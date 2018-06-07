@@ -1,0 +1,34 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                           com.sandpolis.viewer.cli                          *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+    id 'java'
+}
+
+eclipse {
+	project {
+		comment = 'The CLI viewer instance'
+	}
+}
+
+dependencies {
+	testImplementation lib.junit
+
+	implementation project(':dep:com.sandpolis.core.instance')
+	implementation project(':dep:com.sandpolis.core.proto')
+	implementation project(':dep:com.sandpolis.core.util')
+	implementation project(':dep:com.sandpolis.viewer')
+	implementation lib.slf4j
+	implementation lib.lanterna
+}
+
+jar {
+	manifest {
+	    attributes(
+			'Main-Class': 'com.sandpolis.viewer.cli.Main'
+    	)
+	}
+}

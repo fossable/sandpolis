@@ -1,0 +1,14 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                          com.sandpolis.viewer.micro                         *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+}
+
+eclipse {
+	project {
+		comment = 'The micro-client instance'
+	}
+}

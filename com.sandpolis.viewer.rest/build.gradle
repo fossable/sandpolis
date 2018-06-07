@@ -1,0 +1,23 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                          com.sandpolis.viewer.rest                          *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+    id 'java'
+}
+
+eclipse {
+	project {
+		comment = 'The REST viewer instance'
+	}
+}
+
+dependencies {
+	testImplementation lib.junit
+	
+	implementation project(':dep:com.sandpolis.viewer')
+	implementation lib.slf4j
+}
+

@@ -1,0 +1,27 @@
+rootProject.name = 'Sandpolis'
+
+// Instance Projects
+include 'com.sandpolis.charcoal'
+include 'com.sandpolis.client.mega'
+include 'com.sandpolis.client.micro'
+include 'com.sandpolis.server'
+include 'com.sandpolis.viewer.cli'
+include 'com.sandpolis.viewer.jfx'
+include 'com.sandpolis.viewer.react'
+include 'com.sandpolis.viewer.rest'
+
+// Dependency Projects
+include 'dep:com.sandpolis.core.collection'
+include 'dep:com.sandpolis.core.instance'
+include 'dep:com.sandpolis.core.ipc'
+include 'dep:com.sandpolis.core.net'
+include 'dep:com.sandpolis.core.permission'
+include 'dep:com.sandpolis.core.platform'
+include 'dep:com.sandpolis.core.profile'
+include 'dep:com.sandpolis.core.proto'
+include 'dep:com.sandpolis.core.storage.hibernate'
+include 'dep:com.sandpolis.core.storage.ormlite'
+include 'dep:com.sandpolis.core.stream'
+include 'dep:com.sandpolis.core.test'
+include 'dep:com.sandpolis.core.util'
+include 'dep:com.sandpolis.viewer'

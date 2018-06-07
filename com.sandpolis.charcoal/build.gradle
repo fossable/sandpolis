@@ -1,0 +1,27 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                           com.sandpolis.charcoal                            *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+	id 'java'
+}
+
+eclipse {
+	project {
+		comment = 'The Charcoal instance'
+	}
+}
+
+dependencies {
+	testImplementation lib.junit
+}
+
+jar {
+	manifest {
+	    attributes(
+			'Main-Class': 'com.sandpolis.charcoal.Main'
+    	)
+	}
+}

@@ -1,0 +1,22 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                        com.sandpolis.core.collection                        *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+    id 'java-library'
+}
+
+eclipse {
+	project {
+		comment = 'The collections library module'
+	}
+}
+
+dependencies {
+	testImplementation lib.junit
+	
+	implementation lib.guava
+	implementation lib.jpa
+}

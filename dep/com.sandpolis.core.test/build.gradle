@@ -1,0 +1,22 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                           com.sandpolis.core.test                           *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+    id 'java-library'
+}
+
+eclipse {
+	project {
+		comment = 'The testing utilities library module'
+	}
+}
+
+dependencies {
+	implementation lib.junit
+	
+	implementation project(':dep:com.sandpolis.core.net')
+	implementation project(':dep:com.sandpolis.core.proto')
+}

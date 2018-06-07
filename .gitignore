@@ -1,0 +1,15 @@
+# Gradle directories
+.gradle
+
+# Build directories
+build
+bin
+
+# Eclipse Metadata
+.project
+.classpath
+.settings
+
+# Nested Repositories
+/com.sandpolis.server.cloud/
+/com.sandpolis.server.demo/

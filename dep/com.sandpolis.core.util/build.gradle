@@ -1,0 +1,27 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                           com.sandpolis.core.util                           *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+    id 'java-library'
+}
+
+eclipse {
+	project {
+		comment = 'The common utilities library module'
+	}
+}
+
+dependencies {
+	testImplementation lib.junit
+	
+	implementation project(':dep:com.sandpolis.core.instance')
+	implementation project(':dep:com.sandpolis.core.proto')
+	implementation lib.slf4j
+	implementation lib.jansi
+	implementation lib.unit_api
+	implementation lib.unit_ri
+	implementation lib.guava
+}

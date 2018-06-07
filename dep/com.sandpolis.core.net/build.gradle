@@ -1,0 +1,26 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                           com.sandpolis.core.net                            *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+    id 'java-library'
+}
+
+eclipse {
+	project {
+		comment = 'The common networking library module'
+	}
+}
+
+dependencies {
+	testImplementation lib.junit
+	
+	implementation project(':dep:com.sandpolis.core.instance')
+	implementation project(':dep:com.sandpolis.core.proto')
+	implementation project(':dep:com.sandpolis.core.util')
+	implementation lib.slf4j
+	implementation lib.netty
+	implementation lib.guava
+}

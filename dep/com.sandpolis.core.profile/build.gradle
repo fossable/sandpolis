@@ -1,0 +1,26 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                         com.sandpolis.core.profile                          *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+    id 'java-library'
+}
+
+eclipse {
+	project {
+		comment = 'The profile library module'
+	}
+}
+
+dependencies {
+	testImplementation lib.junit
+	
+	implementation project(':dep:com.sandpolis.core.instance')
+	implementation project(':dep:com.sandpolis.core.permission')
+	implementation project(':dep:com.sandpolis.core.platform')
+	implementation project(':dep:com.sandpolis.core.proto')
+	implementation project(':dep:com.sandpolis.core.util')
+	implementation lib.slf4j
+}

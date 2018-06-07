@@ -1,0 +1,25 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                      com.sandpolis.core.storage.ormlite                     *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+    id 'java-library'
+}
+
+eclipse {
+	project {
+		comment = 'The ormlite library module'
+	}
+}
+
+dependencies {
+	testImplementation lib.junit
+	
+	implementation project(':dep:com.sandpolis.core.instance')
+	implementation lib.slf4j
+	implementation lib.jpa
+	implementation lib.ormlite
+	implementation lib.ormlite_jdbc
+}
