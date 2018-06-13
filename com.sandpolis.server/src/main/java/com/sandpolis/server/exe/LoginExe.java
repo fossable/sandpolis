@@ -38,7 +38,7 @@ import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.store.user.UserStore;
 
 /**
- * The {@code Exelet} that handles login and logout requests.
+ * This {@code Exelet} handles login and logout requests.
  * 
  * @author cilki
  * @since 4.0.0
@@ -51,9 +51,17 @@ public class LoginExe extends Exelet {
 		super(connector);
 	}
 
+	@Auth
+	public void rq_logout(Message m) {
+		log.debug("Processing logout request from: {}", connector.getRemoteIP());
+
+		connector.send(rs(m).setRsOutcome(Outcome.newBuilder().setResult(true)));
+		connector.close();
+	}
+
 	@Unauth
 	public void rq_login(Message m) {
-		log.debug("Processing login request from: {} (CVID: {})", connector.getRemoteIP(), connector.getRemoteCvid());
+		log.debug("Processing login request from: {}", connector.getRemoteIP());
 		Outcome.Builder outcome = begin();
 		int id = m.getId();
 
@@ -85,7 +93,7 @@ public class LoginExe extends Exelet {
 	}
 
 	/**
-	 * Allow the login request.
+	 * Utility method to allow a login request.
 	 * 
 	 * @param outcome
 	 *            The current outcome
