@@ -23,4 +23,6 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.proto')
 	implementation project(':dep:com.sandpolis.core.util')
 	implementation lib.slf4j
+	implementation lib.guava
+	implementation lib.netty
 }

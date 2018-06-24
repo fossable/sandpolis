@@ -21,14 +21,17 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.instance')
 	implementation project(':dep:com.sandpolis.core.ipc')
 	implementation project(':dep:com.sandpolis.core.net')
+	implementation project(':dep:com.sandpolis.core.permission')
 	implementation project(':dep:com.sandpolis.core.profile')
 	implementation project(':dep:com.sandpolis.core.proto')
-	implementation project(':dep:com.sandpolis.core.storage.ormlite')
+	implementation project(':dep:com.sandpolis.core.storage.hibernate')
 	implementation project(':dep:com.sandpolis.core.util')
 	implementation lib.slf4j
 	implementation lib.jpa
+	implementation lib.guava
 	implementation lib.netty
 	implementation lib.sqlite
+	implementation lib.zt_zip
 }
 
 jar {

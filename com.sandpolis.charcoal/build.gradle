@@ -16,6 +16,11 @@ eclipse {
 
 dependencies {
 	testImplementation lib.junit
+	
+	implementation project(':dep:com.sandpolis.core.instance')
+	implementation lib.slf4j
+	implementation lib.logback_core
+	implementation lib.logback_classic
 }
 
 jar {
