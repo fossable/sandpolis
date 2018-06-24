@@ -76,7 +76,7 @@ public class Receptor extends Thread {
 				switch (message.getMsgCase()) {
 				case RQ_METADATA:
 					Message.newBuilder()
-							.setRsMetadata(RS_Metadata.newBuilder().setInstance(Core.INSTANCE.getLabel())
+							.setRsMetadata(RS_Metadata.newBuilder().setInstance(Core.INSTANCE)
 									.setVersion(Core.SO_BUILD.getVersion()).setPid(ProcessHandle.current().pid()))
 							.build().writeDelimitedTo(out);
 					break;

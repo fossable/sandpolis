@@ -20,6 +20,8 @@ syntax = "proto3";
 package ipc;
 option java_package = "com.sandpolis.core.proto.ipc";
 
+import "com/sandpolis/core/proto/util/Platform.proto";
+
 /**
  * Request instance metadata.
  */
@@ -32,7 +34,7 @@ message RQ_Metadata {
 message RS_Metadata {
 
 	// The instance's type
-	string instance = 1;
+	util.Instance instance = 1;
 	
 	// The instance's Sandpolis version
 	string version 	= 2;
