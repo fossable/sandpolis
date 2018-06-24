@@ -17,8 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.charcoal;
 
-import com.sandpolis.core.instance.Instance;
 import com.sandpolis.core.instance.MainDispatch;
+import com.sandpolis.core.proto.util.Platform.Instance;
 
 /**
  * This stub is the entry point for Charcoal instances. Control is given to

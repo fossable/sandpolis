@@ -28,11 +28,11 @@ import java.util.concurrent.CompletableFuture;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.sandpolis.core.instance.Instance;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.util.IDUtil;
 
 import io.netty.channel.embedded.EmbeddedChannel;

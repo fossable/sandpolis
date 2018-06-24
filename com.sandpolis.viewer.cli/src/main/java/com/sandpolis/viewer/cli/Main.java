@@ -17,8 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.viewer.cli;
 
-import com.sandpolis.core.instance.Instance;
 import com.sandpolis.core.instance.MainDispatch;
+import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.viewer.Viewer;
 
 /**

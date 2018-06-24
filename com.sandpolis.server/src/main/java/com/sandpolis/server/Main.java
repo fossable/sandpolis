@@ -17,8 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server;
 
-import com.sandpolis.core.instance.Instance;
 import com.sandpolis.core.instance.MainDispatch;
+import com.sandpolis.core.proto.util.Platform.Instance;
 
 /**
  * This stub is the entry point for Server instances. Control is given to

@@ -24,13 +24,13 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Instance;
 import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.Store.AutoInitializer;
 import com.sandpolis.core.ipc.Connector;
 import com.sandpolis.core.ipc.Listener;
 import com.sandpolis.core.ipc.Receptor;
 import com.sandpolis.core.proto.ipc.MCMetadata.RS_Metadata;
+import com.sandpolis.core.proto.util.Platform.Instance;
 
 /**
  * This store manages interprocess connections.
