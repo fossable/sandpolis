@@ -17,9 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.gradle.deploy
 
-import com.sandpolis.gradle.deploy.task.DeployCharcoal
-import com.sandpolis.gradle.deploy.task.DeployServer
-import com.sandpolis.gradle.deploy.task.DeployViewer
+import com.sandpolis.gradle.deploy.task.DeployInstance
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -76,17 +74,12 @@ public class DeployPlugin implements Plugin<Project> {
 				def deploy_type
 				switch (getName()){
 					case "com.sandpolis.charcoal":
-						deploy_type = DeployCharcoal
-						break
 					case "com.sandpolis.server":
 					case "com.sandpolis.server.cloud":
-						deploy_type = DeployServer
-						break
 					case "com.sandpolis.viewer.cli":
 					case "com.sandpolis.viewer.jfx":
-						deploy_type = DeployViewer
+						deploy_type = DeployInstance
 						break
-
 					default:
 						return
 				}
@@ -106,7 +99,7 @@ public class DeployPlugin implements Plugin<Project> {
 
 						// TODO: parse platform and directory by name rather than rely on order
 						platform = remote.extensions[0].platform()
-						directory = remote.extensions[1].directory()
+						directory = remote.extensions[1].directory() + sub.getName()
 					}
 
 					// Setup task dependencies
