@@ -33,15 +33,14 @@ import io.netty.util.concurrent.DefaultPromise;
 public class SockFuture extends DefaultPromise<Sock> {
 
 	public SockFuture(ChannelFuture connect) {
-		if (connect == null)
-			throw new IllegalArgumentException();
+		super(connect.channel().eventLoop());
 
 		connect.addListener((ChannelFuture future) -> {
 			if (!future.isSuccess())
 				SockFuture.this.setFailure(future.cause());
 
 			// Wait for the CVID handshake to complete
-			future.channel().attr(ChannelConstant.HANDLER_CVID).get().addListener((DefaultPromise<Void> promise) -> {
+			future.channel().attr(ChannelConstant.HANDLER_CVID).get().addListener((DefaultPromise<Integer> promise) -> {
 				if (!promise.isSuccess())
 					SockFuture.this.setFailure(promise.cause());
 

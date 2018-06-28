@@ -18,7 +18,6 @@
 package com.sandpolis.core.net.future;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -29,28 +28,68 @@ import java.util.concurrent.ExecutionException;
 import org.junit.Test;
 
 import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.test.TestClientInitializer;
-import com.sandpolis.core.test.TestServerInitializer;
+import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.net.init.PeerPipelineInit;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.concurrent.DefaultPromise;
 
 public class SockFutureTest {
 
+	private static PeerPipelineInit clientPipeline = new PeerPipelineInit(null);
+	private static PeerPipelineInit serverPipeline = new PeerPipelineInit(null);
+
 	@Test
-	public void testGet() throws InterruptedException, ExecutionException {
-		EmbeddedChannel server = new EmbeddedChannel(new TestServerInitializer());
-		server.bind(new InetSocketAddress(6000));
+	public void testGetEmbedded() throws InterruptedException, ExecutionException {
+		EmbeddedChannel server = new EmbeddedChannel(serverPipeline);
+		ChannelFuture serverFuture = server.bind(new InetSocketAddress(9000));
 
-		EmbeddedChannel client = new EmbeddedChannel(new TestClientInitializer());
-		SockFuture sf = new SockFuture(client.connect(new InetSocketAddress("127.0.0.1", 6000)));
-		assertFalse(sf.isDone());
+		EmbeddedChannel client = new EmbeddedChannel(clientPipeline);
+		ChannelFuture clientFuture = client.connect(new InetSocketAddress("127.0.0.1", 9000));
 
-		// Move the handshake messages manually
-		ByteBuf msg = client.readOutbound();
-		server.writeInbound(msg);
-		msg = server.readOutbound();
-		client.writeInbound(msg);
+		testGet(serverFuture, clientFuture);
+	}
+
+	@Test
+	public void testGetNioTcp() throws InterruptedException, ExecutionException {
+		ChannelFuture serverFuture = new ServerBootstrap().channel(NioServerSocketChannel.class)
+				.group(new NioEventLoopGroup()).childHandler(serverPipeline).bind(9000);
+
+		ChannelFuture clientFuture = new Bootstrap().channel(NioSocketChannel.class).group(new NioEventLoopGroup())
+				.handler(clientPipeline).connect("127.0.0.1", 9000);
+
+		testGet(serverFuture, clientFuture);
+	}
+
+	@Test
+	public void testGetNioUdp() throws InterruptedException, ExecutionException {
+		ChannelFuture serverFuture = new Bootstrap().channel(NioDatagramChannel.class).group(new NioEventLoopGroup())
+				.handler(serverPipeline).bind(9000);
+
+		ChannelFuture clientFuture = new Bootstrap().channel(NioDatagramChannel.class).group(new NioEventLoopGroup())
+				.handler(clientPipeline).connect("127.0.0.1", 9000);
+
+		testGet(serverFuture, clientFuture);
+	}
+
+	private void testGet(ChannelFuture server, ChannelFuture client) throws InterruptedException, ExecutionException {
+
+		// Complete the CVID handshake manually
+		server.channel().attr(ChannelConstant.HANDLER_CVID)
+				.set(new DefaultPromise<Integer>(server.channel().eventLoop()).setSuccess(1));
+		client.channel().attr(ChannelConstant.HANDLER_CVID)
+				.set(new DefaultPromise<Integer>(client.channel().eventLoop()).setSuccess(1));
+
+		SockFuture sf = new SockFuture(client);
+
+		client.sync();
 
 		Sock sock = sf.get();
 		assertTrue(sf.isDone());
@@ -58,10 +97,11 @@ public class SockFutureTest {
 		assertNull(sf.cause());
 
 		assertNotNull(sock);
-		assertEquals(client, sock.channel());
+		assertEquals(client.channel(), sock.channel());
+		assertEquals(sock, client.channel().attr(ChannelConstant.SOCK).get());
 
-		server.close();
-		client.close();
+		server.channel().close();
+		client.channel().close();
 	}
 
 }
