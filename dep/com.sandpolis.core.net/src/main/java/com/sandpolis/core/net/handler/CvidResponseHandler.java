@@ -20,8 +20,9 @@ package com.sandpolis.core.net.handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.exception.MessageFlowException;
+import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -34,8 +35,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 /**
- * This handler manages the CVID handshake from the responding instance. Usually
- * the requesting instance will be the server.
+ * This handler manages the CVID handshake for the responding instance. Usually
+ * the responding instance will be the server.
  * 
  * @see CvidResponseHandler
  * 
@@ -47,46 +48,27 @@ public class CvidResponseHandler extends SimpleChannelInboundHandler<Message> {
 
 	private static final Logger log = LoggerFactory.getLogger(CvidResponseHandler.class);
 
-	private int cvid;
-	private String uuid;
-
-	public CvidResponseHandler(int cvid, String uuid) {
-		this.cvid = cvid;
-		this.uuid = uuid;
-	}
-
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
 		Channel ch = ctx.channel();
 
-		autoremove(ch);
+		// Autoremove the handler
+		ch.pipeline().remove(this);
+
 		RQ_Cvid rq = msg.getRqCvid();
 		if (rq != null && !rq.getUuid().isEmpty() && IDUtil.CVID.toInstance(rq.getIid()) != Instance.SERVER) {
-
-			RS_Cvid.Builder rs = RS_Cvid.newBuilder().setServerCvid(cvid).setServerUuid(uuid)
+			RS_Cvid.Builder rs = RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.uuid())
 					.setCvid(IDUtil.CVID.cvid(rq.getIid()));
 
 			ch.writeAndFlush(Message.newBuilder().setRsCvid(rs).build());
 
-			ch.attr(Sock.INSTANCE_KEY).set(IDUtil.CVID.toInstance(rq.getIid()));
-			ch.attr(Sock.CVID_KEY).set(rs.getCvid());
-			ch.attr(Sock.UUID_KEY).set(rq.getUuid());
-			ch.attr(Sock.CVID_HANDLER_KEY).get().complete(null);
+			ch.attr(ChannelConstant.INSTANCE).set(IDUtil.CVID.toInstance(rq.getIid()));
+			ch.attr(ChannelConstant.CVID).set(rs.getCvid());
+			ch.attr(ChannelConstant.UUID).set(rq.getUuid());
+			ch.attr(ChannelConstant.HANDLER_CVID).get().setSuccess(rs.getCvid());
 		} else {
-			ch.attr(Sock.CVID_HANDLER_KEY).get().completeExceptionally(new MessageFlowException(RQ_Cvid.class, msg));
+			ch.attr(ChannelConstant.HANDLER_CVID).get().setFailure(new MessageFlowException(RQ_Cvid.class, msg));
 		}
-	}
-
-	/**
-	 * Remove the handler from the pipeline once the negotation is over.
-	 */
-	private void autoremove(Channel channel) {
-		channel.pipeline().remove(this);
-	}
-
-	@Override
-	public boolean isSharable() {
-		return true;
 	}
 
 }

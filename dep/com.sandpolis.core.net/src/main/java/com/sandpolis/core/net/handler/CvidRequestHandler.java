@@ -21,8 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.exception.MessageFlowException;
+import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -35,7 +35,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 /**
- * This handler manages the CVID handshake from the requesting instance. Usually
+ * This handler manages the CVID handshake for the requesting instance. Usually
  * the requesting instance will be the client or viewer.
  * 
  * @see CvidResponseHandler
@@ -52,45 +52,41 @@ public class CvidRequestHandler extends SimpleChannelInboundHandler<Message> {
 	protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
 		Channel ch = ctx.channel();
 
-		autoremove(ch);
+		// Autoremove the handler
+		ch.pipeline().remove(this);
+
 		RS_Cvid rs = msg.getRsCvid();
 		if (rs != null && !rs.getServerUuid().isEmpty()) {
 
 			Core.setCvid(rs.getCvid());
-			ch.attr(Sock.CVID_KEY).set(rs.getServerCvid());
-			ch.attr(Sock.UUID_KEY).set(rs.getServerUuid());
-			ch.attr(Sock.CVID_HANDLER_KEY).get().complete(null);
+			ch.attr(ChannelConstant.CVID).set(rs.getServerCvid());
+			ch.attr(ChannelConstant.UUID).set(rs.getServerUuid());
+			ch.attr(ChannelConstant.HANDLER_CVID).get().setSuccess(rs.getCvid());
 		} else {
-			ch.attr(Sock.CVID_HANDLER_KEY).get().completeExceptionally(new MessageFlowException(RS_Cvid.class, msg));
+			ch.attr(ChannelConstant.HANDLER_CVID).get().setFailure(new MessageFlowException(RS_Cvid.class, msg));
 		}
 	}
 
+	@Override
+	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		handshake(ctx.channel(), Core.INSTANCE, Core.uuid());
+		super.channelActive(ctx);
+	}
+
 	/**
-	 * Begin the CVID handshake.
+	 * Begin the CVID handshake phase.
 	 * 
 	 * @param channel
 	 *            The channel
 	 * @param instance
-	 *            The requesting instance
+	 *            The instance type
 	 * @param uuid
-	 *            The requesting instance's UUID
+	 *            The instance's UUID
 	 */
-	public void initiateHandshake(Channel channel, Instance instance, String uuid) {
+	public void handshake(Channel channel, Instance instance, String uuid) {
 		log.debug("Initiating CVID handshake");
 		channel.writeAndFlush(Message.newBuilder()
 				.setRqCvid(RQ_Cvid.newBuilder().setIid(IDUtil.CVID.getIID(instance)).setUuid(uuid)).build());
-	}
-
-	/**
-	 * Remove the handler from the pipeline once the negotation is over.
-	 */
-	private void autoremove(Channel channel) {
-		channel.pipeline().remove(this);
-	}
-
-	@Override
-	public boolean isSharable() {
-		return true;
 	}
 
 }

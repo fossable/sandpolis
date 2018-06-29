@@ -23,64 +23,63 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.concurrent.CompletableFuture;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.util.IDUtil;
 
+import io.netty.channel.DefaultEventLoop;
 import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.util.concurrent.DefaultPromise;
 
 public class CvidResponseHandlerTest {
 
-	private static final CvidResponseHandler serverHandler = new CvidResponseHandler(123, "testuuid");
+	private static final CvidResponseHandler serverHandler = new CvidResponseHandler();
 	private EmbeddedChannel server;
 
 	@Before
 	public void setup() {
 		server = new EmbeddedChannel();
 		server.pipeline().addLast("cvid", serverHandler);
-		server.attr(Sock.CVID_HANDLER_KEY).set(new CompletableFuture<>());
+		server.attr(ChannelConstant.HANDLER_CVID).set(new DefaultPromise<>(new DefaultEventLoop()));
 	}
 
 	@Test
 	public void testReceiveIncorrect() {
 		assertNotNull(server.pipeline().get("cvid"));
-		assertFalse(server.attr(Sock.CVID_HANDLER_KEY).get().isDone());
+		assertFalse(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
 		server.writeInbound(Message.newBuilder()
 				.setRqCvid(RQ_Cvid.newBuilder().setIid(IDUtil.CVID.getIID(Instance.SERVER)).setUuid("testuuid2"))
 				.build());
-		assertTrue(server.attr(Sock.CVID_HANDLER_KEY).get().isDone());
-		assertTrue(server.attr(Sock.CVID_HANDLER_KEY).get().isCompletedExceptionally());
+		assertTrue(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
+		assertFalse(server.attr(ChannelConstant.HANDLER_CVID).get().isSuccess());
 		assertNull(server.pipeline().get("cvid"));
 	}
 
 	@Test
 	public void testReceiveCorrect() {
 		assertNotNull(server.pipeline().get("cvid"));
-		assertFalse(server.attr(Sock.CVID_HANDLER_KEY).get().isDone());
+		assertFalse(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
 		server.writeInbound(Message.newBuilder()
 				.setRqCvid(RQ_Cvid.newBuilder().setIid(IDUtil.CVID.getIID(Instance.CLIENT)).setUuid("testuuid2"))
 				.build());
-		assertTrue(server.attr(Sock.CVID_HANDLER_KEY).get().isDone());
-		assertFalse(server.attr(Sock.CVID_HANDLER_KEY).get().isCompletedExceptionally());
+		assertTrue(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
+		assertTrue(server.attr(ChannelConstant.HANDLER_CVID).get().isSuccess());
 
-		assertEquals(Instance.CLIENT, IDUtil.CVID.extractInstance(server.attr(Sock.CVID_KEY).get()));
-		assertEquals("testuuid2", server.attr(Sock.UUID_KEY).get());
+		assertEquals(Instance.CLIENT, IDUtil.CVID.extractInstance(server.attr(ChannelConstant.CVID).get()));
+		assertEquals("testuuid2", server.attr(ChannelConstant.UUID).get());
 		assertNull(server.pipeline().get("cvid"));
 
 		Message msg = server.readOutbound();
 		RS_Cvid rs = msg.getRsCvid();
 
 		assertEquals(Instance.CLIENT, IDUtil.CVID.extractInstance(rs.getCvid()));
-		assertEquals(123, rs.getServerCvid());
-		assertEquals("testuuid", rs.getServerUuid());
+		assertFalse(rs.getServerUuid().isEmpty());
 
 	}
 
