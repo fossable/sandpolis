@@ -38,7 +38,7 @@ import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.store.user.UserStore;
 
 /**
- * This {@code Exelet} handles login and logout requests.
+ * This {@link Exelet} handles login and logout requests from viewer instances.
  * 
  * @author cilki
  * @since 4.0.0
@@ -56,7 +56,7 @@ public class LoginExe extends Exelet {
 		log.debug("Processing logout request from: {}", connector.getRemoteIP());
 
 		connector.send(rs(m).setRsOutcome(Outcome.newBuilder().setResult(true)));
-		connector.close();
+		ConnectionStore.close(connector);
 	}
 
 	@Unauth
@@ -103,7 +103,7 @@ public class LoginExe extends Exelet {
 	 *            The username
 	 */
 	private void passLogin(Outcome.Builder outcome, int id, String user) {
-		log.debug("Accepting login for user: {}", user);
+		log.debug("Accepting login request for user: {}", user);
 
 		// Mark connection as authenticated
 		connector.authenticate();
@@ -122,7 +122,7 @@ public class LoginExe extends Exelet {
 	}
 
 	/**
-	 * Reject the login request and close the connection.
+	 * Reject the login request, but leave the connection open.
 	 * 
 	 * @param outcome
 	 *            The current outcome
@@ -132,10 +132,9 @@ public class LoginExe extends Exelet {
 	 *            The username
 	 */
 	private void failLogin(Outcome.Builder outcome, int id, String user) {
-		log.debug("Rejecting login for user: {}", user);
+		log.debug("Rejecting login request for user: {}", user);
 
 		connector.send(rs(id).setRsOutcome(failure(outcome)));
-		ConnectionStore.close(connector);
 	}
 
 }
