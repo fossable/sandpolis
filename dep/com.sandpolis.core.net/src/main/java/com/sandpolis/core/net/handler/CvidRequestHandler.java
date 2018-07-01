@@ -27,7 +27,6 @@ import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.util.IDUtil;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -85,8 +84,8 @@ public class CvidRequestHandler extends SimpleChannelInboundHandler<Message> {
 	 */
 	public void handshake(Channel channel, Instance instance, String uuid) {
 		log.debug("Initiating CVID handshake");
-		channel.writeAndFlush(Message.newBuilder()
-				.setRqCvid(RQ_Cvid.newBuilder().setIid(IDUtil.CVID.getIID(instance)).setUuid(uuid)).build());
+		channel.writeAndFlush(
+				Message.newBuilder().setRqCvid(RQ_Cvid.newBuilder().setInstance(instance).setUuid(uuid)).build());
 	}
 
 }

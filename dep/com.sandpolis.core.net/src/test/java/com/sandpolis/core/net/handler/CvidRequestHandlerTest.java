@@ -58,7 +58,7 @@ public class CvidRequestHandlerTest {
 		RQ_Cvid rq = msg.getRqCvid();
 
 		assertTrue(rq != null);
-		assertEquals(IDUtil.CVID.getIID(Instance.CLIENT), rq.getIid());
+		assertEquals(Instance.CLIENT, rq.getInstance());
 		assertEquals("testuuid", rq.getUuid());
 	}
 

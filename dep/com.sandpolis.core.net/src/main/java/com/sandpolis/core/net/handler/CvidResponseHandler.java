@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.exception.MessageFlowException;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
@@ -56,16 +57,19 @@ public class CvidResponseHandler extends SimpleChannelInboundHandler<Message> {
 		ch.pipeline().remove(this);
 
 		RQ_Cvid rq = msg.getRqCvid();
-		if (rq != null && !rq.getUuid().isEmpty() && IDUtil.CVID.toInstance(rq.getIid()) != Instance.SERVER) {
+		if (rq != null && !rq.getUuid().isEmpty() && rq.getInstance() != Instance.SERVER) {
 			RS_Cvid.Builder rs = RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.uuid())
-					.setCvid(IDUtil.CVID.cvid(rq.getIid()));
+					.setCvid(IDUtil.CVID.cvid(rq.getInstance()));
 
 			ch.writeAndFlush(Message.newBuilder().setRsCvid(rs).build());
 
-			ch.attr(ChannelConstant.INSTANCE).set(IDUtil.CVID.toInstance(rq.getIid()));
+			ch.attr(ChannelConstant.INSTANCE).set(rq.getInstance());
 			ch.attr(ChannelConstant.CVID).set(rs.getCvid());
 			ch.attr(ChannelConstant.UUID).set(rq.getUuid());
 			ch.attr(ChannelConstant.HANDLER_CVID).get().setSuccess(rs.getCvid());
+
+			ch.attr(ChannelConstant.SOCK).set(new Sock(ch));
+			ch.attr(ChannelConstant.SOCK).get().preauthenticate();
 		} else {
 			ch.attr(ChannelConstant.HANDLER_CVID).get().setFailure(new MessageFlowException(RQ_Cvid.class, msg));
 		}

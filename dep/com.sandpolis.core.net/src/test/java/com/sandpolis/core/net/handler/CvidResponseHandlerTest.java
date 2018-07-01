@@ -54,8 +54,7 @@ public class CvidResponseHandlerTest {
 		assertNotNull(server.pipeline().get("cvid"));
 		assertFalse(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
 		server.writeInbound(Message.newBuilder()
-				.setRqCvid(RQ_Cvid.newBuilder().setIid(IDUtil.CVID.getIID(Instance.SERVER)).setUuid("testuuid2"))
-				.build());
+				.setRqCvid(RQ_Cvid.newBuilder().setInstance(Instance.SERVER).setUuid("testuuid2")).build());
 		assertTrue(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
 		assertFalse(server.attr(ChannelConstant.HANDLER_CVID).get().isSuccess());
 		assertNull(server.pipeline().get("cvid"));
@@ -66,8 +65,7 @@ public class CvidResponseHandlerTest {
 		assertNotNull(server.pipeline().get("cvid"));
 		assertFalse(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
 		server.writeInbound(Message.newBuilder()
-				.setRqCvid(RQ_Cvid.newBuilder().setIid(IDUtil.CVID.getIID(Instance.CLIENT)).setUuid("testuuid2"))
-				.build());
+				.setRqCvid(RQ_Cvid.newBuilder().setInstance(Instance.CLIENT).setUuid("testuuid2")).build());
 		assertTrue(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
 		assertTrue(server.attr(ChannelConstant.HANDLER_CVID).get().isSuccess());
 

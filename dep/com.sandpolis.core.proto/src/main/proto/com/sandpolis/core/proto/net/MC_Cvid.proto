@@ -20,6 +20,8 @@ syntax = "proto3";
 package net;
 option java_package = "com.sandpolis.core.proto.net";
 
+import "com/sandpolis/core/proto/util/Platform.proto";
+
 /**
  * A CVID request which must occur before authentication.
  */
@@ -27,8 +29,8 @@ message RQ_Cvid {
 	// The UUID of the requesting instance
 	string uuid = 1;
 	
-	// The instance ID of the requesting instance
-	int32 iid 	= 2;
+	// The instance type of the requesting instance
+	util.Instance instance = 2;
 }
 
 /**
