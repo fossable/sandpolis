@@ -10,7 +10,7 @@ class DeployInstance extends RemoteTask {
 		project_root.ssh.run {
 			session(rhost) {
 				// Kill the process
-				execute 'pkill -9 -f "java -jar com.sandpolis"', ignoreError: true
+				execute 'pkill -9 -f "java -jar ' + directory + '"', ignoreError: true
 
 				// Reset working directory
 				remove directory
