@@ -3,22 +3,10 @@
 *                         com.sandpolis.gradle.deploy                         *
 ******************************************************************************/
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
-    }
-}
-
 plugins {
-	// TODO uncomment and remove buildscript {} when 2.0.4 is available
-	// id "com.github.johnrengelman.plugin-shadow" version "2.0.4"
+	id "com.github.johnrengelman.shadow" version "2.0.4"
 	id 'groovy'
 }
-
-apply plugin: 'com.github.johnrengelman.shadow'
 
 description = 'A plugin that sets up deployment tasks in Sandpolis'
 group 		= 'com.sandpolis.gradle'
