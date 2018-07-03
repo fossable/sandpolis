@@ -24,7 +24,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 
@@ -194,6 +196,26 @@ public final class CertUtil {
 	public static X509Certificate getRoot() throws CertificateException, IOException {
 		try (InputStream in = CertUtil.class.getResourceAsStream("/cert/root.cert")) {
 			return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
+		}
+	}
+
+	/**
+	 * Indicates whether the given certificate is within the timestamp constraints.
+	 * 
+	 * @param certificate
+	 *            The certificate to check
+	 * @return True if the current time is after the begin timestamp, but before the
+	 *         expiration timestamp
+	 */
+	public static boolean getValidity(X509Certificate certificate) {
+		if (certificate == null)
+			throw new IllegalArgumentException();
+
+		try {
+			certificate.checkValidity();
+			return true;
+		} catch (CertificateExpiredException | CertificateNotYetValidException e) {
+			return false;
 		}
 	}
 }
