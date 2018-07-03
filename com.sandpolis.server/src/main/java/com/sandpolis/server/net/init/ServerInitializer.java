@@ -24,20 +24,26 @@ import java.util.Base64;
 import javax.net.ssl.SSLException;
 
 import com.google.common.primitives.Bytes;
-import com.sandpolis.core.instance.Instance;
+import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.net.Exelet;
+import com.sandpolis.core.net.handler.CvidResponseHandler;
+import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.net.init.PipelineInitializer;
 import com.sandpolis.server.exe.AuthExe;
 import com.sandpolis.server.exe.GroupExe;
 import com.sandpolis.server.exe.ListenerExe;
 import com.sandpolis.server.exe.LoginExe;
+import com.sandpolis.server.exe.ServerExe;
 import com.sandpolis.server.exe.UserExe;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import io.netty.util.concurrent.DefaultPromise;
 
 /**
  * This {@link ChannelInitializer} configures a {@link ChannelPipeline} for use
@@ -48,12 +54,14 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
  */
 public class ServerInitializer extends PipelineInitializer {
 
+	private static final CvidResponseHandler cvidHandler = new CvidResponseHandler();
+
 	/**
 	 * All server {@link Exelet} classes.
 	 */
 	@SuppressWarnings("unchecked")
 	private static final Class<? extends Exelet>[] exelets = new Class[] { AuthExe.class, GroupExe.class,
-			ListenerExe.class, LoginExe.class, UserExe.class };
+			ListenerExe.class, LoginExe.class, ServerExe.class, UserExe.class };
 
 	/**
 	 * The certificate in PEM format.
@@ -74,7 +82,7 @@ public class ServerInitializer extends PipelineInitializer {
 	 * Construct a {@code ServerInitializer} with a self-signed certificate.
 	 */
 	public ServerInitializer() {
-		super(exelets, Instance.SERVER);
+		super(exelets);
 	}
 
 	/**
@@ -86,10 +94,10 @@ public class ServerInitializer extends PipelineInitializer {
 	 *            The private key
 	 */
 	public ServerInitializer(byte[] cert, byte[] key) {
-		super(exelets, Instance.SERVER);
-		if (cert == null)
-			throw new IllegalArgumentException();
-		if (key == null)
+		super(exelets);
+		if (cert == null && key == null)
+			return;
+		if (cert == null || key == null)
 			throw new IllegalArgumentException();
 
 		byte[] begin_cert = "-----BEGIN CERTIFICATE-----\n".getBytes();
@@ -106,8 +114,21 @@ public class ServerInitializer extends PipelineInitializer {
 	}
 
 	@Override
+	protected void initChannel(Channel ch) throws Exception {
+		super.initChannel(ch);
+
+		if (Config.SSL) {
+			SslHandler ssl = getSslContext().newHandler(ch.alloc());
+			ch.pipeline().addAfter("traffic", "ssl", ssl);
+			ch.attr(ChannelConstant.HANDLER_SSL).set(ssl);
+		}
+
+		ch.pipeline().addBefore("exe", "cvid", cvidHandler);
+		ch.attr(ChannelConstant.FUTURE_CVID).set(new DefaultPromise<>(ch.eventLoop()));
+	}
+
 	public SslContext getSslContext() throws Exception {
-		if (sslCtx == null) {
+		if (sslCtx == null && Config.SSL) {
 			sslCtx = buildSslContext();
 
 			// No point in keeping these around anymore

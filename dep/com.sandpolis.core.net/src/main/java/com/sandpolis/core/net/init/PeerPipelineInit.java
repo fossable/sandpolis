@@ -18,15 +18,19 @@
 package com.sandpolis.core.net.init;
 
 import com.sandpolis.core.net.Exelet;
+import com.sandpolis.core.net.codec.PeerEncryptionDecoder;
+import com.sandpolis.core.net.codec.PeerEncryptionEncoder;
 import com.sandpolis.core.net.handler.HolePunchHandler;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.socket.DatagramChannel;
 
 /**
- * This {@link PipelineInitializer} configures a {@link Channel} for datagram
- * "connections" between two peers. The {@link Channel} will automatically
- * perform a NAT traversal prior to activation using the hole-punching
- * technique.
+ * This {@link PipelineInitializer} configures a {@link Channel} for
+ * peer-to-peer connections. Typically this initializer will be used with
+ * datagram channels. The {@link Channel} will automatically perform a NAT
+ * traversal prior to activation if required.
  * 
  * @author cilki
  * @since 5.0.0
@@ -40,8 +44,13 @@ public class PeerPipelineInit extends PipelineInitializer {
 	@Override
 	protected void initChannel(Channel ch) throws Exception {
 		super.initChannel(ch);
+		ChannelPipeline p = ch.pipeline();
 
-		ch.pipeline().addFirst(new HolePunchHandler());
+		p.addFirst(new PeerEncryptionEncoder());
+		p.addFirst(new PeerEncryptionDecoder());
+
+		if (ch instanceof DatagramChannel)
+			p.addFirst(new HolePunchHandler());
 	}
 
 }
