@@ -46,13 +46,13 @@ public class CvidRequestHandlerTest {
 	public void setup() {
 		client = new EmbeddedChannel();
 		client.pipeline().addLast("cvid", clientHandler);
-		client.attr(ChannelConstant.HANDLER_CVID).set(new DefaultPromise<>(new DefaultEventLoop()));
+		client.attr(ChannelConstant.FUTURE_CVID).set(new DefaultPromise<>(new DefaultEventLoop()));
 	}
 
 	@Test
 	public void testInitiate() {
 		clientHandler.handshake(client, Instance.CLIENT, "testuuid");
-		assertFalse(client.attr(ChannelConstant.HANDLER_CVID).get().isDone());
+		assertFalse(client.attr(ChannelConstant.FUTURE_CVID).get().isDone());
 
 		Message msg = client.readOutbound();
 		RQ_Cvid rq = msg.getRqCvid();
@@ -65,21 +65,21 @@ public class CvidRequestHandlerTest {
 	@Test
 	public void testReceiveIncorrect() {
 		assertNotNull(client.pipeline().get("cvid"));
-		assertFalse(client.attr(ChannelConstant.HANDLER_CVID).get().isDone());
+		assertFalse(client.attr(ChannelConstant.FUTURE_CVID).get().isDone());
 		client.writeInbound(Message.newBuilder().setRsCvid(RS_Cvid.newBuilder()).build());
-		assertTrue(client.attr(ChannelConstant.HANDLER_CVID).get().isDone());
-		assertFalse(client.attr(ChannelConstant.HANDLER_CVID).get().isSuccess());
+		assertTrue(client.attr(ChannelConstant.FUTURE_CVID).get().isDone());
+		assertFalse(client.attr(ChannelConstant.FUTURE_CVID).get().isSuccess());
 		assertNull(client.pipeline().get("cvid"));
 	}
 
 	@Test
 	public void testReceiveCorrect() {
 		assertNotNull(client.pipeline().get("cvid"));
-		assertFalse(client.attr(ChannelConstant.HANDLER_CVID).get().isDone());
+		assertFalse(client.attr(ChannelConstant.FUTURE_CVID).get().isDone());
 		client.writeInbound(Message.newBuilder().setRsCvid(RS_Cvid.newBuilder()
 				.setCvid(IDUtil.CVID.cvid(Instance.CLIENT)).setServerCvid(123).setServerUuid("testuuid")).build());
-		assertTrue(client.attr(ChannelConstant.HANDLER_CVID).get().isDone());
-		assertTrue(client.attr(ChannelConstant.HANDLER_CVID).get().isSuccess());
+		assertTrue(client.attr(ChannelConstant.FUTURE_CVID).get().isDone());
+		assertTrue(client.attr(ChannelConstant.FUTURE_CVID).get().isSuccess());
 
 		assertEquals(123, client.attr(ChannelConstant.CVID).get().intValue());
 		assertEquals("testuuid", client.attr(ChannelConstant.UUID).get());

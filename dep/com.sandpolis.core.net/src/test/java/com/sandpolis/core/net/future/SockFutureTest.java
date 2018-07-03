@@ -82,9 +82,9 @@ public class SockFutureTest {
 	private void testGet(ChannelFuture server, ChannelFuture client) throws InterruptedException, ExecutionException {
 
 		// Complete the CVID handshake manually
-		server.channel().attr(ChannelConstant.HANDLER_CVID)
+		server.channel().attr(ChannelConstant.FUTURE_CVID)
 				.set(new DefaultPromise<Integer>(server.channel().eventLoop()).setSuccess(1));
-		client.channel().attr(ChannelConstant.HANDLER_CVID)
+		client.channel().attr(ChannelConstant.FUTURE_CVID)
 				.set(new DefaultPromise<Integer>(client.channel().eventLoop()).setSuccess(1));
 
 		SockFuture sf = new SockFuture(client);

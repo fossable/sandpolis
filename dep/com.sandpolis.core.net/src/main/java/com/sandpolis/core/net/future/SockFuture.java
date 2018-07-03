@@ -40,7 +40,7 @@ public class SockFuture extends DefaultPromise<Sock> {
 				SockFuture.this.setFailure(future.cause());
 
 			// Wait for the CVID handshake to complete
-			future.channel().attr(ChannelConstant.HANDLER_CVID).get().addListener((DefaultPromise<Integer> promise) -> {
+			future.channel().attr(ChannelConstant.FUTURE_CVID).get().addListener((DefaultPromise<Integer> promise) -> {
 				if (!promise.isSuccess())
 					SockFuture.this.setFailure(promise.cause());
 

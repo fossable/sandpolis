@@ -46,28 +46,28 @@ public class CvidResponseHandlerTest {
 	public void setup() {
 		server = new EmbeddedChannel();
 		server.pipeline().addLast("cvid", serverHandler);
-		server.attr(ChannelConstant.HANDLER_CVID).set(new DefaultPromise<>(new DefaultEventLoop()));
+		server.attr(ChannelConstant.FUTURE_CVID).set(new DefaultPromise<>(new DefaultEventLoop()));
 	}
 
 	@Test
 	public void testReceiveIncorrect() {
 		assertNotNull(server.pipeline().get("cvid"));
-		assertFalse(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
+		assertFalse(server.attr(ChannelConstant.FUTURE_CVID).get().isDone());
 		server.writeInbound(Message.newBuilder()
 				.setRqCvid(RQ_Cvid.newBuilder().setInstance(Instance.SERVER).setUuid("testuuid2")).build());
-		assertTrue(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
-		assertFalse(server.attr(ChannelConstant.HANDLER_CVID).get().isSuccess());
+		assertTrue(server.attr(ChannelConstant.FUTURE_CVID).get().isDone());
+		assertFalse(server.attr(ChannelConstant.FUTURE_CVID).get().isSuccess());
 		assertNull(server.pipeline().get("cvid"));
 	}
 
 	@Test
 	public void testReceiveCorrect() {
 		assertNotNull(server.pipeline().get("cvid"));
-		assertFalse(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
+		assertFalse(server.attr(ChannelConstant.FUTURE_CVID).get().isDone());
 		server.writeInbound(Message.newBuilder()
 				.setRqCvid(RQ_Cvid.newBuilder().setInstance(Instance.CLIENT).setUuid("testuuid2")).build());
-		assertTrue(server.attr(ChannelConstant.HANDLER_CVID).get().isDone());
-		assertTrue(server.attr(ChannelConstant.HANDLER_CVID).get().isSuccess());
+		assertTrue(server.attr(ChannelConstant.FUTURE_CVID).get().isDone());
+		assertTrue(server.attr(ChannelConstant.FUTURE_CVID).get().isSuccess());
 
 		assertEquals(Instance.CLIENT, IDUtil.CVID.extractInstance(server.attr(ChannelConstant.CVID).get()));
 		assertEquals("testuuid2", server.attr(ChannelConstant.UUID).get());

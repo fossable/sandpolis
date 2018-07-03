@@ -66,12 +66,12 @@ public class CvidResponseHandler extends SimpleChannelInboundHandler<Message> {
 			ch.attr(ChannelConstant.INSTANCE).set(rq.getInstance());
 			ch.attr(ChannelConstant.CVID).set(rs.getCvid());
 			ch.attr(ChannelConstant.UUID).set(rq.getUuid());
-			ch.attr(ChannelConstant.HANDLER_CVID).get().setSuccess(rs.getCvid());
+			ch.attr(ChannelConstant.FUTURE_CVID).get().setSuccess(rs.getCvid());
 
 			ch.attr(ChannelConstant.SOCK).set(new Sock(ch));
 			ch.attr(ChannelConstant.SOCK).get().preauthenticate();
 		} else {
-			ch.attr(ChannelConstant.HANDLER_CVID).get().setFailure(new MessageFlowException(RQ_Cvid.class, msg));
+			ch.attr(ChannelConstant.FUTURE_CVID).get().setFailure(new MessageFlowException(RQ_Cvid.class, msg));
 		}
 	}
 
