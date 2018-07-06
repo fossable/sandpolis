@@ -9,8 +9,6 @@ plugins {
 }
 
 description = 'A plugin that sets up deployment tasks in Sandpolis'
-group 		= 'com.sandpolis.gradle'
-version 	= '1.0.0'
 
 repositories {
     jcenter()

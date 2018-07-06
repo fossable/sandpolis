@@ -1,4 +1,13 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                                                                             *
+******************************************************************************/
+
 rootProject.name = 'Sandpolis'
+
+// Composite Builds
+includeBuild 'gradle/com.sandpolis.gradle.deploy'
+// includeBuild 'gradle/com.sandpolis.gradle.soi'
 
 // Instance Projects
 include 'com.sandpolis.charcoal'
