@@ -1,0 +1,28 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                          com.sandpolis.gradle.soi                           *
+******************************************************************************/
+
+plugins {
+	id "com.github.johnrengelman.shadow" version "2.0.4"
+	id 'java-gradle-plugin'
+}
+
+description = 'A plugin that injects static objects into instance modules'
+
+repositories {
+    mavenCentral()
+    flatDir dirs: '../../dep/com.sandpolis.core.proto/build/libs'
+}
+
+dependencies {
+	shadow gradleApi()
+
+    compile 'com.google.protobuf:protobuf-java:3.6.0'
+    
+    compile ':com.sandpolis.core.proto:'
+}
+
+shadowJar {
+	classifier = null
+}
