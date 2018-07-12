@@ -17,15 +17,15 @@
  *****************************************************************************/
 package com.sandpolis.server.net.init;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.security.cert.CertificateException;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.io.Files;
 
@@ -40,7 +40,7 @@ public class ServerInitializerTest {
 	private ServerInitializer secure2;
 	private ServerInitializer insecure;
 
-	@Before
+	@BeforeEach
 	public void setup() throws CertificateException, IOException {
 		SelfSignedCertificate ssc = new SelfSignedCertificate();
 		secure = new ServerInitializer(Files.toByteArray(ssc.certificate()), Files.toByteArray(ssc.privateKey()));

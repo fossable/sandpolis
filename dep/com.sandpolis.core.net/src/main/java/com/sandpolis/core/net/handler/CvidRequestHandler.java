@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.exception.MessageFlowException;
 import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -58,11 +59,13 @@ public class CvidRequestHandler extends SimpleChannelInboundHandler<Message> {
 		if (rs != null && !rs.getServerUuid().isEmpty()) {
 
 			Core.setCvid(rs.getCvid());
+			NetworkStore.load(Core.cvid());
+			NetworkStore.setPreferredServer(rs.getServerCvid());
 			ch.attr(ChannelConstant.CVID).set(rs.getServerCvid());
 			ch.attr(ChannelConstant.UUID).set(rs.getServerUuid());
-			ch.attr(ChannelConstant.HANDLER_CVID).get().setSuccess(rs.getCvid());
+			ch.attr(ChannelConstant.FUTURE_CVID).get().setSuccess(rs.getCvid());
 		} else {
-			ch.attr(ChannelConstant.HANDLER_CVID).get().setFailure(new MessageFlowException(RS_Cvid.class, msg));
+			ch.attr(ChannelConstant.FUTURE_CVID).get().setFailure(new MessageFlowException(RS_Cvid.class, msg));
 		}
 	}
 

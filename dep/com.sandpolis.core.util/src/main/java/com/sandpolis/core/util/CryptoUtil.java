@@ -41,6 +41,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import com.google.common.io.BaseEncoding;
 
@@ -225,11 +226,12 @@ public final class CryptoUtil {
 		 * @since 5.0.0
 		 */
 		@Entity
+		@Table(name = "KeyPairs")
 		public static class ReciprocalKeyPair {
 
 			@Id
 			@GeneratedValue(strategy = GenerationType.AUTO)
-			@Column(nullable = false, unique = true)
+			@Column(nullable = false)
 			private int id;
 
 			@Column(nullable = false)

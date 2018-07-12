@@ -17,14 +17,16 @@
  *****************************************************************************/
 package com.sandpolis.core.instance;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
 
 public class EnvironmentTest {
 
-	@Test(expected = RuntimeException.class)
+	@Test
 	public void testCheck() {
 		// The test environment is not setup correctly
-		Environment.check();
+		assertThrows(RuntimeException.class, () -> Environment.check());
 	}
 
 }

@@ -20,13 +20,13 @@ package com.sandpolis.core.util;
 import static com.sandpolis.core.util.CryptoUtil.MD5;
 import static com.sandpolis.core.util.CryptoUtil.SHA1;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.KeyPair;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 

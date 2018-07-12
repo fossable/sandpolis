@@ -17,19 +17,17 @@
  *****************************************************************************/
 package com.sandpolis.core.collection.ring_buffer;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import com.sandpolis.core.collection.ring_buffer.RingBuffer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class RingBufferTest {
 
 	private RingBuffer<Long> buffer;
 	private int capacity;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		capacity = 100;
 		buffer = new RingBuffer<>(capacity);

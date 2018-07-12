@@ -19,11 +19,11 @@ package com.sandpolis.server.exe;
 
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 import static com.sandpolis.core.util.ProtoUtil.rq;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.net.ExeletTest;
@@ -39,7 +39,7 @@ public final class LoginExeTest extends ExeletTest {
 
 	private LoginExe exe;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		initChannel();
 		exe = new LoginExe(new Sock(channel));

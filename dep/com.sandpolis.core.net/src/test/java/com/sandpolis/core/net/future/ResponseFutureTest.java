@@ -17,13 +17,14 @@
  *****************************************************************************/
 package com.sandpolis.core.net.future;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.ExecutionException;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -33,7 +34,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 
 public class ResponseFutureTest {
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		ResponseFuture.setDefaultExecutor(GlobalEventExecutor.INSTANCE);
 	}
@@ -51,7 +52,7 @@ public class ResponseFutureTest {
 		assertTrue(response.get().getResult());
 	}
 
-	@Test(expected = InvalidMessageException.class)
+	@Test
 	public void testResponseInvalid() throws InterruptedException, ExecutionException {
 		MessageFuture msgFuture = new MessageFuture();
 		ResponseFuture<Outcome> response = new ResponseFuture<>(msgFuture);
@@ -59,7 +60,7 @@ public class ResponseFutureTest {
 
 		msgFuture.setSuccess(Message.newBuilder().build());
 
-		response.sync();
+		assertThrows(InvalidMessageException.class, () -> response.sync());
 	}
 
 }

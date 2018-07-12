@@ -71,7 +71,7 @@ public final class RandUtil {
 	 * 
 	 * @param n
 	 *            The maximum bound (inclusive)
-	 * @return The next long value from a Random object.
+	 * @return The next random long
 	 */
 	public static long nextLong(long n) {
 		return Math.abs(insecureRandom.nextLong()) % n;
@@ -84,10 +84,19 @@ public final class RandUtil {
 	 *            The minimum bound (inclusive)
 	 * @param upper
 	 *            The maximum bound (inclusive)
-	 * @return The next long value from a Random object.
+	 * @return The next random long
 	 */
 	public static long nextLong(long lower, long upper) {
 		return nextLong(upper - lower + 1) + lower;
+	}
+
+	/**
+	 * Get a random long value.
+	 * 
+	 * @return The next random long
+	 */
+	public static long nextLong() {
+		return insecureRandom.nextLong();
 	}
 
 	/**

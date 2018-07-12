@@ -17,20 +17,19 @@
  *****************************************************************************/
 package com.sandpolis.core.net.handler;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.MessageFuture;
-import com.sandpolis.core.net.future.MessageFuture.MessageTimeout;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -43,7 +42,7 @@ public class ExecuteHandlerTest {
 	public static boolean rq_login_triggered;
 	public static boolean rq_cvid_triggered;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		rq_login_triggered = false;
 		rq_cvid_triggered = false;
@@ -88,7 +87,7 @@ public class ExecuteHandlerTest {
 	}
 
 	@Test
-	public void testResponse() throws MessageTimeout, InterruptedException, ExecutionException, TimeoutException {
+	public void testResponse() throws InterruptedException, ExecutionException, TimeoutException {
 		ExecuteHandler execute = new ExecuteHandler(new Class[] { TestExe.class, Test2Exe.class });
 		EmbeddedChannel channel = new EmbeddedChannel(execute);
 

@@ -17,11 +17,12 @@
  *****************************************************************************/
 package com.sandpolis.core.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SerialUtilTest {
 
@@ -33,16 +34,16 @@ public class SerialUtilTest {
 		assertEquals(str, SerialUtil.deserialize(SerialUtil.serialize(str, false), false));
 	}
 
-	@Test(expected = IOException.class)
-	public void testIncorrectUsage1() throws ClassNotFoundException, IOException {
+	@Test
+	public void testIncorrectUsage1() {
 		String str = RandUtil.nextAlphabetic(10000);
-		assertEquals(str, SerialUtil.deserialize(SerialUtil.serialize(str, false), true));
+		assertThrows(IOException.class, () -> SerialUtil.deserialize(SerialUtil.serialize(str, false), true));
 	}
 
-	@Test(expected = IOException.class)
-	public void testIncorrectUsage2() throws ClassNotFoundException, IOException {
+	@Test
+	public void testIncorrectUsage2() {
 		String str = RandUtil.nextAlphabetic(10000);
-		assertEquals(str, SerialUtil.deserialize(SerialUtil.serialize(str, true), false));
+		assertThrows(IOException.class, () -> SerialUtil.deserialize(SerialUtil.serialize(str, true), false));
 	}
 
 }

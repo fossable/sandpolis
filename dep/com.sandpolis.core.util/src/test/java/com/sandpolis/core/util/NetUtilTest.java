@@ -17,22 +17,18 @@
  *****************************************************************************/
 package com.sandpolis.core.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
 
 public class NetUtilTest {
-
-	@Rule
-	public TemporaryFolder temp = new TemporaryFolder();
 
 	@Test
 	public void testDownload() throws IOException {
@@ -40,16 +36,17 @@ public class NetUtilTest {
 		assertNotNull(NetUtil.download("https://github.com/Subterranean-Security/Sandpolis/blob/master/.gitignore"));
 
 		// Now download to a file
-		File out = temp.newFile();
+		File out = TempUtil.getFile();
 		assertEquals(0, out.length());
 		NetUtil.download("https://github.com/Subterranean-Security/Sandpolis/blob/master/.gitignore", out);
 		assertTrue(out.length() > 0);
 
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testDownloadTooLarge() throws IOException {
-		NetUtil.download("http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso");
+		assertThrows(IllegalArgumentException.class,
+				() -> NetUtil.download("http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso"));
 	}
 
 	@Test

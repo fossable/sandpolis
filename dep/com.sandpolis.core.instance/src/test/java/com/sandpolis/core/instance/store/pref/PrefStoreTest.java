@@ -17,20 +17,20 @@
  *****************************************************************************/
 package com.sandpolis.core.instance.store.pref;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.prefs.Preferences;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class PrefStoreTest {
 
-	@BeforeClass
+	@BeforeAll
 	public static void setup() {
 		PrefStore.load(Preferences.userRoot().node("/com/sandpolis/test"));
 	}

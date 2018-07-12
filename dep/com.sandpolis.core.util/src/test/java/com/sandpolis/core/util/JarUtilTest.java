@@ -17,13 +17,14 @@
  *****************************************************************************/
 package com.sandpolis.core.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class JarUtilTest {
 
@@ -37,9 +38,10 @@ public class JarUtilTest {
 		assertNull(JarUtil.getManifestValue("test-attribute2", new File("src/test/resources/test1.jar")));
 	}
 
-	@Test(expected = IOException.class)
+	@Test
 	public void testGetManifestFileNotExists() throws IOException {
-		assertNull(JarUtil.getManifestValue("test-attribute", new File("src/test/resources/test6.jar")));
+		assertThrows(IOException.class,
+				() -> JarUtil.getManifestValue("test-attribute", new File("src/test/resources/test6.jar")));
 	}
 
 	@Test

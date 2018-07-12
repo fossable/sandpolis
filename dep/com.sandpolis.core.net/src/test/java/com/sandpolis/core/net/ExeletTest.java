@@ -17,12 +17,13 @@
  *****************************************************************************/
 package com.sandpolis.core.net;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.lang.reflect.Method;
 
 import com.sandpolis.core.net.handler.ExecuteHandler;
+import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
 
@@ -44,8 +45,7 @@ public class ExeletTest {
 	 * <li>All public methods have a single {@code Message} parameter</li>
 	 * </ul>
 	 * 
-	 * @param _class
-	 *            The {@code Exelet} to be tested.
+	 * @param _class The {@code Exelet} to be tested.
 	 */
 	protected void testDeclaration(Class<? extends Exelet> _class) {
 		for (Method m : _class.getMethods()) {
@@ -70,8 +70,8 @@ public class ExeletTest {
 	 */
 	protected void initChannel() {
 		channel = new EmbeddedChannel();
-		channel.attr(Sock.EXECUTE_HANDLER_KEY).set(new ExecuteHandler(new Class[] {}));
-		channel.attr(Sock.CVID_KEY).set(0);
+		channel.attr(ChannelConstant.HANDLER_EXECUTE).set(new ExecuteHandler(new Class[] {}));
+		channel.attr(ChannelConstant.CVID).set(0);
 	}
 
 }

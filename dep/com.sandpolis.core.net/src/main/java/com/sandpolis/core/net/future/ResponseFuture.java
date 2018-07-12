@@ -18,7 +18,6 @@
 package com.sandpolis.core.net.future;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
-import com.sandpolis.core.instance.SourceAnnotations.TestCase;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.proto.net.MSG.Message;
 
@@ -39,7 +38,6 @@ import io.netty.util.concurrent.Future;
  * @author cilki
  * @since 5.0.0
  */
-@TestCase(ResponseFutureTest.class)
 public class ResponseFuture<E> extends DefaultPromise<E> {
 
 	/**

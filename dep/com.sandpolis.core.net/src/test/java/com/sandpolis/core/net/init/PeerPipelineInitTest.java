@@ -17,10 +17,10 @@
  *****************************************************************************/
 package com.sandpolis.core.net.init;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.util.RandUtil;
