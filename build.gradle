@@ -1,0 +1,77 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                                                                             *
+******************************************************************************/
+
+ext.lib = [
+
+	// Unit testing
+	junit					: 'org.junit.jupiter:junit-jupiter-engine:5.3.0-M1',
+
+	// Logging
+	slf4j					: 'org.slf4j:slf4j-api:1.7.25',
+	logback_core			: 'ch.qos.logback:logback-core:1.2.3',
+	logback_classic			: 'ch.qos.logback:logback-classic:1.2.3',
+	jansi					: 'org.fusesource.jansi:jansi:1.17.1',
+
+	// Networking
+	netty					: 'io.netty:netty-all:4.1.25.Final',
+	protobuf				: 'com.google.protobuf:protobuf-java:3.6.0',
+
+	// Storage
+	jpa						: 'javax.persistence:javax.persistence-api:2.2',
+	hibernate				: 'org.hibernate:hibernate-core:5.3.1.Final',
+	hibernate_sqlite		: 'com.github.gwenn:sqlite-dialect:master',
+	ormlite					: 'com.j256.ormlite:ormlite-core:5.1',
+	ormlite_jdbc			: 'com.j256.ormlite:ormlite-jdbc:5.1',
+	ormlite_android			: 'com.j256.ormlite:ormlite-android:5.1',
+	sqlite					: 'org.xerial:sqlite-jdbc:3.23.1',
+
+	// Unit conversion
+	unit_api				: 'javax.measure:unit-api:1.0',
+	unit_ri					: 'tec.units:unit-ri:1.0.3',
+
+	// Guava
+	guava					: 'com.google.guava:guava:25.1-jre',
+
+	// Bittorrent
+	ttorrent				: 'com.turn:ttorrent-core:1.5',
+
+	// Hardware information
+	oshi					: 'com.github.oshi:oshi-core:3.6.2',
+
+	// Zip Utility
+	zt_zip					: 'org.zeroturnaround:zt-zip:1.13',
+
+	// Lanterna
+	lanterna				: 'com.googlecode.lanterna:lanterna:3.0.1'
+]
+
+allprojects {
+	repositories {
+		mavenCentral()
+		maven { url 'https://jitpack.io' }
+	}
+
+	buildscript {
+		repositories {
+			mavenCentral()
+		}
+	}
+}
+
+buildscript {
+	repositories {
+		jcenter()
+
+		flatDir dirs: 'gradle/com.sandpolis.gradle.soi/build/libs'
+	}
+	dependencies {
+		classpath 'net.sf.proguard:proguard-gradle:6.0.3'
+ 		classpath ':com.sandpolis.gradle.deploy:'
+ 		classpath ':com.sandpolis.gradle.soi:'
+	}
+}
+
+apply plugin: 'com.sandpolis.gradle.deploy'
+apply plugin: 'com.sandpolis.gradle.soi'
