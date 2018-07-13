@@ -63,8 +63,6 @@ allprojects {
 buildscript {
 	repositories {
 		jcenter()
-
-		flatDir dirs: 'gradle/com.sandpolis.gradle.soi/build/libs'
 	}
 	dependencies {
 		classpath 'net.sf.proguard:proguard-gradle:6.0.3'
