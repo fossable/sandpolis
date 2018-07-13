@@ -61,6 +61,10 @@ public class DeployPlugin implements Plugin<Project> {
 
 	void apply(Project root) {
 
+		// Abort if no remote configuration is found
+		if(!root.file("remote.gradle").exists())
+			return;
+
 		// Apply the required SSH plugin to the root project
 		root.apply(plugin: SshPlugin)
 
