@@ -1,0 +1,16 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                         example remote configuration                        *
+******************************************************************************/
+
+remotes {
+	localhost {
+		host = 'localhost'
+		user = 'username'
+		port = 1200
+		identity = file('~/.ssh/id_rsa')
+		
+		extensions.add platform:{'lin'}
+		extensions.add directory:{'~/.deploy/'}
+	}
+}
