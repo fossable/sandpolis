@@ -3,16 +3,10 @@
 *                          com.sandpolis.core.proto                           *
 ******************************************************************************/
 
-buildscript {
-	dependencies {
-		classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
-	}
-}
-
 plugins {
 	id 'eclipse'
     id 'java-library'
-    id 'com.google.protobuf' version '0.8.5'
+    id 'com.google.protobuf' version '0.8.6'
 }
 
 eclipse {

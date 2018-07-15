@@ -5,6 +5,7 @@
 
 plugins {
 	id 'java-gradle-plugin'
+	id 'com.google.protobuf' version '0.8.6'
 }
 
 description = 'A plugin that injects static objects into instance modules'
@@ -19,11 +20,10 @@ dependencies {
     compile 'com.google.protobuf:protobuf-java:3.6.0'
 }
 
-sourceSets {
-	main {
-    	java {
-			srcDirs 'src/main/java'
-			srcDirs '../../dep/com.sandpolis.core.proto/src/main/java'
-		}
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.6.0'
 	}
+
+	generatedFilesBaseDir = "$projectDir/src/"
 }
