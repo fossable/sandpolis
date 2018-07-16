@@ -1,0 +1,87 @@
+/******************************************************************************
+ *                                                                            *
+ *                    Copyright 2016 Subterranean Security                    *
+ *                                                                            *
+ *  Licensed under the Apache License, Version 2.0 (the "License");           *
+ *  you may not use this file except in compliance with the License.          *
+ *  You may obtain a copy of the License at                                   *
+ *                                                                            *
+ *      http://www.apache.org/licenses/LICENSE-2.0                            *
+ *                                                                            *
+ *  Unless required by applicable law or agreed to in writing, software       *
+ *  distributed under the License is distributed on an "AS IS" BASIS,         *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *  See the License for the specific language governing permissions and       *
+ *  limitations under the License.                                            *
+ *                                                                            *
+ *****************************************************************************/
+syntax = "proto3";
+
+package util;
+option java_package = "com.sandpolis.core.proto.util";
+
+/**
+ * A GroupContainer represents a Group that is not installed on a server.
+ */
+message GroupContainer {
+
+	/**
+	 * A password authentication-mechanism container.
+ 	 */
+	message PasswordContainer {
+	
+		// The mechanism ID
+		int64 id = 1;
+		
+		// The associated password
+		string password = 2;
+	}
+	
+	/**
+ 	 * A key authentication-mechanism container.
+ 	 */
+	message KeyContainer {
+
+		/**
+	 	 * A completely generic KeyPair container.
+	 	 */
+		message KeyPair {
+
+			// The private key
+			bytes signer = 1;
+
+			// The public key
+			bytes verifier = 2;
+		}
+		
+		// The mechanism ID
+		int64 id = 1;
+		
+		// The server's reciprocal keypair
+		KeyPair server = 2;
+		
+		// The client's reciprocal keypair
+		KeyPair client = 3;
+	}
+	
+	// The groupId
+	int64 id = 1;
+	
+	// The user-friendly name
+	string name = 2;
+	
+	// The creation timestamp
+	int64 ctime = 3;
+	
+	// The modification timestamp
+	int64 mtime = 4;
+	
+	// The username of the user that owns this group
+	string owner = 5;
+	
+	// The password authentication-mechanisms that belong to this group
+	repeated PasswordContainer password_mechanism = 6;
+	
+	// The key authentication-mechanisms that belong to this group
+	repeated KeyContainer key_mechanism = 7;
+}
