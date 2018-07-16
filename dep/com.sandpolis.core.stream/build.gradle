@@ -21,4 +21,5 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.profile')
 	implementation project(':dep:com.sandpolis.core.proto')
 	implementation lib.slf4j
+	implementation lib.jpa
 }

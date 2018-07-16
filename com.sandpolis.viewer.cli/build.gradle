@@ -14,15 +14,26 @@ eclipse {
 	}
 }
 
+repositories {
+	// TODO remove
+	flatDir dirs: 'lib'
+}
+
 dependencies {
 	testImplementation lib.junit
 
 	implementation project(':dep:com.sandpolis.core.instance')
+	implementation project(':dep:com.sandpolis.core.net')
 	implementation project(':dep:com.sandpolis.core.proto')
 	implementation project(':dep:com.sandpolis.core.util')
 	implementation project(':dep:com.sandpolis.viewer')
 	implementation lib.slf4j
+	implementation lib.logback_classic
 	implementation lib.lanterna
+	
+	// TODO remove
+	implementation 'org.mini2Dx:universal-tween-engine:6.3.3'
+	implementation ':SLPanels:'
 }
 
 jar {
