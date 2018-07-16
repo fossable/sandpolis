@@ -68,10 +68,15 @@ public class SoiTask extends DefaultTask {
 	 */
 	private void writeBuildSO() {
 		SO_Build.Builder so = SO_Build.newBuilder();
-		so.setVersion((String) root.findProperty("BUILD_VERSION"));
-		so.setNumber(Integer.parseInt((String) root.findProperty("BUILD_NUMBER")));
 		so.setTime(System.currentTimeMillis());
-		so.setPlatform(String.format("%s %s", System.getProperty("os.name"), System.getProperty("os.version")));
+		so.setVersion((String) root.findProperty("BUILD_VERSION"));
+
+		String number = (String) root.findProperty("TRAVIS_BUILD_NUMBER");
+		if (number != null)
+			so.setNumber(Integer.parseInt(number));
+
+		so.setPlatform(String.format("%s (%s %s)", System.getProperty("os.name"), System.getProperty("os.version"),
+				System.getProperty("os.arch")));
 		so.setJavaVersion(
 				String.format("%s (%s)", System.getProperty("java.version"), System.getProperty("java.vendor")));
 		so.setGradleVersion(root.getGradle().getGradleVersion());
