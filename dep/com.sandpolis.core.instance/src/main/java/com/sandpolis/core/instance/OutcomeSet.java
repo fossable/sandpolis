@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.sandpolis.core.proto.util.Misc.Outcome;
+import com.sandpolis.core.proto.util.Result.Outcome;
 
 /**
  * A {@link Set} of {@link Outcome}s representing the overall result of some

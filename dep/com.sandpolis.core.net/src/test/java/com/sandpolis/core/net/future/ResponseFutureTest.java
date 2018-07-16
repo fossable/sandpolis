@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.core.proto.util.Misc.Outcome;
+import com.sandpolis.core.proto.util.Result.Outcome;
 
 import io.netty.util.concurrent.GlobalEventExecutor;
 

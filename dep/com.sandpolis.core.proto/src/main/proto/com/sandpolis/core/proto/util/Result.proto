@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
+ *                    Copyright 2016 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,37 +15,28 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.instance;
+syntax = "proto3";
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+package util;
+option java_package = "com.sandpolis.core.proto.util";
 
-import org.junit.jupiter.api.Test;
+/**
+ * An Outcome represents the final result of some generic action.
+ */
+message Outcome {
 
-import com.sandpolis.core.proto.util.Result.Outcome;
-
-public class OutcomeSetTest {
-
-	@Test
-	public void basicUsage() {
-		OutcomeSet set = new OutcomeSet();
-		set.add(Outcome.newBuilder().setResult(true).setComment("No comment").setTime(1023).setAction("Test1"));
-		set.add(Outcome.newBuilder().setResult(true).setComment("Test2"));
-		set.add(Outcome.newBuilder().setResult(true));
-
-		assertTrue(set.getResult());
-		assertNull(set.getOneFailed());
-		assertTrue(set.getFailed().size() == 0);
-
-		set.add(Outcome.newBuilder().setResult(false).setComment("Failed for some unknown reason :)"));
-
-		assertFalse(set.getResult());
-		assertNotNull(set.getOneFailed());
-		assertTrue(set.getFailed().size() == 1);
-		assertEquals("Failed for some unknown reason :)", set.getOneFailed().getComment());
-	}
-
+	// The result of the action
+	bool result = 1;
+	
+	// An optional comment on the result
+	string comment = 2;
+	
+	// An optional duration of the action in milliseconds
+	int64 time = 3;
+	
+	// An optional action name
+	string action = 4;
+	
+	// An optional stacktrace
+	string stacktrace = 5;
 }

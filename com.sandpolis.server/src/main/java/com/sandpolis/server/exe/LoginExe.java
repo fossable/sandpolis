@@ -25,15 +25,15 @@ import static com.sandpolis.core.util.ProtoUtil.success;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.attribute.key.singular.AK_VIEWER;
+import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.ConnectionState;
 import com.sandpolis.core.net.store.ConnectionStore;
-import com.sandpolis.core.profile.ViewerProfile;
+import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.store.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.core.proto.util.Misc.Outcome;
+import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.store.user.UserStore;
 
@@ -112,7 +112,7 @@ public class LoginExe extends Exelet {
 		connector.setState(ConnectionState.AUTHENTICATED);
 
 		// Retrieve profile
-		ViewerProfile profile = ProfileStore.getViewer(user);
+		Profile profile = ProfileStore.getViewer(user);
 
 		// Update login metadata
 		profile.set(AK_VIEWER.LOGIN_IP, connector.getRemoteIP());

@@ -25,8 +25,8 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.proto.util.Misc.Outcome;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Result.Outcome;
 
 /**
  * This class invokes an instance's real {@code main()} via reflection and
