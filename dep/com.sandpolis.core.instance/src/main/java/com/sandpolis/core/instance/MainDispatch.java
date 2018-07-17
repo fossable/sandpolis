@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.idle.IdleLoop;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
@@ -198,9 +199,11 @@ public final class MainDispatch {
 	/**
 	 * Register an idle task with the {@link IdleLoop}.
 	 * 
-	 * @param task The new idle task
+	 * @param task The new idle task which returns true if the task should be
+	 *             rescheduled after completion or false if the task should be
+	 *             dropped
 	 */
-	public static void registerIdle(Supplier<Void> task) {
+	public static void registerIdle(Supplier<Boolean> task) {
 		if (idle == null)
 			throw new IllegalStateException();
 

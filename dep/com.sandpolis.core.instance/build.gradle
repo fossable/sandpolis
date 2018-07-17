@@ -22,6 +22,7 @@ dependencies {
 	implementation lib.logback_core
 	implementation lib.logback_classic
 	implementation lib.jansi
+	implementation lib.guava
 	implementation lib.jpa
 
 }
