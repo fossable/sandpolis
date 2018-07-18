@@ -27,6 +27,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
 
+import org.apache.commons.validator.routines.DomainValidator;
+import org.apache.commons.validator.routines.InetAddressValidator;
+
 /**
  * Network utilities.
  * 
@@ -51,8 +54,7 @@ public class NetUtil {
 	 * Download a file from the Internet. The entire file is loaded into memory, so
 	 * only use with small files!
 	 * 
-	 * @param url
-	 *            The resource location
+	 * @param url The resource location
 	 * @return A byte array containing the file
 	 * @throws IOException
 	 */
@@ -64,8 +66,7 @@ public class NetUtil {
 	 * Download a file from the Internet. The entire file is loaded into memory, so
 	 * only use with small files!
 	 * 
-	 * @param url
-	 *            The resource location
+	 * @param url The resource location
 	 * @return A byte array containing the file
 	 * @throws IOException
 	 */
@@ -88,10 +89,8 @@ public class NetUtil {
 	 * Download a file from the Internet to a local file. This method has no size
 	 * limits.
 	 * 
-	 * @param url
-	 *            The resource location
-	 * @param file
-	 *            The output file
+	 * @param url  The resource location
+	 * @param file The output file
 	 * @throws IOException
 	 */
 	public static void download(String url, File file) throws IOException {
@@ -102,10 +101,8 @@ public class NetUtil {
 	 * Download a file from the Internet to a local file. This method has no size
 	 * limits.
 	 * 
-	 * @param url
-	 *            The resource location
-	 * @param file
-	 *            The output file
+	 * @param url  The resource location
+	 * @param file The output file
 	 * @throws IOException
 	 */
 	public static void download(URL url, File file) throws IOException {
@@ -127,15 +124,13 @@ public class NetUtil {
 	 * Tests the visibility of a port on a remote host by attempting a socket
 	 * connection.
 	 * 
-	 * @param host
-	 *            The target DNS name or IP address
-	 * @param port
-	 *            The target port
+	 * @param host The target DNS name or IP address
+	 * @param port The target port
 	 * @return True if the port is open, false if the port is closed or there was a
 	 *         connection error
 	 */
 	public static boolean checkPort(String host, int port) {
-		if (!ValidationUtil.dns(host) && !ValidationUtil.ipv4(host))
+		if (!DomainValidator.getInstance().isValid(host) && !InetAddressValidator.getInstance().isValid(host))
 			throw new IllegalArgumentException("Invalid host: " + host);
 		if (!ValidationUtil.port(port))
 			throw new IllegalArgumentException("Invalid port: " + port);

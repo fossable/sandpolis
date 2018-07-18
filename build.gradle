@@ -30,6 +30,9 @@ ext.lib = [
 	// Unit conversion
 	unit_api				: 'javax.measure:unit-api:1.0',
 	unit_ri					: 'tec.units:unit-ri:1.0.3',
+	
+	// Input validator
+	validator				: 'commons-validator:commons-validator:1.6',
 
 	// Guava
 	guava					: 'com.google.guava:guava:25.1-jre',

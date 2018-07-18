@@ -25,4 +25,5 @@ dependencies {
 	implementation lib.unit_api
 	implementation lib.unit_ri
 	implementation lib.guava
+	implementation lib.validator
 }
