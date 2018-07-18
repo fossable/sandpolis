@@ -22,6 +22,7 @@ import java.io.File;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.commons.validator.routines.RegexValidator;
 
+import com.google.protobuf.ByteString;
 import com.sandpolis.core.proto.util.Listener.ListenerConfig;
 
 /**
@@ -191,10 +192,15 @@ public final class ValidationUtil {
 	public static boolean listenerConfig(ListenerConfig config) {
 		if (config == null)
 			return false;
+		if (!username(config.getOwner()))
+			return false;
 		if (!port(config.getPort()))
 			return false;
 		if (InetAddressValidator.getInstance().isValidInet4Address(config.getAddress()))
 			return false;
+		if (!(config.getCert() == ByteString.EMPTY && config.getKey() == ByteString.EMPTY)) {
+			// TODO validate certificate and key format
+		}
 
 		return true;
 	}
