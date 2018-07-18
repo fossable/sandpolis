@@ -55,10 +55,8 @@ public final class RandUtil {
 	/**
 	 * Get a random int value.
 	 * 
-	 * @param lower
-	 *            The minimum bound (inclusive)
-	 * @param upper
-	 *            The maximum bound (inclusive)
+	 * @param lower The minimum bound (inclusive)
+	 * @param upper The maximum bound (inclusive)
 	 * @return The next int value from a Random object.
 	 */
 	public static int nextInt(int lower, int upper) {
@@ -69,8 +67,7 @@ public final class RandUtil {
 	/**
 	 * Get a random long value from the range [0, n].
 	 * 
-	 * @param n
-	 *            The maximum bound (inclusive)
+	 * @param n The maximum bound (inclusive)
 	 * @return The next random long
 	 */
 	public static long nextLong(long n) {
@@ -80,10 +77,8 @@ public final class RandUtil {
 	/**
 	 * Get a random long value from the specified range.
 	 * 
-	 * @param lower
-	 *            The minimum bound (inclusive)
-	 * @param upper
-	 *            The maximum bound (inclusive)
+	 * @param lower The minimum bound (inclusive)
+	 * @param upper The maximum bound (inclusive)
 	 * @return The next random long
 	 */
 	public static long nextLong(long lower, long upper) {
@@ -102,8 +97,7 @@ public final class RandUtil {
 	/**
 	 * Generate a random alphabetic string of given length.
 	 *
-	 * @param characters
-	 *            The length of the random String.
+	 * @param characters The length of the random String.
 	 * @return A new random String containing only [A-Z] and [a-z].
 	 */
 	public static String nextAlphabetic(int characters) {
@@ -121,8 +115,7 @@ public final class RandUtil {
 	/**
 	 * Generate a random numeric string of given length.
 	 *
-	 * @param digits
-	 *            The length of the random String.
+	 * @param digits The length of the random String.
 	 * @return A new random String containing only [0-9].
 	 */
 	public static String nextNumeric(int digits) {
@@ -132,5 +125,15 @@ public final class RandUtil {
 		}
 
 		return buffer.toString();
+	}
+
+	/**
+	 * Get a random item from an array.
+	 * 
+	 * @param array The source array
+	 * @return A random item from the array
+	 */
+	public static <E> E nextItem(E[] array) {
+		return array[nextInt(0, array.length - 1)];
 	}
 }
