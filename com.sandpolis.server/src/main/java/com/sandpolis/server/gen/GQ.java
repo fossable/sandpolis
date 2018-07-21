@@ -28,17 +28,20 @@ import com.sandpolis.server.gen.generator.MegaGen;
  * are executed serially. In the rare case that multiple generation requests are
  * received at nearly the same time, they are queued in the order of receipt. If
  * the queue reaches maximum capacity, some GenConfigs will be dropped and their
- * sender notified.
+ * sender notified.<br>
+ * <br>
  * 
  * Adding elements to the generation queue triggers a worker thread. The worker
  * sequentially generates each GenConfig in the queue and sends the resulting
  * artifact to the requested location. Once the queue is exhausted, the worker
- * is shutdown.
+ * is shutdown.<br>
+ * <br>
  * 
  * When the queue is empty (which should be 99.9% of the time), this
  * architecture incurs very low memory overhead. The cost to start a new worker
  * when a GenConfig enters an empty queue is acceptable, so a thread pool should
- * not be used.
+ * not be used.<br>
+ * <br>
  * 
  * TODO: Use RateLimiter to prevent abuse of the generators. An authenticated
  * (and malicious) viewer can repeatedly fill the queue which would lead to
@@ -66,8 +69,7 @@ public final class GQ {
 	/**
 	 * Add a new job to the queue.
 	 * 
-	 * @param config
-	 *            The GenConfig to add.
+	 * @param config The GenConfig to add.
 	 * @return True if the GenConfig was accepted into the queue. False otherwise.
 	 */
 	public static synchronized boolean add(GenConfig config) {
