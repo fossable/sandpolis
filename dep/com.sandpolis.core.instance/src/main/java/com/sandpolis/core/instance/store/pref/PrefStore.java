@@ -131,6 +131,30 @@ public final class PrefStore extends Store {
 	}
 
 	/**
+	 * Get a value from the store.
+	 * 
+	 * @param tag
+	 *            A unique String whose associated value is to be returned.
+	 * @return The byte[] value associated with the provided tag.
+	 */
+	public static byte[] getBytes(String tag) {
+		return provider.getByteArray(tag, null);
+	}
+
+	/**
+	 * Add a value to the store. Old values are overwritten.
+	 * 
+	 * @param tag
+	 *            The unique key which will become associated with the new value.
+	 * @param value
+	 *            The new value
+	 */
+	public static void putBytes(String tag, byte[] value) {
+		log.trace("Associating \"{}\": {}", tag, value);
+		provider.putByteArray(tag, value);
+	}
+
+	/**
 	 * Flush and shutdown the store. Any subsequent interaction will fail until the
 	 * store is reinitialized.
 	 */

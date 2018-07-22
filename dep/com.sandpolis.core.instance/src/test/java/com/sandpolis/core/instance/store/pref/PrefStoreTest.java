@@ -83,4 +83,20 @@ public class PrefStoreTest {
 		}
 	}
 
+	@Test
+	public void testBytes() {
+		Map<String, byte[]> map = new HashMap<>();
+		for (int i = 0; i < 1000; i++) {
+			String tag = "integer" + new Random().nextInt();
+			byte[] value = ("" + System.nanoTime()).getBytes();
+
+			map.put(tag, value);
+			PrefStore.putBytes(tag, value);
+		}
+
+		for (String tag : map.keySet()) {
+			assertTrue(map.get(tag) == PrefStore.getBytes(tag));
+		}
+	}
+
 }
