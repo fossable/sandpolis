@@ -66,8 +66,8 @@ message RS_ListGroups {
 message RQ_AddMechanism {
 
 	oneof mechanism {
-		util.GroupContainer.PasswordContainer password = 1;
-		util.GroupContainer.KeyContainer key = 2;
+		util.PasswordContainer password = 1;
+		util.KeyContainer key = 2;
 	}
 }
 

@@ -21,48 +21,48 @@ package util;
 option java_package = "com.sandpolis.core.proto.util";
 
 /**
+ * A password authentication-mechanism container.
+ */
+message PasswordContainer {
+
+	// The mechanism ID
+	int64 id = 1;
+	
+	// The associated password
+	string password = 2;
+}
+
+/**
+ * A key authentication-mechanism container.
+ */
+message KeyContainer {
+
+	/**
+ 	 * A completely generic KeyPair container.
+ 	 */
+	message KeyPair {
+
+		// The private key
+		bytes signer = 1;
+
+		// The public key
+		bytes verifier = 2;
+	}
+	
+	// The mechanism ID
+	int64 id = 1;
+	
+	// The server's reciprocal keypair
+	KeyPair server = 2;
+	
+	// The client's reciprocal keypair
+	KeyPair client = 3;
+}
+
+/**
  * A GroupContainer represents a Group that is not installed on a server.
  */
 message GroupContainer {
-
-	/**
-	 * A password authentication-mechanism container.
- 	 */
-	message PasswordContainer {
-	
-		// The mechanism ID
-		int64 id = 1;
-		
-		// The associated password
-		string password = 2;
-	}
-	
-	/**
- 	 * A key authentication-mechanism container.
- 	 */
-	message KeyContainer {
-
-		/**
-	 	 * A completely generic KeyPair container.
-	 	 */
-		message KeyPair {
-
-			// The private key
-			bytes signer = 1;
-
-			// The public key
-			bytes verifier = 2;
-		}
-		
-		// The mechanism ID
-		int64 id = 1;
-		
-		// The server's reciprocal keypair
-		KeyPair server = 2;
-		
-		// The client's reciprocal keypair
-		KeyPair client = 3;
-	}
 	
 	// The groupId
 	int64 id = 1;
