@@ -76,7 +76,6 @@ public abstract class FileGenerator extends Generator {
 			report.setOutputMd5(Files.asByteSource(result).hash(Hashing.md5()).toString());
 			report.setOutputSha256(Files.asByteSource(result).hash(Hashing.sha256()).toString());
 			report.setOutputSha512(Files.asByteSource(result).hash(Hashing.sha512()).toString());
-			report.setOutputCrc32(Files.asByteSource(result).hash(Hashing.crc32()).toString());
 		} catch (IOException e) {
 			return false;
 		}

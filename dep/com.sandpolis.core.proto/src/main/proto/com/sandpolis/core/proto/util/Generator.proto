@@ -1,0 +1,237 @@
+/******************************************************************************
+ *                                                                            *
+ *                    Copyright 2016 Subterranean Security                    *
+ *                                                                            *
+ *  Licensed under the Apache License, Version 2.0 (the "License");           *
+ *  you may not use this file except in compliance with the License.          *
+ *  You may obtain a copy of the License at                                   *
+ *                                                                            *
+ *      http://www.apache.org/licenses/LICENSE-2.0                            *
+ *                                                                            *
+ *  Unless required by applicable law or agreed to in writing, software       *
+ *  distributed under the License is distributed on an "AS IS" BASIS,         *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *  See the License for the specific language governing permissions and       *
+ *  limitations under the License.                                            *
+ *                                                                            *
+ *****************************************************************************/
+syntax = "proto3";
+
+package util;
+option java_package = "com.sandpolis.core.proto.util";
+
+import "com/sandpolis/core/proto/util/Group.proto";
+import "com/sandpolis/core/proto/util/Platform.proto";
+import "com/sandpolis/core/proto/util/Keylogger.proto";
+
+/**
+ * Identifies the target host of a potential connection.
+ */
+message NetworkTarget {
+
+	// The network address
+	string address = 1;
+	
+	// The numeric port
+	int32 port = 2;
+}
+
+/**
+ * Identifies supported client features, platforms, and architectures. 
+ */
+message FeatureSet {
+
+	// Supported operating systems
+	repeated OsType supported_os = 1;
+	
+	// Supported system architectures
+	repeated Architecture supported_arch = 2;
+	
+	// Keylogger feature
+	bool keylogger = 3;
+
+	// Bittorrent feature
+	bool torrent = 4;
+	
+	// Remote desktop feature
+	bool remote_desktop = 5;
+	
+	// Browser integration
+	bool browser = 6;
+	
+	// Docker integration
+	bool docker = 7;
+}
+
+/**
+ * The payload type.
+ */
+enum OutputPayload {
+
+	// A full-featured heavyweight client 
+	MEGA = 0;
+
+	// A lightweight native client
+	MICRO = 1;
+}
+
+/**
+ * The format of the output.
+ */
+enum OutputFormat {
+
+	// File formats
+	JAR = 0;
+	EXE = 1;
+	ELF = 2;
+	BAT = 3;
+	SH = 4;
+	RB = 5;
+	PY = 6;
+
+	// Other formats
+	QR = 7;
+}
+
+/**
+ * Information on the result of a generation.
+ */
+message GenReport {
+
+	// The overall success of the generation attempt
+	bool result = 1;
+	
+	// A comment on the result of the generation attempt
+	string comment = 2;
+	
+	// The start timestamp of the generation
+	int64 timestamp = 3;
+	
+	// How long the generation took in milliseconds
+	int64 duration = 4;
+	
+	// A MD5 hash of the result
+	string output_md5 = 5;
+	
+	// A SHA256 hash of the result
+	string output_sha256 = 6;
+	
+	// A SHA512 hash of the result
+	string output_sha512 = 7;
+	
+	// The size of the result in bytes
+	int64 output_size = 9;
+	
+	// The type of installer generated
+	OutputPayload payload = 10;
+	
+	// The type of installer generated
+	OutputFormat format = 11;
+}
+
+/**
+ * Configuration specific to the network module.
+ */
+message NetworkConfig {
+
+	// The network location of a server instance to connect
+	repeated NetworkTarget target = 1;
+	int32 reconnect_period = 2;
+	
+	// When true, invalid server certificates will cause authentication to fail
+	bool strict_certs = 3;
+	
+	// When true, the client will not be able to connect to services outside of 
+	// the Sandpolis network.
+	bool strict_network = 4;
+}
+
+/**
+ * Configuration specific to payload execution.
+ */
+message ExecutionConfig {
+	// Whether the initial installer should be deleted upon successful execution
+	bool melt = 1;
+	
+	// Whether the client should be automatically started on boot
+	bool auto = 2;
+	
+	// Whether the client should force install if the initial installation fails
+	// for any reason.
+	bool recover = 3;
+	
+	// Installation paths. Keys are the enum numbers from OsType.
+	map<int32, string> install_path = 4;
+}
+
+/**
+ * Configuration specific to the authentication module.
+ */
+message AuthenticationConfig {
+	// The name of the auth group
+	// (Only needed if group type is KEY)
+	string group_name = 1;
+	
+	oneof auth_oneof {
+		// Key authentication mechanism
+		KeyContainer key = 2;
+		
+		// Password authentication mechanism
+		PasswordContainer password = 3;
+	}
+}
+
+/**
+ * Configuration specific to the keylogger feature.
+ */
+message KeyloggerConfig {
+	// The flush trigger
+	KeyloggerTrigger flush_trigger = 1;
+	
+	// The flush value
+	int32 flush_value = 2;
+}
+
+/**
+ * Configuration specific to MEGA payloads.
+ */
+message MegaConfig {
+	FeatureSet features = 1;
+	NetworkConfig network = 2;
+	ExecutionConfig execution = 3;
+	AuthenticationConfig authentication = 4;
+}
+
+/**
+ * Configuration specific to MICRO payloads.
+ */
+message MicroConfig {
+	NetworkConfig network = 1;
+	ExecutionConfig execution = 2;
+	AuthenticationConfig authentication = 3;
+}
+
+/**
+ * A GenConfig contains all parameters and information needed to launch a new 
+ * generator.
+ */
+message GenConfig {
+
+	// The user that requested the generation
+	string request_user = 1;
+	
+	// The payload type
+	OutputPayload payload = 2;
+
+	// The output format of this client
+	OutputFormat format = 3;
+
+	// An optional identifier
+	string client_identifier = 4;
+	
+	oneof payload_config {
+		MegaConfig mega = 5;
+		MicroConfig micro = 6;
+	}
+
+}

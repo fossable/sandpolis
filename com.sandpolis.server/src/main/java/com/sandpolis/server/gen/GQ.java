@@ -20,6 +20,9 @@ package com.sandpolis.server.gen;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.server.gen.generator.MegaGen;
 
@@ -53,6 +56,8 @@ import com.sandpolis.server.gen.generator.MegaGen;
 public final class GQ {
 	private GQ() {
 	}
+
+	private static final Logger log = LoggerFactory.getLogger(GQ.class);
 
 	private static final int CAPACITY = 5;
 
@@ -94,13 +99,13 @@ public final class GQ {
 				GenConfig config;
 				while ((config = gq.poll()) != null) {
 					Generator generator;
-					switch (config.getOutputType()) {
-					case JAR:
+					switch (config.getPayload()) {
+					case MEGA:
 						generator = new MegaGen(config);
 						break;
 					default:
-						generator = null;
-						break;
+						log.warn("Failed to execute generator of type: {}", config.getPayload().toString());
+						continue;
 					}
 
 					generator.generate();
