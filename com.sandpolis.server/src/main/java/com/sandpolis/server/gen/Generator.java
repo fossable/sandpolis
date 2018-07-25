@@ -58,20 +58,10 @@ public abstract class Generator {
 	}
 
 	/**
-	 * Performs the generation.<br>
-	 * <br>
-	 * 
-	 * This method should always be overriden in this form:
-	 * 
-	 * <pre>
-	 * public void generate() {
-	 * 	super.generate();
-	 * 	// Do generation
-	 * 	super.cleanup();
-	 * }
-	 * </pre>
+	 * Performs the generation synchronously. The callee is also responsible for
+	 * calling {@link #cleanup()}.
 	 */
-	public void generate() {
+	public void generate() throws Exception {
 		if (report != null)
 			throw new IllegalStateException("A generator cannot be run more than once!");
 		report = GenReport.newBuilder().setTimestamp(System.currentTimeMillis())
@@ -82,16 +72,18 @@ public abstract class Generator {
 	}
 
 	/**
-	 * Performs the clean up after generation.
+	 * Performs the clean up after generation. This method is idempotent.
 	 */
 	public void cleanup() {
 
-		try {
-			MoreFiles.deleteRecursively(temp.toPath());
-		} catch (IOException e) {
-			log.debug("Failed to delete temporary directory", e);
-		} finally {
-			report.setDuration(System.currentTimeMillis() - report.getDuration());
+		if (temp.exists()) {
+			try {
+				MoreFiles.deleteRecursively(temp.toPath());
+			} catch (IOException e) {
+				log.debug("Failed to delete temporary directory", e);
+			} finally {
+				report.setDuration(System.currentTimeMillis() - report.getDuration());
+			}
 		}
 	}
 

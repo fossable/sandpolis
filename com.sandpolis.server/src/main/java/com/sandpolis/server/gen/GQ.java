@@ -108,7 +108,13 @@ public final class GQ {
 						continue;
 					}
 
-					generator.generate();
+					try {
+						generator.generate();
+					} catch (Exception e) {
+						log.error("Failed to generate", e);
+					} finally {
+						generator.cleanup();
+					}
 				}
 
 				worker = null;

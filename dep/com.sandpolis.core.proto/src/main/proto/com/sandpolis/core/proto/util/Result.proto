@@ -21,22 +21,23 @@ package util;
 option java_package = "com.sandpolis.core.proto.util";
 
 /**
- * An Outcome represents the final result of some generic action.
+ * A representation of the final result of some generic action.
  */
 message Outcome {
 
 	// The result of the action
 	bool result = 1;
 	
-	// An optional comment on the result
+	// A comment on the result
 	string comment = 2;
 	
-	// An optional duration of the action in milliseconds
+	// The duration of the action in milliseconds if successful. Undefined if
+	// the result is failure.
 	int64 time = 3;
 	
-	// An optional action name
+	// An action name
 	string action = 4;
 	
-	// An optional stacktrace
-	string stacktrace = 5;
+	// An exception's stacktrace along with all cause stacktraces
+	string exception = 5;
 }
