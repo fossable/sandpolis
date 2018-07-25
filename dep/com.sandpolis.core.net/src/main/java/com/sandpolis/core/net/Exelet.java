@@ -17,8 +17,10 @@
  *****************************************************************************/
 package com.sandpolis.core.net;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 import com.sandpolis.core.permission.Perm;
 
@@ -48,6 +50,7 @@ public abstract class Exelet {
 	 * @since 5.0.0
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
 	public static @interface Auth {
 	}
 
@@ -59,6 +62,7 @@ public abstract class Exelet {
 	 * @since 5.0.0
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
 	public static @interface Unauth {
 	}
 
@@ -70,6 +74,7 @@ public abstract class Exelet {
 	 * @since 5.0.0
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
 	public static @interface Permission {
 
 		/**
