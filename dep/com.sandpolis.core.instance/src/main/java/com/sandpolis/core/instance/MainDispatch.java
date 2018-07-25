@@ -17,6 +17,10 @@
  *****************************************************************************/
 package com.sandpolis.core.instance;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +53,8 @@ public final class MainDispatch {
 	 * {@code main()} returns.
 	 */
 	private static List<Supplier<Outcome>> tasks = new ArrayList<>();
+
+	private static List<Runnable> shutdown = new ArrayList<>();
 
 	/**
 	 * The {@link Thread} that runs
@@ -118,12 +124,23 @@ public final class MainDispatch {
 		MainDispatch.main = main;
 		MainDispatch.instance = instance;
 
+		// Setup exception handler
+		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+			log.error("An unexpected exception has occurred", throwable);
+		});
+
 		try {
 			main.getDeclaredMethod("main", String[].class).invoke(null, (Object) args);
 		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
 			throw new RuntimeException("Failed to invoke main() in class: " + main.getName(), e);
 		}
+
+		// Setup shutdown hook
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			shutdown.forEach(task -> task.run());
+			shutdown = null;
+		}));
 
 		OutcomeSet outcomes = new OutcomeSet();
 
@@ -133,8 +150,12 @@ public final class MainDispatch {
 
 		// Print nonfatal errors
 		if (!outcomes.getResult())
-			for (Outcome failed : outcomes.getFailed())
-				log.error("({}) {}", failed.getAction(), failed.getComment());
+			for (Outcome failed : outcomes.getFailed()) {
+				if (failed.getException() != null)
+					log.error("({}) {}", failed.getAction(), failed.getException());
+				else
+					log.error("({}) {}", failed.getAction(), failed.getComment());
+			}
 
 		// Launch idle loop
 		if (idle != null)
@@ -147,51 +168,67 @@ public final class MainDispatch {
 	}
 
 	/**
-	 * Register an initialization task with the given attributes.
+	 * Register a new initialization task which will be executed during the
+	 * dispatch. Tasks registered with this method are executed sequentially in the
+	 * same order as the method calls.
 	 * 
-	 * @param task      The initialization task
-	 * @param condition A condition that determines whether the task should run
-	 * @param fatal     Indicates whether {@code System.exit} should be called if
-	 *                  the task fails
+	 * @param task   The task reference
+	 * @param config The configuration annotation
 	 */
-	public static void register(Supplier<Outcome> task, Supplier<Boolean> condition, boolean fatal) {
+	public static void register(Supplier<Outcome> task, InitializationTask config) {
+		if (task == null)
+			throw new IllegalArgumentException();
+		if (config == null)
+			throw new IllegalArgumentException();
 		if (tasks == null)
 			throw new IllegalStateException("Tasks cannot be registered after dispatch is complete");
+		if (tasks.contains(task))
+			throw new IllegalArgumentException("Tasks cannot be registered more than once");
 
 		tasks.add(() -> {
-			if (condition.get()) {
-				Outcome outcome = task.get();
-				if (outcome == null)
-					throw new RuntimeException("Invalid task detected");
+			Outcome outcome = task.get();
+			if (outcome == null)
+				throw new RuntimeException("Invalid task detected");
 
-				if (!outcome.getResult() && fatal) {
-					log.error("A fatal error has occurred in task \"{}\": {}", outcome.getAction(),
-							outcome.getComment());
-					throw new RuntimeException();
-				}
-				return outcome;
-			} else
-				return Outcome.newBuilder().setResult(true).setComment("Skipped").build();
+			if (!outcome.getResult() && config.fatal()) {
+				log.error("A fatal error has occurred in task \"{}\": {}", outcome.getAction(), outcome.getComment());
+				throw new RuntimeException();
+			}
+			return outcome;
 		});
 	}
 
 	/**
-	 * Register an initialization task with default attributes.
+	 * Register a new initialization task which will be executed during the
+	 * dispatch. Tasks registered with this method are executed sequentially in the
+	 * same order as the method calls.
 	 * 
-	 * @param task The initialization task
+	 * @param task     The task reference
+	 * @param source   The source class
+	 * @param taskName The name of the
 	 */
-	public static void register(Supplier<Outcome> task) {
-		register(task, () -> true, false);
+	public static void register(Supplier<Outcome> task, Class<?> source, String taskName) {
+		if (source == null)
+			throw new IllegalArgumentException();
+
+		try {
+			register(task, source.getDeclaredMethod(taskName).getAnnotation(InitializationTask.class));
+		} catch (NoSuchMethodException | SecurityException e) {
+			throw new RuntimeException("Missing initialization annotation");
+		}
 	}
 
 	/**
-	 * Register an {@link IdleLoop} with {@link MainDispatch}.
+	 * Register an {@link IdleLoop} with {@link MainDispatch}. The loop will be
+	 * started during dispatch.
 	 * 
 	 * @param idle The new {@link IdleLoop}
 	 */
 	public static void register(IdleLoop idle) {
-		if (idle != null)
-			throw new IllegalStateException();
+		if (idle == null)
+			throw new IllegalArgumentException();
+		if (MainDispatch.idle != null)
+			throw new IllegalStateException("Only one idle loop can be registered");
 
 		MainDispatch.idle = idle;
 	}
@@ -208,6 +245,49 @@ public final class MainDispatch {
 			throw new IllegalStateException();
 
 		idle.register(task);
+	}
+
+	/**
+	 * Register a task to run during shutdown. Tasks will be executed in the same
+	 * order as registration.
+	 * 
+	 * @param task The shutdown task
+	 */
+	public static void registerShutdown(Runnable task) {
+		if (shutdown.contains(task))
+			throw new IllegalArgumentException("Shutdown tasks cannot be registered more than once");
+
+		shutdown.add(task);
+	}
+
+	/**
+	 * A task that is executed during instance shutdown.
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	public @interface ShutdownTask {
+	}
+
+	/**
+	 * A task that is executed at an indeterminate time in the future when the
+	 * instance has relatively little work to do.
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	public @interface IdleTask {
+	}
+
+	/**
+	 * A task that is executed during instance initialization.
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	public @interface InitializationTask {
+
+		/**
+		 * Indicates that the application should exit if the task fails.
+		 */
+		public boolean fatal() default false;
 	}
 
 }
