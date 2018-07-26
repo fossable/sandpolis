@@ -25,7 +25,7 @@ import java.util.jar.JarFile;
 import com.google.common.io.Resources;
 
 /**
- * Utilities for working with jarfiles and their resources.
+ * Utilities for working with jar files and their resources.
  * 
  * @author cilki
  * @since 4.0.0
@@ -37,10 +37,8 @@ public final class JarUtil {
 	/**
 	 * Retrieve the value of a manifest attribute from the specified jar.
 	 * 
-	 * @param attribute
-	 *            The attribute to query
-	 * @param jarFile
-	 *            The target jar file
+	 * @param attribute The attribute to query
+	 * @param jarFile   The target jar file
 	 * @return The attribute's value
 	 * @throws IOException
 	 */
@@ -61,18 +59,21 @@ public final class JarUtil {
 	/**
 	 * Calculate the size of a resource by (probably) reading it entirely.
 	 * 
-	 * @param path
-	 *            Location of target resource within the given jar
-	 * @param jarFile
-	 *            The target jar file
+	 * @param path    Absolute location of target resource within the given jar
+	 * @param jarFile The target jar file
 	 * @return The size of the target resource in bytes
 	 * @throws IOException
 	 */
 	public static long getResourceSize(String path, File jarFile) throws IOException {
 		if (path == null)
 			throw new IllegalArgumentException();
+		if (jarFile == null)
+			throw new IllegalArgumentException();
 
-		return Resources.asByteSource(new URL(jarFile.toURI().toURL(), path)).size();
+		if (!path.startsWith("/"))
+			path = "/" + path;
+
+		return Resources.asByteSource(new URL("jar:file:" + jarFile.getAbsolutePath() + "!" + path)).size();
 	}
 
 }

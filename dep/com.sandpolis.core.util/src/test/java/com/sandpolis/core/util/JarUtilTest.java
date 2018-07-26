@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,15 @@ public class JarUtilTest {
 
 	@Test
 	public void testGetResourceSize() throws IOException {
+		assertEquals(88, JarUtil.getResourceSize("/META-INF/MANIFEST.MF", new File("src/test/resources/test1.jar")));
 		assertEquals(88, JarUtil.getResourceSize("META-INF/MANIFEST.MF", new File("src/test/resources/test1.jar")));
+	}
+
+	@Test
+	public void testGetResourceSizeInvalid() throws IOException {
+		assertThrows(FileNotFoundException.class,
+				() -> JarUtil.getResourceSize("META-INF/MANIFEST.MF2", new File("src/test/resources/test1.jar")));
+		assertThrows(IOException.class, () -> JarUtil.getResourceSize("", new File("src/test/resources/test1.jar")));
 	}
 
 }
