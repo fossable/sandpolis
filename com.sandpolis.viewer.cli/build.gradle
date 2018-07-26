@@ -28,7 +28,7 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.util')
 	implementation project(':dep:com.sandpolis.viewer')
 	implementation lib.slf4j
-	implementation lib.logback_classic
+	implementation lib.logback
 	implementation lib.lanterna
 	
 	// TODO remove

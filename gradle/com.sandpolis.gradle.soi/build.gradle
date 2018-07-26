@@ -18,6 +18,7 @@ dependencies {
 	compile gradleApi()
 
     compile 'com.google.protobuf:protobuf-java:3.6.0'
+    compile 'com.google.guava:guava:25.1-jre'
 }
 
 protobuf {

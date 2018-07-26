@@ -21,5 +21,4 @@ dependencies {
 	implementation lib.slf4j
 	implementation lib.jpa
 	implementation lib.ormlite
-	implementation lib.ormlite_jdbc
 }

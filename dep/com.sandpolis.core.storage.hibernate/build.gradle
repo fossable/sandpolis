@@ -21,7 +21,6 @@ dependencies {
 	implementation lib.slf4j
 	implementation lib.sqlite
 	implementation lib.hibernate
-	implementation lib.hibernate_sqlite
 	
 	implementation 'javax.xml.bind:jaxb-api:2.3.0'
 }

@@ -17,15 +17,25 @@
  *****************************************************************************/
 package com.sandpolis.gradle.soi;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.gradle.api.artifacts.ExternalModuleDependency;
-import org.gradle.api.attributes.Attribute;
+import org.gradle.api.Project;
+import org.gradle.api.artifacts.ResolvedDependency;
 
+import com.google.common.io.Resources;
+import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix;
 import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix.Artifact;
+import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix.Artifact.NativeComponent;
+import com.sandpolis.core.proto.util.Platform.Architecture;
+import com.sandpolis.core.proto.util.Platform.OsType;
 
 /**
  * This class collects Gradle dependencies and produces a
@@ -35,7 +45,24 @@ import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix.Artifact;
  */
 public class DependencyProcessor {
 
-	private List<Artifact.Builder> matrix = new ArrayList<>();
+	/**
+	 * A list of mutable {@link Artifact}s.
+	 */
+	private List<Artifact.Builder> artifacts = new ArrayList<>();
+
+	/**
+	 * A mapping from objects in {@link #artifacts} to file artifacts.
+	 */
+	private Map<Artifact.Builder, File> files = new HashMap<>();
+
+	/**
+	 * The root project.
+	 */
+	private Project root;
+
+	public DependencyProcessor(Project root) {
+		this.root = root;
+	}
 
 	/**
 	 * Add a new dependency relationship to the processor.
@@ -43,18 +70,8 @@ public class DependencyProcessor {
 	 * @param instance   The instance artifact
 	 * @param dependency The artifact's dependency
 	 */
-	public void add(String instance, ExternalModuleDependency dependency) {
+	public synchronized void add(String instance, ResolvedDependency dependency) {
 		add(Artifact.newBuilder().setCoordinates(":" + instance + ":"), dependency);
-	}
-
-	/**
-	 * Add a new dependency relationship to the processor.
-	 * 
-	 * @param parent     The parent dependency
-	 * @param dependency The parent's dependency
-	 */
-	public void add(ExternalModuleDependency parent, ExternalModuleDependency dependency) {
-		add(getArtifact(parent), dependency);
 	}
 
 	/**
@@ -63,18 +80,27 @@ public class DependencyProcessor {
 	 * @param parent     The parent artifact
 	 * @param dependency The artifact's dependency
 	 */
-	public synchronized void add(Artifact.Builder parent, ExternalModuleDependency dependency) {
-		System.out.println("Adding dependency: " + dependency.getName());
-		if (!matrix.stream().anyMatch(a -> a.getCoordinates().equals(parent.getCoordinates())))
-			matrix.add(parent);
+	private void add(Artifact.Builder parent, ResolvedDependency dependency) {
+		System.out.println("Adding dependency: " + dependency.getModuleName());
+		if (!artifacts.stream().anyMatch(a -> a.getCoordinates().equals(parent.getCoordinates())))
+			artifacts.add(parent);
 
 		Artifact.Builder artifact = getArtifact(dependency);
+		if (!artifacts.stream().anyMatch(a -> a.getCoordinates().equals(artifact.getCoordinates()))) {
+			artifacts.add(artifact);
+		}
 
-		parent.addDependency(matrix.size());
-		matrix.add(artifact);
+		for (int i = 0; i < artifacts.size(); i++) {
+			if (artifacts.get(i).getCoordinates().equals(artifact.getCoordinates())) {
+				parent.addDependency(i);
+				break;
+			}
+		}
 
-		// TODO get child dependencies recursively
-		// add(artifact, dependency.getDependencies())
+		// Recursively add child dependencies
+		for (ResolvedDependency child : dependency.getChildren()) {
+			add(artifact, child);
+		}
 	}
 
 	/**
@@ -83,9 +109,68 @@ public class DependencyProcessor {
 	 * 
 	 * @return A new {@link SO_DependencyMatrix}
 	 */
+	@SuppressWarnings("unchecked")
 	public SO_DependencyMatrix build() {
-		return SO_DependencyMatrix.newBuilder()
-				.addAllArtifact(matrix.stream().map(a -> a.build()).collect(Collectors.toList())).build();
+		SO_DependencyMatrix.Builder deps = SO_DependencyMatrix.newBuilder();
+
+		// Read feature extension from root project
+		Map<String, List<String>> features = (Map<String, List<String>>) root.getExtensions().getExtraProperties()
+				.get("feature_matrix");
+
+		// Flatten each feature into the mutable artifact's list
+		for (String feature : features.keySet()) {
+			for (Artifact.Builder artifact : artifacts) {
+				for (String dependency : features.get(feature)) {
+					if (artifact.getCoordinates().equals(dependency)) {
+						artifact.addFeature(feature);
+					}
+				}
+			}
+		}
+
+		// Read natives extension from root project
+		Map<String, Map<String, Map<String, String>>> natives = (Map<String, Map<String, Map<String, String>>>) root
+				.getExtensions().getExtraProperties().get("native_matrix");
+
+		// Flatten each native component into the mutable artifact's list
+		for (String dependency : natives.keySet()) {
+			for (Artifact.Builder artifact : artifacts) {
+				if (artifact.getCoordinates().contains(":" + dependency.replaceAll("_", "-") + ":")) {
+					for (String platform : natives.get(dependency).keySet()) {
+						for (String architecture : natives.get(dependency).get(platform).keySet()) {
+
+							EnumValueDescriptor arch = Architecture.getDescriptor().findValueByName(architecture);
+							EnumValueDescriptor os = OsType.getDescriptor().findValueByName(platform.toUpperCase());
+
+							NativeComponent.Builder component = NativeComponent.newBuilder()
+									.setPath(natives.get(dependency).get(platform).get(architecture));
+
+							if (arch != null)
+								component.setArchitecture(Architecture.valueOf(arch));
+							else
+								throw new RuntimeException("Missing: Architecture." + architecture);
+
+							if (os != null)
+								component.setPlatform(OsType.valueOf(os));
+							else
+								throw new RuntimeException("Missing: OsType." + platform.toUpperCase());
+
+							try {
+								// Get component size
+								component.setSize(Resources.asByteSource(new URL("jar:file:"
+										+ files.get(artifact).getAbsolutePath() + "!" + component.getPath())).size());
+							} catch (IOException e) {
+								throw new RuntimeException(e);
+							}
+
+							artifact.addNativeComponent(component);
+						}
+					}
+				}
+			}
+		}
+
+		return deps.addAllArtifact(artifacts.stream().map(a -> a.build()).collect(Collectors.toList())).build();
 	}
 
 	/**
@@ -94,11 +179,17 @@ public class DependencyProcessor {
 	 * @param dependency The dependency
 	 * @return An artifact representing the dependency
 	 */
-	private static Artifact.Builder getArtifact(ExternalModuleDependency dependency) {
-		Artifact.Builder dep = Artifact.newBuilder().setCoordinates(getCoordinates(dependency));
-		dep.setFeature(dependency.getAttributes().getAttribute(Attribute.of("feature", String.class)));
-		dep.setPlatform(dependency.getAttributes().getAttribute(Attribute.of("platform", String.class)));
-		return dep;
+	private Artifact.Builder getArtifact(ResolvedDependency dependency) {
+		if (dependency == null)
+			throw new IllegalArgumentException();
+
+		File resource = dependency.getModuleArtifacts().iterator().next().getFile();
+
+		Artifact.Builder artifact = Artifact.newBuilder().setCoordinates(getCoordinates(dependency))
+				.setSize(resource.length());
+
+		files.put(artifact, resource);
+		return artifact;
 	}
 
 	/**
@@ -107,8 +198,15 @@ public class DependencyProcessor {
 	 * @param dependency The dependency
 	 * @return The dependency's coordinates
 	 */
-	private static String getCoordinates(ExternalModuleDependency dependency) {
-		return String.format("%s:%s:%s", dependency.getGroup(), dependency.getName(), dependency.getVersion());
+	private static String getCoordinates(ResolvedDependency dependency) {
+		if (dependency == null)
+			throw new IllegalArgumentException();
+
+		if (dependency.getModuleGroup().contains("Sandpolis"))
+			return String.format(":%s:", dependency.getModuleName());
+
+		return String.format("%s:%s:%s", dependency.getModuleGroup(), dependency.getModuleName(),
+				dependency.getModuleVersion());
 	}
 
 }

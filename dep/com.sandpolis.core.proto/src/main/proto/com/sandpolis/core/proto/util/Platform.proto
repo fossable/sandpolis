@@ -41,18 +41,29 @@ enum Architecture {
 
 	X86_64 = 1;
 	AMD64 = 1;
+	IA_64 = 1;
 
-	ARM64 = 2;
-	ARMv8 = 2;
 	AARCH64 = 2;
-
-	ARM32 = 3;
-	ARMv7 = 3;
-
-	SPARC64 = 4;
-	SPARCv9 = 4;
 	
-	MIPS64 = 5;
+	ARMv8 = 3;
+
+	ARMv7 = 4;
+	
+	ARMv6 = 5;
+	
+	ARMv5 = 6;
+
+	SPARC = 7;
+	
+	SPARCv9 = 8;
+	
+	MIPS64 = 9;
+	
+	PPC = 10;
+	
+	PPC64 = 11;
+	
+	S390X = 12;
 }
 
 /**
@@ -61,28 +72,22 @@ enum Architecture {
 enum OsType {
 	option allow_alias = true;
 
-	// Linux
 	LINUX = 0;
-
-	// Windows
+	
 	WINDOWS = 1;
 
-	// OS X or macOS
 	MACOS = 2;
 	OSX = 2;
 
-	// IOS
 	IOS = 3;
 
-	// Android
 	ANDROID = 4;
 
-	// Berkeley Software Distribution
-	BSD = 5;
+	FREEBSD = 5;
+	
+	OPENBSD = 6;
 
-	// Solaris
-	SOLARIS = 6;
+	SOLARIS = 7;
 
-	// Advanced Interactive eXecutive
-	AIX = 7;
+	AIX = 8;
 }

@@ -20,6 +20,8 @@ syntax = "proto3";
 package soi;
 option java_package = "com.sandpolis.core.proto.soi";
 
+import "com/sandpolis/core/proto/util/Platform.proto";
+
 /**
  * The SO_DependencyMatrix object contains exhaustive dependency information about
  * each instance.
@@ -34,11 +36,30 @@ message SO_DependencyMatrix {
 		// The size of the artifact in bytes.
 		int64 size = 2;
 		
-		// The feature associated with this artifact.
-		string feature = 3;
+		// The artifact's associated client features.
+		repeated string feature = 3;
 		
-		// The specific platform.
-		string platform = 4;
+		/**
+		 * An internal component of the artifact which is specific to a platform
+		 * and system architecture.
+		 */
+		message NativeComponent {
+		
+			// The component's compatible platform.
+			util.OsType platform = 1;
+			
+			// The component's compatible system architecture.
+			util.Architecture architecture = 2;
+		
+			// The component's internal path.
+			string path = 3;
+			
+			// The component's size in bytes
+			int64 size = 4;
+		}
+		
+		// The artifact's internal native components.
+		repeated NativeComponent native_component = 4;
 		
 		// A list of artifact IDs that this artifact directly depends on.
 		repeated int32 dependency = 5;
@@ -46,7 +67,5 @@ message SO_DependencyMatrix {
 
 	// A list of every artifact where the artifact ID is its position in the list.
 	repeated Artifact artifact = 1;
-	
-	// The client artifact ID
-	int32 client = 2;
+
 }

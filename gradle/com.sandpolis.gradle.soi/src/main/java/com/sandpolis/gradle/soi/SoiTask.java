@@ -25,8 +25,7 @@ import java.util.Map;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
@@ -94,17 +93,18 @@ public class SoiTask extends DefaultTask {
 	 * Compute and write the dependency matrix to the soi directory.
 	 */
 	private void writeMatrixSO() {
-		DependencyProcessor processor = new DependencyProcessor();
+		DependencyProcessor processor = new DependencyProcessor(root);
 
 		root.subprojects(sub -> {
 			Map<String, Configuration> conf = sub.getConfigurations().getAsMap();
 
 			if (conf.containsKey("runtimeClasspath")) {
-				// TODO list is empty
-				for (Dependency dep : conf.get("runtimeClasspath").getDependencies()) {
-					if (dep instanceof ExternalModuleDependency) {
-						processor.add(sub.getName(), (ExternalModuleDependency) dep);
-					}
+				for (ResolvedDependency dep : conf.get("runtimeClasspath").getResolvedConfiguration()
+						.getFirstLevelModuleDependencies()) {
+					if (dep.getModuleArtifacts().size() != 1)
+						continue;
+
+					processor.add(sub.getName(), dep);
 				}
 			}
 		});

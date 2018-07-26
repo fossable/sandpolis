@@ -21,8 +21,7 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.proto')
 	implementation project(':dep:com.sandpolis.core.util')
 	implementation lib.slf4j
-	implementation lib.logback_core
-	implementation lib.logback_classic
+	implementation lib.logback
 }
 
 jar {
