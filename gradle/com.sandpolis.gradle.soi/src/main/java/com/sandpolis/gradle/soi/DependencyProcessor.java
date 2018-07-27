@@ -34,6 +34,7 @@ import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix;
 import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix.Artifact;
 import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix.Artifact.NativeComponent;
+import com.sandpolis.core.proto.util.Generator.Feature;
 import com.sandpolis.core.proto.util.Platform.Architecture;
 import com.sandpolis.core.proto.util.Platform.OsType;
 
@@ -67,7 +68,7 @@ public class DependencyProcessor {
 	/**
 	 * Add a new dependency relationship to the processor.
 	 * 
-	 * @param instance   The instance artifact
+	 * @param instance   The instance artifact name
 	 * @param dependency The artifact's dependency
 	 */
 	public synchronized void add(String instance, ResolvedDependency dependency) {
@@ -122,7 +123,7 @@ public class DependencyProcessor {
 			for (Artifact.Builder artifact : artifacts) {
 				for (String dependency : features.get(feature)) {
 					if (artifact.getCoordinates().equals(dependency)) {
-						artifact.addFeature(feature);
+						artifact.addFeature(Feature.valueOf(feature.toUpperCase()));
 					}
 				}
 			}

@@ -21,6 +21,7 @@ package soi;
 option java_package = "com.sandpolis.core.proto.soi";
 
 import "com/sandpolis/core/proto/util/Platform.proto";
+import "com/sandpolis/core/proto/util/Generator.proto";
 
 /**
  * The SO_DependencyMatrix object contains exhaustive dependency information about
@@ -37,7 +38,7 @@ message SO_DependencyMatrix {
 		int64 size = 2;
 		
 		// The artifact's associated client features.
-		repeated string feature = 3;
+		repeated util.Feature feature = 3;
 		
 		/**
 		 * An internal component of the artifact which is specific to a platform
