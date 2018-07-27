@@ -27,6 +27,14 @@ import com.google.common.io.MoreFiles;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.GenReport;
 import com.sandpolis.core.util.TempUtil;
+import com.sandpolis.server.gen.packager.BatPackager;
+import com.sandpolis.server.gen.packager.ElfPackager;
+import com.sandpolis.server.gen.packager.ExePackager;
+import com.sandpolis.server.gen.packager.JarPackager;
+import com.sandpolis.server.gen.packager.PyPackager;
+import com.sandpolis.server.gen.packager.QrPackager;
+import com.sandpolis.server.gen.packager.RbPackager;
+import com.sandpolis.server.gen.packager.ShPackager;
 
 /**
  * The parent class of all output generators.
@@ -53,14 +61,52 @@ public abstract class Generator {
 	 */
 	protected GenReport.Builder report;
 
+	/**
+	 * The packager which is responsible for producing the final output.
+	 */
+	private Packager packager;
+
 	protected Generator(GenConfig config) {
+		if (config == null)
+			throw new IllegalArgumentException();
+
 		this.config = config;
+
+		switch (config.getFormat()) {
+		case BAT:
+			packager = new BatPackager();
+			break;
+		case ELF:
+			packager = new ElfPackager();
+			break;
+		case EXE:
+			packager = new ExePackager();
+			break;
+		case JAR:
+			packager = new JarPackager();
+			break;
+		case PY:
+			packager = new PyPackager();
+			break;
+		case QR:
+			packager = new QrPackager();
+			break;
+		case RB:
+			packager = new RbPackager();
+			break;
+		case SH:
+			packager = new ShPackager();
+			break;
+		default:
+			throw new IllegalArgumentException();
+		}
 	}
 
 	/**
-	 * Performs the generation synchronously. The callee is also responsible for
-	 * calling {@link #cleanup()}.
+	 * Performs the generation synchronously.
 	 */
+	abstract protected Object run() throws Exception;
+
 	public void generate() throws Exception {
 		if (report != null)
 			throw new IllegalStateException("A generator cannot be run more than once!");
@@ -68,7 +114,11 @@ public abstract class Generator {
 				.setDuration(System.currentTimeMillis());
 		temp = TempUtil.getDir();
 
-		// Override for the win
+		try {
+			packager.process(config, run());
+		} finally {
+			cleanup();
+		}
 	}
 
 	/**
@@ -94,7 +144,7 @@ public abstract class Generator {
 	 */
 	public GenReport getReport() {
 		if (report == null)
-			throw new IllegalStateException();
+			throw new IllegalStateException("The generator has not been started");
 
 		return report.build();
 	}

@@ -112,8 +112,6 @@ public final class GQ {
 						generator.generate();
 					} catch (Exception e) {
 						log.error("Failed to generate", e);
-					} finally {
-						generator.cleanup();
 					}
 				}
 
