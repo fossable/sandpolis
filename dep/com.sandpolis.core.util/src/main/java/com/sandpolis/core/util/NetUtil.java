@@ -36,14 +36,16 @@ import org.apache.commons.validator.routines.InetAddressValidator;
  * @author cilki
  * @since 3.0.0
  */
-public class NetUtil {
+public final class NetUtil {
+	private NetUtil() {
+	}
 
 	/**
-	 * The maximum number of bytes that can be downloaded with
+	 * The maximum number of bytes that can be downloaded directly into memory with
 	 * {@link #download(String)} or {@link #download(URL)}. This limit exists to
-	 * prevent out of memory errors.
+	 * prevent out of memory errors and is set to 512 MiB.
 	 */
-	private static final int DOWNLOAD_LIMIT = 512 * 1024 * 1024 * 1024;
+	private static final long DOWNLOAD_LIMIT = 536870912L;
 
 	/**
 	 * The number of milliseconds to wait before considering the port to be closed.
@@ -75,9 +77,10 @@ public class NetUtil {
 			throw new IllegalArgumentException();
 
 		URLConnection con = url.openConnection();
+		long size = con.getContentLengthLong();
 
-		if (con.getContentLength() > DOWNLOAD_LIMIT)
-			throw new IllegalArgumentException("File too large");
+		if (size > DOWNLOAD_LIMIT)
+			throw new IllegalArgumentException("File too large: " + size + " bytes");
 
 		try (DataInputStream in = new DataInputStream(con.getInputStream())) {
 			return in.readAllBytes();
