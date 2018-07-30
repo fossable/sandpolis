@@ -77,11 +77,14 @@ message FeatureSet {
  */
 enum OutputPayload {
 
+	// A configuration specific to another payload type
+	CONFIG = 0;
+
 	// A full-featured heavyweight client 
-	MEGA = 0;
+	MEGA = 1;
 
 	// A lightweight native client
-	MICRO = 1;
+	MICRO = 2;
 }
 
 /**
@@ -227,21 +230,24 @@ message MicroConfig {
  */
 message GenConfig {
 
+	// The request ID
+	int64 id = 1; 
+
 	// The user that requested the generation
-	string request_user = 1;
-	
+	string request_user = 2;
+
 	// The payload type
-	OutputPayload payload = 2;
+	OutputPayload payload = 3;
 
 	// The output format of this client
-	OutputFormat format = 3;
+	OutputFormat format = 4;
 
 	// An optional identifier
-	string client_identifier = 4;
+	string client_identifier = 5;
 	
 	oneof payload_config {
-		MegaConfig mega = 5;
-		MicroConfig micro = 6;
+		MegaConfig mega = 6;
+		MicroConfig micro = 7;
 	}
 
 }
