@@ -78,12 +78,18 @@ public final class ArtifactUtil {
 
 		Stream<Artifact> all = Stream.empty();
 		for (int id : getInstanceArtifact(instance).getDependencyList()) {
-			Stream.concat(all, getDependencies(Core.SO_MATRIX.getArtifact(id)));
+			all = Stream.concat(all, getDependencies(Core.SO_MATRIX.getArtifact(id)));
 		}
 
 		return all.distinct();
 	}
 
+	/**
+	 * Get a stream of an artifact and all its dependencies using a recursive call.
+	 * 
+	 * @param artifact The artifact
+	 * @return A stream of the artifact and its dependencies
+	 */
 	private static Stream<Artifact> getDependencies(Artifact artifact) {
 		return Stream.concat(Stream.of(artifact), artifact.getDependencyList().stream()
 				.map(id -> Core.SO_MATRIX.getArtifact(id)).flatMap(ArtifactUtil::getDependencies));
