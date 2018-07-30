@@ -32,6 +32,10 @@ import com.sandpolis.server.gen.Packager;
  * @since 5.0.0
  */
 public class UrlPackager extends Packager {
+	private UrlPackager() {
+	}
+
+	public static final UrlPackager INSTANCE = new UrlPackager();
 
 	@Override
 	public void process(GenConfig config, Object payload) throws Exception {

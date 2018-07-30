@@ -48,7 +48,14 @@ import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.store.profile.ProfileStore;
 import com.sandpolis.core.proto.ipc.MCMetadata.RS_Metadata;
+import com.sandpolis.core.proto.util.Generator.Feature;
+import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
+import com.sandpolis.core.proto.util.Generator.MegaConfig;
+import com.sandpolis.core.proto.util.Generator.NetworkConfig;
+import com.sandpolis.core.proto.util.Generator.NetworkTarget;
+import com.sandpolis.core.proto.util.Generator.OutputFormat;
+import com.sandpolis.core.proto.util.Generator.OutputPayload;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.AsciiUtil;
@@ -202,7 +209,11 @@ public final class Server {
 			return success(outcome, "Skipped");
 
 		try {
-			new MegaGen(GenConfig.newBuilder().build()).generate();
+			new MegaGen(GenConfig.newBuilder().setPayload(OutputPayload.MEGA).setFormat(OutputFormat.JAR)
+					.setMega(MegaConfig.newBuilder()
+							.setNetwork(NetworkConfig.newBuilder()
+									.addTarget(NetworkTarget.newBuilder().setAddress("127.0.0.1").setPort(10101))))
+					.build()).generate();
 		} catch (Exception e) {
 			return failure(outcome, e);
 		}

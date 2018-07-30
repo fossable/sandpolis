@@ -34,7 +34,7 @@ public class ConfigGen extends Generator {
 
 	@Override
 	protected Object run() throws Exception {
-		switch (config.getPayload()) {
+		switch (config.getPayloadConfigCase()) {
 		case MEGA:
 			return config.getMega();
 		case MICRO:

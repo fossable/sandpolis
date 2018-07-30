@@ -35,6 +35,7 @@ import com.sandpolis.server.gen.packager.PyPackager;
 import com.sandpolis.server.gen.packager.QrPackager;
 import com.sandpolis.server.gen.packager.RbPackager;
 import com.sandpolis.server.gen.packager.ShPackager;
+import com.sandpolis.server.gen.packager.UrlPackager;
 
 /**
  * The parent class of all output generators.
@@ -74,28 +75,31 @@ public abstract class Generator {
 
 		switch (config.getFormat()) {
 		case BAT:
-			packager = new BatPackager();
+			packager = BatPackager.INSTANCE;
 			break;
 		case ELF:
-			packager = new ElfPackager();
+			packager = ElfPackager.INSTANCE;
 			break;
 		case EXE:
-			packager = new ExePackager();
+			packager = ExePackager.INSTANCE;
 			break;
 		case JAR:
-			packager = new JarPackager();
+			packager = JarPackager.INSTANCE;
 			break;
 		case PY:
-			packager = new PyPackager();
+			packager = PyPackager.INSTANCE;
 			break;
 		case QR:
-			packager = new QrPackager();
+			packager = QrPackager.INSTANCE;
 			break;
 		case RB:
-			packager = new RbPackager();
+			packager = RbPackager.INSTANCE;
 			break;
 		case SH:
-			packager = new ShPackager();
+			packager = ShPackager.INSTANCE;
+			break;
+		case URL:
+			packager = UrlPackager.INSTANCE;
 			break;
 		default:
 			throw new IllegalArgumentException();

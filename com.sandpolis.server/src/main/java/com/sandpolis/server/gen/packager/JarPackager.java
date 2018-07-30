@@ -29,6 +29,10 @@ import com.sandpolis.server.gen.Packager;
  * @since 5.0.0
  */
 public class JarPackager extends Packager {
+	private JarPackager() {
+	}
+
+	public static final JarPackager INSTANCE = new JarPackager();
 
 	@Override
 	public void process(GenConfig config, Object payload) throws Exception {
