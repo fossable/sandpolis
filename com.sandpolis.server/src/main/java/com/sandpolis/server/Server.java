@@ -22,7 +22,6 @@ import static com.sandpolis.core.util.ProtoUtil.complete;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.success;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Date;
@@ -48,8 +47,6 @@ import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.store.profile.ProfileStore;
 import com.sandpolis.core.proto.ipc.MCMetadata.RS_Metadata;
-import com.sandpolis.core.proto.util.Generator.Feature;
-import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkConfig;
@@ -160,8 +157,7 @@ public final class Server {
 		// Load DatabaseStore
 		try {
 			if (Config.DB_URL == null) {
-				DatabaseStore.load(DatabaseFactory.create(new File(Environment.DB.getAbsolutePath() + "/server.db")),
-						ORM_CLASSES);
+				DatabaseStore.load(DatabaseFactory.create(Environment.DB.resolve("server.db").toFile()), ORM_CLASSES);
 			} else {
 				DatabaseStore.load(DatabaseFactory.create(Config.DB_URL), ORM_CLASSES);
 			}

@@ -55,7 +55,7 @@ public class MegaGen extends FileGenerator {
 
 	@Override
 	protected Object run() throws Exception {
-		File client = new File(Environment.JLIB.getAbsolutePath() + "/com.sandpolis.client.mega.jar");
+		File client = Environment.JLIB.resolve("com.sandpolis.client.mega.jar").toFile();
 		FeatureSet features = config.getMega().getFeatures();
 
 		// A list of entries to be injected

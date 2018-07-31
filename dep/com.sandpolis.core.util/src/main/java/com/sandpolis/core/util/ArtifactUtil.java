@@ -102,7 +102,7 @@ public final class ArtifactUtil {
 	 * @return The artifact's local file
 	 */
 	public static File getArtifactFile(Artifact artifact) {
-		return new File(Environment.JLIB.getAbsolutePath() + "/" + getArtifactFilename(artifact.getCoordinates()));
+		return Environment.JLIB.resolve(getArtifactFilename(artifact.getCoordinates())).toFile();
 	}
 
 	/**
