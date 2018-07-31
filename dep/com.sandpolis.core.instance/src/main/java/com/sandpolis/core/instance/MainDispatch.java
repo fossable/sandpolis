@@ -191,8 +191,10 @@ public final class MainDispatch {
 				throw new RuntimeException("Invalid task detected");
 
 			if (!outcome.getResult() && config.fatal()) {
-				log.error("A fatal error has occurred in task \"{}\": {}", outcome.getAction(), outcome.getComment());
-				throw new RuntimeException();
+				log.error("A fatal error has occurred in task: {}", outcome.getAction());
+				if (!outcome.getException().isEmpty())
+					log.error(outcome.getException());
+				System.exit(0);
 			}
 			return outcome;
 		});

@@ -144,7 +144,7 @@ public final class Environment {
 				return null;
 			return jar;
 		} catch (Exception e) {
-			return null;
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -175,9 +175,9 @@ public final class Environment {
 	 */
 	private static Path discover(String sub) {
 		try {
-			return BASE.resolve(sub).toRealPath();
-		} catch (IOException | NullPointerException e) {
-			return null;
+			return BASE.resolve(sub).toFile().getCanonicalFile().toPath();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 }
