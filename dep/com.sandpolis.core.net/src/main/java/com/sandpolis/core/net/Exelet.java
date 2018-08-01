@@ -22,7 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.sandpolis.core.permission.Perm;
+import com.sandpolis.core.instance.Perm;
 
 /**
  * An {@code Exelet} handles incoming messages from a {@link Sock}. All
