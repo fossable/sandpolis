@@ -1,0 +1,169 @@
+/******************************************************************************
+ *                                                                            *
+ *                    Copyright 2016 Subterranean Security                    *
+ *                                                                            *
+ *  Licensed under the Apache License, Version 2.0 (the "License");           *
+ *  you may not use this file except in compliance with the License.          *
+ *  You may obtain a copy of the License at                                   *
+ *                                                                            *
+ *      http://www.apache.org/licenses/LICENSE-2.0                            *
+ *                                                                            *
+ *  Unless required by applicable law or agreed to in writing, software       *
+ *  distributed under the License is distributed on an "AS IS" BASIS,         *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *  See the License for the specific language governing permissions and       *
+ *  limitations under the License.                                            *
+ *                                                                            *
+ *****************************************************************************/
+syntax = "proto3";
+
+package net;
+option java_package = "com.sandpolis.core.proto.net";
+
+import "com/sandpolis/core/proto/net/MC_Auth.proto";
+//import "com/sandpolis/core/proto/net/MC_Client.proto";
+import "com/sandpolis/core/proto/net/MC_Cvid.proto";
+//import "com/sandpolis/core/proto/net/MC_Debug.proto";
+//import "com/sandpolis/core/proto/net/MC_Delta.proto";
+//import "com/sandpolis/core/proto/net/MC_FileManager.proto";
+import "com/sandpolis/core/proto/net/MC_Generator.proto";
+import "com/sandpolis/core/proto/net/MC_Group.proto";
+//import "com/sandpolis/core/proto/net/MC_Keylogger.proto";
+import "com/sandpolis/core/proto/net/MC_Listener.proto";
+import "com/sandpolis/core/proto/net/MC_Login.proto";
+//import "com/sandpolis/core/proto/net/MC_Network.proto";
+import "com/sandpolis/core/proto/net/MC_Ping.proto";
+import "com/sandpolis/core/proto/net/MC_Server.proto";
+//import "com/sandpolis/core/proto/net/MC_Stream.proto";
+//import "com/sandpolis/core/proto/net/MC_Torrent.proto";
+import "com/sandpolis/core/proto/net/MC_User.proto";
+import "com/sandpolis/core/proto/util/Result.proto";
+
+/**
+ * A message type for typical communication among instances.
+ *
+ * Message naming prefixes:
+ *	RQ_*	Request messages
+ *	RS_*	Response messages
+ *	IM_*	Intermediate messages
+ *	EV_*	Asynchronous events
+ *	
+ * Message category naming conventions:
+ *	MC_*	Message category
+*/
+message Message {
+
+	// The final destination CVID 
+	int32 to = 1;
+	
+	// The original source CVID
+	int32 from = 2;
+
+	// An optional ID for message sequencing
+	int32 id = 3;
+
+	oneof msg_oneof {
+		// High frequency messages first
+//		EV_StreamData 			ev_stream_data 				= 4;
+//		EV_EndpointClosed 		ev_endpoint_closed 			= 5;
+//		EV_ProfileDelta 		ev_profile_delta 			= 6;
+//		EV_KEvent 				ev_kevent 					= 7;
+//		EV_NetworkDelta 		ev_network_delta 			= 9;
+		
+		// A generic response indicating an outcome
+		util.Outcome 			rs_outcome 					= 10;
+		
+		// MC_Auth
+		RQ_NoAuth 				rq_no_auth 					= 100;
+		RQ_PasswordAuth 		rq_password_auth 			= 101;
+		RQ_KeyAuth 				rq_key_auth 				= 102;
+		IM_Nonce 				im_nonce	 				= 103;
+		
+		// MC_Client
+//		RQ_ChangeClientSetting 	rq_change_client_setting 	= 200;
+//		RQ_Screenshot	 		rq_screenshot		 		= 201;
+//		RS_Screenshot 			rs_screenshot 				= 202;
+
+		// MC_Cvid
+		RQ_Cvid 				rq_cvid 					= 300;
+		RS_Cvid 				rs_cvid 					= 301;
+		
+		// MC_Debug
+//		M1_DebugKill 			m1_debug_kill 				= 400;
+//		RQ_DebugSession 		rq_debug_session 			= 401;
+//		RS_DebugSession 		rs_debug_session 			= 402;
+
+		// MC_Delta
+//		RQ_ProfileDelta 		rq_profile_delta 			= 500;
+//		RS_ProfileDelta 		rs_profile_delta 			= 501;
+
+		// MC_FileManager
+//		RQ_FileListing 			rq_file_listing 			= 600;
+//		RS_FileListing 			rs_file_listing 			= 601;
+//		RQ_FileHandle 			rq_file_handle 				= 602;
+//		RS_FileHandle 			rs_file_handle 				= 603;
+//		RQ_AdvancedFileInfo 	rq_advanced_file_info 		= 604;
+//		RS_AdvancedFileInfo 	rs_advanced_file_info 		= 605;
+//		MI_CloseFileHandle 		mi_close_file_handle 		= 606;
+//		RQ_Delete 				rq_delete 					= 607;
+
+		// MC_Generator
+		RQ_Generate 			rq_generate					= 700;
+		RS_Generate 			rs_generate 				= 701;
+		
+		// MC_Group
+		RQ_CreateGroup	 		rq_create_group		 		= 800;
+		RQ_RemoveGroup 			rq_remove_group 			= 801;
+		RQ_ListGroups 			rq_list_groups	 			= 803;
+		RS_ListGroups 			rs_list_groups	 			= 804;
+		RQ_AddMechanism			rq_add_mechanism			= 805;
+		RQ_RemoveMechanism		rq_remove_mechanism			= 806;
+		RQ_ChangeOwner			rq_change_owner				= 807;
+		RQ_AddMember			rq_add_member				= 808;
+		RQ_RemoveMember			rq_remove_member			= 809;
+		
+		// MC_Keylogger
+//		RQ_KeyUpdate 			rq_key_update 				= 900;
+//		RS_KeyUpdate 			rs_key_update 				= 901;
+//		RQ_ChangeKeyloggerState rq_change_keylogger_state	= 902;
+
+		// MC_Listener
+		RQ_AddListener 			rq_add_listener 			= 1000;
+		RQ_RemoveListener 		rq_remove_listener 			= 1001;
+		RQ_ChangeListenerState	rq_change_listener_state	= 1002;
+		
+		// MC_Login
+		RQ_Login 				rq_login 					= 1100;
+		RQ_Logout 				rq_logout 					= 1101;
+		
+		// MC_Network
+//		RQ_DirectConnection 	rq_direct_connection 		= 1200;
+//		RS_DirectConnection 	rs_direct_connection 		= 1201;
+//		RQ_MakeDirectConnection rq_make_direct_connection 	= 1202;
+
+		// MC_Password
+		
+		// MC_Ping
+		RQ_Ping 				rq_ping 					= 1300;
+		RS_Ping 				rs_ping 					= 1301;
+
+		// MC_Server
+		RQ_ServerBanner			rq_server_banner 			= 1400;
+		RS_ServerBanner			rs_server_banner 			= 1401;
+		
+		// MC_Shell
+		
+		// MC_Stream
+//		RQ_StreamStart 			rq_stream_start 			= 1500;
+//		RQ_StreamStop 			rq_stream_stop 				= 1501;
+		
+		// MC_Torrent
+//		RQ_AddTorrent 			rq_add_torrent 				= 1600;
+//		RS_AddTorrent 			rs_add_torrent 				= 1601;
+		
+		// MC_User
+		RQ_AddUser 				rq_add_user 				= 1700;
+		RQ_EditUser 			rq_edit_user				= 1701;
+
+	}
+}
