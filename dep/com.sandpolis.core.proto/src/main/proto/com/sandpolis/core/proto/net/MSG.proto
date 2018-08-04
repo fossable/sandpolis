@@ -25,7 +25,7 @@ import "com/sandpolis/core/proto/net/MC_Auth.proto";
 import "com/sandpolis/core/proto/net/MC_Cvid.proto";
 //import "com/sandpolis/core/proto/net/MC_Debug.proto";
 //import "com/sandpolis/core/proto/net/MC_Delta.proto";
-//import "com/sandpolis/core/proto/net/MC_FileManager.proto";
+import "com/sandpolis/core/proto/net/MC_FsHandle.proto";
 import "com/sandpolis/core/proto/net/MC_Generator.proto";
 import "com/sandpolis/core/proto/net/MC_Group.proto";
 //import "com/sandpolis/core/proto/net/MC_Keylogger.proto";
@@ -97,15 +97,16 @@ message Message {
 //		RQ_ProfileDelta 		rq_profile_delta 			= 500;
 //		RS_ProfileDelta 		rs_profile_delta 			= 501;
 
-		// MC_FileManager
-//		RQ_FileListing 			rq_file_listing 			= 600;
-//		RS_FileListing 			rs_file_listing 			= 601;
-//		RQ_FileHandle 			rq_file_handle 				= 602;
-//		RS_FileHandle 			rs_file_handle 				= 603;
-//		RQ_AdvancedFileInfo 	rq_advanced_file_info 		= 604;
-//		RS_AdvancedFileInfo 	rs_advanced_file_info 		= 605;
-//		MI_CloseFileHandle 		mi_close_file_handle 		= 606;
-//		RQ_Delete 				rq_delete 					= 607;
+		// MC_FsHandle
+		EV_FileListing 			ev_file_listing 			= 600;
+		RQ_FileListing 			rq_file_listing 			= 601;
+		RS_FileListing 			rs_file_listing 			= 602;
+		RQ_FsHandle 			rq_fs_handle 				= 603;
+		RS_FsHandle 			rs_fs_handle 				= 604;
+		RQ_FileInfo 			rq_file_info 				= 605;
+		RS_FileInfo 			rs_file_info 				= 606;
+		RQ_CloseFsHandle 		rq_close_fs_handle 			= 607;
+		RQ_FileDelete 			rq_file_delete 				= 608;
 
 		// MC_Generator
 		RQ_Generate 			rq_generate					= 700;
