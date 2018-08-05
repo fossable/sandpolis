@@ -422,6 +422,18 @@ public class Sock {
 		channel.flush();
 	}
 
+	@Override
+	public int hashCode() {
+		return channel.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Sock)
+			return channel.equals(((Sock) obj).channel);
+		return false;
+	}
+
 	public static enum Protocol {
 		TCP, UDP;
 
