@@ -18,9 +18,11 @@
 package com.sandpolis.core.instance;
 
 /**
- * A {@code Store} is designed to provide extremely convenient access to
+ * A {@link Store} is designed to provide extremely convenient access to
  * optionally-persistent objects with a static context. {@code Store}s cannot be
- * instantiated and may require external initialization before being used.
+ * instantiated and may require external initialization before being used.<br>
+ * <br>
+ * This class is a marker class.
  * 
  * @author cilki
  * @since 4.0.0
@@ -29,7 +31,24 @@ public abstract class Store {
 
 	/**
 	 * Indicates that a {@link Store} initializes itself and no other configuration
-	 * is required.
+	 * is required.<br>
+	 * <br>
+	 * Recommended usage:
+	 * 
+	 * <pre>
+	 * {@code @AutoInitializer}
+	 * class ExampleStore extends Store {
+	 * 
+	 *     static {
+	 *         init();
+	 *     }
+	 * 
+	 *     // Initialize or reinitialize the Store
+	 *     public static void init() {
+	 * 
+	 *     }
+	 * }
+	 * </pre>
 	 * 
 	 * @author cilki
 	 * @since 5.0.0
@@ -38,8 +57,25 @@ public abstract class Store {
 	}
 
 	/**
-	 * Indicates that a {@link Store} is must be manually initialized with either
-	 * {@code load()} or {@code init()}.
+	 * Indicates that a {@link Store} must be manually initialized with either
+	 * {@code load()} or {@code init()}.<br>
+	 * <br>
+	 * Recommended usage:
+	 * 
+	 * <pre>
+	 * {@code @ManualInitializer}
+	 * class ExampleStore extends Store {
+	 * 
+	 *     // Initialize or reinitialize the Store
+	 *     public static void init() {
+	 * 
+	 *     }
+	 *     
+	 *     public static void load() {
+	 * 
+	 *     }
+	 * }
+	 * </pre>
 	 * 
 	 * @author cilki
 	 * @since 5.0.0
