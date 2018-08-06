@@ -46,7 +46,7 @@ public class ClientPipelineInit extends PipelineInitializer {
 	protected void initChannel(Channel ch) throws Exception {
 		super.initChannel(ch);
 
-		if (Config.SSL) {
+		if (!Config.NO_SSL) {
 			SslHandler ssl = SslContextBuilder.forClient().trustManager(CertUtil.getRoot()).build()
 					.newHandler(ch.alloc());
 			ch.pipeline().addAfter("traffic", "ssl", ssl);

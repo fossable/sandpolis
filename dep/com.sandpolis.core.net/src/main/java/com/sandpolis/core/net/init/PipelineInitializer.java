@@ -20,7 +20,7 @@ package com.sandpolis.core.net.init;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.handler.EventHandler;
@@ -110,7 +110,7 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		p.addLast("traffic", traffic);
 		ch.attr(ChannelConstant.HANDLER_TRAFFIC).set(traffic);
 
-		if (Core.LOG_NET_RAW)
+		if (Config.LOG_NET_RAW)
 			p.addLast(LOGGING);
 
 		p.addLast(EVENT);
@@ -120,7 +120,7 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		p.addLast(PROTO_FRAME_ENCODER);
 		p.addLast(PROTO_ENCODER);
 
-		if (Core.LOG_NET)
+		if (Config.LOG_NET)
 			p.addLast(LOGGING);
 
 		// TODO add EventExecutorGroup!

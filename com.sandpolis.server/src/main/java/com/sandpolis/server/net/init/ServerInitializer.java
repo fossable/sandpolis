@@ -117,7 +117,7 @@ public class ServerInitializer extends PipelineInitializer {
 	protected void initChannel(Channel ch) throws Exception {
 		super.initChannel(ch);
 
-		if (Config.SSL) {
+		if (!Config.NO_SSL) {
 			SslHandler ssl = getSslContext().newHandler(ch.alloc());
 			ch.pipeline().addAfter("traffic", "ssl", ssl);
 			ch.attr(ChannelConstant.HANDLER_SSL).set(ssl);
@@ -128,7 +128,7 @@ public class ServerInitializer extends PipelineInitializer {
 	}
 
 	public SslContext getSslContext() throws Exception {
-		if (sslCtx == null && Config.SSL) {
+		if (sslCtx == null && !Config.NO_SSL) {
 			sslCtx = buildSslContext();
 
 			// No point in keeping these around anymore
