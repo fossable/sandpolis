@@ -23,4 +23,5 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.util')
 	implementation lib.slf4j
 	implementation lib.oshi
+	implementation lib.guava
 }

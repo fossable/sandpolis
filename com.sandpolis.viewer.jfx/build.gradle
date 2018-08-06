@@ -3,24 +3,10 @@
 *                           com.sandpolis.viewer.jfx                          *
 ******************************************************************************/
 
-buildscript {
-    repositories {
-        jcenter()
-        google()
-        maven {
-        	url "http://nexus.gluonhq.com/nexus/content/repositories/releases"
-        }
-    }
-    dependencies {
-        classpath 'org.javafxports:jfxmobile-plugin:2.0.28'
-    }
-}
-
 plugins {
 	id 'eclipse'
+	id 'java'
 }
-
-apply plugin: 'org.javafxports.jfxmobile' 
 
 eclipse {
 	project {
@@ -29,8 +15,6 @@ eclipse {
 }
 
 repositories {
-    jcenter()
-    
     // TODO remove dependency
     flatDir dirs: 'lib'
 }
@@ -51,12 +35,6 @@ dependencies {
 
 	// TODO remove dependency
 	implementation ':StlMeshImporter:'
-}
-
-mainClassName = 'com.sandpolis.viewer.jfx.Main'
-
-jfxmobile.android {
-	compileSdkVersion = 28
 }
 
 jar {
