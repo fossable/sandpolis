@@ -20,11 +20,12 @@ package com.sandpolis.core.net.future;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.init.ChannelConstant;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.DefaultPromise;
 
 /**
- * A {@code SockFuture} provides an easy way to obtain a configured {@link Sock}
+ * A {@link SockFuture} provides an easy way to obtain a configured {@link Sock}
  * from a {@link ChannelFuture}.
  * 
  * @author cilki
@@ -32,22 +33,48 @@ import io.netty.util.concurrent.DefaultPromise;
  */
 public class SockFuture extends DefaultPromise<Sock> {
 
+	/**
+	 * Construct a new {@link SockFuture} which will create a new {@link Sock} once
+	 * the given connection is established.
+	 * 
+	 * @param connect A connection future
+	 */
 	public SockFuture(ChannelFuture connect) {
 		super(connect.channel().eventLoop());
 
 		connect.addListener((ChannelFuture future) -> {
 			if (!future.isSuccess())
 				SockFuture.this.setFailure(future.cause());
+			Channel ch = future.channel();
 
-			// Wait for the CVID handshake to complete
-			future.channel().attr(ChannelConstant.FUTURE_CVID).get().addListener((DefaultPromise<Integer> promise) -> {
-				if (!promise.isSuccess())
-					SockFuture.this.setFailure(promise.cause());
+			if (ch.attr(ChannelConstant.FUTURE_CVID).get() != null) {
+				// Wait for the CVID handshake to complete
+				ch.attr(ChannelConstant.FUTURE_CVID).get().addListener((DefaultPromise<Integer> promise) -> {
+					if (!promise.isSuccess()) {
+						SockFuture.this.setFailure(promise.cause());
+						return;
+					}
 
-				Sock sock = new Sock(future.channel());
-				future.channel().attr(ChannelConstant.SOCK).set(sock);
-				SockFuture.this.setSuccess(sock);
-			});
+					complete(ch);
+				});
+			} else {
+				complete(ch);
+			}
 		});
+	}
+
+	/**
+	 * Complete the future successfully.
+	 * 
+	 * @param channel The successful channel
+	 */
+	private void complete(Channel channel) {
+		if (isDone())
+			throw new IllegalStateException();
+
+		Sock sock = new Sock(channel);
+		channel.attr(ChannelConstant.SOCK).set(sock);
+
+		setSuccess(sock);
 	}
 }
