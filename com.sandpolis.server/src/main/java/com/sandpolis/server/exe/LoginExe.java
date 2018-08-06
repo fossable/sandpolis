@@ -29,7 +29,7 @@ import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.ConnectionState;
-import com.sandpolis.core.net.store.ConnectionStore;
+import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.store.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MSG.Message;
