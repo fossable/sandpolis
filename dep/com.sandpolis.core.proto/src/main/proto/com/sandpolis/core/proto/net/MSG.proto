@@ -31,7 +31,7 @@ import "com/sandpolis/core/proto/net/MC_Group.proto";
 //import "com/sandpolis/core/proto/net/MC_Keylogger.proto";
 import "com/sandpolis/core/proto/net/MC_Listener.proto";
 import "com/sandpolis/core/proto/net/MC_Login.proto";
-//import "com/sandpolis/core/proto/net/MC_Network.proto";
+import "com/sandpolis/core/proto/net/MC_Network.proto";
 import "com/sandpolis/core/proto/net/MC_Ping.proto";
 import "com/sandpolis/core/proto/net/MC_Server.proto";
 //import "com/sandpolis/core/proto/net/MC_Stream.proto";
@@ -138,9 +138,11 @@ message Message {
 		RQ_Logout 				rq_logout 					= 1101;
 		
 		// MC_Network
-//		RQ_DirectConnection 	rq_direct_connection 		= 1200;
-//		RS_DirectConnection 	rs_direct_connection 		= 1201;
-//		RQ_MakeDirectConnection rq_make_direct_connection 	= 1202;
+		EV_EndpointClosed		ev_endpoint_closed			= 1200;
+		EV_NetworkDelta			ev_network_delta			= 1201;
+		RQ_DirectConnection 	rq_direct_connection 		= 1202;
+		RS_DirectConnection 	rs_direct_connection 		= 1203;
+		RQ_Connection			rq_connection 				= 1204;
 
 		// MC_Password
 		

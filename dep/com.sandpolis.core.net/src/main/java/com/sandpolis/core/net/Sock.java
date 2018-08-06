@@ -347,6 +347,24 @@ public class Sock {
 	}
 
 	/**
+	 * Get a {@link MessageFuture} that will be triggered by the arrival of a
+	 * {@link Message} with the given ID.
+	 * 
+	 * @param id      The ID of the desired {@link Message}
+	 * @param timeout The message timeout
+	 * @param unit    The timeout unit
+	 * @return A {@link MessageFuture}
+	 */
+	public MessageFuture read(int id, int timeout, TimeUnit unit) {
+		ExecuteHandler execute = channel.attr(ChannelConstant.HANDLER_EXECUTE).get();
+		if (!execute.getResponseMap().containsKey(id)) {
+			execute.getResponseMap().put(id, new MessageFuture(timeout, unit));
+		}
+
+		return execute.getResponseMap().get(id);
+	}
+
+	/**
 	 * Send a {@link Message} with the intention of receiving a reply.
 	 * 
 	 * @param message The {@link Message} to send
