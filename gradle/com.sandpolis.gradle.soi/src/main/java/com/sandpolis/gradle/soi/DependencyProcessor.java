@@ -82,7 +82,6 @@ public class DependencyProcessor {
 	 * @param dependency The artifact's dependency
 	 */
 	private void add(Artifact.Builder parent, ResolvedDependency dependency) {
-		System.out.println("Adding dependency: " + dependency.getModuleName());
 		if (!artifacts.stream().anyMatch(a -> a.getCoordinates().equals(parent.getCoordinates())))
 			artifacts.add(parent);
 
