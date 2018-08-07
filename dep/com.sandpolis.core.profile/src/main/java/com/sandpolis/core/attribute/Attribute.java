@@ -23,6 +23,7 @@ import java.util.Iterator;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyMetaDef;
@@ -60,6 +61,14 @@ public abstract class Attribute<E> extends AttributeNode {
 	 * during a {@link #merge}.
 	 */
 	protected static final OneofDescriptor UPDATE_ONEOF = AttributeUpdate.getDescriptor().getOneofs().get(0);
+
+	/**
+	 * The descriptor for the {@link AttributeUpdate} field that contains an updated
+	 * value. Due to type erasure, this value is set upon the first use of
+	 * {@link #getUpdates}.
+	 */
+	@Transient
+	protected FieldDescriptor UPDATE_FIELD;
 
 	/**
 	 * The current value of the {@link Attribute}.
@@ -158,6 +167,29 @@ public abstract class Attribute<E> extends AttributeNode {
 		if (current == null)
 			return "null";
 		return current.toString();
+	}
+
+	/**
+	 * Set the {@link #UPDATE_FIELD} value.
+	 * 
+	 * @param example An example of update content which will be probed for type
+	 */
+	protected void setUpdateField(E example) {
+		if (UPDATE_FIELD != null)
+			throw new IllegalStateException();
+
+		if (example instanceof String)
+			UPDATE_FIELD = AttributeUpdate.getDescriptor().findFieldByName("string");
+		else if (example instanceof Integer)
+			UPDATE_FIELD = AttributeUpdate.getDescriptor().findFieldByName("integer");
+		else if (example instanceof Long)
+			UPDATE_FIELD = AttributeUpdate.getDescriptor().findFieldByName("long");
+		else if (example instanceof Boolean)
+			UPDATE_FIELD = AttributeUpdate.getDescriptor().findFieldByName("boolean");
+		else if (example instanceof Double)
+			UPDATE_FIELD = AttributeUpdate.getDescriptor().findFieldByName("double");
+		else
+			throw new RuntimeException();
 	}
 
 }
