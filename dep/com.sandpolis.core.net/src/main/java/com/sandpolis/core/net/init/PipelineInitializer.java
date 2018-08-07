@@ -83,21 +83,22 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 	protected static final EventHandler EVENT = new EventHandler();
 
 	/**
-	 * The {@link Exelet}s to use when initializing a {@link ExecuteHandler}.
+	 * The {@link Exelet}s to use when initializing an {@link ExecuteHandler}.
 	 */
 	private Class<? extends Exelet>[] exelets;
 
 	/**
 	 * Construct a new {@link PipelineInitializer}.
 	 * 
-	 * @param exelets Classes that will be scanned to build a {@link ExecuteHandler}
+	 * @param exelets Classes that will be scanned to build an
+	 *                {@link ExecuteHandler}
 	 */
 	@SuppressWarnings("unchecked")
 	public PipelineInitializer(Class<? extends Exelet>[] exelets) {
 		if (exelets == null)
-			exelets = new Class[0];
-
-		this.exelets = exelets;
+			this.exelets = new Class[0];
+		else
+			this.exelets = exelets;
 	}
 
 	@Override
