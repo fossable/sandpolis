@@ -33,7 +33,7 @@ import org.hibernate.annotations.MetaValue;
 import com.google.protobuf.ByteString.ByteIterator;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.OneofDescriptor;
-import com.sandpolis.core.instance.Updatable;
+import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
 import com.sandpolis.core.proto.util.Update.AttributeUpdate;
 
 /**
@@ -45,15 +45,14 @@ import com.sandpolis.core.proto.util.Update.AttributeUpdate;
  * <li>Double</li>
  * <li>Boolean</li>
  * 
- * @param <E>
- *            The type the {@link Attribute} contains
+ * @param <E> The type the {@link Attribute} contains
  * @see UntrackedAttribute
  * @see TrackedAttribute
  * @author cilki
  * @since 4.0.0
  */
 @Entity
-public abstract class Attribute<E> extends Updatable<AttributeUpdate> implements AttributeNode {
+public abstract class Attribute<E> extends AttributeNode {
 
 	/**
 	 * The descriptor for the {@link AttributeUpdate} oneof which will contain an
@@ -94,8 +93,7 @@ public abstract class Attribute<E> extends Updatable<AttributeUpdate> implements
 	/**
 	 * Set the current value of this {@link Attribute}.
 	 * 
-	 * @param value
-	 *            The new value
+	 * @param value The new value
 	 */
 	public void set(E value) {
 		set(value, System.currentTimeMillis());
@@ -104,10 +102,8 @@ public abstract class Attribute<E> extends Updatable<AttributeUpdate> implements
 	/**
 	 * Set the current value of this {@link Attribute} with an arbitrary timestamp.
 	 * 
-	 * @param value
-	 *            The new value
-	 * @param time
-	 *            The new value's timestamp
+	 * @param value The new value
+	 * @param time  The new value's timestamp
 	 */
 	public void set(E value, long time) {
 		current = value;
@@ -116,12 +112,14 @@ public abstract class Attribute<E> extends Updatable<AttributeUpdate> implements
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void merge(AttributeUpdate update) throws Exception {
-		FieldDescriptor oneof = update.getOneofFieldDescriptor(UPDATE_ONEOF);
-		if (oneof == null)
-			throw new InvalidUpdateException();
+	public void merge(AttributeNodeUpdate updates) throws Exception {
+		for (AttributeUpdate update : updates.getAttributeUpdateList()) {
+			FieldDescriptor oneof = update.getOneofFieldDescriptor(UPDATE_ONEOF);
+			if (oneof == null)
+				throw new InvalidUpdateException();
 
-		set((E) update.getField(oneof));
+			set((E) update.getField(oneof));
+		}
 	}
 
 	@Override

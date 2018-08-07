@@ -17,8 +17,22 @@
  *****************************************************************************/
 package com.sandpolis.core.attribute;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Transient;
+
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ByteString.ByteIterator;
+import com.sandpolis.core.instance.Updatable;
+import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
 
 /**
  * An {@link AttributeNode} represents a node in an attribute tree. Every node
@@ -32,18 +46,19 @@ import com.google.protobuf.ByteString.ByteIterator;
  * 
  * There are two {@link AttributeNode} implementations: a branch type which may
  * exist anywhere in the tree ({@link AttributeGroup}) and a leaf type
- * ({@link Attribute}.<br>
+ * ({@link Attribute}) that contains data.<br>
  * <br>
  * The attribute tree can be traversed downwards using the
  * {@link #getNode(ByteIterator)} method with an iterator for an ID chain.<br>
  * <br>
- * The children of this {@link AttributeNode} can be iterated using
+ * The children of a {@link AttributeNode} can be iterated using its
  * {@link #iterator}.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public interface AttributeNode extends Iterable<AttributeNode> {
+@Entity
+public abstract class AttributeNode extends Updatable<AttributeNodeUpdate> implements Iterable<AttributeNode> {
 
 	/**
 	 * Indicates a one-byte characteristic ID.
@@ -66,30 +81,43 @@ public interface AttributeNode extends Iterable<AttributeNode> {
 	public static final int QUAD = 4;
 
 	/**
+	 * The database ID.
+	 */
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(nullable = false)
+	private int id;
+
+	/**
+	 * The node's parent which is stored to allow change events to propegate upwards
+	 * in the tree.
+	 */
+	@Transient // TODO
+	private AttributeNode parent;
+
+	/**
 	 * Get a descendent of this {@link AttributeNode} according to the given
-	 * {@link ByteString} iterator. Each value from the iterator specifies which
-	 * child to search on each level. The implementation will likely call
-	 * {@link getNode} recursively on each level until the {@link ByteString} runs
-	 * out. When this method is called with an exhausted iterator, it should return
-	 * {@code this}.
+	 * {@link ByteString} iterator (relative location). Each value from the iterator
+	 * specifies which child to search on each level. The implementation will likely
+	 * call {@link getNode} recursively on each level until the {@link ByteString}
+	 * runs out. When this method is called with an exhausted iterator, it should
+	 * return {@code this}.
 	 * 
-	 * @param key
-	 *            An {@link Iterator} for a {@link ByteString} which fully describes
-	 *            the location of the desired {@link AttributeNode}
+	 * @param key An {@link Iterator} for a {@link ByteString} which fully describes
+	 *            the relative location of the desired {@link AttributeNode}
 	 * @return The requested {@link AttributeNode} or {@code null}
 	 */
-	public AttributeNode getNode(ByteIterator key);
+	public abstract AttributeNode getNode(ByteIterator key);
 
 	/**
 	 * Get a descendent of this {@link AttributeNode} according to the given
 	 * {@link ByteString}.
 	 * 
-	 * @param key
-	 *            A {@link ByteString} which fully describes the location of the
+	 * @param key A {@link ByteString} which fully describes the location of the
 	 *            desired {@link AttributeNode}
 	 * @return The requested {@link AttributeNode} or {@code null}
 	 */
-	default public AttributeNode getNode(ByteString key) {
+	public AttributeNode getNode(ByteString key) {
 		return getNode(key.iterator());
 	}
 
@@ -98,12 +126,11 @@ public interface AttributeNode extends Iterable<AttributeNode> {
 	 * {@link AttributeNodeKey}. This method cannot be used for plural
 	 * {@link AttributeNode}s because {@link AttributeNodeKey}s are strictly static.
 	 * 
-	 * @param key
-	 *            A {@link AttributeNodeKey} which corresponds to the desired
+	 * @param key A {@link AttributeNodeKey} which corresponds to the desired
 	 *            {@link AttributeNode}
 	 * @return The requested {@link AttributeNode} or {@code null}
 	 */
-	default public AttributeNode getNode(AttributeNodeKey key) {
+	public AttributeNode getNode(AttributeNodeKey key) {
 		return getNode(key.chain().iterator());
 	}
 
@@ -111,17 +138,20 @@ public interface AttributeNode extends Iterable<AttributeNode> {
 	 * Add a child node. The implementing class must not be a leaf type otherwise
 	 * {@link UnsupportedOperationException} will be thrown.
 	 * 
-	 * @param node
-	 *            A new {@link AttributeNode} which may be a branch or leaf
+	 * @param node A new {@link AttributeNode} which may be a branch or leaf
 	 */
-	public void addNode(AttributeNode node);
+	public abstract void addNode(AttributeNode node);
+
+	public void setParent(AttributeNode node) {
+		parent = node;
+	}
 
 	/**
 	 * Get the number of children of this node.
 	 * 
 	 * @return The number of children
 	 */
-	public int getSize();
+	public abstract int getSize();
 
 	/**
 	 * Get the characteristic ID which uniquely identifies a node among its sibling
@@ -129,6 +159,62 @@ public interface AttributeNode extends Iterable<AttributeNode> {
 	 * 
 	 * @return The node's characteristic ID
 	 */
-	public int getCharacteristic();
+	public abstract int getCharacteristic();
 
+	/**
+	 * Indicates whether this {@link AttributeNode} is anonymous and therefore has
+	 * no corresponding {@link AttributeNodeKey}. The parent of an anonymous node
+	 * must be plural and all children of a plural node must be anonymous.
+	 * 
+	 * @return True if this {@link AttributeNode} is anonymous
+	 */
+	public abstract boolean isAnonymous();
+
+	public Stream<AttributeNode> stream() {
+		Iterable<AttributeNode> iterable = () -> iterator();
+		return StreamSupport.stream(iterable.spliterator(), false);
+	}
+
+	@Transient
+	private List<AttributeChangeListener> listeners;
+
+	/**
+	 * Register a new listener on this {@link AttributeNode}.
+	 * 
+	 * @param listener
+	 */
+	public void register(AttributeChangeListener listener) {
+		listeners.add(listener);
+	}
+
+	/**
+	 * Fire a change event.
+	 * 
+	 * @param node The node that changed
+	 */
+	public void fireChanged(AttributeNode node) {
+		synchronized (listeners) {
+			for (AttributeChangeListener listener : listeners) {
+				listener.changed(node);
+			}
+		}
+
+		if (parent != null)
+			parent.fireChanged(node);
+	}
+
+	/**
+	 * When registered on an {@link AttributeNode}, this listener receives change
+	 * notifications for the node and all transitive children of the node.
+	 */
+	public static interface AttributeChangeListener {
+
+		/**
+		 * Indicates an attribute node has changed.
+		 * 
+		 * @param node The node that changed
+		 */
+		public void changed(AttributeNode node);
+
+	}
 }
