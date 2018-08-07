@@ -31,7 +31,7 @@ import javax.persistence.Transient;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ByteString.ByteIterator;
-import com.sandpolis.core.instance.Updatable;
+import com.sandpolis.core.instance.Updatable.AbstractUpdatable;
 import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
 
 /**
@@ -58,7 +58,7 @@ import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
  * @since 5.0.0
  */
 @Entity
-public abstract class AttributeNode extends Updatable<AttributeNodeUpdate> implements Iterable<AttributeNode> {
+public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdate> implements Iterable<AttributeNode> {
 
 	/**
 	 * Indicates a one-byte characteristic ID.
