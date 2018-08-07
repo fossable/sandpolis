@@ -35,6 +35,7 @@ import com.sandpolis.server.exe.ListenerExe;
 import com.sandpolis.server.exe.LoginExe;
 import com.sandpolis.server.exe.ServerExe;
 import com.sandpolis.server.exe.UserExe;
+import com.sandpolis.server.net.handler.ProxyHandler;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -88,10 +89,8 @@ public class ServerInitializer extends PipelineInitializer {
 	/**
 	 * Construct a {@code ServerInitializer} with the given certificate.
 	 * 
-	 * @param cert
-	 *            The certificate
-	 * @param key
-	 *            The private key
+	 * @param cert The certificate
+	 * @param key  The private key
 	 */
 	public ServerInitializer(byte[] cert, byte[] key) {
 		super(exelets);
@@ -123,8 +122,12 @@ public class ServerInitializer extends PipelineInitializer {
 			ch.attr(ChannelConstant.HANDLER_SSL).set(ssl);
 		}
 
+		// Add CVID handler
 		ch.pipeline().addBefore("exe", "cvid", cvidHandler);
 		ch.attr(ChannelConstant.FUTURE_CVID).set(new DefaultPromise<>(ch.eventLoop()));
+
+		// Add proxy handler
+		ch.pipeline().addAfter("protobuf.frame_decoder", "proxy", new ProxyHandler());
 	}
 
 	public SslContext getSslContext() throws Exception {

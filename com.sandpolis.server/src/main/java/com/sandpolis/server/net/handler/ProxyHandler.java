@@ -31,6 +31,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
+import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
 import io.netty.util.ReferenceCountUtil;
 
 /**
@@ -83,8 +84,9 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 				Sock con = ConnectionStore.get(to);
 				if (con != null) {
 					msg.resetReaderIndex();
-					// Skip protobuf encoder in outbound pipeline
-					con.send(msg);
+					// Skip to the middle of the pipeline
+					((ProtobufVarint32LengthFieldPrepender) con.channel().pipeline().get("protobuf.frame_encoder"))
+							.acceptOutboundMessage(msg);
 				} else {
 					ctx.channel().writeAndFlush(Message.newBuilder()
 							.setEvEndpointClosed(EV_EndpointClosed.newBuilder().setCvid(to)).build());

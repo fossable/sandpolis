@@ -90,8 +90,7 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 	/**
 	 * Construct a new {@link PipelineInitializer}.
 	 * 
-	 * @param exelets
-	 *            Classes that will be scanned to build a {@link ExecuteHandler}
+	 * @param exelets Classes that will be scanned to build a {@link ExecuteHandler}
 	 */
 	@SuppressWarnings("unchecked")
 	public PipelineInitializer(Class<? extends Exelet>[] exelets) {
@@ -115,10 +114,10 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 
 		p.addLast(EVENT);
 
-		p.addLast(new ProtobufVarint32FrameDecoder());
-		p.addLast(PROTO_DECODER);
-		p.addLast(PROTO_FRAME_ENCODER);
-		p.addLast(PROTO_ENCODER);
+		p.addLast("protobuf.frame_decoder", new ProtobufVarint32FrameDecoder());
+		p.addLast("protobuf.decoder", PROTO_DECODER);
+		p.addLast("protobuf.frame_encoder", PROTO_FRAME_ENCODER);
+		p.addLast("protobuf.encoder", PROTO_ENCODER);
 
 		if (Config.LOG_NET)
 			p.addLast(LOGGING);

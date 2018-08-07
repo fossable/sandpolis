@@ -37,7 +37,6 @@ import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.util.IDUtil;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
@@ -405,16 +404,6 @@ public class Sock {
 	 */
 	public void send(Message.Builder message) {
 		send(message.build());
-	}
-
-	/**
-	 * Write a raw {@link ByteBuf} and flush the {@link Channel}.
-	 * 
-	 * @param buffer The {@link ByteBuf} to send
-	 */
-	public void send(ByteBuf buffer) {
-		// Skip protobuf encoding by writing to a ChannelHandlerContext
-		channel.attr(ChannelConstant.PROXY_OUTBOUND).get().writeAndFlush(buffer);
 	}
 
 	/**
