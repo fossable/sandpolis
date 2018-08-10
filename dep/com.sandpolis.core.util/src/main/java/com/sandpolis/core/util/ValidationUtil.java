@@ -18,6 +18,7 @@
 package com.sandpolis.core.util;
 
 import java.io.File;
+import java.security.cert.CertificateException;
 
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.commons.validator.routines.RegexValidator;
@@ -196,10 +197,16 @@ public final class ValidationUtil {
 			return false;
 		if (!port(config.getPort()))
 			return false;
-		if (InetAddressValidator.getInstance().isValidInet4Address(config.getAddress()))
+		if (!InetAddressValidator.getInstance().isValidInet4Address(config.getAddress()))
 			return false;
-		if (!(config.getCert() == ByteString.EMPTY && config.getKey() == ByteString.EMPTY)) {
-			// TODO validate certificate and key format
+		if (config.getCert() != ByteString.EMPTY && config.getKey() != ByteString.EMPTY) {
+			// Validate certificate and key formats
+			try {
+				CertUtil.parse(config.getCert().toByteArray());
+				CertUtil.parse(config.getKey().toByteArray());
+			} catch (CertificateException e) {
+				return false;
+			}
 		}
 
 		return true;
