@@ -6,7 +6,8 @@
 ext.lib = [
 
 	// Unit testing
-	junit: 'org.junit.jupiter:junit-jupiter-engine:5.3.0-M1',
+	junit: ['org.junit.jupiter:junit-jupiter-engine:5.3.0-M1',
+			'org.junit.jupiter:junit-jupiter-params:5.3.0-M1'],
 
 	// Logging
 	slf4j: 'org.slf4j:slf4j-api:1.7.25',

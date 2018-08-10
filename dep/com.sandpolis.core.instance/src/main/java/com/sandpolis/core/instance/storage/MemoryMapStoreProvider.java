@@ -42,11 +42,7 @@ public class MemoryMapStoreProvider<E> extends EphemeralStoreProvider<E> impleme
 
 	@Override
 	public void add(E e) {
-		try {
-			map.put(getId.invoke(e), e);
-		} catch (Throwable t) {
-			throw new RuntimeException(t);
-		}
+		map.put(getId(e), e);
 	}
 
 	@Override
@@ -79,7 +75,7 @@ public class MemoryMapStoreProvider<E> extends EphemeralStoreProvider<E> impleme
 
 	@Override
 	public void remove(E e) {
-		map.remove(e);
+		map.remove(getId(e));
 	}
 
 }

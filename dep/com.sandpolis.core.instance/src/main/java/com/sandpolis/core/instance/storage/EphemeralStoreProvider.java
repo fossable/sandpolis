@@ -19,6 +19,7 @@ package com.sandpolis.core.instance.storage;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Field;
 
 import javax.persistence.Id;
@@ -37,22 +38,36 @@ public abstract class EphemeralStoreProvider<E> {
 	protected final Class<E> cls;
 
 	/**
+	 * A lookup object for {@link #cls}.
+	 */
+	protected final Lookup privateLookup;
+
+	/**
 	 * A handle on the getter for the primary ID.
 	 */
-	protected MethodHandle getId;
+	private MethodHandle getId;
 
 	protected EphemeralStoreProvider(Class<E> cls) {
 		this.cls = cls;
 
 		try {
+			this.privateLookup = MethodHandles.privateLookupIn(cls, MethodHandles.lookup());
 			for (Field field : cls.getDeclaredFields()) {
 				if (field.getAnnotation(Id.class) != null) {
-					getId = MethodHandles.lookup().findGetter(cls, field.getName(), field.getType());
+					getId = privateLookup.findGetter(cls, field.getName(), field.getType());
 					break;
 				}
 			}
 		} catch (SecurityException | NoSuchFieldException | IllegalAccessException e) {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(e);
+		}
+	}
+
+	protected Object getId(E e) {
+		try {
+			return getId.invoke(e);
+		} catch (Throwable t) {
+			throw new RuntimeException(t);
 		}
 	}
 
@@ -62,9 +77,8 @@ public abstract class EphemeralStoreProvider<E> {
 	 * @param field The field name
 	 * @return A handle on the field getter
 	 */
-	protected MethodHandle fieldGetter(String field)
-			throws NoSuchFieldException, IllegalAccessException, SecurityException {
-		return MethodHandles.lookup().findGetter(cls, field, cls.getField(field).getType());
+	protected MethodHandle fieldGetter(String field) throws NoSuchFieldException, IllegalAccessException {
+		return privateLookup.findGetter(cls, field, cls.getDeclaredField(field).getType());
 	}
 
 }

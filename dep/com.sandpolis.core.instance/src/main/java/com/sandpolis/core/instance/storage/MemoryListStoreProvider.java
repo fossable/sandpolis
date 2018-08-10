@@ -48,15 +48,11 @@ public class MemoryListStoreProvider<E> extends EphemeralStoreProvider<E> implem
 
 	@Override
 	public E get(Object id) {
-		try {
-			for (E e : list) {
-				if (getId.invokeExact(e).equals(id))
-					return e;
-			}
-			return null;
-		} catch (Throwable t) {
-			throw new RuntimeException(t);
+		for (E e : list) {
+			if (getId(e).equals(id))
+				return e;
 		}
+		return null;
 	}
 
 	@Override
