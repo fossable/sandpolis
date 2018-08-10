@@ -53,6 +53,7 @@ import com.sandpolis.core.proto.util.Generator.NetworkConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 import com.sandpolis.core.proto.util.Generator.OutputFormat;
 import com.sandpolis.core.proto.util.Generator.OutputPayload;
+import com.sandpolis.core.proto.util.Listener.ListenerConfig;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.AsciiUtil;
@@ -91,7 +92,7 @@ public final class Server {
 		MainDispatch.register(Server::loadServerStores, Server.class, "loadServerStores");
 		MainDispatch.register(Server::installDebugClient, Server.class, "installDebugClient");
 		MainDispatch.register(Server::loadListeners, Server.class, "loadListeners");
-
+		MainDispatch.register(Server::post, Server.class, "post");
 	}
 
 	/**
@@ -213,6 +214,30 @@ public final class Server {
 		} catch (Exception e) {
 			return failure(outcome, e);
 		}
+
+		return success(outcome);
+	}
+
+	/**
+	 * Perform a self-test.
+	 * 
+	 * @return The {@link Outcome} of the task
+	 */
+	@InitializationTask
+	private static Outcome post() {
+		Outcome.Builder outcome = begin("Power-on self test");
+		if (!Config.POST)
+			return success(outcome, "Skipped");
+
+		log.info("Performing POST");
+
+		// Test UserStore
+		if (!UserStore.add("POSTUSER", "password", 0).getResult())
+			return failure(outcome);
+
+		// Test ListenerStore
+		ListenerStore.add(ListenerConfig.newBuilder().setPort(7000).setAddress("0.0.0.0").setOwner("POSTUSER")
+				.setName("POST").build());
 
 		return success(outcome);
 	}

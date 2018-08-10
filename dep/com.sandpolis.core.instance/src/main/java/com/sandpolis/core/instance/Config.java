@@ -91,6 +91,16 @@ public final class Config {
 	 */
 	public static final boolean NO_SSL;
 
+	/**
+	 * Implications of {@code POST}:
+	 * <ul>
+	 * <li>The instance will perform a self-test upon startup</li>
+	 * </ul>
+	 * 
+	 * Default: {@code false}
+	 */
+	public static final boolean POST;
+
 	static {
 		Properties prop = new Properties();
 		try (FileInputStream in = new FileInputStream("instance.properties")) {
@@ -103,12 +113,13 @@ public final class Config {
 		prop.putAll(System.getProperties());
 
 		// Parse properties
-		DB_PROVIDER = prop.getProperty("db.provider", "ormlite");
+		DB_PROVIDER = prop.getProperty("db.provider", "hibernate");
 		DB_URL = prop.getProperty("db.url", null);
 		DEBUG_CLIENT = Boolean.parseBoolean(prop.getProperty("debug-client", "false"));
 		LOG_NET = Boolean.parseBoolean(prop.getProperty("log-net", "false"));
 		LOG_NET_RAW = Boolean.parseBoolean(prop.getProperty("log-net-raw", "false"));
 		NO_MUTEX = Boolean.parseBoolean(prop.getProperty("no-mutex", "false"));
 		NO_SSL = Boolean.parseBoolean(prop.getProperty("no-ssl", "true"));
+		POST = Boolean.parseBoolean(prop.getProperty("post", "true"));
 	}
 }
