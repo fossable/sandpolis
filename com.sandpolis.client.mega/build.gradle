@@ -24,6 +24,7 @@ dependencies {
 	implementation lib.slf4j
 	implementation lib.jpa
 	implementation lib.guava
+	implementation lib.netty
 }
 
 jar {
