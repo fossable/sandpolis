@@ -91,7 +91,14 @@ public final class HibernateDatabaseFactory {
 
 				// Set the credentials
 				.setProperty("hibernate.connection.username", db.getUsername())
-				.setProperty("hibernate.connection.password", db.getPassword());
+				.setProperty("hibernate.connection.password", db.getPassword())
+
+				// Set the database URL
+				.setProperty("hibernate.connection.url", db.getUrl())
+
+				// Set additional options
+				.setProperty("hibernate.hbm2ddl.auto", "create")
+				.setProperty("hibernate.current_session_context_class", "thread");
 		for (Class<?> cls : persist)
 			conf.addAnnotatedClass(cls);
 

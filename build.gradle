@@ -32,6 +32,8 @@ ext.lib = [
 				'com.j256.ormlite:ormlite-jdbc:5.1'],
 	ormlite_android: 'com.j256.ormlite:ormlite-android:5.1',
 	sqlite: 'org.xerial:sqlite-jdbc:3.23.1',
+	mariadb: 'ch.vorburger.mariaDB4j:mariaDB4j:2.3.0',
+	mysql: 'mysql:mysql-connector-java:8.0.12',
 
 	// Unit conversion
 	unit: ['javax.measure:unit-api:1.0',

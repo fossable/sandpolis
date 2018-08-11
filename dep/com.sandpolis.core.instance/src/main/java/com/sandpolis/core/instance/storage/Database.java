@@ -59,6 +59,18 @@ public final class Database implements AutoCloseable {
 	protected String url;
 
 	/**
+	 * The database username.
+	 */
+	@Column
+	protected String username;
+
+	/**
+	 * The database password.
+	 */
+	@Column
+	protected String password;
+
+	/**
 	 * A timestamp of the last successful connection.
 	 */
 	@Column
@@ -71,7 +83,7 @@ public final class Database implements AutoCloseable {
 	private DatabaseConnection connection;
 
 	/**
-	 * Construct a new {@link Database} from the given URL.
+	 * Construct a new {@link Database} from the given URL with blank credentials.
 	 * 
 	 * @param url The database url
 	 * @throws URISyntaxException If the url format is incorrect
@@ -81,6 +93,28 @@ public final class Database implements AutoCloseable {
 			throw new IllegalArgumentException();
 
 		this.url = new URI(url).toString();
+		this.username = "";
+		this.password = "";
+	}
+
+	/**
+	 * Construct a new {@link Database} from the given URL with the given
+	 * credentials.
+	 * 
+	 * @param url      The database url
+	 * @param username The database username
+	 * @param password The database password
+	 * @throws URISyntaxException If the url format is incorrect
+	 */
+	public Database(String url, String username, String password) throws URISyntaxException {
+		this(url);
+		if (username == null)
+			throw new IllegalArgumentException();
+		if (password == null)
+			throw new IllegalArgumentException();
+
+		this.username = username;
+		this.password = password;
 	}
 
 	/**
@@ -134,6 +168,24 @@ public final class Database implements AutoCloseable {
 	 */
 	public String getUrl() {
 		return url;
+	}
+
+	/**
+	 * Get the database username.
+	 * 
+	 * @return The username
+	 */
+	public String getUsername() {
+		return username;
+	}
+
+	/**
+	 * Get the database password.
+	 * 
+	 * @return The password
+	 */
+	public String getPassword() {
+		return password;
 	}
 
 	/**

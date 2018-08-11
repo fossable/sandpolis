@@ -16,6 +16,8 @@ eclipse {
 
 dependencies {
 	testImplementation lib.junit
+	testImplementation lib.mariadb
+	testImplementation lib.mysql
 	
 	implementation project(':dep:com.sandpolis.core.instance')
 	implementation lib.slf4j
