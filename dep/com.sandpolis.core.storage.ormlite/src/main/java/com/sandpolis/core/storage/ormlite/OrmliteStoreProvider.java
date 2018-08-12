@@ -17,10 +17,16 @@
  *****************************************************************************/
 package com.sandpolis.core.storage.ormlite;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
+import com.j256.ormlite.dao.CloseableIterator;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.support.ConnectionSource;
@@ -80,7 +86,20 @@ public class OrmliteStoreProvider<E> implements StoreProvider<E> {
 
 	@Override
 	public Iterator<E> iterator() {
-		return dao.iterator();
+		return dao.iterator();// TODO leak
+	}
+
+	@Override
+	public Stream<E> stream() {
+		CloseableIterator<E> it = dao.iterator();
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.DISTINCT), false)
+				.onClose(() -> {
+					try {
+						it.close();
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				});
 	}
 
 	@Override

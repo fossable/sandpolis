@@ -87,7 +87,7 @@ public final class HibernateDatabaseFactory {
 				.setProperty("connection.driver_class", "com.mysql.jdbc.Driver")
 
 				// Set the MySQL dialect
-				.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect")
+				.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL5Dialect")
 
 				// Set the credentials
 				.setProperty("hibernate.connection.username", db.getUsername())

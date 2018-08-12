@@ -107,11 +107,14 @@ public interface StoreProvider<E> extends Iterable<E> {
 	 * @return The number of elements in the store
 	 */
 	default public long count() {
-		return stream().count();
+		try (Stream<E> stream = stream()) {
+			return stream.count();
+		}
 	}
 
 	/**
-	 * Get a {@link Stream} over the elements in the store.
+	 * Get a {@link Stream} over the elements in the store. The stream <b>MUST</b>
+	 * be properly closed, otherwise resources will leak.
 	 * 
 	 * @return A new {@link Stream} over the elements in the store
 	 */
