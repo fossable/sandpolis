@@ -78,4 +78,9 @@ public class MemoryMapStoreProvider<E> extends EphemeralStoreProvider<E> impleme
 		map.remove(getId(e));
 	}
 
+	@Override
+	public void clear() {
+		map.clear();
+	}
+
 }

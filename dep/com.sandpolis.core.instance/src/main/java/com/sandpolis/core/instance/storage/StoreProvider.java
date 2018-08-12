@@ -76,6 +76,11 @@ public interface StoreProvider<E> extends Iterable<E> {
 	public void remove(E e);
 
 	/**
+	 * Remove all elements from the store's backing storage.
+	 */
+	public void clear();
+
+	/**
 	 * Indicates whether an element exists in the store.
 	 * 
 	 * @param id The primary key of the element

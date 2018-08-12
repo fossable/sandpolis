@@ -83,4 +83,9 @@ public class MemoryListStoreProvider<E> extends EphemeralStoreProvider<E> implem
 		list.remove(e);
 	}
 
+	@Override
+	public void clear() {
+		list.clear();
+	}
+
 }

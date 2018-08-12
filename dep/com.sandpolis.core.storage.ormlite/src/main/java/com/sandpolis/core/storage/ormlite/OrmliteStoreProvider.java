@@ -24,6 +24,7 @@ import java.util.List;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.support.ConnectionSource;
+import com.j256.ormlite.table.TableUtils;
 import com.sandpolis.core.instance.storage.StoreProvider;
 
 /**
@@ -95,6 +96,15 @@ public class OrmliteStoreProvider<E> implements StoreProvider<E> {
 	public void remove(E item) {
 		try {
 			dao.delete(item);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public void clear() {
+		try {
+			TableUtils.clearTable(dao.getConnectionSource(), dao.getDataClass());
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
