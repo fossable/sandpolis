@@ -82,7 +82,7 @@ public final class ValidationUtil {
 	 * Password validator.
 	 */
 	private static final RegexValidator PASSWORD_REGEX = new RegexValidator(
-			String.format("^[.]{%d,%d}$", GROUP_MIN, GROUP_MAX));
+			String.format("^.{%d,%d}$", PASSWORD_MIN, PASSWORD_MAX));
 
 	/**
 	 * Private IPv4 validator.
