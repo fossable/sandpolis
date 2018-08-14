@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.lang.reflect.Method;
 
+import com.sandpolis.core.net.Exelet.AccessPredicate;
 import com.sandpolis.core.net.handler.ExecuteHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -49,7 +50,7 @@ public class ExeletTest {
 	 */
 	protected void testDeclaration(Class<? extends Exelet> _class) {
 		for (Method m : _class.getMethods()) {
-			if (m.getDeclaringClass() == _class) {
+			if (m.getDeclaringClass() == _class && !m.isAnnotationPresent(AccessPredicate.class)) {
 				// Check parameters
 				Class<?>[] params = m.getParameterTypes();
 				assertEquals(1, params.length);
@@ -68,6 +69,7 @@ public class ExeletTest {
 	/**
 	 * Initialize a new testing channel.
 	 */
+	@SuppressWarnings("unchecked")
 	protected void initChannel() {
 		channel = new EmbeddedChannel();
 		channel.attr(ChannelConstant.HANDLER_EXECUTE).set(new ExecuteHandler(new Class[] {}));

@@ -20,7 +20,6 @@ package com.sandpolis.core.net.handler;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,14 +57,13 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 	 * authentication state) are met. Therefore, invalid messages will always be
 	 * ignored.
 	 */
-	private Map<MsgOneofCase, MethodHandle> handles;
+	private final Map<MsgOneofCase, MethodHandle> handles;
 
 	/**
 	 * Indicates whether the {@code ExecuteHandler} has a registered handler for the
 	 * given message type.
 	 * 
-	 * @param type
-	 *            The message type
+	 * @param type The message type
 	 * @return True if there exists an {@link Exelet} handler for the message type
 	 */
 	public boolean containsHandler(MsgOneofCase type) {
@@ -86,7 +84,7 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 	 * in {@link #handles} and the message's ID is in {@link #responseMap}, the
 	 * MessageFuture is removed and notified.
 	 */
-	private Map<Integer, MessageFuture> responseMap;
+	private final Map<Integer, MessageFuture> responseMap;
 
 	/**
 	 * Get the response map.
@@ -103,12 +101,9 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 	private final Map<Class<? extends Exelet>, Exelet> exelets;
 
 	/**
-	 * Create a new {@code ExecuteHandler} with the given {@link Exelet} list.
+	 * Create a new {@link ExecuteHandler} with the given {@link Exelet} list.
 	 * 
-	 * @param exelets
-	 *            A list of available {@link Exelet}s
-	 * @param state
-	 *            The connection state
+	 * @param exelets A list of available {@link Exelet}s
 	 */
 	public ExecuteHandler(Class<? extends Exelet>[] exelets) {
 		if (exelets == null)
@@ -119,44 +114,54 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 
 		this.exelets = new HashMap<>();
 		for (Class<? extends Exelet> exelet : exelets)
-			// Null values are permissible in this use case
+			// Use null values to indicate that an exelet has not been loaded yet
 			this.exelets.put(exelet, null);
 	}
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-		MethodHandle handle = handles.get(msg.getMsgOneofCase());
 
+		MethodHandle handle = handles.get(msg.getMsgOneofCase());
 		if (handle != null) {
-			// Execute the message with a predefined handler
+			// Execute the message with the predefined handler
 			try {
-				handle.invokeExact(msg);
-			} catch (Throwable t) {
-				log.error("Failed to invoke handler: {} for message: {}", handle, msg.getMsgOneofCase());
+				handle.invoke(msg);
+			} catch (Throwable e) {
+				throw new RuntimeException(e);
 			}
-		} else if (responseMap.containsKey(msg.getId())) {
-			// Give the message to a waiting Thread
-			responseMap.remove(msg.getId()).setSuccess(msg);
-		} else {
-			// Drop the message
-			log.debug("Dropping message: {}", msg.getMsgOneofCase());
+			return;
 		}
+
+		MessageFuture future = responseMap.remove(msg.getId());
+		if (future != null) {
+			// Give the message to a waiting Thread
+			future.setSuccess(msg);
+			return;
+		}
+
+		// Drop the message
+		log.debug("Dropping a message of type: {}", msg.getMsgOneofCase());
+		if (log.isTraceEnabled())
+			log.trace("Dropped message: {}", msg.toString());
 	}
 
 	/**
 	 * Setup the handler for unauthenticated messages. Permission annotations are
 	 * ignored for unauth handlers.
 	 * 
-	 * @param sock
-	 *            The connector for each {@link Exelet}
+	 * @param sock The connector for each {@link Exelet}
 	 */
 	public void initUnauth(Sock sock) {
-		for (Class<? extends Exelet> _class : exelets.keySet()) {
-			for (Method m : _class.getMethods()) {
-				if (m.isAnnotationPresent(Unauth.class)) {
-					register(sock, _class, m.getName());
+		try {
+			for (Class<? extends Exelet> _class : exelets.keySet()) {
+				for (Method m : _class.getMethods()) {
+					if (m.isAnnotationPresent(Unauth.class)) {
+						register(sock, _class, m);
+					}
 				}
 			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -164,25 +169,27 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 	 * Setup the handler for authenticated messages. Permission annotations will be
 	 * checked.
 	 * 
-	 * @param sock
-	 *            The connector for each {@link Exelet}
+	 * @param sock The connector for each {@link Exelet}
 	 */
 	public void initAuth(Sock sock) {
-		for (Class<? extends Exelet> _class : exelets.keySet()) {
-			for (Method m : _class.getMethods()) {
-				if (m.isAnnotationPresent(Auth.class)) {
-					boolean passed = true;
+		try {
+			for (Class<? extends Exelet> _class : exelets.keySet()) {
+				for (Method m : _class.getMethods()) {
+					if (m.isAnnotationPresent(Auth.class)) {
+						boolean passed = true;
 
-					// Check permissions
-					for (Permission a : m.getAnnotationsByType(Permission.class)) {
-						// TODO
+						// Check permissions
+						for (Permission a : m.getAnnotationsByType(Permission.class)) {
+							// TODO
+						}
+
+						if (passed)
+							register(sock, _class, m);
 					}
-
-					if (passed)
-						register(sock, _class, m.getName());
-
 				}
 			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -190,30 +197,28 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 	 * Associate a message type with a handler. In the event of multiple
 	 * registrations of the same message type, the last registration wins.
 	 * 
-	 * @param sock
-	 *            The connector for the {@link Exelet} instance if necessary
-	 * @param _class
-	 *            The {@link Exelet} class that contains the message handler
-	 * @param name
-	 *            The message type
+	 * @param sock   The connector for the {@link Exelet} instance if necessary
+	 * @param _class The {@link Exelet} class that contains the message handler
+	 * @param method The message handler
 	 */
-	private void register(Sock sock, Class<? extends Exelet> _class, String name) {
-		if (exelets.get(_class) == null)
-			try {
-				exelets.put(_class, _class.getConstructor(Sock.class).newInstance(sock));
-			} catch (InstantiationException | IllegalAccessException | InvocationTargetException
-					| NoSuchMethodException e) {
-				log.error("Failed to instantiate exelet: {}", _class.getName());
-			}
+	private void register(Sock sock, Class<? extends Exelet> _class, Method method) throws Exception {
+		// Retrieve the message type
+		MsgOneofCase type = MsgOneofCase.valueOf(method.getName().toUpperCase());
+		if (type == MsgOneofCase.MSGONEOF_NOT_SET)
+			throw new RuntimeException();
 
-		try {
-			handles.put(MsgOneofCase.valueOf(name.toUpperCase()), MethodHandles.publicLookup().bind(exelets.get(_class),
-					name, MethodType.methodType(void.class, Message.class)));
-		} catch (NoSuchMethodException | IllegalAccessException e) {
-			log.warn("Missing handler for message: {} in {}", name, _class.getName());
-		} catch (IllegalArgumentException e) {
-			log.warn("Message {} not defined in MSG", name);
+		Exelet exelet = exelets.get(_class);
+		if (exelet == null) {
+			// Build a new exelet for the given class
+			exelet = _class.getConstructor(Sock.class).newInstance(sock);
+			exelets.put(_class, exelet);
 		}
+
+		// A direct reference to the message handler
+		MethodHandle handle = MethodHandles.publicLookup().bind(exelet, method.getName(),
+				MethodType.methodType(void.class, Message.class));
+
+		handles.put(type, handle);
 	}
 
 }
