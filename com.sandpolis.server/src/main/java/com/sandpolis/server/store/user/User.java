@@ -26,6 +26,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.sandpolis.server.store.group.Group;
 
@@ -39,13 +40,16 @@ import com.sandpolis.server.store.group.Group;
 @Table(name = "Users")
 public class User {
 
-	/**
-	 * The database ID.
-	 */
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column
-	private int id;
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private int db_id;
+
+	/**
+	 * The user's unique ID.
+	 */
+	@Column(nullable = false, unique = true)
+	private long id;
 
 	/**
 	 * The user's unique username.
@@ -80,7 +84,10 @@ public class User {
 	@ManyToMany(mappedBy = "members")
 	private List<Group> groups;
 
-	public int getId() {
+	@Transient
+	private int cvid;
+
+	public long getId() {
 		return id;
 	}
 
@@ -126,6 +133,15 @@ public class User {
 
 	public User setExpiration(long expiration) {
 		this.expiration = expiration;
+		return this;
+	}
+
+	public int getCvid() {
+		return cvid;
+	}
+
+	public User setCvid(int cvid) {
+		this.cvid = cvid;
 		return this;
 	}
 

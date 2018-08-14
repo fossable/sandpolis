@@ -83,10 +83,8 @@ public final class CryptoUtil {
 	/**
 	 * Compute a hash of the inputs. Parameter order changes the result of the hash!
 	 * 
-	 * @param digest
-	 *            The hash algorithm
-	 * @param input
-	 *            The hash inputs
+	 * @param digest The hash algorithm
+	 * @param input  The hash inputs
 	 * @return The hash as a lowercase hexadecimal String
 	 */
 	public static String hash(MessageDigest digest, char[]... input) {
@@ -106,10 +104,8 @@ public final class CryptoUtil {
 	/**
 	 * Compute a hash of the inputs. Parameter order changes the result of the hash!
 	 * 
-	 * @param digest
-	 *            The hash algorithm
-	 * @param input
-	 *            The hash inputs
+	 * @param digest The hash algorithm
+	 * @param input  The hash inputs
 	 * @return The unencoded hash
 	 */
 	public static byte[] hash(MessageDigest digest, byte[]... input) {
@@ -125,10 +121,8 @@ public final class CryptoUtil {
 	/**
 	 * Compute a hash of the inputs. Parameter order changes the result of the hash!
 	 * 
-	 * @param digest
-	 *            The hash algorithm
-	 * @param input
-	 *            The hash inputs
+	 * @param digest The hash algorithm
+	 * @param input  The hash inputs
 	 * @return The hash as a lowercase hexadecimal String
 	 */
 	public static String hash(MessageDigest digest, String... input) {
@@ -144,10 +138,8 @@ public final class CryptoUtil {
 	/**
 	 * Sign the nonce using SHA256.
 	 * 
-	 * @param nonce
-	 *            The data to be signed
-	 * @param key
-	 *            The signing key
+	 * @param nonce The data to be signed
+	 * @param key   The signing key
 	 * @return The signed nonce in base64
 	 */
 	public static String sign(String nonce, String key) {
@@ -157,10 +149,8 @@ public final class CryptoUtil {
 	/**
 	 * Sign the nonce using SHA256.
 	 * 
-	 * @param nonce
-	 *            The data to be signed
-	 * @param key
-	 *            The signing key
+	 * @param nonce The data to be signed
+	 * @param key   The signing key
 	 * @return The signed nonce in base64
 	 */
 	public static String sign(String nonce, byte[] key) {
@@ -170,10 +160,8 @@ public final class CryptoUtil {
 	/**
 	 * Sign the nonce using SHA256.
 	 * 
-	 * @param nonce
-	 *            The data to be signed
-	 * @param key
-	 *            The signing key
+	 * @param nonce The data to be signed
+	 * @param key   The signing key
 	 * @return The signed nonce in base64
 	 */
 	public static String sign(byte[] nonce, byte[] key) {
@@ -183,8 +171,7 @@ public final class CryptoUtil {
 	/**
 	 * Get a random byte array of given size.
 	 * 
-	 * @param length
-	 *            The size of the resulting nonce
+	 * @param length The size of the resulting nonce
 	 * @return A secure nonce
 	 */
 	public static byte[] getNonce(int length) {
@@ -230,9 +217,9 @@ public final class CryptoUtil {
 		public static class ReciprocalKeyPair {
 
 			@Id
+			@Column
 			@GeneratedValue(strategy = GenerationType.AUTO)
-			@Column(nullable = false)
-			private int id;
+			private int db_id;
 
 			@Column(nullable = false)
 			private byte[] signer;
@@ -277,10 +264,8 @@ public final class CryptoUtil {
 		/**
 		 * Sign the given nonce.
 		 * 
-		 * @param key
-		 *            The SAND5 keypair to use during signing
-		 * @param nonce
-		 *            The original nonce
+		 * @param key   The SAND5 keypair to use during signing
+		 * @param nonce The original nonce
 		 * @return The signed nonce
 		 */
 		public static byte[] sign(ReciprocalKeyPair key, byte[] nonce) {
@@ -305,12 +290,9 @@ public final class CryptoUtil {
 		/**
 		 * Verify a SAND5 signature.
 		 * 
-		 * @param key
-		 *            The SAND5 keypair to use during verification
-		 * @param nonce
-		 *            The original nonce
-		 * @param signature
-		 *            The signed nonce
+		 * @param key       The SAND5 keypair to use during verification
+		 * @param nonce     The original nonce
+		 * @param signature The signed nonce
 		 * @return True if {@code signature} was produced by the reciprocal SAND5
 		 *         keypair; false otherwise
 		 */
@@ -371,8 +353,7 @@ public final class CryptoUtil {
 		 * Compute a hash of the given password with a random salt. Repeated calls to
 		 * this method with the same input should always produce different outputs.
 		 * 
-		 * @param pass
-		 *            The password to hash
+		 * @param pass The password to hash
 		 * @return A PBKDF2 hash of the password
 		 */
 		public static String hash(String pass) {
@@ -389,10 +370,8 @@ public final class CryptoUtil {
 		 * constant time, so brute-force timing attacks could possibly reveal the hash
 		 * given enough attempts.
 		 * 
-		 * @param pass
-		 *            The password to verify
-		 * @param ref
-		 *            The reference password hash
+		 * @param pass The password to verify
+		 * @param ref  The reference password hash
 		 * @return True if the password matches the hash; false otherwise
 		 */
 		public static boolean check(String pass, String ref) {
@@ -421,14 +400,10 @@ public final class CryptoUtil {
 		/**
 		 * Compute a raw PBKDF2 hash.
 		 * 
-		 * @param pass
-		 *            The characters to hash
-		 * @param salt
-		 *            The unencoded salt to include in the hash
-		 * @param iterations
-		 *            The number of iterations to perform
-		 * @param bytes
-		 *            The size of the key
+		 * @param pass       The characters to hash
+		 * @param salt       The unencoded salt to include in the hash
+		 * @param iterations The number of iterations to perform
+		 * @param bytes      The size of the key
 		 * @return The unencoded PBKDF2 hash
 		 */
 		public static byte[] pbkdf2(char[] pass, byte[] salt, int iterations, int bytes) {

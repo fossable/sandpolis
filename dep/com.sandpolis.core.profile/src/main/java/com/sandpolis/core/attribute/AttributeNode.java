@@ -80,13 +80,10 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	 */
 	public static final int QUAD = 4;
 
-	/**
-	 * The database ID.
-	 */
 	@Id
+	@Column
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(nullable = false)
-	private int id;
+	private int db_id;
 
 	/**
 	 * The node's parent which is stored to allow change events to propegate upwards

@@ -44,13 +44,10 @@ import javax.persistence.Transient;
 @Table(name = "Databases")
 public final class Database implements AutoCloseable {
 
-	/**
-	 * The database's unique ID.
-	 */
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column
-	private int id;
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private int db_id;
 
 	/**
 	 * The database url in standard format.
