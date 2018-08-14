@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import com.google.protobuf.Message.Builder;
+import com.google.common.base.CaseFormat;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -182,20 +183,13 @@ public final class ProtoUtil {
 	}
 
 	/**
-	 * Set the payload message of the given message.
+	 * Set the payload of the given message.
 	 * 
 	 * @param msg     The message to receive the payload
 	 * @param payload The payload to insert
 	 * @return {@code msg}
 	 */
 	public static Message.Builder setPayload(Message.Builder msg, MessageOrBuilder payload) {
-		String field = payload.getClass().getName().toLowerCase();
-
-		// Extract type (between the $)
-		field = field.substring(field.indexOf('$') + 1);
-
-		if (field.contains("$"))
-			field = field.substring(0, field.lastIndexOf('$'));
 
 		// Build the payload if not already built
 		if (payload instanceof Builder)
@@ -204,6 +198,13 @@ public final class ProtoUtil {
 		// Handle special case for Outcome
 		if (payload instanceof Outcome)
 			return msg.setRsOutcome((Outcome) payload);
+
+		String field = payload.getClass().getSimpleName();
+		String prefix = field.substring(0, field.indexOf('_') + 1).toLowerCase();
+
+		// Convert case
+		field = prefix
+				+ CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, field.substring(field.indexOf('_') + 1));
 
 		try {
 			return msg.setField(Message.getDescriptor().findFieldByName(field), payload);
