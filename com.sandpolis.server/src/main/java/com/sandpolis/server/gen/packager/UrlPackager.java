@@ -17,12 +17,13 @@
  *****************************************************************************/
 package com.sandpolis.server.gen.packager;
 
+import java.nio.file.Files;
+
 import com.google.common.io.BaseEncoding;
-import com.google.common.io.Files;
+import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Generator.MicroConfig;
-import com.sandpolis.core.util.TempUtil;
 import com.sandpolis.server.gen.Packager;
 
 /**
@@ -58,7 +59,7 @@ public class UrlPackager extends Packager {
 			throw new IncompatiblePayloadException();
 		}
 
-		// TODO create directory for generator output
-		Files.write(url.getBytes(), TempUtil.getFile());
+		// Write to generator output directory
+		Files.write(Environment.GEN_OUTPUT.resolve(config.getId() + ".url"), url.getBytes());
 	}
 }

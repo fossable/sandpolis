@@ -41,9 +41,8 @@ public class JarPackager extends Packager {
 		case MEGA:
 			// TODO runtime image
 
-			// TODO create directory for generator output
+			// Write to generator output directory
 			Files.write(Environment.GEN_OUTPUT.resolve(config.getId() + ".jar"), (byte[]) payload);
-
 			break;
 		default:
 			throw new IncompatiblePayloadException();
