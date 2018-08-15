@@ -17,13 +17,13 @@ repositories {
 dependencies {
 	compile gradleApi()
 
-    compile 'com.google.protobuf:protobuf-java:3.6.0'
-    compile 'com.google.guava:guava:25.1-jre'
+    compile 'com.google.protobuf:protobuf-java:3.6.1'
+    compile 'com.google.guava:guava:26.0-jre'
 }
 
 protobuf {
 	protoc {
-		artifact = 'com.google.protobuf:protoc:3.6.0'
+		artifact = 'com.google.protobuf:protoc:3.6.1'
 	}
 
 	generatedFilesBaseDir = "$projectDir/src/"

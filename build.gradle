@@ -7,29 +7,30 @@ ext.lib = [
 
 	// Unit testing
 	junit: ['org.junit.jupiter:junit-jupiter-engine:5.3.0-M1',
-			'org.junit.jupiter:junit-jupiter-params:5.3.0-M1'],
+		'org.junit.jupiter:junit-jupiter-params:5.3.0-M1'],
 
 	// Logging
 	slf4j: 'org.slf4j:slf4j-api:1.7.25',
-	logback: ['ch.qos.logback:logback-core:1.2.3',
-				'ch.qos.logback:logback-classic:1.2.3'],
 	jansi: 'org.fusesource.jansi:jansi:1.17.1',
+	logback: ['ch.qos.logback:logback-core:1.2.3',
+		'ch.qos.logback:logback-classic:1.2.3'],
 
 	// Networking
-	netty: ['io.netty:netty-common:4.1.27.Final',
-				'io.netty:netty-codec:4.1.27.Final', 
-				'io.netty:netty-transport:4.1.27.Final',
-				'io.netty:netty-handler:4.1.27.Final'],
-	netty_epoll: 'io.netty:netty-transport-native-epoll:4.1.27.Final',
-	netty_kqueue: 'io.netty:netty-transport-native-kqueue:4.1.27.Final',
-	protobuf: 'com.google.protobuf:protobuf-java:3.6.0',
+	netty: ['io.netty:netty-common:4.1.28.Final',
+		'io.netty:netty-codec:4.1.28.Final', 
+		'io.netty:netty-transport:4.1.28.Final',
+		'io.netty:netty-handler:4.1.28.Final'],
+	netty_epoll: 'io.netty:netty-transport-native-epoll:4.1.28.Final',
+	netty_kqueue: 'io.netty:netty-transport-native-kqueue:4.1.28.Final',
+	protobuf: 'com.google.protobuf:protobuf-java:3.6.1',
 
 	// Storage
 	jpa: 'javax.persistence:javax.persistence-api:2.2',
-	hibernate: ['org.hibernate:hibernate-core:5.3.1.Final',
-					'com.github.gwenn:sqlite-dialect:master'],
+	hibernate: ['org.hibernate:hibernate-core:5.3.5.Final',
+		'org.hibernate:hibernate-c3p0:5.3.5.Final',
+		'com.github.gwenn:sqlite-dialect:master'],
 	ormlite: ['com.j256.ormlite:ormlite-core:5.1',
-				'com.j256.ormlite:ormlite-jdbc:5.1'],
+		'com.j256.ormlite:ormlite-jdbc:5.1'],
 	ormlite_android: 'com.j256.ormlite:ormlite-android:5.1',
 	sqlite: 'org.xerial:sqlite-jdbc:3.23.1',
 	mariadb: 'ch.vorburger.mariaDB4j:mariaDB4j:2.3.0',
@@ -37,13 +38,13 @@ ext.lib = [
 
 	// Unit conversion
 	unit: ['javax.measure:unit-api:1.0',
-			'tec.units:unit-ri:1.0.3'],
+		'tec.units:unit-ri:1.0.3'],
 	
 	// User input validator
 	validator: 'commons-validator:commons-validator:1.6',
 
 	// Guava
-	guava: 'com.google.guava:guava:25.1-jre',
+	guava: 'com.google.guava:guava:26.0-jre',
 
 	// Bittorrent
 	ttorrent: 'com.turn:ttorrent-core:1.5',
@@ -52,7 +53,7 @@ ext.lib = [
 	docker: 'com.spotify:docker-client:8.11.7',
 
 	// Hardware information
-	oshi: 'com.github.oshi:oshi-core:3.6.2',
+	oshi: 'com.github.oshi:oshi-core:3.7.2',
 
 	// Zip Utility
 	zt_zip: 'org.zeroturnaround:zt-zip:1.13',
