@@ -131,7 +131,8 @@ message Message {
 		// MC_Listener
 		RQ_AddListener 			rq_add_listener 			= 1000;
 		RQ_RemoveListener 		rq_remove_listener 			= 1001;
-		RQ_ChangeListenerState	rq_change_listener_state	= 1002;
+		RQ_EditListener			rq_edit_listener			= 1002;
+		RQ_ChangeListener		rq_change_listener			= 1003;
 		
 		// MC_Login
 		RQ_Login 				rq_login 					= 1100;

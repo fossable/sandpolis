@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
-import com.sandpolis.core.net.Exelet.AccessPredicate;
 import com.sandpolis.core.net.handler.ExecuteHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -46,11 +46,15 @@ public class ExeletTest {
 	 * <li>All public methods have a single {@code Message} parameter</li>
 	 * </ul>
 	 * 
-	 * @param _class The {@code Exelet} to be tested.
+	 * Implementation note: There's no reason to build a set of method names to
+	 * check that they are unique (1st contraint) because the third constraint
+	 * ensures such a situation would never compile.
+	 * 
+	 * @param _class The {@code Exelet} to be tested
 	 */
 	protected void testDeclaration(Class<? extends Exelet> _class) {
-		for (Method m : _class.getMethods()) {
-			if (m.getDeclaringClass() == _class && !m.isAnnotationPresent(AccessPredicate.class)) {
+		for (Method m : _class.getDeclaredMethods()) {
+			if (Modifier.isPublic(m.getModifiers())) {
 				// Check parameters
 				Class<?>[] params = m.getParameterTypes();
 				assertEquals(1, params.length);

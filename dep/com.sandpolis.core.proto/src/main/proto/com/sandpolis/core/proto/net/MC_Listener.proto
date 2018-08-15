@@ -33,27 +33,36 @@ message RQ_AddListener {
  * Request to remove a listener
  */
 message RQ_RemoveListener {
-	int32 id = 1;
+	int64 id = 1;
+}
+
+/**
+ * Request to edit a listener's configuration
+ */
+message RQ_EditListener {
+	int64 id = 1;
+
+	// 
+	repeated int32 changed = 2;
+
+	util.ListenerConfig config = 3;
 }
 
 /**
  * Request to change a listener's state
  */
-message RQ_ChangeListenerState {
+message RQ_ChangeListener {
 	enum ListenerState {
-		// A listener which is bound to the relevant port and is accepting connections
-		ACTIVE = 0;
+
+		// A listener that is bound to a port and is accepting connections
+		LISTENING = 0;
 		
-		// A listener which is bound, but not accepting connections
-		CLOSED = 1;
-		
-		// A listener which is unbound
-		INACTIVE = 2;
+		// A listener that is unbound and not accepting connections
+		INACTIVE = 1;
 
 	}
 	
-	// One or more listeners to be altered
-	repeated int32 id = 1;
+	int64 id = 1;
 	
 	// The new state
 	ListenerState state = 2;
