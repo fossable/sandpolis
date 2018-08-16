@@ -55,11 +55,11 @@ public class KeyMechanism extends AuthenticationMechanism {
 	private Group group;
 
 	@OneToOne(optional = false, cascade = CascadeType.ALL)
-	@JoinColumn(referencedColumnName = "id")
+	@JoinColumn(referencedColumnName = "db_id")
 	private ReciprocalKeyPair client;
 
 	@OneToOne(optional = false, cascade = CascadeType.ALL)
-	@JoinColumn(referencedColumnName = "id")
+	@JoinColumn(referencedColumnName = "db_id")
 	private ReciprocalKeyPair server;
 
 	/**

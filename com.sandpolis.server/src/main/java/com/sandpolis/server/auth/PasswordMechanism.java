@@ -45,7 +45,7 @@ public class PasswordMechanism extends AuthenticationMechanism {
 	private long mech_id;
 
 	@ManyToOne(optional = false)
-	@JoinColumn(referencedColumnName = "id")
+	@JoinColumn(referencedColumnName = "groupId")
 	private Group group;
 
 	@Column(nullable = false)
