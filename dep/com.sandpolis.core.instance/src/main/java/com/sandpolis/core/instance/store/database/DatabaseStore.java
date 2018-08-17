@@ -23,10 +23,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Store;
-import com.sandpolis.core.instance.storage.Database;
-import com.sandpolis.core.instance.storage.DatabaseFactory;
 import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.storage.database.DatabaseFactory;
 
 /**
  * The {@link DatabaseStore} manages various types of SQL databases.

@@ -22,8 +22,8 @@ import java.sql.SQLException;
 
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import com.sandpolis.core.instance.storage.DatabaseConnection;
 import com.sandpolis.core.instance.storage.StoreProvider;
+import com.sandpolis.core.instance.storage.database.DatabaseConnection;
 
 /**
  * Represents the connection to an Ormlite database.

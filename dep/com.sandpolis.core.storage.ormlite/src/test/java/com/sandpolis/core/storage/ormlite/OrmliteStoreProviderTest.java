@@ -37,8 +37,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.sandpolis.core.instance.storage.Database;
 import com.sandpolis.core.instance.storage.StoreProvider;
+import com.sandpolis.core.instance.storage.database.Database;
 
 import ch.vorburger.exec.ManagedProcessException;
 import ch.vorburger.mariadb4j.DB;

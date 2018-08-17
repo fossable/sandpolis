@@ -28,9 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.Store.ManualInitializer;
-import com.sandpolis.core.instance.storage.Database;
 import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
@@ -114,14 +114,11 @@ public final class UserStore extends Store {
 	 * @return The outcome of the add operation
 	 */
 	public static Outcome add(String username, String password, long expiration) {
-		if (username == null)
-			throw new IllegalArgumentException();
-		if (password == null)
-			throw new IllegalArgumentException();
-
 		Outcome.Builder outcome = begin();
 		if (!ValidationUtil.username(username))
 			return failure(outcome, "Invalid username");
+		if (!ValidationUtil.password(password))
+			return failure(outcome, "Invalid password");
 		if (exists(username))
 			return failure(outcome, "User already exists");
 

@@ -19,8 +19,8 @@ package com.sandpolis.core.storage.hibernate;
 
 import javax.persistence.EntityManagerFactory;
 
-import com.sandpolis.core.instance.storage.DatabaseConnection;
 import com.sandpolis.core.instance.storage.StoreProvider;
+import com.sandpolis.core.instance.storage.database.DatabaseConnection;
 
 /**
  * Represents the connection to a Hibernate database.

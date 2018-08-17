@@ -15,29 +15,32 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.instance.storage;
+package com.sandpolis.core.instance.storage.database.converter;
+
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
+
+import com.sandpolis.core.proto.util.Platform.Instance;
 
 /**
- * Represents the connection to a {@link Database}.
+ * When used on a persistent {@link Instance} field, this converter makes
+ * database operations much more efficient by replacing {@link Instance}s with
+ * their numeric identifier.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public abstract class DatabaseConnection implements AutoCloseable {
+@Converter
+public class InstanceConverter implements AttributeConverter<Instance, Integer> {
 
-	/**
-	 * Indicated whether the connection is currently open.
-	 * 
-	 * @return The connection status
-	 */
-	public abstract boolean isOpen();
+	@Override
+	public Integer convertToDatabaseColumn(Instance instance) {
+		return instance.getNumber();
+	}
 
-	/**
-	 * Obtain a new {@link StoreProvider} for this database.
-	 * 
-	 * @param cls The class type that the provider will manage
-	 * @return A new provider for the given class
-	 */
-	public abstract <E> StoreProvider<E> provider(Class<E> cls);
+	@Override
+	public Instance convertToEntityAttribute(Integer dbData) {
+		return Instance.forNumber(dbData);
+	}
 
 }

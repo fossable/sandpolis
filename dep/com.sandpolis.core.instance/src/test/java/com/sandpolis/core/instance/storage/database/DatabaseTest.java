@@ -15,32 +15,39 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.instance.storage.converter;
+package com.sandpolis.core.instance.storage.database;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.sandpolis.core.proto.util.Platform.Instance;
+import java.net.URISyntaxException;
 
-/**
- * When used on a persistent {@link Instance} field, this converter makes
- * database operations much more efficient by replacing {@link Instance}s with
- * their numeric identifier.
- * 
- * @author cilki
- * @since 5.0.0
- */
-@Converter
-public class InstanceConverter implements AttributeConverter<Instance, Integer> {
+import org.junit.jupiter.api.Test;
 
-	@Override
-	public Integer convertToDatabaseColumn(Instance instance) {
-		return instance.getNumber();
+import com.sandpolis.core.instance.storage.database.Database;
+
+class DatabaseTest {
+
+	@Test
+	void testState() throws Exception {
+		try (Database db = new Database("jdbc:sqlite:file:/home/test.db")) {
+			assertFalse(db.isOpen());
+			assertEquals("/home/test.db", db.getFile().getAbsolutePath());
+		}
+
+		try (Database db = new Database("jdbc:mysql:192.168.1.1/database")) {
+			assertFalse(db.isOpen());
+			assertNull(db.getFile());
+			assertNotNull(db.getUrl());
+		}
 	}
 
-	@Override
-	public Instance convertToEntityAttribute(Integer dbData) {
-		return Instance.forNumber(dbData);
+	@Test
+	void testInvalidUrls() {
+		assertThrows(URISyntaxException.class, () -> new Database("invalid url"));
 	}
 
 }

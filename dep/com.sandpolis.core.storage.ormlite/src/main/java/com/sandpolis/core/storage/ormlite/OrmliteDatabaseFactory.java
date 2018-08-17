@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.sandpolis.core.instance.storage.Database;
+import com.sandpolis.core.instance.storage.database.Database;
 
 /**
  * A factory for producing initialized Ormlite databases.

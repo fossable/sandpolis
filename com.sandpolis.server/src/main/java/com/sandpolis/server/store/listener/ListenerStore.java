@@ -29,9 +29,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.OutcomeSet;
 import com.sandpolis.core.instance.Store;
-import com.sandpolis.core.instance.storage.Database;
 import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener.ListenerState;
 import com.sandpolis.core.proto.util.Listener.ListenerConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;

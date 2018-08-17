@@ -19,7 +19,7 @@ package com.sandpolis.core.storage.hibernate;
 
 import org.hibernate.cfg.Configuration;
 
-import com.sandpolis.core.instance.storage.Database;
+import com.sandpolis.core.instance.storage.database.Database;
 
 /**
  * A factory for producing initialized Hibernate databases.
@@ -59,6 +59,11 @@ public final class HibernateDatabaseFactory {
 				// Set the database URL
 				.setProperty("hibernate.connection.url", db.getUrl())
 
+				.setProperty("hibernate.show_sql", "true")
+
+				// Set pool options
+				.setProperty("hibernate.c3p0.min_size", "0").setProperty("hibernate.c3p0.max_size", "1")
+
 				// Set additional options
 				.setProperty("hibernate.connection.shutdown", "true").setProperty("hibernate.hbm2ddl.auto", "create")
 				.setProperty("hibernate.current_session_context_class", "thread");
@@ -95,6 +100,8 @@ public final class HibernateDatabaseFactory {
 
 				// Set the database URL
 				.setProperty("hibernate.connection.url", db.getUrl())
+
+				// Set pool options
 
 				// Set additional options
 				.setProperty("hibernate.hbm2ddl.auto", "create")

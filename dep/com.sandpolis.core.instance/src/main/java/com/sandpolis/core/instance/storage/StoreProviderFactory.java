@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.core.instance.storage;
 
+import com.sandpolis.core.instance.storage.database.Database;
+
 /**
  * A singleton factory for new {@link StoreProvider} instances.
  * 
