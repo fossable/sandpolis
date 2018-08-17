@@ -19,10 +19,10 @@ package com.sandpolis.core.storage.ormlite;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -31,15 +31,16 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import com.sandpolis.core.instance.storage.ConcurrentStoreProvider;
 import com.sandpolis.core.instance.storage.StoreProvider;
 
 /**
- * A persistent {@code StoreProvider} that is backed by an Ormlite DAO.
+ * A persistent {@link StoreProvider} that is backed by an Ormlite DAO.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public class OrmliteStoreProvider<E> implements StoreProvider<E> {
+public class OrmliteStoreProvider<E> extends ConcurrentStoreProvider<E> implements StoreProvider<E> {
 
 	private Dao<E, Object> dao;
 
@@ -50,15 +51,6 @@ public class OrmliteStoreProvider<E> implements StoreProvider<E> {
 			throw new IllegalArgumentException();
 
 		this.dao = DaoManager.createDao(cs, cls);
-	}
-
-	@Override
-	public void add(E item) {
-		try {
-			dao.createIfNotExists(item);
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	@Override
@@ -85,12 +77,8 @@ public class OrmliteStoreProvider<E> implements StoreProvider<E> {
 	}
 
 	@Override
-	public Iterator<E> iterator() {
-		return dao.iterator();// TODO leak
-	}
-
-	@Override
 	public Stream<E> stream() {
+		beginStream();
 		CloseableIterator<E> it = dao.iterator();
 		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.DISTINCT), false)
 				.onClose(() -> {
@@ -98,6 +86,8 @@ public class OrmliteStoreProvider<E> implements StoreProvider<E> {
 						it.close();
 					} catch (IOException e) {
 						throw new RuntimeException(e);
+					} finally {
+						endStream();
 					}
 				});
 	}
@@ -112,21 +102,29 @@ public class OrmliteStoreProvider<E> implements StoreProvider<E> {
 	}
 
 	@Override
+	public void add(E item) {
+		mutate(() -> dao.createIfNotExists(item));
+	}
+
+	@Override
 	public void remove(E item) {
-		try {
-			dao.delete(item);
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+		mutate(() -> dao.delete(item));
+	}
+
+	@Override
+	public void removeIf(Predicate<E> condition) {
+		mutate(() -> {
+			try (CloseableIterator<E> iterator = dao.iterator()) {
+				while (iterator.hasNext())
+					if (condition.test(iterator.next()))
+						iterator.remove();
+			}
+		});
 	}
 
 	@Override
 	public void clear() {
-		try {
-			TableUtils.clearTable(dao.getConnectionSource(), dao.getDataClass());
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+		mutate(() -> TableUtils.clearTable(dao.getConnectionSource(), dao.getDataClass()));
 	}
 
 }

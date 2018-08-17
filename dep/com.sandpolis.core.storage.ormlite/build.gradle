@@ -18,6 +18,7 @@ dependencies {
 	testImplementation lib.junit
 	testImplementation lib.mariadb
 	testImplementation lib.mysql
+	testImplementation 'net.jodah:concurrentunit:0.4.3'
 	
 	implementation project(':dep:com.sandpolis.core.instance')
 	implementation lib.slf4j

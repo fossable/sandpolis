@@ -17,7 +17,10 @@
  *****************************************************************************/
 package com.sandpolis.core.storage.hibernate;
 
-import java.util.Iterator;
+import java.util.ConcurrentModificationException;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
@@ -29,6 +32,7 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import com.sandpolis.core.instance.storage.ConcurrentStoreProvider;
 import com.sandpolis.core.instance.storage.StoreProvider;
 
 /**
@@ -37,7 +41,7 @@ import com.sandpolis.core.instance.storage.StoreProvider;
  * @author cilki
  * @since 5.0.0
  */
-public class HibernateStoreProvider<E> implements StoreProvider<E> {
+public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implements StoreProvider<E> {
 
 	/**
 	 * The persistent class.
@@ -60,20 +64,39 @@ public class HibernateStoreProvider<E> implements StoreProvider<E> {
 
 	}
 
+	/**
+	 * Get a new {@link Stream} that does not register itself with
+	 * {@link ConcurrentStoreProvider} and therefore is not protected from
+	 * {@link ConcurrentModificationException}s.
+	 * 
+	 * @return A new unsafe stream
+	 */
+	private Stream<E> unsafeStream() {
+		EntityManager em = emf.createEntityManager();
+		CriteriaQuery<E> cq = em.getCriteriaBuilder().createQuery(cls);
+		return em.createQuery(cq.select(cq.from(cls))).getResultStream().onClose(() -> em.close());
+	}
+
 	@Override
 	public void add(E e) {
-		EntityManager em = emf.createEntityManager();
-		em.getTransaction().begin();
-		em.persist(e);
-		em.getTransaction().commit();
-		em.close();
+		mutate(() -> {
+			EntityManager em = emf.createEntityManager();
+			try {
+				em.getTransaction().begin();
+				em.persist(e);
+				em.getTransaction().commit();
+			} finally {
+				em.close();
+			}
+		});
 	}
 
 	@Override
 	public E get(Object id) {
 		EntityManager em = emf.createEntityManager();
-		em.getTransaction().begin();
+		
 		try {
+			em.getTransaction().begin();
 			E e = em.find(cls, id);
 			em.getTransaction().commit();
 			return e;
@@ -85,12 +108,13 @@ public class HibernateStoreProvider<E> implements StoreProvider<E> {
 	@Override
 	public E get(String field, Object id) {
 		EntityManager em = emf.createEntityManager();
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		CriteriaQuery<E> cq = cb.createQuery(cls);
-		Root<E> root = cq.from(cls);
-		TypedQuery<E> tq = em.createQuery(cq.select(root).where(cb.equal(root.get(field), id)));
 
 		try {
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery<E> cq = cb.createQuery(cls);
+			Root<E> root = cq.from(cls);
+			TypedQuery<E> tq = em.createQuery(cq.select(root).where(cb.equal(root.get(field), id)));
+
 			return tq.getSingleResult();
 		} catch (NoResultException e) {
 			return null;
@@ -100,18 +124,13 @@ public class HibernateStoreProvider<E> implements StoreProvider<E> {
 	}
 
 	@Override
-	public Iterator<E> iterator() {
-		return stream().iterator();// TODO leak
-	}
-
-	@Override
 	public long count() {
 		EntityManager em = emf.createEntityManager();
 
-		CriteriaBuilder qb = em.getCriteriaBuilder();
-		CriteriaQuery<Long> cq = qb.createQuery(Long.class);
-		cq.select(qb.count(cq.from(cls)));
 		try {
+			CriteriaBuilder qb = em.getCriteriaBuilder();
+			CriteriaQuery<Long> cq = qb.createQuery(Long.class);
+			cq.select(qb.count(cq.from(cls)));
 			return em.createQuery(cq).getSingleResult();
 		} finally {
 			em.close();
@@ -120,31 +139,62 @@ public class HibernateStoreProvider<E> implements StoreProvider<E> {
 
 	@Override
 	public Stream<E> stream() {
-		EntityManager em = emf.createEntityManager();
-		CriteriaQuery<E> cq = em.getCriteriaBuilder().createQuery(cls);
-		return em.createQuery(cq.select(cq.from(cls))).getResultStream().onClose(() -> em.close());
+		beginStream();
+		return unsafeStream().onClose(() -> endStream());
 	}
 
 	@Override
 	public void remove(E e) {
-		EntityManager em = emf.createEntityManager();
-		em.getTransaction().begin();
-		em.remove(e);
-		em.getTransaction().commit();
-		em.close();
+		mutate(() -> {
+			EntityManager em = emf.createEntityManager();
+			try {
+				em.getTransaction().begin();
+				em.remove(e);
+				em.getTransaction().commit();
+			} finally {
+				em.close();
+			}
+		});
+	}
+
+	@Override
+	public void removeIf(Predicate<E> condition) {
+		mutate(() -> {
+			List<E> removals;
+			try (Stream<E> unsafe = unsafeStream()) {
+				removals = unsafe.filter(condition).collect(Collectors.toList());
+			}
+
+			EntityManager em = emf.createEntityManager();
+			try {
+				em.getTransaction().begin();
+				for (E removal : removals)
+					em.remove(removal);
+				em.getTransaction().commit();
+			} catch (Throwable e) {
+				if (em.getTransaction().isActive())
+					em.getTransaction().rollback();
+			} finally {
+				em.close();
+			}
+		});
 	}
 
 	@Override
 	public void clear() {
-		EntityManager em = emf.createEntityManager();
-		try {
-			CriteriaDelete<E> query = em.getCriteriaBuilder().createCriteriaDelete(cls);
-			query.from(cls);
-			em.createQuery(query).executeUpdate();
-		} catch (Exception ignore) {
-		} finally {
-			em.close();
-		}
+		mutate(() -> {
+			EntityManager em = emf.createEntityManager();
+			try {
+				CriteriaDelete<E> query = em.getCriteriaBuilder().createCriteriaDelete(cls);
+				query.from(cls);
+				em.createQuery(query).executeUpdate();
+			} catch (Exception e) {
+				if (em.getTransaction().isActive())
+					em.getTransaction().rollback();
+			} finally {
+				em.close();
+			}
+		});
 	}
 
 }
