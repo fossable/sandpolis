@@ -16,6 +16,7 @@ eclipse {
 
 dependencies {
 	testImplementation lib.junit
+	testImplementation 'net.jodah:concurrentunit:0.4.3'
 
 	implementation project(':dep:com.sandpolis.core.proto')
 	implementation lib.slf4j

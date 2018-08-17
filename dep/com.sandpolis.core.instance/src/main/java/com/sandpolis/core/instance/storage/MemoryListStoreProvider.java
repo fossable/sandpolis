@@ -18,9 +18,9 @@
 package com.sandpolis.core.instance.storage;
 
 import java.lang.invoke.MethodHandle;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -42,50 +42,58 @@ public class MemoryListStoreProvider<E> extends EphemeralStoreProvider<E> implem
 	}
 
 	@Override
-	public void add(E e) {
-		list.add(e);
-	}
-
-	@Override
 	public E get(Object id) {
-		for (E e : list) {
-			if (getId(e).equals(id))
-				return e;
+		beginStream();
+		try {
+			for (E e : list) {
+				if (id.equals(getId(e)))
+					return e;
+			}
+			return null;
+		} finally {
+			endStream();
 		}
-		return null;
 	}
 
 	@Override
 	public E get(String field, Object id) {
+		beginStream();
 		try {
 			MethodHandle getField = fieldGetter(field);
 			for (E e : list)
 				if (id.equals(getField.invoke(e)))
 					return e;
+			return null;
 		} catch (Throwable t) {
 			throw new RuntimeException(t);
+		} finally {
+			endStream();
 		}
-		return null;
-	}
-
-	@Override
-	public Iterator<E> iterator() {
-		return list.iterator();
 	}
 
 	@Override
 	public Stream<E> stream() {
-		return list.stream();
+		beginStream();
+		return list.stream().onClose(() -> endStream());
+	}
+
+	@Override
+	public void add(E e) {
+		mutate(() -> list.add(e));
 	}
 
 	@Override
 	public void remove(E e) {
-		list.remove(e);
+		mutate(() -> list.remove(e));
+	}
+
+	@Override
+	public void removeIf(Predicate<E> condition) {
+		mutate(() -> list.removeIf(condition));
 	}
 
 	@Override
 	public void clear() {
-		list.clear();
+		mutate(() -> list.clear());
 	}
-
 }

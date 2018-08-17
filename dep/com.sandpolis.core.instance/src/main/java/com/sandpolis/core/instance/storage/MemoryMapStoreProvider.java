@@ -19,8 +19,8 @@ package com.sandpolis.core.instance.storage;
 
 import java.lang.invoke.MethodHandle;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -41,46 +41,50 @@ public class MemoryMapStoreProvider<E> extends EphemeralStoreProvider<E> impleme
 	}
 
 	@Override
-	public void add(E e) {
-		map.put(getId(e), e);
-	}
-
-	@Override
 	public E get(Object id) {
 		return map.get(id);
 	}
 
 	@Override
 	public E get(String field, Object id) {
+		beginStream();
 		try {
 			MethodHandle getField = fieldGetter(field);
 			for (E e : map.values())
 				if (id.equals(getField.invoke(e)))
 					return e;
+			return null;
 		} catch (Throwable t) {
 			throw new RuntimeException(t);
+		} finally {
+			endStream();
 		}
-		return null;
-	}
-
-	@Override
-	public Iterator<E> iterator() {
-		return map.values().iterator();
 	}
 
 	@Override
 	public Stream<E> stream() {
-		return map.values().stream();
+		beginStream();
+		return map.values().stream().onClose(() -> endStream());
+	}
+
+	@Override
+	public void add(E e) {
+		mutate(() -> map.put(getId(e), e));
 	}
 
 	@Override
 	public void remove(E e) {
-		map.remove(getId(e));
+		mutate(() -> map.remove(getId(e)));
+	}
+
+	@Override
+	public void removeIf(Predicate<E> condition) {
+		mutate(() -> map.values().removeIf(condition));
 	}
 
 	@Override
 	public void clear() {
-		map.clear();
+		mutate(() -> map.clear());
 	}
 
 }

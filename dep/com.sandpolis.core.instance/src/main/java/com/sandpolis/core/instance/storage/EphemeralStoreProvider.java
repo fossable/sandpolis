@@ -25,12 +25,13 @@ import java.lang.reflect.Field;
 import javax.persistence.Id;
 
 /**
- * A superclass for {@link StoreProvider}s that only store data temporarily.
+ * A superclass for {@link StoreProvider}s that store data temporarily in
+ * memory.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public abstract class EphemeralStoreProvider<E> {
+public abstract class EphemeralStoreProvider<E> extends ConcurrentStoreProvider<E> {
 
 	/**
 	 * The type managed by the store.
@@ -38,7 +39,7 @@ public abstract class EphemeralStoreProvider<E> {
 	protected final Class<E> cls;
 
 	/**
-	 * A lookup object for {@link #cls}.
+	 * A private lookup object for {@link #cls}.
 	 */
 	protected final Lookup privateLookup;
 
@@ -63,6 +64,12 @@ public abstract class EphemeralStoreProvider<E> {
 		}
 	}
 
+	/**
+	 * Get the value of the primary ID field for the given object.
+	 * 
+	 * @param e The object to query
+	 * @return The object's primary ID
+	 */
 	protected Object getId(E e) {
 		try {
 			return getId.invoke(e);
@@ -72,7 +79,7 @@ public abstract class EphemeralStoreProvider<E> {
 	}
 
 	/**
-	 * Get a field getter for {@link #cls}.
+	 * Get a field getter from {@link #cls}.
 	 * 
 	 * @param field The field name
 	 * @return A handle on the field getter

@@ -22,13 +22,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 import javax.persistence.Id;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import net.jodah.concurrentunit.Waiter;
 
 class StoreProviderTest {
 
@@ -211,6 +218,63 @@ class StoreProviderTest {
 		provider.add(o4);
 
 		assertArrayEquals(new TestObject[] { o1, o2, o4 }, provider.stream().toArray(TestObject[]::new));
+	}
+
+	@ParameterizedTest
+	@MethodSource("implementations")
+	void testConcurrency(StoreProvider<TestObject> provider) throws Exception {
+		Set<Thread> threads = new HashSet<>();
+		Random rand = new Random();
+		Waiter waiter = new Waiter();
+
+		// Add some concurrent mutators
+		for (TestObject o : new TestObject[] { o1, o2, o3, o4, o5, o6 })
+			threads.add(new Thread(() -> {
+				for (int i = 0; i < rand.nextInt(50); i++) {
+					try {
+						provider.add(o);
+						Thread.sleep(rand.nextInt(200));
+						provider.remove(o);
+					} catch (Throwable e) {
+						waiter.fail(e);
+					}
+				}
+				waiter.resume();
+			}));
+
+		// Add some get requests
+		for (TestObject o : new TestObject[] { o1, o2, o3, o4, o5, o6 })
+			threads.add(new Thread(() -> {
+				for (int i = 0; i < rand.nextInt(50); i++) {
+					try {
+						// May be null or nonnull
+						provider.get(o.getId());
+						Thread.sleep(rand.nextInt(200));
+					} catch (Throwable e) {
+						waiter.fail(e);
+					}
+				}
+				waiter.resume();
+			}));
+
+		// Add some iterators
+		for (TestObject o : new TestObject[] { o1, o2, o3, o4, o5, o6 })
+			threads.add(new Thread(() -> {
+				for (int i = 0; i < rand.nextInt(50); i++) {
+					try (Stream<TestObject> stream = provider.stream()) {
+						waiter.assertTrue(stream.count() <= 6);
+						Thread.sleep(rand.nextInt(200));
+					} catch (Throwable e) {
+						waiter.fail(e);
+					}
+				}
+				waiter.resume();
+			}));
+
+		// Start everything at once
+		for (Thread thread : threads)
+			thread.start();
+		waiter.await(30000, 18);
 	}
 
 	static Stream<StoreProvider<TestObject>> implementations() {

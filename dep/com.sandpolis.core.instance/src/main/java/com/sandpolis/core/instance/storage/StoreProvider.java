@@ -17,10 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.core.instance.storage;
 
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import com.sandpolis.core.instance.Store;
 
@@ -41,7 +39,7 @@ import com.sandpolis.core.instance.Store;
  * @author cilki
  * @since 5.0.0
  */
-public interface StoreProvider<E> extends Iterable<E> {
+public interface StoreProvider<E> {
 
 	/**
 	 * Add an object to the store's backing storage.
@@ -69,11 +67,18 @@ public interface StoreProvider<E> extends Iterable<E> {
 	public E get(String field, Object id);
 
 	/**
-	 * Remove an object from the store's backing storage.
+	 * Remove an element from the store's backing storage.
 	 * 
-	 * @param e The object to remove
+	 * @param e The element to remove
 	 */
 	public void remove(E e);
+
+	/**
+	 * Remove all elements that satisfy the given condition.
+	 * 
+	 * @param condition The removal condition
+	 */
+	public void removeIf(Predicate<E> condition);
 
 	/**
 	 * Remove all elements from the store's backing storage.
@@ -113,13 +118,18 @@ public interface StoreProvider<E> extends Iterable<E> {
 	}
 
 	/**
-	 * Get a {@link Stream} over the elements in the store. The stream <b>MUST</b>
-	 * be properly closed, otherwise resources will leak.
+	 * Get a {@link Stream} over the elements in the store. <b>The stream MUST be
+	 * properly closed, otherwise the store will become permanently immutable</b>.
+	 * Always use the following idiom:
+	 * 
+	 * <pre>
+	 * try (Stream stream = provider.stream()) {
+	 * 	...
+	 * }
+	 * </pre>
 	 * 
 	 * @return A new {@link Stream} over the elements in the store
 	 */
-	default public Stream<E> stream() {
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(), Spliterator.DISTINCT), false);
-	}
+	public Stream<E> stream();
 
 }
