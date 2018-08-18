@@ -23,10 +23,10 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.GenReport;
-import com.sandpolis.core.util.TempUtil;
 import com.sandpolis.server.gen.packager.BatPackager;
 import com.sandpolis.server.gen.packager.ElfPackager;
 import com.sandpolis.server.gen.packager.ExePackager;
@@ -116,7 +116,7 @@ public abstract class Generator {
 			throw new IllegalStateException("A generator cannot be run more than once!");
 		report = GenReport.newBuilder().setTimestamp(System.currentTimeMillis())
 				.setDuration(System.currentTimeMillis());
-		temp = TempUtil.getDir();
+		temp = Files.createTempDir();
 
 		try {
 			packager.process(config, run());

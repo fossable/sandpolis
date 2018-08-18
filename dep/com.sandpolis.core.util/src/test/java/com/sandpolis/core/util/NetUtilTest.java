@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import org.junit.jupiter.api.Test;
 
@@ -36,11 +37,11 @@ public class NetUtilTest {
 		assertNotNull(NetUtil.download("https://github.com/Subterranean-Security/Sandpolis/blob/master/.gitignore"));
 
 		// Now download to a file
-		File out = TempUtil.getFile();
+		File out = Files.createTempFile(null, null).toFile();
 		assertEquals(0, out.length());
 		NetUtil.download("https://github.com/Subterranean-Security/Sandpolis/blob/master/.gitignore", out);
 		assertTrue(out.length() > 0);
-
+		out.delete();
 	}
 
 	@Test

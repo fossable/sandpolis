@@ -26,9 +26,26 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.io.Files;
+import com.google.common.io.MoreFiles;
+
 class ArtifactUtilTest {
+
+	private File temp;
+
+	@BeforeEach
+	void setup() {
+		temp = Files.createTempDir();
+	}
+
+	@AfterEach
+	void cleanup() throws IOException {
+		MoreFiles.deleteRecursively(temp.toPath());
+	}
 
 	@Test
 	void testGetArtifactFilename() {
@@ -42,14 +59,13 @@ class ArtifactUtilTest {
 
 	@Test
 	void testDownloadCaching() throws IOException {
-		File dir = TempUtil.getDir();
-		assertTrue(ArtifactUtil.download(dir, "javax.measure:unit-api:1.0"));
-		assertFalse(ArtifactUtil.download(dir, "javax.measure:unit-api:1.0"));
+		assertTrue(ArtifactUtil.download(temp, "javax.measure:unit-api:1.0"));
+		assertFalse(ArtifactUtil.download(temp, "javax.measure:unit-api:1.0"));
 	}
 
 	@Test
 	void testDownloadCacheCorrupted() throws IOException {
-		File dir = TempUtil.getDir();
+		File dir = Files.createTempDir();
 		assertTrue(ArtifactUtil.download(dir, "javax.measure:unit-api:1.0"));
 
 		// Corrupt the downloaded file

@@ -32,9 +32,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.zeroturnaround.zip.ZipUtil;
 
+import com.google.common.io.Files;
+import com.google.common.io.MoreFiles;
 import com.sandpolis.core.proto.net.MCFsHandle.FileListlet;
 import com.sandpolis.core.proto.net.MCFsHandle.FileListlet.UpdateType;
-import com.sandpolis.core.util.TempUtil;
 
 class FsHandleTest {
 
@@ -47,7 +48,7 @@ class FsHandleTest {
 
 	@BeforeEach
 	void setup() throws IOException {
-		temp = TempUtil.getDir();
+		temp = Files.createTempDir();
 
 		ZipUtil.unpack(test_jar, temp);
 		ZipUtil.unpack(test_zip, temp);
@@ -56,8 +57,9 @@ class FsHandleTest {
 	}
 
 	@AfterEach
-	void close() {
+	void close() throws IOException {
 		fs.close();
+		MoreFiles.deleteRecursively(temp.toPath());
 	}
 
 	@Test

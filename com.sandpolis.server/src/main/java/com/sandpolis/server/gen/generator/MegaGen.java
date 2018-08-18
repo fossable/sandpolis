@@ -19,6 +19,8 @@ package com.sandpolis.server.gen.generator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,7 +38,6 @@ import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.util.ArtifactUtil;
-import com.sandpolis.core.util.TempUtil;
 import com.sandpolis.server.gen.FileGenerator;
 
 /**
@@ -87,9 +88,12 @@ public class MegaGen extends FileGenerator {
 
 						// TODO use removeEntries(File, String[], OutputStream) rather than copying to a
 						// temporary file (if that method is ever added to zt-zip).
-
-						// Copy to temporary staging file
-						File staging = TempUtil.getFile(temp);
+						File staging = null;
+						try {
+							staging = Files.createTempFile(null, null).toFile();
+						} catch (IOException e) {
+							throw new RuntimeException(e);
+						}
 						ZipUtil.removeEntries(source, paths, staging);
 
 						return new FileSource("lib/" + source.getName(), staging);
