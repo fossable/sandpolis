@@ -46,9 +46,15 @@ import com.sandpolis.server.store.group.Group;
 public class KeyMechanism extends AuthenticationMechanism {
 
 	@Id
+	@Column
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(nullable = false)
-	private long mech_id;
+	private int db_id;
+
+	/**
+	 * The mechanism ID.
+	 */
+	@Column(nullable = false, unique = true)
+	private long id;
 
 	@ManyToOne(optional = false, cascade = CascadeType.ALL)
 	@JoinColumn(referencedColumnName = "groupId")

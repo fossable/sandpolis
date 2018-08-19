@@ -40,9 +40,15 @@ import com.sandpolis.server.store.group.Group;
 public class PasswordMechanism extends AuthenticationMechanism {
 
 	@Id
+	@Column
 	@GeneratedValue(strategy = GenerationType.AUTO)
+	private int db_id;
+
+	/**
+	 * The mechanism ID.
+	 */
 	@Column(nullable = false, unique = true)
-	private long mech_id;
+	private long id;
 
 	@ManyToOne(optional = false)
 	@JoinColumn(referencedColumnName = "groupId")
@@ -61,6 +67,10 @@ public class PasswordMechanism extends AuthenticationMechanism {
 			throw new IllegalArgumentException();
 
 		this.password = password;
+	}
+
+	public String getPassword() {
+		return password;
 	}
 
 }
