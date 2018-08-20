@@ -27,17 +27,35 @@ message Outcome {
 
 	// The result of the action
 	bool result = 1;
-	
+
 	// A comment on the result
 	string comment = 2;
-	
+
 	// The duration of the action in milliseconds if successful. Undefined if
 	// the result is failure.
 	int64 time = 3;
-	
+
 	// An action name
 	string action = 4;
-	
-	// An exception's stacktrace along with all cause stacktraces
+
+	// An exception's stacktrace with default formatting
 	string exception = 5;
+
+	// A predefined error code
+	ErrorCode error = 6;
+}
+
+/**
+ * Common error types that can be included in an Outcome.
+ */
+enum ErrorCode {
+	NONE = 0;
+
+	INVALID_USERNAME = 1;
+	INVALID_EMAIL = 2;
+	INVALID_PORT = 3;
+	INVALID_CERTIFICATE = 4;
+	INVALID_KEY = 5;
+	INVALID_ADDRESS = 6;
+	INVALID_GROUPNAME = 7;
 }
