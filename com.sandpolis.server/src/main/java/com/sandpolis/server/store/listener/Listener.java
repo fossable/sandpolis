@@ -32,12 +32,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
+import com.sandpolis.core.instance.ProtoType;
 import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.proto.util.Listener.ListenerConfig;
+import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
+import com.sandpolis.core.proto.pojo.Listener.ListenerStats;
+import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
+import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.net.init.ServerInitializer;
 import com.sandpolis.server.store.user.User;
-import com.sandpolis.server.store.user.UserStore;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelOption;
@@ -52,7 +55,7 @@ import io.netty.channel.ServerChannel;
  */
 @Entity
 @Table(name = "Listeners")
-public class Listener {
+public class Listener implements ProtoType<ProtoListener> {
 
 	public static final Logger log = LoggerFactory.getLogger(Listener.class);
 
@@ -129,48 +132,36 @@ public class Listener {
 	private byte[] privateKey;
 
 	/**
-	 * The listening {@code Channel} that is bound to the listening network
+	 * The listening {@link Channel} that is bound to the listening network
 	 * interface.
 	 */
 	@Transient
 	private ServerChannel acceptor;
 
 	/**
-	 * The {@code EventLoopGroup} that handles the {@code ServerChannel}.
+	 * The {@link EventLoopGroup} that handles the {@link ServerChannel}.
 	 */
 	@Transient
 	private EventLoopGroup parentLoopGroup;
 
 	/**
-	 * The {@code EventLoopGroup} that handles all spawned {@code Channel}s.
+	 * The {@link EventLoopGroup} that handles all spawned {@link Channel}s.
 	 */
 	@Transient
 	private EventLoopGroup childLoopGroup;
 
+	// JPA Constructor
+	Listener() {
+	}
+
 	/**
-	 * Construct a new {@code Listener} according to the given configuration.
+	 * Construct a new {@link Listener} from a configuration.
 	 * 
-	 * @param config The {@code Listener}'s configuration
+	 * @param config The configuration which should be prevalidated and complete
 	 */
 	public Listener(ListenerConfig config) {
-		if (!ValidationUtil.listenerConfig(config))
-			throw new IllegalArgumentException("Invalid listener configuration");
-
-		id = config.getId();
-		name = config.getName();
-		owner = UserStore.get(config.getOwner());
-		enabled = config.getEnabled();
-		port = config.getPort();
-		address = config.getAddress();
-		upnp = config.getUpnp();
-		clientAcceptor = config.getClientAcceptor();
-		viewerAcceptor = config.getViewerAcceptor();
-
-		// Optional certificate
-		if (config.getCert() != null && config.getKey() != null) {
-			certificate = config.getCert().toByteArray();
-			privateKey = config.getKey().toByteArray();
-		}
+		if (merge(ProtoListener.newBuilder().setConfig(config).build()) != ErrorCode.NONE)
+			throw new IllegalArgumentException();
 	}
 
 	/**
@@ -202,7 +193,7 @@ public class Listener {
 	}
 
 	/**
-	 * Stop the listener, leaving all spawned {@code Channel}s alive.
+	 * Stop the listener, leaving all spawned {@link Channel}s alive.
 	 */
 	public void stop() {
 		if (!isListening())
@@ -228,23 +219,6 @@ public class Listener {
 	 */
 	public boolean isListening() {
 		return acceptor != null;
-	}
-
-	/**
-	 * Construct a {@link ListenerConfig} that represents this listener.
-	 * 
-	 * @return A new {@link ListenerConfig}
-	 */
-	public ListenerConfig getConfig() {
-
-		ListenerConfig.Builder config = ListenerConfig.newBuilder();
-		config.setId(id).setName(name).setEnabled(enabled).setPort(port).setAddress(address).setUpnp(upnp)
-				.setClientAcceptor(clientAcceptor).setViewerAcceptor(viewerAcceptor);
-
-		if (certificate != null && privateKey != null)
-			config.setCert(ByteString.copyFrom(certificate)).setKey(ByteString.copyFrom(privateKey));
-
-		return config.build();
 	}
 
 	public long getId() {
@@ -327,4 +301,50 @@ public class Listener {
 		this.privateKey = privateKey;
 	}
 
+	@Override
+	public ErrorCode merge(ProtoListener delta) {
+		ErrorCode validity = ValidationUtil.validConfig(delta.getConfig());
+		if (validity != ErrorCode.NONE)
+			return validity;
+
+		if (delta.hasConfig()) {
+			ListenerConfig config = delta.getConfig();
+
+			if (config.hasName())
+				setName(config.getName());
+			if (config.hasPort())
+				setPort(config.getPort());
+			if (config.hasAddress())
+				setAddress(config.getAddress());
+			if (config.hasOwner())
+				; // TODO owner
+			if (config.hasUpnp())
+				setUpnp(config.getUpnp());
+			if (config.hasClientAcceptor())
+				setClientAcceptor(config.getClientAcceptor());
+			if (config.hasViewerAcceptor())
+				setViewerAcceptor(config.getViewerAcceptor());
+			if (config.hasEnabled())
+				setEnabled(config.getEnabled());
+			if (config.hasCert())
+				setCertificate(config.getCert().toByteArray());
+			if (config.hasKey())
+				setPrivateKey(config.getKey().toByteArray());
+		}
+
+		return ErrorCode.NONE;
+	}
+
+	@Override
+	public ProtoListener extract() {
+		ListenerConfig.Builder config = ListenerConfig.newBuilder().setId(getId()).setName(getName())
+				.setOwner(getOwner().getUsername()).setEnabled(isEnabled()).setPort(getPort()).setAddress(getAddress())
+				.setUpnp(isUpnp()).setClientAcceptor(isClientAcceptor()).setViewerAcceptor(isViewerAcceptor());
+		if (getCertificate() != null && getPrivateKey() != null)
+			config.setCert(ByteString.copyFrom(getCertificate())).setKey(ByteString.copyFrom(getPrivateKey()));
+
+		ListenerStats.Builder stats = ListenerStats.newBuilder();
+
+		return ProtoListener.newBuilder().setConfig(config).setStats(stats).build();
+	}
 }

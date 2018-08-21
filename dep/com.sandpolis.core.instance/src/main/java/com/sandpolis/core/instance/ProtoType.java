@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
+ *                    Copyright 2018 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,46 +15,41 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-syntax = "proto3";
+package com.sandpolis.core.instance;
 
-package util;
-option java_package = "com.sandpolis.core.proto.util";
+import com.google.protobuf.GeneratedMessageV3;
+import com.sandpolis.core.proto.util.Result.ErrorCode;
 
 /**
- * A configuration for a socket listener.
+ * Indicates that a POJO class has a corresponding protobuf type. The standard
+ * name for the protobuf type is {@code "Proto<Implementing Class name>"}.<br>
+ * <br>
+ * An implementation of this interface must implement a method that converts the
+ * object to the protobuf type ({@link #extract()}) and a method that merges the
+ * protobuf type into the object ({@link #merge(GeneratedMessageV3)}).
+ * 
+ * @param <E> The corresponding protobuf type
+ * @author cilki
+ * @since 5.0.0
  */
-message ListenerConfig {
+public interface ProtoType<E extends GeneratedMessageV3> {
 
-	// The listener ID
-	int64 id = 1;
-	
-	// An optional name for the listener
-	string name = 2;
-	
-	// The listening port
-	int32 port = 3;
-	
-	// The bind address
-	string address = 4;
-	
-	// The username of the user that owns the listener
-	string owner = 5;
-	
-	// Indicates whether automatic port forwarding with UPnP will be attempted
-	bool upnp = 6;
-	
-	// Indicates whether client instances can be accepted by the listener
-	bool client_acceptor = 7;
-	
-	// Indicates whether viewer instances can be accepted by the listener
-	bool viewer_acceptor = 8;
-	
-	// Indicates whether the listener can be started
-	bool enabled = 9;
-	
-	// Certificate
-	bytes cert = 10;
-	
-	// Private key for the certificate
-	bytes key = 11;
+	/**
+	 * Incorperate the given protobuf into the object. Any field restrictions are
+	 * ignored.<br>
+	 * <br>
+	 * Implementations should have no side effects if the input was invalid.
+	 * 
+	 * @param delta The changes
+	 * @return An error code if {@code delta} was invalid or {@link ErrorCode#NONE}
+	 */
+	public ErrorCode merge(E delta);
+
+	/**
+	 * Convert the object's entire state to a new protocol buffer.
+	 * 
+	 * @return A new protobuf fully representing the object
+	 */
+	public E extract();
+
 }

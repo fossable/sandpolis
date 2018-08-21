@@ -22,8 +22,6 @@ import static com.sandpolis.core.util.ProtoUtil.complete;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.success;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +31,11 @@ import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener.ListenerState;
-import com.sandpolis.core.proto.util.Listener.ListenerConfig;
+import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
+import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
+import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.util.ValidationUtil;
 
 /**
  * The {@link ListenerStore} manages network listeners.
@@ -151,15 +152,18 @@ public final class ListenerStore extends Store {
 	/**
 	 * Create a new listener from the given configuration and add it to the store.
 	 * 
-	 * @param config
-	 * @return
+	 * @param config The listener configuration
+	 * @return The outcome of the action
 	 */
 	public static Outcome add(ListenerConfig config) {
-		try {
-			return add(new Listener(config));
-		} catch (IllegalArgumentException e) {
-			return Outcome.newBuilder().setResult(false).build();
-		}
+		ErrorCode code = ValidationUtil.validConfig(config);
+		if (code != ErrorCode.NONE)
+			return Outcome.newBuilder().setResult(false).setError(code).build();
+		code = ValidationUtil.completeConfig(config);
+		if (code != ErrorCode.NONE)
+			return Outcome.newBuilder().setResult(false).setError(code).build();
+
+		return add(new Listener(config));
 	}
 
 	/**
@@ -196,14 +200,13 @@ public final class ListenerStore extends Store {
 	}
 
 	/**
-	 * Edit a listener's configuration.
+	 * Change a listener's configuration or statistics.
 	 * 
-	 * @param id      A listener ID
-	 * @param changes A list of changed field numbers
-	 * @param config  The configuration changes
+	 * @param id    The ID of the listener to modify
+	 * @param delta The changes
 	 * @return The outcome of the action
 	 */
-	public static Outcome edit(long id, List<Integer> changed, ListenerConfig config) {
+	public static Outcome delta(long id, ProtoListener delta) {
 		Outcome.Builder outcome = begin();
 		Listener listener = get(id);
 		if (listener == null)
@@ -211,26 +214,9 @@ public final class ListenerStore extends Store {
 		if (listener.isListening())
 			return failure(outcome, "Listener is active");
 
-		// TODO error handling
-		if (changed.contains(ListenerConfig.NAME_FIELD_NUMBER))
-			listener.setName(config.getName());
-		if (changed.contains(ListenerConfig.PORT_FIELD_NUMBER))
-			listener.setPort(config.getPort());
-		if (changed.contains(ListenerConfig.ADDRESS_FIELD_NUMBER))
-			listener.setAddress(config.getAddress());
-		// TODO owner
-		if (changed.contains(ListenerConfig.UPNP_FIELD_NUMBER))
-			listener.setUpnp(config.getUpnp());
-		if (changed.contains(ListenerConfig.CLIENT_ACCEPTOR_FIELD_NUMBER))
-			listener.setClientAcceptor(config.getClientAcceptor());
-		if (changed.contains(ListenerConfig.VIEWER_ACCEPTOR_FIELD_NUMBER))
-			listener.setViewerAcceptor(config.getViewerAcceptor());
-		if (changed.contains(ListenerConfig.ENABLED_FIELD_NUMBER))
-			listener.setEnabled(config.getEnabled());
-		if (changed.contains(ListenerConfig.CERT_FIELD_NUMBER))
-			listener.setCertificate(config.getCert().toByteArray());
-		if (changed.contains(ListenerConfig.KEY_FIELD_NUMBER))
-			listener.setPrivateKey(config.getKey().toByteArray());
+		ErrorCode error = listener.merge(delta);
+		if (error != ErrorCode.NONE)
+			return failure(outcome.setError(error));
 
 		return success(outcome);
 	}

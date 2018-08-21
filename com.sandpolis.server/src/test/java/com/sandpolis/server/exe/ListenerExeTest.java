@@ -17,7 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.server.exe;
 
-import static com.sandpolis.core.util.ProtoUtil.*;
+import static com.sandpolis.core.util.ProtoUtil.rq;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -31,7 +31,8 @@ import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
 import com.sandpolis.core.proto.net.MCListener.RQ_RemoveListener;
 import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.core.proto.util.Listener.ListenerConfig;
+import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
+import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.server.store.listener.Listener;
 import com.sandpolis.server.store.listener.ListenerStore;
@@ -49,7 +50,7 @@ class ListenerExeTest extends ExeletTest {
 		channel.attr(ChannelConstant.CVID).set(90);
 
 		UserStore.init(StoreProviderFactory.memoryList(User.class));
-		UserStore.add("junit", "12345678", 0);
+		UserStore.add(UserConfig.newBuilder().setUsername("junit").setPassword("12345678").build());
 		UserStore.get("junit").setCvid(90);
 
 		ListenerStore.init(StoreProviderFactory.memoryList(Listener.class));

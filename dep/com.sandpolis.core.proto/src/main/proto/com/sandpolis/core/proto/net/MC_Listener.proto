@@ -20,32 +20,33 @@ syntax = "proto3";
 package net;
 option java_package = "com.sandpolis.core.proto.net";
 
-import "com/sandpolis/core/proto/util/Listener.proto";
+import "com/sandpolis/core/proto/pojo/Listener.proto";
 
 /**
- * Request to create a new listener
+ * Request to create a new listener.
  */
 message RQ_AddListener {
-	util.ListenerConfig config = 1;
+	pojo.ListenerConfig config = 1;
 }
 
 /**
- * Request to remove a listener
+ * Request to remove a listener.
  */
 message RQ_RemoveListener {
+
+	// The ID of the listener to remove
 	int64 id = 1;
 }
 
 /**
- * Request to edit a listener's configuration
+ * Request to change a listener's config or stats. 
  */
-message RQ_EditListener {
+message RQ_ListenerDelta {
+
+	// The ID of the listener to modify
 	int64 id = 1;
 
-	// 
-	repeated int32 changed = 2;
-
-	util.ListenerConfig config = 3;
+	pojo.ProtoListener delta = 2;
 }
 
 /**
@@ -59,11 +60,11 @@ message RQ_ChangeListener {
 		
 		// A listener that is unbound and not accepting connections
 		INACTIVE = 1;
-
 	}
-	
+
+	// The ID of the listener to modify
 	int64 id = 1;
-	
+
 	// The new state
 	ListenerState state = 2;
 }

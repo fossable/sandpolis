@@ -20,7 +20,6 @@ package com.sandpolis.server.exe;
 import com.sandpolis.core.instance.Perm;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.proto.net.MCListener.RQ_EditListener;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.server.store.listener.Listener;
 import com.sandpolis.server.store.listener.ListenerStore;
@@ -52,12 +51,11 @@ public class ListenerExe extends Exelet {
 	}
 
 	@Auth
-	public void rq_edit_listener(Message m) {
-		RQ_EditListener rq = m.getRqEditListener();
-		if (!accessCheck(m, this::ownership, rq.getId()))
+	public void rq_listener_delta(Message m) {
+		if (!accessCheck(m, this::ownership, m.getRqListenerDelta().getId()))
 			return;
 
-		reply(m, ListenerStore.edit(rq.getId(), rq.getChangedList(), rq.getConfig()));
+		reply(m, ListenerStore.delta(m.getRqListenerDelta().getId(), m.getRqListenerDelta().getDelta()));
 	}
 
 	@Auth

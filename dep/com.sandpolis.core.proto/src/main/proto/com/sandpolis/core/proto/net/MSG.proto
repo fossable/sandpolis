@@ -113,15 +113,11 @@ message Message {
 		RS_Generate 			rs_generate 				= 701;
 		
 		// MC_Group
-		RQ_CreateGroup	 		rq_create_group		 		= 800;
+		RQ_AddGroup	 			rq_add_group		 		= 800;
 		RQ_RemoveGroup 			rq_remove_group 			= 801;
 		RQ_ListGroups 			rq_list_groups	 			= 803;
 		RS_ListGroups 			rs_list_groups	 			= 804;
-		RQ_AddMechanism			rq_add_mechanism			= 805;
-		RQ_RemoveMechanism		rq_remove_mechanism			= 806;
-		RQ_ChangeOwner			rq_change_owner				= 807;
-		RQ_AddMember			rq_add_member				= 808;
-		RQ_RemoveMember			rq_remove_member			= 809;
+		RQ_GroupDelta			rq_group_delta				= 805;
 		
 		// MC_Keylogger
 //		RQ_KeyUpdate 			rq_key_update 				= 900;
@@ -131,7 +127,7 @@ message Message {
 		// MC_Listener
 		RQ_AddListener 			rq_add_listener 			= 1000;
 		RQ_RemoveListener 		rq_remove_listener 			= 1001;
-		RQ_EditListener			rq_edit_listener			= 1002;
+		RQ_ListenerDelta		rq_listener_delta			= 1002;
 		RQ_ChangeListener		rq_change_listener			= 1003;
 		
 		// MC_Login
@@ -167,7 +163,7 @@ message Message {
 		
 		// MC_User
 		RQ_AddUser 				rq_add_user 				= 1700;
-		RQ_EditUser 			rq_edit_user				= 1701;
+		RQ_UserDelta 			rq_user_delta				= 1701;
 
 	}
 }
