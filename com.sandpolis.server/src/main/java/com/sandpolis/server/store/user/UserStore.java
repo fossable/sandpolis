@@ -31,6 +31,9 @@ import com.sandpolis.core.instance.Store.ManualInitializer;
 import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.proto.pojo.User.ProtoUser;
+import com.sandpolis.core.proto.pojo.User.UserConfig;
+import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
@@ -72,6 +75,16 @@ public final class UserStore extends Store {
 	}
 
 	/**
+	 * Check if a user exists in the store.
+	 * 
+	 * @param id The ID to check
+	 * @return True if the user exists, false otherwise
+	 */
+	public static boolean exists(long id) {
+		return get(id) != null;
+	}
+
+	/**
 	 * Verify a login attempt.
 	 * 
 	 * @param username The username
@@ -106,32 +119,63 @@ public final class UserStore extends Store {
 	}
 
 	/**
-	 * Create a new {@link User} and add it to the store.
+	 * Create a new user from the given configuration and add it to the store.
 	 * 
-	 * @param username   The user's username
-	 * @param password   The user's password
-	 * @param expiration An expiration timestamp or 0 for no expiration
-	 * @return The outcome of the add operation
+	 * @param config The user configuration
+	 * @return The outcome of the action
 	 */
-	public static Outcome add(String username, String password, long expiration) {
-		Outcome.Builder outcome = begin();
-		if (!ValidationUtil.username(username))
-			return failure(outcome, "Invalid username");
-		if (!ValidationUtil.password(password))
-			return failure(outcome, "Invalid password");
-		if (exists(username))
-			return failure(outcome, "User already exists");
+	public static Outcome add(UserConfig config) {
+		ErrorCode code = ValidationUtil.validConfig(config);
+		if (code != ErrorCode.NONE)
+			return Outcome.newBuilder().setResult(false).setError(code).build();
+		code = ValidationUtil.completeConfig(config);
+		if (code != ErrorCode.NONE)
+			return Outcome.newBuilder().setResult(false).setError(code).build();
 
 		// Create the user
-		User user = new User().setUsername(username).setCreation(System.currentTimeMillis()).setExpiration(expiration);
+		User user = new User(config);
+
+		// Set creation time
+		user.setCreation(System.currentTimeMillis());
 
 		// Hash password
-		user.setHash(CryptoUtil.PBKDF2.hash(password));
+		user.setHash(CryptoUtil.PBKDF2.hash(config.getPassword()));
 
-		// Save the user
+		return add(user);
+	}
+
+	/**
+	 * Add a user to the store.
+	 * 
+	 * @param user The user to add
+	 * @return The outcome of the action
+	 */
+	public static Outcome add(User user) {
+		Outcome.Builder outcome = begin();
+		if (get(user.getUsername()) != null)
+			return failure(outcome, "Username is already taken");
+
 		provider.add(user);
+		return success(outcome);
+	}
 
-		log.debug("User \"{}\" has been added", username);
+	/**
+	 * Change a user's configuration or statistics.
+	 * 
+	 * @param id    The ID of the user to modify
+	 * @param delta The changes
+	 * @return The outcome of the action
+	 */
+	public static Outcome delta(long id, ProtoUser delta) {
+		Outcome.Builder outcome = begin();
+		User user = get(id);
+		if (user == null)
+			return failure(outcome, "User not found");
+
+		ErrorCode error = user.merge(delta);
+		if (error != ErrorCode.NONE)
+			return failure(outcome.setError(error));
+
 		return success(outcome);
 	}
 
@@ -143,6 +187,16 @@ public final class UserStore extends Store {
 	 */
 	public static User get(String username) {
 		return provider.get("username", username);
+	}
+
+	/**
+	 * Get a {@link User} from the store.
+	 * 
+	 * @param id The ID to query
+	 * @return The user or {@code null}
+	 */
+	public static User get(long id) {
+		return provider.get("id", id);
 	}
 
 	/**
@@ -159,6 +213,23 @@ public final class UserStore extends Store {
 		provider.remove(get(username));
 
 		log.debug("User \"{}\" has been deleted", username);
+		return success(outcome);
+	}
+
+	/**
+	 * Remove a {@link User} from the store.
+	 * 
+	 * @param id The ID of the user to remove
+	 * @return The outcome of the remove operation
+	 */
+	public static Outcome remove(long id) {
+		Outcome.Builder outcome = begin();
+		if (!exists(id))
+			return failure(outcome, "User does not exist");
+
+		provider.remove(get(id));
+
+		log.debug("User \"{}\" has been deleted", id);
 		return success(outcome);
 	}
 }

@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 public class UserStoreTest {
@@ -41,7 +42,7 @@ public class UserStoreTest {
 	@Test
 	public void testUserExists() {
 		assertFalse(UserStore.exists("TESTUSER"));
-		UserStore.add("TESTUSER", "abc1234c", 0);
+		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER2").setPassword("abc1234c").build());
 		assertTrue(UserStore.exists("TESTUSER"));
 		UserStore.remove("TESTUSER");
 		assertFalse(UserStore.exists("TESTUSER"));
@@ -49,7 +50,7 @@ public class UserStoreTest {
 
 	@Test
 	public void testLogin() {
-		UserStore.add("TESTUSER2", "abc1234c", 0);
+		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER2").setPassword("abc1234c").build());
 		assertFalse(UserStore.validLogin("TESTUSER2", "wrongpass").getResult());
 		assertFalse(UserStore.validLogin("TESTUSER3", "abc1234c").getResult());
 		assertTrue(UserStore.validLogin("TESTUSER2", "abc1234c").getResult());
@@ -57,8 +58,7 @@ public class UserStoreTest {
 
 	@Test
 	public void testLoginExpired() {
-		System.out.println("Testing login expired");
-		UserStore.add("TESTUSER2", "abc1234c", 10);
+		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER2").setPassword("abc1234c").build());
 		assertFalse(UserStore.validLogin("TESTUSER2", "abc1234c").getResult());
 		UserStore.get("TESTUSER2").setExpiration(System.currentTimeMillis() + 10000);
 		assertTrue(UserStore.validLogin("TESTUSER2", "abc1234c").getResult());
@@ -66,7 +66,8 @@ public class UserStoreTest {
 
 	@Test
 	public void testAddGetUser() {
-		Outcome outcome = UserStore.add("TESTUSER3", "1234567890", 0);
+		Outcome outcome = UserStore
+				.add(UserConfig.newBuilder().setUsername("TESTUSER2").setPassword("abc1234c").build());
 		assertTrue(outcome.getResult());
 
 		User user = UserStore.get("TESTUSER3");

@@ -30,6 +30,7 @@ import com.sandpolis.core.net.ExeletTest;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.RandUtil;
 import com.sandpolis.server.store.user.User;
@@ -59,7 +60,7 @@ public final class LoginExeTest extends ExeletTest {
 
 		exe.rq_login(rq().setRqLogin(RQ_Login.newBuilder().setUsername(user).setPassword(pass)).build());
 
-		UserStore.add(user, pass, 0);
+		UserStore.add(UserConfig.newBuilder().setUsername(user).setPassword(pass).build());
 
 		exe.rq_login(rq().setRqLogin(RQ_Login.newBuilder().setUsername(user).setPassword(pass)).build());
 

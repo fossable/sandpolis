@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
+ *                    Copyright 2018 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,36 +15,45 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-syntax = "proto3";
+syntax = "proto2";
 
-package net;
-option java_package = "com.sandpolis.core.proto.net";
-
-import "com/sandpolis/core/proto/pojo/User.proto";
+package pojo;
+option java_package = "com.sandpolis.core.proto.pojo";
 
 /**
- * Request to add a new user.
+ * The configuration of a User.
  */
-message RQ_AddUser {
-	pojo.UserConfig config = 1;
-}
+message UserConfig {
 
-/**
- * Request to remove a user.
- */
-message RQ_RemoveUser {
+	// The primary ID
+	optional int64 id = 1;
 
-	// The ID of the user to remove
-	int64 id = 1;
-}
-
-/**
- * Request to change a user's config or stats.
- */
-message RQ_UserDelta {
-
-	// The ID of the user to modify
-	int64 id = 1;
+	// The username
+	optional string username = 2;
 	
-	pojo.ProtoUser delta = 2;
+	// The password
+	optional string password = 3;
+	
+	// The email address
+	optional string email = 4;
+	
+	// The expiration timestamp
+	optional int64 expiration = 5;
+}
+
+/**
+ * User statistics.
+ */
+message UserStats {
+
+	// The creation timestamp
+	optional int64 ctime = 1;
+}
+
+/**
+ * A User container.
+ */
+message ProtoUser {
+	optional UserConfig config = 1;
+	optional UserStats stats = 2;
 }

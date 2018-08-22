@@ -29,6 +29,7 @@ import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.net.MCUser.RQ_AddUser;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
+import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.util.RandUtil;
 
 import io.netty.buffer.ByteBuf;
@@ -49,8 +50,8 @@ class ProxyHandlerTest {
 	 * Messages that should be routed
 	 */
 	private Message[] routing = new Message[] { Message.newBuilder().setTo(14).setFrom(12).build(),
-			Message.newBuilder().setTo(14).setFrom(12).setId(19)
-					.setRqAddUser(RQ_AddUser.newBuilder().setUser(RandUtil.nextAlphabetic(2048))).build() };
+			Message.newBuilder().setTo(14).setFrom(12).setId(19).setRqAddUser(RQ_AddUser.newBuilder()
+					.setConfig(UserConfig.newBuilder().setUsername(RandUtil.nextAlphabetic(2048)))).build() };
 
 	/**
 	 * Messages that should pass through the proxy unchanged

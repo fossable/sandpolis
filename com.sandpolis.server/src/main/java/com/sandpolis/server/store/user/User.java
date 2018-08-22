@@ -28,7 +28,16 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.sandpolis.core.instance.ProtoType;
+import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
+import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
+import com.sandpolis.core.proto.pojo.User.ProtoUser;
+import com.sandpolis.core.proto.pojo.User.UserConfig;
+import com.sandpolis.core.proto.pojo.User.UserStats;
+import com.sandpolis.core.proto.util.Result.ErrorCode;
+import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.store.group.Group;
+import com.sandpolis.server.store.listener.Listener;
 
 /**
  * Represents a user account on the server.
@@ -38,7 +47,7 @@ import com.sandpolis.server.store.group.Group;
  */
 @Entity
 @Table(name = "Users")
-public class User {
+public class User implements ProtoType<ProtoUser> {
 
 	@Id
 	@Column
@@ -86,6 +95,20 @@ public class User {
 
 	@Transient
 	private int cvid;
+
+	// JPA Constructor
+	User() {
+	}
+
+	/**
+	 * Construct a new {@link User} from a configuration.
+	 * 
+	 * @param config The configuration which should be prevalidated and complete
+	 */
+	public User(UserConfig config) {
+		if (merge(ProtoUser.newBuilder().setConfig(config).build()) != ErrorCode.NONE)
+			throw new IllegalArgumentException();
+	}
 
 	public long getId() {
 		return id;
@@ -145,4 +168,37 @@ public class User {
 		return this;
 	}
 
+	@Override
+	public ErrorCode merge(ProtoUser delta) {
+		ErrorCode validity = ValidationUtil.validConfig(delta.getConfig());
+		if (validity != ErrorCode.NONE)
+			return validity;
+
+		if (delta.hasConfig()) {
+			UserConfig config = delta.getConfig();
+
+			if (config.hasEmail())
+				setEmail(config.getEmail());
+			if (config.hasExpiration())
+				setExpiration(config.getExpiration());
+		}
+
+		if (delta.hasStats()) {
+			UserStats stats = delta.getStats();
+
+			if (stats.hasCtime())
+				setCreation(stats.getCtime());
+		}
+
+		return ErrorCode.NONE;
+	}
+
+	@Override
+	public ProtoUser extract() {
+		UserConfig.Builder config = UserConfig.newBuilder().setUsername(username).setEmail(email)
+				.setExpiration(expiration);
+		UserStats.Builder stats = UserStats.newBuilder().setCtime(creation);
+
+		return ProtoUser.newBuilder().setConfig(config).setStats(stats).build();
+	}
 }

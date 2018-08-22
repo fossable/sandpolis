@@ -163,7 +163,8 @@ message Message {
 		
 		// MC_User
 		RQ_AddUser 				rq_add_user 				= 1700;
-		RQ_UserDelta 			rq_user_delta				= 1701;
+		RQ_RemoveUser 			rq_remove_user 				= 1701;
+		RQ_UserDelta 			rq_user_delta				= 1702;
 
 	}
 }
