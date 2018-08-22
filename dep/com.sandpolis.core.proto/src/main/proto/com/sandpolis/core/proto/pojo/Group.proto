@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
+ *                    Copyright 2018 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,73 +15,53 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-syntax = "proto3";
+syntax = "proto2";
 
-package util;
-option java_package = "com.sandpolis.core.proto.util";
+package pojo;
+option java_package = "com.sandpolis.core.proto.pojo";
 
-/**
- * A password authentication-mechanism container.
- */
-message PasswordContainer {
-
-	// The mechanism ID
-	int64 id = 1;
-	
-	// The associated password
-	string password = 2;
-}
+import "com/sandpolis/core/proto/util/Auth.proto";
 
 /**
- * A key authentication-mechanism container.
+ * The configuration of a Group.
  */
-message KeyContainer {
-
-	/**
- 	 * A completely generic KeyPair container.
- 	 */
-	message KeyPair {
-
-		// The private key
-		bytes signer = 1;
-
-		// The public key
-		bytes verifier = 2;
-	}
+message GroupConfig {
 	
-	// The mechanism ID
-	int64 id = 1;
-	
-	// The server's reciprocal keypair
-	KeyPair server = 2;
-	
-	// The client's reciprocal keypair
-	KeyPair client = 3;
-}
-
-/**
- * A GroupContainer represents a Group that is not installed on a server.
- */
-message GroupContainer {
-	
-	// The groupId
-	int64 id = 1;
+	// The primary ID
+	optional int64 id = 1;
 	
 	// The user-friendly name
-	string name = 2;
-	
-	// The creation timestamp
-	int64 ctime = 3;
-	
-	// The modification timestamp
-	int64 mtime = 4;
+	optional string name = 2;
 	
 	// The username of the user that owns this group
-	string owner = 5;
+	optional string owner = 3;
 	
-	// The password authentication-mechanisms that belong to this group
-	repeated PasswordContainer password_mechanism = 6;
+	// The usernames of all group members
+	repeated string member = 4;
 	
-	// The key authentication-mechanisms that belong to this group
-	repeated KeyContainer key_mechanism = 7;
+	// The password mechanisms that belong to the group
+	repeated util.PasswordContainer password_mechanism = 5;
+	
+	// The key mechanisms that belong to the group
+	repeated util.KeyContainer key_mechanism = 6;
+}
+
+/**
+ * Group statistics.
+ */
+message GroupStats {
+
+	// The creation timestamp
+	optional int64 ctime = 1;
+	
+	// The modification timestamp
+	optional int64 mtime = 2;
+}
+
+/**
+ * A Group container. 
+ */
+message ProtoGroup {
+	optional GroupConfig config = 1;
+	optional GroupStats stats = 2;
 }

@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
+ *                    Copyright 2016 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -17,48 +17,44 @@
  *****************************************************************************/
 syntax = "proto3";
 
-package net;
-option java_package = "com.sandpolis.core.proto.net";
-
-import "com/sandpolis/core/proto/pojo/Group.proto";
+package util;
+option java_package = "com.sandpolis.core.proto.util";
 
 /**
- * Request: Create a new group on the server
+ * A password mechanism container.
  */
-message RQ_AddGroup {
+message PasswordContainer {
 
-	// The group configuration
-	pojo.GroupConfig config = 1;
-}
-
-/**
- * Request: Delete a group on the server
- */
-message RQ_RemoveGroup {
-
-	// The ID of the group to remove
+	// The mechanism ID
 	int64 id = 1;
+	
+	// The associated password
+	string password = 2;
 }
 
 /**
- * Request: A list of groups visible to the user
+ * A key mechanism container.
  */
-message RQ_ListGroups {}
+message KeyContainer {
 
-/**
- * Response: A list of groups visible to the user
- */
-message RS_ListGroups {
-	repeated pojo.ProtoGroup group = 1;
-}
+	/**
+ 	 * A completely generic KeyPair container.
+ 	 */
+	message KeyPair {
 
-/**
- * Request: Change the configuration of a group
- */
-message RQ_GroupDelta {
+		// The private key
+		bytes signer = 1;
 
-	// The ID of the group to modify
+		// The public key
+		bytes verifier = 2;
+	}
+	
+	// The mechanism ID
 	int64 id = 1;
-
-	pojo.ProtoGroup delta = 2;
+	
+	// The server's reciprocal keypair
+	KeyPair server = 2;
+	
+	// The client's reciprocal keypair
+	KeyPair client = 3;
 }

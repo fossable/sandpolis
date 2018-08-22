@@ -20,7 +20,7 @@ syntax = "proto3";
 package util;
 option java_package = "com.sandpolis.core.proto.util";
 
-import "com/sandpolis/core/proto/util/Group.proto";
+import "com/sandpolis/core/proto/util/Auth.proto";
 import "com/sandpolis/core/proto/util/Platform.proto";
 import "com/sandpolis/core/proto/util/Keylogger.proto";
 
@@ -48,7 +48,7 @@ enum Feature {
 	TORRENT = 1;
 	
 	// Remote desktop feature
-	REMOTE_DESKTOP = 2;
+	DESKTOP = 2;
 	
 	// Browser integration
 	BROWSER = 3;
@@ -77,13 +77,13 @@ message FeatureSet {
  */
 enum OutputPayload {
 
-	// A configuration specific to another payload type
+	// Output a configuration for another payload type
 	CONFIG = 0;
 
-	// A full-featured heavyweight client 
+	// Output a full-featured heavyweight client written in Java
 	MEGA = 1;
 
-	// A lightweight native client
+	// Output a lightweight native client written in C++
 	MICRO = 2;
 }
 
@@ -231,7 +231,7 @@ message MicroConfig {
 message GenConfig {
 
 	// The request ID
-	int64 id = 1; 
+	int64 id = 1;
 
 	// The user that requested the generation
 	string request_user = 2;
@@ -249,5 +249,4 @@ message GenConfig {
 		MegaConfig mega = 6;
 		MicroConfig micro = 7;
 	}
-
 }
