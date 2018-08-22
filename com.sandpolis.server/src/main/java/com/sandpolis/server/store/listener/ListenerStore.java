@@ -22,6 +22,8 @@ import static com.sandpolis.core.util.ProtoUtil.complete;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.success;
 
+import java.util.stream.Stream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,13 +74,15 @@ public final class ListenerStore extends Store {
 	 */
 	public static OutcomeSet start() {
 		OutcomeSet outcomes = new OutcomeSet();
-		provider.stream().filter(listener -> !listener.isListening() && listener.isEnabled()).forEach(listener -> {
-			Outcome.Builder outcome = begin();
+		try (Stream<Listener> stream = provider.stream()) {
+			stream.filter(listener -> !listener.isListening() && listener.isEnabled()).forEach(listener -> {
+				Outcome.Builder outcome = begin();
 
-			log.debug("Starting listener: {}", listener.getId());
-			outcome.setResult(listener.start());
-			outcomes.add(complete(outcome));
-		});
+				log.debug("Starting listener: {}", listener.getId());
+				outcome.setResult(listener.start());
+				outcomes.add(complete(outcome));
+			});
+		}
 		return outcomes;
 	}
 
@@ -110,13 +114,15 @@ public final class ListenerStore extends Store {
 	 */
 	public static OutcomeSet stop() {
 		OutcomeSet outcomes = new OutcomeSet();
-		provider.stream().filter(listener -> listener.isListening()).forEach(listener -> {
-			Outcome.Builder outcome = begin();
+		try (Stream<Listener> stream = provider.stream()) {
+			stream.filter(listener -> listener.isListening()).forEach(listener -> {
+				Outcome.Builder outcome = begin();
 
-			log.debug("Stopping listener: {}", listener.getId());
-			listener.stop();
-			outcomes.add(complete(outcome));
-		});
+				log.debug("Stopping listener: {}", listener.getId());
+				listener.stop();
+				outcomes.add(complete(outcome));
+			});
+		}
 		return outcomes;
 	}
 

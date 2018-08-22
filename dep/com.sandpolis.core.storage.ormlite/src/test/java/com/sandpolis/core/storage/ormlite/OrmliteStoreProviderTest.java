@@ -243,7 +243,9 @@ class OrmliteStoreProviderTest {
 		provider.add(o2);
 		provider.add(o4);
 
-		assertArrayEquals(new TestObject[] { o1, o2, o4 }, provider.stream().toArray(TestObject[]::new));
+		try (Stream<TestObject> stream = provider.stream()) {
+			assertArrayEquals(new TestObject[] { o1, o2, o4 }, stream.toArray(TestObject[]::new));
+		}
 	}
 
 	@ParameterizedTest
