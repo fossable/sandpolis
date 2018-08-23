@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.auth;
 
+import java.util.Objects;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -24,7 +26,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 
 import com.sandpolis.server.store.group.Group;
 
@@ -36,7 +37,6 @@ import com.sandpolis.server.store.group.Group;
  * @since 5.0.0
  */
 @Entity
-@Table(name = "PasswordMechanisms")
 public class PasswordMechanism extends AuthenticationMechanism {
 
 	@Id
@@ -47,13 +47,20 @@ public class PasswordMechanism extends AuthenticationMechanism {
 	/**
 	 * The mechanism ID.
 	 */
-	@Column(nullable = false, unique = true)
+	@Column(nullable = false)
 	private long id;
 
+	/**
+	 * The parent {@link Group}.
+	 */
 	@ManyToOne(optional = false)
-	@JoinColumn(referencedColumnName = "groupId")
+	@JoinColumn(referencedColumnName = "db_id")
 	private Group group;
 
+	/**
+	 * The mechanism password which is stored unhashed because reversibility is
+	 * important.
+	 */
 	@Column(nullable = false)
 	private String password;
 
@@ -62,15 +69,36 @@ public class PasswordMechanism extends AuthenticationMechanism {
 	 * 
 	 * @param password The password
 	 */
-	public PasswordMechanism(String password) {
-		if (password == null)
-			throw new IllegalArgumentException();
-
-		this.password = password;
+	public PasswordMechanism(Group parent, String password) {
+		this.group = Objects.requireNonNull(parent);
+		this.password = Objects.requireNonNull(password);
 	}
 
+	/**
+	 * Get the mechanism ID.
+	 * 
+	 * @return The mechanism ID (mechID)
+	 */
+	public long getId() {
+		return id;
+	}
+
+	/**
+	 * Get the mechanism's password.
+	 * 
+	 * @return The password
+	 */
 	public String getPassword() {
 		return password;
+	}
+
+	/**
+	 * Get the mechanism's parent {@link Group}.
+	 * 
+	 * @return The group
+	 */
+	public Group getGroup() {
+		return group;
 	}
 
 }
