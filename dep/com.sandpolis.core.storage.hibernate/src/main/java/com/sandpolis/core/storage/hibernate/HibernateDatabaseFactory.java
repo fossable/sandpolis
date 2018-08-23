@@ -47,7 +47,7 @@ public final class HibernateDatabaseFactory {
 
 		Configuration conf = new Configuration()
 				// Set the SQLite database driver
-				.setProperty("connection.driver_class", "org.sqlite.JDBC")
+				.setProperty("hibernate.connection.driver_class", "org.sqlite.JDBC")
 
 				// Set the SQLite dialect
 				.setProperty("hibernate.dialect", "org.hibernate.dialect.SQLiteDialect")
@@ -59,14 +59,13 @@ public final class HibernateDatabaseFactory {
 				// Set the database URL
 				.setProperty("hibernate.connection.url", db.getUrl())
 
-				.setProperty("hibernate.show_sql", "true")
-
 				// Set pool options
-				.setProperty("hibernate.c3p0.min_size", "0").setProperty("hibernate.c3p0.max_size", "1")
+				.setProperty("hibernate.c3p0.min_size", "0").setProperty("hibernate.c3p0.max_size", "2")// TODO 1
 
 				// Set additional options
-				.setProperty("hibernate.connection.shutdown", "true").setProperty("hibernate.hbm2ddl.auto", "create")
-				.setProperty("hibernate.current_session_context_class", "thread");
+				.setProperty("hibernate.connection.shutdown", "true")
+				.setProperty("hibernate.globally_quoted_identifiers", "true")
+				.setProperty("hibernate.hbm2ddl.auto", "create");
 		for (Class<?> cls : persist)
 			conf.addAnnotatedClass(cls);
 
@@ -89,7 +88,7 @@ public final class HibernateDatabaseFactory {
 
 		Configuration conf = new Configuration()
 				// Set the MySQL database driver
-				.setProperty("connection.driver_class", "com.mysql.jdbc.Driver")
+				.setProperty("hibernate.connection.driver_class", "com.mysql.cj.jdbc.Driver")
 
 				// Set the MySQL dialect
 				.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL5Dialect")
@@ -102,10 +101,11 @@ public final class HibernateDatabaseFactory {
 				.setProperty("hibernate.connection.url", db.getUrl())
 
 				// Set pool options
+				.setProperty("hibernate.c3p0.min_size", "0").setProperty("hibernate.c3p0.max_size", "20")
 
 				// Set additional options
-				.setProperty("hibernate.hbm2ddl.auto", "create")
-				.setProperty("hibernate.current_session_context_class", "thread");
+				.setProperty("hibernate.globally_quoted_identifiers", "true")
+				.setProperty("hibernate.hbm2ddl.auto", "create");
 		for (Class<?> cls : persist)
 			conf.addAnnotatedClass(cls);
 
