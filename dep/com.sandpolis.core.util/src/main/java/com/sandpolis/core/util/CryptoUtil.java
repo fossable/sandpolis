@@ -213,7 +213,6 @@ public final class CryptoUtil {
 		 * @since 5.0.0
 		 */
 		@Entity
-		@Table(name = "KeyPairs")
 		public static class ReciprocalKeyPair {
 
 			@Id

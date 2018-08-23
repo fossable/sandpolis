@@ -27,6 +27,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.Transient;
 
 import com.google.protobuf.ByteString;
@@ -58,6 +60,7 @@ import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
  * @since 5.0.0
  */
 @Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdate> implements Iterable<AttributeNode> {
 
 	/**
@@ -83,7 +86,7 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	@Id
 	@Column
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	private int db_id;
+	protected int db_id;
 
 	/**
 	 * The node's parent which is stored to allow change events to propegate upwards

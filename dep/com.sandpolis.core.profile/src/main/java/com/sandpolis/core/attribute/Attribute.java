@@ -22,6 +22,8 @@ import java.util.Iterator;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.Transient;
 
@@ -53,6 +55,7 @@ import com.sandpolis.core.proto.util.Update.AttributeUpdate;
  * @since 4.0.0
  */
 @Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class Attribute<E> extends AttributeNode {
 
 	/**

@@ -41,7 +41,6 @@ import javax.persistence.Transient;
  * @since 3.0.0
  */
 @Entity
-@Table(name = "Databases")
 public final class Database implements AutoCloseable {
 
 	@Id
