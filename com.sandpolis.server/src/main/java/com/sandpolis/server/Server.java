@@ -47,8 +47,6 @@ import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.store.profile.ProfileStore;
 import com.sandpolis.core.proto.ipc.MCMetadata.RS_Metadata;
-import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
-import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkConfig;
@@ -167,11 +165,11 @@ public final class Server {
 			return failure(outcome, e);
 		}
 
-		// Load ListenerStore
-		ListenerStore.load(DatabaseStore.main());
-
 		// Load UserStore
 		UserStore.load(DatabaseStore.main());
+
+		// Load ListenerStore
+		ListenerStore.load(DatabaseStore.main());
 
 		// Load GroupStore
 		GroupStore.load(DatabaseStore.main());
@@ -231,16 +229,10 @@ public final class Server {
 			return success(outcome, "Skipped");
 
 		log.info("Performing POST");
-
-		// Test UserStore
-		if (!UserStore.add(UserConfig.newBuilder().setUsername("POSTUSER").setPassword("password").build()).getResult())
-			return failure(outcome);
-
-		// Test ListenerStore
-		ListenerStore.add(ListenerConfig.newBuilder().setPort(7000).setAddress("0.0.0.0").setOwner("POSTUSER")
-				.setName("POST").build());
-
-		return success(outcome);
+		Outcome post = Post.smokeTest();
+		if (post.getResult())
+			log.info("POST completed successfully in {} ms", post.getTime());
+		return outcome.mergeFrom(post).build();
 	}
 
 	/**
