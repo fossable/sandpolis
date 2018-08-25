@@ -17,12 +17,13 @@
  *****************************************************************************/
 package com.sandpolis.server.store.group;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -31,7 +32,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.Table;
 
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.ProtoType;
@@ -62,7 +62,6 @@ import com.sandpolis.server.store.user.User;
  * @since 5.0.0
  */
 @Entity
-@Table(name = "Groups")
 public class Group implements ProtoType<ProtoGroup> {
 
 	@Id
@@ -71,7 +70,7 @@ public class Group implements ProtoType<ProtoGroup> {
 	private int db_id;
 
 	/**
-	 * The group's unique ID.
+	 * The unique ID.
 	 */
 	@Column(nullable = false, unique = true)
 	private long groupId;
@@ -79,22 +78,22 @@ public class Group implements ProtoType<ProtoGroup> {
 	/**
 	 * The group's name.
 	 */
-	@Column(nullable = false, unique = true)
+	@Column
 	private String name;
 
 	/**
 	 * The group's owner.
 	 */
 	@ManyToOne(optional = false, cascade = CascadeType.ALL)
-	@JoinColumn(referencedColumnName = "username")
+	@JoinColumn(referencedColumnName = "db_id")
 	private User owner;
 
 	/**
 	 * The group's members.
 	 */
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "user_group", joinColumns = @JoinColumn(name = "group_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
-	private List<User> members;
+	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JoinTable(name = "user_group", joinColumns = @JoinColumn(name = "group_id", referencedColumnName = "db_id"), inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "db_id"))
+	private Collection<User> members = new ArrayList<>();
 
 	/**
 	 * The group's creation timestamp.
@@ -111,14 +110,14 @@ public class Group implements ProtoType<ProtoGroup> {
 	/**
 	 * The group's password authentication mechanisms.
 	 */
-	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-	private Collection<PasswordMechanism> passwords;
+	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private Collection<PasswordMechanism> passwords = new ArrayList<>();
 
 	/**
 	 * The group's key authentication mechanisms.
 	 */
-	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-	private Collection<KeyMechanism> keys;
+	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private Collection<KeyMechanism> keys = new ArrayList<>();
 
 	// JPA Constructor
 	Group() {
@@ -153,7 +152,11 @@ public class Group implements ProtoType<ProtoGroup> {
 	 * @param mechanism The new authentication mechanism
 	 */
 	public void addKeyMechanism(KeyMechanism mechanism) {
-		keys.add(mechanism);
+		GroupStore.transaction(() -> getKeys().add(mechanism));
+	}
+
+	private void setGroupId(long groupId) {
+		this.groupId = groupId;
 	}
 
 	public KeyMechanism getKeyMechanism(long mechId) {
@@ -188,21 +191,30 @@ public class Group implements ProtoType<ProtoGroup> {
 		this.mtime = mtime;
 	}
 
-	public List<User> getMembers() {
+	public Collection<User> getMembers() {
 		return members;
+	}
+
+	public Collection<KeyMechanism> getKeys() {
+		return keys;
 	}
 
 	@Override
 	public ErrorCode merge(ProtoGroup delta) {
-		ErrorCode validity = ValidationUtil.validConfig(delta.getConfig());
+		ErrorCode validity = ValidationUtil.Config.valid(delta.getConfig());
 		if (validity != ErrorCode.NONE)
 			return validity;
 
 		if (delta.hasConfig()) {
+			if (delta.getConfig().hasId())
+				setGroupId(delta.getConfig().getId());
 			if (delta.getConfig().hasName())
 				setName(delta.getConfig().getName());
 			if (delta.getConfig().hasOwner())
 				;// TODO
+			for (PasswordContainer password : delta.getConfig().getPasswordMechanismList()) {
+				addPasswordMechanism(new PasswordMechanism(this, password.getPassword()));
+			}
 		}
 
 		if (delta.hasStats()) {

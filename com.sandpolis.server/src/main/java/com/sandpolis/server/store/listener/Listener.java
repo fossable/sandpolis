@@ -25,7 +25,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import org.slf4j.Logger;
@@ -43,6 +42,7 @@ import com.sandpolis.server.net.init.ServerInitializer;
 import com.sandpolis.server.store.user.User;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
@@ -54,7 +54,6 @@ import io.netty.channel.ServerChannel;
  * @since 1.0.0
  */
 @Entity
-@Table(name = "Listeners")
 public class Listener implements ProtoType<ProtoListener> {
 
 	public static final Logger log = LoggerFactory.getLogger(Listener.class);
@@ -65,7 +64,7 @@ public class Listener implements ProtoType<ProtoListener> {
 	private int db_id;
 
 	/**
-	 * The listener's unique ID.
+	 * The unique ID.
 	 */
 	@Column(nullable = false, unique = true)
 	private long id;
@@ -73,14 +72,14 @@ public class Listener implements ProtoType<ProtoListener> {
 	/**
 	 * The listener's optional user-friendly name.
 	 */
-	@Column(nullable = true)
+	@Column
 	private String name;
 
 	/**
 	 * The user that owns the listener.
 	 */
-	@ManyToOne(optional = true, cascade = CascadeType.ALL)
-	@JoinColumn(referencedColumnName = "username")
+	@ManyToOne(optional = false, cascade = CascadeType.ALL)
+	@JoinColumn(referencedColumnName = "db_id")
 	private User owner;
 
 	/**
@@ -104,31 +103,31 @@ public class Listener implements ProtoType<ProtoListener> {
 	/**
 	 * Indicates whether automatic port forwarding with UPnP will be attempted.
 	 */
-	@Column(nullable = true)
+	@Column
 	private boolean upnp;
 
 	/**
 	 * Indicates whether client instances can be accepted by the listener.
 	 */
-	@Column(nullable = true)
+	@Column
 	private boolean clientAcceptor;
 
 	/**
 	 * Indicates whether viewer instances can be accepted by the listener.
 	 */
-	@Column(nullable = true)
+	@Column
 	private boolean viewerAcceptor;
 
 	/**
 	 * The listener's certificate.
 	 */
-	@Column(nullable = true)
+	@Column
 	private byte[] certificate;
 
 	/**
 	 * The listener's private key.
 	 */
-	@Column(nullable = true)
+	@Column
 	private byte[] privateKey;
 
 	/**
@@ -303,7 +302,7 @@ public class Listener implements ProtoType<ProtoListener> {
 
 	@Override
 	public ErrorCode merge(ProtoListener delta) {
-		ErrorCode validity = ValidationUtil.validConfig(delta.getConfig());
+		ErrorCode validity = ValidationUtil.Config.valid(delta.getConfig());
 		if (validity != ErrorCode.NONE)
 			return validity;
 

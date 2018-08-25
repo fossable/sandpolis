@@ -57,7 +57,7 @@ public class KeyMechanism extends AuthenticationMechanism {
 	private long id;
 
 	@ManyToOne(optional = false, cascade = CascadeType.ALL)
-	@JoinColumn(referencedColumnName = "groupId")
+	@JoinColumn(referencedColumnName = "db_id")
 	private Group group;
 
 	@OneToOne(optional = false, cascade = CascadeType.ALL)

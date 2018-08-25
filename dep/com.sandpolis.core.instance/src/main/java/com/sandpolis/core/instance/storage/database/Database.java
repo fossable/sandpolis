@@ -26,7 +26,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Table;
 import javax.persistence.Transient;
 
 /**
@@ -49,27 +48,33 @@ public final class Database implements AutoCloseable {
 	private int db_id;
 
 	/**
+	 * The unique ID.
+	 */
+	@Column(nullable = false, unique = true)
+	private int id;
+
+	/**
 	 * The database url in standard format.
 	 */
-	@Column
-	protected String url;
+	@Column(nullable = false)
+	private String url;
 
 	/**
 	 * The database username.
 	 */
 	@Column
-	protected String username;
+	private String username;
 
 	/**
 	 * The database password.
 	 */
 	@Column
-	protected String password;
+	private String password;
 
 	/**
 	 * A timestamp of the last successful connection.
 	 */
-	@Column
+	@Column(nullable = false)
 	private long timestamp;
 
 	/**

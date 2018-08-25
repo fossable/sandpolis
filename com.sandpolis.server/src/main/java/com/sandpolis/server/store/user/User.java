@@ -25,19 +25,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.sandpolis.core.instance.ProtoType;
-import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
-import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
 import com.sandpolis.core.proto.pojo.User.ProtoUser;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.pojo.User.UserStats;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.store.group.Group;
-import com.sandpolis.server.store.listener.Listener;
 
 /**
  * Represents a user account on the server.
@@ -46,7 +42,6 @@ import com.sandpolis.server.store.listener.Listener;
  * @since 5.0.0
  */
 @Entity
-@Table(name = "Users")
 public class User implements ProtoType<ProtoUser> {
 
 	@Id
@@ -55,7 +50,7 @@ public class User implements ProtoType<ProtoUser> {
 	private int db_id;
 
 	/**
-	 * The user's unique ID.
+	 * The unique ID.
 	 */
 	@Column(nullable = false, unique = true)
 	private long id;
@@ -63,13 +58,13 @@ public class User implements ProtoType<ProtoUser> {
 	/**
 	 * The user's unique username.
 	 */
-	@Column(nullable = false, unique = true, length = 30)
+	@Column(nullable = false, length = 30, unique = true)
 	private String username;
 
 	/**
 	 * The user's optional email address.
 	 */
-	@Column(nullable = true)
+	@Column
 	private String email;
 
 	/**
@@ -87,7 +82,7 @@ public class User implements ProtoType<ProtoUser> {
 	/**
 	 * An optional expiration timestamp.
 	 */
-	@Column(nullable = true)
+	@Column
 	private long expiration;
 
 	@ManyToMany(mappedBy = "members")
@@ -170,13 +165,15 @@ public class User implements ProtoType<ProtoUser> {
 
 	@Override
 	public ErrorCode merge(ProtoUser delta) {
-		ErrorCode validity = ValidationUtil.validConfig(delta.getConfig());
+		ErrorCode validity = ValidationUtil.Config.valid(delta.getConfig());
 		if (validity != ErrorCode.NONE)
 			return validity;
 
 		if (delta.hasConfig()) {
 			UserConfig config = delta.getConfig();
 
+			if (config.hasUsername())
+				setUsername(config.getUsername());
 			if (config.hasEmail())
 				setEmail(config.getEmail());
 			if (config.hasExpiration())
