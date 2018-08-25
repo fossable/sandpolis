@@ -162,10 +162,10 @@ public final class ListenerStore extends Store {
 	 * @return The outcome of the action
 	 */
 	public static Outcome add(ListenerConfig config) {
-		ErrorCode code = ValidationUtil.validConfig(config);
+		ErrorCode code = ValidationUtil.Config.valid(config);
 		if (code != ErrorCode.NONE)
 			return Outcome.newBuilder().setResult(false).setError(code).build();
-		code = ValidationUtil.completeConfig(config);
+		code = ValidationUtil.Config.complete(config);
 		if (code != ErrorCode.NONE)
 			return Outcome.newBuilder().setResult(false).setError(code).build();
 

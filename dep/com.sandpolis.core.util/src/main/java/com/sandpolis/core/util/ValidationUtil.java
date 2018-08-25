@@ -17,17 +17,30 @@
  *****************************************************************************/
 package com.sandpolis.core.util;
 
+import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_ADDRESS;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_CERTIFICATE;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_EMAIL;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_GROUPNAME;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_ID;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_KEY;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_PORT;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_USERNAME;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.NONE;
+
 import java.io.File;
 import java.security.cert.CertificateException;
 
+import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.commons.validator.routines.RegexValidator;
 
-import com.google.protobuf.ByteString;
-import com.sandpolis.core.proto.util.Listener.ListenerConfig;
+import com.sandpolis.core.proto.pojo.Group.GroupConfig;
+import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
+import com.sandpolis.core.proto.pojo.User.UserConfig;
+import com.sandpolis.core.proto.util.Result.ErrorCode;
 
 /**
- * Utilities to validate user input.
+ * Utilities that validate user input.
  * 
  * @author cilki
  * @since 4.0.0
@@ -185,31 +198,155 @@ public final class ValidationUtil {
 	}
 
 	/**
-	 * Validate a listener configuration.
+	 * This static class checks protobuf configurations for validity and
+	 * completeness.
 	 * 
-	 * @param config The candidate configuration
-	 * @return The configuration's validity
+	 * A config is <b>complete</b> if:
+	 * <ul>
+	 * <li>Every required field is present in the config.</li>
+	 * </ul>
+	 * 
+	 * A config is <b>valid</b> if:
+	 * <ul>
+	 * <li>Every field present in the config passes all input restrictions.</li>
+	 * </ul>
+	 * 
+	 * A config may be in any combination of the two states.
+	 * 
+	 * @author cilki
+	 * @since 5.0.0
 	 */
-	public static boolean listenerConfig(ListenerConfig config) {
-		if (config == null)
-			return false;
-		if (!username(config.getOwner()))
-			return false;
-		if (!port(config.getPort()))
-			return false;
-		if (!InetAddressValidator.getInstance().isValidInet4Address(config.getAddress()))
-			return false;
-		if (config.getCert() != ByteString.EMPTY && config.getKey() != ByteString.EMPTY) {
-			// Validate certificate and key formats
-			try {
-				CertUtil.parse(config.getCert().toByteArray());
-				CertUtil.parse(config.getKey().toByteArray());
-			} catch (CertificateException e) {
-				return false;
+	public static class Config {
+
+		/**
+		 * Validate a {@link ListenerConfig}.
+		 * 
+		 * @param config The candidate configuration
+		 * @return An error code or {@link ErrorCode#NONE}
+		 */
+		public static ErrorCode valid(ListenerConfig config) {
+			if (config == null)
+				throw new IllegalArgumentException();
+
+			if (config.hasOwner() && !username(config.getOwner()))
+				return INVALID_USERNAME;
+			if (config.hasPort() && !port(config.getPort()))
+				return INVALID_PORT;
+			if (config.hasAddress() && !InetAddressValidator.getInstance().isValidInet4Address(config.getAddress()))
+				return INVALID_ADDRESS;
+			if (!config.hasCert() && config.hasKey())
+				return INVALID_CERTIFICATE;
+			if (config.hasCert() && !config.hasKey())
+				return INVALID_KEY;
+			if (config.hasCert() && config.hasKey()) {
+				// Check certificate and key formats
+				try {
+					CertUtil.parse(config.getCert().toByteArray());
+				} catch (CertificateException e) {
+					return INVALID_CERTIFICATE;
+				}
+
+				try {
+					CertUtil.parse(config.getKey().toByteArray());
+				} catch (CertificateException e) {
+					return INVALID_KEY;
+				}
 			}
+
+			return NONE;
 		}
 
-		return true;
-	}
+		/**
+		 * Check a {@link ListenerConfig} for completeness.
+		 * 
+		 * @param config The candidate configuration
+		 * @return An error code or {@link ErrorCode#NONE}
+		 */
+		public static ErrorCode complete(ListenerConfig config) {
+			if (config == null)
+				throw new IllegalArgumentException();
 
+			if (!config.hasPort())
+				return INVALID_PORT;
+			if (!config.hasAddress())
+				return INVALID_ADDRESS;
+			if (!config.hasOwner())
+				return INVALID_USERNAME;
+
+			return NONE;
+		}
+
+		/**
+		 * Validate a {@link UserConfig}.
+		 * 
+		 * @param config The candidate configuration
+		 * @return An error code or {@link ErrorCode#NONE}
+		 */
+		public static ErrorCode valid(UserConfig config) {
+			if (config == null)
+				throw new IllegalArgumentException();
+
+			if (config.hasUsername() && !username(config.getUsername()))
+				return INVALID_USERNAME;
+			if (config.hasEmail() && !EmailValidator.getInstance().isValid(config.getEmail()))
+				return INVALID_EMAIL;
+
+			return NONE;
+		}
+
+		/**
+		 * Check a {@link UserConfig} for completeness.
+		 * 
+		 * @param config The candidate configuration
+		 * @return An error code or {@link ErrorCode#NONE}
+		 */
+		public static ErrorCode complete(UserConfig config) {
+			if (config == null)
+				throw new IllegalArgumentException();
+
+			if (!config.hasUsername())
+				return INVALID_USERNAME;
+
+			return NONE;
+		}
+
+		/**
+		 * Validate a {@link GroupConfig}.
+		 * 
+		 * @param config The candidate configuration
+		 * @return An error code or {@link ErrorCode#NONE}
+		 */
+		public static ErrorCode valid(GroupConfig config) {
+			if (config == null)
+				throw new IllegalArgumentException();
+
+			if (config.hasName() && !group(config.getName()))
+				return INVALID_GROUPNAME;
+			if (config.hasOwner() && !username(config.getOwner()))
+				return INVALID_USERNAME;
+			for (String member : config.getMemberList())
+				if (!username(member))
+					return INVALID_USERNAME;
+
+			return NONE;
+		}
+
+		/**
+		 * Check a {@link GroupConfig} for completeness.
+		 * 
+		 * @param config The candidate configuration
+		 * @return An error code or {@link ErrorCode#NONE}
+		 */
+		public static ErrorCode complete(GroupConfig config) {
+			if (config == null)
+				throw new IllegalArgumentException();
+
+			if (!config.hasId())
+				return INVALID_ID;
+			if (!config.hasOwner())
+				return INVALID_USERNAME;
+
+			return NONE;
+		}
+	}
 }

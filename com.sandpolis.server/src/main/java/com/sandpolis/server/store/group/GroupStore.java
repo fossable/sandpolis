@@ -84,10 +84,10 @@ public final class GroupStore extends Store {
 	 * @return The outcome of the action
 	 */
 	public static Outcome add(GroupConfig config) {
-		ErrorCode code = ValidationUtil.validConfig(config);
+		ErrorCode code = ValidationUtil.Config.valid(config);
 		if (code != ErrorCode.NONE)
 			return Outcome.newBuilder().setResult(false).setError(code).build();
-		code = ValidationUtil.completeConfig(config);
+		code = ValidationUtil.Config.complete(config);
 		if (code != ErrorCode.NONE)
 			return Outcome.newBuilder().setResult(false).setError(code).build();
 
@@ -158,6 +158,10 @@ public final class GroupStore extends Store {
 	 */
 	public static Stream<Group> getGroups() {
 		return provider.stream();
+	}
+
+	public static void transaction(Runnable operation) {
+		provider.transaction(operation);
 	}
 
 }
