@@ -32,7 +32,7 @@ dependencies {
 	implementation lib.jpa
 	implementation lib.guava
 	implementation lib.netty
-	implementation lib.sqlite
+	implementation lib.h2
 	implementation lib.zt_zip
 }
 

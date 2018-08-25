@@ -17,8 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.store.group;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -93,7 +93,7 @@ public class Group implements ProtoType<ProtoGroup> {
 	 */
 	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinTable(name = "user_group", joinColumns = @JoinColumn(name = "group_id", referencedColumnName = "db_id"), inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "db_id"))
-	private Collection<User> members = new ArrayList<>();
+	private Set<User> members;
 
 	/**
 	 * The group's creation timestamp.
@@ -111,13 +111,13 @@ public class Group implements ProtoType<ProtoGroup> {
 	 * The group's password authentication mechanisms.
 	 */
 	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private Collection<PasswordMechanism> passwords = new ArrayList<>();
+	private Set<PasswordMechanism> passwords;
 
 	/**
 	 * The group's key authentication mechanisms.
 	 */
 	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private Collection<KeyMechanism> keys = new ArrayList<>();
+	private Set<KeyMechanism> keys;
 
 	// JPA Constructor
 	Group() {

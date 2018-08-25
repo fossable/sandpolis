@@ -22,6 +22,7 @@ import java.sql.SQLException;
 
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.storage.database.DatabaseFactory.IDatabaseFactory;
 
 /**
  * A factory for producing initialized Ormlite databases.
@@ -29,31 +30,20 @@ import com.sandpolis.core.instance.storage.database.Database;
  * @author cilki
  * @since 5.0.0
  */
-public class OrmliteDatabaseFactory {
+public class OrmliteDatabaseFactory implements IDatabaseFactory {
 
-	/**
-	 * Initialize a new SQLite database with Ormlite.
-	 * 
-	 * @param persist A list of classes that will be persisted or {@code null} for
-	 *                none
-	 * @param db      The database to be initialized
-	 * @return The initialized database
-	 */
-	public static Database sqlite(Class<?>[] persist, Database db) throws SQLException, IOException {
+	public Database sqlite(Class<?>[] persist, Database db) throws SQLException, IOException {
 		return db
 				.init(new OrmliteConnection(new JdbcConnectionSource(db.getUrl(), db.getUsername(), db.getPassword())));
 	}
 
-	/**
-	 * Initialize a new MySQL database with Ormlite.
-	 * 
-	 * @param persist A list of classes that will be persisted or {@code null} for
-	 *                none
-	 * @param db      The database to be initialized
-	 * @return The initialized database
-	 */
-	public static Database mysql(Class<?>[] persist, Database db) throws SQLException, IOException {
+	public Database mysql(Class<?>[] persist, Database db) throws SQLException, IOException {
 		return db
 				.init(new OrmliteConnection(new JdbcConnectionSource(db.getUrl(), db.getUsername(), db.getPassword())));
+	}
+
+	@Override
+	public Database h2(Class<?>[] persist, Database db) throws Exception {
+		throw new UnsupportedOperationException();
 	}
 }

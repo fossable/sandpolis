@@ -326,10 +326,10 @@ class OrmliteStoreProviderTest {
 
 	static Stream<StoreProvider<TestObject>> implementations()
 			throws URISyntaxException, IOException, SQLException, ManagedProcessException {
-		Database sqlite = OrmliteDatabaseFactory.sqlite(new Class[] { TestObject.class },
+		Database sqlite = new OrmliteDatabaseFactory().sqlite(new Class[] { TestObject.class },
 				new Database("jdbc:sqlite:file:" + Files.createTempFile(null, null).toAbsolutePath().toString()));
 
-		Database mysql = OrmliteDatabaseFactory.mysql(new Class[] { TestObject.class },
+		Database mysql = new OrmliteDatabaseFactory().mysql(new Class[] { TestObject.class },
 				new Database("jdbc:mysql://127.0.0.1:8001/test?serverTimezone=America/Chicago", "root", ""));
 
 		// Reset table

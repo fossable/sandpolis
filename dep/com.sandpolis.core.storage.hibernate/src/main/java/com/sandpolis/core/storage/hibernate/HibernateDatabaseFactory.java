@@ -20,6 +20,7 @@ package com.sandpolis.core.storage.hibernate;
 import org.hibernate.cfg.Configuration;
 
 import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.storage.database.DatabaseFactory.IDatabaseFactory;
 
 /**
  * A factory for producing initialized Hibernate databases.
@@ -27,19 +28,10 @@ import com.sandpolis.core.instance.storage.database.Database;
  * @author cilki
  * @since 5.0.0
  */
-public final class HibernateDatabaseFactory {
-	private HibernateDatabaseFactory() {
-	}
+public class HibernateDatabaseFactory implements IDatabaseFactory {
 
-	/**
-	 * Initialize a new SQLite database with Hibernate.
-	 * 
-	 * @param persist A list of classes that will be persisted or {@code null} for
-	 *                none
-	 * @param db      The database to be initialized
-	 * @return The initialized database
-	 */
-	public static Database sqlite(Class<?>[] persist, Database db) {
+	@Override
+	public Database sqlite(Class<?>[] persist, Database db) {
 		if (db == null)
 			throw new IllegalArgumentException();
 		if (persist == null)
@@ -60,27 +52,23 @@ public final class HibernateDatabaseFactory {
 				.setProperty("hibernate.connection.url", db.getUrl())
 
 				// Set pool options
-				.setProperty("hibernate.c3p0.min_size", "0").setProperty("hibernate.c3p0.max_size", "2")// TODO 1
+				.setProperty("hibernate.c3p0.min_size", "0").setProperty("hibernate.c3p0.max_size", "1")
 
 				// Set additional options
 				.setProperty("hibernate.connection.shutdown", "true")
 				.setProperty("hibernate.globally_quoted_identifiers", "true")
-				.setProperty("hibernate.hbm2ddl.auto", "create");
+
+				// This property cannot be changed because SQLite does not support altering a
+				// table's unique constrants
+				.setProperty("hibernate.hbm2ddl.auto", "validate");
 		for (Class<?> cls : persist)
 			conf.addAnnotatedClass(cls);
 
 		return db.init(new HibernateConnection(conf.buildSessionFactory()));
 	}
 
-	/**
-	 * Initialize a new MySQL database with Hibernate.
-	 * 
-	 * @param persist A list of classes that will be persisted or {@code null} for
-	 *                none
-	 * @param db      The database to be initialized
-	 * @return The initialized database
-	 */
-	public static Database mysql(Class<?>[] persist, Database db) {
+	@Override
+	public Database mysql(Class<?>[] persist, Database db) {
 		if (db == null)
 			throw new IllegalArgumentException();
 		if (persist == null)
@@ -104,6 +92,40 @@ public final class HibernateDatabaseFactory {
 				.setProperty("hibernate.c3p0.min_size", "0").setProperty("hibernate.c3p0.max_size", "20")
 
 				// Set additional options
+				.setProperty("hibernate.globally_quoted_identifiers", "true")
+				.setProperty("hibernate.hbm2ddl.auto", "create");
+		for (Class<?> cls : persist)
+			conf.addAnnotatedClass(cls);
+
+		return db.init(new HibernateConnection(conf.buildSessionFactory()));
+	}
+
+	@Override
+	public Database h2(Class<?>[] persist, Database db) {
+		if (db == null)
+			throw new IllegalArgumentException();
+		if (persist == null)
+			persist = new Class[0];
+
+		Configuration conf = new Configuration()
+				// Set the H2 database driver
+				.setProperty("hibernate.connection.driver_class", "org.h2.Driver")
+
+				// Set the H2 dialect
+				.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
+
+				// Set the credentials
+				.setProperty("hibernate.connection.username", db.getUsername())
+				.setProperty("hibernate.connection.password", db.getPassword())
+
+				// Set the database URL
+				.setProperty("hibernate.connection.url", db.getUrl())
+
+				// Set pool options
+				.setProperty("hibernate.c3p0.min_size", "0").setProperty("hibernate.c3p0.max_size", "1")
+
+				// Set additional options
+				.setProperty("hibernate.connection.shutdown", "true")
 				.setProperty("hibernate.globally_quoted_identifiers", "true")
 				.setProperty("hibernate.hbm2ddl.auto", "create");
 		for (Class<?> cls : persist)

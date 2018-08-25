@@ -157,7 +157,8 @@ public final class Server {
 		// Load DatabaseStore
 		try {
 			if (Config.DB_URL == null) {
-				DatabaseStore.load(DatabaseFactory.create(Environment.DB.resolve("server.db").toFile()), ORM_CLASSES);
+				DatabaseStore.load(DatabaseFactory.create("h2", Environment.DB.resolve("server.db").toFile()),
+						ORM_CLASSES);
 			} else {
 				DatabaseStore.load(DatabaseFactory.create(Config.DB_URL), ORM_CLASSES);
 			}

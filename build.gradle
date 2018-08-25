@@ -28,17 +28,15 @@ ext.lib = [
 	jpa: 'javax.persistence:javax.persistence-api:2.2',
 	hibernate: ['org.hibernate:hibernate-core:5.3.5.Final',
 		'org.hibernate:hibernate-c3p0:5.3.5.Final',
-		'com.github.gwenn:sqlite-dialect:master'],
+		'com.github.gwenn:sqlite-dialect:master',
+		'javax.xml.bind:jaxb-api:2.3.0'],
 	ormlite: ['com.j256.ormlite:ormlite-core:5.1',
 		'com.j256.ormlite:ormlite-jdbc:5.1'],
 	ormlite_android: 'com.j256.ormlite:ormlite-android:5.1',
 	sqlite: 'org.xerial:sqlite-jdbc:3.23.1',
 	mariadb: 'ch.vorburger.mariaDB4j:mariaDB4j:2.3.0',
 	mysql: 'mysql:mysql-connector-java:8.0.12',
-
-	// Unit conversion
-	unit: ['javax.measure:unit-api:1.0',
-		'tec.units:unit-ri:1.0.3'],
+	h2: 'com.h2database:h2:1.4.197',
 	
 	// User input validator
 	validator: 'commons-validator:commons-validator:1.6',

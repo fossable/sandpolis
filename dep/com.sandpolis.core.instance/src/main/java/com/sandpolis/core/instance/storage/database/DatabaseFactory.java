@@ -19,8 +19,8 @@ package com.sandpolis.core.instance.storage.database;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
+import java.util.Objects;
 
 import com.sandpolis.core.instance.Config;
 
@@ -35,46 +35,49 @@ public final class DatabaseFactory {
 	}
 
 	/**
-	 * The Hibernate factory class.
+	 * The Hibernate database factory.
 	 */
-	private static Class<?> hibernateFactory;
+	private static final IDatabaseFactory hibernateFactory;
 
 	/**
-	 * The Ormlite factory class.
+	 * The Ormlite database factory.
 	 */
-	private static Class<?> ormliteFactory;
+	private static final IDatabaseFactory ormliteFactory;
 
 	static {
-		try {
-			hibernateFactory = Class.forName("com.sandpolis.core.storage.hibernate.HibernateDatabaseFactory");
-		} catch (ClassNotFoundException ignore) {
-			hibernateFactory = null;
-		}
+		hibernateFactory = loadFactory("com.sandpolis.core.storage.hibernate.HibernateDatabaseFactory");
+		ormliteFactory = loadFactory("com.sandpolis.core.storage.ormlite.OrmliteDatabaseFactory");
+	}
 
+	/**
+	 * Load a database factory.
+	 */
+	private static IDatabaseFactory loadFactory(String path) {
 		try {
-			ormliteFactory = Class.forName("com.sandpolis.core.storage.ormlite.OrmliteDatabaseFactory");
-		} catch (ClassNotFoundException ignore) {
-			ormliteFactory = null;
+			return (IDatabaseFactory) Class.forName(path).getConstructor().newInstance();
+		} catch (Exception e) {
+			return null;
 		}
 	}
 
 	/**
 	 * Create a new uninitialized {@link Database} from the given {@link File}.
 	 * 
+	 * @param type The database type
 	 * @param file The source file which will be created if it does not exist
 	 * @return An uninitialized {@code Database}
 	 * @throws IOException If the file creation fails
 	 */
-	public static Database create(File file) throws IOException {
-		if (file == null)
-			throw new IllegalArgumentException("Null argument");
+	public static Database create(String type, File file) throws IOException {
+		Objects.requireNonNull(type);
+		Objects.requireNonNull(file);
 		if (file.isDirectory())
 			throw new IllegalArgumentException("Invalid database file");
 		if (!file.exists() && !file.createNewFile())
 			throw new IOException("Failed to create database file");
 
 		try {
-			return new Database("jdbc:sqlite:file:" + file.getAbsolutePath());
+			return new Database(String.format("jdbc:%s:file:%s", type, file.getAbsolutePath()));
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
@@ -103,36 +106,79 @@ public final class DatabaseFactory {
 			// Already initialized
 			throw new IllegalArgumentException();
 
-		String type = database.getFile() == null ? "mysql" : "sqlite";
-
-		try {
-			return (Database) getFactoryMethod(type).invoke(null, persist, database);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
-	 * Get the {@link Method} that will yield a new {@link Database} for the
-	 * configured provider.
-	 * 
-	 * @param dbType The type of database
-	 * @return The factory method
-	 */
-	private static Method getFactoryMethod(String dbType) throws NoSuchMethodException, SecurityException {
+		IDatabaseFactory fac;
 		switch (Config.DB_PROVIDER) {
 		case "":
 		case "default":
 		case "ormlite":
 			if (ormliteFactory == null)
 				throw new RuntimeException("Ormlite not found on classpath");
-			return ormliteFactory.getMethod(dbType, Class[].class, Database.class);
+
+			fac = ormliteFactory;
+			break;
 		case "hibernate":
 			if (hibernateFactory == null)
 				throw new RuntimeException("Hibernate not found on classpath");
-			return hibernateFactory.getMethod(dbType, Class[].class, Database.class);
+			fac = hibernateFactory;
+			break;
 		default:
 			throw new RuntimeException();
 		}
+
+		try {
+			switch (database.getType()) {
+			case "mysql":
+				return fac.mysql(persist, database);
+			case "sqlite":
+				return fac.sqlite(persist, database);
+			case "h2":
+				return fac.h2(persist, database);
+			default:
+				throw new RuntimeException();
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * A contract that every database factory should implement.<br>
+	 * <br>
+	 * TODO: Think of a better name for this interface.
+	 * 
+	 * @author cilki
+	 * @since 5.0.0
+	 */
+	public static interface IDatabaseFactory {
+
+		/**
+		 * Initialize a new SQLite database.
+		 * 
+		 * @param persist A list of classes that will be persisted or {@code null} for
+		 *                none
+		 * @param db      The database to be initialized
+		 * @return The initialized database
+		 */
+		public Database sqlite(Class<?>[] persist, Database db) throws Exception;
+
+		/**
+		 * Initialize a new MySQL database.
+		 * 
+		 * @param persist A list of classes that will be persisted or {@code null} for
+		 *                none
+		 * @param db      The database to be initialized
+		 * @return The initialized database
+		 */
+		public Database mysql(Class<?>[] persist, Database db) throws Exception;
+
+		/**
+		 * Initialize a new H2 database.
+		 * 
+		 * @param persist A list of classes that will be persisted or {@code null} for
+		 *                none
+		 * @param db      The database to be initialized
+		 * @return The initialized database
+		 */
+		public Database h2(Class<?>[] persist, Database db) throws Exception;
 	}
 }

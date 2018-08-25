@@ -22,7 +22,6 @@ dependencies {
 	implementation lib.slf4j
 	implementation lib.jpa
 	implementation lib.jansi
-	implementation lib.unit
 	implementation lib.guava
 	implementation lib.validator
 }

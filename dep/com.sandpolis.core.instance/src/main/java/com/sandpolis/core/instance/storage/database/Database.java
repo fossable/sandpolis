@@ -163,6 +163,18 @@ public final class Database implements AutoCloseable {
 	}
 
 	/**
+	 * Get the database's type.
+	 * 
+	 * @return The database type
+	 */
+	public String getType() {
+		// Parse the URL for type info
+		String type = url.substring(url.indexOf(':') + 1);
+		type = type.substring(0, type.indexOf(':'));
+		return type;
+	}
+
+	/**
 	 * Get the database URL in standard format.
 	 * 
 	 * @return The database URL
