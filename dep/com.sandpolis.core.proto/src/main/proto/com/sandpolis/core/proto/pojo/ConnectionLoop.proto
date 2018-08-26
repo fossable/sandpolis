@@ -15,10 +15,10 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-syntax = "proto3";
+syntax = "proto2";
 
-package util;
-option java_package = "com.sandpolis.core.proto.util";
+package pojo;
+option java_package = "com.sandpolis.core.proto.pojo";
 
 import "com/sandpolis/core/proto/util/Generator.proto";
 
@@ -29,21 +29,21 @@ import "com/sandpolis/core/proto/util/Generator.proto";
 message LoopConfig {
 
 	// The list of network targets to attempt
-	repeated NetworkTarget network_target = 1;
+	repeated util.NetworkTarget network_target = 1;
 	
 	// Indicates whether strict certificate checking will be enabled
-	bool strict_certs = 2;
+	optional bool strict_certs = 2;
 	
 	// The maximum number of conenction iterations to attempt in the worst case
-	int32 max_iterations = 3;
+	optional int32 max_iterations = 3;
 	
 	// The initial connection timeout
-	int32 timeout = 4;
+	optional int32 timeout = 4;
 	
 	// The maximum connection timeout
-	int32 max_timeout = 5;
+	optional int32 max_timeout = 5;
 	
 	// The timeout smoothing factor which determines how quickly the maximum
 	// timeout is reached
-	double timeout_flatness = 6;
+	optional double timeout_flatness = 6;
 }
