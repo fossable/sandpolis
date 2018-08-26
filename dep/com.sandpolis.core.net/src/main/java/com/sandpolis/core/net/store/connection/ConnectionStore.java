@@ -35,7 +35,7 @@ import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkAdded;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.NodeAdded;
-import com.sandpolis.core.proto.util.ConnectionLoop.LoopConfig;
+import com.sandpolis.core.proto.pojo.ConnectionLoop.LoopConfig;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.util.concurrent.DefaultPromise;

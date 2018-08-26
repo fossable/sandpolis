@@ -25,7 +25,7 @@ import java.util.concurrent.TimeoutException;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ChannelConstant;
-import com.sandpolis.core.proto.util.ConnectionLoop.LoopConfig;
+import com.sandpolis.core.proto.pojo.ConnectionLoop.LoopConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 
 import io.netty.bootstrap.Bootstrap;
