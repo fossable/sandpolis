@@ -17,7 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.server.store.listener;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -40,6 +39,7 @@ import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.net.init.ServerInitializer;
 import com.sandpolis.server.store.user.User;
+import com.sandpolis.server.store.user.UserStore;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -78,7 +78,7 @@ public class Listener implements ProtoType<ProtoListener> {
 	/**
 	 * The user that owns the listener.
 	 */
-	@ManyToOne(optional = false, cascade = CascadeType.ALL)
+	@ManyToOne(optional = false)
 	@JoinColumn(referencedColumnName = "db_id")
 	private User owner;
 
@@ -236,6 +236,10 @@ public class Listener implements ProtoType<ProtoListener> {
 		return owner;
 	}
 
+	public void setOwner(User owner) {
+		this.owner = owner;
+	}
+
 	public boolean isEnabled() {
 		return enabled;
 	}
@@ -316,7 +320,7 @@ public class Listener implements ProtoType<ProtoListener> {
 			if (config.hasAddress())
 				setAddress(config.getAddress());
 			if (config.hasOwner())
-				; // TODO owner
+				setOwner(UserStore.get(config.getOwner()));
 			if (config.hasUpnp())
 				setUpnp(config.getUpnp());
 			if (config.hasClientAcceptor())

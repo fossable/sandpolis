@@ -47,6 +47,7 @@ import com.sandpolis.server.auth.AuthenticationMechanism;
 import com.sandpolis.server.auth.KeyMechanism;
 import com.sandpolis.server.auth.PasswordMechanism;
 import com.sandpolis.server.store.user.User;
+import com.sandpolis.server.store.user.UserStore;
 
 /**
  * A {@link Group} is a collection of users that share permissions on a
@@ -84,7 +85,7 @@ public class Group implements ProtoType<ProtoGroup> {
 	/**
 	 * The group's owner.
 	 */
-	@ManyToOne(optional = false, cascade = CascadeType.ALL)
+	@ManyToOne(optional = false)
 	@JoinColumn(referencedColumnName = "db_id")
 	private User owner;
 
@@ -143,7 +144,7 @@ public class Group implements ProtoType<ProtoGroup> {
 	 * @param mechanism The new authentication mechanism
 	 */
 	public void addPasswordMechanism(PasswordMechanism mechanism) {
-		passwords.add(mechanism);
+		GroupStore.transaction(() -> getPasswords().add(mechanism));
 	}
 
 	/**
@@ -175,6 +176,10 @@ public class Group implements ProtoType<ProtoGroup> {
 		return owner;
 	}
 
+	public void setOwner(User owner) {
+		this.owner = owner;
+	}
+
 	public long getCtime() {
 		return ctime;
 	}
@@ -199,6 +204,10 @@ public class Group implements ProtoType<ProtoGroup> {
 		return keys;
 	}
 
+	public Collection<PasswordMechanism> getPasswords() {
+		return passwords;
+	}
+
 	@Override
 	public ErrorCode merge(ProtoGroup delta) {
 		ErrorCode validity = ValidationUtil.Config.valid(delta.getConfig());
@@ -206,22 +215,26 @@ public class Group implements ProtoType<ProtoGroup> {
 			return validity;
 
 		if (delta.hasConfig()) {
-			if (delta.getConfig().hasId())
-				setGroupId(delta.getConfig().getId());
-			if (delta.getConfig().hasName())
-				setName(delta.getConfig().getName());
-			if (delta.getConfig().hasOwner())
-				;// TODO
-			for (PasswordContainer password : delta.getConfig().getPasswordMechanismList()) {
+			GroupConfig config = delta.getConfig();
+
+			if (config.hasId())
+				setGroupId(config.getId());
+			if (config.hasName())
+				setName(config.getName());
+			if (config.hasOwner())
+				setOwner(UserStore.get(config.getOwner()));
+			for (PasswordContainer password : config.getPasswordMechanismList()) {
 				addPasswordMechanism(new PasswordMechanism(this, password.getPassword()));
 			}
 		}
 
 		if (delta.hasStats()) {
-			if (delta.getStats().hasCtime())
-				setCtime(delta.getStats().getCtime());
-			if (delta.getStats().hasMtime())
-				setMtime(delta.getStats().getMtime());
+			GroupStats stats = delta.getStats();
+
+			if (stats.hasCtime())
+				setCtime(stats.getCtime());
+			if (stats.hasMtime())
+				setMtime(stats.getMtime());
 		}
 
 		return ErrorCode.NONE;

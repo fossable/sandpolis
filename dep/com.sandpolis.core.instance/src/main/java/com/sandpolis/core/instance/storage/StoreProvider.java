@@ -132,4 +132,9 @@ public interface StoreProvider<E> {
 	 */
 	public Stream<E> stream();
 
+	// TODO This may not be needed
+	default public void transaction(Runnable operation) {
+		operation.run();
+	}
+
 }

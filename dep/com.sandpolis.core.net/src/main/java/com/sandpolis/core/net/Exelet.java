@@ -131,4 +131,14 @@ public abstract class Exelet {
 		return false;
 	}
 
+	/**
+	 * Check that the user associated with the connection is a superuser.
+	 * 
+	 * @return Whether the access check passed
+	 */
+	@AccessPredicate
+	protected boolean superuser(long id) {
+		return false;// TODO
+	}
+
 }

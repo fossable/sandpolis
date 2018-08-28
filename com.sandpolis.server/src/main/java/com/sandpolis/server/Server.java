@@ -45,7 +45,7 @@ import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.ipc.store.IPCStore;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.Profile;
-import com.sandpolis.core.profile.store.profile.ProfileStore;
+import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.ipc.MCMetadata.RS_Metadata;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;

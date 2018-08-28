@@ -94,7 +94,7 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 	@Override
 	public E get(Object id) {
 		EntityManager em = emf.createEntityManager();
-		
+
 		try {
 			em.getTransaction().begin();
 			E e = em.find(cls, id);
@@ -197,4 +197,18 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 		});
 	}
 
+	@Override
+	public void transaction(Runnable operation) {
+		EntityManager em = emf.createEntityManager();
+		try {
+			em.getTransaction().begin();
+			operation.run();
+			em.getTransaction().commit();
+		} catch (Throwable e) {
+			if (em.getTransaction().isActive())
+				em.getTransaction().rollback();
+		} finally {
+			em.close();
+		}
+	}
 }

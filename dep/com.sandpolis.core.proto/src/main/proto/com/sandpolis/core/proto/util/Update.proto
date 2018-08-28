@@ -46,3 +46,7 @@ message AttributeNodeUpdate {
 	// Attribute updates for the current node
 	repeated AttributeUpdate attribute_update = 2;
 }
+
+message ProfileUpdate {
+	AttributeNodeUpdate root_update = 1;
+}
