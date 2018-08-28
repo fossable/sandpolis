@@ -47,7 +47,7 @@ public class NetUtilTest {
 	@Test
 	public void testDownloadTooLarge() throws IOException {
 		assertThrows(IllegalArgumentException.class,
-				() -> NetUtil.download("http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso"));
+				() -> NetUtil.download("http://old-releases.ubuntu.com/releases/11.04/ubuntu-11.04-desktop-amd64.iso"));
 	}
 
 	@Test
