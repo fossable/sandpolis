@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.instance.store.pref;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -95,7 +96,7 @@ public class PrefStoreTest {
 		}
 
 		for (String tag : map.keySet()) {
-			assertTrue(map.get(tag) == PrefStore.getBytes(tag));
+			assertArrayEquals(map.get(tag), PrefStore.getBytes(tag));
 		}
 	}
 
