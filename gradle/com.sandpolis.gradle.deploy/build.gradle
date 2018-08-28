@@ -4,11 +4,16 @@
 ******************************************************************************/
 
 plugins {
+	id 'eclipse'
 	id "com.github.johnrengelman.shadow" version "2.0.4"
 	id 'groovy'
 }
 
-description = 'A plugin that sets up deployment tasks in Sandpolis'
+eclipse {
+	project {
+		comment = 'A plugin that sets up deployment tasks in Sandpolis'
+	}
+}
 
 repositories {
     jcenter()

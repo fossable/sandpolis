@@ -4,11 +4,16 @@
 ******************************************************************************/
 
 plugins {
+	id 'eclipse'
 	id 'java-gradle-plugin'
 	id 'com.google.protobuf' version '0.8.6'
 }
 
-description = 'A plugin that injects static objects into instance modules'
+eclipse {
+	project {
+		comment = 'A plugin that injects static objects into instance modules'
+	}
+}
 
 repositories {
     mavenCentral()

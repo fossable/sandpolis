@@ -1,0 +1,26 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                         com.sandpolis.gradle.codegen                        *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+	id 'groovy'
+}
+
+eclipse {
+	project {
+		comment = 'A plugin that generates Sandpolis-specific code'
+	}
+}
+
+repositories {
+    mavenCentral()
+}
+dependencies {
+	compile gradleApi()
+	compile localGroovy()
+
+	compile 'org.yaml:snakeyaml:1.22'
+	compile 'com.squareup:javapoet:1.11.1'
+}

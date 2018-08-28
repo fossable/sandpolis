@@ -3,10 +3,18 @@
 *                         com.sandpolis.core.profile                          *
 ******************************************************************************/
 
+buildscript {
+	dependencies {
+ 		classpath ':com.sandpolis.gradle.codegen:'
+	}
+}
+
 plugins {
 	id 'eclipse'
     id 'java-library'
 }
+
+apply plugin: 'com.sandpolis.gradle.codegen'
 
 eclipse {
 	project {

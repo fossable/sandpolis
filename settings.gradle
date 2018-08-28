@@ -6,6 +6,7 @@
 rootProject.name = 'Sandpolis'
 
 // Composite Builds
+includeBuild 'gradle/com.sandpolis.gradle.codegen'
 includeBuild 'gradle/com.sandpolis.gradle.deploy'
 includeBuild 'gradle/com.sandpolis.gradle.soi'
 
