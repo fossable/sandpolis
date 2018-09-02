@@ -36,12 +36,12 @@ import com.sandpolis.server.store.group.GroupStore;
 import com.sandpolis.server.store.user.User;
 import com.sandpolis.server.store.user.UserStore;
 
-public final class GroupExeTest extends ExeletTest {
+class GroupExeTest extends ExeletTest {
 
 	private GroupExe exe;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		initChannel();
 		exe = new GroupExe(new Sock(channel));
 
@@ -50,54 +50,69 @@ public final class GroupExeTest extends ExeletTest {
 	}
 
 	@Test
-	public void testDeclaration() {
+	void testDeclaration() {
 		testDeclaration(GroupExe.class);
 	}
 
 	@Test
-	public void rq_create_group(Message m) {
-
+	void rqAddGroupEmptyMessage(Message m) {
 		// Empty message
 		exe.rq_add_group(rq(RQ_AddGroup.newBuilder()).build());
 		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
+	}
 
+	@Test
+	void rqAddGroupMissingOwner(Message m) {
 		// Missing owner
 		exe.rq_add_group(rq(RQ_AddGroup.newBuilder().setConfig(GroupConfig.newBuilder().setName("default"))).build());
 		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
+	}
 
+	@Test
+	void rqAddGroupMissingName(Message m) {
 		// Missing name
 		exe.rq_add_group(rq(RQ_AddGroup.newBuilder().setConfig(GroupConfig.newBuilder().setOwner("admin"))).build());
 		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
+	}
 
+	@Test
+	void rqAddGroupWithoutMembers(Message m) {
 		// Valid without members
 		exe.rq_add_group(
 				rq(RQ_AddGroup.newBuilder().setConfig(GroupConfig.newBuilder().setName("default").setOwner("admin")))
 						.build());
 		assertTrue(((Message) channel.readOutbound()).getRsOutcome().getResult());
+	}
 
-		// Group exists
+	@Test
+	void rqAddGroupWithConflict(Message m) {
+		// Group already exists
 		exe.rq_add_group(
 				rq(RQ_AddGroup.newBuilder().setConfig(GroupConfig.newBuilder().setName("default").setOwner("admin")))
 						.build());
 		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
+	}
 
-		// Valid
+	@Test
+	void rqAddGroupValid(Message m) {
+		// Completely valid
 		exe.rq_add_group(rq(RQ_AddGroup.newBuilder()
 				.setConfig(GroupConfig.newBuilder().setName("default2").setOwner("admin").addMember("demo"))).build());
 		assertTrue(((Message) channel.readOutbound()).getRsOutcome().getResult());
 	}
 
 	@Test
-	public void rq_remove_group(Message m) {
-
+	void rqRemoveGroupEmptyMessage(Message m) {
 		// Empty message
 		exe.rq_remove_group(rq(RQ_RemoveGroup.newBuilder()).build());
 		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
+	}
 
+	@Test
+	void rqRemoveGroupMissing(Message m) {
 		// Group does not exist
 		exe.rq_remove_group(rq(RQ_RemoveGroup.newBuilder().setId(9292)).build());
 		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
-
 	}
 
 }
