@@ -34,6 +34,7 @@ import "com/sandpolis/core/proto/net/MC_Login.proto";
 import "com/sandpolis/core/proto/net/MC_Network.proto";
 import "com/sandpolis/core/proto/net/MC_Ping.proto";
 import "com/sandpolis/core/proto/net/MC_Server.proto";
+import "com/sandpolis/core/proto/net/MC_Shell.proto";
 //import "com/sandpolis/core/proto/net/MC_Stream.proto";
 //import "com/sandpolis/core/proto/net/MC_Torrent.proto";
 import "com/sandpolis/core/proto/net/MC_User.proto";
@@ -152,6 +153,9 @@ message Message {
 		RS_ServerBanner			rs_server_banner 			= 1401;
 		
 		// MC_Shell
+		EV_ShellData 			ev_shell_data 				= 1800;
+		RQ_ShellHandle 			rq_shell_handle 			= 1801;
+		RS_ShellHandle 			rs_shell_handle 			= 1802;
 		
 		// MC_Stream
 //		RQ_StreamStart 			rq_stream_start 			= 1500;
