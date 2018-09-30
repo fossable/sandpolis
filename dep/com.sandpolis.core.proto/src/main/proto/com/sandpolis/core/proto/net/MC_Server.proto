@@ -30,8 +30,8 @@ message RQ_ServerBanner {}
  */
 message RS_ServerBanner {
 
-	// Maintainance mode indicates that only superusers will be allowed to login
-	bool maintainance = 1;
+	// Maintenance mode indicates that only superusers will be allowed to login
+	bool maintenance = 1;
 	
 	// The 3-field version of the server
 	string version = 2;
