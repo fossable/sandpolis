@@ -19,6 +19,7 @@ dependencies {
 	testImplementation 'net.jodah:concurrentunit:0.4.3'
 
 	implementation project(':dep:com.sandpolis.core.proto')
+	implementation lib.protobuf
 	implementation lib.slf4j
 	implementation lib.logback
 	implementation lib.jansi
