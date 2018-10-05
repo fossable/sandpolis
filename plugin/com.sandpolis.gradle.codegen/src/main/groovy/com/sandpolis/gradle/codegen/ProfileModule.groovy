@@ -52,10 +52,10 @@ class ProfileModule extends DefaultTask {
 
       // Write out
       JavaFile.builder("com.sandpolis.core.attribute.key", ak.build())
-        .skipJavaLangImports(true).build().writeTo(getProject().file("src/gen/java"));
+        .skipJavaLangImports(true).build().writeTo(getProject().file("src/main/java"));
 
       // Additional modifications to the generated source
-      def out = getProject().file("src/gen/java/com/sandpolis/core/attribute/key/AK_${name}.java")
+      def out = getProject().file("src/main/java/com/sandpolis/core/attribute/key/AK_${name}.java")
       out.text = header + out.text
     }
   }

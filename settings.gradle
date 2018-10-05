@@ -6,9 +6,9 @@
 rootProject.name = 'Sandpolis'
 
 // Composite Builds
-includeBuild 'gradle/com.sandpolis.gradle.codegen'
-includeBuild 'gradle/com.sandpolis.gradle.deploy'
-includeBuild 'gradle/com.sandpolis.gradle.soi'
+includeBuild 'plugin/com.sandpolis.gradle.codegen'
+includeBuild 'plugin/com.sandpolis.gradle.deploy'
+includeBuild 'plugin/com.sandpolis.gradle.soi'
 
 // Instance Projects
 include 'com.sandpolis.charcoal'
@@ -35,3 +35,6 @@ include 'dep:com.sandpolis.core.stream'
 include 'dep:com.sandpolis.core.test'
 include 'dep:com.sandpolis.core.util'
 include 'dep:com.sandpolis.viewer'
+
+// Core plugins
+include 'plugin:com.sandpolis.plugin.browser:client:mega'
