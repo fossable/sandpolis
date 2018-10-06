@@ -1,0 +1,23 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                         com.sandpolis.gradle.plugin                         *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+	id 'groovy'
+}
+
+eclipse {
+	project {
+		comment = 'A plugin that packages Sandpolis plugins'
+	}
+}
+
+repositories {
+    jcenter()
+}
+dependencies {
+	compile gradleApi()
+    compile localGroovy()
+}
