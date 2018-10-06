@@ -17,11 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.server;
 
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.complete;
-import static com.sandpolis.core.util.ProtoUtil.failure;
-import static com.sandpolis.core.util.ProtoUtil.success;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Date;
@@ -38,6 +33,7 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
+import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.storage.database.DatabaseFactory;
 import com.sandpolis.core.instance.store.database.DatabaseStore;
@@ -54,7 +50,6 @@ import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 import com.sandpolis.core.proto.util.Generator.OutputFormat;
 import com.sandpolis.core.proto.util.Generator.OutputPayload;
 import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 import com.sandpolis.core.util.IDUtil;
@@ -86,47 +81,51 @@ public final class Server {
 		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
 				Core.SO_BUILD.getNumber());
 
-		MainDispatch.register(Server::checkEnvironment, Server.class, "checkEnvironment");
-		MainDispatch.register(Server::checkLocks, Server.class, "checkLocks");
-		MainDispatch.register(Server::loadServerStores, Server.class, "loadServerStores");
-		MainDispatch.register(Server::installDebugClient, Server.class, "installDebugClient");
-		MainDispatch.register(Server::loadListeners, Server.class, "loadListeners");
-		MainDispatch.register(Server::post, Server.class, "post");
+		MainDispatch.register(Server::checkEnvironment);
+		MainDispatch.register(Server::checkLocks);
+		MainDispatch.register(Server::loadServerStores);
+		MainDispatch.register(Server::loadPlugins);
+		MainDispatch.register(Server::installDebugClient);
+		MainDispatch.register(Server::loadListeners);
+		MainDispatch.register(Server::post);
 	}
 
 	/**
 	 * Check the runtime environment for fatal errors.
 	 * 
-	 * @return The {@link Outcome} of the task
+	 * @return The task's outcome
 	 */
-	@InitializationTask(fatal = true)
-	private static Outcome checkEnvironment() {
-		Outcome.Builder outcome = begin("Check runtime environment");
+	@InitializationTask(name = "Check runtime environment", fatal = true)
+	private static TaskOutcome checkEnvironment() {
+		TaskOutcome task = TaskOutcome.begin(new Object() {
+		}.getClass().getEnclosingMethod());
 
 		try {
 			Environment.check();
 		} catch (RuntimeException e) {
-			return failure(outcome, e);
+			return task.failure(e);
 		}
 
-		return success(outcome);
+		return task.success();
 	}
 
 	/**
 	 * Check for instance locks. If found, this instance will exit. Otherwise a new
 	 * lock is established.
 	 * 
-	 * @return The {@link Outcome} of the task
+	 * @return The task's outcome
 	 */
-	@InitializationTask(fatal = true)
-	private static Outcome checkLocks() {
-		Outcome.Builder outcome = begin("Check instance locks");
+	@InitializationTask(name = "Check instance locks", fatal = true)
+	private static TaskOutcome checkLocks() {
+		TaskOutcome task = TaskOutcome.begin(new Object() {
+		}.getClass().getEnclosingMethod());
+
 		if (Config.NO_MUTEX)
-			return success(outcome, "Skipped");
+			return task.skipped();
 
 		RS_Metadata metadata = IPCStore.queryInstance(Instance.SERVER);
 		if (metadata != null) {
-			return failure(outcome, "Another server instance has been detected (process " + metadata.getPid() + ")");
+			return task.failure("Another server instance has been detected (process " + metadata.getPid() + ")");
 		}
 
 		try {
@@ -135,17 +134,18 @@ public final class Server {
 			log.warn("Failed to initialize an IPC listener", e);
 		}
 
-		return success(outcome);
+		return task.success();
 	}
 
 	/**
 	 * Load static stores.
 	 * 
-	 * @return The {@link Outcome} of the task
+	 * @return The task's outcome
 	 */
-	@InitializationTask
-	private static Outcome loadServerStores() {
-		Outcome.Builder outcome = begin("Load server stores");
+	@InitializationTask(name = "Load static stores", fatal = true)
+	private static TaskOutcome loadServerStores() {
+		TaskOutcome task = TaskOutcome.begin(new Object() {
+		}.getClass().getEnclosingMethod());
 
 		// Load NetworkStore and choose a new CVID
 		Core.setCvid(IDUtil.CVID.cvid(Instance.SERVER));
@@ -163,7 +163,7 @@ public final class Server {
 				DatabaseStore.load(DatabaseFactory.create(Config.DB_URL), ORM_CLASSES);
 			}
 		} catch (URISyntaxException | IOException e) {
-			return failure(outcome, e);
+			return task.failure(e);
 		}
 
 		// Load UserStore
@@ -178,32 +178,51 @@ public final class Server {
 		// Load ProfileStore
 		ProfileStore.load(DatabaseStore.main());
 
-		return success(outcome);
+		return task.success();
 	}
 
 	/**
 	 * Load socket listeners.
 	 * 
-	 * @return The {@link Outcome} of the task
+	 * @return The task's outcome
 	 */
-	@InitializationTask
-	private static Outcome loadListeners() {
-		Outcome.Builder outcome = begin("Load socket listeners");
+	@InitializationTask(name = "Load socket listeners")
+	private static TaskOutcome loadListeners() {
+		TaskOutcome task = TaskOutcome.begin(new Object() {
+		}.getClass().getEnclosingMethod());
 
-		outcome.setResult(ListenerStore.start().getResult());
-		return complete(outcome);
+		return task.complete(ListenerStore.start().getResult());
+	}
+
+	/**
+	 * Load plugins.
+	 * 
+	 * @return The task's outcome
+	 */
+	@InitializationTask(name = "Load server plugins")
+	private static TaskOutcome loadPlugins() {
+		TaskOutcome task = TaskOutcome.begin(new Object() {
+		}.getClass().getEnclosingMethod());
+
+		if (Config.NO_PLUGINS)
+			return task.skipped();
+
+		// TODO
+		return task.complete(false);
 	}
 
 	/**
 	 * Install a debug client on the local machine.
 	 * 
-	 * @return The {@link Outcome} of the task
+	 * @return The task's outcome
 	 */
-	@InitializationTask
-	private static Outcome installDebugClient() {
-		Outcome.Builder outcome = begin("Install debug client");
+	@InitializationTask(name = "Install debug client")
+	private static TaskOutcome installDebugClient() {
+		TaskOutcome task = TaskOutcome.begin(new Object() {
+		}.getClass().getEnclosingMethod());
+
 		if (!Config.DEBUG_CLIENT)
-			return success(outcome, "Skipped");
+			return task.skipped();
 
 		try {
 			new MegaGen(GenConfig.newBuilder().setPayload(OutputPayload.MEGA).setFormat(OutputFormat.JAR)
@@ -212,28 +231,26 @@ public final class Server {
 									.addTarget(NetworkTarget.newBuilder().setAddress("127.0.0.1").setPort(10101))))
 					.build()).generate();
 		} catch (Exception e) {
-			return failure(outcome, e);
+			return task.failure(e);
 		}
 
-		return success(outcome);
+		return task.success();
 	}
 
 	/**
 	 * Perform a self-test.
 	 * 
-	 * @return The {@link Outcome} of the task
+	 * @return The task's outcome
 	 */
-	@InitializationTask
-	private static Outcome post() {
-		Outcome.Builder outcome = begin("Power-on self test");
-		if (!Config.POST)
-			return success(outcome, "Skipped");
+	@InitializationTask(name = "Power-on self test", fatal = true)
+	private static TaskOutcome post() {
+		TaskOutcome task = TaskOutcome.begin(new Object() {
+		}.getClass().getEnclosingMethod());
 
-		log.info("Performing POST");
-		Outcome post = Post.smokeTest();
-		if (post.getResult())
-			log.info("POST completed successfully in {} ms", post.getTime());
-		return outcome.mergeFrom(post).build();
+		if (!Config.POST)
+			return task.skipped();
+
+		return task.complete(Post.smokeTest());
 	}
 
 	/**

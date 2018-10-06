@@ -92,6 +92,26 @@ public final class Config {
 	public static final boolean NO_SSL;
 
 	/**
+	 * Implications of {@code NO_PLUGINS}:
+	 * <ul>
+	 * <li>Plugins will not be loaded on startup</li>
+	 * </ul>
+	 * 
+	 * Default: {@code false}
+	 */
+	public static final boolean NO_PLUGINS;
+
+	/**
+	 * Implications of {@code NO_TASK_SUMMARY}:
+	 * <ul>
+	 * <li>The task summary will not be shown on startup</li>
+	 * </ul>
+	 * 
+	 * Default: {@code true}
+	 */
+	public static final boolean NO_TASK_SUMMARY;
+
+	/**
 	 * Implications of {@code POST}:
 	 * <ul>
 	 * <li>The instance will perform a self-test upon startup</li>
@@ -120,6 +140,8 @@ public final class Config {
 		LOG_NET_RAW = Boolean.parseBoolean(prop.getProperty("log-net-raw", "false"));
 		NO_MUTEX = Boolean.parseBoolean(prop.getProperty("no-mutex", "false"));
 		NO_SSL = Boolean.parseBoolean(prop.getProperty("no-ssl", "true"));
+		NO_PLUGINS = Boolean.parseBoolean(prop.getProperty("no-plugins", "true"));
+		NO_TASK_SUMMARY = Boolean.parseBoolean(prop.getProperty("no-summary", "false"));
 		POST = Boolean.parseBoolean(prop.getProperty("post", "true"));
 	}
 }

@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import com.sandpolis.core.instance.MainDispatch.IdleTask;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
+import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
 import com.sandpolis.core.instance.idle.IdleLoop;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -79,12 +80,13 @@ class MainDispatchTest {
 	static class NoFailures {
 		public static void main(String[] args) {
 			assertArrayEquals(args, new String[] { "37434" });
-			MainDispatch.register(NoFailures::setup1, NoFailures.class, "setup1");
+			MainDispatch.register(NoFailures::setup1);
 		}
 
-		@InitializationTask(fatal = false)
-		private static Outcome setup1() {
-			return Outcome.newBuilder().setResult(true).build();
+		@InitializationTask(name = "test", fatal = false)
+		private static TaskOutcome setup1() {
+			return TaskOutcome.begin(new Object() {
+			}.getClass().getEnclosingMethod()).success();
 		}
 	}
 
@@ -99,12 +101,13 @@ class MainDispatchTest {
 	static class Nonfatal {
 		public static void main(String[] args) {
 			assertArrayEquals(args, new String[] { "37434" });
-			MainDispatch.register(Nonfatal::setup1, Nonfatal.class, "setup1");
+			MainDispatch.register(Nonfatal::setup1);
 		}
 
-		@InitializationTask(fatal = false)
-		private static Outcome setup1() {
-			return Outcome.newBuilder().setResult(false).build();
+		@InitializationTask(name = "test", fatal = false)
+		private static TaskOutcome setup1() {
+			return TaskOutcome.begin(new Object() {
+			}.getClass().getEnclosingMethod()).failure();
 		}
 	}
 

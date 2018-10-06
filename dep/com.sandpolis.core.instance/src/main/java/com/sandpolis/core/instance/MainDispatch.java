@@ -22,6 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -52,7 +53,7 @@ public final class MainDispatch {
 	 * A configurable list of tasks that are executed when the instance's
 	 * {@code main()} returns.
 	 */
-	private static List<Supplier<Outcome>> tasks = new ArrayList<>();
+	private static List<Supplier<TaskOutcome>> tasks = new ArrayList<>();
 
 	private static List<Runnable> shutdown = new ArrayList<>();
 
@@ -123,6 +124,8 @@ public final class MainDispatch {
 
 		MainDispatch.main = main;
 		MainDispatch.instance = instance;
+		long timestamp = System.currentTimeMillis();
+		List<TaskOutcome> outcomes = new ArrayList<>();
 
 		// Setup exception handler
 		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
@@ -142,29 +145,53 @@ public final class MainDispatch {
 			shutdown = null;
 		}));
 
-		OutcomeSet outcomes = new OutcomeSet();
+		// Run the configuration
+		for (Supplier<TaskOutcome> task : tasks) {
+			TaskOutcome taskOutcome = task.get();
+			Outcome outcome = taskOutcome.getOutcome();
+			outcomes.add(taskOutcome);
 
-		// Run configuration
-		for (Supplier<Outcome> task : tasks)
-			outcomes.add(task.get());
-
-		// Print nonfatal errors
-		if (!outcomes.getResult())
-			for (Outcome failed : outcomes.getFailed()) {
-				if (failed.getException() != null)
-					log.error("({}) {}", failed.getAction(), failed.getException());
-				else
-					log.error("({}) {}", failed.getAction(), failed.getComment());
+			if (!outcome.getResult() && taskOutcome.isFatal()) {
+				log.error("A fatal error has occurred in task: {}", outcome.getAction());
+				logTaskSummary(outcomes);
+				System.exit(0);
 			}
+		}
+
+		// Print task summary if required
+		if (outcomes.stream().filter(o -> !o.getOutcome().getResult()).count() != 0)
+			logTaskSummary(outcomes);
+		else if (!Config.NO_TASK_SUMMARY)
+			logTaskSummary(outcomes);
 
 		// Launch idle loop
 		if (idle != null)
 			idle.start();
 
-		log.info("Initialization completed in {} ms", outcomes.getTime());
+		log.info("Initialization completed in {} ms", System.currentTimeMillis() - timestamp);
 
 		// Cleanup
 		tasks = null;
+	}
+
+	/**
+	 * Log the task summary.
+	 * 
+	 * @param outcomes The task outcomes
+	 */
+	private static void logTaskSummary(List<TaskOutcome> outcomes) {
+		for (TaskOutcome task : outcomes) {
+			Outcome outcome = task.getOutcome();
+			String line = String.format("%31s: %4s (%5d ms)", outcome.getAction(), outcome.getResult() ? "OK" : "FAIL",
+					outcome.getTime());
+			if (!outcome.getResult()) {
+				log.error(line);
+				if (!outcome.getException().isEmpty())
+					log.error(outcome.getException());
+			} else {
+				log.info(line);
+			}
+		}
 	}
 
 	/**
@@ -172,13 +199,10 @@ public final class MainDispatch {
 	 * dispatch. Tasks registered with this method are executed sequentially in the
 	 * same order as the method calls.
 	 * 
-	 * @param task   The task reference
-	 * @param config The configuration annotation
+	 * @param task The task reference
 	 */
-	public static void register(Supplier<Outcome> task, InitializationTask config) {
+	public static void register(Supplier<TaskOutcome> task) {
 		if (task == null)
-			throw new IllegalArgumentException();
-		if (config == null)
 			throw new IllegalArgumentException();
 		if (tasks == null)
 			throw new IllegalStateException("Tasks cannot be registered after dispatch is complete");
@@ -186,38 +210,14 @@ public final class MainDispatch {
 			throw new IllegalArgumentException("Tasks cannot be registered more than once");
 
 		tasks.add(() -> {
-			Outcome outcome = task.get();
+			TaskOutcome outcome = task.get();
 			if (outcome == null)
 				throw new RuntimeException("Invalid task detected");
+			if (outcome.getOutcome() == null)
+				throw new RuntimeException("Invalid task detected");
 
-			if (!outcome.getResult() && config.fatal()) {
-				log.error("A fatal error has occurred in task: {}", outcome.getAction());
-				if (!outcome.getException().isEmpty())
-					log.error(outcome.getException());
-				System.exit(0);
-			}
 			return outcome;
 		});
-	}
-
-	/**
-	 * Register a new initialization task which will be executed during the
-	 * dispatch. Tasks registered with this method are executed sequentially in the
-	 * same order as the method calls.
-	 * 
-	 * @param task     The task reference
-	 * @param source   The source class
-	 * @param taskName The name of the
-	 */
-	public static void register(Supplier<Outcome> task, Class<?> source, String taskName) {
-		if (source == null)
-			throw new IllegalArgumentException();
-
-		try {
-			register(task, source.getDeclaredMethod(taskName).getAnnotation(InitializationTask.class));
-		} catch (NoSuchMethodException | SecurityException e) {
-			throw new RuntimeException("Missing initialization annotation");
-		}
 	}
 
 	/**
@@ -290,6 +290,176 @@ public final class MainDispatch {
 		 * Indicates that the application should exit if the task fails.
 		 */
 		public boolean fatal() default false;
+
+		/**
+		 * The name of the task.
+		 */
+		public String name();
+
+		/**
+		 * TODO
+		 */
+		public boolean debug() default false;
 	}
 
+	/**
+	 * Represents the outcome of an {@link InitializationTask}.
+	 */
+	public static class TaskOutcome {
+
+		/**
+		 * Whether the application should be stopped if the task fails.
+		 */
+		private boolean fatal;
+
+		/**
+		 * Whether the task was skipped.
+		 */
+		private boolean skipped;
+
+		/**
+		 * The overall outcome of the task.
+		 */
+		private Outcome outcome;
+		private Outcome.Builder builder;
+
+		/**
+		 * Get the task's fatal flag.
+		 * 
+		 * @return Whether the task is fatal
+		 */
+		public boolean isFatal() {
+			return fatal;
+		}
+
+		/**
+		 * Get the task's skipped flag.
+		 * 
+		 * @return Whether the task was skipped
+		 */
+		public boolean isSkipped() {
+			return skipped;
+		}
+
+		/**
+		 * Get the task's outcome.
+		 * 
+		 * @return The task's outcome
+		 */
+		public Outcome getOutcome() {
+			return outcome;
+		}
+
+		/**
+		 * Mark the task as skipped.
+		 * 
+		 * @return A completed {@link TaskOutcome}
+		 */
+		public TaskOutcome skipped() {
+			skipped = true;
+			complete();
+			return this;
+		}
+
+		/**
+		 * Mark the task as succeeded.
+		 * 
+		 * @return A completed {@link TaskOutcome}
+		 */
+		public TaskOutcome success() {
+			builder.setResult(true);
+			complete();
+			return this;
+		}
+
+		/**
+		 * Mark the task as failed.
+		 * 
+		 * @return A completed {@link TaskOutcome}
+		 */
+		public TaskOutcome failure() {
+			builder.setResult(false);
+			complete();
+			return this;
+		}
+
+		/**
+		 * Mark the task as failed with an exception.
+		 * 
+		 * @param e The relevant exception
+		 * @return A completed {@link TaskOutcome}
+		 */
+		public TaskOutcome failure(Exception e) {
+			// TODO exception
+			builder.setResult(false);
+			complete();
+			return this;
+		}
+
+		/**
+		 * Mark the task as failed with a comment.
+		 * 
+		 * @param comment The relevant comment
+		 * @return A completed {@link TaskOutcome}
+		 */
+		public TaskOutcome failure(String comment) {
+			builder.setResult(false).setComment(comment);
+			complete();
+			return this;
+		}
+
+		/**
+		 * Mark the task as complete.
+		 * 
+		 * @param result The task result
+		 * @return A completed {@link TaskOutcome}
+		 */
+		public TaskOutcome complete(boolean result) {
+			builder.setResult(result);
+			complete();
+			return this;
+		}
+
+		/**
+		 * Mark the task as complete and merge the given outcome.
+		 * 
+		 * @param outcome The outcome to merge
+		 * @return A completed {@link TaskOutcome}
+		 */
+		public TaskOutcome complete(Outcome outcome) {
+			builder.mergeFrom(outcome);
+			this.outcome = builder.clearTime().mergeFrom(outcome).build();
+			return this;
+		}
+
+		/**
+		 * Complete the {@link TaskOutcome}.
+		 */
+		private void complete() {
+			if (outcome != null)
+				throw new IllegalStateException();
+			outcome = builder.setTime(System.currentTimeMillis() - builder.getTime()).build();
+		}
+
+		/**
+		 * Begin a new incomplete task.
+		 * 
+		 * @param task The task's method for metadata analysis
+		 * @return A new incomplete task
+		 */
+		public static TaskOutcome begin(Method task) {
+			if (task == null)
+				throw new IllegalArgumentException();
+			TaskOutcome outcome = new TaskOutcome();
+
+			try {
+				InitializationTask annotation = task.getAnnotationsByType(InitializationTask.class)[0];
+				outcome.fatal = annotation.fatal();
+				outcome.builder = Outcome.newBuilder().setAction(annotation.name()).setTime(System.currentTimeMillis());
+				return outcome;
+			} catch (IndexOutOfBoundsException e) {
+				throw new IllegalArgumentException("Method: " + task.getName() + " is not an initialization task", e);
+			}
+		}
+	}
 }
