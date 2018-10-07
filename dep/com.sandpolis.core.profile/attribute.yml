@@ -1,0 +1,18 @@
+# This file is used by the codegen plugin to generate sources for the module. The
+# generated files SHOULD be tracked in version control.
+
+- META: TODO
+  tag: 1
+  children:
+    - cvid: Client/Viewer ID
+      tag: 1
+      type: Integer
+    - uuid: Universally Unique ID
+      tag: 2
+      type: String
+    - version: Sandpolis version string
+      tag: 3
+      type: String
+    - creation_timestamp: Timestamp of the instance's last startup
+      tag: 4
+      type: Long
