@@ -78,7 +78,7 @@ public class LoginExe extends Exelet {
 		// Check for user
 		if (!UserStore.exists(user)) {
 			log.debug("The user ({}) does not exist", user);
-			failLogin(outcome.setComment("Nonexistant user"), id, user);
+			failLogin(outcome.setComment("Authentication failed"), id, user);
 			return;
 		}
 
@@ -89,34 +89,20 @@ public class LoginExe extends Exelet {
 			return;
 		}
 
-		passLogin(outcome, id, user);
-	}
-
-	/**
-	 * Utility method to allow a login request.
-	 * 
-	 * @param outcome
-	 *            The current outcome
-	 * @param id
-	 *            The request id
-	 * @param user
-	 *            The username
-	 */
-	private void passLogin(Outcome.Builder outcome, int id, String user) {
 		log.debug("Accepting login request for user: {}", user);
 
 		// Mark connection as authenticated
 		connector.authenticate();
-
-		// this connection is now authenticated
 		connector.setState(ConnectionState.AUTHENTICATED);
 
-		// Retrieve profile
-		Profile profile = ProfileStore.getViewer(user);
-
 		// Update login metadata
+		Profile profile = ProfileStore.getViewer(user);
 		profile.set(AK_VIEWER.LOGIN_IP, connector.getRemoteIP());
 		profile.set(AK_VIEWER.LOGIN_TIME, System.currentTimeMillis());
+
+		// Synchronize plugins
+		// TODO
+		// connector.send(rq().setRqPluginSync(RQ_PluginSync.newBuilder()));
 
 		connector.send(rs(id).setRsOutcome(success(outcome)));
 	}
@@ -124,12 +110,9 @@ public class LoginExe extends Exelet {
 	/**
 	 * Reject the login request, but leave the connection open.
 	 * 
-	 * @param outcome
-	 *            The current outcome
-	 * @param id
-	 *            The request id
-	 * @param user
-	 *            The username
+	 * @param outcome The current outcome
+	 * @param id      The request id
+	 * @param user    The username
 	 */
 	private void failLogin(Outcome.Builder outcome, int id, String user) {
 		log.debug("Rejecting login request for user: {}", user);
