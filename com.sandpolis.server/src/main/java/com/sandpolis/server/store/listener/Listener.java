@@ -161,6 +161,8 @@ public class Listener implements ProtoType<ProtoListener> {
 	public Listener(ListenerConfig config) {
 		if (merge(ProtoListener.newBuilder().setConfig(config).build()) != ErrorCode.NONE)
 			throw new IllegalArgumentException();
+
+		this.id = config.getId();
 	}
 
 	/**

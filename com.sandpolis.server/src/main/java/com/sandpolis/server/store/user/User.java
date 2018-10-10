@@ -103,6 +103,8 @@ public class User implements ProtoType<ProtoUser> {
 	public User(UserConfig config) {
 		if (merge(ProtoUser.newBuilder().setConfig(config).build()) != ErrorCode.NONE)
 			throw new IllegalArgumentException();
+
+		this.id = config.getId();
 	}
 
 	public long getId() {

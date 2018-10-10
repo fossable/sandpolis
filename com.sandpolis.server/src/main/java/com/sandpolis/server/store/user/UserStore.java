@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.server.store.user;
 
+import static com.sandpolis.core.util.CryptoUtil.SHA256;
 import static com.sandpolis.core.util.ProtoUtil.begin;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.success;
@@ -139,7 +140,7 @@ public final class UserStore extends Store {
 		user.setCreation(System.currentTimeMillis());
 
 		// Hash password
-		user.setHash(CryptoUtil.PBKDF2.hash(config.getPassword()));
+		user.setHash(CryptoUtil.PBKDF2.hash(CryptoUtil.hash(SHA256, config.getPassword())));
 
 		return add(user);
 	}

@@ -66,7 +66,7 @@ public class GroupExe extends Exelet {
 	}
 
 	@Auth
-	public void rq_delta_group(Message m) {
+	public void rq_group_delta(Message m) {
 		if (!accessCheck(m, this::ownership, m.getRqGroupDelta().getDelta().getConfig().getId()))
 			return;
 

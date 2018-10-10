@@ -132,6 +132,8 @@ public class Group implements ProtoType<ProtoGroup> {
 	public Group(GroupConfig config) {
 		if (merge(ProtoGroup.newBuilder().setConfig(config).build()) != ErrorCode.NONE)
 			throw new IllegalArgumentException();
+
+		this.groupId = config.getId();
 	}
 
 	public long getGroupId() {
@@ -154,10 +156,6 @@ public class Group implements ProtoType<ProtoGroup> {
 	 */
 	public void addKeyMechanism(KeyMechanism mechanism) {
 		GroupStore.transaction(() -> getKeys().add(mechanism));
-	}
-
-	private void setGroupId(long groupId) {
-		this.groupId = groupId;
 	}
 
 	public KeyMechanism getKeyMechanism(long mechId) {
@@ -217,8 +215,6 @@ public class Group implements ProtoType<ProtoGroup> {
 		if (delta.hasConfig()) {
 			GroupConfig config = delta.getConfig();
 
-			if (config.hasId())
-				setGroupId(config.getId());
 			if (config.hasName())
 				setName(config.getName());
 			if (config.hasOwner())
