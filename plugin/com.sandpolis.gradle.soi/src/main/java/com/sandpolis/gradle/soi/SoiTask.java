@@ -67,18 +67,35 @@ public class SoiTask extends DefaultTask {
 	 */
 	private void writeBuildSO() {
 		SO_Build.Builder so = SO_Build.newBuilder();
+
+		// Build time
 		so.setTime(System.currentTimeMillis());
+
+		// Application version
 		so.setVersion((String) root.findProperty("BUILD_VERSION"));
 
+		// Build number
 		String number = (String) root.findProperty("TRAVIS_BUILD_NUMBER");
 		if (number != null)
 			so.setNumber(Integer.parseInt(number));
 
+		// Build platform
 		so.setPlatform(String.format("%s (%s %s)", System.getProperty("os.name"), System.getProperty("os.version"),
 				System.getProperty("os.arch")));
+
+		// Java version
 		so.setJavaVersion(
 				String.format("%s (%s)", System.getProperty("java.version"), System.getProperty("java.vendor")));
+
+		// Gradle version
 		so.setGradleVersion(root.getGradle().getGradleVersion());
+
+		// Core plugins
+		root.subprojects(sub -> {
+			if (sub.getName().startsWith("com.sandpolis.plugin")) {
+				so.addPlugin(sub.getName());
+			}
+		});
 
 		// Write object
 		File output = new File(soi.getAbsolutePath() + "/build.bin");
