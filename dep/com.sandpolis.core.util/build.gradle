@@ -17,7 +17,6 @@ eclipse {
 dependencies {
 	testImplementation lib.junit
 	
-	implementation project(':dep:com.sandpolis.core.instance')
 	implementation project(':dep:com.sandpolis.core.proto')
 	implementation lib.slf4j
 	implementation lib.jpa

@@ -10,6 +10,7 @@ buildscript {
 	dependencies {
 		classpath 'net.sf.proguard:proguard-gradle:6.0.3'
  		classpath ':com.sandpolis.gradle.deploy:'
+ 		classpath ':com.sandpolis.gradle.plugin:'
  		classpath ':com.sandpolis.gradle.soi:'
 	}
 }
@@ -51,6 +52,9 @@ ext.lib = [
 	mariadb: 'ch.vorburger.mariaDB4j:mariaDB4j:2.3.0',
 	mysql: 'mysql:mysql-connector-java:8.0.12',
 	h2: 'com.h2database:h2:1.4.197',
+	
+	// Plugins
+	pf4j: 'org.pf4j:pf4j:2.4.0',
 	
 	// User input validator
 	validator: 'commons-validator:commons-validator:1.6',
