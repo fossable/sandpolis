@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.instance.idle.IdleLoop;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.util.ProtoUtil;
 
 /**
  * This class invokes an instance's real {@code main()} via reflection and
@@ -152,7 +153,7 @@ public final class MainDispatch {
 			outcomes.add(taskOutcome);
 
 			if (!outcome.getResult() && taskOutcome.isFatal()) {
-				log.error("A fatal error has occurred in task: {}", outcome.getAction());
+				log.error("A fatal error has occurred in: {}", outcome.getAction());
 				logTaskSummary(outcomes);
 				System.exit(0);
 			}
@@ -321,7 +322,7 @@ public final class MainDispatch {
 		 * The overall outcome of the task.
 		 */
 		private Outcome outcome;
-		private Outcome.Builder builder;
+		private Outcome.Builder temporary;
 
 		/**
 		 * Get the task's fatal flag.
@@ -356,8 +357,11 @@ public final class MainDispatch {
 		 * @return A completed {@link TaskOutcome}
 		 */
 		public TaskOutcome skipped() {
+			if (outcome != null)
+				throw new IllegalStateException();
+
 			skipped = true;
-			complete();
+			outcome = ProtoUtil.complete(temporary);
 			return this;
 		}
 
@@ -367,8 +371,10 @@ public final class MainDispatch {
 		 * @return A completed {@link TaskOutcome}
 		 */
 		public TaskOutcome success() {
-			builder.setResult(true);
-			complete();
+			if (outcome != null)
+				throw new IllegalStateException();
+
+			outcome = ProtoUtil.success(temporary);
 			return this;
 		}
 
@@ -378,21 +384,24 @@ public final class MainDispatch {
 		 * @return A completed {@link TaskOutcome}
 		 */
 		public TaskOutcome failure() {
-			builder.setResult(false);
-			complete();
+			if (outcome != null)
+				throw new IllegalStateException();
+
+			outcome = ProtoUtil.failure(temporary);
 			return this;
 		}
 
 		/**
 		 * Mark the task as failed with an exception.
 		 * 
-		 * @param e The relevant exception
+		 * @param t The relevant exception
 		 * @return A completed {@link TaskOutcome}
 		 */
-		public TaskOutcome failure(Exception e) {
-			// TODO exception
-			builder.setResult(false);
-			complete();
+		public TaskOutcome failure(Exception t) {
+			if (outcome != null)
+				throw new IllegalStateException();
+
+			outcome = ProtoUtil.failure(temporary, t);
 			return this;
 		}
 
@@ -403,8 +412,10 @@ public final class MainDispatch {
 		 * @return A completed {@link TaskOutcome}
 		 */
 		public TaskOutcome failure(String comment) {
-			builder.setResult(false).setComment(comment);
-			complete();
+			if (outcome != null)
+				throw new IllegalStateException();
+
+			outcome = ProtoUtil.failure(temporary, comment);
 			return this;
 		}
 
@@ -415,8 +426,10 @@ public final class MainDispatch {
 		 * @return A completed {@link TaskOutcome}
 		 */
 		public TaskOutcome complete(boolean result) {
-			builder.setResult(result);
-			complete();
+			if (outcome != null)
+				throw new IllegalStateException();
+
+			outcome = ProtoUtil.complete(temporary.setResult(result));
 			return this;
 		}
 
@@ -427,18 +440,11 @@ public final class MainDispatch {
 		 * @return A completed {@link TaskOutcome}
 		 */
 		public TaskOutcome complete(Outcome outcome) {
-			builder.mergeFrom(outcome);
-			this.outcome = builder.clearTime().mergeFrom(outcome).build();
-			return this;
-		}
-
-		/**
-		 * Complete the {@link TaskOutcome}.
-		 */
-		private void complete() {
 			if (outcome != null)
 				throw new IllegalStateException();
-			outcome = builder.setTime(System.currentTimeMillis() - builder.getTime()).build();
+
+			outcome = temporary.clearTime().mergeFrom(outcome).build();
+			return this;
 		}
 
 		/**
@@ -455,7 +461,7 @@ public final class MainDispatch {
 			try {
 				InitializationTask annotation = task.getAnnotationsByType(InitializationTask.class)[0];
 				outcome.fatal = annotation.fatal();
-				outcome.builder = Outcome.newBuilder().setAction(annotation.name()).setTime(System.currentTimeMillis());
+				outcome.temporary = ProtoUtil.begin(annotation.name());
 				return outcome;
 			} catch (IndexOutOfBoundsException e) {
 				throw new IllegalArgumentException("Method: " + task.getName() + " is not an initialization task", e);
