@@ -20,6 +20,8 @@ package com.sandpolis.core.util;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
 import com.google.common.io.Resources;
@@ -35,24 +37,48 @@ public final class JarUtil {
 	}
 
 	/**
-	 * Retrieve the value of a manifest attribute from the specified jar.
+	 * Retrieve the value of a manifest attribute from the given jar.
 	 * 
 	 * @param attribute The attribute to query
 	 * @param jarFile   The target jar file
-	 * @return The attribute's value
+	 * @return The attribute's value or {@code null} if not found
+	 * @throws IOException
+	 */
+	public static String getManifestValue(String attribute, Path jarFile) throws IOException {
+		return getManifestValue(attribute, jarFile.toFile());
+	}
+
+	/**
+	 * Retrieve the value of a manifest attribute from the given jar.
+	 * 
+	 * @param attribute The attribute to query
+	 * @param jarFile   The target jar file
+	 * @return The attribute's value or {@code null} if not found
 	 * @throws IOException
 	 */
 	public static String getManifestValue(String attribute, File jarFile) throws IOException {
 		if (attribute == null)
 			throw new IllegalArgumentException();
+
+		return getManifest(jarFile).getValue(attribute);
+	}
+
+	/**
+	 * Retrieve the attribute map from the manifest of the given jar.
+	 * 
+	 * @param jarFile The target jar file
+	 * @return The jar's manifest attributes
+	 * @throws IOException
+	 */
+	public static Attributes getManifest(File jarFile) throws IOException {
 		if (jarFile == null)
 			throw new IllegalArgumentException();
 
-		try (JarFile jar = new JarFile(jarFile)) {
+		try (JarFile jar = new JarFile(jarFile, false)) {
 			if (jar.getManifest() == null)
 				throw new IOException("Manifest not found");
 
-			return jar.getManifest().getMainAttributes().getValue(attribute);
+			return jar.getManifest().getMainAttributes();
 		}
 	}
 
