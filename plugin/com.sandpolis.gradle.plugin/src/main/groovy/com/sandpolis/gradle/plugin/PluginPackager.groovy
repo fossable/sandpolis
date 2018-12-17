@@ -21,7 +21,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
-import org.gradle.api.UnknownTaskException
 
 /**
  * This plugin packages a Sandpolis plugin into an installable archive.
@@ -30,16 +29,22 @@ import org.gradle.api.UnknownTaskException
  */
 public class PluginPackager implements Plugin<Project> {
 
+    def plugin_modules = ["client:mega", "client:micro", "viewer:jfx", "viewer:cli"]
+
 	void apply(Project project) {
 	
     	project.subprojects {
     		afterEvaluate {
-    			try {
-					project.tasks.getByName('jar')
-						.from(tasks.getByName('jar').outputs.files.getFiles()[0].getParent())
-    			} catch (UnknownTaskException e) {
-    				// Skip
-    			}
+                if (plugin_modules.contains(parent.name + ":" + name)) {
+
+                    // Setup dependency
+                    project.tasks.getByName('jar').dependsOn(tasks.getByName('jar'))
+                    
+                    // Add artifact to root project's jar task
+                    project.tasks.getByName('jar')
+                        .from(tasks.getByName('jar').outputs.files.getFiles()[0].getParent(),
+                            {into parent.name})
+                }
     		}
     	}
 	}
