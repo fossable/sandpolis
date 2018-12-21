@@ -42,30 +42,30 @@ public final class Post {
 		Outcome.Builder outcome = begin();
 		Outcome test;
 
-		// Check UserStore
-		test = UserStore.add(UserConfig.newBuilder().setUsername("POSTUSER").setPassword("POSTPASS").build());
-		if (!test.getResult())
-			return failure(outcome.mergeFrom(test));
-
-		// Check ListenerStore
-		test = ListenerStore.add(ListenerConfig.newBuilder().setPort(7000).setAddress("0.0.0.0").setOwner("POSTUSER")
-				.setName("POST").build());
-		if (!test.getResult())
-			return failure(outcome.mergeFrom(test));
-
-		// Check GroupStore
-		test = GroupStore.add(GroupConfig.newBuilder().setId(2).setName("POSTGROUP").setOwner("POSTUSER")
-				.addPasswordMechanism(PasswordContainer.newBuilder().setPassword("POSTPASS")).build());
-		if (!test.getResult())
-			return failure(outcome.mergeFrom(test));
-
-		Group testGroup = GroupStore.get(2L);
-		testGroup.addKeyMechanism(KeyMechanism.generate(testGroup));
-		if (testGroup.getKeys().size() != 1)
-			return failure(outcome, "Unexpected size: " + testGroup.getKeys().size());
-
-		// Check DatabaseStore
 		try {
+			// Check UserStore
+			test = UserStore.add(UserConfig.newBuilder().setUsername("POSTUSER").setPassword("POSTPASS").build());
+			if (!test.getResult())
+				return failure(outcome.mergeFrom(test));
+
+			// Check ListenerStore
+			test = ListenerStore.add(ListenerConfig.newBuilder().setId(2).setPort(7000).setAddress("0.0.0.0")
+					.setOwner("POSTUSER").setName("POST").build());
+			if (!test.getResult())
+				return failure(outcome.mergeFrom(test));
+
+			// Check GroupStore
+			test = GroupStore.add(GroupConfig.newBuilder().setId(2).setName("POSTGROUP").setOwner("POSTUSER")
+					.addPasswordMechanism(PasswordContainer.newBuilder().setPassword("POSTPASS")).build());
+			if (!test.getResult())
+				return failure(outcome.mergeFrom(test));
+
+			Group testGroup = GroupStore.get(2L);
+			testGroup.addKeyMechanism(KeyMechanism.generate(testGroup));
+			if (testGroup.getKeys().size() != 1)
+				return failure(outcome, "Unexpected size: " + testGroup.getKeys().size());
+
+			// Check DatabaseStore
 			DatabaseStore.add(new Database("jdbc:mysql://127.0.0.1/test"));
 		} catch (Exception e) {
 			return failure(outcome, e);

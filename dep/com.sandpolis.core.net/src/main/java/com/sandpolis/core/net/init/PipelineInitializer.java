@@ -41,10 +41,10 @@ import io.netty.handler.traffic.ChannelTrafficShapingHandler;
  * This class provides a base for other {@link ChannelInitializer}s which
  * configure a {@link ChannelPipeline} for use as a specific connection type
  * (server, client, or viewer).
- * 
+ *
  * @see PeerPipelineInit
  * @see ClientPipelineInit
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -89,7 +89,7 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 
 	/**
 	 * Construct a new {@link PipelineInitializer}.
-	 * 
+	 *
 	 * @param exelets Classes that will be scanned to build an
 	 *                {@link ExecuteHandler}
 	 */
@@ -110,7 +110,7 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		p.addLast("traffic", traffic);
 		ch.attr(ChannelConstant.HANDLER_TRAFFIC).set(traffic);
 
-		if (Config.LOG_NET_RAW)
+		if (Config.getBoolean("log.traffic_raw"))
 			p.addLast(LOGGING);
 
 		p.addLast(EVENT);
@@ -120,7 +120,7 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		p.addLast("protobuf.frame_encoder", PROTO_FRAME_ENCODER);
 		p.addLast("protobuf.encoder", PROTO_ENCODER);
 
-		if (Config.LOG_NET)
+		if (Config.getBoolean("log.traffic"))
 			p.addLast(LOGGING);
 
 		// TODO add EventExecutorGroup!

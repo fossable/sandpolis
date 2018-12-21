@@ -32,6 +32,7 @@ dependencies {
 	implementation lib.guava
 	implementation lib.netty
 	implementation lib.validator
+	implementation lib.javafx
 
 	// TODO remove dependency
 	implementation ':StlMeshImporter:'

@@ -15,7 +15,9 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.util;
+package com.sandpolis.core.instance.store.artifact;
+
+import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,22 +34,23 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix.Artifact;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.util.NetUtil;
 
 /**
  * Utilities for managing dependency artifacts.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
-public final class ArtifactUtil {
-	private ArtifactUtil() {
+public final class ArtifactStore {
+	private ArtifactStore() {
 	}
 
-	private static final Logger log = LoggerFactory.getLogger(ArtifactUtil.class);
+	private static final Logger log = LoggerFactory.getLogger(ArtifactStore.class);
 
 	/**
 	 * Get the root artifact for the given instance.
-	 * 
+	 *
 	 * @param instance The instance type
 	 * @return The artifact for the instance
 	 */
@@ -68,7 +71,7 @@ public final class ArtifactUtil {
 
 	/**
 	 * Get all direct and transitive dependencies of an instance.
-	 * 
+	 *
 	 * @param instance The instance type
 	 * @return An unordered stream of dependencies
 	 */
@@ -86,28 +89,28 @@ public final class ArtifactUtil {
 
 	/**
 	 * Get a stream of an artifact and all its dependencies using a recursive call.
-	 * 
+	 *
 	 * @param artifact The artifact
 	 * @return A stream of the artifact and its dependencies
 	 */
 	private static Stream<Artifact> getDependencies(Artifact artifact) {
 		return Stream.concat(Stream.of(artifact), artifact.getDependencyList().stream()
-				.map(id -> Core.SO_MATRIX.getArtifact(id)).flatMap(ArtifactUtil::getDependencies));
+				.map(id -> Core.SO_MATRIX.getArtifact(id)).flatMap(ArtifactStore::getDependencies));
 	}
 
 	/**
 	 * Get an artifact's file from the environment's library directory.
-	 * 
+	 *
 	 * @param artifact The artifact
 	 * @return The artifact's local file
 	 */
 	public static File getArtifactFile(Artifact artifact) {
-		return Environment.JLIB.resolve(getArtifactFilename(artifact.getCoordinates())).toFile();
+		return Environment.get(JLIB).resolve(getArtifactFilename(artifact.getCoordinates())).toFile();
 	}
 
 	/**
 	 * Convert an artifact's coordinates to a filename.
-	 * 
+	 *
 	 * @param coordinates The artifact's coordinates
 	 * @return The artifact's filename
 	 */
@@ -133,13 +136,14 @@ public final class ArtifactUtil {
 	 * Download an artifact from Maven Central to the library directory. If an
 	 * artifact already exists in the directory, its hash will be checked against
 	 * the Maven Central hash.
-	 * 
+	 *
 	 * @param directory The output directory
 	 * @param artifact  The artifact identifier in standard Gradle form:
 	 *                  group:name:version
 	 * @return Whether the artifact was actually downloaded
 	 * @throws IOException
 	 */
+	@SuppressWarnings("deprecation")
 	public static boolean download(File directory, String artifact) throws IOException {
 		if (artifact == null)
 			throw new IllegalArgumentException();

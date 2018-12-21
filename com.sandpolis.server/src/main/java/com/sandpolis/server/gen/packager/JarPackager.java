@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.gen.packager;
 
+import static com.sandpolis.core.instance.Environment.EnvPath.GEN;
+
 import java.nio.file.Files;
 
 import com.sandpolis.core.instance.Environment;
@@ -42,7 +44,7 @@ public class JarPackager extends Packager {
 			// TODO runtime image
 
 			// Write to generator output directory
-			Files.write(Environment.GEN_OUTPUT.resolve(config.getId() + ".jar"), (byte[]) payload);
+			Files.write(Environment.get(GEN).resolve(config.getId() + ".jar"), (byte[]) payload);
 			break;
 		default:
 			throw new IncompatiblePayloadException();

@@ -30,7 +30,7 @@ import io.netty.util.concurrent.DefaultPromise;
 /**
  * This {@link PipelineInitializer} configures a {@link Channel} for connections
  * to the server.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -46,7 +46,7 @@ public class ClientPipelineInit extends PipelineInitializer {
 	protected void initChannel(Channel ch) throws Exception {
 		super.initChannel(ch);
 
-		if (!Config.NO_SSL) {
+		if (Config.getBoolean("net.tls")) {
 			SslHandler ssl = SslContextBuilder.forClient().trustManager(CertUtil.getRoot()).build()
 					.newHandler(ch.alloc());
 			ch.pipeline().addAfter("traffic", "ssl", ssl);

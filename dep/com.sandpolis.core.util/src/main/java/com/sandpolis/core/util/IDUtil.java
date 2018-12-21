@@ -19,7 +19,6 @@ package com.sandpolis.core.util;
 
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 
-import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.proto.util.Platform.Instance;
 
 /**

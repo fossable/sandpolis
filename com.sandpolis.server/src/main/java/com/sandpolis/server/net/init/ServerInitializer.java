@@ -49,7 +49,7 @@ import io.netty.util.concurrent.DefaultPromise;
 /**
  * This {@link ChannelInitializer} configures a {@link ChannelPipeline} for use
  * as a server connection.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -88,7 +88,7 @@ public class ServerInitializer extends PipelineInitializer {
 
 	/**
 	 * Construct a {@code ServerInitializer} with the given certificate.
-	 * 
+	 *
 	 * @param cert The certificate
 	 * @param key  The private key
 	 */
@@ -116,7 +116,7 @@ public class ServerInitializer extends PipelineInitializer {
 	protected void initChannel(Channel ch) throws Exception {
 		super.initChannel(ch);
 
-		if (!Config.NO_SSL) {
+		if (Config.getBoolean("net.tls")) {
 			SslHandler ssl = getSslContext().newHandler(ch.alloc());
 			ch.pipeline().addAfter("traffic", "ssl", ssl);
 			ch.attr(ChannelConstant.HANDLER_SSL).set(ssl);
@@ -131,7 +131,7 @@ public class ServerInitializer extends PipelineInitializer {
 	}
 
 	public SslContext getSslContext() throws Exception {
-		if (sslCtx == null && !Config.NO_SSL) {
+		if (sslCtx == null && Config.getBoolean("net.tls")) {
 			sslCtx = buildSslContext();
 
 			// No point in keeping these around anymore

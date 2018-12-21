@@ -15,7 +15,7 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.util;
+package com.sandpolis.core.instance.store.artifact;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
 
-class ArtifactUtilTest {
+class ArtifactStoreTest {
 
 	private File temp;
 
@@ -49,31 +49,31 @@ class ArtifactUtilTest {
 
 	@Test
 	void testGetArtifactFilename() {
-		assertEquals("google.com-1.0.jar", ArtifactUtil.getArtifactFilename("com.google:google.com:1.0"));
-		assertEquals("test.jar", ArtifactUtil.getArtifactFilename(":test:"));
+		assertEquals("google.com-1.0.jar", ArtifactStore.getArtifactFilename("com.google:google.com:1.0"));
+		assertEquals("test.jar", ArtifactStore.getArtifactFilename(":test:"));
 
-		assertThrows(IllegalArgumentException.class, () -> ArtifactUtil.getArtifactFilename(":"));
-		assertThrows(IllegalArgumentException.class, () -> ArtifactUtil.getArtifactFilename(""));
-		assertThrows(IllegalArgumentException.class, () -> ArtifactUtil.getArtifactFilename("test.jar"));
+		assertThrows(IllegalArgumentException.class, () -> ArtifactStore.getArtifactFilename(":"));
+		assertThrows(IllegalArgumentException.class, () -> ArtifactStore.getArtifactFilename(""));
+		assertThrows(IllegalArgumentException.class, () -> ArtifactStore.getArtifactFilename("test.jar"));
 	}
 
 	@Test
 	void testDownloadCaching() throws IOException {
-		assertTrue(ArtifactUtil.download(temp, "javax.measure:unit-api:1.0"));
-		assertFalse(ArtifactUtil.download(temp, "javax.measure:unit-api:1.0"));
+		assertTrue(ArtifactStore.download(temp, "javax.measure:unit-api:1.0"));
+		assertFalse(ArtifactStore.download(temp, "javax.measure:unit-api:1.0"));
 	}
 
 	@Test
 	void testDownloadCacheCorrupted() throws IOException {
 		File dir = Files.createTempDir();
-		assertTrue(ArtifactUtil.download(dir, "javax.measure:unit-api:1.0"));
+		assertTrue(ArtifactStore.download(dir, "javax.measure:unit-api:1.0"));
 
 		// Corrupt the downloaded file
 		try (PrintWriter pw = new PrintWriter(dir.getAbsolutePath() + "/unit-api-1.0.jar")) {
 			pw.print("a");
 		}
 
-		assertTrue(ArtifactUtil.download(dir, "javax.measure:unit-api:1.0"));
+		assertTrue(ArtifactStore.download(dir, "javax.measure:unit-api:1.0"));
 	}
 
 }

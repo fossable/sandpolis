@@ -46,8 +46,7 @@ public final class PrefStore extends Store {
 	/**
 	 * Load the store from the given {@link Preferences}.
 	 * 
-	 * @param prefs
-	 *            The store provider
+	 * @param prefs The store provider
 	 */
 	public static void load(Preferences prefs) {
 		if (prefs == null)
@@ -61,21 +60,29 @@ public final class PrefStore extends Store {
 	/**
 	 * Get a value from the store.
 	 * 
-	 * @param tag
-	 *            A unique String whose associated value is to be returned.
+	 * @param tag A unique String whose associated value is to be returned.
 	 * @return The String value associated with the provided tag.
 	 */
 	public static String getString(String tag) {
-		return provider.get(tag, null);
+		return getString(tag, null);
+	}
+
+	/**
+	 * Get a value from the store.
+	 * 
+	 * @param tag A unique String whose associated value is to be returned.
+	 * @param def The default value
+	 * @return The String value associated with the provided tag.
+	 */
+	public static String getString(String tag, String def) {
+		return provider.get(tag, def);
 	}
 
 	/**
 	 * Add a value to the store. Old values are overwritten.
 	 * 
-	 * @param tag
-	 *            The unique key which will become associated with the new value.
-	 * @param value
-	 *            The new value
+	 * @param tag   The unique key which will become associated with the new value.
+	 * @param value The new value
 	 */
 	public static void putString(String tag, String value) {
 		log.trace("Associating \"{}\": \"{}\"", tag, value);
@@ -85,8 +92,7 @@ public final class PrefStore extends Store {
 	/**
 	 * Get a value from the store.
 	 * 
-	 * @param tag
-	 *            A unique String whose associated value is to be returned.
+	 * @param tag A unique String whose associated value is to be returned.
 	 * @return The boolean value associated with the provided tag.
 	 */
 	public static boolean getBoolean(String tag) {
@@ -96,10 +102,8 @@ public final class PrefStore extends Store {
 	/**
 	 * Add a value to the store. Old values are overwritten.
 	 * 
-	 * @param tag
-	 *            The unique key which will become associated with the new value.
-	 * @param value
-	 *            The new value
+	 * @param tag   The unique key which will become associated with the new value.
+	 * @param value The new value
 	 */
 	public static void putBoolean(String tag, boolean value) {
 		log.trace("Associating \"{}\": {}", tag, value);
@@ -109,8 +113,7 @@ public final class PrefStore extends Store {
 	/**
 	 * Get a value from the store.
 	 * 
-	 * @param tag
-	 *            A unique String whose associated value is to be returned.
+	 * @param tag A unique String whose associated value is to be returned.
 	 * @return The int value associated with the provided tag.
 	 */
 	public static int getInt(String tag) {
@@ -120,10 +123,8 @@ public final class PrefStore extends Store {
 	/**
 	 * Add a value to the store. Old values are overwritten.
 	 * 
-	 * @param tag
-	 *            The unique key which will become associated with the new value.
-	 * @param value
-	 *            The new value
+	 * @param tag   The unique key which will become associated with the new value.
+	 * @param value The new value
 	 */
 	public static void putInt(String tag, int value) {
 		log.trace("Associating \"{}\": {}", tag, value);
@@ -133,8 +134,7 @@ public final class PrefStore extends Store {
 	/**
 	 * Get a value from the store.
 	 * 
-	 * @param tag
-	 *            A unique String whose associated value is to be returned.
+	 * @param tag A unique String whose associated value is to be returned.
 	 * @return The byte[] value associated with the provided tag.
 	 */
 	public static byte[] getBytes(String tag) {
@@ -144,10 +144,8 @@ public final class PrefStore extends Store {
 	/**
 	 * Add a value to the store. Old values are overwritten.
 	 * 
-	 * @param tag
-	 *            The unique key which will become associated with the new value.
-	 * @param value
-	 *            The new value
+	 * @param tag   The unique key which will become associated with the new value.
+	 * @param value The new value
 	 */
 	public static void putBytes(String tag, byte[] value) {
 		log.trace("Associating \"{}\": {}", tag, value);

@@ -162,7 +162,7 @@ public final class MainDispatch {
 		// Print task summary if required
 		if (outcomes.stream().filter(o -> !o.getOutcome().getResult()).count() != 0)
 			logTaskSummary(outcomes);
-		else if (!Config.NO_TASK_SUMMARY)
+		else if (!Config.getBoolean("no_summary"))
 			logTaskSummary(outcomes);
 
 		// Launch idle loop

@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.gen.packager;
 
+import static com.sandpolis.core.instance.Environment.EnvPath.GEN;
+
 import java.nio.file.Files;
 
 import com.google.common.io.BaseEncoding;
@@ -60,6 +62,6 @@ public class UrlPackager extends Packager {
 		}
 
 		// Write to generator output directory
-		Files.write(Environment.GEN_OUTPUT.resolve(config.getId() + ".url"), url.getBytes());
+		Files.write(Environment.get(GEN).resolve(config.getId() + ".url"), url.getBytes());
 	}
 }

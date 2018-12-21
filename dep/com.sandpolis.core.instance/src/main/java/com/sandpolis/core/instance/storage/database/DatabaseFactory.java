@@ -26,7 +26,7 @@ import com.sandpolis.core.instance.Config;
 
 /**
  * A singleton factory for new {@link Database} instances.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -62,7 +62,7 @@ public final class DatabaseFactory {
 
 	/**
 	 * Create a new uninitialized {@link Database} from the given {@link File}.
-	 * 
+	 *
 	 * @param type The database type
 	 * @param file The source file which will be created if it does not exist
 	 * @return An uninitialized {@code Database}
@@ -85,7 +85,7 @@ public final class DatabaseFactory {
 
 	/**
 	 * Create a new uninitialized {@link Database} from the given URL.
-	 * 
+	 *
 	 * @param url The source url
 	 * @return An uninitialized {@code Database}
 	 * @throws URISyntaxException If the url format is invalid
@@ -95,8 +95,21 @@ public final class DatabaseFactory {
 	}
 
 	/**
+	 * Create a new uninitialized {@link Database} from the given URL.
+	 *
+	 * @param url The source url
+	 * @param username
+	 * @param password
+	 * @return An uninitialized {@code Database}
+	 * @throws URISyntaxException If the url format is invalid
+	 */
+	public static Database create(String url, String username, String password) throws URISyntaxException {
+		return new Database(url, username, password);
+	}
+
+	/**
 	 * Initialize an uninitialized {@link Database}.
-	 * 
+	 *
 	 * @param database The uninitialized database
 	 * @param persist  A list of persistent classes
 	 * @return The initialized database
@@ -107,7 +120,7 @@ public final class DatabaseFactory {
 			throw new IllegalArgumentException();
 
 		IDatabaseFactory fac;
-		switch (Config.DB_PROVIDER) {
+		switch (Config.get("db.provider")) {
 		case "":
 		case "default":
 		case "ormlite":
@@ -145,7 +158,7 @@ public final class DatabaseFactory {
 	 * A contract that every database factory should implement.<br>
 	 * <br>
 	 * TODO: Think of a better name for this interface.
-	 * 
+	 *
 	 * @author cilki
 	 * @since 5.0.0
 	 */
@@ -153,7 +166,7 @@ public final class DatabaseFactory {
 
 		/**
 		 * Initialize a new SQLite database.
-		 * 
+		 *
 		 * @param persist A list of classes that will be persisted or {@code null} for
 		 *                none
 		 * @param db      The database to be initialized
@@ -163,7 +176,7 @@ public final class DatabaseFactory {
 
 		/**
 		 * Initialize a new MySQL database.
-		 * 
+		 *
 		 * @param persist A list of classes that will be persisted or {@code null} for
 		 *                none
 		 * @param db      The database to be initialized
@@ -173,7 +186,7 @@ public final class DatabaseFactory {
 
 		/**
 		 * Initialize a new H2 database.
-		 * 
+		 *
 		 * @param persist A list of classes that will be persisted or {@code null} for
 		 *                none
 		 * @param db      The database to be initialized

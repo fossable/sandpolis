@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.gen.generator;
 
+import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -33,16 +35,16 @@ import org.zeroturnaround.zip.ZipEntrySource;
 import org.zeroturnaround.zip.ZipUtil;
 
 import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.store.artifact.ArtifactStore;
 import com.sandpolis.core.proto.util.Generator.Feature;
 import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.util.ArtifactUtil;
 import com.sandpolis.server.gen.FileGenerator;
 
 /**
  * This generator builds a MEGA client.
- * 
+ *
  * @author cilki
  * @since 2.0.0
  */
@@ -56,7 +58,7 @@ public class MegaGen extends FileGenerator {
 
 	@Override
 	protected Object run() throws Exception {
-		File client = Environment.JLIB.resolve("com.sandpolis.client.mega.jar").toFile();
+		File client = Environment.get(JLIB).resolve("com.sandpolis.client.mega.jar").toFile();
 		FeatureSet features = config.getMega().getFeatures();
 
 		// A list of entries to be injected
@@ -66,7 +68,7 @@ public class MegaGen extends FileGenerator {
 		sources.add(new ByteSource("client.bin", config.getMega().toByteArray()));
 
 		// Filter libraries according to features and target platforms
-		sources.addAll(ArtifactUtil.getDependencies(Instance.CLIENT)
+		sources.addAll(ArtifactStore.getDependencies(Instance.CLIENT)
 				// Filter by feature
 				.filter(artifact -> {
 					for (Feature feature : artifact.getFeatureList()) {
@@ -76,7 +78,7 @@ public class MegaGen extends FileGenerator {
 					}
 					return true;
 				}).map(artifact -> {
-					File source = ArtifactUtil.getArtifactFile(artifact);
+					File source = ArtifactStore.getArtifactFile(artifact);
 					if (artifact.getNativeComponentCount() != 0) {
 
 						// Collect unnecessary internal native components
