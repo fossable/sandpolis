@@ -6,6 +6,7 @@
 plugins {
 	id 'eclipse'
 	id 'java'
+	id 'com.github.onslip.gradle-one-jar' version '1.0.5'
 }
 
 eclipse {
@@ -33,4 +34,19 @@ jar {
 			'Main-Class': 'com.sandpolis.client.mega.Main'
     	)
 	}
+}
+
+// Add OneJar task to produce a jar capable of nested dependencies, but don't
+// actually add them yet
+task one_jar(type: OneJar) {
+    mainClass = 'com.sandpolis.client.mega.Main' 
+}
+project.tasks.assemble.dependsOn project.tasks.one_jar
+
+// Create a custom configuration containing the nested jar
+configurations {
+	onejarArtifact.extendsFrom runtimeClasspath
+}
+artifacts {
+	onejarArtifact one_jar
 }

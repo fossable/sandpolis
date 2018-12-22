@@ -18,7 +18,7 @@ dependencies {
 	testImplementation project(':dep:com.sandpolis.core.test')
 	testImplementation lib.junit
 	
-	implementation project(':com.sandpolis.client.mega')
+	implementation project(path: ':com.sandpolis.client.mega', configuration: 'onejarArtifact')
 	// implementation project(':com.sandpolis.client.micro')
 	implementation project(':dep:com.sandpolis.core.instance')
 	implementation project(':dep:com.sandpolis.core.ipc')
