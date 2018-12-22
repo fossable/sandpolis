@@ -30,7 +30,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 import com.sandpolis.core.proto.soi.Build.SO_Build;
-import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix;
 
 /**
  * This task parses the multiproject and writes soi binaries to the output
@@ -115,36 +114,25 @@ public class SoiTask extends DefaultTask {
 		root.subprojects(sub -> {
 			Map<String, Configuration> conf = sub.getConfigurations().getAsMap();
 
-			if (conf.containsKey("runtimeClasspath")) {
+			if (conf.containsKey("runtimeClasspath") && sub.getPath().startsWith(":" + sub.getName())) {
 				for (ResolvedDependency dep : conf.get("runtimeClasspath").getResolvedConfiguration()
 						.getFirstLevelModuleDependencies()) {
-					if (dep.getModuleArtifacts().size() != 1)
+					if (dep.getModuleArtifacts().size() != 1) {
 						continue;
+					}
 
 					processor.add(sub.getName(), dep);
 				}
 			}
 		});
 
-		SO_DependencyMatrix so = processor.build();
-		testMatrixSO(so);
-
 		// Write object
 		File output = new File(soi.getAbsolutePath() + "/matrix.bin");
 		try (FileOutputStream out = new FileOutputStream(output)) {
-			so.writeTo(out);
+			processor.build().writeTo(out);
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to write SO_DependencyMatrix", e);
 		}
-	}
-
-	/**
-	 * Test a {@link SO_DependencyMatrix} for cycles.
-	 * 
-	 * @param so The dependency matrix
-	 */
-	private void testMatrixSO(SO_DependencyMatrix so) {
-		// TODO test for cycles
 	}
 
 }

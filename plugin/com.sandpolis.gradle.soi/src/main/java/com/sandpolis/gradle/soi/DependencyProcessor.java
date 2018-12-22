@@ -24,9 +24,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 
 import com.google.common.io.Resources;
@@ -39,8 +42,10 @@ import com.sandpolis.core.proto.util.Platform.Architecture;
 import com.sandpolis.core.proto.util.Platform.OsType;
 
 /**
- * This class collects Gradle dependencies and produces a
- * {@link SO_DependencyMatrix} which can be used in the SOI task.
+ * This class accepts Gradle dependencies incrementally and produces a
+ * {@link SO_DependencyMatrix} which can be used in the SOI task. <br>
+ * <br>
+ * Note: this class is NOT thread-safe.
  * 
  * @author cilki
  */
@@ -71,8 +76,11 @@ public class DependencyProcessor {
 	 * @param instance   The instance artifact name
 	 * @param dependency The artifact's dependency
 	 */
-	public synchronized void add(String instance, ResolvedDependency dependency) {
-		add(Artifact.newBuilder().setCoordinates(":" + instance + ":"), dependency);
+	public void add(String instance, ResolvedDependency dependency) {
+		Objects.requireNonNull(instance);
+		Objects.requireNonNull(dependency);
+
+		add(toArtifact(":" + instance + ":"), dependency);
 	}
 
 	/**
@@ -82,19 +90,13 @@ public class DependencyProcessor {
 	 * @param dependency The artifact's dependency
 	 */
 	private void add(Artifact.Builder parent, ResolvedDependency dependency) {
-		if (!artifacts.stream().anyMatch(a -> a.getCoordinates().equals(parent.getCoordinates())))
-			artifacts.add(parent);
+		Objects.requireNonNull(parent);
+		Objects.requireNonNull(dependency);
 
-		Artifact.Builder artifact = getArtifact(dependency);
-		if (!artifacts.stream().anyMatch(a -> a.getCoordinates().equals(artifact.getCoordinates()))) {
-			artifacts.add(artifact);
-		}
-
-		for (int i = 0; i < artifacts.size(); i++) {
-			if (artifacts.get(i).getCoordinates().equals(artifact.getCoordinates())) {
-				parent.addDependency(i);
-				break;
-			}
+		Artifact.Builder artifact = toArtifact(dependency);
+		int id = artifacts.indexOf(artifact);
+		if (!parent.getDependencyList().contains(id)) {
+			parent.addDependency(id);
 		}
 
 		// Recursively add child dependencies
@@ -111,7 +113,6 @@ public class DependencyProcessor {
 	 */
 	@SuppressWarnings("unchecked")
 	public SO_DependencyMatrix build() {
-		SO_DependencyMatrix.Builder deps = SO_DependencyMatrix.newBuilder();
 
 		// Read feature extension from root project
 		Map<String, List<String>> features = (Map<String, List<String>>) root.getExtensions().getExtraProperties()
@@ -170,26 +171,72 @@ public class DependencyProcessor {
 			}
 		}
 
-		return deps.addAllArtifact(artifacts.stream().map(a -> a.build()).collect(Collectors.toList())).build();
+		return SO_DependencyMatrix.newBuilder()
+				.addAllArtifact(artifacts.stream().map(a -> a.build()).collect(Collectors.toList())).build();
 	}
 
 	/**
-	 * Build a new artifact representing the given dependency.
+	 * Get an existing artifact or build a new one for the given dependency.
 	 * 
 	 * @param dependency The dependency
 	 * @return An artifact representing the dependency
 	 */
-	private Artifact.Builder getArtifact(ResolvedDependency dependency) {
-		if (dependency == null)
-			throw new IllegalArgumentException();
+	private Artifact.Builder toArtifact(ResolvedDependency dependency) {
+		Objects.requireNonNull(dependency);
 
-		File resource = dependency.getModuleArtifacts().iterator().next().getFile();
+		Artifact.Builder artifact = getArtifact(dependency);
+		if (artifact != null)
+			return artifact;
 
-		Artifact.Builder artifact = Artifact.newBuilder().setCoordinates(getCoordinates(dependency))
-				.setSize(resource.length());
+		File resource = getFile(dependency);
 
+		artifact = Artifact.newBuilder().setCoordinates(getCoordinates(dependency)).setSize(resource.length());
+
+		artifacts.add(artifact);
 		files.put(artifact, resource);
 		return artifact;
+	}
+
+	/**
+	 * Get an existing artifact or build a new one for the given coordinates.
+	 * 
+	 * @param coordinates The coordinates
+	 * @return An artifact representing the dependency
+	 */
+	private Artifact.Builder toArtifact(String coordinates) {
+		Objects.requireNonNull(coordinates);
+
+		Artifact.Builder artifact = getArtifact(coordinates);
+		if (artifact != null)
+			return artifact;
+
+		artifact = Artifact.newBuilder().setCoordinates(coordinates);
+		artifacts.add(artifact);
+		return artifact;
+	}
+
+	/**
+	 * Find an artifact for a dependency.
+	 * 
+	 * @param dependency The dependency
+	 * @return The existing artifact or {@code null}
+	 */
+	private Artifact.Builder getArtifact(ResolvedDependency dependency) {
+		Objects.requireNonNull(dependency);
+
+		return getArtifact(getCoordinates(dependency));
+	}
+
+	/**
+	 * Find an artifact by its coordinates.
+	 * 
+	 * @param coordinates The artifact's coordinates
+	 * @return The existing artifact or {@code null}
+	 */
+	private Artifact.Builder getArtifact(String coordinates) {
+		Objects.requireNonNull(coordinates);
+
+		return artifacts.stream().filter(a -> a.getCoordinates().equals(coordinates)).findAny().orElse(null);
 	}
 
 	/**
@@ -199,14 +246,28 @@ public class DependencyProcessor {
 	 * @return The dependency's coordinates
 	 */
 	private static String getCoordinates(ResolvedDependency dependency) {
-		if (dependency == null)
-			throw new IllegalArgumentException();
+		Objects.requireNonNull(dependency);
 
 		if (dependency.getModuleGroup().contains("Sandpolis"))
 			return String.format(":%s:", dependency.getModuleName());
 
 		return String.format("%s:%s:%s", dependency.getModuleGroup(), dependency.getModuleName(),
 				dependency.getModuleVersion());
+	}
+
+	/**
+	 * Get the dependency's jar file.
+	 * 
+	 * @param dependency The dependency
+	 * @return The {@link File} associated with the dependency
+	 */
+	private static File getFile(ResolvedDependency dependency) {
+		Objects.requireNonNull(dependency);
+
+		Set<ResolvedArtifact> artifacts = dependency.getModuleArtifacts();
+		if (artifacts.size() != 1)
+			throw new IllegalArgumentException("Dependency has an unexpected number of artifacts: " + artifacts.size());
+		return artifacts.iterator().next().getFile();
 	}
 
 }
