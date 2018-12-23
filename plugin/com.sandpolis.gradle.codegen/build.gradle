@@ -18,9 +18,9 @@ repositories {
     mavenCentral()
 }
 dependencies {
-	compile gradleApi()
-	compile localGroovy()
+	implementation gradleApi()
+	implementation localGroovy()
 
-	compile 'org.yaml:snakeyaml:1.22'
-	compile 'com.squareup:javapoet:1.11.1'
+	implementation 'org.yaml:snakeyaml:1.22'
+	implementation 'com.squareup:javapoet:1.11.1'
 }

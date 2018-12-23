@@ -16,63 +16,70 @@ buildscript {
 }
 
 plugins {
+	// id 'com.sandpolis.gradle.deploy' version '1.0.0'
+	// id 'com.sandpolis.gradle.soi' version '1.0.0'
 }
 
 ext.lib = [
 
 	// Unit testing
-	junit: ['org.junit.jupiter:junit-jupiter-engine:5.3.0-M1',
-		'org.junit.jupiter:junit-jupiter-params:5.3.0-M1'],
+	junit: ['org.junit.jupiter:junit-jupiter-engine:5.3.2',
+		'org.junit.jupiter:junit-jupiter-params:5.3.2'],
 
 	// Logging
-	slf4j: 'org.slf4j:slf4j-api:1.8.0-beta2',
+	slf4j: 'org.slf4j:slf4j-api:1.7.25',
 	jansi: 'org.fusesource.jansi:jansi:1.17.1',
-	logback: ['ch.qos.logback:logback-core:1.3.0-alpha4',
-		'ch.qos.logback:logback-classic:1.3.0-alpha4'],
+	logback: ['ch.qos.logback:logback-core:1.2.3',
+		'ch.qos.logback:logback-classic:1.2.3'],
 
 	// Networking
-	netty: ['io.netty:netty-common:4.1.28.Final',
-		'io.netty:netty-codec:4.1.28.Final', 
-		'io.netty:netty-transport:4.1.28.Final',
-		'io.netty:netty-handler:4.1.28.Final'],
-	netty_epoll: 'io.netty:netty-transport-native-epoll:4.1.28.Final',
-	netty_kqueue: 'io.netty:netty-transport-native-kqueue:4.1.28.Final',
+	netty: ['io.netty:netty-common:4.1.32.Final',
+		'io.netty:netty-codec:4.1.32.Final',
+		'io.netty:netty-transport:4.1.32.Final',
+		'io.netty:netty-handler:4.1.32.Final'],
+	netty_epoll: 'io.netty:netty-transport-native-epoll:4.1.32.Final',
+	netty_kqueue: 'io.netty:netty-transport-native-kqueue:4.1.32.Final',
 	protobuf: 'com.google.protobuf:protobuf-java:3.6.1',
 
 	// Storage
 	jpa: 'javax.persistence:javax.persistence-api:2.2',
-	hibernate: ['org.hibernate:hibernate-core:5.3.5.Final',
-		'org.hibernate:hibernate-c3p0:5.3.5.Final',
+	hibernate: ['org.hibernate:hibernate-core:5.4.0.Final',
+		'org.hibernate:hibernate-c3p0:5.4.0.Final',
 		'com.github.gwenn:sqlite-dialect:master',
 		'javax.xml.bind:jaxb-api:2.3.0'],
 	ormlite: ['com.j256.ormlite:ormlite-core:5.1',
 		'com.j256.ormlite:ormlite-jdbc:5.1'],
 	ormlite_android: 'com.j256.ormlite:ormlite-android:5.1',
-	sqlite: 'org.xerial:sqlite-jdbc:3.23.1',
+	sqlite: 'org.xerial:sqlite-jdbc:3.25.2',
 	mariadb: 'ch.vorburger.mariaDB4j:mariaDB4j:2.3.0',
-	mysql: 'mysql:mysql-connector-java:8.0.12',
+	mysql: 'mysql:mysql-connector-java:8.0.13',
 	h2: 'com.h2database:h2:1.4.197',
 	
+	javafx: ['org.openjfx:javafx-base:11', 'org.openjfx:javafx-graphics:11',
+			'org.openjfx:javafx-controls:11', 'org.openjfx:javafx-fxml:11'],
+
 	// Plugins
-	pf4j: 'org.pf4j:pf4j:2.4.0',
-	
+	pf4j: 'org.pf4j:pf4j:2.5.0',
+
 	// User input validator
 	validator: 'commons-validator:commons-validator:1.6',
 
 	// Guava
-	guava: 'com.google.guava:guava:26.0-jre',
+	guava: 'com.google.guava:guava:27.0.1-jre',
 
 	// Bittorrent
 	ttorrent: 'com.turn:ttorrent-core:1.5',
-	
+
 	// Docker client
 	docker: 'com.spotify:docker-client:8.11.7',
 
 	// Hardware information
-	oshi: 'com.github.oshi:oshi-core:3.7.2',
+	oshi: 'com.github.oshi:oshi-core:3.12.0',
 
 	// Zip Utility
-	zt_zip: 'org.zeroturnaround:zt-zip:1.13',
+	// TODO wait for 1.14 to be released
+	zt_zip: 'com.github.zeroturnaround:zt-zip:master',
+	//zt_zip: 'org.zeroturnaround:zt-zip:1.13',
 
 	// Lanterna
 	lanterna: 'com.googlecode.lanterna:lanterna:3.0.1'
@@ -93,10 +100,10 @@ ext.feature_matrix = [
 ext.native_matrix = [
 	sqlite_jdbc: [
 		freebsd: [
-			X86_64: '/org/sqlite/native/FreeBSD/x86_64/libsqlitejdbc.so'	
+			X86_64: '/org/sqlite/native/FreeBSD/x86_64/libsqlitejdbc.so'
 		],
 		osx: [
-			X86_64: '/org/sqlite/native/Mac/x86_64/libsqlitejdbc.jnilib'	
+			X86_64: '/org/sqlite/native/Mac/x86_64/libsqlitejdbc.jnilib'
 		],
 		linux: [
 			X86: '/org/sqlite/native/Linux/x86/libsqlitejdbc.so',
@@ -113,7 +120,7 @@ ext.native_matrix = [
 			X86_64: '/org/sqlite/native/Windows/x86_64/sqlitejdbc.dll'
 		]
 	],
-	
+
 	jna: [
 		windows: [
 			X86: '/com/sun/jna/win32-x86/jnidispatch.dll',
@@ -149,11 +156,19 @@ ext.native_matrix = [
 		openbsd: [
 			X86: '/com/sun/jna/openbsd-x86/libjnidispatch.so',
 			X86_64: '/com/sun/jna/openbsd-x86-64/libjnidispatch.so'
-		]	
+		]
 	]
 ]
 
 allprojects {
+	//buildDir = '/tmp/build/' + project.path
+
+	//eclipse {
+	//	project {
+	//		linkedResource name: 'build', type: '2', location: '/tmp/build/' + project.path
+	//	}
+	//}
+
 	repositories {
 		mavenCentral()
 		maven { url 'https://jitpack.io' }

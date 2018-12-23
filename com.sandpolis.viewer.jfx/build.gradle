@@ -6,7 +6,12 @@
 plugins {
 	id 'eclipse'
 	id 'java'
+	id 'org.openjfx.javafxplugin' version '0.0.5'
 }
+
+//javafx {
+//    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+//}
 
 eclipse {
 	project {
@@ -32,7 +37,6 @@ dependencies {
 	implementation lib.guava
 	implementation lib.netty
 	implementation lib.validator
-	implementation lib.javafx
 
 	// TODO remove dependency
 	implementation ':StlMeshImporter:'
