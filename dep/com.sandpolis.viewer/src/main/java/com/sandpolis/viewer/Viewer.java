@@ -85,7 +85,7 @@ public final class Viewer {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (Config.NO_MUTEX)
+		if (Config.getBoolean("no_mutex"))
 			return task.success();
 
 		RS_Metadata metadata = IPCStore.queryInstance(Instance.VIEWER);

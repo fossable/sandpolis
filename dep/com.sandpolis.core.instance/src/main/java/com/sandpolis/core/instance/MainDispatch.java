@@ -24,6 +24,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -152,7 +153,7 @@ public final class MainDispatch {
 			Outcome outcome = taskOutcome.getOutcome();
 			outcomes.add(taskOutcome);
 
-			if (!outcome.getResult() && taskOutcome.isFatal()) {
+			if (!outcome.getResult() && taskOutcome.isFatal() && !taskOutcome.isSkipped()) {
 				log.error("A fatal error has occurred in: {}", outcome.getAction());
 				logTaskSummary(outcomes);
 				System.exit(0);
@@ -181,16 +182,20 @@ public final class MainDispatch {
 	 * @param outcomes The task outcomes
 	 */
 	private static void logTaskSummary(List<TaskOutcome> outcomes) {
+
+		// TODO
+		outcomes.stream().max(Comparator.comparing(task -> task.getOutcome().getAction().length())).get();
+
 		for (TaskOutcome task : outcomes) {
 			Outcome outcome = task.getOutcome();
-			String line = String.format("%31s: %4s (%5d ms)", outcome.getAction(), outcome.getResult() ? "OK" : "FAIL",
-					outcome.getTime());
-			if (!outcome.getResult()) {
+			String line = String.format("%31s: %4s (%5d ms)", outcome.getAction(),
+					task.isSkipped() ? "SKIP" : outcome.getResult() ? "OK" : "FAIL", outcome.getTime());
+			if (task.isSkipped() || outcome.getResult()) {
+				log.info(line);
+			} else {
 				log.error(line);
 				if (!outcome.getException().isEmpty())
 					log.error(outcome.getException());
-			} else {
-				log.info(line);
 			}
 		}
 	}
@@ -245,7 +250,8 @@ public final class MainDispatch {
 	 */
 	public static void registerIdle(Supplier<Boolean> task) {
 		if (idle == null)
-			throw new IllegalStateException();
+			// Register a default loop
+			idle = new IdleLoop();
 
 		idle.register(task);
 	}
@@ -298,7 +304,7 @@ public final class MainDispatch {
 		public String name();
 
 		/**
-		 * TODO
+		 * Indicates that the task should only be run in debug mode.
 		 */
 		public boolean debug() default false;
 	}
@@ -436,14 +442,14 @@ public final class MainDispatch {
 		/**
 		 * Mark the task as complete and merge the given outcome.
 		 * 
-		 * @param outcome The outcome to merge
+		 * @param _outcome The outcome to merge
 		 * @return A completed {@link TaskOutcome}
 		 */
-		public TaskOutcome complete(Outcome outcome) {
+		public TaskOutcome complete(Outcome _outcome) {
 			if (outcome != null)
 				throw new IllegalStateException();
 
-			outcome = temporary.clearTime().mergeFrom(outcome).build();
+			outcome = temporary.clearTime().mergeFrom(_outcome).build();
 			return this;
 		}
 
