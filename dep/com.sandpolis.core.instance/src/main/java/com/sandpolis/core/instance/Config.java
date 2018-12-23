@@ -17,131 +17,133 @@
  *****************************************************************************/
 package com.sandpolis.core.instance;
 
-import java.io.FileInputStream;
-import java.util.Properties;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Objects;
 
 /**
- * This singleton contains instance configuration constants.
- * 
+ * This singleton contains the instance configuration.
+ *
  * @author cilki
  * @since 5.0.0
  */
 public final class Config {
-	private Config() {
+
+	/**
+	 * The global configuration.
+	 */
+	private static final Map<String, Object> config = new HashMap<>();
+
+	/**
+	 * Check that the configuration contains a property.
+	 * 
+	 * @param property The property to request
+	 * @return Whether the property exists in the configuration
+	 */
+	public static boolean has(String property) {
+		return config.containsKey(property);
 	}
 
 	/**
-	 * The database provider.
-	 */
-	public static final String DB_PROVIDER;
-
-	/**
-	 * The database URL.
-	 */
-	public static final String DB_URL;
-
-	/**
-	 * Implications of {@code DEBUG_CLIENT}:
-	 * <ul>
-	 * <li>A debug client will be installed on the system upon startup</li>
-	 * </ul>
+	 * Get the value of a String property.
 	 * 
-	 * Default: {@code false}
+	 * @param property The property to request
+	 * @return The property value
 	 */
-	public static final boolean DEBUG_CLIENT;
+	public static String get(String property) {
+		return (String) config.get(property);
+	}
 
 	/**
-	 * Implications of {@code LOG_NET}:
-	 * <ul>
-	 * <li>Decoded network I/O will be logged</li>
-	 * </ul>
+	 * Get the value of a Boolean property.
 	 * 
-	 * Default: {@code false}
+	 * @param property The property to request
+	 * @return The property value
 	 */
-	public static final boolean LOG_NET;
+	public static boolean getBoolean(String property) {
+		return (boolean) config.get(property);
+	}
 
 	/**
-	 * Implications of {@code LOG_NET_RAW}:
-	 * <ul>
-	 * <li>Undecoded network I/O will be logged</li>
-	 * </ul>
+	 * Get the value of an Integer property.
 	 * 
-	 * Default: {@code false}
+	 * @param property The property to request
+	 * @return The property value
 	 */
-	public static final boolean LOG_NET_RAW;
+	public static int getInteger(String property) {
+		return (int) config.get(property);
+	}
 
 	/**
-	 * Implications of {@code NO_MUTEX}:
-	 * <ul>
-	 * <li>The instance will not check for other running instances of the same
-	 * type</li>
-	 * </ul>
+	 * Insist that the runtime environment provide the given property of the given
+	 * type.
 	 * 
-	 * Default: {@code false}
+	 * @param property The property name
+	 * @param type     The property type
+	 * @return Whether the environment fufills the requirement
 	 */
-	public static final boolean NO_MUTEX;
+	public static boolean require(String property, Class<?> type) {
+		Objects.requireNonNull(property);
+		Objects.requireNonNull(type);
+
+		String value = getValue(property);
+
+		if (value == null)
+			return false;
+
+		if (type == String.class)
+			config.put(property, value);
+		else if (type == Boolean.class)
+			config.put(property, Boolean.parseBoolean(value));
+		else if (type == Integer.class)
+			config.put(property, Integer.parseInt(value));
+		else
+			throw new IllegalArgumentException("Unsupported type: " + type.getName());
+
+		return true;
+	}
 
 	/**
-	 * Implications of {@code NO_SSL}:
-	 * <ul>
-	 * <li>SSL will be disabled for all connections</li>
-	 * </ul>
+	 * Get a property from the runtime environment or a default value.
 	 * 
-	 * Default: {@code false}
+	 * @param property The property name
+	 * @param def      The default value
 	 */
-	public static final boolean NO_SSL;
+	public static void register(String property, Object def) {
+		Objects.requireNonNull(property);
+
+		String value = getValue(property);
+		if (value == null)
+			if (def != null)
+				config.put(property, def);
+			else if (def instanceof String)
+				config.put(property, value);
+			else if (def instanceof Boolean)
+				config.put(property, Boolean.parseBoolean(value));
+			else if (def instanceof Integer)
+				config.put(property, Integer.parseInt(value));
+			else
+				throw new IllegalArgumentException();
+	}
 
 	/**
-	 * Implications of {@code NO_PLUGINS}:
-	 * <ul>
-	 * <li>Plugins will not be loaded on startup</li>
-	 * </ul>
+	 * Query a property.
 	 * 
-	 * Default: {@code false}
+	 * @param property The property name
+	 * @return The property value
 	 */
-	public static final boolean NO_PLUGINS;
+	private static String getValue(String property) {
 
-	/**
-	 * Implications of {@code NO_TASK_SUMMARY}:
-	 * <ul>
-	 * <li>The task summary will not be shown on startup</li>
-	 * </ul>
-	 * 
-	 * Default: {@code true}
-	 */
-	public static final boolean NO_TASK_SUMMARY;
+		// Query environment variable
+		// TODO remove this translation or document
+		String value = System.getenv().get(property.toUpperCase().replace('.', '_'));
+		if (value != null)
+			return value;
 
-	/**
-	 * Implications of {@code POST}:
-	 * <ul>
-	 * <li>The instance will perform a self-test upon startup</li>
-	 * </ul>
-	 * 
-	 * Default: {@code false}
-	 */
-	public static final boolean POST;
+		// Query system property
+		return System.getProperty(property);
+	}
 
-	static {
-		Properties prop = new Properties();
-		try (FileInputStream in = new FileInputStream("instance.properties")) {
-			prop.load(in);
-		} catch (Exception ignore) {
-			// The show must go on
-		}
-
-		// Merge system properties
-		prop.putAll(System.getProperties());
-
-		// Parse properties
-		DB_PROVIDER = prop.getProperty("db.provider", "hibernate");
-		DB_URL = prop.getProperty("db.url", null);
-		DEBUG_CLIENT = Boolean.parseBoolean(prop.getProperty("debug-client", "false"));
-		LOG_NET = Boolean.parseBoolean(prop.getProperty("log-net", "false"));
-		LOG_NET_RAW = Boolean.parseBoolean(prop.getProperty("log-net-raw", "false"));
-		NO_MUTEX = Boolean.parseBoolean(prop.getProperty("no-mutex", "false"));
-		NO_SSL = Boolean.parseBoolean(prop.getProperty("no-ssl", "true"));
-		NO_PLUGINS = Boolean.parseBoolean(prop.getProperty("no-plugins", "true"));
-		NO_TASK_SUMMARY = Boolean.parseBoolean(prop.getProperty("no-summary", "false"));
-		POST = Boolean.parseBoolean(prop.getProperty("post", "true"));
+	private Config() {
 	}
 }
