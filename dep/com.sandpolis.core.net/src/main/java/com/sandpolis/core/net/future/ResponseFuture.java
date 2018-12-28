@@ -18,6 +18,7 @@
 package com.sandpolis.core.net.future;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.proto.net.MSG.Message;
 
@@ -41,25 +42,6 @@ import io.netty.util.concurrent.Future;
 public class ResponseFuture<E> extends DefaultPromise<E> {
 
 	/**
-	 * An {@link EventExecutor} that will be used for all instances that do not
-	 * specify their own.
-	 */
-	private static EventExecutor defExecutor;
-
-	/**
-	 * Set the default {@link EventExecutor}.
-	 * 
-	 * @param defExecutor
-	 *            The new {@link EventExecutor}
-	 */
-	public static void setDefaultExecutor(EventExecutor defExecutor) {
-		if (defExecutor == null)
-			throw new IllegalArgumentException();
-
-		ResponseFuture.defExecutor = defExecutor;
-	}
-
-	/**
 	 * Construct a new {@link ResponseFuture} that listens on the given
 	 * {@link MessageFuture}.
 	 * 
@@ -68,7 +50,7 @@ public class ResponseFuture<E> extends DefaultPromise<E> {
 	 *            arrives
 	 */
 	public ResponseFuture(MessageFuture future) {
-		this(defExecutor, future);
+		this(ThreadStore.get(ResponseFuture.class), future);
 	}
 
 	/**

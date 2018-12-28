@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -36,7 +37,7 @@ public class ResponseFutureTest {
 
 	@BeforeEach
 	public void setup() {
-		ResponseFuture.setDefaultExecutor(GlobalEventExecutor.INSTANCE);
+		ThreadStore.register(GlobalEventExecutor.INSTANCE, ResponseFuture.class);
 	}
 
 	@Test

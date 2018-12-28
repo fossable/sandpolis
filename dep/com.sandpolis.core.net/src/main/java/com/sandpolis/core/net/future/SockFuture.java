@@ -23,10 +23,11 @@ import com.sandpolis.core.net.init.ChannelConstant;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.DefaultPromise;
+import io.netty.util.concurrent.EventExecutor;
 
 /**
- * A {@link SockFuture} provides an easy way to obtain a configured {@link Sock}
- * from a {@link ChannelFuture}.
+ * A {@link SockFuture} is a wrapper for {@link ChannelFuture} which provides an
+ * easy way to obtain a configured {@link Sock}.
  * 
  * @author cilki
  * @since 5.0.0
@@ -40,7 +41,18 @@ public class SockFuture extends DefaultPromise<Sock> {
 	 * @param connect A connection future
 	 */
 	public SockFuture(ChannelFuture connect) {
-		super(connect.channel().eventLoop());
+		this(connect.channel().eventLoop(), connect);
+	}
+
+	/**
+	 * Construct a new {@link SockFuture} which will create a new {@link Sock} once
+	 * the given connection is established.
+	 * 
+	 * @param executor A custom executor
+	 * @param connect  A connection future
+	 */
+	public SockFuture(EventExecutor executor, ChannelFuture connect) {
+		super(executor);
 
 		connect.addListener((ChannelFuture future) -> {
 			if (!future.isSuccess())

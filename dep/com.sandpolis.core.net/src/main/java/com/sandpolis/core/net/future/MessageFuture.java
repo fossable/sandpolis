@@ -17,14 +17,15 @@
  *****************************************************************************/
 package com.sandpolis.core.net.future;
 
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.proto.net.MSG.Message;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;
-import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 
 /**
  * A {@link MessageFuture} is given to a thread waiting for a message (most
@@ -38,15 +39,11 @@ import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 public class MessageFuture extends DefaultPromise<Message> {
 
 	/**
-	 * The default executor if one is not provided.
-	 */
-	private static final EventExecutor DEFAULT_EXECUTOR = new UnorderedThreadPoolEventExecutor(6);
-
-	/**
 	 * Construct a {@link MessageFuture} that only completes if the message arrives.
 	 */
 	public MessageFuture() {
-		super(DEFAULT_EXECUTOR);
+		// Don't bother setting a timer
+		super(ThreadStore.get(MessageFuture.class));
 	}
 
 	/**
@@ -57,8 +54,19 @@ public class MessageFuture extends DefaultPromise<Message> {
 	 * @param unit    The timeout unit
 	 */
 	public MessageFuture(long timeout, TimeUnit unit) {
-		this();
-		DEFAULT_EXECUTOR.execute(() -> {
+		this(ThreadStore.get(MessageFuture.class), timeout, unit);
+	}
+
+	/**
+	 * Construct a {@link MessageFuture} that autocompletes if the given timeout
+	 * expires.
+	 * 
+	 * @param timeout The timeout value
+	 * @param unit    The timeout unit
+	 */
+	public MessageFuture(EventExecutor executor, long timeout, TimeUnit unit) {
+		super(executor);
+		Future<?> timer = executor.submit(() -> {
 			try {
 				await(timeout, unit);
 			} catch (InterruptedException e) {
@@ -67,6 +75,12 @@ public class MessageFuture extends DefaultPromise<Message> {
 
 			if (!isDone())
 				setFailure(new TimeoutException("Waited for " + timeout + " " + unit.toString()));
+		});
+
+		// Kill the timer when the message is received
+		addListener(message -> {
+			if (isSuccess())
+				timer.cancel(true);
 		});
 	}
 }

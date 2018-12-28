@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.handler.EventHandler;
@@ -123,9 +124,9 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		if (Config.getBoolean("log.traffic"))
 			p.addLast(LOGGING);
 
-		// TODO add EventExecutorGroup!
+		// Business logic
 		ExecuteHandler execute = new ExecuteHandler(exelets);
-		p.addLast("exe", execute);
+		p.addLast(ThreadStore.get(PipelineInitializer.class), "exe", execute);
 		ch.attr(ChannelConstant.HANDLER_EXECUTE).set(execute);
 
 	}
