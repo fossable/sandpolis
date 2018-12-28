@@ -19,9 +19,18 @@ class DeployInstance extends RemoteTask {
 				// Reset Java Preferences
 				execute 'rm -rf ~/.java'
 
-				// Transfer files
+				// Transfer instance binary
 				put from: project_deploy.jar.archivePath, into: directory
+				
+				// Transfer libraries
 				put from: project_deploy.configurations.runtimeClasspath, into: directory + '/jlib'
+				
+				// Transfer all core plugins for server only
+				if (project_deploy.name.equals("com.sandpolis.server"))
+					project_root.subprojects { sub ->
+						if (sub.name.startsWith("com.sandpolis.plugin"))
+							put from: sub.jar.outputs.files, into: directory + '/jlib'
+					}
 
 				// Check for screen session
 				if(!execute('screen -ls', ignoreError: true).contains(project_deploy.getName()))
@@ -47,9 +56,18 @@ class DeployInstance extends RemoteTask {
 				// Reset Java Preferences
 				execute 'reg delete "HKEY_CURRENT_USER\\Software\\JavaSoft\\Prefs"'
 
-				// Transfer files
+				// Transfer instance binary
 				put from: project_deploy.jar.archivePath, into: directory
+				
+				// Transfer libraries
 				put from: project_deploy.configurations.runtimeClasspath, into: directory + '/jlib'
+				
+				// Transfer all core plugins for server only
+				if (project_deploy.name.equals("com.sandpolis.server"))
+					project_root.subprojects { sub ->
+						if (sub.name.startsWith("com.sandpolis.plugin"))
+							put from: sub.jar.outputs.files, into: directory + '/jlib'
+					}
 
 				// Run the artifact
 				// TODO
@@ -58,6 +76,7 @@ class DeployInstance extends RemoteTask {
 	}
 
 	void osx() {
-		// TODO
+		// No difference for now
+		lin()
 	}
 }
