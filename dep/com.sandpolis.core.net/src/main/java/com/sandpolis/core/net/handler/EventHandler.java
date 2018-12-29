@@ -39,15 +39,30 @@ public class EventHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		ctx.channel().attr(ChannelConstant.CONNECTION_STATE).set(ConnectionState.CONNECTED);
+		var attribute = ctx.channel().attr(ChannelConstant.CONNECTION_STATE);
+		synchronized (attribute) {
+			attribute.set(ConnectionState.CONNECTED);
+		}
+
 		super.channelActive(ctx);
 	}
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		ctx.channel().attr(ChannelConstant.CONNECTION_STATE).set(ConnectionState.NOT_CONNECTED);
+		var attribute = ctx.channel().attr(ChannelConstant.SOCK);
+		if (attribute.get() != null)
+			attribute.get().changeState(ConnectionState.NOT_CONNECTED);
+		else
+			; // The channel was closed before a Sock could be assigned
+
 		ctx.close();
 		super.channelInactive(ctx);
+	}
+
+	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+		// TODO Auto-generated method stub
+		super.exceptionCaught(ctx, cause);
 	}
 
 	@Override

@@ -17,9 +17,14 @@
  *****************************************************************************/
 package com.sandpolis.core.net;
 
+import static com.sandpolis.core.net.Sock.ConnectionState.AUTHENTICATED;
+import static com.sandpolis.core.net.Sock.ConnectionState.CONNECTED;
+import static com.sandpolis.core.net.Sock.ConnectionState.NOT_CONNECTED;
+
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.security.cert.X509Certificate;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -50,7 +55,7 @@ import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.handler.traffic.TrafficCounter;
 
 /**
- * This class wraps a {@link Channel} and manages its state.
+ * This class wraps a {@link Channel} instance and provides helpful utilities.
  * 
  * @author cilki
  * @since 5.0.0
@@ -59,25 +64,13 @@ public class Sock {
 
 	private static final Logger log = LoggerFactory.getLogger(Sock.class);
 
-	public static final Transport TRANSPORT = Transport.getTransport();
-
 	/**
 	 * The {@code Sock}'s underlying {@link Channel}.
 	 */
 	private Channel channel;
 
 	/**
-	 * The {@code Sock}'s current connection state.
-	 */
-	private ConnectionState state;
-
-	/**
-	 * The {@code Sock}'s current certificate state.
-	 */
-	private CertificateState certState;
-
-	/**
-	 * Get the {@link Channel} of this {@code Sock}.
+	 * Get the {@link Channel} of this {@link Sock}.
 	 * 
 	 * @return The {@code Sock}'s underlying {@link Channel}
 	 */
@@ -91,7 +84,7 @@ public class Sock {
 	 * @return The {@link ConnectionState}
 	 */
 	public ConnectionState getState() {
-		return state;
+		return channel.attr(ChannelConstant.CONNECTION_STATE).get();
 	}
 
 	/**
@@ -100,20 +93,38 @@ public class Sock {
 	 * @return The {@link CertificateState}
 	 */
 	public CertificateState getCertState() {
-		return certState;
+		return channel.attr(ChannelConstant.CERTIFICATE_STATE).get();
 	}
 
-	public void setState(ConnectionState state) {
-		if (this.state != state) {
-			log.debug("[CVID {}] Sock state changed: {}->{}", getRemoteCvid(), this.state, state);
-			this.state = state;
+	/**
+	 * Change the Sock's connection state.
+	 * 
+	 * @param state The new connection state
+	 */
+	public void changeState(ConnectionState state) {
+		var attribute = channel.attr(ChannelConstant.CONNECTION_STATE);
+		if (attribute.get() == state)
+			throw new IllegalArgumentException();
+
+		log.debug("[CVID {}] Connection state changed: {}->{}", getRemoteCvid(), attribute.get(), state);
+		synchronized (attribute) {
+			attribute.set(state);
 		}
 	}
 
-	public void setCertState(CertificateState certState) {
-		if (this.certState != certState) {
-			log.debug("[CVID {}] Sock state changed: {}->{}", getRemoteCvid(), this.certState, certState);
-			this.certState = certState;
+	/**
+	 * Change the Sock's certificate state.
+	 * 
+	 * @param certState The new certificate state
+	 */
+	public void changeCertState(CertificateState certState) {
+		var attribute = channel.attr(ChannelConstant.CERTIFICATE_STATE);
+		if (attribute.get() == certState)
+			throw new IllegalArgumentException();
+
+		log.debug("[CVID {}] Certificate state changed: {}->{}", getRemoteCvid(), attribute.get(), certState);
+		synchronized (attribute) {
+			attribute.set(certState);
 		}
 	}
 
@@ -123,25 +134,19 @@ public class Sock {
 	 * @param channel An active or inactive {@link Channel}
 	 */
 	public Sock(Channel channel) {
-		if (channel == null)
-			throw new IllegalArgumentException();
+		this.channel = Objects.requireNonNull(channel);
 
-		this.channel = channel;
-
-		if (channel.isActive())
-			state = ConnectionState.CONNECTED;
-		else
-			state = ConnectionState.NOT_CONNECTED;
+		if (getState() == null)
+			changeState(NOT_CONNECTED);
 	}
 
 	/**
 	 * Shutdown the {@code Sock}.
 	 */
 	public void close() {
-		if (state != ConnectionState.AUTHENTICATED && state != ConnectionState.CONNECTED)
-			throw new IllegalStateException("Cannot close due to connection state: " + state);
-		setState(ConnectionState.NOT_CONNECTED);
+		requireState(CONNECTED, AUTHENTICATED);
 
+		changeState(NOT_CONNECTED);
 		channel.close();
 		channel.eventLoop().shutdownGracefully();
 	}
@@ -167,10 +172,10 @@ public class Sock {
 	 * @return The IPv4 address of the remote host
 	 */
 	public String getRemoteIP() {
-		if (state == ConnectionState.NOT_CONNECTED)
-			throw new IllegalStateException("Cannot query remote IP due to connection state: " + state);
+		requireState(CONNECTED, AUTHENTICATED);
 
 		if (channel instanceof EmbeddedChannel)
+			// For unit testing
 			return channel.remoteAddress().toString();
 
 		return ((InetSocketAddress) channel.remoteAddress()).getAddress().getHostAddress();
@@ -182,8 +187,7 @@ public class Sock {
 	 * @return The remote port to which the local host is connected
 	 */
 	public int getRemotePort() {
-		if (state == ConnectionState.NOT_CONNECTED)
-			throw new IllegalStateException("Cannot query remote port due to connection state: " + state);
+		requireState(CONNECTED, AUTHENTICATED);
 
 		return ((InetSocketAddress) channel.remoteAddress()).getPort();
 	}
@@ -212,8 +216,7 @@ public class Sock {
 	 * @return The local port to which the remote host is connected
 	 */
 	public int getLocalPort() {
-		if (state == ConnectionState.NOT_CONNECTED)
-			throw new IllegalStateException("Cannot query local port due to connection state: " + state);
+		requireState(CONNECTED, AUTHENTICATED);
 
 		return ((InetSocketAddress) channel.localAddress()).getPort();
 	}
@@ -225,8 +228,7 @@ public class Sock {
 	 * @throws SSLPeerUnverifiedException
 	 */
 	public X509Certificate getRemoteCertificate() throws SSLPeerUnverifiedException {
-		if (state == ConnectionState.NOT_CONNECTED)
-			throw new IllegalStateException("Cannot query remote certificate due to connection state: " + state);
+		requireState(CONNECTED, AUTHENTICATED);
 
 		SslHandler ssl = channel.attr(ChannelConstant.HANDLER_SSL).get();
 		if (ssl == null)
@@ -318,8 +320,7 @@ public class Sock {
 	 * @throws TimeoutException
 	 */
 	public long ping() throws InterruptedException, ExecutionException, TimeoutException {
-		if (state == ConnectionState.NOT_CONNECTED || state == ConnectionState.CLOSED)
-			throw new IllegalStateException();
+		requireState(CONNECTED, AUTHENTICATED);
 
 		long t1 = System.nanoTime();
 		request(Message.newBuilder().setRqPing(RQ_Ping.newBuilder())).get(2000, TimeUnit.MILLISECONDS);
@@ -439,6 +440,20 @@ public class Sock {
 		if (obj instanceof Sock)
 			return channel.equals(((Sock) obj).channel);
 		return false;
+	}
+
+	/**
+	 * Require that the {@link Sock} be in one of the given states. Otherwise throw
+	 * an exception.
+	 * 
+	 * @param states A list of acceptable states
+	 */
+	private void requireState(ConnectionState... states) {
+		ConnectionState state = getState();
+		for (var s : states)
+			if (state == s)
+				return;
+		throw new IllegalStateException("Unacceptable connection state: " + state);
 	}
 
 	public static enum Protocol {
