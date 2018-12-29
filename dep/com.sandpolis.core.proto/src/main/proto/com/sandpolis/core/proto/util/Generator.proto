@@ -143,20 +143,42 @@ message GenReport {
 }
 
 /**
+ * A LoopConfig contains all parameters and information needed to establish a
+ * new connection with a ConnectionLoop.
+ */
+message LoopConfig {
+
+	// The list of network targets to attempt
+	repeated NetworkTarget target = 1;
+	
+	// Indicates whether strict certificate checking will be enabled
+	bool strict_certs = 2;
+	
+	// The maximum number of conenction iterations to attempt in the worst case
+	int32 max_iterations = 3;
+	
+	// The initial connection timeout
+	int32 timeout = 4;
+	
+	// The maximum connection timeout
+	int32 max_timeout = 5;
+	
+	// The timeout smoothing factor which determines how quickly the maximum
+	// timeout is reached
+	double timeout_flatness = 6;
+}
+
+/**
  * Configuration specific to the network module.
  */
 message NetworkConfig {
 
-	// The network location of a server instance to connect
-	repeated NetworkTarget target = 1;
-	int32 reconnect_period = 2;
-	
-	// When true, invalid server certificates will cause authentication to fail
-	bool strict_certs = 3;
+	// The ConnectionLoop configuration
+	LoopConfig loop_config = 1;
 	
 	// When true, the client will not be able to connect to services outside of 
 	// the Sandpolis network.
-	bool strict_network = 4;
+	bool strict_network = 2;
 }
 
 /**

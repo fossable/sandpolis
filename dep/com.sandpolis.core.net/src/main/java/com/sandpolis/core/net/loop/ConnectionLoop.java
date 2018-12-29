@@ -18,14 +18,19 @@
 package com.sandpolis.core.net.loop;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ChannelConstant;
-import com.sandpolis.core.proto.pojo.ConnectionLoop.LoopConfig;
+import com.sandpolis.core.net.store.connection.ConnectionStore;
+import com.sandpolis.core.proto.util.Generator.LoopConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 
 import io.netty.bootstrap.Bootstrap;
@@ -39,6 +44,8 @@ import io.netty.bootstrap.Bootstrap;
  * @since 5.0.0
  */
 public class ConnectionLoop extends Thread {
+
+	public static final Logger log = LoggerFactory.getLogger(ConnectionLoop.class);
 
 	/**
 	 * The loop configuration.
@@ -69,7 +76,7 @@ public class ConnectionLoop extends Thread {
 	 * @param timeout The connection timeout in milliseconds
 	 */
 	public ConnectionLoop(String address, int port, int timeout, Bootstrap bootstrap) {
-		this(LoopConfig.newBuilder().addNetworkTarget(NetworkTarget.newBuilder().setAddress(address).setPort(port))
+		this(LoopConfig.newBuilder().addTarget(NetworkTarget.newBuilder().setAddress(address).setPort(port))
 				.setTimeout(timeout).setMaxTimeout(timeout).setMaxIterations(1), bootstrap);
 	}
 
@@ -88,19 +95,20 @@ public class ConnectionLoop extends Thread {
 	 * @param config The configuration object
 	 */
 	public ConnectionLoop(LoopConfig config, Bootstrap bootstrap) {
-		this.config = config;
+		this.config = Objects.requireNonNull(config);
+		this.bootstrap = Objects.requireNonNull(bootstrap);
 
 		if (config.getTimeoutFlatness() == 0)
 			this.cycler = new LoopCycle(config.getTimeout(), config.getMaxTimeout());
 		else
 			this.cycler = new LoopCycle(config.getTimeout(), config.getMaxTimeout(), config.getTimeoutFlatness());
 
-		this.bootstrap = bootstrap.attr(ChannelConstant.STRICT_CERTS, config.getStrictCerts());
+		bootstrap.attr(ChannelConstant.STRICT_CERTS, config.getStrictCerts());
 	}
 
 	@Override
 	public void run() {
-		List<NetworkTarget> targets = config.getNetworkTargetList();
+		List<NetworkTarget> targets = config.getTargetList();
 
 		try {
 			while (!Thread.interrupted()) {
@@ -114,11 +122,15 @@ public class ConnectionLoop extends Thread {
 					try {
 						result = future.get(timeout, TimeUnit.MILLISECONDS);
 					} catch (TimeoutException | ExecutionException e) {
+						log.trace("Connection attempt timed out after {} ms", timeout);
 						result = null;
 					}
 
-					if (result != null)
+					if (result != null) {
+						// TODO move somewhere else
+						ConnectionStore.add(result);
 						return;
+					}
 
 					time = System.currentTimeMillis() - time;
 					if (time < timeout)
