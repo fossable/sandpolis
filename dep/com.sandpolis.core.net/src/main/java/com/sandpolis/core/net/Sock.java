@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.net.future.MessageFuture;
-import com.sandpolis.core.net.handler.ExecuteHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -338,12 +337,7 @@ public class Sock {
 	 * @return A {@link MessageFuture}
 	 */
 	public MessageFuture read(int id) {
-		ExecuteHandler execute = channel.attr(ChannelConstant.HANDLER_EXECUTE).get();
-		if (!execute.getResponseMap().containsKey(id)) {
-			execute.getResponseMap().put(id, new MessageFuture());
-		}
-
-		return execute.getResponseMap().get(id);
+		return channel.attr(ChannelConstant.HANDLER_EXECUTE).get().putResponseFuture(id, new MessageFuture());
 	}
 
 	/**
@@ -356,12 +350,7 @@ public class Sock {
 	 * @return A {@link MessageFuture}
 	 */
 	public MessageFuture read(int id, int timeout, TimeUnit unit) {
-		ExecuteHandler execute = channel.attr(ChannelConstant.HANDLER_EXECUTE).get();
-		if (!execute.getResponseMap().containsKey(id)) {
-			execute.getResponseMap().put(id, new MessageFuture(timeout, unit));
-		}
-
-		return execute.getResponseMap().get(id);
+		return channel.attr(ChannelConstant.HANDLER_EXECUTE).get().putResponseFuture(id, new MessageFuture(timeout, unit));
 	}
 
 	/**

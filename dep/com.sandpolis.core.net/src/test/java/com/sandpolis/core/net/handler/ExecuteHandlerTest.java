@@ -92,10 +92,10 @@ public class ExecuteHandlerTest {
 		EmbeddedChannel channel = new EmbeddedChannel(execute);
 
 		MessageFuture future = new MessageFuture();
-		execute.getResponseMap().put(14, future);
+		execute.putResponseFuture(14, future);
 		channel.writeInbound(Message.newBuilder().setId(14).build());
 		assertTrue(future.get(100, TimeUnit.MILLISECONDS) != null);
-		assertTrue(execute.getResponseMap().isEmpty());
+		assertTrue(execute.getResponseCount() == 0);
 
 	}
 

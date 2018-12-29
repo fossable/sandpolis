@@ -23,6 +23,8 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +54,11 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 	private static final Logger log = LoggerFactory.getLogger(ExecuteHandler.class);
 
 	/**
+	 * A list of {@link Exelet}s available to this handler.
+	 */
+	private final Map<Class<? extends Exelet>, Exelet> exelets;
+
+	/**
 	 * Maps message types to the relevant handler. A specific handler will only be
 	 * present in the map if its annotated requirements (permissions and
 	 * authentication state) are met. Therefore, invalid messages will always be
@@ -60,45 +67,12 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 	private final Map<MsgOneofCase, MethodHandle> handles;
 
 	/**
-	 * Indicates whether the {@code ExecuteHandler} has a registered handler for the
-	 * given message type.
-	 * 
-	 * @param type The message type
-	 * @return True if there exists an {@link Exelet} handler for the message type
-	 */
-	public boolean containsHandler(MsgOneofCase type) {
-		return handles.containsKey(type);
-	}
-
-	/**
-	 * Reset all {@link Exelet} handlers.
-	 */
-	public void resetHandlers() {
-		// TODO disable channel reads
-		handles.clear();
-	}
-
-	/**
 	 * When a response message is desired, a {@link MessageFuture} is placed into
 	 * this map. If a message is received which is not associated with any handler
 	 * in {@link #handles} and the message's ID is in {@link #responseMap}, the
 	 * MessageFuture is removed and notified.
 	 */
-	private final Map<Integer, MessageFuture> responseMap;
-
-	/**
-	 * Get the response map.
-	 * 
-	 * @return The response map
-	 */
-	public Map<Integer, MessageFuture> getResponseMap() {
-		return responseMap;
-	}
-
-	/**
-	 * A list of {@link Exelet}s available to this handler.
-	 */
-	private final Map<Class<? extends Exelet>, Exelet> exelets;
+	private final ConcurrentMap<Integer, MessageFuture> responseMap;
 
 	/**
 	 * Create a new {@link ExecuteHandler} with the given {@link Exelet} list.
@@ -109,10 +83,10 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 		if (exelets == null)
 			throw new IllegalArgumentException();
 
-		handles = new HashMap<>();
-		responseMap = new HashMap<>();
-
+		this.responseMap = new ConcurrentHashMap<>();
+		this.handles = new HashMap<>();
 		this.exelets = new HashMap<>();
+
 		for (Class<? extends Exelet> exelet : exelets)
 			// Use null values to indicate that an exelet has not been loaded yet
 			this.exelets.put(exelet, null);
@@ -140,9 +114,52 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 		}
 
 		// Drop the message
-		log.debug("Dropping a message of type: {}", msg.getMsgOneofCase());
-		if (log.isTraceEnabled())
-			log.trace("Dropped message: {}", msg.toString());
+		log.warn("Dropping a message of type: {}", msg.getMsgOneofCase());
+		if (log.isDebugEnabled())
+			log.debug("Dropped message: {}", msg.toString());
+	}
+
+	/**
+	 * Add a new response callback to the response map unless one is already
+	 * present.
+	 * 
+	 * @param id     The message ID
+	 * @param future A new {@link MessageFuture}
+	 * @return An existing future or the given parameter
+	 */
+	public MessageFuture putResponseFuture(int id, MessageFuture future) {
+		if (!responseMap.containsKey(id))
+			responseMap.put(id, future);
+
+		return responseMap.get(id);
+	}
+
+	/**
+	 * Get the number of futures waiting for a response.
+	 * 
+	 * @return The number of entries in the response map
+	 */
+	public int getResponseCount() {
+		return responseMap.size();
+	}
+
+	/**
+	 * Indicates whether the {@code ExecuteHandler} has a registered handler for the
+	 * given message type.
+	 * 
+	 * @param type The message type
+	 * @return True if there exists an {@link Exelet} handler for the message type
+	 */
+	public boolean containsHandler(MsgOneofCase type) {
+		return handles.containsKey(type);
+	}
+
+	/**
+	 * Reset all {@link Exelet} handlers.
+	 */
+	public void resetHandlers() {
+		// TODO disable channel reads
+		handles.clear();
 	}
 
 	/**
