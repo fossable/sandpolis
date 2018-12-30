@@ -159,7 +159,7 @@ public class Listener implements ProtoType<ProtoListener> {
 	 * @param config The configuration which should be prevalidated and complete
 	 */
 	public Listener(ListenerConfig config) {
-		if (merge(ProtoListener.newBuilder().setConfig(config).build()) != ErrorCode.NONE)
+		if (merge(ProtoListener.newBuilder().setConfig(config).build()) != ErrorCode.OK)
 			throw new IllegalArgumentException();
 
 		this.id = config.getId();
@@ -174,11 +174,11 @@ public class Listener implements ProtoType<ProtoListener> {
 
 		log.debug("Starting listener on port: {}", port);
 
-		parentLoopGroup = Sock.TRANSPORT.getEventLoopGroup();
-		childLoopGroup = Sock.TRANSPORT.getEventLoopGroup();
+		parentLoopGroup = Sock.Transport.INSTANCE.getEventLoopGroup();
+		childLoopGroup = Sock.Transport.INSTANCE.getEventLoopGroup();
 
 		ServerBootstrap b = new ServerBootstrap();
-		b.group(parentLoopGroup, childLoopGroup).channel(Sock.TRANSPORT.getServerSocketChannel())//
+		b.group(parentLoopGroup, childLoopGroup).channel(Sock.Transport.INSTANCE.getServerSocketChannel())//
 				.childHandler(new ServerInitializer())// (certificate, privateKey)
 				.option(ChannelOption.SO_BACKLOG, 128)//
 				.childOption(ChannelOption.SO_KEEPALIVE, true);
@@ -309,7 +309,7 @@ public class Listener implements ProtoType<ProtoListener> {
 	@Override
 	public ErrorCode merge(ProtoListener delta) {
 		ErrorCode validity = ValidationUtil.Config.valid(delta.getConfig());
-		if (validity != ErrorCode.NONE)
+		if (validity != ErrorCode.OK)
 			return validity;
 
 		if (delta.hasConfig()) {
@@ -337,7 +337,7 @@ public class Listener implements ProtoType<ProtoListener> {
 				setPrivateKey(config.getKey().toByteArray());
 		}
 
-		return ErrorCode.NONE;
+		return ErrorCode.OK;
 	}
 
 	@Override

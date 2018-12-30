@@ -45,7 +45,7 @@ public class UrlPackager extends Packager {
 		String url = "https://sandpolis.com/config?c=";
 
 		switch (config.getPayload()) {
-		case CONFIG:
+		case OUTPUT_CONFIG:
 			switch (config.getPayloadConfigCase()) {
 			case MEGA:
 				url += BaseEncoding.base64Url().encode(((MegaConfig) payload).toByteArray());

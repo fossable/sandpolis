@@ -19,6 +19,7 @@ package com.sandpolis.viewer.cli;
 
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.viewer.Viewer;
 
 /**
@@ -34,7 +35,7 @@ public final class Main {
 
 	public static void main(String[] args) {
 		Viewer.registerUI(new Cli());
-		MainDispatch.dispatch(Viewer.class, args, Instance.VIEWER);
+		MainDispatch.dispatch(Viewer.class, args, Instance.VIEWER, InstanceFlavor.CLI);
 	}
 
 }

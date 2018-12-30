@@ -59,12 +59,13 @@ public class CvidRequestHandler extends SimpleChannelInboundHandler<Message> {
 		if (rs != null && !rs.getServerUuid().isEmpty()) {
 
 			Core.setCvid(rs.getCvid());
-			NetworkStore.load(Core.cvid());
-			NetworkStore.setPreferredServer(rs.getServerCvid());
+			NetworkStore.updateCvid(Core.cvid());
 			ch.attr(ChannelConstant.CVID).set(rs.getServerCvid());
 			ch.attr(ChannelConstant.UUID).set(rs.getServerUuid());
 			ch.attr(ChannelConstant.FUTURE_CVID).get().setSuccess(rs.getCvid());
+			log.debug("CVID handshake complete");
 		} else {
+			log.debug("CVID handshake failed");
 			ch.attr(ChannelConstant.FUTURE_CVID).get().setFailure(new MessageFlowException(RS_Cvid.class, msg));
 		}
 	}
@@ -78,12 +79,9 @@ public class CvidRequestHandler extends SimpleChannelInboundHandler<Message> {
 	/**
 	 * Begin the CVID handshake phase.
 	 * 
-	 * @param channel
-	 *            The channel
-	 * @param instance
-	 *            The instance type
-	 * @param uuid
-	 *            The instance's UUID
+	 * @param channel  The channel
+	 * @param instance The instance type
+	 * @param uuid     The instance's UUID
 	 */
 	public void handshake(Channel channel, Instance instance, String uuid) {
 		log.debug("Initiating CVID handshake");

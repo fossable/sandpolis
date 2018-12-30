@@ -24,8 +24,9 @@ import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -33,21 +34,18 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.idle.IdleLoop;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ProtoUtil;
 
 /**
  * This class invokes an instance's real {@code main()} via reflection and
- * assists with initialization of the new instance.<br>
- * <br>
- * The {@link #dispatch} method should always be invoked first
+ * assists with initialization of the new instance.
  * 
  * @author cilki
  * @since 5.0.0
  */
 public final class MainDispatch {
-	private MainDispatch() {
-	}
 
 	public static final Logger log = LoggerFactory.getLogger(MainDispatch.class);
 
@@ -57,10 +55,13 @@ public final class MainDispatch {
 	 */
 	private static List<Supplier<TaskOutcome>> tasks = new ArrayList<>();
 
-	private static List<Runnable> shutdown = new ArrayList<>();
+	/**
+	 * A configurable list of tasks that are executed on shutdown.
+	 */
+	private static List<Runnable> shutdown = new LinkedList<>();
 
 	/**
-	 * The {@link Thread} that runs
+	 * A {@link Thread} that runs idle tasks in the background.
 	 */
 	private static IdleLoop idle;
 
@@ -75,10 +76,15 @@ public final class MainDispatch {
 	private static Instance instance;
 
 	/**
-	 * Get the main {@link Class} that was dispatched or {@code null} if
-	 * {@link #dispatch} has not been called.
+	 * The instance's {@code InstanceFlavor} type.
+	 */
+	private static InstanceFlavor flavor;
+
+	/**
+	 * Get the main {@link Class} that was dispatched or {@code MainDispatch.class}
+	 * if {@link #dispatch} has not been called.
 	 * 
-	 * @return The dispatched {@link Class} or {@code null}
+	 * @return The dispatched {@link Class} or {@code MainDispatch.class}
 	 */
 	public static Class<?> getMain() {
 		return main;
@@ -92,6 +98,16 @@ public final class MainDispatch {
 	 */
 	public static Instance getInstance() {
 		return instance;
+	}
+
+	/**
+	 * Get the {@link InstanceFlavor} that was dispatched or {@code null} if
+	 * {@link #dispatch} has not been called.
+	 * 
+	 * @return The dispatched {@link InstanceFlavor} or {@code null}
+	 */
+	public static InstanceFlavor getInstanceFlavor() {
+		return flavor;
 	}
 
 	/**
@@ -112,20 +128,17 @@ public final class MainDispatch {
 	 * @param main     The {@link Class} which contains the {@code main()} to invoke
 	 * @param args     The arguments to be passed to the {@code main()}
 	 * @param instance The instance's {@link Instance}
+	 * @param flavor   The instance's {@link InstanceFlavor}
 	 */
-	public static void dispatch(Class<?> main, String[] args, Instance instance) {
-		if (main == null)
-			throw new IllegalArgumentException();
-		if (args == null)
-			throw new IllegalArgumentException();
-		if (instance == null)
-			throw new IllegalArgumentException();
-
-		if (MainDispatch.instance != null)
+	public static void dispatch(Class<?> main, String[] args, Instance instance, InstanceFlavor flavor) {
+		if (MainDispatch.main != MainDispatch.class)
 			throw new IllegalStateException("Dispatch cannot be called more than once");
 
-		MainDispatch.main = main;
-		MainDispatch.instance = instance;
+		MainDispatch.main = Objects.requireNonNull(main);
+		MainDispatch.instance = Objects.requireNonNull(instance);
+		MainDispatch.flavor = Objects.requireNonNull(flavor);
+		Objects.requireNonNull(args);
+
 		long timestamp = System.currentTimeMillis();
 		List<TaskOutcome> outcomes = new ArrayList<>();
 
@@ -183,12 +196,13 @@ public final class MainDispatch {
 	 */
 	private static void logTaskSummary(List<TaskOutcome> outcomes) {
 
-		// TODO
-		outcomes.stream().max(Comparator.comparing(task -> task.getOutcome().getAction().length())).get();
+		// Create a format string according to the width of the longest description
+		String format = String.format("%%%ds: %%4s (%%5d ms)",
+				outcomes.stream().mapToInt(task -> task.getOutcome().getAction().length()).max().getAsInt());
 
 		for (TaskOutcome task : outcomes) {
 			Outcome outcome = task.getOutcome();
-			String line = String.format("%31s: %4s (%5d ms)", outcome.getAction(),
+			String line = String.format(format, outcome.getAction(),
 					task.isSkipped() ? "SKIP" : outcome.getResult() ? "OK" : "FAIL", outcome.getTime());
 			if (task.isSkipped() || outcome.getResult()) {
 				log.info(line);
@@ -473,5 +487,8 @@ public final class MainDispatch {
 				throw new IllegalArgumentException("Method: " + task.getName() + " is not an initialization task", e);
 			}
 		}
+	}
+
+	private MainDispatch() {
 	}
 }

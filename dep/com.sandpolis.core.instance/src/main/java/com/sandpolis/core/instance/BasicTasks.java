@@ -58,7 +58,8 @@ public final class BasicTasks {
 
 		Config.register("net.tls", false);
 
-		Config.register("no_plugins", true);
+		Config.register("no_plugins", false);
+		Config.register("no_summary", false);
 
 		return task.success();
 	}

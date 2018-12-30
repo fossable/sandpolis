@@ -127,10 +127,10 @@ public final class UserStore extends Store {
 	 */
 	public static Outcome add(UserConfig config) {
 		ErrorCode code = ValidationUtil.Config.valid(config);
-		if (code != ErrorCode.NONE)
+		if (code != ErrorCode.OK)
 			return Outcome.newBuilder().setResult(false).setError(code).build();
 		code = ValidationUtil.Config.complete(config);
-		if (code != ErrorCode.NONE)
+		if (code != ErrorCode.OK)
 			return Outcome.newBuilder().setResult(false).setError(code).build();
 
 		// Create the user
@@ -174,7 +174,7 @@ public final class UserStore extends Store {
 			return failure(outcome, "User not found");
 
 		ErrorCode error = user.merge(delta);
-		if (error != ErrorCode.NONE)
+		if (error != ErrorCode.OK)
 			return failure(outcome.setError(error));
 
 		return success(outcome);

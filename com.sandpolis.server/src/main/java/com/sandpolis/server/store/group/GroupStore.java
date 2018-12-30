@@ -46,8 +46,6 @@ import com.sandpolis.server.store.user.User;
  */
 @ManualInitializer
 public final class GroupStore extends Store {
-	private GroupStore() {
-	}
 
 	private static final Logger log = LoggerFactory.getLogger(GroupStore.class);
 
@@ -85,10 +83,10 @@ public final class GroupStore extends Store {
 	 */
 	public static Outcome add(GroupConfig config) {
 		ErrorCode code = ValidationUtil.Config.valid(config);
-		if (code != ErrorCode.NONE)
+		if (code != ErrorCode.OK)
 			return Outcome.newBuilder().setResult(false).setError(code).build();
 		code = ValidationUtil.Config.complete(config);
-		if (code != ErrorCode.NONE)
+		if (code != ErrorCode.OK)
 			return Outcome.newBuilder().setResult(false).setError(code).build();
 
 		return add(new Group(config));
@@ -123,7 +121,7 @@ public final class GroupStore extends Store {
 			return failure(outcome, "Group not found");
 
 		ErrorCode error = group.merge(delta);
-		if (error != ErrorCode.NONE)
+		if (error != ErrorCode.OK)
 			return failure(outcome.setError(error));
 
 		return success(outcome);
@@ -148,6 +146,7 @@ public final class GroupStore extends Store {
 	 * @return A stream of the user's groups
 	 */
 	public static Stream<Group> getMembership(User user) {
+		// TODO CLOSE STREAM
 		return provider.stream().filter(group -> user.equals(group.getOwner()) || group.getMembers().contains(user));
 	}
 
@@ -157,11 +156,15 @@ public final class GroupStore extends Store {
 	 * @return A stream of all groups in the store
 	 */
 	public static Stream<Group> getGroups() {
+		// TODO CLOSE STREAM
 		return provider.stream();
 	}
 
 	public static void transaction(Runnable operation) {
 		provider.transaction(operation);
+	}
+
+	private GroupStore() {
 	}
 
 }

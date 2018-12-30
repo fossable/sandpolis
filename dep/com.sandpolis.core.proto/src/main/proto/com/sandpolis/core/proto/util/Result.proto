@@ -49,7 +49,7 @@ message Outcome {
  * Common error types that can be included in an Outcome.
  */
 enum ErrorCode {
-	NONE = 0;
+	OK = 0;
 
 	INVALID_USERNAME = 1;
 	INVALID_EMAIL = 2;

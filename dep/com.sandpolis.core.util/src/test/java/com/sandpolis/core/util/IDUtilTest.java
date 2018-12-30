@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.IDUtil.CVID;
 
 public class IDUtilTest {
@@ -45,11 +46,12 @@ public class IDUtilTest {
 
 	@Test
 	public void testUuidGenerator() {
-		String uuid = IDUtil.UUID.getUUID();
+		String uuid = IDUtil.UUID.getUUID(Instance.SERVER, InstanceFlavor.VANILLA);
 
 		assertNotNull(uuid);
 		for (int i = 0; i < 100; i++) {
-			assertEquals(uuid, IDUtil.UUID.getUUID());
+			assertEquals(uuid, IDUtil.UUID.getUUID(Instance.SERVER, InstanceFlavor.VANILLA));
+			assertNotEquals(uuid, IDUtil.UUID.getUUID(Instance.CLIENT, InstanceFlavor.VANILLA));
 		}
 	}
 

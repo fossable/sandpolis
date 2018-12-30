@@ -130,7 +130,7 @@ public class Group implements ProtoType<ProtoGroup> {
 	 * @param config The configuration which should be prevalidated and complete
 	 */
 	public Group(GroupConfig config) {
-		if (merge(ProtoGroup.newBuilder().setConfig(config).build()) != ErrorCode.NONE)
+		if (merge(ProtoGroup.newBuilder().setConfig(config).build()) != ErrorCode.OK)
 			throw new IllegalArgumentException();
 
 		this.groupId = config.getId();
@@ -209,7 +209,7 @@ public class Group implements ProtoType<ProtoGroup> {
 	@Override
 	public ErrorCode merge(ProtoGroup delta) {
 		ErrorCode validity = ValidationUtil.Config.valid(delta.getConfig());
-		if (validity != ErrorCode.NONE)
+		if (validity != ErrorCode.OK)
 			return validity;
 
 		if (delta.hasConfig()) {
@@ -233,7 +233,7 @@ public class Group implements ProtoType<ProtoGroup> {
 				setMtime(stats.getMtime());
 		}
 
-		return ErrorCode.NONE;
+		return ErrorCode.OK;
 	}
 
 	@Override

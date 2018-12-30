@@ -19,6 +19,7 @@ package com.sandpolis.server;
 
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
 /**
  * This stub is the entry point for Server instances. Control is given to
@@ -32,7 +33,7 @@ public final class Main {
 	}
 
 	public static void main(String[] args) {
-		MainDispatch.dispatch(Server.class, args, Instance.SERVER);
+		MainDispatch.dispatch(Server.class, args, Instance.SERVER, InstanceFlavor.VANILLA);
 	}
 
 }

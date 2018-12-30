@@ -20,6 +20,7 @@ package com.sandpolis.core.util;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
 /**
  * This utility simplifies the handling of many types of IDs.
@@ -28,8 +29,6 @@ import com.sandpolis.core.proto.util.Platform.Instance;
  * @since 5.0.0
  */
 public final class IDUtil {
-	private IDUtil() {
-	}
 
 	/**
 	 * A CVID is a 32 bit ID that uniquely identifies an instance on a particular
@@ -62,8 +61,7 @@ public final class IDUtil {
 		/**
 		 * Extract the instance type from a CVID.
 		 * 
-		 * @param cvid
-		 *            A CVID
+		 * @param cvid A CVID
 		 * @return The cvid's instance
 		 */
 		public static Instance extractInstance(int cvid) {
@@ -74,8 +72,7 @@ public final class IDUtil {
 		/**
 		 * Generate a new CVID.
 		 * 
-		 * @param instance
-		 *            The new CVID's instance type
+		 * @param instance The new CVID's instance type
 		 * @return A new CVID
 		 */
 		public static int cvid(Instance instance) {
@@ -101,11 +98,14 @@ public final class IDUtil {
 		/**
 		 * Get the instance's Universal Unique ID.
 		 * 
+		 * @param instance The instance type
+		 * @param flavor   The instance subtype
 		 * @return The UUID
 		 */
-		public static String getUUID() {
-			// TODO come up with a better scheme
-			return CryptoUtil.hash(SHA256, System.getProperty("user.home"));
+		public static String getUUID(Instance instance, InstanceFlavor flavor) {
+			String id = System.getProperty("os.name") + instance.name() + flavor.name();
+			// TODO another source
+			return CryptoUtil.hash(SHA256, id.toLowerCase());
 		}
 
 	}
@@ -167,4 +167,6 @@ public final class IDUtil {
 		return RandUtil.nextLong();
 	}
 
+	private IDUtil() {
+	}
 }

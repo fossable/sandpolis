@@ -156,7 +156,7 @@ public final class Environment {
 				return null;
 			return jar;
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			return null;
 		}
 	}
 
@@ -187,8 +187,8 @@ public final class Environment {
 	 */
 	private static Path discover(EnvPath sub) {
 		try {
-			return BASE.resolve(sub.name()).toFile().getCanonicalFile().toPath();
-		} catch (IOException e) {
+			return BASE.resolve(sub.name().toLowerCase()).toFile().getCanonicalFile().toPath();
+		} catch (Exception e) {
 			return null;
 		}
 	}

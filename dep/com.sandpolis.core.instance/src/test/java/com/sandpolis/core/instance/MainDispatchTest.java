@@ -32,6 +32,7 @@ import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
 import com.sandpolis.core.instance.idle.IdleLoop;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 class MainDispatchTest {
@@ -71,7 +72,7 @@ class MainDispatchTest {
 
 	@Test
 	void testDispatchEmpty() {
-		MainDispatch.dispatch(Empty.class, new String[] {}, Instance.CHARCOAL);
+		MainDispatch.dispatch(Empty.class, new String[] {}, Instance.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 	/**
@@ -92,7 +93,7 @@ class MainDispatchTest {
 
 	@Test
 	void testDispatchNoFailures() {
-		MainDispatch.dispatch(NoFailures.class, new String[] { "37434" }, Instance.CHARCOAL);
+		MainDispatch.dispatch(NoFailures.class, new String[] { "37434" }, Instance.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 	/**
@@ -113,7 +114,7 @@ class MainDispatchTest {
 
 	@Test
 	void testDispatchFatal() {
-		MainDispatch.dispatch(Nonfatal.class, new String[] { "37434" }, Instance.CHARCOAL);
+		MainDispatch.dispatch(Nonfatal.class, new String[] { "37434" }, Instance.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 	/**
@@ -133,7 +134,7 @@ class MainDispatchTest {
 
 	@Test
 	void testIdle() {
-		MainDispatch.dispatch(Idle.class, new String[] {}, Instance.CHARCOAL);
+		MainDispatch.dispatch(Idle.class, new String[] {}, Instance.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 	/**
@@ -152,7 +153,7 @@ class MainDispatchTest {
 
 	@Test
 	void testShutdown() {
-		MainDispatch.dispatch(Shutdown.class, new String[] {}, Instance.CHARCOAL);
+		MainDispatch.dispatch(Shutdown.class, new String[] {}, Instance.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 }

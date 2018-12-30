@@ -40,7 +40,7 @@ public class JarPackager extends Packager {
 	@Override
 	public void process(GenConfig config, Object payload) throws Exception {
 		switch (config.getPayload()) {
-		case MEGA:
+		case OUTPUT_MEGA:
 			// TODO runtime image
 
 			// Write to generator output directory

@@ -163,10 +163,10 @@ public final class ListenerStore extends Store {
 	 */
 	public static Outcome add(ListenerConfig config) {
 		ErrorCode code = ValidationUtil.Config.valid(config);
-		if (code != ErrorCode.NONE)
+		if (code != ErrorCode.OK)
 			return Outcome.newBuilder().setResult(false).setError(code).build();
 		code = ValidationUtil.Config.complete(config);
-		if (code != ErrorCode.NONE)
+		if (code != ErrorCode.OK)
 			return Outcome.newBuilder().setResult(false).setError(code).build();
 
 		return add(new Listener(config));
@@ -221,7 +221,7 @@ public final class ListenerStore extends Store {
 			return failure(outcome, "Listener is active");
 
 		ErrorCode error = listener.merge(delta);
-		if (error != ErrorCode.NONE)
+		if (error != ErrorCode.OK)
 			return failure(outcome.setError(error));
 
 		return success(outcome);

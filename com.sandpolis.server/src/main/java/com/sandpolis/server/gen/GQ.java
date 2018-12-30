@@ -100,7 +100,7 @@ public final class GQ {
 				while ((config = gq.poll()) != null) {
 					Generator generator;
 					switch (config.getPayload()) {
-					case MEGA:
+					case OUTPUT_MEGA:
 						generator = new MegaGen(config);
 						break;
 					default:

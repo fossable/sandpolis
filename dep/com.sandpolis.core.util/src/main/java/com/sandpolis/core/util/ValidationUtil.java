@@ -25,7 +25,7 @@ import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_ID;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_KEY;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_PORT;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_USERNAME;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.NONE;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.OK;
 
 import java.io.File;
 import java.security.cert.CertificateException;
@@ -222,7 +222,7 @@ public final class ValidationUtil {
 		 * Validate a {@link ListenerConfig}.
 		 * 
 		 * @param config The candidate configuration
-		 * @return An error code or {@link ErrorCode#NONE}
+		 * @return An error code or {@link ErrorCode#OK}
 		 */
 		public static ErrorCode valid(ListenerConfig config) {
 			if (config == null)
@@ -253,14 +253,14 @@ public final class ValidationUtil {
 				}
 			}
 
-			return NONE;
+			return OK;
 		}
 
 		/**
 		 * Check a {@link ListenerConfig} for completeness.
 		 * 
 		 * @param config The candidate configuration
-		 * @return An error code or {@link ErrorCode#NONE}
+		 * @return An error code or {@link ErrorCode#OK}
 		 */
 		public static ErrorCode complete(ListenerConfig config) {
 			if (config == null)
@@ -273,14 +273,14 @@ public final class ValidationUtil {
 			if (!config.hasOwner())
 				return INVALID_USERNAME;
 
-			return NONE;
+			return OK;
 		}
 
 		/**
 		 * Validate a {@link UserConfig}.
 		 * 
 		 * @param config The candidate configuration
-		 * @return An error code or {@link ErrorCode#NONE}
+		 * @return An error code or {@link ErrorCode#OK}
 		 */
 		public static ErrorCode valid(UserConfig config) {
 			if (config == null)
@@ -291,14 +291,14 @@ public final class ValidationUtil {
 			if (config.hasEmail() && !EmailValidator.getInstance().isValid(config.getEmail()))
 				return INVALID_EMAIL;
 
-			return NONE;
+			return OK;
 		}
 
 		/**
 		 * Check a {@link UserConfig} for completeness.
 		 * 
 		 * @param config The candidate configuration
-		 * @return An error code or {@link ErrorCode#NONE}
+		 * @return An error code or {@link ErrorCode#OK}
 		 */
 		public static ErrorCode complete(UserConfig config) {
 			if (config == null)
@@ -307,14 +307,14 @@ public final class ValidationUtil {
 			if (!config.hasUsername())
 				return INVALID_USERNAME;
 
-			return NONE;
+			return OK;
 		}
 
 		/**
 		 * Validate a {@link GroupConfig}.
 		 * 
 		 * @param config The candidate configuration
-		 * @return An error code or {@link ErrorCode#NONE}
+		 * @return An error code or {@link ErrorCode#OK}
 		 */
 		public static ErrorCode valid(GroupConfig config) {
 			if (config == null)
@@ -328,14 +328,14 @@ public final class ValidationUtil {
 				if (!username(member))
 					return INVALID_USERNAME;
 
-			return NONE;
+			return OK;
 		}
 
 		/**
 		 * Check a {@link GroupConfig} for completeness.
 		 * 
 		 * @param config The candidate configuration
-		 * @return An error code or {@link ErrorCode#NONE}
+		 * @return An error code or {@link ErrorCode#OK}
 		 */
 		public static ErrorCode complete(GroupConfig config) {
 			if (config == null)
@@ -346,7 +346,7 @@ public final class ValidationUtil {
 			if (!config.hasOwner())
 				return INVALID_USERNAME;
 
-			return NONE;
+			return OK;
 		}
 	}
 }

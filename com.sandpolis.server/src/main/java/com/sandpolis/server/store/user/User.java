@@ -101,7 +101,7 @@ public class User implements ProtoType<ProtoUser> {
 	 * @param config The configuration which should be prevalidated and complete
 	 */
 	public User(UserConfig config) {
-		if (merge(ProtoUser.newBuilder().setConfig(config).build()) != ErrorCode.NONE)
+		if (merge(ProtoUser.newBuilder().setConfig(config).build()) != ErrorCode.OK)
 			throw new IllegalArgumentException();
 
 		this.id = config.getId();
@@ -168,7 +168,7 @@ public class User implements ProtoType<ProtoUser> {
 	@Override
 	public ErrorCode merge(ProtoUser delta) {
 		ErrorCode validity = ValidationUtil.Config.valid(delta.getConfig());
-		if (validity != ErrorCode.NONE)
+		if (validity != ErrorCode.OK)
 			return validity;
 
 		if (delta.hasConfig()) {
@@ -189,7 +189,7 @@ public class User implements ProtoType<ProtoUser> {
 				setCreation(stats.getCtime());
 		}
 
-		return ErrorCode.NONE;
+		return ErrorCode.OK;
 	}
 
 	@Override

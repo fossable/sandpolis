@@ -24,11 +24,28 @@ option java_package = "com.sandpolis.core.proto.util";
  * An enumeration of all Sandpolis instance types.
  */
 enum Instance {
-	INSTALLER = 0;
+	CHARCOAL = 0;
 	SERVER = 1;
 	CLIENT = 2;
 	VIEWER = 3;
-	CHARCOAL = 4;
+}
+
+/**
+ * An enumeration of all instance subtypes.
+ */
+enum InstanceFlavor {
+	NONE = 0;
+
+	// Server types
+	VANILLA = 10;
+
+	// Client types
+	MEGA = 20;
+	MICRO = 21;
+
+	// Viewer types
+	CLI = 30;
+	JFX = 31;
 }
 
 /**

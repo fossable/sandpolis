@@ -76,15 +76,15 @@ message FeatureSet {
  * The payload type.
  */
 enum OutputPayload {
-
+	// TODO remove prefix
 	// Output a configuration for another payload type
-	CONFIG = 0;
+	OUTPUT_CONFIG = 0;
 
 	// Output a full-featured heavyweight client written in Java
-	MEGA = 1;
+	OUTPUT_MEGA = 1;
 
 	// Output a lightweight native client written in C++
-	MICRO = 2;
+	OUTPUT_MICRO = 2;
 }
 
 /**

@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.proto.soi.Build.SO_Build;
 import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.IDUtil;
 
 /**
  * Contains common fields useful to every instance type.
@@ -33,8 +35,6 @@ import com.sandpolis.core.proto.util.Platform.Instance;
  * @since 2.0.0
  */
 public final class Core {
-	private Core() {
-	}
 
 	public static final Logger log = LoggerFactory.getLogger(Core.class);
 
@@ -42,6 +42,11 @@ public final class Core {
 	 * The instance type.
 	 */
 	public static final Instance INSTANCE;
+
+	/**
+	 * The instance subtype.
+	 */
+	public static final InstanceFlavor FLAVOR;
 
 	/**
 	 * Build information included in the instance jar.
@@ -56,6 +61,7 @@ public final class Core {
 	static {
 		try {
 			INSTANCE = MainDispatch.getInstance();
+			FLAVOR = MainDispatch.getInstanceFlavor();
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to determine instance!", e);
 		}
@@ -81,7 +87,7 @@ public final class Core {
 	/**
 	 * The instance's UUID.
 	 */
-	private static String uuid;
+	private static final String uuid = IDUtil.UUID.getUUID(INSTANCE, FLAVOR);
 
 	/**
 	 * Get the CVID.
@@ -113,18 +119,6 @@ public final class Core {
 		return uuid;
 	}
 
-	/**
-	 * Set the instance's UUID.
-	 * 
-	 * @param uuid A new UUID
-	 */
-	public static void setUuid(String uuid) {
-		if (uuid == null)
-			throw new IllegalArgumentException();
-		if (uuid.equals(Core.uuid))
-			log.warn("Setting UUID to same value");
-
-		Core.uuid = uuid;
+	private Core() {
 	}
-
 }

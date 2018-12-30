@@ -44,7 +44,8 @@ public final class Post {
 
 		try {
 			// Check UserStore
-			test = UserStore.add(UserConfig.newBuilder().setUsername("POSTUSER").setPassword("POSTPASS").build());
+			test = UserStore
+					.add(UserConfig.newBuilder().setId(10).setUsername("POSTUSER").setPassword("POSTPASS").build());
 			if (!test.getResult())
 				return failure(outcome.mergeFrom(test));
 

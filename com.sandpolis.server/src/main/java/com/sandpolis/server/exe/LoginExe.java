@@ -17,21 +17,25 @@
  *****************************************************************************/
 package com.sandpolis.server.exe;
 
-import static com.sandpolis.core.util.ProtoUtil.begin;
+import static com.sandpolis.core.util.ProtoUtil.*;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.rs;
 import static com.sandpolis.core.util.ProtoUtil.success;
+
+import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.attribute.key.AK_VIEWER;
+import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.ConnectionState;
 import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.ProfileStore;
+import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginSync;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ValidationUtil;
@@ -93,16 +97,23 @@ public class LoginExe extends Exelet {
 
 		// Mark connection as authenticated
 		connector.authenticate();
-		connector.setState(ConnectionState.AUTHENTICATED);
+		connector.changeState(ConnectionState.AUTHENTICATED);
 
 		// Update login metadata
-		Profile profile = ProfileStore.getViewer(user);
-		profile.set(AK_VIEWER.LOGIN_IP, connector.getRemoteIP());
-		profile.set(AK_VIEWER.LOGIN_TIME, System.currentTimeMillis());
+		// Profile profile = ProfileStore.getViewer(user);
+		// profile.set(AK_VIEWER.LOGIN_IP, connector.getRemoteIP());
+		// profile.set(AK_VIEWER.LOGIN_TIME, System.currentTimeMillis());
 
 		// Synchronize plugins
-		// TODO
-		// connector.send(rq().setRqPluginSync(RQ_PluginSync.newBuilder()));
+		// TODO improve
+		try {
+			Message rs = connector.request(rq()
+					.setRqPluginSync(RQ_PluginSync.newBuilder().addAllDescriptor(PluginStore.getPluginDescriptors())))
+					.get();
+		} catch (InterruptedException | ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		connector.send(rs(id).setRsOutcome(success(outcome)));
 	}
