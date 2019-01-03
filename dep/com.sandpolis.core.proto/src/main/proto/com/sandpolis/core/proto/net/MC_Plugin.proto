@@ -24,31 +24,45 @@ option java_package = "com.sandpolis.core.proto.net";
  * Plugin metadata.
  */
 message PluginDescriptor {
-	string name = 1;
-	string version = 2;
-	string trust_authority = 3;
-	bytes icon = 4;
+	string id = 1;
+	string name = 2;
+	string version = 3;
+	string description = 4;
+	string trust_authority = 5;
+	bytes icon = 6;
+	bool enabled = 7;
+	int32 component_size_mega = 8;
+	int32 component_size_micro = 9;
+	int32 component_size_jfx = 10;
+	int32 component_size_cli = 11;
+}
+
+/**
+ * A request for a plugin list.
+ */
+message RQ_PluginList {
+}
+
+/**
+ * A response to a plugin list request.
+ */
+message RS_PluginList {
+	repeated PluginDescriptor plugin = 1;
 }
 
 /**
  * A request to initiate plugin synchronization.
  */
 message RQ_PluginSync {
-	repeated PluginDescriptor descriptor = 1;
+	repeated PluginDescriptor plugin = 1;
 }
 
 /**
- * A request for a plugin transfer.
+ * The response to a plugin synchronization request.
  */
-message RQ_PluginTransfer {
-	string name = 1;
-}
-
-/**
- * The response to a plugin transfer request.
- */
-message RS_PluginTransfer {
-	bytes plugin_binary = 1;
+message RS_PluginSync {
+	// The eligible plugin binaries
+	repeated bytes plugin_binary = 1;
 }
 
 /**
@@ -57,7 +71,13 @@ message RS_PluginTransfer {
 message RQ_PluginInstall {
 
 	oneof source {
+		// The plugin binary
 		bytes plugin_binary = 1;
+		
+		// The plugin's HTTP location
 		string plugin_url = 2;
+		
+		// The plugin's maven central coordinates
+		string plugin_coordinates = 3;
 	}
 }

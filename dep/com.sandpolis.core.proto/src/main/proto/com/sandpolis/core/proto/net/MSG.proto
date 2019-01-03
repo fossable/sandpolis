@@ -144,9 +144,10 @@ message Message {
 		
 		// MC_Plugin
 		RQ_PluginSync			rq_plugin_sync				= 900;
-		RQ_PluginTransfer		rq_plugin_transfer			= 901;
-		RS_PluginTransfer		rs_plugin_transfer			= 902;
-		RQ_PluginInstall		rq_plugin_install			= 903;
+		RS_PluginSync			rs_plugin_sync				= 901;
+		RQ_PluginInstall		rq_plugin_install			= 902;
+		RQ_PluginList			rq_plugin_list				= 903;
+		RS_PluginList			rs_plugin_list				= 904;
 
 		// MC_Server
 		RQ_ServerBanner			rq_server_banner 			= 1400;
