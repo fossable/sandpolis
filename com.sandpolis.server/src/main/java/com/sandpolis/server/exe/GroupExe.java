@@ -42,15 +42,17 @@ public class GroupExe extends Exelet {
 	@Auth
 	@Permission(permission = Perm.server.groups.create)
 	public void rq_add_group(Message m) {
-		reply(m, GroupStore.add(m.getRqAddGroup().getConfig()));
+		var rq = m.getRqAddGroup();
+		reply(m, GroupStore.add(rq.getConfig()));
 	}
 
 	@Auth
 	public void rq_remove_group(Message m) {
-		if (!accessCheck(m, this::ownership, m.getRqRemoveGroup().getId()))
+		var rq = m.getRqRemoveGroup();
+		if (!accessCheck(m, this::ownership, rq.getId()))
 			return;
 
-		reply(m, GroupStore.remove(m.getRqRemoveGroup().getId()));
+		reply(m, GroupStore.remove(rq.getId()));
 	}
 
 	@Auth
@@ -67,10 +69,11 @@ public class GroupExe extends Exelet {
 
 	@Auth
 	public void rq_group_delta(Message m) {
-		if (!accessCheck(m, this::ownership, m.getRqGroupDelta().getDelta().getConfig().getId()))
+		var rq = m.getRqGroupDelta();
+		if (!accessCheck(m, this::ownership, rq.getDelta().getConfig().getId()))
 			return;
 
-		reply(m, GroupStore.delta(m.getRqGroupDelta().getId(), m.getRqGroupDelta().getDelta()));
+		reply(m, GroupStore.delta(rq.getId(), rq.getDelta()));
 	}
 
 	@AccessPredicate

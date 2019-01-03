@@ -39,31 +39,35 @@ public class ListenerExe extends Exelet {
 	@Auth
 	@Permission(permission = Perm.server.listeners.create)
 	public void rq_add_listener(Message m) {
-		reply(m, ListenerStore.add(m.getRqAddListener().getConfig()));
+		var rq = m.getRqAddListener();
+		reply(m, ListenerStore.add(rq.getConfig()));
 	}
 
 	@Auth
 	public void rq_remove_listener(Message m) {
-		if (!accessCheck(m, this::ownership, m.getRqRemoveListener().getId()))
+		var rq = m.getRqRemoveListener();
+		if (!accessCheck(m, this::ownership, rq.getId()))
 			return;
 
-		reply(m, ListenerStore.remove(m.getRqRemoveListener().getId()));
+		reply(m, ListenerStore.remove(rq.getId()));
 	}
 
 	@Auth
 	public void rq_listener_delta(Message m) {
-		if (!accessCheck(m, this::ownership, m.getRqListenerDelta().getId()))
+		var rq = m.getRqListenerDelta();
+		if (!accessCheck(m, this::ownership, rq.getId()))
 			return;
 
-		reply(m, ListenerStore.delta(m.getRqListenerDelta().getId(), m.getRqListenerDelta().getDelta()));
+		reply(m, ListenerStore.delta(rq.getId(), rq.getDelta()));
 	}
 
 	@Auth
 	public void rq_change_listener(Message m) {
-		if (!accessCheck(m, this::ownership, m.getRqChangeListener().getId()))
+		var rq = m.getRqChangeListener();
+		if (!accessCheck(m, this::ownership, rq.getId()))
 			return;
 
-		reply(m, ListenerStore.change(m.getRqChangeListener().getId(), m.getRqChangeListener().getState()));
+		reply(m, ListenerStore.change(rq.getId(), rq.getState()));
 	}
 
 	/**

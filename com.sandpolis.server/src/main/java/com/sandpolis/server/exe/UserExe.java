@@ -39,23 +39,26 @@ public class UserExe extends Exelet {
 	@Auth
 	@Permission(permission = Perm.server.users.create)
 	public void rq_add_user(Message m) {
-		reply(m, UserStore.add(m.getRqAddUser().getConfig()));
+		var rq = m.getRqAddUser();
+		reply(m, UserStore.add(rq.getConfig()));
 	}
-	
+
 	@Auth
 	public void rq_remove_user(Message m) {
-		if (!accessCheck(m, this::ownership, m.getRqRemoveUser().getId()))
+		var rq = m.getRqRemoveUser();
+		if (!accessCheck(m, this::ownership, rq.getId()))
 			return;
 
-		reply(m, UserStore.remove(m.getRqRemoveUser().getId()));
+		reply(m, UserStore.remove(rq.getId()));
 	}
 
 	@Auth
 	public void rq_user_delta(Message m) {
-		if (!accessCheck(m, this::ownership, m.getRqUserDelta().getDelta().getConfig().getId()))
+		var rq = m.getRqUserDelta();
+		if (!accessCheck(m, this::ownership, rq.getDelta().getConfig().getId()))
 			return;
 
-		reply(m, UserStore.delta(m.getRqUserDelta().getId(), m.getRqUserDelta().getDelta()));
+		reply(m, UserStore.delta(rq.getId(), rq.getDelta()));
 	}
 
 	/**
