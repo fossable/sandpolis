@@ -4,7 +4,4 @@ script:
   - ./gradlew build --stacktrace --scan -s
 
 jdk:
-  - oraclejdk9
-  - oraclejdk10
-  - openjdk9
-  - openjdk10
+  - openjdk11
