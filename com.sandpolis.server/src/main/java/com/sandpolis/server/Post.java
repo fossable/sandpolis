@@ -56,12 +56,12 @@ public final class Post {
 				return failure(outcome.mergeFrom(test));
 
 			// Check GroupStore
-			test = GroupStore.add(GroupConfig.newBuilder().setId(2).setName("POSTGROUP").setOwner("POSTUSER")
+			test = GroupStore.add(GroupConfig.newBuilder().setId("2").setName("POSTGROUP").setOwner("POSTUSER")
 					.addPasswordMechanism(PasswordContainer.newBuilder().setPassword("POSTPASS")).build());
 			if (!test.getResult())
 				return failure(outcome.mergeFrom(test));
 
-			Group testGroup = GroupStore.get(2L);
+			Group testGroup = GroupStore.get("2");
 			testGroup.addKeyMechanism(KeyMechanism.generate(testGroup));
 			if (testGroup.getKeys().size() != 1)
 				return failure(outcome, "Unexpected size: " + testGroup.getKeys().size());

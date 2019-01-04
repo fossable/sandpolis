@@ -71,7 +71,7 @@ public final class GroupStore extends Store {
 	 * @param groupId The ID of a group
 	 * @return The requested {@code Group} or {@code null}
 	 */
-	public static Group get(long groupId) {
+	public static Group get(String groupId) {
 		return provider.get("groupId", groupId);
 	}
 
@@ -114,7 +114,7 @@ public final class GroupStore extends Store {
 	 * @param delta The changes
 	 * @return The outcome of the action
 	 */
-	public static Outcome delta(long id, ProtoGroup delta) {
+	public static Outcome delta(String id, ProtoGroup delta) {
 		Outcome.Builder outcome = begin();
 		Group group = get(id);
 		if (group == null)
@@ -133,7 +133,7 @@ public final class GroupStore extends Store {
 	 * @param id The group's ID
 	 * @return The outcome of the action
 	 */
-	public static Outcome remove(long id) {
+	public static Outcome remove(String id) {
 		Outcome.Builder outcome = begin();
 		provider.remove(get(id));
 		return success(outcome);

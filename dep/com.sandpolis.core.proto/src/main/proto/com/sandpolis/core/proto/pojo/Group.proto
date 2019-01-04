@@ -28,7 +28,7 @@ import "com/sandpolis/core/proto/util/Auth.proto";
 message GroupConfig {
 	
 	// The primary ID
-	optional int64 id = 1;
+	optional string id = 1;
 	
 	// The user-friendly name
 	optional string name = 2;

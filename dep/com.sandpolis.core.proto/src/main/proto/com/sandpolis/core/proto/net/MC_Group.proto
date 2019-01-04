@@ -37,7 +37,7 @@ message RQ_AddGroup {
 message RQ_RemoveGroup {
 
 	// The ID of the group to remove
-	int64 id = 1;
+	string id = 1;
 }
 
 /**
@@ -58,7 +58,7 @@ message RS_ListGroups {
 message RQ_GroupDelta {
 
 	// The ID of the group to modify
-	int64 id = 1;
+	string id = 1;
 
 	pojo.ProtoGroup delta = 2;
 }

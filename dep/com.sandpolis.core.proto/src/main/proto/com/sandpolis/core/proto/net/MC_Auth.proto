@@ -41,7 +41,7 @@ message RQ_PasswordAuth {
 message RQ_KeyAuth {
 
 	// The ID of the group to use
-	int64 group_id = 1;
+	string group_id = 1;
 
 	// The ID of the KeyMechanism to use
 	int64 mech_id = 2;

@@ -74,7 +74,7 @@ public class Group implements ProtoType<ProtoGroup> {
 	 * The unique ID.
 	 */
 	@Column(nullable = false, unique = true)
-	private long groupId;
+	private String id;
 
 	/**
 	 * The group's name.
@@ -133,11 +133,11 @@ public class Group implements ProtoType<ProtoGroup> {
 		if (merge(ProtoGroup.newBuilder().setConfig(config).build()) != ErrorCode.OK)
 			throw new IllegalArgumentException();
 
-		this.groupId = config.getId();
+		this.id = config.getId();
 	}
 
-	public long getGroupId() {
-		return groupId;
+	public String getGroupId() {
+		return id;
 	}
 
 	/**
@@ -238,8 +238,7 @@ public class Group implements ProtoType<ProtoGroup> {
 
 	@Override
 	public ProtoGroup extract() {
-		GroupConfig.Builder config = GroupConfig.newBuilder().setId(groupId).setName(name)
-				.setOwner(owner.getUsername());
+		GroupConfig.Builder config = GroupConfig.newBuilder().setId(id).setName(name).setOwner(owner.getUsername());
 
 		for (User member : members) {
 			config.addMember(member.getUsername());

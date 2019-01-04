@@ -111,7 +111,7 @@ class GroupExeTest extends ExeletTest {
 	@Test
 	void rqRemoveGroupMissing(Message m) {
 		// Group does not exist
-		exe.rq_remove_group(rq(RQ_RemoveGroup.newBuilder().setId(9292)).build());
+		exe.rq_remove_group(rq(RQ_RemoveGroup.newBuilder().setId("9292")).build());
 		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
 	}
 
