@@ -35,7 +35,7 @@ class NetworkStoreTest {
 
 	@BeforeEach
 	void setup() {
-		NetworkStore.load(123);
+		NetworkStore.updateCvid(123);
 		NetworkStore.setPreferredServer(100);
 	}
 

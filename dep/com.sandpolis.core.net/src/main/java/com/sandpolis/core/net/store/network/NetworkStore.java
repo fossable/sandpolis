@@ -17,6 +17,11 @@
  *****************************************************************************/
 package com.sandpolis.core.net.store.network;
 
+import static com.sandpolis.core.net.store.connection.ConnectionStore.Events.SOCK_ESTABLISHED;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.Events.SOCK_LOST;
+import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_ESTABLISHED;
+import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_LOST;
+
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +32,8 @@ import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
 import com.google.common.graph.NetworkBuilder;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.Store.ManualInitializer;
+import com.sandpolis.core.instance.Signaler;
+import com.sandpolis.core.instance.Store.AutoInitializer;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.store.connection.ConnectionStore;
@@ -37,6 +43,8 @@ import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkRemoved;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.NodeAdded;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.NodeRemoved;
 import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.util.IDUtil;
 
 /**
  * A static store for managing network connections, which may or may not be
@@ -47,12 +55,23 @@ import com.sandpolis.core.proto.net.MSG.Message;
  * @see ConnectionStore
  * @since 5.0.0
  */
-@ManualInitializer
+@AutoInitializer
 public final class NetworkStore {
-	private NetworkStore() {
-	}
 
 	private static final Logger log = LoggerFactory.getLogger(NetworkStore.class);
+
+	public enum Events {
+
+		/**
+		 * Indicates that the last connection to a server has been lost.
+		 */
+		SRV_LOST,
+
+		/**
+		 * Indicates that the first connection to a server has been established.
+		 */
+		SRV_ESTABLISHED;
+	}
 
 	/**
 	 * The undirected graph which describes the visible connections between nodes on
@@ -65,11 +84,37 @@ public final class NetworkStore {
 	 */
 	private static int preferredServer;
 
-	public static void init() {
-		network = NetworkBuilder.undirected().allowsSelfLoops(false).allowsParallelEdges(true).build();
+	static {
+		init();
+
+		Signaler.register(SOCK_LOST, (Sock sock) -> {
+			network.removeEdge(network.edgeConnectingOrNull(Core.cvid(), sock.getRemoteCvid()));
+
+			// See if that was the last connection to a server
+			if (sock.getRemoteInstance() == Instance.SERVER) {
+				// TODO
+				Signaler.fire(SRV_LOST, sock.getRemoteCvid());
+			}
+		});
+
+		Signaler.register(SOCK_ESTABLISHED, (Sock sock) -> {
+			network.addNode(sock.getRemoteCvid());
+			// TODO add edge
+
+			// See if that was the first connection to a server
+			if (sock.getRemoteInstance() == Instance.SERVER) {
+				// TODO
+				Signaler.fire(SRV_ESTABLISHED, sock.getRemoteCvid());
+			}
+		});
 	}
 
-	public static void load(int cvid) {
+	public static void init() {
+		network = NetworkBuilder.undirected().allowsSelfLoops(false).allowsParallelEdges(true).build();
+		preferredServer = 0;
+	}
+
+	public static void updateCvid(int cvid) {
 		init();
 		network.addNode(cvid);
 	}
@@ -84,12 +129,21 @@ public final class NetworkStore {
 	}
 
 	/**
-	 * Set the preferred server CVID.
+	 * Explicitly set the preferred server CVID.
 	 * 
 	 * @param cvid The new preferred server
 	 */
 	public static void setPreferredServer(int cvid) {
 		preferredServer = cvid;
+	}
+
+	public static int getPreferredServer() {
+		if (preferredServer == 0)
+			// Choose a server at random
+			preferredServer = network.nodes().stream()
+					.filter(cvid -> IDUtil.CVID.extractInstance(cvid) == Instance.SERVER).findAny().get();
+
+		return preferredServer;
 	}
 
 	/**
@@ -150,8 +204,8 @@ public final class NetworkStore {
 	 * @return The next hop
 	 */
 	public static int deliver(Message message) {
-		ConnectionStore.get(preferredServer).send(message);
-		return preferredServer;
+		ConnectionStore.get(getPreferredServer()).send(message);
+		return getPreferredServer();
 	}
 
 	/**
@@ -191,7 +245,11 @@ public final class NetworkStore {
 	}
 
 	/**
-	 * Transmit a message into the network, taking the most direct path.
+	 * Transmit a message into the network, taking the most direct path.<br>
+	 * <br>
+	 * Implementation note: this method cannot use {@link #route(Message)} because
+	 * it must place the receive request before actually sending the message. (To
+	 * avoid missing a message that is received extremely quickly).
 	 * 
 	 * @param message The message
 	 * @param timeout The message timeout
@@ -199,8 +257,18 @@ public final class NetworkStore {
 	 * @return The next hop
 	 */
 	public static MessageFuture route(Message.Builder message, int timeout, TimeUnit unit) {
-		int hop = route(message);
-		return receive(hop, message.getId(), timeout, unit);
+		int hop = findHop(message);
+		MessageFuture mf = receive(hop, message.getId(), timeout, unit);
+		ConnectionStore.get(hop).send(message);
+		return mf;
+	}
+
+	// TODO temporary
+	private static int findHop(Message.Builder message) {
+		if (network.adjacentNodes(Core.cvid()).contains(message.getTo()))
+			return message.getTo();
+
+		return getPreferredServer();
 	}
 
 	/**
@@ -233,5 +301,8 @@ public final class NetworkStore {
 			return null;
 
 		return sock.read(id, timeout, unit);
+	}
+
+	private NetworkStore() {
 	}
 }

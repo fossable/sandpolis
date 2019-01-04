@@ -17,25 +17,30 @@
  *****************************************************************************/
 package com.sandpolis.core.net.store.connection;
 
+import static com.sandpolis.core.net.store.connection.ConnectionStore.Events.SOCK_ESTABLISHED;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.Events.SOCK_LOST;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.Store.AutoInitializer;
+import com.sandpolis.core.instance.store.thread.ThreadStore;
+import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.Sock.Protocol;
 import com.sandpolis.core.net.future.SockFuture;
+import com.sandpolis.core.net.init.ClientPipelineInit;
 import com.sandpolis.core.net.loop.ConnectionLoop;
 import com.sandpolis.core.net.store.network.NetworkStore;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkAdded;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.NodeAdded;
-import com.sandpolis.core.proto.pojo.ConnectionLoop.LoopConfig;
+import com.sandpolis.core.proto.util.Generator.LoopConfig;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.util.concurrent.DefaultPromise;
@@ -50,28 +55,33 @@ import io.netty.util.concurrent.DefaultPromise;
  */
 @AutoInitializer
 public final class ConnectionStore extends Store {
-	private ConnectionStore() {
-	}
 
 	public static final Logger log = LoggerFactory.getLogger(ConnectionStore.class);
 
 	/**
 	 * Stores direct connections between this instance and another.
 	 */
-	private static Map<Integer, Sock> connections;
+	private static final Map<Integer, Sock> connections = new HashMap<>();
 
 	/**
 	 * A list of connection threads that are currently attempting connections.
 	 */
-	private static List<ConnectionLoop> threads;
+	private static final List<ConnectionLoop> threads = new LinkedList<>();
 
-	static {
-		init();
-	}
+	/**
+	 * Connection events.
+	 */
+	public enum Events {
 
-	public static void init() {
-		connections = new HashMap<>();
-		threads = new LinkedList<>();
+		/**
+		 * Indicates that a connection has been lost.
+		 */
+		SOCK_LOST,
+
+		/**
+		 * Indicates that a new connection has been established.
+		 */
+		SOCK_ESTABLISHED;
 	}
 
 	/**
@@ -80,16 +90,13 @@ public final class ConnectionStore extends Store {
 	 * @param con The connection
 	 */
 	public static void add(Sock con) {
-		if (con == null)
-			throw new IllegalArgumentException();
+		Objects.requireNonNull(con);
 		if (connections.containsKey(con.getRemoteCvid()))
 			throw new IllegalArgumentException();
 		log.debug("New sock registered with: {}", con.getRemoteCvid());
 
 		connections.put(con.getRemoteCvid(), con);
-		NetworkStore.updateNetwork(EV_NetworkDelta.newBuilder()
-				.addNodeAdded(NodeAdded.newBuilder().setCvid(con.getRemoteCvid()))
-				.addLinkAdded(LinkAdded.newBuilder().setCvid1(Core.cvid()).setCvid2(con.getRemoteCvid())).build());
+		Signaler.fire(SOCK_ESTABLISHED, con);
 	}
 
 	/**
@@ -104,8 +111,7 @@ public final class ConnectionStore extends Store {
 			removal.close();
 			log.debug("Sock with: {} closed", cvid);
 
-			NetworkStore.updateNetwork(
-					EV_NetworkDelta.newBuilder().addNodeAdded(NodeAdded.newBuilder().setCvid(cvid)).build());
+			Signaler.fire(SOCK_LOST, removal);
 		}
 		return removal;
 	}
@@ -116,8 +122,7 @@ public final class ConnectionStore extends Store {
 	 * @param con The connection to remove
 	 */
 	public static void close(Sock con) {
-		if (con == null)
-			throw new IllegalArgumentException();
+		Objects.requireNonNull(con);
 
 		close(con.getRemoteCvid());
 	}
@@ -163,8 +168,7 @@ public final class ConnectionStore extends Store {
 	 *         established
 	 */
 	public static SockFuture connect(Bootstrap bootstrap) {
-		if (bootstrap == null)
-			throw new IllegalArgumentException();
+		Objects.requireNonNull(bootstrap);
 
 		SockFuture sf = new SockFuture(bootstrap.connect());
 		sf.addListener((DefaultPromise<Sock> future) -> {
@@ -178,19 +182,24 @@ public final class ConnectionStore extends Store {
 	 * Create a new {@link ConnectionLoop} with the given configuration. The loop is
 	 * automatically started.
 	 * 
-	 * @param config    The connection loop configuration
-	 * @param bootstrap The connection bootstrap
+	 * @param config The connection loop configuration
 	 * @return The new connection loop
 	 */
-	public static ConnectionLoop connect(LoopConfig config, Bootstrap bootstrap) {
-		if (config == null)
-			throw new IllegalArgumentException();
-		if (bootstrap == null)
-			throw new IllegalArgumentException();
+	public static ConnectionLoop connect(LoopConfig config, Class<? extends Exelet>[] exelets) {
+		Objects.requireNonNull(config);
+
+		// Build a bootstrap
+		Bootstrap bootstrap = new Bootstrap().channel(Protocol.TCP.getChannel())
+				.group(ThreadStore.get("net.connection.outgoing")).handler(new ClientPipelineInit(exelets));
 
 		ConnectionLoop loop = new ConnectionLoop(config, bootstrap);
+		loop.start();
+
 		threads.add(loop);
 		return loop;
+	}
+
+	private ConnectionStore() {
 	}
 
 }
