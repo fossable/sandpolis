@@ -19,13 +19,13 @@ package com.sandpolis.server.gen.generator;
 
 import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,17 +58,12 @@ public class MegaGen extends FileGenerator {
 
 	@Override
 	protected Object run() throws Exception {
-		File client = Environment.get(JLIB).resolve("com.sandpolis.client.mega.jar").toFile();
+
+		// Make convenient references for common objects
 		FeatureSet features = config.getMega().getFeatures();
 
-		// A list of entries to be injected
-		List<ZipEntrySource> sources = new ArrayList<>();
-
-		// Add client config
-		sources.add(new ByteSource("client.bin", config.getMega().toByteArray()));
-
-		// Filter libraries according to features and target platforms
-		sources.addAll(ArtifactStore.getDependencies(Instance.CLIENT)
+		// Compute libraries for injection according to the configuration
+		List<ZipEntrySource> entries = ArtifactStore.getDependencies(Instance.CLIENT)
 				// Filter by feature
 				.filter(artifact -> {
 					for (Feature feature : artifact.getFeatureList()) {
@@ -81,32 +76,50 @@ public class MegaGen extends FileGenerator {
 					File source = ArtifactStore.getArtifactFile(artifact);
 					if (artifact.getNativeComponentCount() != 0) {
 
-						// Collect unnecessary internal native components
+						// Find unnecessary internal native components
 						String[] paths = artifact.getNativeComponentList().stream()
 								.filter(component -> !features.getSupportedOsList().contains(component.getPlatform()))
 								.filter(component -> !features.getSupportedArchList()
 										.contains(component.getArchitecture()))
 								.map(component -> component.getPath()).toArray(String[]::new);
 
-						// TODO use removeEntries(File, String[], OutputStream) rather than copying to a
-						// temporary file (if that method is ever added to zt-zip).
-						File staging = null;
-						try {
-							staging = Files.createTempFile(null, null).toFile();
+						// Omit the components
+						try (var out = new ByteArrayOutputStream()) {
+							ZipUtil.removeEntries(source, paths, out);
+							return new ByteSource("lib/" + source.getName(), out.toByteArray());
 						} catch (IOException e) {
 							throw new RuntimeException(e);
 						}
-						ZipUtil.removeEntries(source, paths, staging);
-
-						return new FileSource("lib/" + source.getName(), staging);
 					}
 					return new FileSource("lib/" + source.getName(), source);
 
-				}).collect(Collectors.toList()));
+				}).collect(Collectors.toList());
+
+		File client = Environment.get(JLIB).resolve("com.sandpolis.client.mega-standalone.jar").toFile();
+
+		try (var zip = new ZipFile(client);
+				var main_in = zip.getInputStream(zip.getEntry("main/main.jar"));
+				var main_out = new ByteArrayOutputStream()) {
+			// Add client config
+			ZipUtil.addEntries(main_in,
+					new ZipEntrySource[] { new ByteSource("soi/client.bin", config.getMega().toByteArray()) },
+					main_out);
+
+			entries.add(new ByteSource("main/main.jar", main_out.toByteArray()));
+		}
+
+		////////////////////////////////////////////////////////
+		// TODO remove when zt-zip adds a stream-based method //
+		byte[] temp;
+		try (var out = new ByteArrayOutputStream()) {
+			ZipUtil.removeEntries(client, new String[] { "main/main.jar" }, out);
+			temp = out.toByteArray();
+		}
+		////////////////////////////////////////////////////////
 
 		// Inject artifacts
-		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-			ZipUtil.addEntries(client, sources.stream().toArray(ZipEntrySource[]::new), out);
+		try (var out = new ByteArrayOutputStream(); var in = new ByteArrayInputStream(temp)) {
+			ZipUtil.addEntries(in, entries.stream().toArray(ZipEntrySource[]::new), out);
 			return out.toByteArray();
 		}
 	}
