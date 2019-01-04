@@ -43,7 +43,7 @@ public class MessageFuture extends DefaultPromise<Message> {
 	 */
 	public MessageFuture() {
 		// Don't bother setting a timer
-		super(ThreadStore.get(MessageFuture.class));
+		super(ThreadStore.get("net.message.incoming"));
 	}
 
 	/**
@@ -54,7 +54,7 @@ public class MessageFuture extends DefaultPromise<Message> {
 	 * @param unit    The timeout unit
 	 */
 	public MessageFuture(long timeout, TimeUnit unit) {
-		this(ThreadStore.get(MessageFuture.class), timeout, unit);
+		this(ThreadStore.get("net.message.incoming"), timeout, unit);
 	}
 
 	/**

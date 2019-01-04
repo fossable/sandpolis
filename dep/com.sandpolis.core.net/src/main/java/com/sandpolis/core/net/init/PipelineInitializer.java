@@ -126,7 +126,7 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 
 		// Business logic
 		ExecuteHandler execute = new ExecuteHandler(exelets);
-		p.addLast(ThreadStore.get(PipelineInitializer.class), "exe", execute);
+		p.addLast(ThreadStore.get("net.exelet"), "exe", execute);
 		ch.attr(ChannelConstant.HANDLER_EXECUTE).set(execute);
 
 	}

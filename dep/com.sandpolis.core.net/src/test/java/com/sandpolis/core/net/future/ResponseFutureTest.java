@@ -37,7 +37,7 @@ public class ResponseFutureTest {
 
 	@BeforeEach
 	public void setup() {
-		ThreadStore.register(GlobalEventExecutor.INSTANCE, ResponseFuture.class);
+		ThreadStore.register(GlobalEventExecutor.INSTANCE, "net.message.incoming");
 	}
 
 	@Test

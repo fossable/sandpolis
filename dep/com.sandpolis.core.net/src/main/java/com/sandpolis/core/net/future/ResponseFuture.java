@@ -50,7 +50,7 @@ public class ResponseFuture<E> extends DefaultPromise<E> {
 	 *            arrives
 	 */
 	public ResponseFuture(MessageFuture future) {
-		this(ThreadStore.get(ResponseFuture.class), future);
+		this(ThreadStore.get("net.message.incoming"), future);
 	}
 
 	/**
