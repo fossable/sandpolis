@@ -95,18 +95,27 @@ public final class ProfileStore extends Store {
 		return null;
 	}
 
-	public static void update(List<EV_ProfileDelta> updates) {
+	public static void merge(List<EV_ProfileDelta> updates) {
 		for (EV_ProfileDelta update : updates) {
 			Profile profile = getProfile(update.getCvid());
 			if (profile == null) {
 				profile = new Profile(IDUtil.CVID.extractInstance(update.getCvid()));
-			}
 
-			try {
-				profile.merge(update.getUpdate());
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				try {
+					profile.merge(update.getUpdate());
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				provider.add(profile);
+			} else {
+				try {
+					profile.merge(update.getUpdate());
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}

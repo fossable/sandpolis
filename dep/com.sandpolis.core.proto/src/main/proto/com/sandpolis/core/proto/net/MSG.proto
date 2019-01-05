@@ -24,7 +24,7 @@ import "com/sandpolis/core/proto/net/MC_Auth.proto";
 //import "com/sandpolis/core/proto/net/MC_Client.proto";
 import "com/sandpolis/core/proto/net/MC_Cvid.proto";
 //import "com/sandpolis/core/proto/net/MC_Debug.proto";
-//import "com/sandpolis/core/proto/net/MC_Delta.proto";
+import "com/sandpolis/core/proto/net/MC_Delta.proto";
 import "com/sandpolis/core/proto/net/MC_FsHandle.proto";
 import "com/sandpolis/core/proto/net/MC_Generator.proto";
 import "com/sandpolis/core/proto/net/MC_Group.proto";
@@ -68,7 +68,6 @@ message Message {
 		// High frequency messages first
 //		EV_StreamData 			ev_stream_data 				= 4;
 //		EV_EndpointClosed 		ev_endpoint_closed 			= 5;
-//		EV_ProfileDelta 		ev_profile_delta 			= 6;
 //		EV_KEvent 				ev_kevent 					= 7;
 //		EV_NetworkDelta 		ev_network_delta 			= 9;
 		
@@ -96,8 +95,10 @@ message Message {
 //		RS_DebugSession 		rs_debug_session 			= 402;
 
 		// MC_Delta
-//		RQ_ProfileDelta 		rq_profile_delta 			= 500;
-//		RS_ProfileDelta 		rs_profile_delta 			= 501;
+		RQ_ProfileDelta 			rq_profile_delta 			= 500;
+		RS_ProfileDelta 			rs_profile_delta 			= 501;
+		EV_ProfileDelta 			ev_profile_delta 			= 502;
+		EV_PermissionDelta 		ev_permission_delta 		= 503;
 
 		// MC_FsHandle
 		EV_FileListing 			ev_file_listing 			= 600;
