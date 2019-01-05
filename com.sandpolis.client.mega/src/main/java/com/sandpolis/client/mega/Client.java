@@ -204,7 +204,7 @@ public final class Client {
 			return task.skipped();
 
 		try {
-			PluginStore.installCore();
+			PluginStore.scanPluginDirectory();
 
 			PluginStore.loadPlugins();
 		} catch (Exception e) {
