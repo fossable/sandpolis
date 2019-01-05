@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
 import com.google.common.graph.NetworkBuilder;
+import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.Store.AutoInitializer;
@@ -251,14 +252,13 @@ public final class NetworkStore {
 	 * it must place the receive request before actually sending the message. (To
 	 * avoid missing a message that is received extremely quickly).
 	 * 
-	 * @param message The message
-	 * @param timeout The message timeout
-	 * @param unit    The timeout unit
+	 * @param message      The message
+	 * @param timeoutClass The message timeout class
 	 * @return The next hop
 	 */
-	public static MessageFuture route(Message.Builder message, int timeout, TimeUnit unit) {
+	public static MessageFuture route(Message.Builder message, String timeoutClass) {
 		int hop = findHop(message);
-		MessageFuture mf = receive(hop, message.getId(), timeout, unit);
+		MessageFuture mf = receive(hop, message.getId(), Config.getInteger(timeoutClass), TimeUnit.MILLISECONDS);
 		ConnectionStore.get(hop).send(message);
 		return mf;
 	}

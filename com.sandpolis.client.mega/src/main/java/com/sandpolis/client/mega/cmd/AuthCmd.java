@@ -24,12 +24,10 @@ import static com.sandpolis.core.util.ProtoUtil.rq;
 import static com.sandpolis.core.util.ProtoUtil.rs;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.net.Cmdlet;
-import com.sandpolis.core.net.Timeouts;
 import com.sandpolis.core.net.exception.MessageFlowException;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.net.MCAuth.IM_Nonce;
@@ -55,8 +53,8 @@ public final class AuthCmd extends Cmdlet {
 	 * @return The outcome of the action
 	 */
 	public static Outcome none() throws InterruptedException, ExecutionException, TimeoutException {
-		return getOutcome(NetworkStore
-				.route(rq().setRqNoAuth(RQ_NoAuth.newBuilder()), Timeouts.DEFAULT, TimeUnit.MILLISECONDS).get());
+		return getOutcome(
+				NetworkStore.route(rq().setRqNoAuth(RQ_NoAuth.newBuilder()), "net.timeout.response.default").get());
 	}
 
 	/**
@@ -66,7 +64,7 @@ public final class AuthCmd extends Cmdlet {
 	 */
 	public static Outcome password(String password) throws InterruptedException, ExecutionException, TimeoutException {
 		return getOutcome(NetworkStore.route(rq().setRqPasswordAuth(RQ_PasswordAuth.newBuilder().setPassword(password)),
-				Timeouts.DEFAULT, TimeUnit.MILLISECONDS).get());
+				"net.timeout.response.default").get());
 	}
 
 	/**
@@ -81,7 +79,7 @@ public final class AuthCmd extends Cmdlet {
 		byte[] nonceA = CryptoUtil.SAND5.getNonce();
 		Message rs = NetworkStore.route(rq().setRqKeyAuth(
 				RQ_KeyAuth.newBuilder().setGroupId(groupId).setMechId(mechId).setNonce(ByteString.copyFrom(nonceA))),
-				Timeouts.DEFAULT, TimeUnit.MILLISECONDS).get();
+				"net.timeout.response.default").get();
 		if (rs.getRsOutcome() != null)
 			return rs.getRsOutcome();
 		if (rs.getImNonce() == null)
@@ -89,7 +87,7 @@ public final class AuthCmd extends Cmdlet {
 
 		byte[] signed = CryptoUtil.SAND5.sign(key, rs.getImNonce().getNonce().toByteArray());
 		rs = NetworkStore.route(rq().setImNonce(IM_Nonce.newBuilder().setNonce(ByteString.copyFrom(signed))),
-				Timeouts.DEFAULT, TimeUnit.MILLISECONDS).get();
+				"net.timeout.response.default").get();
 		if (rs.getRsOutcome() != null)
 			return rs.getRsOutcome();
 		if (rs.getImNonce() == null)

@@ -57,6 +57,7 @@ public final class BasicTasks {
 		Config.register("log.startup_summary", false);
 
 		Config.register("net.tls", false);
+		Config.register("net.timeout.response.default", 2000);
 
 		Config.register("no_plugins", false);
 		Config.register("no_summary", false);
