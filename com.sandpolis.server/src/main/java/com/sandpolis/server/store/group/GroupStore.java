@@ -21,6 +21,9 @@ import static com.sandpolis.core.util.ProtoUtil.begin;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.success;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -52,15 +55,11 @@ public final class GroupStore extends Store {
 	private static StoreProvider<Group> provider;
 
 	public static void init(StoreProvider<Group> provider) {
-		if (provider == null)
-			throw new IllegalArgumentException();
-
-		GroupStore.provider = provider;
+		GroupStore.provider = Objects.requireNonNull(provider);
 	}
 
 	public static void load(Database main) {
-		if (main == null)
-			throw new IllegalArgumentException();
+		Objects.requireNonNull(main);
 
 		init(StoreProviderFactory.database(Group.class, main));
 	}
@@ -69,10 +68,10 @@ public final class GroupStore extends Store {
 	 * Get a group from the store.
 	 * 
 	 * @param groupId The ID of a group
-	 * @return The requested {@code Group} or {@code null}
+	 * @return The requested {@link Group} or {@code null} if not found
 	 */
 	public static Group get(String groupId) {
-		return provider.get("groupId", groupId);
+		return provider.get("id", groupId);
 	}
 
 	/**
@@ -140,28 +139,53 @@ public final class GroupStore extends Store {
 	}
 
 	/**
-	 * Get a stream of all groups that the given user owns or is a member of.
+	 * Get all groups that the given user owns or is a member of.
 	 * 
 	 * @param user A user
-	 * @return A stream of the user's groups
+	 * @return A list of the user's groups
 	 */
-	public static Stream<Group> getMembership(User user) {
-		// TODO CLOSE STREAM
-		return provider.stream().filter(group -> user.equals(group.getOwner()) || group.getMembers().contains(user));
+	public static List<Group> getMembership(User user) {
+		try (Stream<Group> stream = provider.stream()) {
+			return stream.filter(group -> user.equals(group.getOwner()) || group.getMembers().contains(user))
+					.collect(Collectors.toList());
+		}
 	}
 
 	/**
-	 * Get a stream of all groups.
+	 * Get a list of all groups.
 	 * 
-	 * @return A stream of all groups in the store
+	 * @return A list of all groups in the store
 	 */
-	public static Stream<Group> getGroups() {
-		// TODO CLOSE STREAM
-		return provider.stream();
+	public static List<Group> getGroups() {
+		try (Stream<Group> stream = provider.stream()) {
+			return stream.collect(Collectors.toList());
+		}
 	}
 
-	public static void transaction(Runnable operation) {
-		provider.transaction(operation);
+	/**
+	 * Get a list of groups without an auth mechanism.
+	 * 
+	 * @return A list of unauth groups
+	 */
+	public static List<Group> getUnauthGroups() {
+		try (Stream<Group> stream = provider.stream()) {
+			return stream.filter(group -> group.getKeys().size() == 0 && group.getPasswords().size() == 0)
+					.collect(Collectors.toList());
+		}
+	}
+
+	/**
+	 * Get a list of groups with the given password.
+	 * 
+	 * @param password The password
+	 * @return A list of groups with the password
+	 */
+	public static List<Group> getByPassword(String password) {
+		try (Stream<Group> stream = provider.stream()) {
+			return stream.filter(
+					group -> group.getPasswords().stream().anyMatch(mech -> mech.getPassword().equals(password)))
+					.collect(Collectors.toList());
+		}
 	}
 
 	private GroupStore() {

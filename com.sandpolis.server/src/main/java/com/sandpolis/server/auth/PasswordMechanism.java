@@ -74,6 +74,9 @@ public class PasswordMechanism extends AuthenticationMechanism {
 		this.password = Objects.requireNonNull(password);
 	}
 
+	PasswordMechanism() {
+	}
+
 	/**
 	 * Get the mechanism ID.
 	 * 

@@ -17,8 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.server.exe;
 
-import java.util.stream.Stream;
-
 import com.sandpolis.core.instance.Perm;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
@@ -60,9 +58,8 @@ public class GroupExe extends Exelet {
 		// TODO check for Perm.server.groups.view
 
 		RS_ListGroups.Builder rs = RS_ListGroups.newBuilder();
-		try (Stream<Group> groups = GroupStore.getMembership(null)) {// TODO correct user
-			groups.map(group -> group.extract()).forEach(group -> rs.addGroup(group));
-		}
+		// TODO correct user
+		GroupStore.getMembership(null).stream().map(group -> group.extract()).forEach(group -> rs.addGroup(group));
 
 		reply(m, rs);
 	}

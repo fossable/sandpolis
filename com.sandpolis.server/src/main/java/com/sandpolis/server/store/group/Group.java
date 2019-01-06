@@ -18,6 +18,8 @@
 package com.sandpolis.server.store.group;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -51,7 +53,7 @@ import com.sandpolis.server.store.user.UserStore;
 
 /**
  * A {@link Group} is a collection of users that share permissions on a
- * collections of clients. A group has one owner, who has complete control over
+ * collection of clients. A group has one owner, who has complete control over
  * the group, and any number of members.<br>
  * <br>
  * Clients are always added to a group via an {@link AuthenticationMechanism}.
@@ -130,10 +132,12 @@ public class Group implements ProtoType<ProtoGroup> {
 	 * @param config The configuration which should be prevalidated and complete
 	 */
 	public Group(GroupConfig config) {
+		this.id = Objects.requireNonNull(config.getId());
+		this.passwords = new HashSet<>();
+		this.keys = new HashSet<>();
+
 		if (merge(ProtoGroup.newBuilder().setConfig(config).build()) != ErrorCode.OK)
 			throw new IllegalArgumentException();
-
-		this.id = config.getId();
 	}
 
 	public String getGroupId() {
@@ -146,7 +150,7 @@ public class Group implements ProtoType<ProtoGroup> {
 	 * @param mechanism The new authentication mechanism
 	 */
 	public void addPasswordMechanism(PasswordMechanism mechanism) {
-		GroupStore.transaction(() -> getPasswords().add(mechanism));
+		passwords.add(mechanism);
 	}
 
 	/**
@@ -155,7 +159,7 @@ public class Group implements ProtoType<ProtoGroup> {
 	 * @param mechanism The new authentication mechanism
 	 */
 	public void addKeyMechanism(KeyMechanism mechanism) {
-		GroupStore.transaction(() -> getKeys().add(mechanism));
+		keys.add(mechanism);
 	}
 
 	public KeyMechanism getKeyMechanism(long mechId) {

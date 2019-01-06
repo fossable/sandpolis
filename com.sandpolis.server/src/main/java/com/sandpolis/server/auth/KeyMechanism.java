@@ -88,6 +88,9 @@ public class KeyMechanism extends AuthenticationMechanism {
 		this.server = server;
 	}
 
+	KeyMechanism() {
+	}
+
 	/**
 	 * Get the client-side keypair.
 	 * 

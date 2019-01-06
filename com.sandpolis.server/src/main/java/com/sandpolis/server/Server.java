@@ -27,6 +27,7 @@ import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Date;
+import java.util.concurrent.Executors;
 import java.util.prefs.Preferences;
 
 import org.slf4j.Logger;
@@ -42,17 +43,23 @@ import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
+import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.storage.database.DatabaseFactory;
 import com.sandpolis.core.instance.store.database.DatabaseStore;
+import com.sandpolis.core.instance.store.plugin.Plugin;
+import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.instance.store.pref.PrefStore;
+import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.IPCTasks;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.ProfileStore;
+import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
+import com.sandpolis.core.proto.util.Generator.LoopConfig;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkTarget;
@@ -71,6 +78,9 @@ import com.sandpolis.server.store.listener.Listener;
 import com.sandpolis.server.store.listener.ListenerStore;
 import com.sandpolis.server.store.user.User;
 import com.sandpolis.server.store.user.UserStore;
+
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 
 /**
  * The entry point for Server instances. This class is responsible for
@@ -148,9 +158,20 @@ public final class Server {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
+		// Load ThreadStore
+		ThreadStore.register(Executors.newCachedThreadPool(r -> {
+			var s = new Thread(r, "SIGNALER");
+			s.setDaemon(true);
+			return s;
+		}), "signaler");
+		ThreadStore.register(new NioEventLoopGroup(4), "net.exelet");
+		ThreadStore.register(new NioEventLoopGroup(2), "net.connection.outgoing");
+		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), "net.message.incoming");
+		Signaler.init(ThreadStore.get("signaler"));
+
 		// Load NetworkStore and choose a new CVID
 		Core.setCvid(IDUtil.CVID.cvid(Instance.SERVER));
-		NetworkStore.load(Core.cvid());
+		NetworkStore.updateCvid(Core.cvid());
 
 		// Load PrefStore
 		PrefStore.load(Preferences.userRoot());
@@ -181,7 +202,7 @@ public final class Server {
 		ProfileStore.load(DatabaseStore.main());
 
 		// Load PluginStore
-		// PluginStore.load(DatabaseStore.main());
+		PluginStore.load(DatabaseStore.main());
 
 		return task.success();
 	}
@@ -213,8 +234,15 @@ public final class Server {
 		if (Config.getBoolean("no_plugins"))
 			return task.skipped();
 
-		// TODO
-		return task.complete(false);
+		try {
+			PluginStore.scanPluginDirectory();
+
+			PluginStore.loadPlugins();
+		} catch (Exception e) {
+			return task.failure(e);
+		}
+
+		return task.success();
 	}
 
 	/**
@@ -231,18 +259,22 @@ public final class Server {
 			return task.skipped();
 
 		try {
-			// Generate client
-			new MegaGen(GenConfig.newBuilder().setPayload(OutputPayload.MEGA).setFormat(OutputFormat.JAR)
-					.setMega(MegaConfig.newBuilder()
-							.setNetwork(NetworkConfig.newBuilder()
-									.addTarget(NetworkTarget.newBuilder().setAddress("127.0.0.1").setPort(10101))))
-					.build()).generate();
-
 			// Create user and listener
 			UserStore.add(UserConfig.newBuilder().setUsername("admin").setPassword("password").build());
 
 			ListenerStore.add(ListenerConfig.newBuilder().setPort(10101).setAddress("0.0.0.0").setOwner("admin")
 					.setName("test").setEnabled(true).build());
+
+			// Create group
+			GroupStore.add(GroupConfig.newBuilder().setName("test group").setOwner("admin").build());
+
+			// Generate client
+			new MegaGen(GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
+					.setMega(MegaConfig.newBuilder().setNetwork(NetworkConfig.newBuilder()
+							.setLoopConfig(LoopConfig.newBuilder().setTimeout(1000).setMaxTimeout(1000)
+									.addTarget(NetworkTarget.newBuilder().setAddress("127.0.0.1").setPort(10101)))))
+					.build()).generate();
+
 		} catch (Exception e) {
 			return task.failure(e);
 		}
@@ -271,6 +303,6 @@ public final class Server {
 	 */
 	private static final Class<?>[] ORM_CLASSES = new Class<?>[] { Database.class, Listener.class, Group.class,
 			ReciprocalKeyPair.class, KeyMechanism.class, PasswordMechanism.class, User.class, Profile.class,
-			AttributeNode.class, AttributeGroup.class, UntrackedAttribute.class };
+			AttributeNode.class, AttributeGroup.class, UntrackedAttribute.class, Plugin.class };
 
 }
