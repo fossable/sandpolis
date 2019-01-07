@@ -6,12 +6,12 @@
 plugins {
 	id 'eclipse'
 	id 'java'
-	id 'org.openjfx.javafxplugin' version '0.0.5'
+	id 'org.openjfx.javafxplugin' version '0.0.6'
 }
 
-//javafx {
-//    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
-//}
+javafx {
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+}
 
 eclipse {
 	project {
