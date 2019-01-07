@@ -22,8 +22,18 @@ import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertPath;
+import java.security.cert.CertPathValidator;
+import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.PKIXParameters;
+import java.security.cert.TrustAnchor;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -65,9 +75,17 @@ public final class PluginStore {
 
 	private static PluginManager manager;
 
+	private static X509Certificate plugin_ca;
+
 	public static void init(StoreProvider<Plugin> provider) {
 		PluginStore.provider = Objects.requireNonNull(provider);
 		manager = new DefaultPluginManager();
+
+		try {
+			plugin_ca = CertUtil.parse(Resources.toByteArray(PluginStore.class.getResource("/cert/plugin.cert")));
+		} catch (CertificateException | IOException e) {
+			throw new RuntimeException("Failed to load certificate", e);
+		}
 	}
 
 	public static void load(Database main) {
@@ -177,7 +195,7 @@ public final class PluginStore {
 			String version = manifest.getValue("Plugin-Version");
 			String description = manifest.getValue("Description");
 
-			// TODO validate
+			// TODO validate info
 			log.debug("Installing plugin: {}", path.toString());
 
 			provider.add(new Plugin(id, name, version, description, true, hash));
@@ -204,12 +222,14 @@ public final class PluginStore {
 			throw new RuntimeException(e);
 		}
 
-		// TODO verify certificate
+		// Verify certificate
 		try {
 			var cert = CertUtil.parse(JarUtil.getManifestValue("Plugin-Cert", path));
+			verifyCertificate(cert);
 		} catch (CertificateException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return;
 		}
 
 		log.debug("Loading plugin: {}", plugin.getName());
@@ -225,6 +245,34 @@ public final class PluginStore {
 	 */
 	private static byte[] hashPlugin(Path path) throws IOException {
 		return MoreFiles.asByteSource(path).hash(Hashing.sha256()).asBytes();
+	}
+
+	/**
+	 * Verify a plugin's certificate.
+	 * 
+	 * @param cert The plugin's certificate
+	 * @return Whether the certificate could be validated
+	 * @throws CertificateException
+	 */
+	public static boolean verifyCertificate(X509Certificate cert) throws CertificateException {
+		Objects.requireNonNull(cert);
+
+		CertPath path = CertificateFactory.getInstance("X.509").generateCertPath(List.of(cert));
+		TrustAnchor anchor = new TrustAnchor(plugin_ca, null);
+		// TODO add user trust anchors
+
+		try {
+			PKIXParameters params = new PKIXParameters(Collections.singleton(anchor));
+			params.setRevocationEnabled(false);
+
+			CertPathValidator.getInstance("PKIX").validate(path, params);
+		} catch (CertPathValidatorException e) {
+			return false;
+		} catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
+			throw new RuntimeException(e);
+		}
+
+		return true;
 	}
 
 	private PluginStore() {
