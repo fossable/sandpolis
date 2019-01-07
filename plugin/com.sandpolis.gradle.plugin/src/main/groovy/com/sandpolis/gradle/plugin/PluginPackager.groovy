@@ -47,5 +47,19 @@ public class PluginPackager implements Plugin<Project> {
                 }
     		}
     	}
+    	
+    	// Setup plugin manifest
+    	project.jar {
+			manifest {
+			    attributes(			
+					'Plugin-Id': project.ext.plugin_id,
+					'Plugin-Name': project.ext.plugin_name,
+					'Plugin-Description': project.ext.plugin_description,
+					'Plugin-Version': project.ext.plugin_version,
+					'Plugin-Class': project.ext.plugin_class,
+					'Plugin-Cert': project.file(project.ext.plugin_id + ".cert").text.replace("\n", "").replace("-----BEGIN CERTIFICATE-----", "").replace("-----END CERTIFICATE-----", "")
+		    	)
+			}
+		}
 	}
 }
