@@ -171,8 +171,8 @@ public class DependencyProcessor {
 			}
 		}
 
-		return SO_DependencyMatrix.newBuilder()
-				.addAllArtifact(artifacts.stream().map(a -> a.build()).collect(Collectors.toList())).build();
+		return SO_DependencyMatrix.newBuilder().addAllArtifact(() -> artifacts.stream().map(a -> a.build()).iterator())
+				.build();
 	}
 
 	/**
@@ -265,8 +265,9 @@ public class DependencyProcessor {
 		Objects.requireNonNull(dependency);
 
 		Set<ResolvedArtifact> artifacts = dependency.getModuleArtifacts();
-		if (artifacts.size() != 1)
-			throw new IllegalArgumentException("Dependency has an unexpected number of artifacts: " + artifacts.size());
+		// TODO Handle this case
+//		if (artifacts.size() != 1)
+//			throw new IllegalArgumentException("Dependency has an unexpected number of artifacts: " + artifacts);
 		return artifacts.iterator().next().getFile();
 	}
 
