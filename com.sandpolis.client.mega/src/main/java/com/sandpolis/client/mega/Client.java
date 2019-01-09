@@ -51,6 +51,7 @@ import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.IPCTasks;
 import com.sandpolis.core.net.store.connection.ConnectionStore;
+import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Platform.Instance;
@@ -184,6 +185,9 @@ public final class Client {
 		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), "net.message.incoming");
 		Signaler.init(ThreadStore.get("signaler"));
 
+		// Load NetworkStore
+		NetworkStore.init();
+
 		// Load PluginStore
 		PluginStore.init(new MemoryListStoreProvider<Plugin>(Plugin.class));
 
@@ -235,10 +239,10 @@ public final class Client {
 					AuthCmd.key(auth.getGroupName(), mech.getId(), key);
 					break;
 				case PASSWORD:
-					AuthCmd.password(auth.getPassword().getPassword());
+					AuthCmd.async().password(auth.getPassword().getPassword()).get();
 					break;
 				default:
-					AuthCmd.none();
+					AuthCmd.async().none().get();
 					break;
 				}
 			} catch (Exception e) {

@@ -86,8 +86,6 @@ public final class NetworkStore {
 	private static int preferredServer;
 
 	static {
-		init();
-
 		Signaler.register(SOCK_LOST, (Sock sock) -> {
 			network.removeEdge(network.edgeConnectingOrNull(Core.cvid(), sock.getRemoteCvid()));
 
