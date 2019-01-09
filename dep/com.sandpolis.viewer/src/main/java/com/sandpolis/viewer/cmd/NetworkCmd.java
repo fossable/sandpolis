@@ -19,8 +19,8 @@ package com.sandpolis.viewer.cmd;
 
 import com.sandpolis.core.net.Cmdlet;
 import com.sandpolis.core.net.future.SockFuture;
+import com.sandpolis.core.net.init.ClientPipelineInit;
 import com.sandpolis.core.net.store.connection.ConnectionStore;
-import com.sandpolis.viewer.store.instance.InstanceStore;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -43,7 +43,9 @@ public final class NetworkCmd extends Cmdlet<NetworkCmd> {
 	 */
 	public SockFuture connect(String address, int port) {
 		return ConnectionStore.connect(new Bootstrap().channel(NioSocketChannel.class).group(new NioEventLoopGroup())
-				.remoteAddress(address, port).handler(InstanceStore.PIPELINE_INIT));
+				.remoteAddress(address, port)
+				// TODO use static pipeline initializer defined somewhere
+				.handler(new ClientPipelineInit(new Class[] {})));
 	}
 
 	/**
