@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
+ *                    Copyright 2018 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,105 +15,75 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer;
+package com.sandpolis.viewer.cli;
+
+import static com.sandpolis.core.instance.Environment.EnvPath.DB;
+import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
+import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
+import static com.sandpolis.core.instance.Environment.EnvPath.NLIB;
+import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.prefs.Preferences;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Config;
+import com.github.cilki.slpanels.SLAnimator;
+import com.googlecode.lanterna.gui2.AsynchronousTextGUIThread;
+import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
+import com.googlecode.lanterna.gui2.SeparateTextGUIThread;
+import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
+import com.googlecode.lanterna.screen.Screen;
+import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
-import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
-import com.sandpolis.core.instance.store.pref.PrefStore;
-import com.sandpolis.core.ipc.store.IPCStore;
-import com.sandpolis.core.proto.ipc.MCMetadata.RS_Metadata;
-import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.ipc.IPCTasks;
 import com.sandpolis.core.util.AsciiUtil;
+import com.sandpolis.viewer.cli.view.main.MainWindow;
 
 /**
- * The entry point for Viewer instances. This class is responsible for
- * initializing the new instance and launching the user interface.
- * 
  * @author cilki
- * @since 4.0.0
+ * @since 5.0.0
  */
 public final class Viewer {
-	private Viewer() {
-	}
 
 	public static final Logger log = LoggerFactory.getLogger(Viewer.class);
 
-	private static UI ui;
-
 	public static void main(String[] args) {
-		log.info("Launching {} ({})", AsciiUtil.toRainbow("Sandpolis"), Core.SO_BUILD.getVersion());
+		log.info("Launching {} ({})", AsciiUtil.toRainbow("Sandpolis Viewer"), Core.SO_BUILD.getVersion());
 		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
 				Core.SO_BUILD.getNumber());
 
-		MainDispatch.register(Viewer::checkLocks);
-		// MainDispatch.register(Viewer::findLocalServer);
-		MainDispatch.register(Viewer::loadViewerStores);
+		MainDispatch.register(BasicTasks::loadConfiguration);
+		MainDispatch.register(IPCTasks::checkLocks);
+		MainDispatch.register(Viewer::loadEnvironment);
+//		MainDispatch.register(Viewer::loadStores);
+//		MainDispatch.register(Viewer::loadPlugins);
 		MainDispatch.register(Viewer::loadUserInterface);
-
-		MainDispatch.registerShutdown(Viewer::unloadUserInterface);
-	}
-
-	public static void registerUI(UI ui) {
-		if (Viewer.ui != null)
-			throw new IllegalStateException();
-		Viewer.ui = ui;
-	}
-
-	public static UI getUI() {
-		return ui;
 	}
 
 	/**
-	 * Check for instance locks. If found, this instance will exit. Otherwise a new
-	 * lock is established.
-	 * 
+	 * Load the runtime environment.
+	 *
 	 * @return The task's outcome
 	 */
-	@InitializationTask(name = "Check instance locks", fatal = true)
-	private static TaskOutcome checkLocks() {
+	@InitializationTask(name = "Load runtime environment", fatal = true)
+	private static TaskOutcome loadEnvironment() {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (Config.getBoolean("no_mutex"))
-			return task.success();
-
-		RS_Metadata metadata = IPCStore.queryInstance(Instance.VIEWER);
-		if (metadata != null) {
-			return task.failure("Another viewer instance has been detected (process " + metadata.getPid() + ")");
+		if (!Environment.load(DB, TMP, LOG, JLIB, NLIB)) {
+			try {
+				Environment.setup();
+			} catch (RuntimeException e) {
+				return task.failure(e);
+			}
 		}
-
-		try {
-			IPCStore.listen(Instance.VIEWER);
-		} catch (IOException e) {
-			log.warn("Failed to initialize an IPC listener", e);
-		}
-
-		return task.success();
-	}
-
-	/**
-	 * Load static stores.
-	 * 
-	 * @return The task's outcome
-	 */
-	@InitializationTask(name = "Load static stores")
-	private static TaskOutcome loadViewerStores() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
-		// Load PrefStore
-		PrefStore.load(Preferences.userRoot());
 
 		return task.success();
 	}
@@ -128,26 +98,26 @@ public final class Viewer {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (ui == null)
-			return task.failure("No user interface found");
-
 		try {
-			ui.start();
-		} catch (Exception e) {
+			Screen screen = new DefaultTerminalFactory().setForceTextTerminal(true).createScreen();
+			screen.startScreen();
+
+			WindowBasedTextGUI textGUI = new MultiWindowTextGUI(new SeparateTextGUIThread.Factory(), screen);
+			((AsynchronousTextGUIThread) textGUI.getGUIThread()).start();
+
+			// textGUI.addWindow(new LogPanel());
+			MainWindow window = new MainWindow();
+			textGUI.addWindow(window);
+			textGUI.updateScreen();
+
+			// Start the animator. If another Tween-able type is added in addition to
+			// MovablePanel, this statement needs to move.
+			SLAnimator.start(textGUI.getGUIThread(), window);
+		} catch (IOException e) {
 			return task.failure(e);
 		}
 
 		return task.success();
-	}
-
-	@ShutdownTask
-	private static void unloadUserInterface() {
-		try {
-			log.debug("Terminating user interface");
-			ui.stop();
-		} catch (Exception e) {
-			log.error("Failed to terminate user interface", e);
-		}
 	}
 
 }

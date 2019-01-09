@@ -11,7 +11,6 @@ import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
-import com.sandpolis.viewer.cli.Cli;
 import com.sandpolis.viewer.cli.component.SideMenuPanel;
 import com.sandpolis.viewer.cli.view.about.AboutPanel;
 
@@ -30,42 +29,6 @@ public class MainWindow extends BasicWindow {
 				.setSize(new TerminalSize(8, 8)));
 
 		ep.setSize(new TerminalSize(10, 10));
-
-		new Thread(() -> {
-			while (true) {
-
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-				try {
-					Cli.getCli().getThread().invokeAndWait(() -> {
-						ep.raise((LanPanel) new LanPanel(new BorderLayout()).addComponent(new Label("test")), 5);
-					});
-				} catch (IllegalStateException | InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				try {
-					Cli.getCli().getThread().invokeAndWait(() -> {
-						ep.drop();
-					});
-				} catch (IllegalStateException | InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-
-			}
-		}).start();
 
 		main.add("Test", ep);
 		main.add("Hosts", new Panel(new BorderLayout()).addComponent(new Label("Not implemented yet...")));

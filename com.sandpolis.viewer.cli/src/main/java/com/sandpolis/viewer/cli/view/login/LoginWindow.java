@@ -22,7 +22,6 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
-import com.sandpolis.viewer.Viewer;
 import com.sandpolis.viewer.cmd.LoginCmd;
 
 public class LoginWindow extends BasicWindow {
@@ -95,12 +94,7 @@ public class LoginWindow extends BasicWindow {
 
 			Button btn_exit = new Button("Exit", () -> {
 				close();
-				try {
-					Viewer.getUI().stop();
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				System.exit(0);
 			});
 			buttons.addComponent(btn_exit, BorderLayout.Location.LEFT);
 			buttons.addComponent(new EmptySpace(), BorderLayout.Location.CENTER);

@@ -23,6 +23,7 @@ dependencies {
 	testImplementation lib.junit
 
 	implementation project(':dep:com.sandpolis.core.instance')
+	implementation project(':dep:com.sandpolis.core.ipc')
 	implementation project(':dep:com.sandpolis.core.net')
 	implementation project(':dep:com.sandpolis.core.proto')
 	implementation project(':dep:com.sandpolis.core.util')
@@ -30,6 +31,7 @@ dependencies {
 	implementation lib.slf4j
 	implementation lib.logback
 	implementation lib.lanterna
+	implementation lib.netty
 	
 	// TODO remove
 	implementation 'org.mini2Dx:universal-tween-engine:6.3.3'

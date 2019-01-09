@@ -27,19 +27,12 @@ import javafx.application.Platform;
 /**
  * This {@link EventExecutor} implementation runs tasks on the JavaFX
  * application thread. The primary motivation is to allow {@link Future}
- * listeners to be executed on the GUI update thread.<br>
- * <br>
- * Only one instance of this class may be created and should be accessed via
- * {@link #INSTANCE}.
+ * listeners to be executed on the GUI update thread.
  * 
  * @author cilki
  * @since 5.0.0
  */
 public final class FxEventExecutor extends AbstractEventExecutor {
-	private FxEventExecutor() {
-	}
-
-	public static final FxEventExecutor INSTANCE = new FxEventExecutor();
 
 	@Override
 	public boolean isShuttingDown() {
@@ -87,7 +80,7 @@ public final class FxEventExecutor extends AbstractEventExecutor {
 
 	@Override
 	public void shutdown() {
-		Platform.exit();
+		throw new UnsupportedOperationException();
 	}
 
 }
