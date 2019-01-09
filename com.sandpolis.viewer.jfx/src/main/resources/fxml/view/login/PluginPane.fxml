@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
+   <bottom>
+      <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+        <buttons>
+          <Button mnemonicParsing="false" text="Install Plugins" />
+            <Button mnemonicParsing="false" text="Don't Install" />
+        </buttons>
+         <BorderPane.margin>
+            <Insets left="5.0" right="5.0" />
+         </BorderPane.margin>
+      </ButtonBar>
+   </bottom>
+   <top>
+      <Label text="This server has the following plugins installed:" BorderPane.alignment="CENTER" />
+   </top>
+   <center>
+      <BorderPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <bottom>
+            <ProgressBar prefWidth="200.0" progress="0.0" BorderPane.alignment="CENTER" />
+         </bottom>
+         <center>
+            <TableView prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+              <columns>
+                <TableColumn editable="false" prefWidth="150.0" sortable="false" text="Plugin" />
+                <TableColumn editable="false" prefWidth="240.0" sortable="false" text="Description" />
+                  <TableColumn editable="false" prefWidth="75.0" sortable="false" text="Trust Authority" />
+                  <TableColumn editable="false" prefWidth="75.0" sortable="false" text="Install?" />
+              </columns>
+               <BorderPane.margin>
+                  <Insets bottom="40.0" left="20.0" right="20.0" top="20.0" />
+               </BorderPane.margin>
+            </TableView>
+         </center>
+      </BorderPane>
+   </center>
+</BorderPane>
