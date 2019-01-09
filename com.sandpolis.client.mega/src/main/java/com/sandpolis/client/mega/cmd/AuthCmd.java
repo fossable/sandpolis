@@ -19,8 +19,6 @@ package com.sandpolis.client.mega.cmd;
 
 import static com.sandpolis.core.util.ProtoUtil.begin;
 import static com.sandpolis.core.util.ProtoUtil.complete;
-import static com.sandpolis.core.util.ProtoUtil.getOutcome;
-import static com.sandpolis.core.util.ProtoUtil.rq;
 import static com.sandpolis.core.util.ProtoUtil.rs;
 
 import java.util.concurrent.ExecutionException;
@@ -29,6 +27,7 @@ import java.util.concurrent.TimeoutException;
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.net.Cmdlet;
 import com.sandpolis.core.net.exception.MessageFlowException;
+import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.net.MCAuth.IM_Nonce;
 import com.sandpolis.core.proto.net.MCAuth.RQ_KeyAuth;
@@ -38,6 +37,7 @@ import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
+import com.sandpolis.core.util.ProtoUtil;
 
 /**
  * Contains authentication commands for client instances.
@@ -45,26 +45,24 @@ import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
  * @author cilki
  * @since 5.0.0
  */
-public final class AuthCmd extends Cmdlet {
+public final class AuthCmd extends Cmdlet<AuthCmd> {
 
 	/**
 	 * Attempt to authenticate with nothing.
 	 * 
-	 * @return The outcome of the action
+	 * @return The response future
 	 */
-	public static Outcome none() throws InterruptedException, ExecutionException, TimeoutException {
-		return getOutcome(
-				NetworkStore.route(rq().setRqNoAuth(RQ_NoAuth.newBuilder()), "net.timeout.response.default").get());
+	public ResponseFuture<Outcome> none() {
+		return rq(RQ_NoAuth.newBuilder());
 	}
 
 	/**
 	 * Attempt to authenticate with a password.
 	 * 
-	 * @return The outcome of the action
+	 * @return The response future
 	 */
-	public static Outcome password(String password) throws InterruptedException, ExecutionException, TimeoutException {
-		return getOutcome(NetworkStore.route(rq().setRqPasswordAuth(RQ_PasswordAuth.newBuilder().setPassword(password)),
-				"net.timeout.response.default").get());
+	public ResponseFuture<Outcome> password(String password) {
+		return rq(RQ_PasswordAuth.newBuilder().setPassword(password));
 	}
 
 	/**
@@ -72,12 +70,13 @@ public final class AuthCmd extends Cmdlet {
 	 * 
 	 * @return The outcome of the action
 	 */
+	// TODO convert to async
 	public static Outcome key(String groupId, long mechId, ReciprocalKeyPair key)
 			throws InterruptedException, ExecutionException, TimeoutException {
 		Outcome.Builder outcome = begin();
 
 		byte[] nonceA = CryptoUtil.SAND5.getNonce();
-		Message rs = NetworkStore.route(rq().setRqKeyAuth(
+		Message rs = NetworkStore.route(ProtoUtil.rq().setRqKeyAuth(
 				RQ_KeyAuth.newBuilder().setGroupId(groupId).setMechId(mechId).setNonce(ByteString.copyFrom(nonceA))),
 				"net.timeout.response.default").get();
 		if (rs.getRsOutcome() != null)
@@ -86,7 +85,7 @@ public final class AuthCmd extends Cmdlet {
 			throw new MessageFlowException(RQ_KeyAuth.class, rs);
 
 		byte[] signed = CryptoUtil.SAND5.sign(key, rs.getImNonce().getNonce().toByteArray());
-		rs = NetworkStore.route(rq().setImNonce(IM_Nonce.newBuilder().setNonce(ByteString.copyFrom(signed))),
+		rs = NetworkStore.route(ProtoUtil.rq().setImNonce(IM_Nonce.newBuilder().setNonce(ByteString.copyFrom(signed))),
 				"net.timeout.response.default").get();
 		if (rs.getRsOutcome() != null)
 			return rs.getRsOutcome();
@@ -97,6 +96,16 @@ public final class AuthCmd extends Cmdlet {
 		NetworkStore.route(rs(rs).setRsOutcome(Outcome.newBuilder().setResult(verifyServer)));
 
 		return complete(outcome.setResult(verifyServer));
+	}
+
+	/**
+	 * Prepare for an asynchronous command.
+	 * 
+	 * @return A configurable object from which all asynchronous (nonstatic)
+	 *         commands in {@link AuthCmd} can be invoked
+	 */
+	public static AuthCmd async() {
+		return new AuthCmd();
 	}
 
 	private AuthCmd() {

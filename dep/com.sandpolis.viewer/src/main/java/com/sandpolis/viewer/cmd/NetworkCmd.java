@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
+ *                    Copyright 2018 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -17,48 +17,45 @@
  *****************************************************************************/
 package com.sandpolis.viewer.cmd;
 
-import static com.sandpolis.core.util.CryptoUtil.SHA256;
-
-import java.util.Objects;
-
 import com.sandpolis.core.net.Cmdlet;
-import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
-import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.core.util.CryptoUtil;
+import com.sandpolis.core.net.future.SockFuture;
+import com.sandpolis.core.net.store.connection.ConnectionStore;
+import com.sandpolis.viewer.store.instance.InstanceStore;
+
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
 
 /**
- * Contains login commands.
+ * Contains network commands.
  * 
  * @author cilki
- * @since 4.0.0
+ * @since 5.0.0
  */
-public final class LoginCmd extends Cmdlet<LoginCmd> {
+public final class NetworkCmd extends Cmdlet<NetworkCmd> {
 
 	/**
-	 * Attempt to login to the Server.
+	 * Attempt to connect to a Sandpolis listener.
 	 * 
-	 * @param user The logon username
-	 * @param pass The logon password
-	 * @return
+	 * @param address The IP address or DNS name
+	 * @param port    The port number
+	 * @return The future of the action
 	 */
-	public ResponseFuture<Outcome> login(String user, String pass) {
-		Objects.requireNonNull(user);
-		Objects.requireNonNull(pass);
-
-		return rq(RQ_Login.newBuilder().setUsername(user).setPassword(CryptoUtil.hash(SHA256, pass)));
+	public SockFuture connect(String address, int port) {
+		return ConnectionStore.connect(new Bootstrap().channel(NioSocketChannel.class).group(new NioEventLoopGroup())
+				.remoteAddress(address, port).handler(InstanceStore.PIPELINE_INIT));
 	}
 
 	/**
 	 * Prepare for an asynchronous command.
 	 * 
 	 * @return A configurable object from which all asynchronous (nonstatic)
-	 *         commands in {@link LoginCmd} can be invoked
+	 *         commands in {@link NetworkCmd} can be invoked
 	 */
-	public static LoginCmd async() {
-		return new LoginCmd();
+	public static NetworkCmd async() {
+		return new NetworkCmd();
 	}
 
-	private LoginCmd() {
+	private NetworkCmd() {
 	}
 }

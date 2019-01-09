@@ -17,48 +17,67 @@
  *****************************************************************************/
 package com.sandpolis.viewer.cmd;
 
-import static com.sandpolis.core.util.CryptoUtil.SHA256;
-
-import java.util.Objects;
-
 import com.sandpolis.core.net.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
+import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
+import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener;
+import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener.ListenerState;
+import com.sandpolis.core.proto.net.MCListener.RQ_RemoveListener;
+import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.core.util.CryptoUtil;
 
 /**
- * Contains login commands.
+ * Contains listener commands.
  * 
  * @author cilki
  * @since 4.0.0
  */
-public final class LoginCmd extends Cmdlet<LoginCmd> {
+public final class ListenerCmd extends Cmdlet<ListenerCmd> {
 
 	/**
-	 * Attempt to login to the Server.
+	 * Add a new listener on the server.
 	 * 
-	 * @param user The logon username
-	 * @param pass The logon password
-	 * @return
+	 * @param conf The listener configuration
+	 * @return A future that will receive the outcome of this action
 	 */
-	public ResponseFuture<Outcome> login(String user, String pass) {
-		Objects.requireNonNull(user);
-		Objects.requireNonNull(pass);
+	public ResponseFuture<Outcome> addListener(ListenerConfig conf) {
+		return rq(RQ_AddListener.newBuilder().setConfig(conf));
 
-		return rq(RQ_Login.newBuilder().setUsername(user).setPassword(CryptoUtil.hash(SHA256, pass)));
+	}
+
+	/**
+	 * Stop and remove a listener on the server.
+	 * 
+	 * @param id The listener ID
+	 * @return A future that will receive the outcome of this action
+	 */
+	public ResponseFuture<Outcome> removeListener(int id) {
+		return rq(RQ_RemoveListener.newBuilder().setId(id));
+
+	}
+
+	/**
+	 * Change the state of a listener on the server.
+	 * 
+	 * @param id    The listener
+	 * @param state The new state
+	 * @return A future that will receive the outcome of this action
+	 */
+	public ResponseFuture<Outcome> changeListenerState(ListenerState state, long id) {
+		return rq(RQ_ChangeListener.newBuilder().setId(id).setState(state));
+
 	}
 
 	/**
 	 * Prepare for an asynchronous command.
 	 * 
 	 * @return A configurable object from which all asynchronous (nonstatic)
-	 *         commands in {@link LoginCmd} can be invoked
+	 *         commands in {@link ListenerCmd} can be invoked
 	 */
-	public static LoginCmd async() {
-		return new LoginCmd();
+	public static ListenerCmd async() {
+		return new ListenerCmd();
 	}
 
-	private LoginCmd() {
+	private ListenerCmd() {
 	}
 }

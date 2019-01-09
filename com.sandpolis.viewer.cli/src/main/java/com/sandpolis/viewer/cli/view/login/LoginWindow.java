@@ -110,7 +110,7 @@ public class LoginWindow extends BasicWindow {
 				fld_password.setEnabled(false);
 				try {
 
-					LoginCmd.login(fld_username.getText(), fld_password.getText());
+					LoginCmd.async().login(fld_username.getText(), fld_password.getText()).get();
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
