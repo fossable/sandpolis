@@ -18,9 +18,11 @@
 package com.sandpolis.core.net;
 
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
+import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -123,16 +125,22 @@ public abstract class Cmdlet<E> {
 	 */
 	protected <R> ResponseFuture<R> route(Message.Builder m) {
 		Objects.requireNonNull(m);
-		if (sock != null)
-			// TODO should the message be sent with sock.request in this case?
+
+		MessageFuture mf;
+		if (sock != null) {
 			m.setTo(sock.getRemoteCvid());
-		else if (cvid != null)
+			mf = sock.request(m);
+		} else if (cvid != null) {
 			m.setTo(cvid);
+			mf = NetworkStore.route(m, timeout);
+		} else {
+			mf = NetworkStore.route(m, timeout);
+		}
 
 		if (poolId != null) {
-			return new ResponseFuture<>(ThreadStore.get(poolId), NetworkStore.route(m, timeout));
+			return new ResponseFuture<>(ThreadStore.get(poolId), mf);
 		} else {
-			return new ResponseFuture<>(NetworkStore.route(m, timeout));
+			return new ResponseFuture<>(mf);
 		}
 	}
 }
