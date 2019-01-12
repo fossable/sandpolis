@@ -19,19 +19,21 @@ package com.sandpolis.viewer.jfx.common.pane;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
-import javafx.animation.Animation;
+import javafx.animation.Animation.Status;
 import javafx.animation.Transition;
 import javafx.beans.NamedArg;
-import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.util.Duration;
 
 /**
- * The {@link ExtendPane} allows secondary {@link Node}s to be raised over a
- * central primary {@link Node}.
+ * An {@link ExtendPane} allows {@link Region}s to be raised over a central
+ * primary {@link Node} similar to a {@link BorderPane}. This class is not
+ * thread-safe.
  * 
  * @author cilki
  * @since 5.0.0
@@ -46,161 +48,244 @@ public class ExtendPane extends BorderPane {
 	}
 
 	/**
-	 * A map of in-progress animations that are bringing a node into view.
+	 * A wrapper for {@link Transition}.
 	 */
-	private Map<ExtendSide, Animation> show_map = new HashMap<>();
+	private abstract class ExtendTransition extends Transition {
 
-	/**
-	 * A map of pending animations that will bring a node out of view.
-	 */
-	private Map<ExtendSide, Animation> hide_map = new HashMap<>();
+		private Region region;
 
-	/**
-	 * A map of currently shown nodes.
-	 */
-	private Map<ExtendSide, Node> node_map = new HashMap<>();
+		public Region getRegion() {
+			return region;
+		}
 
-	/**
-	 * Get the {@link Node} that is currently extended on the given side.
-	 * 
-	 * @param side
-	 *            An {@link ExtendSide}
-	 * @return The {@link Node} extended on the given side
-	 */
-	public Node get(ExtendSide side) {
-		return node_map.get(side);
+		public ExtendTransition(Region region, double duration) {
+			this.region = Objects.requireNonNull(region);
+			setCycleDuration(Duration.millis(duration));
+		}
 	}
 
 	/**
-	 * Drop the given side.
+	 * The animation map. If an {@link ExtendSide} exists in the map, then the side
+	 * is currently extended (any could also be executing an animation).
+	 */
+	private Map<ExtendSide, ExtendTransition> map = new HashMap<>(1, 1.0f);
+
+	/**
+	 * Construct a new {@link ExtendPane} around the given {@link Node}.
 	 * 
-	 * @param side
-	 *            The side to drop
+	 * @param main The central node which will take up the entire container until
+	 *             something is extended
+	 */
+	public ExtendPane(@NamedArg("main") Node main) {
+		setCenter(Objects.requireNonNull(main));
+	}
+
+	/**
+	 * Get the {@link Region} that is currently extended on the given side.
+	 * 
+	 * @param side An {@link ExtendSide}
+	 * @return The {@link Region} extended on the given side
+	 */
+	public Region get(ExtendSide side) {
+		if (map.containsKey(side))
+			return map.get(side).getRegion();
+		return null;
+	}
+
+	/**
+	 * Get whether the given side has a running animation.
+	 * 
+	 * @param side The given side
+	 * @return Whether the side has a running animation
+	 */
+	public boolean isMoving(ExtendSide side) {
+		if (!map.containsKey(side))
+			return false;
+		return map.get(side).getStatus() == Status.RUNNING;
+	}
+
+	/**
+	 * Drop the given side if extended.
+	 * 
+	 * @param side The side to drop
 	 */
 	public void drop(ExtendSide side) {
-		if (side == null)
-			throw new IllegalArgumentException();
-		if (!hide_map.containsKey(side))
-			throw new IllegalStateException("The side: " + side + " is not extended");
-
-		hide_map.remove(side).play();
+		Objects.requireNonNull(side);
+		if (map.containsKey(side) && !isMoving(side))
+			map.get(side).play();
 	}
 
 	/**
 	 * Drop all extended sides simultaneously.
 	 */
 	public void drop() {
-		for (Animation hide : hide_map.values())
-			hide.play();
-
-		hide_map.clear();
+		for (ExtendSide side : ExtendSide.values())
+			drop(side);
 	}
 
 	/**
-	 * Move a new {@link Pane} in from the given side. If the side is already
+	 * Move a new {@link Region} in from the given side. If the side is already
 	 * extended, it will be dropped first.
 	 * 
-	 * @param pane
-	 *            The pane to extend
-	 * @param side
-	 *            The side to extend from
-	 * @param duration
-	 *            The duration of the transition in milliseconds
-	 * @param absWidth
-	 *            The relative width of the extended pane as a percentage
+	 * @param region   The pane to extend
+	 * @param side     The side to extend from
+	 * @param duration The duration of the transition in milliseconds
+	 * @param size     The relative length of the extended pane as a percentage
+	 *                 (along the transition axis)
+	 * @return Whether the transition was scheduled
 	 */
-	public void raise(Pane pane, ExtendSide side, int duration, float absWidth) {
-		if (pane == null)
-			throw new IllegalArgumentException();
-		if (side == null)
-			throw new IllegalArgumentException();
+	public boolean raise(Region region, ExtendSide side, int duration, float size) {
+		Objects.requireNonNull(region);
+		Objects.requireNonNull(side);
 		if (duration < 0)
 			throw new IllegalArgumentException();
-		if (absWidth < 0 || absWidth > 1.0)
+		if (size < 0 || size > 1.0)
 			throw new IllegalArgumentException();
 
 		// TODO relative using property bindings
+		throw new UnsupportedOperationException();
 	}
 
 	/**
-	 * Move a new {@link Pane} in from the given side. If the side is already
+	 * Move a new {@link Region} in from the given side. If the side is already
 	 * extended, it will be dropped first.
 	 * 
-	 * @param pane
-	 *            The pane to extend
-	 * @param side
-	 *            The side to extend from
-	 * @param duration
-	 *            The duration of the transition in milliseconds
-	 * @param absWidth
-	 *            The absolute width of the extended pane in pixels
+	 * @param region   The region to extend
+	 * @param side     The side to extend from
+	 * @param duration The duration of the transition in milliseconds
+	 * @param size     The absolute length of the extended pane in pixels (along the
+	 *                 transition axis)
+	 * @return Whether the transition was scheduled
 	 */
-	public void raise(Pane pane, ExtendSide side, int duration, int absWidth) {
-		if (pane == null)
-			throw new IllegalArgumentException();
-		if (side == null)
-			throw new IllegalArgumentException();
+	public boolean raise(Region region, ExtendSide side, int duration, int size) {
+		Objects.requireNonNull(region);
+		Objects.requireNonNull(side);
 		if (duration < 0)
 			throw new IllegalArgumentException();
-		if (absWidth < 0)
+		if (size < 0)
 			throw new IllegalArgumentException();
 
-		if (show_map.containsKey(side)) {
+		if (isMoving(side)) {
 			// An animation for this side is in progress
-			return;
+			return false;
 		}
 
-		Animation hide = new Transition() {
-			{
-				setCycleDuration(Duration.millis(duration));
-			}
+		// Use one transition to show the node and reverse it to hide
+		ExtendTransition show;
 
-			protected void interpolate(double frac) {
-				final double curWidth = absWidth * (1.0 - frac);
-				pane.setPrefWidth(curWidth);
-				pane.setTranslateX(-absWidth + curWidth);
-			}
-		};
+		// The region needs to be wrapped in a Pane
+		Region wrapped = new Pane(region);
 
-		Animation show = new Transition() {
-			{
-				setCycleDuration(Duration.millis(duration));
-			}
+		switch (side) {
+		case TOP:
+			region.setPrefHeight(size);
+			wrapped.setPrefHeight(0);
 
-			protected void interpolate(double frac) {
-				final double curWidth = absWidth * frac;
-				pane.setPrefWidth(curWidth);
-				pane.setTranslateX(-absWidth + curWidth);
-			}
-		};
-		show.onFinishedProperty().set((ActionEvent event) -> {
-			show_map.remove(side);
-			hide_map.put(side, hide);
+			// Make the node invisible to prevent it from appearing before the animation
+			// begins. It should become visible on the first frame.
+			wrapped.setVisible(false);
+			show = new ExtendTransition(region, duration) {
+
+				private boolean first = true;
+
+				@Override
+				protected void interpolate(double frac) {
+					if (first) {
+						wrapped.setVisible(true);
+						first = false;
+					}
+
+					final double timeline = size * frac;
+					region.setPrefHeight(timeline);
+					region.setTranslateY(-size + timeline);
+				}
+			};
+			break;
+		case LEFT:
+			region.setPrefWidth(size);
+			wrapped.setPrefWidth(0);
+
+			// Make the node invisible to prevent it from appearing before the animation
+			// begins. It should become visible on the first frame.
+			wrapped.setVisible(false);
+			show = new ExtendTransition(region, duration) {
+
+				private boolean first = true;
+
+				@Override
+				protected void interpolate(double frac) {
+					if (first) {
+						wrapped.setVisible(true);
+						first = false;
+					}
+
+					final double timeline = size * frac;
+					wrapped.setPrefWidth(timeline);
+					wrapped.setTranslateX(-size + timeline);
+
+				}
+			};
+			break;
+		case BOTTOM:
+			region.setPrefHeight(size);
+			wrapped.setPrefHeight(0);
+			show = new ExtendTransition(region, duration) {
+
+				@Override
+				protected void interpolate(double frac) {
+					wrapped.setPrefHeight(size * frac);
+				}
+			};
+			break;
+		case RIGHT:
+			region.setPrefWidth(size);
+			wrapped.setPrefWidth(0);
+			show = new ExtendTransition(region, duration) {
+
+				@Override
+				protected void interpolate(double frac) {
+					wrapped.setPrefWidth(size * frac);
+				}
+			};
+			break;
+		default:
+			throw new RuntimeException();
+		}
+
+		show.onFinishedProperty().set(e -> {
+			show.setRate(-show.getRate());
+			show.onFinishedProperty().set(f -> {
+				map.remove(side);
+				addToLayout(side, null);
+			});
 		});
-		hide.onFinishedProperty().set((ActionEvent event) -> {
-			setSide(side, null);
-		});
 
-		if (hide_map.containsKey(side)) {
-			// Need to drop the side first
-			hide_map.get(side).onFinishedProperty().set((ActionEvent event) -> {
-				setSide(side, pane);
+		if (map.containsKey(side)) {
+			// Need to drop the extended side first
+			map.get(side).onFinishedProperty().set(e -> {
+				map.put(side, show);
 
-				show_map.put(side, show);
+				addToLayout(side, wrapped);
 				show.play();
 			});
 			drop(side);
 		} else {
-			setSide(side, pane);
+			map.put(side, show);
 
-			show_map.put(side, show);
+			addToLayout(side, wrapped);
 			show.play();
-
 		}
+
+		return true;
 	}
 
-	private void setSide(ExtendSide side, Node node) {
-		node_map.put(side, node);
+	/**
+	 * Add the given node to the border layout.
+	 * 
+	 * @param side The side
+	 * @param node The node to add or {@code null}
+	 */
+	private void addToLayout(ExtendSide side, Region node) {
 		switch (side) {
 		case BOTTOM:
 			setBottom(node);
@@ -216,16 +301,4 @@ public class ExtendPane extends BorderPane {
 			return;
 		}
 	}
-
-	/**
-	 * Construct a new {@link ExtendPane} around the given {@link Node}.
-	 * 
-	 * @param main
-	 *            The primary node which will take up the entire container until
-	 *            something is extended
-	 */
-	public ExtendPane(@NamedArg("main") Node main) {
-		setCenter(main);
-	}
-
 }
