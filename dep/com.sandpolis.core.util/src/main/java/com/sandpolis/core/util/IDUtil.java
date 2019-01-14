@@ -81,7 +81,7 @@ public final class IDUtil {
 			if (instance == Instance.UNRECOGNIZED)
 				throw new IllegalArgumentException();
 
-			return (RandUtil.nextInt() << IID_SPACE) | instance.getNumber();
+			return Math.abs((RandUtil.nextInt() << IID_SPACE) | instance.getNumber());
 		}
 
 	}
