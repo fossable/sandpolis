@@ -1,0 +1,25 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                         com.sandpolis.plugin.desktop                        *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+  	id 'java-library'
+}
+
+eclipse {
+	project {
+		name = 'com.sandpolis.plugin.desktop:viewer:jfx'
+		comment = "The desktop plugin's JavaFX component"
+	}
+}
+
+dependencies {
+	testImplementation lib.junit
+
+	implementation project(':plugin:com.sandpolis.plugin.desktop')
+	implementation project(':dep:com.sandpolis.core.instance')
+	implementation lib.slf4j
+	implementation lib.pf4j
+}
