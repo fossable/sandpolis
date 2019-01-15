@@ -104,7 +104,8 @@ public final class Config {
 	}
 
 	/**
-	 * Get a property from the runtime environment or a default value.
+	 * Get a property from the runtime environment or a default value. A default of
+	 * {@code null} implies the property's type should be {@link String}.
 	 * 
 	 * @param property The property name
 	 * @param def      The default value
@@ -114,16 +115,17 @@ public final class Config {
 
 		String value = getValue(property);
 		if (value == null)
-			if (def != null)
-				config.put(property, def);
-			else if (def instanceof String)
-				config.put(property, value);
-			else if (def instanceof Boolean)
+			// Set default
+			config.put(property, def);
+		else {
+			// Use default to predict type of value
+			if (def instanceof Boolean)
 				config.put(property, Boolean.parseBoolean(value));
 			else if (def instanceof Integer)
 				config.put(property, Integer.parseInt(value));
 			else
-				throw new IllegalArgumentException();
+				config.put(property, value);
+		}
 	}
 
 	/**
