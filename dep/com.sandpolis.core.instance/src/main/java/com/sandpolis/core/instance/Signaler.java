@@ -136,11 +136,11 @@ public final class Signaler<E> {
 	 */
 	public static <E> void fire(Object type, E e) {
 		Objects.requireNonNull(type);
+		log.debug("Firing event: {}", type);
 
-		if (listeners.containsKey(type)) {
-			log.debug("Firing event: {}", type);
+		if (listeners.containsKey(type))
 			pool.execute(() -> listeners.get(type).removeIf(f -> !f.apply(e)));
-		}
+
 	}
 
 	/**

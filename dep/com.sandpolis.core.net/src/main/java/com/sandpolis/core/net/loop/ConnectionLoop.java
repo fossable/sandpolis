@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ChannelConstant;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.proto.util.Generator.LoopConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 
@@ -124,12 +123,6 @@ public class ConnectionLoop extends Thread {
 					} catch (TimeoutException | ExecutionException e) {
 						log.trace("Connection attempt timed out after {} ms", timeout);
 						result = null;
-					}
-
-					if (result != null) {
-						// TODO move somewhere else
-						ConnectionStore.add(result);
-						return;
 					}
 
 					time = System.currentTimeMillis() - time;

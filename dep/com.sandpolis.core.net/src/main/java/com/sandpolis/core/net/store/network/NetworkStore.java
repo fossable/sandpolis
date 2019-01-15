@@ -87,7 +87,7 @@ public final class NetworkStore {
 
 	static {
 		Signaler.register(SOCK_LOST, (Sock sock) -> {
-			network.removeEdge(network.edgeConnectingOrNull(Core.cvid(), sock.getRemoteCvid()));
+			network.edgeConnecting(Core.cvid(), sock.getRemoteCvid()).ifPresent(network::removeEdge);
 
 			// See if that was the last connection to a server
 			if (sock.getRemoteInstance() == Instance.SERVER) {

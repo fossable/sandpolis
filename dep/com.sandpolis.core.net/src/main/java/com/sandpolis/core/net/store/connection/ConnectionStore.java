@@ -43,7 +43,6 @@ import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.util.Generator.LoopConfig;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.util.concurrent.DefaultPromise;
 
 /**
  * A static store for managing direct connections and connection attempt
@@ -84,47 +83,14 @@ public final class ConnectionStore extends Store {
 		SOCK_ESTABLISHED;
 	}
 
-	/**
-	 * Add a connection to the store.
-	 * 
-	 * @param con The connection
-	 */
-	public static void add(Sock con) {
-		Objects.requireNonNull(con);
-		if (connections.containsKey(con.getRemoteCvid()))
-			throw new IllegalArgumentException();
-		log.debug("New sock registered with: {}", con.getRemoteCvid());
+	static {
+		Signaler.register(SOCK_LOST, (Sock sock) -> {
+			connections.remove(sock.getRemoteCvid());
+		});
 
-		connections.put(con.getRemoteCvid(), con);
-		Signaler.fire(SOCK_ESTABLISHED, con);
-	}
-
-	/**
-	 * Close and remove a connection from the store.
-	 * 
-	 * @param cvid The CVID of the connection to remove
-	 * @return The closed connection or {@code null} if the connection was not found
-	 */
-	public static Sock close(int cvid) {
-		Sock removal = connections.remove(cvid);
-		if (removal != null) {
-			removal.close();
-			log.debug("Sock with: {} closed", cvid);
-
-			Signaler.fire(SOCK_LOST, removal);
-		}
-		return removal;
-	}
-
-	/**
-	 * Close and remove a connection from the store.
-	 * 
-	 * @param con The connection to remove
-	 */
-	public static void close(Sock con) {
-		Objects.requireNonNull(con);
-
-		close(con.getRemoteCvid());
+		Signaler.register(SOCK_ESTABLISHED, (Sock sock) -> {
+			connections.put(sock.getRemoteCvid(), sock);
+		});
 	}
 
 	/**
@@ -170,12 +136,7 @@ public final class ConnectionStore extends Store {
 	public static SockFuture connect(Bootstrap bootstrap) {
 		Objects.requireNonNull(bootstrap);
 
-		SockFuture sf = new SockFuture(bootstrap.connect());
-		sf.addListener((DefaultPromise<Sock> future) -> {
-			add(future.get());
-		});
-
-		return sf;
+		return new SockFuture(bootstrap.connect());
 	}
 
 	/**

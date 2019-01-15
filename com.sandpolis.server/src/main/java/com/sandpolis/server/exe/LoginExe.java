@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.ConnectionState;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ValidationUtil;
@@ -53,7 +52,7 @@ public class LoginExe extends Exelet {
 		log.debug("Processing logout request from: {}", connector.getRemoteIP());
 
 		connector.send(rs(m).setRsOutcome(Outcome.newBuilder().setResult(true)));
-		ConnectionStore.close(connector);
+		connector.close();
 	}
 
 	@Unauth

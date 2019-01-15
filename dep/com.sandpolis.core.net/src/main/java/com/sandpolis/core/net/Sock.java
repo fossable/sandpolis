@@ -34,8 +34,10 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.net.store.connection.ConnectionStore.Events;
 import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
@@ -103,11 +105,19 @@ public class Sock {
 	public void changeState(ConnectionState state) {
 		var attribute = channel.attr(ChannelConstant.CONNECTION_STATE);
 		if (attribute.get() == state)
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Attempted to change state to itself: " + state);
 
 		log.debug("[CVID {}] Connection state changed: {}->{}", getRemoteCvid(), attribute.get(), state);
 		synchronized (attribute) {
 			attribute.set(state);
+		}
+
+		switch (state) {
+		case NOT_CONNECTED:
+			Signaler.fire(Events.SOCK_LOST, this);
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -135,8 +145,10 @@ public class Sock {
 	public Sock(Channel channel) {
 		this.channel = Objects.requireNonNull(channel);
 
-		if (getState() == null)
-			changeState(NOT_CONNECTED);
+		if (getState() == CONNECTED) {
+			log.debug("[CVID {}] Connection state changed: {}->{}", getRemoteCvid(), NOT_CONNECTED, CONNECTED);
+			Signaler.fire(Events.SOCK_ESTABLISHED, this);
+		}
 	}
 
 	/**
@@ -145,7 +157,6 @@ public class Sock {
 	public void close() {
 		requireState(CONNECTED, AUTHENTICATED);
 
-		changeState(NOT_CONNECTED);
 		channel.close();
 		channel.eventLoop().shutdownGracefully();
 	}
@@ -350,7 +361,8 @@ public class Sock {
 	 * @return A {@link MessageFuture}
 	 */
 	public MessageFuture read(int id, int timeout, TimeUnit unit) {
-		return channel.attr(ChannelConstant.HANDLER_EXECUTE).get().putResponseFuture(id, new MessageFuture(timeout, unit));
+		return channel.attr(ChannelConstant.HANDLER_EXECUTE).get().putResponseFuture(id,
+				new MessageFuture(timeout, unit));
 	}
 
 	/**
