@@ -18,7 +18,7 @@
 package com.sandpolis.server.store.server;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
@@ -26,8 +26,9 @@ import javax.imageio.ImageIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.Files;
 import com.google.protobuf.ByteString;
+import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.Store.AutoInitializer;
 import com.sandpolis.core.instance.store.pref.PrefStore;
@@ -62,30 +63,31 @@ public final class ServerStore extends Store {
 		if (banner != null)
 			log.debug("Reloading server banner");
 
-		RS_ServerBanner.Builder rs = RS_ServerBanner.newBuilder();
-		rs.setBanner(PrefStore.getString("banner.text", ""));// TODO default
-		File imagePath = new File(PrefStore.getString("banner.image-path", ""));// TODO default
-		if (imagePath.exists()) {
-			try {
-				rs.setBannerImage(ByteString.copyFrom(Files.toByteArray(imagePath)));
+		var ban = RS_ServerBanner.newBuilder().setVersion(Core.SO_BUILD.getVersion())
+				.setBanner(Config.get("banner.text"));
+
+		String imagePath = Config.get("banner.image.path");
+		if (imagePath != null) {
+			try (var in = new FileInputStream(imagePath)) {
+				ban.setBannerImage(ByteString.readFrom(in));
 			} catch (IOException e) {
 				log.error("Failed to read banner image", e);
 			}
 		} else {
-			byte[] image = PrefStore.getBytes("banner.image-attachment");
+			byte[] image = PrefStore.getBytes("banner.image.bytes");
 			if (image != null)
-				rs.setBannerImage(ByteString.copyFrom(image));
+				ban.setBannerImage(ByteString.copyFrom(image));
 		}
 
 		// Validate image format
-		try (ByteArrayInputStream in = new ByteArrayInputStream(rs.getBannerImage().toByteArray())) {
+		try (var in = new ByteArrayInputStream(ban.getBannerImage().toByteArray())) {
 			ImageIO.read(in);
 		} catch (IOException e) {
 			log.error("Invalid banner image format", e);
-			rs.clearBannerImage();
+			ban.clearBannerImage();
 		}
 
-		banner = rs.build();
+		banner = ban.build();
 	}
 
 	/**

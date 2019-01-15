@@ -123,6 +123,9 @@ public final class Server {
 
 		Config.register("debug_client", true);
 
+		Config.register("banner.text", "Welcome to a Sandpolis Server");
+		Config.register("banner.image.path", null);
+
 		return task.success();
 	}
 
