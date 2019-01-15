@@ -17,7 +17,7 @@ class DeployInstance extends RemoteTask {
 				execute 'mkdir -p ' + directory + '/jlib'
 
 				// Reset Java Preferences
-				execute 'rm -rf ~/.java'
+				execute 'rm -rf ~/.java/.userPrefs/com'
 
 				// Transfer instance binary
 				put from: project_deploy.jar.archivePath, into: directory
