@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.concurrent.Executors;
-import java.util.prefs.Preferences;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,7 +174,7 @@ public final class Server {
 		NetworkStore.updateCvid(Core.cvid());
 
 		// Load PrefStore
-		PrefStore.load(Preferences.userRoot());
+		PrefStore.load(Server.class);
 
 		// Load DatabaseStore
 		try {

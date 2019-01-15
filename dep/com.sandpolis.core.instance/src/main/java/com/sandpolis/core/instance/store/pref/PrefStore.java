@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.instance.store.pref;
 
+import java.util.Objects;
 import java.util.prefs.Preferences;
 
 import org.slf4j.Logger;
@@ -44,17 +45,19 @@ public final class PrefStore extends Store {
 	private static Preferences provider;
 
 	/**
-	 * Load the store from the given {@link Preferences}.
+	 * Initialize the store from the given {@link Preferences}.
 	 * 
 	 * @param prefs The store provider
 	 */
-	public static void load(Preferences prefs) {
-		if (prefs == null)
-			throw new IllegalArgumentException();
+	public static void init(Preferences prefs) {
 		if (provider != null)
 			throw new IllegalStateException();
 
-		provider = prefs;
+		provider = Objects.requireNonNull(prefs);
+	}
+
+	public static void load(Class<?> c) {
+		init(Preferences.userNodeForPackage(c));
 	}
 
 	/**

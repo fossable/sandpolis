@@ -33,7 +33,7 @@ public class PrefStoreTest {
 
 	@BeforeAll
 	public static void setup() {
-		PrefStore.load(Preferences.userRoot().node("/com/sandpolis/test"));
+		PrefStore.init(Preferences.userRoot().node("/com/sandpolis/test"));
 	}
 
 	@Test
