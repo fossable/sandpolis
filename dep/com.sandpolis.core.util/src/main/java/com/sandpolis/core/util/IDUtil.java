@@ -19,6 +19,8 @@ package com.sandpolis.core.util;
 
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 
+import java.util.Objects;
+
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
@@ -50,8 +52,6 @@ public final class IDUtil {
 	 * @since 5.0.0
 	 */
 	public static final class CVID {
-		private CVID() {
-		}
 
 		/**
 		 * The number of bits used to encode the instance ID (IID).
@@ -70,20 +70,26 @@ public final class IDUtil {
 		}
 
 		/**
-		 * Generate a new CVID.
+		 * Generate a new random CVID.<br>
+		 * <br>
+		 * Note: there's a small chance that this method will produce an invalid ID of 0
+		 * for Charcoal instances. Since Charcoal is for debugging only, this is not
+		 * remedied by introducing a validity-checking loop. Charcoal instances should
+		 * manually check the output of this method and regenerate if equal to 0.
 		 * 
 		 * @param instance The new CVID's instance type
 		 * @return A new CVID
 		 */
 		public static int cvid(Instance instance) {
-			if (instance == null)
-				throw new IllegalArgumentException();
+			Objects.requireNonNull(instance);
 			if (instance == Instance.UNRECOGNIZED)
 				throw new IllegalArgumentException();
 
-			return Math.abs((RandUtil.nextInt() << IID_SPACE) | instance.getNumber());
+			return ((RandUtil.nextInt() << IID_SPACE) | instance.getNumber()) & 0x7FFFFFFF;
 		}
 
+		private CVID() {
+		}
 	}
 
 	/**
