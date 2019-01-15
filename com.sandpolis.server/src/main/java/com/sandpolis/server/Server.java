@@ -167,6 +167,7 @@ public final class Server {
 		ThreadStore.register(new NioEventLoopGroup(4), "net.exelet");
 		ThreadStore.register(new NioEventLoopGroup(2), "net.connection.outgoing");
 		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), "net.message.incoming");
+		ThreadStore.register(Executors.newSingleThreadExecutor(), "generator");
 		Signaler.init(ThreadStore.get("signaler"));
 
 		// Load NetworkStore and choose a new CVID

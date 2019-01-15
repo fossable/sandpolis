@@ -30,6 +30,7 @@ import com.sandpolis.core.net.handler.CvidResponseHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.net.init.PipelineInitializer;
 import com.sandpolis.server.exe.AuthExe;
+import com.sandpolis.server.exe.GenExe;
 import com.sandpolis.server.exe.GroupExe;
 import com.sandpolis.server.exe.ListenerExe;
 import com.sandpolis.server.exe.LoginExe;
@@ -61,7 +62,7 @@ public class ServerInitializer extends PipelineInitializer {
 	 * All server {@link Exelet} classes.
 	 */
 	@SuppressWarnings("unchecked")
-	private static final Class<? extends Exelet>[] exelets = new Class[] { AuthExe.class, GroupExe.class,
+	private static final Class<? extends Exelet>[] exelets = new Class[] { AuthExe.class, GenExe.class, GroupExe.class,
 			ListenerExe.class, LoginExe.class, ServerExe.class, UserExe.class };
 
 	/**
