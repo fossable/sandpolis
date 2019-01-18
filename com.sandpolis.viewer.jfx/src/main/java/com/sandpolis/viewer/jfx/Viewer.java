@@ -45,12 +45,11 @@ import com.sandpolis.core.ipc.IPCTasks;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.viewer.jfx.common.FxEventExecutor;
-import com.sandpolis.viewer.jfx.view.login.LoginController;
+import com.sandpolis.viewer.jfx.common.FxUtil;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -69,11 +68,25 @@ public final class Viewer {
 				Core.SO_BUILD.getNumber());
 
 		MainDispatch.register(BasicTasks::loadConfiguration);
+		MainDispatch.register(Viewer::loadConfiguration);
 		MainDispatch.register(IPCTasks::checkLocks);
 		MainDispatch.register(Viewer::loadEnvironment);
 		MainDispatch.register(Viewer::loadStores);
 		MainDispatch.register(Viewer::loadPlugins);
 		MainDispatch.register(Viewer::loadUserInterface);
+	}
+
+	/**
+	 * Load the configuration from the runtime environment.
+	 *
+	 * @return The task's outcome
+	 */
+	@InitializationTask(name = "Load viewer configuration", fatal = true)
+	private static TaskOutcome loadConfiguration() {
+		TaskOutcome task = TaskOutcome.begin(new Object() {
+		}.getClass().getEnclosingMethod());
+
+		return task.success();
 	}
 
 	/**
@@ -162,19 +175,41 @@ public final class Viewer {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		new Thread(() -> Application.launch(new Application() {
-			@Override
-			public void start(Stage stage) throws Exception {
-				FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/view/login/Login.fxml"));
-				Parent root = loader.load();
-				((LoginController) loader.getController()).setStage(stage);
-				Scene scene = new Scene(root, 420, 380);
-				stage.setScene(scene);
-				stage.show();
-			}
-		}.getClass())).start();
+		new Thread(() -> Application.launch(UI.class)).start();
 
 		return task.success();
+	}
+
+	/**
+	 * The {@link Application} class for starting the user interface.
+	 */
+	public static class UI extends Application {
+
+		private static Application singleton;
+
+		public UI() {
+			if (singleton != null)
+				throw new IllegalStateException();
+
+			singleton = this;
+		}
+
+		/**
+		 * Get the application handle.
+		 * 
+		 * @return The {@link Application} or {@code null} if it has not started
+		 */
+		public static Application getApplication() {
+			return singleton;
+		}
+
+		@Override
+		public void start(Stage stage) throws Exception {
+			// TODO automatic login
+			Parent root = FxUtil.loadRoot("/fxml/view/login/Login.fxml", stage);
+			stage.setScene(new Scene(root, 420, 380));
+			stage.show();
+		}
 	}
 
 }
