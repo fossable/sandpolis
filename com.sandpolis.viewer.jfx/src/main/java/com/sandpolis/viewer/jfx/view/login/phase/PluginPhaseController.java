@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
+ *                    Copyright 2019 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,62 +15,10 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.view.login;
+package com.sandpolis.viewer.jfx.view.login.phase;
 
-import org.apache.commons.validator.routines.DomainValidator;
-import org.apache.commons.validator.routines.InetAddressValidator;
+import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 
-import com.sandpolis.core.util.ValidationUtil;
+public class PluginPhaseController extends AbstractController {
 
-import javafx.fxml.FXML;
-import javafx.scene.control.TextField;
-
-public class ServerPaneController {
-
-	@FXML
-	private TextField address;
-	@FXML
-	private TextField port;
-
-	@FXML
-	private void initialize() {
-
-		// Set address filter
-		// TODO
-
-		// Set port filter
-		port.textProperty().addListener((p, o, n) -> {
-			if (!ValidationUtil.port(n) && !n.isEmpty())
-				port.setText(o);
-		});
-
-	}
-
-	public boolean checkInput() {
-		if (!ValidationUtil.port(port.getText())) {
-			// TODO visual errors
-			return false;
-		}
-
-		if (!DomainValidator.getInstance().isValid(address.getText())
-				&& !InetAddressValidator.getInstance().isValid(address.getText())) {
-			// TODO visual errors
-			return false;
-		}
-
-		return true;
-	}
-
-	public void setEnabled(boolean enabled) {
-		address.setDisable(!enabled);
-		port.setDisable(!enabled);
-	}
-
-	public String getAddress() {
-		return address.getText();
-	}
-
-	public int getPort() {
-		return Integer.parseInt(port.getText());
-	}
 }

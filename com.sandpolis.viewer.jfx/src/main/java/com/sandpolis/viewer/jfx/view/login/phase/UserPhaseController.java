@@ -15,16 +15,17 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.view.login;
+package com.sandpolis.viewer.jfx.view.login.phase;
 
 import java.security.cert.X509Certificate;
 
 import javax.net.ssl.SSLPeerUnverifiedException;
 
+import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 import com.sandpolis.core.util.CertUtil;
-import com.sandpolis.core.util.ValidationUtil;
+import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -33,7 +34,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 
-public class UserPaneController {
+public class UserPhaseController extends AbstractController {
 
 	@FXML
 	private Label server_ip;
@@ -52,47 +53,21 @@ public class UserPaneController {
 
 	private Task<Void> pinger;
 
-	public boolean checkInputs() {
-		if (!ValidationUtil.username(username.getText())) {
-			// TODO visual error
-			return false;
-		}
-
-		if (!ValidationUtil.password(password.getText())) {
-			// TODO visual error
-			return false;
-		}
-
-		return true;
-	}
-
-	public void setEnabled(boolean enabled) {
-		username.setDisable(!enabled);
-		password.setDisable(!enabled);
-	}
-
-	public void set(Sock sock, RS_ServerBanner banner) {
-		setServerInfo(banner);
-		setSockInfo(sock);
-
-	}
-
-	private void setServerInfo(RS_ServerBanner rs) {
-		if (rs == null)
-			throw new IllegalArgumentException();
+	@Subscribe
+	public void setBannerInfo(RS_ServerBanner rs) {
 
 		// Set static info
 		server_banner.setText(rs.getBanner());
 		server_version.setText(rs.getVersion());
 	}
 
-	private void setSockInfo(Sock sock) {
+	@Subscribe
+	public void setSockInfo(Sock sock) {
 		server_ip.setText(sock.getRemoteIP());
-		setCertificate(sock);
-		startPinger(sock);
 	}
 
-	private void setCertificate(Sock sock) {
+	@Subscribe
+	public void setCertificate(Sock sock) {
 
 		try {
 			X509Certificate certificate = sock.getRemoteCertificate();
@@ -116,7 +91,8 @@ public class UserPaneController {
 
 	}
 
-	private void startPinger(Sock sock) {
+	@Subscribe
+	public void startPinger(Sock sock) {
 		if (pinger != null)
 			pinger.cancel();
 
@@ -135,10 +111,20 @@ public class UserPaneController {
 		new Thread(pinger).start();
 	}
 
+	/**
+	 * Get the current username.
+	 * 
+	 * @return The username
+	 */
 	public String getUsername() {
 		return username.getText();
 	}
 
+	/**
+	 * Get the current password.
+	 * 
+	 * @return The password
+	 */
 	public String getPassword() {
 		return password.getText();
 	}

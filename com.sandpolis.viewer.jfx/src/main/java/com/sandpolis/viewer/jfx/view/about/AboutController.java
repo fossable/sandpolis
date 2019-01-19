@@ -22,6 +22,7 @@ import java.util.Date;
 import com.interactivemesh.jfx.importer.stl.StlMeshImporter;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.viewer.jfx.Viewer.UI;
+import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -42,7 +43,7 @@ import javafx.scene.shape.MeshView;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
 
-public class AboutController {
+public class AboutController extends AbstractController {
 
 	@FXML
 	private Label version;

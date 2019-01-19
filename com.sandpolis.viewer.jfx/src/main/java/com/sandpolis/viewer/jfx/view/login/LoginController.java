@@ -20,6 +20,7 @@ package com.sandpolis.viewer.jfx.view.login;
 import java.io.IOException;
 import java.util.Objects;
 
+import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
@@ -27,13 +28,16 @@ import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.viewer.cmd.LoginCmd;
 import com.sandpolis.viewer.cmd.NetworkCmd;
 import com.sandpolis.viewer.cmd.ServerCmd;
+import com.sandpolis.viewer.jfx.common.FxUtil;
+import com.sandpolis.viewer.jfx.common.controller.FxController;
 import com.sandpolis.viewer.jfx.common.pane.CarouselPane;
+import com.sandpolis.viewer.jfx.view.login.phase.ServerPhaseController;
+import com.sandpolis.viewer.jfx.view.login.phase.UserPhaseController;
 
 import javafx.animation.FadeTransition;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -42,7 +46,7 @@ import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-public class LoginController {
+public class LoginController extends FxController {
 	@FXML
 	private Button btn_back;
 	@FXML
@@ -50,21 +54,21 @@ public class LoginController {
 	@FXML
 	private CarouselPane carousel;
 	@FXML
-	private UserPaneController userPaneController;
+	private UserPhaseController userPhaseController;
 	@FXML
-	private ServerPaneController serverPaneController;
+	private ServerPhaseController serverPhaseController;
 	@FXML
 	private ImageView bannerImage;
-
-	/**
-	 * The login stage.
-	 */
-	private Stage stage;
 
 	/**
 	 * The cached default banner.
 	 */
 	private Image defaultImage;
+
+	/**
+	 * The connection to the server.
+	 */
+	private Sock connection;
 
 	private enum LoginPhase {
 		SERVER_INPUT, USER_INPUT, PLUGIN_PHASE;
@@ -74,6 +78,8 @@ public class LoginController {
 
 	@FXML
 	private void initialize() {
+		register(serverPhaseController, userPhaseController);
+
 		defaultImage = new Image(LoginController.class.getResourceAsStream("/image/view/login/banner.png"));
 		resetBannerImage();
 
@@ -106,6 +112,8 @@ public class LoginController {
 			break;
 		case USER_INPUT:
 			phase.set(LoginPhase.SERVER_INPUT);
+			if (connection != null)
+				connection.close();
 			break;
 		case PLUGIN_PHASE:
 			break;
@@ -118,20 +126,19 @@ public class LoginController {
 	private void btn_continue(ActionEvent event) {
 		switch (phase.get()) {
 		case SERVER_INPUT:
-			if (!serverPaneController.checkInput())
-				return;
-
-			NetworkCmd.async().connect(serverPaneController.getAddress(), serverPaneController.getPort())
+			NetworkCmd.async().connect(serverPhaseController.getAddress(), serverPhaseController.getPort())
 					.addListener((SockFuture sockFuture) -> {
 						if (sockFuture.isSuccess()) {
-							ServerCmd.async().target(sockFuture.get()).pool("ui.fx").getServerBanner()
+							connection = sockFuture.get();
+							ServerCmd.async().target(connection).pool("ui.fx").getServerBanner()
 									.addListener((ResponseFuture<RS_ServerBanner> responseFuture) -> {
 										if (responseFuture.isSuccess()) {
 											RS_ServerBanner banner = responseFuture.get();
 											if (!banner.getBannerImage().isEmpty())
 												setBannerImage(new Image(banner.getBannerImage().newInput()));
 
-											userPaneController.set(sockFuture.get(), banner);
+											bus.post(connection);
+											bus.post(banner);
 											phase.set(LoginPhase.USER_INPUT);
 										}
 									});
@@ -140,7 +147,8 @@ public class LoginController {
 
 			break;
 		case USER_INPUT:
-			LoginCmd.async().pool("ui.fx").login(userPaneController.getUsername(), userPaneController.getPassword())
+			LoginCmd.async().target(connection).pool("ui.fx")
+					.login(userPhaseController.getUsername(), userPhaseController.getPassword())
 					.addListener((ResponseFuture<Outcome> outcomeFuture) -> {
 						if (outcomeFuture.isSuccess()) {
 							// TODO plugin sync
@@ -193,17 +201,13 @@ public class LoginController {
 		stage.close();
 
 		try {
-			Parent root = new FXMLLoader(getClass().getResource("/fxml/view/main/Main.fxml")).load();
+			Parent root = FxUtil.loadRoot("/fxml/view/main/Main.fxml");
 			Stage stage = new Stage();
 			stage.setScene(new Scene(root, 450, 450));
 			stage.show();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	public void setStage(Stage stage) {
-		this.stage = Objects.requireNonNull(stage);
 	}
 
 }

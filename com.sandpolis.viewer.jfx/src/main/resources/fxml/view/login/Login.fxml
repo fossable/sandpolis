@@ -31,8 +31,9 @@
 	<center>
 		<CarouselPane fx:id="carousel" direction="left" duration="600">
 			<children>
-				<fx:include fx:id="serverPane" source="ServerPane.fxml" />
-				<fx:include fx:id="userPane" source="UserPane.fxml" />
+				<fx:include fx:id="serverPhase" source="phase/ServerPhase.fxml" />
+				<fx:include fx:id="userPhase" source="phase/UserPhase.fxml" />
+				<fx:include fx:id="pluginPhase" source="phase/PluginPhase.fxml" />
 			</children>
 		</CarouselPane>
 	</center>

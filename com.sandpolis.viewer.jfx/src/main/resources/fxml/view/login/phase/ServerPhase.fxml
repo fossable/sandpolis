@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.viewer.jfx.view.login.ServerPaneController">
+<VBox xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.viewer.jfx.view.login.phase.ServerPhaseController">
 	<children>
 		<TitledPane animated="false" collapsible="false" text="Server" BorderPane.alignment="CENTER">
 			<content>
