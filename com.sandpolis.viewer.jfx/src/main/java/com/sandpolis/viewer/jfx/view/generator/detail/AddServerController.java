@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.view.generator.Events.AddServerEvent;
-import com.sandpolis.viewer.jfx.view.generator.Events.CloseDetailEvent;
+import com.sandpolis.viewer.jfx.view.generator.Events.DetailCloseEvent;
 import com.sandpolis.viewer.jfx.view.generator.Item.ConfigGroup;
 import com.sandpolis.viewer.jfx.view.generator.Item.ConfigPropertyList;
 import com.sandpolis.viewer.jfx.view.generator.Item.ConfigPropertyText;
@@ -94,13 +94,13 @@ public class AddServerController extends AbstractController {
 		// Bind address to group name
 		group.getValue().name().bind(a.value());
 
-		bus.post(AddServerEvent.build(group));
-		bus.post(CloseDetailEvent.build());
+		post(AddServerEvent::new, group);
+		post(DetailCloseEvent::new);
 	}
 
 	@FXML
 	private void cancel(ActionEvent event) {
-		bus.post(CloseDetailEvent.build());
+		post(DetailCloseEvent::new);
 	}
 
 }
