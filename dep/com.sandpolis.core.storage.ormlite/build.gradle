@@ -21,7 +21,12 @@ dependencies {
 	testImplementation 'net.jodah:concurrentunit:0.4.3'
 	
 	implementation project(':dep:com.sandpolis.core.instance')
+	implementation lib.jpa
 	implementation lib.slf4j
 	implementation lib.sqlite
 	implementation lib.ormlite
+}
+
+test {
+	useJUnitPlatform()
 }

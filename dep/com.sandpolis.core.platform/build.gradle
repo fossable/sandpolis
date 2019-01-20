@@ -25,3 +25,7 @@ dependencies {
 	implementation lib.oshi
 	implementation lib.guava
 }
+
+test {
+	useJUnitPlatform()
+}

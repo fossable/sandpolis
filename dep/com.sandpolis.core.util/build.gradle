@@ -24,3 +24,7 @@ dependencies {
 	implementation lib.guava
 	implementation lib.validator
 }
+
+test {
+	useJUnitPlatform()
+}

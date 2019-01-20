@@ -16,6 +16,7 @@ eclipse {
 
 dependencies {
 	testImplementation lib.junit
+	testImplementation project(':dep:com.sandpolis.core.net').sourceSets.test.output
 	
 	implementation project(path: ':com.sandpolis.client.mega', configuration: 'onejarArtifact')
 	// implementation project(':com.sandpolis.client.micro')
@@ -41,4 +42,8 @@ jar {
 			'Main-Class': 'com.sandpolis.server.Main'
     	)
 	}
+}
+
+test {
+	useJUnitPlatform()
 }

@@ -25,3 +25,7 @@ dependencies {
 	implementation lib.netty
 	implementation lib.guava
 }
+
+test {
+	useJUnitPlatform()
+}

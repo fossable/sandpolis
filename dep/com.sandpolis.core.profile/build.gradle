@@ -35,3 +35,7 @@ dependencies {
 	implementation lib.hibernate
 	implementation lib.guava
 }
+
+test {
+	useJUnitPlatform()
+}
