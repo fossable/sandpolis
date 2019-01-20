@@ -33,7 +33,6 @@ include 'dep:com.sandpolis.core.proto'
 include 'dep:com.sandpolis.core.storage.hibernate'
 include 'dep:com.sandpolis.core.storage.ormlite'
 include 'dep:com.sandpolis.core.stream'
-include 'dep:com.sandpolis.core.test'
 include 'dep:com.sandpolis.core.util'
 include 'dep:com.sandpolis.viewer'
 

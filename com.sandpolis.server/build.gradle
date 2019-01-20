@@ -15,7 +15,6 @@ eclipse {
 }
 
 dependencies {
-	testImplementation project(':dep:com.sandpolis.core.test')
 	testImplementation lib.junit
 	
 	implementation project(path: ':com.sandpolis.client.mega', configuration: 'onejarArtifact')
