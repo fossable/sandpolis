@@ -30,6 +30,7 @@ import static com.sandpolis.core.proto.util.Result.ErrorCode.OK;
 import java.io.File;
 import java.security.cert.CertificateException;
 
+import org.apache.commons.validator.routines.DomainValidator;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.commons.validator.routines.RegexValidator;
@@ -146,6 +147,16 @@ public final class ValidationUtil {
 	 */
 	public static boolean privateIP(String ip) {
 		return InetAddressValidator.getInstance().isValidInet4Address(ip) && PRIVATEIP_REGEX.isValid(ip);
+	}
+
+	/**
+	 * Validate a DNS name or IP address.
+	 * 
+	 * @param address The candidate address
+	 * @return The address validity
+	 */
+	public static boolean address(String address) {
+		return InetAddressValidator.getInstance().isValid(address) || DomainValidator.getInstance().isValid(address);
 	}
 
 	/**
