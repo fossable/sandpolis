@@ -21,11 +21,11 @@ import java.util.stream.Stream;
 
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
+import com.sandpolis.viewer.jfx.view.generator.TreeGroup;
+import com.sandpolis.viewer.jfx.view.generator.TreeAttributeList;
+import com.sandpolis.viewer.jfx.view.generator.TreeAttributeText;
 import com.sandpolis.viewer.jfx.view.generator.Events.AddServerEvent;
 import com.sandpolis.viewer.jfx.view.generator.Events.DetailCloseEvent;
-import com.sandpolis.viewer.jfx.view.generator.Item.ConfigGroup;
-import com.sandpolis.viewer.jfx.view.generator.Item.ConfigPropertyList;
-import com.sandpolis.viewer.jfx.view.generator.Item.ConfigPropertyText;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -81,13 +81,13 @@ public class AddServerController extends AbstractController {
 		}
 
 		// Add the server to the configuration tree
-		var group = new TreeItem<>(new ConfigGroup(address).icon("server.png"));
+		var group = new TreeItem<>(new TreeGroup(address).icon("server.png"));
 
-		var a = new ConfigPropertyText("address").validator(ValidationUtil::address).value(address);
-		var p = new ConfigPropertyText("port").validator(ValidationUtil::port).value(port).icon("ip.png");
-		var c = new ConfigPropertyList("certificates").options("true", "false").value(certificates.toString())
+		var a = new TreeAttributeText("address").validator(ValidationUtil::address).value(address);
+		var p = new TreeAttributeText("port").validator(ValidationUtil::port).value(port).icon("ip.png");
+		var c = new TreeAttributeList("certificates").options("true", "false").value(certificates.toString())
 				.icon("ssl_certificate.png");
-		var cc = new ConfigPropertyText("connection cooldown").value(cooldown.toString());
+		var cc = new TreeAttributeText("connection cooldown").value(cooldown.toString());
 
 		Stream.of(a, p, c, cc).map(TreeItem::new).forEach(group.getChildren()::add);
 

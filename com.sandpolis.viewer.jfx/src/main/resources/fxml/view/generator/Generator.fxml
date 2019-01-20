@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.ToolBar?>
+<?import com.sandpolis.viewer.jfx.common.pane.ExtendPane?>
+<?import javafx.scene.control.Button?>
+
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity"
+	minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
+	prefWidth="600.0" xmlns="http://javafx.com/javafx/9"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.jfx.view.generator.GeneratorController">
+	<left>
+	    <ToolBar focusTraversable="false" orientation="VERTICAL">
+		<items>
+		<Button onAction="#add_network_target" text="Add Server" />
+		<Button onAction="#add_plugin" text="Add Plugin" />
+		<Button onAction="#add_group" text="Add Group" />
+		<Button onAction="#generate" text="Generate" />
+		</items>
+        </ToolBar>
+	</left>
+	<center>
+       <ExtendPane fx:id="extend" >
+          <main>
+             <TreeView fx:id="tree" BorderPane.alignment="CENTER" />      
+          </main>
+       </ExtendPane>
+	</center>
+</BorderPane>

@@ -17,42 +17,64 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.view.generator;
 
-import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
-import com.sandpolis.viewer.jfx.common.event.Event;
-import com.sandpolis.viewer.jfx.common.event.ParameterizedEvent;
+import java.util.Objects;
 
-import javafx.scene.control.TreeItem;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.scene.Node;
+import javafx.scene.image.ImageView;
 
-public final class Events {
+/**
+ * The superclass for all items in the generator's configuration tree.
+ * 
+ * @author cilki
+ * @since 5.0.0
+ */
+public abstract class GenTreeItem {
+
+	enum Type {
+		CATEGORY, GROUP, ATTRIBUTE;
+	}
+
+	private Type type;
 
 	/**
-	 * Add a new network target to the configuration tree.
+	 * The name of this {@link GenTreeItem}.
 	 */
-	public static class AddServerEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
+	private StringProperty name = new SimpleStringProperty();
+
+	/**
+	 * The icon of this {@link GenTreeItem}.
+	 */
+	private ObjectProperty<Node> icon = new SimpleObjectProperty<>();
+
+	public GenTreeItem(Type type, String name) {
+		this.type = Objects.requireNonNull(type);
+		this.name.set(Objects.requireNonNull(name));
+	}
+
+	public Type getType() {
+		return type;
+	}
+
+	public StringProperty name() {
+		return name;
+	}
+
+	public ObjectProperty<Node> icon() {
+		return icon;
 	}
 
 	/**
-	 * Add a new plugin to the configuration tree.
+	 * Set the {@link GenTreeItem}'s icon.
+	 * 
+	 * @param location The icon name within the icons directory
+	 * @return {@code this}
 	 */
-	public static class AddPluginEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
+	public GenTreeItem icon(String location) {
+		this.icon.set(new ImageView("/image/icon16/common/" + Objects.requireNonNull(location)));
+		return this;
 	}
-
-	/**
-	 * Add a new auth group to the configuration tree.
-	 */
-	public static class AddGroupEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
-	}
-
-	/**
-	 * Close the detail panel.
-	 */
-	public static class DetailCloseEvent extends Event {
-	}
-
-	/**
-	 * Indicates that a generation attempt has completed.
-	 */
-	public static class GenerationCompletedEvent extends ParameterizedEvent<RS_Generate> {
-	}
-
 }

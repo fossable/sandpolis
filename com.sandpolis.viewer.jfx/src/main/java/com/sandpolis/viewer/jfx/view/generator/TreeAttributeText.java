@@ -17,42 +17,56 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.view.generator;
 
-import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
-import com.sandpolis.viewer.jfx.common.event.Event;
-import com.sandpolis.viewer.jfx.common.event.ParameterizedEvent;
+import java.util.Objects;
+import java.util.function.Function;
 
-import javafx.scene.control.TreeItem;
+import javafx.scene.control.TextField;
 
-public final class Events {
+/**
+ * Represents a text attribute cell in the configuration tree.
+ * 
+ * @author cilki
+ * @since 5.0.0
+ */
+public class TreeAttributeText extends TreeAttribute {
 
-	/**
-	 * Add a new network target to the configuration tree.
-	 */
-	public static class AddServerEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
+	private TextField text = new TextField();
+
+	public TreeAttributeText(String name) {
+		super(name);
+
+		// Setup value binding
+		value().bind(text.textProperty());
+
+		// Add control
+		control.setRight(text);
+	}
+
+	public TreeAttributeText validator(Function<String, Boolean> validator) {
+		this.validator = Objects.requireNonNull(validator);
+		return this;
 	}
 
 	/**
-	 * Add a new plugin to the configuration tree.
+	 * Set the current value.
+	 * 
+	 * @param value The new value
+	 * @return {@code this}
 	 */
-	public static class AddPluginEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
+	public TreeAttributeText value(String value) {
+		this.text.setText(value);
+		return this;
 	}
 
 	/**
-	 * Add a new auth group to the configuration tree.
+	 * Set the number of character columns.
+	 * 
+	 * @param number The new value
+	 * @return {@code this}
 	 */
-	public static class AddGroupEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
-	}
-
-	/**
-	 * Close the detail panel.
-	 */
-	public static class DetailCloseEvent extends Event {
-	}
-
-	/**
-	 * Indicates that a generation attempt has completed.
-	 */
-	public static class GenerationCompletedEvent extends ParameterizedEvent<RS_Generate> {
+	public TreeAttributeText columns(int number) {
+		this.text.setPrefColumnCount(number);
+		return this;
 	}
 
 }

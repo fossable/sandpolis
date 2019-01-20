@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+
+
+<TitledPane collapsible="false" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.viewer.jfx.view.generator.detail.StatusController">
+   <content>
+      <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="80.0">
+         <top>
+            <FlowPane alignment="TOP_CENTER" columnHalignment="CENTER" hgap="5.0" BorderPane.alignment="CENTER">
+               <children>
+                  <Label text="Output Size:" />
+                  <Label text="0" />
+               </children>
+            </FlowPane>
+         </top>
+      </BorderPane>
+   </content>
+</TitledPane>

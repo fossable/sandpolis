@@ -15,44 +15,41 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.view.generator;
+package com.sandpolis.viewer.jfx.view.generator.detail;
 
-import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
-import com.sandpolis.viewer.jfx.common.event.Event;
-import com.sandpolis.viewer.jfx.common.event.ParameterizedEvent;
+import com.google.common.eventbus.Subscribe;
+import com.sandpolis.viewer.jfx.common.controller.AbstractController;
+import com.sandpolis.viewer.jfx.view.generator.Events.GenerationCompletedEvent;
 
-import javafx.scene.control.TreeItem;
+import javafx.fxml.FXML;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 
-public final class Events {
+public class ProgressController extends AbstractController {
 
-	/**
-	 * Add a new network target to the configuration tree.
-	 */
-	public static class AddServerEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
+	@FXML
+	private ProgressBar progress;
+	@FXML
+	private Label text;
+	@FXML
+	private ButtonBar buttons;
+
+	@FXML
+	private void initialize() {
+		buttons.setVisible(false);
 	}
 
-	/**
-	 * Add a new plugin to the configuration tree.
-	 */
-	public static class AddPluginEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
-	}
+	@Subscribe
+	public void completed(GenerationCompletedEvent event) {
+		buttons.setVisible(true);
 
-	/**
-	 * Add a new auth group to the configuration tree.
-	 */
-	public static class AddGroupEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
+		var rs = event.get();
+		if (rs.getReport().getResult()) {
+			progress.setProgress(1.0);
+			text.setText("Wrote " + rs.getReport().getOutputSize() + " bytes");
+		} else {
+			progress.setProgress(0.0);
+		}
 	}
-
-	/**
-	 * Close the detail panel.
-	 */
-	public static class DetailCloseEvent extends Event {
-	}
-
-	/**
-	 * Indicates that a generation attempt has completed.
-	 */
-	public static class GenerationCompletedEvent extends ParameterizedEvent<RS_Generate> {
-	}
-
 }

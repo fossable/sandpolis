@@ -17,42 +17,16 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.view.generator;
 
-import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
-import com.sandpolis.viewer.jfx.common.event.Event;
-import com.sandpolis.viewer.jfx.common.event.ParameterizedEvent;
+/**
+ * Represents a group cell in the configuration tree.
+ * 
+ * @author cilki
+ * @since 5.0.0
+ */
+public class TreeGroup extends GenTreeItem {
 
-import javafx.scene.control.TreeItem;
-
-public final class Events {
-
-	/**
-	 * Add a new network target to the configuration tree.
-	 */
-	public static class AddServerEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
-	}
-
-	/**
-	 * Add a new plugin to the configuration tree.
-	 */
-	public static class AddPluginEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
-	}
-
-	/**
-	 * Add a new auth group to the configuration tree.
-	 */
-	public static class AddGroupEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
-	}
-
-	/**
-	 * Close the detail panel.
-	 */
-	public static class DetailCloseEvent extends Event {
-	}
-
-	/**
-	 * Indicates that a generation attempt has completed.
-	 */
-	public static class GenerationCompletedEvent extends ParameterizedEvent<RS_Generate> {
+	public TreeGroup(String name) {
+		super(Type.GROUP, name);
 	}
 
 }

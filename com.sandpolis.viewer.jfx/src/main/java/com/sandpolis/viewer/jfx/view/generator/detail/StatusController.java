@@ -15,44 +15,10 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.view.generator;
+package com.sandpolis.viewer.jfx.view.generator.detail;
 
-import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
-import com.sandpolis.viewer.jfx.common.event.Event;
-import com.sandpolis.viewer.jfx.common.event.ParameterizedEvent;
+import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 
-import javafx.scene.control.TreeItem;
-
-public final class Events {
-
-	/**
-	 * Add a new network target to the configuration tree.
-	 */
-	public static class AddServerEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
-	}
-
-	/**
-	 * Add a new plugin to the configuration tree.
-	 */
-	public static class AddPluginEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
-	}
-
-	/**
-	 * Add a new auth group to the configuration tree.
-	 */
-	public static class AddGroupEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
-	}
-
-	/**
-	 * Close the detail panel.
-	 */
-	public static class DetailCloseEvent extends Event {
-	}
-
-	/**
-	 * Indicates that a generation attempt has completed.
-	 */
-	public static class GenerationCompletedEvent extends ParameterizedEvent<RS_Generate> {
-	}
+public class StatusController extends AbstractController {
 
 }
