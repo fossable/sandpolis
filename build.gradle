@@ -67,12 +67,6 @@ ext.lib = [
 	// Guava
 	guava: 'com.google.guava:guava:27.0.1-jre',
 
-	// Bittorrent
-	ttorrent: 'com.turn:ttorrent-core:1.5',
-
-	// Docker client
-	docker: 'com.spotify:docker-client:8.11.7',
-
 	// Hardware information
 	oshi: 'com.github.oshi:oshi-core:3.12.0',
 

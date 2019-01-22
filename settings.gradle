@@ -37,5 +37,4 @@ include 'dep:com.sandpolis.core.util'
 include 'dep:com.sandpolis.viewer'
 
 // Core plugins
-include 'plugin:com.sandpolis.plugin.browser:client:mega'
 include 'plugin:com.sandpolis.plugin.desktop:viewer:jfx'
