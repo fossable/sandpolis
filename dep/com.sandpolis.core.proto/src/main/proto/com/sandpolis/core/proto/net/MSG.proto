@@ -28,7 +28,6 @@ import "com/sandpolis/core/proto/net/MC_Delta.proto";
 import "com/sandpolis/core/proto/net/MC_FsHandle.proto";
 import "com/sandpolis/core/proto/net/MC_Generator.proto";
 import "com/sandpolis/core/proto/net/MC_Group.proto";
-//import "com/sandpolis/core/proto/net/MC_Keylogger.proto";
 import "com/sandpolis/core/proto/net/MC_Listener.proto";
 import "com/sandpolis/core/proto/net/MC_Login.proto";
 import "com/sandpolis/core/proto/net/MC_Network.proto";
@@ -37,7 +36,6 @@ import "com/sandpolis/core/proto/net/MC_Plugin.proto";
 import "com/sandpolis/core/proto/net/MC_Server.proto";
 import "com/sandpolis/core/proto/net/MC_Shell.proto";
 //import "com/sandpolis/core/proto/net/MC_Stream.proto";
-//import "com/sandpolis/core/proto/net/MC_Torrent.proto";
 import "com/sandpolis/core/proto/net/MC_User.proto";
 import "com/sandpolis/core/proto/util/Result.proto";
 
@@ -68,7 +66,6 @@ message Message {
 		// High frequency messages first
 //		EV_StreamData 			ev_stream_data 				= 4;
 //		EV_EndpointClosed 		ev_endpoint_closed 			= 5;
-//		EV_KEvent 				ev_kevent 					= 7;
 //		EV_NetworkDelta 		ev_network_delta 			= 9;
 		
 		// A generic response indicating an outcome

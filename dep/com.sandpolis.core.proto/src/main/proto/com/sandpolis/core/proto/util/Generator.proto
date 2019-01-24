@@ -22,7 +22,6 @@ option java_package = "com.sandpolis.core.proto.util";
 
 import "com/sandpolis/core/proto/util/Auth.proto";
 import "com/sandpolis/core/proto/util/Platform.proto";
-import "com/sandpolis/core/proto/util/Keylogger.proto";
 
 /**
  * Identifies the target host of a potential connection.
@@ -214,17 +213,6 @@ message AuthenticationConfig {
 		// Password authentication mechanism
 		PasswordContainer password = 3;
 	}
-}
-
-/**
- * Configuration specific to the keylogger feature.
- */
-message KeyloggerConfig {
-	// The flush trigger
-	KeyloggerTrigger flush_trigger = 1;
-	
-	// The flush value
-	int32 flush_value = 2;
 }
 
 /**
