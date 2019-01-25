@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public final class ThreadStore {
 
 	private static final Logger log = LoggerFactory.getLogger(ThreadStore.class);
 
-	private static Map<String, ExecutorService> map = new HashMap<>();
+	private static Map<String, ExecutorService> map;
 
 	/**
 	 * Associate each id in the given list with the given {@link ExecutorService}.
@@ -49,6 +50,8 @@ public final class ThreadStore {
 	 */
 	public static void register(ExecutorService executor, String... id) {
 		Objects.requireNonNull(executor);
+		if (map == null)
+			map = new HashMap<>();
 
 		for (String s : id)
 			map.put(s, executor);
@@ -63,10 +66,33 @@ public final class ThreadStore {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <E> E get(String id) {
+		if (map == null)
+			// Invoke unit test
+			autoinit();
+
 		return (E) map.get(Objects.requireNonNull(id));
 	}
 
 	// TODO shutdown method
+
+	/**
+	 * Automatically initialize the store with default {@link ExecutorService}s for
+	 * easier unit testing.
+	 */
+	private static void autoinit() {
+		log.warn("Automatically initializing ThreadStore");
+		register(Executors.newSingleThreadExecutor(), "signaler", "generator");
+
+		try {
+			Class<?> c = Class.forName("io.netty.channel.nio.NioEventLoopGroup");
+			Object instance = c.getConstructor(Integer.class).newInstance(8);
+
+			register((ExecutorService) instance, "net.connection.outgoing", "net.message.incoming", "net.exelet");
+			register((ExecutorService) instance.getClass().getMethod("next").invoke(instance), "dns");
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	private ThreadStore() {
 	}
