@@ -20,6 +20,7 @@ package com.sandpolis.viewer.jfx.common.pane;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import javafx.animation.Animation.Status;
 import javafx.animation.Transition;
@@ -114,9 +115,10 @@ public class CarouselPane extends StackPane {
 	 */
 	public CarouselPane(@NamedArg("direction") String direction, @NamedArg("duration") int duration,
 			@NamedArg("children") Node... children) {
-		if (direction == null)
-			throw new IllegalArgumentException();
-		if (children == null || children.length == 0)
+		Objects.requireNonNull(direction);
+		Objects.requireNonNull(children);
+
+		if (children.length == 0)
 			throw new IllegalArgumentException();
 		if (duration < 0)
 			throw new IllegalArgumentException();
@@ -138,6 +140,17 @@ public class CarouselPane extends StackPane {
 		}
 
 		getChildren().add(views.get(0));
+	}
+
+	/**
+	 * Add a node to the end of the carousel. This method does not move the view.
+	 * 
+	 * @param name The node's name
+	 * @param node The node to add
+	 */
+	public void add(String name, Node node) {
+		node.setUserData(name);
+		add(node);
 	}
 
 	/**
@@ -182,6 +195,25 @@ public class CarouselPane extends StackPane {
 	}
 
 	/**
+	 * Move the view to the page associated with the given name (which comes from a
+	 * node's {@code userData}).
+	 * 
+	 * @param name The page's name
+	 */
+	public void moveTo(String name) {
+		Objects.requireNonNull(name);
+
+		for (int i = 0; i < views.size(); i++) {
+			if (name.equals(views.get(i).getUserData())) {
+				moveTo(i);
+				return;
+			}
+		}
+
+		throw new RuntimeException("Failed to find carousel page: " + name);
+	}
+
+	/**
 	 * Move the view to the given index.
 	 * 
 	 * @param n The desired index
@@ -190,8 +222,10 @@ public class CarouselPane extends StackPane {
 		if (n < 0 || n >= views.size())
 			throw new IllegalArgumentException();
 		if (n == current)
+			// Nothing to do
 			return;
 		if (isMoving())
+			// TODO Either schedule the transition or return failure
 			return;
 
 		Node next = views.get(n);
