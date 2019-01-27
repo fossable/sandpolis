@@ -20,11 +20,12 @@ package com.sandpolis.core.instance.storage;
 import java.lang.invoke.MethodHandle;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
- * An ephemeral {@link StoreProvider} that is backed by a {@link HashMap}.
+ * An ephemeral {@link StoreProvider} that is backed by a {@link Map}.
  * 
  * @author cilki
  * @since 5.0.0
@@ -34,10 +35,15 @@ public class MemoryMapStoreProvider<E> extends EphemeralStoreProvider<E> impleme
 	/**
 	 * The backing storage for this {@code StoreProvider}.
 	 */
-	private final Map<Object, E> map = new HashMap<>();
+	private final Map<Object, E> map;
 
 	public MemoryMapStoreProvider(Class<E> cls) {
+		this(cls, new HashMap<>());
+	}
+
+	public MemoryMapStoreProvider(Class<E> cls, Map<Object, E> map) {
 		super(cls);
+		this.map = Objects.requireNonNull(map);
 	}
 
 	@Override

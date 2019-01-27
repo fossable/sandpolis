@@ -20,11 +20,12 @@ package com.sandpolis.core.instance.storage;
 import java.lang.invoke.MethodHandle;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
- * An ephemeral {@link StoreProvider} that is backed by a {@link LinkedList}.
+ * An ephemeral {@link StoreProvider} that is backed by a {@link List}.
  * 
  * @author cilki
  * @since 5.0.0
@@ -37,8 +38,12 @@ public class MemoryListStoreProvider<E> extends EphemeralStoreProvider<E> implem
 	private final List<E> list;
 
 	public MemoryListStoreProvider(Class<E> cls) {
+		this(cls, new LinkedList<>());
+	}
+
+	public MemoryListStoreProvider(Class<E> cls, List<E> list) {
 		super(cls);
-		this.list = new LinkedList<>();
+		this.list = Objects.requireNonNull(list);
 	}
 
 	@Override
