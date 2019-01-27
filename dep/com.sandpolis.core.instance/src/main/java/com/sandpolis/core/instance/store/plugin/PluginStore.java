@@ -22,20 +22,12 @@ import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertPath;
-import java.security.cert.CertPathValidator;
-import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.PKIXParameters;
-import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -73,25 +65,34 @@ public final class PluginStore {
 
 	private static StoreProvider<Plugin> provider;
 
+	/**
+	 * The PF4J plugin manager.
+	 */
 	private static PluginManager manager;
 
-	private static X509Certificate plugin_ca;
+	/**
+	 * The default certificate verifier.
+	 */
+	private static Function<X509Certificate, Boolean> verifier = c -> true;
 
 	public static void init(StoreProvider<Plugin> provider) {
 		PluginStore.provider = Objects.requireNonNull(provider);
 		manager = new DefaultPluginManager();
-
-		try {
-			plugin_ca = CertUtil.parse(Resources.toByteArray(PluginStore.class.getResource("/cert/plugin.cert")));
-		} catch (CertificateException | IOException e) {
-			throw new RuntimeException("Failed to load certificate", e);
-		}
 	}
 
 	public static void load(Database main) {
 		Objects.requireNonNull(main);
 
 		init(StoreProviderFactory.database(Plugin.class, main));
+	}
+
+	/**
+	 * Set the certificate verifier.
+	 * 
+	 * @param verifier A new certificate verifier
+	 */
+	public static void setCertVerifier(Function<X509Certificate, Boolean> verifier) {
+		PluginStore.verifier = Objects.requireNonNull(verifier);
 	}
 
 	/**
@@ -225,7 +226,8 @@ public final class PluginStore {
 		// Verify certificate
 		try {
 			var cert = CertUtil.parse(JarUtil.getManifestValue("Plugin-Cert", path));
-			verifyCertificate(cert);
+			if (!verifier.apply(cert))
+				throw new CertificateException("Certificate verification failed");
 		} catch (CertificateException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -245,34 +247,6 @@ public final class PluginStore {
 	 */
 	private static byte[] hashPlugin(Path path) throws IOException {
 		return MoreFiles.asByteSource(path).hash(Hashing.sha256()).asBytes();
-	}
-
-	/**
-	 * Verify a plugin's certificate.
-	 * 
-	 * @param cert The plugin's certificate
-	 * @return Whether the certificate could be validated
-	 * @throws CertificateException
-	 */
-	public static boolean verifyCertificate(X509Certificate cert) throws CertificateException {
-		Objects.requireNonNull(cert);
-
-		CertPath path = CertificateFactory.getInstance("X.509").generateCertPath(List.of(cert));
-		TrustAnchor anchor = new TrustAnchor(plugin_ca, null);
-		// TODO add user trust anchors
-
-		try {
-			PKIXParameters params = new PKIXParameters(Collections.singleton(anchor));
-			params.setRevocationEnabled(false);
-
-			CertPathValidator.getInstance("PKIX").validate(path, params);
-		} catch (CertPathValidatorException e) {
-			return false;
-		} catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
-			throw new RuntimeException(e);
-		}
-
-		return true;
 	}
 
 	private PluginStore() {

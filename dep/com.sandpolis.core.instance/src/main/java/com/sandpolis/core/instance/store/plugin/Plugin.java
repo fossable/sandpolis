@@ -72,9 +72,6 @@ public final class Plugin {
 	@Column(nullable = true)
 	private byte[] icon;
 
-	@Column(nullable = true) // TODO false
-	private String trust_authority;
-
 	/**
 	 * Whether the plugin is enabled.
 	 */
@@ -143,10 +140,6 @@ public final class Plugin {
 		return icon;
 	}
 
-	public String getTrustAuthority() {
-		return trust_authority;
-	}
-
 	public boolean isEnabled() {
 		return enabled;
 	}
@@ -162,7 +155,7 @@ public final class Plugin {
 	 */
 	public PluginDescriptor toDescriptor() {
 		var plugin = PluginDescriptor.newBuilder().setId(getId()).setName(getName()).setVersion(getVersion())
-				.setTrustAuthority(getTrustAuthority()).setEnabled(isEnabled());
+				.setEnabled(isEnabled());
 
 		if (icon != null)
 			plugin.setIcon(ByteString.copyFrom(getIcon()));
