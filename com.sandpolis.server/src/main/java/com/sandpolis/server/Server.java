@@ -75,6 +75,7 @@ import com.sandpolis.server.store.group.Group;
 import com.sandpolis.server.store.group.GroupStore;
 import com.sandpolis.server.store.listener.Listener;
 import com.sandpolis.server.store.listener.ListenerStore;
+import com.sandpolis.server.store.trust.TrustStore;
 import com.sandpolis.server.store.user.User;
 import com.sandpolis.server.store.user.UserStore;
 
@@ -206,6 +207,7 @@ public final class Server {
 
 		// Load PluginStore
 		PluginStore.load(DatabaseStore.main());
+		PluginStore.setCertVerifier(TrustStore::verifyPluginCertificate);
 
 		return task.success();
 	}
