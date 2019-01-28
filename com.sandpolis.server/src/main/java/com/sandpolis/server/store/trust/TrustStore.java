@@ -20,7 +20,6 @@ package com.sandpolis.server.store.trust;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertPath;
 import java.security.cert.CertPathValidator;
 import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertificateException;
@@ -93,21 +92,22 @@ public final class TrustStore {
 	public static boolean verifyPluginCertificate(X509Certificate cert) {
 		Objects.requireNonNull(cert);
 
+		PKIXParameters params;
 		try (Stream<TrustAnchor> stream = provider.stream()) {
-			CertPath path = CertificateFactory.getInstance("X.509").generateCertPath(List.of(cert));
-
-			PKIXParameters params = new PKIXParameters(
-					stream.map(t -> new java.security.cert.TrustAnchor(t.getCertificate(), null))
-							.collect(Collectors.toSet()));
+			params = new PKIXParameters(stream.map(t -> new java.security.cert.TrustAnchor(t.getCertificate(), null))
+					.collect(Collectors.toSet()));
 			params.setRevocationEnabled(false);
+		} catch (InvalidAlgorithmParameterException e) {
+			throw new RuntimeException(e);
+		}
 
-			CertPathValidator.getInstance("PKIX").validate(path, params);
-		} catch (CertPathValidatorException e) {
+		try {
+			CertPathValidator.getInstance("PKIX")
+					.validate(CertificateFactory.getInstance("X.509").generateCertPath(List.of(cert)), params);
+		} catch (CertPathValidatorException | CertificateException e) {
 			return false;
 		} catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
 			throw new RuntimeException(e);
-		} catch (CertificateException e) {
-			return false;
 		}
 
 		log.debug("Successfully verified certificate: {}", cert.getSerialNumber());

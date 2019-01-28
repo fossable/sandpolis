@@ -51,13 +51,16 @@ public class TrustAnchor {
 	@Column
 	private String name;
 
-	@Column
+	@Column(length = 4096)
 	@Convert(converter = CertificateConverter.class)
 	private X509Certificate certificate;
 
 	public TrustAnchor(String name, X509Certificate certificate) {
 		this.name = Objects.requireNonNull(name);
 		this.certificate = Objects.requireNonNull(certificate);
+	}
+
+	TrustAnchor() {
 	}
 
 	public String getName() {
@@ -69,8 +72,8 @@ public class TrustAnchor {
 	}
 
 	@Converter
-	private class CertificateConverter implements AttributeConverter<X509Certificate, String> {
-	
+	public static class CertificateConverter implements AttributeConverter<X509Certificate, String> {
+
 		@Override
 		public String convertToDatabaseColumn(X509Certificate cert) {
 			try {
@@ -79,7 +82,7 @@ public class TrustAnchor {
 				throw new RuntimeException(e);
 			}
 		}
-	
+
 		@Override
 		public X509Certificate convertToEntityAttribute(String dbData) {
 			try {

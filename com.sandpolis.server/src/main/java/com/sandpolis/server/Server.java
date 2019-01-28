@@ -75,6 +75,7 @@ import com.sandpolis.server.store.group.Group;
 import com.sandpolis.server.store.group.GroupStore;
 import com.sandpolis.server.store.listener.Listener;
 import com.sandpolis.server.store.listener.ListenerStore;
+import com.sandpolis.server.store.trust.TrustAnchor;
 import com.sandpolis.server.store.trust.TrustStore;
 import com.sandpolis.server.store.user.User;
 import com.sandpolis.server.store.user.UserStore;
@@ -205,6 +206,9 @@ public final class Server {
 		// Load ProfileStore
 		ProfileStore.load(DatabaseStore.main());
 
+		// Load TrustStore
+		TrustStore.load(DatabaseStore.main());
+
 		// Load PluginStore
 		PluginStore.load(DatabaseStore.main());
 		PluginStore.setCertVerifier(TrustStore::verifyPluginCertificate);
@@ -308,6 +312,6 @@ public final class Server {
 	 */
 	private static final Class<?>[] ORM_CLASSES = new Class<?>[] { Database.class, Listener.class, Group.class,
 			ReciprocalKeyPair.class, KeyMechanism.class, PasswordMechanism.class, User.class, Profile.class,
-			AttributeNode.class, AttributeGroup.class, UntrackedAttribute.class, Plugin.class };
+			AttributeNode.class, AttributeGroup.class, UntrackedAttribute.class, Plugin.class, TrustAnchor.class };
 
 }
