@@ -28,7 +28,7 @@ dependencies {
 	implementation 'org.hibernate:hibernate-core:5.4.0.Final'
 	implementation 'org.hibernate:hibernate-c3p0:5.4.0.Final'
 	implementation 'com.github.gwenn:sqlite-dialect:master'
-	implementation 'javax.xml.bind:jaxb-api:2.3.0'
+	implementation 'javax.xml.bind:jaxb-api:2.3.1'
 }
 
 test {
