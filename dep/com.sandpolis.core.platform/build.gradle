@@ -23,7 +23,7 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.util')
 	
 	// https://github.com/oshi/oshi
-	implementation 'com.github.oshi:oshi-core:3.12.0'
+	implementation 'com.github.oshi:oshi-core:3.13.0'
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:27.0.1-jre'
