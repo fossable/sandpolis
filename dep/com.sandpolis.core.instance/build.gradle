@@ -15,19 +15,29 @@ eclipse {
 }
 
 dependencies {
-	testImplementation lib.junit
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.3.2'
 	testImplementation 'net.jodah:concurrentunit:0.4.3'
 
 	implementation project(':dep:com.sandpolis.core.proto')
 	implementation project(':dep:com.sandpolis.core.util')
-	implementation lib.protobuf
-	implementation lib.slf4j
-	implementation lib.logback
-	implementation lib.jansi
-	implementation lib.guava
-	implementation lib.jpa
-	implementation lib.pf4j
 
+	// https://github.com/qos-ch/logback
+	implementation 'ch.qos.logback:logback-core:1.2.3'
+	implementation 'ch.qos.logback:logback-classic:1.2.3'
+
+	// https://github.com/google/guava
+	implementation 'com.google.guava:guava:27.0.1-jre'
+
+	implementation 'javax.persistence:javax.persistence-api:2.2'	
+	
+	// https://github.com/fusesource/jansi
+	implementation 'org.fusesource.jansi:jansi:1.17.1'
+
+	// https://github.com/pf4j/pf4j
+	implementation 'org.pf4j:pf4j:2.5.0'
+
+	// https://github.com/qos-ch/slf4j
+	implementation 'org.slf4j:slf4j-api:1.7.25'
 }
 
 test {

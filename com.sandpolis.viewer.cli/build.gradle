@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-	testImplementation lib.junit
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.3.2'
 
 	implementation project(':dep:com.sandpolis.core.instance')
 	implementation project(':dep:com.sandpolis.core.ipc')
@@ -28,11 +28,23 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.proto')
 	implementation project(':dep:com.sandpolis.core.util')
 	implementation project(':dep:com.sandpolis.viewer')
-	implementation lib.slf4j
-	implementation lib.logback
-	implementation lib.lanterna
-	implementation lib.netty
-	
+
+	// https://github.com/qos-ch/logback
+	implementation 'ch.qos.logback:logback-core:1.2.3'
+	implementation 'ch.qos.logback:logback-classic:1.2.3'
+
+	// https://github.com/mabe02/lanterna
+	implementation 'com.googlecode.lanterna:lanterna:3.0.1'
+
+	// https://github.com/netty/netty
+	implementation 'io.netty:netty-common:4.1.32.Final'
+	implementation 'io.netty:netty-codec:4.1.32.Final'
+	implementation 'io.netty:netty-transport:4.1.32.Final'
+	implementation 'io.netty:netty-handler:4.1.32.Final'
+
+	// https://github.com/qos-ch/slf4j
+	implementation 'org.slf4j:slf4j-api:1.7.25'
+
 	// TODO remove
 	implementation 'org.mini2Dx:universal-tween-engine:6.3.3'
 	implementation ':SLPanels:'

@@ -15,14 +15,19 @@ eclipse {
 }
 
 dependencies {
-	testImplementation lib.junit
-	testImplementation lib.mariadb
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.3.2'
+	testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.3.0'
 	testImplementation 'net.jodah:concurrentunit:0.4.3'
-	
+
 	implementation project(':dep:com.sandpolis.core.instance')
-	implementation lib.slf4j
-	implementation lib.hibernate
-	
+
+	// https://github.com/qos-ch/slf4j
+	implementation 'org.slf4j:slf4j-api:1.7.25'
+
+	// https://github.com/hibernate/hibernate-orm
+	implementation 'org.hibernate:hibernate-core:5.4.0.Final'
+	implementation 'org.hibernate:hibernate-c3p0:5.4.0.Final'
+	implementation 'com.github.gwenn:sqlite-dialect:master'
 	implementation 'javax.xml.bind:jaxb-api:2.3.0'
 }
 

@@ -15,13 +15,14 @@ eclipse {
 }
 
 dependencies {
-	testImplementation lib.junit
-	
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.3.2'
+
 	implementation project(':dep:com.sandpolis.core.instance')
 	implementation project(':dep:com.sandpolis.core.proto')
 	implementation project(':dep:com.sandpolis.core.util')
-	implementation lib.slf4j
-	implementation lib.logback
+
+	// https://github.com/qos-ch/slf4j
+	implementation 'org.slf4j:slf4j-api:1.7.25'
 }
 
 jar {
