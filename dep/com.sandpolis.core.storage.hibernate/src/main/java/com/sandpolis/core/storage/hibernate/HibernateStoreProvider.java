@@ -19,6 +19,7 @@ package com.sandpolis.core.storage.hibernate;
 
 import java.util.ConcurrentModificationException;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -36,7 +37,7 @@ import com.sandpolis.core.instance.storage.ConcurrentStoreProvider;
 import com.sandpolis.core.instance.storage.StoreProvider;
 
 /**
- * A persistent {@link StoreProvider} that is backed by a Hibernate session.
+ * A persistent {@link StoreProvider} that is backed by a Hibernate connection.
  * 
  * @author cilki
  * @since 5.0.0
@@ -49,32 +50,13 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 	private final Class<E> cls;
 
 	/**
-	 * The backing storage for this {@code StoreProvider}.
+	 * The Hibernate session factory for this {@link StoreProvider}.
 	 */
 	private final EntityManagerFactory emf;
 
 	public HibernateStoreProvider(Class<E> cls, EntityManagerFactory emf) {
-		if (cls == null)
-			throw new IllegalArgumentException();
-		if (emf == null)
-			throw new IllegalArgumentException();
-
-		this.cls = cls;
-		this.emf = emf;
-
-	}
-
-	/**
-	 * Get a new {@link Stream} that does not register itself with
-	 * {@link ConcurrentStoreProvider} and therefore is not protected from
-	 * {@link ConcurrentModificationException}s.
-	 * 
-	 * @return A new unsafe stream
-	 */
-	private Stream<E> unsafeStream() {
-		EntityManager em = emf.createEntityManager();
-		CriteriaQuery<E> cq = em.getCriteriaBuilder().createQuery(cls);
-		return em.createQuery(cq.select(cq.from(cls))).getResultStream().onClose(() -> em.close());
+		this.cls = Objects.requireNonNull(cls);
+		this.emf = Objects.requireNonNull(emf);
 	}
 
 	@Override
@@ -138,12 +120,6 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 	}
 
 	@Override
-	public Stream<E> stream() {
-		beginStream();
-		return unsafeStream().onClose(() -> endStream());
-	}
-
-	@Override
 	public void remove(E e) {
 		mutate(() -> {
 			EntityManager em = emf.createEntityManager();
@@ -198,15 +174,23 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 	}
 
 	@Override
-	public void transaction(Runnable operation) {
+	public Stream<E> stream() {
+		beginStream();
+		return unsafeStream().onClose(() -> endStream());
+	}
+
+	/**
+	 * Get a new {@link Stream} that does not register itself with
+	 * {@link ConcurrentStoreProvider} and therefore is not protected from
+	 * {@link ConcurrentModificationException}s.
+	 * 
+	 * @return A new unsafe stream
+	 */
+	private Stream<E> unsafeStream() {
 		EntityManager em = emf.createEntityManager();
 		try {
-			em.getTransaction().begin();
-			operation.run();
-			em.getTransaction().commit();
-		} catch (Throwable e) {
-			if (em.getTransaction().isActive())
-				em.getTransaction().rollback();
+			CriteriaQuery<E> cq = em.getCriteriaBuilder().createQuery(cls);
+			return em.createQuery(cq.select(cq.from(cls))).getResultList().stream();
 		} finally {
 			em.close();
 		}

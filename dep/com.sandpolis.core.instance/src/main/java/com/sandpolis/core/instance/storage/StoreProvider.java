@@ -118,9 +118,9 @@ public interface StoreProvider<E> {
 	}
 
 	/**
-	 * Get a {@link Stream} over the elements in the store. <b>The stream MUST be
-	 * properly closed, otherwise the store will become permanently immutable</b>.
-	 * Always use the following idiom:
+	 * Get a {@link Stream} over all the elements in the store. <b>The stream MUST
+	 * be properly closed, otherwise the store will become permanently
+	 * immutable</b>. Always use the following idiom:
 	 * 
 	 * <pre>
 	 * try (Stream stream = provider.stream()) {
@@ -128,13 +128,15 @@ public interface StoreProvider<E> {
 	 * }
 	 * </pre>
 	 * 
+	 * The streams produced by this method are eagerly loaded. For performance
+	 * improvements when filtering, use {@link #stream(String)} which delegates
+	 * responsibility to the database itself.
+	 * 
 	 * @return A new {@link Stream} over the elements in the store
 	 */
 	public Stream<E> stream();
 
-	// TODO This may not be needed
-	default public void transaction(Runnable operation) {
-		operation.run();
-	}
+	// TODO JPQL stream for better filtering and ordering performance
+	// public Stream<E> stream(String query);
 
 }
