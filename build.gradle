@@ -80,18 +80,6 @@ ext.lib = [
 	lanterna: 'com.googlecode.lanterna:lanterna:3.0.1'
 ]
 
-ext.feature_matrix = [
-	browser: [
-		lib.sqlite
-	],
-	bittorrent: [
-		lib.ttorrent
-	],
-	docker: [
-		lib.docker
-	]
-]
-
 ext.native_matrix = [
 	sqlite_jdbc: [
 		freebsd: [

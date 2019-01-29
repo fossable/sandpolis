@@ -36,10 +36,7 @@ message SO_DependencyMatrix {
 		
 		// The size of the artifact in bytes.
 		int64 size = 2;
-		
-		// The artifact's associated client features.
-		repeated util.Feature feature = 3;
-		
+
 		/**
 		 * An internal component of the artifact which is specific to a platform
 		 * and system architecture.

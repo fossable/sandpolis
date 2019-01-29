@@ -36,7 +36,6 @@ import org.zeroturnaround.zip.ZipUtil;
 
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.store.artifact.ArtifactStore;
-import com.sandpolis.core.proto.util.Generator.Feature;
 import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Platform.Instance;
@@ -63,37 +62,27 @@ public class MegaGen extends FileGenerator {
 		FeatureSet features = config.getMega().getFeatures();
 
 		// Compute libraries for injection according to the configuration
-		List<ZipEntrySource> entries = ArtifactStore.getDependencies(Instance.CLIENT)
-				// Filter by feature
-				.filter(artifact -> {
-					for (Feature feature : artifact.getFeatureList()) {
-						if (!features.getFeatureList().contains(feature)) {
-							return false;
-						}
-					}
-					return true;
-				}).map(artifact -> {
-					File source = ArtifactStore.getArtifactFile(artifact);
-					if (artifact.getNativeComponentCount() != 0) {
+		List<ZipEntrySource> entries = ArtifactStore.getDependencies(Instance.CLIENT).map(artifact -> {
+			File source = ArtifactStore.getArtifactFile(artifact);
+			if (artifact.getNativeComponentCount() != 0) {
 
-						// Find unnecessary internal native components
-						String[] paths = artifact.getNativeComponentList().stream()
-								.filter(component -> !features.getSupportedOsList().contains(component.getPlatform()))
-								.filter(component -> !features.getSupportedArchList()
-										.contains(component.getArchitecture()))
-								.map(component -> component.getPath()).toArray(String[]::new);
+				// Find unnecessary internal native components
+				String[] paths = artifact.getNativeComponentList().stream()
+						.filter(component -> !features.getSupportedOsList().contains(component.getPlatform()))
+						.filter(component -> !features.getSupportedArchList().contains(component.getArchitecture()))
+						.map(component -> component.getPath()).toArray(String[]::new);
 
-						// Omit the components
-						try (var out = new ByteArrayOutputStream()) {
-							ZipUtil.removeEntries(source, paths, out);
-							return new ByteSource("lib/" + source.getName(), out.toByteArray());
-						} catch (IOException e) {
-							throw new RuntimeException(e);
-						}
-					}
-					return new FileSource("lib/" + source.getName(), source);
+				// Omit the components
+				try (var out = new ByteArrayOutputStream()) {
+					ZipUtil.removeEntries(source, paths, out);
+					return new ByteSource("lib/" + source.getName(), out.toByteArray());
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			return new FileSource("lib/" + source.getName(), source);
 
-				}).collect(Collectors.toList());
+		}).collect(Collectors.toList());
 
 		File client = Environment.get(JLIB).resolve("com.sandpolis.client.mega-standalone.jar").toFile();
 

@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -37,7 +36,6 @@ import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix;
 import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix.Artifact;
 import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix.Artifact.NativeComponent;
-import com.sandpolis.core.proto.util.Generator.Feature;
 import com.sandpolis.core.proto.util.Platform.Architecture;
 import com.sandpolis.core.proto.util.Platform.OsType;
 
@@ -113,21 +111,6 @@ public class DependencyProcessor {
 	 */
 	@SuppressWarnings("unchecked")
 	public SO_DependencyMatrix build() {
-
-		// Read feature extension from root project
-		Map<String, List<String>> features = (Map<String, List<String>>) root.getExtensions().getExtraProperties()
-				.get("feature_matrix");
-
-		// Flatten each feature into the mutable artifact's list
-		for (String feature : features.keySet()) {
-			for (Artifact.Builder artifact : artifacts) {
-				for (String dependency : features.get(feature)) {
-					if (artifact.getCoordinates().equals(dependency)) {
-						artifact.addFeature(Feature.valueOf(feature.toUpperCase()));
-					}
-				}
-			}
-		}
 
 		// Read natives extension from root project
 		Map<String, Map<String, Map<String, String>>> natives = (Map<String, Map<String, Map<String, String>>>) root

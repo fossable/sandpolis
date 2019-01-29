@@ -36,27 +36,6 @@ message NetworkTarget {
 }
 
 /**
- * An enumeration of all possible client features. 
- */
-enum Feature {
-
-	// Keylogger feature
-	KEYLOGGER = 0;
-	
-	// Bittorrent feature
-	TORRENT = 1;
-	
-	// Remote desktop feature
-	DESKTOP = 2;
-	
-	// Browser integration
-	BROWSER = 3;
-	
-	// Docker integration
-	DOCKER = 4;
-}
-
-/**
  * Identifies supported client features, platforms, and architectures. 
  */
 message FeatureSet {
@@ -66,9 +45,7 @@ message FeatureSet {
 	
 	// Supported system architectures
 	repeated Architecture supported_arch = 2;
-	
-	// Supported client features
-	repeated Feature feature = 3;
+
 }
 
 /**
