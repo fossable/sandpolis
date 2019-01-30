@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity"
+	minHeight="-Infinity" minWidth="-Infinity" styleClass="main_menu-panel"
+	xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.jfx.view.main.menu.ConfigurationController">
+	<children>
+		<Label alignment="CENTER" styleClass="main_menu-header"
+			text="Configuration">
+			<graphic>
+				<ImageView fitHeight="16.0" fitWidth="16.0"
+					pickOnBounds="true" preserveRatio="true">
+					<image>
+						<Image url="/image/icon16/common/cog.png" />
+					</image>
+				</ImageView>
+			</graphic>
+		</Label>
+		<VBox styleClass="main_menu-subpanel">
+			<children>
+				<Button mnemonicParsing="false" styleClass="main_menu-button"
+					text="Local Settings">
+					<graphic>
+						<ImageView fitHeight="16.0" fitWidth="16.0"
+							pickOnBounds="true" preserveRatio="true">
+							<image>
+								<Image url="/image/icon16/common/folder.png" />
+							</image>
+						</ImageView>
+					</graphic>
+				</Button>
+				<Button mnemonicParsing="false" styleClass="main_menu-button"
+					text="Server Settings">
+					<graphic>
+						<ImageView fitHeight="16.0" fitWidth="16.0"
+							pickOnBounds="true" preserveRatio="true">
+							<image>
+								<Image url="/image/icon16/common/view_graph.png" />
+							</image>
+						</ImageView>
+					</graphic>
+				</Button>
+			</children>
+		</VBox>
+	</children>
+	<padding>
+		<Insets left="4.0" right="4.0" />
+	</padding>
+</VBox>
