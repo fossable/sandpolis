@@ -18,7 +18,7 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.3.2'
 	testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.3.0'
 	testImplementation 'mysql:mysql-connector-java:8.0.13'
-	testImplementation 'net.jodah:concurrentunit:0.4.3'
+	testImplementation 'net.jodah:concurrentunit:0.4.4'
 
 	implementation project(':dep:com.sandpolis.core.instance')
 
