@@ -21,7 +21,7 @@ import java.awt.AWTException;
 
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.common.tray.Tray;
-import com.sandpolis.viewer.jfx.view.main.Events.Detail2OpenEvent;
+import com.sandpolis.viewer.jfx.view.main.Events.AuxDetailOpenEvent;
 import com.sandpolis.viewer.jfx.view.main.Events.ViewChangeEvent;
 
 import javafx.fxml.FXML;
@@ -40,12 +40,12 @@ public class InterfaceController extends AbstractController {
 
 	@FXML
 	private void open_console() {
-		post(Detail2OpenEvent::new, "console");
+		post(AuxDetailOpenEvent::new, "console");
 	}
 
 	@FXML
 	private void open_status() {
-		post(Detail2OpenEvent::new, "status");
+		post(AuxDetailOpenEvent::new, "status");
 	}
 
 	@FXML

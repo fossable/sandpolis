@@ -17,8 +17,12 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.view.main;
 
-import com.sandpolis.viewer.jfx.common.event.ParameterizedEvent;
+import java.util.List;
+
+import com.sandpolis.core.attribute.AttributeKey;
+import com.sandpolis.core.profile.Profile;
 import com.sandpolis.viewer.jfx.common.event.Event;
+import com.sandpolis.viewer.jfx.common.event.ParameterizedEvent;
 
 import javafx.scene.layout.Pane;
 
@@ -37,15 +41,39 @@ public final class Events {
 	}
 
 	/**
-	 * Close the main detail.
+	 * Close the host detail.
 	 */
-	public static class DetailCloseEvent extends Event {
+	public static class HostDetailCloseEvent extends Event {
 	}
 
 	/**
-	 * Open the main detail.
+	 * Open the host detail.
 	 */
-	public static class DetailOpenEvent extends ParameterizedEvent<String> {
+	public static class HostDetailOpenEvent extends ParameterizedEvent<Profile> {
+	}
+
+	/**
+	 * Change the headers in the host list.
+	 */
+	public static class HostListHeaderChangeEvent extends ParameterizedEvent<List<AttributeKey<?>>> {
+	}
+
+	/**
+	 * Open the auxiliary detail.
+	 */
+	public static class AuxDetailOpenEvent extends ParameterizedEvent<String> {
+	}
+
+	/**
+	 * Close the auxiliary detail.
+	 */
+	public static class AuxDetailCloseEvent extends ParameterizedEvent<String> {
+	}
+
+	/**
+	 * Change the primary view.
+	 */
+	public static class ViewChangeEvent extends ParameterizedEvent<String> {
 	}
 
 }
