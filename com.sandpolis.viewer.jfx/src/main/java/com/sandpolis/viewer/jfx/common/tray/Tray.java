@@ -26,6 +26,8 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import com.sandpolis.viewer.jfx.store.stage.StageStore;
+
 /**
  * A singleton for interacting with the AWT system tray.
  * 
@@ -70,7 +72,8 @@ public final class Tray {
 
 		SystemTray.getSystemTray().add(tray);
 
-		// TODO hide interface
+		// Hide interface
+		StageStore.hideAll();
 	}
 
 	/**
@@ -85,7 +88,8 @@ public final class Tray {
 		SystemTray.getSystemTray().remove(tray);
 		tray = null;
 
-		// TODO restore interface
+		// Restore interface
+		StageStore.showAll();
 	}
 
 	/**

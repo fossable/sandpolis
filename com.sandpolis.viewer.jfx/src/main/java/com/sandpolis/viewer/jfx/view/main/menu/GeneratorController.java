@@ -17,15 +17,15 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.view.main.menu;
 
+import static com.sandpolis.core.proto.util.Generator.OutputPayload.OUTPUT_MEGA;
+import static com.sandpolis.core.proto.util.Generator.OutputPayload.OUTPUT_MICRO;
+
 import java.io.IOException;
 
-import com.sandpolis.core.proto.util.Generator.OutputPayload;
-import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
+import com.sandpolis.viewer.jfx.store.stage.StageStore;
 
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
 
 public class GeneratorController extends AbstractController {
 
@@ -36,17 +36,11 @@ public class GeneratorController extends AbstractController {
 
 	@FXML
 	private void open_mega() throws IOException {
-		Stage stage = new Stage();
-		stage.setScene(new Scene(
-				FxUtil.loadRoot("/fxml/view/generator/Generator.fxml", stage, OutputPayload.OUTPUT_MEGA), 420, 380));
-		stage.show();
+		StageStore.newStage().root("/fxml/view/generator/Generator.fxml", OUTPUT_MEGA).size(420, 380).show();
 	}
 
 	@FXML
 	private void open_micro() throws IOException {
-		Stage stage = new Stage();
-		stage.setScene(new Scene(
-				FxUtil.loadRoot("/fxml/view/generator/Generator.fxml", stage, OutputPayload.OUTPUT_MICRO), 420, 380));
-		stage.show();
+		StageStore.newStage().root("/fxml/view/generator/Generator.fxml", OUTPUT_MICRO).size(420, 380).show();
 	}
 }

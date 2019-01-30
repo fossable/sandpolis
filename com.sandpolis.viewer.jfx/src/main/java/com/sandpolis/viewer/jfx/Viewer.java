@@ -206,9 +206,7 @@ public final class Viewer {
 		@Override
 		public void start(Stage stage) throws Exception {
 			// TODO automatic login
-			Parent root = FxUtil.loadRoot("/fxml/view/login/Login.fxml", stage);
-			stage.setScene(new Scene(root, 420, 380));
-			stage.show();
+			StageStore.newStage().stage(stage).root("/fxml/view/login/Login.fxml").size(420, 420 * 0.618).show();
 		}
 	}
 

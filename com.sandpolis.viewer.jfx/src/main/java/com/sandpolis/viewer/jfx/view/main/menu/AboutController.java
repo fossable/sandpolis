@@ -19,19 +19,15 @@ package com.sandpolis.viewer.jfx.view.main.menu;
 
 import java.io.IOException;
 
-import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
+import com.sandpolis.viewer.jfx.store.stage.StageStore;
 
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
 
 public class AboutController extends AbstractController {
 
 	@FXML
 	public void open_about() throws IOException {
-		Stage stage = new Stage();
-		stage.setScene(new Scene(FxUtil.loadRoot("/fxml/view/about/About.fxml"), 420, 380));
-		stage.show();
+		StageStore.newStage().root("/fxml/view/about/About.fxml").size(420, 420 * 0.618).show();
 	}
 }
