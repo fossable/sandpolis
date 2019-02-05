@@ -27,50 +27,54 @@ import java.security.cert.CertificateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.io.Files;
+import com.sandpolis.core.instance.Config;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
-public class ServerInitializerTest {
+class ServerInitializerTest {
 
-	private ServerInitializer secure;
-	private ServerInitializer secure2;
-	private ServerInitializer insecure;
+	// A ServerInitializer that uses an external certificate
+	ServerInitializer secure;
+
+	// A ServerInitializer that should use a fallback self-signed SSL certificate
+	ServerInitializer fallback;
 
 	@BeforeEach
-	public void setup() throws CertificateException, IOException {
+	void setup() throws CertificateException, IOException {
+		Config.register("log.traffic_raw", false);
+		Config.register("log.traffic", false);
+		Config.register("net.tls", true);
+
 		SelfSignedCertificate ssc = new SelfSignedCertificate();
-		secure = new ServerInitializer(Files.toByteArray(ssc.certificate()), Files.toByteArray(ssc.privateKey()));
-		secure2 = new ServerInitializer(ssc.cert().getEncoded(), ssc.key().getEncoded());
-		insecure = new ServerInitializer();
+		secure = new ServerInitializer(ssc.cert().getEncoded(), ssc.key().getEncoded());
+		fallback = new ServerInitializer();
 	}
 
 	@Test
-	public void testGetSslContext() throws Exception {
-		assertNotNull(insecure.getSslContext());
-		assertEquals(insecure.getSslContext(), insecure.getSslContext());
+	void testGetSslContext() throws Exception {
+
+		// Ensure a context is always returned
+		assertNotNull(fallback.getSslContext());
 		assertNotNull(secure.getSslContext());
+
+		// Ensure the contexts don't change
+		assertEquals(fallback.getSslContext(), fallback.getSslContext());
 		assertEquals(secure.getSslContext(), secure.getSslContext());
-		assertNotNull(secure2.getSslContext());
-		assertEquals(secure2.getSslContext(), secure2.getSslContext());
 	}
 
 	@Test
-	public void testInitChannel() throws Exception {
+	void testInitChannel() throws Exception {
 		Method init = ChannelInitializer.class.getDeclaredMethod("initChannel", Channel.class);
 		init.setAccessible(true);
 
-		EmbeddedChannel insecureChannel = new EmbeddedChannel();
 		EmbeddedChannel secureChannel = new EmbeddedChannel();
-		EmbeddedChannel secure2Channel = new EmbeddedChannel();
+		EmbeddedChannel fallbackChannel = new EmbeddedChannel();
 
-		init.invoke(insecure, insecureChannel);
+		// Use the initializers to build a channel
+		init.invoke(fallback, fallbackChannel);
 		init.invoke(secure, secureChannel);
-		init.invoke(secure2, secure2Channel);
-
 	}
-
 }

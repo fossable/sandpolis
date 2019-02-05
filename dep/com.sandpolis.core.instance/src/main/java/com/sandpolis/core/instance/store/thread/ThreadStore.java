@@ -85,7 +85,7 @@ public final class ThreadStore {
 
 		try {
 			Class<?> c = Class.forName("io.netty.channel.nio.NioEventLoopGroup");
-			Object instance = c.getConstructor(Integer.class).newInstance(8);
+			Object instance = c.getConstructor(int.class).newInstance(8);
 
 			register((ExecutorService) instance, "net.connection.outgoing", "net.message.incoming", "net.exelet");
 			register((ExecutorService) instance.getClass().getMethod("next").invoke(instance), "dns");
