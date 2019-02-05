@@ -20,7 +20,6 @@ package com.sandpolis.server.store.user;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URISyntaxException;
@@ -60,7 +59,7 @@ public class UserStoreTest {
 	public void testLoginExpired() {
 		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER2").setPassword("abc1234c").build());
 		assertFalse(UserStore.validLogin("TESTUSER2", "abc1234c").getResult());
-		UserStore.get("TESTUSER2").setExpiration(System.currentTimeMillis() + 10000);
+		UserStore.get("TESTUSER2").get().setExpiration(System.currentTimeMillis() + 10000);
 		assertTrue(UserStore.validLogin("TESTUSER2", "abc1234c").getResult());
 	}
 
@@ -70,9 +69,7 @@ public class UserStoreTest {
 				.add(UserConfig.newBuilder().setUsername("TESTUSER2").setPassword("abc1234c").build());
 		assertTrue(outcome.getResult());
 
-		User user = UserStore.get("TESTUSER3");
-
-		assertNotNull(user);
+		User user = UserStore.get("TESTUSER3").get();
 		assertEquals(0, user.getExpiration());
 		assertEquals("TESTUSER3", user.getUsername());
 		assertNotEquals(0, user.getCreation());

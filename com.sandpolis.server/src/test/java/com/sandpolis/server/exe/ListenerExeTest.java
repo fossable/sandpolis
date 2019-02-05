@@ -51,7 +51,7 @@ class ListenerExeTest extends ExeletTest {
 
 		UserStore.init(StoreProviderFactory.memoryList(User.class));
 		UserStore.add(UserConfig.newBuilder().setUsername("junit").setPassword("12345678").build());
-		UserStore.get("junit").setCvid(90);
+		UserStore.get("junit").get().setCvid(90);
 
 		ListenerStore.init(StoreProviderFactory.memoryList(Listener.class));
 		ListenerStore.add(ListenerConfig.newBuilder().setOwner("junit").setPort(5000).setAddress("0.0.0.0").build());

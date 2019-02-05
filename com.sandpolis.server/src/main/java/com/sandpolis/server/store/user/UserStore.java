@@ -23,6 +23,7 @@ import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.success;
 
 import java.util.Date;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,7 +104,7 @@ public final class UserStore extends Store {
 			return failure(outcome, "User does not exist");
 
 		// Retrieve user
-		User user = get(username);
+		User user = get(username).get();
 
 		// Check expiration date
 		if (user.getExpiration() > 0 && user.getExpiration() < System.currentTimeMillis())
@@ -169,7 +170,7 @@ public final class UserStore extends Store {
 	 */
 	public static Outcome delta(long id, ProtoUser delta) {
 		Outcome.Builder outcome = begin();
-		User user = get(id);
+		User user = get(id).orElse(null);
 		if (user == null)
 			return failure(outcome, "User not found");
 
@@ -186,7 +187,7 @@ public final class UserStore extends Store {
 	 * @param username The username to query
 	 * @return The user or {@code null}
 	 */
-	public static User get(String username) {
+	public static Optional<User> get(String username) {
 		return provider.get("username", username);
 	}
 
@@ -196,7 +197,7 @@ public final class UserStore extends Store {
 	 * @param id The ID to query
 	 * @return The user or {@code null}
 	 */
-	public static User get(long id) {
+	public static Optional<User> get(long id) {
 		return provider.get("id", id);
 	}
 
@@ -211,7 +212,7 @@ public final class UserStore extends Store {
 		if (!exists(username))
 			return failure(outcome, "User does not exist");
 
-		provider.remove(get(username));
+		get(username).ifPresent(provider::remove);
 
 		log.debug("User \"{}\" has been deleted", username);
 		return success(outcome);
@@ -228,7 +229,7 @@ public final class UserStore extends Store {
 		if (!exists(id))
 			return failure(outcome, "User does not exist");
 
-		provider.remove(get(id));
+		get(id).ifPresent(provider::remove);
 
 		log.debug("User \"{}\" has been deleted", id);
 		return success(outcome);

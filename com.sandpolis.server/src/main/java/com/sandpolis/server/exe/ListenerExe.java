@@ -78,7 +78,7 @@ public class ListenerExe extends Exelet {
 	 */
 	@AccessPredicate
 	private boolean ownership(long id) {
-		Listener listener = ListenerStore.get(id);
+		Listener listener = ListenerStore.get(id).orElse(null);
 		if (listener == null)
 			// Listener does not exist
 			return false;

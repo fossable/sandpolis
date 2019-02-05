@@ -222,7 +222,7 @@ public class Group implements ProtoType<ProtoGroup> {
 			if (config.hasName())
 				setName(config.getName());
 			if (config.hasOwner())
-				setOwner(UserStore.get(config.getOwner()));
+				setOwner(UserStore.get(config.getOwner()).get());
 			for (PasswordContainer password : config.getPasswordMechanismList()) {
 				addPasswordMechanism(new PasswordMechanism(this, password.getPassword()));
 			}

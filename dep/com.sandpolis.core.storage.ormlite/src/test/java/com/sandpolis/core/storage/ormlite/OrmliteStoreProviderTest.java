@@ -20,7 +20,6 @@ package com.sandpolis.core.storage.ormlite;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -161,13 +160,13 @@ class OrmliteStoreProviderTest {
 		provider.remove(o4);
 		provider.remove(o6);
 
-		assertNull(provider.get(2L));
-		assertNull(provider.get(4L));
-		assertNull(provider.get(6L));
+		assertFalse(provider.get(2L).isPresent());
+		assertFalse(provider.get(4L).isPresent());
+		assertFalse(provider.get(6L).isPresent());
 
-		assertEquals(o1, provider.get(1L));
-		assertEquals(o3, provider.get(3L));
-		assertEquals(o5, provider.get(5L));
+		assertEquals(o1, provider.get(1L).get());
+		assertEquals(o3, provider.get(3L).get());
+		assertEquals(o5, provider.get(5L).get());
 	}
 
 	@ParameterizedTest

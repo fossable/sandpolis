@@ -23,6 +23,7 @@ import static com.sandpolis.core.util.ProtoUtil.success;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,7 +71,7 @@ public final class GroupStore extends Store {
 	 * @param groupId The ID of a group
 	 * @return The requested {@link Group} or {@code null} if not found
 	 */
-	public static Group get(String groupId) {
+	public static Optional<Group> get(String groupId) {
 		return provider.get("id", groupId);
 	}
 
@@ -98,7 +99,7 @@ public final class GroupStore extends Store {
 	 * @return The outcome of the action
 	 */
 	public static Outcome add(Group group) {
-		Outcome.Builder outcome = begin();
+		var outcome = begin();
 		if (get(group.getGroupId()) != null)
 			return failure(outcome, "Group ID is already taken");
 
@@ -114,8 +115,8 @@ public final class GroupStore extends Store {
 	 * @return The outcome of the action
 	 */
 	public static Outcome delta(String id, ProtoGroup delta) {
-		Outcome.Builder outcome = begin();
-		Group group = get(id);
+		var outcome = begin();
+		Group group = get(id).orElse(null);
 		if (group == null)
 			return failure(outcome, "Group not found");
 
@@ -133,8 +134,8 @@ public final class GroupStore extends Store {
 	 * @return The outcome of the action
 	 */
 	public static Outcome remove(String id) {
-		Outcome.Builder outcome = begin();
-		provider.remove(get(id));
+		var outcome = begin();
+		get(id).ifPresent(provider::remove);
 		return success(outcome);
 	}
 

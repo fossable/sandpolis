@@ -322,7 +322,7 @@ public class Listener implements ProtoType<ProtoListener> {
 			if (config.hasAddress())
 				setAddress(config.getAddress());
 			if (config.hasOwner())
-				setOwner(UserStore.get(config.getOwner()));
+				setOwner(UserStore.get(config.getOwner()).get());
 			if (config.hasUpnp())
 				setUpnp(config.getUpnp());
 			if (config.hasClientAcceptor())

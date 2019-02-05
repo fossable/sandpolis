@@ -20,6 +20,7 @@ package com.sandpolis.core.storage.ormlite;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Predicate;
@@ -54,23 +55,21 @@ public class OrmliteStoreProvider<E> extends ConcurrentStoreProvider<E> implemen
 	}
 
 	@Override
-	public E get(Object id) {
+	public Optional<E> get(Object id) {
 		try {
-			return dao.queryForId(id);
+			return Optional.ofNullable(dao.queryForId(id));
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	@Override
-	public E get(String field, Object id) {
+	public Optional<E> get(String field, Object id) {
 		try {
 			List<E> results = dao.queryForEq(field, id);
 			if (results.size() == 0)
-				return null;
-			if (results.size() > 1)
-				return null;// TODO: do something about this case
-			return results.get(0);
+				return Optional.empty();
+			return Optional.of(results.get(0));
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}

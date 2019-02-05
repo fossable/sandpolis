@@ -21,6 +21,7 @@ import java.lang.invoke.MethodHandle;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -47,19 +48,19 @@ public class MemoryMapStoreProvider<E> extends EphemeralStoreProvider<E> impleme
 	}
 
 	@Override
-	public E get(Object id) {
-		return map.get(id);
+	public Optional<E> get(Object id) {
+		return Optional.ofNullable(map.get(id));
 	}
 
 	@Override
-	public E get(String field, Object id) {
+	public Optional<E> get(String field, Object id) {
 		beginStream();
 		try {
 			MethodHandle getField = fieldGetter(field);
 			for (E e : map.values())
 				if (id.equals(getField.invoke(e)))
-					return e;
-			return null;
+					return Optional.of(e);
+			return Optional.empty();
 		} catch (Throwable t) {
 			throw new RuntimeException(t);
 		} finally {

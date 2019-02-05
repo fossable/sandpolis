@@ -19,13 +19,14 @@ package com.sandpolis.core.profile;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.Store.ManualInitializer;
 import com.sandpolis.core.instance.storage.StoreProvider;
@@ -73,49 +74,35 @@ public final class ProfileStore extends Store {
 	 * @param cvid The profile's CVID
 	 * @return The requested {@link Profile} or {@code null} if not found
 	 */
-	public static Profile getProfile(int cvid) {
-		if (!profileCache.asMap().containsKey(cvid)) {
-			// Cache miss
-			Profile profile = provider.get("cvid", cvid);
-			if (profile == null)
-				return null;
-			profileCache.put(cvid, profile);
+	public static Optional<Profile> getProfile(int cvid) {
+		try {
+			return Optional.ofNullable(profileCache.get(cvid, () -> provider.get("cvid", cvid).orElse(null)));
+		} catch (ExecutionException e) {
+			throw new RuntimeException(e);
 		}
-		return profileCache.getIfPresent(cvid);
 	}
 
 	/**
 	 * Retrieve a viewer's {@link Profile} by username.
 	 * 
 	 * @param username The username of the requested profile
-	 * @return The requested {@link Profile} or {@code null} if not found
+	 * @return The requested {@link Profile}
 	 */
-	public static Profile getViewer(String username) {
+	public static Optional<Profile> getViewer(String username) {
 		// TODO
 		return null;
 	}
 
-	public static void merge(List<EV_ProfileDelta> updates) {
+	public static void merge(List<EV_ProfileDelta> updates) throws Exception {
 		for (EV_ProfileDelta update : updates) {
-			Profile profile = getProfile(update.getCvid());
+			Profile profile = getProfile(update.getCvid()).orElse(null);
 			if (profile == null) {
 				profile = new Profile(IDUtil.CVID.extractInstance(update.getCvid()));
 
-				try {
-					profile.merge(update.getUpdate());
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
+				profile.merge(update.getUpdate());
 				provider.add(profile);
 			} else {
-				try {
-					profile.merge(update.getUpdate());
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				profile.merge(update.getUpdate());
 			}
 		}
 	}
@@ -128,10 +115,6 @@ public final class ProfileStore extends Store {
 					.collect(Collectors.toList());
 		}
 
-	}
-
-	public static Profile getLocalProfile() {
-		return getProfile(Core.cvid());
 	}
 
 }

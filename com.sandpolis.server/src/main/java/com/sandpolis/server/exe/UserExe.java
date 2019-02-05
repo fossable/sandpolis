@@ -69,7 +69,7 @@ public class UserExe extends Exelet {
 	 */
 	@AccessPredicate
 	private boolean ownership(long id) {
-		User user = UserStore.get(id);
+		User user = UserStore.get(id).orElse(null);
 		if (user == null)
 			// User does not exist
 			return false;

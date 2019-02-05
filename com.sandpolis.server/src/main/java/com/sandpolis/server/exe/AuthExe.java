@@ -96,7 +96,7 @@ public class AuthExe extends Exelet {
 		var outcome = begin();
 
 		var rq = Objects.requireNonNull(m.getRqKeyAuth());
-		Group group = GroupStore.get(rq.getGroupId());
+		Group group = GroupStore.get(rq.getGroupId()).orElse(null);
 		if (group == null) {
 			connector.send(rs(m, failure(outcome)));
 			return;

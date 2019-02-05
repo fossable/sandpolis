@@ -21,6 +21,7 @@ import java.lang.invoke.MethodHandle;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -47,28 +48,28 @@ public class MemoryListStoreProvider<E> extends EphemeralStoreProvider<E> implem
 	}
 
 	@Override
-	public E get(Object id) {
+	public Optional<E> get(Object id) {
 		beginStream();
 		try {
 			for (E e : list) {
 				if (id.equals(getId(e)))
-					return e;
+					return Optional.of(e);
 			}
-			return null;
+			return Optional.empty();
 		} finally {
 			endStream();
 		}
 	}
 
 	@Override
-	public E get(String field, Object id) {
+	public Optional<E> get(String field, Object id) {
 		beginStream();
 		try {
 			MethodHandle getField = fieldGetter(field);
 			for (E e : list)
 				if (id.equals(getField.invoke(e)))
-					return e;
-			return null;
+					return Optional.of(e);
+			return Optional.empty();
 		} catch (Throwable t) {
 			throw new RuntimeException(t);
 		} finally {

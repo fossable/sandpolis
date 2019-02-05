@@ -61,7 +61,7 @@ public final class Post {
 			if (!test.getResult())
 				return failure(outcome.mergeFrom(test));
 
-			Group testGroup = GroupStore.get("2");
+			Group testGroup = GroupStore.get("2").get();
 			testGroup.addKeyMechanism(KeyMechanism.generate(testGroup));
 			if (testGroup.getKeys().size() != 1)
 				return failure(outcome, "Unexpected size: " + testGroup.getKeys().size());

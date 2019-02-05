@@ -140,7 +140,7 @@ public final class NetworkStore {
 		if (preferredServer == 0)
 			// Choose a server at random
 			preferredServer = network.nodes().stream()
-					.filter(cvid -> IDUtil.CVID.extractInstance(cvid) == Instance.SERVER).findAny().get();
+					.filter(cvid -> IDUtil.CVID.extractInstance(cvid) == Instance.SERVER).findAny().orElse(null);
 
 		return preferredServer;
 	}

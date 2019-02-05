@@ -22,6 +22,7 @@ import static com.sandpolis.core.util.ProtoUtil.complete;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.success;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -94,7 +95,7 @@ public final class ListenerStore extends Store {
 	 */
 	public static Outcome start(long id) {
 		Outcome.Builder outcome = begin();
-		Listener listener = get(id);
+		Listener listener = get(id).orElse(null);
 		if (listener == null)
 			return failure(outcome, "The listener was not found");
 		if (!listener.isEnabled())
@@ -134,7 +135,7 @@ public final class ListenerStore extends Store {
 	 */
 	public static Outcome stop(long id) {
 		Outcome.Builder outcome = begin();
-		Listener listener = get(id);
+		Listener listener = get(id).orElse(null);
 		if (listener == null)
 			return failure(outcome, "The listener was not found");
 		if (!listener.isListening())
@@ -151,7 +152,7 @@ public final class ListenerStore extends Store {
 	 * @param id A listener ID
 	 * @return The associated listener
 	 */
-	public static Listener get(long id) {
+	public static Optional<Listener> get(long id) {
 		return provider.get("id", id);
 	}
 
@@ -195,7 +196,7 @@ public final class ListenerStore extends Store {
 	 */
 	public static Outcome remove(long id) {
 		Outcome.Builder outcome = begin();
-		Listener listener = get(id);
+		Listener listener = get(id).get();
 		if (listener == null)
 			return failure(outcome, "Listener not found");
 		if (listener.isListening())
@@ -214,7 +215,7 @@ public final class ListenerStore extends Store {
 	 */
 	public static Outcome delta(long id, ProtoListener delta) {
 		Outcome.Builder outcome = begin();
-		Listener listener = get(id);
+		Listener listener = get(id).orElse(null);
 		if (listener == null)
 			return failure(outcome, "Listener not found");
 		if (listener.isListening())

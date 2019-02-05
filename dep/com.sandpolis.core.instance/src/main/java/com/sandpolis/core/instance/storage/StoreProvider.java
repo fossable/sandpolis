@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.instance.storage;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -55,7 +56,7 @@ public interface StoreProvider<E> {
 	 * @param id The primary key of the item to retrieve
 	 * @return The requested object
 	 */
-	public E get(Object id);
+	public Optional<E> get(Object id);
 
 	/**
 	 * Retrieve an object from the store's backing storage by the given identifier.
@@ -64,7 +65,7 @@ public interface StoreProvider<E> {
 	 * @param id    The field value of the item to retrieve
 	 * @return The requested object
 	 */
-	public E get(String field, Object id);
+	public Optional<E> get(String field, Object id);
 
 	/**
 	 * Remove an element from the store's backing storage.
@@ -92,7 +93,7 @@ public interface StoreProvider<E> {
 	 * @return Whether the requested object exists in the store
 	 */
 	default public boolean exists(Object id) {
-		return get(id) != null;
+		return get(id).isPresent();
 	}
 
 	/**
@@ -103,7 +104,7 @@ public interface StoreProvider<E> {
 	 * @return Whether the requested object exists in the store
 	 */
 	default public boolean exists(String field, Object id) {
-		return get(field, id) != null;
+		return get(field, id).isPresent();
 	}
 
 	/**

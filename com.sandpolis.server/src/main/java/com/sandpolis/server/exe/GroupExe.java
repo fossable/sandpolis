@@ -75,7 +75,7 @@ public class GroupExe extends Exelet {
 
 	@AccessPredicate
 	private boolean ownership(String id) {
-		Group group = GroupStore.get(id);
+		Group group = GroupStore.get(id).orElse(null);
 		if (group == null)
 			return false;
 
@@ -84,7 +84,7 @@ public class GroupExe extends Exelet {
 
 	@AccessPredicate
 	private boolean membership(String id) {
-		Group group = GroupStore.get(id);
+		Group group = GroupStore.get(id).orElse(null);
 		if (group == null)
 			return false;
 

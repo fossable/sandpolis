@@ -125,7 +125,7 @@ public final class PluginStore {
 	 */
 	public static Plugin getPlugin(String id) {
 		try (Stream<Plugin> stream = provider.stream()) {
-			return stream.filter(plugin -> plugin.getId().equals(id)).findAny().get();
+			return stream.filter(plugin -> plugin.getId().equals(id)).findAny().orElse(null);
 		}
 	}
 

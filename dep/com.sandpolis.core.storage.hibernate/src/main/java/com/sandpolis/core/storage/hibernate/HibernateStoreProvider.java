@@ -20,6 +20,7 @@ package com.sandpolis.core.storage.hibernate;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -74,21 +75,21 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 	}
 
 	@Override
-	public E get(Object id) {
+	public Optional<E> get(Object id) {
 		EntityManager em = emf.createEntityManager();
 
 		try {
 			em.getTransaction().begin();
 			E e = em.find(cls, id);
 			em.getTransaction().commit();
-			return e;
+			return Optional.ofNullable(e);
 		} finally {
 			em.close();
 		}
 	}
 
 	@Override
-	public E get(String field, Object id) {
+	public Optional<E> get(String field, Object id) {
 		EntityManager em = emf.createEntityManager();
 
 		try {
@@ -97,9 +98,9 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 			Root<E> root = cq.from(cls);
 			TypedQuery<E> tq = em.createQuery(cq.select(root).where(cb.equal(root.get(field), id)));
 
-			return tq.getSingleResult();
+			return Optional.of(tq.getSingleResult());
 		} catch (NoResultException e) {
-			return null;
+			return Optional.empty();
 		} finally {
 			em.close();
 		}
