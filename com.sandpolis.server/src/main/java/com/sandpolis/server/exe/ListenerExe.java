@@ -17,6 +17,9 @@
  *****************************************************************************/
 package com.sandpolis.server.exe;
 
+import static com.sandpolis.core.util.ProtoUtil.begin;
+import static com.sandpolis.core.util.ProtoUtil.success;
+
 import com.sandpolis.core.instance.Perm;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
@@ -40,7 +43,10 @@ public class ListenerExe extends Exelet {
 	@Permission(permission = Perm.server.listeners.create)
 	public void rq_add_listener(Message m) {
 		var rq = m.getRqAddListener();
-		reply(m, ListenerStore.add(rq.getConfig()));
+
+		var outcome = begin();
+		ListenerStore.add(rq.getConfig());
+		reply(m, success(outcome));
 	}
 
 	@Auth
@@ -49,7 +55,9 @@ public class ListenerExe extends Exelet {
 		if (!accessCheck(m, this::ownership, rq.getId()))
 			return;
 
-		reply(m, ListenerStore.remove(rq.getId()));
+		var outcome = begin();
+		ListenerStore.remove(rq.getId());
+		reply(m, success(outcome));
 	}
 
 	@Auth

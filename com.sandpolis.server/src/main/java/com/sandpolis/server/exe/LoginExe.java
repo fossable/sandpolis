@@ -22,6 +22,8 @@ import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.rs;
 import static com.sandpolis.core.util.ProtoUtil.success;
 
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +32,9 @@ import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.ConnectionState;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
+import com.sandpolis.server.store.user.User;
 import com.sandpolis.server.store.user.UserStore;
 
 /**
@@ -59,33 +63,42 @@ public class LoginExe extends Exelet {
 	public void rq_login(Message m) {
 		log.debug("Processing login request from: {}", connector.getRemoteIP());
 		Outcome.Builder outcome = begin();
+		var rq = m.getRqLogin();
 		int id = m.getId();
 
 		// Extract username
-		String user = m.getRqLogin().getUsername();
+		String username = rq.getUsername();
 
 		// Validate username
-		if (!ValidationUtil.username(user)) {
-			log.debug("The username ({}) is invalid", user);
-			failLogin(outcome.setComment("Invalid username"), id, user);
+		if (!ValidationUtil.username(username)) {
+			log.debug("The username ({}) is invalid", username);
+			failLogin(outcome.setComment("Invalid username"), id, username);
 			return;
 		}
 
-		// Check for user
-		if (!UserStore.exists(user)) {
-			log.debug("The user ({}) does not exist", user);
-			failLogin(outcome.setComment("Authentication failed"), id, user);
+		User user = UserStore.get(username).orElse(null);
+		if (user == null) {
+			log.debug("The user ({}) does not exist", username);
+			failLogin(outcome.setComment("Authentication failed"), id, username);
+			return;
+		}
+
+		// Check expiration
+		if (UserStore.isExpired(user)) {
+			log.debug("The user ({}) is expired", username);
+			failLogin(outcome.setComment("User expired on: " + new Date(user.getExpiration()).toString()), id,
+					username);
 			return;
 		}
 
 		// Perform authentication
-		if (!UserStore.validLogin(user, m.getRqLogin().getPassword()).getResult()) {
-			log.debug("Authentication failed", user);
-			failLogin(outcome.setComment("Authentication failed"), id, user);
+		if (!CryptoUtil.PBKDF2.check(rq.getPassword(), user.getHash())) {
+			log.debug("Authentication failed", username);
+			failLogin(outcome.setComment("Authentication failed"), id, username);
 			return;
 		}
 
-		log.debug("Accepting login request for user: {}", user);
+		log.debug("Accepting login request for user: {}", username);
 
 		// Mark connection as authenticated
 		connector.authenticate();

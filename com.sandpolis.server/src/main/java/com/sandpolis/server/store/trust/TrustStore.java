@@ -28,6 +28,7 @@ import java.security.cert.PKIXParameters;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,7 +61,7 @@ public final class TrustStore {
 		TrustStore.provider = Objects.requireNonNull(provider);
 
 		// Install root CA if required
-		if (provider.get("name", "PLUGIN CA") == null) {
+		if (get("PLUGIN CA").isEmpty()) {
 			try {
 				add(new TrustAnchor("PLUGIN CA",
 						CertUtil.parse(Resources.toByteArray(MainDispatch.class.getResource("/cert/plugin.cert")))));
@@ -68,6 +69,9 @@ public final class TrustStore {
 				throw new RuntimeException("Failed to load certificate", e);
 			}
 		}
+
+		if (log.isDebugEnabled())
+			log.debug("Initialized store containing {} entities", provider.count());
 	}
 
 	public static void load(Database main) {
@@ -81,6 +85,16 @@ public final class TrustStore {
 	 */
 	public static void add(TrustAnchor anchor) {
 		provider.add(Objects.requireNonNull(anchor));
+	}
+
+	/**
+	 * Get a trust anchor from the store.
+	 * 
+	 * @param id The name of the trust anchor
+	 * @return The requested {@link TrustAnchor}
+	 */
+	public static Optional<TrustAnchor> get(String name) {
+		return provider.get("name", name);
 	}
 
 	/**

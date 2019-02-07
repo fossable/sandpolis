@@ -17,6 +17,9 @@
  *****************************************************************************/
 package com.sandpolis.server.exe;
 
+import static com.sandpolis.core.util.ProtoUtil.begin;
+import static com.sandpolis.core.util.ProtoUtil.success;
+
 import com.sandpolis.core.instance.Perm;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
@@ -41,7 +44,10 @@ public class GroupExe extends Exelet {
 	@Permission(permission = Perm.server.groups.create)
 	public void rq_add_group(Message m) {
 		var rq = m.getRqAddGroup();
-		reply(m, GroupStore.add(rq.getConfig()));
+
+		var outcome = begin();
+		GroupStore.add(rq.getConfig());
+		reply(m, success(outcome));
 	}
 
 	@Auth
@@ -50,7 +56,9 @@ public class GroupExe extends Exelet {
 		if (!accessCheck(m, this::ownership, rq.getId()))
 			return;
 
-		reply(m, GroupStore.remove(rq.getId()));
+		var outcome = begin();
+		GroupStore.remove(rq.getId());
+		reply(m, success(outcome));
 	}
 
 	@Auth

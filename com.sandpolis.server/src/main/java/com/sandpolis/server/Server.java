@@ -226,8 +226,13 @@ public final class Server {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		// TODO debug listener
-		return task.complete(ListenerStore.start().getResult());
+		try {
+			// TODO debug listener
+			ListenerStore.start();
+		} catch (Exception e) {
+			return task.failure(e);
+		}
+		return task.complete(true);
 	}
 
 	/**
@@ -275,7 +280,7 @@ public final class Server {
 					.setName("test").setEnabled(true).build());
 
 			// Create group
-			GroupStore.add(GroupConfig.newBuilder().setName("test group").setOwner("admin").build());
+			GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin").build());
 
 			// Generate client
 			new MegaGen(GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)

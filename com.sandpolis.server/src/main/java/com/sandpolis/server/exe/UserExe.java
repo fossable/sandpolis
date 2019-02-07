@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.exe;
 
+import static com.sandpolis.core.util.ProtoUtil.*;
+
 import com.sandpolis.core.instance.Perm;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
@@ -40,7 +42,10 @@ public class UserExe extends Exelet {
 	@Permission(permission = Perm.server.users.create)
 	public void rq_add_user(Message m) {
 		var rq = m.getRqAddUser();
-		reply(m, UserStore.add(rq.getConfig()));
+
+		var outcome = begin();
+		UserStore.add(rq.getConfig());
+		reply(m, success(outcome));
 	}
 
 	@Auth
@@ -49,7 +54,9 @@ public class UserExe extends Exelet {
 		if (!accessCheck(m, this::ownership, rq.getId()))
 			return;
 
-		reply(m, UserStore.remove(rq.getId()));
+		var outcome = begin();
+		UserStore.remove(rq.getId());
+		reply(m, success(outcome));
 	}
 
 	@Auth

@@ -17,12 +17,13 @@
  *****************************************************************************/
 package com.sandpolis.server.store.user;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 import static com.sandpolis.core.util.ProtoUtil.begin;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.success;
 
-import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -42,123 +43,147 @@ import com.sandpolis.core.util.ValidationUtil;
 
 @ManualInitializer
 public final class UserStore extends Store {
-	private UserStore() {
-	}
 
 	private static final Logger log = LoggerFactory.getLogger(UserStore.class);
 
 	private static StoreProvider<User> provider;
 
 	public static void init(StoreProvider<User> provider) {
-		if (provider == null)
-			throw new IllegalArgumentException();
+		UserStore.provider = Objects.requireNonNull(provider);
 
-		UserStore.provider = provider;
+		if (log.isDebugEnabled())
+			log.debug("Initialized store containing {} entities", provider.count());
 	}
 
 	public static void load(Database main) {
-		if (main == null)
-			throw new IllegalArgumentException();
-
-		init(StoreProviderFactory.database(User.class, main));
+		init(StoreProviderFactory.database(User.class, Objects.requireNonNull(main)));
 	}
 
 	/**
 	 * Check if a user exists in the store.
 	 * 
-	 * @param username The username to check
-	 * @return True if the user exists, false otherwise
+	 * @param username The user's username
+	 * @return Whether the given user exists
 	 */
 	public static boolean exists(String username) {
-		if (username == null)
-			throw new IllegalArgumentException();
+		Objects.requireNonNull(username);
 
-		return get(username) != null;
+		return get(username).isPresent();
 	}
 
 	/**
 	 * Check if a user exists in the store.
 	 * 
-	 * @param id The ID to check
-	 * @return True if the user exists, false otherwise
+	 * @param id The user's ID
+	 * @return Whether the given user exists
 	 */
 	public static boolean exists(long id) {
-		return get(id) != null;
+		return get(id).isPresent();
 	}
 
 	/**
-	 * Verify a login attempt.
+	 * Check a user's expiration status.
 	 * 
-	 * @param username The username
-	 * @param password The password
-	 * @return The outcome of the validation operation
+	 * @param user The user to check
+	 * @return Whether the given user is currently expired
 	 */
-	public static Outcome validLogin(String username, String password) {
-		if (username == null)
-			throw new IllegalArgumentException();
-		if (password == null)
-			throw new IllegalArgumentException();
+	public static boolean isExpired(User user) {
+		Objects.requireNonNull(user);
 
-		Outcome.Builder outcome = begin("Verify login");
-		if (!exists(username))
-			return failure(outcome, "User does not exist");
+		return user.getExpiration() > 0 && user.getExpiration() < System.currentTimeMillis();
+	}
 
-		// Retrieve user
-		User user = get(username).get();
+	/**
+	 * Check a user's expiration status.
+	 * 
+	 * @param user The user to check
+	 * @return Whether the given user is currently expired
+	 */
+	public static boolean isExpired(String user) {
+		Objects.requireNonNull(user);
 
-		// Check expiration date
-		if (user.getExpiration() > 0 && user.getExpiration() < System.currentTimeMillis())
-			return failure(outcome, "User expired on: " + new Date(user.getExpiration()).toString());
+		return isExpired(get(user).get());
+	}
 
-		// Make decision
-		if (CryptoUtil.PBKDF2.check(password, user.getHash())) {
-			log.debug("Verified login request for user: {}", username);
-			return success(outcome);
-		} else {
-			log.debug("Login verification failed for user: {}", username);
-			return failure(outcome, "Wrong password");
-		}
+	/**
+	 * Get a {@link User} from the store.
+	 * 
+	 * @param username The username to query
+	 * @return The requested user
+	 */
+	public static Optional<User> get(String username) {
+		return provider.get("username", username);
+	}
+
+	/**
+	 * Get a {@link User} from the store.
+	 * 
+	 * @param id The user ID to query
+	 * @return The requested user
+	 */
+	public static Optional<User> get(long id) {
+		return provider.get("id", id);
+	}
+
+	/**
+	 * Remove a {@link User} from the store if it exists.
+	 * 
+	 * @param username The username to remove
+	 */
+	public static void remove(String username) {
+		log.debug("Deleting user \"{}\"", username);
+
+		get(username).ifPresent(provider::remove);
+	}
+
+	/**
+	 * Remove a {@link User} from the store if it exists.
+	 * 
+	 * @param id The ID of the user to remove
+	 */
+	public static void remove(long id) {
+		log.debug("Deleting user {}", id);
+
+		get(id).ifPresent(provider::remove);
 	}
 
 	/**
 	 * Create a new user from the given configuration and add it to the store.
 	 * 
 	 * @param config The user configuration
-	 * @return The outcome of the action
 	 */
-	public static Outcome add(UserConfig config) {
-		ErrorCode code = ValidationUtil.Config.valid(config);
-		if (code != ErrorCode.OK)
-			return Outcome.newBuilder().setResult(false).setError(code).build();
-		code = ValidationUtil.Config.complete(config);
-		if (code != ErrorCode.OK)
-			return Outcome.newBuilder().setResult(false).setError(code).build();
+	public static void add(UserConfig.Builder config) {
+		add(config.build());
+	}
+
+	/**
+	 * Create a new user from the given configuration and add it to the store.
+	 * 
+	 * @param config The user configuration
+	 */
+	public static void add(UserConfig config) {
+		Objects.requireNonNull(config);
+		checkArgument(ValidationUtil.Config.valid(config) == ErrorCode.OK, "Invalid configuration");
 
 		// Create the user
 		User user = new User(config);
-
-		// Set creation time
 		user.setCreation(System.currentTimeMillis());
-
-		// Hash password
 		user.setHash(CryptoUtil.PBKDF2.hash(CryptoUtil.hash(SHA256, config.getPassword())));
 
-		return add(user);
+		add(user);
 	}
 
 	/**
 	 * Add a user to the store.
 	 * 
-	 * @param user The user to add
-	 * @return The outcome of the action
+	 * @param user The new user
 	 */
-	public static Outcome add(User user) {
-		Outcome.Builder outcome = begin();
-		if (get(user.getUsername()) != null)
-			return failure(outcome, "Username is already taken");
+	public static void add(User user) {
+		Objects.requireNonNull(user);
+		checkArgument(get(user.getUsername()).isEmpty(), "Username conflict");
 
+		log.debug("Adding new user: {}", user.getUsername());
 		provider.add(user);
-		return success(outcome);
 	}
 
 	/**
@@ -181,57 +206,6 @@ public final class UserStore extends Store {
 		return success(outcome);
 	}
 
-	/**
-	 * Get a {@link User} from the store.
-	 * 
-	 * @param username The username to query
-	 * @return The user or {@code null}
-	 */
-	public static Optional<User> get(String username) {
-		return provider.get("username", username);
-	}
-
-	/**
-	 * Get a {@link User} from the store.
-	 * 
-	 * @param id The ID to query
-	 * @return The user or {@code null}
-	 */
-	public static Optional<User> get(long id) {
-		return provider.get("id", id);
-	}
-
-	/**
-	 * Remove a {@link User} from the store.
-	 * 
-	 * @param username The username to remove
-	 * @return The outcome of the remove operation
-	 */
-	public static Outcome remove(String username) {
-		Outcome.Builder outcome = begin();
-		if (!exists(username))
-			return failure(outcome, "User does not exist");
-
-		get(username).ifPresent(provider::remove);
-
-		log.debug("User \"{}\" has been deleted", username);
-		return success(outcome);
-	}
-
-	/**
-	 * Remove a {@link User} from the store.
-	 * 
-	 * @param id The ID of the user to remove
-	 * @return The outcome of the remove operation
-	 */
-	public static Outcome remove(long id) {
-		Outcome.Builder outcome = begin();
-		if (!exists(id))
-			return failure(outcome, "User does not exist");
-
-		get(id).ifPresent(provider::remove);
-
-		log.debug("User \"{}\" has been deleted", id);
-		return success(outcome);
+	private UserStore() {
 	}
 }

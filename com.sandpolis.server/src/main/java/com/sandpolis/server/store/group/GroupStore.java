@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.server.store.group;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.sandpolis.core.util.ProtoUtil.begin;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.success;
@@ -57,86 +58,68 @@ public final class GroupStore extends Store {
 
 	public static void init(StoreProvider<Group> provider) {
 		GroupStore.provider = Objects.requireNonNull(provider);
+
+		if (log.isDebugEnabled())
+			log.debug("Initialized store containing {} entities", provider.count());
 	}
 
 	public static void load(Database main) {
-		Objects.requireNonNull(main);
-
-		init(StoreProviderFactory.database(Group.class, main));
+		init(StoreProviderFactory.database(Group.class, Objects.requireNonNull(main)));
 	}
 
 	/**
 	 * Get a group from the store.
 	 * 
-	 * @param groupId The ID of a group
-	 * @return The requested {@link Group} or {@code null} if not found
+	 * @param id The ID of a group
+	 * @return The requested {@link Group}
 	 */
-	public static Optional<Group> get(String groupId) {
-		return provider.get("id", groupId);
+	public static Optional<Group> get(String id) {
+		return provider.get("id", id);
 	}
 
 	/**
 	 * Create a new group from the given configuration and add it to the store.
 	 * 
 	 * @param config The group configuration
-	 * @return The outcome of the action
 	 */
-	public static Outcome add(GroupConfig config) {
-		ErrorCode code = ValidationUtil.Config.valid(config);
-		if (code != ErrorCode.OK)
-			return Outcome.newBuilder().setResult(false).setError(code).build();
-		code = ValidationUtil.Config.complete(config);
-		if (code != ErrorCode.OK)
-			return Outcome.newBuilder().setResult(false).setError(code).build();
+	public static void add(GroupConfig.Builder config) {
+		add(config.build());
+	}
 
-		return add(new Group(config));
+	/**
+	 * Create a new group from the given configuration and add it to the store.
+	 * 
+	 * @param config The group configuration
+	 */
+	public static void add(GroupConfig config) {
+		Objects.requireNonNull(config);
+		checkArgument(ValidationUtil.Config.valid(config) == ErrorCode.OK, "Invalid configuration");
+		checkArgument(ValidationUtil.Config.complete(config) == ErrorCode.OK, "Incomplete configuration");
+
+		add(new Group(config));
 	}
 
 	/**
 	 * Add a group to the store.
 	 * 
 	 * @param group The group to add
-	 * @return The outcome of the action
 	 */
-	public static Outcome add(Group group) {
-		var outcome = begin();
-		if (get(group.getGroupId()) != null)
-			return failure(outcome, "Group ID is already taken");
+	public static void add(Group group) {
+		checkArgument(get(group.getGroupId()).isEmpty(), "ID conflict");
 
+		log.debug("Adding new group: {}", group.getGroupId());
 		provider.add(group);
-		return success(outcome);
-	}
-
-	/**
-	 * Change a group's configuration or statistics.
-	 * 
-	 * @param id    The ID of the group to modify
-	 * @param delta The changes
-	 * @return The outcome of the action
-	 */
-	public static Outcome delta(String id, ProtoGroup delta) {
-		var outcome = begin();
-		Group group = get(id).orElse(null);
-		if (group == null)
-			return failure(outcome, "Group not found");
-
-		ErrorCode error = group.merge(delta);
-		if (error != ErrorCode.OK)
-			return failure(outcome.setError(error));
-
-		return success(outcome);
 	}
 
 	/**
 	 * Remove a group from the store.
 	 * 
 	 * @param id The group's ID
-	 * @return The outcome of the action
 	 */
-	public static Outcome remove(String id) {
-		var outcome = begin();
+	public static void remove(String id) {
+		log.debug("Deleting group {}", id);
+
 		get(id).ifPresent(provider::remove);
-		return success(outcome);
 	}
 
 	/**
@@ -187,6 +170,26 @@ public final class GroupStore extends Store {
 					group -> group.getPasswords().stream().anyMatch(mech -> mech.getPassword().equals(password)))
 					.collect(Collectors.toList());
 		}
+	}
+
+	/**
+	 * Change a group's configuration or statistics.
+	 * 
+	 * @param id    The ID of the group to modify
+	 * @param delta The changes
+	 * @return The outcome of the action
+	 */
+	public static Outcome delta(String id, ProtoGroup delta) {
+		var outcome = begin();
+		Group group = get(id).orElse(null);
+		if (group == null)
+			return failure(outcome, "Group not found");
+
+		ErrorCode error = group.merge(delta);
+		if (error != ErrorCode.OK)
+			return failure(outcome.setError(error));
+
+		return success(outcome);
 	}
 
 	private GroupStore() {

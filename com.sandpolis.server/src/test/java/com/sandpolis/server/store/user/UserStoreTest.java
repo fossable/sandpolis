@@ -25,53 +25,46 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.net.URISyntaxException;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
-import com.sandpolis.core.proto.util.Result.Outcome;
 
-public class UserStoreTest {
+class UserStoreTest {
 
 	@BeforeEach
-	public void setup() throws URISyntaxException {
+	void setup() throws URISyntaxException {
 		UserStore.init(StoreProviderFactory.memoryList(User.class));
 	}
 
 	@Test
-	public void testUserExists() {
+	@DisplayName("Check basic usage of exists")
+	void exists() {
 		assertFalse(UserStore.exists("TESTUSER"));
-		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER2").setPassword("abc1234c").build());
+		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER").setPassword("abc1234c"));
 		assertTrue(UserStore.exists("TESTUSER"));
 		UserStore.remove("TESTUSER");
 		assertFalse(UserStore.exists("TESTUSER"));
 	}
 
 	@Test
-	public void testLogin() {
-		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER2").setPassword("abc1234c").build());
-		assertFalse(UserStore.validLogin("TESTUSER2", "wrongpass").getResult());
-		assertFalse(UserStore.validLogin("TESTUSER3", "abc1234c").getResult());
-		assertTrue(UserStore.validLogin("TESTUSER2", "abc1234c").getResult());
+	@DisplayName("Check basic usage of isExpired")
+	void isExpired() {
+		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER").setPassword("abc1234c"));
+		assertFalse(UserStore.isExpired("TESTUSER"));
+		UserStore.get("TESTUSER").get().setExpiration(System.currentTimeMillis() - 10000);
+		assertTrue(UserStore.isExpired("TESTUSER"));
 	}
 
 	@Test
-	public void testLoginExpired() {
-		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER2").setPassword("abc1234c").build());
-		assertFalse(UserStore.validLogin("TESTUSER2", "abc1234c").getResult());
-		UserStore.get("TESTUSER2").get().setExpiration(System.currentTimeMillis() + 10000);
-		assertTrue(UserStore.validLogin("TESTUSER2", "abc1234c").getResult());
-	}
+	@DisplayName("Check that a user can be added and retrieved")
+	void add() {
+		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER").setPassword("abc1234c"));
 
-	@Test
-	public void testAddGetUser() {
-		Outcome outcome = UserStore
-				.add(UserConfig.newBuilder().setUsername("TESTUSER2").setPassword("abc1234c").build());
-		assertTrue(outcome.getResult());
-
-		User user = UserStore.get("TESTUSER3").get();
+		User user = UserStore.get("TESTUSER").get();
 		assertEquals(0, user.getExpiration());
-		assertEquals("TESTUSER3", user.getUsername());
+		assertEquals("TESTUSER", user.getUsername());
 		assertNotEquals(0, user.getCreation());
 	}
 

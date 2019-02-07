@@ -40,26 +40,18 @@ public final class Post {
 
 	public static Outcome smokeTest() {
 		Outcome.Builder outcome = begin();
-		Outcome test;
 
 		try {
 			// Check UserStore
-			test = UserStore
-					.add(UserConfig.newBuilder().setId(10).setUsername("POSTUSER").setPassword("POSTPASS").build());
-			if (!test.getResult())
-				return failure(outcome.mergeFrom(test));
+			UserStore.add(UserConfig.newBuilder().setId(10).setUsername("POSTUSER").setPassword("POSTPASS").build());
 
 			// Check ListenerStore
-			test = ListenerStore.add(ListenerConfig.newBuilder().setId(2).setPort(7000).setAddress("0.0.0.0")
+			ListenerStore.add(ListenerConfig.newBuilder().setId(2).setPort(7000).setAddress("0.0.0.0")
 					.setOwner("POSTUSER").setName("POST").build());
-			if (!test.getResult())
-				return failure(outcome.mergeFrom(test));
 
 			// Check GroupStore
-			test = GroupStore.add(GroupConfig.newBuilder().setId("2").setName("POSTGROUP").setOwner("POSTUSER")
+			GroupStore.add(GroupConfig.newBuilder().setId("2").setName("POSTGROUP").setOwner("POSTUSER")
 					.addPasswordMechanism(PasswordContainer.newBuilder().setPassword("POSTPASS")).build());
-			if (!test.getResult())
-				return failure(outcome.mergeFrom(test));
 
 			Group testGroup = GroupStore.get("2").get();
 			testGroup.addKeyMechanism(KeyMechanism.generate(testGroup));

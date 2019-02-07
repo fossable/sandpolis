@@ -17,18 +17,18 @@
  *****************************************************************************/
 package com.sandpolis.server.store.listener;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.complete;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.success;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.OutcomeSet;
 import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
@@ -47,103 +47,62 @@ import com.sandpolis.core.util.ValidationUtil;
  * @since 1.0.0
  */
 public final class ListenerStore extends Store {
-	private ListenerStore() {
-	}
 
 	private static final Logger log = LoggerFactory.getLogger(ListenerStore.class);
 
 	private static StoreProvider<Listener> provider;
 
 	public static void init(StoreProvider<Listener> provider) {
-		if (provider == null)
-			throw new IllegalArgumentException();
+		ListenerStore.provider = Objects.requireNonNull(provider);
 
-		ListenerStore.provider = provider;
+		if (log.isDebugEnabled())
+			log.debug("Initialized store containing {} entities", provider.count());
 	}
 
 	public static void load(Database main) {
-		if (main == null)
-			throw new IllegalArgumentException();
-
-		init(StoreProviderFactory.database(Listener.class, main));
+		init(StoreProviderFactory.database(Listener.class, Objects.requireNonNull(main)));
 	}
 
 	/**
 	 * Start all enabled, unstarted listeners in the store.
-	 * 
-	 * @return An {@code OutcomeSet} representing the total outcome
 	 */
-	public static OutcomeSet start() {
-		OutcomeSet outcomes = new OutcomeSet();
+	public static void start() {
 		try (Stream<Listener> stream = provider.stream()) {
-			stream.filter(listener -> !listener.isListening() && listener.isEnabled()).forEach(listener -> {
-				Outcome.Builder outcome = begin();
-
-				log.debug("Starting listener: {}", listener.getId());
-				outcome.setResult(listener.start());
-				outcomes.add(complete(outcome));
-			});
+			stream.filter(listener -> !listener.isListening() && listener.isEnabled()).map(listener -> listener.getId())
+					.forEach(ListenerStore::start);
 		}
-		return outcomes;
 	}
 
 	/**
 	 * Start the given listener.
 	 * 
 	 * @param id A listener ID
-	 * @return The outcome of the action
 	 */
-	public static Outcome start(long id) {
-		Outcome.Builder outcome = begin();
-		Listener listener = get(id).orElse(null);
-		if (listener == null)
-			return failure(outcome, "The listener was not found");
-		if (!listener.isEnabled())
-			return failure(outcome, "The listener is not enabled");
-		if (listener.isListening())
-			return failure(outcome, "The listener is already running");
+	public static void start(long id) {
+		log.debug("Starting listener: {}", id);
 
-		log.debug("Starting listener: {}", listener.getId());
-		outcome.setResult(listener.start());
-		return complete(outcome);
+		get(id).ifPresent(listener -> listener.start());
 	}
 
 	/**
 	 * Stop all running listeners in the store.
-	 * 
-	 * @return An {@code OutcomeSet} representing the total outcome
 	 */
-	public static OutcomeSet stop() {
-		OutcomeSet outcomes = new OutcomeSet();
+	public static void stop() {
 		try (Stream<Listener> stream = provider.stream()) {
-			stream.filter(listener -> listener.isListening()).forEach(listener -> {
-				Outcome.Builder outcome = begin();
-
-				log.debug("Stopping listener: {}", listener.getId());
-				listener.stop();
-				outcomes.add(complete(outcome));
-			});
+			stream.filter(listener -> listener.isListening()).map(listener -> listener.getId())
+					.forEach(ListenerStore::stop);
 		}
-		return outcomes;
 	}
 
 	/**
 	 * Stop the given listener.
 	 * 
 	 * @param id A listener ID
-	 * @return The outcome of the action
 	 */
-	public static Outcome stop(long id) {
-		Outcome.Builder outcome = begin();
-		Listener listener = get(id).orElse(null);
-		if (listener == null)
-			return failure(outcome, "The listener was not found");
-		if (!listener.isListening())
-			return failure(outcome, "The listener is not running");
+	public static void stop(long id) {
+		log.debug("Stopping listener: {}", id);
 
-		log.debug("Stopping listener: {}", listener.getId());
-		listener.stop();
-		return success(outcome);
+		get(id).ifPresent(listener -> listener.stop());
 	}
 
 	/**
@@ -160,50 +119,46 @@ public final class ListenerStore extends Store {
 	 * Create a new listener from the given configuration and add it to the store.
 	 * 
 	 * @param config The listener configuration
-	 * @return The outcome of the action
 	 */
-	public static Outcome add(ListenerConfig config) {
-		ErrorCode code = ValidationUtil.Config.valid(config);
-		if (code != ErrorCode.OK)
-			return Outcome.newBuilder().setResult(false).setError(code).build();
-		code = ValidationUtil.Config.complete(config);
-		if (code != ErrorCode.OK)
-			return Outcome.newBuilder().setResult(false).setError(code).build();
+	public static void add(ListenerConfig.Builder config) {
+		add(config.build());
+	}
 
-		return add(new Listener(config));
+	/**
+	 * Create a new listener from the given configuration and add it to the store.
+	 * 
+	 * @param config The listener configuration
+	 */
+	public static void add(ListenerConfig config) {
+		Objects.requireNonNull(config);
+		checkArgument(ValidationUtil.Config.valid(config) == ErrorCode.OK, "Invalid configuration");
+		checkArgument(ValidationUtil.Config.complete(config) == ErrorCode.OK, "Incomplete configuration");
+
+		add(new Listener(config));
 	}
 
 	/**
 	 * Add a listener to the store.
 	 * 
 	 * @param listener The listener to add
-	 * @return The outcome of the action
 	 */
-	public static Outcome add(Listener listener) {
-		Outcome.Builder outcome = begin();
-		if (get(listener.getId()) != null)
-			return failure(outcome, "Listener ID is already taken");
+	public static void add(Listener listener) {
+		Objects.requireNonNull(listener);
+		checkArgument(get(listener.getId()).isEmpty(), "ID conflict");
 
+		log.debug("Adding new listener: {}", listener.getId());
 		provider.add(listener);
-		return success(outcome);
 	}
 
 	/**
 	 * Remove a listener from the store.
 	 * 
 	 * @param id A listener ID
-	 * @return The outcome of the action
 	 */
-	public static Outcome remove(long id) {
-		Outcome.Builder outcome = begin();
-		Listener listener = get(id).get();
-		if (listener == null)
-			return failure(outcome, "Listener not found");
-		if (listener.isListening())
-			return failure(outcome, "Listener is active");
+	public static void remove(long id) {
+		log.debug("Deleting listener {}", id);
 
-		provider.remove(listener);
-		return success(outcome);
+		get(id).ifPresent(provider::remove);
 	}
 
 	/**
@@ -238,11 +193,18 @@ public final class ListenerStore extends Store {
 	public static Outcome change(long id, ListenerState state) {
 		switch (state) {
 		case LISTENING:
-			return start(id);
+			start(id);
+			break;
 		case INACTIVE:
-			return stop(id);
+			stop(id);
+			break;
 		default:
-			return Outcome.newBuilder().setResult(false).build();
+			break;
 		}
+
+		return Outcome.newBuilder().setResult(false).build();
+	}
+
+	private ListenerStore() {
 	}
 }
