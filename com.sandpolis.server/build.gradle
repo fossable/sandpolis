@@ -16,7 +16,7 @@ eclipse {
 
 dependencies {
 	testImplementation project(':dep:com.sandpolis.core.net').sourceSets.test.output
-	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.3.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.0'
 
 	implementation project(path: ':com.sandpolis.client.mega', configuration: 'onejarArtifact')
 	// implementation project(':com.sandpolis.client.micro')
