@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" packagingData="true">
+
+	<!-- Standard output appenders -->
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%gray(%date{yyyy-MM-dd HH:mm:ss}) %highlight([%-5level])[%logger{0}] %msg%n</pattern>
+		</encoder>
+	</appender>
+	<appender name="STDOUT_PLAIN" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%date{yyyy-MM-dd HH:mm:ss} [%-5level][%logger{0}] %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<!-- Network appender for Charcoal debugging sessions -->
+	<appender name="CHARCOAL" class="ch.qos.logback.classic.net.SocketAppender">
+    	<remoteHost>127.0.0.1</remoteHost>
+    	<port>4500</port>
+    	<reconnectionDelay>10000</reconnectionDelay>
+ 	</appender>
+
+	<logger name="io.netty" level="WARN" />	
+	<logger name="java.util.prefs" level="OFF" />
+	<logger name="org.hibernate" level="WARN" />
+	<logger name="com.mchange" level="OFF" />
+	<logger name="org.zeroturnaround" level="OFF" />
+
+	<root level="DEBUG">
+		<appender-ref ref="STDOUT" />
+	</root>
+
+</configuration>
