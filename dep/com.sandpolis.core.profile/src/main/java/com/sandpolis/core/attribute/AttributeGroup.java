@@ -18,7 +18,6 @@
 package com.sandpolis.core.attribute;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
@@ -92,11 +91,11 @@ public class AttributeGroup extends AttributeNode {
 
 	/**
 	 * Construct an {@link AttributeGroup} with the corresponding
-	 * {@link AttributeNodeKey}.
+	 * {@link AttributeGroupKey}.
 	 * 
-	 * @param key The corresponding {@link AttributeNodeKey}
+	 * @param key The corresponding {@link AttributeGroupKey}
 	 */
-	public AttributeGroup(AttributeNodeKey key) {
+	public AttributeGroup(AttributeGroupKey key) {
 		this.children = new HashMap<>();
 		this.characteristic = key.getCharacteristic();
 		this.plurality = key.getPlurality();
@@ -140,15 +139,7 @@ public class AttributeGroup extends AttributeNode {
 		if (!chain.hasNext())
 			return this;
 
-		int id;
-		if (plurality == 0) {
-			id = readId(chain, 1);
-			log.debug("Singular ID: {}", id);
-		} else {
-			id = readId(chain, plurality);
-			log.debug("Plural ID: {}", id);
-		}
-
+		int id = readId(chain, plurality == 0 ? 1 : plurality);
 		if (children.containsKey(id))
 			return children.get(id).getNode(chain);
 
@@ -164,8 +155,6 @@ public class AttributeGroup extends AttributeNode {
 			assert node.isAnonymous();
 			children.put(children.size(), node);
 		}
-
-		node.setParent(this);
 	}
 
 	@Override
@@ -181,11 +170,6 @@ public class AttributeGroup extends AttributeNode {
 	@Override
 	public boolean isAnonymous() {
 		return anonymous;
-	}
-
-	@Override
-	public Iterator<AttributeNode> iterator() {
-		return children.values().iterator();
 	}
 
 	@Override
