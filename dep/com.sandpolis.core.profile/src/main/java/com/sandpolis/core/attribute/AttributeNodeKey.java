@@ -17,6 +17,9 @@
  *****************************************************************************/
 package com.sandpolis.core.attribute;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.protobuf.ByteString;
 
 /**
@@ -31,104 +34,62 @@ import com.google.protobuf.ByteString;
  * reverse is not true. Nodes that do not have a corresponding key in the
  * attribute-key tree are called anonymous nodes.
  * 
- * @see AttributeKey
  * @author cilki
  * @since 5.0.0
  */
-public class AttributeNodeKey {
-
-	/**
-	 * Corresponds to the root of an attribute tree.
-	 */
-	public static final AttributeNodeKey ROOT = new AttributeNodeKey();
+public abstract class AttributeNodeKey {
 
 	/**
 	 * A chain of bytes that uniquely identifies the {@link AttributeNode} in the
 	 * tree that corresponds with this {@link AttributeNodeKey}.
 	 */
-	private ByteString key;
-
-	/**
-	 * The number of bytes used in the corresponding {@link AttributeGroup} for the
-	 * plurality ID. A value of 0 indicates the attribute group is singular.<br>
-	 * <br>
-	 * Plurality has no meaning for {@link Attribute}s because they cannot have
-	 * descendents.
-	 */
-	private int plurality;
+	protected ByteString key;
 
 	/**
 	 * The characteristic identifier which uniquely identifies a node among its
 	 * sibling nodes.
 	 */
-	private int characteristic;
+	protected int characteristic;
 
 	/**
-	 * Construct the root of an attribute tree.
+	 * This {@link AttributeNodeKey}'s parent.
 	 */
-	private AttributeNodeKey() {
-		key = ByteString.EMPTY;
+	protected AttributeNodeKey parent;
+
+	/**
+	 * A map of auxiliary objects related to this key.
+	 */
+	private Map<String, Object> aux = new HashMap<>();
+
+	/**
+	 * Get whether the given id has an associated auxiliary object for {@code this}.
+	 * 
+	 * @param id The auxiliary object id
+	 * @return Whether {@code this} has an object associated with id
+	 */
+	public boolean containsObject(String id) {
+		return aux.containsKey(id);
 	}
 
 	/**
-	 * Construct a singular top-level key.
+	 * Get the auxiliary object associated with the given id.
 	 * 
-	 * @param characteristic
-	 *            The single-byte characteristic ID
+	 * @param id The auxiliary object id
+	 * @return The requested auxiliary object
 	 */
-	public AttributeNodeKey(int characteristic) {
-		this(characteristic, 0);
+	@SuppressWarnings("unchecked")
+	public <T> T getObject(String id) {
+		return (T) aux.get(id);
 	}
 
 	/**
-	 * Construct a singular key with the given parent.
+	 * Associate the given auxiliary object with the given id.
 	 * 
-	 * @param parent
-	 *            The parent key
-	 * @param characteristic
-	 *            The single-byte characteristic ID
+	 * @param id    The auxiliary object id
+	 * @param value The new object
 	 */
-	public AttributeNodeKey(AttributeNodeKey parent, int characteristic) {
-		this(parent, characteristic, 0);
-	}
-
-	/**
-	 * Construct a plural top-level key.
-	 * 
-	 * @param characteristic
-	 *            The single-byte characteristic ID
-	 * @param pluralWidth
-	 *            The number of bytes for the plurality field
-	 */
-	public AttributeNodeKey(int characteristic, int pluralWidth) {
-		this(ROOT, characteristic, pluralWidth);
-	}
-
-	/**
-	 * Construct a plural key with the given parent.
-	 * 
-	 * @param parent
-	 *            The parent key
-	 * @param characteristic
-	 *            The single-byte characteristic ID
-	 * @param pluralWidth
-	 *            The number of bytes for the plurality field
-	 */
-	public AttributeNodeKey(AttributeNodeKey parent, int characteristic, int pluralWidth) {
-		if (parent == null)
-			throw new IllegalArgumentException();
-		if (pluralWidth < 0 || pluralWidth > 4)
-			throw new IllegalArgumentException();
-
-		this.plurality = pluralWidth;
-		this.characteristic = characteristic;
-
-		key = parent.key;
-
-		if (parent.getPlurality() > 0)
-			key = key.concat(ByteString.copyFrom(new byte[parent.getPlurality()]));
-
-		key = key.concat(ByteString.copyFrom(new byte[] { (byte) characteristic }));
+	public void putObject(String id, Object value) {
+		aux.put(id, value);
 	}
 
 	/**
@@ -141,16 +102,6 @@ public class AttributeNodeKey {
 	}
 
 	/**
-	 * Get the number of bytes allocated to the plural ID. A value of 0 implies the
-	 * corresponding node is not plural.
-	 * 
-	 * @return The corresponding node's plurality number
-	 */
-	public int getPlurality() {
-		return plurality;
-	}
-
-	/**
 	 * Get the characteristic ID which uniquely identifies a node among its sibling
 	 * nodes.
 	 * 
@@ -158,6 +109,20 @@ public class AttributeNodeKey {
 	 */
 	public int getCharacteristic() {
 		return characteristic;
+	}
+
+	/**
+	 * Check if the given key is an ancestor or equal to {@code this}.
+	 * 
+	 * @param key The key
+	 * @return Whether the key is an ancestor or equal to {@code this}
+	 */
+	public boolean isAncestor(AttributeNodeKey key) {
+		if (this.equals(key))
+			return true;
+		if (parent == null)
+			return false;
+		return parent.isAncestor(key);
 	}
 
 }
