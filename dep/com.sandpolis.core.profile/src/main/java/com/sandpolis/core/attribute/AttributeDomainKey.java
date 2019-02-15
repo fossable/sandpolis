@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.core.attribute;
 
+import com.google.protobuf.ByteString;
+
 /**
  * Corresponds to an {@link AttributeDomain}.
  * 
@@ -32,6 +34,7 @@ public class AttributeDomainKey extends AttributeGroupKey {
 
 	public AttributeDomainKey(String domain) {
 		this.domain = domain;
+		this.key = ByteString.EMPTY;
 	}
 
 	/**

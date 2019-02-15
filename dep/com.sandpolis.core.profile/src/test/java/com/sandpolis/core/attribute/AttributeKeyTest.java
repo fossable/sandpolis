@@ -21,30 +21,30 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class AttributeNodeKeyTest {
+class AttributeKeyTest {
 
 	@Test
-	public void testChain() {
-		AttributeNodeKey root = AttributeNodeKey.ROOT;
+	void testChains() {
+		AttributeDomainKey root = new AttributeDomainKey(null);
 
 		// Create a plural group with a 1-byte plurality
-		AttributeNodeKey cpu = new AttributeNodeKey(root, 14, 1);
-		AttributeNodeKey model = new AttributeNodeKey(cpu, 5);
-		AttributeNodeKey core = new AttributeNodeKey(cpu, 2, 4);
-		AttributeNodeKey temp = new AttributeNodeKey(core, 2);
+		AttributeGroupKey cpu = new AttributeGroupKey(root, 14, 1);
+		AttributeNodeKey model = AttributeKey.newBuilder(cpu, 5).build();
+		AttributeGroupKey core = new AttributeGroupKey(cpu, 2, 4);
+		AttributeNodeKey temp = AttributeKey.newBuilder(core, 2).build();
 
 		// Create a plural group with a 4-byte plurality
-		AttributeNodeKey gpu = new AttributeNodeKey(root, 12, 4);
-		AttributeNodeKey vendor = new AttributeNodeKey(gpu, 2);
+		AttributeGroupKey gpu = new AttributeGroupKey(root, 12, 4);
+		AttributeNodeKey vendor = AttributeKey.newBuilder(gpu, 2).build();
 
 		// Check CPU chains
-		assertArrayEquals(new byte[] { 14 }, cpu.chain().toByteArray());
+		assertArrayEquals(new byte[] { 14, 0 }, cpu.chain().toByteArray());
 		assertArrayEquals(new byte[] { 14, 0, 5 }, model.chain().toByteArray());
-		assertArrayEquals(new byte[] { 14, 0, 2 }, core.chain().toByteArray());
+		assertArrayEquals(new byte[] { 14, 0, 2, 0, 0, 0, 0 }, core.chain().toByteArray());
 		assertArrayEquals(new byte[] { 14, 0, 2, 0, 0, 0, 0, 2 }, temp.chain().toByteArray());
 
 		// Check GPU chains
-		assertArrayEquals(new byte[] { 12 }, gpu.chain().toByteArray());
+		assertArrayEquals(new byte[] { 12, 0, 0, 0, 0 }, gpu.chain().toByteArray());
 		assertArrayEquals(new byte[] { 12, 0, 0, 0, 0, 2 }, vendor.chain().toByteArray());
 	}
 

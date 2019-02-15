@@ -57,14 +57,14 @@ public class AttributeGroupKey extends AttributeNodeKey {
 	 * @param plurality      The plurality size
 	 */
 	public AttributeGroupKey(AttributeNodeKey parent, int characteristic, int plurality) {
-		checkArgument(plurality >= 1);
+		checkArgument(plurality >= 0);
 		checkArgument(plurality <= 4);
 
 		this.parent = Objects.requireNonNull(parent);
 		this.plurality = plurality;
 		this.characteristic = characteristic;
-		this.key = parent.key.concat(ByteString.copyFrom(new byte[plurality]))
-				.concat(ByteString.copyFrom(new byte[] { (byte) characteristic }));
+		this.key = parent.key.concat(ByteString.copyFrom(new byte[] { (byte) characteristic })
+				.concat(ByteString.copyFrom(new byte[plurality])));
 	}
 
 	protected AttributeGroupKey() {
