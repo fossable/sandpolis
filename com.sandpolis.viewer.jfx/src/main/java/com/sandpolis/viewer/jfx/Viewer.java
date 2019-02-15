@@ -45,6 +45,7 @@ import com.sandpolis.core.ipc.IPCTasks;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.viewer.jfx.common.FxEventExecutor;
+import com.sandpolis.viewer.jfx.store.stage.StageStore;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 
 import io.netty.channel.nio.NioEventLoopGroup;

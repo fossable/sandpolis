@@ -32,6 +32,7 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.attribute.AttributeDomain;
 import com.sandpolis.core.attribute.AttributeGroup;
 import com.sandpolis.core.attribute.AttributeNode;
 import com.sandpolis.core.attribute.UntrackedAttribute;
@@ -317,6 +318,7 @@ public final class Server {
 	 */
 	private static final Class<?>[] ORM_CLASSES = new Class<?>[] { Database.class, Listener.class, Group.class,
 			ReciprocalKeyPair.class, KeyMechanism.class, PasswordMechanism.class, User.class, Profile.class,
-			AttributeNode.class, AttributeGroup.class, UntrackedAttribute.class, Plugin.class, TrustAnchor.class };
+			AttributeNode.class, AttributeGroup.class, AttributeDomain.class, UntrackedAttribute.class, Plugin.class,
+			TrustAnchor.class };
 
 }

@@ -17,8 +17,9 @@
  *****************************************************************************/
 package com.sandpolis.core.attribute;
 
-import java.util.Collections;
-import java.util.Iterator;
+import static com.google.common.base.Preconditions.checkState;
+
+import java.util.stream.Stream;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -141,28 +142,8 @@ public abstract class Attribute<E> extends AttributeNode {
 	}
 
 	@Override
-	public void addNode(AttributeNode node) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int getSize() {
-		return 0;
-	}
-
-	@Override
-	public boolean isAnonymous() {
-		return false;
-	}
-
-	@Override
 	public int getCharacteristic() {
 		return characteristic;
-	}
-
-	@Override
-	public Iterator<AttributeNode> iterator() {
-		return Collections.emptyIterator();
 	}
 
 	@Override
@@ -172,14 +153,37 @@ public abstract class Attribute<E> extends AttributeNode {
 		return current.toString();
 	}
 
+	@Override
+	public void addNode(AttributeNode node) {
+		// Attributes cannot have descendents
+		throw new UnsupportedOperationException("Attributes cannot have descendents");
+	}
+
+	@Override
+	public int getSize() {
+		// Attributes cannot have descendents
+		return 0;
+	}
+
+	@Override
+	public boolean isAnonymous() {
+		// Attributes cannot be anonymous
+		return false;
+	}
+
+	@Override
+	public Stream<AttributeNode> stream() {
+		// Attributes cannot have descendents
+		return Stream.of();
+	}
+
 	/**
 	 * Set the {@link #UPDATE_FIELD} value.
 	 * 
 	 * @param example An example of update content which will be probed for type
 	 */
 	protected void setUpdateField(E example) {
-		if (UPDATE_FIELD != null)
-			throw new IllegalStateException();
+		checkState(UPDATE_FIELD == null);
 
 		if (example instanceof String)
 			UPDATE_FIELD = AttributeUpdate.getDescriptor().findFieldByName("string");
@@ -192,7 +196,7 @@ public abstract class Attribute<E> extends AttributeNode {
 		else if (example instanceof Double)
 			UPDATE_FIELD = AttributeUpdate.getDescriptor().findFieldByName("double");
 		else
-			throw new RuntimeException();
+			throw new IllegalArgumentException("Invalid attribute type: " + example.getClass());
 	}
 
 }

@@ -36,12 +36,12 @@ import com.sandpolis.core.util.RandUtil;
 import com.sandpolis.server.store.user.User;
 import com.sandpolis.server.store.user.UserStore;
 
-public final class LoginExeTest extends ExeletTest {
+class LoginExeTest extends ExeletTest {
 
 	private LoginExe exe;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		initChannel();
 		exe = new LoginExe(new Sock(channel));
 
@@ -49,12 +49,12 @@ public final class LoginExeTest extends ExeletTest {
 	}
 
 	@Test
-	public void testDeclaration() {
+	void testDeclaration() {
 		testDeclaration(LoginExe.class);
 	}
 
 	@Test
-	public void testLogin() {
+	void testLogin() {
 		String user = RandUtil.nextAlphabetic(9);
 		String pass = CryptoUtil.hash(SHA256, RandUtil.nextAlphabetic(16));
 
