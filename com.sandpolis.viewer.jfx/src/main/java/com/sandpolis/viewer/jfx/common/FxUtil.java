@@ -19,7 +19,13 @@ package com.sandpolis.viewer.jfx.common;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.MissingResourceException;
 import java.util.Objects;
+import java.util.ResourceBundle;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.EventBus;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
@@ -34,6 +40,46 @@ import javafx.fxml.FXMLLoader;
  */
 public final class FxUtil {
 
+	private static final Logger log = LoggerFactory.getLogger(FxUtil.class);
+
+	/**
+	 * The application's global resource bundle.
+	 */
+	private static final ResourceBundle bundle;
+
+	static {
+		ResourceBundle _bundle;
+		try {
+			_bundle = ResourceBundle.getBundle("text.application");
+		} catch (MissingResourceException e) {
+			log.warn(e.getMessage());
+			
+			// Empty bundle
+			_bundle = new ResourceBundle() {
+
+				@Override
+				protected Object handleGetObject(String key) {
+					return null;
+				}
+
+				@Override
+				public Enumeration<String> getKeys() {
+					return null;
+				}
+			};
+		}
+		bundle = _bundle;
+	}
+
+	/**
+	 * Get the resource bundle for the current locale.
+	 * 
+	 * @return The global resource bundle
+	 */
+	public static ResourceBundle getResources() {
+		return bundle;
+	}
+
 	/**
 	 * Load a FXML resource.
 	 * 
@@ -46,7 +92,7 @@ public final class FxUtil {
 		Objects.requireNonNull(location);
 		Objects.requireNonNull(parent);
 
-		FXMLLoader loader = new FXMLLoader(FxUtil.class.getResource(location));
+		FXMLLoader loader = new FXMLLoader(FxUtil.class.getResource(location), bundle);
 		E node = loader.load();
 
 		AbstractController controller = loader.getController();
@@ -71,7 +117,7 @@ public final class FxUtil {
 	public static <E> E loadRoot(String location, Object... parameters) throws IOException {
 		Objects.requireNonNull(location);
 
-		FXMLLoader loader = new FXMLLoader(FxUtil.class.getResource(location));
+		FXMLLoader loader = new FXMLLoader(FxUtil.class.getResource(location), bundle);
 		E node = loader.load();
 
 		AbstractController controller = loader.getController();
