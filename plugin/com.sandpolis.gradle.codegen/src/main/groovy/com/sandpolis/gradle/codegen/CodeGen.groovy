@@ -17,26 +17,25 @@
  *****************************************************************************/
 package com.sandpolis.gradle.codegen
 
-import com.sandpolis.gradle.codegen.ProfileModule
+import com.sandpolis.gradle.codegen.AttributeGenerator
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 /**
- * This plugin adds code generation tasks to Sandpolis.
+ * This plugin adds code generation tasks to the build.
  *
  * @author cilki
  */
-public class CodeGen implements Plugin < Project > {
+public class CodeGen implements Plugin<Project> {
 
-  void apply(Project root) {
+  void apply(Project project) {
 
-    switch (root.getName()) {
-      case "com.sandpolis.core.profile":
-        root.tasks.getByName('compileJava').dependsOn(root.task("codegen", type: ProfileModule))
-        break
-      default:
-        return
-    }
+  	// Look for attribute files
+  	if (project.file("attribute.yml").exists()) {
+  		project.tasks.getByName('compileJava').dependsOn(project.task("generateAttributes", type: AttributeGenerator))
+  	}
+
+  	// TODO Protobuf
   }
 }
