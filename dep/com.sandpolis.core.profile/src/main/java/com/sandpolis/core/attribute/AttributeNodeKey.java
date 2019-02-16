@@ -112,6 +112,18 @@ public abstract class AttributeNodeKey {
 	}
 
 	/**
+	 * Get the key's domain recursively.
+	 * 
+	 * @return The {@link AttributeNodeKey}'s domain
+	 */
+	public String getDomain() {
+		if (parent == null)
+			return ((AttributeDomainKey) this).getDomain();
+
+		return parent.getDomain();
+	}
+
+	/**
 	 * Check if the given key is an ancestor or equal to {@code this}.
 	 * 
 	 * @param key The key

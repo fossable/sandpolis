@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.core.profile;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.persistence.CascadeType;
@@ -27,13 +29,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import com.sandpolis.core.attribute.Attribute;
-import com.sandpolis.core.attribute.AttributeGroup;
+import com.sandpolis.core.attribute.AttributeDomain;
 import com.sandpolis.core.attribute.AttributeKey;
-import com.sandpolis.core.attribute.AttributeNodeKey;
-import com.sandpolis.core.attribute.key.AK_META;
 import com.sandpolis.core.instance.Updatable.AbstractUpdatable;
 import com.sandpolis.core.instance.storage.database.converter.InstanceConverter;
 import com.sandpolis.core.proto.util.Platform.Instance;
@@ -56,12 +58,15 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int db_id;
 
-	/**
-	 * The root node of the attribute tree.
-	 */
+	// TODO
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn
-	private AttributeGroup root;
+	private AttributeDomain root;
+
+	// TODO
+	@OneToMany(cascade = CascadeType.ALL)
+	@MapKeyColumn(name = "db_id")
+	private Map<String, AttributeDomain> domains;
 
 	/**
 	 * The profile's instance type.
@@ -70,22 +75,22 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	@Convert(converter = InstanceConverter.class)
 	private Instance instance;
 
+	@Column
+	private String uuid;
+
+	@Column
+	private int cvid;
+
 	/**
 	 * Initialize a {@link Profile}.
 	 */
 	public Profile(Instance instance) {
 		this.instance = Objects.requireNonNull(instance);
-		this.root = new AttributeGroup(AttributeNodeKey.ROOT);
+		this.domains = new HashMap<>();
 	}
 
-	/**
-	 * Get the value of the specified {@link Attribute}.
-	 * 
-	 * @param key The {@link AttributeKey} to query.
-	 * @return The value of the corresponding attribute.
-	 */
-	public <E> E get(AttributeKey<E> key) {
-		return getAttribute(key).get();
+	Profile() {
+		// JPA
 	}
 
 	/**
@@ -96,7 +101,25 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	 */
 	@SuppressWarnings("unchecked")
 	public <E> Attribute<E> getAttribute(AttributeKey<E> key) {
-		return (Attribute<E>) root.getNode(key.chain().iterator());
+		String domain = key.getDomain();
+		if (!domains.containsKey(domain))
+			domains.put(domain, new AttributeDomain(domain));
+
+		var attribute = domains.get(domain).getNode(key.chain().iterator());
+		if (attribute == null)
+			domains.get(domain).addNode(key.newAttribute());
+
+		return (Attribute<E>) domains.get(domain).getNode(key.chain().iterator());
+	}
+
+	/**
+	 * Get the value of the specified {@link Attribute}.
+	 * 
+	 * @param key The {@link AttributeKey} to query.
+	 * @return The value of the corresponding attribute.
+	 */
+	public <E> E get(AttributeKey<E> key) {
+		return getAttribute(key).get();
 	}
 
 	/**
@@ -138,7 +161,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	 * @return The current UUID.
 	 */
 	public String getUuid() {
-		return get(AK_META.UUID);
+		return uuid;
 	}
 
 	/**
@@ -147,7 +170,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	 * @return The current CVID.
 	 */
 	public int getCvid() {
-		return get(AK_META.CVID);
+		return cvid;
 	}
 
 	/**
@@ -156,7 +179,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	 * @param cvid The new CVID
 	 */
 	public void setCvid(int cvid) {
-		set(AK_META.CVID, cvid);
+		this.cvid = cvid;
 	}
 
 }
