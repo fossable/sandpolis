@@ -19,8 +19,8 @@ package com.sandpolis.core.attribute;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -61,7 +61,7 @@ import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
  */
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdate> implements Iterable<AttributeNode> {
+public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdate> {
 
 	/**
 	 * Indicates a one-byte characteristic ID.
@@ -87,13 +87,6 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	@Column
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	protected int db_id;
-
-	/**
-	 * The node's parent which is stored to allow change events to propegate upwards
-	 * in the tree.
-	 */
-	@Transient // TODO
-	private AttributeNode parent;
 
 	/**
 	 * Get a descendent of this {@link AttributeNode} according to the given
@@ -142,10 +135,6 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	 */
 	public abstract void addNode(AttributeNode node);
 
-	public void setParent(AttributeNode node) {
-		parent = node;
-	}
-
 	/**
 	 * Get the number of children of this node.
 	 * 
@@ -166,25 +155,45 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	 * no corresponding {@link AttributeNodeKey}. The parent of an anonymous node
 	 * must be plural and all children of a plural node must be anonymous.
 	 * 
-	 * @return True if this {@link AttributeNode} is anonymous
+	 * @return Whether this {@link AttributeNode} is anonymous
 	 */
 	public abstract boolean isAnonymous();
 
-	public Stream<AttributeNode> stream() {
-		Iterable<AttributeNode> iterable = () -> iterator();
-		return StreamSupport.stream(iterable.spliterator(), false);
-	}
+	/**
+	 * Get a {@link Stream} of the {@link AttributeNode}'s descendents.
+	 * 
+	 * @return A new stream
+	 */
+	public abstract Stream<AttributeNode> stream();
 
 	@Transient
-	private List<AttributeChangeListener> listeners;
+	private List<Consumer<AttributeNode>> listeners;
 
 	/**
-	 * Register a new listener on this {@link AttributeNode}.
+	 * Register a new listener on this {@link AttributeNode} and all of its
+	 * descendents.
 	 * 
 	 * @param listener
 	 */
-	public void register(AttributeChangeListener listener) {
-		listeners.add(listener);
+	public void register(Consumer<AttributeNode> listener) {
+		synchronized (listeners) {
+			listeners.add(listener);
+		}
+
+		stream().forEach(d -> d.register(listener));
+	}
+
+	/**
+	 * Remove a listener from this {@link AttributeNode} and all of its descendents.
+	 * 
+	 * @param listener The listener to remove
+	 */
+	public void deregister(Consumer<AttributeNode> listener) {
+		synchronized (listeners) {
+			listeners.remove(listener);
+		}
+
+		stream().forEach(d -> d.deregister(listener));
 	}
 
 	/**
@@ -194,27 +203,10 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	 */
 	public void fireChanged(AttributeNode node) {
 		synchronized (listeners) {
-			for (AttributeChangeListener listener : listeners) {
-				listener.changed(node);
+			for (Consumer<AttributeNode> listener : listeners) {
+				listener.accept(node);
 			}
 		}
-
-		if (parent != null)
-			parent.fireChanged(node);
-	}
-
-	/**
-	 * When registered on an {@link AttributeNode}, this listener receives change
-	 * notifications for the node and all transitive children of the node.
-	 */
-	public static interface AttributeChangeListener {
-
-		/**
-		 * Indicates an attribute node has changed.
-		 * 
-		 * @param node The node that changed
-		 */
-		public void changed(AttributeNode node);
 
 	}
 }
