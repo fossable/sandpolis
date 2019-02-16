@@ -28,6 +28,11 @@ import com.google.protobuf.ByteString;
 public class AttributeDomainKey extends AttributeGroupKey {
 
 	/**
+	 * The default attribute domain.
+	 */
+	public static final AttributeDomainKey DEFAULT = new AttributeDomainKey(null);
+
+	/**
 	 * A dotted domain or {@code null} for the default domain.
 	 */
 	private String domain;

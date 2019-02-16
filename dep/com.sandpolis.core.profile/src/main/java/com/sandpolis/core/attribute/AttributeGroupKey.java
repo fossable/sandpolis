@@ -67,6 +67,17 @@ public class AttributeGroupKey extends AttributeNodeKey {
 				.concat(ByteString.copyFrom(new byte[plurality])));
 	}
 
+	/**
+	 * Build an {@link AttributeGroupKey} whose parent is the default attribute
+	 * domain.
+	 * 
+	 * @param characteristic The characteristic ID
+	 * @param plurality      The plurality size
+	 */
+	public AttributeGroupKey(int characteristic, int plurality) {
+		this(AttributeDomainKey.DEFAULT, characteristic, plurality);
+	}
+
 	protected AttributeGroupKey() {
 	}
 
