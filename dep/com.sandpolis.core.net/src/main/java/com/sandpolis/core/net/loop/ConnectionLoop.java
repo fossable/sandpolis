@@ -125,6 +125,9 @@ public class ConnectionLoop extends Thread {
 						result = null;
 					}
 
+					if (result != null)
+						return;
+
 					time = System.currentTimeMillis() - time;
 					if (time < timeout)
 						Thread.sleep(timeout - time);
