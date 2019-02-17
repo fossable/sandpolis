@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.sandpolis.core.attribute.Attribute;
+import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.attribute.UntrackedAttribute;
 
 import javafx.beans.InvalidationListener;
@@ -37,37 +38,51 @@ import javafx.beans.value.ObservableValue;
  */
 public class ObservableAttribute<E> extends UntrackedAttribute<E> implements ObservableValue<E> {
 
-	private List<ChangeListener<? super E>> listeners = new LinkedList<>();
+	/**
+	 * The list of change listeners for this {@link ObservableAttribute}.
+	 */
+	private List<ChangeListener<? super E>> changeListeners = new LinkedList<>();
+
+	/**
+	 * The list of invalidation listeners for this {@link ObservableAttribute}.
+	 */
+	private List<InvalidationListener> invalidationListeners = new LinkedList<>();
+
+	public ObservableAttribute(AttributeKey<E> key) {
+		super(key);
+	}
 
 	@Override
 	public void addListener(InvalidationListener listener) {
-		throw new UnsupportedOperationException();
+		invalidationListeners.add(listener);
 	}
 
 	@Override
 	public void removeListener(InvalidationListener listener) {
-		throw new UnsupportedOperationException();
+		invalidationListeners.remove(listener);
 	}
 
 	@Override
 	public void addListener(ChangeListener<? super E> listener) {
-		listeners.add(listener);
+		changeListeners.add(listener);
 	}
 
 	@Override
 	public void removeListener(ChangeListener<? super E> listener) {
-		listeners.remove(listener);
+		changeListeners.remove(listener);
 	}
 
 	@Override
 	public void set(E value) {
-		listeners.forEach(listener -> listener.changed(this, get(), value));
+		invalidationListeners.forEach(listener -> listener.invalidated(this));
+		changeListeners.forEach(listener -> listener.changed(this, get(), value));
 		super.set(value);
 	}
 
 	@Override
 	public void set(E value, long time) {
-		listeners.forEach(listener -> listener.changed(this, get(), value));
+		invalidationListeners.forEach(listener -> listener.invalidated(this));
+		changeListeners.forEach(listener -> listener.changed(this, get(), value));
 		super.set(value, time);
 	}
 
