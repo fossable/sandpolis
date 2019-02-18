@@ -1,0 +1,130 @@
+- CPU: TODO
+  plurality: 1
+  children:
+    - model: TODO
+      type: String
+    - vendor: TODO
+      type: String
+    - frequency_spec: The specified frequency in Hertz
+      type: Integer
+    - l1_cache: The size of the L1 cache in bytes
+      type: Integer
+      static: true
+    - l2_cache: The size of the L2 cache in bytes
+      type: Integer
+      static: true
+    - l3_cache: The size of the L3 cache in bytes
+      type: Integer
+      static: true
+    - l4_cache: The size of the L4 cache in bytes
+      type: Integer
+      static: true
+    - core: TODO
+      plurality: 1
+      children:
+        - usage: The core's usage as a decimal
+          type: Double
+        - temperature: The core's temperature in Celsius
+          type: Double
+        - thread: TODO
+          plurality: 1
+          children:
+            - id: The thread's ID
+              type: Double
+
+- DISPLAY: TODO
+  plurality: 1
+  children:
+    - name: The display's name
+      type: String
+    - resolution: The display's current resolution
+      type: String
+    - size: The display's physical size in pixels
+      type: String
+    - refresh_frequency: Refresh frequency in Hertz
+      type: Integer
+    - bit_depth: TODO
+      type: Integer
+
+- JVM: TODO
+  children:
+    - arch: JVM architecture
+      type: String
+      static: true
+    - path: JVM base directory
+      type: String
+      static: true
+    - start_timestamp: The JVM start time
+      type: Long
+    - vendor: The JVM vendor name
+      type: String
+      static: true
+    - version: The JVM version
+      type: String
+
+- USER: TODO
+  children:
+    - id: TODO
+      type: String
+    - username: TODO
+      type: String
+    - home: The user's home directory
+      type: String
+
+- LOCATION: TODO
+  children:
+    - city: TODO
+      type: String
+    - country: TODO
+      type: String
+    - country_code: TODO
+      type: String
+    - latitude: TODO
+      type: String
+    - longitude: TODO
+      type: String
+
+- NET: TODO
+  children:
+    - fqdn: TODO
+      type: String
+    - hostname: TODO
+      type: String
+
+- OS: TODO
+  children:
+    - arch: TODO
+      type: String
+    - window_title: TODO
+      type: String
+    - family: TODO
+      type: String
+    - language: TODO
+      type: String
+    - start_timestamp: TODO
+      type: Long
+    - timezone: TODO
+      type: String
+    - name: TODO
+      type: String
+
+- LINUX: TODO
+  children:
+    - distribution: TODO
+      type: String
+    - shell: TODO
+      type: String
+    - window_manager: TODO
+      type: String
+    # TODO kernel and packages
+
+- WINDOWS: TODO
+  children:
+    - ie_version: TODO
+      type: String
+    - install_timestamp: TODO
+      type: Long
+    - powershell_version: TODO
+      type: String
+    - serial: TODO
+      type: String
