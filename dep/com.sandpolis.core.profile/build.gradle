@@ -16,6 +16,14 @@ plugins {
 
 apply plugin: 'com.sandpolis.gradle.codegen'
 
+sourceSets {
+	main {
+		java {
+			srcDirs 'src/gen/java'
+		}
+	}
+}
+
 eclipse {
 	project {
 		comment = 'The profile library module'

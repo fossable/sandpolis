@@ -29,13 +29,13 @@ import org.gradle.api.Project
  */
 public class CodeGen implements Plugin<Project> {
 
-  void apply(Project project) {
+	void apply(Project project) {
 
-  	// Look for attribute files
-  	if (project.file("attribute.yml").exists()) {
-  		project.tasks.getByName('compileJava').dependsOn(project.task("generateAttributes", type: AttributeGenerator))
-  	}
+		// Look for attribute files
+		if (project.file("attribute.yml").exists()) {
+			project.tasks.getByName('compileJava').dependsOn(project.task("generateAttributes", type: AttributeGenerator))
+		}
 
-  	// TODO Protobuf
-  }
+		// TODO Protobuf
+	}
 }
