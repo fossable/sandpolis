@@ -20,6 +20,6 @@ dependencies {
 	implementation project(':dep:com.sandpolis.viewer')
 
 	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.25'
+	implementation 'org.slf4j:slf4j-api:1.7.26'
 }
 

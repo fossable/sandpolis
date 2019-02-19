@@ -30,7 +30,7 @@ dependencies {
 	implementation 'org.fusesource.jansi:jansi:1.17.1'
 
 	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.25'
+	implementation 'org.slf4j:slf4j-api:1.7.26'
 }
 
 test {
