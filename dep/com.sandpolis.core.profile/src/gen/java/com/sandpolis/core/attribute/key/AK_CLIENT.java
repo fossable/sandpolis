@@ -8,7 +8,7 @@ public final class AK_CLIENT {
   /**
    * Client-only attributes.
    */
-  public static final AttributeGroupKey CLIENT = new AttributeGroupKey(null, 2, 0);
+  public static final AttributeGroupKey CLIENT = new AttributeGroupKey(com.sandpolis.core.profile.store.DomainStore.get(null), 2, 0);
 
   /**
    * The client's status.

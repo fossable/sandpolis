@@ -15,42 +15,53 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.attribute;
+package com.sandpolis.core.profile.store;
 
-import javax.persistence.Id;
+import java.util.Objects;
+import java.util.Optional;
 
-import com.google.protobuf.ByteString;
+import com.sandpolis.core.attribute.AttributeDomainKey;
+import com.sandpolis.core.instance.Store.AutoInitializer;
+import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
+import com.sandpolis.core.instance.storage.StoreProvider;
 
 /**
- * Corresponds to an {@link AttributeDomain}.
+ * A store for the instance's {@link AttributeDomainKey}s.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public class AttributeDomainKey extends AttributeGroupKey {
+@AutoInitializer
+public final class DomainStore {
 
-	/**
-	 * The default attribute domain.
-	 */
-	public static final AttributeDomainKey DEFAULT = new AttributeDomainKey(null);
+	private static StoreProvider<AttributeDomainKey> provider;
 
-	/**
-	 * A dotted domain or {@code null} for the default domain.
-	 */
-	@Id
-	private String domain;
+	static {
+		init(new MemoryListStoreProvider<>(AttributeDomainKey.class));
+	}
 
-	public AttributeDomainKey(String domain) {
-		this.domain = domain;
-		this.key = ByteString.EMPTY;
+	public static void init(StoreProvider<AttributeDomainKey> provider) {
+		DomainStore.provider = Objects.requireNonNull(provider);
 	}
 
 	/**
-	 * Get the domain identifier.
+	 * Get a root {@link AttributeDomainKey} from the store.
 	 * 
-	 * @return The domain or {@code null} for the default domain
+	 * @param id The {@link AttributeDomainKey}'s domain
+	 * @return The {@link AttributeDomainKey} for the instance
 	 */
-	public String getDomain() {
-		return domain;
+	public static AttributeDomainKey get(String id) {
+		if (id == null)
+			id = "";
+
+		Optional<AttributeDomainKey> key = provider.get(id);
+		if (key.isPresent())
+			return key.get();
+
+		provider.add(new AttributeDomainKey(id));
+		return provider.get(id).get();
+	}
+
+	private DomainStore() {
 	}
 }

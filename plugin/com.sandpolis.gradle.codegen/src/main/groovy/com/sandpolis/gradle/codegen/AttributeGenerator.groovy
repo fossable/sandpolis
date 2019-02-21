@@ -40,6 +40,9 @@ class AttributeGenerator extends DefaultTask {
 	@TaskAction
 	void action () {
 
+		// The module's attribute domain
+		def domain = getProject().getName().equals("com.sandpolis.core.profile") ? null : getProject().getName()
+
 		// Parse the attribute file
 		new Yaml().load(getProject().file("attribute.yml").text).each {
 			def (name, tag, description) = parseNameTag(it)
@@ -47,8 +50,7 @@ class AttributeGenerator extends DefaultTask {
 			def ak = TypeSpec.classBuilder("AK_" + name.toUpperCase())
 				.addModifiers(Modifier.PUBLIC, Modifier.FINAL)
 
-			// TODO change null
-			processGroup(ak, it, null)
+			processGroup(ak, it, "com.sandpolis.core.profile.store.DomainStore.get($domain)")
 
 			// Write out
 			JavaFile.builder("com.sandpolis.core.attribute.key", ak.build())

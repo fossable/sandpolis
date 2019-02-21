@@ -8,7 +8,7 @@ public final class AK_INSTANCE {
   /**
    * Attributes applicable to all instances.
    */
-  public static final AttributeGroupKey INSTANCE = new AttributeGroupKey(null, 1, 0);
+  public static final AttributeGroupKey INSTANCE = new AttributeGroupKey(com.sandpolis.core.profile.store.DomainStore.get(null), 1, 0);
 
   /**
    * Client/Viewer ID.
