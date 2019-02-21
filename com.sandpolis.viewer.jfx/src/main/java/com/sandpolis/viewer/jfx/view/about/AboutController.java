@@ -21,8 +21,10 @@ import java.util.Date;
 
 import com.interactivemesh.jfx.importer.stl.StlMeshImporter;
 import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.Environment;
 import com.sandpolis.viewer.jfx.Viewer.UI;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
+import com.sandpolis.viewer.jfx.common.label.DateLabel;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -56,7 +58,7 @@ public class AboutController extends AbstractController {
 	@FXML
 	private Label java_version;
 	@FXML
-	private Label java_uptime;
+	private DateLabel java_uptime;
 	@FXML
 	private Pane sub;
 
@@ -74,6 +76,7 @@ public class AboutController extends AbstractController {
 		build_time.setText(new Date(Core.SO_BUILD.getTime()).toString());
 		build_platform.setText(Core.SO_BUILD.getPlatform());
 		java_version.setText(Core.SO_BUILD.getJavaVersion());
+		java_uptime.referenceProperty().set(Environment.JVM_TIMESTAMP.getTime());
 
 		// Load 3D mesh from resource
 		StlMeshImporter importer = new StlMeshImporter();
