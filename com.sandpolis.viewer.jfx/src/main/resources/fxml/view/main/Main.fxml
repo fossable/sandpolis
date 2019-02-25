@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.BorderPane?>
+<?import com.sandpolis.viewer.jfx.common.pane.CarouselPane?>
+<?import com.sandpolis.viewer.jfx.common.pane.ExtendPane?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity"
+	minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
+	prefWidth="600.0" xmlns="http://javafx.com/javafx/9"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.jfx.view.main.MainController">
+	<center>
+		<ExtendPane fx:id="extend">
+			<main>
+				<CarouselPane fx:id="carousel" direction="down"	duration="1000">
+					<children>
+						<fx:include fx:id="hostList" source="list/HostList.fxml" userData="list" />
+						<fx:include fx:id="hostGraph" source="graph/HostGraph.fxml" userData="graph" />
+					</children>
+				</CarouselPane>
+			</main>
+		</ExtendPane>
+	</center>
+	<left>
+		<fx:include fx:id="menu" source="menu/VerticalMenu.fxml" />
+	</left>
+</BorderPane>
