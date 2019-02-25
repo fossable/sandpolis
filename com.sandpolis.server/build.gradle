@@ -36,7 +36,7 @@ dependencies {
 	implementation 'com.google.guava:guava:27.0.1-jre'
 
 	// https://github.com/h2database/h2database
-	implementation 'com.h2database:h2:1.4.197'
+	implementation 'com.h2database:h2:1.4.198'
 
 	// https://github.com/netty/netty
 	implementation 'io.netty:netty-codec:4.1.32.Final'
