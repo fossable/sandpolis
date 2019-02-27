@@ -6,7 +6,6 @@
 plugins {
 	id 'eclipse'
 	id 'java-gradle-plugin'
-	id 'com.google.protobuf' version '0.8.6'
 }
 
 eclipse {
@@ -15,21 +14,15 @@ eclipse {
 	}
 }
 
-repositories {
-    mavenCentral()
+allprojects {
+	repositories {
+	    mavenCentral()
+	}
 }
 
 dependencies {
 	compile gradleApi()
 
-    compile 'com.google.protobuf:protobuf-java:3.6.1'
     compile 'com.google.guava:guava:26.0-jre'
-}
-
-protobuf {
-	protoc {
-		artifact = 'com.google.protobuf:protoc:3.6.1'
-	}
-
-	generatedFilesBaseDir = "$projectDir/src/"
+    compile project(':dep:com.sandpolis.core.proto')
 }

@@ -1,1 +1,4 @@
 rootProject.name = 'com.sandpolis.gradle.soi'
+
+include 'dep:com.sandpolis.core.proto'
+project(':dep:com.sandpolis.core.proto').projectDir = file('../../dep/com.sandpolis.core.proto')
