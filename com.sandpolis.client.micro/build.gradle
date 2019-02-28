@@ -9,6 +9,7 @@ plugins {
 
 eclipse {
 	project {
+		name = 'com.sandpolis.viewer.micro'
 		comment = 'The micro-client instance'
 	}
 }

@@ -5,11 +5,12 @@
 
 plugins {
 	id 'eclipse'
-    id 'java-library'
+	id 'java-library'
 }
 
 eclipse {
 	project {
+		name = 'com.sandpolis.core.collection'
 		comment = 'The collections library module'
 	}
 }
@@ -17,7 +18,7 @@ eclipse {
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.0'
 
-	// https://github.com/google/guava	
+	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:27.0.1-jre'
 
 	implementation 'javax.persistence:javax.persistence-api:2.2'

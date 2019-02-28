@@ -5,21 +5,22 @@
 
 plugins {
 	id 'eclipse'
- 	id 'java-library'
+	id 'java-library'
 }
 
 eclipse {
 	project {
+		name = 'com.sandpolis.plugin.desktop'
 		comment = ''
 	}
 }
 
 ext {
-    plugin_name = 'Desktop Plugin'
-    plugin_id = 'com.sandpolis.plugin.desktop'
-    plugin_description = ''
-    plugin_version = '1.0.0'
-    plugin_class = ''
+	plugin_name = 'Desktop Plugin'
+	plugin_id = 'com.sandpolis.plugin.desktop'
+	plugin_description = ''
+	plugin_version = '1.0.0'
+	plugin_class = ''
 }
 
 dependencies {

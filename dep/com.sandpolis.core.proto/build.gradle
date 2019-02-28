@@ -5,12 +5,13 @@
 
 plugins {
 	id 'eclipse'
-    id 'java-library'
-    id 'com.google.protobuf' version '0.8.6'
+	id 'java-library'
+	id 'com.google.protobuf' version '0.8.6'
 }
 
 eclipse {
 	project {
+		name = 'com.sandpolis.core.proto'
 		comment = 'The protobuf library module'
 	}
 }

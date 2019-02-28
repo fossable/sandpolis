@@ -5,11 +5,12 @@
 
 plugins {
 	id 'eclipse'
-    id 'java-library'
+	id 'java-library'
 }
 
 eclipse {
 	project {
+		name = 'com.sandpolis.viewer'
 		comment = 'The viewer library module'
 	}
 }

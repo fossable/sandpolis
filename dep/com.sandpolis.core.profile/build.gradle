@@ -5,13 +5,13 @@
 
 buildscript {
 	dependencies {
- 		classpath ':com.sandpolis.gradle.codegen:'
+		classpath ':com.sandpolis.gradle.codegen:'
 	}
 }
 
 plugins {
 	id 'eclipse'
-    id 'java-library'
+	id 'java-library'
 }
 
 apply plugin: 'com.sandpolis.gradle.codegen'
@@ -26,6 +26,7 @@ sourceSets {
 
 eclipse {
 	project {
+		name = 'com.sandpolis.core.profile'
 		comment = 'The profile library module'
 	}
 }

@@ -10,18 +10,19 @@ plugins {
 }
 
 javafx {
-    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+	modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
 }
 
 eclipse {
 	project {
+		name = 'com.sandpolis.viewer.jfx'
 		comment = 'The JavaFX viewer instance'
 	}
 }
 
 repositories {
-    // TODO remove dependency
-    flatDir dirs: 'lib'
+	// TODO remove dependency
+	flatDir dirs: 'lib'
 }
 
 dependencies {
@@ -58,8 +59,8 @@ dependencies {
 
 jar {
 	manifest {
-	    attributes(
+		attributes(
 			'Main-Class': 'com.sandpolis.viewer.jfx.Main'
-    	)
+		)
 	}
 }

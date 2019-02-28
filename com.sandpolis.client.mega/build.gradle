@@ -11,6 +11,7 @@ plugins {
 
 eclipse {
 	project {
+		name = 'com.sandpolis.client.mega'
 		comment = 'The mega-client instance'
 	}
 }
@@ -41,16 +42,16 @@ dependencies {
 
 jar {
 	manifest {
-	    attributes(
+		attributes(
 			'Main-Class': 'com.sandpolis.client.mega.Main'
-    	)
+		)
 	}
 }
 
 // Add OneJar task to produce a jar capable of nested dependencies, but don't
 // actually add them yet
 task one_jar(type: OneJar) {
-    mainClass = 'com.sandpolis.client.mega.Main' 
+	mainClass = 'com.sandpolis.client.mega.Main' 
 }
 project.tasks.assemble.dependsOn project.tasks.one_jar
 

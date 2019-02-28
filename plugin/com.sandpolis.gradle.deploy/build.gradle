@@ -10,17 +10,18 @@ plugins {
 
 eclipse {
 	project {
+		name = 'com.sandpolis.gradle.deploy'
 		comment = 'A plugin that sets up deployment tasks in Sandpolis'
 	}
 }
 
 repositories {
-    jcenter()
+	jcenter()
 }
 dependencies {
 	implementation gradleApi()
-    implementation localGroovy()
+	implementation localGroovy()
 
 	implementation 'org.hidetake:groovy-ssh:2.9.0'
-    implementation 'org.hidetake:gradle-ssh-plugin:2.9.0'
+	implementation 'org.hidetake:gradle-ssh-plugin:2.9.0'
 }

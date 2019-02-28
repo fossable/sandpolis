@@ -5,7 +5,7 @@
 
 plugins {
 	id 'eclipse'
- 	id 'java-library'
+	id 'java-library'
 }
 
 sourceSets {
@@ -18,16 +18,17 @@ sourceSets {
 
 eclipse {
 	project {
+		name = 'com.sandpolis.plugin.sysinfo'
 		comment = ''
 	}
 }
 
 ext {
-    plugin_name = 'System Info Plugin'
-    plugin_id = 'com.sandpolis.plugin.sysinfo'
-    plugin_description = ''
-    plugin_version = '1.0.0'
-    plugin_class = ''
+	plugin_name = 'System Info Plugin'
+	plugin_id = 'com.sandpolis.plugin.sysinfo'
+	plugin_description = ''
+	plugin_version = '1.0.0'
+	plugin_class = ''
 }
 
 dependencies {

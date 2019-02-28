@@ -10,19 +10,20 @@ plugins {
 
 eclipse {
 	project {
+		name = 'com.sandpolis.gradle.soi'
 		comment = 'A plugin that injects static objects into instance modules'
 	}
 }
 
 allprojects {
 	repositories {
-	    mavenCentral()
+		mavenCentral()
 	}
 }
 
 dependencies {
 	compile gradleApi()
 
-    compile 'com.google.guava:guava:26.0-jre'
-    compile project(':dep:com.sandpolis.core.proto')
+	compile 'com.google.guava:guava:26.0-jre'
+	compile project(':dep:com.sandpolis.core.proto')
 }

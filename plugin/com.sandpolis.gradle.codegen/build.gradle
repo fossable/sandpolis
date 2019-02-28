@@ -10,12 +10,13 @@ plugins {
 
 eclipse {
 	project {
+		name = 'com.sandpolis.gradle.codegen'
 		comment = 'A plugin that generates Sandpolis-specific code'
 	}
 }
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 }
 dependencies {
 	implementation gradleApi()

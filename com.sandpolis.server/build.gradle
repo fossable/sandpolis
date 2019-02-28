@@ -5,11 +5,12 @@
 
 plugins {
 	id 'eclipse'
-    id 'java'
+	id 'java'
 }
 
 eclipse {
 	project {
+		name = 'com.sandpolis.server'
 		comment = 'The server instance'
 	}
 }
@@ -52,9 +53,9 @@ dependencies {
 
 jar {
 	manifest {
-	    attributes(
+		attributes(
 			'Main-Class': 'com.sandpolis.server.Main'
-    	)
+		)
 	}
 }
 

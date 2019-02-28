@@ -5,11 +5,12 @@
 
 plugins {
 	id 'eclipse'
-    id 'java'
+	id 'java'
 }
 
 eclipse {
 	project {
+		name = 'com.sandpolis.viewer.rest'
 		comment = 'The REST viewer instance'
 	}
 }

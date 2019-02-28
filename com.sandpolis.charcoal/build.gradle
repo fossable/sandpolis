@@ -10,6 +10,7 @@ plugins {
 
 eclipse {
 	project {
+		name = 'com.sandpolis.charcoal'
 		comment = 'The Charcoal instance'
 	}
 }
@@ -27,8 +28,8 @@ dependencies {
 
 jar {
 	manifest {
-	    attributes(
+		attributes(
 			'Main-Class': 'com.sandpolis.charcoal.Main'
-    	)
+		)
 	}
 }

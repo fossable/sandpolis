@@ -5,7 +5,7 @@
 
 plugins {
 	id 'eclipse'
-  	id 'java-library'
+	id 'java-library'
 }
 
 eclipse {

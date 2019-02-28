@@ -9,9 +9,9 @@ buildscript {
 	}
 	dependencies {
 		classpath 'net.sf.proguard:proguard-gradle:6.0.3'
- 		classpath ':com.sandpolis.gradle.deploy:'
- 		classpath ':com.sandpolis.gradle.plugin:'
- 		classpath ':com.sandpolis.gradle.soi:'
+		classpath ':com.sandpolis.gradle.deploy:'
+		classpath ':com.sandpolis.gradle.plugin:'
+		classpath ':com.sandpolis.gradle.soi:'
 	}
 }
 

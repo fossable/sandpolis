@@ -5,11 +5,12 @@
 
 plugins {
 	id 'eclipse'
-    id 'java'
+	id 'java'
 }
 
 eclipse {
 	project {
+		name = 'com.sandpolis.viewer.cli'
 		comment = 'The CLI viewer instance'
 	}
 }
@@ -52,8 +53,8 @@ dependencies {
 
 jar {
 	manifest {
-	    attributes(
+		attributes(
 			'Main-Class': 'com.sandpolis.viewer.cli.Main'
-    	)
+		)
 	}
 }

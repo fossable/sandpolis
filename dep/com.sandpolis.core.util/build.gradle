@@ -5,11 +5,12 @@
 
 plugins {
 	id 'eclipse'
-    id 'java-library'
+	id 'java-library'
 }
 
 eclipse {
 	project {
+		name = 'com.sandpolis.core.util'
 		comment = 'The common utilities library module'
 	}
 }
