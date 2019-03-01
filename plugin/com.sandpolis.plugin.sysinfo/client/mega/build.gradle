@@ -3,49 +3,31 @@
 *                         com.sandpolis.plugin.sysinfo                        *
 ******************************************************************************/
 
-buildscript {
-	dependencies {
-		classpath ':com.sandpolis.gradle.codegen:'
-	}
-}
-
 plugins {
 	id 'eclipse'
 	id 'java-library'
 }
 
-sourceSets {
-	main {
-		java {
-			srcDirs 'src/gen/java'
-		}
-	}
-}
-
 eclipse {
 	project {
-		name = 'com.sandpolis.plugin.sysinfo'
-		comment = ''
+		name = 'com.sandpolis.plugin.sysinfo:client:mega'
+		comment = "The sysinfo plugin's Mega client component"
 	}
-}
-
-ext {
-	plugin_name = 'System Info Plugin'
-	plugin_id = 'com.sandpolis.plugin.sysinfo'
-	plugin_description = ''
-	plugin_version = '1.0.0'
-	plugin_class = ''
 }
 
 dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.3.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.0'
 
 	implementation project(':dep:com.sandpolis.core.instance')
 	implementation project(':dep:com.sandpolis.core.profile')
+	implementation project(':plugin:com.sandpolis.plugin.sysinfo')
+
+	// https://github.com/pf4j/pf4j
+	implementation 'org.pf4j:pf4j:2.6.0'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
-}
 
-apply plugin: 'com.sandpolis.gradle.plugin'
-apply plugin: 'com.sandpolis.gradle.codegen'
+	// https://github.com/oshi/oshi
+	implementation 'com.github.oshi:oshi-core:3.13.0'
+}
