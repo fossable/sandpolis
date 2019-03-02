@@ -77,7 +77,7 @@ public final class DatabaseFactory {
 			throw new IOException("Failed to create database file");
 
 		try {
-			return new Database(String.format("jdbc:%s:file:%s", type, file.getAbsolutePath()));
+			return new Database(String.format("jdbc:%s:%s", type, file.toURI()));
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
@@ -97,7 +97,7 @@ public final class DatabaseFactory {
 	/**
 	 * Create a new uninitialized {@link Database} from the given URL.
 	 *
-	 * @param url The source url
+	 * @param url      The source url
 	 * @param username
 	 * @param password
 	 * @return An uninitialized {@code Database}

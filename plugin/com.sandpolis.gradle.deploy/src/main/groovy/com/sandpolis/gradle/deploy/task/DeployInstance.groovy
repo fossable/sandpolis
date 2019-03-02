@@ -33,12 +33,12 @@ class DeployInstance extends RemoteTask {
 					}
 
 				// Check for screen session
-				if(!execute('screen -ls', ignoreError: true).contains(project_deploy.getName()))
+				if(!execute('screen -ls', ignoreError: true).contains(project_deploy.name))
 					// Create a new detached session
-					execute 'screen -d -m -S ' + project_deploy.getName()
+					execute 'screen -d -m -S ' + project_deploy.name
 
 				// Run the artifact
-				execute 'screen -S ' + project_deploy.getName() + ' -X stuff "clear && java -jar ' + directory + '/' + project_deploy.getName() + '.jar\n"'
+				execute 'screen -S ' + project_deploy.name + ' -X stuff "clear && java -jar ' + directory + '/' + project_deploy.name + '.jar\n"'
 			}
 		}
 	}
@@ -47,14 +47,14 @@ class DeployInstance extends RemoteTask {
 		project_root.ssh.run {
 			session(rhost) {
 				// Kill the process
-				execute 'taskkill /f /t /im ' + project_deploy.getName() + '.jar', ignoreError: true
+				execute "wmic path win32_process where \"CommandLine Like '%${project_deploy.name}.jar%'\" call terminate", ignoreError: true
 
 				// Reset working directory
 				remove directory
-				execute 'mkdir ' + directory + '/jlib'
+				execute 'md "' + directory + '/jlib"'
 
 				// Reset Java Preferences
-				execute 'reg delete "HKEY_CURRENT_USER\\Software\\JavaSoft\\Prefs"'
+				execute 'reg delete "HKEY_CURRENT_USER\\Software\\JavaSoft\\Prefs" /f'
 
 				// Transfer instance binary
 				put from: project_deploy.jar.archivePath, into: directory
@@ -69,8 +69,7 @@ class DeployInstance extends RemoteTask {
 							put from: sub.jar.outputs.files, into: directory + '/jlib'
 					}
 
-				// Run the artifact
-				// TODO
+				// Run the artifact manually
 			}
 		}
 	}
