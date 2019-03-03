@@ -29,36 +29,42 @@ import org.gradle.api.tasks.Copy
  */
 public class PluginPackager implements Plugin<Project> {
 
-    def plugin_modules = ["client:mega", "client:micro", "viewer:jfx", "viewer:cli"]
-
 	void apply(Project project) {
-	
-    	project.subprojects {
-    		afterEvaluate {
-                if (plugin_modules.contains(parent.name + ":" + name)) {
+		def cert = project.file(project.name + ".cert").text.replace("\n", "").replace("-----BEGIN CERTIFICATE-----", "").replace("-----END CERTIFICATE-----", "")
+		def extension = project.extensions.create('sandpolis_plugin', ConfigExtension)
 
-                    // Setup dependency
-                    project.tasks.getByName('jar').dependsOn(tasks.getByName('jar'))
-                    
-                    // Add artifact to root project's jar task
-                    project.tasks.getByName('jar')
-                        .from(tasks.getByName('jar').outputs.files.getFiles()[0].getParent(),
-                            {into parent.name})
-                }
-    		}
-    	}
-    	
-    	// Setup plugin manifest
-    	project.jar {
-			manifest {
-			    attributes(			
-					'Plugin-Id': project.ext.plugin_id,
-					'Plugin-Name': project.ext.plugin_name,
-					'Plugin-Description': project.ext.plugin_description,
-					'Plugin-Version': project.ext.plugin_version,
-					'Plugin-Class': project.ext.plugin_class,
-					'Plugin-Cert': project.file(project.ext.plugin_id + ".cert").text.replace("\n", "").replace("-----BEGIN CERTIFICATE-----", "").replace("-----END CERTIFICATE-----", "")
-		    	)
+		project.subprojects {
+			afterEvaluate {
+				if (tasks.findByPath('jar') != null) {
+
+					// Setup dependency
+					project.tasks.getByName('jar').dependsOn(tasks.getByName('jar'))
+					
+					// Add artifact to root project's jar task
+					project.tasks.getByName('jar')
+						.from(tasks.getByName('jar').outputs.files.getFiles()[0].getParent(),
+							{into parent.name})
+				}
+			}
+		}
+
+		// Setup plugin manifests
+		project.allprojects {
+			afterEvaluate {
+				if (tasks.findByPath('jar') != null) {
+					jar {
+						manifest {
+							attributes(
+								'Plugin-Id': extension.id,
+								'Plugin-Version': extension.version,
+								'Plugin-Name': extension.name,
+								'Plugin-Description': extension.description,
+								'Plugin-Class': extension.id + ".SandPlugin",
+								'Plugin-Cert': cert
+							)
+						}
+					}
+				}
 			}
 		}
 	}

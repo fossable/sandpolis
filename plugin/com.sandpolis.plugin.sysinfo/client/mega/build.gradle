@@ -22,11 +22,12 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.profile')
 	implementation project(':plugin:com.sandpolis.plugin.sysinfo')
 
-	// https://github.com/pf4j/pf4j
-	implementation 'org.pf4j:pf4j:2.6.0'
-
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
+
+	// https://github.com/pf4j/pf4j
+	implementation 'org.pf4j:pf4j:2.6.0'
+	annotationProcessor 'org.pf4j:pf4j:2.6.0'
 
 	// https://github.com/oshi/oshi
 	implementation 'com.github.oshi:oshi-core:3.13.0'
