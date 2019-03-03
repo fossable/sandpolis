@@ -1,0 +1,27 @@
+.main_menu-header {
+	-fx-pref-width: 118px;
+}
+
+.main_menu-button {
+	-fx-pref-width: 118px;
+	-fx-pref-height: 20px;
+    -fx-padding: 2 4 2 4;
+    -fx-text-fill: black;
+    -fx-font-size: 10px;
+}
+
+.main_menu-panel {
+	-fx-spacing: 8px;
+}
+
+.main_menu-subpanel {
+	-fx-spacing: 3px;
+}
+
+.main_menu-tooltip {
+	
+}
+
+.about_logo_background {
+	-fx-background-color: #333333;
+}
