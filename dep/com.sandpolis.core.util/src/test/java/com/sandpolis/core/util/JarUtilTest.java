@@ -17,45 +17,68 @@
  *****************************************************************************/
 package com.sandpolis.core.util;
 
+import static com.sandpolis.core.util.JarUtil.getManifestValue;
+import static com.sandpolis.core.util.JarUtil.getResourceSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-public class JarUtilTest {
+class JarUtilTest {
 
 	@Test
-	public void testGetManifestValueExists() throws IOException {
-		assertEquals("93834", JarUtil.getManifestValue("test-attribute", new File("src/test/resources/test1.jar")));
+	@DisplayName("Get a manifest value that exists")
+	void getManifestValue_1() throws IOException {
+		assertEquals("93834", getManifestValue(new File("src/test/resources/test1.jar"), "test-attribute"));
 	}
 
 	@Test
-	public void testGetManifestValueNotExists() throws IOException {
-		assertNull(JarUtil.getManifestValue("test-attribute2", new File("src/test/resources/test1.jar")));
+	@DisplayName("Get a manifest value that does not exist")
+	void getManifestValue_2() throws IOException {
+		assertNull(getManifestValue(new File("src/test/resources/test1.jar"), "test-attribute2"));
+		assertNull(getManifestValue(new File("src/test/resources/test1.jar"), ""));
 	}
 
 	@Test
-	public void testGetManifestFileNotExists() throws IOException {
+	@DisplayName("Try to get a value from a nonexistent manifest")
+	void getManifestValue_3() {
 		assertThrows(IOException.class,
-				() -> JarUtil.getManifestValue("test-attribute", new File("src/test/resources/test6.jar")));
+				() -> getManifestValue(new File("src/test/resources/test6.jar"), "test-attribute"));
 	}
 
 	@Test
-	public void testGetResourceSize() throws IOException {
-		assertEquals(88, JarUtil.getResourceSize("/META-INF/MANIFEST.MF", new File("src/test/resources/test1.jar")));
-		assertEquals(88, JarUtil.getResourceSize("META-INF/MANIFEST.MF", new File("src/test/resources/test1.jar")));
+	@DisplayName("Get size of jar resources")
+	void getResourceSize_1() throws IOException {
+		assertEquals(88, getResourceSize(new File("src/test/resources/test1.jar"), "/META-INF/MANIFEST.MF"));
+		assertEquals(88, getResourceSize(new File("src/test/resources/test1.jar"), "META-INF/MANIFEST.MF"));
 	}
 
 	@Test
-	public void testGetResourceSizeInvalid() throws IOException {
-		assertThrows(FileNotFoundException.class,
-				() -> JarUtil.getResourceSize("META-INF/MANIFEST.MF2", new File("src/test/resources/test1.jar")));
-		assertThrows(IOException.class, () -> JarUtil.getResourceSize("", new File("src/test/resources/test1.jar")));
+	@DisplayName("Try to get the size of nonexistent resources")
+	void getResourceSize_2() {
+		assertThrows(IOException.class,
+				() -> getResourceSize(new File("src/test/resources/test1.jar"), "META-INF/MANIFEST.MF2"));
+		assertThrows(IOException.class, () -> getResourceSize(new File("src/test/resources/test1.jar"), ""));
+	}
+
+	@Test
+	@DisplayName("Try to get the size of resources in a nonexistent file")
+	void getResourceSize_3() {
+		assertThrows(IOException.class,
+				() -> getResourceSize(new File("src/test/resources/nonexist.jar"), "META-INF/MANIFEST.MF2"));
+	}
+
+	@Test
+	@DisplayName("Try to get the size of resources from an invalid file type")
+	void getResourceSize_4() {
+		assertThrows(IOException.class,
+				() -> getResourceSize(new File("src/test/resources/test1.txt"), "META-INF/MANIFEST.MF"));
+		assertThrows(IOException.class, () -> getResourceSize(new File("src/test/resources"), "META-INF/MANIFEST.MF"));
 	}
 
 }
