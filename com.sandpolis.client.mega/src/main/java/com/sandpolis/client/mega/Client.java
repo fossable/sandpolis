@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.client.mega.cmd.AuthCmd;
+import com.sandpolis.client.mega.cmd.PluginCmd;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
@@ -245,6 +246,9 @@ public final class Client {
 					AuthCmd.async().none().get();
 					break;
 				}
+
+				// Synchronize plugins
+				PluginCmd.async().beginSync().get();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

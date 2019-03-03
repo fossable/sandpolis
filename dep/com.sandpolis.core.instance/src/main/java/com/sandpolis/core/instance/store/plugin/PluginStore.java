@@ -20,13 +20,16 @@ package com.sandpolis.core.instance.store.plugin;
 import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -68,16 +71,15 @@ public final class PluginStore {
 	/**
 	 * The PF4J plugin manager.
 	 */
-	private static PluginManager manager;
+	private static PluginManager manager = new DefaultPluginManager();
 
 	/**
-	 * The default certificate verifier.
+	 * The default certificate verifier which allows all plugins.
 	 */
 	private static Function<X509Certificate, Boolean> verifier = c -> true;
 
 	public static void init(StoreProvider<Plugin> provider) {
 		PluginStore.provider = Objects.requireNonNull(provider);
-		manager = new DefaultPluginManager();
 	}
 
 	public static void load(Database main) {
@@ -87,7 +89,7 @@ public final class PluginStore {
 	}
 
 	/**
-	 * Set the certificate verifier.
+	 * Set the plugin certificate verifier for the store.
 	 * 
 	 * @param verifier A new certificate verifier
 	 */
@@ -118,14 +120,14 @@ public final class PluginStore {
 	}
 
 	/**
-	 * Get a plugin by ID.
+	 * Get a plugin by id.
 	 * 
-	 * @param id The plugin ID
-	 * @return The plugin or {@code null} if not found
+	 * @param id The plugin id
+	 * @return The plugin
 	 */
-	public static Plugin getPlugin(String id) {
+	public static Optional<Plugin> getPlugin(String id) {
 		try (Stream<Plugin> stream = provider.stream()) {
-			return stream.filter(plugin -> plugin.getId().equals(id)).findAny().orElse(null);
+			return stream.filter(plugin -> plugin.getId().equals(id)).findAny();
 		}
 	}
 
@@ -138,8 +140,40 @@ public final class PluginStore {
 	 * @return The component as a {@link ByteSource}
 	 */
 	public static ByteSource getPluginComponent(Plugin plugin, Instance instance, InstanceFlavor sub) {
-		return Resources.asByteSource(manager.getPlugin(plugin.getName()).getPluginClassLoader()
-				.getResource(String.format("/%s/%s.jar", instance.name().toLowerCase(), sub.name().toLowerCase())));
+		return Resources.asByteSource(getComponentUrl(plugin, instance, sub));
+	}
+
+	/**
+	 * Find all components that the given plugin contains.
+	 * 
+	 * @param plugin The plugin to search
+	 * @return A list of components that were found in the plugin
+	 */
+	public static List<InstanceFlavor> findComponentTypes(Plugin plugin) {
+		Objects.requireNonNull(plugin);
+
+		List<InstanceFlavor> types = new LinkedList<>();
+
+		// TODO don't check invalid combinations
+		for (Instance instance : Instance.values())
+			for (InstanceFlavor sub : InstanceFlavor.values())
+				if (getComponentUrl(plugin, instance, sub) != null)
+					types.add(sub);
+
+		return types;
+	}
+
+	public static URL getComponentUrl(Plugin plugin, Instance instance, InstanceFlavor sub) {
+		Objects.requireNonNull(plugin);
+		Objects.requireNonNull(instance);
+		Objects.requireNonNull(sub);
+
+		try {
+			return JarUtil.getResourceUrl(getArtifact(plugin),
+					String.format("%s/%s.jar", instance.name().toLowerCase(), sub.name().toLowerCase()));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**
@@ -149,13 +183,24 @@ public final class PluginStore {
 	 * @return The plugin artifact
 	 */
 	public static Path getArtifact(Plugin plugin) {
-		return Environment.get(JLIB).resolve(plugin.getId() + ".jar");
+		Objects.requireNonNull(plugin);
+
+		Path path;
+		if (manager.getPlugin(plugin.getId()) != null)
+			path = manager.getPlugin(plugin.getId()).getPluginPath();
+		else
+			path = Environment.get(JLIB).resolve(plugin.getId() + ".jar");
+
+		if (!Files.exists(path))
+			throw new RuntimeException();
+
+		return path;
 	}
 
 	/**
-	 * Scan the plugin directory for uninstalled core plugins.
+	 * Scan the plugin directory for uninstalled core plugins and install them.
 	 * 
-	 * @throws IOException
+	 * @throws IOException If a filesystem error occurs
 	 */
 	public static void scanPluginDirectory() throws IOException {
 		Files.list(Environment.get(JLIB))
@@ -176,8 +221,15 @@ public final class PluginStore {
 	 */
 	public static void loadPlugins() {
 		try (Stream<Plugin> stream = provider.stream()) {
-			stream.filter(plugin -> plugin.isEnabled()).forEach(PluginStore::loadPlugin);
+			stream.filter(plugin -> plugin.isEnabled()).filter(plugin -> manager.getPlugin(plugin.getId()) == null)
+					.forEach(PluginStore::loadPlugin);
 		}
+	}
+
+	public static void install(String id, byte[] plugin) throws IOException {
+		Path destination = Environment.get(JLIB).resolve(id + ".jar");
+		Files.write(destination, plugin);
+		installPlugin(destination);
 	}
 
 	/**
@@ -225,7 +277,7 @@ public final class PluginStore {
 
 		// Verify certificate
 		try {
-			var cert = CertUtil.parse(JarUtil.getManifestValue("Plugin-Cert", path));
+			var cert = CertUtil.parse(JarUtil.getManifestValue(path, "Plugin-Cert"));
 			if (!verifier.apply(cert))
 				throw new CertificateException("Certificate verification failed");
 		} catch (CertificateException | IOException e) {
@@ -236,6 +288,8 @@ public final class PluginStore {
 
 		log.debug("Loading plugin: {}", plugin.getName());
 		manager.loadPlugin(path);
+		manager.startPlugin(plugin.getId());
+		manager.getExtensions(SandpolisPlugin.class, plugin.getId()).stream().forEach(SandpolisPlugin::load);
 	}
 
 	/**

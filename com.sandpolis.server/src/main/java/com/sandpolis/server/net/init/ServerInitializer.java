@@ -34,6 +34,7 @@ import com.sandpolis.server.exe.GenExe;
 import com.sandpolis.server.exe.GroupExe;
 import com.sandpolis.server.exe.ListenerExe;
 import com.sandpolis.server.exe.LoginExe;
+import com.sandpolis.server.exe.PluginExe;
 import com.sandpolis.server.exe.ServerExe;
 import com.sandpolis.server.exe.UserExe;
 import com.sandpolis.server.net.handler.ProxyHandler;
@@ -63,7 +64,7 @@ public class ServerInitializer extends PipelineInitializer {
 	 */
 	@SuppressWarnings("unchecked")
 	private static final Class<? extends Exelet>[] exelets = new Class[] { AuthExe.class, GenExe.class, GroupExe.class,
-			ListenerExe.class, LoginExe.class, ServerExe.class, UserExe.class };
+			ListenerExe.class, LoginExe.class, ServerExe.class, UserExe.class, PluginExe.class };
 
 	/**
 	 * The certificate in PEM format.

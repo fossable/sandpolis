@@ -141,8 +141,8 @@ message Message {
 		RS_Ping 				rs_ping 					= 1301;
 		
 		// MC_Plugin
-		RQ_PluginSync			rq_plugin_sync				= 900;
-		RS_PluginSync			rs_plugin_sync				= 901;
+		RQ_PluginDownload		rq_plugin_download			= 900;
+		RS_PluginDownload		rs_plugin_download			= 901;
 		RQ_PluginInstall		rq_plugin_install			= 902;
 		RQ_PluginList			rq_plugin_list				= 903;
 		RS_PluginList			rs_plugin_list				= 904;

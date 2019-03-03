@@ -20,6 +20,8 @@ syntax = "proto3";
 package net;
 option java_package = "com.sandpolis.core.proto.net";
 
+import "com/sandpolis/core/proto/util/Platform.proto";
+
 /**
  * Plugin metadata.
  */
@@ -38,7 +40,7 @@ message PluginDescriptor {
 }
 
 /**
- * A request for a plugin list.
+ * A request for the instance's plugin list.
  */
 message RQ_PluginList {
 }
@@ -51,22 +53,35 @@ message RS_PluginList {
 }
 
 /**
- * A request to initiate plugin synchronization.
+ * A request to download a plugin.
  */
-message RQ_PluginSync {
-	repeated PluginDescriptor plugin = 1;
+message RQ_PluginDownload {
+
+	// The plugin id to download
+	string id = 1;
+
+	// Whether to receive the plugin binary itself or just its location
+	bool location = 2;
 }
 
 /**
- * The response to a plugin synchronization request.
+ * A download response.
  */
-message RS_PluginSync {
-	// The eligible plugin binaries
-	repeated bytes plugin_binary = 1;
+message RS_PluginDownload {
+	oneof source {
+		// The plugin binary
+		bytes plugin_binary = 1;
+		
+		// The plugin's HTTP location
+		string plugin_url = 2;
+		
+		// The plugin's maven central coordinates
+		string plugin_coordinates = 3;
+	}
 }
 
 /**
- * A request to install a plugin on the server.
+ * A request to install a server plugin.
  */
 message RQ_PluginInstall {
 

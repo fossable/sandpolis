@@ -27,15 +27,17 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.io.ByteSource;
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.store.artifact.ArtifactStore;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.proto.net.MCPlugin.RS_PluginDownload;
 import com.sandpolis.core.proto.net.MCPlugin.RS_PluginList;
-import com.sandpolis.core.proto.net.MCPlugin.RS_PluginSync;
 import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.core.util.JarUtil;
 import com.sandpolis.core.util.NetUtil;
@@ -56,21 +58,33 @@ public class PluginExe extends Exelet {
 	}
 
 	@Auth
-	public void rq_plugin_sync(Message m) {
-		var rq = Objects.requireNonNull(m.getRqPluginSync());
-		var rs = RS_PluginSync.newBuilder();
+	public void rq_plugin_download(Message m) {
+		var rq = Objects.requireNonNull(m.getRqPluginDownload());
+		var rs = RS_PluginDownload.newBuilder();
 
-		PluginStore.getPlugins().stream()
-				// Skip plugins that are up to date
-				.filter(plugin -> {
-					return rq.getPluginList().stream().filter(descriptor -> {
-						return plugin.getId().equals(descriptor.getId())
-								&& plugin.getVersion().equals(descriptor.getVersion());
-					}).findAny().isEmpty();
-				}).map(PluginStore::getArtifact).map(PluginExe::tempRead).filter(Objects::nonNull)
-				.map(ByteString::copyFrom).forEach(rs::addPluginBinary);
+		PluginStore.getPlugin(rq.getId()).ifPresentOrElse(plugin -> {
 
-		reply(m, rs);
+			if (rq.getLocation()) {
+				rs.setPluginCoordinates(String.format("com.sandpolis:%s:%s", plugin.getId(), plugin.getVersion()));
+			} else {
+				// Send binary for correct component
+				ByteSource component = PluginStore.getPluginComponent(plugin, connector.getRemoteInstance(),
+						// TODO find instance subtype automatically
+						InstanceFlavor.MEGA);
+
+				try (var in = component.openStream()) {
+					rs.setPluginBinary(ByteString.readFrom(in));
+				} catch (IOException e) {
+					// Failed to read plugin
+					reply(m, null);// TODO
+				}
+			}
+
+			reply(m, rs);
+		}, () -> {
+			// Plugin does not exist
+			reply(m, null);// TODO
+		});
 	}
 
 	@Auth
@@ -102,7 +116,7 @@ public class PluginExe extends Exelet {
 			return;
 		}
 
-		var manifest = JarUtil.getManifest(binary.toFile());
+		var manifest = JarUtil.getManifest(binary);
 
 		// Read plugin name
 		String id = manifest.getValue("Plugin-Id");
@@ -117,15 +131,6 @@ public class PluginExe extends Exelet {
 
 		// Move into library directory
 		Files.move(binary, Environment.get(JLIB).resolve(id + ".jar"));
-	}
-
-	// TODO
-	public static byte[] tempRead(Path path) {
-		try {
-			return Files.readAllBytes(path);
-		} catch (IOException e) {
-			return null;
-		}
 	}
 
 }
