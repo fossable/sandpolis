@@ -20,11 +20,16 @@ package com.sandpolis.core.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.ProviderNotFoundException;
+import java.util.Optional;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
@@ -43,10 +48,10 @@ public final class JarUtil {
 	 * 
 	 * @param file      The target jar file
 	 * @param attribute The attribute to query
-	 * @return The attribute's value or {@code null} if not found
+	 * @return The attribute's value
 	 * @throws IOException
 	 */
-	public static String getManifestValue(Path file, String attribute) throws IOException {
+	public static Optional<String> getManifestValue(Path file, String attribute) throws IOException {
 		checkNotNull(file);
 		checkNotNull(attribute);
 
@@ -58,14 +63,29 @@ public final class JarUtil {
 	 * 
 	 * @param file      The target jar file
 	 * @param attribute The attribute to query
-	 * @return The attribute's value or {@code null} if not found
+	 * @return The attribute's value
 	 * @throws IOException
 	 */
-	public static String getManifestValue(File file, String attribute) throws IOException {
+	public static Optional<String> getManifestValue(File file, String attribute) throws IOException {
 		checkNotNull(file);
 		checkNotNull(attribute);
 
-		return getManifest(file).getValue(attribute);
+		try {
+			return Optional.ofNullable(getManifest(file).getValue(attribute));
+		} catch (IllegalArgumentException e) {
+			return Optional.empty();
+		}
+	}
+
+	/**
+	 * Retrieve the attribute map from the manifest of the given jar.
+	 * 
+	 * @param file The target jar file
+	 * @return The jar's manifest attributes
+	 * @throws IOException
+	 */
+	public static Attributes getManifest(Path file) throws IOException {
+		return getManifest(file.toFile());
 	}
 
 	/**
@@ -94,11 +114,15 @@ public final class JarUtil {
 	 * @return The size of the target resource in bytes
 	 * @throws IOException
 	 */
-	public static long getResourceSize(File file, String resource) throws IOException {
+	public static long getResourceSize(Path file, String resource) throws IOException {
 		checkNotNull(resource);
 		checkNotNull(file);
 
-		return getResourceSize(file.toPath(), resource);
+		URL url = getResourceUrl(file, resource);
+		if (url == null)
+			throw new IOException();
+
+		return Resources.asByteSource(url).size();
 	}
 
 	/**
@@ -109,29 +133,58 @@ public final class JarUtil {
 	 * @return The size of the target resource in bytes
 	 * @throws IOException
 	 */
-	public static long getResourceSize(Path file, String resource) throws IOException {
+	public static long getResourceSize(File file, String resource) throws IOException {
+		checkNotNull(resource);
+		checkNotNull(file);
+
+		return getResourceSize(file.toPath(), resource);
+	}
+
+	/**
+	 * Get a {@link URL} representing some entry of a jar file. The file and entry
+	 * must both exist.
+	 * 
+	 * @param file     The target jar file
+	 * @param resource Absolute location of target resource within the given jar
+	 * @return A URL representing the resource or {@code null} if not found
+	 * @throws IOException
+	 */
+	public static URL getResourceUrl(Path file, String resource) throws IOException {
 		checkNotNull(resource);
 		checkNotNull(file);
 
 		if (!resource.startsWith("/"))
 			resource = "/" + resource;
 
-		return Resources.asByteSource(getResourceUrl(file, resource)).size();
+		if (!resourceExists(file, resource))
+			return null;
+
+		return new URL(String.format("jar:file:%s!%s", file.toAbsolutePath().toString(), resource));
 	}
 
 	/**
-	 * Get a {@link URL} representing some entry of a jar file.
+	 * Check if a resource exists within the given jar file.
 	 * 
 	 * @param file     The target jar file
 	 * @param resource Absolute location of target resource within the given jar
-	 * @return A URL representing the resource
-	 * @throws MalformedURLException
+	 * @return Whether the target resource exists
+	 * @throws IOException
 	 */
-	public static URL getResourceUrl(Path file, String resource) throws MalformedURLException {
-		checkNotNull(file);
+	public static boolean resourceExists(Path file, String resource) throws IOException {
 		checkNotNull(resource);
+		checkNotNull(file);
 
-		return new URL(String.format("jar:file:%s!%s", file.toAbsolutePath().toString(), resource));
+		if (!Files.exists(file))
+			throw new FileNotFoundException();
+
+		if (!resource.startsWith("/"))
+			resource = "/" + resource;
+
+		try (FileSystem fs = FileSystems.newFileSystem(file, null)) {
+			return Files.exists(fs.getPath(resource));
+		} catch (ProviderNotFoundException e) {
+			throw new IOException("Illegal file type");
+		}
 	}
 
 	private JarUtil() {
