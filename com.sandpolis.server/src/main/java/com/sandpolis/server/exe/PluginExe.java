@@ -38,6 +38,7 @@ import com.sandpolis.core.proto.net.MCPlugin.RS_PluginDownload;
 import com.sandpolis.core.proto.net.MCPlugin.RS_PluginList;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.core.util.JarUtil;
 import com.sandpolis.core.util.NetUtil;
@@ -63,33 +64,34 @@ public class PluginExe extends Exelet {
 		var rs = RS_PluginDownload.newBuilder();
 
 		PluginStore.getPlugin(rq.getId()).ifPresentOrElse(plugin -> {
-
-			if (rq.getLocation()) {
+			if (!PluginStore.findComponentTypes(plugin).contains(InstanceFlavor.MEGA)) // TODO hardcoded subtype
+				reply(m, Outcome.newBuilder().setResult(false));// TODO message
+			else if (rq.getLocation()) {
 				rs.setPluginCoordinates(String.format("com.sandpolis:%s:%s", plugin.getId(), plugin.getVersion()));
 			} else {
 				// Send binary for correct component
 				ByteSource component = PluginStore.getPluginComponent(plugin, connector.getRemoteInstance(),
-						// TODO find instance subtype automatically
+						// TODO hardcoded subtype
 						InstanceFlavor.MEGA);
 
 				try (var in = component.openStream()) {
 					rs.setPluginBinary(ByteString.readFrom(in));
 				} catch (IOException e) {
 					// Failed to read plugin
-					reply(m, null);// TODO
+					reply(m, Outcome.newBuilder().setResult(false));// TODO message
 				}
 			}
 
 			reply(m, rs);
 		}, () -> {
 			// Plugin does not exist
-			reply(m, null);// TODO
+			reply(m, Outcome.newBuilder().setResult(false));// TODO message
 		});
 	}
 
 	@Auth
 	public void rq_plugin_list(Message m) {
-		reply(m, RS_PluginList.newBuilder().addAllPlugin(PluginStore.getPluginDescriptors()));
+		reply(m, RS_PluginList.newBuilder().addAllPlugin(() -> PluginStore.getPluginDescriptors().iterator()));
 	}
 
 	@Auth

@@ -17,11 +17,14 @@
  *****************************************************************************/
 package com.sandpolis.core.net;
 
-import java.util.Objects;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.concurrent.ExecutorService;
 
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
+import com.sandpolis.core.net.future.CommandFuture;
+import com.sandpolis.core.net.future.CommandFuture.ResponseHandler;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.store.network.NetworkStore;
@@ -63,13 +66,18 @@ public abstract class Cmdlet<E> {
 	private String timeout = "net.timeout.response.default";
 
 	/**
+	 * A future that is notified when the command completes.
+	 */
+	protected CommandFuture commandFuture;
+
+	/**
 	 * Explicitly set a thread pool for the response listeners.
 	 * 
 	 * @param type The pool type
 	 * @return {@code this}
 	 */
 	public E pool(String type) {
-		this.poolId = Objects.requireNonNull(type);
+		this.poolId = checkNotNull(type);
 		return (E) this;
 	}
 
@@ -80,7 +88,7 @@ public abstract class Cmdlet<E> {
 	 * @return {@code this}
 	 */
 	public E timeout(String timeout) {
-		this.timeout = Objects.requireNonNull(timeout);
+		this.timeout = checkNotNull(timeout);
 		return (E) this;
 	}
 
@@ -91,7 +99,7 @@ public abstract class Cmdlet<E> {
 	 * @return {@code this}
 	 */
 	public E target(Sock sock) {
-		this.sock = Objects.requireNonNull(sock);
+		this.sock = checkNotNull(sock);
 		return (E) this;
 	}
 
@@ -107,14 +115,49 @@ public abstract class Cmdlet<E> {
 	}
 
 	/**
-	 * Route the given payload according to the current configuration.
+	 * Route the given request according to the current configuration.
 	 * 
 	 * @param payload The message payload
 	 * @return A new response future
 	 */
 	protected <R> ResponseFuture<R> rq(MessageOrBuilder payload) {
-		Objects.requireNonNull(payload);
+		checkNotNull(payload);
+
 		return route(ProtoUtil.setPayload(ProtoUtil.rq(), payload));
+	}
+
+	/**
+	 * Route the given request according to the current configuration and register
+	 * the given response handler.
+	 * 
+	 * @param payload The message payload
+	 * @param handler The response handler
+	 * @return A command future
+	 */
+	protected <R> CommandFuture rq(MessageOrBuilder payload, ResponseHandler<R> handler) {
+		checkNotNull(payload);
+		checkNotNull(handler);
+
+		if (commandFuture == null)
+			commandFuture = new CommandFuture();
+
+		ResponseFuture<R> rf = rq(payload);
+		commandFuture.add(rf);
+
+		rf.addListener(future -> {
+			if (future.isSuccess()) {
+				try {
+					handler.handle((R) future.get());
+				} catch (Throwable e) {
+					commandFuture.setFailure(e);
+					return;
+				}
+				commandFuture.tryComplete(rf);
+			} else
+				commandFuture.setFailure(future.cause());
+		});
+
+		return commandFuture;
 	}
 
 	/**
@@ -124,7 +167,7 @@ public abstract class Cmdlet<E> {
 	 * @return A new response future
 	 */
 	protected <R> ResponseFuture<R> route(Message.Builder m) {
-		Objects.requireNonNull(m);
+		checkNotNull(m);
 
 		MessageFuture mf;
 		if (sock != null) {

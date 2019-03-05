@@ -45,9 +45,8 @@ public class ResponseFuture<E> extends DefaultPromise<E> {
 	 * Construct a new {@link ResponseFuture} that listens on the given
 	 * {@link MessageFuture}.
 	 * 
-	 * @param future
-	 *            The {@link MessageFuture} that will be notified when the response
-	 *            arrives
+	 * @param future The {@link MessageFuture} that will be notified when the
+	 *               response arrives
 	 */
 	public ResponseFuture(MessageFuture future) {
 		this(ThreadStore.get("net.message.incoming"), future);
@@ -57,11 +56,10 @@ public class ResponseFuture<E> extends DefaultPromise<E> {
 	 * Construct a new {@link ResponseFuture} that listens on the given
 	 * {@link MessageFuture}.
 	 * 
-	 * @param executor
-	 *            The {@link EventExecutor} that will be used to execute listeners
-	 * @param future
-	 *            The {@link MessageFuture} that will be notified when the response
-	 *            arrives
+	 * @param executor The {@link EventExecutor} that will be used to execute
+	 *                 listeners
+	 * @param future   The {@link MessageFuture} that will be notified when the
+	 *                 response arrives
 	 */
 	@SuppressWarnings("unchecked")
 	public ResponseFuture(EventExecutor executor, MessageFuture future) {

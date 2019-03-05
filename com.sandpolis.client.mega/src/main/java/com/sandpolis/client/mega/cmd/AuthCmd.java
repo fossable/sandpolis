@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.client.mega.cmd;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sandpolis.core.util.ProtoUtil.begin;
 import static com.sandpolis.core.util.ProtoUtil.complete;
 import static com.sandpolis.core.util.ProtoUtil.rs;
@@ -48,7 +49,7 @@ import com.sandpolis.core.util.ProtoUtil;
 public final class AuthCmd extends Cmdlet<AuthCmd> {
 
 	/**
-	 * Attempt to authenticate with nothing.
+	 * Attempt to authenticate without providing any form of identification.
 	 * 
 	 * @return The response future
 	 */
@@ -62,6 +63,8 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	 * @return The response future
 	 */
 	public ResponseFuture<Outcome> password(String password) {
+		checkNotNull(password);
+
 		return rq(RQ_PasswordAuth.newBuilder().setPassword(password));
 	}
 
