@@ -17,7 +17,6 @@ buildscript {
 
 plugins {
 	// id 'com.sandpolis.gradle.deploy' version '1.0.0'
-	// id 'com.sandpolis.gradle.soi' version '1.0.0'
 }
 
 ext.native_matrix = [
@@ -105,4 +104,3 @@ allprojects {
 }
 
 apply plugin: 'com.sandpolis.gradle.deploy'
-apply plugin: 'com.sandpolis.gradle.soi'

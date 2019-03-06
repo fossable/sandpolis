@@ -22,7 +22,6 @@ include 'com.sandpolis.viewer.react'
 include 'com.sandpolis.viewer.rest'
 
 // Dependency Projects
-include 'dep:com.sandpolis.core.collection'
 include 'dep:com.sandpolis.core.instance'
 include 'dep:com.sandpolis.core.ipc'
 include 'dep:com.sandpolis.core.net'
@@ -30,6 +29,7 @@ include 'dep:com.sandpolis.core.permission'
 include 'dep:com.sandpolis.core.platform'
 include 'dep:com.sandpolis.core.profile'
 include 'dep:com.sandpolis.core.proto'
+include 'dep:com.sandpolis.core.soi'
 include 'dep:com.sandpolis.core.storage.hibernate'
 include 'dep:com.sandpolis.core.storage.ormlite'
 include 'dep:com.sandpolis.core.stream'
@@ -38,6 +38,7 @@ include 'dep:com.sandpolis.viewer'
 
 // Core plugins
 include 'plugin:com.sandpolis.plugin.desktop'
+include 'plugin:com.sandpolis.plugin.desktop:client:mega'
 include 'plugin:com.sandpolis.plugin.desktop:viewer:jfx'
 include 'plugin:com.sandpolis.plugin.sysinfo'
 include 'plugin:com.sandpolis.plugin.sysinfo:client:mega'

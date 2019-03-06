@@ -25,5 +25,5 @@ dependencies {
 	compile gradleApi()
 
 	compile 'com.google.guava:guava:26.0-jre'
-	compile project(':dep:com.sandpolis.core.proto')
+	compile project(':dep:com.sandpolis.core.soi')
 }

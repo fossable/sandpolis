@@ -18,7 +18,7 @@
 syntax = "proto3";
 
 package soi;
-option java_package = "com.sandpolis.core.proto.soi";
+option java_package = "com.sandpolis.core.soi";
 
 /**
  * The SO_Build object contains information about the build process.

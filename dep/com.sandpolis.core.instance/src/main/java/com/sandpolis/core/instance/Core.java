@@ -22,8 +22,8 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.proto.soi.Build.SO_Build;
-import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix;
+import com.sandpolis.core.soi.Build.SO_Build;
+import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.IDUtil;

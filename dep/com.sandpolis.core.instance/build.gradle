@@ -21,6 +21,7 @@ dependencies {
 	testImplementation 'net.jodah:concurrentunit:0.4.4'
 
 	implementation project(':dep:com.sandpolis.core.proto')
+	implementation project(':dep:com.sandpolis.core.soi')
 	implementation project(':dep:com.sandpolis.core.util')
 
 	// https://github.com/qos-ch/logback

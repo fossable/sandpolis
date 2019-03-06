@@ -23,6 +23,7 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.ipc')
 	implementation project(':dep:com.sandpolis.core.net')
 	implementation project(':dep:com.sandpolis.core.proto')
+	implementation project(':dep:com.sandpolis.core.soi')
 	implementation project(':dep:com.sandpolis.core.util')
 
 	// https://github.com/google/guava

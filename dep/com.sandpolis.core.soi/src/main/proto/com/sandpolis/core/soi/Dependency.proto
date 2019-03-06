@@ -18,10 +18,7 @@
 syntax = "proto3";
 
 package soi;
-option java_package = "com.sandpolis.core.proto.soi";
-
-import "com/sandpolis/core/proto/util/Platform.proto";
-import "com/sandpolis/core/proto/util/Generator.proto";
+option java_package = "com.sandpolis.core.soi";
 
 /**
  * The SO_DependencyMatrix object contains exhaustive dependency information about
@@ -44,10 +41,12 @@ message SO_DependencyMatrix {
 		message NativeComponent {
 		
 			// The component's compatible platform.
-			util.OsType platform = 1;
+			//util.OsType platform = 1;
+			string platform = 1;
 			
 			// The component's compatible system architecture.
-			util.Architecture architecture = 2;
+			//util.Architecture architecture = 2;
+			string architecture = 2;
 		
 			// The component's internal path.
 			string path = 3;

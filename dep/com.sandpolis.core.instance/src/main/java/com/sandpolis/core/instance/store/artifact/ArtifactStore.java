@@ -32,7 +32,7 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix.Artifact;
+import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.util.NetUtil;
 

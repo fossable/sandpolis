@@ -1,0 +1,40 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                            com.sandpolis.core.soi                           *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+	id 'java-library'
+	id 'com.google.protobuf' version '0.8.8'
+}
+
+eclipse {
+	project {
+		name = 'com.sandpolis.core.soi'
+		comment = 'The serial object injection library module'
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs 'src/gen/java'
+		}
+	}
+}
+
+dependencies {
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.0'
+
+	// https://github.com/protocolbuffers/protobuf
+	api 'com.google.protobuf:protobuf-java:3.7.0'
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.7.0'
+	}
+
+	generatedFilesBaseDir = "$projectDir/src/gen"
+}

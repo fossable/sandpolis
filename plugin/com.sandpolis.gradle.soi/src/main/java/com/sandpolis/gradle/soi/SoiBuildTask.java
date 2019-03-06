@@ -20,61 +20,42 @@ package com.sandpolis.gradle.soi;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Map;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ResolvedDependency;
-import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
-import com.sandpolis.core.proto.soi.Build.SO_Build;
+import com.sandpolis.core.soi.Build.SO_Build;
 
 /**
- * This task parses the multiproject and writes soi binaries to the output
- * directory.
+ * This task outputs a soi binary (called build.bin) containing build metadata.
  * 
  * @author cilki
  */
-public class SoiTask extends DefaultTask {
+public class SoiBuildTask extends DefaultTask {
 
 	/**
-	 * The root project.
+	 * The {@link SO_Build} binary.
 	 */
-	private Project root = getProject();
+	private File so_build = new File(getProject().getBuildDir().getAbsolutePath() + "/tmp_soi/soi/build.bin");
 
-	/**
-	 * The SOI output directory.
-	 */
-	private File soi = new File(root.getBuildDir().getAbsolutePath() + "/soi");
-
-	@OutputDirectory
-	public File getSoi() {
-		return soi;
+	@OutputFile
+	public File getSoBuild() {
+		return so_build;
 	}
 
 	@TaskAction
 	public void run() {
-		writeBuildSO();
-
-		writeMatrixSO();
-	}
-
-	/**
-	 * Gather and write build information to the soi directory.
-	 */
-	private void writeBuildSO() {
 		SO_Build.Builder so = SO_Build.newBuilder();
 
 		// Build time
 		so.setTime(System.currentTimeMillis());
 
 		// Application version
-		so.setVersion((String) root.findProperty("BUILD_VERSION"));
+		so.setVersion((String) getProject().findProperty("BUILD_VERSION"));
 
 		// Build number
-		String number = (String) root.findProperty("TRAVIS_BUILD_NUMBER");
+		String number = (String) getProject().findProperty("TRAVIS_BUILD_NUMBER");
 		if (number != null)
 			so.setNumber(Integer.parseInt(number));
 
@@ -87,52 +68,23 @@ public class SoiTask extends DefaultTask {
 				String.format("%s (%s)", System.getProperty("java.version"), System.getProperty("java.vendor")));
 
 		// Gradle version
-		so.setGradleVersion(root.getGradle().getGradleVersion());
+		so.setGradleVersion(getProject().getGradle().getGradleVersion());
 
 		// Core plugins
-		root.subprojects(sub -> {
+		// TODO move
+		getProject().subprojects(sub -> {
 			if (sub.getName().startsWith("com.sandpolis.plugin")) {
 				so.addPlugin(sub.getName());
 			}
 		});
 
 		// Write object
-		File output = new File(soi.getAbsolutePath() + "/build.bin");
-		try (FileOutputStream out = new FileOutputStream(output)) {
+		try (FileOutputStream out = new FileOutputStream(so_build)) {
 			so.build().writeTo(out);
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to write SO_Build", e);
 		}
-	}
 
-	/**
-	 * Compute and write the dependency matrix to the soi directory.
-	 */
-	private void writeMatrixSO() {
-		DependencyProcessor processor = new DependencyProcessor(root);
-
-		root.subprojects(sub -> {
-			Map<String, Configuration> conf = sub.getConfigurations().getAsMap();
-
-			if (conf.containsKey("runtimeClasspath") && sub.getPath().startsWith(":" + sub.getName())) {
-				for (ResolvedDependency dep : conf.get("runtimeClasspath").getResolvedConfiguration()
-						.getFirstLevelModuleDependencies()) {
-					if (dep.getModuleArtifacts().size() != 1) {
-						continue;
-					}
-
-					processor.add(sub.getName(), dep);
-				}
-			}
-		});
-
-		// Write object
-		File output = new File(soi.getAbsolutePath() + "/matrix.bin");
-		try (FileOutputStream out = new FileOutputStream(output)) {
-			processor.build().writeTo(out);
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to write SO_DependencyMatrix", e);
-		}
 	}
 
 }

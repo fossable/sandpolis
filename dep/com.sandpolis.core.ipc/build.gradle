@@ -20,6 +20,7 @@ dependencies {
 	
 	implementation project(':dep:com.sandpolis.core.instance')
 	implementation project(':dep:com.sandpolis.core.proto')
+	implementation project(':dep:com.sandpolis.core.soi')
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:27.0.1-jre'

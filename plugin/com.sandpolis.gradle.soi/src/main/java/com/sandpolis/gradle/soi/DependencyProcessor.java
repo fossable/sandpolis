@@ -32,12 +32,9 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 
 import com.google.common.io.Resources;
-import com.google.protobuf.Descriptors.EnumValueDescriptor;
-import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix;
-import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix.Artifact;
-import com.sandpolis.core.proto.soi.Dependency.SO_DependencyMatrix.Artifact.NativeComponent;
-import com.sandpolis.core.proto.util.Platform.Architecture;
-import com.sandpolis.core.proto.util.Platform.OsType;
+import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
+import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
+import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact.NativeComponent;
 
 /**
  * This class accepts Gradle dependencies incrementally and produces a
@@ -60,12 +57,12 @@ public class DependencyProcessor {
 	private Map<Artifact.Builder, File> files = new HashMap<>();
 
 	/**
-	 * The root project.
+	 * The project to receive the SO_DependencyMatrix.
 	 */
-	private Project root;
+	private Project project;
 
-	public DependencyProcessor(Project root) {
-		this.root = root;
+	public DependencyProcessor(Project project) {
+		this.project = Objects.requireNonNull(project);
 	}
 
 	/**
@@ -113,8 +110,8 @@ public class DependencyProcessor {
 	public SO_DependencyMatrix build() {
 
 		// Read natives extension from root project
-		Map<String, Map<String, Map<String, String>>> natives = (Map<String, Map<String, Map<String, String>>>) root
-				.getExtensions().getExtraProperties().get("native_matrix");
+		var natives = (Map<String, Map<String, Map<String, String>>>) project.getRootProject().getExtensions()
+				.getExtraProperties().get("native_matrix");
 
 		// Flatten each native component into the mutable artifact's list
 		for (String dependency : natives.keySet()) {
@@ -123,21 +120,9 @@ public class DependencyProcessor {
 					for (String platform : natives.get(dependency).keySet()) {
 						for (String architecture : natives.get(dependency).get(platform).keySet()) {
 
-							EnumValueDescriptor arch = Architecture.getDescriptor().findValueByName(architecture);
-							EnumValueDescriptor os = OsType.getDescriptor().findValueByName(platform.toUpperCase());
-
 							NativeComponent.Builder component = NativeComponent.newBuilder()
-									.setPath(natives.get(dependency).get(platform).get(architecture));
-
-							if (arch != null)
-								component.setArchitecture(Architecture.valueOf(arch));
-							else
-								throw new RuntimeException("Missing: Architecture." + architecture);
-
-							if (os != null)
-								component.setPlatform(OsType.valueOf(os));
-							else
-								throw new RuntimeException("Missing: OsType." + platform.toUpperCase());
+									.setPath(natives.get(dependency).get(platform).get(architecture))
+									.setArchitecture(architecture).setPlatform(platform.toUpperCase());
 
 							try {
 								// Get component size
