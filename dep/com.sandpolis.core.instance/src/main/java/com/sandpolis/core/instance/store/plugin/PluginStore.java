@@ -205,8 +205,7 @@ public final class PluginStore {
 	public static void scanPluginDirectory() throws IOException {
 		Files.list(Environment.get(JLIB))
 				// Core plugins only
-				.filter(path -> Core.SO_BUILD.getPluginList().stream()
-						.anyMatch(name -> path.getFileName().toString().startsWith(name)))
+				.filter(path -> path.getFileName().toString().startsWith("com.sandpolis.plugin."))
 				// Skip installed plugins
 				.filter(path -> {
 					try (Stream<Plugin> stream = provider.stream()) {

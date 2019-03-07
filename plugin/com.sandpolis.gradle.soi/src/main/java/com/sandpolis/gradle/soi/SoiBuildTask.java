@@ -70,14 +70,6 @@ public class SoiBuildTask extends DefaultTask {
 		// Gradle version
 		so.setGradleVersion(getProject().getGradle().getGradleVersion());
 
-		// Core plugins
-		// TODO move
-		getProject().subprojects(sub -> {
-			if (sub.getName().startsWith("com.sandpolis.plugin")) {
-				so.addPlugin(sub.getName());
-			}
-		});
-
 		// Write object
 		try (FileOutputStream out = new FileOutputStream(so_build)) {
 			so.build().writeTo(out);

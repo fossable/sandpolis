@@ -45,7 +45,4 @@ message SO_Build {
 	
 	// The build platform's Gradle version
 	string gradle_version = 7;
-	
-	// Names of built-in plugins
-	repeated string plugin = 8;
 }
