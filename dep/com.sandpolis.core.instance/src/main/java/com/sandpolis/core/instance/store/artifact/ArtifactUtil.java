@@ -17,12 +17,14 @@
  *****************************************************************************/
 package com.sandpolis.core.instance.store.artifact;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +32,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
-import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
-import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.util.NetUtil;
 
 /**
@@ -42,60 +42,20 @@ import com.sandpolis.core.util.NetUtil;
  * @author cilki
  * @since 5.0.0
  */
-public final class ArtifactStore {
-	private ArtifactStore() {
-	}
+public final class ArtifactUtil {
 
-	private static final Logger log = LoggerFactory.getLogger(ArtifactStore.class);
+	private static final Logger log = LoggerFactory.getLogger(ArtifactUtil.class);
 
 	/**
-	 * Get the root artifact for the given instance.
-	 *
-	 * @param instance The instance type
-	 * @return The artifact for the instance
-	 */
-	public static Artifact getInstanceArtifact(Instance instance) {
-		if (instance == null)
-			throw new IllegalArgumentException();
-
-		for (Artifact artifact : Core.SO_MATRIX.getArtifactList()) {
-			String coordinates = artifact.getCoordinates();
-			if (coordinates.startsWith(":") && coordinates.endsWith(":")
-					&& coordinates.contains(instance.toString().toLowerCase())) {
-				return artifact;
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Get all direct and transitive dependencies of an instance.
-	 *
-	 * @param instance The instance type
-	 * @return An unordered stream of dependencies
-	 */
-	public static Stream<Artifact> getDependencies(Instance instance) {
-		if (instance == null)
-			throw new IllegalArgumentException();
-
-		Stream<Artifact> all = Stream.empty();
-		for (int id : getInstanceArtifact(instance).getDependencyList()) {
-			all = Stream.concat(all, getDependencies(Core.SO_MATRIX.getArtifact(id)));
-		}
-
-		return all.distinct();
-	}
-
-	/**
-	 * Get a stream of an artifact and all its dependencies using a recursive call.
+	 * Get an artifact's file from the environment's library directory.
 	 *
 	 * @param artifact The artifact
-	 * @return A stream of the artifact and its dependencies
+	 * @return The artifact's local file
 	 */
-	private static Stream<Artifact> getDependencies(Artifact artifact) {
-		return Stream.concat(Stream.of(artifact), artifact.getDependencyList().stream()
-				.map(id -> Core.SO_MATRIX.getArtifact(id)).flatMap(ArtifactStore::getDependencies));
+	public static Path getArtifactFile(Artifact artifact) {
+		checkNotNull(artifact);
+
+		return getArtifactFile(artifact.getCoordinates());
 	}
 
 	/**
@@ -104,8 +64,10 @@ public final class ArtifactStore {
 	 * @param artifact The artifact
 	 * @return The artifact's local file
 	 */
-	public static File getArtifactFile(Artifact artifact) {
-		return Environment.get(JLIB).resolve(getArtifactFilename(artifact.getCoordinates())).toFile();
+	public static Path getArtifactFile(String artifact) {
+		checkNotNull(artifact);
+
+		return Environment.get(JLIB).resolve(getArtifactFilename(artifact));
 	}
 
 	/**
@@ -115,12 +77,11 @@ public final class ArtifactStore {
 	 * @return The artifact's filename
 	 */
 	public static String getArtifactFilename(String coordinates) {
-		if (coordinates == null)
-			throw new IllegalArgumentException();
-		if (coordinates.indexOf(':') == -1)
-			throw new IllegalArgumentException();
-		if (coordinates.indexOf(':') == coordinates.lastIndexOf(':'))
-			throw new IllegalArgumentException();
+		String formatMessage = "Coordinate format: group:artifact:version";
+
+		checkNotNull(coordinates);
+		checkArgument(coordinates.indexOf(':') != -1, formatMessage);
+		checkArgument(coordinates.indexOf(':') != coordinates.lastIndexOf(':'), formatMessage);
 
 		// Remove group ID
 		coordinates = coordinates.substring(coordinates.indexOf(':') + 1);
@@ -129,6 +90,8 @@ public final class ArtifactStore {
 		if (coordinates.endsWith(":"))
 			coordinates = coordinates.substring(0, coordinates.length() - 1);
 
+		checkArgument(!coordinates.isEmpty(), formatMessage);
+		checkArgument(!coordinates.equals(":"), formatMessage);
 		return coordinates.replaceAll(":", "-") + ".jar";
 	}
 
@@ -144,13 +107,12 @@ public final class ArtifactStore {
 	 * @throws IOException
 	 */
 	@SuppressWarnings("deprecation")
-	public static boolean download(File directory, String artifact) throws IOException {
-		if (artifact == null)
-			throw new IllegalArgumentException();
+	public static boolean download(Path directory, String artifact) throws IOException {
+		checkNotNull(directory);
+		checkNotNull(artifact);
 
 		String[] id = artifact.split(":");
-		if (id.length != 3)
-			throw new IllegalArgumentException("Invalid artifact ID");
+		checkArgument(id.length == 3, "Invalid artifact ID");
 
 		String filename = id[1] + "-" + id[2] + ".jar";
 		String url = "http://repo1.maven.org/maven2/" // Base URL
@@ -163,7 +125,7 @@ public final class ArtifactStore {
 		// Download the file hash first
 		byte[] hash = BaseEncoding.base16().lowerCase().decode(new String(NetUtil.download(url + ".sha1")));
 
-		File output = new File(directory.getAbsolutePath() + "/" + filename);
+		File output = directory.resolve(filename).toFile();
 		if (output.exists()) {
 			// Check the hash of the existing file to catch partial downloads
 			if (Arrays.equals(Files.asByteSource(output).hash(Hashing.sha1()).asBytes(), hash))
@@ -181,4 +143,6 @@ public final class ArtifactStore {
 		return true;
 	}
 
+	private ArtifactUtil() {
+	}
 }
