@@ -20,11 +20,8 @@ package com.sandpolis.gradle.soi;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Map;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
@@ -50,26 +47,10 @@ public class SoiMatrixTask extends DefaultTask {
 
 	@TaskAction
 	public void run() {
-		DependencyProcessor processor = new DependencyProcessor(getProject());
-
-		getProject().subprojects(sub -> {
-			Map<String, Configuration> conf = sub.getConfigurations().getAsMap();
-
-			if (conf.containsKey("runtimeClasspath") && sub.getPath().startsWith(":" + sub.getName())) {
-				for (ResolvedDependency dep : conf.get("runtimeClasspath").getResolvedConfiguration()
-						.getFirstLevelModuleDependencies()) {
-					if (dep.getModuleArtifacts().size() != 1) {
-						continue;
-					}
-
-					processor.add(sub.getName(), dep);
-				}
-			}
-		});
 
 		// Write object
 		try (FileOutputStream out = new FileOutputStream(so_matrix)) {
-			processor.build().writeTo(out);
+			new DependencyProcessor(getProject()).build().writeTo(out);
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to write SO_DependencyMatrix", e);
 		}

@@ -63,6 +63,16 @@ public class DependencyProcessor {
 
 	public DependencyProcessor(Project project) {
 		this.project = Objects.requireNonNull(project);
+
+		for (ResolvedDependency dep : project.getConfigurations().getAsMap().get("runtimeClasspath")
+				.getResolvedConfiguration().getFirstLevelModuleDependencies()) {
+			if (dep.getModuleArtifacts().size() != 1) {
+				// Skip unspecified dependencies
+				continue;
+			}
+
+			add(project.getName(), dep);
+		}
 	}
 
 	/**
