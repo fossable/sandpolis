@@ -53,30 +53,30 @@ message RS_PluginList {
 }
 
 /**
- * A request to download a plugin.
+ * A request to download an artifact.
  */
-message RQ_PluginDownload {
+message RQ_ArtifactDownload {
 
-	// The plugin id to download
-	string id = 1;
+	// The coordinates of the artifact to download
+	string coordinates = 1;
 
-	// Whether to receive the plugin binary itself or just its location
+	// Whether it's acceptable to receive the external location of the artifact only
 	bool location = 2;
 }
 
 /**
- * A download response.
+ * The download response bearing the artifact binary or the artifact's address.
  */
-message RS_PluginDownload {
+message RS_ArtifactDownload {
 	oneof source {
-		// The plugin binary
-		bytes plugin_binary = 1;
+		// The artifact binary
+		bytes binary = 1;
 		
-		// The plugin's HTTP location
-		string plugin_url = 2;
+		// The artifact's HTTP location
+		string url = 2;
 		
-		// The plugin's maven central coordinates
-		string plugin_coordinates = 3;
+		// The artifact's maven central coordinates
+		string coordinates = 3;
 	}
 }
 

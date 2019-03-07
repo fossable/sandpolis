@@ -30,11 +30,11 @@ import org.slf4j.LoggerFactory;
 import com.google.common.io.ByteSource;
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.store.artifact.ArtifactStore;
+import com.sandpolis.core.instance.store.artifact.ArtifactUtil;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.proto.net.MCPlugin.RS_PluginDownload;
+import com.sandpolis.core.proto.net.MCPlugin.RS_ArtifactDownload;
 import com.sandpolis.core.proto.net.MCPlugin.RS_PluginList;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
@@ -59,15 +59,15 @@ public class PluginExe extends Exelet {
 	}
 
 	@Auth
-	public void rq_plugin_download(Message m) {
-		var rq = Objects.requireNonNull(m.getRqPluginDownload());
-		var rs = RS_PluginDownload.newBuilder();
+	public void rq_artifact_download(Message m) {
+		var rq = Objects.requireNonNull(m.getRqArtifactDownload());
+		var rs = RS_ArtifactDownload.newBuilder();
 
-		PluginStore.getPlugin(rq.getId()).ifPresentOrElse(plugin -> {
+		PluginStore.getPlugin(rq.getCoordinates()).ifPresentOrElse(plugin -> {
 			if (!PluginStore.findComponentTypes(plugin).contains(InstanceFlavor.MEGA)) // TODO hardcoded subtype
 				reply(m, Outcome.newBuilder().setResult(false));// TODO message
 			else if (rq.getLocation()) {
-				rs.setPluginCoordinates(String.format("com.sandpolis:%s:%s", plugin.getId(), plugin.getVersion()));
+				rs.setCoordinates(String.format("com.sandpolis:%s:%s", plugin.getId(), plugin.getVersion()));
 			} else {
 				// Send binary for correct component
 				ByteSource component = PluginStore.getPluginComponent(plugin, connector.getRemoteInstance(),
@@ -75,7 +75,7 @@ public class PluginExe extends Exelet {
 						InstanceFlavor.MEGA);
 
 				try (var in = component.openStream()) {
-					rs.setPluginBinary(ByteString.readFrom(in));
+					rs.setBinary(ByteString.readFrom(in));
 				} catch (IOException e) {
 					// Failed to read plugin
 					reply(m, Outcome.newBuilder().setResult(false));// TODO message
@@ -84,8 +84,22 @@ public class PluginExe extends Exelet {
 
 			reply(m, rs);
 		}, () -> {
-			// Plugin does not exist
-			reply(m, Outcome.newBuilder().setResult(false));// TODO message
+			// Check artifacts
+			Path artifact = ArtifactUtil.getArtifactFile(rq.getCoordinates());
+			if (rq.getLocation()) {
+				// TODO send group:artifact:version
+			} else {
+				if (Files.exists(artifact)) {
+					try (var in = Files.newInputStream(artifact)) {
+						rs.setBinary(ByteString.readFrom(in));
+					} catch (IOException e) {
+						// Failed to read artifact
+						reply(m, Outcome.newBuilder().setResult(false));// TODO message
+					}
+				} else {
+					// TODO missing artifact
+				}
+			}
 		});
 	}
 
@@ -107,7 +121,7 @@ public class PluginExe extends Exelet {
 			Files.write(binary, NetUtil.download(rq.getPluginUrl()));
 			break;
 		case PLUGIN_COORDINATES:
-			if (!ArtifactStore.download(binary.getParent().toFile(), rq.getPluginCoordinates())) {
+			if (!ArtifactUtil.download(binary.getParent(), rq.getPluginCoordinates())) {
 				// TODO
 				return;
 			}
