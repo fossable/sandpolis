@@ -51,6 +51,9 @@ public class PluginPackager implements Plugin<Project> {
 		// Setup plugin manifests
 		project.allprojects {
 			afterEvaluate {
+				def name = id.substring(id.lastIndexOf('.') + 1)
+				name = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase()
+
 				if (tasks.findByPath('jar') != null) {
 					jar {
 						manifest {
@@ -59,7 +62,7 @@ public class PluginPackager implements Plugin<Project> {
 								'Plugin-Version': extension.version,
 								'Plugin-Name': extension.name,
 								'Plugin-Description': extension.description,
-								'Plugin-Class': extension.id + ".SandPlugin",
+								'Plugin-Class': "${extension.id}.${name}Plugin",
 								'Plugin-Cert': cert
 							)
 						}

@@ -1,6 +1,6 @@
 /******************************************************************************
 *                                  SANDPOLIS                                  *
-*                         com.sandpolis.plugin.sysinfo                        *
+*                         com.sandpolis.plugin.desktop                        *
 ******************************************************************************/
 
 buildscript {
@@ -18,8 +18,8 @@ apply plugin: 'com.sandpolis.gradle.soi'
 
 eclipse {
 	project {
-		name = 'com.sandpolis.plugin.sysinfo:client:mega'
-		comment = "The sysinfo plugin's Mega client component"
+		name = 'com.sandpolis.plugin.desktop:client:mega'
+		comment = "The desktop plugin's Mega client component"
 	}
 }
 
@@ -27,8 +27,7 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.0'
 
 	implementation project(':dep:com.sandpolis.core.instance')
-	implementation project(':dep:com.sandpolis.core.profile')
-	implementation project(':plugin:com.sandpolis.plugin.sysinfo')
+	implementation project(':plugin:com.sandpolis.plugin.desktop')
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
@@ -36,7 +35,4 @@ dependencies {
 	// https://github.com/pf4j/pf4j
 	implementation 'org.pf4j:pf4j:2.6.0'
 	annotationProcessor 'org.pf4j:pf4j:2.6.0'
-
-	// https://github.com/oshi/oshi
-	implementation 'com.github.oshi:oshi-core:3.13.0'
 }
