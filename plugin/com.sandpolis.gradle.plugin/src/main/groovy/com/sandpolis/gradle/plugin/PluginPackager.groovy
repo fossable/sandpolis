@@ -51,7 +51,7 @@ public class PluginPackager implements Plugin<Project> {
 		// Setup plugin manifests
 		project.allprojects {
 			afterEvaluate {
-				def name = id.substring(id.lastIndexOf('.') + 1)
+				def name = extension.id.substring(extension.id.lastIndexOf('.') + 1)
 				name = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase()
 
 				if (tasks.findByPath('jar') != null) {
