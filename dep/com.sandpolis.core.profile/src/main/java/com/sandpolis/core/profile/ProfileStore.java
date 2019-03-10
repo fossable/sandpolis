@@ -28,6 +28,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.Store.ManualInitializer;
+import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
@@ -50,6 +51,12 @@ public final class ProfileStore extends Store {
 	private static StoreProvider<Profile> provider;
 
 	/**
+	 * The {@link StoreProvider}'s backing container if configured with
+	 * {@link #load(Database)}.
+	 */
+	private static List<Profile> providerContainer;
+
+	/**
 	 * Recently used profiles that are mapped to a CVID.
 	 */
 	private static Cache<Integer, Profile> profileCache;
@@ -65,6 +72,28 @@ public final class ProfileStore extends Store {
 		Objects.requireNonNull(main);
 
 		init(StoreProviderFactory.database(Profile.class, main));
+	}
+
+	/**
+	 * Initialize the store and expose its backing container.
+	 * 
+	 * @param container The container to use when building the {@link StoreProvider}
+	 */
+	public static void load(List<Profile> container) {
+		ProfileStore.providerContainer = Objects.requireNonNull(container);
+
+		init(new MemoryListStoreProvider<Profile>(Profile.class, container));
+	}
+
+	/**
+	 * Get the {@link StoreProvider}'s backing container if the store was configured
+	 * with {@link #load(List)}.
+	 * 
+	 * @return The store's backing container or {@code null} if access to the
+	 *         container is not allowed
+	 */
+	public static List<Profile> getContainer() {
+		return providerContainer;
 	}
 
 	/**

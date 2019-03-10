@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
@@ -43,16 +44,16 @@ import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.IPCTasks;
 import com.sandpolis.core.net.store.network.NetworkStore;
+import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.util.AsciiUtil;
+import com.sandpolis.viewer.jfx.attribute.ObservableAttribute;
 import com.sandpolis.viewer.jfx.common.FxEventExecutor;
 import com.sandpolis.viewer.jfx.store.stage.StageStore;
-import com.sandpolis.viewer.jfx.common.FxUtil;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 import javafx.application.Application;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.collections.FXCollections;
 import javafx.stage.Stage;
 
 /**
@@ -138,6 +139,12 @@ public final class Viewer {
 
 		// Load PluginStore
 		PluginStore.init(new MemoryListStoreProvider<Plugin>(Plugin.class));
+
+		// Load ProfileStore
+		ProfileStore.load(FXCollections.observableArrayList());
+
+		// Configure attributekeys
+		AttributeKey.setDefaultAttributeClass(ObservableAttribute.class);
 
 		return task.success();
 	}

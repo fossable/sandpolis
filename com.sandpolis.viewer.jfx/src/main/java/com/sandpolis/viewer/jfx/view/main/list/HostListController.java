@@ -18,13 +18,16 @@
 package com.sandpolis.viewer.jfx.view.main.list;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.attribute.key.AK_INSTANCE;
 import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.view.main.Events.HostDetailCloseEvent;
 import com.sandpolis.viewer.jfx.view.main.Events.HostDetailOpenEvent;
@@ -37,12 +40,7 @@ import javafx.scene.control.TableView;
 
 public class HostListController extends AbstractController {
 
-	// TODO move
-	private static ObservableList<Profile> list;
-
-	public static void setList(ObservableList<Profile> list) {
-		HostListController.list = Objects.requireNonNull(list);
-	}
+	private static final Logger log = LoggerFactory.getLogger(HostListController.class);
 
 	/**
 	 * Default list header types.
@@ -54,6 +52,9 @@ public class HostListController extends AbstractController {
 
 	@FXML
 	public void initialize() {
+		if (ProfileStore.getContainer() == null)
+			log.warn("The ProfileStore was not configured to expose the profile container!");
+
 		table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		table.getSelectionModel().selectedItemProperty().addListener((p, o, n) -> {
 			if (n == null)
@@ -61,7 +62,7 @@ public class HostListController extends AbstractController {
 			else
 				post(HostDetailOpenEvent::new, n);
 		});
-		table.setItems(list);
+		table.setItems((ObservableList<Profile>) ProfileStore.getContainer());
 
 		// Set default headers
 		addColumns(defaultHeaders.stream());
