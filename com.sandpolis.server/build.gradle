@@ -6,6 +6,8 @@
 plugins {
 	id 'eclipse'
 	id 'java'
+
+	id 'com.sandpolis.gradle.soi'
 }
 
 eclipse {
@@ -30,9 +32,6 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.storage.hibernate')
 	implementation project(':dep:com.sandpolis.core.util')
 
-	// https://github.com/zeroturnaround/zt-zip
-	implementation 'com.github.zeroturnaround:zt-zip:master'
-
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:27.0.1-jre'
 
@@ -49,6 +48,9 @@ dependencies {
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
+	
+	// https://github.com/cilki/zipset
+	implementation 'com.github.cilki:zipset:1.0.0'
 }
 
 jar {

@@ -18,27 +18,24 @@
 package com.sandpolis.server.gen.generator;
 
 import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
+import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromArtifact;
+import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroturnaround.zip.ByteSource;
-import org.zeroturnaround.zip.FileSource;
-import org.zeroturnaround.zip.ZipEntrySource;
-import org.zeroturnaround.zip.ZipUtil;
 
+import com.github.cilki.zipset.ZipSet;
+import com.github.cilki.zipset.ZipSet.EntryPath;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.store.artifact.ArtifactStore;
+import com.sandpolis.core.instance.store.artifact.ArtifactUtil;
 import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.Architecture;
+import com.sandpolis.core.proto.util.Platform.OsType;
+import com.sandpolis.core.soi.SoiUtil;
 import com.sandpolis.server.gen.FileGenerator;
 
 /**
@@ -51,6 +48,12 @@ public class MegaGen extends FileGenerator {
 
 	private static final Logger log = LoggerFactory.getLogger(MegaGen.class);
 
+	/**
+	 * Dependencies that are required for the client to run and therefore should
+	 * always be included in the output.
+	 */
+	private static final List<String> required = List.of("com.sandpolis.core.soi", "com.sandpolis.core.instance");
+
 	public MegaGen(GenConfig config) {
 		super(config);
 	}
@@ -58,59 +61,52 @@ public class MegaGen extends FileGenerator {
 	@Override
 	protected Object run() throws Exception {
 
-		// Make convenient references for common objects
+		log.debug("Computing MEGA payload");
+
+		ZipSet output = new ZipSet(Environment.get(JLIB).resolve("com.sandpolis.client.mega-standalone.jar"));
 		FeatureSet features = config.getMega().getFeatures();
 
-		// Compute libraries for injection according to the configuration
-		List<ZipEntrySource> entries = ArtifactStore.getDependencies(Instance.CLIENT).map(artifact -> {
-			File source = ArtifactStore.getArtifactFile(artifact);
-			if (artifact.getNativeComponentCount() != 0) {
+		// Add client configuration
+		output.add("/main/main.jar!/soi/client.bin", config.getMega().toByteArray());
 
-				// Find unnecessary internal native components
-				String[] paths = artifact.getNativeComponentList().stream()
-						.filter(component -> !features.getSupportedOsList().contains(component.getPlatform()))
-						.filter(component -> !features.getSupportedArchList().contains(component.getArchitecture()))
-						.map(component -> component.getPath()).toArray(String[]::new);
+		// Add client dependencies
+		SoiUtil.readMatrix(Environment.get(JLIB).resolve("com.sandpolis.client.mega.jar")).getArtifactList().stream()
+				// Skip unnecessary dependencies if allowed
+				.filter(artifact -> !config.getMega().getDownloader()
+						|| required.contains(fromArtifact(artifact).artifactId))
+				.forEach(artifact -> {
+					Path source = ArtifactUtil.getArtifactFile(artifact);
 
-				// Omit the components
-				try (var out = new ByteArrayOutputStream()) {
-					ZipUtil.removeEntries(source, paths, out);
-					return new ByteSource("lib/" + source.getName(), out.toByteArray());
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
+					// Add library
+					output.add("lib/" + source.getFileName(), source);
+
+					// Skip native dependencies if possible
+					artifact.getNativeComponentList().stream()
+							// Filter out unnecessary platform-specific libraries
+							.filter(component -> !features.getSupportedOsList()
+									.contains(OsType.valueOf(component.getPlatform())))
+							.filter(component -> !features.getSupportedArchList()
+									.contains(Architecture.valueOf(component.getArchitecture())))
+							.forEach(component -> {
+								output.sub(EntryPath.get("lib/" + source.getFileName(), component.getPath()));
+							});
+
+				});
+
+		// Add plugin binaries
+		if (!config.getMega().getDownloader()) {
+			for (String plugin : features.getPluginList()) {
+				Path bin = ArtifactUtil.getArtifactFile(plugin);
+				output.add("lib/" + fromCoordinate(plugin).filename, bin);
+
+				// Add plugin dependencies
+				SoiUtil.readMatrix(bin).getArtifactList().stream().forEach(dep -> {
+					output.add("lib/" + fromArtifact(dep).filename, ArtifactUtil.getArtifactFile(dep));
+				});
 			}
-			return new FileSource("lib/" + source.getName(), source);
-
-		}).collect(Collectors.toList());
-
-		File client = Environment.get(JLIB).resolve("com.sandpolis.client.mega-standalone.jar").toFile();
-
-		try (var zip = new ZipFile(client);
-				var main_in = zip.getInputStream(zip.getEntry("main/main.jar"));
-				var main_out = new ByteArrayOutputStream()) {
-			// Add client config
-			ZipUtil.addEntries(main_in,
-					new ZipEntrySource[] { new ByteSource("soi/client.bin", config.getMega().toByteArray()) },
-					main_out);
-
-			entries.add(new ByteSource("main/main.jar", main_out.toByteArray()));
 		}
 
-		////////////////////////////////////////////////////////
-		// TODO remove when zt-zip adds a stream-based method //
-		byte[] temp;
-		try (var out = new ByteArrayOutputStream()) {
-			ZipUtil.removeEntries(client, new String[] { "main/main.jar" }, out);
-			temp = out.toByteArray();
-		}
-		////////////////////////////////////////////////////////
-
-		// Inject artifacts
-		try (var out = new ByteArrayOutputStream(); var in = new ByteArrayInputStream(temp)) {
-			ZipUtil.addEntries(in, entries.stream().toArray(ZipEntrySource[]::new), out);
-			return out.toByteArray();
-		}
+		return output.build();
 	}
 
 }

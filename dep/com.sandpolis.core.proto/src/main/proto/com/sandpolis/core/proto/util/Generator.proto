@@ -46,6 +46,8 @@ message FeatureSet {
 	// Supported system architectures
 	repeated Architecture supported_arch = 2;
 
+	// Supported plugins
+	repeated string plugin = 3;
 }
 
 /**
@@ -200,6 +202,8 @@ message MegaConfig {
 	NetworkConfig network = 2;
 	ExecutionConfig execution = 3;
 	AuthenticationConfig authentication = 4;
+	
+	bool downloader = 5;
 }
 
 /**
