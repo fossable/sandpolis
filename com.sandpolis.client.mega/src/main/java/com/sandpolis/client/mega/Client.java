@@ -22,6 +22,7 @@ import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.NLIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
+import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromArtifact;
 import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_ESTABLISHED;
 import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_LOST;
 
@@ -46,7 +47,6 @@ import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
 import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
-import com.sandpolis.core.instance.store.artifact.ArtifactStore;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
@@ -55,7 +55,7 @@ import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
-import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
@@ -130,15 +130,15 @@ public final class Client {
 			return task.failure(e);
 		}
 
-		ArtifactStore.getDependencies(Instance.CLIENT).forEach(artifact -> {
-			String name = ArtifactStore.getArtifactFilename(artifact.getCoordinates());
+		for (Artifact artifact : Core.SO_MATRIX.getArtifactList()) {
+			String name = fromArtifact(artifact).filename;
 
 			try {
 				Files.copy(Client.class.getResourceAsStream("/lib/" + name), lib.resolve(name));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		});
+		}
 
 		System.exit(0);
 		return task.failure();

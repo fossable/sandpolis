@@ -61,38 +61,13 @@ public final class ArtifactUtil {
 	/**
 	 * Get an artifact's file from the environment's library directory.
 	 *
-	 * @param artifact The artifact
+	 * @param coordinates The artifact's coordinates
 	 * @return The artifact's local file
 	 */
-	public static Path getArtifactFile(String artifact) {
-		checkNotNull(artifact);
-
-		return Environment.get(JLIB).resolve(getArtifactFilename(artifact));
-	}
-
-	/**
-	 * Convert an artifact's coordinates to a filename.
-	 *
-	 * @param coordinates The artifact's coordinates
-	 * @return The artifact's filename
-	 */
-	public static String getArtifactFilename(String coordinates) {
-		String formatMessage = "Coordinate format: group:artifact:version";
-
+	public static Path getArtifactFile(String coordinates) {
 		checkNotNull(coordinates);
-		checkArgument(coordinates.indexOf(':') != -1, formatMessage);
-		checkArgument(coordinates.indexOf(':') != coordinates.lastIndexOf(':'), formatMessage);
 
-		// Remove group ID
-		coordinates = coordinates.substring(coordinates.indexOf(':') + 1);
-
-		// Remove version if empty
-		if (coordinates.endsWith(":"))
-			coordinates = coordinates.substring(0, coordinates.length() - 1);
-
-		checkArgument(!coordinates.isEmpty(), formatMessage);
-		checkArgument(!coordinates.equals(":"), formatMessage);
-		return coordinates.replaceAll(":", "-") + ".jar";
+		return Environment.get(JLIB).resolve(ParsedCoordinate.fromCoordinate(coordinates).filename);
 	}
 
 	/**
@@ -141,6 +116,66 @@ public final class ArtifactUtil {
 			throw new IOException("Hash verification failed");
 
 		return true;
+	}
+
+	/**
+	 * A container for an artifact's colon-delimited coordinate.
+	 */
+	public static class ParsedCoordinate {
+
+		public final String coordinate;
+		public final String groupId;
+		public final String artifactId;
+		public final String version;
+		public final String filename;
+
+		private ParsedCoordinate(String coordinate, String groupId, String artifactId, String version,
+				String filename) {
+			this.coordinate = coordinate;
+			this.groupId = groupId;
+			this.artifactId = artifactId;
+			this.version = version;
+			this.filename = filename;
+		}
+
+		/**
+		 * Parse an artifact's coordinate.
+		 * 
+		 * @param artifact The coordinate to parse
+		 * @return A new {@link ParsedCoordinate}
+		 */
+		public static ParsedCoordinate fromArtifact(Artifact artifact) {
+			return fromCoordinate(artifact.getCoordinates());
+		}
+
+		/**
+		 * Parse a coordinate.
+		 * 
+		 * @param coordinate The coordinate to parse
+		 * @return A new {@link ParsedCoordinate}
+		 */
+		public static ParsedCoordinate fromCoordinate(String coordinate) {
+			checkNotNull(coordinate);
+
+			// Hack to produce an empty last element if necessary
+			if (coordinate.endsWith(":"))
+				coordinate += " ";
+
+			String[] gav = coordinate.split(":");
+			checkArgument(gav.length == 3, "Coordinate format: group:artifact:version");
+
+			// Trim fields
+			for (int i = 0; i < 3; i++)
+				gav[i] = gav[i].trim();
+
+			// Build canonical filename
+			String filename = gav[1];
+			if (!gav[2].isEmpty())
+				filename += "-" + gav[2];
+			filename += ".jar";
+
+			return new ParsedCoordinate(coordinate.trim(), gav[0], gav[1], gav[2], filename);
+		}
 	}
 
 	private ArtifactUtil() {

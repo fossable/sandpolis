@@ -18,7 +18,7 @@
 package com.sandpolis.core.instance.store.artifact;
 
 import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.download;
-import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.getArtifactFilename;
+import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -36,22 +36,28 @@ import org.junit.jupiter.api.io.TempDir;
 class ArtifactUtilTest {
 
 	@Test
-	@DisplayName("Get filenames from valid coordinates")
-	void getArtifactFilename_1() {
-		assertEquals("b-c.jar", getArtifactFilename("a:b:c"));
-		assertEquals("test.jar", getArtifactFilename(":test:"));
-		assertEquals("google.com-1.0.jar", getArtifactFilename("com.google:google.com:1.0"));
+	@DisplayName("Get info from valid coordinates")
+	void fromCoordinate_1() {
+		assertEquals("a:b:c", fromCoordinate("a:b:c").coordinate);
+		assertEquals("a", fromCoordinate("a:b:c").groupId);
+		assertEquals("b", fromCoordinate("a:b:c").artifactId);
+		assertEquals("c", fromCoordinate("a:b:c").version);
+		assertEquals("b-c.jar", fromCoordinate("a:b:c").filename);
+
+		assertEquals(":test:", fromCoordinate(":test:").coordinate);
+		assertEquals("", fromCoordinate(":test:").groupId);
+		assertEquals("test", fromCoordinate(":test:").artifactId);
+		assertEquals("", fromCoordinate(":test:").version);
+		assertEquals("test.jar", fromCoordinate(":test:").filename);
 	}
 
 	@Test
-	@DisplayName("Try to get filenames from invalid coordinates")
-	void getArtifactFilename_2() {
-		assertThrows(NullPointerException.class, () -> getArtifactFilename(null));
-		assertThrows(IllegalArgumentException.class, () -> getArtifactFilename(""));
-		assertThrows(IllegalArgumentException.class, () -> getArtifactFilename(":"));
-		assertThrows(IllegalArgumentException.class, () -> getArtifactFilename("::"));
-		assertThrows(IllegalArgumentException.class, () -> getArtifactFilename(":::"));
-		assertThrows(IllegalArgumentException.class, () -> getArtifactFilename("test.jar"));
+	@DisplayName("Try to get info from invalid coordinates")
+	void fromCoordinate_2() {
+		assertThrows(NullPointerException.class, () -> fromCoordinate(null));
+		assertThrows(IllegalArgumentException.class, () -> fromCoordinate(""));
+		assertThrows(IllegalArgumentException.class, () -> fromCoordinate(":"));
+		assertThrows(IllegalArgumentException.class, () -> fromCoordinate("test.jar"));
 	}
 
 	@Test
