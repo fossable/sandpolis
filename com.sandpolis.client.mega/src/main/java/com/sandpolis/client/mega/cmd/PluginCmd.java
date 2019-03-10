@@ -25,14 +25,17 @@ import java.util.Optional;
 
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Environment.EnvPath;
+import com.sandpolis.core.instance.store.artifact.ArtifactUtil;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.net.Cmdlet;
 import com.sandpolis.core.net.future.CommandFuture;
-import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginDownload;
+import com.sandpolis.core.proto.net.MCPlugin.RQ_ArtifactDownload;
 import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginList;
-import com.sandpolis.core.proto.net.MCPlugin.RS_PluginDownload;
+import com.sandpolis.core.proto.net.MCPlugin.RS_ArtifactDownload;
 import com.sandpolis.core.proto.net.MCPlugin.RS_PluginList;
+import com.sandpolis.core.soi.SoiUtil;
+import com.sandpolis.core.util.NetUtil;
 
 /**
  * Contains plugin commands.
@@ -79,26 +82,9 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 	public CommandFuture downloadPlugin(String id) {
 		checkNotNull(id);
 
-		return rq(RQ_PluginDownload.newBuilder().setId(id).setLocation(false), (RS_PluginDownload rs) -> {
+		return downloadDependency(id);
 
-			Path destination = Environment.get(EnvPath.JLIB).resolve(id + ".jar");
-
-			switch (rs.getSourceCase()) {
-			case PLUGIN_BINARY:
-				Files.write(destination, rs.getPluginBinary().toByteArray());
-				break;
-			case PLUGIN_COORDINATES:
-				throw new RuntimeException("Unimplemented");
-			case PLUGIN_URL:
-				throw new RuntimeException("Unimplemented");
-			default:
-				throw new RuntimeException();
-			}
-
-			// TODO download missing dependencies
-
-			PluginStore.installPlugin(destination);
-		});
+		// PluginStore.installPlugin(destination);
 	}
 
 	/**
@@ -109,8 +95,29 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 	public CommandFuture downloadDependency(String coordinate) {
 		checkNotNull(coordinate);
 
-		// TODO
-		return null;
+		return rq(RQ_ArtifactDownload.newBuilder().setCoordinates(coordinate).setLocation(false),
+				(RS_ArtifactDownload rs) -> {
+
+					Path destination = Environment.get(EnvPath.JLIB).resolve(coordinate + ".jar");
+
+					switch (rs.getSourceCase()) {
+					case BINARY:
+						Files.write(destination, rs.getBinary().toByteArray());
+						break;
+					case COORDINATES:
+						ArtifactUtil.download(destination.getParent(), rs.getCoordinates());
+						break;
+					case URL:
+						NetUtil.download(rs.getUrl(), destination.toFile());
+						break;
+					default:
+						throw new RuntimeException();
+					}
+
+					// TODO download missing dependencies of this dependency
+					SoiUtil.readMatrix(destination);
+
+				});
 	}
 
 	/**

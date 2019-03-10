@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.instance.store.plugin;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
 
 import java.io.IOException;
@@ -43,7 +44,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.Resources;
-import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Store.ManualInitializer;
 import com.sandpolis.core.instance.storage.StoreProvider;
@@ -56,7 +56,20 @@ import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.core.util.JarUtil;
 
 /**
- * The {@link PluginStore} manages plugins.
+ * The {@link PluginStore} manages plugins.<br>
+ * <br>
+ * Plugins can be in one of 4 states:
+ * <ul>
+ * <li>DOWNLOADED: The plugin exists on the filesystem, but the
+ * {@link PluginStore} does not know about it. The plugin does not have a
+ * {@link Plugin} instance.</li>
+ * <li>INSTALLED: The {@link PluginStore} has a {@link Plugin} instance for the
+ * plugin, but no extensions points have been loaded.</li>
+ * <li>DISABLED: The plugin is INSTALLED, but cannot be loaded until it's
+ * enabled.</li>
+ * <li>LOADED: The plugin is INSTALLED and all extension points have been
+ * loaded.</li>
+ * </ul>
  * 
  * @author cilki
  * @since 5.0.0
@@ -83,7 +96,7 @@ public final class PluginStore {
 	}
 
 	public static void load(Database main) {
-		Objects.requireNonNull(main);
+		checkNotNull(main);
 
 		init(StoreProviderFactory.database(Plugin.class, main));
 	}
@@ -98,25 +111,27 @@ public final class PluginStore {
 	}
 
 	/**
-	 * Get a list of all plugins in descriptor form.
+	 * Get the plugins in descriptor form.
 	 * 
-	 * @return The descriptor list
+	 * @return A new plugin descriptor stream
 	 */
-	public static List<PluginDescriptor> getPluginDescriptors() {
+	public static Stream<PluginDescriptor> getPluginDescriptors() {
 		try (Stream<Plugin> stream = provider.stream()) {
-			return stream.map(plugin -> plugin.toDescriptor()).collect(Collectors.toList());
+			return stream.collect(Collectors.toList()).stream().map(plugin -> plugin.toDescriptor());
 		}
+		// return provider.stream().map(plugin -> plugin.toDescriptor());
 	}
 
 	/**
-	 * Get a list of all plugins.
+	 * Get all plugins.
 	 * 
-	 * @return The plugin list
+	 * @return A new plugin stream
 	 */
-	public static List<Plugin> getPlugins() {
+	public static Stream<Plugin> getPlugins() {
 		try (Stream<Plugin> stream = provider.stream()) {
-			return stream.collect(Collectors.toList());
+			return stream.collect(Collectors.toList()).stream();
 		}
+		// return provider.stream();
 	}
 
 	/**
@@ -126,6 +141,8 @@ public final class PluginStore {
 	 * @return The plugin
 	 */
 	public static Optional<Plugin> getPlugin(String id) {
+		checkNotNull(id);
+
 		try (Stream<Plugin> stream = provider.stream()) {
 			return stream.filter(plugin -> plugin.getId().equals(id)).findAny();
 		}
@@ -140,7 +157,11 @@ public final class PluginStore {
 	 * @return The component as a {@link ByteSource}
 	 */
 	public static ByteSource getPluginComponent(Plugin plugin, Instance instance, InstanceFlavor sub) {
-		return Resources.asByteSource(getComponentUrl(plugin, instance, sub));
+		URL url = getPluginComponentUrl(plugin, instance, sub);
+		if (url == null)
+			throw new RuntimeException();
+
+		return Resources.asByteSource(url);
 	}
 
 	/**
@@ -150,23 +171,31 @@ public final class PluginStore {
 	 * @return A list of components that were found in the plugin
 	 */
 	public static List<InstanceFlavor> findComponentTypes(Plugin plugin) {
-		Objects.requireNonNull(plugin);
+		checkNotNull(plugin);
 
 		List<InstanceFlavor> types = new LinkedList<>();
 
 		// TODO don't check invalid combinations
 		for (Instance instance : Instance.values())
 			for (InstanceFlavor sub : InstanceFlavor.values())
-				if (getComponentUrl(plugin, instance, sub) != null)
+				if (getPluginComponentUrl(plugin, instance, sub) != null)
 					types.add(sub);
 
 		return types;
 	}
 
-	public static URL getComponentUrl(Plugin plugin, Instance instance, InstanceFlavor sub) {
-		Objects.requireNonNull(plugin);
-		Objects.requireNonNull(instance);
-		Objects.requireNonNull(sub);
+	/**
+	 * Get a {@link URL} representing a component of the given plugin.
+	 * 
+	 * @param plugin   The target plugin
+	 * @param instance The instance type
+	 * @param sub      The instance subtype
+	 * @return A url for the component or {@code null} if not found
+	 */
+	public static URL getPluginComponentUrl(Plugin plugin, Instance instance, InstanceFlavor sub) {
+		checkNotNull(plugin);
+		checkNotNull(instance);
+		checkNotNull(sub);
 
 		try {
 			return JarUtil.getResourceUrl(getArtifact(plugin),
@@ -183,16 +212,18 @@ public final class PluginStore {
 	 * @return The plugin artifact
 	 */
 	public static Path getArtifact(Plugin plugin) {
-		Objects.requireNonNull(plugin);
+		checkNotNull(plugin);
 
 		Path path;
 		if (manager.getPlugin(plugin.getId()) != null)
+			// First class approach
 			path = manager.getPlugin(plugin.getId()).getPluginPath();
 		else
+			// Fallback approach
 			path = Environment.get(JLIB).resolve(plugin.getId() + ".jar");
 
 		if (!Files.exists(path))
-			throw new RuntimeException();
+			log.warn("Missing filesystem artifact for plugin: {}", plugin.getId());
 
 		return path;
 	}
@@ -220,15 +251,8 @@ public final class PluginStore {
 	 */
 	public static void loadPlugins() {
 		try (Stream<Plugin> stream = provider.stream()) {
-			stream.filter(plugin -> plugin.isEnabled()).filter(plugin -> manager.getPlugin(plugin.getId()) == null)
-					.forEach(PluginStore::loadPlugin);
+			stream.filter(plugin -> plugin.isEnabled()).forEach(PluginStore::loadPlugin);
 		}
-	}
-
-	public static void install(String id, byte[] plugin) throws IOException {
-		Path destination = Environment.get(JLIB).resolve(id + ".jar");
-		Files.write(destination, plugin);
-		installPlugin(destination);
 	}
 
 	/**
@@ -237,6 +261,7 @@ public final class PluginStore {
 	 * @param path The plugin's filesystem artifact
 	 */
 	private static synchronized void installPlugin(Path path) {
+		// TODO check state
 
 		try {
 			byte[] hash = hashPlugin(path);
@@ -250,7 +275,9 @@ public final class PluginStore {
 			// TODO validate info
 			log.debug("Installing plugin: {}", path.toString());
 
-			provider.add(new Plugin(id, name, version, description, true, hash));
+			Plugin plugin = new Plugin(id, name, version, description, true, hash);
+			provider.add(plugin);
+			manager.loadPlugin(path);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -263,6 +290,8 @@ public final class PluginStore {
 	 * @param plugin The plugin to load
 	 */
 	private static void loadPlugin(Plugin plugin) {
+		// TODO check state
+
 		// Locate plugin
 		Path path = getArtifact(plugin);
 
@@ -276,7 +305,7 @@ public final class PluginStore {
 
 		// Verify certificate
 		try {
-			var cert = CertUtil.parse(JarUtil.getManifestValue(path, "Plugin-Cert"));
+			var cert = CertUtil.parse(JarUtil.getManifestValue(path, "Plugin-Cert").get());
 			if (!verifier.apply(cert))
 				throw new CertificateException("Certificate verification failed");
 		} catch (CertificateException | IOException e) {
@@ -286,7 +315,6 @@ public final class PluginStore {
 		}
 
 		log.debug("Loading plugin: {}", plugin.getName());
-		manager.loadPlugin(path);
 		manager.startPlugin(plugin.getId());
 		manager.getExtensions(SandpolisPlugin.class, plugin.getId()).stream().forEach(SandpolisPlugin::load);
 	}
