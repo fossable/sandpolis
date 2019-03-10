@@ -20,7 +20,6 @@ package com.sandpolis.core.profile;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,14 +71,10 @@ public final class ProfileStore extends Store {
 	 * Retrieve a {@link Profile} by CVID.
 	 * 
 	 * @param cvid The profile's CVID
-	 * @return The requested {@link Profile} or {@code null} if not found
+	 * @return The requested {@link Profile}
 	 */
 	public static Optional<Profile> getProfile(int cvid) {
-		try {
-			return Optional.ofNullable(profileCache.get(cvid, () -> provider.get("cvid", cvid).orElse(null)));
-		} catch (ExecutionException e) {
-			throw new RuntimeException(e);
-		}
+		return provider.get("cvid", cvid);
 	}
 
 	/**

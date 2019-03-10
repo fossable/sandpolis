@@ -87,6 +87,9 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	public Profile(Instance instance) {
 		this.instance = Objects.requireNonNull(instance);
 		this.domains = new HashMap<>();
+
+		// TODO
+		this.root = new AttributeDomain(null);
 	}
 
 	Profile() {
@@ -101,15 +104,20 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	 */
 	@SuppressWarnings("unchecked")
 	public <E> Attribute<E> getAttribute(AttributeKey<E> key) {
+		Objects.requireNonNull(key);
+
 		String domain = key.getDomain();
 		if (!domains.containsKey(domain))
 			domains.put(domain, new AttributeDomain(domain));
 
 		var attribute = domains.get(domain).getNode(key.chain().iterator());
-		if (attribute == null)
-			domains.get(domain).addNode(key.newAttribute());
+		if (attribute == null) {
+			attribute = key.newAttribute();
 
-		return (Attribute<E>) domains.get(domain).getNode(key.chain().iterator());
+			domains.get(domain).addNode(attribute);// TODO fix addNode
+		}
+
+		return (Attribute<E>) attribute;
 	}
 
 	/**
