@@ -40,7 +40,7 @@ dependencies {
 	implementation 'commons-validator:commons-validator:1.6'
 
 	// https://github.com/google/guava
-	implementation 'com.google.guava:guava:27.0.1-jre'
+	implementation 'com.google.guava:guava:27.1-jre'
 
 	// https://github.com/sirolf2009/fxgraph
 	implementation 'com.sirolf2009:fxgraph:0.0.3'
