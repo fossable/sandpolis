@@ -29,7 +29,7 @@ dependencies {
 	implementation 'ch.qos.logback:logback-classic:1.2.3'
 
 	// https://github.com/google/guava
-	implementation 'com.google.guava:guava:27.0.1-jre'
+	implementation 'com.google.guava:guava:27.1-jre'
 
 	implementation 'javax.persistence:javax.persistence-api:2.2'	
 	
