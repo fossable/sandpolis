@@ -3,11 +3,19 @@
 *                          com.sandpolis.client.mega                          *
 ******************************************************************************/
 
+buildscript {
+	dependencies {
+		classpath ':com.sandpolis.gradle.soi:'
+	}
+}
+
 plugins {
 	id 'eclipse'
 	id 'java'
 	id 'com.github.onslip.gradle-one-jar' version '1.0.5'
 }
+
+apply plugin: 'com.sandpolis.gradle.soi'
 
 eclipse {
 	project {

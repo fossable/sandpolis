@@ -44,6 +44,7 @@ dependencies {
 
 apply plugin: 'com.sandpolis.gradle.plugin'
 apply plugin: 'com.sandpolis.gradle.codegen'
+apply plugin: 'com.sandpolis.gradle.soi'
 
 sandpolis_plugin {
 	id = 'com.sandpolis.plugin.sysinfo'

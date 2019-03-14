@@ -22,8 +22,10 @@ allprojects {
 }
 
 dependencies {
-	compile gradleApi()
+	implementation gradleApi()
 
-	compile 'com.google.guava:guava:26.0-jre'
-	compile project(':dep:com.sandpolis.core.soi')
+	implementation project(':dep:com.sandpolis.core.soi')
+
+	implementation 'com.google.guava:guava:26.0-jre'
+	implementation 'org.yaml:snakeyaml:1.24'
 }
