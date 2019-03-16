@@ -64,3 +64,13 @@ jar {
 test {
 	useJUnitPlatform()
 }
+
+// Copy dependencies to a path given by STDIN
+task installDependencies {
+	doLast {
+		copy {
+			from(configurations.runtimeClasspath)
+			into(new java.util.Scanner(System.in).nextLine())
+		}
+	}
+}
