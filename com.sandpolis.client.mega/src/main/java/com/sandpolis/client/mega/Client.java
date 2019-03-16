@@ -17,10 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.client.mega;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.DB;
-import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
+import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
-import static com.sandpolis.core.instance.Environment.EnvPath.NLIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromArtifact;
 import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_ESTABLISHED;
@@ -115,7 +113,7 @@ public final class Client {
 
 		// Installation mode
 		Path base = Paths.get(SO_CONFIG.getExecution().getInstallPathOrDefault(0, "."));// TODO 0
-		Path lib = base.resolve("jlib");
+		Path lib = base.resolve("lib");
 
 		try {
 			Files.createDirectories(base);
@@ -154,7 +152,7 @@ public final class Client {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (!Environment.load(DB, TMP, LOG, JLIB, NLIB)) {
+		if (!Environment.load(TMP, LOG, LIB)) {
 			try {
 				Environment.setup();
 			} catch (RuntimeException e) {

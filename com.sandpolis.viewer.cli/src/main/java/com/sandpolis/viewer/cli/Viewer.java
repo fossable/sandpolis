@@ -17,10 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.viewer.cli;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.DB;
-import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
+import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
-import static com.sandpolis.core.instance.Environment.EnvPath.NLIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 
 import java.io.IOException;
@@ -77,7 +75,7 @@ public final class Viewer {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (!Environment.load(DB, TMP, LOG, JLIB, NLIB)) {
+		if (!Environment.load(TMP, LOG, LIB)) {
 			try {
 				Environment.setup();
 			} catch (RuntimeException e) {

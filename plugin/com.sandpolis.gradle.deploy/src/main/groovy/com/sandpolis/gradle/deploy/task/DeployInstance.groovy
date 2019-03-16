@@ -14,7 +14,7 @@ class DeployInstance extends RemoteTask {
 
 				// Reset working directory
 				remove directory
-				execute 'mkdir -p ' + directory + '/jlib'
+				execute 'mkdir -p ' + directory + '/lib'
 
 				// Reset Java Preferences
 				execute 'rm -rf ~/.java/.userPrefs/com'
@@ -23,13 +23,13 @@ class DeployInstance extends RemoteTask {
 				put from: project_deploy.jar.archivePath, into: directory
 				
 				// Transfer libraries
-				put from: project_deploy.configurations.runtimeClasspath, into: directory + '/jlib'
+				put from: project_deploy.configurations.runtimeClasspath, into: directory + '/lib'
 				
 				// Transfer all core plugins for server only
 				if (project_deploy.name.equals("com.sandpolis.server"))
 					project_root.subprojects { sub ->
 						if (sub.name.startsWith("com.sandpolis.plugin"))
-							put from: sub.jar.outputs.files, into: directory + '/jlib'
+							put from: sub.jar.outputs.files, into: directory + '/lib'
 					}
 
 				// Check for screen session
@@ -51,7 +51,7 @@ class DeployInstance extends RemoteTask {
 
 				// Reset working directory
 				remove directory
-				execute 'md "' + directory + '/jlib"'
+				execute 'md "' + directory + '/lib"'
 
 				// Reset Java Preferences
 				execute 'reg delete "HKEY_CURRENT_USER\\Software\\JavaSoft\\Prefs" /f'
@@ -60,13 +60,13 @@ class DeployInstance extends RemoteTask {
 				put from: project_deploy.jar.archivePath, into: directory
 				
 				// Transfer libraries
-				put from: project_deploy.configurations.runtimeClasspath, into: directory + '/jlib'
+				put from: project_deploy.configurations.runtimeClasspath, into: directory + '/lib'
 				
 				// Transfer all core plugins for server only
 				if (project_deploy.name.equals("com.sandpolis.server"))
 					project_root.subprojects { sub ->
 						if (sub.name.startsWith("com.sandpolis.plugin"))
-							put from: sub.jar.outputs.files, into: directory + '/jlib'
+							put from: sub.jar.outputs.files, into: directory + '/lib'
 					}
 
 				// Run the artifact manually

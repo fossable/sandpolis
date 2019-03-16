@@ -90,7 +90,7 @@ public class DeployPlugin implements Plugin<Project> {
 				
 				// Modify jar classpath
 				sub.tasks.getByName('jar').manifest.attributes (
-					'Class-Path': sub.configurations.runtimeClasspath.collect { 'jlib/' + it.getName() }.join(' ')
+					'Class-Path': sub.configurations.runtimeClasspath.collect { 'lib/' + it.getName() }.join(' ')
 				)
 
 				// Create deploy tasks

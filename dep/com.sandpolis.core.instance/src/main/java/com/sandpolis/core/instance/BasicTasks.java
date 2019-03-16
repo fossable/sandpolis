@@ -62,6 +62,10 @@ public final class BasicTasks {
 		Config.register("no_plugins", false);
 		Config.register("no_summary", false);
 
+		Config.register("path.db", null);
+		Config.register("path.gen", null);
+		Config.register("path.log", null);
+
 		return task.success();
 	}
 

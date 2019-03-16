@@ -19,9 +19,8 @@ package com.sandpolis.server;
 
 import static com.sandpolis.core.instance.Environment.EnvPath.DB;
 import static com.sandpolis.core.instance.Environment.EnvPath.GEN;
-import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
+import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
-import static com.sandpolis.core.instance.Environment.EnvPath.NLIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 
 import java.io.IOException;
@@ -102,10 +101,10 @@ public final class Server {
 		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
 				Core.SO_BUILD.getNumber());
 
-		MainDispatch.register(Server::loadEnvironment);
 		MainDispatch.register(BasicTasks::loadConfiguration);
 		MainDispatch.register(Server::loadConfiguration);
 		MainDispatch.register(IPCTasks::checkLocks);
+		MainDispatch.register(Server::loadEnvironment);
 		MainDispatch.register(Server::loadServerStores);
 		MainDispatch.register(Server::loadPlugins);
 		MainDispatch.register(Server::installDebugClient);
@@ -142,7 +141,8 @@ public final class Server {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (!Environment.load(DB, TMP, LOG, JLIB, NLIB, GEN)) {
+		if (!Environment.load(DB.setDefault(Config.get("path.db")), GEN.setDefault(Config.get("path.gen")),
+				LOG.setDefault(Config.get("path.log")), TMP, LIB)) {
 			try {
 				Environment.setup();
 			} catch (RuntimeException e) {

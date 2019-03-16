@@ -29,12 +29,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * This singleton contains information about the runtime environment. Only
- * standard Java classes may be used so that this class can be loaded regardless
- * of the dependency situation.<br>
+ * This class contains important information about the runtime environment.<br>
  * <br>
  * 
- * Any symbolic links will be resolved before they are stored.
+ * Implementation note: Only standard Java classes may be used so this class can
+ * be loaded regardless of the classpath situation.
  * 
  * @author cilki
  * @since 4.0.0
@@ -56,6 +55,9 @@ public final class Environment {
 	 */
 	public static final Path BASE = discoverBase();
 
+	/**
+	 * The names of common environment directories.
+	 */
 	public enum EnvPath {
 
 		/**
@@ -64,29 +66,70 @@ public final class Environment {
 		DB,
 
 		/**
-		 * The location of the temporary directory.
+		 * The location of the payload archive.
 		 */
-		TMP,
-
-		/**
-		 * The location of the log directory.
-		 */
-		LOG,
+		GEN,
 
 		/**
 		 * The location of the library directory for Java dependencies.
 		 */
-		JLIB,
+		LIB,
 
 		/**
-		 * The location of the library directory for native dependencies.
+		 * The location of the log directory.
 		 */
-		NLIB,
+		LOG(System.getProperty("user.home") + "/.sandpolis/log"),
 
 		/**
-		 * The location of the payload archive.
+		 * The location of the external plugin directory.
 		 */
-		GEN;
+		PLUGIN(System.getProperty("user.home") + "/.sandpolis/plugins"),
+
+		/**
+		 * The location of the temporary directory.
+		 */
+		TMP(System.getProperty("java.io.tmpdir"));
+
+		/**
+		 * A default path.
+		 */
+		private Path def;
+
+		/**
+		 * Build a {@link EnvPath} without a default.
+		 */
+		private EnvPath() {
+		}
+
+		/**
+		 * Build a {@link EnvPath} with the given default.
+		 * 
+		 * @param def The default path
+		 */
+		private EnvPath(String def) {
+			setDefault(def);
+		}
+
+		/**
+		 * Get the {@link EnvPath}'s default path.
+		 * 
+		 * @return The default path or {@code null} if none
+		 */
+		public Path getDefault() {
+			return def;
+		}
+
+		/**
+		 * Set the default path for this {@link EnvPath}.
+		 * 
+		 * @param d The new default path
+		 * @return {@code this}
+		 */
+		public EnvPath setDefault(String d) {
+			if (d != null)
+				this.def = Paths.get(d);
+			return this;
+		}
 	}
 
 	private static Map<EnvPath, Path> envpaths;
@@ -119,9 +162,6 @@ public final class Environment {
 
 		envpaths = Arrays.stream(paths).collect(Collectors.toUnmodifiableMap(p -> p, p -> discover(p)));
 
-		for (Path p : envpaths.values())
-			if (p == null)
-				throw new RuntimeException();
 		for (Path p : envpaths.values())
 			if (!Files.exists(p))
 				return false;
@@ -187,9 +227,15 @@ public final class Environment {
 	 */
 	private static Path discover(EnvPath sub) {
 		try {
-			return BASE.resolve(sub.name().toLowerCase()).toFile().getCanonicalFile().toPath();
+			Path p = BASE.resolve(sub.name().toLowerCase()).toFile().getCanonicalFile().toPath();
+			if (Files.exists(p))
+				return p;
+			if (sub.getDefault() != null)
+				return sub.getDefault();
+
+			return p;
 		} catch (Exception e) {
-			return null;
+			throw new RuntimeException(e);
 		}
 	}
 

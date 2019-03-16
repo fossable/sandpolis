@@ -19,7 +19,7 @@ package com.sandpolis.core.instance.store.artifact;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
+import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromFilename;
 
 import java.io.File;
@@ -70,7 +70,7 @@ public final class ArtifactUtil {
 	public static Path getArtifactFile(String coordinates) {
 		checkNotNull(coordinates);
 
-		return Environment.get(JLIB).resolve(ParsedCoordinate.fromCoordinate(coordinates).filename);
+		return Environment.get(LIB).resolve(ParsedCoordinate.fromCoordinate(coordinates).filename);
 	}
 
 	/**
@@ -82,7 +82,7 @@ public final class ArtifactUtil {
 	 * @throws IOException
 	 */
 	public static Stream<Path> findArtifactFile(String artifactId) throws IOException {
-		return java.nio.file.Files.list(Environment.get(JLIB))
+		return java.nio.file.Files.list(Environment.get(LIB))
 				.filter(path -> path.getFileName().toString().startsWith(artifactId))
 				// Sort by semantic version number
 				.sorted((path1, path2) -> {
