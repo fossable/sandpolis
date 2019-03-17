@@ -17,7 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.server.gen.generator;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
+import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromArtifact;
 import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
@@ -63,25 +63,24 @@ public class MegaGen extends FileGenerator {
 
 		log.debug("Computing MEGA payload");
 
-		ZipSet output = new ZipSet(Environment.get(JLIB).resolve("com.sandpolis.client.mega-standalone.jar"));
+		ZipSet output = new ZipSet(Environment.get(LIB).resolve("com.sandpolis.client.mega-standalone.jar"));
 		FeatureSet features = config.getMega().getFeatures();
 
 		// Add client configuration
 		output.add("/main/main.jar!/soi/client.bin", config.getMega().toByteArray());
 
 		// Add client dependencies
-		SoiUtil.readMatrix(Environment.get(JLIB).resolve("com.sandpolis.client.mega.jar")).getArtifactList().stream()
+		SoiUtil.getMatrix(Environment.get(LIB).resolve("com.sandpolis.client.mega.jar")).getAllDependencies()
 				// Skip unnecessary dependencies if allowed
-				.filter(artifact -> !config.getMega().getDownloader()
-						|| required.contains(fromArtifact(artifact).artifactId))
+				.filter(artifact -> !config.getMega().getDownloader() || required.contains(artifact.getArtifactId()))
 				.forEach(artifact -> {
-					Path source = ArtifactUtil.getArtifactFile(artifact);
+					Path source = ArtifactUtil.getArtifactFile(artifact.getArtifact());
 
 					// Add library
 					output.add("lib/" + source.getFileName(), source);
 
 					// Skip native dependencies if possible
-					artifact.getNativeComponentList().stream()
+					artifact.getArtifact().getNativeComponentList().stream()
 							// Filter out unnecessary platform-specific libraries
 							.filter(component -> !features.getSupportedOsList()
 									.contains(OsType.valueOf(component.getPlatform())))

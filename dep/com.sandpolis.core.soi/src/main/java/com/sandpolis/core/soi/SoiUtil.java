@@ -94,6 +94,11 @@ public final class SoiUtil {
 		}
 	}
 
+	public static Dep getMatrix(Path file) throws IOException {
+		SO_DependencyMatrix matrix = readMatrix(file);
+		return new Dep(matrix, matrix.getArtifact(0));
+	}
+
 	private SoiUtil() {
 	}
 }
