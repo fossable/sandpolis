@@ -17,12 +17,14 @@
  *****************************************************************************/
 package com.sandpolis.server.exe;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
+import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
+import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,7 @@ import com.google.common.io.ByteSource;
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.store.artifact.ArtifactUtil;
+import com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
@@ -63,11 +66,14 @@ public class PluginExe extends Exelet {
 		var rq = Objects.requireNonNull(m.getRqArtifactDownload());
 		var rs = RS_ArtifactDownload.newBuilder();
 
-		PluginStore.getPlugin(rq.getCoordinates()).ifPresentOrElse(plugin -> {
+		ParsedCoordinate coordinate = fromCoordinate(rq.getCoordinates());
+		log.debug("Received artifact request: " + coordinate.coordinate);
+
+		PluginStore.getPlugin(coordinate.artifactId).ifPresentOrElse(plugin -> {
 			if (!PluginStore.findComponentTypes(plugin).contains(InstanceFlavor.MEGA)) // TODO hardcoded subtype
 				reply(m, Outcome.newBuilder().setResult(false));// TODO message
 			else if (rq.getLocation()) {
-				rs.setCoordinates(String.format("com.sandpolis:%s:%s", plugin.getId(), plugin.getVersion()));
+				reply(m, rs.setCoordinates(String.format(":%s:%s", plugin.getId(), plugin.getVersion())));
 			} else {
 				// Send binary for correct component
 				ByteSource component = PluginStore.getPluginComponent(plugin, connector.getRemoteInstance(),
@@ -75,30 +81,42 @@ public class PluginExe extends Exelet {
 						InstanceFlavor.MEGA);
 
 				try (var in = component.openStream()) {
-					rs.setBinary(ByteString.readFrom(in));
+					reply(m, rs.setBinary(ByteString.readFrom(in)));
 				} catch (IOException e) {
 					// Failed to read plugin
 					reply(m, Outcome.newBuilder().setResult(false));// TODO message
 				}
 			}
-
-			reply(m, rs);
 		}, () -> {
-			// Check artifacts
-			Path artifact = ArtifactUtil.getArtifactFile(rq.getCoordinates());
-			if (rq.getLocation()) {
-				// TODO send group:artifact:version
-			} else {
-				if (Files.exists(artifact)) {
+			// Check regular artifacts
+			Path artifact = ArtifactUtil.getArtifactFile(coordinate.coordinate);
+
+			if (!Files.exists(artifact)) {
+				// Try to find a suitable artifact
+				try (Stream<Path> artifacts = ArtifactUtil.findArtifactFile(coordinate.artifactId)) {
+					artifact = artifacts.findAny().orElse(null);
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+
+			if (artifact != null) {
+				if (rq.getLocation()) {
+					reply(m, rs.setCoordinates("TODO"));
+				} else {
 					try (var in = Files.newInputStream(artifact)) {
-						rs.setBinary(ByteString.readFrom(in));
+						reply(m, rs.setBinary(ByteString.readFrom(in)));
 					} catch (IOException e) {
 						// Failed to read artifact
 						reply(m, Outcome.newBuilder().setResult(false));// TODO message
 					}
-				} else {
-					// TODO missing artifact
 				}
+			} else if (rq.getLocation()) {
+				reply(m, rs.setCoordinates("TODO"));
+			} else {
+				// No artifact could be found or located
+				reply(m, Outcome.newBuilder().setResult(false));// TODO message
 			}
 		});
 	}
@@ -146,7 +164,7 @@ public class PluginExe extends Exelet {
 			return;
 
 		// Move into library directory
-		Files.move(binary, Environment.get(JLIB).resolve(id + ".jar"));
+		Files.move(binary, Environment.get(LIB).resolve(id + ".jar"));
 	}
 
 }

@@ -29,6 +29,7 @@ import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ProtoUtil;
 
 /**
@@ -66,9 +67,9 @@ public abstract class Cmdlet<E> {
 	private String timeout = "net.timeout.response.default";
 
 	/**
-	 * A future that is notified when the command completes.
+	 * A future that is notified when the command chain completes.
 	 */
-	protected CommandFuture commandFuture;
+	protected CommandFuture session;
 
 	/**
 	 * Explicitly set a thread pool for the response listeners.
@@ -115,15 +116,15 @@ public abstract class Cmdlet<E> {
 	}
 
 	/**
-	 * Route the given request according to the current configuration.
+	 * Route the given request according to the current configuration and register
+	 * the given response handler.
 	 * 
 	 * @param payload The message payload
-	 * @return A new response future
+	 * @param handler The response handler
+	 * @return A command future
 	 */
-	protected <R> ResponseFuture<R> rq(MessageOrBuilder payload) {
-		checkNotNull(payload);
-
-		return route(ProtoUtil.setPayload(ProtoUtil.rq(), payload));
+	protected <R> void request(MessageOrBuilder payload, ResponseHandler<R> handler) {
+		request(payload, handler, null);
 	}
 
 	/**
@@ -132,52 +133,66 @@ public abstract class Cmdlet<E> {
 	 * 
 	 * @param payload The message payload
 	 * @param handler The response handler
+	 * @param failure The outcome handler if an {@link Outcome} is received instead
+	 *                of the expected message
 	 * @return A command future
 	 */
-	protected <R> CommandFuture rq(MessageOrBuilder payload, ResponseHandler<R> handler) {
+	protected <R> void request(MessageOrBuilder payload, ResponseHandler<R> handler, ResponseHandler<Outcome> failure) {
 		checkNotNull(payload);
 		checkNotNull(handler);
 
-		if (commandFuture == null)
-			commandFuture = new CommandFuture();
+		if (session == null)
+			session = new CommandFuture();
 
-		ResponseFuture<R> rf = rq(payload);
-		commandFuture.add(rf);
-
-		rf.addListener(future -> {
-			if (future.isSuccess()) {
-				try {
-					handler.handle((R) future.get());
-				} catch (Throwable e) {
-					commandFuture.setFailure(e);
-					return;
-				}
-				commandFuture.tryComplete(rf);
-			} else
-				commandFuture.setFailure(future.cause());
-		});
-
-		return commandFuture;
+		session.add(route(payload), handler, failure);
 	}
 
 	/**
-	 * Route the given message according to the current configuration.
+	 * Add a handler to the given {@link CommandFuture}.
 	 * 
-	 * @param m The message to send
+	 * @param future
+	 * @param handler
+	 */
+	protected <R> void handle(CommandFuture future, ResponseHandler<Outcome> handler) {
+		checkNotNull(future);
+		checkNotNull(handler);
+
+		if (session == null)
+			session = new CommandFuture();
+
+		session.add(future, handler, null);
+	}
+
+	/**
+	 * Send the given request according to the current configuration.
+	 * 
+	 * @param payload The message payload
 	 * @return A new response future
 	 */
-	protected <R> ResponseFuture<R> route(Message.Builder m) {
-		checkNotNull(m);
+	protected <R> ResponseFuture<R> route(MessageOrBuilder payload) {
+		checkNotNull(payload);
+
+		return route(ProtoUtil.setPayload(ProtoUtil.rq(), payload));
+	}
+
+	/**
+	 * Send the given message according to the current configuration.
+	 * 
+	 * @param message The message to send
+	 * @return A new response future
+	 */
+	protected <R> ResponseFuture<R> route(Message.Builder message) {
+		checkNotNull(message);
 
 		MessageFuture mf;
 		if (sock != null) {
-			m.setTo(sock.getRemoteCvid());
-			mf = sock.request(m);
+			message.setTo(sock.getRemoteCvid());
+			mf = sock.request(message);
 		} else if (cvid != null) {
-			m.setTo(cvid);
-			mf = NetworkStore.route(m, timeout);
+			message.setTo(cvid);
+			mf = NetworkStore.route(message, timeout);
 		} else {
-			mf = NetworkStore.route(m, timeout);
+			mf = NetworkStore.route(message, timeout);
 		}
 
 		if (poolId != null) {

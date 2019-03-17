@@ -18,13 +18,15 @@
 package com.sandpolis.client.mega.cmd;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
+import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Optional;
 
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.Environment.EnvPath;
 import com.sandpolis.core.instance.store.artifact.ArtifactUtil;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
@@ -53,7 +55,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 	 */
 	public CommandFuture beginSync() {
 
-		return rq(RQ_PluginList.newBuilder(), (RS_PluginList rs) -> {
+		request(RQ_PluginList.newBuilder(), (RS_PluginList rs) -> {
 			rs.getPluginList().stream()
 					// Skip up-to-date plugins
 					.filter(descriptor -> {
@@ -64,14 +66,11 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 						// Check versions
 						return !plugin.get().getVersion().equals(descriptor.getVersion());
 					}).forEach(descriptor -> {
-						try {
-							downloadPlugin(descriptor.getId()).sync();
-						} catch (InterruptedException e) {
-							commandFuture.setFailure(e);
-							// TODO stop executing
-						}
+						installPlugin(descriptor.getId());
 					});
 		});
+
+		return session;
 	}
 
 	/**
@@ -79,12 +78,15 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 	 * 
 	 * @return The command future
 	 */
-	public CommandFuture downloadPlugin(String id) {
+	public CommandFuture installPlugin(String id) {
 		checkNotNull(id);
 
-		return downloadDependency(id);
+		// TODO clone instead of async
+		handle(async().installDependency(":" + id + ":"), outcome -> {
+			PluginStore.installPlugin(Environment.get(LIB).resolve(fromCoordinate(":" + id + ":").filename));
+		});
 
-		// PluginStore.installPlugin(destination);
+		return session;
 	}
 
 	/**
@@ -92,13 +94,16 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 	 * 
 	 * @return The command future
 	 */
-	public CommandFuture downloadDependency(String coordinate) {
+	public CommandFuture installDependency(String coordinate) {
 		checkNotNull(coordinate);
 
-		return rq(RQ_ArtifactDownload.newBuilder().setCoordinates(coordinate).setLocation(false),
-				(RS_ArtifactDownload rs) -> {
+		Path destination = Environment.get(LIB).resolve(fromCoordinate(coordinate).filename);
+		if (Files.exists(destination))
+			// Nothing to do
+			return session.success();
 
-					Path destination = Environment.get(EnvPath.JLIB).resolve(coordinate + ".jar");
+		request(RQ_ArtifactDownload.newBuilder().setCoordinates(coordinate).setLocation(false),
+				(RS_ArtifactDownload rs) -> {
 
 					switch (rs.getSourceCase()) {
 					case BINARY:
@@ -111,13 +116,22 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 						NetUtil.download(rs.getUrl(), destination.toFile());
 						break;
 					default:
-						throw new RuntimeException();
+						// Quit the entire command because it's likely that other responses will contain
+						// an invalid source case
+						session.abort("Unknown source case: " + rs.getSourceCase());
 					}
 
-					// TODO download missing dependencies of this dependency
-					SoiUtil.readMatrix(destination);
-
+					try {
+						// Get any missing dependencies recursively
+						SoiUtil.getMatrix(destination).getAllDependencies()
+								// TODO clone instead of async
+								.forEach(dep -> async().installDependency(dep.getCoordinates()).syncUninterruptibly());
+					} catch (NoSuchFileException e) {
+						// This dependency does not have a soi/matrix.bin (skip it)
+					}
 				});
+
+		return session;
 	}
 
 	/**

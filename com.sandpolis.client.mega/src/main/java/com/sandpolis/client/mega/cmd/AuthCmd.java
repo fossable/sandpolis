@@ -54,7 +54,7 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	 * @return The response future
 	 */
 	public ResponseFuture<Outcome> none() {
-		return rq(RQ_NoAuth.newBuilder());
+		return route(RQ_NoAuth.newBuilder());
 	}
 
 	/**
@@ -65,7 +65,7 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	public ResponseFuture<Outcome> password(String password) {
 		checkNotNull(password);
 
-		return rq(RQ_PasswordAuth.newBuilder().setPassword(password));
+		return route(RQ_PasswordAuth.newBuilder().setPassword(password));
 	}
 
 	/**

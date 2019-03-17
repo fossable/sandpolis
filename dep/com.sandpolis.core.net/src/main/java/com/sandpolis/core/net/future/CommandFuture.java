@@ -17,8 +17,11 @@
  *****************************************************************************/
 package com.sandpolis.core.net.future;
 
-import java.util.LinkedList;
-import java.util.List;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Cmdlet;
@@ -41,9 +44,15 @@ public class CommandFuture extends DefaultPromise<Outcome> {
 		public void handle(E e) throws Exception;
 	}
 
+	/**
+	 * The in-progress outcome of the command.
+	 */
 	private Outcome.Builder outcome;
 
-	private List<ResponseFuture<?>> responses;
+	/**
+	 * The executing or waiting components of the command.
+	 */
+	private Set<Future<?>> components;
 
 	public CommandFuture() {
 		this(ThreadStore.get("net.message.incoming"));
@@ -53,17 +62,109 @@ public class CommandFuture extends DefaultPromise<Outcome> {
 		super(executor);
 
 		outcome = ProtoUtil.begin();
-		responses = new LinkedList<>();
+		components = new HashSet<>();
 	}
 
-	public void add(ResponseFuture<?> future) {
-		responses.add(future);
+	public <R> void add(Future<R> future, ResponseHandler<R> handler, ResponseHandler<Outcome> failure) {
+		checkNotNull(future);
+		checkNotNull(handler);
+		checkArgument(future != this);
+
+		synchronized (components) {
+			components.add(future);
+		}
+
+		future.addListener(f -> {
+			if (f.isSuccess()) {
+				try {
+					handler.handle((R) f.get());
+				} catch (ClassCastException e) {
+					if (failure != null && f.get() instanceof Outcome) {
+						try {
+							failure.handle((Outcome) f.get());
+						} catch (Exception t) {
+							setFailure(t);
+							return;
+						}
+					} else {
+						// No failure handler specified or unknown response type
+						setFailure(new Exception("Failed to handle message: " + f.get().getClass().getName()));
+						return;
+					}
+				} catch (Exception e) {
+					setFailure(e);
+					return;
+				}
+
+				remove(future);
+				tryComplete();
+			} else {
+				setFailure(f.cause());
+			}
+		});
 	}
 
-	public void tryComplete(ResponseFuture<?> rf) {
+	public CommandFuture success() {
+		// TODO
+		return this;
+	}
 
-		// If the given future is the last, the command is complete
-		if (responses.indexOf(rf) == responses.size() - 1)
-			setSuccess(ProtoUtil.success(outcome));
+	public CommandFuture failed() {
+		// TODO
+		return this;
+	}
+
+	/**
+	 * Terminate the entire command session.
+	 * 
+	 * @param message The failure message
+	 * @return {@code this}
+	 */
+	public CommandFuture abort(String message) {
+		abort();
+		setFailure(new Exception(message));
+		return this;
+	}
+
+	/**
+	 * Terminate the entire command session.
+	 * 
+	 * @param exception The cause
+	 * @return {@code this}
+	 */
+	public CommandFuture abort(Throwable exception) {
+		abort();
+		setFailure(exception);
+		return this;
+	}
+
+	/**
+	 * Terminate the entire command session.
+	 * 
+	 * @return {@code this}
+	 */
+	private void abort() {
+		synchronized (components) {
+			components.removeIf(future -> {
+				future.cancel(true);
+				return true;
+			});
+		}
+	}
+
+	/**
+	 * Complete the command session if all components have been completed.
+	 */
+	private void tryComplete() {
+		synchronized (components) {
+			if (components.size() == 0)
+				setSuccess(ProtoUtil.success(outcome));
+		}
+	}
+
+	private void remove(Object o) {
+		synchronized (components) {
+			components.remove(o);
+		}
 	}
 }

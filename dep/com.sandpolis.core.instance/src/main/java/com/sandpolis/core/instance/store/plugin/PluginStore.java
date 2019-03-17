@@ -18,7 +18,7 @@
 package com.sandpolis.core.instance.store.plugin;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.sandpolis.core.instance.Environment.EnvPath.JLIB;
+import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 
 import java.io.IOException;
 import java.net.URL;
@@ -220,7 +220,7 @@ public final class PluginStore {
 			path = manager.getPlugin(plugin.getId()).getPluginPath();
 		else
 			// Fallback approach
-			path = Environment.get(JLIB).resolve(plugin.getId() + ".jar");
+			path = Environment.get(LIB).resolve(plugin.getId() + ".jar");
 
 		if (!Files.exists(path))
 			log.warn("Missing filesystem artifact for plugin: {}", plugin.getId());
@@ -234,7 +234,7 @@ public final class PluginStore {
 	 * @throws IOException If a filesystem error occurs
 	 */
 	public static void scanPluginDirectory() throws IOException {
-		Files.list(Environment.get(JLIB))
+		Files.list(Environment.get(LIB))
 				// Core plugins only
 				.filter(path -> path.getFileName().toString().startsWith("com.sandpolis.plugin."))
 				// Skip installed plugins
@@ -260,7 +260,7 @@ public final class PluginStore {
 	 * 
 	 * @param path The plugin's filesystem artifact
 	 */
-	private static synchronized void installPlugin(Path path) {
+	public static synchronized void installPlugin(Path path) {
 		// TODO check state
 
 		try {
