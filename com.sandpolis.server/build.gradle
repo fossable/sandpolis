@@ -31,6 +31,10 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.proto')
 	implementation project(':dep:com.sandpolis.core.storage.hibernate')
 	implementation project(':dep:com.sandpolis.core.util')
+	
+	// Core plugins
+	implementation project(':plugin:com.sandpolis.plugin.desktop')
+	implementation project(':plugin:com.sandpolis.plugin.sysinfo')
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:27.1-jre'
