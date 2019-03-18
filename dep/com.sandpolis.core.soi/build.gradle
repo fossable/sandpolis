@@ -24,6 +24,10 @@ sourceSets {
 	}
 }
 
+repositories {
+	mavenCentral()
+}
+
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.0'
 

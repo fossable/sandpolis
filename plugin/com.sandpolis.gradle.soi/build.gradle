@@ -15,12 +15,9 @@ eclipse {
 	}
 }
 
-allprojects {
-	repositories {
-		mavenCentral()
-	}
+repositories {
+	mavenCentral()
 }
-
 dependencies {
 	implementation gradleApi()
 

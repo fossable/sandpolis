@@ -5,8 +5,8 @@
 
 buildscript {
 	repositories {
-		if (DEPLOY_ENABLED.toBoolean())
-			jcenter()
+		mavenCentral()
+		jcenter()
 	}
 
 	dependencies {
