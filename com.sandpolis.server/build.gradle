@@ -19,7 +19,7 @@ eclipse {
 
 dependencies {
 	testImplementation project(path: ':dep:com.sandpolis.core.net', configuration: 'tests')
-	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.0'
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.1'
 
 	implementation project(path: ':com.sandpolis.client.mega', configuration: 'onejarArtifact')
 	// implementation project(':com.sandpolis.client.micro')
