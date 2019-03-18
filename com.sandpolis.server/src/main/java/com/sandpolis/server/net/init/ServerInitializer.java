@@ -25,6 +25,7 @@ import javax.net.ssl.SSLException;
 
 import com.google.common.primitives.Bytes;
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.handler.CvidResponseHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
@@ -129,7 +130,7 @@ public class ServerInitializer extends PipelineInitializer {
 		ch.attr(ChannelConstant.FUTURE_CVID).set(new DefaultPromise<>(ch.eventLoop()));
 
 		// Add proxy handler
-		ch.pipeline().addAfter("protobuf.frame_decoder", "proxy", new ProxyHandler());
+		ch.pipeline().addAfter("protobuf.frame_decoder", "proxy", new ProxyHandler(Core.cvid()));
 	}
 
 	public SslContext getSslContext() throws Exception {

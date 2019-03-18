@@ -17,101 +17,137 @@
  *****************************************************************************/
 package com.sandpolis.server.net.handler;
 
+import static com.sandpolis.core.net.init.ChannelConstant.CVID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.net.exception.InvalidMessageException;
-import com.sandpolis.core.net.init.ChannelConstant;
-import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
-import com.sandpolis.core.proto.net.MCUser.RQ_AddUser;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
-import com.sandpolis.core.proto.pojo.User.UserConfig;
-import com.sandpolis.core.util.RandUtil;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.protobuf.ProtobufDecoder;
 import io.netty.handler.codec.protobuf.ProtobufEncoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
+import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 
 class ProxyHandlerTest {
 
-	private EmbeddedChannel proxy = new EmbeddedChannel(new ProtobufVarint32FrameDecoder(), new ProxyHandler(),
-			new ProtobufDecoder(Message.getDefaultInstance()));
-	private EmbeddedChannel encoder = new EmbeddedChannel(new ProtobufVarint32LengthFieldPrepender(),
+	/**
+	 * A channel that contains a {@link ProxyHandler}.
+	 */
+	private final EmbeddedChannel proxy = new EmbeddedChannel(new ProtobufVarint32FrameDecoder(),
+			new ProxyHandler(2000), new ProtobufDecoder(Message.getDefaultInstance()));
+
+	/**
+	 * A channel that can be used to encode {@link Message}s into {@link ByteBuf}s.
+	 */
+	private final EmbeddedChannel encoder = new EmbeddedChannel(new ProtobufVarint32LengthFieldPrepender(),
 			new ProtobufEncoder());
 
-	/**
-	 * Messages that should be routed
-	 */
-	private Message[] routing = new Message[] { Message.newBuilder().setTo(14).setFrom(12).build(),
-			Message.newBuilder().setTo(14).setFrom(12).setId(19).setRqAddUser(RQ_AddUser.newBuilder()
-					.setConfig(UserConfig.newBuilder().setUsername(RandUtil.nextAlphabetic(2048)))).build() };
-
-	/**
-	 * Messages that should pass through the proxy unchanged
-	 */
-	private Message[] validPassthrough = new Message[] { Message.newBuilder().build(),
-			Message.newBuilder().setRqLogin(RQ_Login.newBuilder().setUsername("Test")).build() };
-
 	@Test
-	void testSpoofDetection() {
-
-		for (Message message : routing) {
-			// Ensure from field is wrong
-			proxy.attr(ChannelConstant.CVID).set(message.getFrom() + 1);
-
-			assertThrows(InvalidMessageException.class, () -> proxy.writeInbound(encode(message)));
-		}
-	}
-
-	@Test
-	void testRoutingWithMissingTarget() {
-		for (Message message : routing) {
-			// Don't test spoofing detection here
-			proxy.attr(ChannelConstant.CVID).set(message.getFrom());
-
-			proxy.writeInbound(encode(message));
-			assertEquals(MsgOneofCase.EV_ENDPOINT_CLOSED, ((Message) proxy.readOutbound()).getMsgOneofCase());
-		}
-	}
-
-	@Test
-	void testPassthrough() {
-		for (Message message : validPassthrough)
-			testPassthrough(message);
-	}
-
-	@Test
-	void testMessageFieldNumbers() {
-
-		// Test field numbers that must stay constant for the proxy handler
+	@DisplayName("Check that important field numbers will never change")
+	void messageFieldNumbers() {
 		assertEquals(1, Message.TO_FIELD_NUMBER);
 		assertEquals(2, Message.FROM_FIELD_NUMBER);
 		assertEquals(3, Message.ID_FIELD_NUMBER);
 	}
 
-	/**
-	 * Ensure that a message passes through safely.
-	 */
-	private void testPassthrough(Message passthrough) {
-		ByteBuf buf = encode(passthrough);
+	@Test
+	@DisplayName("Allow empty messages to pass through the ProxyHandler")
+	void emptyPassthrough() {
+		assertPassthrough(Message.newBuilder().build());
+	}
 
-		proxy.writeInbound(buf);
-		assertEquals(passthrough, proxy.readInbound());
+	@Test
+	@DisplayName("Disallow messages with negative CVIDs")
+	void negativeCvid() {
+		assertThrows(CorruptedFrameException.class,
+				() -> proxy.writeInbound(encode(Message.newBuilder().setTo(-1234).build())));
+		assertThrows(CorruptedFrameException.class,
+				() -> proxy.writeInbound(encode(Message.newBuilder().setTo(-1).build())));
+
+		// Ensure no messages were passed through
+		assertTrue(proxy.inboundMessages().isEmpty());
+	}
+
+	@Test
+	@DisplayName("Ensure messages addressed to this instance are passed through the ProxyHandler")
+	void simplePassthrough() {
+		proxy.attr(CVID).set(1234);
+		assertPassthrough(Message.newBuilder().setTo(2000).setFrom(1234).build());
+		assertPassthrough(Message.newBuilder().setFrom(1234).build());
+	}
+
+	@Test
+	@DisplayName("Ensure the 'from' field is specified if the message intends to be routed")
+	void checkFromSpecified() {
+		assertThrows(InvalidMessageException.class,
+				() -> proxy.writeInbound(encode(Message.newBuilder().setTo(1234).build())));
+
+		// Ensure no messages were passed through
+		assertTrue(proxy.inboundMessages().isEmpty());
+	}
+
+	@Test
+	@DisplayName("Ensure the 'from' field matches the channel CVID")
+	void spoofDetection() {
+		proxy.attr(CVID).set(4321);
+		assertThrows(InvalidMessageException.class,
+				() -> proxy.writeInbound(encode(Message.newBuilder().setTo(600).setFrom(1234).build())));
+
+		// Ensure no messages were passed through
+		assertTrue(proxy.inboundMessages().isEmpty());
+
+		// Messages intended for the server with spoofed 'from' fields must be allowed
+		assertPassthrough(Message.newBuilder().setTo(2000).setFrom(1234).build());
+	}
+
+	@Test
+	@DisplayName("Ensure the ProxyHandler sends a message if the routing target is missing")
+	void endpointClosedDetection() {
+		proxy.attr(CVID).set(4321);
+
+		proxy.writeInbound(encode(Message.newBuilder().setTo(1234).setFrom(4321).build()));
+		assertEquals(MsgOneofCase.EV_ENDPOINT_CLOSED, ((Message) proxy.readOutbound()).getMsgOneofCase());
+
+		// Ensure no messages were passed through
+		assertTrue(proxy.inboundMessages().isEmpty());
 	}
 
 	/**
-	 * Convert a message into a ByteBuf.
+	 * Assert that the given message passes through the {@link ProxyHandler}
+	 * unchanged.
+	 * 
+	 * @param msgToPass The message to pass through
+	 */
+	private void assertPassthrough(Message msgToPass) {
+		assertTrue(proxy.writeInbound(encode(msgToPass)));
+		assertEquals(msgToPass, proxy.readInbound());
+	}
+
+	/**
+	 * Convert a {@link Message} to a {@link ByteBuf}.
+	 * 
+	 * @param message The message to encode
+	 * @return A new ByteBuf
 	 */
 	private ByteBuf encode(Message message) {
 		assertTrue(encoder.writeOutbound(message));
 		return encoder.readOutbound();
 	}
 
+	@BeforeAll
+	private static void init() {
+		Signaler.init(new UnorderedThreadPoolEventExecutor(1));
+	}
 }

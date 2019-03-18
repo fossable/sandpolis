@@ -17,7 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.server.net.handler;
 
-import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.net.init.ChannelConstant;
@@ -54,23 +53,29 @@ import io.netty.util.ReferenceCountUtil;
 @Sharable
 public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
+	/**
+	 * The server's CVID which is used in determining when to route messages.
+	 */
+	private final int cvid;
+
+	public ProxyHandler(int cvid) {
+		this.cvid = cvid;
+	}
+
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
 		msg.markReaderIndex();
 
-		int to;
-		int from;
-
 		// Read field: "to"
 		if (msg.isReadable() && msg.readByte() == 0x08) {
-			to = readVarint32(msg);
+			int to = readCvid(msg);
 
 			// Perform redirection if necessary
-			if (to != Core.cvid()) {
+			if (to != cvid) {
 
 				// Read field: "from"
-				if (msg.readByte() == 0x10) {
-					from = readVarint32(msg);
+				if (msg.isReadable() && msg.readByte() == 0x10) {
+					int from = readCvid(msg);
 
 					// Verify the from field to prevent spoofing
 					if (ctx.channel().attr(ChannelConstant.CVID).get() != from) {
@@ -91,6 +96,8 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 					ctx.channel().writeAndFlush(Message.newBuilder()
 							.setEvEndpointClosed(EV_EndpointClosed.newBuilder().setCvid(to)).build());
 				}
+
+				return;
 			}
 		}
 
@@ -100,12 +107,12 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 	}
 
 	/**
-	 * Read a varint from the given {@link ByteBuf}.
+	 * Read a CVID varint from the given {@link ByteBuf}.
 	 * 
-	 * @param buffer The bytebuf
-	 * @return The decoded int
+	 * @param buffer The buffer to read (read pointer will be modified)
+	 * @return The decoded CVID
 	 */
-	private static int readVarint32(ByteBuf buffer) {
+	private static int readCvid(ByteBuf buffer) {
 		byte tmp = buffer.readByte();
 		if (tmp >= 0) {
 			return tmp;
@@ -125,13 +132,16 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 						result |= (tmp & 127) << 21;
 						result |= (tmp = buffer.readByte()) << 28;
 						if (tmp < 0) {
-							throw new CorruptedFrameException("Malformed Varint");
+							// The CVID is negative (negative varints are always 10 bytes)
+							throw new CorruptedFrameException("Invalid CVID");
 						}
 					}
 				}
 			}
+			if (result < 0)
+				throw new CorruptedFrameException("Invalid CVID");
+
 			return result;
 		}
 	}
-
 }
