@@ -5,18 +5,22 @@
 
 buildscript {
 	repositories {
-		jcenter()
+		if (DEPLOY_ENABLED.toBoolean())
+			jcenter()
 	}
+
 	dependencies {
-		classpath 'net.sf.proguard:proguard-gradle:6.0.3'
-		classpath ':com.sandpolis.gradle.deploy:'
 		classpath ':com.sandpolis.gradle.plugin:'
 		classpath ':com.sandpolis.gradle.soi:'
+		if (DEPLOY_ENABLED.toBoolean())
+			classpath ':com.sandpolis.gradle.deploy:'
 	}
 }
 
-allprojects {
+if (DEPLOY_ENABLED.toBoolean())
+	apply plugin: 'com.sandpolis.gradle.deploy'
 
+allprojects {
 	repositories {
 		mavenCentral()
 	}
@@ -27,5 +31,3 @@ allprojects {
 		}
 	}
 }
-
-apply plugin: 'com.sandpolis.gradle.deploy'

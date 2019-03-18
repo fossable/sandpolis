@@ -1,7 +1,7 @@
 language: java
 
 script:
-  - ./gradlew build --stacktrace --scan -s
+  - ./gradlew build -PDEPLOY_ENABLED=false
 
 jdk:
   - openjdk11

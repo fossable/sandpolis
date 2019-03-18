@@ -61,7 +61,8 @@ dependencies {
 jar {
 	manifest {
 		attributes(
-			'Main-Class': 'com.sandpolis.viewer.jfx.Main'
+			'Main-Class': 'com.sandpolis.viewer.jfx.Main',
+			'Class-Path': configurations.runtimeClasspath.collect { 'lib/' + it.getName() }.join(' ')
 		)
 	}
 }

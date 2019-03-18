@@ -18,7 +18,7 @@ eclipse {
 }
 
 dependencies {
-	testImplementation project(':dep:com.sandpolis.core.net').sourceSets.test.output
+	testImplementation project(path: ':dep:com.sandpolis.core.net', configuration: 'tests')
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.0'
 
 	implementation project(path: ':com.sandpolis.client.mega', configuration: 'onejarArtifact')
@@ -60,7 +60,8 @@ dependencies {
 jar {
 	manifest {
 		attributes(
-			'Main-Class': 'com.sandpolis.server.Main'
+			'Main-Class': 'com.sandpolis.server.Main',
+			'Class-Path': configurations.runtimeClasspath.collect { 'lib/' + it.getName() }.join(' ')
 		)
 	}
 }
