@@ -5,5 +5,5 @@
 <BorderPane xmlns="http://javafx.com/javafx/9"
 	xmlns:fx="http://javafx.com/fxml/1"
 	fx:controller="com.sandpolis.viewer.jfx.view.main.graph.HostGraphController"
-	fx:id="border">
+	fx:id="pane">
 </BorderPane>

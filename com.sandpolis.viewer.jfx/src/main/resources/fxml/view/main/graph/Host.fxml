@@ -10,6 +10,6 @@
       <ImageView fx:id="image" fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
    </center>
    <bottom>
-      <Label text="Windows 10 x64" BorderPane.alignment="CENTER" />
+      <Label fx:id="undertext" BorderPane.alignment="CENTER" />
    </bottom>
 </BorderPane>
