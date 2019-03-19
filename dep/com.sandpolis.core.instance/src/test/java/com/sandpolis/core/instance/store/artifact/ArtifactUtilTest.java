@@ -18,6 +18,7 @@
 package com.sandpolis.core.instance.store.artifact;
 
 import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.download;
+import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.getLatestVersion;
 import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -85,6 +86,21 @@ class ArtifactUtilTest {
 		}
 
 		assertTrue(download(temp, "javax.measure:unit-api:1.0"));
+	}
+
+	@Test
+	@DisplayName("Get the latest version of an existing artifact")
+	void getLatestVersion_1() throws IOException {
+		// Check an artifact that is unlikely to be updated ever again
+		assertEquals("3.6.0.Beta2", getLatestVersion("org.hibernate:hibernate:"));
+		assertEquals("3.6.0.Beta2", getLatestVersion("org.hibernate:hibernate:3.5.4-Final"));
+	}
+
+	@Test
+	@DisplayName("Try to get the latest version of a nonexistent artifact")
+	void getLatestVersion_2() {
+		// Hopefully no one creates this artifact
+		assertThrows(IOException.class, () -> getLatestVersion("1234:5678:"));
 	}
 
 }

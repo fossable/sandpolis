@@ -24,12 +24,19 @@ import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoor
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 import com.github.zafarkhaja.semver.Version;
 import com.google.common.hash.Hashing;
@@ -111,21 +118,18 @@ public final class ArtifactUtil {
 		checkNotNull(directory);
 		checkNotNull(artifact);
 
-		String[] id = artifact.split(":");
-		checkArgument(id.length == 3, "Invalid artifact ID");
-
-		String filename = id[1] + "-" + id[2] + ".jar";
+		var coordinate = ParsedCoordinate.fromCoordinate(artifact);
 		String url = "http://repo1.maven.org/maven2/" // Base URL
-				+ id[0].replaceAll("\\.", "/") + "/"// Group name
-				+ id[1] + "/" // Artifact name
-				+ id[2] + "/" // Artifact version
-				+ filename; // Artifact
+				+ coordinate.groupId.replaceAll("\\.", "/") + "/"// Group name
+				+ coordinate.artifactId + "/" // Artifact name
+				+ coordinate.version + "/" // Artifact version
+				+ coordinate.filename; // Artifact filename
 		log.debug("Downloading artifact: {}", url);
 
 		// Download the file hash first
 		byte[] hash = BaseEncoding.base16().lowerCase().decode(new String(NetUtil.download(url + ".sha1")));
 
-		File output = directory.resolve(filename).toFile();
+		File output = directory.resolve(coordinate.filename).toFile();
 		if (output.exists()) {
 			// Check the hash of the existing file to catch partial downloads
 			if (Arrays.equals(Files.asByteSource(output).hash(Hashing.sha1()).asBytes(), hash))
@@ -141,6 +145,30 @@ public final class ArtifactUtil {
 			throw new IOException("Hash verification failed");
 
 		return true;
+	}
+
+	/**
+	 * Query the latest version of an artifact.
+	 * 
+	 * @param artifact The artifact to query
+	 * @return The artifact's latest version string
+	 * @throws IOException
+	 */
+	public static String getLatestVersion(String artifact) throws IOException {
+		checkNotNull(artifact);
+
+		var coordinate = ParsedCoordinate.fromCoordinate(artifact);
+		String url = "http://repo1.maven.org/maven2/" // Base URL
+				+ coordinate.groupId.replaceAll("\\.", "/") + "/"// Group name
+				+ coordinate.artifactId // Artifact name
+				+ "/maven-metadata.xml";
+
+		try (var in = new URL(url).openStream()) {
+			return XPathFactory.newDefaultInstance().newXPath().evaluate("/metadata/versioning/latest",
+					DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in));
+		} catch (XPathExpressionException | SAXException | ParserConfigurationException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**
