@@ -31,3 +31,87 @@ allprojects {
 		}
 	}
 }
+
+def publishProjects = [
+	'com.sandpolis.client.mega',
+	'com.sandpolis.core.instance',
+	'com.sandpolis.core.ipc',
+	'com.sandpolis.core.net',
+	'com.sandpolis.core.profile',
+	'com.sandpolis.core.proto',
+	'com.sandpolis.core.soi',
+	'com.sandpolis.core.storage.hibernate',
+	'com.sandpolis.core.util',
+	'com.sandpolis.plugin.desktop',
+	'com.sandpolis.plugin.sysinfo',
+	'com.sandpolis.server',
+	'com.sandpolis.viewer',
+	'com.sandpolis.viewer.cli',
+	'com.sandpolis.viewer.jfx'
+]
+
+// Apply publishing configuration to subprojects
+configure(subprojects.findAll {publishProjects.contains(it.name)}) {
+	apply plugin: 'maven-publish'
+	apply plugin: 'signing'
+
+	afterEvaluate { sub ->
+		task sourcesJar(type: Jar) {
+			from sourceSets.main.allJava
+			archiveClassifier = 'sources'
+		}
+
+		task javadocJar(type: Jar) {
+			from javadoc
+			archiveClassifier = 'javadoc'
+		}
+
+		publishing {
+			publications {
+				mavenJava(MavenPublication) {
+					groupId = 'com.sandpolis'
+					artifactId = sub.name.replace("com.sandpolis.", "").replaceAll("\\.", "-")
+					version = BUILD_VERSION
+
+					from sub.components.java
+					artifact sourcesJar
+					artifact javadocJar
+					pom {
+						name = sub.name
+						url = 'https://github.com/Subterranean-Security/Sandpolis'
+						licenses {
+							license {
+								name = 'The Apache License, Version 2.0'
+								url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+							}
+						}
+						developers {
+							developer {
+								id = 'cilki'
+								name = 'Tyler Cook'
+								email = 'tcc@sandpolis.com'
+							}
+						}
+						scm {
+							url = 'https://github.com/Subterranean-Security/Sandpolis'
+							connection = 'scm:git:git://github.com/Subterranean-Security/Sandpolis.git'
+							developerConnection = 'scm:git:ssh://git@github.com/Subterranean-Security/Sandpolis.git'
+						}
+					}
+				}
+			}
+			repositories {
+				maven {
+					url = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+					credentials {
+						username PUBLISH_USER
+						password PUBLISH_PASS
+					}
+				}
+			}
+		}
+		signing {
+			sign publishing.publications.mavenJava
+		}
+	}
+}
