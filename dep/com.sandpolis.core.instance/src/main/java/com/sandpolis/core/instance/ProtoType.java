@@ -41,7 +41,7 @@ public interface ProtoType<E extends GeneratedMessageV3> {
 	 * Implementations should have no side effects if the input was invalid.
 	 * 
 	 * @param delta The changes
-	 * @return An error code if {@code delta} was invalid or {@link ErrorCode#NONE}
+	 * @return An error code if {@code delta} was invalid or {@link ErrorCode#OK}
 	 */
 	public ErrorCode merge(E delta);
 

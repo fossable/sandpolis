@@ -77,7 +77,6 @@ public class Connector implements AutoCloseable {
 	 * Request instance metadata from the other endpoint of this connection.
 	 * 
 	 * @return The endpoint's metadata object
-	 * @throws MessageFlowException
 	 * @throws IOException
 	 */
 	public RS_Metadata rq_metadata() throws IOException {

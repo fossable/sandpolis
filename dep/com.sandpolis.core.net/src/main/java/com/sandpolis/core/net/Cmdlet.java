@@ -121,7 +121,6 @@ public abstract class Cmdlet<E> {
 	 * 
 	 * @param payload The message payload
 	 * @param handler The response handler
-	 * @return A command future
 	 */
 	protected <R> void request(MessageOrBuilder payload, ResponseHandler<R> handler) {
 		request(payload, handler, null);
@@ -135,7 +134,6 @@ public abstract class Cmdlet<E> {
 	 * @param handler The response handler
 	 * @param failure The outcome handler if an {@link Outcome} is received instead
 	 *                of the expected message
-	 * @return A command future
 	 */
 	protected <R> void request(MessageOrBuilder payload, ResponseHandler<R> handler, ResponseHandler<Outcome> failure) {
 		checkNotNull(payload);

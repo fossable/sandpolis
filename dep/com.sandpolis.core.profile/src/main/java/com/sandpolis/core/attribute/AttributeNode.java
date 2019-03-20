@@ -53,8 +53,8 @@ import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
  * The attribute tree can be traversed downwards using the
  * {@link #getNode(ByteIterator)} method with an iterator for an ID chain.<br>
  * <br>
- * The children of a {@link AttributeNode} can be iterated using its
- * {@link #iterator}.
+ * The children of a {@link AttributeNode} can be iterated using
+ * {@link #stream}.
  * 
  * @author cilki
  * @since 5.0.0

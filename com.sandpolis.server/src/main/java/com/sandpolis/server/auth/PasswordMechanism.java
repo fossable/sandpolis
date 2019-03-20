@@ -67,6 +67,7 @@ public class PasswordMechanism extends AuthenticationMechanism {
 	/**
 	 * Create a new {@link PasswordMechanism}.
 	 * 
+	 * @param parent   The parent group
 	 * @param password The password
 	 */
 	public PasswordMechanism(Group parent, String password) {

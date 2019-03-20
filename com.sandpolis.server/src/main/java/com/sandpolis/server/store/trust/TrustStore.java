@@ -90,7 +90,7 @@ public final class TrustStore {
 	/**
 	 * Get a trust anchor from the store.
 	 * 
-	 * @param id The name of the trust anchor
+	 * @param name The name of the trust anchor
 	 * @return The requested {@link TrustAnchor}
 	 */
 	public static Optional<TrustAnchor> get(String name) {

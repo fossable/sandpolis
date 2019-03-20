@@ -76,30 +76,27 @@ public final class IPCStore extends Store {
 	private static List<Connector> connectors = new LinkedList<>();
 
 	/**
-	 * Add a {@code Connector} to the store.
+	 * Add a {@link Connector} to the store.
 	 * 
-	 * @param connector
-	 *            The {@code Connector} to add
+	 * @param connector The {@link Connector} to add
 	 */
 	public static void add(Connector connector) {
 		connectors.add(connector);
 	}
 
 	/**
-	 * Add a {@code Receptor} to the store.
+	 * Add a {@link Receptor} to the store.
 	 * 
-	 * @param receptor
-	 *            The {@code Receptor} to add
+	 * @param receptor The {@link Receptor} to add
 	 */
 	public static void add(Receptor receptor) {
 		receptors.add(receptor);
 	}
 
 	/**
-	 * Remove a {@code Connector} from the store.
+	 * Remove a {@link Connector} from the store.
 	 * 
-	 * @param connector
-	 *            The {@code Connector} to remove
+	 * @param connector The {@link Connector} to remove
 	 */
 	public static void remove(Connector connector) {
 		connectors.remove(connector);
@@ -108,19 +105,17 @@ public final class IPCStore extends Store {
 	/**
 	 * Remove a {@code Receptor} from the store.
 	 * 
-	 * @param connector
-	 *            The {@code Receptor} to remove
+	 * @param receptor The {@code Receptor} to remove
 	 */
 	public static void remove(Receptor receptor) {
 		receptors.remove(receptor);
 	}
 
 	/**
-	 * Remove the {@code Listener} from the store.
+	 * Remove the {@link Listener} from the store.
 	 * 
-	 * @param listener
-	 *            The {@code Listener} to remove which should be the same as the
-	 *            single listener already in the store.
+	 * @param listener The {@link Listener} to remove which should be the same as
+	 *                 the single listener already in the store.
 	 */
 	public static void remove(Listener listener) {
 		if (listener == null)
@@ -135,8 +130,7 @@ public final class IPCStore extends Store {
 	/**
 	 * Attempt to get an instance's metadata over IPC.
 	 * 
-	 * @param instance
-	 *            The instance type to target
+	 * @param instance The instance type to target
 	 * @return The received metadata object or {@code null} if an error occurred.
 	 */
 	public static RS_Metadata queryInstance(Instance instance) {
@@ -155,8 +149,7 @@ public final class IPCStore extends Store {
 	/**
 	 * Start a new listener for the given instance type.
 	 * 
-	 * @param instance
-	 *            The instance type
+	 * @param instance The instance type
 	 * @throws IOException
 	 */
 	public static void listen(Instance instance) throws IOException {
@@ -171,8 +164,7 @@ public final class IPCStore extends Store {
 	/**
 	 * Make a connection to the given instance type on the default port.
 	 * 
-	 * @param instance
-	 *            The instance to connect
+	 * @param instance The instance to connect
 	 * @return The established connection
 	 * @throws IOException
 	 */
@@ -186,8 +178,7 @@ public final class IPCStore extends Store {
 	/**
 	 * Get the IPC listening port for the specified {@link Instance}.
 	 * 
-	 * @param instance
-	 *            The instance.
+	 * @param instance The instance.
 	 * @return The IPC port
 	 */
 	public static int getPort(Instance instance) {

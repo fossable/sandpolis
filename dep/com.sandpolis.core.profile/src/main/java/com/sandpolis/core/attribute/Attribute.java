@@ -43,11 +43,13 @@ import com.sandpolis.core.proto.util.Update.AttributeUpdate;
 /**
  * An {@link Attribute} is the primary constituent of an attribute tree. It
  * contains a datum of one of the following types:
+ * <ul>
  * <li>String</li>
  * <li>Integer</li>
  * <li>Long</li>
  * <li>Double</li>
  * <li>Boolean</li>
+ * </ul>
  * 
  * @param <E> The type the {@link Attribute} contains
  * @see UntrackedAttribute

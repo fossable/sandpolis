@@ -31,8 +31,8 @@ public abstract class Packager {
 	/**
 	 * Convert the intermediate payload into a final output.
 	 * 
-	 * @param config The generator's configuration
-	 * @param in     The intermediate payload
+	 * @param config  The generator's configuration
+	 * @param payload The intermediate payload
 	 * @throws Exception
 	 */
 	abstract public void process(GenConfig config, Object payload) throws Exception;

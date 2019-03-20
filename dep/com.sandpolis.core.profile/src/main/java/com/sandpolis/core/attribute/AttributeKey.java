@@ -94,7 +94,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 	 * Check whether the given OS type is compatible with the corresponding
 	 * attribute.
 	 * 
-	 * @param instance The instance
+	 * @param os The OS type
 	 * @return Whether the given instance type is compatible
 	 */
 	public boolean isCompatible(OsType os) {

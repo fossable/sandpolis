@@ -130,7 +130,7 @@ public interface StoreProvider<E> {
 	 * </pre>
 	 * 
 	 * The streams produced by this method are eagerly loaded. For performance
-	 * improvements when filtering, use {@link #stream(String)} which delegates
+	 * improvements when filtering, use #stream(String) which delegates
 	 * responsibility to the database itself.
 	 * 
 	 * @return A new {@link Stream} over the elements in the store
