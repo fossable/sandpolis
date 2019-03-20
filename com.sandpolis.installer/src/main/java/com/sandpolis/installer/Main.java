@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
+ *                    Copyright 2019 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,97 +15,25 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-syntax = "proto3";
+package com.sandpolis.installer;
 
-package util;
-option java_package = "com.sandpolis.core.proto.util";
-
-/**
- * An enumeration of all Sandpolis instance types.
- */
-enum Instance {
-	CHARCOAL = 0;
-	SERVER = 1;
-	CLIENT = 2;
-	VIEWER = 3;
-	INSTALLER = 4;
-}
+import com.sandpolis.core.instance.MainDispatch;
+import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
 /**
- * An enumeration of all instance subtypes.
+ * This stub is the entry point for Installer instances. Control is given to
+ * {@link MainDispatch} for initialization.
+ * 
+ * @author cilki
+ * @since 5.0.0
  */
-enum InstanceFlavor {
-	NONE = 0;
+public final class Main {
+	private Main() {
+	}
 
-	// Server types
-	VANILLA = 10;
+	public static void main(String[] args) {
+		MainDispatch.dispatch(Installer.class, args, Instance.INSTALLER, InstanceFlavor.NONE);
+	}
 
-	// Client types
-	MEGA = 20;
-	MICRO = 21;
-
-	// Viewer types
-	CLI = 30;
-	JFX = 31;
-}
-
-/**
- * An enumeration of major CPU architecture families.
- */
-enum Architecture {
-	option allow_alias = true;
-
-	X86 = 0;
-
-	X86_64 = 1;
-	AMD64 = 1;
-	IA_64 = 1;
-
-	AARCH64 = 2;
-	
-	ARMv8 = 3;
-
-	ARMv7 = 4;
-	
-	ARMv6 = 5;
-	
-	ARMv5 = 6;
-
-	SPARC = 7;
-	
-	SPARCv9 = 8;
-	
-	MIPS64 = 9;
-	
-	PPC = 10;
-	
-	PPC64 = 11;
-	
-	S390X = 12;
-}
-
-/**
- * An enumeration of major OS families. 
- */
-enum OsType {
-	option allow_alias = true;
-
-	LINUX = 0;
-	
-	WINDOWS = 1;
-
-	MACOS = 2;
-	OSX = 2;
-
-	IOS = 3;
-
-	ANDROID = 4;
-
-	FREEBSD = 5;
-	
-	OPENBSD = 6;
-
-	SOLARIS = 7;
-
-	AIX = 8;
 }

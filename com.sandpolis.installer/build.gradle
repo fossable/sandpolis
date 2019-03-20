@@ -1,0 +1,52 @@
+/******************************************************************************
+*                                  SANDPOLIS                                  *
+*                           com.sandpolis.installer                           *
+******************************************************************************/
+
+plugins {
+	id 'eclipse'
+	id 'java'
+
+	id 'com.github.onslip.gradle-one-jar' version '1.0.5'
+	id 'org.openjfx.javafxplugin' version '0.0.6'
+}
+
+javafx {
+	modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+}
+
+eclipse {
+	project {
+		name = 'com.sandpolis.installer'
+		comment = 'The installer instance'
+	}
+}
+
+dependencies {
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.1'
+
+	implementation project(':dep:com.sandpolis.core.instance')
+	implementation project(':dep:com.sandpolis.core.ipc')
+	implementation project(':dep:com.sandpolis.core.proto')
+	implementation project(':dep:com.sandpolis.core.soi')
+	implementation project(':dep:com.sandpolis.core.util')
+
+	// https://github.com/google/guava
+	implementation 'com.google.guava:guava:27.1-jre'
+
+	// https://github.com/qos-ch/slf4j
+	implementation 'org.slf4j:slf4j-api:1.7.26'
+}
+
+jar {
+	manifest {
+		attributes(
+			'Main-Class': 'com.sandpolis.installer.Main'
+		)
+	}
+}
+
+task one_jar(type: OneJar) {
+	mainClass = 'com.sandpolis.installer.Main'
+	targetConfiguration = configurations.runtimeClasspath
+}
