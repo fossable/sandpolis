@@ -32,7 +32,7 @@ dependencies {
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
 
-	implementation 'org.xerial:sqlite-jdbc:3.25.2'
+	implementation 'org.xerial:sqlite-jdbc:3.27.2.1'
 }
 
 test {
