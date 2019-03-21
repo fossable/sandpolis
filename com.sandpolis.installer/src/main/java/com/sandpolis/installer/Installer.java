@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.BasicTasks;
+import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
@@ -50,8 +51,8 @@ public final class Installer {
 		log.info("Launching {}", AsciiUtil.toRainbow("Sandpolis Installer"));
 
 		MainDispatch.register(BasicTasks::loadConfiguration);
+		MainDispatch.register(Installer::loadConfiguration);
 		MainDispatch.register(Installer::findInstances);
-		MainDispatch.register(Installer::loadEnvironment);
 		MainDispatch.register(Installer::loadUserInterface);
 	}
 
@@ -75,16 +76,20 @@ public final class Installer {
 	}
 
 	/**
-	 * Load environment information.
+	 * Load instance configuration.
 	 *
 	 * @return The task's outcome
 	 */
-	@InitializationTask(name = "Load environment information")
-	private static TaskOutcome loadEnvironment() {
+	@InitializationTask(name = "Load instance configuration")
+	private static TaskOutcome loadConfiguration() {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		// TODO
+		Config.register("install.version", null);
+		Config.register("install.path.windows", System.getProperty("user.home") + "/.sandpolis");
+		Config.register("install.path.linux", System.getProperty("user.home") + "/.sandpolis");
+		Config.register("install.path.macos", System.getProperty("user.home") + "/.sandpolis");
+
 		return task.success();
 	}
 

@@ -17,6 +17,13 @@
  *****************************************************************************/
 package com.sandpolis.installer.scene.main;
 
+import java.util.function.Consumer;
+
+import com.sandpolis.core.instance.PlatformUtil;
+import com.sandpolis.installer.install.AbstractInstaller;
+import com.sandpolis.installer.install.LinuxInstaller;
+import com.sandpolis.installer.install.WindowsInstaller;
+
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -42,6 +49,35 @@ public class MainController {
 	@FXML
 	private BorderPane pane;
 
+	private ProgressBar progress;
+
+	/**
+	 * The installer to use.
+	 */
+	private AbstractInstaller installer;
+
+	public MainController() {
+		Consumer<String> status = s -> {
+		};
+		Consumer<Double> progress = d -> {
+			this.progress.setProgress(d);
+		};
+
+		switch (PlatformUtil.queryOsType()) {
+		case LINUX:
+			installer = new LinuxInstaller(status, progress);
+			break;
+		case MACOS:
+			installer = new LinuxInstaller(status, progress);
+			break;
+		case WINDOWS:
+			installer = new WindowsInstaller(status, progress);
+			break;
+		default:
+			throw new RuntimeException("No installer found");
+		}
+	}
+
 	@FXML
 	private void initialize() {
 		chk_server.selectedProperty().addListener(this::refresh);
@@ -62,19 +98,25 @@ public class MainController {
 	private void install() {
 
 		// Replace buttons with a progressbar
-		ProgressBar progress = new ProgressBar(0);
 		pane.setBottom(progress);
 
-		new Thread(new Task<Boolean>() {
+		new Thread(new Task<Void>() {
 
 			{
 				setOnSucceeded(event -> {
+					System.exit(0);
+				});
+
+				setOnFailed(event -> {
+					exceptionProperty().get().printStackTrace();
+					System.exit(0);
 				});
 			}
 
 			@Override
-			public Boolean call() throws Exception {
-				return false;
+			public Void call() throws Exception {
+				installer.install(chk_server.isSelected(), chk_viewer_jfx.isSelected(), chk_viewer_cli.isSelected());
+				return null;
 			}
 
 		}).start();
