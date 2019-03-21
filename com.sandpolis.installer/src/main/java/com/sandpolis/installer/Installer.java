@@ -85,7 +85,7 @@ public final class Installer {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		Config.register("install.version", null);
+		Config.register("install.version");
 		Config.register("install.path.windows", System.getProperty("user.home") + "/.sandpolis");
 		Config.register("install.path.linux", System.getProperty("user.home") + "/.sandpolis");
 		Config.register("install.path.macos", System.getProperty("user.home") + "/.sandpolis");

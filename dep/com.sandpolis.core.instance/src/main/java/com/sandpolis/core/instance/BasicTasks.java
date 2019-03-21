@@ -47,9 +47,9 @@ public final class BasicTasks {
 		Config.register("post", true);
 
 		Config.register("db.provider", "hibernate");
-		Config.require("db.url", String.class);
-		Config.require("db.username", String.class);
-		Config.require("db.password", String.class);
+		Config.register("db.url");
+		Config.register("db.username");
+		Config.register("db.password");
 
 		Config.register("no_mutex", false);
 		Config.register("log.traffic", false);
@@ -62,9 +62,9 @@ public final class BasicTasks {
 		Config.register("no_plugins", false);
 		Config.register("no_summary", false);
 
-		Config.register("path.db", null);
-		Config.register("path.gen", null);
-		Config.register("path.log", null);
+		Config.register("path.db");
+		Config.register("path.gen");
+		Config.register("path.log");
 
 		return task.success();
 	}

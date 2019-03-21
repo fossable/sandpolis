@@ -137,7 +137,7 @@ public final class MainDispatch {
 		MainDispatch.main = Objects.requireNonNull(main);
 		MainDispatch.instance = Objects.requireNonNull(instance);
 		MainDispatch.flavor = Objects.requireNonNull(flavor);
-		Objects.requireNonNull(args);
+		Config.setArguments(args);
 
 		long timestamp = System.currentTimeMillis();
 		List<TaskOutcome> outcomes = new ArrayList<>();
