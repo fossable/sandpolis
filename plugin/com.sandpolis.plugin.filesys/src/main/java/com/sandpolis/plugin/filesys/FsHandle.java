@@ -16,7 +16,7 @@
  *                                                                            *
  *****************************************************************************/
 
-package com.sandpolis.core.platform;
+package com.sandpolis.plugin.filesys;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;

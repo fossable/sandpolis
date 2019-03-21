@@ -15,14 +15,6 @@ eclipse {
 	}
 }
 
-ext {
-	plugin_name = 'Shell Plugin'
-	plugin_id = 'com.sandpolis.plugin.shell'
-	plugin_description = ''
-	plugin_version = '1.0.0'
-	plugin_class = ''
-}
-
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.3.2'
 
@@ -33,3 +25,10 @@ dependencies {
 }
 
 apply plugin: 'com.sandpolis.gradle.plugin'
+
+sandpolis_plugin {
+	id = 'com.sandpolis.plugin.shell'
+	name = 'Shell Plugin'
+	description = ''
+	version = '1.0.0'
+}
