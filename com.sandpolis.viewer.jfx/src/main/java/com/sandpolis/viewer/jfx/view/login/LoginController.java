@@ -147,8 +147,10 @@ public class LoginController extends FxController {
 					.login(userPhaseController.getUsername(), userPhaseController.getPassword())
 					.addListener((ResponseFuture<Outcome> outcomeFuture) -> {
 						if (outcomeFuture.isSuccess()) {
-							// TODO plugin sync
-							launchApplication();
+							if (outcomeFuture.get().getResult()) {
+								// TODO plugin sync
+								launchApplication();
+							}
 						}
 					});
 			break;

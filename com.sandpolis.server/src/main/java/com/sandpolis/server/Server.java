@@ -22,6 +22,7 @@ import static com.sandpolis.core.instance.Environment.EnvPath.GEN;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
+import static com.sandpolis.core.util.CryptoUtil.SHA256;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -66,6 +67,7 @@ import com.sandpolis.core.proto.util.Generator.OutputFormat;
 import com.sandpolis.core.proto.util.Generator.OutputPayload;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.util.AsciiUtil;
+import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 import com.sandpolis.core.util.IDUtil;
 import com.sandpolis.server.auth.KeyMechanism;
@@ -275,7 +277,8 @@ public final class Server {
 
 		try {
 			// Create user and listener
-			UserStore.add(UserConfig.newBuilder().setUsername("admin").setPassword("password").build());
+			UserStore.add(UserConfig.newBuilder().setUsername("admin").setPassword(CryptoUtil.hash(SHA256, "password"))
+					.build());
 
 			ListenerStore.add(ListenerConfig.newBuilder().setPort(10101).setAddress("0.0.0.0").setOwner("admin")
 					.setName("test").setEnabled(true).build());
