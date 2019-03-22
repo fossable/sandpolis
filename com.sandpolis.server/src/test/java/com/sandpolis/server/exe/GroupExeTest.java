@@ -21,9 +21,13 @@ import static com.sandpolis.core.util.ProtoUtil.rq;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.concurrent.Executors;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.net.ExeletTest;
 import com.sandpolis.core.net.Sock;
@@ -31,6 +35,7 @@ import com.sandpolis.core.proto.net.MCGroup.RQ_AddGroup;
 import com.sandpolis.core.proto.net.MCGroup.RQ_RemoveGroup;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
+import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.server.store.group.Group;
 import com.sandpolis.server.store.group.GroupStore;
 import com.sandpolis.server.store.user.User;
@@ -42,11 +47,13 @@ class GroupExeTest extends ExeletTest {
 
 	@BeforeEach
 	void setup() {
+		UserStore.init(StoreProviderFactory.memoryList(User.class));
+		UserStore.add(UserConfig.newBuilder().setUsername("admin").setPassword("123"));
+		GroupStore.init(StoreProviderFactory.memoryList(Group.class));
+		Signaler.init(Executors.newSingleThreadExecutor());
+
 		initChannel();
 		exe = new GroupExe(new Sock(channel));
-
-		UserStore.init(StoreProviderFactory.memoryList(User.class));
-		GroupStore.init(StoreProviderFactory.memoryList(Group.class));
 	}
 
 	@Test
@@ -55,63 +62,29 @@ class GroupExeTest extends ExeletTest {
 	}
 
 	@Test
-	void rqAddGroupEmptyMessage(Message m) {
-		// Empty message
-		exe.rq_add_group(rq(RQ_AddGroup.newBuilder()).build());
-		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
-	}
-
-	@Test
-	void rqAddGroupMissingOwner(Message m) {
-		// Missing owner
-		exe.rq_add_group(rq(RQ_AddGroup.newBuilder().setConfig(GroupConfig.newBuilder().setName("default"))).build());
-		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
-	}
-
-	@Test
-	void rqAddGroupMissingName(Message m) {
-		// Missing name
-		exe.rq_add_group(rq(RQ_AddGroup.newBuilder().setConfig(GroupConfig.newBuilder().setOwner("admin"))).build());
-		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
-	}
-
-	@Test
-	void rqAddGroupWithoutMembers(Message m) {
-		// Valid without members
-		exe.rq_add_group(
-				rq(RQ_AddGroup.newBuilder().setConfig(GroupConfig.newBuilder().setName("default").setOwner("admin")))
-						.build());
-		assertTrue(((Message) channel.readOutbound()).getRsOutcome().getResult());
-	}
-
-	@Test
-	void rqAddGroupWithConflict(Message m) {
-		// Group already exists
-		exe.rq_add_group(
-				rq(RQ_AddGroup.newBuilder().setConfig(GroupConfig.newBuilder().setName("default").setOwner("admin")))
-						.build());
-		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
-	}
-
-	@Test
-	void rqAddGroupValid(Message m) {
-		// Completely valid
+	@DisplayName("Add a valid memberless group")
+	void rq_add_group_1() {
 		exe.rq_add_group(rq(RQ_AddGroup.newBuilder()
-				.setConfig(GroupConfig.newBuilder().setName("default2").setOwner("admin").addMember("demo"))).build());
+				.setConfig(GroupConfig.newBuilder().setId("123").setName("default").setOwner("admin"))).build());
+
 		assertTrue(((Message) channel.readOutbound()).getRsOutcome().getResult());
 	}
 
 	@Test
-	void rqRemoveGroupEmptyMessage(Message m) {
-		// Empty message
-		exe.rq_remove_group(rq(RQ_RemoveGroup.newBuilder()).build());
-		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
+	@DisplayName("Add a valid group with members")
+	void rq_add_group_2() {
+		exe.rq_add_group(rq(RQ_AddGroup.newBuilder().setConfig(
+				GroupConfig.newBuilder().setId("123").setName("default2").setOwner("admin").addMember("demouser")))
+						.build());
+
+		assertTrue(((Message) channel.readOutbound()).getRsOutcome().getResult());
 	}
 
 	@Test
-	void rqRemoveGroupMissing(Message m) {
-		// Group does not exist
+	@DisplayName("Try to remove a missing group")
+	void rq_add_group_3() {
 		exe.rq_remove_group(rq(RQ_RemoveGroup.newBuilder().setId("9292")).build());
+
 		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
 	}
 
