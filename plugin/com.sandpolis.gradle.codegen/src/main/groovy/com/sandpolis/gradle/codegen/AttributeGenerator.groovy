@@ -85,7 +85,7 @@ class AttributeGenerator extends DefaultTask {
 	void processAttribute (ak, attribute, parent) {
 		def (name, tag, description) = parseNameTag(attribute)
 
-		def initializer = "AttributeKey.newBuilder($parent, ${tag})"
+		def initializer = "AttributeKey.newBuilder($parent, $tag).setDotPath(\"${parent.toLowerCase()}.$name\")"
 		if (attribute['static'])
 			initializer += ".setStatic(${attribute['static']})"
 

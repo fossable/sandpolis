@@ -13,20 +13,20 @@ public final class AK_INSTANCE {
   /**
    * Client/Viewer ID.
    */
-  public static final AttributeKey<Integer> CVID = AttributeKey.newBuilder(INSTANCE, 1).build();
+  public static final AttributeKey<Integer> CVID = AttributeKey.newBuilder(INSTANCE, 1).setDotPath("instance.cvid").build();
 
   /**
    * Universally Unique ID.
    */
-  public static final AttributeKey<String> UUID = AttributeKey.newBuilder(INSTANCE, 2).build();
+  public static final AttributeKey<String> UUID = AttributeKey.newBuilder(INSTANCE, 2).setDotPath("instance.uuid").build();
 
   /**
    * The instance's Sandpolis version string.
    */
-  public static final AttributeKey<String> VERSION = AttributeKey.newBuilder(INSTANCE, 3).build();
+  public static final AttributeKey<String> VERSION = AttributeKey.newBuilder(INSTANCE, 3).setDotPath("instance.version").build();
 
   /**
    * The instance's installation timestamp.
    */
-  public static final AttributeKey<Long> INSTALL_TIMESTAMP = AttributeKey.newBuilder(INSTANCE, 4).build();
+  public static final AttributeKey<Long> INSTALL_TIMESTAMP = AttributeKey.newBuilder(INSTANCE, 4).setDotPath("instance.install_timestamp").build();
 }

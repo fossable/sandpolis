@@ -54,6 +54,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 	private Set<OsType> platformBlacklist;
 
 	private boolean dynamic;
+	private String dotPath;
 
 	@SuppressWarnings("rawtypes")
 	public static void setDefaultAttributeClass(Class<? extends Attribute> cls) {
@@ -114,6 +115,15 @@ public class AttributeKey<E> extends AttributeNodeKey {
 	 */
 	public boolean isStatic() {
 		return !dynamic;
+	}
+
+	/**
+	 * Get the dot path.
+	 * 
+	 * @return The key's dot path
+	 */
+	public String getDotPath() {
+		return dotPath;
 	}
 
 	/**
@@ -237,6 +247,17 @@ public class AttributeKey<E> extends AttributeNodeKey {
 		 */
 		public Builder setStatic(boolean value) {
 			instance.dynamic = !value;
+			return this;
+		}
+
+		/**
+		 * Set the {@code dotPath} field.
+		 * 
+		 * @param value The field's new value
+		 * @return {@code this}
+		 */
+		public Builder setDotPath(String value) {
+			instance.dotPath = value;
 			return this;
 		}
 

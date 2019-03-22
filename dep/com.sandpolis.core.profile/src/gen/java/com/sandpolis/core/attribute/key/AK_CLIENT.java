@@ -13,5 +13,5 @@ public final class AK_CLIENT {
   /**
    * The client's status.
    */
-  public static final AttributeKey<String> STATUS = AttributeKey.newBuilder(CLIENT, 1).build();
+  public static final AttributeKey<String> STATUS = AttributeKey.newBuilder(CLIENT, 1).setDotPath("client.status").build();
 }

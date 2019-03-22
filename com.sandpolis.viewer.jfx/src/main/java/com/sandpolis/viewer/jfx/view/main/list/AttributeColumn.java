@@ -24,6 +24,7 @@ import com.sandpolis.core.attribute.Attribute;
 import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.viewer.jfx.attribute.ObservableAttribute;
+import com.sandpolis.viewer.jfx.common.FxUtil;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -31,9 +32,10 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
+import javafx.scene.image.Image;
 
 /**
- * A {@link TableColumn} that takes it value from an {@link Attribute}.
+ * A {@link TableColumn} that takes its value from an {@link Attribute}.
  * 
  * @author cilki
  * @since 5.0.0
@@ -56,7 +58,18 @@ public class AttributeColumn extends TableColumn<Profile, Label> {
 
 	public AttributeColumn(AttributeKey<?> key) {
 		this.key = Objects.requireNonNull(key);
+
+		// Read and cache header text
+		if (key.getObject("name") == null)
+			if (FxUtil.getResources().containsKey("ak." + key.getDotPath()))
+				key.putObject("name", FxUtil.getResources().getObject("ak." + key.getDotPath()));
 		setText(key.getObject("name"));
+
+		// Read and cache header image
+		if (key.getObject("icon") == null)
+			if (FxUtil.getResources().containsKey("ak." + key.getDotPath() + ".icon"))
+				key.putObject("icon",
+						new Image((String) FxUtil.getResources().getObject("ak." + key.getDotPath() + ".icon")));
 		setGraphic(key.getObject("icon"));
 
 		// Functions that control how attributes are mapped into Strings and Nodes
