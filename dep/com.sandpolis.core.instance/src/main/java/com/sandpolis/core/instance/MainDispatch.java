@@ -176,7 +176,7 @@ public final class MainDispatch {
 		// Print task summary if required
 		if (outcomes.stream().filter(o -> !o.getOutcome().getResult()).count() != 0)
 			logTaskSummary(outcomes);
-		else if (!Config.getBoolean("no_summary"))
+		else if (!Config.has("no_summary") || !Config.getBoolean("no_summary"))
 			logTaskSummary(outcomes);
 
 		// Launch idle loop
@@ -195,6 +195,8 @@ public final class MainDispatch {
 	 * @param outcomes The task outcomes
 	 */
 	private static void logTaskSummary(List<TaskOutcome> outcomes) {
+		if (outcomes.isEmpty())
+			return;
 
 		// Create a format string according to the width of the longest description
 		String format = String.format("%%%ds: %%4s (%%5d ms)",

@@ -38,7 +38,7 @@ import com.sandpolis.core.proto.util.Result.Outcome;
 class MainDispatchTest {
 
 	@BeforeEach
-	void setup() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	void setup() throws Exception {
 		// Use reflection to manually reset MainDispatch
 		Field tasks = MainDispatch.class.getDeclaredField("tasks");
 		tasks.setAccessible(true);
