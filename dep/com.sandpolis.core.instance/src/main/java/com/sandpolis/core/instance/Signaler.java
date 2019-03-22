@@ -51,9 +51,6 @@ public final class Signaler<E> {
 	private static ExecutorService pool;
 
 	public static void init(ExecutorService pool) {
-		if (listeners != null)
-			throw new IllegalStateException();
-
 		Signaler.pool = Objects.requireNonNull(pool);
 		listeners = new ConcurrentHashMap<>();
 	}
