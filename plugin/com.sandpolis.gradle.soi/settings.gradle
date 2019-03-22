@@ -1,3 +1,8 @@
+/*******************************************************************************
+* SANDPOLIS                                                                    *
+* com.sandpolis.gradle.soi                                                     *
+*******************************************************************************/
+
 rootProject.name = 'com.sandpolis.gradle.soi'
 
 include 'dep:com.sandpolis.core.soi'

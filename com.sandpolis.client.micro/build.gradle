@@ -1,7 +1,7 @@
-/******************************************************************************
-*                                  SANDPOLIS                                  *
-*                          com.sandpolis.viewer.micro                         *
-******************************************************************************/
+/*******************************************************************************
+* SANDPOLIS                                                                    *
+* com.sandpolis.client.micro                                                   *
+*******************************************************************************/
 
 plugins {
 	id 'eclipse'
@@ -9,7 +9,7 @@ plugins {
 
 eclipse {
 	project {
-		name = 'com.sandpolis.viewer.micro'
+		name = 'com.sandpolis.client.micro'
 		comment = 'The micro-client instance'
 	}
 }

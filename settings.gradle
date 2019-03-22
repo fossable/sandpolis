@@ -1,7 +1,7 @@
-/******************************************************************************
-*                                  SANDPOLIS                                  *
-*                                                                             *
-******************************************************************************/
+/*******************************************************************************
+* SANDPOLIS                                                                    *
+*                                                                              *
+*******************************************************************************/
 
 rootProject.name = 'Sandpolis'
 
@@ -19,8 +19,6 @@ include 'com.sandpolis.installer'
 include 'com.sandpolis.server'
 include 'com.sandpolis.viewer.cli'
 include 'com.sandpolis.viewer.jfx'
-include 'com.sandpolis.viewer.react'
-include 'com.sandpolis.viewer.rest'
 
 // Dependency Projects
 include 'dep:com.sandpolis.core.instance'
