@@ -13,10 +13,10 @@ public final class AK_NET {
   /**
    * TODO.
    */
-  public static final AttributeKey<String> FQDN = AttributeKey.newBuilder(NET, 1).build();
+  public static final AttributeKey<String> FQDN = AttributeKey.newBuilder(NET, 1).setDotPath("net.fqdn").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> HOSTNAME = AttributeKey.newBuilder(NET, 2).build();
+  public static final AttributeKey<String> HOSTNAME = AttributeKey.newBuilder(NET, 2).setDotPath("net.hostname").build();
 }

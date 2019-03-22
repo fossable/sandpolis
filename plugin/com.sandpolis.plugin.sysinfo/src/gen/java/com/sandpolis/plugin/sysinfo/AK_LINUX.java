@@ -13,15 +13,15 @@ public final class AK_LINUX {
   /**
    * TODO.
    */
-  public static final AttributeKey<String> DISTRIBUTION = AttributeKey.newBuilder(LINUX, 1).build();
+  public static final AttributeKey<String> DISTRIBUTION = AttributeKey.newBuilder(LINUX, 1).setDotPath("linux.distribution").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> SHELL = AttributeKey.newBuilder(LINUX, 2).build();
+  public static final AttributeKey<String> SHELL = AttributeKey.newBuilder(LINUX, 2).setDotPath("linux.shell").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> WINDOW_MANAGER = AttributeKey.newBuilder(LINUX, 3).build();
+  public static final AttributeKey<String> WINDOW_MANAGER = AttributeKey.newBuilder(LINUX, 3).setDotPath("linux.window_manager").build();
 }

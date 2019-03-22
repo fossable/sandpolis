@@ -13,25 +13,25 @@ public final class AK_LOCATION {
   /**
    * TODO.
    */
-  public static final AttributeKey<String> CITY = AttributeKey.newBuilder(LOCATION, 1).build();
+  public static final AttributeKey<String> CITY = AttributeKey.newBuilder(LOCATION, 1).setDotPath("location.city").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> COUNTRY = AttributeKey.newBuilder(LOCATION, 2).build();
+  public static final AttributeKey<String> COUNTRY = AttributeKey.newBuilder(LOCATION, 2).setDotPath("location.country").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> COUNTRY_CODE = AttributeKey.newBuilder(LOCATION, 3).build();
+  public static final AttributeKey<String> COUNTRY_CODE = AttributeKey.newBuilder(LOCATION, 3).setDotPath("location.country_code").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> LATITUDE = AttributeKey.newBuilder(LOCATION, 4).build();
+  public static final AttributeKey<String> LATITUDE = AttributeKey.newBuilder(LOCATION, 4).setDotPath("location.latitude").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> LONGITUDE = AttributeKey.newBuilder(LOCATION, 5).build();
+  public static final AttributeKey<String> LONGITUDE = AttributeKey.newBuilder(LOCATION, 5).setDotPath("location.longitude").build();
 }

@@ -13,15 +13,15 @@ public final class AK_USER {
   /**
    * TODO.
    */
-  public static final AttributeKey<String> ID = AttributeKey.newBuilder(USER, 1).build();
+  public static final AttributeKey<String> ID = AttributeKey.newBuilder(USER, 1).setDotPath("user.id").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> USERNAME = AttributeKey.newBuilder(USER, 2).build();
+  public static final AttributeKey<String> USERNAME = AttributeKey.newBuilder(USER, 2).setDotPath("user.username").build();
 
   /**
    * The user's home directory.
    */
-  public static final AttributeKey<String> HOME = AttributeKey.newBuilder(USER, 3).build();
+  public static final AttributeKey<String> HOME = AttributeKey.newBuilder(USER, 3).setDotPath("user.home").build();
 }

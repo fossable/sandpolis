@@ -13,35 +13,35 @@ public final class AK_OS {
   /**
    * TODO.
    */
-  public static final AttributeKey<String> ARCH = AttributeKey.newBuilder(OS, 1).build();
+  public static final AttributeKey<String> ARCH = AttributeKey.newBuilder(OS, 1).setDotPath("os.arch").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> WINDOW_TITLE = AttributeKey.newBuilder(OS, 2).build();
+  public static final AttributeKey<String> WINDOW_TITLE = AttributeKey.newBuilder(OS, 2).setDotPath("os.window_title").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> FAMILY = AttributeKey.newBuilder(OS, 3).build();
+  public static final AttributeKey<String> FAMILY = AttributeKey.newBuilder(OS, 3).setDotPath("os.family").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> LANGUAGE = AttributeKey.newBuilder(OS, 4).build();
+  public static final AttributeKey<String> LANGUAGE = AttributeKey.newBuilder(OS, 4).setDotPath("os.language").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<Long> START_TIMESTAMP = AttributeKey.newBuilder(OS, 5).build();
+  public static final AttributeKey<Long> START_TIMESTAMP = AttributeKey.newBuilder(OS, 5).setDotPath("os.start_timestamp").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> TIMEZONE = AttributeKey.newBuilder(OS, 6).build();
+  public static final AttributeKey<String> TIMEZONE = AttributeKey.newBuilder(OS, 6).setDotPath("os.timezone").build();
 
   /**
    * TODO.
    */
-  public static final AttributeKey<String> NAME = AttributeKey.newBuilder(OS, 7).build();
+  public static final AttributeKey<String> NAME = AttributeKey.newBuilder(OS, 7).setDotPath("os.name").build();
 }
