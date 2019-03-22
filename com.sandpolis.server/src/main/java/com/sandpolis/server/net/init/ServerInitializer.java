@@ -25,7 +25,6 @@ import javax.net.ssl.SSLException;
 
 import com.google.common.primitives.Bytes;
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.handler.CvidResponseHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
@@ -83,20 +82,29 @@ public class ServerInitializer extends PipelineInitializer {
 	private SslContext sslCtx;
 
 	/**
-	 * Construct a {@code ServerInitializer} with a self-signed certificate.
+	 * The server's CVID.
 	 */
-	public ServerInitializer() {
+	private int cvid;
+
+	/**
+	 * Construct a {@link ServerInitializer} with a self-signed certificate.
+	 * 
+	 * @param cvid The server CVID
+	 */
+	public ServerInitializer(int cvid) {
 		super(exelets);
+		this.cvid = cvid;
 	}
 
 	/**
-	 * Construct a {@code ServerInitializer} with the given certificate.
+	 * Construct a {@link ServerInitializer} with the given certificate.
 	 *
+	 * @param cvid The server CVID
 	 * @param cert The certificate
 	 * @param key  The private key
 	 */
-	public ServerInitializer(byte[] cert, byte[] key) {
-		super(exelets);
+	public ServerInitializer(int cvid, byte[] cert, byte[] key) {
+		this(cvid);
 		if (cert == null && key == null)
 			return;
 		if (cert == null || key == null)
@@ -130,7 +138,7 @@ public class ServerInitializer extends PipelineInitializer {
 		ch.attr(ChannelConstant.FUTURE_CVID).set(new DefaultPromise<>(ch.eventLoop()));
 
 		// Add proxy handler
-		ch.pipeline().addAfter("protobuf.frame_decoder", "proxy", new ProxyHandler(Core.cvid()));
+		ch.pipeline().addAfter("protobuf.frame_decoder", "proxy", new ProxyHandler(cvid));
 	}
 
 	public SslContext getSslContext() throws Exception {

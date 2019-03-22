@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.ProtoType;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
@@ -179,14 +180,18 @@ public class Listener implements ProtoType<ProtoListener> {
 
 		ServerBootstrap b = new ServerBootstrap();
 		b.group(parentLoopGroup, childLoopGroup).channel(Sock.Transport.INSTANCE.getServerSocketChannel())//
-				.childHandler(new ServerInitializer())// (certificate, privateKey)
-				.option(ChannelOption.SO_BACKLOG, 128)//
+				.option(ChannelOption.SO_BACKLOG, 128)// Socket backlog
 				.childOption(ChannelOption.SO_KEEPALIVE, true);
+
+		if (certificate != null && privateKey != null)
+			b.childHandler(new ServerInitializer(Core.cvid(), certificate, privateKey));
+		else
+			b.childHandler(new ServerInitializer(Core.cvid()));
 
 		try {
 			acceptor = (ServerChannel) b.bind(address, port).await().channel();
 		} catch (InterruptedException e) {
-			log.error("Failed to start the listener because the thread was interrupted.");
+			log.error("Failed to start the listener", e);
 			acceptor = null;
 			return false;
 		}

@@ -20,10 +20,10 @@ package com.sandpolis.server.net.init;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.security.cert.CertificateException;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,27 +36,34 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 class ServerInitializerTest {
 
-	// A ServerInitializer that uses an external certificate
+	/**
+	 * A ServerInitializer that uses an external certificate
+	 */
 	ServerInitializer secure;
 
-	// A ServerInitializer that should use a fallback self-signed SSL certificate
+	/**
+	 * A ServerInitializer that uses a fallback self-signed certificate
+	 */
 	ServerInitializer fallback;
 
-	@BeforeEach
-	void setup() throws CertificateException, IOException {
+	@BeforeAll
+	static void configure() {
 		Config.register("log.traffic_raw", false);
 		Config.register("log.traffic", false);
 		Config.register("net.tls", true);
+	}
 
+	@BeforeEach
+	void setup() throws CertificateException {
 		SelfSignedCertificate ssc = new SelfSignedCertificate();
-		secure = new ServerInitializer(ssc.cert().getEncoded(), ssc.key().getEncoded());
-		fallback = new ServerInitializer();
+		secure = new ServerInitializer(123, ssc.cert().getEncoded(), ssc.key().getEncoded());
+		fallback = new ServerInitializer(123);
 	}
 
 	@Test
 	void testGetSslContext() throws Exception {
 
-		// Ensure a context is always returned
+		// Ensure a non-null context is always returned
 		assertNotNull(fallback.getSslContext());
 		assertNotNull(secure.getSslContext());
 
