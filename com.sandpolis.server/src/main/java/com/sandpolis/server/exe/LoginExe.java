@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.server.exe;
 
+import static com.sandpolis.core.util.CryptoUtil.SHA256;
 import static com.sandpolis.core.util.ProtoUtil.begin;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.rs;
@@ -92,7 +93,7 @@ public class LoginExe extends Exelet {
 		}
 
 		// Perform authentication
-		if (!CryptoUtil.PBKDF2.check(rq.getPassword(), user.getHash())) {
+		if (!CryptoUtil.PBKDF2.check(CryptoUtil.hash(SHA256, rq.getPassword()), user.getHash())) {
 			log.debug("Authentication failed", username);
 			failLogin(outcome.setComment("Authentication failed"), id, username);
 			return;

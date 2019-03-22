@@ -23,34 +23,36 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import com.sandpolis.core.net.Sock.ConnectionState;
 import com.sandpolis.core.net.handler.ExecuteHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
 
+import io.netty.channel.Channel;
 import io.netty.channel.embedded.EmbeddedChannel;
 
 public class ExeletTest {
 
 	/**
-	 * The {@code Channel} that the {@code Exelet} is connected to.
+	 * The {@link Channel} that the {@link Exelet} is connected to.
 	 */
 	protected EmbeddedChannel channel;
 
 	/**
-	 * Test the following aspects of an {@code Exelet} class:
+	 * Test the following aspects of an {@link Exelet} class:
 	 * 
 	 * <ul>
 	 * <li>All public methods are unique in name</li>
-	 * <li>All public methods have a name that matches a {@code Message} type</li>
-	 * <li>All public methods have a single {@code Message} parameter</li>
+	 * <li>All public methods have a name that matches a {@link Message} type</li>
+	 * <li>All public methods have a single {@link Message} parameter</li>
 	 * </ul>
 	 * 
 	 * Implementation note: There's no reason to build a set of method names to
 	 * check that they are unique (1st contraint) because the third constraint
 	 * ensures such a situation would never compile.
 	 * 
-	 * @param _class The {@code Exelet} to be tested
+	 * @param _class The {@link Exelet} to be tested
 	 */
 	protected void testDeclaration(Class<? extends Exelet> _class) {
 		for (Method m : _class.getDeclaredMethods()) {
@@ -78,6 +80,7 @@ public class ExeletTest {
 		channel = new EmbeddedChannel();
 		channel.attr(ChannelConstant.HANDLER_EXECUTE).set(new ExecuteHandler(new Class[] {}));
 		channel.attr(ChannelConstant.CVID).set(0);
+		channel.attr(ChannelConstant.CONNECTION_STATE).set(ConnectionState.CONNECTED);
 	}
 
 }
