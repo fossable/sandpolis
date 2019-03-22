@@ -18,18 +18,19 @@
 package com.sandpolis.server.exe;
 
 import static com.sandpolis.core.util.ProtoUtil.rq;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.concurrent.Executors;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.net.ExeletTest;
 import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
-import com.sandpolis.core.proto.net.MCListener.RQ_RemoveListener;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
@@ -45,9 +46,7 @@ class ListenerExeTest extends ExeletTest {
 
 	@BeforeEach
 	void setup() {
-		initChannel();
-		exe = new ListenerExe(new Sock(channel));
-		channel.attr(ChannelConstant.CVID).set(90);
+		Signaler.init(Executors.newSingleThreadExecutor());
 
 		UserStore.init(StoreProviderFactory.memoryList(User.class));
 		UserStore.add(UserConfig.newBuilder().setUsername("junit").setPassword("12345678").build());
@@ -55,6 +54,9 @@ class ListenerExeTest extends ExeletTest {
 
 		ListenerStore.init(StoreProviderFactory.memoryList(Listener.class));
 		ListenerStore.add(ListenerConfig.newBuilder().setOwner("junit").setPort(5000).setAddress("0.0.0.0").build());
+
+		initChannel();
+		exe = new ListenerExe(new Sock(channel));
 	}
 
 	@Test
@@ -63,26 +65,11 @@ class ListenerExeTest extends ExeletTest {
 	}
 
 	@Test
-	void testRqAddListenerValid() {
+	@DisplayName("Add a listener with a valid configuration")
+	void rq_add_listener_1() {
 		exe.rq_add_listener(rq(RQ_AddListener.newBuilder()
 				.setConfig(ListenerConfig.newBuilder().setId(2).setOwner("junit").setPort(5000).setAddress("0.0.0.0")))
 						.build());
-
-		Outcome outcome = ((Message) channel.readOutbound()).getRsOutcome();
-		assertTrue(outcome.getResult(), outcome.getComment());
-	}
-
-	@Test
-	void testRqAddListenerInvalidConfiguration() {
-		exe.rq_add_listener(rq(RQ_AddListener.newBuilder().setConfig(ListenerConfig.newBuilder().setId(7))).build());
-
-		Outcome outcome = ((Message) channel.readOutbound()).getRsOutcome();
-		assertFalse(outcome.getResult(), outcome.getComment());
-	}
-
-	@Test
-	void testRqRemoveListenerValid() {
-		exe.rq_remove_listener(rq(RQ_RemoveListener.newBuilder().setId(0)).build());
 
 		Outcome outcome = ((Message) channel.readOutbound()).getRsOutcome();
 		assertTrue(outcome.getResult(), outcome.getComment());

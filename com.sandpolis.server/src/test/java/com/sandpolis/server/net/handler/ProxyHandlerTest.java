@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.concurrent.Executors;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +40,6 @@ import io.netty.handler.codec.protobuf.ProtobufDecoder;
 import io.netty.handler.codec.protobuf.ProtobufEncoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
-import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 
 class ProxyHandlerTest {
 
@@ -148,6 +149,6 @@ class ProxyHandlerTest {
 
 	@BeforeAll
 	private static void init() {
-		Signaler.init(new UnorderedThreadPoolEventExecutor(1));
+		Signaler.init(Executors.newSingleThreadExecutor());
 	}
 }

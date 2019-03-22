@@ -20,6 +20,8 @@ package com.sandpolis.server.exe;
 import static com.sandpolis.core.util.ProtoUtil.rq;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.concurrent.Executors;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,15 +33,13 @@ import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
 
-import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
-
 class ServerExeTest extends ExeletTest {
 
 	private ServerExe exe;
 
 	@BeforeEach
 	void setup() {
-		Signaler.init(new UnorderedThreadPoolEventExecutor(1));
+		Signaler.init(Executors.newSingleThreadExecutor());
 
 		initChannel();
 		exe = new ServerExe(new Sock(channel));

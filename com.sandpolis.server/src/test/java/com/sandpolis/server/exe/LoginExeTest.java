@@ -21,6 +21,8 @@ import static com.sandpolis.core.util.ProtoUtil.rq;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.concurrent.Executors;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,8 +37,6 @@ import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.server.store.user.User;
 import com.sandpolis.server.store.user.UserStore;
 
-import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
-
 class LoginExeTest extends ExeletTest {
 
 	private LoginExe exe;
@@ -44,7 +44,7 @@ class LoginExeTest extends ExeletTest {
 	@BeforeEach
 	void setup() {
 		UserStore.init(StoreProviderFactory.memoryList(User.class));
-		Signaler.init(new UnorderedThreadPoolEventExecutor(1));
+		Signaler.init(Executors.newSingleThreadExecutor());
 
 		initChannel();
 		exe = new LoginExe(new Sock(channel));
