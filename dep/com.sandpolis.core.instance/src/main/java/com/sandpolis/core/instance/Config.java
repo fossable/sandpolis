@@ -116,7 +116,7 @@ public final class Config {
 		Objects.requireNonNull(property);
 		Objects.requireNonNull(type);
 		if (config.containsKey(property))
-			throw new IllegalStateException("Already registered: " + property);
+			log.warn("Overwriting property registration: " + property);
 
 		String value = getValue(property);
 		if (value == null)
@@ -143,7 +143,7 @@ public final class Config {
 	public static void register(String property, Object def) {
 		Objects.requireNonNull(property);
 		if (config.containsKey(property))
-			throw new IllegalStateException("Already registered: " + property);
+			log.warn("Overwriting property registration: " + property);
 
 		String value = getValue(property);
 		if (value == null) {

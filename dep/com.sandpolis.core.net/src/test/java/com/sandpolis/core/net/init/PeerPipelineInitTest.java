@@ -20,8 +20,10 @@ package com.sandpolis.core.net.init;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.util.RandUtil;
 
@@ -35,29 +37,35 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
-public class PeerPipelineInitTest {
+class PeerPipelineInitTest {
 
 	private final PeerPipelineInit init = new PeerPipelineInit(null);
 
+	@BeforeAll
+	static void configure() {
+		Config.register("log.traffic_raw", false);
+		Config.register("log.traffic", false);
+	}
+
 	@Test
-	public void testNioUdp() throws InterruptedException {
+	void testNioUdp() throws InterruptedException {
 		Channel peer1 = new Bootstrap().group(new NioEventLoopGroup()).channel(NioDatagramChannel.class).handler(init)
-				.bind(9000).sync().channel();
+				.bind(30492).sync().channel();
 
 		Channel peer2 = new Bootstrap().group(new NioEventLoopGroup()).channel(NioDatagramChannel.class).handler(init)
-				.connect("127.0.0.1", 9000).sync().channel();
+				.connect("127.0.0.1", 30482).sync().channel();
 
 		exchange(peer1, peer2);
 		exchange(peer2, peer1);
 	}
 
 	@Test
-	public void testNioTcp() throws InterruptedException {
+	void testNioTcp() throws InterruptedException {
 		Channel server = new ServerBootstrap().group(new NioEventLoopGroup()).channel(NioServerSocketChannel.class)
-				.childHandler(init).bind(9000).sync().channel();
+				.childHandler(init).bind(28551).sync().channel();
 
 		Channel client = new Bootstrap().group(new NioEventLoopGroup()).channel(NioSocketChannel.class).handler(init)
-				.connect("127.0.0.1", 9000).sync().channel();
+				.connect("127.0.0.1", 28551).sync().channel();
 
 		exchange(server, client);
 		exchange(client, server);
