@@ -118,14 +118,14 @@ class OrmliteStoreProviderTest {
 		provider.add(o5);
 		provider.add(o6);
 
-		assertEquals(o1, provider.get(1L));
-		assertEquals(o2, provider.get(2L));
-		assertEquals(o4, provider.get(4L));
+		assertEquals(o1, provider.get(1L).get());
+		assertEquals(o2, provider.get(2L).get());
+		assertEquals(o4, provider.get(4L).get());
 
 		// Repeat
-		assertEquals(o1, provider.get(1L));
-		assertEquals(o2, provider.get(2L));
-		assertEquals(o4, provider.get(4L));
+		assertEquals(o1, provider.get(1L).get());
+		assertEquals(o2, provider.get(2L).get());
+		assertEquals(o4, provider.get(4L).get());
 	}
 
 	@ParameterizedTest
@@ -138,12 +138,12 @@ class OrmliteStoreProviderTest {
 		provider.add(o5);
 		provider.add(o6);
 
-		assertEquals(o1, provider.get("name", "One"));
-		assertEquals(o2, provider.get("name", "Two"));
+		assertEquals(o1, provider.get("name", "One").get());
+		assertEquals(o2, provider.get("name", "Two").get());
 
 		// Repeat
-		assertEquals(o1, provider.get("name", "One"));
-		assertEquals(o2, provider.get("name", "Two"));
+		assertEquals(o1, provider.get("name", "One").get());
+		assertEquals(o2, provider.get("name", "Two").get());
 	}
 
 	@ParameterizedTest
