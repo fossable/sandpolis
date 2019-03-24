@@ -17,12 +17,9 @@
  *****************************************************************************/
 package com.sandpolis.core.util;
 
-import static com.sandpolis.core.util.CryptoUtil.SHA256;
-
 import java.util.Objects;
 
 import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
 /**
  * This utility simplifies the handling of many types of IDs.
@@ -90,30 +87,6 @@ public final class IDUtil {
 
 		private CVID() {
 		}
-	}
-
-	/**
-	 * A UUID is a 256 byte String that uniquely identifies an instance over all
-	 * sessions.
-	 * 
-	 * @author cilki
-	 * @since 5.0.0
-	 */
-	public static final class UUID {
-
-		/**
-		 * Get the instance's Universal Unique ID.
-		 * 
-		 * @param instance The instance type
-		 * @param flavor   The instance subtype
-		 * @return The UUID
-		 */
-		public static String getUUID(Instance instance, InstanceFlavor flavor) {
-			String id = System.getProperty("os.name") + instance.name() + flavor.name();
-			// TODO another source
-			return CryptoUtil.hash(SHA256, id.toLowerCase());
-		}
-
 	}
 
 	/**

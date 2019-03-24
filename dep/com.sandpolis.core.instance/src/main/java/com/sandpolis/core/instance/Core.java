@@ -17,16 +17,13 @@
  *****************************************************************************/
 package com.sandpolis.core.instance;
 
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.soi.Build.SO_Build;
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
-import com.sandpolis.core.util.IDUtil;
+import com.sandpolis.core.soi.Build.SO_Build;
+import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
 
 /**
  * Contains common fields useful to every instance type.
@@ -58,36 +55,15 @@ public final class Core {
 	 */
 	public static final SO_DependencyMatrix SO_MATRIX;
 
-	static {
-		try {
-			INSTANCE = MainDispatch.getInstance();
-			FLAVOR = MainDispatch.getInstanceFlavor();
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to determine instance!", e);
-		}
-
-		try {
-			SO_MATRIX = SO_DependencyMatrix.parseFrom(MainDispatch.getMain().getResourceAsStream("/soi/matrix.bin"));
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to read SO_MATRIX!", e);
-		}
-
-		try {
-			SO_BUILD = SO_Build.parseFrom(MainDispatch.getMain().getResourceAsStream("/soi/build.bin"));
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to read SO_BUILD!", e);
-		}
-	}
+	/**
+	 * The instance's UUID.
+	 */
+	public static final String UUID;
 
 	/**
 	 * The instance's CVID.
 	 */
 	private static int cvid;
-
-	/**
-	 * The instance's UUID.
-	 */
-	private static final String uuid = IDUtil.UUID.getUUID(INSTANCE, FLAVOR);
 
 	/**
 	 * Get the CVID.
@@ -110,13 +86,56 @@ public final class Core {
 		Core.cvid = cvid;
 	}
 
+	static {
+		if (MainDispatch.getInstance() != null && MainDispatch.getInstanceFlavor() != null) {
+			INSTANCE = MainDispatch.getInstance();
+			FLAVOR = MainDispatch.getInstanceFlavor();
+			SO_MATRIX = readMatrix();
+			SO_BUILD = readBuild();
+
+			// TODO set from PrefStore
+			UUID = java.util.UUID.randomUUID().toString();
+		} else {
+			log.warn("Applying unit test configuration");
+
+			INSTANCE = Instance.CHARCOAL;
+			FLAVOR = InstanceFlavor.NONE;
+			SO_BUILD = null;
+			SO_MATRIX = null;
+			UUID = java.util.UUID.randomUUID().toString();
+		}
+	}
+
 	/**
-	 * Get the UUID.
+	 * Get the instance's {@link SO_DependencyMatrix} object.
 	 * 
-	 * @return The instance's current UUID
+	 * @return The instance's {@link SO_DependencyMatrix} object
 	 */
-	public static String uuid() {
-		return uuid;
+	private static SO_DependencyMatrix readMatrix() {
+		if (MainDispatch.getMain() == MainDispatch.class)
+			throw new IllegalStateException("Core initialized before dispatch");
+
+		try {
+			return SO_DependencyMatrix.parseFrom(MainDispatch.getMain().getResourceAsStream("/soi/matrix.bin"));
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to read SO_MATRIX!", e);
+		}
+	}
+
+	/**
+	 * Get the instance's {@link SO_Build} object.
+	 * 
+	 * @return The instance's {@link SO_Build} object
+	 */
+	private static SO_Build readBuild() {
+		if (MainDispatch.getMain() == MainDispatch.class)
+			throw new IllegalStateException("Core initialized before dispatch");
+
+		try {
+			return SO_Build.parseFrom(MainDispatch.getMain().getResourceAsStream("/soi/build.bin"));
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to read SO_MATRIX!", e);
+		}
 	}
 
 	private Core() {

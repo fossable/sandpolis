@@ -47,6 +47,7 @@ public class CvidResponseHandlerTest {
 		server = new EmbeddedChannel();
 		server.pipeline().addLast("cvid", serverHandler);
 		server.attr(ChannelConstant.FUTURE_CVID).set(new DefaultPromise<>(new DefaultEventLoop()));
+		server.attr(ChannelConstant.HANDLER_EXECUTE).set(new ExecuteHandler(null));
 	}
 
 	@Test

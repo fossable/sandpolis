@@ -58,7 +58,7 @@ public class CvidResponseHandler extends SimpleChannelInboundHandler<Message> {
 
 		RQ_Cvid rq = msg.getRqCvid();
 		if (rq != null && !rq.getUuid().isEmpty() && rq.getInstance() != Instance.SERVER) {
-			RS_Cvid.Builder rs = RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.uuid())
+			RS_Cvid.Builder rs = RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.UUID)
 					.setCvid(IDUtil.CVID.cvid(rq.getInstance()));
 
 			ch.writeAndFlush(Message.newBuilder().setRsCvid(rs).build());

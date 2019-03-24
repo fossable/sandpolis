@@ -72,7 +72,7 @@ public class CvidRequestHandler extends SimpleChannelInboundHandler<Message> {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		handshake(ctx.channel(), Core.INSTANCE, Core.uuid());
+		handshake(ctx.channel(), Core.INSTANCE, Core.UUID);
 		super.channelActive(ctx);
 	}
 

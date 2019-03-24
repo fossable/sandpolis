@@ -57,6 +57,9 @@ import io.netty.util.concurrent.DefaultPromise;
  */
 public class ServerInitializer extends PipelineInitializer {
 
+	// This will cause problems if the server CVID is allowed to change because
+	// CvidResponseHandler always uses the latest CVID while ServerInitializer is
+	// stuck with the cvid field below.
 	private static final CvidResponseHandler cvidHandler = new CvidResponseHandler();
 
 	/**

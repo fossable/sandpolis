@@ -77,19 +77,18 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 	/**
 	 * Create a new {@link ExecuteHandler} with the given {@link Exelet} list.
 	 * 
-	 * @param exelets A list of available {@link Exelet}s
+	 * @param exelets A list of available {@link Exelet}s or {@code null} for none
 	 */
 	public ExecuteHandler(Class<? extends Exelet>[] exelets) {
-		if (exelets == null)
-			throw new IllegalArgumentException();
 
 		this.responseMap = new ConcurrentHashMap<>();
 		this.handles = new HashMap<>();
 		this.exelets = new HashMap<>();
 
-		for (Class<? extends Exelet> exelet : exelets)
-			// Use null values to indicate that an exelet has not been loaded yet
-			this.exelets.put(exelet, null);
+		if (exelets != null)
+			for (Class<? extends Exelet> exelet : exelets)
+				// Use null values to indicate that an exelet has not been loaded yet
+				this.exelets.put(exelet, null);
 	}
 
 	@Override
