@@ -23,18 +23,8 @@ package com.sandpolis.core.instance;
  * @author cilki
  * @since 4.0.0
  */
-public final class Perm extends ConstantTree<Short> {
+public final class Perm {
 	private Perm() {
-	}
-
-	/**
-	 * Lookup a constant by value.
-	 * 
-	 * @param value The value
-	 * @return The constant's String representation
-	 */
-	public String lookup(Short value) {
-		return lookup(Perm.class, value);
 	}
 
 	/**
