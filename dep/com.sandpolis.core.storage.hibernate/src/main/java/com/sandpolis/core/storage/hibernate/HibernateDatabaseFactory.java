@@ -60,7 +60,7 @@ public class HibernateDatabaseFactory implements IDatabaseFactory {
 
 				// This property cannot be changed because SQLite does not support altering a
 				// table's unique constrants
-				.setProperty("hibernate.hbm2ddl.auto", "validate");
+				.setProperty("hibernate.hbm2ddl.auto", "create");
 		for (Class<?> cls : persist)
 			conf.addAnnotatedClass(cls);
 
@@ -76,7 +76,7 @@ public class HibernateDatabaseFactory implements IDatabaseFactory {
 
 		Configuration conf = new Configuration()
 				// Set the MySQL database driver
-				.setProperty("hibernate.connection.driver_class", "com.mysql.cj.jdbc.Driver")
+				.setProperty("hibernate.connection.driver_class", "org.mariadb.jdbc.Driver")
 
 				// Set the MySQL dialect
 				.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL5Dialect")
