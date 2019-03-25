@@ -5,24 +5,46 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://travis-ci.org/Subterranean-Security/Sandpolis.svg?branch=master)](https://travis-ci.org/Subterranean-Security/Sandpolis)
 
-**Sandpolis** is a multi-OS remote administration platform for both serious sysadmins and casual users. It provides real-time monitoring and management of servers or desktop computers from (eventually) any device. The overall architecture of Sandpolis is coincidentally similar to Canonical's [Landscape](https://landscape.canonical.com), but Sandpolis is not intended to be an open-source clone of Landscape.
+**Sandpolis** is a new multi-OS remote administration platform for both serious sysadmins and casual users. It provides real-time monitoring and management capabilities for servers or desktop computers from (eventually) any device. The overall architecture of Sandpolis is coincidentally similar to Canonical's [Landscape service](https://landscape.canonical.com), but Sandpolis is not an open-source imitation of Landscape.
 
-Sandpolis is intended to be the ultimate general purpose administration system. This means Sandpolis is:
+Sandpolis is intended to be the ultimate general purpose administration system. Here are some fundamental qualities that Sandpolis tries to achieve:
 
-- compatible with many operating systems
+- compatible with as many operating systems as possible
 - flexible, configurable, and easily extensible to niche applications via plugins
-- uncompromising on features and performance
+- uncompromising on performance and security
 - low latency and high concurrency
+- user friendly
 
-More simply, Sandpolis is a convenient means to **securely** interacting with many remote computers from one place.
+More simply, Sandpolis is a convenient means to **securely** interacting with many remote computers from one graphical interface.
 
 ### What it isn't
-Sandpolis is **not** intended to be used on unauthorized systems, to manage a botnet, or any other illegal activity. Features are carefully considered and only included if their legitimate use cases significantly outweigh the possible malicious use cases. Unfortunately, the nature of dual-use technology like remote administration is that eliminating all malicious use cases also eliminates all legitimate usability.
+Sandpolis is **not** intended to be used on unauthorized systems, to manage a botnet, or for any other illegal activity. 
+
+There are many _remote administration tools_ out there that claim to be legitimate, but have strange features like ransomware, password stealers, and network flooders. While there may be legitimate use-cases for all of those, the reality is that way more people are going to use them for harm than good. Fortunately, most _remote administration tools_ are so brittle and poorly designed that they are practically useless anyway.
 
 ### Why
 If you're still unsure of what Sandpolis achieves, consider how you might manage a single remote computer: probably via SSH if it's Linux or Remote Desktop if it's Windows. This paradigm works well for many tasks, but others such as hardware monitoring, long background tasks, and distributed tasks are not well suited to a temporary session. Additionally, different operating systems handle common tasks differently, which requires an effective administrator to have specific knowledge of multiple different platforms. Now multiply these issues by the number of computers you have to see the problem Sandpolis solves.
 
-### Building and Running Sandpolis
+### How
+There are three components to any Sandpolis network: a **client** agent installed on a remote computer, a **viewer** agent that you use to manage clients, and a **server** instance that facilitates communication between the two.  
+
+### Installing
+- **Windows**
+`// TODO`
+
+- **Arch Linux**
+Download the [development package](https://aur.archlinux.org/pkgbase/sandpolis-git) or the [stable package](https://aur.archlinux.org/pkgbase/sandpolis) from the AUR and install with `makepkg -si`. The server can be started with `systemctl start sandpolisd`.
+
+- **Debian/Ubuntu**
+`// TODO`
+
+- **MacOS**
+`// TODO`
+
+- **Docker**
+`// TODO`
+
+### Building and Testing
 The build is divided into sets of **instance modules**, **library modules**, and **plugin modules**:
 
 |Module Type| Location | Description|
