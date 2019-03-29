@@ -3,5 +3,9 @@ language: java
 script:
   - ./gradlew build -PDEPLOY_ENABLED=false
 
+os:
+  - linux
+  - osx
+
 jdk:
   - openjdk11
