@@ -23,8 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.File;
 import java.net.URISyntaxException;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.storage.database.Database;
@@ -32,12 +34,16 @@ import com.sandpolis.core.instance.storage.database.Database;
 class DatabaseTest {
 
 	@Test
-	void testState() throws Exception {
+	@DisplayName("Check the state and metadata of a newly constructed Database")
+	void metadata() throws Exception {
+
+		// SQLite
 		try (Database db = new Database("jdbc:sqlite:file:/home/test.db")) {
 			assertFalse(db.isOpen());
-			assertEquals("/home/test.db", db.getFile().getAbsolutePath());
+			assertEquals(new File("/home/test.db").getAbsolutePath(), db.getFile().getAbsolutePath());
 		}
 
+		// MySQL
 		try (Database db = new Database("jdbc:mysql:192.168.1.1/database")) {
 			assertFalse(db.isOpen());
 			assertNull(db.getFile());
@@ -46,8 +52,9 @@ class DatabaseTest {
 	}
 
 	@Test
-	void testInvalidUrls() {
-		assertThrows(URISyntaxException.class, () -> new Database("invalid url"));
+	@DisplayName("Check that a Database cannot be constructed for an invalid URL")
+	void invalidUrl() {
+		assertThrows(URISyntaxException.class, () -> new Database("///invalid url///"));
 	}
 
 }
