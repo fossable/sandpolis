@@ -306,7 +306,7 @@ class HibernateStoreProviderTest {
 	static Stream<StoreProvider<TestObject>> implementations()
 			throws URISyntaxException, IOException, SQLException, ManagedProcessException {
 		Database sqlite = new HibernateDatabaseFactory().sqlite(new Class[] { TestObject.class },
-				new Database("jdbc:sqlite:file:" + Files.createTempFile(null, null).toAbsolutePath().toString()));
+				new Database("jdbc:sqlite:" + Files.createTempFile(null, null).toUri().toURL()));
 
 		Database mysql = new HibernateDatabaseFactory().mysql(new Class[] { TestObject.class },
 				new Database("jdbc:mysql://127.0.0.1:8001/test?serverTimezone=America/Chicago", "root", ""));
