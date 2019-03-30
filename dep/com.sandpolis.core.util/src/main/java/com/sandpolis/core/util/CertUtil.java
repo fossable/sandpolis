@@ -43,11 +43,9 @@ public final class CertUtil {
 	/**
 	 * Load a {@link X509Certificate}.
 	 * 
-	 * @param cert
-	 *            A Base64-encoded certificate
+	 * @param cert A Base64-encoded certificate
 	 * @return The new certificate
-	 * @throws CertificateException
-	 *             If the certificate format is invalid
+	 * @throws CertificateException If the certificate format is invalid
 	 */
 	public static X509Certificate parse(String cert) throws CertificateException {
 		if (cert == null)
@@ -59,13 +57,10 @@ public final class CertUtil {
 	/**
 	 * Load a {@link X509Certificate}.
 	 * 
-	 * @param cert
-	 *            A certificate on the filesystem
+	 * @param cert A certificate on the filesystem
 	 * @return The new certificate
-	 * @throws CertificateException
-	 *             If the certificate format is invalid
-	 * @throws IOException
-	 *             If there was an error reading the file
+	 * @throws CertificateException If the certificate format is invalid
+	 * @throws IOException          If there was an error reading the file
 	 */
 	public static X509Certificate parse(File cert) throws CertificateException, IOException {
 		if (cert == null)
@@ -77,11 +72,9 @@ public final class CertUtil {
 	/**
 	 * Load a {@link X509Certificate}.
 	 * 
-	 * @param cert
-	 *            An unencoded certificate
+	 * @param cert An unencoded certificate
 	 * @return The new certificate
-	 * @throws CertificateException
-	 *             If the certificate format is invalid
+	 * @throws CertificateException If the certificate format is invalid
 	 */
 	public static X509Certificate parse(byte[] cert) throws CertificateException {
 		if (cert == null)
@@ -97,11 +90,9 @@ public final class CertUtil {
 	/**
 	 * Get certificate information as a formatted String.
 	 * 
-	 * @param cert
-	 *            A Base64-encoded certificate
+	 * @param cert A Base64-encoded certificate
 	 * @return A nicely formatted String
-	 * @throws CertificateException
-	 *             If the certificate format is invalid
+	 * @throws CertificateException If the certificate format is invalid
 	 */
 	public static String getInfoString(String cert) throws CertificateException {
 		if (cert == null)
@@ -113,8 +104,7 @@ public final class CertUtil {
 	/**
 	 * Get certificate information as a formatted String.
 	 * 
-	 * @param cert
-	 *            A certificate
+	 * @param cert A certificate
 	 * @return A nicely formatted String
 	 */
 	public static String getInfoString(X509Certificate cert) {
@@ -127,12 +117,12 @@ public final class CertUtil {
 		buffer.append(String.format("Signature: (%s)%n", cert.getSigAlgName()));
 
 		// principal name
-		buffer.append("\t" + cert.getSubjectX500Principal().getName() + "\n");
+		buffer.append(String.format("\t%s%n", cert.getSubjectX500Principal().getName()));
 
 		// validity
-		buffer.append("\tValidity\n");
-		buffer.append("\t\tNot Before: " + cert.getNotBefore().toString() + "\n");
-		buffer.append("\t\tNot After: " + cert.getNotAfter().toString() + "\n");
+		buffer.append(String.format("\tValidity%n"));
+		buffer.append(String.format("\t\tNot Before: %s%n", cert.getNotBefore()));
+		buffer.append(String.format("\t\tNot After: %s%n", cert.getNotAfter()));
 
 		// public key
 		PublicKey pub = cert.getPublicKey();
@@ -145,8 +135,7 @@ public final class CertUtil {
 	/**
 	 * Get certificate information as a formatted HTML String.
 	 * 
-	 * @param cert
-	 *            A certificate
+	 * @param cert A certificate
 	 * @return A nicely formatted HTML String
 	 */
 	public static String getInfoHtml(X509Certificate cert) {
@@ -154,18 +143,15 @@ public final class CertUtil {
 			throw new IllegalArgumentException();
 
 		return String.format("<html>%s</html>",
-				getInfoString(cert).replaceAll("\n", "<br>").replaceAll("\t", "&emsp;"));
+				getInfoString(cert).replaceAll(String.format("%n"), "<br>").replaceAll("\t", "&emsp;"));
 	}
 
 	/**
 	 * Format a binary key into hexidecimal colon format.
 	 * 
-	 * @param data
-	 *            Key data
-	 * @param columns
-	 *            Formatted key width in bytes
-	 * @param padding
-	 *            A padding String to go before the first byte in each row
+	 * @param data    Key data
+	 * @param columns Formatted key width in bytes
+	 * @param padding A padding String to go before the first byte in each row
 	 * @return The formatted key
 	 */
 	private static String formatKey(byte[] data, int columns, String padding) {
@@ -188,10 +174,8 @@ public final class CertUtil {
 	 * Get the root Sandpolis certificate.
 	 * 
 	 * @return The root certificate
-	 * @throws CertificateException
-	 *             If the certificate format is invalid
-	 * @throws IOException
-	 *             If there was an error reading the resource
+	 * @throws CertificateException If the certificate format is invalid
+	 * @throws IOException          If there was an error reading the resource
 	 */
 	public static X509Certificate getRoot() throws CertificateException, IOException {
 		try (InputStream in = CertUtil.class.getResourceAsStream("/cert/root.cert")) {
@@ -202,8 +186,7 @@ public final class CertUtil {
 	/**
 	 * Indicates whether the given certificate is within the timestamp constraints.
 	 * 
-	 * @param certificate
-	 *            The certificate to check
+	 * @param certificate The certificate to check
 	 * @return True if the current time is after the begin timestamp, but before the
 	 *         expiration timestamp
 	 */
