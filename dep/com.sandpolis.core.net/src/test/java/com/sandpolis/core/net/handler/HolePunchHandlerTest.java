@@ -128,49 +128,44 @@ class HolePunchHandlerTest {
 		testLossPattern(new Boolean[] { true, true, true }, new Boolean[] { true, true, true }, true);
 	}
 
-	@Test
-	void lossPattern_1() throws Exception {
-		testLossPattern(new Boolean[] { false, false, false }, new Boolean[] { false, false, false }, false);
-	}
-
-	@Test
-	void lossPattern_2() throws Exception {
-		testLossPattern(new Boolean[] { true, true, true }, new Boolean[] { true, true, true }, true);
-	}
-
 	// @Test
-	void lossPattern_3() throws Exception {
+	void lossPattern_1() throws Exception {
 		testLossPattern(new Boolean[] { true, true, true }, new Boolean[] { false, true, true }, true);
 	}
 
 	@Test
-	void lossPattern_4() throws Exception {
-		testLossPattern(new Boolean[] { true, false, true }, new Boolean[] { false, false, false }, false);
-	}
-
-	@Test
-	void lossPattern_5() throws Exception {
-		testLossPattern(new Boolean[] { false, false, false }, new Boolean[] { true, false, true }, false);
-	}
-
-	@Test
-	void lossPattern_6() throws Exception {
+	void lossPattern_2() throws Exception {
 		testLossPattern(new Boolean[] { true, true, true }, new Boolean[] { false, false, false }, false);
 	}
 
 	@Test
-	void lossPattern_7() throws Exception {
-		testLossPattern(new Boolean[] { false, false, false }, new Boolean[] { true, true, true }, false);
+	void lossPattern_3() throws Exception {
+		testLossPattern(new Boolean[] { true, false, true }, new Boolean[] { false, false, false }, false);
 	}
 
 	@Test
-	void lossPattern_8() throws Exception {
+	void lossPattern_4() throws Exception {
 		testLossPattern(new Boolean[] { true, false, false }, new Boolean[] { false, false, true }, false);
 	}
 
 	@Test
-	void lossPattern_9() throws Exception {
+	void lossPattern_5() throws Exception {
 		testLossPattern(new Boolean[] { false, false, true }, new Boolean[] { true, false, false }, false);
+	}
+
+	@Test
+	void lossPattern_6() throws Exception {
+		testLossPattern(new Boolean[] { false, false, false }, new Boolean[] { true, true, true }, false);
+	}
+
+	@Test
+	void lossPattern_7() throws Exception {
+		testLossPattern(new Boolean[] { false, false, false }, new Boolean[] { true, false, true }, false);
+	}
+
+	@Test
+	void lossPattern_8() throws Exception {
+		testLossPattern(new Boolean[] { false, false, false }, new Boolean[] { false, false, false }, false);
 	}
 
 	/**
