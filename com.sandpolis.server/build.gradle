@@ -67,10 +67,6 @@ jar {
 	}
 }
 
-test {
-	useJUnitPlatform()
-}
-
 // Copy dependencies to a path given by STDIN
 task installDependencies {
 	doLast {

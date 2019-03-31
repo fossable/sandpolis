@@ -20,6 +20,7 @@ buildscript {
 if (DEPLOY_ENABLED.toBoolean())
 	apply plugin: 'com.sandpolis.gradle.deploy'
 
+// Apply repository configuration
 allprojects {
 	repositories {
 		mavenCentral()
@@ -28,6 +29,19 @@ allprojects {
 	buildscript {
 		repositories {
 			mavenCentral()
+		}
+	}
+}
+
+// Apply testing configuration to subprojects
+subprojects {
+	plugins.withType(JavaPlugin) {
+		test {
+			useJUnitPlatform()
+
+			testLogging {
+				exceptionFormat = 'full'
+			}
 		}
 	}
 }

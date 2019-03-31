@@ -40,10 +40,6 @@ dependencies {
 	implementation 'org.slf4j:slf4j-api:1.7.26'
 }
 
-test {
-	useJUnitPlatform()
-}
-
 // Allow com.sandpolis.server to reuse some unit tests
 task testJar(type: Jar, dependsOn: testClasses) {
     classifier = 'tests'
