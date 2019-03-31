@@ -17,44 +17,54 @@
  *****************************************************************************/
 package com.sandpolis.core.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static com.sandpolis.core.util.NetUtil.checkPort;
+import static com.sandpolis.core.util.NetUtil.download;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-public class NetUtilTest {
+class NetUtilTest {
 
 	@Test
-	public void testDownload() throws IOException {
-		// First download to memory
-		assertNotNull(NetUtil.download("https://github.com/Subterranean-Security/Sandpolis/blob/master/.gitignore"));
+	@DisplayName("Download a small file into memory")
+	void download_1() throws IOException {
+		byte[] file = download("https://github.com/Subterranean-Security/Sandpolis/blob/master/.gitignore");
 
-		// Now download to a file
-		File out = Files.createTempFile(null, null).toFile();
-		assertEquals(0, out.length());
-		NetUtil.download("https://github.com/Subterranean-Security/Sandpolis/blob/master/.gitignore", out);
-		assertTrue(out.length() > 0);
-		out.delete();
+		assertNotNull(file);
+		assertTrue(file.length > 0);
 	}
 
 	@Test
-	public void testDownloadTooLarge() throws IOException {
+	@DisplayName("Download a small file to the filesystem")
+	void download_2(@TempDir Path temp) throws IOException {
+		download("https://github.com/Subterranean-Security/Sandpolis/blob/master/.gitignore",
+				temp.resolve("test.txt").toFile());
+
+		assertTrue(Files.exists(temp.resolve("test.txt")));
+		assertTrue(Files.size(temp.resolve("test.txt")) > 0);
+	}
+
+	@Test
+	@DisplayName("Try to download a file that is too big for this method")
+	void download_3() throws IOException {
 		assertThrows(IllegalArgumentException.class,
-				() -> NetUtil.download("http://old-releases.ubuntu.com/releases/11.04/ubuntu-11.04-desktop-amd64.iso"));
+				() -> download("http://old-releases.ubuntu.com/releases/11.04/ubuntu-11.04-desktop-amd64.iso"));
 	}
 
 	@Test
-	public void testCheckPort() {
-		assertTrue(NetUtil.checkPort("www.google.com", 80));
-		assertFalse(NetUtil.checkPort("www.example.com", 81));
-		assertFalse(NetUtil.checkPort("8.8.8.8", 80));
+	@DisplayName("Check some well-known ports")
+	void checkPort_1() {
+		assertTrue(checkPort("www.google.com", 80));
+		assertFalse(checkPort("www.google.com", 81));
 	}
 
 }
