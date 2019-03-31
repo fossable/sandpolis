@@ -20,7 +20,7 @@ package com.sandpolis.server.exe;
 import static com.sandpolis.core.util.ProtoUtil.begin;
 import static com.sandpolis.core.util.ProtoUtil.success;
 
-import com.sandpolis.core.instance.Perm;
+import com.sandpolis.core.instance.PermissionConstant.server;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MCGroup.RS_ListGroups;
@@ -41,7 +41,7 @@ public class GroupExe extends Exelet {
 	}
 
 	@Auth
-	@Permission(permission = Perm.server.groups.create)
+	@Permission(permission = server.group.create)
 	public void rq_add_group(Message m) {
 		var rq = m.getRqAddGroup();
 

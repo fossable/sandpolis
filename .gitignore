@@ -5,11 +5,15 @@
 build
 bin
 
-# Eclipse Metadata
+# Eclipse metadata
 .project
 .classpath
 .settings
 
-# Nested Repositories
+# Nested repositories
 /com.sandpolis.server.cloud/
 /com.sandpolis.server.demo/
+
+# Annotation processor
+.apt_generated
+.factorypath

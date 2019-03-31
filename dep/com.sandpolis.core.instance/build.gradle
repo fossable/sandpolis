@@ -6,6 +6,9 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
+	
+	// Temporary until BuildShip supports annotation processors
+	id 'net.ltgt.apt-eclipse' version '0.21'
 }
 
 eclipse {
@@ -24,6 +27,10 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.soi')
 	implementation project(':dep:com.sandpolis.core.util')
 
+	// https://github.com/cilki/TreeConstants
+	compileOnly 'com.github.cilki:tree-constants-api:1.0.1'
+	annotationProcessor 'com.github.cilki:tree-constants:1.0.1'
+
 	// https://github.com/qos-ch/logback
 	implementation 'ch.qos.logback:logback-core:1.2.3'
 	implementation 'ch.qos.logback:logback-classic:1.2.3'
@@ -31,8 +38,9 @@ dependencies {
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:27.1-jre'
 
-	implementation 'javax.persistence:javax.persistence-api:2.2'	
-	
+	// https://github.com/javaee/jpa-spec
+	implementation 'javax.persistence:javax.persistence-api:2.2'
+
 	// https://github.com/fusesource/jansi
 	implementation 'org.fusesource.jansi:jansi:1.17.1'
 

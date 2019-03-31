@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
 import java.util.function.Predicate;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Perm;
+import com.sandpolis.core.instance.PermissionConstants;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
@@ -77,7 +77,7 @@ public abstract class Exelet {
 
 	/**
 	 * When applied to an {@link Exelet} method, the method will be executable on
-	 * connections which have the necessary permission (defined in {@link Perm}).
+	 * connections which have the necessary permission.
 	 * 
 	 * @author cilki
 	 * @since 5.0.0
@@ -87,7 +87,7 @@ public abstract class Exelet {
 	public static @interface Permission {
 
 		/**
-		 * The permission defined in {@link Perm}.
+		 * The permission as defined in {@link PermissionConstants}.
 		 */
 		short permission();
 	}

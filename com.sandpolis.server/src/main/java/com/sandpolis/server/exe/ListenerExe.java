@@ -20,7 +20,7 @@ package com.sandpolis.server.exe;
 import static com.sandpolis.core.util.ProtoUtil.begin;
 import static com.sandpolis.core.util.ProtoUtil.success;
 
-import com.sandpolis.core.instance.Perm;
+import com.sandpolis.core.instance.PermissionConstant.server;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -40,7 +40,7 @@ public class ListenerExe extends Exelet {
 	}
 
 	@Auth
-	@Permission(permission = Perm.server.listeners.create)
+	@Permission(permission = server.listener.create)
 	public void rq_add_listener(Message m) {
 		var rq = m.getRqAddListener();
 
