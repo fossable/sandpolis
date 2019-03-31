@@ -21,155 +21,151 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.zeroturnaround.zip.ZipUtil;
+import org.junit.jupiter.api.io.TempDir;
 
-import com.google.common.io.Files;
-import com.google.common.io.MoreFiles;
 import com.sandpolis.core.proto.net.MCFsHandle.FileListlet;
 import com.sandpolis.core.proto.net.MCFsHandle.FileListlet.UpdateType;
 
 class FsHandleTest {
 
-	private static FsHandle fs;
-
-	private static File temp;
-
-	private static final File test_jar = new File("src/test/resources/test.jar");
-	private static final File test_zip = new File("src/test/resources/test.zip");
-
-	@BeforeEach
-	void setup() throws IOException {
-		temp = Files.createTempDir();
-
-		ZipUtil.unpack(test_jar, temp);
-		ZipUtil.unpack(test_zip, temp);
-
-		fs = new FsHandle(temp.getAbsolutePath());
-	}
-
-	@AfterEach
-	void close() throws IOException {
-		fs.close();
-		MoreFiles.deleteRecursively(temp.toPath());
-	}
-
 	@Test
-	void testDown() {
-		assertTrue(fs.setPath(temp.getAbsolutePath()));
-		assertFalse(fs.down("logback.xml"));
-		assertFalse(fs.down("test5"));
-		assertTrue(fs.down("test1"));
-	}
+	@DisplayName("Check that the handle can descend into directories")
+	void down_1(@TempDir Path temp) throws IOException {
+		Files.createDirectories(temp.resolve("test1/test2/test3"));
 
-	@Test
-	void testSetPath() {
-		assertTrue(fs.setPath(temp.getAbsolutePath() + "/test1/test/test/test/test"));
-		assertEquals(temp.getAbsolutePath() + "/test1/test/test/test/test", fs.pwd());
-		assertTrue(fs.setPath(temp.getAbsolutePath() + "/test1"));
-		assertEquals(temp.getAbsolutePath() + "/test1", fs.pwd());
-	}
-
-	@Test
-	void testUp() {
-		assertTrue(fs.setPath(temp.getAbsolutePath() + "/test1/test/test/test/test"));
-		assertTrue(fs.up());
-		assertEquals(temp.getAbsolutePath() + "/test1/test/test/test", fs.pwd());
-	}
-
-	@Test
-	void testUpRoot() {
-		assertTrue(fs.setPath("/"));
-		assertFalse(fs.up());
-	}
-
-	@Test
-	void testList() throws IOException {
-		assertTrue(fs.setPath(temp.getAbsolutePath()));
-		assertEquals(8, fs.list().size());
-	}
-
-	@Test
-	void testCallbacks() throws Exception {
-		List<FileListlet> updates = new ArrayList<>();
-
-		fs.addUpdateCallback(ev -> {
-			updates.addAll(ev.getListingList());
-		});
-
-		// Add file
-		new File(temp.getAbsolutePath() + "/test_create.txt").createNewFile();
-		Thread.sleep(300);// Wait for update
-		assertEquals(1, updates.size());
-		FileListlet fileCreated = updates.remove(0);
-		assertEquals("test_create.txt", fileCreated.getName());
-		assertEquals(UpdateType.ENTRY_CREATE, fileCreated.getUpdateType());
-
-		// Delete file
-		new File(temp.getAbsolutePath() + "/test5").delete();
-		Thread.sleep(300);// Wait for update
-		assertEquals(1, updates.size());
-		FileListlet fileDeleted = updates.remove(0);
-		assertEquals("test5", fileDeleted.getName());
-		assertEquals(UpdateType.ENTRY_DELETE, fileDeleted.getUpdateType());
-
-		// Modify file
-		try (PrintWriter pw = new PrintWriter(temp.getAbsolutePath() + "/logback.xml")) {
-			pw.println("some modification");
+		try (FsHandle fs = new FsHandle(temp.toString())) {
+			assertTrue(fs.down("test1"));
+			assertTrue(fs.down("test2"));
+			assertTrue(fs.down("test3"));
 		}
-		Thread.sleep(300);// Wait for update
-		FileListlet fileModified = updates.remove(0);
-		assertEquals("logback.xml", fileModified.getName());
-		assertEquals(UpdateType.ENTRY_MODIFY, fileModified.getUpdateType());
-
 	}
 
 	@Test
-	void testCaching() throws IOException {
+	@DisplayName("Check that the handle cannot descend into files")
+	void down_2(@TempDir Path temp) throws IOException {
+		Files.createFile(temp.resolve("test.txt"));
 
-		// Ensure same list is returned
-		assertTrue(fs.list() == fs.list());
-
-		// Cycle between directories
-		assertTrue(fs.down("test1"));
-		assertTrue(fs.up());
-		assertTrue(fs.down("test1"));
-		assertTrue(fs.up());
-		assertTrue(fs.down("test1"));
-		assertTrue(fs.up());
+		try (FsHandle fs = new FsHandle(temp.toString())) {
+			assertFalse(fs.down("test.txt"));
+		}
 	}
 
 	@Test
-	void testConsistencyPwd() throws IOException {
+	@DisplayName("Check that the handle can move out of directories")
+	void up_1(@TempDir Path temp) throws IOException {
+		Files.createDirectories(temp.resolve("test1/test2/test3"));
 
-		List<FileListlet> listing1 = new ArrayList<>(fs.list());
-		new File(temp.getAbsolutePath() + "/test_create.txt").createNewFile();
-		List<FileListlet> listing2 = fs.list();
-
-		assertEquals(listing1.size() + 1, listing2.size());
+		try (FsHandle fs = new FsHandle(temp.resolve("test1/test2/test3").toString())) {
+			assertTrue(fs.up());
+			assertTrue(fs.up());
+			assertTrue(fs.up());
+			assertEquals(temp.toString(), fs.pwd());
+		}
 	}
 
 	@Test
-	void testConsistencyCache() throws Exception {
+	@DisplayName("Check that the handle cannot move higher than the root")
+	void up_2() {
+		try (FsHandle fs = new FsHandle("/")) {
+			assertFalse(fs.up());
+			assertFalse(fs.up());
+			assertFalse(fs.up());
+			assertEquals(Paths.get("/").toString(), fs.pwd());
+		}
+	}
 
-		assertTrue(fs.down("test1"));
-		List<FileListlet> listing1 = new ArrayList<>(fs.list());
-		assertTrue(fs.up());
+	@Test
+	@DisplayName("Check that the handle lists directory contents")
+	void list_1(@TempDir Path temp) throws IOException {
+		Files.createDirectory(temp.resolve("test1"));
+		Files.createFile(temp.resolve("test1.txt"));
 
-		new File(temp.getAbsolutePath() + "/test1/test_create.txt").createNewFile();
-		Thread.sleep(500);
+		try (FsHandle fs = new FsHandle(temp.toString())) {
 
-		assertTrue(fs.down("test1"));
-		List<FileListlet> listing2 = fs.list();
+			assertTrue(fs.list().stream().anyMatch(listlet -> {
+				return "test1".equals(listlet.getName()) && listlet.getDirectory() == true;
+			}));
 
-		assertEquals(listing1.size() + 1, listing2.size());
+			assertTrue(fs.list().stream().anyMatch(listlet -> {
+				return "test1.txt".equals(listlet.getName()) && listlet.getDirectory() == false;
+			}));
+
+			assertEquals(2, fs.list().size());
+		}
+	}
+
+	@Test
+	@DisplayName("Check that the add event listener is notified")
+	void add_callback_1(@TempDir Path temp) throws IOException, InterruptedException {
+		BlockingQueue<FileListlet> eventQueue = new ArrayBlockingQueue<>(5);
+
+		try (FsHandle fs = new FsHandle(temp.toString())) {
+			fs.addUpdateCallback(ev -> {
+				ev.getListingList().stream().forEachOrdered(eventQueue::add);
+			});
+
+			// Add a file
+			Files.createFile(temp.resolve("test.txt"));
+
+			FileListlet fileCreated = eventQueue.poll(1000, TimeUnit.MILLISECONDS);
+			assertEquals("test.txt", fileCreated.getName());
+			assertEquals(UpdateType.ENTRY_CREATE, fileCreated.getUpdateType());
+			assertEquals(0, eventQueue.size());
+		}
+	}
+
+	@Test
+	@DisplayName("Check that the delete event listener is notified")
+	void delete_callback_1(@TempDir Path temp) throws IOException, InterruptedException {
+		BlockingQueue<FileListlet> eventQueue = new ArrayBlockingQueue<>(5);
+		Files.createFile(temp.resolve("test.txt"));
+
+		try (FsHandle fs = new FsHandle(temp.toString())) {
+			fs.addUpdateCallback(ev -> {
+				ev.getListingList().stream().forEachOrdered(eventQueue::add);
+			});
+
+			// Delete a file
+			Files.delete(temp.resolve("test.txt"));
+
+			FileListlet fileDeleted = eventQueue.poll(1000, TimeUnit.MILLISECONDS);
+			assertEquals("test.txt", fileDeleted.getName());
+			assertEquals(UpdateType.ENTRY_DELETE, fileDeleted.getUpdateType());
+			assertEquals(0, eventQueue.size());
+		}
+	}
+
+	@Test
+	@DisplayName("Check that the modify event listener is notified")
+	void modify_callback_1(@TempDir Path temp) throws IOException, InterruptedException {
+		BlockingQueue<FileListlet> eventQueue = new ArrayBlockingQueue<>(5);
+		Files.createFile(temp.resolve("test.txt"));
+
+		try (FsHandle fs = new FsHandle(temp.toString())) {
+			fs.addUpdateCallback(ev -> {
+				ev.getListingList().stream().forEachOrdered(eventQueue::add);
+			});
+
+			// Modify file
+			try (PrintWriter pw = new PrintWriter(temp.resolve("test.txt").toFile())) {
+				pw.println("1234");
+			}
+
+			FileListlet fileModified = eventQueue.poll(1000, TimeUnit.MILLISECONDS);
+			assertEquals("test.txt", fileModified.getName());
+			assertEquals(UpdateType.ENTRY_MODIFY, fileModified.getUpdateType());
+			assertEquals(0, eventQueue.size());
+		}
 	}
 }
