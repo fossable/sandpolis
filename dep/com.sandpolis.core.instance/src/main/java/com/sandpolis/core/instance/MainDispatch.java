@@ -157,7 +157,6 @@ public final class MainDispatch {
 		// Setup shutdown hook
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			shutdown.forEach(task -> task.run());
-			shutdown = null;
 		}));
 
 		// Run the configuration
