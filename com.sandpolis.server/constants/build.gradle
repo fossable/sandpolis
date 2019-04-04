@@ -1,0 +1,26 @@
+/*******************************************************************************
+* SANDPOLIS                                                                    *
+* com.sandpolis.server:constants                                               *
+*******************************************************************************/
+
+plugins {
+	id 'eclipse'
+	id 'java-library'
+	
+	// Temporary until BuildShip supports annotation processors
+	id 'net.ltgt.apt-eclipse' version '0.21'
+}
+
+eclipse {
+	project {
+		name = 'com.sandpolis.server:constants'
+		comment = 'The server constants module'
+	}
+}
+
+dependencies {
+
+	// https://github.com/cilki/TreeConstants
+	compileOnly 'com.github.cilki:tree-constants-api:1.0.1'
+	annotationProcessor 'com.github.cilki:tree-constants:1.0.1'
+}

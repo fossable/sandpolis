@@ -27,7 +27,9 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.1'
 
 	implementation project(':dep:com.sandpolis.core.instance')
+	implementation project(':dep:com.sandpolis.core.net')
 	implementation project(':dep:com.sandpolis.core.profile')
+	implementation project(':dep:com.sandpolis.core.proto')
 	implementation project(':plugin:com.sandpolis.plugin.sysinfo')
 
 	// https://github.com/qos-ch/slf4j

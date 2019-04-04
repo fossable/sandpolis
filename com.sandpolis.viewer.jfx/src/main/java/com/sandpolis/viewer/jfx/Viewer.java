@@ -22,12 +22,13 @@ import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 
 import java.util.Date;
-import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.attribute.AttributeKey;
+import com.sandpolis.core.instance.PoolConstant.net;
+import com.sandpolis.viewer.jfx.PoolConstant.ui;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
@@ -35,7 +36,6 @@ import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
-import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
@@ -71,6 +71,7 @@ public final class Viewer {
 		MainDispatch.register(Viewer::loadConfiguration);
 		MainDispatch.register(IPCTasks::checkLocks);
 		MainDispatch.register(Viewer::loadEnvironment);
+		MainDispatch.register(BasicTasks::loadStores);
 		MainDispatch.register(Viewer::loadStores);
 		MainDispatch.register(Viewer::loadPlugins);
 		MainDispatch.register(Viewer::loadUserInterface);
@@ -121,16 +122,10 @@ public final class Viewer {
 		}.getClass().getEnclosingMethod());
 
 		// Load ThreadStore
-		ThreadStore.register(Executors.newSingleThreadExecutor(r -> {
-			var s = new Thread(r, "SIGNALER");
-			s.setDaemon(true);
-			return s;
-		}), "signaler");
-		ThreadStore.register(new NioEventLoopGroup(4), "net.exelet");
-		ThreadStore.register(new NioEventLoopGroup(2), "net.connection.outgoing");
-		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), "net.message.incoming");
-		ThreadStore.register(new FxEventExecutor(), "ui.fx");
-		Signaler.init(ThreadStore.get("signaler"));
+		ThreadStore.register(new NioEventLoopGroup(2), net.exelet);
+		ThreadStore.register(new NioEventLoopGroup(2), net.connection.outgoing);
+		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
+		ThreadStore.register(new FxEventExecutor(), ui.fx_thread);
 
 		// Load NetworkStore
 		NetworkStore.init();

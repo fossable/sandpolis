@@ -17,11 +17,15 @@
  *****************************************************************************/
 package com.sandpolis.core.instance;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.Executors;
 
+import com.sandpolis.core.instance.ConfigConstant.logging;
+import com.sandpolis.core.instance.ConfigConstant.net;
+import com.sandpolis.core.instance.ConfigConstant.path;
+import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
+import com.sandpolis.core.instance.store.thread.ThreadStore;
 
 /**
  * Contains general tasks useful to multiple instances. This class allows common
@@ -31,8 +35,6 @@ import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
  * @since 5.0.0
  */
 public final class BasicTasks {
-
-	private static final Logger log = LoggerFactory.getLogger(BasicTasks.class);
 
 	/**
 	 * Load the configuration from the runtime environment.
@@ -44,27 +46,36 @@ public final class BasicTasks {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		Config.register("post", true);
+		Config.register(ConfigConstant.post, true);
 
-		Config.register("db.provider", "hibernate");
-		Config.register("db.url");
-		Config.register("db.username");
-		Config.register("db.password");
+		Config.register(net.ipc.mutex, false);
+		Config.register(logging.net.traffic.decoded, false);
+		Config.register(logging.net.traffic.raw, false);
+		Config.register(logging.startup.summary, false);
 
-		Config.register("no_mutex", false);
-		Config.register("log.traffic", false);
-		Config.register("log.traffic_raw", false);
-		Config.register("log.startup_summary", false);
+		Config.register(net.connection.outgoing.pool_size, 2);
+		Config.register(net.connection.tls, false);
+		Config.register(net.message.default_timeout, 2000);
 
-		Config.register("net.tls", false);
-		Config.register("net.timeout.response.default", 2000);
+		Config.register(plugin.enabled, true);
 
-		Config.register("no_plugins", false);
-		Config.register("no_summary", false);
+		Config.register(path.log);
 
-		Config.register("path.db");
-		Config.register("path.gen");
-		Config.register("path.log");
+		return task.success();
+	}
+
+	/**
+	 * Load static stores.
+	 *
+	 * @return The task's outcome
+	 */
+	@InitializationTask(name = "Load instance stores", fatal = true)
+	public static TaskOutcome loadStores() {
+		TaskOutcome task = TaskOutcome.begin(new Object() {
+		}.getClass().getEnclosingMethod());
+
+		ThreadStore.register(Executors.newSingleThreadExecutor(), PoolConstant.signaler);
+		Signaler.init(ThreadStore.get(PoolConstant.signaler));
 
 		return task.success();
 	}

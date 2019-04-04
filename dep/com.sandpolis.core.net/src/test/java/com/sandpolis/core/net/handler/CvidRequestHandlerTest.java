@@ -23,9 +23,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.concurrent.Executors;
+
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
@@ -37,20 +41,25 @@ import io.netty.channel.DefaultEventLoop;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.concurrent.DefaultPromise;
 
-public class CvidRequestHandlerTest {
+class CvidRequestHandlerTest {
 
 	private static final CvidRequestHandler clientHandler = new CvidRequestHandler();
 	private EmbeddedChannel client;
 
+	@BeforeAll
+	static void configure() {
+		Signaler.init(Executors.newSingleThreadExecutor());
+	}
+
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		client = new EmbeddedChannel();
 		client.pipeline().addLast("cvid", clientHandler);
 		client.attr(ChannelConstant.FUTURE_CVID).set(new DefaultPromise<>(new DefaultEventLoop()));
 	}
 
 	@Test
-	public void testInitiate() {
+	void testInitiate() {
 		clientHandler.handshake(client, Instance.CLIENT, "testuuid");
 		assertFalse(client.attr(ChannelConstant.FUTURE_CVID).get().isDone());
 
@@ -63,7 +72,7 @@ public class CvidRequestHandlerTest {
 	}
 
 	@Test
-	public void testReceiveIncorrect() {
+	void testReceiveIncorrect() {
 		assertNotNull(client.pipeline().get("cvid"));
 		assertFalse(client.attr(ChannelConstant.FUTURE_CVID).get().isDone());
 		client.writeInbound(Message.newBuilder().setRsCvid(RS_Cvid.newBuilder()).build());
@@ -73,7 +82,7 @@ public class CvidRequestHandlerTest {
 	}
 
 	@Test
-	public void testReceiveCorrect() {
+	void testReceiveCorrect() {
 		assertNotNull(client.pipeline().get("cvid"));
 		assertFalse(client.attr(ChannelConstant.FUTURE_CVID).get().isDone());
 		client.writeInbound(Message.newBuilder().setRsCvid(RS_Cvid.newBuilder()

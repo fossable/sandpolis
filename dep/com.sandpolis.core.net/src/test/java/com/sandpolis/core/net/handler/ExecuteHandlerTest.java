@@ -24,9 +24,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.PoolConstant;
+import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.MessageFuture;
@@ -36,20 +39,27 @@ import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
 
 import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
 
-public class ExecuteHandlerTest {
+@SuppressWarnings("unchecked")
+class ExecuteHandlerTest {
 
-	public static boolean rq_login_triggered;
-	public static boolean rq_cvid_triggered;
+	static boolean rq_login_triggered;
+	static boolean rq_cvid_triggered;
+
+	@BeforeAll
+	static void configure() {
+		ThreadStore.register(new NioEventLoopGroup(1).next(), PoolConstant.net.message.incoming);
+	}
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		rq_login_triggered = false;
 		rq_cvid_triggered = false;
 	}
 
 	@Test
-	public void testUnauth() {
+	void testUnauth() {
 		ExecuteHandler execute = new ExecuteHandler(new Class[] { TestExe.class, Test2Exe.class });
 		EmbeddedChannel channel = new EmbeddedChannel(execute);
 		execute.initUnauth(new Sock(channel));
@@ -66,7 +76,7 @@ public class ExecuteHandlerTest {
 	}
 
 	@Test
-	public void testAuth() {
+	void testAuth() {
 		ExecuteHandler execute = new ExecuteHandler(new Class[] { TestExe.class, Test2Exe.class });
 		EmbeddedChannel channel = new EmbeddedChannel(execute);
 		Sock sock = new Sock(channel);
@@ -87,7 +97,7 @@ public class ExecuteHandlerTest {
 	}
 
 	@Test
-	public void testResponse() throws InterruptedException, ExecutionException, TimeoutException {
+	void testResponse() throws InterruptedException, ExecutionException, TimeoutException {
 		ExecuteHandler execute = new ExecuteHandler(new Class[] { TestExe.class, Test2Exe.class });
 		EmbeddedChannel channel = new EmbeddedChannel(execute);
 

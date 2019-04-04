@@ -22,12 +22,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.lang.reflect.Method;
 import java.security.cert.CertificateException;
+import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.ConfigConstant.logging;
+import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.store.thread.ThreadStore;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -48,9 +52,10 @@ class ServerInitializerTest {
 
 	@BeforeAll
 	static void configure() {
-		Config.register("log.traffic_raw", false);
-		Config.register("log.traffic", false);
-		Config.register("net.tls", true);
+		Config.register(logging.net.traffic.raw, false);
+		Config.register(logging.net.traffic.decoded, false);
+		Config.register(net.connection.tls, true);
+		ThreadStore.register(Executors.newSingleThreadExecutor(), "");
 	}
 
 	@BeforeEach

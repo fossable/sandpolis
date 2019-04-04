@@ -15,37 +15,66 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.common;
+package com.sandpolis.server;
 
 import com.github.cilki.tree_constants.TreeConstant;
 
-public final class JfxConstants {
+public final class ConfigConstants {
+	private ConfigConstants() {
+	}
 
+	/**
+	 * The server's login banner text.
+	 */
 	@TreeConstant
-	private static final String ui_help = "ui.help";
+	private static final String server_banner_text = "server.banner.text";
 
+	/**
+	 * The server's banner image path.
+	 */
 	@TreeConstant
-	private static final String ui_main_view = "ui.main.view";
+	private static final String server_banner_image = "server.banner.image";
 
+	/**
+	 * The server's database provider name.
+	 */
 	@TreeConstant
-	private static final String ui_main_console = "ui.main.console";
+	private static final String server_db_provider = "server.db.provider";
 
+	/**
+	 * The server's database URL.
+	 */
 	@TreeConstant
-	private static final String ui_tray_minimize = "ui.tray.minimize";
+	private static final String server_db_url = "server.db.url";
 
+	/**
+	 * The server's database username.
+	 */
 	@TreeConstant
-	private static final String ui_login_recent = "ui.login.recent";
+	private static final String server_db_username = "server.db.username";
 
+	/**
+	 * The server's database password.
+	 */
 	@TreeConstant
-	private static final String ui_notification_new__client__connect = "ui.notification.new_client_connect";
+	private static final String server_db_password = "server.db.password";
 
+	/**
+	 * Whether a new debug client will be generated on startup.
+	 */
 	@TreeConstant
-	private static final String ui_notification_old__client__connect = "ui.notification.old_client_connect";
+	private static final String server_debug__client = "server.debug_client";
 
+	/**
+	 * The server database directory.
+	 */
 	@TreeConstant
-	private static final String ui_notification_client__disconnect = "ui.notification.client_disconnect";
+	private static final String server_path_db = "server.path.db";
 
+	/**
+	 * The server generator archive directory.
+	 */
 	@TreeConstant
-	private static final String ui_notification_unhandled__exception = "ui.notification.unhandled_exception";
+	private static final String server_path_gen = "server.path.gen";
 
 }

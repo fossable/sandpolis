@@ -29,13 +29,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
-import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.cmd.PluginCmd;
+import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
@@ -78,7 +78,7 @@ public final class Client {
 
 	static {
 		try {
-			SO_CONFIG = MegaConfig.parseFrom(MainDispatch.getMain().getResourceAsStream("/soi/client.bin"));
+			SO_CONFIG = MegaConfig.parseFrom(Client.class.getResourceAsStream("/soi/client.bin"));
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to read SO_CONFIG!", e);
 		}
@@ -93,6 +93,7 @@ public final class Client {
 		MainDispatch.register(IPCTasks::checkLocks);
 		MainDispatch.register(Client::install);
 		MainDispatch.register(Client::loadEnvironment);
+		MainDispatch.register(BasicTasks::loadStores);
 		MainDispatch.register(Client::loadStores);
 		MainDispatch.register(Client::loadPlugins);
 		MainDispatch.register(Client::beginConnectionRoutine);
@@ -174,15 +175,9 @@ public final class Client {
 		}.getClass().getEnclosingMethod());
 
 		// Load ThreadStore
-		ThreadStore.register(Executors.newSingleThreadExecutor(r -> {
-			var s = new Thread(r, "SIGNALER");
-			s.setDaemon(true);
-			return s;
-		}), "signaler");
-		ThreadStore.register(new NioEventLoopGroup(4), "net.exelet");
-		ThreadStore.register(new NioEventLoopGroup(2), "net.connection.outgoing");
-		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), "net.message.incoming");
-		Signaler.init(ThreadStore.get("signaler"));
+		ThreadStore.register(new NioEventLoopGroup(2), net.exelet);
+		ThreadStore.register(new NioEventLoopGroup(2), net.connection.outgoing);
+		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
 
 		// Load NetworkStore
 		NetworkStore.init();

@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
+import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.util.ValidationUtil;
 
@@ -54,7 +55,7 @@ public final class DnsUtil {
 		Objects.requireNonNull(server);
 
 		DnsQuestion question = new DefaultDnsQuestion(server, DnsRecordType.SRV);
-		DnsResponse response = new DnsNameResolverBuilder(ThreadStore.get("dns"))
+		DnsResponse response = new DnsNameResolverBuilder(ThreadStore.get(net.dns.resolver))
 				.channelFactory(() -> new NioDatagramChannel()).build().query(question).get().content();
 		DnsRawRecord record = response.recordAt(DnsSection.ANSWER);
 		if (record == null)

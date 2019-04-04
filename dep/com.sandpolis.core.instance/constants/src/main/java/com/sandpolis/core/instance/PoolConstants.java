@@ -15,35 +15,42 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.net.util;
+package com.sandpolis.core.instance;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.github.cilki.tree_constants.TreeConstant;
 
-import java.util.concurrent.ExecutionException;
-
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import com.sandpolis.core.instance.PoolConstant;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
-
-import io.netty.channel.nio.NioEventLoopGroup;
-
-class DnsUtilTest {
-
-	@BeforeAll
-	static void configure() {
-		ThreadStore.register(new NioEventLoopGroup(1).next(), PoolConstant.net.dns.resolver);
+public final class PoolConstants {
+	private PoolConstants() {
 	}
 
-	@Test
-	void testGetPort() throws InterruptedException, ExecutionException {
-		assertEquals((int) DnsUtil.getPort("test.sandpolis.com").get(), 12345);
-		assertTrue(DnsUtil.getPort("invalid123").isEmpty());
-		assertTrue(DnsUtil.getPort("test.google.com").isEmpty());
-		assertThrows(ExecutionException.class, () -> DnsUtil.getPort(""));
-	}
+	/**
+	 * The {@link ExecutorService} for outgoing connection attempts.
+	 */
+	@TreeConstant
+	private static final String net_connection_outgoing = "net.connection.outgoing";
+
+	/**
+	 * The {@link ExecutorService} for incoming messages.
+	 */
+	@TreeConstant
+	private static final String net_message_incoming = "net.message.incoming";
+
+	/**
+	 * The {@link ExecutorService} that runs message handlers.
+	 */
+	@TreeConstant
+	private static final String net_exelet = "net.exelet";
+
+	/**
+	 * The {@link ExecutorService} that runs DNS queries.
+	 */
+	@TreeConstant
+	private static final String net_dns_resolver = "net.dns.resolver";
+
+	/**
+	 * The {@link ExecutorService} that delivers application events.
+	 */
+	@TreeConstant
+	private static final String signaler = "signaler";
 
 }

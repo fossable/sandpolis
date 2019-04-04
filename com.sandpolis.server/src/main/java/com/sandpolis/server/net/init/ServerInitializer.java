@@ -24,6 +24,7 @@ import java.util.Base64;
 import javax.net.ssl.SSLException;
 
 import com.google.common.primitives.Bytes;
+import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.handler.CvidResponseHandler;
@@ -130,7 +131,7 @@ public class ServerInitializer extends PipelineInitializer {
 	protected void initChannel(Channel ch) throws Exception {
 		super.initChannel(ch);
 
-		if (Config.getBoolean("net.tls")) {
+		if (Config.getBoolean(net.connection.tls)) {
 			SslHandler ssl = getSslContext().newHandler(ch.alloc());
 			ch.pipeline().addAfter("traffic", "ssl", ssl);
 			ch.attr(ChannelConstant.HANDLER_SSL).set(ssl);
@@ -145,7 +146,7 @@ public class ServerInitializer extends PipelineInitializer {
 	}
 
 	public SslContext getSslContext() throws Exception {
-		if (sslCtx == null && Config.getBoolean("net.tls")) {
+		if (sslCtx == null && Config.getBoolean(net.connection.tls)) {
 			sslCtx = buildSslContext();
 
 			// No point in keeping these around anymore

@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
@@ -50,7 +51,7 @@ public final class IPCTasks {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (Config.getBoolean("no_mutex"))
+		if (!Config.getBoolean(net.ipc.mutex))
 			return task.skipped();
 
 		RS_Metadata metadata = IPCStore.queryInstance(Core.INSTANCE);

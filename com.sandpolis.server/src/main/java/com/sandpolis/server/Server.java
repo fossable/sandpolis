@@ -38,12 +38,14 @@ import com.sandpolis.core.attribute.AttributeNode;
 import com.sandpolis.core.attribute.UntrackedAttribute;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.ConfigConstant.path;
+import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
-import com.sandpolis.core.instance.Signaler;
+import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.storage.database.DatabaseFactory;
 import com.sandpolis.core.instance.store.database.DatabaseStore;
@@ -70,6 +72,7 @@ import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 import com.sandpolis.core.util.IDUtil;
+import com.sandpolis.server.ConfigConstant.server;
 import com.sandpolis.server.auth.KeyMechanism;
 import com.sandpolis.server.auth.PasswordMechanism;
 import com.sandpolis.server.gen.generator.MegaGen;
@@ -107,6 +110,7 @@ public final class Server {
 		MainDispatch.register(Server::loadConfiguration);
 		MainDispatch.register(IPCTasks::checkLocks);
 		MainDispatch.register(Server::loadEnvironment);
+		MainDispatch.register(BasicTasks::loadStores);
 		MainDispatch.register(Server::loadServerStores);
 		MainDispatch.register(Server::loadPlugins);
 		MainDispatch.register(Server::installDebugClient);
@@ -125,10 +129,15 @@ public final class Server {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		Config.register("debug_client", true);
+		Config.register(server.db.provider, "hibernate");
+		Config.register(server.db.url);
+		Config.register(server.db.username);
+		Config.register(server.db.password);
 
-		Config.register("banner.text", "Welcome to a Sandpolis Server");
-		Config.register("banner.image.path");
+		Config.register(server.debug_client, true);
+
+		Config.register(server.banner.text, "Welcome to a Sandpolis Server");
+		Config.register(server.banner.image);
 
 		return task.success();
 	}
@@ -143,8 +152,8 @@ public final class Server {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (!Environment.load(DB.setDefault(Config.get("path.db")), GEN.setDefault(Config.get("path.gen")),
-				LOG.setDefault(Config.get("path.log")), TMP, LIB)) {
+		if (!Environment.load(DB.setDefault(Config.get(server.path.db)), GEN.setDefault(Config.get(server.path.gen)),
+				LOG.setDefault(Config.get(path.log)), TMP, LIB)) {
 			try {
 				Environment.setup();
 			} catch (RuntimeException e) {
@@ -166,16 +175,10 @@ public final class Server {
 		}.getClass().getEnclosingMethod());
 
 		// Load ThreadStore
-		ThreadStore.register(Executors.newCachedThreadPool(r -> {
-			var s = new Thread(r, "SIGNALER");
-			s.setDaemon(true);
-			return s;
-		}), "signaler");
-		ThreadStore.register(new NioEventLoopGroup(4), "net.exelet");
-		ThreadStore.register(new NioEventLoopGroup(2), "net.connection.outgoing");
-		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), "net.message.incoming");
-		ThreadStore.register(Executors.newSingleThreadExecutor(), "generator");
-		Signaler.init(ThreadStore.get("signaler"));
+		ThreadStore.register(new NioEventLoopGroup(2), net.exelet);
+		ThreadStore.register(new NioEventLoopGroup(2), net.connection.outgoing);
+		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
+		ThreadStore.register(Executors.newCachedThreadPool(), PoolConstant.server.generator);
 
 		// Load NetworkStore and choose a new CVID
 		Core.setCvid(IDUtil.CVID.cvid(Instance.SERVER));
@@ -186,12 +189,12 @@ public final class Server {
 
 		// Load DatabaseStore
 		try {
-			if (!Config.has("db.url")) {
+			if (!Config.has(server.db.url)) {
 				DatabaseStore.load(DatabaseFactory.create("h2", Environment.get(DB).resolve("server.db").toFile()),
 						ORM_CLASSES);
 			} else {
-				DatabaseStore.load(DatabaseFactory.create(Config.get("db.url"), Config.get("db.username"),
-						Config.get("db.password")), ORM_CLASSES);
+				DatabaseStore.load(DatabaseFactory.create(Config.get(server.db.url), Config.get(server.db.username),
+						Config.get(server.db.password)), ORM_CLASSES);
 			}
 		} catch (URISyntaxException | IOException e) {
 			return task.failure(e);
@@ -248,7 +251,7 @@ public final class Server {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (Config.getBoolean("no_plugins"))
+		if (!Config.getBoolean(plugin.enabled))
 			return task.skipped();
 
 		try {
@@ -272,7 +275,7 @@ public final class Server {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (!Config.getBoolean("debug_client"))
+		if (!Config.getBoolean(server.debug_client))
 			return task.skipped();
 
 		try {

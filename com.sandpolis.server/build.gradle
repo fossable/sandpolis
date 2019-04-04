@@ -21,8 +21,10 @@ dependencies {
 	testImplementation project(path: ':dep:com.sandpolis.core.net', configuration: 'tests')
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.1'
 
+	compileOnly project(':dep:com.sandpolis.core.instance:constants')
+	compileOnly project('constants')
+
 	implementation project(path: ':com.sandpolis.client.mega', configuration: 'onejarArtifact')
-	// implementation project(':com.sandpolis.client.micro')
 	implementation project(':dep:com.sandpolis.core.instance')
 	implementation project(':dep:com.sandpolis.core.ipc')
 	implementation project(':dep:com.sandpolis.core.net')

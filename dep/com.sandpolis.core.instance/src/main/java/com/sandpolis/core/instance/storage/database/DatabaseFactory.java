@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Objects;
 
-import com.sandpolis.core.instance.Config;
-
 /**
  * A singleton factory for new {@link Database} instances.
  *
@@ -120,7 +118,7 @@ public final class DatabaseFactory {
 			throw new IllegalArgumentException();
 
 		IDatabaseFactory fac;
-		switch (Config.get("db.provider")) {
+		switch ("hibernate") { // Ignore Config for now
 		case "":
 		case "default":
 		case "ormlite":

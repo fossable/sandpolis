@@ -15,35 +15,18 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.net.util;
+package com.sandpolis.viewer.jfx;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.github.cilki.tree_constants.TreeConstant;
 
-import java.util.concurrent.ExecutionException;
-
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import com.sandpolis.core.instance.PoolConstant;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
-
-import io.netty.channel.nio.NioEventLoopGroup;
-
-class DnsUtilTest {
-
-	@BeforeAll
-	static void configure() {
-		ThreadStore.register(new NioEventLoopGroup(1).next(), PoolConstant.net.dns.resolver);
+public final class PoolConstants {
+	private PoolConstants() {
 	}
 
-	@Test
-	void testGetPort() throws InterruptedException, ExecutionException {
-		assertEquals((int) DnsUtil.getPort("test.sandpolis.com").get(), 12345);
-		assertTrue(DnsUtil.getPort("invalid123").isEmpty());
-		assertTrue(DnsUtil.getPort("test.google.com").isEmpty());
-		assertThrows(ExecutionException.class, () -> DnsUtil.getPort(""));
-	}
+	/**
+	 * The {@link ExecutorService} that delivers application events.
+	 */
+	@TreeConstant
+	private static final String ui_fx__thread = "ui.fx_thread";
 
 }

@@ -7,9 +7,6 @@ plugins {
 	id 'eclipse'
 	id 'java'
 	id 'org.openjfx.javafxplugin' version '0.0.6'
-
-	// Temporary until BuildShip supports annotation processors
-	id 'net.ltgt.apt-eclipse' version '0.21'
 }
 
 javafx {
@@ -30,7 +27,10 @@ repositories {
 
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.1'
-	
+
+	compileOnly project(':dep:com.sandpolis.core.instance:constants')
+	compileOnly project('constants')
+
 	implementation project(':dep:com.sandpolis.core.instance')
 	implementation project(':dep:com.sandpolis.core.ipc')
 	implementation project(':dep:com.sandpolis.core.net')
@@ -39,10 +39,6 @@ dependencies {
 	implementation project(':dep:com.sandpolis.core.soi')
 	implementation project(':dep:com.sandpolis.core.util')
 	implementation project(':dep:com.sandpolis.viewer')
-
-	// https://github.com/cilki/TreeConstants
-	compileOnly 'com.github.cilki:tree-constants-api:1.0.1'
-	annotationProcessor 'com.github.cilki:tree-constants:1.0.1'
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:27.1-jre'

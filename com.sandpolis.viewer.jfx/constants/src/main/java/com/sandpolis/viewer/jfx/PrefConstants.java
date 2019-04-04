@@ -15,35 +15,37 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.net.util;
+package com.sandpolis.viewer.jfx;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.github.cilki.tree_constants.TreeConstant;
 
-import java.util.concurrent.ExecutionException;
+public final class PrefConstants {
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+	@TreeConstant
+	private static final String ui_help = "ui.help";
 
-import com.sandpolis.core.instance.PoolConstant;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
+	@TreeConstant
+	private static final String ui_main_view = "ui.main.view";
 
-import io.netty.channel.nio.NioEventLoopGroup;
+	@TreeConstant
+	private static final String ui_main_console = "ui.main.console";
 
-class DnsUtilTest {
+	@TreeConstant
+	private static final String ui_tray_minimize = "ui.tray.minimize";
 
-	@BeforeAll
-	static void configure() {
-		ThreadStore.register(new NioEventLoopGroup(1).next(), PoolConstant.net.dns.resolver);
-	}
+	@TreeConstant
+	private static final String ui_login_recent = "ui.login.recent";
 
-	@Test
-	void testGetPort() throws InterruptedException, ExecutionException {
-		assertEquals((int) DnsUtil.getPort("test.sandpolis.com").get(), 12345);
-		assertTrue(DnsUtil.getPort("invalid123").isEmpty());
-		assertTrue(DnsUtil.getPort("test.google.com").isEmpty());
-		assertThrows(ExecutionException.class, () -> DnsUtil.getPort(""));
-	}
+	@TreeConstant
+	private static final String ui_notification_new__client__connect = "ui.notification.new_client_connect";
+
+	@TreeConstant
+	private static final String ui_notification_old__client__connect = "ui.notification.old_client_connect";
+
+	@TreeConstant
+	private static final String ui_notification_client__disconnect = "ui.notification.client_disconnect";
+
+	@TreeConstant
+	private static final String ui_notification_unhandled__exception = "ui.notification.unhandled_exception";
 
 }

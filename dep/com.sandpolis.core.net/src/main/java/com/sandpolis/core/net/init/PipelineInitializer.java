@@ -20,6 +20,8 @@ package com.sandpolis.core.net.init;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.ConfigConstant.logging;
+import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Exelet;
@@ -111,7 +113,7 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		p.addLast("traffic", traffic);
 		ch.attr(ChannelConstant.HANDLER_TRAFFIC).set(traffic);
 
-		if (Config.getBoolean("log.traffic_raw"))
+		if (Config.getBoolean(logging.net.traffic.raw))
 			p.addLast(LOGGING);
 
 		p.addLast(EVENT);
@@ -121,12 +123,12 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		p.addLast("protobuf.frame_encoder", PROTO_FRAME_ENCODER);
 		p.addLast("protobuf.encoder", PROTO_ENCODER);
 
-		if (Config.getBoolean("log.traffic"))
+		if (Config.getBoolean(logging.net.traffic.decoded))
 			p.addLast(LOGGING);
 
 		// Business logic
 		ExecuteHandler execute = new ExecuteHandler(exelets);
-		p.addLast(ThreadStore.get("net.exelet"), "exe", execute);
+		p.addLast(ThreadStore.get(net.exelet), "exe", execute);
 		ch.attr(ChannelConstant.HANDLER_EXECUTE).set(execute);
 
 	}

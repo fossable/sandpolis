@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
 import java.util.function.Predicate;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.PermissionConstants;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
