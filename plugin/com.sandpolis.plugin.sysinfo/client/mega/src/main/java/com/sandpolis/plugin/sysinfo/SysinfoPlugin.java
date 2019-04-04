@@ -19,46 +19,54 @@ package com.sandpolis.plugin.sysinfo;
 
 import java.util.function.Function;
 
-import org.pf4j.Extension;
 import org.pf4j.Plugin;
+import org.pf4j.PluginException;
 import org.pf4j.PluginWrapper;
 
 import com.sandpolis.core.attribute.AttributeKey;
-import com.sandpolis.core.instance.store.plugin.SandpolisPlugin;
+import com.sandpolis.core.net.Exelet;
+import com.sandpolis.core.net.plugin.ExeletProvider;
 
 import oshi.hardware.CentralProcessor;
 import oshi.software.os.NetworkParams;
 
-public class SysinfoPlugin extends Plugin {
+public class SysinfoPlugin extends Plugin implements ExeletProvider {
 
 	public SysinfoPlugin(PluginWrapper wrapper) {
 		super(wrapper);
 	}
 
-	@Extension
-	public static class Test implements SandpolisPlugin {
-		
-		public Test() {}
-
-		@Override
-		public void load() {
-			System.out.println("Loading plugin");
-			registerAttributes();
-		}
-
-		public void registerAttributes() {
-			register(AK_CPU.VENDOR, (CentralProcessor cpu) -> cpu.getVendor());
-			register(AK_NET.HOSTNAME, (NetworkParams net) -> net.getHostName());
-		}
-
-		private <T> void register(AttributeKey<T> key, Function<?, T> fetch) {
-			key.putObject("fetcher", fetch);
-		}
-
-		@Override
-		public void unload() {
-			// TODO Auto-generated method stub
-
-		}
+	@Override
+	public void start() throws PluginException {
+		setupAttributes();
+		super.start();
 	}
+
+	@Override
+	public void stop() throws PluginException {
+		// TODO Auto-generated method stub
+		super.stop();
+	}
+
+	private void setupAttributes() {
+		associate(AK_CPU.VENDOR, (CentralProcessor cpu) -> cpu.getVendor());
+		associate(AK_NET.HOSTNAME, (NetworkParams net) -> net.getHostName());
+	}
+
+	/**
+	 * Associate the given key with the given value retriever.
+	 * 
+	 * @param key       An attribute key
+	 * @param retriever A value retriever
+	 */
+	private <T> void associate(AttributeKey<T> key, Function<?, T> retriever) {
+		key.putObject("retriever", retriever);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Class<? extends Exelet>[] getExelets() {
+		return new Class[] { SysinfoExelet.class };
+	}
+
 }

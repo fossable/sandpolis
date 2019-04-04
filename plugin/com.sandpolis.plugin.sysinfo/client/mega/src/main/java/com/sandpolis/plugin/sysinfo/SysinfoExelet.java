@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
+ *                    Copyright 2019 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,19 +15,26 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.instance.store.plugin;
+package com.sandpolis.plugin.sysinfo;
 
-import org.pf4j.ExtensionPoint;
+import com.sandpolis.core.net.Exelet;
+import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.proto.net.MSG.Message;
 
-/**
- * The root type of a Sandpolis plugin.
- * 
- * @author cilki
- * @since 5.0.0
- */
-public interface SandpolisPlugin extends ExtensionPoint {
+public class SysinfoExelet extends Exelet {
 
-	void load();
+	public SysinfoExelet(Sock connector) {
+		super(connector);
+	}
 
-	void unload();
+	@Auth
+	public void rq_query(Message m) {
+		// TODO
+	}
+
+	@Auth
+	public void rq_enumerate(Message m) {
+		// TODO
+	}
+
 }

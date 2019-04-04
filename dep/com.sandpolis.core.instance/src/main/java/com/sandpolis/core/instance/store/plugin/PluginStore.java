@@ -316,7 +316,9 @@ public final class PluginStore {
 
 		log.debug("Loading plugin: {}", plugin.getName());
 		manager.startPlugin(plugin.getId());
-		manager.getExtensions(SandpolisPlugin.class, plugin.getId()).stream().forEach(SandpolisPlugin::load);
+		// TODO load extensions
+		// manager.getExtensions(SandpolisPlugin.class,
+		// plugin.getId()).stream().forEach(SandpolisPlugin::load);
 	}
 
 	/**
