@@ -18,6 +18,7 @@
 package com.sandpolis.core.net.init;
 
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.handler.CvidRequestHandler;
 import com.sandpolis.core.util.CertUtil;
@@ -46,7 +47,7 @@ public class ClientPipelineInit extends PipelineInitializer {
 	protected void initChannel(Channel ch) throws Exception {
 		super.initChannel(ch);
 
-		if (Config.getBoolean("net.tls")) {
+		if (Config.getBoolean(net.connection.tls)) {
 			SslHandler ssl = SslContextBuilder.forClient().trustManager(CertUtil.getRoot()).build()
 					.newHandler(ch.alloc());
 			ch.pipeline().addAfter("traffic", "ssl", ssl);

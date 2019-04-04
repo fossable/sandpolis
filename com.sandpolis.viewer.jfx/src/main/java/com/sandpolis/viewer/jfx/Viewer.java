@@ -31,6 +31,7 @@ import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.viewer.jfx.PoolConstant.ui;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
@@ -152,7 +153,7 @@ public final class Viewer {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (Config.getBoolean("no_plugins"))
+		if (Config.getBoolean(plugin.enabled))
 			return task.skipped();
 
 		try {

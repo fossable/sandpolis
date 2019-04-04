@@ -33,6 +33,7 @@ import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.Store.AutoInitializer;
 import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
+import com.sandpolis.server.ConfigConstant.server;
 
 /**
  * @author cilki
@@ -64,9 +65,9 @@ public final class ServerStore extends Store {
 			log.debug("Reloading server banner");
 
 		var ban = RS_ServerBanner.newBuilder().setVersion(Core.SO_BUILD.getVersion())
-				.setBanner(Config.get("banner.text"));
+				.setBanner(Config.get(server.banner.text));
 
-		String imagePath = Config.get("banner.image.path");
+		String imagePath = Config.get(server.banner.image);
 		if (imagePath != null) {
 			try (var in = new FileInputStream(imagePath)) {
 				ban.setBannerImage(ByteString.readFrom(in));

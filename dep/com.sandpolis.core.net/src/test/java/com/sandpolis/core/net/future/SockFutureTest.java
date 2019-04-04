@@ -30,8 +30,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.ConfigConstant.logging;
+import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Signaler;
+import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.net.init.PeerPipelineInit;
@@ -52,9 +54,10 @@ class SockFutureTest {
 
 	@BeforeAll
 	static void configure() {
-		Signaler.init(Executors.newSingleThreadExecutor());
 		Config.register(logging.net.traffic.raw, false);
 		Config.register(logging.net.traffic.decoded, false);
+		ThreadStore.register(new NioEventLoopGroup().next(), net.exelet);
+		Signaler.init(Executors.newSingleThreadExecutor());
 	}
 
 	@Test

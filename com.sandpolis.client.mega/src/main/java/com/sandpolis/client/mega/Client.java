@@ -44,6 +44,7 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
 import com.sandpolis.core.instance.Signaler;
+import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
@@ -198,7 +199,7 @@ public final class Client {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
 
-		if (Config.getBoolean("no_plugins"))
+		if (Config.getBoolean(plugin.enabled))
 			return task.skipped();
 
 		try {

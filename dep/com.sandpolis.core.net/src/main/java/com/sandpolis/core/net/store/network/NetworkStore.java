@@ -32,6 +32,7 @@ import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
 import com.google.common.graph.NetworkBuilder;
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.Store.AutoInitializer;
@@ -256,6 +257,9 @@ public final class NetworkStore {
 	 */
 	public static MessageFuture route(Message.Builder message, String timeoutClass) {
 		int hop = findHop(message);
+		if (!Config.has(timeoutClass))
+			timeoutClass = net.message.default_timeout;
+
 		MessageFuture mf = receive(hop, message.getId(), Config.getInteger(timeoutClass), TimeUnit.MILLISECONDS);
 		ConnectionStore.get(hop).send(message);
 		return mf;
