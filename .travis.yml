@@ -1,7 +1,8 @@
+sudo: false
 language: java
 
 script:
-  - ./gradlew build -PDEPLOY_ENABLED=false
+  - ./gradlew test -PDEPLOY_ENABLED=false
 
 os:
   - linux
