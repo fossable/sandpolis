@@ -17,15 +17,18 @@
  *****************************************************************************/
 package com.sandpolis.plugin.filesys;
 
+import static java.nio.file.StandardOpenOption.APPEND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -34,8 +37,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.proto.net.MCFsHandle.FileListlet;
 import com.sandpolis.core.proto.net.MCFsHandle.FileListlet.UpdateType;
+import com.sandpolis.core.proto.util.Platform.OsType;
 
 class FsHandleTest {
 
@@ -108,7 +113,10 @@ class FsHandleTest {
 	@Test
 	@DisplayName("Check that the add event listener is notified")
 	void add_callback_1(@TempDir Path temp) throws IOException, InterruptedException {
+		assumeFalse(PlatformUtil.queryOsType() == OsType.MACOS);
+
 		BlockingQueue<FileListlet> eventQueue = new ArrayBlockingQueue<>(5);
+		Files.createFile(temp.resolve("test.txt"));
 
 		try (FsHandle fs = new FsHandle(temp.toString())) {
 			fs.addUpdateCallback(ev -> {
@@ -116,18 +124,21 @@ class FsHandleTest {
 			});
 
 			// Add a file
-			Files.createFile(temp.resolve("test.txt"));
+			Files.createFile(temp.resolve("added.txt"));
 
-			FileListlet fileCreated = eventQueue.poll(1000, TimeUnit.MILLISECONDS);
-			assertEquals("test.txt", fileCreated.getName());
+			FileListlet fileCreated = eventQueue.poll(5000, TimeUnit.MILLISECONDS);
+			assertNotNull(fileCreated);
+			assertEquals("added.txt", fileCreated.getName());
 			assertEquals(UpdateType.ENTRY_CREATE, fileCreated.getUpdateType());
-			assertEquals(0, eventQueue.size());
+			assertEquals(0, eventQueue.size(), "Unexpected events: " + Arrays.toString(eventQueue.toArray()));
 		}
 	}
 
 	@Test
 	@DisplayName("Check that the delete event listener is notified")
 	void delete_callback_1(@TempDir Path temp) throws IOException, InterruptedException {
+		assumeFalse(PlatformUtil.queryOsType() == OsType.MACOS);
+
 		BlockingQueue<FileListlet> eventQueue = new ArrayBlockingQueue<>(5);
 		Files.createFile(temp.resolve("test.txt"));
 
@@ -139,18 +150,21 @@ class FsHandleTest {
 			// Delete a file
 			Files.delete(temp.resolve("test.txt"));
 
-			FileListlet fileDeleted = eventQueue.poll(1000, TimeUnit.MILLISECONDS);
+			FileListlet fileDeleted = eventQueue.poll(5000, TimeUnit.MILLISECONDS);
+			assertNotNull(fileDeleted);
 			assertEquals("test.txt", fileDeleted.getName());
 			assertEquals(UpdateType.ENTRY_DELETE, fileDeleted.getUpdateType());
-			assertEquals(0, eventQueue.size());
+			assertEquals(0, eventQueue.size(), "Unexpected events: " + Arrays.toString(eventQueue.toArray()));
 		}
 	}
 
 	@Test
 	@DisplayName("Check that the modify event listener is notified")
 	void modify_callback_1(@TempDir Path temp) throws IOException, InterruptedException {
+		assumeFalse(PlatformUtil.queryOsType() == OsType.MACOS);
+
 		BlockingQueue<FileListlet> eventQueue = new ArrayBlockingQueue<>(5);
-		Files.createFile(temp.resolve("test.txt"));
+		Files.write(temp.resolve("test.txt"), "1234".getBytes());
 
 		try (FsHandle fs = new FsHandle(temp.toString())) {
 			fs.addUpdateCallback(ev -> {
@@ -158,14 +172,13 @@ class FsHandleTest {
 			});
 
 			// Modify file
-			try (PrintWriter pw = new PrintWriter(temp.resolve("test.txt").toFile())) {
-				pw.println("1234");
-			}
+			Files.write(temp.resolve("test.txt"), "5678".getBytes(), APPEND);
 
-			FileListlet fileModified = eventQueue.poll(1000, TimeUnit.MILLISECONDS);
+			FileListlet fileModified = eventQueue.poll(5000, TimeUnit.MILLISECONDS);
+			assertNotNull(fileModified);
 			assertEquals("test.txt", fileModified.getName());
 			assertEquals(UpdateType.ENTRY_MODIFY, fileModified.getUpdateType());
-			assertEquals(0, eventQueue.size());
+			assertEquals(0, eventQueue.size(), "Unexpected events: " + Arrays.toString(eventQueue.toArray()));
 		}
 	}
 }
