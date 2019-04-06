@@ -32,21 +32,21 @@ enum Instance {
 }
 
 /**
- * An enumeration of all instance subtypes.
+ * An enumeration of all official instance subtypes (flavors).
  */
 enum InstanceFlavor {
 	NONE = 0;
 
 	// Server types
-	VANILLA = 10;
+	VANILLA = 1;
 
 	// Client types
-	MEGA = 20;
-	MICRO = 21;
+	MEGA = 2;
+	MICRO = 3;
 
 	// Viewer types
-	CLI = 30;
-	JFX = 31;
+	CLI = 4;
+	JFX = 5;
 }
 
 /**

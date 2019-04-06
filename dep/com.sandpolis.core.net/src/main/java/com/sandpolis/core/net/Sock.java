@@ -41,6 +41,7 @@ import com.sandpolis.core.net.store.connection.ConnectionStore.Events;
 import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.IDUtil;
 
 import io.netty.channel.Channel;
@@ -218,6 +219,15 @@ public class Sock {
 	 */
 	public Instance getRemoteInstance() {
 		return IDUtil.CVID.extractInstance(getRemoteCvid());
+	}
+
+	/**
+	 * Get the remote {@link InstanceFlavor}.
+	 * 
+	 * @return The instance flavor of the remote host
+	 */
+	public InstanceFlavor getRemoteInstanceFlavor() {
+		return IDUtil.CVID.extractInstanceFlavor(getRemoteCvid());
 	}
 
 	/**

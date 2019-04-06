@@ -35,6 +35,7 @@ import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.IDUtil;
 
 import io.netty.channel.DefaultEventLoop;
@@ -60,7 +61,7 @@ class CvidRequestHandlerTest {
 
 	@Test
 	void testInitiate() {
-		clientHandler.handshake(client, Instance.CLIENT, "testuuid");
+		clientHandler.handshake(client, Instance.CLIENT, InstanceFlavor.MEGA, "testuuid");
 		assertFalse(client.attr(ChannelConstant.FUTURE_CVID).get().isDone());
 
 		Message msg = client.readOutbound();
@@ -68,6 +69,7 @@ class CvidRequestHandlerTest {
 
 		assertTrue(rq != null);
 		assertEquals(Instance.CLIENT, rq.getInstance());
+		assertEquals(InstanceFlavor.MEGA, rq.getInstanceFlavor());
 		assertEquals("testuuid", rq.getUuid());
 	}
 

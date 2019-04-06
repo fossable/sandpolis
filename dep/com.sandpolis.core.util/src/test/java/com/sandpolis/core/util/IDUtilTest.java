@@ -18,26 +18,49 @@
 package com.sandpolis.core.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.IDUtil.CVID;
 
-public class IDUtilTest {
+class IDUtilTest {
 
 	@Test
-	public void testCvidGenerator() {
-		for (Instance instance : Instance.values()) {
-			if (instance == Instance.UNRECOGNIZED)
-				break;
+	@DisplayName("Check for Instance ID overflows")
+	void iid_1() {
+		for (Instance instance : Instance.values())
+			if (instance != Instance.UNRECOGNIZED)
+				assertTrue(instance.getNumber() <= (1 << IDUtil.CVID.IID_SPACE) - 1,
+						"Maximum ID exceeded: " + instance.getNumber());
+	}
 
-			for (int i = 0; i < 1000; i++) {
-				int cvid = CVID.cvid(instance);
-				assertNotEquals(0, cvid);
-				assertEquals(instance, CVID.extractInstance(cvid));
+	@Test
+	@DisplayName("Check for InstanceFlavor ID overflows")
+	void fid_1() {
+		for (InstanceFlavor flavor : InstanceFlavor.values())
+			if (flavor != InstanceFlavor.UNRECOGNIZED)
+				assertTrue(flavor.getNumber() <= (1 << IDUtil.CVID.FID_SPACE) - 1,
+						"Maximum ID exceeded: " + flavor.getNumber());
+	}
+
+	@Test
+	@DisplayName("Check a few random CVIDs for validity")
+	void cvid_1() {
+		for (Instance instance : Instance.values()) {
+			for (InstanceFlavor flavor : InstanceFlavor.values()) {
+				if (instance == Instance.UNRECOGNIZED || flavor == InstanceFlavor.UNRECOGNIZED)
+					continue;
+
+				for (int i = 0; i < 1000; i++) {
+					int cvid = CVID.cvid(instance, flavor);
+					assertTrue(0 < cvid, "Invalid CVID: " + cvid);
+					assertEquals(instance, CVID.extractInstance(cvid));
+					assertEquals(flavor, CVID.extractInstanceFlavor(cvid));
+				}
 			}
 		}
 	}
@@ -48,10 +71,10 @@ public class IDUtilTest {
 	private static final int MSG_MAX = 64;
 
 	@Test
-	public void testMsgGenerator() {
+	@DisplayName("Ensure message ID never exceeds MSG_MAX")
+	void msg_1() {
 		for (int i = 0; i < 10000; i++) {
 			assertTrue(IDUtil.msg() <= MSG_MAX);
 		}
 	}
-
 }

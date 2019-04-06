@@ -70,7 +70,7 @@ public class PluginExe extends Exelet {
 		log.debug("Received artifact request: " + coordinate.coordinate);
 
 		PluginStore.getPlugin(coordinate.artifactId).ifPresentOrElse(plugin -> {
-			if (!PluginStore.findComponentTypes(plugin).contains(InstanceFlavor.MEGA)) // TODO hardcoded subtype
+			if (!PluginStore.findComponentTypes(plugin).contains(connector.getRemoteInstanceFlavor()))
 				reply(m, Outcome.newBuilder().setResult(false));// TODO message
 			else if (rq.getLocation()) {
 				reply(m, rs.setCoordinates(String.format(":%s:%s", plugin.getId(), plugin.getVersion())));

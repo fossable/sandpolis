@@ -28,6 +28,7 @@ import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -72,7 +73,7 @@ public class CvidRequestHandler extends SimpleChannelInboundHandler<Message> {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		handshake(ctx.channel(), Core.INSTANCE, Core.UUID);
+		handshake(ctx.channel(), Core.INSTANCE, Core.FLAVOR, Core.UUID);
 		super.channelActive(ctx);
 	}
 
@@ -81,12 +82,13 @@ public class CvidRequestHandler extends SimpleChannelInboundHandler<Message> {
 	 * 
 	 * @param channel  The channel
 	 * @param instance The instance type
+	 * @param flavor   The instance flavor
 	 * @param uuid     The instance's UUID
 	 */
-	public void handshake(Channel channel, Instance instance, String uuid) {
+	public void handshake(Channel channel, Instance instance, InstanceFlavor flavor, String uuid) {
 		log.debug("Initiating CVID handshake");
-		channel.writeAndFlush(
-				Message.newBuilder().setRqCvid(RQ_Cvid.newBuilder().setInstance(instance).setUuid(uuid)).build());
+		channel.writeAndFlush(Message.newBuilder()
+				.setRqCvid(RQ_Cvid.newBuilder().setInstance(instance).setInstanceFlavor(flavor).setUuid(uuid)).build());
 	}
 
 }

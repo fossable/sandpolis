@@ -28,9 +28,12 @@ import "com/sandpolis/core/proto/util/Platform.proto";
 message RQ_Cvid {
 	// The UUID of the requesting instance
 	string uuid = 1;
-	
+
 	// The instance type of the requesting instance
 	util.Instance instance = 2;
+
+	// The instance flavor of the requesting instance
+	util.InstanceFlavor instance_flavor = 3;
 }
 
 /**
