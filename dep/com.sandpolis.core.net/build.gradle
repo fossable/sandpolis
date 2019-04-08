@@ -16,7 +16,7 @@ eclipse {
 }
 
 dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.1'
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 	testCompile project(':dep:com.sandpolis.core.instance:constants')
 
 	compileOnly project(':dep:com.sandpolis.core.instance:constants')
