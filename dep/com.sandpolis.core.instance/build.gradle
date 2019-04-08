@@ -37,7 +37,7 @@ dependencies {
 	implementation 'javax.persistence:javax.persistence-api:2.2'
 
 	// https://github.com/fusesource/jansi
-	implementation 'org.fusesource.jansi:jansi:1.17.1'
+	implementation 'org.fusesource.jansi:jansi:1.18'
 
 	// https://github.com/pf4j/pf4j
 	implementation 'org.pf4j:pf4j:2.6.0'
