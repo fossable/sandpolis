@@ -24,7 +24,7 @@ eclipse {
 }
 
 dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.1'
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 
 	compileOnly project(':plugin:com.sandpolis.plugin.sysinfo')
 
