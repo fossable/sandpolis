@@ -29,14 +29,13 @@ import java.util.concurrent.Executors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.logging;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.init.ChannelConstant;
-import com.sandpolis.core.net.init.PeerPipelineInit;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -46,11 +45,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.logging.LoggingHandler;
 
 class SockFutureTest {
-
-	private static PeerPipelineInit clientPipeline = new PeerPipelineInit(null);
-	private static PeerPipelineInit serverPipeline = new PeerPipelineInit(null);
 
 	@BeforeAll
 	static void configure() {
@@ -62,10 +59,10 @@ class SockFutureTest {
 
 	@Test
 	void testGetEmbedded() throws InterruptedException, ExecutionException {
-		EmbeddedChannel server = new EmbeddedChannel(serverPipeline);
+		EmbeddedChannel server = new EmbeddedChannel();
 		ChannelFuture serverFuture = server.bind(new InetSocketAddress(16101));
 
-		EmbeddedChannel client = new EmbeddedChannel(clientPipeline);
+		EmbeddedChannel client = new EmbeddedChannel();
 		ChannelFuture clientFuture = client.connect(new InetSocketAddress("127.0.0.1", 16101));
 
 		testGet(serverFuture, clientFuture);
@@ -74,10 +71,10 @@ class SockFutureTest {
 	@Test
 	void testGetNioTcp() throws InterruptedException, ExecutionException {
 		ChannelFuture serverFuture = new ServerBootstrap().channel(NioServerSocketChannel.class)
-				.group(new NioEventLoopGroup()).childHandler(serverPipeline).bind(40255);
+				.group(new NioEventLoopGroup()).childHandler(new LoggingHandler()).bind(40255);
 
 		ChannelFuture clientFuture = new Bootstrap().channel(NioSocketChannel.class).group(new NioEventLoopGroup())
-				.handler(clientPipeline).connect("127.0.0.1", 40255);
+				.handler(new LoggingHandler()).connect("127.0.0.1", 40255);
 
 		testGet(serverFuture, clientFuture);
 	}
@@ -85,10 +82,10 @@ class SockFutureTest {
 	@Test
 	void testGetNioUdp() throws InterruptedException, ExecutionException {
 		ChannelFuture serverFuture = new Bootstrap().channel(NioDatagramChannel.class).group(new NioEventLoopGroup())
-				.handler(serverPipeline).bind(13418);
+				.handler(new LoggingHandler()).bind(13418);
 
 		ChannelFuture clientFuture = new Bootstrap().channel(NioDatagramChannel.class).group(new NioEventLoopGroup())
-				.handler(clientPipeline).connect("127.0.0.1", 13418);
+				.handler(new LoggingHandler()).connect("127.0.0.1", 13418);
 
 		testGet(serverFuture, clientFuture);
 	}
@@ -100,20 +97,24 @@ class SockFutureTest {
 		client.channel().attr(ChannelConstant.CVID).set(321);
 
 		SockFuture sf = new SockFuture(client);
+		sf.sync();
 
-		client.sync();
-
-		Sock sock = sf.get();
 		assertTrue(sf.isDone());
 		assertTrue(sf.isSuccess());
 		assertNull(sf.cause());
+
+		Sock sock = sf.get();
+		sf.sync();
+
+		assertTrue(client.isDone());
+		assertTrue(client.isSuccess());
+		assertNull(client.cause());
 
 		assertNotNull(sock);
 		assertEquals(client.channel(), sock.channel());
 		assertEquals(sock, client.channel().attr(ChannelConstant.SOCK).get());
 
-		server.channel().close();
 		client.channel().close();
+		server.channel().close();
 	}
-
 }
