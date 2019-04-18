@@ -21,6 +21,6 @@ eclipse {
 dependencies {
 
 	// https://github.com/cilki/TreeConstants
-	compileOnly 'com.github.cilki:tree-constants-api:1.0.1'
-	annotationProcessor 'com.github.cilki:tree-constants:1.0.1'
+	compileOnly 'com.github.cilki:tree-constants-api:+'
+	annotationProcessor 'com.github.cilki:tree-constants:+'
 }
