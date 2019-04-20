@@ -1,5 +1,5 @@
 <p align="center">
-	<img src="screenshots/sandpolis.png" />
+	<img src="https://s3.us-east-2.amazonaws.com/github.sandpolis.com/header.png" />
 </p>
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
