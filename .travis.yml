@@ -2,7 +2,7 @@ sudo: false
 language: java
 
 script:
-  - ./gradlew test -PDEPLOY_ENABLED=false
+  - ./gradlew test -PPLUGINS_DEPLOY=false
 
 os:
   - linux
