@@ -34,6 +34,7 @@ import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 import com.sandpolis.core.proto.util.Generator.OutputFormat;
 import com.sandpolis.core.proto.util.Generator.OutputPayload;
 import com.sandpolis.viewer.cmd.GenCmd;
+import com.sandpolis.viewer.jfx.PoolConstant.ui;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.common.controller.FxController;
 import com.sandpolis.viewer.jfx.common.pane.ExtendPane;
@@ -194,7 +195,7 @@ public class GeneratorController extends FxController {
 		extend.raise(FxUtil.load("/fxml/view/generator/detail/Progress.fxml", this), ExtendSide.BOTTOM, 1000, 150);
 
 		// Execute command
-		GenCmd.async().pool("ui.fx").generate(getConfig()).addListener((ResponseFuture<RS_Generate> response) -> {
+		GenCmd.async().pool(ui.fx_thread).generate(getConfig()).addListener((ResponseFuture<RS_Generate> response) -> {
 			post(GenerationCompletedEvent::new, response.get());
 		});
 	}

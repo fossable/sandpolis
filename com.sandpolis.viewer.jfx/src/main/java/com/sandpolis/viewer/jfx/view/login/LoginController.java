@@ -27,6 +27,7 @@ import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.viewer.cmd.LoginCmd;
 import com.sandpolis.viewer.cmd.NetworkCmd;
 import com.sandpolis.viewer.cmd.ServerCmd;
+import com.sandpolis.viewer.jfx.PoolConstant.ui;
 import com.sandpolis.viewer.jfx.common.controller.FxController;
 import com.sandpolis.viewer.jfx.common.pane.CarouselPane;
 import com.sandpolis.viewer.jfx.store.stage.StageStore;
@@ -126,7 +127,7 @@ public class LoginController extends FxController {
 					.addListener((SockFuture sockFuture) -> {
 						if (sockFuture.isSuccess()) {
 							connection = sockFuture.get();
-							ServerCmd.async().target(connection).pool("ui.fx").getServerBanner()
+							ServerCmd.async().target(connection).pool(ui.fx_thread).getServerBanner()
 									.addListener((ResponseFuture<RS_ServerBanner> responseFuture) -> {
 										if (responseFuture.isSuccess()) {
 											RS_ServerBanner banner = responseFuture.get();
@@ -143,7 +144,7 @@ public class LoginController extends FxController {
 
 			break;
 		case USER_INPUT:
-			LoginCmd.async().target(connection).pool("ui.fx")
+			LoginCmd.async().target(connection).pool(ui.fx_thread)
 					.login(userPhaseController.getUsername(), userPhaseController.getPassword())
 					.addListener((ResponseFuture<Outcome> outcomeFuture) -> {
 						if (outcomeFuture.isSuccess()) {
