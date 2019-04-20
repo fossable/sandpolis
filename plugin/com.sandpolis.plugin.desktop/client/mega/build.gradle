@@ -26,7 +26,7 @@ eclipse {
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 
-	implementation project(':dep:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':plugin:com.sandpolis.plugin.desktop')
 
 	// https://github.com/qos-ch/slf4j

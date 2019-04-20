@@ -28,8 +28,8 @@ dependencies {
 
 	compileOnly project(':plugin:com.sandpolis.plugin.sysinfo')
 
-	implementation project(':dep:com.sandpolis.core.instance')
-	implementation project(':dep:com.sandpolis.core.net')
+	implementation project(':module:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.net')
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'

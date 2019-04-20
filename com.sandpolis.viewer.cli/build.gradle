@@ -23,13 +23,13 @@ repositories {
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 
-	implementation project(':dep:com.sandpolis.core.instance')
-	implementation project(':dep:com.sandpolis.core.ipc')
-	implementation project(':dep:com.sandpolis.core.net')
-	implementation project(':dep:com.sandpolis.core.proto')
-	implementation project(':dep:com.sandpolis.core.soi')
-	implementation project(':dep:com.sandpolis.core.util')
-	implementation project(':dep:com.sandpolis.viewer')
+	implementation project(':module:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.ipc')
+	implementation project(':module:com.sandpolis.core.net')
+	implementation project(':module:com.sandpolis.core.proto')
+	implementation project(':module:com.sandpolis.core.soi')
+	implementation project(':module:com.sandpolis.core.util')
+	implementation project(':module:com.sandpolis.viewer')
 
 	// https://github.com/qos-ch/logback
 	implementation 'ch.qos.logback:logback-core:1.2.3'

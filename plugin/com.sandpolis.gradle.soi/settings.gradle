@@ -1,9 +1,0 @@
-/*******************************************************************************
-* SANDPOLIS                                                                    *
-* com.sandpolis.gradle.soi                                                     *
-*******************************************************************************/
-
-rootProject.name = 'com.sandpolis.gradle.soi'
-
-include 'dep:com.sandpolis.core.soi'
-project(':dep:com.sandpolis.core.soi').projectDir = file('../../dep/com.sandpolis.core.soi')

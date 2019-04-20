@@ -1,6 +1,6 @@
 /*******************************************************************************
 * SANDPOLIS                                                                    *
-* com.sandpolis.plugin.desktop                                                 *
+* com.sandpolis.core.permission                                                *
 *******************************************************************************/
 
 plugins {
@@ -10,8 +10,8 @@ plugins {
 
 eclipse {
 	project {
-		name = 'com.sandpolis.plugin.desktop:viewer:jfx'
-		comment = "The desktop plugin's JavaFX component"
+		name = 'com.sandpolis.core.permission'
+		comment = 'The permissions library module'
 	}
 }
 
@@ -19,10 +19,6 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 
 	implementation project(':module:com.sandpolis.core.instance')
-	implementation project(':plugin:com.sandpolis.plugin.desktop')
-
-	// https://github.com/pf4j/pf4j
-	implementation 'org.pf4j:pf4j:2.6.0'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'

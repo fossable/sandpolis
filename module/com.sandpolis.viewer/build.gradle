@@ -1,17 +1,17 @@
 /*******************************************************************************
 * SANDPOLIS                                                                    *
-* com.sandpolis.charcoal                                                       *
+* com.sandpolis.viewer                                                         *
 *******************************************************************************/
 
 plugins {
 	id 'eclipse'
-	id 'java'
+	id 'java-library'
 }
 
 eclipse {
 	project {
-		name = 'com.sandpolis.charcoal'
-		comment = 'The Charcoal instance'
+		name = 'com.sandpolis.viewer'
+		comment = 'The viewer library module'
 	}
 }
 
@@ -19,19 +19,20 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 
 	implementation project(':module:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.ipc')
+	implementation project(':module:com.sandpolis.core.net')
 	implementation project(':module:com.sandpolis.core.proto')
-	implementation project(':module:com.sandpolis.core.soi')
 	implementation project(':module:com.sandpolis.core.util')
+	
+	// https://github.com/google/guava
+	implementation 'com.google.guava:guava:27.1-jre'
+
+	// https://github.com/netty/netty
+	implementation 'io.netty:netty-common:4.1.35.Final'
+	implementation 'io.netty:netty-codec:4.1.35.Final'
+	implementation 'io.netty:netty-transport:4.1.35.Final'
+	implementation 'io.netty:netty-handler:4.1.35.Final'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
-}
-
-jar {
-	manifest {
-		attributes(
-			'Main-Class': 'com.sandpolis.charcoal.Main',
-			'Class-Path': configurations.runtimeClasspath.collect { 'lib/' + it.getName() }.join(' ')
-		)
-	}
 }

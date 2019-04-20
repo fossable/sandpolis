@@ -1,43 +1,55 @@
 /*******************************************************************************
 * SANDPOLIS                                                                    *
-* com.sandpolis.plugin.filesys                                                 *
+* com.sandpolis.core.profile                                                   *
 *******************************************************************************/
+
+buildscript {
+	dependencies {
+		classpath ':com.sandpolis.gradle.codegen:'
+	}
+}
 
 plugins {
 	id 'eclipse'
 	id 'java-library'
 }
 
+apply plugin: 'com.sandpolis.gradle.codegen'
+
+sourceSets {
+	main {
+		java {
+			srcDirs 'src/gen/java'
+		}
+	}
+}
+
 eclipse {
 	project {
-		name = 'com.sandpolis.plugin.filesys'
-		comment = 'The filesys plugin'
+		name = 'com.sandpolis.core.profile'
+		comment = 'The profile library module'
 	}
 }
 
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
-	testImplementation 'org.zeroturnaround:zt-zip:1.13'
-
+	
 	implementation project(':module:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.permission')
 	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':module:com.sandpolis.core.util')
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:27.1-jre'
 
+	implementation 'javax.persistence:javax.persistence-api:2.2'
+
+	implementation 'org.hibernate:hibernate-core:5.4.2.Final'
+
 	// https://github.com/pf4j/pf4j
 	implementation 'org.pf4j:pf4j:2.6.0'
+	annotationProcessor 'org.pf4j:pf4j:2.6.0'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
-}
-
-apply plugin: 'com.sandpolis.gradle.plugin'
-
-sandpolis_plugin {
-	id = 'com.sandpolis.plugin.filesys'
-	name = 'Filesystem Plugin'
-	description = 'Provides access to the filesystem'
-	version = '1.0.0'
 }

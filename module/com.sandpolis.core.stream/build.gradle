@@ -1,6 +1,6 @@
 /*******************************************************************************
 * SANDPOLIS                                                                    *
-* com.sandpolis.plugin.desktop                                                 *
+* com.sandpolis.core.stream                                                    *
 *******************************************************************************/
 
 plugins {
@@ -10,8 +10,8 @@ plugins {
 
 eclipse {
 	project {
-		name = 'com.sandpolis.plugin.desktop:viewer:jfx'
-		comment = "The desktop plugin's JavaFX component"
+		name = 'com.sandpolis.core.stream'
+		comment = 'The stream library module'
 	}
 }
 
@@ -19,10 +19,10 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 
 	implementation project(':module:com.sandpolis.core.instance')
-	implementation project(':plugin:com.sandpolis.plugin.desktop')
-
-	// https://github.com/pf4j/pf4j
-	implementation 'org.pf4j:pf4j:2.6.0'
+	implementation project(':module:com.sandpolis.core.profile')
+	implementation project(':module:com.sandpolis.core.proto')
+	
+	implementation 'javax.persistence:javax.persistence-api:2.2'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'

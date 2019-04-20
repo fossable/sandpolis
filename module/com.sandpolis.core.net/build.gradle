@@ -1,39 +1,29 @@
 /*******************************************************************************
 * SANDPOLIS                                                                    *
-* com.sandpolis.client.mega                                                    *
+* com.sandpolis.core.net                                                       *
 *******************************************************************************/
-
-buildscript {
-	dependencies {
-		classpath ':com.sandpolis.gradle.soi:'
-	}
-}
 
 plugins {
 	id 'eclipse'
-	id 'java'
-	id 'com.github.onslip.gradle-one-jar' version '1.0.5'
+	id 'java-library'
 }
-
-apply plugin: 'com.sandpolis.gradle.soi'
 
 eclipse {
 	project {
-		name = 'com.sandpolis.client.mega'
-		comment = 'The mega-client instance'
+		name = 'com.sandpolis.core.net'
+		comment = 'The common networking library module'
 	}
 }
 
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
+	testCompile project(':module:com.sandpolis.core.instance:constants')
 
 	compileOnly project(':module:com.sandpolis.core.instance:constants')
 
 	implementation project(':module:com.sandpolis.core.instance')
-	implementation project(':module:com.sandpolis.core.ipc')
-	implementation project(':module:com.sandpolis.core.net')
+	implementation project(':module:com.sandpolis.core.permission')
 	implementation project(':module:com.sandpolis.core.proto')
-	implementation project(':module:com.sandpolis.core.soi')
 	implementation project(':module:com.sandpolis.core.util')
 
 	// https://github.com/google/guava
@@ -44,32 +34,25 @@ dependencies {
 	implementation 'io.netty:netty-codec:4.1.35.Final'
 	implementation 'io.netty:netty-transport:4.1.35.Final'
 	implementation 'io.netty:netty-handler:4.1.35.Final'
+	implementation 'io.netty:netty-resolver-dns:4.1.35.Final'
 
-	implementation 'javax.persistence:javax.persistence-api:2.2'
+	// https://github.com/pf4j/pf4j
+	implementation 'org.pf4j:pf4j:2.6.0'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
 }
 
-jar {
-	manifest {
-		attributes(
-			'Main-Class': 'com.sandpolis.client.mega.Main'
-		)
+// Allow com.sandpolis.server to reuse some unit tests
+task testJar(type: Jar, dependsOn: testClasses) {
+    classifier = 'tests'
+    from sourceSets.test.output
+}
+configurations {
+	tests {
+		extendsFrom testCompile
 	}
 }
-
-// Add OneJar task to produce a jar capable of nested dependencies, but don't
-// actually add them yet
-task one_jar(type: OneJar) {
-	mainClass = 'com.sandpolis.client.mega.Main' 
-}
-project.tasks.assemble.dependsOn project.tasks.one_jar
-
-// Create a custom configuration containing the nested jar
-configurations {
-	onejarArtifact.extendsFrom runtimeClasspath
-}
 artifacts {
-	onejarArtifact one_jar
+	tests testJar
 }

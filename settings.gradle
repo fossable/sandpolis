@@ -6,11 +6,14 @@
 rootProject.name = 'Sandpolis'
 
 // Composite Builds
-includeBuild 'plugin/com.sandpolis.gradle.codegen'
-includeBuild 'plugin/com.sandpolis.gradle.plugin'
-includeBuild 'plugin/com.sandpolis.gradle.soi'
-if (DEPLOY_ENABLED.toBoolean())
-	includeBuild 'plugin/com.sandpolis.gradle.deploy'
+if (PLUGINS_CODEGEN.toBoolean())
+	includeBuild 'gradle/com.sandpolis.gradle.codegen'
+if (PLUGINS_PLUGIN.toBoolean())
+	includeBuild 'gradle/com.sandpolis.gradle.plugin'
+if (PLUGINS_SOI.toBoolean())
+	includeBuild 'gradle/com.sandpolis.gradle.soi'
+if (PLUGINS_DEPLOY.toBoolean())
+	includeBuild 'gradle/com.sandpolis.gradle.deploy'
 
 // Instance Projects
 include 'com.sandpolis.charcoal'
@@ -24,19 +27,19 @@ include 'com.sandpolis.viewer.jfx'
 include 'com.sandpolis.viewer.jfx:constants'
 
 // Dependency Projects
-include 'dep:com.sandpolis.core.instance'
-include 'dep:com.sandpolis.core.instance:constants'
-include 'dep:com.sandpolis.core.ipc'
-include 'dep:com.sandpolis.core.net'
-include 'dep:com.sandpolis.core.permission'
-include 'dep:com.sandpolis.core.profile'
-include 'dep:com.sandpolis.core.proto'
-include 'dep:com.sandpolis.core.soi'
-include 'dep:com.sandpolis.core.storage.hibernate'
-include 'dep:com.sandpolis.core.storage.ormlite'
-include 'dep:com.sandpolis.core.stream'
-include 'dep:com.sandpolis.core.util'
-include 'dep:com.sandpolis.viewer'
+include 'module:com.sandpolis.core.instance'
+include 'module:com.sandpolis.core.instance:constants'
+include 'module:com.sandpolis.core.ipc'
+include 'module:com.sandpolis.core.net'
+include 'module:com.sandpolis.core.permission'
+include 'module:com.sandpolis.core.profile'
+include 'module:com.sandpolis.core.proto'
+include 'module:com.sandpolis.core.soi'
+include 'module:com.sandpolis.core.storage.hibernate'
+include 'module:com.sandpolis.core.storage.ormlite'
+include 'module:com.sandpolis.core.stream'
+include 'module:com.sandpolis.core.util'
+include 'module:com.sandpolis.viewer'
 
 // Core plugins
 include 'plugin:com.sandpolis.plugin.desktop'

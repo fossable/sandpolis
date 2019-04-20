@@ -1,0 +1,36 @@
+/*******************************************************************************
+* SANDPOLIS                                                                    *
+* com.sandpolis.core.storage.ormlite                                           *
+*******************************************************************************/
+
+plugins {
+	id 'eclipse'
+	id 'java-library'
+}
+
+eclipse {
+	project {
+		name = 'com.sandpolis.core.storage.ormlite'
+		comment = 'The ormlite library module'
+	}
+}
+
+dependencies {
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.4.2'
+	testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.3.0'
+	testImplementation 'mysql:mysql-connector-java:8.0.13'
+	testImplementation 'net.jodah:concurrentunit:0.4.4'
+
+	implementation project(':module:com.sandpolis.core.instance')
+
+	implementation 'com.j256.ormlite:ormlite-core:5.1'
+	implementation 'com.j256.ormlite:ormlite-jdbc:5.1'
+
+	implementation 'javax.persistence:javax.persistence-api:2.2'
+
+	// https://github.com/qos-ch/slf4j
+	implementation 'org.slf4j:slf4j-api:1.7.26'
+
+	implementation 'org.xerial:sqlite-jdbc:3.25.2'
+}

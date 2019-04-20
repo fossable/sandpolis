@@ -1,0 +1,9 @@
+/*******************************************************************************
+* SANDPOLIS                                                                    *
+* com.sandpolis.gradle.soi                                                     *
+*******************************************************************************/
+
+rootProject.name = 'com.sandpolis.gradle.soi'
+
+include 'module:com.sandpolis.core.soi'
+project(':module:com.sandpolis.core.soi').projectDir = file('../../module/com.sandpolis.core.soi')

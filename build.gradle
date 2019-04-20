@@ -12,12 +12,12 @@ buildscript {
 	dependencies {
 		classpath ':com.sandpolis.gradle.plugin:'
 		classpath ':com.sandpolis.gradle.soi:'
-		if (DEPLOY_ENABLED.toBoolean())
+		if (PLUGINS_DEPLOY.toBoolean())
 			classpath ':com.sandpolis.gradle.deploy:'
 	}
 }
 
-if (DEPLOY_ENABLED.toBoolean())
+if (PLUGINS_DEPLOY.toBoolean())
 	apply plugin: 'com.sandpolis.gradle.deploy'
 
 // Apply repository configuration
@@ -85,7 +85,7 @@ configure(subprojects.findAll {publishProjects.contains(it.name)}) {
 				mavenJava(MavenPublication) {
 					groupId = 'com.sandpolis'
 					artifactId = sub.name.replace("com.sandpolis.", "").replaceAll("\\.", "-")
-					version = BUILD_VERSION
+					version = SANDPOLIS_VERSION
 
 					from sub.components.java
 					artifact sourcesJar

@@ -28,17 +28,17 @@ repositories {
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 
-	compileOnly project(':dep:com.sandpolis.core.instance:constants')
+	compileOnly project(':module:com.sandpolis.core.instance:constants')
 	compileOnly project('constants')
 
-	implementation project(':dep:com.sandpolis.core.instance')
-	implementation project(':dep:com.sandpolis.core.ipc')
-	implementation project(':dep:com.sandpolis.core.net')
-	implementation project(':dep:com.sandpolis.core.profile')
-	implementation project(':dep:com.sandpolis.core.proto')
-	implementation project(':dep:com.sandpolis.core.soi')
-	implementation project(':dep:com.sandpolis.core.util')
-	implementation project(':dep:com.sandpolis.viewer')
+	implementation project(':module:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.ipc')
+	implementation project(':module:com.sandpolis.core.net')
+	implementation project(':module:com.sandpolis.core.profile')
+	implementation project(':module:com.sandpolis.core.proto')
+	implementation project(':module:com.sandpolis.core.soi')
+	implementation project(':module:com.sandpolis.core.util')
+	implementation project(':module:com.sandpolis.viewer')
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:27.1-jre'

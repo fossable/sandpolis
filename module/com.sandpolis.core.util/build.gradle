@@ -1,37 +1,35 @@
 /*******************************************************************************
 * SANDPOLIS                                                                    *
-* com.sandpolis.charcoal                                                       *
+* com.sandpolis.core.util                                                      *
 *******************************************************************************/
 
 plugins {
 	id 'eclipse'
-	id 'java'
+	id 'java-library'
 }
 
 eclipse {
 	project {
-		name = 'com.sandpolis.charcoal'
-		comment = 'The Charcoal instance'
+		name = 'com.sandpolis.core.util'
+		comment = 'The common utilities library module'
 	}
 }
 
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 
-	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':module:com.sandpolis.core.proto')
-	implementation project(':module:com.sandpolis.core.soi')
-	implementation project(':module:com.sandpolis.core.util')
+
+	implementation 'commons-validator:commons-validator:1.6'
+
+	// https://github.com/google/guava
+	implementation 'com.google.guava:guava:27.1-jre'
+
+	implementation 'javax.persistence:javax.persistence-api:2.2'
+
+	// https://github.com/fusesource/jansi
+	implementation 'org.fusesource.jansi:jansi:1.18'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
-}
-
-jar {
-	manifest {
-		attributes(
-			'Main-Class': 'com.sandpolis.charcoal.Main',
-			'Class-Path': configurations.runtimeClasspath.collect { 'lib/' + it.getName() }.join(' ')
-		)
-	}
 }
