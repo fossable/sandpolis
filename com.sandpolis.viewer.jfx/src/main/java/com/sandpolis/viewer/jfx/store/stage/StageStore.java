@@ -19,6 +19,7 @@ package com.sandpolis.viewer.jfx.store.stage;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -135,8 +136,12 @@ public final class StageStore {
 		 * @return {@code this}
 		 */
 		public StageBuilder root(String root, Object... params) {
+			// Append stage to end of array
+			params = Arrays.copyOf(params, params.length + 1);
+			params[params.length - 1] = stage;
+
 			try {
-				this.root = FxUtil.loadRoot(Objects.requireNonNull(root), stage, params);
+				this.root = FxUtil.loadRoot(Objects.requireNonNull(root), params);
 				return this;
 			} catch (IOException e) {
 				throw new RuntimeException(e);
