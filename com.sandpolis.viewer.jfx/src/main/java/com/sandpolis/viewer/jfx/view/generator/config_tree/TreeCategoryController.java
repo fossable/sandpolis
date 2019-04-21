@@ -15,58 +15,14 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.view.generator;
-
-import java.util.Objects;
-import java.util.function.Function;
-
-import javafx.scene.control.TextField;
+package com.sandpolis.viewer.jfx.view.generator.config_tree;
 
 /**
- * Represents a text attribute cell in the configuration tree.
+ * A controller for top-level category items.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public class TreeAttributeText extends TreeAttribute {
-
-	private TextField text = new TextField();
-
-	public TreeAttributeText(String name) {
-		super(name);
-
-		// Setup value binding
-		value().bind(text.textProperty());
-
-		// Add control
-		control.setRight(text);
-	}
-
-	public TreeAttributeText validator(Function<String, Boolean> validator) {
-		this.validator = Objects.requireNonNull(validator);
-		return this;
-	}
-
-	/**
-	 * Set the current value.
-	 * 
-	 * @param value The new value
-	 * @return {@code this}
-	 */
-	public TreeAttributeText value(String value) {
-		this.text.setText(value);
-		return this;
-	}
-
-	/**
-	 * Set the number of character columns.
-	 * 
-	 * @param number The new value
-	 * @return {@code this}
-	 */
-	public TreeAttributeText columns(int number) {
-		this.text.setPrefColumnCount(number);
-		return this;
-	}
+public class TreeCategoryController extends TreeGroupController {
 
 }

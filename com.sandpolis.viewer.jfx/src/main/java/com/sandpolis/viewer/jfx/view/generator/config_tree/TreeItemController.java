@@ -15,18 +15,50 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.view.generator;
+package com.sandpolis.viewer.jfx.view.generator.config_tree;
+
+import java.util.Objects;
+
+import com.sandpolis.viewer.jfx.common.controller.AbstractController;
+
+import javafx.beans.property.StringProperty;
+import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 /**
- * Represents a category cell in the configuration tree.
+ * A controller for all items in the configuration tree.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public class TreeCategory extends GenTreeItem {
+public abstract class TreeItemController extends AbstractController {
 
-	public TreeCategory(String name) {
-		super(Type.CATEGORY, name);
+	private TreeItem<Node> item;
+
+	@FXML
+	protected ImageView icon;
+
+	@FXML
+	protected Label name;
+
+	public void setIcon(String image) {
+		icon.setImage(new Image(image));
+	}
+
+	public StringProperty name() {
+		return name.textProperty();
+	}
+
+	public void setItem(TreeItem<Node> item) {
+		this.item = Objects.requireNonNull(item);
+	}
+
+	public TreeItem<Node> getItem() {
+		return item;
 	}
 
 }

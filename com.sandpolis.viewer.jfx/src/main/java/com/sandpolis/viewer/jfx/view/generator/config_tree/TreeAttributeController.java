@@ -15,81 +15,46 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.view.generator;
+package com.sandpolis.viewer.jfx.view.generator.config_tree;
 
 import java.util.function.Function;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
+import javafx.fxml.FXML;
 import javafx.scene.paint.Color;
 
 /**
- * Represents an attribute cell in the configuration tree.
+ * A controller for items that have an attribute.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public abstract class TreeAttribute extends GenTreeItem {
+public abstract class TreeAttributeController extends TreeItemController {
 
 	/**
-	 * The attribute's value.
+	 * The attribute's ID.
 	 */
-	private StringProperty value = new SimpleStringProperty();
+	private StringProperty id = new SimpleStringProperty();
+
+	/**
+	 * Get the {@code id} property.
+	 * 
+	 * @return The {@code id} property
+	 */
+	public StringProperty id() {
+		return id;
+	}
 
 	/**
 	 * The validity of the attribute's value.
 	 */
 	private BooleanProperty validity = new SimpleBooleanProperty();
-
-	/**
-	 * The function that determines the validity of the value.
-	 */
-	protected Function<String, Boolean> validator = s -> true;
-
-	/**
-	 * The attribute's custom control.
-	 */
-	protected BorderPane control = new BorderPane();
-
-	public TreeAttribute(String name) {
-		super(Type.ATTRIBUTE, name);
-
-		Label label = new Label(name().get());
-		label.graphicProperty().bind(icon());
-		label.textFillProperty().bind(Bindings.createObjectBinding(() -> {
-			return validity.get() ? Color.BLACK : Color.RED;
-		}, validity));
-		control.setLeft(label);
-
-		validity.bind(Bindings.createBooleanBinding(() -> {
-			return validator.apply(value.get());
-		}, value));
-
-	}
-
-	/**
-	 * Get the attribute's custom control.
-	 * 
-	 * @return The control
-	 */
-	public Node getControl() {
-		return control;
-	}
-
-	/**
-	 * Get the {@code value} property.
-	 * 
-	 * @return The {@code value} property
-	 */
-	public StringProperty value() {
-		return value;
-	}
 
 	/**
 	 * Get the {@code validity} property.
@@ -99,5 +64,38 @@ public abstract class TreeAttribute extends GenTreeItem {
 	public BooleanProperty validity() {
 		return validity;
 	}
+
+	/**
+	 * The function that determines the validity of the attribute value.
+	 */
+	protected ObjectProperty<Function<String, Boolean>> validator = new SimpleObjectProperty<>(s -> true);
+
+	/**
+	 * Get the {@code validator} property.
+	 * 
+	 * @return The {@code validator} property
+	 */
+	public ObjectProperty<Function<String, Boolean>> validator() {
+		return validator;
+	}
+
+	@FXML
+	protected void initialize() {
+		name.textFillProperty().bind(Bindings.createObjectBinding(() -> {
+			return validity.get() ? Color.BLACK : Color.RED;
+		}, validity));
+
+		validity.bind(Bindings.createBooleanBinding(() -> {
+			return validator.get().apply(value().get());
+		}, value()));
+
+	}
+
+	/**
+	 * Get the {@code value} property.
+	 * 
+	 * @return The {@code value} property
+	 */
+	public abstract StringProperty value();
 
 }

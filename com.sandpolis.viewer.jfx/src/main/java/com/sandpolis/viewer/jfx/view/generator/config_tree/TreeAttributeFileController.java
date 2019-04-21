@@ -15,66 +15,34 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.view.generator;
+package com.sandpolis.viewer.jfx.view.generator.config_tree;
 
-import java.util.Objects;
+import java.io.File;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.scene.Node;
-import javafx.scene.image.ImageView;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 /**
- * The superclass for all items in the generator's configuration tree.
+ * A controller for items that have a file attribute.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public abstract class GenTreeItem {
+public class TreeAttributeFileController extends TreeAttributeTextController {
 
-	enum Type {
-		CATEGORY, GROUP, ATTRIBUTE;
+	@FXML
+	protected Button select;
+
+	@FXML
+	private void select() {
+		select.setDisable(true);
+		FileChooser fc = new FileChooser();
+		File file = fc.showSaveDialog(new Stage());
+		if (file != null)
+			text.setText(file.getAbsolutePath());
+		select.setDisable(false);
 	}
 
-	private Type type;
-
-	/**
-	 * The name of this {@link GenTreeItem}.
-	 */
-	private StringProperty name = new SimpleStringProperty();
-
-	/**
-	 * The icon of this {@link GenTreeItem}.
-	 */
-	private ObjectProperty<Node> icon = new SimpleObjectProperty<>();
-
-	public GenTreeItem(Type type, String name) {
-		this.type = Objects.requireNonNull(type);
-		this.name.set(Objects.requireNonNull(name));
-	}
-
-	public Type getType() {
-		return type;
-	}
-
-	public StringProperty name() {
-		return name;
-	}
-
-	public ObjectProperty<Node> icon() {
-		return icon;
-	}
-
-	/**
-	 * Set the {@link GenTreeItem}'s icon.
-	 * 
-	 * @param location The icon name within the icons directory
-	 * @return {@code this}
-	 */
-	public GenTreeItem icon(String location) {
-		this.icon.set(new ImageView("/image/icon16/common/" + Objects.requireNonNull(location)));
-		return this;
-	}
 }

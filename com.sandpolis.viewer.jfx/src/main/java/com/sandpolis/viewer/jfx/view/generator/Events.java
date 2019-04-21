@@ -21,26 +21,43 @@ import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
 import com.sandpolis.viewer.jfx.common.event.Event;
 import com.sandpolis.viewer.jfx.common.event.ParameterizedEvent;
 
-import javafx.scene.control.TreeItem;
-
 public final class Events {
 
 	/**
 	 * Add a new network target to the configuration tree.
 	 */
-	public static class AddServerEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
+	public static class AddServerEvent extends ParameterizedEvent<AddServerEvent.Container> {
+		public static final class Container {
+			public final String address;
+			public final String port;
+			public final String strict_certs;
+			public final String cooldown;
+
+			public Container(String address, String port, String strict_certs, String cooldown) {
+				this.address = address;
+				this.port = port;
+				this.strict_certs = strict_certs;
+				this.cooldown = cooldown;
+			}
+		}
 	}
 
 	/**
 	 * Add a new plugin to the configuration tree.
 	 */
-	public static class AddPluginEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
+	public static class AddPluginEvent extends ParameterizedEvent<AddPluginEvent.Container> {
+		public static final class Container {
+
+		}
 	}
 
 	/**
 	 * Add a new auth group to the configuration tree.
 	 */
-	public static class AddGroupEvent extends ParameterizedEvent<TreeItem<GenTreeItem>> {
+	public static class AddGroupEvent extends ParameterizedEvent<AddGroupEvent.Container> {
+		public static final class Container {
+
+		}
 	}
 
 	/**

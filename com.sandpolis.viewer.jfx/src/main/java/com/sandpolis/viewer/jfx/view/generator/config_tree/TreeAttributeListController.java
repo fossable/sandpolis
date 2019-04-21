@@ -15,55 +15,58 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.view.generator;
+package com.sandpolis.viewer.jfx.view.generator.config_tree;
 
-import java.util.Objects;
-
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
 
 /**
- * Represents a list attribute cell in the configuration tree.
+ * A controller for items that have a list attribute.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public class TreeAttributeList extends TreeAttribute {
+public class TreeAttributeListController extends TreeAttributeController {
 
-	private ComboBox<String> list = new ComboBox<>();
+	@FXML
+	private ComboBox<String> list;
 
-	public TreeAttributeList(String name) {
-		super(name);
+	private StringProperty value = new SimpleStringProperty();
 
-		// Setup value binding
-		value().bind(list.valueProperty());
+	@FXML
+	@Override
+	protected void initialize() {
+		super.initialize();
 
-		// Add control
-		control.setRight(list);
+		// Define value
+		value().bindBidirectional(list.valueProperty());
+
 		list.setCellFactory(p -> new ListCell<String>() {
 			@Override
 			protected void updateItem(String item, boolean empty) {
 				super.updateItem(item, empty);
 
 				if (empty) {
-					// Clear contents
 					setText(null);
 					setGraphic(null);
-					return;
-				}
-
-				// Parse option
-				String[] parts = item.split(";");
-				if (parts.length > 2)
-					throw new RuntimeException("Invalid option: " + item);
-				if (parts.length == 2) {
-					setText(parts[1]);
-					setGraphic(new ImageView("/image/icon16/" + parts[0]));
 				} else {
-					setText(parts[0]);
-					setGraphic(null);
+					// Parse option
+					String[] parts = item.split(";");
+					if (parts.length > 2)
+						throw new RuntimeException("Invalid option: " + item);
+					if (parts.length == 2) {
+						setText(parts[1]);
+						setGraphic(new ImageView("/image/icon16/" + parts[0]));
+					} else {
+						setText(parts[0]);
+						setGraphic(null);
+					}
 				}
 			};
 		});
@@ -72,25 +75,12 @@ public class TreeAttributeList extends TreeAttribute {
 		list.setButtonCell(list.getCellFactory().call(new ListView<>()));
 	}
 
-	/**
-	 * Set the property's possible values.
-	 * 
-	 * @param options The property's values
-	 * @return {@code this}
-	 */
-	public TreeAttributeList options(String... options) {
-		this.list.getItems().addAll(Objects.requireNonNull(options));
-		return this;
+	@Override
+	public StringProperty value() {
+		return value;
 	}
 
-	/**
-	 * Set the current value.
-	 * 
-	 * @param value The new value
-	 * @return {@code this}
-	 */
-	public TreeAttributeList value(String value) {
-		this.list.setValue(value);
-		return this;
+	public ObservableList<String> getItems() {
+		return list.getItems();
 	}
 }

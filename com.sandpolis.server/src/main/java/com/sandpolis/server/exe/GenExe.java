@@ -30,6 +30,7 @@ import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.server.PoolConstant.server;
 import com.sandpolis.server.gen.FileGenerator;
 import com.sandpolis.server.gen.generator.MegaGen;
 
@@ -51,7 +52,7 @@ public class GenExe extends Exelet {
 	public void rq_generate(Message m) throws Exception {
 		var config = m.getRqGenerate().getConfig();
 
-		ExecutorService pool = ThreadStore.get("generator");
+		ExecutorService pool = ThreadStore.get(server.generator);
 		FileGenerator generator = pool.submit(() -> {
 			FileGenerator gen;
 			switch (config.getPayload()) {

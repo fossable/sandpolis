@@ -27,25 +27,34 @@ import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
 import com.sandpolis.core.proto.util.Generator.AuthenticationConfig;
 import com.sandpolis.core.proto.util.Generator.ExecutionConfig;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
+import com.sandpolis.core.proto.util.Generator.LoopConfig;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Generator.MicroConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 import com.sandpolis.core.proto.util.Generator.OutputFormat;
 import com.sandpolis.core.proto.util.Generator.OutputPayload;
+import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.viewer.cmd.GenCmd;
 import com.sandpolis.viewer.jfx.PoolConstant.ui;
 import com.sandpolis.viewer.jfx.common.FxUtil;
+import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.common.controller.FxController;
 import com.sandpolis.viewer.jfx.common.pane.ExtendPane;
 import com.sandpolis.viewer.jfx.common.pane.ExtendPane.ExtendSide;
 import com.sandpolis.viewer.jfx.view.generator.Events.AddServerEvent;
 import com.sandpolis.viewer.jfx.view.generator.Events.DetailCloseEvent;
 import com.sandpolis.viewer.jfx.view.generator.Events.GenerationCompletedEvent;
+import com.sandpolis.viewer.jfx.view.generator.config_tree.TreeAttributeFileController;
+import com.sandpolis.viewer.jfx.view.generator.config_tree.TreeAttributeListController;
+import com.sandpolis.viewer.jfx.view.generator.config_tree.TreeAttributeTextController;
+import com.sandpolis.viewer.jfx.view.generator.config_tree.TreeCategoryController;
+import com.sandpolis.viewer.jfx.view.generator.config_tree.TreeGroupController;
+import com.sandpolis.viewer.jfx.view.generator.config_tree.TreeItemController;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
@@ -56,41 +65,51 @@ public class GeneratorController extends FxController {
 	@FXML
 	private ExtendPane extend;
 	@FXML
-	private TreeView<GenTreeItem> tree;
+	private TreeView<Node> tree;
+
+	private TreeCategoryController exe;
+	private TreeCategoryController net;
+	private TreeCategoryController auth;
+	private TreeCategoryController plugin;
+	private TreeCategoryController output;
+
+	private TreeAttributeListController exe_melt;
+	private TreeAttributeListController exe_recovery;
+	private TreeAttributeTextController exe_message;
+
+	private TreeGroupController exe_windows;
+	private TreeGroupController exe_linux;
+
+	private TreeAttributeFileController out_directory;
+	private TreeAttributeListController out_format;
+	private TreeAttributeTextController out_passphrase;
 
 	private OutputPayload payload;
 
-	private TreeItem<GenTreeItem> exe = new TreeItem<>(new TreeCategory("Execution"));
-	private TreeItem<GenTreeItem> net = new TreeItem<>(new TreeCategory("Network").icon("computer.png"));
-	private TreeItem<GenTreeItem> auth = new TreeItem<>(new TreeCategory("Authentication").icon("lock.png"));
-	private TreeItem<GenTreeItem> plugin = new TreeItem<>(new TreeCategory("Plugins").icon("plugin.png"));
-	private TreeItem<GenTreeItem> output = new TreeItem<>(new TreeCategory("Output").icon("compile.png"));
+	private <C extends TreeItemController> C load(AbstractController parent, Class<?> type) throws IOException {
+		String resourceName = "/fxml/view/generator/" + type.getSimpleName().replace("Controller", "") + ".fxml";
+		FXMLLoader loader = new FXMLLoader(GeneratorController.class.getResource(resourceName));
 
-	private TreeAttribute exe_melt = new TreeAttributeList("cleanup installer").options("true", "false").value("false");
-	private TreeAttribute exe_recovery = new TreeAttributeList("error recovery").options("true", "false")
-			.value("false");
-	private TreeAttribute exe_message = new TreeAttributeText("install message");
+		TreeItem<Node> item = new TreeItem<>(loader.load());
+		C controller = loader.getController();
+		controller.setItem(item);
 
-	private TreeGroup exe_windows = new TreeGroup("Windows");
-	private TreeGroup exe_linux = new TreeGroup("Linux");
-
-	private TreeAttribute out_directory = new TreeAttributeText("directory");
-	private TreeAttribute out_timestamp = new TreeAttributeText("timestamp");
-
-	private TreeAttribute out_format = new TreeAttributeList("format").options("common/jar_empty.png;jar",
-			"file/exe.png;exe", "elf", "file/bat.png;bat", "sh", "rb", "py", "qr", "url");
-
-	private TreeAttribute out_passphrase = new TreeAttributeText("encryption passphrase");
+		if (parent == this)
+			tree.getRoot().getChildren().add(item);
+		if (parent instanceof TreeItemController)
+			((TreeItemController) parent).getItem().getChildren().add(item);
+		if (parent instanceof TreeGroupController)
+			((TreeGroupController) parent).getChildren().add(controller);
+		return controller;
+	}
 
 	@FXML
 	private void initialize() throws IOException {
-
-		TreeItem<GenTreeItem> root = new TreeItem<>();
-		tree.setRoot(root);
+		tree.setRoot(new TreeItem<>());
 		tree.setShowRoot(false);
-		tree.setCellFactory(p -> new TreeCell<GenTreeItem>() {
+		tree.setCellFactory(p -> new TreeCell<Node>() {
 			@Override
-			public void updateItem(GenTreeItem item, boolean empty) {
+			public void updateItem(Node item, boolean empty) {
 				super.updateItem(item, empty);
 
 				// Unbind properties
@@ -98,59 +117,78 @@ public class GeneratorController extends FxController {
 				graphicProperty().unbind();
 
 				if (empty) {
-
-					// Clear contents
 					setText(null);
 					setGraphic(null);
 					setContextMenu(null);
-					return;
-				}
-
-				switch (item.getType()) {
-				case CATEGORY:
-					setText(item.name().get());
-					graphicProperty().bind(getItem().icon());
-					break;
-				case GROUP:
-					textProperty().bind(item.name());
-					graphicProperty().bind(getItem().icon());
-					textFillProperty();// TODO
-
-					ContextMenu menu = new ContextMenu();
-					MenuItem menuitem = new MenuItem("Remove");
-					menuitem.setOnAction(event -> {
-						getTreeItem().getParent().getChildren().remove(getTreeItem());
-					});
-					menu.getItems().add(menuitem);
-					setContextMenu(menu);
-					break;
-				case ATTRIBUTE:
-					TreeAttribute configItem = (TreeAttribute) getItem();
-					setGraphic(configItem.getControl());
-					break;
+				} else {
+					setGraphic(item);
 				}
 			}
 		});
 
-		// TODO temporary
-		payload = OutputPayload.OUTPUT_MEGA;
+		exe = load(this, TreeCategoryController.class);
+		exe.name().set("Execution");
+		exe.setIcon("/image/icon16/common/computer.png");
 
-		Stream.of(exe, net, auth, plugin, output).forEach(root.getChildren()::add);
+		net = load(this, TreeCategoryController.class);
+		net.name().set("Networking");
+		net.setIcon("/image/icon16/common/computer.png");
 
-		Stream.of(exe_melt, exe_recovery, exe_message, exe_windows, exe_linux).map(TreeItem::new)
-				.forEach(exe.getChildren()::add);
-		Stream.of(out_format, out_directory, (GenTreeItem) out_timestamp, out_passphrase).map(TreeItem::new)
-				.forEach(output.getChildren()::add);
+		auth = load(this, TreeCategoryController.class);
+		auth.name().set("Authentication");
+		auth.setIcon("/image/icon16/common/lock.png");
 
+		plugin = load(this, TreeCategoryController.class);
+		plugin.name().set("Plugins");
+		plugin.setIcon("/image/icon16/common/plugin.png");
+
+		output = load(this, TreeCategoryController.class);
+		output.name().set("Output");
+		output.setIcon("/image/icon16/common/compile.png");
+
+		exe_melt = load(exe, TreeAttributeListController.class);
+		exe_melt.name().set("Delete installer when done");
+		exe_melt.getItems().addAll("true", "false");
+		exe_melt.value().set("false");
+
+		exe_recovery = load(exe, TreeAttributeListController.class);
+		exe_recovery.name().set("Recover from errors");
+
+		exe_message = load(exe, TreeAttributeTextController.class);
+		exe_message.name().set("Installation message");
+
+		exe_windows = load(exe, TreeGroupController.class);
+		exe_windows.name().set("Windows");
+
+		exe_linux = load(exe, TreeGroupController.class);
+		exe_linux.name().set("Linux");
+
+		out_directory = load(output, TreeAttributeFileController.class);
+		out_directory.name().set("Output Location");
+		out_directory.value().set(System.getProperty("user.home"));
+
+		out_format = load(output, TreeAttributeListController.class);
+		out_format.name().set("File Format");
+
+		out_passphrase = load(output, TreeAttributeTextController.class);
+		out_passphrase.name().set("Encryption Passphrase");
+
+		// Raise status
 		extend.raise(FxUtil.load("/fxml/view/generator/detail/Status.fxml", this), ExtendSide.BOTTOM, 1000, 100);
 	}
 
 	private NetworkConfig getNetworkConfig() {
-		net.getChildren().stream().map(n -> {
+		LoopConfig.Builder config = LoopConfig.newBuilder();
 
-			return NetworkTarget.newBuilder().setAddress("").build();
-		});
-		return NetworkConfig.newBuilder().build();
+		for (TreeItemController c : net.getChildren()) {
+			if (c instanceof TreeGroupController) {
+				TreeGroupController group = (TreeGroupController) c;
+				config.addTarget(NetworkTarget.newBuilder().setAddress(group.getValueForId("address").get())
+						.setPort(Integer.parseInt(group.getValueForId("port").get())));
+			}
+		}
+
+		return NetworkConfig.newBuilder().setLoopConfig(config).build();
 	}
 
 	private ExecutionConfig getExecutionConfig() {
@@ -180,16 +218,10 @@ public class GeneratorController extends FxController {
 		return config.build();
 	}
 
-	public String searchForProperty(TreeItem<GenTreeItem> item, String target) {
-		item.getChildren().stream().map(TreeItem::getValue).filter(i -> i.name().get().equals(target));
-
-		return null;
-	}
-
 	@FXML
 	private void generate() throws IOException {
 		// Collapse all categories
-		Stream.of(exe, net, auth, plugin, output).forEach(cat -> cat.setExpanded(false));
+		Stream.of(exe, net, auth, plugin, output).forEach(cat -> cat.getItem().setExpanded(false));
 
 		// Raise progress detail
 		extend.raise(FxUtil.load("/fxml/view/generator/detail/Progress.fxml", this), ExtendSide.BOTTOM, 1000, 150);
@@ -222,13 +254,45 @@ public class GeneratorController extends FxController {
 	}
 
 	@Subscribe
-	public void addServer(AddServerEvent event) {
-		// Add to tree
-		net.getChildren().add(event.get());
+	public void addServer(AddServerEvent event) throws IOException {
+
+		// Add the server to the configuration tree
+		TreeGroupController group = load(net, TreeGroupController.class);
+		group.setIcon("/image/icon16/common/server.png");
+
+		TreeAttributeTextController address = load(group, TreeAttributeTextController.class);
+		address.id().set("address");
+		address.name().set("address");
+		address.setIcon("/image/icon16/common/ip.png");
+		address.validator().set(ValidationUtil::address);
+		address.value().set(event.get().address);
+
+		TreeAttributeTextController port = load(group, TreeAttributeTextController.class);
+		port.id().set("port");
+		port.name().set("port");
+		port.setIcon("/image/icon16/common/ip.png");
+		port.validator().set(ValidationUtil::port);
+		port.value().set(event.get().port);
+
+		TreeAttributeListController strict_certs = load(group, TreeAttributeListController.class);
+		strict_certs.id().set("strict_certs");
+		strict_certs.name().set("certificates");
+		strict_certs.setIcon("/image/icon16/common/ssl_certificate.png");
+		strict_certs.getItems().addAll("true", "false");
+		strict_certs.value().set(event.get().strict_certs);
+
+		TreeAttributeTextController cooldown = load(group, TreeAttributeTextController.class);
+		cooldown.id().set("cooldown");
+		cooldown.name().set("cooldown");
+		cooldown.setIcon("/image/icon16/common/ip.png");
+		cooldown.value().set(event.get().cooldown);
+
+		// Bind address to group name
+		group.name().bind(address.value());
 
 		// Select the node and refocus
-		tree.getSelectionModel().select(event.get());
-		event.get().setExpanded(true);
+		tree.getSelectionModel().select(group.getItem());
+		group.getItem().setExpanded(true);
 		tree.requestFocus();
 	}
 

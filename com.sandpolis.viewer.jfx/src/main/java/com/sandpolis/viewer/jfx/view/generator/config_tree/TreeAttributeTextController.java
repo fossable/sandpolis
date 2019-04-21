@@ -15,18 +15,25 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.view.generator;
+package com.sandpolis.viewer.jfx.view.generator.config_tree;
+
+import javafx.beans.property.StringProperty;
+import javafx.fxml.FXML;
+import javafx.scene.control.TextField;
 
 /**
- * Represents a group cell in the configuration tree.
+ * A controller for items that have a textfield attribute.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public class TreeGroup extends GenTreeItem {
+public class TreeAttributeTextController extends TreeAttributeController {
 
-	public TreeGroup(String name) {
-		super(Type.GROUP, name);
+	@FXML
+	protected TextField text;
+
+	@Override
+	public StringProperty value() {
+		return text.textProperty();
 	}
-
 }
