@@ -87,8 +87,11 @@ public class GeneratorController extends FxController {
 	private OutputPayload payload;
 
 	private <C extends TreeItemController> C load(AbstractController parent, Class<?> type) throws IOException {
-		String resourceName = "/fxml/view/generator/" + type.getSimpleName().replace("Controller", "") + ".fxml";
-		FXMLLoader loader = new FXMLLoader(GeneratorController.class.getResource(resourceName));
+		if (!type.getSimpleName().endsWith("Controller"))
+			throw new IllegalArgumentException();
+
+		FXMLLoader loader = new FXMLLoader(GeneratorController.class.getResource(
+				"/fxml/view/generator/config_tree/" + type.getSimpleName().replace("Controller", "") + ".fxml"));
 
 		TreeItem<Node> item = new TreeItem<>(loader.load());
 		C controller = loader.getController();
