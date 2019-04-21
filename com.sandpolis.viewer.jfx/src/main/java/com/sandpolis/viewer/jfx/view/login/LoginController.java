@@ -60,28 +60,32 @@ public class LoginController extends FxController {
 	/**
 	 * The cached default banner.
 	 */
-	private Image defaultImage;
+	private static final Image defaultImage = new Image(
+			LoginController.class.getResourceAsStream("/image/view/login/banner.png"));
 
 	/**
 	 * The connection to the server.
 	 */
 	private Sock connection;
 
-	private enum LoginPhase {
-		SERVER_INPUT, USER_INPUT, PLUGIN_PHASE;
+	public enum LoginPhase {
+		SERVER_INPUT, USER_INPUT, PLUGIN_PHASE, COMPLETE;
 	}
 
+	/**
+	 * The current login phase.
+	 */
 	private SimpleObjectProperty<LoginPhase> phase = new SimpleObjectProperty<>(LoginPhase.SERVER_INPUT);
 
 	@FXML
 	private void initialize() {
 		register(serverPhaseController, userPhaseController);
 
-		defaultImage = new Image(LoginController.class.getResourceAsStream("/image/view/login/banner.png"));
 		resetBannerImage();
-
 		phase.addListener((p, o, n) -> {
 			if (o != n) {
+				bus.post(n);
+
 				switch (n) {
 				case SERVER_INPUT:
 					btn_back.setText("Exit");
@@ -94,8 +98,15 @@ public class LoginController extends FxController {
 					btn_continue.setText("Login");
 					carousel.moveForward();
 					break;
+				case PLUGIN_PHASE:
+					btn_back.setText("Back");
+					btn_continue.setText("Continue");
+					carousel.moveForward();
+					break;
+				case COMPLETE:
+					break;
 				default:
-					throw new RuntimeException();
+					throw new RuntimeException("Unexpected phase: " + n);
 				}
 			}
 		});
@@ -149,8 +160,12 @@ public class LoginController extends FxController {
 					.addListener((ResponseFuture<Outcome> outcomeFuture) -> {
 						if (outcomeFuture.isSuccess()) {
 							if (outcomeFuture.get().getResult()) {
-								// TODO plugin sync
-								launchApplication();
+								if ("TODO".equals("")) {
+									phase.set(LoginPhase.PLUGIN_PHASE);
+								} else {
+									phase.set(LoginPhase.COMPLETE);
+									launchApplication();
+								}
 							}
 						}
 					});
@@ -198,7 +213,6 @@ public class LoginController extends FxController {
 	 */
 	private void launchApplication() {
 		StageStore.close(stage);
-
 		StageStore.newStage().root("/fxml/view/main/Main.fxml").size(420, 420 * 0.618).show();
 	}
 

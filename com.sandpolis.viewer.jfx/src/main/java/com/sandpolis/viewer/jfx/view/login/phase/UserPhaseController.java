@@ -26,6 +26,7 @@ import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
+import com.sandpolis.viewer.jfx.view.login.LoginController.LoginPhase;
 
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -109,6 +110,17 @@ public class UserPhaseController extends AbstractController {
 		};
 		server_ping.textProperty().bind(pinger.messageProperty());
 		new Thread(pinger).start();
+	}
+
+	@Subscribe
+	public void phaseChanged(LoginPhase phase) {
+		switch (phase) {
+		case USER_INPUT:
+			break;
+		default:
+			if (pinger != null)
+				pinger.cancel();
+		}
 	}
 
 	/**
