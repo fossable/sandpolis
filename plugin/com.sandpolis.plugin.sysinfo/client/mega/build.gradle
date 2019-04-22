@@ -40,5 +40,5 @@ dependencies {
 	annotationProcessor 'org.pf4j:pf4j:2.6.0'
 
 	// https://github.com/oshi/oshi
-	implementation 'com.github.oshi:oshi-core:3.13.0'
+	implementation 'com.github.oshi:oshi-core:3.13.1'
 }
