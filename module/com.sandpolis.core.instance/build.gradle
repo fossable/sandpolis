@@ -30,6 +30,9 @@ dependencies {
 	implementation 'ch.qos.logback:logback-core:1.2.3'
 	implementation 'ch.qos.logback:logback-classic:1.2.3'
 
+	// https://github.com/cilki/CompactClassLoader
+	implementation 'com.github.cilki:compact-classloader:+'
+
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:27.1-jre'
 
