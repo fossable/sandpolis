@@ -21,6 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.sandpolis.core.instance.store.pref.PrefStore;
+import com.sandpolis.viewer.jfx.PrefConstant.ui;
+
 import javafx.animation.Animation.Status;
 import javafx.animation.Transition;
 import javafx.beans.NamedArg;
@@ -165,10 +168,25 @@ public class ExtendPane extends BorderPane {
 		if (size < 0)
 			throw new IllegalArgumentException();
 
-		if (isMoving(side)) {
+		// Bypass animation if possible
+		if (!PrefStore.getBoolean(ui.animations)) {
+			switch (side) {
+			case TOP:
+			case BOTTOM:
+				region.setPrefHeight(size);
+				break;
+			case RIGHT:
+			case LEFT:
+				region.setPrefWidth(size);
+				break;
+			}
+			addToLayout(side, region);
+			return true;
+		}
+
+		if (isMoving(side))
 			// An animation for this side is in progress
 			return false;
-		}
 
 		// Use one transition to show the node and reverse it to hide
 		ExtendTransition show;
@@ -176,13 +194,16 @@ public class ExtendPane extends BorderPane {
 		// The region needs to be wrapped in a Pane
 		Region wrapped = new Pane(region);
 
+		// The TOP and LEFT cases are handled by moving the wrapper pane onto the stage
+		// from just outside of the stage without resizing the wrapper.
+		// The BOTTOM and RIGHT cases are handled by simply resizing the wrapper pane.
 		switch (side) {
 		case TOP:
 			region.setPrefHeight(size);
 			wrapped.setPrefHeight(0);
 
 			// Make the node invisible to prevent it from appearing before the animation
-			// begins. It should become visible on the first frame.
+			// begins. It will become visible on the first frame.
 			wrapped.setVisible(false);
 			show = new ExtendTransition(region, duration) {
 
@@ -206,7 +227,7 @@ public class ExtendPane extends BorderPane {
 			wrapped.setPrefWidth(0);
 
 			// Make the node invisible to prevent it from appearing before the animation
-			// begins. It should become visible on the first frame.
+			// begins. It will become visible on the first frame.
 			wrapped.setVisible(false);
 			show = new ExtendTransition(region, duration) {
 

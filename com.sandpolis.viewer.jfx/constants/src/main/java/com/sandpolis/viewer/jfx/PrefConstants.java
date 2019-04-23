@@ -37,6 +37,9 @@ public final class PrefConstants {
 	private static final String ui_login_recent = "ui.login.recent";
 
 	@TreeConstant
+	private static final String ui_animations = "ui.animations";
+
+	@TreeConstant
 	private static final String ui_notification_new__client__connect = "ui.notification.new_client_connect";
 
 	@TreeConstant
