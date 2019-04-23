@@ -22,13 +22,12 @@ import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 
 import java.util.Date;
+import java.util.prefs.BackingStoreException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.attribute.AttributeKey;
-import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.viewer.jfx.PoolConstant.ui;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.plugin;
@@ -37,14 +36,17 @@ import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
+import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
+import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.IPCTasks;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.util.AsciiUtil;
+import com.sandpolis.viewer.jfx.PoolConstant.ui;
 import com.sandpolis.viewer.jfx.attribute.ObservableAttribute;
 import com.sandpolis.viewer.jfx.common.FxEventExecutor;
 import com.sandpolis.viewer.jfx.store.stage.StageStore;
@@ -87,6 +89,19 @@ public final class Viewer {
 	private static TaskOutcome loadConfiguration() {
 		TaskOutcome task = TaskOutcome.begin(new Object() {
 		}.getClass().getEnclosingMethod());
+
+		// Load PrefStore
+		PrefStore.load(Viewer.class);
+
+		try {
+			PrefStore.register(PrefConstant.ui.help, true);
+			PrefStore.register(PrefConstant.ui.animations, true);
+			PrefStore.register(PrefConstant.ui.main.view, "list");
+			PrefStore.register(PrefConstant.ui.main.console, false);
+			PrefStore.register(PrefConstant.ui.tray.minimize, true);
+		} catch (BackingStoreException e) {
+			return task.failure(e);
+		}
 
 		return task.success();
 	}
