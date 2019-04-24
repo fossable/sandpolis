@@ -51,4 +51,30 @@ public final class PrefConstants {
 	@TreeConstant
 	private static final String ui_notification_unhandled__exception = "ui.notification.unhandled_exception";
 
+	@TreeConstant
+	private static final String ui_theme = "ui.theme";
+
+	@TreeConstant
+	private static final String ui_view_login_width = "ui.view.login.width";
+
+	@TreeConstant
+	private static final String ui_view_login_height = "ui.view.login.height";
+
+	@TreeConstant
+	private static final String ui_view_main_width = "ui.view.main.width";
+
+	@TreeConstant
+	private static final String ui_view_main_height = "ui.view.main.height";
+
+	@TreeConstant
+	private static final String ui_view_about_width = "ui.view.about.width";
+
+	@TreeConstant
+	private static final String ui_view_about_height = "ui.view.about.height";
+
+	@TreeConstant
+	private static final String ui_view_generator_width = "ui.view.generator.width";
+
+	@TreeConstant
+	private static final String ui_view_generator_height = "ui.view.generator.height";
 }

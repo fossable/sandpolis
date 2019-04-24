@@ -46,7 +46,7 @@ import com.sandpolis.core.ipc.IPCTasks;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.util.AsciiUtil;
-import com.sandpolis.viewer.jfx.PoolConstant.ui;
+import com.sandpolis.viewer.jfx.PrefConstant.ui;
 import com.sandpolis.viewer.jfx.attribute.ObservableAttribute;
 import com.sandpolis.viewer.jfx.common.FxEventExecutor;
 import com.sandpolis.viewer.jfx.store.stage.StageStore;
@@ -94,11 +94,21 @@ public final class Viewer {
 		PrefStore.load(Viewer.class);
 
 		try {
-			PrefStore.register(PrefConstant.ui.help, true);
-			PrefStore.register(PrefConstant.ui.animations, true);
-			PrefStore.register(PrefConstant.ui.main.view, "list");
-			PrefStore.register(PrefConstant.ui.main.console, false);
-			PrefStore.register(PrefConstant.ui.tray.minimize, true);
+			PrefStore.register(ui.help, true);
+			PrefStore.register(ui.animations, true);
+			PrefStore.register(ui.main.view, "list");
+			PrefStore.register(ui.main.console, false);
+			PrefStore.register(ui.tray.minimize, true);
+			PrefStore.register(ui.theme, "Crimson");
+
+			PrefStore.register(ui.view.login.width, 535);
+			PrefStore.register(ui.view.login.height, 380);
+			PrefStore.register(ui.view.main.width, 770);
+			PrefStore.register(ui.view.main.height, 345);
+			PrefStore.register(ui.view.about.width, 660);
+			PrefStore.register(ui.view.about.height, 400);
+			PrefStore.register(ui.view.generator.width, 700);
+			PrefStore.register(ui.view.generator.height, 400);
 		} catch (BackingStoreException e) {
 			return task.failure(e);
 		}
@@ -141,7 +151,7 @@ public final class Viewer {
 		ThreadStore.register(new NioEventLoopGroup(2), net.exelet);
 		ThreadStore.register(new NioEventLoopGroup(2), net.connection.outgoing);
 		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
-		ThreadStore.register(new FxEventExecutor(), ui.fx_thread);
+		ThreadStore.register(new FxEventExecutor(), PoolConstant.ui.fx_thread);
 
 		// Load NetworkStore
 		NetworkStore.init();
@@ -222,9 +232,9 @@ public final class Viewer {
 
 		@Override
 		public void start(Stage stage) throws Exception {
-			// TODO automatic login
-			StageStore.newStage().stage(stage).root("/fxml/view/login/Login.fxml").size(420, 420 * 0.618).show();
+			StageStore.newStage().stage(stage).root("/fxml/view/login/Login.fxml")
+					.size(PrefStore.getInt(ui.view.login.width), PrefStore.getInt(ui.view.login.height))
+					.resizable(false).show();
 		}
 	}
-
 }

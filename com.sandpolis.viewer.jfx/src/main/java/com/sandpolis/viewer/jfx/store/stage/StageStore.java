@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Objects;
 
 import com.sandpolis.core.instance.Store.AutoInitializer;
+import com.sandpolis.core.instance.store.pref.PrefStore;
+import com.sandpolis.viewer.jfx.PrefConstant.ui;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 
 import javafx.scene.Parent;
@@ -84,9 +86,12 @@ public final class StageStore {
 	 * @param theme The new theme
 	 */
 	public static void changeTheme(String theme) {
+		Objects.requireNonNull(theme);
+
+		PrefStore.putString(ui.theme, theme);
 		loaded.stream().map(stage -> stage.getScene().getStylesheets()).forEach(styles -> {
 			styles.clear();
-			styles.add(theme);
+			styles.add("/css/" + theme + ".css");
 		});
 	}
 
@@ -96,6 +101,7 @@ public final class StageStore {
 		private Parent root;
 		private double width;
 		private double height;
+		private boolean resizable = true;
 
 		private StageBuilder() {
 			stage = new Stage();
@@ -129,6 +135,17 @@ public final class StageStore {
 		}
 
 		/**
+		 * Specify the stage's resizable property.
+		 * 
+		 * @param resizable Whether the stage can resize
+		 * @return {@code this}
+		 */
+		public StageBuilder resizable(boolean resizable) {
+			this.resizable = resizable;
+			return this;
+		}
+
+		/**
 		 * Load the root of the scene graph.
 		 * 
 		 * @param root   The root location
@@ -152,14 +169,10 @@ public final class StageStore {
 		 * Produce a complete stage and show it on the screen.
 		 */
 		public void show() {
-			if (width == 0)
-				width = 100;
-			if (height == 0)
-				height = 100;
-
 			Scene scene = new Scene(root, width, height);
-			scene.getStylesheets().add("/css/Crimson.css");// TODO default theme
+			scene.getStylesheets().add("/css/" + PrefStore.getString(ui.theme) + ".css");
 			stage.setScene(scene);
+			stage.setResizable(resizable);
 			stage.show();
 			loaded.add(stage);
 		}

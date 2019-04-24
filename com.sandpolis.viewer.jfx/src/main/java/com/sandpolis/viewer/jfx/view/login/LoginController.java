@@ -19,6 +19,7 @@ package com.sandpolis.viewer.jfx.view.login;
 
 import java.util.Objects;
 
+import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.future.SockFuture;
@@ -28,6 +29,7 @@ import com.sandpolis.viewer.cmd.LoginCmd;
 import com.sandpolis.viewer.cmd.NetworkCmd;
 import com.sandpolis.viewer.cmd.ServerCmd;
 import com.sandpolis.viewer.jfx.PoolConstant.ui;
+import com.sandpolis.viewer.jfx.PrefConstant;
 import com.sandpolis.viewer.jfx.common.controller.FxController;
 import com.sandpolis.viewer.jfx.common.pane.CarouselPane;
 import com.sandpolis.viewer.jfx.store.stage.StageStore;
@@ -213,7 +215,8 @@ public class LoginController extends FxController {
 	 */
 	private void launchApplication() {
 		StageStore.close(stage);
-		StageStore.newStage().root("/fxml/view/main/Main.fxml").size(420, 420 * 0.618).show();
+		StageStore.newStage().root("/fxml/view/main/Main.fxml").size(PrefStore.getInt(PrefConstant.ui.view.main.width),
+				PrefStore.getInt(PrefConstant.ui.view.main.height)).show();
 	}
 
 }
