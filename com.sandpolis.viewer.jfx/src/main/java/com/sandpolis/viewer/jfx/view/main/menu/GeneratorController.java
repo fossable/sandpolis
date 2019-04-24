@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.viewer.jfx.PrefConstant.ui;
+import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.store.stage.StageStore;
 
@@ -39,12 +40,14 @@ public class GeneratorController extends AbstractController {
 	@FXML
 	private void open_mega() throws IOException {
 		StageStore.newStage().root("/fxml/view/generator/Generator.fxml", OUTPUT_MEGA)
-				.size(PrefStore.getInt(ui.view.generator.width), PrefStore.getInt(ui.view.generator.height)).show();
+				.size(PrefStore.getInt(ui.view.generator.width), PrefStore.getInt(ui.view.generator.height))
+				.title(FxUtil.translate("stage.generator.title")).show();
 	}
 
 	@FXML
 	private void open_micro() throws IOException {
 		StageStore.newStage().root("/fxml/view/generator/Generator.fxml", OUTPUT_MICRO)
-				.size(PrefStore.getInt(ui.view.generator.width), PrefStore.getInt(ui.view.generator.height)).show();
+				.size(PrefStore.getInt(ui.view.generator.width), PrefStore.getInt(ui.view.generator.height))
+				.title(FxUtil.translate("stage.generator.title")).show();
 	}
 }

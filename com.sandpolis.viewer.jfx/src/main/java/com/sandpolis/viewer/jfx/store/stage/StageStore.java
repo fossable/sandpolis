@@ -57,6 +57,16 @@ public final class StageStore {
 	}
 
 	/**
+	 * Begin stage building.
+	 * 
+	 * @param stage The initial stage
+	 * @return A new {@link StageBuilder}
+	 */
+	public static StageBuilder newStage(Stage stage) {
+		return new StageBuilder().stage(stage);
+	}
+
+	/**
 	 * Hide all stages in the store.
 	 */
 	public static void hideAll() {
@@ -99,6 +109,7 @@ public final class StageStore {
 
 		private Stage stage;
 		private Parent root;
+		private String title;
 		private double width;
 		private double height;
 		private boolean resizable = true;
@@ -146,6 +157,17 @@ public final class StageStore {
 		}
 
 		/**
+		 * Specify the stage's title property.
+		 * 
+		 * @param title The stage title
+		 * @return {@code this}
+		 */
+		public StageBuilder title(String title) {
+			this.title = title;
+			return this;
+		}
+
+		/**
 		 * Load the root of the scene graph.
 		 * 
 		 * @param root   The root location
@@ -173,7 +195,9 @@ public final class StageStore {
 			scene.getStylesheets().add("/css/" + PrefStore.getString(ui.theme) + ".css");
 			stage.setScene(scene);
 			stage.setResizable(resizable);
+			stage.setTitle(title);
 			stage.show();
+
 			loaded.add(stage);
 		}
 	}

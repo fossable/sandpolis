@@ -53,7 +53,7 @@ public final class FxUtil {
 			_bundle = ResourceBundle.getBundle("text.application");
 		} catch (MissingResourceException e) {
 			log.warn(e.getMessage());
-			
+
 			// Empty bundle
 			_bundle = new ResourceBundle() {
 
@@ -78,6 +78,16 @@ public final class FxUtil {
 	 */
 	public static ResourceBundle getResources() {
 		return bundle;
+	}
+
+	/**
+	 * A convenience method for {@code getResources().getString()}.
+	 * 
+	 * @param key The translation key
+	 * @return The string associated with the given key or {@code null}
+	 */
+	public static String translate(String key) {
+		return bundle.getString(key);
 	}
 
 	/**

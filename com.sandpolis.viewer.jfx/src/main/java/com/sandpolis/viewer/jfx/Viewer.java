@@ -49,6 +49,7 @@ import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.viewer.jfx.PrefConstant.ui;
 import com.sandpolis.viewer.jfx.attribute.ObservableAttribute;
 import com.sandpolis.viewer.jfx.common.FxEventExecutor;
+import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.store.stage.StageStore;
 
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -234,7 +235,7 @@ public final class Viewer {
 		public void start(Stage stage) throws Exception {
 			StageStore.newStage().stage(stage).root("/fxml/view/login/Login.fxml")
 					.size(PrefStore.getInt(ui.view.login.width), PrefStore.getInt(ui.view.login.height))
-					.resizable(false).show();
+					.resizable(false).title(FxUtil.translate("stage.login.title")).show();
 		}
 	}
 }
