@@ -29,6 +29,8 @@ import com.sandpolis.viewer.jfx.common.label.DateLabel;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.ConditionalFeature;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -37,8 +39,9 @@ import javafx.scene.Group;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.SubScene;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.MeshView;
@@ -60,7 +63,7 @@ public class AboutController extends AbstractController {
 	@FXML
 	private DateLabel java_uptime;
 	@FXML
-	private Pane sub;
+	private BorderPane sub;
 
 	private double x;
 	private double xSpeed = 0.1;
@@ -78,45 +81,51 @@ public class AboutController extends AbstractController {
 		java_version.setText(Core.SO_BUILD.getJavaVersion());
 		java_uptime.referenceProperty().set(Environment.JVM_TIMESTAMP.getTime());
 
-		// Load 3D mesh from resource
-		StlMeshImporter importer = new StlMeshImporter();
-		importer.read(getClass().getResource("/mesh/sandpolis.stl"));
-		MeshView meshView = new MeshView(importer.getImport());
-		Group bp = new Group(meshView);
+		if (Platform.isSupported(ConditionalFeature.SCENE3D)) {
+			// Load 3D mesh from resource
+			StlMeshImporter importer = new StlMeshImporter();
+			importer.read(getClass().getResource("/mesh/sandpolis.stl"));
+			MeshView meshView = new MeshView(importer.getImport());
+			Group bp = new Group(meshView);
 
-		SubScene ss = new SubScene(bp, sub.getWidth(), sub.getHeight(), true, SceneAntialiasing.BALANCED);
-		ss.widthProperty().bind(sub.widthProperty());
-		ss.heightProperty().bind(sub.heightProperty());
-		sub.getChildren().add(ss);
+			SubScene ss = new SubScene(bp, sub.getWidth(), sub.getHeight(), true, SceneAntialiasing.BALANCED);
+			ss.widthProperty().bind(sub.widthProperty());
+			ss.heightProperty().bind(sub.heightProperty());
+			sub.setCenter(ss);
 
-		// Set position
-		meshView.layoutXProperty().bind(Bindings.divide(sub.widthProperty(), 2.0));
-		meshView.layoutYProperty().bind(Bindings.divide(sub.heightProperty(), 2.0));
+			// Set position
+			meshView.layoutXProperty().bind(Bindings.divide(sub.widthProperty(), 2.0));
+			meshView.layoutYProperty().bind(Bindings.divide(sub.heightProperty(), 2.0));
 
-		// Set material
-		PhongMaterial sample = new PhongMaterial(Color.rgb(247, 213, 145));
-		sample.setSpecularColor(Color.rgb(247, 213, 145));
-		sample.setSpecularPower(16);
-		meshView.setMaterial(sample);
+			// Set material
+			PhongMaterial sample = new PhongMaterial(Color.rgb(247, 213, 145));
+			sample.setSpecularColor(Color.rgb(247, 213, 145));
+			sample.setSpecularPower(16);
+			meshView.setMaterial(sample);
 
-		KeyFrame kf = new KeyFrame(Duration.millis(2), new EventHandler<ActionEvent>() {
+			KeyFrame kf = new KeyFrame(Duration.millis(2), new EventHandler<ActionEvent>() {
 
-			@Override
-			public void handle(ActionEvent event) {
-				meshView.getTransforms().setAll(new Rotate(x, Rotate.X_AXIS), new Rotate(z, Rotate.Z_AXIS));
-				x += xSpeed;
-				z += zSpeed;
-			}
-		});
+				@Override
+				public void handle(ActionEvent event) {
+					meshView.getTransforms().setAll(new Rotate(x, Rotate.X_AXIS), new Rotate(z, Rotate.Z_AXIS));
+					x += xSpeed;
+					z += zSpeed;
+				}
+			});
 
-		meshView.addEventHandler(MouseEvent.MOUSE_DRAGGED, (MouseEvent event) -> {
-			// TODO
-			;
-		});
+			meshView.addEventHandler(MouseEvent.MOUSE_DRAGGED, (MouseEvent event) -> {
+				// TODO
+				;
+			});
 
-		Timeline tl = new Timeline(kf);
-		tl.setCycleCount(Animation.INDEFINITE);
-		tl.play();
+			Timeline tl = new Timeline(kf);
+			tl.setCycleCount(Animation.INDEFINITE);
+			tl.play();
+		} else {
+			// Just show a static image
+			ImageView banner = new ImageView("/image/view/about/banner.png");
+			sub.setCenter(banner);
+		}
 	}
 
 	@FXML

@@ -75,6 +75,6 @@
 		<Insets bottom="4.0" left="10.0" right="10.0" top="10.0" />
 	</padding>
 	<top>
-		<Pane fx:id="sub" prefHeight="175.0" styleClass="about_logo_background" stylesheets="@../../../css/Crimson.css" />
+		<BorderPane fx:id="sub" prefHeight="175.0" styleClass="about_logo_background" />
 	</top>
 </BorderPane>
