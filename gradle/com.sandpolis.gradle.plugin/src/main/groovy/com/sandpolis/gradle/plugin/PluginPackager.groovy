@@ -30,7 +30,7 @@ import org.gradle.api.tasks.Copy
 public class PluginPackager implements Plugin<Project> {
 
 	void apply(Project project) {
-		def cert = project.file(project.name + ".cert").text.replace("\n", "").replace("-----BEGIN CERTIFICATE-----", "").replace("-----END CERTIFICATE-----", "")
+		def cert = project.file(project.name + ".cert").text.replaceAll("\\R", "").replace("-----BEGIN CERTIFICATE-----", "").replace("-----END CERTIFICATE-----", "")
 		def extension = project.extensions.create('sandpolis_plugin', ConfigExtension)
 
 		project.subprojects {
