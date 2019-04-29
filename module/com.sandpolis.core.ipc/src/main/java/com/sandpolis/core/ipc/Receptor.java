@@ -24,12 +24,12 @@ import java.net.Socket;
 
 import com.google.common.util.concurrent.RateLimiter;
 import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
+import com.sandpolis.core.ipc.MSG.Message;
 import com.sandpolis.core.ipc.store.IPCStore;
-import com.sandpolis.core.proto.ipc.MCMetadata.RS_Metadata;
-import com.sandpolis.core.proto.ipc.MSG.Message;
 
 /**
- * This simple IPC receiver processes messages serially from a {@code Socket}.
+ * This simple IPC receiver processes messages serially from a {@link Socket}.
  * 
  * @author cilki
  * @since 5.0.0
@@ -51,8 +51,7 @@ public class Receptor extends Thread {
 	 * Create a new IPC Receptor around an established socket. The Receptor
 	 * immediately begins listening on the socket.
 	 * 
-	 * @param socket
-	 *            A Socket pre-established by an IPC Listener.
+	 * @param socket A Socket pre-established by an IPC Listener.
 	 */
 	public Receptor(Socket socket) {
 		this.socket = socket;
@@ -76,7 +75,7 @@ public class Receptor extends Thread {
 				switch (message.getMsgCase()) {
 				case RQ_METADATA:
 					Message.newBuilder()
-							.setRsMetadata(RS_Metadata.newBuilder().setInstance(Core.INSTANCE)
+							.setRsMetadata(RS_Metadata.newBuilder().setInstance(Core.INSTANCE.name())
 									.setVersion(Core.SO_BUILD.getVersion()).setPid(ProcessHandle.current().pid()))
 							.build().writeDelimitedTo(out);
 					break;

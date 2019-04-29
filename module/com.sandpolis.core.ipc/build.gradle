@@ -6,12 +6,22 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
+	id 'com.google.protobuf' version '0.8.8'
 }
 
 eclipse {
 	project {
 		name = 'com.sandpolis.core.ipc'
 		comment = 'The inter-process communications library module'
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs 'src/main/proto'
+			srcDirs 'gen/main/java'
+		}
 	}
 }
 
@@ -29,4 +39,12 @@ dependencies {
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'	
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.7.1'
+	}
+
+	generatedFilesBaseDir = "$projectDir/gen/"
 }

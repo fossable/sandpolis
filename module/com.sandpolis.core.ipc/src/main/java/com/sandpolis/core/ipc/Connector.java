@@ -24,9 +24,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import com.sandpolis.core.ipc.store.IPCStore;
-import com.sandpolis.core.proto.ipc.MCMetadata.RQ_Metadata;
-import com.sandpolis.core.proto.ipc.MCMetadata.RS_Metadata;
-import com.sandpolis.core.proto.ipc.MSG.Message;
+import com.sandpolis.core.ipc.MCMetadata.RQ_Metadata;
+import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
+import com.sandpolis.core.ipc.MSG.Message;
 
 /**
  * A very simple IPC connection.

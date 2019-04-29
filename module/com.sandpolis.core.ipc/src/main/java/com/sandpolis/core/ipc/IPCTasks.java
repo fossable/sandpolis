@@ -28,7 +28,7 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
 import com.sandpolis.core.ipc.store.IPCStore;
-import com.sandpolis.core.proto.ipc.MCMetadata.RS_Metadata;
+import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
 
 /**
  * Contains IPC tasks useful to multiple instances.

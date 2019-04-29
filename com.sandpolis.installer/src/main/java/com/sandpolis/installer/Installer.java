@@ -26,7 +26,7 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
 import com.sandpolis.core.ipc.store.IPCStore;
-import com.sandpolis.core.proto.ipc.MCMetadata.RS_Metadata;
+import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.util.AsciiUtil;
 

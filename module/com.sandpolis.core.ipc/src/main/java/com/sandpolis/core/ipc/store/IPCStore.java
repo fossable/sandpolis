@@ -29,7 +29,7 @@ import com.sandpolis.core.instance.Store.AutoInitializer;
 import com.sandpolis.core.ipc.Connector;
 import com.sandpolis.core.ipc.Listener;
 import com.sandpolis.core.ipc.Receptor;
-import com.sandpolis.core.proto.ipc.MCMetadata.RS_Metadata;
+import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
 import com.sandpolis.core.proto.util.Platform.Instance;
 
 /**

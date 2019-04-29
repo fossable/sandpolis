@@ -18,27 +18,25 @@
 syntax = "proto3";
 
 package ipc;
-option java_package = "com.sandpolis.core.proto.ipc";
+option java_package = "com.sandpolis.core.ipc";
 
-import "com/sandpolis/core/proto/util/Platform.proto";
-
-/**
- * Request instance metadata.
- */
-message RQ_Metadata {
-}
+import "com/sandpolis/core/ipc/MC_Metadata.proto";
 
 /**
- * Response to RQ_Metadata.
+ * A message type for inter-process communication (IPC) among instances.
+ *
+ * Message naming conventions:
+ *	RQ_*		Request messages
+ *	RS_*		Response messages
+ *	
+ * Message category naming conventions:
+ *	MC_*		Message Category
  */
-message RS_Metadata {
+message Message {
+	oneof msg {
 
-	// The instance's type
-	util.Instance instance = 1;
-	
-	// The instance's Sandpolis version
-	string version 	= 2;
-	
-	// The instance's PID
-	int64  pid 		= 3;
+		// MC_Metadata
+		RQ_Metadata rq_metadata = 1;
+		RS_Metadata rs_metadata = 2;
+	}
 }

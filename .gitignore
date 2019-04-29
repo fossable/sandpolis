@@ -17,3 +17,6 @@ bin
 # Annotation processor
 .apt_generated
 .factorypath
+
+# Generated directories
+**/gen/main/java
