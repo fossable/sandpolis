@@ -8,7 +8,7 @@ plugins {
 	id 'java'
 
 	id 'com.github.onslip.gradle-one-jar' version '1.0.5'
-	id 'org.openjfx.javafxplugin' version '0.0.6'
+	id 'org.openjfx.javafxplugin' version '0.0.7'
 }
 
 javafx {

@@ -6,7 +6,7 @@
 plugins {
 	id 'eclipse'
 	id 'java'
-	id 'org.openjfx.javafxplugin' version '0.0.6'
+	id 'org.openjfx.javafxplugin' version '0.0.7'
 }
 
 javafx {
