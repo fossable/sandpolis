@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.installer;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +27,9 @@ import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
-import com.sandpolis.core.ipc.store.IPCStore;
+import com.sandpolis.core.ipc.IPCStore;
 import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
+import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.util.AsciiUtil;
 
@@ -52,6 +55,9 @@ public final class Installer {
 
 		MainDispatch.register(BasicTasks::loadConfiguration);
 		MainDispatch.register(Installer::loadConfiguration);
+		MainDispatch.register(IPCTask::load);
+		MainDispatch.register(IPCTask::checkLock);
+		MainDispatch.register(IPCTask::setLock);
 		MainDispatch.register(Installer::findInstances);
 		MainDispatch.register(Installer::loadUserInterface);
 	}
@@ -67,9 +73,9 @@ public final class Installer {
 		}.getClass().getEnclosingMethod());
 
 		for (Instance instance : Instance.values()) {
-			RS_Metadata metadata = IPCStore.queryInstance(instance);
-			if (metadata != null)
-				return task.failure("Another instance has been detected (process " + metadata.getPid() + ")");
+			Optional<RS_Metadata> metadata = IPCStore.queryInstance(instance, null);// TODO get correct subtype
+			if (metadata.isPresent())
+				return task.failure("A Sandpolis instance has been detected (process " + metadata.get().getPid() + ")");
 		}
 
 		return task.success();

@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Store;
+import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
 /**
  * This store provides access to a unique {@link Preferences} object for
@@ -49,14 +51,25 @@ public final class PrefStore extends Store {
 	 * @param prefs The store provider
 	 */
 	public static void init(Preferences prefs) {
-		if (provider != null)
-			throw new IllegalStateException("Attempted to reinitialize an unclosed store");
+		// if (provider != null)
+		// provider.flush();
 
 		provider = Objects.requireNonNull(prefs);
 	}
 
-	public static void load(Class<?> c) {
-		init(Preferences.userNodeForPackage(Objects.requireNonNull(c)));
+	public static void load(Instance instance, InstanceFlavor flavor) {
+		init(getPreferences(instance, flavor));
+	}
+
+	/**
+	 * Get the {@link Preferences} object unique to the given instance.
+	 * 
+	 * @param instance The instance type
+	 * @param flavor   The instance subtype
+	 * @return A unique {@link Preferences} object
+	 */
+	public static Preferences getPreferences(Instance instance, InstanceFlavor flavor) {
+		return Preferences.userRoot().node("com/sandpolis/" + instance + "/" + flavor);
 	}
 
 	/**

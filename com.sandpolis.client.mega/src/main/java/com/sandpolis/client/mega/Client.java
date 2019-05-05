@@ -35,21 +35,21 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.cmd.PluginCmd;
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
+import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.Signaler;
-import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
-import com.sandpolis.core.ipc.IPCTasks;
+import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
@@ -91,7 +91,9 @@ public final class Client {
 				Core.SO_BUILD.getNumber());
 
 		MainDispatch.register(BasicTasks::loadConfiguration);
-		MainDispatch.register(IPCTasks::checkLocks);
+		MainDispatch.register(IPCTask::load);
+		MainDispatch.register(IPCTask::checkLock);
+		MainDispatch.register(IPCTask::setLock);
 		MainDispatch.register(Client::install);
 		MainDispatch.register(Client::loadEnvironment);
 		MainDispatch.register(BasicTasks::loadStores);

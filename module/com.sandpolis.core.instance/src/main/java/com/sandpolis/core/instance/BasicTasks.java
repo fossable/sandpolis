@@ -48,7 +48,8 @@ public final class BasicTasks {
 
 		Config.register(ConfigConstant.post, true);
 
-		Config.register(net.ipc.mutex, false);
+		Config.register(net.ipc.mutex, true);
+		Config.register(net.ipc.timeout, 400);
 		Config.register(logging.net.traffic.decoded, false);
 		Config.register(logging.net.traffic.raw, false);
 		Config.register(logging.startup.summary, false);

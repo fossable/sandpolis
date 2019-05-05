@@ -40,7 +40,7 @@ import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
-import com.sandpolis.core.ipc.IPCTasks;
+import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.viewer.cli.view.main.MainWindow;
 
@@ -58,7 +58,9 @@ public final class Viewer {
 				Core.SO_BUILD.getNumber());
 
 		MainDispatch.register(BasicTasks::loadConfiguration);
-		MainDispatch.register(IPCTasks::checkLocks);
+		MainDispatch.register(IPCTask::load);
+		MainDispatch.register(IPCTask::checkLock);
+		MainDispatch.register(IPCTask::setLock);
 		MainDispatch.register(Viewer::loadEnvironment);
 //		MainDispatch.register(Viewer::loadStores);
 //		MainDispatch.register(Viewer::loadPlugins);

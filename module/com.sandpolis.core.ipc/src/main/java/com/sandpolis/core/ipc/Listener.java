@@ -17,31 +17,24 @@
  *****************************************************************************/
 package com.sandpolis.core.ipc;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.UnknownHostException;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import com.google.common.util.concurrent.RateLimiter;
-import com.sandpolis.core.ipc.store.IPCStore;
 
 /**
- * An IPC listener which binds to a port on the loopback interface.
+ * A listener that binds to a port on the loopback interface. The listener
+ * spawns {@link Receptor}s for each incoming connection.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public class Listener extends Thread {
-
-	/**
-	 * Maximum capacity of the incoming connection queue.
-	 */
-	private static final int BACKLOG = 4;
-
-	/**
-	 * The listening socket.
-	 */
-	private ServerSocket socket;
+public class Listener implements Runnable, Closeable {
 
 	/**
 	 * A {@link RateLimiter} that limits connection attempts to prevent abuse.
@@ -49,31 +42,89 @@ public class Listener extends Thread {
 	private final RateLimiter connectionLimiter = RateLimiter.create(4);
 
 	/**
-	 * Create a new IPC listener on the specified port.
+	 * The listening socket.
+	 */
+	private ServerSocket socket;
+
+	/**
+	 * The listening task's {@link Future}.
+	 */
+	private Future<?> future;
+
+	/**
+	 * The {@link ExecutorService} for spawned {@link Receptor}s.
+	 */
+	private ExecutorService receptorService;
+
+	/**
+	 * Create a new IPC listener on an ephemeral port.
 	 * 
-	 * @param port
-	 *            The port
-	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public Listener(int port) throws UnknownHostException, IOException {
-		this.socket = new ServerSocket(port, BACKLOG, InetAddress.getLoopbackAddress());
+	public Listener() throws IOException {
+		this(0);
+	}
 
-		start();
+	/**
+	 * Create a new IPC listener on the specified port. A new socket will be bound
+	 * to the port immediately, but connections will not be accepted until the
+	 * listener is started.
+	 * 
+	 * @param port The listening port
+	 * @throws IOException
+	 */
+	public Listener(int port) throws IOException {
+		socket = new ServerSocket(port, 4, InetAddress.getLoopbackAddress());
+	}
+
+	/**
+	 * Get the listener's local port.
+	 * 
+	 * @return The local port number
+	 */
+	public int getPort() {
+		return socket.getLocalPort();
+	}
+
+	/**
+	 * Start the listener on the given {@link ExecutorService}.
+	 * 
+	 * @param listenerService The listener executor service
+	 * @param receptorService The receptor executor service
+	 */
+	public void start(ExecutorService listenerService, ExecutorService receptorService) {
+		if (future != null)
+			throw new IllegalStateException("Listener already running");
+		if (!socket.isBound())
+			throw new IllegalStateException("Socket not bound");
+
+		this.receptorService = Objects.requireNonNull(receptorService);
+
+		future = listenerService.submit(this);
+	}
+
+	@Override
+	public void close() throws IOException {
+		if (socket != null)
+			socket.close();
+		if (future != null)
+			future.cancel(true);
 	}
 
 	@Override
 	public void run() {
 		try {
-			while (!Thread.currentThread().isInterrupted()) {
+			while (!socket.isClosed()) {
 				connectionLimiter.acquire();
-				new Receptor(socket.accept());
+
+				Receptor receptor = new Receptor(socket.accept());
+				receptor.start(receptorService);
+				IPCStore.getMutableReceptors().add(receptor);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		} finally {
-			IPCStore.remove(this);
+			IPCStore.getMutableListeners().remove(this);
 		}
 	}
-
 }

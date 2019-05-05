@@ -53,7 +53,7 @@ import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
-import com.sandpolis.core.ipc.IPCTasks;
+import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.ProfileStore;
@@ -108,7 +108,9 @@ public final class Server {
 
 		MainDispatch.register(BasicTasks::loadConfiguration);
 		MainDispatch.register(Server::loadConfiguration);
-		MainDispatch.register(IPCTasks::checkLocks);
+		MainDispatch.register(IPCTask::load);
+		MainDispatch.register(IPCTask::checkLock);
+		MainDispatch.register(IPCTask::setLock);
 		MainDispatch.register(Server::loadEnvironment);
 		MainDispatch.register(BasicTasks::loadStores);
 		MainDispatch.register(Server::loadServerStores);
@@ -185,7 +187,7 @@ public final class Server {
 		NetworkStore.updateCvid(Core.cvid());
 
 		// Load PrefStore
-		PrefStore.load(Server.class);
+		PrefStore.load(Core.INSTANCE, Core.FLAVOR);
 
 		// Load DatabaseStore
 		try {

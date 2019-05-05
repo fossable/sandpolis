@@ -48,6 +48,18 @@ public final class PoolConstants {
 	private static final String net_dns_resolver = "net.dns.resolver";
 
 	/**
+	 * The {@link ExecutorService} that listens for IPC connections.
+	 */
+	@TreeConstant
+	private static final String net_ipc_listener = "net.ipc.listener";
+
+	/**
+	 * The {@link ExecutorService} that handles IPC messages.
+	 */
+	@TreeConstant
+	private static final String net_ipc_receptor = "net.ipc.receptor";
+
+	/**
 	 * The {@link ExecutorService} that delivers application events.
 	 */
 	@TreeConstant

@@ -84,6 +84,12 @@ public final class ConfigConstants {
 	private static final String net_ipc_mutex = "net.ipc.mutex";
 
 	/**
+	 * The IPC connection timeout.
+	 */
+	@TreeConstant
+	private static final String net_ipc_timeout = "net.ipc.timeout";
+
+	/**
 	 * Whether plugins will be loaded.
 	 */
 	@TreeConstant

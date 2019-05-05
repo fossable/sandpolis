@@ -17,30 +17,27 @@
  *****************************************************************************/
 package com.sandpolis.core.ipc;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Optional;
 
-import com.sandpolis.core.ipc.store.IPCStore;
+import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.ipc.MCMetadata.RQ_Metadata;
 import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
 import com.sandpolis.core.ipc.MSG.Message;
 
 /**
- * A very simple IPC connection.
+ * A simple IPC connection.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public class Connector implements AutoCloseable {
-
-	/**
-	 * The connection timeout which can be set low since the destination is always a
-	 * local socket.
-	 */
-	public static final int CONNECT_TIMEOUT = 200;
+public class Connector implements Closeable {
 
 	/**
 	 * The underlying socket.
@@ -58,19 +55,22 @@ public class Connector implements AutoCloseable {
 	private OutputStream out;
 
 	public Connector(int port) throws IOException {
-		this.socket = new Socket();
-		this.socket.connect(new InetSocketAddress("127.0.0.1", port), CONNECT_TIMEOUT);
-		this.in = socket.getInputStream();
-		this.out = socket.getOutputStream();
+		socket = new Socket();
+		socket.connect(new InetSocketAddress("127.0.0.1", port), Config.getInteger(net.ipc.timeout));
 
-		IPCStore.add(this);
+		if (socket.isConnected()) {
+			in = socket.getInputStream();
+			out = socket.getOutputStream();
+
+			IPCStore.getMutableConnectors().add(this);
+		}
 	}
 
 	@Override
-	public void close() throws Exception {
-		IPCStore.remove(this);
-
+	public void close() throws IOException {
 		socket.close();
+
+		IPCStore.getMutableConnectors().remove(this);
 	}
 
 	/**
@@ -79,15 +79,18 @@ public class Connector implements AutoCloseable {
 	 * @return The endpoint's metadata object
 	 * @throws IOException
 	 */
-	public RS_Metadata rq_metadata() throws IOException {
+	public Optional<RS_Metadata> rq_metadata() throws IOException {
+		if (socket.isClosed())
+			throw new IOException("Closed socket");
 
-		Message rq = Message.newBuilder().setRqMetadata(RQ_Metadata.newBuilder()).build();
-		rq.writeDelimitedTo(out);
+		synchronized (socket) {
+			Message.newBuilder().setRqMetadata(RQ_Metadata.newBuilder()).build().writeDelimitedTo(out);
 
-		Message message = Message.parseDelimitedFrom(in);
-		if (message == null)
-			return null;
-		return message.getRsMetadata();
+			Message message = Message.parseDelimitedFrom(in);
+			if (message == null)
+				return Optional.empty();
+
+			return Optional.of(message.getRsMetadata());
+		}
 	}
-
 }

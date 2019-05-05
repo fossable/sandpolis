@@ -22,6 +22,7 @@ import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 
 import java.util.Date;
+import java.util.concurrent.Executors;
 import java.util.prefs.BackingStoreException;
 
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
-import com.sandpolis.core.ipc.IPCTasks;
+import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.util.AsciiUtil;
@@ -73,7 +74,9 @@ public final class Viewer {
 
 		MainDispatch.register(BasicTasks::loadConfiguration);
 		MainDispatch.register(Viewer::loadConfiguration);
-		MainDispatch.register(IPCTasks::checkLocks);
+		MainDispatch.register(IPCTask::load);
+		MainDispatch.register(IPCTask::checkLock);
+		MainDispatch.register(IPCTask::setLock);
 		MainDispatch.register(Viewer::loadEnvironment);
 		MainDispatch.register(BasicTasks::loadStores);
 		MainDispatch.register(Viewer::loadStores);
@@ -92,7 +95,7 @@ public final class Viewer {
 		}.getClass().getEnclosingMethod());
 
 		// Load PrefStore
-		PrefStore.load(Viewer.class);
+		PrefStore.load(Core.INSTANCE, Core.FLAVOR);
 
 		try {
 			PrefStore.register(ui.help, true);

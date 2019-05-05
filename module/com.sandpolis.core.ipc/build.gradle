@@ -27,6 +27,7 @@ sourceSets {
 
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
+	testCompile project(':module:com.sandpolis.core.instance:constants')
 
 	compileOnly project(':module:com.sandpolis.core.instance:constants')
 
