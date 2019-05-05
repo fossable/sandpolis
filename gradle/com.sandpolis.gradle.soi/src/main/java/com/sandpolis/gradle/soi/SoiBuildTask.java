@@ -21,9 +21,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.gradle.api.Task;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.specs.Spec;
 
 import com.sandpolis.core.soi.Build.SO_Build;
 
@@ -38,6 +40,14 @@ public class SoiBuildTask extends DefaultTask {
 	 * The {@link SO_Build} binary.
 	 */
 	private File so_build = new File(getProject().getBuildDir().getAbsolutePath() + "/tmp_soi/soi/build.bin");
+
+	public SoiBuildTask() {
+		getOutputs().upToDateWhen(new Spec<Task>() {
+			public boolean isSatisfiedBy(Task element) {
+				return false;
+			}
+		});
+	}
 
 	@OutputFile
 	public File getSoBuild() {
