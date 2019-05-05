@@ -18,12 +18,11 @@
 package com.sandpolis.core.ipc.store;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -38,6 +37,7 @@ import com.sandpolis.core.ipc.IPCStore;
 import com.sandpolis.core.ipc.Listener;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.NetUtil;
 
 class ListenerTest {
 
@@ -85,13 +85,22 @@ class ListenerTest {
 	}
 
 	@Test
-	@DisplayName("Check that the IPC port is reserved")
+	@DisplayName("Check that the IPC port is opened")
 	void listen_2() throws IOException {
+		assertFalse(NetUtil.checkPort("127.0.0.1", 21023));
+
+		try (Listener listener = new Listener(21023)) {
+			assertTrue(NetUtil.checkPort("127.0.0.1", 21023));
+		}
+
+		assertFalse(NetUtil.checkPort("127.0.0.1", 21023));
+	}
+
+	@Test
+	@DisplayName("Check that the IPC listener chooses a random port")
+	void listen_3() throws IOException {
 		try (Listener listener = new Listener()) {
 			assertTrue(listener.getPort() > 0);
-
-			// The port should be bound, so opening another socket should fail
-			assertThrows(IOException.class, () -> new ServerSocket(listener.getPort()));
 		}
 	}
 }
