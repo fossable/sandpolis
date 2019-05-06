@@ -17,7 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.core.instance.idle;
 
-import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,20 +45,9 @@ public class IdleLoop {
 	private static final int REFRESH = 1000 * 60 * 15;
 
 	/**
-	 * Idle tasks will only run if the estimated workload percentage is less than
-	 * this threshold.
-	 */
-	private static final double THRESHOLD = 0.80;
-
-	/**
 	 * Tasks that should be performed on the idle loop periodically.
 	 */
 	private List<Supplier<Boolean>> tasks = Collections.synchronizedList(new ArrayList<>());
-
-	/**
-	 * The workload estimator which will be used to schedule idle tasks.
-	 */
-	private WorkloadEstimator estimator;
 
 	/**
 	 * The control thread.
@@ -68,21 +56,12 @@ public class IdleLoop {
 
 	public IdleLoop() {
 
-		// Determine supported estimator
-		if (ManagementFactory.getThreadMXBean().isThreadCpuTimeSupported())
-			estimator = new JMXEstimator();
-		else
-			estimator = new StackTraceEstimator();
-
 		// Setup control thread
 		thread = new Thread(() -> {
 			try {
 				while (!Thread.currentThread().isInterrupted()) {
 					Thread.sleep(REFRESH);
-					if (estimator.estimate() < THRESHOLD)
-						synchronized (tasks) {
-							tasks.removeIf(task -> !task.get());
-						}
+					tasks.removeIf(task -> !task.get());
 				}
 			} catch (InterruptedException ignore) {
 			}
