@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -61,10 +62,15 @@ class NetUtilTest {
 	}
 
 	@Test
-	@DisplayName("Check some well-known ports")
-	void checkPort_1() {
-		assertTrue(checkPort("www.google.com", 80));
-		assertFalse(checkPort("www.google.com", 81));
+	@DisplayName("Check some localhost ports")
+	void checkPort_1() throws IOException {
+		assertFalse(checkPort("127.0.0.1", 8923));
+
+		try (ServerSocket socket = new ServerSocket(8923)) {
+			assertTrue(checkPort("127.0.0.1", 8923));
+		}
+
+		assertFalse(checkPort("127.0.0.1", 8923));
 	}
 
 }
