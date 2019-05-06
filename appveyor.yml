@@ -1,6 +1,6 @@
 version: '{build}'
 
-image: Visual Studio 2015
+image: Visual Studio 2017
 
 branches:
   only:
@@ -15,13 +15,9 @@ environment:
 
 init:
   - git config --global --unset core.autocrlf
-  - set GRADLE_OPTS="-Dorg.gradle.daemon=false"
 
 install:
-  - SET PATH=%JAVA_HOME%\bin;%PATH%
-  - echo %PATH%
-  - java -version
-  - gradlew.bat --version
+  - gradlew --version
 
 build_script:
   - gradlew assemble -PPLUGINS_DEPLOY=false
