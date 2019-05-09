@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.testfx.assertions.api.Assertions.assertThat;
 
+import java.util.function.Supplier;
 import java.util.prefs.Preferences;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -41,6 +42,16 @@ import javafx.stage.Stage;
 
 @ExtendWith(ApplicationExtension.class)
 class CarouselPaneTest {
+
+	private static void waitCondition(Supplier<Boolean> condition, int timeout) throws InterruptedException {
+		int waited = 0;
+		while(!condition.get()) {
+			if (waited >= timeout)
+				throw new RuntimeException();
+			Thread.sleep(100);
+			waited += 100;
+		}
+	}
 
 	@BeforeAll
 	private static void init() throws Exception {
@@ -93,10 +104,33 @@ class CarouselPaneTest {
 		assertThat(carousel).doesNotHaveChild("#view2");
 		assertThat(carousel).doesNotHaveChild("#view3");
 
-		// Move view and wait
-		Platform.runLater(() -> carousel.moveForward());
+		// Move view and check state
+		robot.interact(() -> carousel.moveForward());
+		waitCondition(() -> !carousel.isMoving(), 5000);
+		assertThat(carousel).doesNotHaveChild("#view1");
+		assertThat(carousel).hasChild("#view2");
+		assertThat(carousel).doesNotHaveChild("#view3");
 
-		// TODO check state
+		// Move view and check state
+		robot.interact(() -> carousel.moveForward());
+		waitCondition(() -> !carousel.isMoving(), 5000);
+		assertThat(carousel).doesNotHaveChild("#view1");
+		assertThat(carousel).doesNotHaveChild("#view2");
+		assertThat(carousel).hasChild("#view3");
+
+		// Move view and check state
+		robot.interact(() -> carousel.moveBackward());
+		waitCondition(() -> !carousel.isMoving(), 5000);
+		assertThat(carousel).doesNotHaveChild("#view1");
+		assertThat(carousel).hasChild("#view2");
+		assertThat(carousel).doesNotHaveChild("#view3");
+
+		// Move view and check state
+		robot.interact(() -> carousel.moveBackward());
+		waitCondition(() -> !carousel.isMoving(), 5000);
+		assertThat(carousel).hasChild("#view1");
+		assertThat(carousel).doesNotHaveChild("#view2");
+		assertThat(carousel).doesNotHaveChild("#view3");
 	}
 
 }
