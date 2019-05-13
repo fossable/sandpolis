@@ -22,10 +22,9 @@ import static com.sandpolis.core.instance.Environment.EnvPath.GEN;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
+import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.concurrent.Executors;
 
@@ -44,7 +43,7 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
-import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
+import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.storage.database.DatabaseFactory;
@@ -96,8 +95,6 @@ import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
  * @since 1.0.0
  */
 public final class Server {
-	private Server() {
-	}
 
 	private static final Logger log = LoggerFactory.getLogger(Server.class);
 
@@ -106,31 +103,26 @@ public final class Server {
 		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
 				Core.SO_BUILD.getNumber());
 
-		MainDispatch.register(BasicTasks::loadConfiguration);
-		MainDispatch.register(Server::loadConfiguration);
-		MainDispatch.register(IPCTask::load);
-		MainDispatch.register(IPCTask::checkLock);
-		MainDispatch.register(IPCTask::setLock);
-		MainDispatch.register(Server::loadEnvironment);
-		MainDispatch.register(BasicTasks::loadStores);
-		MainDispatch.register(Server::loadServerStores);
-		MainDispatch.register(Server::loadPlugins);
-		MainDispatch.register(Server::installDebugClient);
-		MainDispatch.register(Server::loadListeners);
-		MainDispatch.register(Server::post);
+		register(BasicTasks.loadConfiguration);
+		register(Server.loadConfiguration);
+		register(IPCTask.load);
+		register(IPCTask.checkLock);
+		register(IPCTask.setLock);
+		register(Server.loadEnvironment);
+		register(BasicTasks.loadStores);
+		register(Server.loadServerStores);
+		register(Server.loadPlugins);
+		register(Server.installDebugClient);
+		register(Server.loadListeners);
+		register(Server.post);
 
 	}
 
 	/**
 	 * Load the Server instance's configuration.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load server configuration", fatal = true)
-	public static TaskOutcome loadConfiguration() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
+	private static final Task loadConfiguration = new Task((task) -> {
 		Config.register(server.db.provider, "hibernate");
 		Config.register(server.db.url);
 		Config.register(server.db.username);
@@ -142,39 +134,35 @@ public final class Server {
 		Config.register(server.banner.image);
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Check the runtime environment for fatal errors.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
-	private static TaskOutcome loadEnvironment() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task loadEnvironment = new Task((task) -> {
 
 		if (!Environment.load(DB.setDefault(Config.get(server.path.db)), GEN.setDefault(Config.get(server.path.gen)),
 				LOG.setDefault(Config.get(path.log)), TMP, LIB)) {
-			try {
-				Environment.setup();
-			} catch (RuntimeException e) {
-				return task.failure(e);
-			}
+			Environment.setup();
 		}
 
 		return task.success();
-	}
+	});
+
+	/**
+	 * A list of classes that are managed by the ORM for this instance.
+	 */
+	private static final Class<?>[] ORM_CLASSES = new Class<?>[] { Database.class, Listener.class, Group.class,
+			ReciprocalKeyPair.class, KeyMechanism.class, PasswordMechanism.class, User.class, Profile.class,
+			AttributeNode.class, AttributeGroup.class, AttributeDomain.class, UntrackedAttribute.class, Plugin.class,
+			TrustAnchor.class };
 
 	/**
 	 * Load static stores.
-	 * 
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
-	public static TaskOutcome loadServerStores() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task loadServerStores = new Task((task) -> {
 
 		// Load ThreadStore
 		ThreadStore.register(new NioEventLoopGroup(2), net.exelet);
@@ -190,16 +178,12 @@ public final class Server {
 		PrefStore.load(Core.INSTANCE, Core.FLAVOR);
 
 		// Load DatabaseStore
-		try {
-			if (!Config.has(server.db.url)) {
-				DatabaseStore.load(DatabaseFactory.create("h2", Environment.get(DB).resolve("server.db").toFile()),
-						ORM_CLASSES);
-			} else {
-				DatabaseStore.load(DatabaseFactory.create(Config.get(server.db.url), Config.get(server.db.username),
-						Config.get(server.db.password)), ORM_CLASSES);
-			}
-		} catch (URISyntaxException | IOException e) {
-			return task.failure(e);
+		if (!Config.has(server.db.url)) {
+			DatabaseStore.load(DatabaseFactory.create("h2", Environment.get(DB).resolve("server.db").toFile()),
+					ORM_CLASSES);
+		} else {
+			DatabaseStore.load(DatabaseFactory.create(Config.get(server.db.url), Config.get(server.db.username),
+					Config.get(server.db.password)), ORM_CLASSES);
 		}
 
 		// Load UserStore
@@ -222,111 +206,70 @@ public final class Server {
 		PluginStore.setCertVerifier(TrustStore::verifyPluginCertificate);
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Load socket listeners.
-	 * 
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load socket listeners")
-	private static TaskOutcome loadListeners() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task loadListeners = new Task((task) -> {
+		// TODO debug listener
+		ListenerStore.start();
 
-		try {
-			// TODO debug listener
-			ListenerStore.start();
-		} catch (Exception e) {
-			return task.failure(e);
-		}
-		return task.complete(true);
-	}
+		return task.success();
+	});
 
 	/**
 	 * Load plugins.
-	 * 
-	 * @return The task's outcome
 	 */
-	@InitializationTask(name = "Load server plugins")
-	private static TaskOutcome loadPlugins() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
-		if (!Config.getBoolean(plugin.enabled))
-			return task.skipped();
-
-		try {
-			PluginStore.scanPluginDirectory();
-
-			PluginStore.loadPlugins();
-		} catch (Exception e) {
-			return task.failure(e);
-		}
+	@InitializationTask(name = "Load server plugins", condition = plugin.enabled)
+	private static final Task loadPlugins = new Task((task) -> {
+		PluginStore.scanPluginDirectory();
+		PluginStore.loadPlugins();
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Install a debug client on the local machine.
-	 * 
-	 * @return The task's outcome
 	 */
-	@InitializationTask(name = "Install debug client", debug = true)
-	private static TaskOutcome installDebugClient() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	@InitializationTask(name = "Install debug client", debug = true, condition = server.debug_client)
+	private static final Task installDebugClient = new Task((task) -> {
 
-		if (!Config.getBoolean(server.debug_client))
-			return task.skipped();
+		// Create user and listener
+		UserStore.add(
+				UserConfig.newBuilder().setUsername("admin").setPassword(CryptoUtil.hash(SHA256, "password")).build());
 
-		try {
-			// Create user and listener
-			UserStore.add(UserConfig.newBuilder().setUsername("admin").setPassword(CryptoUtil.hash(SHA256, "password"))
-					.build());
+		ListenerStore.add(ListenerConfig.newBuilder().setPort(10101).setAddress("0.0.0.0").setOwner("admin")
+				.setName("test").setEnabled(true).build());
 
-			ListenerStore.add(ListenerConfig.newBuilder().setPort(10101).setAddress("0.0.0.0").setOwner("admin")
-					.setName("test").setEnabled(true).build());
+		// Create group
+		GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin").build());
 
-			// Create group
-			GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin").build());
-
-			// Generate client
-			new MegaGen(GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
-					.setMega(MegaConfig.newBuilder().setNetwork(NetworkConfig.newBuilder()
-							.setLoopConfig(LoopConfig.newBuilder().setTimeout(1000).setMaxTimeout(1000)
-									.addTarget(NetworkTarget.newBuilder().setAddress("127.0.0.1").setPort(10101)))))
-					.build()).generate();
-
-		} catch (Exception e) {
-			return task.failure(e);
-		}
+		// Generate client
+		new MegaGen(
+				GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
+						.setMega(MegaConfig.newBuilder().setNetwork(NetworkConfig.newBuilder()
+								.setLoopConfig(LoopConfig.newBuilder().setTimeout(1000).setMaxTimeout(1000)
+										.addTarget(NetworkTarget.newBuilder().setAddress("127.0.0.1").setPort(10101)))))
+						.build()).generate();
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Perform a self-test.
-	 * 
-	 * @return The task's outcome
 	 */
-	@InitializationTask(name = "Power-on self test", fatal = true, debug = true)
-	private static TaskOutcome post() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
-		if (!Config.getBoolean("post"))
-			return task.skipped();
-
+	@InitializationTask(name = "Power-on self test", debug = true)
+	private static final Task post = new Task((task) -> {
 		return task.complete(Post.smokeTest());
+	});
+
+	private Server() {
 	}
 
-	/**
-	 * A list of classes that are managed by the ORM for this instance.
-	 */
-	private static final Class<?>[] ORM_CLASSES = new Class<?>[] { Database.class, Listener.class, Group.class,
-			ReciprocalKeyPair.class, KeyMechanism.class, PasswordMechanism.class, User.class, Profile.class,
-			AttributeNode.class, AttributeGroup.class, AttributeDomain.class, UntrackedAttribute.class, Plugin.class,
-			TrustAnchor.class };
+	static {
+		MainDispatch.register(Server.class);
+	}
 
 }

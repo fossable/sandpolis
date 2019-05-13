@@ -24,7 +24,7 @@ import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.ConfigConstant.path;
 import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
-import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
+import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 
 /**
@@ -38,14 +38,9 @@ public final class BasicTasks {
 
 	/**
 	 * Load the configuration from the runtime environment.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load instance configuration", fatal = true)
-	public static TaskOutcome loadConfiguration() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
+	public static final Task loadConfiguration = new Task((task) -> {
 		Config.register(ConfigConstant.post, true);
 
 		Config.register(net.ipc.mutex, true);
@@ -63,24 +58,23 @@ public final class BasicTasks {
 		Config.register(path.log);
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Load static stores.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load instance stores", fatal = true)
-	public static TaskOutcome loadStores() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
+	public static final Task loadStores = new Task((task) -> {
 		ThreadStore.register(Executors.newSingleThreadExecutor(), PoolConstant.signaler);
 		Signaler.init(ThreadStore.get(PoolConstant.signaler));
 
 		return task.success();
-	}
+	});
 
 	private BasicTasks() {
+	}
+
+	static {
+		MainDispatch.register(BasicTasks.class);
 	}
 }

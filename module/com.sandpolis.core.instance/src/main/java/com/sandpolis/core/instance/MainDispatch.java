@@ -17,12 +17,12 @@
  *****************************************************************************/
 package com.sandpolis.core.instance;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,8 +40,9 @@ import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ProtoUtil;
 
 /**
- * This class invokes an instance's real {@code main()} via reflection and
- * assists with initialization of the new instance.
+ * {@link MainDispatch} allows the instance's main method to configure
+ * initialization tasks before they are sequentially executed by this class.
+ * Idle tasks and shutdown tasks are also managed by this class.
  * 
  * @author cilki
  * @since 5.0.0
@@ -51,13 +52,12 @@ public final class MainDispatch {
 	public static final Logger log = LoggerFactory.getLogger(MainDispatch.class);
 
 	/**
-	 * A configurable list of tasks that are executed when the instance's
-	 * {@code main()} returns.
+	 * A configurable list of tasks that initialize the instance.
 	 */
-	private static List<Supplier<TaskOutcome>> tasks = new ArrayList<>();
+	private static List<Task> tasks = new ArrayList<>();
 
 	/**
-	 * A configurable list of tasks that are executed on shutdown.
+	 * A configurable list of tasks that are executed on instance shutdown.
 	 */
 	private static List<Runnable> shutdown = new LinkedList<>();
 
@@ -67,67 +67,66 @@ public final class MainDispatch {
 	private static IdleLoop idle;
 
 	/**
-	 * The instance's main {@code Class}.
+	 * The instance's main {@link Class}.
 	 */
 	private static Class<?> main = MainDispatch.class;
 
 	/**
-	 * The instance's {@code Instance} type.
+	 * The instance's {@link Instance} type.
 	 */
 	private static Instance instance;
 
 	/**
-	 * The instance's {@code InstanceFlavor} type.
+	 * The instance's {@link InstanceFlavor} type.
 	 */
 	private static InstanceFlavor flavor;
 
 	/**
-	 * Get the main {@link Class} that was dispatched or {@code MainDispatch.class}
-	 * if {@link #dispatch} has not been called.
+	 * Get the {@link Class} that was dispatched.
 	 * 
-	 * @return The dispatched {@link Class} or {@code MainDispatch.class}
+	 * @return The dispatched {@link Class} or {@code MainDispatch.class} if
+	 *         {@link #dispatch} has not been called
 	 */
 	public static Class<?> getMain() {
 		return main;
 	}
 
 	/**
-	 * Get the {@link Instance} that was dispatched or {@code null} if
-	 * {@link #dispatch} has not been called.
+	 * Get the {@link Instance} type.
 	 * 
-	 * @return The dispatched {@link Instance} or {@code null}
+	 * @return The dispatched {@link Instance} or {@code null} if {@link #dispatch}
+	 *         has not been called
 	 */
 	public static Instance getInstance() {
 		return instance;
 	}
 
 	/**
-	 * Get the {@link InstanceFlavor} that was dispatched or {@code null} if
-	 * {@link #dispatch} has not been called.
+	 * Get the {@link InstanceFlavor} type.
 	 * 
-	 * @return The dispatched {@link InstanceFlavor} or {@code null}
+	 * @return The dispatched {@link InstanceFlavor} or {@code null} if
+	 *         {@link #dispatch} has not been called
 	 */
 	public static InstanceFlavor getInstanceFlavor() {
 		return flavor;
 	}
 
 	/**
-	 * Get the {@link IdleLoop} or {@code null} if one has not been registered.
+	 * Get the {@link IdleLoop}.
 	 * 
-	 * @return The registered {@link IdleLoop} or {@code null}
+	 * @return The registered {@link IdleLoop} or {@code null} if one has not been
+	 *         registered
 	 */
 	public static IdleLoop getIdleLoop() {
 		return idle;
 	}
 
 	/**
-	 * Invokes the instance's {@code main()} method (which should register
-	 * initialization tasks with {@link MainDispatch}) and then initializes the
-	 * instance.
+	 * Invokes the instance's main method (which should register initialization
+	 * tasks with {@link MainDispatch}) and then initializes the instance.
 	 * 
-	 * 
-	 * @param main     The {@link Class} which contains the {@code main()} to invoke
-	 * @param args     The arguments to be passed to the {@code main()}
+	 * @param main     The {@link Class} which contains the {@code main} to invoke
+	 * @param args     The arguments to be passed to the {@code main}
 	 * @param instance The instance's {@link Instance}
 	 * @param flavor   The instance's {@link InstanceFlavor}
 	 */
@@ -138,75 +137,90 @@ public final class MainDispatch {
 		MainDispatch.main = Objects.requireNonNull(main);
 		MainDispatch.instance = Objects.requireNonNull(instance);
 		MainDispatch.flavor = Objects.requireNonNull(flavor);
-		Config.setArguments(args);
 
 		long timestamp = System.currentTimeMillis();
-		List<TaskOutcome> outcomes = new ArrayList<>();
+
+		// Pass main arguments to the Config class
+		Config.setArguments(args);
 
 		// Setup exception handler
 		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
 			log.error("An unexpected exception has occurred", throwable);
 		});
 
-		try {
-			main.getDeclaredMethod("main", String[].class).invoke(null, (Object) args);
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException e) {
-			throw new RuntimeException("Failed to invoke main() in class: " + main.getName(), e);
-		}
-
 		// Setup shutdown hook
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			shutdown.forEach(task -> task.run());
 		}));
 
-		// Run the configuration
-		for (Supplier<TaskOutcome> task : tasks) {
-			TaskOutcome taskOutcome = task.get();
-			Outcome outcome = taskOutcome.getOutcome();
-			outcomes.add(taskOutcome);
+		// Invoke the main method
+		try {
+			main.getDeclaredMethod("main", String[].class).invoke(null, (Object) args);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to invoke main method in class: " + main.getName(), e);
+		}
 
-			if (!outcome.getResult() && taskOutcome.isFatal() && !taskOutcome.isSkipped()) {
-				log.error("A fatal error has occurred in: {}", outcome.getAction());
-				logTaskSummary(outcomes);
+		// Execute tasks
+		for (Task task : tasks) {
+			if (task.initMetadata == null)
+				throw new RuntimeException("Unregistered initialization task class");
+
+			TaskOutcome outcome = new TaskOutcome(task.initMetadata.name());
+			task.outcome = outcome;
+
+			if (!task.initMetadata.condition().isEmpty() && !Config.getBoolean(task.initMetadata.condition())) {
+				outcome.skipped = true;
+			} else {
+				try {
+					task.execute(outcome);
+				} catch (Exception e) {
+					outcome.failure(e);
+				}
+			}
+
+			if (!outcome.getOutcome().getResult() && task.initMetadata.fatal() && !outcome.isSkipped()) {
+				log.error("A fatal error has occurred in task: {}", task.initMetadata.name());
+				logTaskSummary();
 				System.exit(0);
 			}
 		}
 
+		// Print task summary if any task failed
+		if (tasks.stream().filter(t -> !t.outcome.getOutcome().getResult()).count() != 0)
+			logTaskSummary();
+
 		// Print task summary if required
-		if (outcomes.stream().filter(o -> !o.getOutcome().getResult()).count() != 0)
-			logTaskSummary(outcomes);
 		else if (!Config.has(logging.startup.summary) || !Config.getBoolean(logging.startup.summary))
-			logTaskSummary(outcomes);
+			logTaskSummary();
 
 		// Launch idle loop
 		if (idle != null)
 			idle.start();
 
-		log.info("Initialization completed in {} ms", System.currentTimeMillis() - timestamp);
-
 		// Cleanup
 		tasks = null;
+
+		log.info("Initialization completed in {} ms", System.currentTimeMillis() - timestamp);
 	}
 
 	/**
-	 * Log the task summary.
-	 * 
-	 * @param outcomes The task outcomes
+	 * Build a summary for {@link #tasks} and write to log.
 	 */
-	private static void logTaskSummary(List<TaskOutcome> outcomes) {
-		if (outcomes.isEmpty())
+	private static void logTaskSummary() {
+		if (tasks.isEmpty())
 			return;
 
 		// Create a format string according to the width of the longest description
 		String format = String.format("%%%ds: %%4s (%%5d ms)",
-				outcomes.stream().mapToInt(task -> task.getOutcome().getAction().length()).max().getAsInt());
+				tasks.stream().mapToInt(task -> task.initMetadata.name().length()).max().getAsInt());
 
-		for (TaskOutcome task : outcomes) {
-			Outcome outcome = task.getOutcome();
+		for (Task task : tasks) {
+			TaskOutcome taskOutcome = task.getOutcome();
+			Outcome outcome = taskOutcome.getOutcome();
+
 			String line = String.format(format, outcome.getAction(),
-					task.isSkipped() ? "SKIP" : outcome.getResult() ? "OK" : "FAIL", outcome.getTime());
-			if (task.isSkipped() || outcome.getResult()) {
+					taskOutcome.isSkipped() ? "SKIP" : outcome.getResult() ? "OK" : "FAIL", outcome.getTime());
+			if (taskOutcome.isSkipped() || outcome.getResult()) {
 				log.info(line);
 			} else {
 				log.error(line);
@@ -214,32 +228,6 @@ public final class MainDispatch {
 					log.error(outcome.getException());
 			}
 		}
-	}
-
-	/**
-	 * Register a new initialization task which will be executed during the
-	 * dispatch. Tasks registered with this method are executed sequentially in the
-	 * same order as the method calls.
-	 * 
-	 * @param task The task reference
-	 */
-	public static void register(Supplier<TaskOutcome> task) {
-		if (task == null)
-			throw new IllegalArgumentException();
-		if (tasks == null)
-			throw new IllegalStateException("Tasks cannot be registered after dispatch is complete");
-		if (tasks.contains(task))
-			throw new IllegalArgumentException("Tasks cannot be registered more than once");
-
-		tasks.add(() -> {
-			TaskOutcome outcome = task.get();
-			if (outcome == null)
-				throw new RuntimeException("Invalid task detected");
-			if (outcome.getOutcome() == null)
-				throw new RuntimeException("Invalid task detected");
-
-			return outcome;
-		});
 	}
 
 	/**
@@ -286,10 +274,27 @@ public final class MainDispatch {
 	}
 
 	/**
+	 * Register a new initialization task which will be executed during the
+	 * dispatch. Tasks registered with this method are executed sequentially in the
+	 * same order as the method calls.
+	 * 
+	 * @param task The task reference
+	 */
+	public static void register(Task task) {
+		Objects.requireNonNull(task);
+		if (tasks == null)
+			throw new IllegalStateException("Tasks cannot be registered after dispatch is complete");
+		if (tasks.contains(task))
+			throw new IllegalArgumentException("Tasks cannot be registered more than once");
+
+		tasks.add(task);
+	}
+
+	/**
 	 * A task that is executed during instance shutdown.
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.METHOD)
+	@Target(ElementType.FIELD)
 	public @interface ShutdownTask {
 	}
 
@@ -298,7 +303,7 @@ public final class MainDispatch {
 	 * instance has relatively little work to do.
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.METHOD)
+	@Target(ElementType.FIELD)
 	public @interface IdleTask {
 	}
 
@@ -306,13 +311,8 @@ public final class MainDispatch {
 	 * A task that is executed during instance initialization.
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.METHOD)
+	@Target(ElementType.FIELD)
 	public @interface InitializationTask {
-
-		/**
-		 * Indicates that the application should exit if the task fails.
-		 */
-		public boolean fatal() default false;
 
 		/**
 		 * The name of the task.
@@ -320,9 +320,21 @@ public final class MainDispatch {
 		public String name();
 
 		/**
-		 * Indicates that the task should only be run in debug mode.
+		 * The condition under which the task will execute.
+		 */
+		public String condition() default "";
+
+		/**
+		 * Indicates that the application should exit if the task fails.
+		 */
+		public boolean fatal() default false;
+
+		/**
+		 * Indicates that the task will run if and only if the instance is in debug
+		 * mode.
 		 */
 		public boolean debug() default false;
+
 	}
 
 	/**
@@ -330,30 +342,10 @@ public final class MainDispatch {
 	 */
 	public static class TaskOutcome {
 
-		/**
-		 * Whether the application should be stopped if the task fails.
-		 */
-		private boolean fatal;
-
-		/**
-		 * Whether the task was skipped.
-		 */
-		private boolean skipped;
-
-		/**
-		 * The overall outcome of the task.
-		 */
 		private Outcome outcome;
 		private Outcome.Builder temporary;
 
-		/**
-		 * Get the task's fatal flag.
-		 * 
-		 * @return Whether the task is fatal
-		 */
-		public boolean isFatal() {
-			return fatal;
-		}
+		private boolean skipped;
 
 		/**
 		 * Get the task's skipped flag.
@@ -469,25 +461,68 @@ public final class MainDispatch {
 			return this;
 		}
 
-		/**
-		 * Begin a new incomplete task.
-		 * 
-		 * @param task The task's method for metadata analysis
-		 * @return A new incomplete task
-		 */
-		public static TaskOutcome begin(Method task) {
-			if (task == null)
-				throw new IllegalArgumentException();
-			TaskOutcome outcome = new TaskOutcome();
+		public TaskOutcome(String name) {
+			temporary = ProtoUtil.begin(Objects.requireNonNull(name));
+		}
+	}
 
-			try {
-				InitializationTask annotation = task.getAnnotationsByType(InitializationTask.class)[0];
-				outcome.fatal = annotation.fatal();
-				outcome.temporary = ProtoUtil.begin(annotation.name());
-				return outcome;
-			} catch (IndexOutOfBoundsException e) {
-				throw new IllegalArgumentException("Method: " + task.getName() + " is not an initialization task", e);
+	/**
+	 * The task's operation.
+	 */
+	public interface TaskAction {
+		public TaskOutcome execute(TaskOutcome task) throws Exception;
+	}
+
+	public static class Task implements TaskAction {
+
+		private InitializationTask initMetadata;
+		private IdleTask idleMetadata;
+		private ShutdownTask shutdownMetadata;
+
+		private TaskAction action;
+		private TaskOutcome outcome;
+
+		public Task(TaskAction action) {
+			this.action = Objects.requireNonNull(action);
+		}
+
+		public TaskOutcome getOutcome() {
+			return outcome;
+		}
+
+		@Override
+		public TaskOutcome execute(TaskOutcome task) throws Exception {
+			return action.execute(task);
+		}
+	}
+
+	/**
+	 * Serach for task fields in the given class and inject annotations into them.
+	 * 
+	 * @param c The class to search
+	 */
+	public static void register(Class<?> c) {
+		try {
+			for (Field field : c.getDeclaredFields()) {
+				for (Annotation annotation : field.getAnnotations()) {
+					Field inject = null;
+					if (annotation instanceof InitializationTask) {
+						inject = Task.class.getDeclaredField("initMetadata");
+					} else if (annotation instanceof IdleTask) {
+						inject = Task.class.getDeclaredField("idleMetadata");
+					} else if (annotation instanceof ShutdownTask) {
+						inject = Task.class.getDeclaredField("shutdownMetadata");
+					} else {
+						continue;
+					}
+
+					field.setAccessible(true);
+					inject.setAccessible(true);
+					inject.set(field.get(null), annotation);
+				}
 			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 	}
 

@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.installer;
 
+import static com.sandpolis.core.instance.MainDispatch.register;
+
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -26,11 +28,12 @@ import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
-import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
+import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.ipc.IPCStore;
 import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.AsciiUtil;
 
 import javafx.application.Application;
@@ -53,65 +56,49 @@ public final class Installer {
 	public static void main(String[] args) {
 		log.info("Launching {}", AsciiUtil.toRainbow("Sandpolis Installer"));
 
-		MainDispatch.register(BasicTasks::loadConfiguration);
-		MainDispatch.register(Installer::loadConfiguration);
-		MainDispatch.register(IPCTask::load);
-		MainDispatch.register(IPCTask::checkLock);
-		MainDispatch.register(IPCTask::setLock);
-		MainDispatch.register(Installer::findInstances);
-		MainDispatch.register(Installer::loadUserInterface);
+		register(BasicTasks.loadConfiguration);
+		register(Installer.loadConfiguration);
+		register(IPCTask.load);
+		register(IPCTask.checkLock);
+		register(IPCTask.setLock);
+		register(Installer.findInstances);
+		register(Installer.loadUserInterface);
 	}
 
 	/**
 	 * Find any running instances.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Find running instances")
-	private static TaskOutcome findInstances() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
-		for (Instance instance : Instance.values()) {
-			Optional<RS_Metadata> metadata = IPCStore.queryInstance(instance, null);// TODO get correct subtype
-			if (metadata.isPresent())
-				return task.failure("A Sandpolis instance has been detected (process " + metadata.get().getPid() + ")");
-		}
+	private static final Task findInstances = new Task((task) -> {
+		Optional<RS_Metadata> metadata = IPCStore.queryInstance(Instance.INSTALLER, InstanceFlavor.NONE);
+		if (metadata.isPresent())
+			return task.failure("A Sandpolis instance has been detected (process " + metadata.get().getPid() + ")");
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Load instance configuration.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load instance configuration")
-	private static TaskOutcome loadConfiguration() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
+	private static final Task loadConfiguration = new Task((task) -> {
 		Config.register("install.version");
 		Config.register("install.path.windows", System.getProperty("user.home") + "/.sandpolis");
 		Config.register("install.path.linux", System.getProperty("user.home") + "/.sandpolis");
 		Config.register("install.path.macos", System.getProperty("user.home") + "/.sandpolis");
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Load and show the user interface.
-	 * 
-	 * @return The task's outcome
 	 */
-	@InitializationTask(name = "Load user interface")
-	private static TaskOutcome loadUserInterface() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
+	@InitializationTask(name = "Load user interface", fatal = true)
+	private static final Task loadUserInterface = new Task((task) -> {
 		new Thread(() -> Application.launch(UI.class)).start();
+
 		return task.success();
-	}
+	});
 
 	/**
 	 * The {@link Application} class for starting the user interface.
@@ -130,5 +117,9 @@ public final class Installer {
 	}
 
 	private Installer() {
+	}
+
+	static {
+		MainDispatch.register(Installer.class);
 	}
 }

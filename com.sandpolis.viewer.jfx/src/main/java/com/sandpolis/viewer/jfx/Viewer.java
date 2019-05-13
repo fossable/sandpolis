@@ -22,21 +22,18 @@ import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 
 import java.util.Date;
-import java.util.concurrent.Executors;
-import java.util.prefs.BackingStoreException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.instance.BasicTasks;
-import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
-import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
+import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.store.plugin.Plugin;
@@ -72,84 +69,63 @@ public final class Viewer {
 		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
 				Core.SO_BUILD.getNumber());
 
-		MainDispatch.register(BasicTasks::loadConfiguration);
-		MainDispatch.register(Viewer::loadConfiguration);
-		MainDispatch.register(IPCTask::load);
-		MainDispatch.register(IPCTask::checkLock);
-		MainDispatch.register(IPCTask::setLock);
-		MainDispatch.register(Viewer::loadEnvironment);
-		MainDispatch.register(BasicTasks::loadStores);
-		MainDispatch.register(Viewer::loadStores);
-		MainDispatch.register(Viewer::loadPlugins);
-		MainDispatch.register(Viewer::loadUserInterface);
+		MainDispatch.register(BasicTasks.loadConfiguration);
+		MainDispatch.register(Viewer.loadConfiguration);
+		MainDispatch.register(IPCTask.load);
+		MainDispatch.register(IPCTask.checkLock);
+		MainDispatch.register(IPCTask.setLock);
+		MainDispatch.register(Viewer.loadEnvironment);
+		MainDispatch.register(BasicTasks.loadStores);
+		MainDispatch.register(Viewer.loadStores);
+		MainDispatch.register(Viewer.loadPlugins);
+		MainDispatch.register(Viewer.loadUserInterface);
 	}
 
 	/**
 	 * Load the configuration from the runtime environment.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load viewer configuration", fatal = true)
-	private static TaskOutcome loadConfiguration() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task loadConfiguration = new Task((task) -> {
 
 		// Load PrefStore
 		PrefStore.load(Core.INSTANCE, Core.FLAVOR);
 
-		try {
-			PrefStore.register(ui.help, true);
-			PrefStore.register(ui.animations, true);
-			PrefStore.register(ui.main.view, "list");
-			PrefStore.register(ui.main.console, false);
-			PrefStore.register(ui.tray.minimize, true);
-			PrefStore.register(ui.theme, "Crimson");
+		PrefStore.register(ui.help, true);
+		PrefStore.register(ui.animations, true);
+		PrefStore.register(ui.main.view, "list");
+		PrefStore.register(ui.main.console, false);
+		PrefStore.register(ui.tray.minimize, true);
+		PrefStore.register(ui.theme, "Crimson");
 
-			PrefStore.register(ui.view.login.width, 535);
-			PrefStore.register(ui.view.login.height, 380);
-			PrefStore.register(ui.view.main.width, 770);
-			PrefStore.register(ui.view.main.height, 345);
-			PrefStore.register(ui.view.about.width, 660);
-			PrefStore.register(ui.view.about.height, 400);
-			PrefStore.register(ui.view.generator.width, 700);
-			PrefStore.register(ui.view.generator.height, 400);
-		} catch (BackingStoreException e) {
-			return task.failure(e);
-		}
+		PrefStore.register(ui.view.login.width, 535);
+		PrefStore.register(ui.view.login.height, 380);
+		PrefStore.register(ui.view.main.width, 770);
+		PrefStore.register(ui.view.main.height, 345);
+		PrefStore.register(ui.view.about.width, 660);
+		PrefStore.register(ui.view.about.height, 400);
+		PrefStore.register(ui.view.generator.width, 700);
+		PrefStore.register(ui.view.generator.height, 400);
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Load the runtime environment.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
-	private static TaskOutcome loadEnvironment() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task loadEnvironment = new Task((task) -> {
 
-		if (!Environment.load(LOG, TMP, LIB)) {
-			try {
-				Environment.setup();
-			} catch (RuntimeException e) {
-				return task.failure(e);
-			}
-		}
+		if (!Environment.load(LOG, TMP, LIB))
+			Environment.setup();
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Load static stores.
-	 * 
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
-	public static TaskOutcome loadStores() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task loadStores = new Task((task) -> {
 
 		// Load ThreadStore
 		ThreadStore.register(new NioEventLoopGroup(2), net.exelet);
@@ -170,31 +146,20 @@ public final class Viewer {
 		AttributeKey.setDefaultAttributeClass(ObservableAttribute.class);
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Load plugins.
 	 *
 	 * @return The task's outcome
 	 */
-	@InitializationTask(name = "Load viewer plugins")
-	private static TaskOutcome loadPlugins() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
-		if (Config.getBoolean(plugin.enabled))
-			return task.skipped();
-
-		try {
-			PluginStore.scanPluginDirectory();
-
-			PluginStore.loadPlugins();
-		} catch (Exception e) {
-			return task.failure(e);
-		}
+	@InitializationTask(name = "Load viewer plugins", condition = plugin.enabled)
+	private static final Task loadPlugins = new Task((task) -> {
+		PluginStore.scanPluginDirectory();
+		PluginStore.loadPlugins();
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Load and show the user interface.
@@ -202,14 +167,11 @@ public final class Viewer {
 	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load user interface")
-	private static TaskOutcome loadUserInterface() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
+	private static final Task loadUserInterface = new Task((task) -> {
 		new Thread(() -> Application.launch(UI.class)).start();
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * The {@link Application} class for starting the user interface.
@@ -240,5 +202,12 @@ public final class Viewer {
 					.size(PrefStore.getInt(ui.view.login.width), PrefStore.getInt(ui.view.login.height))
 					.resizable(false).title(FxUtil.translate("stage.login.title")).show();
 		}
+	}
+
+	private Viewer() {
+	}
+
+	static {
+		MainDispatch.register(Viewer.class);
 	}
 }

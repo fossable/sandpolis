@@ -20,8 +20,8 @@ package com.sandpolis.viewer.cli;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
+import static com.sandpolis.core.instance.MainDispatch.register;
 
-import java.io.IOException;
 import java.util.Date;
 
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
-import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
+import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.viewer.cli.view.main.MainWindow;
@@ -57,67 +57,54 @@ public final class Viewer {
 		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
 				Core.SO_BUILD.getNumber());
 
-		MainDispatch.register(BasicTasks::loadConfiguration);
-		MainDispatch.register(IPCTask::load);
-		MainDispatch.register(IPCTask::checkLock);
-		MainDispatch.register(IPCTask::setLock);
-		MainDispatch.register(Viewer::loadEnvironment);
-//		MainDispatch.register(Viewer::loadStores);
-//		MainDispatch.register(Viewer::loadPlugins);
-		MainDispatch.register(Viewer::loadUserInterface);
+		register(BasicTasks.loadConfiguration);
+		register(IPCTask.load);
+		register(IPCTask.checkLock);
+		register(IPCTask.setLock);
+		register(Viewer.loadEnvironment);
+		register(Viewer.loadUserInterface);
 	}
 
 	/**
 	 * Load the runtime environment.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
-	private static TaskOutcome loadEnvironment() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task loadEnvironment = new Task((task) -> {
 
-		if (!Environment.load(TMP, LOG, LIB)) {
-			try {
-				Environment.setup();
-			} catch (RuntimeException e) {
-				return task.failure(e);
-			}
-		}
+		if (!Environment.load(TMP, LOG, LIB))
+			Environment.setup();
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Load and show the user interface.
-	 * 
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load user interface")
-	private static TaskOutcome loadUserInterface() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task loadUserInterface = new Task((task) -> {
+		Screen screen = new DefaultTerminalFactory().setForceTextTerminal(true).createScreen();
+		screen.startScreen();
 
-		try {
-			Screen screen = new DefaultTerminalFactory().setForceTextTerminal(true).createScreen();
-			screen.startScreen();
+		WindowBasedTextGUI textGUI = new MultiWindowTextGUI(new SeparateTextGUIThread.Factory(), screen);
+		((AsynchronousTextGUIThread) textGUI.getGUIThread()).start();
 
-			WindowBasedTextGUI textGUI = new MultiWindowTextGUI(new SeparateTextGUIThread.Factory(), screen);
-			((AsynchronousTextGUIThread) textGUI.getGUIThread()).start();
+		// textGUI.addWindow(new LogPanel());
+		MainWindow window = new MainWindow();
+		textGUI.addWindow(window);
+		textGUI.updateScreen();
 
-			// textGUI.addWindow(new LogPanel());
-			MainWindow window = new MainWindow();
-			textGUI.addWindow(window);
-			textGUI.updateScreen();
-
-			// Start the animator. If another Tween-able type is added in addition to
-			// MovablePanel, this statement needs to move.
-			SLAnimator.start(textGUI.getGUIThread(), window);
-		} catch (IOException e) {
-			return task.failure(e);
-		}
+		// Start the animator. If another Tween-able type is added in addition to
+		// MovablePanel, this statement needs to move.
+		SLAnimator.start(textGUI.getGUIThread(), window);
 
 		return task.success();
+	});
+
+	private Viewer() {
+	}
+
+	static {
+		MainDispatch.register(Viewer.class);
 	}
 
 }

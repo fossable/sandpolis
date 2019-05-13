@@ -21,19 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.function.Supplier;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.MainDispatch.IdleTask;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
-import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
-import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
-import com.sandpolis.core.instance.idle.IdleLoop;
+import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
-import com.sandpolis.core.proto.util.Result.Outcome;
 
 class MainDispatchTest {
 
@@ -42,7 +38,7 @@ class MainDispatchTest {
 		// Use reflection to manually reset MainDispatch
 		Field tasks = MainDispatch.class.getDeclaredField("tasks");
 		tasks.setAccessible(true);
-		tasks.set(null, new ArrayList<Supplier<Outcome>>());
+		tasks.set(null, new ArrayList<Task>());
 
 		Field shutdown = MainDispatch.class.getDeclaredField("shutdown");
 		shutdown.setAccessible(true);
@@ -59,101 +55,71 @@ class MainDispatchTest {
 		Field instance = MainDispatch.class.getDeclaredField("instance");
 		instance.setAccessible(true);
 		instance.set(null, null);
+
+		Field flavor = MainDispatch.class.getDeclaredField("flavor");
+		flavor.setAccessible(true);
+		flavor.set(null, null);
+
+		MainDispatch.register(EmptyTest.class);
+		MainDispatch.register(SuccessTest.class);
+		MainDispatch.register(NonfatalTest.class);
 	}
 
 	/**
 	 * Test a main that performs no configuration
 	 */
-	static class Empty {
+	static class EmptyTest {
 		public static void main(String[] args) {
 			assertArrayEquals(args, new String[] {});
 		}
 	}
 
 	@Test
-	void testDispatchEmpty() {
-		MainDispatch.dispatch(Empty.class, new String[] {}, Instance.CHARCOAL, InstanceFlavor.NONE);
+	@DisplayName("Dispatch a class that registers nothing")
+	void dispatch_1() {
+		MainDispatch.dispatch(EmptyTest.class, new String[] {}, Instance.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 	/**
 	 * Test a main that performs a successful configuration
 	 */
-	static class NoFailures {
+	static class SuccessTest {
 		public static void main(String[] args) {
 			assertArrayEquals(args, new String[] { "37434" });
-			MainDispatch.register(NoFailures::setup1);
+			MainDispatch.register(SuccessTest.setup);
 		}
 
 		@InitializationTask(name = "test", fatal = false)
-		private static TaskOutcome setup1() {
-			return TaskOutcome.begin(new Object() {
-			}.getClass().getEnclosingMethod()).success();
-		}
+		private static final Task setup = new Task((task) -> {
+			return task.success();
+		});
 	}
 
 	@Test
-	void testDispatchNoFailures() {
-		MainDispatch.dispatch(NoFailures.class, new String[] { "37434" }, Instance.CHARCOAL, InstanceFlavor.NONE);
+	@DisplayName("Dispatch a class that is successful")
+	void dispatch_2() {
+		MainDispatch.dispatch(SuccessTest.class, new String[] { "37434" }, Instance.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 	/**
 	 * Test a main that encounters a nonfatal error
 	 */
-	static class Nonfatal {
+	static class NonfatalTest {
 		public static void main(String[] args) {
 			assertArrayEquals(args, new String[] { "37434" });
-			MainDispatch.register(Nonfatal::setup1);
+			MainDispatch.register(NonfatalTest.setup);
 		}
 
 		@InitializationTask(name = "test", fatal = false)
-		private static TaskOutcome setup1() {
-			return TaskOutcome.begin(new Object() {
-			}.getClass().getEnclosingMethod()).failure();
-		}
+		private static final Task setup = new Task((task) -> {
+			return task.failure();
+		});
 	}
 
 	@Test
-	void testDispatchFatal() {
-		MainDispatch.dispatch(Nonfatal.class, new String[] { "37434" }, Instance.CHARCOAL, InstanceFlavor.NONE);
-	}
-
-	/**
-	 * Test a main that configures an idle loop
-	 */
-	static class Idle {
-		public static void main(String[] args) {
-			MainDispatch.register(new IdleLoop());
-			MainDispatch.registerIdle(Idle::idleTask);
-		}
-
-		@IdleTask
-		private static boolean idleTask() {
-			return true;
-		}
-	}
-
-	@Test
-	void testIdle() {
-		MainDispatch.dispatch(Idle.class, new String[] {}, Instance.CHARCOAL, InstanceFlavor.NONE);
-	}
-
-	/**
-	 * Test a main that configures a shutdown task
-	 */
-	static class Shutdown {
-
-		public static void main(String[] args) {
-			MainDispatch.registerShutdown(Shutdown::shutdownTask);
-		}
-
-		@ShutdownTask
-		private static void shutdownTask() {
-		}
-	}
-
-	@Test
-	void testShutdown() {
-		MainDispatch.dispatch(Shutdown.class, new String[] {}, Instance.CHARCOAL, InstanceFlavor.NONE);
+	@DisplayName("Dispatch a class that encounters a non-fatal error")
+	void dispatch_3() {
+		MainDispatch.dispatch(NonfatalTest.class, new String[] { "37434" }, Instance.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 }

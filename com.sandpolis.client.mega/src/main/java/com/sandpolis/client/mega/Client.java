@@ -36,13 +36,12 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.cmd.PluginCmd;
 import com.sandpolis.core.instance.BasicTasks;
-import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
-import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
+import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
@@ -90,27 +89,23 @@ public final class Client {
 		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
 				Core.SO_BUILD.getNumber());
 
-		MainDispatch.register(BasicTasks::loadConfiguration);
-		MainDispatch.register(IPCTask::load);
-		MainDispatch.register(IPCTask::checkLock);
-		MainDispatch.register(IPCTask::setLock);
-		MainDispatch.register(Client::install);
-		MainDispatch.register(Client::loadEnvironment);
-		MainDispatch.register(BasicTasks::loadStores);
-		MainDispatch.register(Client::loadStores);
-		MainDispatch.register(Client::loadPlugins);
-		MainDispatch.register(Client::beginConnectionRoutine);
+		MainDispatch.register(BasicTasks.loadConfiguration);
+		MainDispatch.register(IPCTask.load);
+		MainDispatch.register(IPCTask.checkLock);
+		MainDispatch.register(IPCTask.setLock);
+		MainDispatch.register(Client.install);
+		MainDispatch.register(Client.loadEnvironment);
+		MainDispatch.register(BasicTasks.loadStores);
+		MainDispatch.register(Client.loadStores);
+		MainDispatch.register(Client.loadPlugins);
+		MainDispatch.register(Client.beginConnectionRoutine);
 	}
 
 	/**
 	 * Install the client if necessary.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Install client", fatal = true)
-	private static TaskOutcome install() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task install = new Task((task) -> {
 
 		if (Environment.JAR == null)
 			return task.skipped();
@@ -119,63 +114,38 @@ public final class Client {
 		Path base = Paths.get(SO_CONFIG.getExecution().getInstallPathOrDefault(0, "."));// TODO 0
 		Path lib = base.resolve("lib");
 
-		try {
-			Files.createDirectories(base);
-			Files.createDirectories(lib);
-		} catch (IOException e) {
-			return task.failure(e);
-		}
+		Files.createDirectories(base);
+		Files.createDirectories(lib);
 
-		try {
-			Files.copy(Client.class.getResourceAsStream("/main/main.jar"), base.resolve("client.jar"));
-		} catch (Exception e) {
-			return task.failure(e);
-		}
+		Files.copy(Client.class.getResourceAsStream("/main/main.jar"), base.resolve("client.jar"));
 
 		for (Artifact artifact : Core.SO_MATRIX.getArtifactList()) {
 			String name = fromArtifact(artifact).filename;
 
-			try {
-				Files.copy(Client.class.getResourceAsStream("/lib/" + name), lib.resolve(name));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			Files.copy(Client.class.getResourceAsStream("/lib/" + name), lib.resolve(name));
 		}
 
 		System.exit(0);
-		return task.failure();
-	}
+		return task.success();
+	});
 
 	/**
 	 * Load the runtime environment.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
-	private static TaskOutcome loadEnvironment() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task loadEnvironment = new Task((task) -> {
 
-		if (!Environment.load(TMP, LOG, LIB)) {
-			try {
-				Environment.setup();
-			} catch (RuntimeException e) {
-				return task.failure(e);
-			}
-		}
+		if (!Environment.load(TMP, LOG, LIB))
+			Environment.setup();
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Load static stores.
-	 * 
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
-	public static TaskOutcome loadStores() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task loadStores = new Task((task) -> {
 
 		// Load ThreadStore
 		ThreadStore.register(new NioEventLoopGroup(2), net.exelet);
@@ -189,41 +159,24 @@ public final class Client {
 		PluginStore.init(new MemoryListStoreProvider<Plugin>(Plugin.class));
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Load plugins.
-	 *
-	 * @return The task's outcome
 	 */
-	@InitializationTask(name = "Load client plugins")
-	private static TaskOutcome loadPlugins() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
-		if (Config.getBoolean(plugin.enabled))
-			return task.skipped();
-
-		try {
-			PluginStore.scanPluginDirectory();
-
-			PluginStore.loadPlugins();
-		} catch (Exception e) {
-			return task.failure(e);
-		}
+	@InitializationTask(name = "Load client plugins", condition = plugin.enabled)
+	private static final Task loadPlugins = new Task((task) -> {
+		PluginStore.scanPluginDirectory();
+		PluginStore.loadPlugins();
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Begin the connection routine.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Begin the connection routine", fatal = true)
-	private static TaskOutcome beginConnectionRoutine() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	private static final Task beginConnectionRoutine = new Task((task) -> {
 
 		Signaler.register(SRV_ESTABLISHED, () -> {
 			var auth = SO_CONFIG.getAuthentication();
@@ -257,8 +210,12 @@ public final class Client {
 		Signaler.fire(SRV_LOST);
 
 		return task.success();
-	}
+	});
 
 	private Client() {
+	}
+
+	static {
+		MainDispatch.register(Client.class);
 	}
 }

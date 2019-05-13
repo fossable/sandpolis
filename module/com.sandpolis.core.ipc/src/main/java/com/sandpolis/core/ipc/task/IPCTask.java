@@ -17,14 +17,13 @@
  *****************************************************************************/
 package com.sandpolis.core.ipc.task;
 
-import java.io.IOException;
 import java.util.concurrent.Executors;
 
-import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
-import com.sandpolis.core.instance.MainDispatch.TaskOutcome;
+import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.PoolConstant;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.IPCStore;
@@ -40,66 +39,44 @@ public final class IPCTask {
 
 	/**
 	 * Load the IPC module.
-	 *
-	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load IPC module", fatal = true)
-	public static TaskOutcome load() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
+	public static final Task load = new Task((task) -> {
 		IPCStore.init();
 
 		ThreadStore.register(Executors.newSingleThreadExecutor(), PoolConstant.net.ipc.listener);
 		ThreadStore.register(Executors.newSingleThreadExecutor(), PoolConstant.net.ipc.receptor);
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Check for an existing instance lock. If found, this instance will exit.
-	 *
-	 * @return The task's outcome
 	 */
-	@InitializationTask(name = "Check instance lock", fatal = true)
-	public static TaskOutcome checkLock() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
+	@InitializationTask(name = "Check instance lock", condition = net.ipc.mutex, fatal = true)
+	public static final Task checkLock = new Task((task) -> {
 
-		if (!Config.getBoolean(net.ipc.mutex))
-			return task.skipped();
-
-		try {
-			RS_Metadata metadata = IPCStore.queryInstance(Core.INSTANCE, Core.FLAVOR).orElse(null);
-			if (metadata != null) {
-				return task.failure("Another instance has been detected (process " + metadata.getPid() + ")");
-			}
-		} catch (Exception e) {
-			return task.failure(e);
-		}
+		RS_Metadata metadata = IPCStore.queryInstance(Core.INSTANCE, Core.FLAVOR).orElse(null);
+		if (metadata != null)
+			return task.failure("Another instance has been detected (process " + metadata.getPid() + ")");
 
 		return task.success();
-	}
+	});
 
 	/**
 	 * Set a new instance lock.
-	 *
-	 * @return The task's outcome
 	 */
-	@InitializationTask(name = "Set instance lock", fatal = false)
-	public static TaskOutcome setLock() {
-		TaskOutcome task = TaskOutcome.begin(new Object() {
-		}.getClass().getEnclosingMethod());
-
-		try {
-			IPCStore.listen(Core.INSTANCE, Core.FLAVOR);
-		} catch (IOException e) {
-			return task.failure(e);
-		}
+	@InitializationTask(name = "Set instance lock", condition = net.ipc.mutex, fatal = false)
+	public static final Task setLock = new Task((task) -> {
+		IPCStore.listen(Core.INSTANCE, Core.FLAVOR);
 
 		return task.success();
-	}
+	});
 
 	private IPCTask() {
+	}
+
+	static {
+		MainDispatch.register(IPCTask.class);
 	}
 }
