@@ -12,7 +12,6 @@ buildscript {
 plugins {
 	id 'eclipse'
 	id 'java'
-	id 'com.github.onslip.gradle-one-jar' version '1.0.5'
 }
 
 apply plugin: 'com.sandpolis.gradle.soi'
@@ -54,22 +53,16 @@ dependencies {
 jar {
 	manifest {
 		attributes(
-			'Main-Class': 'com.sandpolis.client.mega.Main'
+			'Main-Class': 'com.github.cilki.compact.BootProxy',
+			'Boot-Class': 'com.sandpolis.client.mega.Main'
 		)
 	}
-}
 
-// Add OneJar task to produce a jar capable of nested dependencies, but don't
-// actually add them yet
-task one_jar(type: OneJar) {
-	mainClass = 'com.sandpolis.client.mega.Main' 
-}
-project.tasks.assemble.dependsOn project.tasks.one_jar
-
-// Create a custom configuration containing the nested jar
-configurations {
-	onejarArtifact.extendsFrom runtimeClasspath
-}
-artifacts {
-	onejarArtifact one_jar
+	from {
+		configurations.runtimeClasspath.filter {
+			it.name.startsWith("compact-classloader")
+		}.collect {
+			zipTree(it)
+		}
+	}
 }

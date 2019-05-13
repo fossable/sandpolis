@@ -24,13 +24,14 @@ dependencies {
 	compileOnly project(':module:com.sandpolis.core.instance:constants')
 	compileOnly project('constants')
 
-	implementation project(path: ':com.sandpolis.client.mega', configuration: 'onejarArtifact')
+	implementation project(':com.sandpolis.client.mega')
 	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':module:com.sandpolis.core.ipc')
 	implementation project(':module:com.sandpolis.core.net')
 	implementation project(':module:com.sandpolis.core.permission')
 	implementation project(':module:com.sandpolis.core.profile')
 	implementation project(':module:com.sandpolis.core.proto')
+	implementation project(':module:com.sandpolis.core.soi')
 	implementation project(':module:com.sandpolis.core.storage.hibernate')
 	implementation project(':module:com.sandpolis.core.util')
 	

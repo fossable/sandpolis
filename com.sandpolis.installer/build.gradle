@@ -7,7 +7,6 @@ plugins {
 	id 'eclipse'
 	id 'java'
 
-	id 'com.github.onslip.gradle-one-jar' version '1.0.5'
 	id 'org.openjfx.javafxplugin' version '0.0.7'
 }
 
@@ -41,28 +40,14 @@ dependencies {
 jar {
 	manifest {
 		attributes(
-			'Main-Class': 'com.sandpolis.installer.Main'
+			'Main-Class': 'com.github.cilki.compact.BootProxy',
+			'Boot-Class': 'com.sandpolis.installer.Main'
 		)
 	}
 
-//	from {
-//		configurations.runtimeClasspath.filter {
-//			it.getName().equals("CompactClassLoader.jar")
-//		}.collect {
-//			it.isDirectory() ? it : zipTree(it)
-//		}
-//	}
-//
-//	from {
-//		configurations.runtimeClasspath.filter {
-//			!getName().equals("CompactClassLoader.jar")
-//		}.collect {
-//			it
-//		}
-//	}
-}
-
-task one_jar(type: OneJar) {
-	mainClass = 'com.sandpolis.installer.Main'
-	targetConfiguration = configurations.runtimeClasspath
+	from {
+		configurations.runtimeClasspath.collect {
+			it.name.startsWith("compact-classloader") ? zipTree(it) : it
+		}
+	}
 }
