@@ -17,69 +17,64 @@
  *****************************************************************************/
 package com.sandpolis.core.util;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigInteger;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-public class RandUtilTest {
+class RandUtilTest {
 
 	@Test
-	public void testNextInt() {
-		int min = -2;
-		int max = 10;
+	@DisplayName("Test bounded integer generation")
+	void nextInt_1() {
 
-		for (int i = 0; i < 100000; i++) {
-			int rand = RandUtil.nextInt(min, max);
-			assertTrue(rand >= min);
-			assertTrue(rand <= max);
-		}
+		for (int[] range : new int[][] { { -2, 10 }, { -1, 1 }, { 1, 100 }, { -100, -1 }, { 0, 1 } }) {
+			int min = range[0];
+			int max = range[1];
 
-		min = -1;
-		max = 0;
-
-		for (int i = 0; i < 100000; i++) {
-			int rand = RandUtil.nextInt(min, max);
-			assertTrue(rand >= min);
-			assertTrue(rand <= max);
-		}
-
-	}
-
-	@Test
-	public void testNextLong() {
-		long min = -2;
-		long max = 10;
-
-		for (int i = 0; i < 100000; i++) {
-			long rand = RandUtil.nextLong(min, max);
-			assertTrue(rand >= min);
-			assertTrue(rand <= max);
-		}
-
-		min = -1;
-		max = 0;
-
-		for (int i = 0; i < 100000; i++) {
-			long rand = RandUtil.nextLong(min, max);
-			assertTrue(rand >= min);
-			assertTrue(rand <= max);
-		}
-
-	}
-
-	@Test
-	public void testNextAlphabetic() {
-		String alpha = RandUtil.nextAlphabetic(10000);
-		for (int i = 0; i < alpha.length(); i++) {
-			assertTrue(Character.isLetter(alpha.charAt(i)));
+			for (int i = 0; i < 1000; i++) {
+				int rand = RandUtil.nextInt(min, max);
+				assertTrue(rand >= min);
+				assertTrue(rand <= max);
+			}
 		}
 	}
 
 	@Test
-	public void testNextNumeric() {
-		new BigInteger(RandUtil.nextNumeric(10000));
+	@DisplayName("Test bounded long generation")
+	void nextLong_1() {
+
+		for (long[] range : new long[][] { { -2, 10 }, { -1, 1 }, { 1, 100 }, { -100, -1 }, { 0, 1 } }) {
+			long min = range[0];
+			long max = range[1];
+
+			for (int i = 0; i < 1000; i++) {
+				long rand = RandUtil.nextLong(min, max);
+				assertTrue(rand >= min);
+				assertTrue(rand <= max);
+			}
+		}
+	}
+
+	@Test
+	@DisplayName("Test alphabetic string generation")
+	void nextAlphabetic_1() {
+		assertEquals("", RandUtil.nextAlphabetic(0));
+
+		for (char c : RandUtil.nextAlphabetic(1000).toCharArray()) {
+			assertTrue(Character.isLetter(c));
+		}
+	}
+
+	@Test
+	@DisplayName("Test numeric string generation")
+	void nextNumeric_1() {
+		assertEquals("", RandUtil.nextNumeric(0));
+		assertDoesNotThrow(() -> new BigInteger(RandUtil.nextNumeric(1000)));
 	}
 
 }
