@@ -17,8 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.installer.scene.main;
 
-import java.util.function.Consumer;
-
 import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.installer.install.AbstractInstaller;
 import com.sandpolis.installer.install.LinuxInstaller;
@@ -29,8 +27,11 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TitledPane;
+import javafx.scene.input.Clipboard;
 
 public class MainController {
 
@@ -44,11 +45,30 @@ public class MainController {
 	private CheckBox chk_viewer_cli;
 
 	@FXML
+	private CheckBox chk_client;
+
+	@FXML
+	private TitledPane pane_server;
+
+	@FXML
+	private TitledPane pane_viewer_jfx;
+
+	@FXML
+	private TitledPane pane_viewer_cli;
+
+	@FXML
+	private TitledPane pane_client;
+
+	@FXML
+	private TextField client_key;
+
+	@FXML
 	private Button btn_install;
 
 	@FXML
-	private BorderPane pane;
+	private Label status;
 
+	@FXML
 	private ProgressBar progress;
 
 	/**
@@ -57,21 +77,16 @@ public class MainController {
 	private AbstractInstaller installer;
 
 	public MainController() {
-		Consumer<String> status = s -> {
-		};
-		Consumer<Double> progress = d -> {
-			this.progress.setProgress(d);
-		};
 
 		switch (PlatformUtil.queryOsType()) {
 		case LINUX:
-			installer = new LinuxInstaller(status, progress);
+			installer = new LinuxInstaller(status::setText, progress::setProgress);
 			break;
 		case MACOS:
-			installer = new LinuxInstaller(status, progress);
+			installer = new LinuxInstaller(status::setText, progress::setProgress);
 			break;
 		case WINDOWS:
-			installer = new WindowsInstaller(status, progress);
+			installer = new WindowsInstaller(status::setText, progress::setProgress);
 			break;
 		default:
 			throw new RuntimeException("No installer found");
@@ -83,6 +98,12 @@ public class MainController {
 		chk_server.selectedProperty().addListener(this::refresh);
 		chk_viewer_jfx.selectedProperty().addListener(this::refresh);
 		chk_viewer_cli.selectedProperty().addListener(this::refresh);
+		chk_client.selectedProperty().addListener(this::refresh);
+
+		pane_server.expandedProperty().bind(chk_server.selectedProperty());
+		pane_viewer_jfx.expandedProperty().bind(chk_viewer_jfx.selectedProperty());
+		pane_viewer_cli.expandedProperty().bind(chk_viewer_cli.selectedProperty());
+		pane_client.expandedProperty().bind(chk_client.selectedProperty());
 	}
 
 	/**
@@ -90,15 +111,21 @@ public class MainController {
 	 */
 	private void refresh(ObservableValue<?> p, boolean o, boolean n) {
 		// Ensure at least one box is checked
-		btn_install
-				.setDisable(!chk_server.isSelected() && !chk_viewer_jfx.isSelected() && !chk_viewer_cli.isSelected());
+		btn_install.setDisable(!chk_server.isSelected() && !chk_viewer_jfx.isSelected() && !chk_viewer_cli.isSelected()
+				&& !chk_client.isSelected());
+	}
+
+	@FXML
+	private void paste_key() {
+		client_key.setText(Clipboard.getSystemClipboard().getString());
 	}
 
 	@FXML
 	private void install() {
 
 		// Replace buttons with a progressbar
-		pane.setBottom(progress);
+		progress.setVisible(true);
+		status.setVisible(true);
 
 		new Thread(new Task<Void>() {
 

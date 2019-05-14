@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.store.artifact.ArtifactUtil;
-import com.sandpolis.core.proto.util.Platform.OsType;
 import com.sandpolis.core.soi.SoiUtil;
 
 /**
@@ -107,8 +106,11 @@ public abstract class AbstractInstaller {
 		Path lib = destination.resolve("lib");
 		for (var artifact : SoiUtil.readMatrix(destination.resolve(fromCoordinate(coordinate).filename))
 				.getArtifactList()) {
-			if (!Files.exists(lib.resolve(fromCoordinate(artifact.getCoordinates()).filename)))
+			if (!Files.exists(lib.resolve(fromCoordinate(artifact.getCoordinates()).filename))) {
+				status.accept("Downloading " + artifact.getCoordinates());
+				progress.accept(0.0);
 				ArtifactUtil.download(lib, artifact.getCoordinates());
+			}
 		}
 	}
 

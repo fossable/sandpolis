@@ -4,27 +4,137 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<BorderPane id="background" fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="256.0" prefWidth="311.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.installer.scene.main.MainController">
+<BorderPane id="background" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="541.0" prefWidth="311.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.installer.scene.main.MainController">
    <bottom>
-      <ButtonBar fx:id="button_bar" BorderPane.alignment="CENTER">
-        <buttons>
-          <Button fx:id="btn_install" mnemonicParsing="false" onAction="#install" text="Install" />
-        </buttons>
-         <padding>
-            <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
-         </padding>
-      </ButtonBar>
+      <BorderPane BorderPane.alignment="CENTER">
+         <center>
+            <ButtonBar fx:id="button_bar">
+              <buttons>
+                <Button fx:id="btn_install" mnemonicParsing="false" onAction="#install" text="Install" />
+              </buttons>
+               <padding>
+                  <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+               </padding>
+            </ButtonBar>
+         </center>
+         <top>
+            <VBox alignment="TOP_CENTER" spacing="4.0" BorderPane.alignment="CENTER">
+               <children>
+                  <Label fx:id="status" text="Label" visible="false" />
+                  <ProgressBar progress="0.0" visible="false" />
+               </children>
+               <padding>
+                  <Insets bottom="5.0" />
+               </padding>
+            </VBox>
+         </top>
+      </BorderPane>
    </bottom>
-   <top>
+   <center>
       <VBox prefHeight="200.0" prefWidth="100.0" spacing="4.0" BorderPane.alignment="CENTER">
          <children>
-            <CheckBox fx:id="chk_server" mnemonicParsing="false" selected="true" text="Server" />
-            <CheckBox fx:id="chk_viewer_jfx" mnemonicParsing="false" selected="true" text="Viewer GUI" />
-            <CheckBox fx:id="chk_viewer_cli" mnemonicParsing="false" text="Viewer CLI" />
+            <TitledPane fx:id="pane_server" collapsible="false">
+               <graphic>
+                  <CheckBox fx:id="chk_server" mnemonicParsing="false" selected="true" text="Install Server" />
+               </graphic>
+               <content>
+                  <BorderPane>
+                     <center>
+                        <Label text="Install the Sandpolis server which accepts connections from clients and viewers." wrapText="true" BorderPane.alignment="CENTER_LEFT">
+                           <font>
+                              <Font size="11.0" />
+                           </font>
+                        </Label>
+                     </center>
+                  </BorderPane>
+               </content>
+            </TitledPane>
+            <TitledPane fx:id="pane_viewer_jfx" collapsible="false">
+               <graphic>
+                  <CheckBox fx:id="chk_viewer_jfx" mnemonicParsing="false" selected="true" text="Install Viewer GUI" />
+               </graphic>
+               <content>
+                  <BorderPane>
+                     <center>
+                        <Label text="Install the Sandpolis GUI viewer." wrapText="true" BorderPane.alignment="BOTTOM_LEFT">
+                           <font>
+                              <Font size="11.0" />
+                           </font>
+                        </Label>
+                     </center>
+                  </BorderPane>
+               </content>
+            </TitledPane>
+            <TitledPane fx:id="pane_viewer_cli" collapsible="false">
+               <graphic>
+                  <CheckBox fx:id="chk_viewer_cli" mnemonicParsing="false" text="Install Viewer CLI" />
+               </graphic>
+               <content>
+                  <BorderPane>
+                     <center>
+                        <Label text="Install the Sandpolis CLI viewer." wrapText="true" BorderPane.alignment="CENTER_LEFT">
+                           <font>
+                              <Font size="11.0" />
+                           </font>
+                        </Label>
+                     </center>
+                  </BorderPane>
+               </content>
+            </TitledPane>
+            <TitledPane fx:id="pane_client" collapsible="false">
+               <graphic>
+                  <CheckBox fx:id="chk_client" mnemonicParsing="false" text="Install Client" />
+               </graphic>
+               <content>
+                  <BorderPane>
+                     <bottom>
+                        <VBox spacing="2.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <Label text="Enter Sync Key:" />
+                              <HBox>
+                                 <children>
+                                    <TextField fx:id="client_key" HBox.hgrow="ALWAYS" />
+                                    <Button mnemonicParsing="false" onAction="#paste_key" text="P" />
+                                 </children>
+                              </HBox>
+                           </children>
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
+                        </VBox>
+                     </bottom>
+                     <center>
+                        <Label text="Install the Sandpolis client agent on this computer and associate it with a server by pasting a sync key below." wrapText="true" BorderPane.alignment="CENTER_LEFT">
+                           <font>
+                              <Font size="11.0" />
+                           </font>
+                        </Label>
+                     </center>
+                  </BorderPane>
+               </content>
+            </TitledPane>
          </children>
       </VBox>
+   </center>
+   <top>
+      <ImageView fitHeight="70.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+         <image>
+            <Image url="/image/about/banner.png" />
+         </image>
+      </ImageView>
    </top>
 </BorderPane>

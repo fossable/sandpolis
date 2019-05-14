@@ -19,8 +19,6 @@ package com.sandpolis.installer;
 
 import static com.sandpolis.core.instance.MainDispatch.register;
 
-import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,11 +27,7 @@ import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.ipc.IPCStore;
-import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
 import com.sandpolis.core.ipc.task.IPCTask;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.AsciiUtil;
 
 import javafx.application.Application;
@@ -61,21 +55,8 @@ public final class Installer {
 		register(IPCTask.load);
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
-		register(Installer.findInstances);
 		register(Installer.loadUserInterface);
 	}
-
-	/**
-	 * Find any running instances.
-	 */
-	@InitializationTask(name = "Find running instances")
-	private static final Task findInstances = new Task((task) -> {
-		Optional<RS_Metadata> metadata = IPCStore.queryInstance(Instance.INSTALLER, InstanceFlavor.NONE);
-		if (metadata.isPresent())
-			return task.failure("A Sandpolis instance has been detected (process " + metadata.get().getPid() + ")");
-
-		return task.success();
-	});
 
 	/**
 	 * Load instance configuration.
