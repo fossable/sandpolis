@@ -35,7 +35,7 @@ public final class PlatformUtil {
 	/**
 	 * Detect the OS type of the current system.
 	 * 
-	 * @return The system's {@link OsType} or {@link #UNRECOGNIZED}
+	 * @return The system's {@link OsType} or {@code UNRECOGNIZED}
 	 */
 	public static OsType queryOsType() {
 		String name = System.getProperty("os.name").toLowerCase();

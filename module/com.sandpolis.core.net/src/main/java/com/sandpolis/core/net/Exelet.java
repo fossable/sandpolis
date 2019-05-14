@@ -86,7 +86,7 @@ public abstract class Exelet {
 	public static @interface Permission {
 
 		/**
-		 * The permission as defined in {@link PermissionConstants}.
+		 * The permission identifier.
 		 */
 		short permission();
 	}
