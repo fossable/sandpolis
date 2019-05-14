@@ -28,6 +28,7 @@ import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.viewer.jfx.PrefConstant.ui;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 
+import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -70,14 +71,18 @@ public final class StageStore {
 	 * Hide all stages in the store.
 	 */
 	public static void hideAll() {
-		loaded.stream().forEach(stage -> stage.hide());
+		Platform.runLater(() -> {
+			loaded.stream().forEach(stage -> stage.hide());
+		});
 	}
 
 	/**
 	 * Show all stages in the store.
 	 */
 	public static void showAll() {
-		loaded.stream().forEach(stage -> stage.show());
+		Platform.runLater(() -> {
+			loaded.stream().forEach(stage -> stage.show());
+		});
 	}
 
 	/**
@@ -87,7 +92,9 @@ public final class StageStore {
 	 */
 	public static void close(Stage stage) {
 		loaded.remove(stage);
-		stage.close();
+		Platform.runLater(() -> {
+			stage.close();
+		});
 	}
 
 	/**
@@ -99,9 +106,11 @@ public final class StageStore {
 		Objects.requireNonNull(theme);
 
 		PrefStore.putString(ui.theme, theme);
-		loaded.stream().map(stage -> stage.getScene().getStylesheets()).forEach(styles -> {
-			styles.clear();
-			styles.add("/css/" + theme + ".css");
+		Platform.runLater(() -> {
+			loaded.stream().map(stage -> stage.getScene().getStylesheets()).forEach(styles -> {
+				styles.clear();
+				styles.add("/css/" + theme + ".css");
+			});
 		});
 	}
 
