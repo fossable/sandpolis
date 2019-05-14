@@ -90,9 +90,10 @@ public final class Installer {
 		public void start(Stage stage) throws Exception {
 			Parent node = new FXMLLoader(UI.class.getResource("/fxml/Main.fxml")).load();
 
-			Scene scene = new Scene(node, 220, 220 * 0.618);
+			Scene scene = new Scene(node, 430, 600);
 			scene.getStylesheets().add("/css/default.css");
 			stage.setScene(scene);
+			stage.setResizable(false);
 			stage.show();
 		}
 	}

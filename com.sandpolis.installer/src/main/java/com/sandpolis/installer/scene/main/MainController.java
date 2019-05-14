@@ -17,11 +17,15 @@
  *****************************************************************************/
 package com.sandpolis.installer.scene.main;
 
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
 import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.installer.install.AbstractInstaller;
 import com.sandpolis.installer.install.LinuxInstaller;
 import com.sandpolis.installer.install.WindowsInstaller;
 
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -31,6 +35,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 
 public class MainController {
@@ -71,39 +77,49 @@ public class MainController {
 	@FXML
 	private ProgressBar progress;
 
+	@FXML
+	private ImageView banner;
+
 	/**
 	 * The installer to use.
 	 */
 	private AbstractInstaller installer;
 
-	public MainController() {
+	@FXML
+	private void initialize() {
+		Consumer<String> status = (s) -> {
+			Platform.runLater(() -> this.status.setText(s));
+		};
+
+		Consumer<Double> progress = (p) -> {
+			Platform.runLater(() -> this.progress.setProgress(p));
+		};
 
 		switch (PlatformUtil.queryOsType()) {
 		case LINUX:
-			installer = new LinuxInstaller(status::setText, progress::setProgress);
+			installer = new LinuxInstaller(status, progress);
 			break;
 		case MACOS:
-			installer = new LinuxInstaller(status::setText, progress::setProgress);
+			installer = new LinuxInstaller(status, progress);
 			break;
 		case WINDOWS:
-			installer = new WindowsInstaller(status::setText, progress::setProgress);
+			installer = new WindowsInstaller(status, progress);
 			break;
 		default:
 			throw new RuntimeException("No installer found");
 		}
-	}
 
-	@FXML
-	private void initialize() {
 		chk_server.selectedProperty().addListener(this::refresh);
 		chk_viewer_jfx.selectedProperty().addListener(this::refresh);
 		chk_viewer_cli.selectedProperty().addListener(this::refresh);
 		chk_client.selectedProperty().addListener(this::refresh);
 
-		pane_server.expandedProperty().bind(chk_server.selectedProperty());
-		pane_viewer_jfx.expandedProperty().bind(chk_viewer_jfx.selectedProperty());
-		pane_viewer_cli.expandedProperty().bind(chk_viewer_cli.selectedProperty());
-		pane_client.expandedProperty().bind(chk_client.selectedProperty());
+		pane_server.expandedProperty().bindBidirectional(chk_server.selectedProperty());
+		pane_viewer_jfx.expandedProperty().bindBidirectional(chk_viewer_jfx.selectedProperty());
+		pane_viewer_cli.expandedProperty().bindBidirectional(chk_viewer_cli.selectedProperty());
+		pane_client.expandedProperty().bindBidirectional(chk_client.selectedProperty());
+
+		banner.setImage(new Image(MainController.class.getResourceAsStream("/image/logo.png")));
 	}
 
 	/**
@@ -131,18 +147,31 @@ public class MainController {
 
 			{
 				setOnSucceeded(event -> {
-					System.exit(0);
 				});
 
 				setOnFailed(event -> {
+					btn_install.setVisible(false);
+					progress.setVisible(false);
+					status.setText("Installation failed!");
+
 					exceptionProperty().get().printStackTrace();
-					System.exit(0);
 				});
 			}
 
 			@Override
 			public Void call() throws Exception {
-				installer.install(chk_server.isSelected(), chk_viewer_jfx.isSelected(), chk_viewer_cli.isSelected());
+				double progressIncrement = 100 / Stream.of(chk_server, chk_viewer_jfx, chk_viewer_cli, chk_client)
+						.filter(c -> c.isSelected()).count();
+
+				if (chk_server.isSelected())
+					installer.installServer(progressIncrement);
+				if (chk_viewer_jfx.isSelected())
+					installer.installViewerJfx(progressIncrement);
+				if (chk_viewer_cli.isSelected())
+					installer.installViewerCli(progressIncrement);
+				if (chk_client.isSelected())
+					installer.installClient(progressIncrement, client_key.getText());
+
 				return null;
 			}
 

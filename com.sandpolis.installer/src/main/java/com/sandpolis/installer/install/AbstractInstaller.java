@@ -22,6 +22,7 @@ import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoor
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.store.artifact.ArtifactUtil;
+import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
 import com.sandpolis.core.soi.SoiUtil;
 
 /**
@@ -55,62 +57,96 @@ public abstract class AbstractInstaller {
 	 */
 	private Consumer<Double> progress;
 
+	/**
+	 * The current progress.
+	 */
+	private double progressValue;
+
+	/**
+	 * The Sandpolis version that will be installed.
+	 */
+	private String version;
+
 	public AbstractInstaller(Path destination, Consumer<String> status, Consumer<Double> progress) {
 		this.destination = Objects.requireNonNull(destination);
 		this.status = Objects.requireNonNull(status);
 		this.progress = Objects.requireNonNull(progress);
+
+		if (Config.has("install.version")) {
+			version = Config.get("install.version");
+		}
 	}
 
-	public void install(boolean serverInstall, boolean viewerJfxInstall, boolean viewerCliInstall) throws IOException {
+	public void installServer(double progressIncrement) throws IOException {
 
 		Files.createDirectories(destination);
 
-		if (serverInstall) {
-			log.info("Installing server");
-			install("com.sandpolis:server:");
-			serverPostInstall();
-		}
-		if (viewerJfxInstall) {
-			log.info("Installing viewer GUI");
-			install("com.sandpolis:viewer-jfx:");
-			viewerJfxPostInstall();
-		}
-		if (viewerCliInstall) {
-			log.info("Installing viewer CLI");
-			install("com.sandpolis:viewer-cli:");
-			viewerCliPostInstall();
-		}
+		log.info("Installing server");
+		install(progressIncrement, "com.sandpolis:server:");
+		serverPostInstall();
+	}
+
+	public void installViewerJfx(double progressIncrement) throws IOException {
+
+		Files.createDirectories(destination);
+
+		log.info("Installing viewer GUI");
+		install(progressIncrement, "com.sandpolis:viewer-jfx:");
+		viewerJfxPostInstall();
+	}
+
+	public void installViewerCli(double progressIncrement) throws IOException {
+
+		Files.createDirectories(destination);
+
+		log.info("Installing viewer CLI");
+		install(progressIncrement, "com.sandpolis:viewer-cli:");
+		viewerCliPostInstall();
+	}
+
+	public void installClient(double progressIncrement, String key) throws IOException {
+
+		Files.createDirectories(destination);
+
+		log.info("Installing client");
+		install(progressIncrement, "com.sandpolis:client-mega:");
+		clientPostInstall();
 	}
 
 	/**
 	 * Installs the given artifact into {@link #destination} and all dependencies
 	 * into the lib directory.
 	 * 
-	 * @param coordinate The artifact to install
+	 * @param progressIncrement The amount to increase progress if successful
+	 * @param coordinate        The artifact to install
 	 * @throws IOException
 	 */
-	private void install(String coordinate) throws IOException {
+	private void install(double progressIncrement, String coordinate) throws IOException {
 
-		if (Config.has("install.version")) {
-			coordinate += Config.get("install.version");
-		} else {
+		if (version == null) {
 			// Request latest version number
 			status.accept("Downloading metadata");
-			coordinate += ArtifactUtil.getLatestVersion(coordinate);
+			version = ArtifactUtil.getLatestVersion(coordinate);
 		}
+		coordinate += version;
 
 		// Download executable
+		status.accept("Downloading executable");
 		ArtifactUtil.download(destination, coordinate);
 
 		// Download dependencies
 		Path lib = destination.resolve("lib");
-		for (var artifact : SoiUtil.readMatrix(destination.resolve(fromCoordinate(coordinate).filename))
-				.getArtifactList()) {
+		List<Artifact> dependencies = SoiUtil.readMatrix(destination.resolve(fromCoordinate(coordinate).filename))
+				.getArtifactList();
+
+		for (var artifact : dependencies) {
 			if (!Files.exists(lib.resolve(fromCoordinate(artifact.getCoordinates()).filename))) {
 				status.accept("Downloading " + artifact.getCoordinates());
-				progress.accept(0.0);
 				ArtifactUtil.download(lib, artifact.getCoordinates());
 			}
+
+			progressValue += progressIncrement / dependencies.size();
+			progress.accept(progressValue);
 		}
 	}
 
@@ -132,6 +168,13 @@ public abstract class AbstractInstaller {
 	 * A hook invoked after the viewer cli has been successfully installed.
 	 */
 	protected void viewerCliPostInstall() {
+		// no op
+	}
+
+	/**
+	 * A hook invoked after the client has been successfully installed.
+	 */
+	protected void clientPostInstall() {
 		// no op
 	}
 
