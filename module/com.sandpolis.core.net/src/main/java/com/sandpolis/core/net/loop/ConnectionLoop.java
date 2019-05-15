@@ -17,32 +17,33 @@
  *****************************************************************************/
 package com.sandpolis.core.net.loop;
 
-import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.instance.PoolConstant.net;
+import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.util.Generator.LoopConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.util.concurrent.EventExecutor;
 
 /**
- * A {@link ConnectionLoop} is a {@link Thread} which makes repeated connection
- * attempts to a list of {@link NetworkTarget}s until a connection is made or
- * the maximum iteration count has been reached.
+ * A {@link ConnectionLoop} makes repeated connection attempts to a list of
+ * {@link NetworkTarget}s until a connection is made or the maximum iteration
+ * count has been reached. The connection attempt interval can be configured to
+ * slowly back off.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public class ConnectionLoop extends Thread {
+public final class ConnectionLoop implements Runnable {
 
 	public static final Logger log = LoggerFactory.getLogger(ConnectionLoop.class);
 
@@ -62,10 +63,10 @@ public class ConnectionLoop extends Thread {
 	private Bootstrap bootstrap;
 
 	/**
-	 * The {@link Sock} produced by a successful connection attempt, otherwise
-	 * {@code null}.
+	 * The {@link SockFuture} that will be notified by a successful connection
+	 * attempt.
 	 */
-	private Sock result;
+	private SockFuture future;
 
 	/**
 	 * Create a new single-iteration {@link ConnectionLoop}.
@@ -103,66 +104,77 @@ public class ConnectionLoop extends Thread {
 			this.cycler = new LoopCycle(config.getTimeout(), config.getMaxTimeout(), config.getTimeoutFlatness());
 
 		bootstrap.attr(ChannelConstant.STRICT_CERTS, config.getStrictCerts());
+
+		future = new SockFuture((EventExecutor) ThreadStore.get(net.connection.outgoing));
 	}
 
 	@Override
 	public void run() {
-		List<NetworkTarget> targets = config.getTargetList();
 
 		try {
-			while (!Thread.interrupted()) {
+			while (cycler.getIterations() < config.getMaxIterations()) {
 
-				int timeout = cycler.nextTimeout() / targets.size();
-				for (NetworkTarget n : targets) {
-
+				int timeout = cycler.nextTimeout() / config.getTargetCount();
+				for (NetworkTarget n : config.getTargetList()) {
 					long time = System.currentTimeMillis();
-					SockFuture future = new SockFuture(bootstrap.remoteAddress(n.getAddress(), n.getPort()).connect());
 
-					try {
-						result = future.get(timeout, TimeUnit.MILLISECONDS);
-					} catch (TimeoutException | ExecutionException e) {
-						log.trace("Connection attempt timed out after {} ms", timeout);
-						result = null;
+					SockFuture future = new SockFuture(bootstrap.remoteAddress(n.getAddress(), n.getPort()).connect());
+					future.await(timeout, TimeUnit.MILLISECONDS);
+					if (future.isSuccess() && future.getNow() != null) {
+						this.future.setSuccess(future.getNow());
+						return;
 					}
 
-					if (result != null)
-						return;
+					future.cancel(true);
 
 					time = System.currentTimeMillis() - time;
 					if (time < timeout)
 						Thread.sleep(timeout - time);
 				}
-
-				if (cycler.getIterations() == config.getMaxIterations())
-					return;
 			}
+
+			// Maximum iteration count exceeded
+			future.setSuccess(null);
 		} catch (InterruptedException e) {
-			return;
+			future.setFailure(e);
+		} catch (Exception e) {
+			future.setFailure(e);
 		}
 	}
 
 	/**
-	 * Wait for the {@link ConnectionLoop} to complete.
+	 * Start the {@link ConnectionLoop}.
 	 * 
-	 * @throws InterruptedException
+	 * @return A {@link SockFuture}
 	 */
-	public void await() throws InterruptedException {
-		this.join();
+	public SockFuture start() {
+		return start((ExecutorService) ThreadStore.get(net.connection.outgoing));
 	}
 
 	/**
-	 * Get the resultant {@link Sock} of this {@code ConnectionLoop}.
+	 * Start the {@link ConnectionLoop}.
 	 * 
-	 * @return The connection produced by this {@code ConnectionLoop}
+	 * @param executor The executor service
+	 * @return A {@link SockFuture}
 	 */
-	public Sock getResult() {
-		return result;
+	public SockFuture start(ExecutorService executor) {
+		executor.execute(this);
+		return future;
 	}
 
 	/**
-	 * Get the {@link LoopConfig} of this {@code ConnectionLoop}.
+	 * Get the loop's {@link SockFuture}.
 	 * 
-	 * @return The immutable configuration of this {@code ConnectionLoop}
+	 * @return The connection future
+	 */
+	public SockFuture future() {
+		return future;
+	}
+
+	/**
+	 * Get the loop's {@link LoopConfig}.
+	 * 
+	 * @return The immutable configuration of this {@link ConnectionLoop}
 	 */
 	public LoopConfig getConfig() {
 		return config;

@@ -35,6 +35,16 @@ import io.netty.util.concurrent.EventExecutor;
 public class SockFuture extends DefaultPromise<Sock> {
 
 	/**
+	 * Construct a new {@link SockFuture} that is not waiting on a
+	 * {@link ChannelFuture} directly.
+	 * 
+	 * @param executor A custom executor
+	 */
+	public SockFuture(EventExecutor executor) {
+		super(executor);
+	}
+
+	/**
 	 * Construct a new {@link SockFuture} which will create a new {@link Sock} once
 	 * the given connection is established.
 	 * 
@@ -55,8 +65,11 @@ public class SockFuture extends DefaultPromise<Sock> {
 		super(executor);
 
 		connect.addListener((ChannelFuture future) -> {
-			if (!future.isSuccess())
+			if (!future.isSuccess()) {
 				SockFuture.this.setFailure(future.cause());
+				return;
+			}
+
 			Channel ch = future.channel();
 
 			if (ch.attr(ChannelConstant.FUTURE_CVID).get() != null) {

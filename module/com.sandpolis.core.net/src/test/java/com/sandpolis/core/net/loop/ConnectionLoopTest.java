@@ -17,12 +17,21 @@
  *****************************************************************************/
 package com.sandpolis.core.net.loop;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import com.sandpolis.core.instance.PoolConstant.net;
+import com.sandpolis.core.instance.store.thread.ThreadStore;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -33,29 +42,44 @@ import io.netty.handler.logging.LoggingHandler;
 
 class ConnectionLoopTest {
 
-	@Test
-	void testConnectionFailure() throws InterruptedException {
-		ConnectionLoop loop = new ConnectionLoop("127.0.0.1", 38903, 100, new Bootstrap()
-				.channel(NioSocketChannel.class).group(new NioEventLoopGroup()).handler(new LoggingHandler()));
-
-		loop.start();
-		loop.await();
-
-		assertNull(loop.getResult());
+	@BeforeAll
+	private static void setup() {
+		ThreadStore.register(new NioEventLoopGroup().next(), net.connection.outgoing);
 	}
 
 	@Test
-	void testSingletonSuccess() throws InterruptedException, IOException {
-
-		new ServerBootstrap().group(new NioEventLoopGroup()).channel(NioServerSocketChannel.class)
-				.childHandler(new LoggingHandler()).bind(23374);
-
-		ConnectionLoop loop = new ConnectionLoop("127.0.0.1", 23374, 100, new Bootstrap()
+	@DisplayName("Attempt a connection on a closed port")
+	void connect_1() throws InterruptedException {
+		ConnectionLoop loop = new ConnectionLoop("127.0.0.1", 38903, 500, new Bootstrap()
 				.channel(NioSocketChannel.class).group(new NioEventLoopGroup()).handler(new LoggingHandler()));
 
-		loop.start();
-		loop.await();
+		assertFalse(loop.future().isDone());
+		assertFalse(loop.future().isSuccess());
 
-		assertNotNull(loop.getResult());
+		loop.start().await(1000, TimeUnit.MILLISECONDS);
+
+		assertTrue(loop.future().isDone());
+		assertTrue(loop.future().isSuccess());
+		assertNull(loop.future().getNow());
+	}
+
+	@Test
+	@DisplayName("Make a successful connection to a local socket")
+	void connect_2() throws InterruptedException, IOException {
+
+		new ServerBootstrap().group(new NioEventLoopGroup()).channel(NioServerSocketChannel.class)
+				.childHandler(new LoggingHandler()).bind(InetAddress.getLoopbackAddress(), 23374).sync();
+
+		ConnectionLoop loop = new ConnectionLoop("127.0.0.1", 23374, 500, new Bootstrap()
+				.channel(NioSocketChannel.class).group(new NioEventLoopGroup()).handler(new LoggingHandler()));
+
+		assertFalse(loop.future().isDone());
+		assertFalse(loop.future().isSuccess());
+
+		loop.start().await(1000, TimeUnit.MILLISECONDS);
+
+		assertTrue(loop.future().isDone());
+		assertTrue(loop.future().isSuccess());
+		assertNotNull(loop.future().getNow());
 	}
 }
