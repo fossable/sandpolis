@@ -290,12 +290,9 @@ class HibernateStoreProviderTest {
 	private static DB db;
 
 	@BeforeAll
-	private static void setup() throws ManagedProcessException, InterruptedException {
+	private static void setup() throws ManagedProcessException {
 		db = DB.newEmbeddedDB(8001);
 		db.start();
-
-		// TODO find a better way to wait for the database to load
-		Thread.sleep(9000);
 	}
 
 	@AfterAll
