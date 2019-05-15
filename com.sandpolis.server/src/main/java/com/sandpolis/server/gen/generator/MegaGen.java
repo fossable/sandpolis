@@ -63,7 +63,7 @@ public class MegaGen extends FileGenerator {
 
 		log.debug("Computing MEGA payload");
 
-		ZipSet output = new ZipSet(Environment.get(LIB).resolve("com.sandpolis.client.mega-standalone.jar"));
+		ZipSet output = new ZipSet(Environment.get(LIB).resolve("com.sandpolis.client.mega.jar"));
 		FeatureSet features = config.getMega().getFeatures();
 
 		// Add client configuration
