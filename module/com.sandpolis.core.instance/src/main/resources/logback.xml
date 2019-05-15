@@ -24,7 +24,7 @@
 	<logger name="java.util.prefs" level="OFF" />
 	<logger name="org.hibernate" level="WARN" />
 	<logger name="com.mchange" level="OFF" />
-	<logger name="org.zeroturnaround" level="OFF" />
+	<logger name="org.pf4j" level="WARN" />	
 
 	<root level="DEBUG">
 		<appender-ref ref="STDOUT" />
