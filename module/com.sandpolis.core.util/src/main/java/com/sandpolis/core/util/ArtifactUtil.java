@@ -54,7 +54,7 @@ public final class ArtifactUtil {
 	/**
 	 * The central repository base URL.
 	 */
-	private static final String MAVEN_HOST = "http://127.0.0.1";// "https://repo1.maven.org";
+	private static final String MAVEN_HOST = "https://repo1.maven.org";
 
 	/**
 	 * Get an artifact file from the given directory.
