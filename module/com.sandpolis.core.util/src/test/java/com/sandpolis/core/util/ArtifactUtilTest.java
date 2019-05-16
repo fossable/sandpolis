@@ -15,11 +15,10 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.instance.store.artifact;
+package com.sandpolis.core.util;
 
-import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.download;
-import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.getLatestVersion;
-import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.core.util.ArtifactUtil.*;
+import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -64,28 +63,22 @@ class ArtifactUtilTest {
 	@Test
 	@DisplayName("Check download")
 	void download_1(@TempDir Path temp) throws IOException {
-		assertTrue(download(temp, "javax.measure:unit-api:1.0"));
+		download(temp, "javax.measure:unit-api:1.0");
 		assertTrue(Files.exists(temp.resolve("unit-api-1.0.jar")));
 	}
 
 	@Test
-	@DisplayName("Check that repeated downloads are cached")
-	void download_2(@TempDir Path temp) throws IOException {
-		assertTrue(download(temp, "javax.measure:unit-api:1.0"));
-		assertFalse(download(temp, "javax.measure:unit-api:1.0"));
-	}
-
-	@Test
-	@DisplayName("Check that a corrupted download is repaired")
-	void download_3(@TempDir Path temp) throws IOException {
-		assertTrue(download(temp, "javax.measure:unit-api:1.0"));
+	@DisplayName("Check an artifact's hash")
+	void checkHash_1(@TempDir Path temp) throws IOException {
+		download(temp, "javax.measure:unit-api:1.0");
+		assertTrue(checkHash(temp, "javax.measure:unit-api:1.0"));
 
 		// Intentionally corrupt the downloaded file
 		try (PrintWriter pw = new PrintWriter(temp.resolve("unit-api-1.0.jar").toFile())) {
 			pw.print("a");
 		}
 
-		assertTrue(download(temp, "javax.measure:unit-api:1.0"));
+		assertFalse(checkHash(temp, "javax.measure:unit-api:1.0"));
 	}
 
 	@Test

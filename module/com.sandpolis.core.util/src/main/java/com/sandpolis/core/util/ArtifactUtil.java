@@ -15,14 +15,12 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.instance.store.artifact;
+package com.sandpolis.core.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
-import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromFilename;
 
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -38,16 +36,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import com.github.zafarkhaja.semver.Version;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
-import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
-import com.sandpolis.core.util.NetUtil;
 
 /**
- * Utilities for managing dependency artifacts.
+ * Utilities for managing dependency artifacts and interacting with the Maven
+ * Central Repository.
  *
  * @author cilki
  * @since 5.0.0
@@ -57,108 +52,118 @@ public final class ArtifactUtil {
 	private static final Logger log = LoggerFactory.getLogger(ArtifactUtil.class);
 
 	/**
-	 * Get an artifact's file from the environment's library directory.
-	 *
-	 * @param artifact The artifact
-	 * @return The artifact's local file
+	 * The central repository base URL.
 	 */
-	public static Path getArtifactFile(Artifact artifact) {
-		checkNotNull(artifact);
-
-		return getArtifactFile(artifact.getCoordinates());
-	}
+	private static final String MAVEN_HOST = "http://127.0.0.1";// "https://repo1.maven.org";
 
 	/**
-	 * Get an artifact's file from the environment's library directory.
+	 * Get an artifact file from the given directory.
 	 *
+	 * @param directory   The directory containing artifacts
 	 * @param coordinates The artifact's coordinates
 	 * @return The artifact's local file
 	 */
-	public static Path getArtifactFile(String coordinates) {
+	public static Path getArtifactFile(Path directory, String coordinates) {
+		checkNotNull(directory);
 		checkNotNull(coordinates);
 
-		return Environment.get(LIB).resolve(ParsedCoordinate.fromCoordinate(coordinates).filename);
+		return directory.resolve(ParsedCoordinate.fromCoordinate(coordinates).filename);
 	}
 
 	/**
 	 * Find all artifacts with the given artifact name. The results will be in
 	 * decreasing version order if applicable.
 	 * 
+	 * @param directory  The directory containing artifacts
 	 * @param artifactId The artifact to search for
 	 * @return A stream of all matching artifacts
 	 * @throws IOException
 	 */
-	public static Stream<Path> findArtifactFile(String artifactId) throws IOException {
-		return java.nio.file.Files.list(Environment.get(LIB))
-				.filter(path -> path.getFileName().toString().startsWith(artifactId))
+	public static Stream<Path> findArtifactFile(Path directory, String artifactId) throws IOException {
+		return java.nio.file.Files.list(directory).filter(path -> path.getFileName().toString().startsWith(artifactId))
 				// Sort by semantic version number
 				.sorted((path1, path2) -> {
-					try {
-						return Version.valueOf(fromFilename(path1.getFileName().toString()).version)
-								.compareTo(Version.valueOf(fromFilename(path2.getFileName().toString()).version));
-					} catch (Exception e) {
-						return 0;
-					}
+					// TODO COMPARE CORRECTLY!
+					return ParsedCoordinate.fromFilename(path1.getFileName().toString()).version
+							.compareTo(ParsedCoordinate.fromFilename(path2.getFileName().toString()).version);
 				});
 	}
 
 	/**
-	 * Download an artifact from Maven Central to the library directory. If an
-	 * artifact already exists in the directory, its hash will be checked against
-	 * the Maven Central hash.
+	 * Download an artifact from Maven Central to the given directory.
 	 *
 	 * @param directory The output directory
-	 * @param artifact  The artifact identifier in standard Gradle form:
-	 *                  group:name:version
-	 * @return Whether the artifact was actually downloaded
+	 * @param gav       The artifact coordinate in standard Gradle form
+	 *                  (group:name:version)
+	 * @return The output path
 	 * @throws IOException
 	 */
-	@SuppressWarnings("deprecation")
-	public static boolean download(Path directory, String artifact) throws IOException {
+	public static Path download(Path directory, String gav) throws IOException {
 		checkNotNull(directory);
-		checkNotNull(artifact);
+		checkNotNull(gav);
 
-		var coordinate = ParsedCoordinate.fromCoordinate(artifact);
-		String url = "http://repo1.maven.org/maven2/" // Base URL
+		var coordinate = ParsedCoordinate.fromCoordinate(gav);
+		String url = MAVEN_HOST + "/maven2/" // Base URL
 				+ coordinate.groupId.replaceAll("\\.", "/") + "/"// Group name
 				+ coordinate.artifactId + "/" // Artifact name
 				+ coordinate.version + "/" // Artifact version
 				+ coordinate.filename; // Artifact filename
 		log.debug("Downloading artifact: {}", url);
 
-		// Download the file hash first
-		byte[] hash = BaseEncoding.base16().lowerCase().decode(new String(NetUtil.download(url + ".sha1")));
+		Path output = directory.resolve(coordinate.filename);
+		NetUtil.download(url, output.toFile());
+		return output;
+	}
 
-		File output = directory.resolve(coordinate.filename).toFile();
-		if (output.exists()) {
-			// Check the hash of the existing file to catch partial downloads
-			if (Arrays.equals(Files.asByteSource(output).hash(Hashing.sha1()).asBytes(), hash))
-				return false;
+	/**
+	 * Check an artifact's hash.
+	 * 
+	 * @param directory The artifact directory
+	 * @param gav       The artifact coordinate in standard Gradle form
+	 *                  (group:name:version)
+	 * @return Whether the artifact in the given directory matches the remote hash
+	 * @throws IOException
+	 */
+	@SuppressWarnings("deprecation")
+	public static boolean checkHash(Path directory, String gav) throws IOException {
+		checkNotNull(directory);
+		checkNotNull(gav);
 
-			output.delete();
-		}
+		var coordinate = ParsedCoordinate.fromCoordinate(gav);
+		String url = MAVEN_HOST + "/maven2/" // Base URL
+				+ coordinate.groupId.replaceAll("\\.", "/") + "/"// Group name
+				+ coordinate.artifactId + "/" // Artifact name
+				+ coordinate.version + "/" // Artifact version
+				+ coordinate.filename // Artifact filename
+				+ ".sha1";
+		log.debug("Downloading hash: {}", url);
 
-		NetUtil.download(url, output);
+		// If the directory does not contain the file, the hash doesn't match
+		Path artifact = directory.resolve(coordinate.filename);
+		if (!java.nio.file.Files.exists(artifact))
+			throw new FileNotFoundException();
 
-		// Check hash of download
-		if (!Arrays.equals(Files.asByteSource(output).hash(Hashing.sha1()).asBytes(), hash))
-			throw new IOException("Hash verification failed");
+		// Download the file hash
+		byte[] hash = BaseEncoding.base16().lowerCase().decode(new String(NetUtil.download(url)));
 
-		return true;
+		// Compare hash
+		return Arrays.equals(Files.asByteSource(artifact.toFile()).hash(Hashing.sha1()).asBytes(), hash);
 	}
 
 	/**
 	 * Query the latest version of an artifact.
 	 * 
-	 * @param artifact The artifact to query
+	 * @param gav The artifact coordinate in standard Gradle form
+	 *            (group:name:version)
 	 * @return The artifact's latest version string
-	 * @throws IOException
+	 * @throws IOException If the connection could not be made, the artifact could
+	 *                     not be found, or the metadata could not be parsed
 	 */
-	public static String getLatestVersion(String artifact) throws IOException {
-		checkNotNull(artifact);
+	public static String getLatestVersion(String gav) throws IOException {
+		checkNotNull(gav);
 
-		var coordinate = ParsedCoordinate.fromCoordinate(artifact);
-		String url = "http://repo1.maven.org/maven2/" // Base URL
+		var coordinate = ParsedCoordinate.fromCoordinate(gav);
+		String url = MAVEN_HOST + "/maven2/" // Base URL
 				+ coordinate.groupId.replaceAll("\\.", "/") + "/"// Group name
 				+ coordinate.artifactId // Artifact name
 				+ "/maven-metadata.xml";
@@ -167,7 +172,7 @@ public final class ArtifactUtil {
 			return XPathFactory.newDefaultInstance().newXPath().evaluate("/metadata/versioning/latest",
 					DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in));
 		} catch (XPathExpressionException | SAXException | ParserConfigurationException e) {
-			throw new RuntimeException(e);
+			throw new IOException(e);
 		}
 	}
 
@@ -203,7 +208,6 @@ public final class ArtifactUtil {
 
 			String version = filename.substring(filename.lastIndexOf('-') + 1, filename.lastIndexOf(".jar"));
 			try {
-				Version.valueOf(version);
 				String artifact = filename.substring(0, filename.lastIndexOf('-'));
 				return new ParsedCoordinate(":" + artifact + ":" + version, null, artifact, version, filename);
 			} catch (Exception e) {
@@ -211,18 +215,6 @@ public final class ArtifactUtil {
 				String artifact = filename.substring(0, filename.lastIndexOf(".jar"));
 				return new ParsedCoordinate(":" + artifact + ":", null, artifact, null, filename);
 			}
-		}
-
-		/**
-		 * Parse an artifact's coordinate.
-		 * 
-		 * @param artifact The coordinate to parse
-		 * @return A new {@link ParsedCoordinate}
-		 */
-		public static ParsedCoordinate fromArtifact(Artifact artifact) {
-			checkNotNull(artifact);
-
-			return fromCoordinate(artifact.getCoordinates());
 		}
 
 		/**

@@ -20,7 +20,7 @@ package com.sandpolis.client.mega;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
-import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromArtifact;
+import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_ESTABLISHED;
 import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_LOST;
 
@@ -120,7 +120,7 @@ public final class Client {
 		Files.copy(Client.class.getResourceAsStream("/main/main.jar"), base.resolve("client.jar"));
 
 		for (Artifact artifact : Core.SO_MATRIX.getArtifactList()) {
-			String name = fromArtifact(artifact).filename;
+			String name = fromCoordinate(artifact.getCoordinates()).filename;
 
 			Files.copy(Client.class.getResourceAsStream("/lib/" + name), lib.resolve(name));
 		}

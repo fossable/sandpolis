@@ -18,8 +18,7 @@
 package com.sandpolis.server.gen.generator;
 
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
-import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromArtifact;
-import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -30,12 +29,12 @@ import org.slf4j.LoggerFactory;
 import com.github.cilki.zipset.ZipSet;
 import com.github.cilki.zipset.ZipSet.EntryPath;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.store.artifact.ArtifactUtil;
 import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Platform.Architecture;
 import com.sandpolis.core.proto.util.Platform.OsType;
 import com.sandpolis.core.soi.SoiUtil;
+import com.sandpolis.core.util.ArtifactUtil;
 import com.sandpolis.server.gen.FileGenerator;
 
 /**
@@ -74,7 +73,8 @@ public class MegaGen extends FileGenerator {
 				// Skip unnecessary dependencies if allowed
 				.filter(artifact -> !config.getMega().getDownloader() || required.contains(artifact.getArtifactId()))
 				.forEach(artifact -> {
-					Path source = ArtifactUtil.getArtifactFile(artifact.getArtifact());
+					Path source = ArtifactUtil.getArtifactFile(Environment.get(LIB),
+							artifact.getArtifact().getCoordinates());
 
 					// Add library
 					output.add("lib/" + source.getFileName(), source);
@@ -95,12 +95,13 @@ public class MegaGen extends FileGenerator {
 		// Add plugin binaries
 		if (!config.getMega().getDownloader()) {
 			for (String plugin : features.getPluginList()) {
-				Path bin = ArtifactUtil.getArtifactFile(plugin);
+				Path bin = ArtifactUtil.getArtifactFile(Environment.get(LIB), plugin);
 				output.add("lib/" + fromCoordinate(plugin).filename, bin);
 
 				// Add plugin dependencies
 				SoiUtil.readMatrix(bin).getArtifactList().stream().forEach(dep -> {
-					output.add("lib/" + fromArtifact(dep).filename, ArtifactUtil.getArtifactFile(dep));
+					output.add("lib/" + fromCoordinate(dep.getCoordinates()).filename,
+							ArtifactUtil.getArtifactFile(Environment.get(LIB), dep.getCoordinates()));
 				});
 			}
 		}

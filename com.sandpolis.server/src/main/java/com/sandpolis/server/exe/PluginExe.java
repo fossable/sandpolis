@@ -18,7 +18,7 @@
 package com.sandpolis.server.exe;
 
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
-import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.io.ByteSource;
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.store.artifact.ArtifactUtil;
-import com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate;
+import com.sandpolis.core.util.ArtifactUtil;
+import com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
@@ -89,11 +89,12 @@ public class PluginExe extends Exelet {
 			}
 		}, () -> {
 			// Check regular artifacts
-			Path artifact = ArtifactUtil.getArtifactFile(coordinate.coordinate);
+			Path artifact = ArtifactUtil.getArtifactFile(Environment.get(LIB), coordinate.coordinate);
 
 			if (!Files.exists(artifact)) {
 				// Try to find a suitable artifact
-				try (Stream<Path> artifacts = ArtifactUtil.findArtifactFile(coordinate.artifactId)) {
+				try (Stream<Path> artifacts = ArtifactUtil.findArtifactFile(Environment.get(LIB),
+						coordinate.artifactId)) {
 					artifact = artifacts.findAny().orElse(null);
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
@@ -139,10 +140,8 @@ public class PluginExe extends Exelet {
 			Files.write(binary, NetUtil.download(rq.getPluginUrl()));
 			break;
 		case PLUGIN_COORDINATES:
-			if (!ArtifactUtil.download(binary.getParent(), rq.getPluginCoordinates())) {
-				// TODO
-				return;
-			}
+			ArtifactUtil.download(binary.getParent(), rq.getPluginCoordinates());
+
 			binary = binary.resolveSibling("TODO");// TODO
 			break;
 		default:

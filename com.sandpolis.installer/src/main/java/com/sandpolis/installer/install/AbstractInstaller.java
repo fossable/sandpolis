@@ -17,7 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.installer.install;
 
-import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,9 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.store.artifact.ArtifactUtil;
 import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
 import com.sandpolis.core.soi.SoiUtil;
+import com.sandpolis.core.util.ArtifactUtil;
 
 /**
  * @author cilki
@@ -82,7 +82,7 @@ public abstract class AbstractInstaller {
 		Files.createDirectories(destination);
 
 		log.info("Installing server");
-		install(progressIncrement, "com.sandpolis:server:");
+		install(progressIncrement, "com.sandpolis:sandpolis-server:");
 		serverPostInstall();
 	}
 
@@ -91,7 +91,7 @@ public abstract class AbstractInstaller {
 		Files.createDirectories(destination);
 
 		log.info("Installing viewer GUI");
-		install(progressIncrement, "com.sandpolis:viewer-jfx:");
+		install(progressIncrement, "com.sandpolis:sandpolis-viewer-jfx:");
 		viewerJfxPostInstall();
 	}
 
@@ -100,7 +100,7 @@ public abstract class AbstractInstaller {
 		Files.createDirectories(destination);
 
 		log.info("Installing viewer CLI");
-		install(progressIncrement, "com.sandpolis:viewer-cli:");
+		install(progressIncrement, "com.sandpolis:sandpolis-viewer-cli:");
 		viewerCliPostInstall();
 	}
 
@@ -109,7 +109,7 @@ public abstract class AbstractInstaller {
 		Files.createDirectories(destination);
 
 		log.info("Installing client");
-		install(progressIncrement, "com.sandpolis:client-mega:");
+		install(progressIncrement, "com.sandpolis:sandpolis-client-mega:");
 		clientPostInstall();
 	}
 
@@ -132,12 +132,11 @@ public abstract class AbstractInstaller {
 
 		// Download executable
 		status.accept("Downloading executable");
-		ArtifactUtil.download(destination, coordinate);
+		Path executable = ArtifactUtil.download(destination, coordinate);
 
 		// Download dependencies
 		Path lib = destination.resolve("lib");
-		List<Artifact> dependencies = SoiUtil.readMatrix(destination.resolve(fromCoordinate(coordinate).filename))
-				.getArtifactList();
+		List<Artifact> dependencies = SoiUtil.readMatrix(executable).getArtifactList();
 
 		for (var artifact : dependencies) {
 			if (!Files.exists(lib.resolve(fromCoordinate(artifact.getCoordinates()).filename))) {

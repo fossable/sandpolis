@@ -19,7 +19,7 @@ package com.sandpolis.client.mega.cmd;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
-import static com.sandpolis.core.instance.store.artifact.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.store.artifact.ArtifactUtil;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.net.Cmdlet;
@@ -37,6 +36,7 @@ import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginList;
 import com.sandpolis.core.proto.net.MCPlugin.RS_ArtifactDownload;
 import com.sandpolis.core.proto.net.MCPlugin.RS_PluginList;
 import com.sandpolis.core.soi.SoiUtil;
+import com.sandpolis.core.util.ArtifactUtil;
 import com.sandpolis.core.util.NetUtil;
 
 /**
