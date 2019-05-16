@@ -21,7 +21,7 @@ import java.io.File;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.AbstractCopyTask;
 
 /**
  * The SOI plugin gathers information about the build and injects it into the
@@ -34,17 +34,13 @@ public class SoiPlugin implements Plugin<Project> {
 	@Override
 	public void apply(Project root) {
 
-		// Setup the SOI directory
-		File soi = new File(root.getBuildDir().getAbsolutePath() + "/tmp_soi/soi");
-		soi.mkdirs();
-
 		// Depend on SOI tasks
-		root.getTasks().getByName("jar").dependsOn(root.getTasks().create("soiBuild", SoiBuildTask.class));
-		root.getTasks().getByName("jar").dependsOn(root.getTasks().create("soiMatrix", SoiMatrixTask.class));
+		AbstractCopyTask processResources = (AbstractCopyTask) root.getTasks().getByName("processResources");
+		processResources.dependsOn(root.getTasks().create("soiBuild", SoiBuildTask.class));
+		processResources.dependsOn(root.getTasks().create("soiMatrix", SoiMatrixTask.class));
 
-		// Add SOI directory to source set so it's included in the jar
-		SourceSetContainer sourceSets = (SourceSetContainer) root.getProperties().get("sourceSets");
-		sourceSets.getByName("main").getResources().srcDir(soi.getParent());
+		// Configure task to include SOI directory
+		processResources.from(new File(root.getBuildDir().getAbsolutePath() + "/tmp_soi"));
 
 	}
 }
