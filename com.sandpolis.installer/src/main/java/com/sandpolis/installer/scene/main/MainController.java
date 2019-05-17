@@ -17,22 +17,19 @@
  *****************************************************************************/
 package com.sandpolis.installer.scene.main;
 
-import java.util.function.Consumer;
-import java.util.stream.Stream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.installer.install.AbstractInstaller;
-import com.sandpolis.installer.install.LinuxInstaller;
-import com.sandpolis.installer.install.WindowsInstaller;
 
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
@@ -66,6 +63,12 @@ public class MainController {
 	private TitledPane pane_client;
 
 	@FXML
+	private TextField username;
+
+	@FXML
+	private PasswordField password;
+
+	@FXML
 	private TextField client_key;
 
 	@FXML
@@ -75,44 +78,20 @@ public class MainController {
 	private Label status;
 
 	@FXML
-	private ProgressBar progress;
-
-	@FXML
 	private ImageView banner;
 
 	/**
-	 * The installer to use.
+	 * An executor that will run the installation.
 	 */
-	private AbstractInstaller installer;
+	private ExecutorService service = Executors.newSingleThreadExecutor();
 
 	@FXML
 	private void initialize() {
-		Consumer<String> status = (s) -> {
-			Platform.runLater(() -> this.status.setText(s));
-		};
 
-		Consumer<Double> progress = (p) -> {
-			Platform.runLater(() -> this.progress.setProgress(p));
-		};
-
-		switch (PlatformUtil.queryOsType()) {
-		case LINUX:
-			installer = new LinuxInstaller(status, progress);
-			break;
-		case MACOS:
-			installer = new LinuxInstaller(status, progress);
-			break;
-		case WINDOWS:
-			installer = new WindowsInstaller(status, progress);
-			break;
-		default:
-			throw new RuntimeException("No installer found");
-		}
-
-		chk_server.selectedProperty().addListener(this::refresh);
-		chk_viewer_jfx.selectedProperty().addListener(this::refresh);
-		chk_viewer_cli.selectedProperty().addListener(this::refresh);
-		chk_client.selectedProperty().addListener(this::refresh);
+		chk_server.selectedProperty().addListener(this::refreshScene);
+		chk_viewer_jfx.selectedProperty().addListener(this::refreshScene);
+		chk_viewer_cli.selectedProperty().addListener(this::refreshScene);
+		chk_client.selectedProperty().addListener(this::refreshScene);
 
 		pane_server.expandedProperty().bindBidirectional(chk_server.selectedProperty());
 		pane_viewer_jfx.expandedProperty().bindBidirectional(chk_viewer_jfx.selectedProperty());
@@ -122,10 +101,7 @@ public class MainController {
 		banner.setImage(new Image(MainController.class.getResourceAsStream("/image/logo.png")));
 	}
 
-	/**
-	 * Refresh the scene's state.
-	 */
-	private void refresh(ObservableValue<?> p, boolean o, boolean n) {
+	private void refreshScene(ObservableValue<?> p, boolean o, boolean n) {
 		// Ensure at least one box is checked
 		btn_install.setDisable(!chk_server.isSelected() && !chk_viewer_jfx.isSelected() && !chk_viewer_cli.isSelected()
 				&& !chk_client.isSelected());
@@ -139,42 +115,89 @@ public class MainController {
 	@FXML
 	private void install() {
 
-		// Replace buttons with a progressbar
-		progress.setVisible(true);
 		status.setVisible(true);
+		username.setDisable(true);
+		password.setDisable(true);
+		chk_server.setDisable(true);
+		chk_viewer_jfx.setDisable(true);
+		chk_viewer_cli.setDisable(true);
+		chk_client.setDisable(true);
+		btn_install.setDisable(true);
 
-		new Thread(new Task<Void>() {
+		if (chk_server.isSelected()) {
+			install(pane_server, AbstractInstaller.newServerInstaller(username.getText(), password.getText()));
+		} else {
+			pane_server.setCollapsible(false);
+		}
+		if (chk_viewer_jfx.isSelected()) {
+			install(pane_viewer_jfx, AbstractInstaller.newViewerJfxInstaller());
+		} else {
+			pane_viewer_jfx.setCollapsible(false);
+		}
+		if (chk_viewer_cli.isSelected()) {
+			install(pane_viewer_cli, AbstractInstaller.newViewerCliInstaller());
+		} else {
+			pane_viewer_cli.setCollapsible(false);
+		}
+		if (chk_client.isSelected()) {
+			install(pane_client, AbstractInstaller.newClientInstaller(client_key.getText()));
+		} else {
+			pane_client.setCollapsible(false);
+		}
 
-			{
-				setOnSucceeded(event -> {
+		service.execute(() -> {
+			Platform.runLater(() -> {
+				status.setText("Installation succeeded!");
+				btn_install.setDisable(false);
+				btn_install.setText("Finish");
+				btn_install.setOnAction((e) -> {
+					System.exit(0);
 				});
+			});
+		});
+	}
 
-				setOnFailed(event -> {
-					btn_install.setVisible(false);
-					progress.setVisible(false);
+	private void install(TitledPane section, AbstractInstaller installer) {
+
+		ProgressIndicator progress = new ProgressIndicator(0.0);
+		installer.setOnScheduled(event -> {
+			progress.setPrefHeight(22);
+			progress.progressProperty().bind(installer.progressProperty());
+			section.setGraphic(progress);
+		});
+
+		installer.setOnSucceeded(event -> {
+			section.setText("Installed successfully");
+			section.setExpanded(false);
+			section.setCollapsible(false);
+
+			progress.progressProperty().unbind();
+			progress.setProgress(1.0);
+		});
+
+		installer.setOnFailed(event -> {
+			section.setText("Installation failed!");
+			section.setCollapsible(false);
+
+			installer.getException().printStackTrace();
+		});
+
+		service.execute(installer);
+
+		// Check outcome of task
+		service.execute(() -> {
+			if (!installer.isCompleted()) {
+				Platform.runLater(() -> {
 					status.setText("Installation failed!");
-
-					exceptionProperty().get().printStackTrace();
+					btn_install.setDisable(false);
+					btn_install.setText("Exit");
+					btn_install.setOnAction((e) -> {
+						System.exit(0);
+					});
 				});
+
+				service.shutdownNow();
 			}
-
-			@Override
-			public Void call() throws Exception {
-				double progressIncrement = 100 / Stream.of(chk_server, chk_viewer_jfx, chk_viewer_cli, chk_client)
-						.filter(c -> c.isSelected()).count();
-
-				if (chk_server.isSelected())
-					installer.installServer(progressIncrement);
-				if (chk_viewer_jfx.isSelected())
-					installer.installViewerJfx(progressIncrement);
-				if (chk_viewer_cli.isSelected())
-					installer.installViewerCli(progressIncrement);
-				if (chk_client.isSelected())
-					installer.installClient(progressIncrement, client_key.getText());
-
-				return null;
-			}
-
-		}).start();
+		});
 	}
 }

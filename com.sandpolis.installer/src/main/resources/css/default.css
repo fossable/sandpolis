@@ -1,5 +1,13 @@
-#background{
+#background {
     -fx-background-color: #3d3d3d,
         linear-gradient(from 0.5px 0px to 10.5px 0px, repeat, #3a3a3a 5%, transparent 5%),
         linear-gradient(from 0px 0.5px to 0px 10.5px, repeat, #3a3a3a 5%, transparent 5%);
+}
+
+.progress-indicator .percentage {
+    -fx-fill:null;
+}
+
+.progress-indicator  {
+    -fx-padding: 0 0 -16 0;
 }

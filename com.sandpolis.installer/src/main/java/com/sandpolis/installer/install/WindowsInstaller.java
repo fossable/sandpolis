@@ -18,14 +18,13 @@
 package com.sandpolis.installer.install;
 
 import java.nio.file.Paths;
-import java.util.function.Consumer;
 
 import com.sandpolis.core.instance.Config;
 
 public class WindowsInstaller extends AbstractInstaller {
 
-	public WindowsInstaller(Consumer<String> status, Consumer<Double> progress) {
-		super(Paths.get(Config.get("install.path.windows")), status, progress);
+	public WindowsInstaller() {
+		super(Paths.get(Config.get("install.path.windows")));
 	}
 
 }
