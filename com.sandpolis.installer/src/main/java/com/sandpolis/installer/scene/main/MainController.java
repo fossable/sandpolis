@@ -115,7 +115,6 @@ public class MainController {
 	@FXML
 	private void install() {
 
-		status.setVisible(true);
 		username.setDisable(true);
 		password.setDisable(true);
 		chk_server.setDisable(true);
@@ -124,11 +123,6 @@ public class MainController {
 		chk_client.setDisable(true);
 		btn_install.setDisable(true);
 
-		if (chk_server.isSelected()) {
-			install(pane_server, AbstractInstaller.newServerInstaller(username.getText(), password.getText()));
-		} else {
-			pane_server.setCollapsible(false);
-		}
 		if (chk_viewer_jfx.isSelected()) {
 			install(pane_viewer_jfx, AbstractInstaller.newViewerJfxInstaller());
 		} else {
@@ -139,6 +133,11 @@ public class MainController {
 		} else {
 			pane_viewer_cli.setCollapsible(false);
 		}
+		if (chk_server.isSelected()) {
+			install(pane_server, AbstractInstaller.newServerInstaller(username.getText(), password.getText()));
+		} else {
+			pane_server.setCollapsible(false);
+		}
 		if (chk_client.isSelected()) {
 			install(pane_client, AbstractInstaller.newClientInstaller(client_key.getText()));
 		} else {
@@ -147,6 +146,7 @@ public class MainController {
 
 		service.execute(() -> {
 			Platform.runLater(() -> {
+				status.textProperty().unbind();
 				status.setText("Installation succeeded!");
 				btn_install.setDisable(false);
 				btn_install.setText("Finish");
@@ -164,6 +164,8 @@ public class MainController {
 			progress.setPrefHeight(22);
 			progress.progressProperty().bind(installer.progressProperty());
 			section.setGraphic(progress);
+
+			status.textProperty().bind(installer.messageProperty());
 		});
 
 		installer.setOnSucceeded(event -> {
@@ -188,6 +190,7 @@ public class MainController {
 		service.execute(() -> {
 			if (!installer.isCompleted()) {
 				Platform.runLater(() -> {
+					status.textProperty().unbind();
 					status.setText("Installation failed!");
 					btn_install.setDisable(false);
 					btn_install.setText("Exit");

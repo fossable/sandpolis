@@ -11,3 +11,10 @@
 .progress-indicator  {
     -fx-padding: 0 0 -16 0;
 }
+
+#status_box {
+    -fx-background-color: #f0f0f0
+}
+
+#status_text {
+}

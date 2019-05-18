@@ -31,13 +31,49 @@
             </ButtonBar>
          </center>
          <top>
-         	<Label fx:id="status" text="Label" visible="false" />
+            <HBox id="status_box">
+               <children>
+               	<Label id="status_label" fx:id="status" text="Choose a component to install/update" />
+               </children>
+            </HBox>
          </top>
       </BorderPane>
    </bottom>
    <center>
       <VBox prefHeight="200.0" prefWidth="100.0" spacing="4.0" BorderPane.alignment="CENTER">
          <children>
+            <TitledPane fx:id="pane_viewer_jfx" text="Install Viewer GUI">
+               <graphic>
+                  <CheckBox fx:id="chk_viewer_jfx" mnemonicParsing="false" selected="true" />
+               </graphic>
+               <content>
+                  <BorderPane>
+                     <center>
+                        <Label text="The Sandpolis GUI is a rich desktop application that allows you to connect to a Sandpolis server." wrapText="true" BorderPane.alignment="BOTTOM_LEFT">
+                           <font>
+                              <Font size="11.0" />
+                           </font>
+                        </Label>
+                     </center>
+                  </BorderPane>
+               </content>
+            </TitledPane>
+            <TitledPane fx:id="pane_viewer_cli" text="Install Viewer CLI">
+               <graphic>
+                  <CheckBox fx:id="chk_viewer_cli" mnemonicParsing="false" />
+               </graphic>
+               <content>
+                  <BorderPane>
+                     <center>
+                        <Label text="The Sandpolis CLI is a minimalist text interface that allows you to connect to a Sandpolis server." wrapText="true" BorderPane.alignment="CENTER_LEFT">
+                           <font>
+                              <Font size="11.0" />
+                           </font>
+                        </Label>
+                     </center>
+                  </BorderPane>
+               </content>
+            </TitledPane>
             <TitledPane fx:id="pane_server" text="Install Server">
                <graphic>
                   <CheckBox fx:id="chk_server" mnemonicParsing="false" selected="true" />
@@ -78,38 +114,6 @@
                   </BorderPane>
                </content>
             </TitledPane>
-            <TitledPane fx:id="pane_viewer_jfx" text="Install Viewer GUI">
-               <graphic>
-                  <CheckBox fx:id="chk_viewer_jfx" mnemonicParsing="false" selected="true" />
-               </graphic>
-               <content>
-                  <BorderPane>
-                     <center>
-                        <Label text="The Sandpolis GUI is a rich desktop application that allows you to connect to a Sandpolis server." wrapText="true" BorderPane.alignment="BOTTOM_LEFT">
-                           <font>
-                              <Font size="11.0" />
-                           </font>
-                        </Label>
-                     </center>
-                  </BorderPane>
-               </content>
-            </TitledPane>
-            <TitledPane fx:id="pane_viewer_cli" text="Install Viewer CLI">
-               <graphic>
-                  <CheckBox fx:id="chk_viewer_cli" mnemonicParsing="false" />
-               </graphic>
-               <content>
-                  <BorderPane>
-                     <center>
-                        <Label text="The Sandpolis CLI is a minimalist text interface that allows you to connect to a Sandpolis server." wrapText="true" BorderPane.alignment="CENTER_LEFT">
-                           <font>
-                              <Font size="11.0" />
-                           </font>
-                        </Label>
-                     </center>
-                  </BorderPane>
-               </content>
-            </TitledPane>
             <TitledPane fx:id="pane_client" text="Install Client">
                <graphic>
                   <CheckBox fx:id="chk_client" mnemonicParsing="false" />
@@ -139,7 +143,7 @@
                         </VBox>
                      </bottom>
                      <center>
-                        <Label text="The Sandpolis client agent can be installed on this computer by entering a sync key below. Sync keys can be generated in with a Sandpolis viewer application." wrapText="true" BorderPane.alignment="CENTER_LEFT">
+                        <Label text="The Sandpolis client agent can be installed on this computer by entering a sync key below. Sync keys can be generated with a Sandpolis viewer application." wrapText="true" BorderPane.alignment="CENTER_LEFT">
                            <font>
                               <Font size="11.0" />
                            </font>

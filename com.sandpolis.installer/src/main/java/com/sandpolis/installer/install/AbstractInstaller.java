@@ -19,12 +19,12 @@ package com.sandpolis.installer.install;
 
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
-import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
 import com.sandpolis.core.soi.SoiUtil;
 import com.sandpolis.core.util.ArtifactUtil;
 
@@ -82,11 +81,6 @@ public abstract class AbstractInstaller extends Task<Void> {
 	private boolean completed;
 
 	/**
-	 * The installation progress.
-	 */
-	private double progress;
-
-	/**
 	 * A post-installation hook.
 	 */
 	private Runnable postHook;
@@ -115,7 +109,7 @@ public abstract class AbstractInstaller extends Task<Void> {
 
 	public static AbstractInstaller newServerInstaller(String username, String password) {
 		AbstractInstaller installer = newInstaller();
-		installer.coordinate = "com.sandpolis:sandpolis-server:";
+		installer.coordinate = "com.sandpolis:sandpolis-server-vanilla:";
 		installer.postHook = installer::serverPostInstall;
 		installer.username = username;
 		installer.password = password;
@@ -146,6 +140,7 @@ public abstract class AbstractInstaller extends Task<Void> {
 
 	@Override
 	protected Void call() throws Exception {
+		log.debug("Executing installation for " + coordinate);
 
 		if (version == null) {
 			// Request latest version number
@@ -154,18 +149,39 @@ public abstract class AbstractInstaller extends Task<Void> {
 		}
 		coordinate += version;
 
-		Files.createDirectories(destination);
+		// Create directories
+		Path lib = destination.resolve("lib");
+		Files.createDirectories(lib);
 
 		// Download executable
 		updateMessage("Downloading " + coordinate);
 		Path executable = ArtifactUtil.download(destination, coordinate);
 
-		// Download dependencies
-		Path lib = destination.resolve("lib");
-		Files.createDirectories(lib);
-
+		// Calculate dependencies
 		SO_DependencyMatrix matrix = SoiUtil.readMatrix(executable);
-		download(matrix, lib, coordinate, 1.0);
+		Set<String> dependencies = new HashSet<>();
+		computeDependencies(matrix, dependencies, coordinate);
+
+		double progress = 0;
+		for (String dep : dependencies) {
+			var coordinate = fromCoordinate(dep);
+			Path dependency = lib.resolve(coordinate.filename);
+			if (!Files.exists(dependency)) {
+				InputStream in = AbstractInstaller.class.getResourceAsStream("/" + coordinate.filename);
+				if (in != null) {
+					updateMessage("Extracting " + dep);
+					try (in) {
+						Files.copy(in, dependency);
+					}
+				} else {
+					updateMessage("Downloading " + dep);
+					ArtifactUtil.download(lib, dep);
+				}
+			}
+
+			progress++;
+			updateProgress(progress, dependencies.size());
+		}
 
 		postHook.run();
 		completed = true;
@@ -173,36 +189,25 @@ public abstract class AbstractInstaller extends Task<Void> {
 	}
 
 	/**
-	 * Download all dependencies of the artifact corresponding to the given
+	 * Gather all dependencies of the artifact corresponding to the given
 	 * coordinate.
 	 * 
-	 * @param matrix     The dependency matrix
-	 * @param lib        The output directory
-	 * @param coordinate The coordinate
-	 * @param percent    The percentage that the progress property should increase
-	 *                   after the current invocation is complete
-	 * @throws IOException
+	 * @param matrix       The dependency matrix
+	 * @param dependencies The dependency set
+	 * @param coordinate   The coordinate
 	 */
-	private void download(SO_DependencyMatrix matrix, Path lib, String coordinate, double percent) throws IOException {
+	private void computeDependencies(SO_DependencyMatrix matrix, Set<String> dependencies, String coordinate) {
+		if (dependencies.contains(coordinate))
+			return;
 
-		List<Artifact> dependencies = matrix.getArtifactList().stream()
+		dependencies.add(coordinate);
+
+		matrix.getArtifactList().stream()
+				// Find the artifact in the matrix and iterate over its dependencies
 				.filter(a -> a.getCoordinates().equals(coordinate)).findFirst().get().getDependencyList().stream()
-				.map(matrix.getArtifactList()::get).collect(Collectors.toList());
+				.map(matrix.getArtifactList()::get).map(a -> a.getCoordinates())
+				.forEach(c -> computeDependencies(matrix, dependencies, c));
 
-		for (var artifact : dependencies) {
-			Path dependency = lib.resolve(fromCoordinate(artifact.getCoordinates()).filename);
-			if (!Files.exists(dependency)) {
-				updateMessage("Downloading " + artifact.getCoordinates());
-				ArtifactUtil.download(lib, artifact.getCoordinates());
-			}
-
-			download(matrix, lib, artifact.getCoordinates(), percent / dependencies.size());
-		}
-
-		if (dependencies.size() == 0) {
-			progress += percent;
-			updateProgress(progress, 1.0);
-		}
 	}
 
 	public boolean isCompleted() {
