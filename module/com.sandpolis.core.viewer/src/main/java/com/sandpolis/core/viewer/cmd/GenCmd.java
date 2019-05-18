@@ -15,35 +15,42 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.cmd;
+package com.sandpolis.core.viewer.cmd;
 
 import com.sandpolis.core.net.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.MCServer.RQ_ServerBanner;
-import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
+import com.sandpolis.core.proto.net.MCGenerator.RQ_Generate;
+import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
+import com.sandpolis.core.proto.util.Generator.GenConfig;
 
 /**
- * Contains server commands.
+ * Contains generator commands.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public final class ServerCmd extends Cmdlet<ServerCmd> {
+public final class GenCmd extends Cmdlet<GenCmd> {
 
-	public ResponseFuture<RS_ServerBanner> getServerBanner() {
-		return route(RQ_ServerBanner.newBuilder());
+	/**
+	 * Generate a payload from the given configuration.
+	 * 
+	 * @param config The generation configuration
+	 * @return A future that will receive the outcome of this action
+	 */
+	public ResponseFuture<RS_Generate> generate(GenConfig config) {
+		return route(RQ_Generate.newBuilder().setConfig(config));
 	}
 
 	/**
 	 * Prepare for an asynchronous command.
 	 * 
 	 * @return A configurable object from which all asynchronous (nonstatic)
-	 *         commands in {@link ServerCmd} can be invoked
+	 *         commands in {@link GenCmd} can be invoked
 	 */
-	public static ServerCmd async() {
-		return new ServerCmd();
+	public static GenCmd async() {
+		return new GenCmd();
 	}
 
-	private ServerCmd() {
+	private GenCmd() {
 	}
 }

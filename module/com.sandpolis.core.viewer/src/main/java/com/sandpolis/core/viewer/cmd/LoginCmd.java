@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
+ *                    Copyright 2017 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,42 +15,50 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.cmd;
+package com.sandpolis.core.viewer.cmd;
+
+import static com.sandpolis.core.util.CryptoUtil.SHA256;
+
+import java.util.Objects;
 
 import com.sandpolis.core.net.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.MCGenerator.RQ_Generate;
-import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
-import com.sandpolis.core.proto.util.Generator.GenConfig;
+import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
+import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.util.CryptoUtil;
 
 /**
- * Contains generator commands.
+ * Contains login commands.
  * 
  * @author cilki
- * @since 5.0.0
+ * @since 4.0.0
  */
-public final class GenCmd extends Cmdlet<GenCmd> {
+public final class LoginCmd extends Cmdlet<LoginCmd> {
 
 	/**
-	 * Generate a payload from the given configuration.
+	 * Attempt to login to the Server.
 	 * 
-	 * @param config The generation configuration
-	 * @return A future that will receive the outcome of this action
+	 * @param user The logon username
+	 * @param pass The logon password
+	 * @return
 	 */
-	public ResponseFuture<RS_Generate> generate(GenConfig config) {
-		return route(RQ_Generate.newBuilder().setConfig(config));
+	public ResponseFuture<Outcome> login(String user, String pass) {
+		Objects.requireNonNull(user);
+		Objects.requireNonNull(pass);
+
+		return route(RQ_Login.newBuilder().setUsername(user).setPassword(CryptoUtil.hash(SHA256, pass)));
 	}
 
 	/**
 	 * Prepare for an asynchronous command.
 	 * 
 	 * @return A configurable object from which all asynchronous (nonstatic)
-	 *         commands in {@link GenCmd} can be invoked
+	 *         commands in {@link LoginCmd} can be invoked
 	 */
-	public static GenCmd async() {
-		return new GenCmd();
+	public static LoginCmd async() {
+		return new LoginCmd();
 	}
 
-	private GenCmd() {
+	private LoginCmd() {
 	}
 }

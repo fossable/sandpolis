@@ -1,6 +1,6 @@
 /*******************************************************************************
 * SANDPOLIS                                                                    *
-* com.sandpolis.viewer                                                         *
+* com.sandpolis.core.viewer                                                    *
 *******************************************************************************/
 
 plugins {
@@ -10,7 +10,7 @@ plugins {
 
 eclipse {
 	project {
-		name = 'com.sandpolis.viewer'
+		name = 'com.sandpolis.core.viewer'
 		comment = 'The viewer library module'
 	}
 }

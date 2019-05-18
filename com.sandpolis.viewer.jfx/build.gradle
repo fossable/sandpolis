@@ -43,7 +43,7 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':module:com.sandpolis.core.soi')
 	implementation project(':module:com.sandpolis.core.util')
-	implementation project(':module:com.sandpolis.viewer')
+	implementation project(':module:com.sandpolis.core.viewer')
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:27.1-jre'

@@ -15,7 +15,7 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.cmd;
+package com.sandpolis.core.viewer.cmd;
 
 import java.io.File;
 import java.io.FileInputStream;

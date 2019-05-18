@@ -38,7 +38,7 @@ include 'module:com.sandpolis.core.storage.hibernate'
 include 'module:com.sandpolis.core.storage.ormlite'
 include 'module:com.sandpolis.core.stream'
 include 'module:com.sandpolis.core.util'
-include 'module:com.sandpolis.viewer'
+include 'module:com.sandpolis.core.viewer'
 
 // Core plugins
 include 'plugin:com.sandpolis.plugin.desktop'

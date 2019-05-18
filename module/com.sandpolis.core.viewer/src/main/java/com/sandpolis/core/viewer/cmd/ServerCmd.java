@@ -15,49 +15,35 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.cmd;
+package com.sandpolis.core.viewer.cmd;
 
 import com.sandpolis.core.net.Cmdlet;
-import com.sandpolis.core.net.future.SockFuture;
-import com.sandpolis.core.net.init.ClientPipelineInit;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
-
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
+import com.sandpolis.core.net.future.ResponseFuture;
+import com.sandpolis.core.proto.net.MCServer.RQ_ServerBanner;
+import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 
 /**
- * Contains network commands.
+ * Contains server commands.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public final class NetworkCmd extends Cmdlet<NetworkCmd> {
+public final class ServerCmd extends Cmdlet<ServerCmd> {
 
-	/**
-	 * Attempt to connect to a Sandpolis listener.
-	 * 
-	 * @param address The IP address or DNS name
-	 * @param port    The port number
-	 * @return The future of the action
-	 */
-	public SockFuture connect(String address, int port) {
-		return ConnectionStore.connect(new Bootstrap().channel(NioSocketChannel.class).group(new NioEventLoopGroup())
-				.remoteAddress(address, port)
-				// TODO use static pipeline initializer defined somewhere
-				.handler(new ClientPipelineInit(new Class[] {})));
+	public ResponseFuture<RS_ServerBanner> getServerBanner() {
+		return route(RQ_ServerBanner.newBuilder());
 	}
 
 	/**
 	 * Prepare for an asynchronous command.
 	 * 
 	 * @return A configurable object from which all asynchronous (nonstatic)
-	 *         commands in {@link NetworkCmd} can be invoked
+	 *         commands in {@link ServerCmd} can be invoked
 	 */
-	public static NetworkCmd async() {
-		return new NetworkCmd();
+	public static ServerCmd async() {
+		return new ServerCmd();
 	}
 
-	private NetworkCmd() {
+	private ServerCmd() {
 	}
 }

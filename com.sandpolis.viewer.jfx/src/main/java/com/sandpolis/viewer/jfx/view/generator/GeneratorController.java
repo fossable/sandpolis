@@ -35,7 +35,7 @@ import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 import com.sandpolis.core.proto.util.Generator.OutputFormat;
 import com.sandpolis.core.proto.util.Generator.OutputPayload;
 import com.sandpolis.core.util.ValidationUtil;
-import com.sandpolis.viewer.cmd.GenCmd;
+import com.sandpolis.core.viewer.cmd.GenCmd;
 import com.sandpolis.viewer.jfx.PoolConstant.ui;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;

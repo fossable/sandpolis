@@ -22,7 +22,7 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
-import com.sandpolis.viewer.cmd.LoginCmd;
+import com.sandpolis.core.viewer.cmd.LoginCmd;
 
 public class LoginWindow extends BasicWindow {
 

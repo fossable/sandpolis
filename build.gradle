@@ -57,11 +57,11 @@ def publishProjects = [
 	'com.sandpolis.core.soi',
 	'com.sandpolis.core.storage.hibernate',
 	'com.sandpolis.core.util',
+	'com.sandpolis.core.viewer',
 	'com.sandpolis.plugin.desktop',
 	'com.sandpolis.plugin.filesys',
 	'com.sandpolis.plugin.sysinfo',
 	'com.sandpolis.server.vanilla',
-	'com.sandpolis.viewer',
 	'com.sandpolis.viewer.cli',
 	'com.sandpolis.viewer.jfx'
 ]

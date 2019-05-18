@@ -30,7 +30,7 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':module:com.sandpolis.core.soi')
 	implementation project(':module:com.sandpolis.core.util')
-	implementation project(':module:com.sandpolis.viewer')
+	implementation project(':module:com.sandpolis.core.viewer')
 
 	// https://github.com/qos-ch/logback
 	implementation 'ch.qos.logback:logback-core:1.2.3'
