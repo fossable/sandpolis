@@ -25,7 +25,7 @@ sourceSets {
 eclipse {
 	project {
 		name = 'com.sandpolis.plugin.sysinfo'
-		comment = ''
+		comment = 'The system info plugin'
 	}
 }
 

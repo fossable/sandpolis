@@ -11,7 +11,7 @@ plugins {
 eclipse {
 	project {
 		name = 'com.sandpolis.plugin.filesys'
-		comment = 'The filesys plugin'
+		comment = 'The filesystem plugin'
 	}
 }
 
