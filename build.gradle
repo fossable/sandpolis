@@ -46,6 +46,7 @@ subprojects {
 	}
 }
 
+// A list of projects that will be published to the release repository
 def publishProjects = [
 	'com.sandpolis.client.mega',
 	'com.sandpolis.core.instance',
@@ -57,6 +58,7 @@ def publishProjects = [
 	'com.sandpolis.core.storage.hibernate',
 	'com.sandpolis.core.util',
 	'com.sandpolis.plugin.desktop',
+	'com.sandpolis.plugin.filesys',
 	'com.sandpolis.plugin.sysinfo',
 	'com.sandpolis.server',
 	'com.sandpolis.viewer',
@@ -64,10 +66,14 @@ def publishProjects = [
 	'com.sandpolis.viewer.jfx'
 ]
 
-// Apply publishing configuration to subprojects
+// Apply publishing configuration
 configure(subprojects.findAll {publishProjects.contains(it.name)}) {
 	apply plugin: 'maven-publish'
 	apply plugin: 'signing'
+
+	group = 'com.sandpolis'
+	archivesBaseName = it.name.replace("com.", "").replaceAll("\\.", "-")
+	version = SANDPOLIS_VERSION
 
 	afterEvaluate { sub ->
 		task sourcesJar(type: Jar) {
@@ -83,15 +89,16 @@ configure(subprojects.findAll {publishProjects.contains(it.name)}) {
 		publishing {
 			publications {
 				mavenJava(MavenPublication) {
-					groupId = 'com.sandpolis'
-					artifactId = sub.name.replace("com.sandpolis.", "").replaceAll("\\.", "-")
-					version = SANDPOLIS_VERSION
+					groupId = sub.group
+					artifactId = sub.archivesBaseName
+					version = sub.version
 
 					from sub.components.java
 					artifact sourcesJar
 					artifact javadocJar
 					pom {
 						name = sub.name
+						description = sub.eclipse.project.comment
 						url = 'https://github.com/Subterranean-Security/Sandpolis'
 						licenses {
 							license {

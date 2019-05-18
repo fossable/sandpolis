@@ -35,7 +35,6 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 	
 	implementation project(':module:com.sandpolis.core.instance')
-	implementation project(':module:com.sandpolis.core.permission')
 	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':module:com.sandpolis.core.util')
 

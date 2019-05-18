@@ -6,6 +6,7 @@
 plugins {
 	id 'eclipse'
 	id 'java'
+	id 'com.sandpolis.gradle.soi'
 }
 
 eclipse {

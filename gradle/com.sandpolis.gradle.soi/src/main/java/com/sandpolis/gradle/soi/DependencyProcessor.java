@@ -246,7 +246,8 @@ public final class DependencyProcessor {
 	private static String getCoordinates(Project project) {
 		Objects.requireNonNull(project);
 
-		return String.format(":%s:", project.getName());
+		return String.format("com.sandpolis:%s:%s", project.getName().replace("com.", "").replaceAll("\\.", "-"),
+				project.getVersion());
 	}
 
 	/**
@@ -258,11 +259,11 @@ public final class DependencyProcessor {
 	private static String getCoordinates(ResolvedDependency dependency) {
 		Objects.requireNonNull(dependency);
 
-		if (dependency.getModuleGroup().contains("Sandpolis"))
-			return String.format(":%s:", dependency.getModuleName());
+		String artifactId = dependency.getModuleGroup().equals("com.sandpolis")
+				? dependency.getModuleName().replace("com.", "").replaceAll("\\.", "-")
+				: dependency.getModuleName();
 
-		return String.format("%s:%s:%s", dependency.getModuleGroup(), dependency.getModuleName(),
-				dependency.getModuleVersion());
+		return String.format("%s:%s:%s", dependency.getModuleGroup(), artifactId, dependency.getModuleVersion());
 	}
 
 }
