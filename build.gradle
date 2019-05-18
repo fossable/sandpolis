@@ -60,7 +60,7 @@ def publishProjects = [
 	'com.sandpolis.plugin.desktop',
 	'com.sandpolis.plugin.filesys',
 	'com.sandpolis.plugin.sysinfo',
-	'com.sandpolis.server',
+	'com.sandpolis.server.vanilla',
 	'com.sandpolis.viewer',
 	'com.sandpolis.viewer.cli',
 	'com.sandpolis.viewer.jfx'

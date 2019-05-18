@@ -234,9 +234,10 @@ public final class PluginStore {
 	 * @throws IOException If a filesystem error occurs
 	 */
 	public static void scanPluginDirectory() throws IOException {
+		// TODO will install an arbitrary version if there's more than one
 		Files.list(Environment.get(LIB))
 				// Core plugins only
-				.filter(path -> path.getFileName().toString().startsWith("com.sandpolis.plugin."))
+				.filter(path -> path.getFileName().toString().startsWith("sandpolis-plugin-"))
 				// Skip installed plugins
 				.filter(path -> {
 					try (Stream<Plugin> stream = provider.stream()) {

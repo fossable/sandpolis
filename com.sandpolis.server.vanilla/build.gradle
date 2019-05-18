@@ -1,0 +1,80 @@
+/*******************************************************************************
+* SANDPOLIS                                                                    *
+* com.sandpolis.server.vanilla                                                 *
+*******************************************************************************/
+
+plugins {
+	id 'eclipse'
+	id 'java'
+
+	id 'com.sandpolis.gradle.soi'
+}
+
+eclipse {
+	project {
+		name = 'com.sandpolis.server.vanilla'
+		comment = 'The server instance'
+	}
+}
+
+dependencies {
+	testImplementation project(path: ':module:com.sandpolis.core.net', configuration: 'tests')
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
+
+	compileOnly project(':module:com.sandpolis.core.instance:constants')
+	compileOnly project('constants')
+
+	implementation project(':com.sandpolis.client.mega')
+	implementation project(':module:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.ipc')
+	implementation project(':module:com.sandpolis.core.net')
+	implementation project(':module:com.sandpolis.core.profile')
+	implementation project(':module:com.sandpolis.core.proto')
+	implementation project(':module:com.sandpolis.core.soi')
+	implementation project(':module:com.sandpolis.core.storage.hibernate')
+	implementation project(':module:com.sandpolis.core.util')
+	
+	// Core plugins
+	implementation project(':plugin:com.sandpolis.plugin.desktop')
+	implementation project(':plugin:com.sandpolis.plugin.sysinfo')
+	implementation project(':plugin:com.sandpolis.plugin.filesys')
+
+	// https://github.com/google/guava
+	implementation 'com.google.guava:guava:27.1-jre'
+
+	// https://github.com/h2database/h2database
+	implementation 'com.h2database:h2:1.4.199'
+
+	// https://github.com/netty/netty
+	implementation 'io.netty:netty-codec:4.1.36.Final'
+	implementation 'io.netty:netty-common:4.1.36.Final'
+	implementation 'io.netty:netty-handler:4.1.36.Final'
+	implementation 'io.netty:netty-transport:4.1.36.Final'
+
+	implementation 'javax.persistence:javax.persistence-api:2.2'
+
+	// https://github.com/qos-ch/slf4j
+	implementation 'org.slf4j:slf4j-api:1.7.26'
+	
+	// https://github.com/cilki/zipset
+	implementation 'com.github.cilki:zipset:1.1.0'
+}
+
+jar {
+	manifest {
+		attributes(
+			'Main-Class': 'com.sandpolis.server.vanilla.Main',
+			'Class-Path': configurations.runtimeClasspath.collect { 'lib/' + it.getName() }.join(' ')
+		)
+	}
+}
+
+// Copy dependencies to a path given by STDIN
+task installDependencies {
+	doLast {
+		copy {
+			from(configurations.runtimeClasspath)
+			into(new java.util.Scanner(System.in).nextLine())
+		}
+	}
+}

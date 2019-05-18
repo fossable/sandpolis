@@ -78,7 +78,7 @@ public class DeployPlugin implements Plugin<Project> {
 				def deploy_type
 				switch (getName()){
 					case "com.sandpolis.charcoal":
-					case "com.sandpolis.server":
+					case "com.sandpolis.server.vanilla":
 					case "com.sandpolis.client.mega":
 					case "com.sandpolis.viewer.cli":
 					case "com.sandpolis.viewer.jfx":

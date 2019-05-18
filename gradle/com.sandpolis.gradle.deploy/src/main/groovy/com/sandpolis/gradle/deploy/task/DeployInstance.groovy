@@ -26,7 +26,7 @@ class DeployInstance extends RemoteTask {
 				put from: project_deploy.configurations.runtimeClasspath, into: directory + '/lib'
 				
 				// Transfer all core plugins for server only
-				if (project_deploy.name.equals("com.sandpolis.server"))
+				if (project_deploy.name.equals("com.sandpolis.server.vanilla"))
 					project_root.subprojects { sub ->
 						if (sub.name.startsWith("com.sandpolis.plugin"))
 							put from: sub.jar.outputs.files, into: directory + '/lib'
@@ -38,7 +38,7 @@ class DeployInstance extends RemoteTask {
 					execute 'screen -d -m -S ' + project_deploy.name
 
 				// Run the artifact
-				execute 'screen -S ' + project_deploy.name + ' -X stuff "clear && java -jar ' + directory + '/' + project_deploy.name + '.jar\n"'
+				execute 'screen -S ' + project_deploy.name + ' -X stuff "clear && java -jar ' + directory + '/' + project_deploy.archivesBaseName + '-' + project_deploy.version + '.jar\n"'
 			}
 		}
 	}
@@ -63,7 +63,7 @@ class DeployInstance extends RemoteTask {
 				put from: project_deploy.configurations.runtimeClasspath, into: directory + '/lib'
 				
 				// Transfer all core plugins for server only
-				if (project_deploy.name.equals("com.sandpolis.server"))
+				if (project_deploy.name.equals("com.sandpolis.server.vanilla"))
 					project_root.subprojects { sub ->
 						if (sub.name.startsWith("com.sandpolis.plugin"))
 							put from: sub.jar.outputs.files, into: directory + '/lib'
