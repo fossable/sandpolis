@@ -35,23 +35,12 @@ import org.testfx.framework.junit5.Start;
 import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.viewer.jfx.PrefConstant.ui;
 
-import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
 @ExtendWith(ApplicationExtension.class)
 class CarouselPaneTest {
-
-	private static void waitCondition(Supplier<Boolean> condition, int timeout) throws InterruptedException {
-		int waited = 0;
-		while(!condition.get()) {
-			if (waited >= timeout)
-				throw new RuntimeException();
-			Thread.sleep(100);
-			waited += 100;
-		}
-	}
 
 	@BeforeAll
 	private static void init() throws Exception {
@@ -93,7 +82,7 @@ class CarouselPaneTest {
 	@Test
 	@DisplayName("Try to construct a CarouselPane with an invalid duration")
 	void carouselPane_2() {
-		assertThrows(IllegalArgumentException.class, () -> new CarouselPane("invalid", -1, new Label()));
+		assertThrows(IllegalArgumentException.class, () -> new CarouselPane("right", -1, new Label()));
 	}
 
 	@Test
@@ -133,4 +122,17 @@ class CarouselPaneTest {
 		assertThat(carousel).doesNotHaveChild("#view3");
 	}
 
+	private void waitCondition(Supplier<Boolean> condition, int timeout) throws InterruptedException {
+		int waited = 0;
+		while (!condition.get()) {
+			if (waited >= timeout)
+				throw new RuntimeException();
+			Thread.sleep(100);
+			waited += 100;
+		}
+
+		// Wait a little longer for the animation hooks to finish
+		// TODO come up with a better way
+		Thread.sleep(400);
+	}
 }
