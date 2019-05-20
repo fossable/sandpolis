@@ -83,7 +83,11 @@ public class MainController {
 	/**
 	 * An executor that will run the installation.
 	 */
-	private ExecutorService service = Executors.newSingleThreadExecutor();
+	private static final ExecutorService service = Executors.newSingleThreadExecutor((Runnable r) -> {
+		Thread thread = new Thread(r, "installation_thread");
+		thread.setDaemon(true);
+		return thread;
+	});
 
 	@FXML
 	private void initialize() {
