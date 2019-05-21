@@ -17,9 +17,9 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.view.about;
 
+import java.io.IOException;
 import java.util.Date;
 
-import com.interactivemesh.jfx.importer.stl.StlMeshImporter;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.viewer.jfx.Viewer.UI;
@@ -71,7 +71,7 @@ public class AboutController extends AbstractController {
 	private double zSpeed = 0;
 
 	@FXML
-	private void initialize() {
+	private void initialize() throws IOException {
 
 		// Load static properties
 		version.setText(Core.SO_BUILD.getVersion());
@@ -82,10 +82,9 @@ public class AboutController extends AbstractController {
 		java_uptime.referenceProperty().set(Environment.JVM_TIMESTAMP.getTime());
 
 		if (Platform.isSupported(ConditionalFeature.SCENE3D)) {
+
 			// Load 3D mesh from resource
-			StlMeshImporter importer = new StlMeshImporter();
-			importer.read(getClass().getResource("/mesh/sandpolis.stl"));
-			MeshView meshView = new MeshView(importer.getImport());
+			MeshView meshView = new MeshView(StlParser.parse(getClass().getResourceAsStream("/mesh/sandpolis.stl")));
 			Group bp = new Group(meshView);
 
 			SubScene ss = new SubScene(bp, sub.getWidth(), sub.getHeight(), true, SceneAntialiasing.BALANCED);

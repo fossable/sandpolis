@@ -21,11 +21,6 @@ eclipse {
 	}
 }
 
-repositories {
-	// TODO remove dependency
-	flatDir dirs: 'lib'
-}
-
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 	testImplementation 'org.testfx:testfx-core:4.0.15-alpha'
@@ -65,9 +60,6 @@ dependencies {
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
-
-	// TODO remove dependency
-	implementation ':StlMeshImporter:'
 }
 
 jar {
