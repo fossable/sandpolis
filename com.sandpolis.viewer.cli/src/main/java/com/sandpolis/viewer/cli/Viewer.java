@@ -27,7 +27,6 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.cilki.slpanels.SLAnimator;
 import com.googlecode.lanterna.gui2.AsynchronousTextGUIThread;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.SeparateTextGUIThread;
@@ -92,10 +91,6 @@ public final class Viewer {
 		MainWindow window = new MainWindow();
 		textGUI.addWindow(window);
 		textGUI.updateScreen();
-
-		// Start the animator. If another Tween-able type is added in addition to
-		// MovablePanel, this statement needs to move.
-		SLAnimator.start(textGUI.getGUIThread(), window);
 
 		return task.success();
 	});

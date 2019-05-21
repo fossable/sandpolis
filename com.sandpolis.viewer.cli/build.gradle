@@ -16,11 +16,6 @@ eclipse {
 	}
 }
 
-repositories {
-	// TODO remove
-	flatDir dirs: 'lib'
-}
-
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 
@@ -47,10 +42,6 @@ dependencies {
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
-
-	// TODO remove
-	implementation 'org.mini2Dx:universal-tween-engine:6.3.3'
-	implementation ':SLPanels:'
 }
 
 jar {
