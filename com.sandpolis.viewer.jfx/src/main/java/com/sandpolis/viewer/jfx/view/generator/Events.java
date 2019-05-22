@@ -72,4 +72,16 @@ public final class Events {
 	public static class GenerationCompletedEvent extends ParameterizedEvent<RS_Generate> {
 	}
 
+	/**
+	 * Indicates that the output location has been changed.
+	 */
+	public static class OutputLocationChangedEvent extends ParameterizedEvent<String> {
+	}
+
+	/**
+	 * Indicates that the output format has been changed.
+	 */
+	public static class OutputFormatChangedEvent extends ParameterizedEvent<String> {
+	}
+
 }

@@ -45,6 +45,8 @@ import com.sandpolis.viewer.jfx.common.pane.ExtendPane.ExtendSide;
 import com.sandpolis.viewer.jfx.view.generator.Events.AddServerEvent;
 import com.sandpolis.viewer.jfx.view.generator.Events.DetailCloseEvent;
 import com.sandpolis.viewer.jfx.view.generator.Events.GenerationCompletedEvent;
+import com.sandpolis.viewer.jfx.view.generator.Events.OutputFormatChangedEvent;
+import com.sandpolis.viewer.jfx.view.generator.Events.OutputLocationChangedEvent;
 import com.sandpolis.viewer.jfx.view.generator.config_tree.TreeAttributeFileController;
 import com.sandpolis.viewer.jfx.view.generator.config_tree.TreeAttributeListController;
 import com.sandpolis.viewer.jfx.view.generator.config_tree.TreeAttributeTextController;
@@ -59,6 +61,7 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.layout.Region;
 
 public class GeneratorController extends FxController {
 
@@ -108,6 +111,11 @@ public class GeneratorController extends FxController {
 
 	@FXML
 	private void initialize() throws IOException {
+		// Raise status
+		Region status = FxUtil.load("/fxml/view/generator/detail/Status.fxml", this);
+		status.prefWidthProperty().bind(extend.widthProperty());
+		extend.raise(status, ExtendSide.BOTTOM, 1000, 100);
+
 		tree.setRoot(new TreeItem<>());
 		tree.setShowRoot(false);
 		tree.setCellFactory(p -> new TreeCell<Node>() {
@@ -169,15 +177,18 @@ public class GeneratorController extends FxController {
 		out_directory = load(output, TreeAttributeFileController.class);
 		out_directory.name().set("Output Location");
 		out_directory.value().set(System.getProperty("user.home"));
+		out_directory.value().addListener((p, o, n) -> {
+			post(OutputLocationChangedEvent::new, n);
+		});
 
 		out_format = load(output, TreeAttributeListController.class);
 		out_format.name().set("File Format");
+		out_format.value().addListener((p, o, n) -> {
+			post(OutputFormatChangedEvent::new, n);
+		});
 
 		out_passphrase = load(output, TreeAttributeTextController.class);
 		out_passphrase.name().set("Encryption Passphrase");
-
-		// Raise status
-		extend.raise(FxUtil.load("/fxml/view/generator/detail/Status.fxml", this), ExtendSide.BOTTOM, 1000, 100);
 	}
 
 	private NetworkConfig getNetworkConfig() {
@@ -227,7 +238,9 @@ public class GeneratorController extends FxController {
 		Stream.of(exe, net, auth, plugin, output).forEach(cat -> cat.getItem().setExpanded(false));
 
 		// Raise progress detail
-		extend.raise(FxUtil.load("/fxml/view/generator/detail/Progress.fxml", this), ExtendSide.BOTTOM, 1000, 150);
+		Region progress = FxUtil.load("/fxml/view/generator/detail/Progress.fxml", this);
+		progress.prefWidthProperty().bind(extend.widthProperty());
+		extend.raise(progress, ExtendSide.BOTTOM, 500, 150);
 
 		// Execute command
 		GenCmd.async().pool(ui.fx_thread).generate(getConfig()).addListener((ResponseFuture<RS_Generate> response) -> {
@@ -239,21 +252,21 @@ public class GeneratorController extends FxController {
 	private void add_network_target() throws IOException {
 		TitledPane pane = FxUtil.load("/fxml/view/generator/detail/AddServer.fxml", this);
 
-		extend.raise(pane, ExtendSide.RIGHT, 1000, 300);
+		extend.raise(pane, ExtendSide.RIGHT, 800, 300);
 	}
 
 	@FXML
 	private void add_plugin() throws IOException {
 		TitledPane pane = FxUtil.load("/fxml/view/generator/detail/AddPlugin.fxml", this);
 
-		extend.raise(pane, ExtendSide.RIGHT, 1000, 300);
+		extend.raise(pane, ExtendSide.RIGHT, 800, 300);
 	}
 
 	@FXML
 	private void add_group() throws IOException {
 		TitledPane pane = FxUtil.load("/fxml/view/generator/detail/AddAuth.fxml", this);
 
-		extend.raise(pane, ExtendSide.RIGHT, 1000, 300);
+		extend.raise(pane, ExtendSide.RIGHT, 800, 300);
 	}
 
 	@Subscribe

@@ -25,3 +25,20 @@
 .about_logo_background {
 	-fx-background-color: #333333;
 }
+
+/* GENERATOR */
+#btn_add_server {
+	-fx-graphic: "/image/icon16/common/server_add.png";
+}
+
+#btn_add_plugin {
+	-fx-graphic: "/image/icon16/common/server_add.png";
+}
+
+#btn_add_group {
+	-fx-graphic: "/image/icon16/common/server_add.png";
+}
+
+#btn_generate {
+	-fx-graphic: "/image/icon16/common/compile.png";
+}
