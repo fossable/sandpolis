@@ -33,6 +33,11 @@ allprojects {
 	}
 }
 
+// Apply metadata configuration
+allprojects {
+	version = SANDPOLIS_VERSION
+}
+
 // Apply testing configuration to subprojects
 subprojects {
 	plugins.withType(JavaPlugin) {
@@ -73,7 +78,6 @@ configure(subprojects.findAll {publishProjects.contains(it.name)}) {
 
 	group = 'com.sandpolis'
 	archivesBaseName = it.name.replace("com.", "").replaceAll("\\.", "-")
-	version = SANDPOLIS_VERSION
 
 	afterEvaluate { sub ->
 		task sourcesJar(type: Jar) {

@@ -8,6 +8,7 @@ plugins {
 	id 'java'
 
 	id 'org.openjfx.javafxplugin' version '0.0.7'
+	id "com.github.breadmoirai.github-release" version "2.2.8"
 }
 
 javafx {
@@ -19,6 +20,13 @@ eclipse {
 		name = 'com.sandpolis.installer'
 		comment = 'The installer instance'
 	}
+}
+
+configurations {
+	installTargets
+	jfxWin
+	jfxLin
+	jfxMac
 }
 
 dependencies {
@@ -35,9 +43,40 @@ dependencies {
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
+
+	// Installation targets
+	installTargets project(':com.sandpolis.server.vanilla')
+	installTargets project(':com.sandpolis.viewer.jfx')
+	installTargets project(':com.sandpolis.viewer.cli')
+	installTargets project(':com.sandpolis.client.mega')
+
+	// JavaFX runtimes
+	jfxWin 'org.openjfx:javafx-base:11.0.2:win'
+	jfxWin 'org.openjfx:javafx-fxml:11.0.2:win'
+	jfxWin 'org.openjfx:javafx-graphics:11.0.2:win'
+	jfxWin 'org.openjfx:javafx-controls:11.0.2:win'
+
+	jfxLin 'org.openjfx:javafx-base:11.0.2:linux'
+	jfxLin 'org.openjfx:javafx-fxml:11.0.2:linux'
+	jfxLin 'org.openjfx:javafx-graphics:11.0.2:linux'
+	jfxLin 'org.openjfx:javafx-controls:11.0.2:linux'
+
+	jfxMac 'org.openjfx:javafx-base:11.0.2:mac'
+	jfxMac 'org.openjfx:javafx-fxml:11.0.2:mac'
+	jfxMac 'org.openjfx:javafx-graphics:11.0.2:mac'
+	jfxMac 'org.openjfx:javafx-controls:11.0.2:mac'
 }
 
 jar {
+	from {
+		configurations.runtimeClasspath.collect {
+			it.name.startsWith("compact-classloader") ? zipTree(it) : it
+		}
+	}
+}
+
+task jarOnlineWin(type: Jar, dependsOn: jar) {
+	baseName = "SandpolisInstaller-win"
 	manifest {
 		attributes(
 			'Main-Class': 'com.github.cilki.compact.BootProxy',
@@ -45,9 +84,98 @@ jar {
 		)
 	}
 
-	from {
-		configurations.runtimeClasspath.collect {
-			it.name.startsWith("compact-classloader") ? zipTree(it) : it
-		}
+	from (zipTree(jar.archivePath)) {
+		exclude "javafx-*"
 	}
+
+	from {
+		configurations.jfxWin
+	}
+}
+
+task jarOnlineLin(type: Jar, dependsOn: jar) {
+	baseName = "SandpolisInstaller-linux"
+	manifest {
+		attributes(
+			'Main-Class': 'com.github.cilki.compact.BootProxy',
+			'Boot-Class': 'com.sandpolis.installer.Main'
+		)
+	}
+
+	from (zipTree(jar.archivePath)) {
+		exclude "javafx-*"
+	}
+
+	from {
+		configurations.jfxLin
+	}
+}
+
+task jarOnlineMac(type: Jar, dependsOn: jar) {
+	baseName = "SandpolisInstaller-mac"
+	manifest {
+		attributes(
+			'Main-Class': 'com.github.cilki.compact.BootProxy',
+			'Boot-Class': 'com.sandpolis.installer.Main'
+		)
+	}
+
+	from (zipTree(jar.archivePath)) {
+		exclude "javafx-*"
+	}
+
+	from {
+		configurations.jfxMac
+	}
+}
+
+task jarOffline(type: Jar, dependsOn: jar) {
+	baseName = "SandpolisInstaller-offline"
+	manifest {
+		attributes(
+			'Main-Class': 'com.github.cilki.compact.BootProxy',
+			'Boot-Class': 'com.sandpolis.installer.Main'
+		)
+	}
+
+	from (zipTree(jar.archivePath)) {
+		exclude "javafx-*"
+	}
+
+	from {
+		configurations.installTargets
+	}
+
+	from {
+		configurations.jfxWin
+	}
+
+	from {
+		configurations.jfxLin
+	}
+
+	from {
+		configurations.jfxMac
+	}
+}
+
+artifacts {
+	archives jarOnlineWin
+	archives jarOnlineLin
+	archives jarOnlineMac
+	archives jarOffline
+}
+
+githubRelease {
+	token GITHUB_TOKEN
+	owner "Subterranean-Security"
+	repo "Sandpolis"
+	draft true
+	prerelease true
+	releaseAssets {[
+		jarOnlineWin.archivePath,
+		jarOnlineLin.archivePath,
+		jarOnlineMac.archivePath,
+		jarOffline.archivePath
+	]}
 }
