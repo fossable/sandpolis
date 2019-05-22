@@ -68,6 +68,13 @@ dependencies {
 }
 
 jar {
+	manifest {
+		attributes(
+			'Main-Class': 'com.github.cilki.compact.BootProxy',
+			'Boot-Class': 'com.sandpolis.installer.Main'
+		)
+	}
+
 	from {
 		configurations.runtimeClasspath.collect {
 			it.name.startsWith("compact-classloader") ? zipTree(it) : it

@@ -8,6 +8,7 @@
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -23,20 +24,13 @@
          <center>
             <ButtonBar fx:id="button_bar" prefWidth="303.0">
               <buttons>
-                <Button fx:id="btn_install" mnemonicParsing="false" onAction="#install" text="Install" />
+                <Button fx:id="btn_install" disable="true" mnemonicParsing="false" onAction="#install" text="Install" />
               </buttons>
                <padding>
                   <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
                </padding>
             </ButtonBar>
          </center>
-         <top>
-            <HBox id="status_box">
-               <children>
-               	<Label id="status_label" fx:id="status" text="Choose a component to install/update" />
-               </children>
-            </HBox>
-         </top>
       </BorderPane>
    </bottom>
    <center>
@@ -44,7 +38,7 @@
          <children>
             <TitledPane fx:id="pane_viewer_jfx" text="Install Viewer GUI">
                <graphic>
-                  <CheckBox fx:id="chk_viewer_jfx" mnemonicParsing="false" selected="true" />
+                  <CheckBox fx:id="chk_viewer_jfx" mnemonicParsing="false" />
                </graphic>
                <content>
                   <BorderPane>
@@ -76,7 +70,7 @@
             </TitledPane>
             <TitledPane fx:id="pane_server" text="Install Server">
                <graphic>
-                  <CheckBox fx:id="chk_server" mnemonicParsing="false" selected="true" />
+                  <CheckBox fx:id="chk_server" mnemonicParsing="false" />
                </graphic>
                <content>
                   <BorderPane>
@@ -130,7 +124,10 @@
                               <HBox spacing="4.0">
                                  <children>
                                     <TextField fx:id="client_key" HBox.hgrow="ALWAYS" />
-                                    <Button mnemonicParsing="false" onAction="#paste_key" text="P" />
+                                    <Button id="btn_paste" mnemonicParsing="false" onAction="#paste_key">
+                                       <tooltip>
+                                          <Tooltip text="Paste key from clipboard" />
+                                       </tooltip></Button>
                                  </children>
                               </HBox>
                            </children>

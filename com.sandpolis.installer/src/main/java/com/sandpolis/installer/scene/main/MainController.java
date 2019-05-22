@@ -27,7 +27,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
@@ -73,9 +72,6 @@ public class MainController {
 
 	@FXML
 	private Button btn_install;
-
-	@FXML
-	private Label status;
 
 	@FXML
 	private ImageView banner;
@@ -150,8 +146,6 @@ public class MainController {
 
 		service.execute(() -> {
 			Platform.runLater(() -> {
-				status.textProperty().unbind();
-				status.setText("Installation succeeded!");
 				btn_install.setDisable(false);
 				btn_install.setText("Finish");
 				btn_install.setOnAction((e) -> {
@@ -168,8 +162,6 @@ public class MainController {
 			progress.setPrefHeight(22);
 			progress.progressProperty().bind(installer.progressProperty());
 			section.setGraphic(progress);
-
-			status.textProperty().bind(installer.messageProperty());
 		});
 
 		installer.setOnSucceeded(event -> {
@@ -194,8 +186,6 @@ public class MainController {
 		service.execute(() -> {
 			if (!installer.isCompleted()) {
 				Platform.runLater(() -> {
-					status.textProperty().unbind();
-					status.setText("Installation failed!");
 					btn_install.setDisable(false);
 					btn_install.setText("Exit");
 					btn_install.setOnAction((e) -> {
