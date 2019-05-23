@@ -18,6 +18,9 @@
 package com.sandpolis.viewer.jfx.view.generator;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -57,6 +60,7 @@ import com.sandpolis.viewer.jfx.view.generator.config_tree.TreeItemController;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
@@ -69,6 +73,14 @@ public class GeneratorController extends FxController {
 	private ExtendPane extend;
 	@FXML
 	private TreeView<Node> tree;
+	@FXML
+	private Button btn_add_server;
+	@FXML
+	private Button btn_add_plugin;
+	@FXML
+	private Button btn_add_group;
+	@FXML
+	private Button btn_generate;
 
 	private TreeCategoryController exe;
 	private TreeCategoryController net;
@@ -180,6 +192,12 @@ public class GeneratorController extends FxController {
 		out_directory.value().addListener((p, o, n) -> {
 			post(OutputLocationChangedEvent::new, n);
 		});
+		out_directory.setFileMapper(file -> {
+			if (file.isDirectory())
+				return file.getAbsolutePath() + "/payload.jar";
+
+			return file.getAbsolutePath();
+		});
 
 		out_format = load(output, TreeAttributeListController.class);
 		out_format.name().set("File Format");
@@ -219,7 +237,7 @@ public class GeneratorController extends FxController {
 	 * 
 	 * @return A new {@link GenConfig}
 	 */
-	public GenConfig getConfig() {
+	private GenConfig getConfig() {
 		var config = GenConfig.newBuilder().setRequestUser("TODO").setPayload(payload).setFormat(OutputFormat.JAR);
 
 		if (payload == OutputPayload.OUTPUT_MEGA)
@@ -232,19 +250,43 @@ public class GeneratorController extends FxController {
 		return config.build();
 	}
 
+	/**
+	 * Get the output path.
+	 * 
+	 * @return The current output path
+	 */
+	private Path getOutput() {
+		Path output = Paths.get(out_directory.value().get());
+		return output;
+	}
+
 	@FXML
 	private void generate() throws IOException {
+		GenConfig config = getConfig();
+
 		// Collapse all categories
-		Stream.of(exe, net, auth, plugin, output).forEach(cat -> cat.getItem().setExpanded(false));
+		Stream.of(exe, net, auth, plugin, output).forEach(cat -> {
+			cat.getItem().setExpanded(false);
+			cat.getItem().getValue().setDisable(true);
+		});
+
+		// Disable controls
+		btn_add_server.setDisable(true);
+		btn_add_plugin.setDisable(true);
+		btn_add_group.setDisable(true);
+		btn_generate.setDisable(true);
 
 		// Raise progress detail
 		Region progress = FxUtil.load("/fxml/view/generator/detail/Progress.fxml", this);
 		progress.prefWidthProperty().bind(extend.widthProperty());
 		extend.raise(progress, ExtendSide.BOTTOM, 500, 150);
 
-		// Execute command
-		GenCmd.async().pool(ui.fx_thread).generate(getConfig()).addListener((ResponseFuture<RS_Generate> response) -> {
+		// Execute
+		GenCmd.async().pool(ui.fx_thread).generate(config).addListener((ResponseFuture<RS_Generate> response) -> {
 			post(GenerationCompletedEvent::new, response.get());
+
+			// TODO worker thread
+			Files.write(getOutput(), response.get().getOutput().toByteArray());
 		});
 	}
 

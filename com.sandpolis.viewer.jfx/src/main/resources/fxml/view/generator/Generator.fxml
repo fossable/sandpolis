@@ -21,25 +21,28 @@
 					<left>
 						<ToolBar focusTraversable="false" orientation="VERTICAL">
 							<items>
-								<Button id="btn_add_server"
+								<Button id="btn_add_server" fx:id="btn_add_server"
 									onAction="#add_network_target">
 									<tooltip>
 										<Tooltip text="Add a new server" />
 									</tooltip>
 								</Button>
-								<Button id="btn_add_plugin" onAction="#add_plugin">
+								<Button id="btn_add_plugin" fx:id="btn_add_plugin"
+									onAction="#add_plugin">
 									<tooltip>
 										<Tooltip text="Add a new plugin" />
 									</tooltip>
 								</Button>
-								<Button id="btn_add_group" onAction="#add_group">
+								<Button id="btn_add_group" fx:id="btn_add_group"
+									onAction="#add_group">
 									<tooltip>
 										<Tooltip text="Add a new authentication group" />
 									</tooltip>
 								</Button>
 								<Separator orientation="VERTICAL" prefHeight="16.0"
 									visible="false" />
-								<Button id="btn_generate" onAction="#generate">
+								<Button id="btn_generate" fx:id="btn_generate"
+									onAction="#generate">
 									<tooltip>
 										<Tooltip text="Generate" />
 									</tooltip>
