@@ -8,7 +8,7 @@ plugins {
 	id 'java'
 
 	id 'org.openjfx.javafxplugin' version '0.0.7'
-	id "com.github.breadmoirai.github-release" version "2.2.8"
+	id "com.github.breadmoirai.github-release" version "2.2.9"
 	id 'edu.sc.seis.launch4j' version '2.4.6'
 }
 
@@ -168,15 +168,18 @@ task jarOffline(type: Jar, dependsOn: jar) {
 }
 
 launch4j {
-  mainClassName = 'com.github.cilki.compact.BootProxy'
+	outfile = "SandpolisInstaller-win-${project.version}.exe"
+	mainClassName = 'com.github.cilki.compact.BootProxy'
+	headerType = 'gui'
+	stayAlive = 'true'
+	companyName = 'Subterranean Security'
+	productName = 'Sandpolis Installer'
+	windowTitle = 'Sandpolis Installer'
+	version = "0.${SANDPOLIS_VERSION}"
+	textVersion = "0.${SANDPOLIS_VERSION}"
+	jar = jarOnlineWin.archivePath
 }
-
-artifacts {
-	archives jarOnlineWin
-	archives jarOnlineLin
-	archives jarOnlineMac
-	archives jarOffline
-}
+tasks.createExe.dependsOn(jarOnlineWin)
 
 githubRelease {
 	token GITHUB_TOKEN
@@ -185,9 +188,10 @@ githubRelease {
 	draft true
 	prerelease true
 	releaseAssets {[
-		jarOnlineWin.archivePath,
+		project.file("build/launch4j/${launch4j.outfile}"),
 		jarOnlineLin.archivePath,
 		jarOnlineMac.archivePath,
 		jarOffline.archivePath
 	]}
 }
+tasks.githubRelease.dependsOn(createExe)
