@@ -9,6 +9,7 @@ plugins {
 
 	id 'org.openjfx.javafxplugin' version '0.0.7'
 	id "com.github.breadmoirai.github-release" version "2.2.8"
+	id 'edu.sc.seis.launch4j' version '2.4.6'
 }
 
 javafx {
@@ -164,6 +165,10 @@ task jarOffline(type: Jar, dependsOn: jar) {
 	from {
 		configurations.jfxMac
 	}
+}
+
+launch4j {
+  mainClassName = 'com.github.cilki.compact.BootProxy'
 }
 
 artifacts {
