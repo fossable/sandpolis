@@ -33,9 +33,14 @@ public class BatPackager extends Packager {
 	public static final BatPackager INSTANCE = new BatPackager();
 
 	@Override
-	public void process(GenConfig config, Object payload) throws Exception {
+	public byte[] process(GenConfig config, Object payload) throws Exception {
 		// TODO Auto-generated method stub
+		return null;
+	}
 
+	@Override
+	public String getFileExtension() {
+		return "bat";
 	}
 
 }

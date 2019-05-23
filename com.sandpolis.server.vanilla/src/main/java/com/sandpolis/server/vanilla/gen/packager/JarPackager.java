@@ -17,11 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.gen.packager;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.GEN;
-
-import java.nio.file.Files;
-
-import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.server.vanilla.gen.Packager;
 
@@ -38,18 +33,18 @@ public class JarPackager extends Packager {
 	public static final JarPackager INSTANCE = new JarPackager();
 
 	@Override
-	public void process(GenConfig config, Object payload) throws Exception {
+	public byte[] process(GenConfig config, Object payload) throws Exception {
 		switch (config.getPayload()) {
 		case OUTPUT_MEGA:
-			// TODO runtime image
-
-			// Write to generator output directory
-			Files.write(Environment.get(GEN).resolve(config.getId() + ".jar"), (byte[]) payload);
-			break;
+			return (byte[]) payload;
 		default:
 			throw new IncompatiblePayloadException();
 		}
+	}
 
+	@Override
+	public String getFileExtension() {
+		return "jar";
 	}
 
 }

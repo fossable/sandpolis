@@ -34,9 +34,20 @@ public abstract class Packager {
 	 * @param config  The generator's configuration
 	 * @param payload The intermediate payload
 	 * @throws Exception
+	 * @return The processed payload
 	 */
-	abstract public void process(GenConfig config, Object payload) throws Exception;
+	public abstract byte[] process(GenConfig config, Object payload) throws Exception;
 
+	/**
+	 * Get the {@link Packager}'s output file extension.
+	 * 
+	 * @return A file extension
+	 */
+	public abstract String getFileExtension();
+
+	/**
+	 * This exception is thrown when a {@link Packager} receives the wrong payload.
+	 */
 	protected static class IncompatiblePayloadException extends RuntimeException {
 		public IncompatiblePayloadException() {
 		}

@@ -17,12 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.gen.packager;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.GEN;
-
-import java.nio.file.Files;
-
 import com.google.common.io.BaseEncoding;
-import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Generator.MicroConfig;
@@ -41,7 +36,7 @@ public class UrlPackager extends Packager {
 	public static final UrlPackager INSTANCE = new UrlPackager();
 
 	@Override
-	public void process(GenConfig config, Object payload) throws Exception {
+	public byte[] process(GenConfig config, Object payload) throws Exception {
 		String url = "https://sandpolis.com/config?c=";
 
 		switch (config.getPayload()) {
@@ -61,7 +56,12 @@ public class UrlPackager extends Packager {
 			throw new IncompatiblePayloadException();
 		}
 
-		// Write to generator output directory
-		Files.write(Environment.get(GEN).resolve(config.getId() + ".url"), url.getBytes());
+		return url.getBytes();
 	}
+
+	@Override
+	public String getFileExtension() {
+		return "url";
+	}
+
 }

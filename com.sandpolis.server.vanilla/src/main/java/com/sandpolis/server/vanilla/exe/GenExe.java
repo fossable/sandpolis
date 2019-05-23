@@ -17,7 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
-import java.io.FileInputStream;
 import java.util.concurrent.ExecutorService;
 
 import org.slf4j.Logger;
@@ -53,35 +52,35 @@ public class GenExe extends Exelet {
 		var config = m.getRqGenerate().getConfig();
 
 		ExecutorService pool = ThreadStore.get(server.generator);
-		FileGenerator generator = pool.submit(() -> {
-			FileGenerator gen;
+		pool.execute(() -> {
+			FileGenerator generator;
 			switch (config.getPayload()) {
 			case OUTPUT_MEGA:
-				gen = new MegaGen(config);
+				generator = new MegaGen(config);
 				break;
 			case OUTPUT_MICRO:
 			default:
-				log.warn("Failed to execute generator of type: {}", config.getPayload());
-				return null;
+				log.warn("No generator found for type: {}", config.getPayload());
+				reply(m, Outcome.newBuilder().setResult(false));
+				return;
 			}
 
 			try {
-				gen.generate();
+				generator.generate();
 			} catch (Exception e) {
-				log.error("Failed to generate", e);
+				log.error("Generation failed", e);
+				reply(m, Outcome.newBuilder().setResult(false));
+				return;
 			}
 
-			return gen;
-		}).get();
-
-		if (generator == null)
-			reply(m, Outcome.newBuilder().setResult(false));
-		else if (generator.getResult() != null)
-			try (var in = new FileInputStream(generator.getResult())) {
-				reply(m, RS_Generate.newBuilder().setReport(generator.getReport()).setOutput(ByteString.readFrom(in)));
+			if (generator.getResult() == null) {
+				reply(m, RS_Generate.newBuilder().setReport(generator.getReport()));
+			} else {
+				reply(m, RS_Generate.newBuilder().setReport(generator.getReport())
+						.setOutput(ByteString.copyFrom(generator.getResult())));
 			}
-		else
-			reply(m, RS_Generate.newBuilder().setReport(generator.getReport()));
+
+		});
 
 	}
 

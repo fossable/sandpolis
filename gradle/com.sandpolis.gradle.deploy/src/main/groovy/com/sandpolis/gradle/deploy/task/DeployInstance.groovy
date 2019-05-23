@@ -29,7 +29,7 @@ class DeployInstance extends RemoteTask {
 				if (project_deploy.name.equals("com.sandpolis.server.vanilla"))
 					project_root.subprojects { sub ->
 						if (sub.name.startsWith("com.sandpolis.plugin"))
-							put from: sub.jar.outputs.files, into: directory + '/lib'
+							put from: sub.jar.archivePath, into: directory + '/lib'
 					}
 
 				// Check for screen session
@@ -66,7 +66,7 @@ class DeployInstance extends RemoteTask {
 				if (project_deploy.name.equals("com.sandpolis.server.vanilla"))
 					project_root.subprojects { sub ->
 						if (sub.name.startsWith("com.sandpolis.plugin"))
-							put from: sub.jar.outputs.files, into: directory + '/lib'
+							put from: sub.jar.archivePath, into: directory + '/lib'
 					}
 
 				// Run the artifact manually

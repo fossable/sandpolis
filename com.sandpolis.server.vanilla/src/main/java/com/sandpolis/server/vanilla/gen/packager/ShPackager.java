@@ -33,9 +33,14 @@ public class ShPackager extends Packager {
 	public static final ShPackager INSTANCE = new ShPackager();
 
 	@Override
-	public void process(GenConfig config, Object payload) throws Exception {
+	public byte[] process(GenConfig config, Object payload) throws Exception {
 		// TODO Auto-generated method stub
+		return null;
+	}
 
+	@Override
+	public String getFileExtension() {
+		return "sh";
 	}
 
 }

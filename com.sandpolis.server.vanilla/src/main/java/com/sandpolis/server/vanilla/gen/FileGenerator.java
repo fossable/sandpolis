@@ -17,11 +17,15 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.gen;
 
-import java.io.File;
+import static com.sandpolis.core.instance.Environment.EnvPath.GEN;
+
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
+import com.google.common.io.ByteSource;
+import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 
 /**
@@ -35,51 +39,57 @@ public abstract class FileGenerator extends Generator {
 	/**
 	 * The final result of the generation.
 	 */
-	protected File result;
+	private Path resultArchive;
 
 	public FileGenerator(GenConfig config) {
 		super(config);
 	}
 
-	/**
-	 * Get the location of the generator output.
-	 * 
-	 * @return The location of the result.
-	 */
-	public File getResult() {
-		return result;
+	@Override
+	public void generate() throws Exception {
+		super.generate();
+
+		if (result != null) {
+			resultArchive = Environment.get(GEN).resolve(config.getId() + "." + packager.getFileExtension());
+			Files.write(resultArchive, result);
+
+			computeMetadata();
+		}
 	}
 
 	/**
-	 * Read the generator output into memory.
+	 * Get the location of the generator output in the archive directory.
+	 * 
+	 * @return The location of the result
+	 */
+	public Path getResultPath() {
+		return resultArchive;
+	}
+
+	/**
+	 * Read the generator output from the archive.
 	 * 
 	 * @return A byte array containing the generator output
 	 * @throws IOException
 	 */
 	public byte[] readResult() throws IOException {
-		return Files.toByteArray(result);
+		return Files.readAllBytes(resultArchive);
 	}
 
 	/**
-	 * Compute file metadata and store in the report.
-	 * 
-	 * @return The success of the action
+	 * Compute output metadata and store in the report.
 	 */
-	@SuppressWarnings("deprecation")
-	protected boolean computeMetadata() {
+	protected void computeMetadata() {
 		if (result == null)
-			return false;
+			throw new IllegalStateException();
 
-		report.setOutputSize(result.length());
+		report.setOutputSize(result.length);
 
 		try {
-			report.setOutputMd5(Files.asByteSource(result).hash(Hashing.md5()).toString());
-			report.setOutputSha256(Files.asByteSource(result).hash(Hashing.sha256()).toString());
-			report.setOutputSha512(Files.asByteSource(result).hash(Hashing.sha512()).toString());
+			report.setOutputSha256(ByteSource.wrap(result).hash(Hashing.sha256()).toString());
+			report.setOutputSha512(ByteSource.wrap(result).hash(Hashing.sha512()).toString());
 		} catch (IOException e) {
-			return false;
+			throw new RuntimeException(e);
 		}
-
-		return true;
 	}
 }

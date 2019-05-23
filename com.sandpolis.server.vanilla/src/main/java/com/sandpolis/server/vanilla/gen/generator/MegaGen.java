@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.cilki.zipset.ZipSet;
 import com.github.cilki.zipset.ZipSet.EntryPath;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
@@ -61,14 +62,13 @@ public class MegaGen extends FileGenerator {
 	protected Object run() throws Exception {
 		log.debug("Computing MEGA payload");
 
-		// TODO account for version suffix
-		Path client = Environment.get(LIB).resolve("sandpolis-client-mega.jar");
+		Path client = Environment.get(LIB).resolve("sandpolis-client-mega-" + Core.SO_BUILD.getVersion() + ".jar");
 
 		ZipSet output = new ZipSet(client);
 		FeatureSet features = config.getMega().getFeatures();
 
 		// Add client configuration
-		output.add("/main/main.jar!/soi/client.bin", config.getMega().toByteArray());
+		output.add("soi/client.bin", config.getMega().toByteArray());
 
 		// Add client dependencies
 		SoiUtil.getMatrix(client).getAllDependencies()

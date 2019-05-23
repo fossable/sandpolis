@@ -17,14 +17,11 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.gen;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.Files;
-import com.google.common.io.MoreFiles;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.GenReport;
 import com.sandpolis.server.vanilla.gen.packager.BatPackager;
@@ -53,25 +50,22 @@ public abstract class Generator {
 	protected GenConfig config;
 
 	/**
-	 * A temporary directory for the generator if it needs one.
-	 */
-	protected File temp;
-
-	/**
-	 * A report about the generation.
+	 * The generation report.
 	 */
 	protected GenReport.Builder report;
 
 	/**
+	 * The intermediate result of the generation.
+	 */
+	protected byte[] result;
+
+	/**
 	 * The packager which is responsible for producing the final output.
 	 */
-	private Packager packager;
+	protected Packager packager;
 
 	protected Generator(GenConfig config) {
-		if (config == null)
-			throw new IllegalArgumentException();
-
-		this.config = config;
+		this.config = Objects.requireNonNull(config);
 
 		switch (config.getFormat()) {
 		case BAT:
@@ -109,48 +103,43 @@ public abstract class Generator {
 	/**
 	 * Performs the generation synchronously.
 	 */
-	abstract protected Object run() throws Exception;
+	protected abstract Object run() throws Exception;
 
 	public void generate() throws Exception {
 		if (report != null)
-			throw new IllegalStateException("A generator cannot be run more than once!");
+			throw new IllegalStateException("The generator has already been started");
+
 		report = GenReport.newBuilder().setTimestamp(System.currentTimeMillis())
 				.setDuration(System.currentTimeMillis());
-		temp = Files.createTempDir();
 
 		try {
-			packager.process(config, run());
+			result = packager.process(config, run());
 		} finally {
-			cleanup();
+			report.setDuration(System.currentTimeMillis() - report.getDuration());
+			log.debug("Generation completed in {} ms", report.getDuration());
 		}
 	}
 
 	/**
-	 * Performs the clean up after generation. This method is idempotent.
-	 */
-	public void cleanup() {
-
-		if (temp.exists()) {
-			try {
-				MoreFiles.deleteRecursively(temp.toPath());
-			} catch (IOException e) {
-				log.debug("Failed to delete temporary directory", e);
-			} finally {
-				report.setDuration(System.currentTimeMillis() - report.getDuration());
-			}
-		}
-	}
-
-	/**
-	 * Get the generation report.
+	 * Get the generation report. Each invocation of this method returns a new (yet
+	 * equivalent) object.
 	 * 
-	 * @return The generation report
+	 * @return The completed generation report
 	 */
 	public GenReport getReport() {
 		if (report == null)
 			throw new IllegalStateException("The generator has not been started");
 
 		return report.build();
+	}
+
+	/**
+	 * Get the generation result.
+	 * 
+	 * @return The final result
+	 */
+	public byte[] getResult() {
+		return result;
 	}
 
 }
