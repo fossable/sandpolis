@@ -34,6 +34,10 @@ public class PluginPackager implements Plugin<Project> {
 		def extension = project.extensions.create('sandpolis_plugin', ConfigExtension)
 
 		project.subprojects {
+
+			// Remove version from components so jar task doesn't append it
+			it.version = null
+
 			afterEvaluate {
 				if (tasks.findByPath('jar') != null) {
 
@@ -42,8 +46,7 @@ public class PluginPackager implements Plugin<Project> {
 					
 					// Add artifact to root project's jar task
 					project.tasks.getByName('jar')
-						.from(tasks.getByName('jar').outputs.files.getFiles()[0].getParent(),
-							{into parent.name})
+						.from(tasks.getByName('jar').archivePath, {into parent.name})
 				}
 			}
 		}
@@ -59,7 +62,7 @@ public class PluginPackager implements Plugin<Project> {
 						manifest {
 							attributes(
 								'Plugin-Id': extension.id,
-								'Plugin-Version': extension.version,
+								'Plugin-Version': project.version,
 								'Plugin-Name': extension.name,
 								'Plugin-Description': extension.description,
 								'Plugin-Class': "${extension.id}.${name}Plugin",

@@ -34,9 +34,4 @@ class ConfigExtension {
 	 */
 	String description
 
-	/**
-	 * The plugin's version string.
-	 */
-	String version
-
 }

@@ -51,5 +51,4 @@ sandpolis_plugin {
 	id = 'com.sandpolis.plugin.sysinfo'
 	name = 'System Info Plugin'
 	description = ''
-	version = '1.0.0'
 }

@@ -33,5 +33,4 @@ sandpolis_plugin {
 	id = 'com.sandpolis.plugin.desktop'
 	name = 'Desktop Plugin'
 	description = ''
-	version = '1.0.0'
 }

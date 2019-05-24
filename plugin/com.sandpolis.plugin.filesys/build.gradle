@@ -39,5 +39,4 @@ sandpolis_plugin {
 	id = 'com.sandpolis.plugin.filesys'
 	name = 'Filesystem Plugin'
 	description = 'Provides access to the filesystem'
-	version = '1.0.0'
 }
