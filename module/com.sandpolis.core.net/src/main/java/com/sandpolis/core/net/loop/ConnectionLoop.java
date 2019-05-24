@@ -112,7 +112,7 @@ public final class ConnectionLoop implements Runnable {
 	public void run() {
 
 		try {
-			while (cycler.getIterations() < config.getMaxIterations()) {
+			while (cycler.getIterations() < config.getMaxIterations() || config.getMaxIterations() == 0) {
 
 				int timeout = cycler.nextTimeout() / config.getTargetCount();
 				for (NetworkTarget n : config.getTargetList()) {
