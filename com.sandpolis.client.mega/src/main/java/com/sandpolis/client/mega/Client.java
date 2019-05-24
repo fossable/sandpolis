@@ -148,8 +148,8 @@ public final class Client {
 	private static final Task loadStores = new Task((task) -> {
 
 		// Load ThreadStore
-		ThreadStore.register(new NioEventLoopGroup(2), net.exelet);
-		ThreadStore.register(new NioEventLoopGroup(2), net.connection.outgoing);
+		ThreadStore.register(new NioEventLoopGroup(2).next(), net.exelet);
+		ThreadStore.register(new NioEventLoopGroup(2).next(), net.connection.outgoing);
 		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
 
 		// Load NetworkStore

@@ -32,10 +32,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.pf4j.DefaultPluginManager;
 import org.pf4j.PluginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +82,7 @@ public final class PluginStore {
 	/**
 	 * The PF4J plugin manager.
 	 */
-	private static PluginManager manager = new DefaultPluginManager();
+	private static PluginManager manager = new SandpolisPluginManager();
 
 	/**
 	 * The default certificate verifier which allows all plugins.
@@ -116,10 +114,7 @@ public final class PluginStore {
 	 * @return A new plugin descriptor stream
 	 */
 	public static Stream<PluginDescriptor> getPluginDescriptors() {
-		try (Stream<Plugin> stream = provider.stream()) {
-			return stream.collect(Collectors.toList()).stream().map(plugin -> plugin.toDescriptor());
-		}
-		// return provider.stream().map(plugin -> plugin.toDescriptor());
+		return provider.stream().map(plugin -> plugin.toDescriptor());
 	}
 
 	/**
@@ -128,10 +123,7 @@ public final class PluginStore {
 	 * @return A new plugin stream
 	 */
 	public static Stream<Plugin> getPlugins() {
-		try (Stream<Plugin> stream = provider.stream()) {
-			return stream.collect(Collectors.toList()).stream();
-		}
-		// return provider.stream();
+		return provider.stream();
 	}
 
 	/**
@@ -143,9 +135,7 @@ public final class PluginStore {
 	public static Optional<Plugin> getPlugin(String id) {
 		checkNotNull(id);
 
-		try (Stream<Plugin> stream = provider.stream()) {
-			return stream.filter(plugin -> plugin.getId().equals(id)).findAny();
-		}
+		return provider.stream().filter(plugin -> plugin.getId().equals(id)).findAny();
 	}
 
 	/**
@@ -154,14 +144,13 @@ public final class PluginStore {
 	 * @param plugin   The plugin
 	 * @param instance The instance type of the component
 	 * @param sub      The subtype of the component
-	 * @return The component as a {@link ByteSource}
+	 * @return The component as a {@link ByteSource} or {@code null} if the
+	 *         component does not exist
 	 */
 	public static ByteSource getPluginComponent(Plugin plugin, Instance instance, InstanceFlavor sub) {
 		URL url = getPluginComponentUrl(plugin, instance, sub);
-		if (url == null)
-			throw new RuntimeException();
 
-		return Resources.asByteSource(url);
+		return url != null ? Resources.asByteSource(url) : null;
 	}
 
 	/**
@@ -251,9 +240,7 @@ public final class PluginStore {
 	 * Load all enabled plugins.
 	 */
 	public static void loadPlugins() {
-		try (Stream<Plugin> stream = provider.stream()) {
-			stream.filter(plugin -> plugin.isEnabled()).forEach(PluginStore::loadPlugin);
-		}
+		provider.stream().filter(plugin -> plugin.isEnabled()).forEach(PluginStore::loadPlugin);
 	}
 
 	/**
@@ -310,8 +297,7 @@ public final class PluginStore {
 			if (!verifier.apply(cert))
 				throw new CertificateException("Certificate verification failed");
 		} catch (CertificateException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Failed to load plugin", e);
 			return;
 		}
 

@@ -39,11 +39,15 @@ import org.pf4j.PluginLoader;
 import org.pf4j.PluginRepository;
 import org.pf4j.PluginStatusProvider;
 import org.pf4j.VersionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.cilki.compact.CompactClassLoader;
 import com.sandpolis.core.instance.Core;
 
 public final class SandpolisPluginManager extends AbstractPluginManager {
+
+	private static final Logger log = LoggerFactory.getLogger(SandpolisPluginManager.class);
 
 	@Override
 	protected PluginRepository createPluginRepository() {
@@ -94,17 +98,22 @@ public final class SandpolisPluginManager extends AbstractPluginManager {
 
 			@Override
 			public ClassLoader loadPlugin(Path pluginPath, PluginDescriptor pluginDescriptor) {
-				CompactClassLoader ccl = new CompactClassLoader(SandpolisPluginManager.class.getClassLoader());
+				CompactClassLoader ccl = new CompactClassLoader(ClassLoader.getSystemClassLoader());
 				try {
 					// Add common classes
 					ccl.add(pluginPath.toUri().toURL(), false);
 
 					// Add instance specific classes
-					ccl.add(new URL(String.format("file:%s!/%s/%s.jar", pluginPath,
-							Core.INSTANCE.toString().toLowerCase(), Core.FLAVOR.toString().toLowerCase())), false);
+					String componentPath = String.format("%s/%s.jar", Core.INSTANCE.toString().toLowerCase(),
+							Core.FLAVOR.toString().toLowerCase());
+
+					if (ccl.getResource(componentPath) != null) {
+						ccl.add(new URL(String.format("file:%s!/%s", pluginPath, componentPath)), false);
+
+						// TODO component specific dependencies from matrix.bin
+					}
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.error("Failed to load plugin", e);
 				}
 
 				return ccl;
