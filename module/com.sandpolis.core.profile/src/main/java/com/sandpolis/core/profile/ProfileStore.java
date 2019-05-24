@@ -22,10 +22,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.Store.ManualInitializer;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
@@ -113,8 +113,7 @@ public final class ProfileStore extends Store {
 	 * @return The requested {@link Profile}
 	 */
 	public static Optional<Profile> getViewer(String username) {
-		// TODO
-		return null;
+		return provider.stream().filter(profile -> username.equals(profile.get(AK_VIEWER.USERNAME))).findFirst();
 	}
 
 	public static void merge(List<EV_ProfileDelta> updates) throws Exception {
@@ -132,12 +131,10 @@ public final class ProfileStore extends Store {
 	}
 
 	public static List<EV_ProfileDelta> getUpdates(long timestamp, int cvid) {
-		try (Stream<Profile> stream = provider.stream()) {
-			return stream.filter(profile -> profile.getInstance() == Instance.CLIENT)// TODO filter permissions
-					.map(profile -> EV_ProfileDelta.newBuilder().setUpdate(profile.getUpdates(timestamp)).build())
-					// TODO set cvid or uuid in update
-					.collect(Collectors.toList());
-		}
+		return provider.stream().filter(profile -> profile.getInstance() == Instance.CLIENT)// TODO filter permissions
+				.map(profile -> EV_ProfileDelta.newBuilder().setUpdate(profile.getUpdates(timestamp)).build())
+				// TODO set cvid or uuid in update
+				.collect(Collectors.toList());
 
 	}
 

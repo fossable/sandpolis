@@ -28,10 +28,14 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.ConnectionState;
+import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
@@ -106,9 +110,16 @@ public class LoginExe extends Exelet {
 		connector.changeState(ConnectionState.AUTHENTICATED);
 
 		// Update login metadata
-		// Profile profile = ProfileStore.getViewer(user);
-		// profile.set(AK_VIEWER.LOGIN_IP, connector.getRemoteIP());
-		// profile.set(AK_VIEWER.LOGIN_TIME, System.currentTimeMillis());
+		Profile viewer = ProfileStore.getViewer(username).orElse(null);
+		if (viewer == null) {
+			// Build new profile
+			viewer = new Profile(Instance.VIEWER);
+			viewer.set(AK_VIEWER.USERNAME, username);
+			// TODO add to store
+		}
+
+		viewer.set(AK_VIEWER.LOGIN_IP, connector.getRemoteIP());
+		viewer.set(AK_VIEWER.LOGIN_TIME, System.currentTimeMillis());
 
 		connector.send(rs(id).setRsOutcome(success(outcome)));
 	}
