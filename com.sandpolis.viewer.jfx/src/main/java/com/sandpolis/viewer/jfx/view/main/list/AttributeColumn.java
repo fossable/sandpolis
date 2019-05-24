@@ -78,7 +78,7 @@ public class AttributeColumn extends TableColumn<Profile, Label> {
 				: a -> null;
 		Function<Attribute<?>, String> textConverter = key.containsObject("textConverter")
 				? key.getObject("textConverter")
-				: a -> a.get().toString();
+				: a -> a.get() == null ? null : a.get().toString();
 
 		setCellValueFactory(p -> {
 			ObjectProperty<Label> label = new SimpleObjectProperty<>(new Label());
