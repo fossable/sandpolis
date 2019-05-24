@@ -64,7 +64,10 @@ jar {
 	manifest {
 		attributes(
 			'Main-Class': 'com.sandpolis.server.vanilla.Main',
-			'Class-Path': configurations.runtimeClasspath.collect { 'lib/' + it.getName() }.join(' ')
+			'Class-Path': configurations.runtimeClasspath
+				.filter { !it.getName().contains("sandpolis-plugin") }
+				.collect { 'lib/' + it.getName() }
+				.join(' ')
 		)
 	}
 }
