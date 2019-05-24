@@ -31,6 +31,8 @@ import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.net.ExeletTest;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
@@ -45,6 +47,7 @@ class LoginExeTest extends ExeletTest {
 	@BeforeEach
 	void setup() {
 		UserStore.init(StoreProviderFactory.memoryList(User.class));
+		ProfileStore.init(StoreProviderFactory.memoryList(Profile.class));
 		Signaler.init(Executors.newSingleThreadExecutor());
 
 		initChannel();
