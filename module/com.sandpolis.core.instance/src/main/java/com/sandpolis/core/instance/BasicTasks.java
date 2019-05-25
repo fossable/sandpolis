@@ -24,6 +24,7 @@ import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.ConfigConstant.path;
 import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
+import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 
@@ -68,6 +69,15 @@ public final class BasicTasks {
 		ThreadStore.register(Executors.newSingleThreadExecutor(), PoolConstant.signaler);
 		Signaler.init(ThreadStore.get(PoolConstant.signaler));
 
+		return task.success();
+	});
+
+	/**
+	 * Cleanup static stores.
+	 */
+	@ShutdownTask
+	public static final Task shutdownStores = new Task((task) -> {
+		ThreadStore.shutdown();
 		return task.success();
 	});
 

@@ -31,6 +31,7 @@ import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.util.AsciiUtil;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -56,6 +57,8 @@ public final class Installer {
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
 		register(Installer.loadUserInterface);
+
+		register(BasicTasks.shutdownStores);
 	}
 
 	/**
@@ -88,6 +91,11 @@ public final class Installer {
 
 		@Override
 		public void start(Stage stage) throws Exception {
+			stage.setOnCloseRequest(event -> {
+				Platform.exit();
+				System.exit(0);
+			});
+
 			Parent node = new FXMLLoader(UI.class.getResource("/fxml/Main.fxml")).load();
 
 			Scene scene = new Scene(node, 430, 600);

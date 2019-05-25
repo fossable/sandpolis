@@ -68,7 +68,14 @@ public final class ThreadStore {
 		return (E) map.get(Objects.requireNonNull(id));
 	}
 
-	// TODO shutdown method
+	/**
+	 * Shutdown all threads in the {@link ThreadStore}.
+	 */
+	public static void shutdown() {
+		log.debug("Shutting down {} thread pools", map.size());
+		map.values().forEach(service -> service.shutdownNow());
+		map.clear();
+	}
 
 	private ThreadStore() {
 	}

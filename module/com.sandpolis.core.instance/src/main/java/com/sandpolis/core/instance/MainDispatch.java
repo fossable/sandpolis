@@ -59,7 +59,7 @@ public final class MainDispatch {
 	/**
 	 * A configurable list of tasks that are executed on instance shutdown.
 	 */
-	private static List<Runnable> shutdown = new LinkedList<>();
+	private static List<Task> shutdown = new LinkedList<>();
 
 	/**
 	 * A {@link Thread} that runs idle tasks in the background.
@@ -150,7 +150,13 @@ public final class MainDispatch {
 
 		// Setup shutdown hook
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			shutdown.forEach(task -> task.run());
+			shutdown.forEach(task -> {
+				try {
+					task.execute(new TaskOutcome(task.toString()));
+				} catch (Exception e) {
+					log.error("Failed to execute shutdown task", e);
+				}
+			});
 		}));
 
 		// Invoke the main method
@@ -277,19 +283,6 @@ public final class MainDispatch {
 	}
 
 	/**
-	 * Register a task to run during shutdown. Tasks will be executed in the same
-	 * order as registration.
-	 * 
-	 * @param task The shutdown task
-	 */
-	public static void registerShutdown(Runnable task) {
-		if (shutdown.contains(task))
-			throw new IllegalArgumentException("Shutdown tasks cannot be registered more than once");
-
-		shutdown.add(task);
-	}
-
-	/**
 	 * Register a new initialization task which will be executed during the
 	 * dispatch. Tasks registered with this method are executed sequentially in the
 	 * same order as the method calls.
@@ -302,8 +295,15 @@ public final class MainDispatch {
 			throw new IllegalStateException("Tasks cannot be registered after dispatch is complete");
 		if (tasks.contains(task))
 			throw new IllegalArgumentException("Tasks cannot be registered more than once");
+		if (shutdown.contains(task))
+			throw new IllegalArgumentException("Shutdown tasks cannot be registered more than once");
 
-		tasks.add(task);
+		if (task.initMetadata != null)
+			tasks.add(task);
+		else if (task.shutdownMetadata != null)
+			shutdown.add(task);
+		else
+			throw new RuntimeException("Unknown task type");
 	}
 
 	/**
