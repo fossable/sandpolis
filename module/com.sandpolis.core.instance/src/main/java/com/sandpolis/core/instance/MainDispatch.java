@@ -171,9 +171,9 @@ public final class MainDispatch {
 				outcome.skipped = true;
 			} else {
 				try {
-					task.execute(outcome);
+					task.outcome = task.execute(outcome);
 				} catch (Exception e) {
-					outcome.failure(e);
+					task.outcome = outcome.failure(e);
 				}
 			}
 
@@ -217,7 +217,7 @@ public final class MainDispatch {
 
 		for (Task task : tasks) {
 			if (task.outcome == null) {
-				log.info(String.format(descFormat + " NOT EXECUTED", task.initMetadata.name()));
+				log.info(String.format(descFormat + "      ( ---- ms)", task.initMetadata.name()));
 				continue;
 			}
 
@@ -504,8 +504,7 @@ public final class MainDispatch {
 
 		@Override
 		public TaskOutcome execute(TaskOutcome task) throws Exception {
-			outcome = action.execute(task);
-			return outcome;
+			return action.execute(task);
 		}
 	}
 
