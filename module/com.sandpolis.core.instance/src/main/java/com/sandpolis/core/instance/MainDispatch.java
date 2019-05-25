@@ -166,7 +166,6 @@ public final class MainDispatch {
 				throw new RuntimeException("Unregistered initialization task class");
 
 			TaskOutcome outcome = new TaskOutcome(task.initMetadata.name());
-			task.outcome = outcome;
 
 			if (!task.initMetadata.condition().isEmpty() && !Config.getBoolean(task.initMetadata.condition())) {
 				outcome.skipped = true;
@@ -181,7 +180,7 @@ public final class MainDispatch {
 			if (!outcome.getOutcome().getResult() && task.initMetadata.fatal() && !outcome.isSkipped()) {
 				log.error("A fatal error has occurred in task: {}", task.initMetadata.name());
 				logTaskSummary();
-				System.exit(0);
+				System.exit(1);
 			}
 		}
 
@@ -207,20 +206,37 @@ public final class MainDispatch {
 	 * Build a summary for {@link #tasks} and write to log.
 	 */
 	private static void logTaskSummary() {
-		if (tasks.isEmpty())
+		if (tasks.isEmpty()) {
+			log.warn("Skipping task summary: no tasks were registered");
 			return;
+		}
 
-		// Create a format string according to the width of the longest description
-		String format = String.format("%%%ds: %%4s (%%5d ms)",
+		// Create a format string according to the width of the longest task description
+		String descFormat = String.format("%%%ds:",
 				tasks.stream().mapToInt(task -> task.initMetadata.name().length()).max().getAsInt());
 
 		for (Task task : tasks) {
-			TaskOutcome taskOutcome = task.getOutcome();
-			Outcome outcome = taskOutcome.getOutcome();
+			if (task.outcome == null) {
+				log.info(String.format(descFormat + " NOT EXECUTED", task.initMetadata.name()));
+				continue;
+			}
 
-			String line = String.format(format, outcome.getAction(),
-					taskOutcome.isSkipped() ? "SKIP" : outcome.getResult() ? "OK" : "FAIL", outcome.getTime());
-			if (taskOutcome.isSkipped() || outcome.getResult()) {
+			Outcome outcome = task.outcome.getOutcome();
+
+			// Format description and result
+			String line = String.format(descFormat + " %4s", task.initMetadata.name(),
+					task.outcome.isSkipped() ? "SKIP" : outcome.getResult() ? "OK" : "FAIL");
+
+			// Format duration
+			if (task.outcome.isSkipped() || !outcome.getResult())
+				line += " ( ---- ms)";
+			else if (outcome.getTime() > 9999)
+				line += String.format(" (%5.1f  s)", outcome.getTime() / 1000.0);
+			else
+				line += String.format(" (%5d ms)", outcome.getTime());
+
+			// Write to log
+			if (task.outcome.isSkipped() || outcome.getResult()) {
 				log.info(line);
 			} else {
 				log.error(line);
@@ -486,13 +502,10 @@ public final class MainDispatch {
 			this.action = Objects.requireNonNull(action);
 		}
 
-		public TaskOutcome getOutcome() {
-			return outcome;
-		}
-
 		@Override
 		public TaskOutcome execute(TaskOutcome task) throws Exception {
-			return action.execute(task);
+			outcome = action.execute(task);
+			return outcome;
 		}
 	}
 
