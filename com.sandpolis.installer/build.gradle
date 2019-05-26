@@ -167,6 +167,13 @@ task jarOffline(type: Jar, dependsOn: jar) {
 	}
 }
 
+artifacts {
+	archives jarOnlineWin
+	archives jarOnlineLin
+	archives jarOnlineMac
+	archives jarOffline
+}
+
 launch4j {
 	outfile = "SandpolisInstaller-win-${project.version}.exe"
 	mainClassName = 'com.github.cilki.compact.BootProxy'
@@ -178,20 +185,22 @@ launch4j {
 	version = "0.${SANDPOLIS_VERSION}"
 	textVersion = "0.${SANDPOLIS_VERSION}"
 	jar = jarOnlineWin.archivePath
+	copyConfigurable = jarOnlineWin
 }
 tasks.createExe.dependsOn(jarOnlineWin)
 
 githubRelease {
-	token GITHUB_TOKEN
-	owner "Subterranean-Security"
-	repo "Sandpolis"
-	draft true
-	prerelease true
-	releaseAssets {[
+	token = GITHUB_TOKEN
+	owner = 'Subterranean-Security'
+	repo = 'Sandpolis'
+	draft = true
+	prerelease = true
+	releaseAssets = {[
 		project.file("build/launch4j/${launch4j.outfile}"),
 		jarOnlineLin.archivePath,
 		jarOnlineMac.archivePath,
 		jarOffline.archivePath
 	]}
 }
+tasks.githubRelease.dependsOn(assemble)
 tasks.githubRelease.dependsOn(createExe)
