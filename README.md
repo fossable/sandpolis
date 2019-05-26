@@ -54,7 +54,7 @@ There are many _remote administration tools_ out there that claim to be for legi
 
 - **Docker**
     - The server can be started with: `sudo docker run sandpolis/sandpolis-server`
-    - See [DockerHub](https://cloud.docker.com/repository/docker/sandpolis/sandpolis-server) for more information
+    - See [DockerHub](https://hub.docker.com/r/sandpolis/sandpolis-server) for more information
 
 ### Building and Testing
 The build is divided into sets of **instance modules**, **library modules**, and **plugin modules**:
