@@ -143,7 +143,8 @@ public final class Server {
 	private static final Task loadEnvironment = new Task((task) -> {
 
 		if (!Environment.load(DB.setDefault(Config.get(server.path.db)), GEN.setDefault(Config.get(server.path.gen)),
-				LOG.setDefault(Config.get(path.log)), TMP, LIB)) {
+				LOG.setDefault(Config.get(path.log)), TMP.setDefault(Config.get(path.tmp)),
+				LIB.setDefault(Config.get(path.lib)))) {
 			Environment.setup();
 		}
 

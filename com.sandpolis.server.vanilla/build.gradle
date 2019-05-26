@@ -6,8 +6,10 @@
 plugins {
 	id 'eclipse'
 	id 'java'
+	id 'application'
 
 	id 'com.sandpolis.gradle.soi'
+	id 'com.bmuschko.docker-java-application' version '4.9.0'
 }
 
 eclipse {
@@ -69,6 +71,22 @@ jar {
 				.collect { 'lib/' + it.getName() }
 				.join(' ')
 		)
+	}
+}
+
+mainClassName = 'com.sandpolis.server.vanilla.Main'
+
+docker {
+	javaApplication {
+		baseImage = 'openjdk:11-jre-slim'
+		maintainer = 'tcc@sandpolis.com'
+		tag = "sandpolis/sandpolis-server:${project.version}"
+		jvmArgs = [
+			'-Dpath.lib=/app/libs',
+			'-Dserver.path.gen=/tmp',
+			'-Dserver.debug_client=false',
+			'-Dnet.ipc.mutex=false'
+		]
 	}
 }
 

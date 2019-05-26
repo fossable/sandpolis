@@ -107,4 +107,16 @@ public final class ConfigConstants {
 	@TreeConstant
 	private static final String path_log = "path.log";
 
+	/**
+	 * The tmp directory.
+	 */
+	@TreeConstant
+	private static final String path_tmp = "path.tmp";
+
+	/**
+	 * The lib directory.
+	 */
+	@TreeConstant
+	private static final String path_lib = "path.lib";
+
 }

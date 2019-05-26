@@ -40,7 +40,7 @@ public final class IPCTask {
 	/**
 	 * Load the IPC module.
 	 */
-	@InitializationTask(name = "Load IPC module", fatal = true)
+	@InitializationTask(name = "Load IPC module", condition = net.ipc.mutex, fatal = true)
 	public static final Task load = new Task((task) -> {
 		IPCStore.init();
 
