@@ -174,19 +174,19 @@ public final class MainDispatch {
 			TaskOutcome outcome = new TaskOutcome(task.initMetadata.name());
 
 			if (!task.initMetadata.condition().isEmpty() && !Config.getBoolean(task.initMetadata.condition())) {
-				outcome.skipped = true;
+				task.outcome = outcome.skipped();
 			} else {
 				try {
 					task.outcome = task.execute(outcome);
 				} catch (Exception e) {
 					task.outcome = outcome.failure(e);
 				}
-			}
 
-			if (!outcome.getOutcome().getResult() && task.initMetadata.fatal() && !outcome.isSkipped()) {
-				log.error("A fatal error has occurred in task: {}", task.initMetadata.name());
-				logTaskSummary();
-				System.exit(1);
+				if (!outcome.getOutcome().getResult() && task.initMetadata.fatal()) {
+					log.error("A fatal error has occurred in task: {}", task.initMetadata.name());
+					logTaskSummary();
+					System.exit(1);
+				}
 			}
 		}
 
