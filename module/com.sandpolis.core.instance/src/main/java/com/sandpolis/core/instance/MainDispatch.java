@@ -182,7 +182,7 @@ public final class MainDispatch {
 					task.outcome = outcome.failure(e);
 				}
 
-				if (!outcome.getOutcome().getResult() && task.initMetadata.fatal()) {
+				if (!task.outcome.isSkipped() && !outcome.getOutcome().getResult() && task.initMetadata.fatal()) {
 					log.error("A fatal error has occurred in task: {}", task.initMetadata.name());
 					logTaskSummary();
 					System.exit(1);
