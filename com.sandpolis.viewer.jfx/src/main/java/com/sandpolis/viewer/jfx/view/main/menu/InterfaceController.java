@@ -19,14 +19,24 @@ package com.sandpolis.viewer.jfx.view.main.menu;
 
 import java.awt.AWTException;
 
+import com.sandpolis.viewer.jfx.common.button.SvgButton;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.common.tray.Tray;
 import com.sandpolis.viewer.jfx.view.main.Events.AuxDetailOpenEvent;
 import com.sandpolis.viewer.jfx.view.main.Events.ViewChangeEvent;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 
 public class InterfaceController extends AbstractController {
+
+	@FXML
+	private SvgButton btn_background;
+
+	@FXML
+	private void initialize() {
+		btn_background.setDisable(!Tray.isSupported());
+	}
 
 	@FXML
 	private void open_list() {
@@ -55,6 +65,7 @@ public class InterfaceController extends AbstractController {
 
 	@FXML
 	private void quit() {
+		Platform.exit();
 		System.exit(0);
 	}
 
