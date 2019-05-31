@@ -20,14 +20,13 @@ package com.sandpolis.viewer.jfx.view.generator.config_tree;
 import java.util.Objects;
 
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
+import com.sandpolis.viewer.jfx.common.label.SvgLabel;
 
 import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TreeItem;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 
 /**
  * A controller for all items in the configuration tree.
@@ -40,13 +39,13 @@ public abstract class TreeItemController extends AbstractController {
 	private TreeItem<Node> item;
 
 	@FXML
-	protected ImageView icon;
+	protected SvgLabel icon;
 
 	@FXML
 	protected Label name;
 
 	public void setIcon(String image) {
-		icon.setImage(new Image(image));
+		icon.svgProperty().set(image);
 	}
 
 	public StringProperty name() {

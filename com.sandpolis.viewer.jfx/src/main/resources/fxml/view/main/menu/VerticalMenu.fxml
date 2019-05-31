@@ -1,72 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 
-<ToolBar focusTraversable="false" orientation="VERTICAL" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.viewer.jfx.view.main.menu.VerticalMenuController">
+<?import com.sandpolis.viewer.jfx.common.button.SvgButton?>
+
+<ToolBar focusTraversable="false" orientation="VERTICAL"
+	xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.jfx.view.main.menu.VerticalMenuController">
 	<items>
-		<Button fx:id="btn_interface" graphicTextGap="0.0" mnemonicParsing="false" onAction="#btn_interface">
-			<graphic>
-				<ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-					<image>
-						<Image url="/image/icon16/common/application.png" />
-					</image>
-				</ImageView>
-			</graphic>
-         <tooltip>
-            <Tooltip styleClass="main_menu-tooltip" text="Interface settings" />
-         </tooltip>
-		</Button>
-		<Button fx:id="btn_management" graphicTextGap="0.0" mnemonicParsing="false" onAction="#btn_management">
-			<graphic>
-				<ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-					<image>
-						<Image url="/image/icon16/common/dopplr.png" />
-					</image>
-				</ImageView>
-			</graphic>
-         <tooltip>
-            <Tooltip styleClass="main_menu-tooltip" text="Management" />
-         </tooltip>
-		</Button>
-		<Button fx:id="btn_generator" graphicTextGap="0.0" mnemonicParsing="false" onAction="#btn_generator">
-			<graphic>
-				<ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-					<image>
-						<Image url="/image/icon16/common/compile.png" />
-					</image>
-				</ImageView>
-			</graphic>
-         <tooltip>
-            <Tooltip styleClass="main_menu-tooltip" text="Generator" />
-         </tooltip>
-		</Button>
-		<Button fx:id="btn_configuration" graphicTextGap="0.0" mnemonicParsing="false" onAction="#btn_configuration">
-			<graphic>
-				<ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-					<image>
-						<Image url="/image/icon16/common/cog.png" />
-					</image>
-				</ImageView>
-			</graphic>
-         <tooltip>
-            <Tooltip styleClass="main_menu-tooltip" text="Configuration" />
-         </tooltip>
-		</Button>
-		<Button fx:id="btn_about" graphicTextGap="0.0" mnemonicParsing="false" onAction="#btn_about">
-			<graphic>
-				<ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-					<image>
-						<Image url="/image/icon16/common/crimson.png" />
-					</image>
-				</ImageView>
-			</graphic>
-         <tooltip>
-            <Tooltip styleClass="main_menu-tooltip" text="About Sandpolis" />
-         </tooltip>
-		</Button>
+		<SvgButton fx:id="btn_interface"
+			id="main-menu-btn_interface" styleClass="main-menu-category_button"
+			mnemonicParsing="false" onAction="#btn_interface">
+			<tooltip>
+				<Tooltip styleClass="main-menu-tooltip"
+					text="Interface settings" />
+			</tooltip>
+		</SvgButton>
+		<SvgButton fx:id="btn_management"
+			id="main-menu-btn_management" styleClass="main-menu-category_button"
+			mnemonicParsing="false" onAction="#btn_management">
+			<tooltip>
+				<Tooltip styleClass="main-menu-tooltip" text="Management" />
+			</tooltip>
+		</SvgButton>
+		<SvgButton fx:id="btn_generator"
+			id="main-menu-btn_generator" styleClass="main-menu-category_button"
+			mnemonicParsing="false" onAction="#btn_generator">
+			<tooltip>
+				<Tooltip styleClass="main-menu-tooltip" text="Generator" />
+			</tooltip>
+		</SvgButton>
+		<SvgButton fx:id="btn_configuration"
+			id="main-menu-btn_configuration"
+			styleClass="main-menu-category_button" mnemonicParsing="false"
+			onAction="#btn_configuration">
+			<tooltip>
+				<Tooltip styleClass="main-menu-tooltip" text="Configuration" />
+			</tooltip>
+		</SvgButton>
+		<SvgButton fx:id="btn_about" id="main-menu-btn_about"
+			styleClass="main-menu-category_button" mnemonicParsing="false"
+			onAction="#btn_about">
+			<tooltip>
+				<Tooltip styleClass="main-menu-tooltip"
+					text="About Sandpolis" />
+			</tooltip>
+		</SvgButton>
 	</items>
 </ToolBar>

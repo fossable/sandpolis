@@ -24,7 +24,7 @@ import com.sandpolis.core.profile.Profile;
 import com.sandpolis.viewer.jfx.common.event.Event;
 import com.sandpolis.viewer.jfx.common.event.ParameterizedEvent;
 
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 
 public final class Events {
 
@@ -35,9 +35,9 @@ public final class Events {
 	}
 
 	/**
-	 * Open the main menu with the given {@link Pane}.
+	 * Open the main menu with the given {@link Region}.
 	 */
-	public static class MenuOpenEvent extends ParameterizedEvent<Pane> {
+	public static class MenuOpenEvent extends ParameterizedEvent<Region> {
 	}
 
 	/**

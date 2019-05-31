@@ -8,27 +8,33 @@
 <?import javafx.scene.layout.BorderPane?>
 
 
-<TitledPane collapsible="false" text="Progress" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.viewer.jfx.view.generator.detail.ProgressController">
-   <content>
-      <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
-         <center>
-            <BorderPane BorderPane.alignment="CENTER">
-               <center>
-                  <ProgressBar fx:id="progress" prefWidth="200.0" BorderPane.alignment="CENTER" />
-               </center>
-               <bottom>
-                  <Label fx:id="text" text="Generating payload..." BorderPane.alignment="CENTER" />
-               </bottom>
-            </BorderPane>
-         </center>
-         <bottom>
-            <ButtonBar fx:id="buttons" prefHeight="40.0" prefWidth="400.0" BorderPane.alignment="CENTER">
-              <buttons>
-                <Button mnemonicParsing="false" text="Close" />
-                <Button mnemonicParsing="false" text="Exit" />
-              </buttons>
-            </ButtonBar>
-         </bottom>
-      </BorderPane>
-   </content>
+<TitledPane collapsible="false" text="Progress"
+	xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.jfx.view.generator.detail.ProgressController">
+	<content>
+		<BorderPane maxHeight="-Infinity" maxWidth="-Infinity"
+			minHeight="-Infinity" minWidth="-Infinity">
+			<center>
+				<BorderPane BorderPane.alignment="CENTER">
+					<center>
+						<ProgressBar fx:id="progress" prefWidth="200.0"
+							BorderPane.alignment="CENTER" />
+					</center>
+					<bottom>
+						<Label fx:id="text" text="Generating payload..."
+							BorderPane.alignment="CENTER" />
+					</bottom>
+				</BorderPane>
+			</center>
+			<bottom>
+				<ButtonBar fx:id="buttons" prefHeight="40.0"
+					prefWidth="400.0" BorderPane.alignment="CENTER">
+					<buttons>
+						<Button mnemonicParsing="false" text="Close" />
+						<Button mnemonicParsing="false" text="Exit" />
+					</buttons>
+				</ButtonBar>
+			</bottom>
+		</BorderPane>
+	</content>
 </TitledPane>

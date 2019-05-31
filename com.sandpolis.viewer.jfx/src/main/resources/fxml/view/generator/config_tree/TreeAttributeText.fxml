@@ -6,16 +6,20 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.viewer.jfx.view.generator.config_tree.TreeAttributeTextController">
-   <left>
-      <HBox alignment="CENTER_LEFT" BorderPane.alignment="CENTER">
-         <children>
-            <ImageView fx:id="icon" fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true" />
-            <Label fx:id="name" />
-         </children>
-      </HBox>
-   </left>
-   <right>
-      <TextField fx:id="text" BorderPane.alignment="CENTER" />
-   </right>
+<?import com.sandpolis.viewer.jfx.common.label.SvgLabel?>
+
+<BorderPane xmlns="http://javafx.com/javafx/9"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.jfx.view.generator.config_tree.TreeAttributeTextController">
+	<left>
+		<HBox alignment="CENTER_LEFT" BorderPane.alignment="CENTER">
+			<children>
+				<SvgLabel fx:id="icon" />
+				<Label fx:id="name" />
+			</children>
+		</HBox>
+	</left>
+	<right>
+		<TextField fx:id="text" BorderPane.alignment="CENTER" />
+	</right>
 </BorderPane>

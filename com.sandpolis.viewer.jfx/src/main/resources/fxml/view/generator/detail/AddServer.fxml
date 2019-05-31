@@ -17,72 +17,95 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<TitledPane collapsible="false" text="Add Server" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.viewer.jfx.view.generator.detail.AddServerController">
-   <content>
-      <BorderPane>
-         <center>
-            <VBox prefWidth="100.0" spacing="8.0" BorderPane.alignment="CENTER">
-               <children>
-                  <GridPane hgap="2.0">
-                    <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                      <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="60.0" />
-                        <ColumnConstraints hgrow="NEVER" minWidth="10.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                     <children>
-                        <Label text="Address" />
-                        <TextField fx:id="fld_address" GridPane.rowIndex="1" />
-                        <Label text="Port" GridPane.columnIndex="1" />
-                        <TextField fx:id="fld_port" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <Button fx:id="btn_test" mnemonicParsing="false" onAction="#test_address" text="Test" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                     </children>
-                  </GridPane>
-                  <HBox fx:id="test_box" alignment="CENTER_LEFT" spacing="4.0" visible="false">
-                     <children>
-                        <ProgressIndicator fx:id="test_progress" prefHeight="16.0" prefWidth="16.0" />
-                        <Label fx:id="test_status" />
-                     </children>
-                  </HBox>
-                  <GridPane>
-                    <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                      <ColumnConstraints halignment="RIGHT" minWidth="10.0" prefWidth="100.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                     <children>
-                        <Label text="Connection Cooldown" GridPane.columnSpan="2" />
-                        <HBox GridPane.columnIndex="1" />
-                        <Spinner fx:id="spn_cooldown" GridPane.rowIndex="1">
-                           <valueFactory>
-                              <SpinnerValueFactory.IntegerSpinnerValueFactory max="10" min="0" />
-                           </valueFactory>
-                        </Spinner>
-                        <Label alignment="CENTER" text="ms" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="1">
-                           <padding>
-                              <Insets left="4.0" />
-                           </padding>
-                        </Label>
-                     </children>
-                  </GridPane>
-                  <CheckBox fx:id="chk_certificates" mnemonicParsing="false" text="Ignore Certificate" />
-               </children>
-            </VBox>
-         </center>
-         <bottom>
-            <ButtonBar BorderPane.alignment="CENTER">
-              <buttons>
-                <Button mnemonicParsing="false" onAction="#add_server" text="Add" />
-                  <Button mnemonicParsing="false" onAction="#cancel" text="Cancel" />
-              </buttons>
-            </ButtonBar>
-         </bottom>
-      </BorderPane>
-   </content>
+<TitledPane collapsible="false" text="Add Server"
+	xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.jfx.view.generator.detail.AddServerController">
+	<content>
+		<BorderPane>
+			<center>
+				<VBox prefWidth="100.0" spacing="8.0"
+					BorderPane.alignment="CENTER">
+					<children>
+						<GridPane hgap="2.0">
+							<columnConstraints>
+								<ColumnConstraints hgrow="SOMETIMES"
+									minWidth="10.0" prefWidth="100.0" />
+								<ColumnConstraints hgrow="NEVER"
+									minWidth="10.0" prefWidth="60.0" />
+								<ColumnConstraints hgrow="NEVER"
+									minWidth="10.0" />
+							</columnConstraints>
+							<rowConstraints>
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" vgrow="SOMETIMES" />
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" vgrow="SOMETIMES" />
+							</rowConstraints>
+							<children>
+								<Label text="Address" />
+								<TextField fx:id="fld_address" GridPane.rowIndex="1" />
+								<Label text="Port" GridPane.columnIndex="1" />
+								<TextField fx:id="fld_port" GridPane.columnIndex="1"
+									GridPane.rowIndex="1" />
+								<Button fx:id="btn_test" mnemonicParsing="false"
+									onAction="#test_address" text="Test" GridPane.columnIndex="2"
+									GridPane.rowIndex="1" />
+							</children>
+						</GridPane>
+						<HBox fx:id="test_box" alignment="CENTER_LEFT" spacing="4.0"
+							visible="false">
+							<children>
+								<ProgressIndicator fx:id="test_progress"
+									prefHeight="16.0" prefWidth="16.0" />
+								<Label fx:id="test_status" />
+							</children>
+						</HBox>
+						<GridPane>
+							<columnConstraints>
+								<ColumnConstraints hgrow="SOMETIMES"
+									minWidth="10.0" prefWidth="100.0" />
+								<ColumnConstraints halignment="RIGHT"
+									minWidth="10.0" prefWidth="100.0" />
+							</columnConstraints>
+							<rowConstraints>
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" vgrow="SOMETIMES" />
+								<RowConstraints minHeight="10.0"
+									prefHeight="30.0" vgrow="SOMETIMES" />
+							</rowConstraints>
+							<children>
+								<Label text="Connection Cooldown" GridPane.columnSpan="2" />
+								<HBox GridPane.columnIndex="1" />
+								<Spinner fx:id="spn_cooldown" GridPane.rowIndex="1">
+									<valueFactory>
+										<SpinnerValueFactory.IntegerSpinnerValueFactory
+											max="10" min="0" />
+									</valueFactory>
+								</Spinner>
+								<Label alignment="CENTER" text="ms"
+									GridPane.columnIndex="1" GridPane.halignment="LEFT"
+									GridPane.rowIndex="1">
+									<padding>
+										<Insets left="4.0" />
+									</padding>
+								</Label>
+							</children>
+						</GridPane>
+						<CheckBox fx:id="chk_certificates"
+							mnemonicParsing="false" text="Ignore Certificate" />
+					</children>
+				</VBox>
+			</center>
+			<bottom>
+				<ButtonBar BorderPane.alignment="CENTER">
+					<buttons>
+						<Button mnemonicParsing="false" onAction="#add_server"
+							text="Add" />
+						<Button mnemonicParsing="false" onAction="#cancel"
+							text="Cancel" />
+					</buttons>
+				</ButtonBar>
+			</bottom>
+		</BorderPane>
+	</content>
 </TitledPane>

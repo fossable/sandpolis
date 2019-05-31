@@ -26,7 +26,7 @@ import com.sandpolis.viewer.jfx.view.main.Events.MenuOpenEvent;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.Region;
 
 public class VerticalMenuController extends AbstractController {
 
@@ -41,11 +41,11 @@ public class VerticalMenuController extends AbstractController {
 	@FXML
 	private Button btn_about;
 
-	private VBox pane_interface;
-	private VBox pane_management;
-	private VBox pane_generator;
-	private VBox pane_configuration;
-	private VBox pane_about;
+	private Region pane_interface;
+	private Region pane_management;
+	private Region pane_generator;
+	private Region pane_configuration;
+	private Region pane_about;
 
 	@FXML
 	public void initialize() throws IOException {

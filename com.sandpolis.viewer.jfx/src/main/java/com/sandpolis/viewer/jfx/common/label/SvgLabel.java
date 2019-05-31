@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import com.sandpolis.viewer.jfx.common.MicroSvgParser;
 
+import javafx.beans.property.StringProperty;
 import javafx.css.CssMetaData;
 import javafx.css.SimpleStyleableDoubleProperty;
 import javafx.css.SimpleStyleableObjectProperty;
@@ -117,6 +118,10 @@ public class SvgLabel extends Label {
 			"svgWidth", 16.0);
 	private final StyleableDoubleProperty svgHeight = new SimpleStyleableDoubleProperty(SVG_HEIGHT_METADATA, this,
 			"svgHeight", 16.0);
+
+	public StringProperty svgProperty() {
+		return svg;
+	}
 
 	public SvgLabel() {
 		getStyleClass().add("default-svg-label");

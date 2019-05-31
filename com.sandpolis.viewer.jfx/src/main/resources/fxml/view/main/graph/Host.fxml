@@ -5,11 +5,16 @@
 <?import javafx.scene.layout.BorderPane?>
 
 
-<BorderPane fx:id="border" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.viewer.jfx.view.main.graph.HostController">
-   <center>
-      <ImageView fx:id="image" fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
-   </center>
-   <bottom>
-      <Label fx:id="undertext" BorderPane.alignment="CENTER" />
-   </bottom>
+<BorderPane fx:id="border" maxHeight="-Infinity"
+	maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+	xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.jfx.view.main.graph.HostController">
+	<center>
+		<ImageView fx:id="image" fitHeight="32.0" fitWidth="32.0"
+			pickOnBounds="true" preserveRatio="true"
+			BorderPane.alignment="CENTER" />
+	</center>
+	<bottom>
+		<Label fx:id="undertext" BorderPane.alignment="CENTER" />
+	</bottom>
 </BorderPane>

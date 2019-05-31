@@ -151,23 +151,23 @@ public class GeneratorController extends FxController {
 
 		exe = load(this, TreeCategoryController.class);
 		exe.name().set("Execution");
-		exe.setIcon("/image/icon16/common/computer.png");
+		exe.setIcon("/image/common/file-line.svg");
 
 		net = load(this, TreeCategoryController.class);
 		net.name().set("Networking");
-		net.setIcon("/image/icon16/common/computer.png");
+		net.setIcon("/image/common/global-line.svg");
 
 		auth = load(this, TreeCategoryController.class);
 		auth.name().set("Authentication");
-		auth.setIcon("/image/icon16/common/lock.png");
+		auth.setIcon("/image/common/lock-2-line.svg");
 
 		plugin = load(this, TreeCategoryController.class);
 		plugin.name().set("Plugins");
-		plugin.setIcon("/image/icon16/common/plugin.png");
+		plugin.setIcon("/image/common/plug-line.svg");
 
 		output = load(this, TreeCategoryController.class);
 		output.name().set("Output");
-		output.setIcon("/image/icon16/common/compile.png");
+//		output.setIcon("/image/icon16/common/compile.png");
 
 		exe_melt = load(exe, TreeAttributeListController.class);
 		exe_melt.name().set("Delete installer when done");
@@ -316,33 +316,33 @@ public class GeneratorController extends FxController {
 
 		// Add the server to the configuration tree
 		TreeGroupController group = load(net, TreeGroupController.class);
-		group.setIcon("/image/icon16/common/server.png");
+		group.setIcon("/image/common/server-line.png");
 
 		TreeAttributeTextController address = load(group, TreeAttributeTextController.class);
 		address.id().set("address");
 		address.name().set("address");
-		address.setIcon("/image/icon16/common/ip.png");
+		address.setIcon("/image/common/server-line.svg");
 		address.validator().set(ValidationUtil::address);
 		address.value().set(event.get().address);
 
 		TreeAttributeTextController port = load(group, TreeAttributeTextController.class);
 		port.id().set("port");
 		port.name().set("port");
-		port.setIcon("/image/icon16/common/ip.png");
+//		port.setIcon("/image/icon16/common/ip.png");
 		port.validator().set(ValidationUtil::port);
 		port.value().set(event.get().port);
 
 		TreeAttributeListController strict_certs = load(group, TreeAttributeListController.class);
 		strict_certs.id().set("strict_certs");
 		strict_certs.name().set("certificates");
-		strict_certs.setIcon("/image/icon16/common/ssl_certificate.png");
+		strict_certs.setIcon("/image/common/file-shield-line.svg");
 		strict_certs.getItems().addAll("true", "false");
 		strict_certs.value().set(event.get().strict_certs);
 
 		TreeAttributeTextController cooldown = load(group, TreeAttributeTextController.class);
 		cooldown.id().set("cooldown");
 		cooldown.name().set("cooldown");
-		cooldown.setIcon("/image/icon16/common/ip.png");
+//		cooldown.setIcon("/image/icon16/common/ip.png");
 		cooldown.value().set(event.get().cooldown);
 
 		// Bind address to group name
