@@ -28,8 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
-import com.sandpolis.viewer.jfx.common.button.SvgButton;
-
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.scene.Group;
@@ -47,7 +45,7 @@ import javafx.scene.shape.SVGPath;
  */
 public final class MicroSvgParser {
 
-	private static final Logger log = LoggerFactory.getLogger(SvgButton.class);
+	private static final Logger log = LoggerFactory.getLogger(MicroSvgParser.class);
 
 	/**
 	 * Load an SVG image from the classpath.
