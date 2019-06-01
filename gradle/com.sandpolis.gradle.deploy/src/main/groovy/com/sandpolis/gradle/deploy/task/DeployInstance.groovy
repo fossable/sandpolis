@@ -54,7 +54,7 @@ class DeployInstance extends RemoteTask {
 				execute 'md "' + directory + '/lib"'
 
 				// Reset Java Preferences
-				execute 'reg delete "HKEY_CURRENT_USER\\Software\\JavaSoft\\Prefs" /f'
+				execute 'reg delete "HKEY_CURRENT_USER\\Software\\JavaSoft\\Prefs" /f', ignoreError: true
 
 				// Transfer instance binary
 				put from: project_deploy.jar.archivePath, into: directory
