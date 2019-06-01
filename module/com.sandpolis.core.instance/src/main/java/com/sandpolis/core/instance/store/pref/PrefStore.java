@@ -69,7 +69,8 @@ public final class PrefStore extends Store {
 	 * @return A unique {@link Preferences} object
 	 */
 	public static Preferences getPreferences(Instance instance, InstanceFlavor flavor) {
-		return Preferences.userRoot().node("com/sandpolis/" + instance + "/" + flavor);
+		return Preferences.userRoot()
+				.node("com/sandpolis/" + instance.name().toLowerCase() + "/" + flavor.name().toLowerCase());
 	}
 
 	/**
