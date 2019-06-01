@@ -70,8 +70,7 @@ public class SoiBuildTask extends DefaultTask {
 			so.setNumber(Integer.parseInt(number));
 
 		// Build platform
-		so.setPlatform(String.format("%s (%s %s)", System.getProperty("os.name"), System.getProperty("os.version"),
-				System.getProperty("os.arch")));
+		so.setPlatform(String.format("%s (%s)", System.getProperty("os.name"), System.getProperty("os.arch")));
 
 		// Java version
 		so.setJavaVersion(

@@ -108,3 +108,9 @@
 #about-logo_background {
 	-fx-background-color: #333333;
 }
+#about-btn_website {
+}
+#about-btn_github {
+	-fx-svg: "/image/common/github-line.svg";
+	-fx-padding: 1 2 1 2;
+}

@@ -5,13 +5,16 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 
+<?import com.sandpolis.viewer.jfx.common.button.SvgButton?>
 <?import com.sandpolis.viewer.jfx.common.label.DateLabel?>
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity"
@@ -24,11 +27,11 @@
 			BorderPane.alignment="CENTER">
 			<buttons>
 				<Button mnemonicParsing="false" text="Website"
-					onAction="#open_website" />
-				<Button mnemonicParsing="false" text="GitHub"
-					onAction="#open_github" />
+					id="about-btn_website" onAction="#open_website" />
+				<SvgButton mnemonicParsing="false" text="GitHub"
+					id="about-btn_github" onAction="#open_github" />
 				<Button mnemonicParsing="false" text="Close"
-					onAction="#close" />
+					fx:id="btn_close" onAction="#close" />
 			</buttons>
 		</ButtonBar>
 	</bottom>
@@ -58,17 +61,18 @@
 					</rowConstraints>
 					<children>
 						<Label text="Version" />
-						<Label text="Build Number" GridPane.rowIndex="1" />
-						<Label text="Build Timestamp" GridPane.rowIndex="2" />
-						<Label text="Java Version" GridPane.rowIndex="4" />
-						<Label text="Java Uptime" GridPane.rowIndex="5" />
-						<Label text="Build Platform" GridPane.rowIndex="3" />
+						<Label text="Build Timestamp" GridPane.rowIndex="1" />
+						<Label text="Build Platform" GridPane.rowIndex="2" />
+						<Label text="Build Java Version" GridPane.rowIndex="3" />
+						<Label text="Current Java Version" GridPane.rowIndex="4" />
+						<Label text="Application Uptime" GridPane.rowIndex="5" />
+
 						<Label fx:id="version" GridPane.columnIndex="1" />
-						<Label fx:id="build_number" GridPane.columnIndex="1"
-							GridPane.rowIndex="1" />
 						<Label fx:id="build_time" GridPane.columnIndex="1"
-							GridPane.rowIndex="2" />
+							GridPane.rowIndex="1" />
 						<Label fx:id="build_platform" GridPane.columnIndex="1"
+							GridPane.rowIndex="2" />
+						<Label fx:id="build_version" GridPane.columnIndex="1"
 							GridPane.rowIndex="3" />
 						<Label fx:id="java_version" GridPane.columnIndex="1"
 							GridPane.rowIndex="4" />
@@ -78,13 +82,20 @@
 				</GridPane>
 			</center>
 			<right>
-				<TextArea editable="false" focusTraversable="false"
-					pickOnBounds="false" prefHeight="200.0" prefWidth="200.0"
-					text="DESCRIPTION" wrapText="true" BorderPane.alignment="CENTER">
-					<cursor>
-						<Cursor fx:constant="DEFAULT" />
-					</cursor>
-				</TextArea>
+				<TableView fx:id="configuration">
+					<columns>
+						<TableColumn text="Configuration">
+							<cellValueFactory>
+								<PropertyValueFactory property="key" />
+							</cellValueFactory>
+						</TableColumn>
+						<TableColumn text="Value">
+							<cellValueFactory>
+								<PropertyValueFactory property="value" />
+							</cellValueFactory>
+						</TableColumn>
+					</columns>
+				</TableView>
 			</right>
 			<GridPane.margin>
 				<Insets />

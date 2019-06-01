@@ -19,7 +19,9 @@ package com.sandpolis.core.instance;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -169,6 +171,15 @@ public final class Config {
 	 */
 	public static void register(String property) {
 		register(property, null);
+	}
+
+	/**
+	 * Get the store's configuration.
+	 * 
+	 * @return The configuration data
+	 */
+	public static Set<Entry<String, Object>> entries() {
+		return config.entrySet();
 	}
 
 	/**

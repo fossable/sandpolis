@@ -20,6 +20,7 @@ package com.sandpolis.viewer.jfx.view.about;
 import java.io.IOException;
 import java.util.Date;
 
+import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.viewer.jfx.Viewer.UI;
@@ -32,13 +33,17 @@ import javafx.animation.Timeline;
 import javafx.application.ConditionalFeature;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.SubScene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableView;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -53,17 +58,21 @@ public class AboutController extends AbstractController {
 	@FXML
 	private Label version;
 	@FXML
-	private Label build_number;
-	@FXML
 	private Label build_time;
 	@FXML
 	private Label build_platform;
 	@FXML
+	private Label build_version;
+	@FXML
 	private Label java_version;
+	@FXML
+	private Button btn_close;
 	@FXML
 	private DateLabel java_uptime;
 	@FXML
 	private BorderPane sub;
+	@FXML
+	private TableView<ConfigProperty> configuration;
 
 	private double x;
 	private double xSpeed = 0.1;
@@ -73,13 +82,31 @@ public class AboutController extends AbstractController {
 	@FXML
 	private void initialize() throws IOException {
 
-		// Load static properties
-		version.setText(Core.SO_BUILD.getVersion());
-		build_number.setText(Integer.toString(Core.SO_BUILD.getNumber()));
+		// Set Sandpolis version
+		if (!Core.SO_BUILD.getVersion().isEmpty())
+			version.setText(Core.SO_BUILD.getVersion());
+		else
+			version.setText("?.?.?");
+
+		// Set build timestamp
 		build_time.setText(new Date(Core.SO_BUILD.getTime()).toString());
+
+		// Set build platform name
 		build_platform.setText(Core.SO_BUILD.getPlatform());
-		java_version.setText(Core.SO_BUILD.getJavaVersion());
+
+		// Set build Java version
+		build_version.setText(Core.SO_BUILD.getJavaVersion());
+
+		// Set current Java version
+		java_version.setText(
+				String.format("%s (%s)", System.getProperty("java.version"), System.getProperty("java.vendor")));
+
+		// Bind uptime
 		java_uptime.referenceProperty().set(Environment.JVM_TIMESTAMP.getTime());
+
+		// Load configuration data
+		for (var entry : Config.entries())
+			configuration.getItems().add(new ConfigProperty(entry.getKey(), entry.getValue().toString()));
 
 		if (Platform.isSupported(ConditionalFeature.SCENE3D)) {
 
@@ -125,6 +152,9 @@ public class AboutController extends AbstractController {
 			ImageView banner = new ImageView("/image/view/about/banner.png");
 			sub.setCenter(banner);
 		}
+
+		// Set default button
+		Platform.runLater(() -> btn_close.requestFocus());
 	}
 
 	@FXML
@@ -140,6 +170,29 @@ public class AboutController extends AbstractController {
 	@FXML
 	private void close() {
 		sub.getScene().getWindow().hide();
+	}
+
+	/**
+	 * A container for configuration properties.
+	 */
+	public static class ConfigProperty {
+
+		private final StringProperty key = new SimpleStringProperty(this, "key");
+		private final StringProperty value = new SimpleStringProperty(this, "value");
+
+		public ConfigProperty(String key, String value) {
+			this.key.set(key);
+			this.value.set(value);
+		}
+
+		public StringProperty keyProperty() {
+			return key;
+		}
+
+		public StringProperty valueProperty() {
+			return value;
+		}
+
 	}
 
 }
