@@ -19,7 +19,7 @@ package com.sandpolis.core.instance;
 
 import javax.persistence.MappedSuperclass;
 
-import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.Message;
 
 /**
  * Provides a consistent API for merging and extracting protobuf updates.
@@ -28,7 +28,7 @@ import com.google.protobuf.GeneratedMessageV3;
  * @author cilki
  * @since 5.0.0
  */
-public interface Updatable<E extends GeneratedMessageV3> {
+public interface Updatable<E extends Message> {
 
 	/**
 	 * Merge updates into this {@link Updatable}.
@@ -70,7 +70,7 @@ public interface Updatable<E extends GeneratedMessageV3> {
 	 * An abstract implementation of {@link Updatable} than handles timestamps.
 	 */
 	@MappedSuperclass
-	public abstract class AbstractUpdatable<E extends GeneratedMessageV3> implements Updatable<E> {
+	public abstract class AbstractUpdatable<E extends Message> implements Updatable<E> {
 
 		/**
 		 * A timestamp of the most recent update.

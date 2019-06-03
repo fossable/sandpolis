@@ -17,7 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.instance;
 
-import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.Message;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 
 /**
@@ -26,13 +26,13 @@ import com.sandpolis.core.proto.util.Result.ErrorCode;
  * <br>
  * An implementation of this interface must implement a method that converts the
  * object to the protobuf type ({@link #extract()}) and a method that merges the
- * protobuf type into the object ({@link #merge(GeneratedMessageV3)}).
+ * protobuf type into the object ({@link #merge(Message)}).
  * 
  * @param <E> The corresponding protobuf type
  * @author cilki
  * @since 5.0.0
  */
-public interface ProtoType<E extends GeneratedMessageV3> {
+public interface ProtoType<E extends Message> {
 
 	/**
 	 * Incorperate the given protobuf into the object. Any field restrictions are
