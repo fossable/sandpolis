@@ -132,24 +132,19 @@ public final class IDUtil {
 	}
 
 	/**
-	 * The maximum message ID.
+	 * The request ID counter.
 	 */
-	private static final int MSG_MAX = 64;
-
-	private static int msg;
+	private static volatile int msg;
 
 	/**
-	 * Get an ID for use in a message which requires a response. IDs cycle from 0 to
-	 * {@link #MSG_MAX} which saves a few bytes on the wire.
+	 * Get a request ID for use in a message that requires a response.
 	 * 
-	 * @return An ID ranging from 0-{@link #MSG_MAX}
+	 * @return A new request ID
 	 */
-	public static int msg() {
-		msg++;
-		if (msg > MSG_MAX) {
+	public static synchronized int msg() {
+		if (msg == Integer.MAX_VALUE)
 			msg = 0;
-		}
-		return msg;
+		return ++msg;
 	}
 
 	/**

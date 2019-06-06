@@ -20,6 +20,8 @@ package com.sandpolis.core.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Field;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -65,16 +67,25 @@ class IDUtilTest {
 		}
 	}
 
-	/**
-	 * Maximum message ID.
-	 */
-	private static final int MSG_MAX = 64;
+	@Test
+	@DisplayName("Ensure message ID is positive")
+	void msg_1() throws Exception {
+		Field msg = IDUtil.class.getDeclaredField("msg");
+		msg.setAccessible(true);
+		msg.set(null, 0);
+
+		assertTrue(IDUtil.msg() == 1);
+		assertTrue(IDUtil.msg() == IDUtil.msg() - 1);
+	}
 
 	@Test
-	@DisplayName("Ensure message ID never exceeds MSG_MAX")
-	void msg_1() {
-		for (int i = 0; i < 10000; i++) {
-			assertTrue(IDUtil.msg() <= MSG_MAX);
-		}
+	@DisplayName("Ensure message ID wraps correctly")
+	void msg_2() throws Exception {
+		Field msg = IDUtil.class.getDeclaredField("msg");
+		msg.setAccessible(true);
+		msg.set(null, Integer.MAX_VALUE - 1);
+
+		assertTrue(IDUtil.msg() == Integer.MAX_VALUE);
+		assertTrue(IDUtil.msg() == 1);
 	}
 }
