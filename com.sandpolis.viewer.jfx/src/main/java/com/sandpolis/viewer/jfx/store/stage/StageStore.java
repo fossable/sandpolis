@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.Store.AutoInitializer;
 import com.sandpolis.core.instance.store.pref.PrefStore;
@@ -31,6 +32,7 @@ import com.sandpolis.viewer.jfx.common.FxUtil;
 import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 /**
@@ -202,6 +204,13 @@ public final class StageStore {
 		public void show() {
 			Scene scene = new Scene(root, width, height);
 			scene.getStylesheets().add("/css/" + PrefStore.getString(ui.theme) + ".css");
+
+			// Set default icons unless they were manually specified
+			if (stage.getIcons().size() == 0) {
+				Stream.of("/image/icon.png", "/image/icon@2x.png", "/image/icon@3x.png", "/image/icon@4x.png")
+						.map(StageStore.class::getResourceAsStream).map(Image::new).forEach(stage.getIcons()::add);
+			}
+
 			stage.setScene(scene);
 			stage.setResizable(resizable);
 			stage.setTitle(title);

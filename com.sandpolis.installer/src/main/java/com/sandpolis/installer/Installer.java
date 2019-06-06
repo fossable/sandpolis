@@ -19,6 +19,8 @@ package com.sandpolis.installer;
 
 import static com.sandpolis.core.instance.MainDispatch.register;
 
+import java.util.stream.Stream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +37,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 /**
@@ -91,10 +94,15 @@ public final class Installer {
 
 		@Override
 		public void start(Stage stage) throws Exception {
+			stage.setTitle("Sandpolis Installer");
 			stage.setOnCloseRequest(event -> {
 				Platform.exit();
 				System.exit(0);
 			});
+
+			// Set icons
+			Stream.of("/image/icon.png", "/image/icon@2x.png", "/image/icon@3x.png", "/image/icon@4x.png")
+					.map(UI.class::getResourceAsStream).map(Image::new).forEach(stage.getIcons()::add);
 
 			Parent node = new FXMLLoader(UI.class.getResource("/fxml/Main.fxml")).load();
 
