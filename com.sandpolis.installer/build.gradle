@@ -186,6 +186,7 @@ launch4j {
 	textVersion = "0.${SANDPOLIS_VERSION}"
 	jar = jarOnlineWin.archivePath
 	copyConfigurable = jarOnlineWin
+	icon = "${projectDir}/sandpolis.ico"
 }
 tasks.createExe.dependsOn(jarOnlineWin)
 
