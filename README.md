@@ -2,19 +2,19 @@
 	<img src="https://s3.us-east-2.amazonaws.com/github.sandpolis.com/header.png" />
 </p>
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
+![GitHub repo size](https://img.shields.io/github/repo-size/Subterranean-Security/Sandpolis.svg)
+![GitHub release](https://img.shields.io/github/release-pre/Subterranean-Security/Sandpolis.svg?color=blue)
+![GitHub All Releases](https://img.shields.io/github/downloads/Subterranean-Security/Sandpolis/total.svg?color=blue)
 [![Build Status](https://travis-ci.org/Subterranean-Security/Sandpolis.svg?branch=master)](https://travis-ci.org/Subterranean-Security/Sandpolis)
 [![Build status](https://ci.appveyor.com/api/projects/status/8a2xdoy8pt21k77g?svg=true)](https://ci.appveyor.com/project/cilki/sandpolis)
 
-**Sandpolis** is a cross-platform remote administration framework for serious sysadmins, power users, and (sometimes) normal users. It provides real-time monitoring and management of servers, regular desktops, and anything in-between. Simply put, Sandpolis is a convenient way to securely interact with many remote computers from one interface.
+**Sandpolis** is a cross-platform remote administration framework that can manage servers, desktop computers, mobile devices, and anything else that runs Java (except for your printers, Blu-Ray players, refrigerators, etc).
 
-Here are some fundamental qualities that Sandpolis tries to achieve:
+Sandpolis is targeted at sysadmins and power users, but can be used by anyone once it's configured. Most users will want to use Sandpolis via the JavaFX desktop application, but alternative user interfaces (like web and mobile applications) are planned.
 
-- compatible with as many operating systems as possible
-- flexible, configurable, and easily extensible to niche applications via plugins
-- uncompromising on performance and security
-- low latency and high concurrency
-- user friendly
+##### Project Status
+**Sandpolis is very much unfinished and therefore should only be used in a testing environment**. There are a few releases up, but don't expect much from them until things are more complete.
 
 ### How
 There are three components in any Sandpolis network:
@@ -28,9 +28,15 @@ For convenience, there are many ways to install the Sandpolis client on your mac
 Clients maintain a persistent connection to the server, and viewers maintain a temporary connection to the server or directly to clients. This allows tasks to continue running in the background while viewers are not connected.
 
 ### Why
-Sandpolis is somewhat like a fusion of [TeamViewer](https://www.teamviewer.com) and Canonical's [Landscape](https://landscape.canonical.com). The overall architecture and intended usage of Sandpolis is very similar to Landscape, but Sandpolis also provides features like remote desktop and file management which will never be included in Landscape. Sandpolis isn't intended to replace TeamViewer or Landscape, but rather it serves the middle-ground between the two.
+Sandpolis is somewhat like a fusion of [TeamViewer](https://www.teamviewer.com) and Canonical's [Landscape](https://landscape.canonical.com). The overall architecture and intended usage of Sandpolis is very similar to Landscape, but Sandpolis also provides features like remote desktop that don't fit in Landscape. Sandpolis isn't intended to replace TeamViewer or Landscape, but rather it serves the middle-ground between the two.
 
-Best of all, Sandpolis is 100% free and open-source.  
+Here are some fundamental qualities that Sandpolis tries to achieve:
+
+- compatible with as many operating systems as possible
+- flexible, configurable, and easily extensible to niche applications via plugins
+- uncompromising on performance and security
+- low latency and high concurrency
+- user friendly
 
 ### What it isn't
 Sandpolis is **not** intended to be used on unauthorized systems, to manage a botnet, or for any other illegal activity. 
