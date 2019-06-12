@@ -41,7 +41,7 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.viewer')
 
 	// https://github.com/google/guava
-	implementation 'com.google.guava:guava:27.1-jre'
+	implementation 'com.google.guava:guava:28.0-jre'
 
 	// https://github.com/sirolf2009/fxgraph
 	implementation 'com.sirolf2009:fxgraph:0.0.3'

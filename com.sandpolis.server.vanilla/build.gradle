@@ -42,7 +42,7 @@ dependencies {
 	implementation project(':plugin:com.sandpolis.plugin.filesys')
 
 	// https://github.com/google/guava
-	implementation 'com.google.guava:guava:27.1-jre'
+	implementation 'com.google.guava:guava:28.0-jre'
 
 	// https://github.com/h2database/h2database
 	implementation 'com.h2database:h2:1.4.199'

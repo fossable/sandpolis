@@ -37,7 +37,7 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.soi')
 
 	// https://github.com/google/guava
-	implementation 'com.google.guava:guava:27.1-jre'
+	implementation 'com.google.guava:guava:28.0-jre'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'	
