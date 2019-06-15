@@ -17,26 +17,23 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_USERNAME;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.failure;
-import static com.sandpolis.core.util.ProtoUtil.rs;
-import static com.sandpolis.core.util.ProtoUtil.success;
-
-import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.protobuf.Message;
 import com.sandpolis.core.attribute.key.AK_VIEWER;
-import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.ConnectionState;
+import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.ProfileStore;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.user.User;
@@ -57,50 +54,40 @@ public class LoginExe extends Exelet {
 	}
 
 	@Auth
-	public void rq_logout(Message m) {
+	public void rq_logout(MSG.Message rq) {
 		log.debug("Processing logout request from: {}", connector.getRemoteIP());
 
-		connector.send(rs(m).setRsOutcome(Outcome.newBuilder().setResult(true)));
 		connector.close();
 	}
 
 	@Unauth
-	public void rq_login(Message m) {
+	public Message.Builder rq_login(RQ_Login rq) {
 		log.debug("Processing login request from: {}", connector.getRemoteIP());
-		Outcome.Builder outcome = begin();
-		var rq = m.getRqLogin();
-		int id = m.getId();
-
-		// Extract username
-		String username = rq.getUsername();
+		var outcome = begin();
 
 		// Validate username
+		String username = rq.getUsername();
 		if (!ValidationUtil.username(username)) {
 			log.debug("The username ({}) is invalid", username);
-			failLogin(outcome.setComment("Invalid username"), id, username);
-			return;
+			return failure(outcome, INVALID_USERNAME);
 		}
 
 		User user = UserStore.get(username).orElse(null);
 		if (user == null) {
 			log.debug("The user ({}) does not exist", username);
-			failLogin(outcome.setComment("Authentication failed"), id, username);
-			return;
+			return failure(outcome, ACCESS_DENIED);
 		}
 
 		// Check expiration
 		if (UserStore.isExpired(user)) {
 			log.debug("The user ({}) is expired", username);
-			failLogin(outcome.setComment("User expired on: " + new Date(user.getExpiration()).toString()), id,
-					username);
-			return;
+			return failure(outcome, ACCESS_DENIED);
 		}
 
-		// Perform authentication
+		// Check password
 		if (!CryptoUtil.PBKDF2.check(CryptoUtil.hash(SHA256, rq.getPassword()), user.getHash())) {
 			log.debug("Authentication failed", username);
-			failLogin(outcome.setComment("Authentication failed"), id, username);
-			return;
+			return failure(outcome, ACCESS_DENIED);
 		}
 
 		log.debug("Accepting login request for user: {}", username);
@@ -121,20 +108,6 @@ public class LoginExe extends Exelet {
 		viewer.set(AK_VIEWER.LOGIN_IP, connector.getRemoteIP());
 		viewer.set(AK_VIEWER.LOGIN_TIME, System.currentTimeMillis());
 
-		connector.send(rs(id).setRsOutcome(success(outcome)));
+		return success(outcome);
 	}
-
-	/**
-	 * Reject the login request, but leave the connection open.
-	 * 
-	 * @param outcome The current outcome
-	 * @param id      The request id
-	 * @param user    The username
-	 */
-	private void failLogin(Outcome.Builder outcome, int id, String user) {
-		log.debug("Rejecting login request for user: {}", user);
-
-		connector.send(rs(id).setRsOutcome(failure(outcome)));
-	}
-
 }

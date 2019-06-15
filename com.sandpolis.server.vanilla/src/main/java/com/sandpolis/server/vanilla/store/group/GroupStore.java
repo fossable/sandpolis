@@ -18,9 +18,6 @@
 package com.sandpolis.server.vanilla.store.group;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.failure;
-import static com.sandpolis.core.util.ProtoUtil.success;
 
 import java.util.List;
 import java.util.Objects;
@@ -39,7 +36,6 @@ import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Group.ProtoGroup;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
-import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.user.User;
 
@@ -179,17 +175,12 @@ public final class GroupStore extends Store {
 	 * @param delta The changes
 	 * @return The outcome of the action
 	 */
-	public static Outcome delta(String id, ProtoGroup delta) {
-		var outcome = begin();
+	public static ErrorCode delta(String id, ProtoGroup delta) {
 		Group group = get(id).orElse(null);
 		if (group == null)
-			return failure(outcome, "Group not found");
+			return ErrorCode.UNKNOWN_GROUP;
 
-		ErrorCode error = group.merge(delta);
-		if (error != ErrorCode.OK)
-			return failure(outcome.setError(error));
-
-		return success(outcome);
+		return group.merge(delta);
 	}
 
 	private GroupStore() {

@@ -18,27 +18,15 @@
 package com.sandpolis.client.mega.cmd;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.complete;
-import static com.sandpolis.core.util.ProtoUtil.rs;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
-import com.google.protobuf.ByteString;
-import com.sandpolis.core.net.Cmdlet;
-import com.sandpolis.core.net.exception.MessageFlowException;
+import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.store.network.NetworkStore;
-import com.sandpolis.core.proto.net.MCAuth.IM_Nonce;
+import com.sandpolis.core.net.handler.Sand5Handler;
 import com.sandpolis.core.proto.net.MCAuth.RQ_KeyAuth;
 import com.sandpolis.core.proto.net.MCAuth.RQ_NoAuth;
 import com.sandpolis.core.proto.net.MCAuth.RQ_PasswordAuth;
-import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
-import com.sandpolis.core.util.ProtoUtil;
 
 /**
  * Contains authentication commands for client instances.
@@ -51,7 +39,7 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	/**
 	 * Attempt to authenticate without providing any form of identification.
 	 * 
-	 * @return The response future
+	 * @return A response future
 	 */
 	public ResponseFuture<Outcome> none() {
 		return route(RQ_NoAuth.newBuilder());
@@ -60,7 +48,7 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	/**
 	 * Attempt to authenticate with a password.
 	 * 
-	 * @return The response future
+	 * @return A response future
 	 */
 	public ResponseFuture<Outcome> password(String password) {
 		checkNotNull(password);
@@ -69,36 +57,19 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	}
 
 	/**
-	 * Attempt to authenticate with a SAND5 key.
+	 * Attempt to authenticate with a SAND5 keypair.
 	 * 
-	 * @return The outcome of the action
+	 * @param group The group ID
+	 * @param mech  The key mechanism ID
+	 * @param key   The client keypair
+	 * @return A response future
 	 */
-	// TODO convert to async
-	public static Outcome key(String groupId, long mechId, ReciprocalKeyPair key)
-			throws InterruptedException, ExecutionException, TimeoutException {
-		Outcome.Builder outcome = begin();
+	public ResponseFuture<Outcome> key(String group, long mech, ReciprocalKeyPair key) {
+		checkNotNull(group);
+		checkNotNull(key);
 
-		byte[] nonceA = CryptoUtil.SAND5.getNonce();
-		Message rs = NetworkStore.route(ProtoUtil.rq().setRqKeyAuth(
-				RQ_KeyAuth.newBuilder().setGroupId(groupId).setMechId(mechId).setNonce(ByteString.copyFrom(nonceA))),
-				"net.timeout.response.default").get();
-		if (rs.getRsOutcome() != null)
-			return rs.getRsOutcome();
-		if (rs.getImNonce() == null)
-			throw new MessageFlowException(RQ_KeyAuth.class, rs);
-
-		byte[] signed = CryptoUtil.SAND5.sign(key, rs.getImNonce().getNonce().toByteArray());
-		rs = NetworkStore.route(ProtoUtil.rq().setImNonce(IM_Nonce.newBuilder().setNonce(ByteString.copyFrom(signed))),
-				"net.timeout.response.default").get();
-		if (rs.getRsOutcome() != null)
-			return rs.getRsOutcome();
-		if (rs.getImNonce() == null)
-			throw new MessageFlowException(IM_Nonce.class, rs);
-
-		boolean verifyServer = CryptoUtil.SAND5.check(key, nonceA, rs.getImNonce().getNonce().toByteArray());
-		NetworkStore.route(rs(rs).setRsOutcome(Outcome.newBuilder().setResult(verifyServer)));
-
-		return complete(outcome.setResult(verifyServer));
+		Sand5Handler.registerResponseHandler(sock.channel(), key);
+		return route(RQ_KeyAuth.newBuilder().setGroupId(group).setMechId(mech));
 	}
 
 	/**

@@ -17,13 +17,15 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.success;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
 
+import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PermissionConstant.server;
-import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.proto.net.MCUser.RQ_AddUser;
+import com.sandpolis.core.proto.net.MCUser.RQ_RemoveUser;
+import com.sandpolis.core.proto.net.MCUser.RQ_UserDelta;
 import com.sandpolis.server.vanilla.store.user.User;
 import com.sandpolis.server.vanilla.store.user.UserStore;
 
@@ -41,32 +43,30 @@ public class UserExe extends Exelet {
 
 	@Auth
 	@Permission(permission = server.user.create)
-	public void rq_add_user(Message m) {
-		var rq = m.getRqAddUser();
-
+	public Message.Builder rq_add_user(RQ_AddUser rq) {
 		var outcome = begin();
+
 		UserStore.add(rq.getConfig());
-		reply(m, success(outcome));
+		return success(outcome);
 	}
 
 	@Auth
-	public void rq_remove_user(Message m) {
-		var rq = m.getRqRemoveUser();
-		if (!accessCheck(m, this::ownership, rq.getId()))
-			return;
-
+	public Message.Builder rq_remove_user(RQ_RemoveUser rq) {
 		var outcome = begin();
+		if (!ownership(rq.getId()))
+			return failure(outcome, ACCESS_DENIED);
+
 		UserStore.remove(rq.getId());
-		reply(m, success(outcome));
+		return success(outcome);
 	}
 
 	@Auth
-	public void rq_user_delta(Message m) {
-		var rq = m.getRqUserDelta();
-		if (!accessCheck(m, this::ownership, rq.getDelta().getConfig().getId()))
-			return;
+	public Message.Builder rq_user_delta(RQ_UserDelta rq) {
+		var outcome = begin();
+		if (!ownership(rq.getDelta().getConfig().getId()))
+			return failure(outcome, ACCESS_DENIED);
 
-		reply(m, UserStore.delta(rq.getId(), rq.getDelta()));
+		return complete(outcome, UserStore.delta(rq.getId(), rq.getDelta()));
 	}
 
 	/**

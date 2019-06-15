@@ -20,9 +20,9 @@ package com.sandpolis.client.mega;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
-import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_ESTABLISHED;
 import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_LOST;
+import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -49,10 +49,12 @@ import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.task.IPCTask;
+import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
+import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
@@ -179,29 +181,28 @@ public final class Client {
 	private static final Task beginConnectionRoutine = new Task((task) -> {
 
 		Signaler.register(SRV_ESTABLISHED, () -> {
+			ResponseFuture<Outcome> future;
 			var auth = SO_CONFIG.getAuthentication();
-			try {
-				switch (auth.getAuthOneofCase()) {
-				case KEY:
-					KeyContainer mech = auth.getKey();
-					ReciprocalKeyPair key = new ReciprocalKeyPair(mech.getClient().getVerifier().toByteArray(),
-							mech.getClient().getSigner().toByteArray());
-					AuthCmd.key(auth.getGroupName(), mech.getId(), key);
-					break;
-				case PASSWORD:
-					AuthCmd.async().password(auth.getPassword().getPassword()).get();
-					break;
-				default:
-					AuthCmd.async().none().get();
-					break;
-				}
 
-				// Synchronize plugins
-				PluginCmd.async().beginSync().get();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			switch (auth.getAuthOneofCase()) {
+			case KEY:
+				KeyContainer mech = auth.getKey();
+				ReciprocalKeyPair key = new ReciprocalKeyPair(mech.getClient().getVerifier().toByteArray(),
+						mech.getClient().getSigner().toByteArray());
+				future = AuthCmd.async().key(auth.getGroupName(), mech.getId(), key);
+				break;
+			case PASSWORD:
+				future = AuthCmd.async().password(auth.getPassword().getPassword());
+				break;
+			default:
+				future = AuthCmd.async().none();
+				break;
 			}
+
+			future.addHandler((Outcome rs) -> {
+				// Synchronize plugins
+				PluginCmd.async().sync();
+			});
 		});
 
 		Signaler.register(SRV_LOST, () -> {

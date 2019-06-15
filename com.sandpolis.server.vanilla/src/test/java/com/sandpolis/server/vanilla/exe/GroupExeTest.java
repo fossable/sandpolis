@@ -17,7 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.util.ProtoUtil.rq;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -33,9 +32,9 @@ import com.sandpolis.core.net.ExeletTest;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MCGroup.RQ_AddGroup;
 import com.sandpolis.core.proto.net.MCGroup.RQ_RemoveGroup;
-import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
+import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.server.vanilla.store.group.Group;
 import com.sandpolis.server.vanilla.store.group.GroupStore;
 import com.sandpolis.server.vanilla.store.user.User;
@@ -64,28 +63,28 @@ class GroupExeTest extends ExeletTest {
 	@Test
 	@DisplayName("Add a valid memberless group")
 	void rq_add_group_1() {
-		exe.rq_add_group(rq(RQ_AddGroup.newBuilder()
-				.setConfig(GroupConfig.newBuilder().setId("123").setName("default").setOwner("admin"))).build());
+		var rs = (Outcome.Builder) exe.rq_add_group(RQ_AddGroup.newBuilder()
+				.setConfig(GroupConfig.newBuilder().setId("123").setName("default").setOwner("admin")).build());
 
-		assertTrue(((Message) channel.readOutbound()).getRsOutcome().getResult());
+		assertTrue(rs.getResult());
 	}
 
 	@Test
 	@DisplayName("Add a valid group with members")
 	void rq_add_group_2() {
-		exe.rq_add_group(rq(RQ_AddGroup.newBuilder().setConfig(
-				GroupConfig.newBuilder().setId("123").setName("default2").setOwner("admin").addMember("demouser")))
-						.build());
+		var rs = (Outcome.Builder) exe.rq_add_group(RQ_AddGroup.newBuilder().setConfig(
+				GroupConfig.newBuilder().setId("123").setName("default2").setOwner("admin").addMember("demouser"))
+				.build());
 
-		assertTrue(((Message) channel.readOutbound()).getRsOutcome().getResult());
+		assertTrue(rs.getResult());
 	}
 
 	@Test
 	@DisplayName("Try to remove a missing group")
 	void rq_add_group_3() {
-		exe.rq_remove_group(rq(RQ_RemoveGroup.newBuilder().setId("9292")).build());
+		var rs = (Outcome.Builder) exe.rq_remove_group(RQ_RemoveGroup.newBuilder().setId("9292").build());
 
-		assertFalse(((Message) channel.readOutbound()).getRsOutcome().getResult());
+		assertFalse(rs.getResult());
 	}
 
 }

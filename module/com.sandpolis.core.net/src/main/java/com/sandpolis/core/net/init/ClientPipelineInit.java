@@ -19,7 +19,7 @@ package com.sandpolis.core.net.init;
 
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.net;
-import com.sandpolis.core.net.Exelet;
+import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.CvidRequestHandler;
 import com.sandpolis.core.util.CertUtil;
 

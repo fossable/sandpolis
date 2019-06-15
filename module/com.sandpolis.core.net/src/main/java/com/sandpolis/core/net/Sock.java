@@ -67,7 +67,7 @@ public class Sock {
 	private static final Logger log = LoggerFactory.getLogger(Sock.class);
 
 	/**
-	 * The {@code Sock}'s underlying {@link Channel}.
+	 * The {@link Sock}'s underlying {@link Channel}.
 	 */
 	private Channel channel;
 
@@ -153,7 +153,7 @@ public class Sock {
 	}
 
 	/**
-	 * Shutdown the {@code Sock}.
+	 * Shutdown the {@link Sock}.
 	 */
 	public void close() {
 		requireState(CONNECTED, AUTHENTICATED);
@@ -389,6 +389,21 @@ public class Sock {
 	}
 
 	/**
+	 * Send a {@link Message} with the intention of receiving a reply.
+	 * 
+	 * @param message The {@link Message} to send
+	 * @param timeout The response timeout
+	 * @param unit    The timeout unit
+	 * @return A {@link MessageFuture} which will be notified when the response is
+	 *         received
+	 */
+	public MessageFuture request(Message message, int timeout, TimeUnit unit) {
+		MessageFuture future = read(message.getId(), timeout, unit);
+		send(message);
+		return future;
+	}
+
+	/**
 	 * Send a {@link Message} with the intention of receiving a reply. The ID field
 	 * will be populated if empty.
 	 * 
@@ -400,6 +415,21 @@ public class Sock {
 		if (message.getId() == 0)
 			message.setId(0);// TODO GET FROM ID UTIL!
 		return request(message.build());
+	}
+
+	/**
+	 * Send a {@link Message} with the intention of receiving a reply.
+	 * 
+	 * @param message The {@link Message} to send
+	 * @param timeout The response timeout
+	 * @param unit    The timeout unit
+	 * @return A {@link MessageFuture} which will be notified when the response is
+	 *         received
+	 */
+	public MessageFuture request(Message.Builder message, int timeout, TimeUnit unit) {
+		if (message.getId() == 0)
+			message.setId(0);// TODO GET FROM ID UTIL!
+		return request(message.build(), timeout, unit);
 	}
 
 	/**

@@ -29,8 +29,8 @@ import java.util.Optional;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
-import com.sandpolis.core.net.Cmdlet;
-import com.sandpolis.core.net.future.CommandFuture;
+import com.sandpolis.core.net.command.Cmdlet;
+import com.sandpolis.core.net.command.CommandFuture;
 import com.sandpolis.core.proto.net.MCPlugin.RQ_ArtifactDownload;
 import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginList;
 import com.sandpolis.core.proto.net.MCPlugin.RS_ArtifactDownload;
@@ -53,9 +53,10 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 	 * 
 	 * @return The command future
 	 */
-	public CommandFuture beginSync() {
+	public CommandFuture sync() {
+		var session = begin();
 
-		request(RQ_PluginList.newBuilder(), (RS_PluginList rs) -> {
+		session.request(RQ_PluginList.newBuilder(), (RS_PluginList rs) -> {
 			rs.getPluginList().stream()
 					// Skip up-to-date plugins
 					.filter(descriptor -> {
@@ -66,7 +67,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 						// Check versions
 						return !plugin.get().getVersion().equals(descriptor.getVersion());
 					}).forEach(descriptor -> {
-						installPlugin(descriptor.getId());
+						session.subcommand(install(descriptor.getId()));
 					});
 		});
 
@@ -76,14 +77,15 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 	/**
 	 * Download a plugin to the plugin directory.
 	 * 
+	 * @param gav The plugin coordinate
 	 * @return The command future
 	 */
-	public CommandFuture installPlugin(String id) {
-		checkNotNull(id);
+	public CommandFuture install(String gav) {
+		checkNotNull(gav);
+		var session = begin();
 
-		// TODO clone instead of async
-		handle(async().installDependency(":" + id + ":"), outcome -> {
-			PluginStore.installPlugin(Environment.get(LIB).resolve(fromCoordinate(":" + id + ":").filename));
+		session.subcommand(installDependency(gav), outcome -> {
+			PluginStore.installPlugin(Environment.get(LIB).resolve(fromCoordinate(gav).filename));
 		});
 
 		return session;
@@ -94,42 +96,42 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 	 * 
 	 * @return The command future
 	 */
-	public CommandFuture installDependency(String coordinate) {
-		checkNotNull(coordinate);
+	public CommandFuture installDependency(String gav) {
+		checkNotNull(gav);
+		var session = begin();
 
-		Path destination = Environment.get(LIB).resolve(fromCoordinate(coordinate).filename);
+		Path destination = Environment.get(LIB).resolve(fromCoordinate(gav).filename);
 		if (Files.exists(destination))
 			// Nothing to do
 			return session.success();
 
-		request(RQ_ArtifactDownload.newBuilder().setCoordinates(coordinate).setLocation(false),
-				(RS_ArtifactDownload rs) -> {
+		var rq = RQ_ArtifactDownload.newBuilder().setCoordinates(gav).setLocation(false);
 
-					switch (rs.getSourceCase()) {
-					case BINARY:
-						Files.write(destination, rs.getBinary().toByteArray());
-						break;
-					case COORDINATES:
-						ArtifactUtil.download(destination.getParent(), rs.getCoordinates());
-						break;
-					case URL:
-						NetUtil.download(rs.getUrl(), destination.toFile());
-						break;
-					default:
-						// Quit the entire command because it's likely that other responses will contain
-						// an invalid source case
-						session.abort("Unknown source case: " + rs.getSourceCase());
-					}
+		session.request(rq, (RS_ArtifactDownload rs) -> {
 
-					try {
-						// Get any missing dependencies recursively
-						SoiUtil.getMatrix(destination).getAllDependencies()
-								// TODO clone instead of async
-								.forEach(dep -> async().installDependency(dep.getCoordinates()).syncUninterruptibly());
-					} catch (NoSuchFileException e) {
-						// This dependency does not have a soi/matrix.bin (skip it)
-					}
-				});
+			switch (rs.getSourceCase()) {
+			case BINARY:
+				Files.write(destination, rs.getBinary().toByteArray());
+				break;
+			case COORDINATES:
+				ArtifactUtil.download(destination.getParent(), rs.getCoordinates());
+				break;
+			case URL:
+				NetUtil.download(rs.getUrl(), destination.toFile());
+				break;
+			default:
+				session.abort("Unknown source case: " + rs.getSourceCase());
+				return;
+			}
+
+			try {
+				// Get any missing dependencies recursively
+				SoiUtil.getMatrix(destination).getAllDependencies()
+						.forEach(dep -> session.subcommand(installDependency(dep.getCoordinates())));
+			} catch (NoSuchFileException e) {
+				// This dependency does not have a soi/matrix.bin (skip it)
+			}
+		});
 
 		return session;
 	}

@@ -17,7 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.viewer.cmd;
 
-import com.sandpolis.core.net.Cmdlet;
+import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
 import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener;

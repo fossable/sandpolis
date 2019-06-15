@@ -17,9 +17,9 @@
  *****************************************************************************/
 package com.sandpolis.core.net.init;
 
-import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.codec.PeerEncryptionDecoder;
 import com.sandpolis.core.net.codec.PeerEncryptionEncoder;
+import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.HolePunchHandler;
 
 import io.netty.channel.Channel;

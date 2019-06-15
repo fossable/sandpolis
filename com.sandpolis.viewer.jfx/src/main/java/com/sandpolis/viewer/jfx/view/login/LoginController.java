@@ -21,7 +21,6 @@ import java.util.Objects;
 
 import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -142,33 +141,29 @@ public class LoginController extends FxController {
 						if (sockFuture.isSuccess()) {
 							connection = sockFuture.get();
 							ServerCmd.async().target(connection).pool(ui.fx_thread).getServerBanner()
-									.addListener((ResponseFuture<RS_ServerBanner> responseFuture) -> {
-										if (responseFuture.isSuccess()) {
-											RS_ServerBanner banner = responseFuture.get();
-											if (!banner.getBannerImage().isEmpty())
-												setBannerImage(new Image(banner.getBannerImage().newInput()));
+									.addHandler((RS_ServerBanner rs) -> {
+										if (!rs.getBannerImage().isEmpty())
+											setBannerImage(new Image(rs.getBannerImage().newInput()));
 
-											bus.post(connection);
-											bus.post(banner);
-											phase.set(LoginPhase.USER_INPUT);
-										}
+										bus.post(connection);
+										bus.post(rs);
+										phase.set(LoginPhase.USER_INPUT);
+									}).addHandler((Outcome rs) -> {
+										// TODO failure
 									});
 						}
 					});
-
 			break;
 		case USER_INPUT:
 			LoginCmd.async().target(connection).pool(ui.fx_thread)
 					.login(userPhaseController.getUsername(), userPhaseController.getPassword())
-					.addListener((ResponseFuture<Outcome> outcomeFuture) -> {
-						if (outcomeFuture.isSuccess()) {
-							if (outcomeFuture.get().getResult()) {
-								if ("TODO".equals("")) {
-									phase.set(LoginPhase.PLUGIN_PHASE);
-								} else {
-									phase.set(LoginPhase.COMPLETE);
-									launchApplication();
-								}
+					.addHandler((Outcome rs) -> {
+						if (rs.getResult()) {
+							if ("TODO".equals("")) {
+								phase.set(LoginPhase.PLUGIN_PHASE);
+							} else {
+								phase.set(LoginPhase.COMPLETE);
+								launchApplication();
 							}
 						}
 					});

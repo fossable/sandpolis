@@ -25,18 +25,22 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.net.Exelet;
-import com.sandpolis.core.net.Exelet.Auth;
-import com.sandpolis.core.net.Exelet.Permission;
-import com.sandpolis.core.net.Exelet.Unauth;
+import com.google.protobuf.Message;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.command.Exelet.Auth;
+import com.sandpolis.core.net.command.Exelet.Permission;
+import com.sandpolis.core.net.command.Exelet.Unauth;
 import com.sandpolis.core.net.future.MessageFuture;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
+import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.util.ProtoUtil;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -49,7 +53,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
  * @author cilki
  * @since 5.0.0
  */
-public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
+public final class ExecuteHandler extends SimpleChannelInboundHandler<MSG.Message> {
 
 	private static final Logger log = LoggerFactory.getLogger(ExecuteHandler.class);
 
@@ -64,7 +68,7 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 	 * authentication state) are met. Therefore, invalid messages will always be
 	 * ignored.
 	 */
-	private final Map<MsgOneofCase, MethodHandle> handles;
+	private final Map<MsgOneofCase, Consumer<MSG.Message>> handles;
 
 	/**
 	 * When a response message is desired, a {@link MessageFuture} is placed into
@@ -92,21 +96,17 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 	}
 
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
+	protected void channelRead0(ChannelHandlerContext ctx, MSG.Message msg) throws Exception {
 
-		MethodHandle handle = handles.get(msg.getMsgOneofCase());
+		Consumer<MSG.Message> handle = handles.get(msg.getMsgOneofCase());
 		if (handle != null) {
 			// Execute the message with the predefined handler
-			try {
-				handle.invoke(msg);
-			} catch (Throwable e) {
-				throw new RuntimeException(e);
-			}
+			handle.accept(msg);
 			return;
 		}
 
 		MessageFuture future = responseMap.remove(msg.getId());
-		if (future != null) {
+		if (future != null && !future.isCancelled()) {
 			// Give the message to a waiting Thread
 			future.setSuccess(msg);
 			return;
@@ -115,7 +115,7 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 		// Drop the message
 		log.warn("Dropping a message of type: {}", msg.getMsgOneofCase());
 		if (log.isDebugEnabled())
-			log.debug("Dropped message: {}", msg.toString());
+			log.debug("Dropped message ({})", msg.toString());
 	}
 
 	/**
@@ -230,11 +230,40 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<Message> {
 			exelets.put(_class, exelet);
 		}
 
-		// A direct reference to the message handler
-		MethodHandle handle = MethodHandles.publicLookup().bind(exelet, method.getName(),
-				MethodType.methodType(void.class, Message.class));
+		// Simple request style: public Message.Builder rq_command(RQ_Command rq)
+		if (method.getReturnType() == Message.Builder.class && method.getParameterCount() == 1) {
+			MethodHandle handle = MethodHandles.publicLookup().bind(exelet, method.getName(),
+					MethodType.methodType(method.getReturnType(), method.getParameterTypes()[0]));
 
-		handles.put(type, handle);
+			handles.put(type, msg -> {
+				try {
+					Message.Builder rs = (Message.Builder) handle.invoke(ProtoUtil.getPayload(msg));
+					sock.send(ProtoUtil.rs(msg, rs));
+				} catch (Throwable e) {
+					log.warn("Message handler failed", e);
+					sock.send(ProtoUtil.rs(msg, Outcome.newBuilder().setResult(false)));
+				}
+			});
+		}
+
+		// Void request style: public void rq_command(Message rq)
+		else if (method.getReturnType() == void.class && method.getParameterCount() == 1
+				&& method.getParameterTypes()[0] == MSG.Message.class) {
+			MethodHandle handle = MethodHandles.publicLookup().bind(exelet, method.getName(),
+					MethodType.methodType(method.getReturnType(), method.getParameterTypes()[0]));
+
+			handles.put(type, msg -> {
+				try {
+					handle.invoke(msg);
+				} catch (Throwable e) {
+					log.warn("Message handler failed", e);
+				}
+			});
+		}
+
+		// Unknown format
+		else {
+			throw new RuntimeException("Unknown handler format for method: " + method.getName());
+		}
 	}
-
 }

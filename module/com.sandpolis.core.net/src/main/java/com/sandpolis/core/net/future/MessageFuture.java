@@ -17,9 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.net.future;
 
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
@@ -67,21 +65,19 @@ public class MessageFuture extends DefaultPromise<Message> {
 	 */
 	public MessageFuture(EventExecutor executor, long timeout, TimeUnit unit) {
 		super(executor);
-		Future<?> timer = executor.submit(() -> {
+		var timer = executor.submit(() -> {
 			try {
 				await(timeout, unit);
 			} catch (InterruptedException e) {
-				setFailure(e);
+				// Ignore
+			} finally {
+				cancel(true);
 			}
-
-			if (!isDone())
-				setFailure(new TimeoutException("Waited for " + timeout + " " + unit.toString()));
 		});
 
 		// Kill the timer when the message is received
 		addListener(message -> {
-			if (isSuccess())
-				timer.cancel(true);
+			timer.cancel(true);
 		});
 	}
 }

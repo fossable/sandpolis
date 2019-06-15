@@ -18,9 +18,6 @@
 package com.sandpolis.server.vanilla.store.listener;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.failure;
-import static com.sandpolis.core.util.ProtoUtil.success;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -37,7 +34,6 @@ import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener.ListenerState;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
-import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ValidationUtil;
 
 /**
@@ -168,19 +164,14 @@ public final class ListenerStore extends Store {
 	 * @param delta The changes
 	 * @return The outcome of the action
 	 */
-	public static Outcome delta(long id, ProtoListener delta) {
-		Outcome.Builder outcome = begin();
+	public static ErrorCode delta(long id, ProtoListener delta) {
 		Listener listener = get(id).orElse(null);
 		if (listener == null)
-			return failure(outcome, "Listener not found");
+			return ErrorCode.UNKNOWN_LISTENER;
 		if (listener.isListening())
-			return failure(outcome, "Listener is active");
+			return ErrorCode.INVALID_LISTENER_STATE;
 
-		ErrorCode error = listener.merge(delta);
-		if (error != ErrorCode.OK)
-			return failure(outcome.setError(error));
-
-		return success(outcome);
+		return listener.merge(delta);
 	}
 
 	/**
@@ -190,7 +181,7 @@ public final class ListenerStore extends Store {
 	 * @param state The new listener state
 	 * @return The outcome of the action
 	 */
-	public static Outcome change(long id, ListenerState state) {
+	public static ErrorCode change(long id, ListenerState state) {
 		switch (state) {
 		case LISTENING:
 			start(id);
@@ -202,7 +193,7 @@ public final class ListenerStore extends Store {
 			break;
 		}
 
-		return Outcome.newBuilder().setResult(false).build();
+		return ErrorCode.OK;
 	}
 
 	private ListenerStore() {

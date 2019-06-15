@@ -15,7 +15,7 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.net;
+package com.sandpolis.core.net.command;
 
 import static com.sandpolis.core.util.ProtoUtil.rs;
 
@@ -23,11 +23,13 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.function.Predicate;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.util.ProtoUtil;
 
 /**
  * An {@code Exelet} handles incoming messages from a {@link Sock}. All
@@ -37,9 +39,6 @@ import com.sandpolis.core.proto.util.Result.Outcome;
  * @since 5.0.0
  */
 public abstract class Exelet {
-
-	protected static final Outcome OUTCOME_PERMISSION_ERROR = Outcome.newBuilder().setResult(false)
-			.setComment("Permission error").build();
 
 	/**
 	 * The {@link Sock} this {@link Exelet} is handling.
@@ -114,23 +113,6 @@ public abstract class Exelet {
 	}
 
 	/**
-	 * Perform an access check. If the check fails, a response is automatically sent
-	 * to the endpoint.
-	 * 
-	 * @param m     The received message
-	 * @param pred  The {@link AccessPredicate}
-	 * @param token The access token
-	 * @return Whether the access check passed
-	 */
-	protected <E> boolean accessCheck(Message m, Predicate<E> pred, E token) {
-		if (pred.test(token))
-			return true;
-
-		reply(m, OUTCOME_PERMISSION_ERROR);
-		return false;
-	}
-
-	/**
 	 * Check that the user associated with the connection is a superuser.
 	 * 
 	 * @return Whether the access check passed
@@ -138,6 +120,22 @@ public abstract class Exelet {
 	@AccessPredicate
 	protected boolean superuser(long id) {
 		return false;// TODO
+	}
+
+	protected Outcome.Builder begin() {
+		return ProtoUtil.begin();
+	}
+
+	protected Outcome.Builder failure(Outcome.Builder outcome, ErrorCode code) {
+		return outcome.setTime(System.currentTimeMillis() - outcome.getTime()).setResult(false).setError(code);
+	}
+
+	protected Outcome.Builder success(Outcome.Builder outcome) {
+		return outcome.setTime(System.currentTimeMillis() - outcome.getTime()).setResult(true);
+	}
+
+	protected Outcome.Builder complete(Outcome.Builder outcome, ErrorCode code) {
+		return code == ErrorCode.OK ? success(outcome) : failure(outcome, code);
 	}
 
 }

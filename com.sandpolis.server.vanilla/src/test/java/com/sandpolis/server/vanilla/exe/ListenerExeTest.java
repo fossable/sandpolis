@@ -17,7 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.util.ProtoUtil.rq;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.Executors;
@@ -31,11 +30,9 @@ import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.net.ExeletTest;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
-import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.server.vanilla.exe.ListenerExe;
 import com.sandpolis.server.vanilla.store.listener.Listener;
 import com.sandpolis.server.vanilla.store.listener.ListenerStore;
 import com.sandpolis.server.vanilla.store.user.User;
@@ -68,12 +65,11 @@ class ListenerExeTest extends ExeletTest {
 	@Test
 	@DisplayName("Add a listener with a valid configuration")
 	void rq_add_listener_1() {
-		exe.rq_add_listener(rq(RQ_AddListener.newBuilder()
-				.setConfig(ListenerConfig.newBuilder().setId(2).setOwner("junit").setPort(5000).setAddress("0.0.0.0")))
-						.build());
+		var rs = (Outcome.Builder) exe.rq_add_listener(RQ_AddListener.newBuilder()
+				.setConfig(ListenerConfig.newBuilder().setId(2).setOwner("junit").setPort(5000).setAddress("0.0.0.0"))
+				.build());
 
-		Outcome outcome = ((Message) channel.readOutbound()).getRsOutcome();
-		assertTrue(outcome.getResult(), outcome.getComment());
+		assertTrue(rs.getResult());
 	}
 
 }

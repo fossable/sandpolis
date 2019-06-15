@@ -17,8 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.plugin.sysinfo;
 
-import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MSG.Message;
 
 public class SysinfoExelet extends Exelet {

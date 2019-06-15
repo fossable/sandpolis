@@ -17,13 +17,16 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.success;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
 
+import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PermissionConstant.server;
-import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
+import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener;
+import com.sandpolis.core.proto.net.MCListener.RQ_ListenerDelta;
+import com.sandpolis.core.proto.net.MCListener.RQ_RemoveListener;
 import com.sandpolis.server.vanilla.store.listener.Listener;
 import com.sandpolis.server.vanilla.store.listener.ListenerStore;
 
@@ -41,41 +44,39 @@ public class ListenerExe extends Exelet {
 
 	@Auth
 	@Permission(permission = server.listener.create)
-	public void rq_add_listener(Message m) {
-		var rq = m.getRqAddListener();
-
+	public Message.Builder rq_add_listener(RQ_AddListener rq) {
 		var outcome = begin();
+
 		ListenerStore.add(rq.getConfig());
-		reply(m, success(outcome));
+		return success(outcome);
 	}
 
 	@Auth
-	public void rq_remove_listener(Message m) {
-		var rq = m.getRqRemoveListener();
-		if (!accessCheck(m, this::ownership, rq.getId()))
-			return;
-
+	public Message.Builder rq_remove_listener(RQ_RemoveListener rq) {
 		var outcome = begin();
+		if (!ownership(rq.getId()))
+			return failure(outcome, ACCESS_DENIED);
+
 		ListenerStore.remove(rq.getId());
-		reply(m, success(outcome));
+		return success(outcome);
 	}
 
 	@Auth
-	public void rq_listener_delta(Message m) {
-		var rq = m.getRqListenerDelta();
-		if (!accessCheck(m, this::ownership, rq.getId()))
-			return;
+	public Message.Builder rq_listener_delta(RQ_ListenerDelta rq) {
+		var outcome = begin();
+		if (!ownership(rq.getId()))
+			return failure(outcome, ACCESS_DENIED);
 
-		reply(m, ListenerStore.delta(rq.getId(), rq.getDelta()));
+		return complete(outcome, ListenerStore.delta(rq.getId(), rq.getDelta()));
 	}
 
 	@Auth
-	public void rq_change_listener(Message m) {
-		var rq = m.getRqChangeListener();
-		if (!accessCheck(m, this::ownership, rq.getId()))
-			return;
+	public Message.Builder rq_change_listener(RQ_ChangeListener rq) {
+		var outcome = begin();
+		if (!ownership(rq.getId()))
+			return failure(outcome, ACCESS_DENIED);
 
-		reply(m, ListenerStore.change(rq.getId(), rq.getState()));
+		return complete(outcome, ListenerStore.change(rq.getId(), rq.getState()));
 	}
 
 	/**

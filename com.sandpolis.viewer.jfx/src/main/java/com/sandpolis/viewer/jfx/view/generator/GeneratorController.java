@@ -25,7 +25,6 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
 import com.sandpolis.core.proto.util.Generator.AuthenticationConfig;
 import com.sandpolis.core.proto.util.Generator.ExecutionConfig;
@@ -282,11 +281,11 @@ public class GeneratorController extends FxController {
 		extend.raise(progress, ExtendSide.BOTTOM, 500, 150);
 
 		// Execute
-		GenCmd.async().pool(ui.fx_thread).generate(config).addListener((ResponseFuture<RS_Generate> response) -> {
-			post(GenerationCompletedEvent::new, response.get());
+		GenCmd.async().pool(ui.fx_thread).generate(config).addHandler((RS_Generate rs) -> {
+			post(GenerationCompletedEvent::new, rs);
 
 			// TODO worker thread
-			Files.write(getOutput(), response.get().getOutput().toByteArray());
+			Files.write(getOutput(), rs.getOutput().toByteArray());
 		});
 	}
 

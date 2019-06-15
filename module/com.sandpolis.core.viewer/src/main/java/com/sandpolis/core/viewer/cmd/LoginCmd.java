@@ -21,7 +21,7 @@ import static com.sandpolis.core.util.CryptoUtil.SHA256;
 
 import java.util.Objects;
 
-import com.sandpolis.core.net.Cmdlet;
+import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -36,11 +36,11 @@ import com.sandpolis.core.util.CryptoUtil;
 public final class LoginCmd extends Cmdlet<LoginCmd> {
 
 	/**
-	 * Attempt to login to the Server.
+	 * Attempt to login to a server.
 	 * 
-	 * @param user The logon username
-	 * @param pass The logon password
-	 * @return
+	 * @param user The user's username
+	 * @param pass The user's plaintext password
+	 * @return A response future
 	 */
 	public ResponseFuture<Outcome> login(String user, String pass) {
 		Objects.requireNonNull(user);

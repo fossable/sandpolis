@@ -21,9 +21,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import com.google.protobuf.Message.Builder;
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Preconditions;
+import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.Descriptors.OneofDescriptor;
+import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
@@ -35,8 +39,11 @@ import com.sandpolis.core.proto.util.Result.Outcome;
  * @since 5.0.0
  */
 public final class ProtoUtil {
-	private ProtoUtil() {
-	}
+
+	/**
+	 * The {@code oneof} descriptor that will contain the message response.
+	 */
+	public static final OneofDescriptor MSG_ONEOF = MSG.Message.getDescriptor().getOneofs().get(0);
 
 	/**
 	 * Begin an action that should be completed with {@link #success} or
@@ -199,12 +206,7 @@ public final class ProtoUtil {
 		if (payload instanceof Outcome)
 			return msg.setRsOutcome((Outcome) payload);
 
-		String field = payload.getClass().getSimpleName();
-		String prefix = field.substring(0, field.indexOf('_') + 1).toLowerCase();
-
-		// Convert case
-		field = prefix
-				+ CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, field.substring(field.indexOf('_') + 1));
+		String field = convertMessageClassToFieldName(payload.getClass());
 
 		try {
 			return msg.setField(Message.getDescriptor().findFieldByName(field), payload);
@@ -214,18 +216,34 @@ public final class ProtoUtil {
 	}
 
 	/**
-	 * Get an {@link Outcome} from a message.
+	 * Get the payload from the given message.
 	 * 
-	 * @param msg The message containing an outcome
-	 * @return The outcome
+	 * @param msg The message
+	 * @return The message's payload
 	 */
-	public static Outcome getOutcome(Message msg) {
-		Outcome.Builder outcome = begin();
-		if (msg == null)
-			return failure(outcome);
-		if (msg.getRsOutcome() == null)
-			return failure(outcome);
-		return msg.getRsOutcome();
+	public static Object getPayload(Message msg) {
+		FieldDescriptor oneof = msg.getOneofFieldDescriptor(MSG_ONEOF);
+		if (oneof == null)
+			return null;
+
+		return msg.getField(oneof);
 	}
 
+	/**
+	 * Convert a message class name (RQ_ExampleMessage) to its message field name
+	 * (rq_example_message).
+	 * 
+	 * @param payload The payload class
+	 * @return The field name
+	 */
+	public static String convertMessageClassToFieldName(Class<?> payload) {
+		String field = payload.getSimpleName();
+		Preconditions.checkArgument(field.charAt(2) == '_');
+
+		return field.substring(0, field.indexOf('_') + 1).toLowerCase()
+				+ CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, field.substring(field.indexOf('_') + 1));
+	}
+
+	private ProtoUtil() {
+	}
 }

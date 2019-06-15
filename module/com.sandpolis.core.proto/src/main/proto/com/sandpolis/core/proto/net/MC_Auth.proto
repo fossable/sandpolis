@@ -21,38 +21,28 @@ package net;
 option java_package = "com.sandpolis.core.proto.net";
 
 /**
- * Request for authenticated status without a key or password.
+ * Request authenticated status for free.
  */
 message RQ_NoAuth {
 }
 
 /**
- * Request for authenticated status using a PasswordMechanism.
+ * Request authenticated status using a PasswordMechanism.
  */
 message RQ_PasswordAuth {
 
-	// The password
+	// The password of some PasswordMechanism on the server
 	string password = 1;
 }
 
 /**
- * Request for authenticated status using a KeyMechanism.
+ * Request authenticated status using a SAND5 KeyMechanism.
  */
 message RQ_KeyAuth {
 
-	// The ID of the group to use
+	// The group ID
 	string group_id = 1;
 
-	// The ID of the KeyMechanism to use
+	// The KeyMechanism ID
 	int64 mech_id = 2;
-
-	// Random bytes which will be signed by the server
-	bytes nonce = 3;
-}
-
-/**
- * An intermediate nonce.
- */
-message IM_Nonce {
-	bytes nonce = 1;
 }

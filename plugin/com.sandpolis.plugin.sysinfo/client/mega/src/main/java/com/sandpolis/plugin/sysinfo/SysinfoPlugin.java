@@ -24,7 +24,7 @@ import org.pf4j.PluginException;
 import org.pf4j.PluginWrapper;
 
 import com.sandpolis.core.attribute.AttributeKey;
-import com.sandpolis.core.net.Exelet;
+import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 
 import oshi.hardware.CentralProcessor;
@@ -50,6 +50,7 @@ public class SysinfoPlugin extends Plugin implements ExeletProvider {
 
 	private void setupAttributes() {
 		associate(AK_CPU.VENDOR, (CentralProcessor cpu) -> cpu.getVendor());
+		associate(AK_CPU.MODEL, (CentralProcessor cpu) -> cpu.getModel());
 		associate(AK_NET.HOSTNAME, (NetworkParams net) -> net.getHostName());
 	}
 

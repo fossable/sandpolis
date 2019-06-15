@@ -122,7 +122,10 @@ public class KeyMechanism extends AuthenticationMechanism {
 		KeyPair k1 = CryptoUtil.SAND5.generate();
 		KeyPair k2 = CryptoUtil.SAND5.generate();
 
-		return new KeyMechanism(group, new ReciprocalKeyPair(k1.getPrivate().getEncoded(), k2.getPublic().getEncoded()),
+		return new KeyMechanism(group,
+				// The client keypair (consists of k1's private key and k2's public key)
+				new ReciprocalKeyPair(k1.getPrivate().getEncoded(), k2.getPublic().getEncoded()),
+				// The server keypair (consists of k1's public key and k2's private key)
 				new ReciprocalKeyPair(k2.getPrivate().getEncoded(), k1.getPublic().getEncoded()));
 	}
 

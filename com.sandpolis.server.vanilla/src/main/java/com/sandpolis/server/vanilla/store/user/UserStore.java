@@ -19,9 +19,6 @@ package com.sandpolis.server.vanilla.store.user;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.failure;
-import static com.sandpolis.core.util.ProtoUtil.success;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -37,7 +34,6 @@ import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.proto.pojo.User.ProtoUser;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
-import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
 
@@ -193,17 +189,12 @@ public final class UserStore extends Store {
 	 * @param delta The changes
 	 * @return The outcome of the action
 	 */
-	public static Outcome delta(long id, ProtoUser delta) {
-		Outcome.Builder outcome = begin();
+	public static ErrorCode delta(long id, ProtoUser delta) {
 		User user = get(id).orElse(null);
 		if (user == null)
-			return failure(outcome, "User not found");
+			return ErrorCode.UNKNOWN_USER;
 
-		ErrorCode error = user.merge(delta);
-		if (error != ErrorCode.OK)
-			return failure(outcome.setError(error));
-
-		return success(outcome);
+		return user.merge(delta);
 	}
 
 	private UserStore() {

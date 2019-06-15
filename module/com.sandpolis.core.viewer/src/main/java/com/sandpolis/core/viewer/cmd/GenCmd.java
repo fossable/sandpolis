@@ -17,7 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.viewer.cmd;
 
-import com.sandpolis.core.net.Cmdlet;
+import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.proto.net.MCGenerator.RQ_Generate;
 import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;

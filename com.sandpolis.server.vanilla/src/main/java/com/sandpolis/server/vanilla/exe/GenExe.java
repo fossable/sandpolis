@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
-import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;

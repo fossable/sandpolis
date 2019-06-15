@@ -17,14 +17,16 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.success;
-
+import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PermissionConstant.server;
-import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.proto.net.MCGroup.RQ_AddGroup;
+import com.sandpolis.core.proto.net.MCGroup.RQ_GroupDelta;
+import com.sandpolis.core.proto.net.MCGroup.RQ_ListGroups;
+import com.sandpolis.core.proto.net.MCGroup.RQ_RemoveGroup;
 import com.sandpolis.core.proto.net.MCGroup.RS_ListGroups;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.server.vanilla.store.group.Group;
 import com.sandpolis.server.vanilla.store.group.GroupStore;
 
@@ -42,43 +44,40 @@ public class GroupExe extends Exelet {
 
 	@Auth
 	@Permission(permission = server.group.create)
-	public void rq_add_group(Message m) {
-		var rq = m.getRqAddGroup();
-
+	public Message.Builder rq_add_group(RQ_AddGroup rq) {
 		var outcome = begin();
+
 		GroupStore.add(rq.getConfig());
-		reply(m, success(outcome));
+		return success(outcome);
 	}
 
 	@Auth
-	public void rq_remove_group(Message m) {
-		var rq = m.getRqRemoveGroup();
-		if (!accessCheck(m, this::ownership, rq.getId()))
-			return;
-
+	public Message.Builder rq_remove_group(RQ_RemoveGroup rq) {
 		var outcome = begin();
+		if (!ownership(rq.getId()))
+			return failure(outcome, ErrorCode.ACCESS_DENIED);
+
 		GroupStore.remove(rq.getId());
-		reply(m, success(outcome));
+		return success(outcome);
 	}
 
 	@Auth
-	public void rq_list_groups(Message m) {
-		// TODO check for Perm.server.groups.view
+	@Permission(permission = server.group.view)
+	public Message.Builder rq_list_groups(RQ_ListGroups rq) {
+		var rs = RS_ListGroups.newBuilder();
 
-		RS_ListGroups.Builder rs = RS_ListGroups.newBuilder();
-		// TODO correct user
-		GroupStore.getMembership(null).stream().map(group -> group.extract()).forEach(group -> rs.addGroup(group));
-
-		reply(m, rs);
+		// TODO get correct user
+		GroupStore.getMembership(null).stream().map(group -> group.extract()).forEach(rs::addGroup);
+		return rs;
 	}
 
 	@Auth
-	public void rq_group_delta(Message m) {
-		var rq = m.getRqGroupDelta();
-		if (!accessCheck(m, this::ownership, rq.getDelta().getConfig().getId()))
-			return;
+	public Message.Builder rq_group_delta(RQ_GroupDelta rq) {
+		var outcome = begin();
+		if (!ownership(rq.getDelta().getConfig().getId()))
+			return failure(outcome, ErrorCode.ACCESS_DENIED);
 
-		reply(m, GroupStore.delta(rq.getId(), rq.getDelta()));
+		return complete(outcome, GroupStore.delta(rq.getId(), rq.getDelta()));
 	}
 
 	@AccessPredicate

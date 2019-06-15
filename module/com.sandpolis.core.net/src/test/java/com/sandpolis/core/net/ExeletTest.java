@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 import com.sandpolis.core.net.Sock.ConnectionState;
+import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.ExecuteHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -60,7 +61,6 @@ public class ExeletTest {
 				// Check parameters
 				Class<?>[] params = m.getParameterTypes();
 				assertEquals(1, params.length);
-				assertEquals(Message.class, params[0]);
 
 				// Check name
 				try {

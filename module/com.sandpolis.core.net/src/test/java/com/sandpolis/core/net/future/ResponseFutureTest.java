@@ -20,28 +20,35 @@ package com.sandpolis.core.net.future;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.exception.InvalidMessageException;
+import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
+import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 import io.netty.util.concurrent.GlobalEventExecutor;
 
-public class ResponseFutureTest {
+class ResponseFutureTest {
 
 	@BeforeEach
-	public void setup() {
-		ThreadStore.register(GlobalEventExecutor.INSTANCE, "net.message.incoming");
+	private void setup() {
+		ThreadStore.register(GlobalEventExecutor.INSTANCE, net.message.incoming);
 	}
 
 	@Test
-	public void testResponseSuccess() throws InterruptedException, ExecutionException {
+	@DisplayName("Receive the correct response")
+	void testResponse_1() throws InterruptedException, ExecutionException {
 		MessageFuture msgFuture = new MessageFuture();
 		ResponseFuture<Outcome> response = new ResponseFuture<>(msgFuture);
 		assertFalse(response.isDone());
@@ -50,11 +57,12 @@ public class ResponseFutureTest {
 
 		response.sync();
 		assertTrue(response.isSuccess());
-		assertTrue(response.get().getResult());
+		assertTrue(response.getExpected().getResult());
 	}
 
 	@Test
-	public void testResponseInvalid() throws InterruptedException, ExecutionException {
+	@DisplayName("Try to receive an empty message")
+	void testResponse_2() throws InterruptedException, ExecutionException {
 		MessageFuture msgFuture = new MessageFuture();
 		ResponseFuture<Outcome> response = new ResponseFuture<>(msgFuture);
 		assertFalse(response.isDone());
@@ -62,6 +70,73 @@ public class ResponseFutureTest {
 		msgFuture.setSuccess(Message.newBuilder().build());
 
 		assertThrows(InvalidMessageException.class, () -> response.sync());
+		assertTrue(!response.isSuccess());
+	}
+
+	@Test
+	@DisplayName("Check response handlers")
+	void testResponse_3() throws InterruptedException {
+		MessageFuture msgFuture = new MessageFuture();
+		ResponseFuture<RS_Cvid> response = new ResponseFuture<>(msgFuture);
+		assertFalse(response.isDone());
+
+		response.addHandler((Outcome rs) -> {
+			fail();
+		});
+		response.addHandler((RS_Cvid rs) -> {
+			fail();
+		});
+
+		AtomicBoolean called1 = new AtomicBoolean();
+		response.addHandler((RQ_Cvid rs) -> {
+			called1.set(true);
+			synchronized (called1) {
+				called1.notify();
+			}
+		});
+
+		msgFuture.setSuccess(Message.newBuilder().setRqCvid(RQ_Cvid.newBuilder()).build());
+
+		response.addHandler((Outcome rs) -> {
+			fail();
+		});
+
+		AtomicBoolean called2 = new AtomicBoolean();
+		response.addHandler((RQ_Cvid rs) -> {
+			called2.set(true);
+			synchronized (called2) {
+				called2.notify();
+			}
+		});
+
+		// Wait for handlers to finish
+		synchronized (called1) {
+			called1.wait(1000);
+		}
+		synchronized (called2) {
+			called2.wait(1000);
+		}
+
+		assertTrue(called1.get());
+		assertTrue(called2.get());
+	}
+
+	@Test
+	@DisplayName("Receive an outcome instead of the expected type")
+	void testResponse_4() throws InterruptedException, ExecutionException {
+		MessageFuture msgFuture = new MessageFuture();
+		ResponseFuture<RS_Cvid> response = new ResponseFuture<>(msgFuture);
+		assertFalse(response.isDone());
+
+		msgFuture.setSuccess(Message.newBuilder().setRsOutcome(Outcome.newBuilder().setResult(false)).build());
+
+		response.sync();
+		assertThrows(ClassCastException.class, () -> {
+			@SuppressWarnings("unused")
+			RS_Cvid rs = response.getExpected();
+		});
+		assertTrue(response.isSuccess());
+		assertFalse(((Outcome) response.get()).getResult());
 	}
 
 }

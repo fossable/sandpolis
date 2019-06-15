@@ -17,25 +17,29 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.failure;
-import static com.sandpolis.core.util.ProtoUtil.rs;
-import static com.sandpolis.core.util.ProtoUtil.success;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.FAILURE_KEY_CHALLENGE;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_KEY;
+import static com.sandpolis.core.proto.util.Result.ErrorCode.UNKNOWN_GROUP;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
-import com.google.protobuf.ByteString;
-import com.sandpolis.core.net.Exelet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.protobuf.Message;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.ConnectionState;
-import com.sandpolis.core.net.store.network.NetworkStore;
-import com.sandpolis.core.proto.net.MCAuth.IM_Nonce;
-import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.core.util.CryptoUtil;
+import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.handler.Sand5Handler;
+import com.sandpolis.core.proto.net.MCAuth.RQ_KeyAuth;
+import com.sandpolis.core.proto.net.MCAuth.RQ_NoAuth;
+import com.sandpolis.core.proto.net.MCAuth.RQ_PasswordAuth;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.store.group.Group;
 import com.sandpolis.server.vanilla.store.group.GroupStore;
+
+import io.netty.util.concurrent.Future;
 
 /**
  * Authentication message handlers.
@@ -45,98 +49,81 @@ import com.sandpolis.server.vanilla.store.group.GroupStore;
  */
 public class AuthExe extends Exelet {
 
+	private static final Logger log = LoggerFactory.getLogger(AuthExe.class);
+
 	public AuthExe(Sock connector) {
 		super(connector);
 	}
 
 	@Unauth
-	public void rq_no_auth(Message m) {
+	public Message.Builder rq_no_auth(RQ_NoAuth rq) {
 		var outcome = begin();
 
-		// Get all groups that accept no auth
-		List<Group> unauth = GroupStore.getUnauthGroups();
-		if (unauth.size() == 0) {
-			connector.send(rs(m, failure(outcome)));
-		} else {
-
-			// Mark connection as authenticated
-			connector.authenticate();
-			connector.changeState(ConnectionState.AUTHENTICATED);
-
-			connector.send(rs(m, success(outcome)));
-
-			// TODO add client to group
+		List<Group> groups = GroupStore.getUnauthGroups();
+		if (groups.size() == 0) {
+			log.debug("Refusing free authentication attempt because there are no unauth groups");
+			return failure(outcome, UNKNOWN_GROUP);
 		}
+
+		groups.forEach(group -> {
+			// TODO add client to group
+		});
+
+		// Connection is now authenticated
+		connector.authenticate();
+		connector.changeState(ConnectionState.AUTHENTICATED);
+
+		return success(outcome);
 	}
 
 	@Unauth
-	public void rq_password_auth(Message m) {
+	public Message.Builder rq_password_auth(RQ_PasswordAuth rq) {
 		var outcome = begin();
 
-		var rq = Objects.requireNonNull(m.getRqPasswordAuth());
-
-		// Get all groups with the password
 		List<Group> groups = GroupStore.getByPassword(rq.getPassword());
 		if (groups.size() == 0) {
-			connector.send(rs(m, failure(outcome)));
-		} else {
-
-			// Mark connection as authenticated
-			connector.authenticate();
-			connector.changeState(ConnectionState.AUTHENTICATED);
-
-			connector.send(rs(m, success(outcome)));
-
-			// TODO add client to group
+			log.debug("Refusing password authentication attempt because the password did not match any group");
+			return failure(outcome, UNKNOWN_GROUP);
 		}
+
+		groups.forEach(group -> {
+			// TODO add client to group
+		});
+
+		// Connection is now authenticated
+		connector.authenticate();
+		connector.changeState(ConnectionState.AUTHENTICATED);
+
+		return success(outcome);
 	}
 
 	@Unauth
-	public void rq_key_auth(Message m) throws Exception {
+	public Message.Builder rq_key_auth(RQ_KeyAuth rq) throws InterruptedException, ExecutionException {
 		var outcome = begin();
 
-		var rq = Objects.requireNonNull(m.getRqKeyAuth());
 		Group group = GroupStore.get(rq.getGroupId()).orElse(null);
 		if (group == null) {
-			connector.send(rs(m, failure(outcome)));
-			return;
+			log.debug("Refusing key authentication attempt due to unknown group ID: {}", rq.getGroupId());
+			return failure(outcome, UNKNOWN_GROUP);
 		}
 
 		KeyMechanism mech = group.getKeyMechanism(rq.getMechId());
 		if (mech == null) {
-			connector.send(rs(m, failure(outcome)));
-			return;
+			log.debug("Refusing key authentication attempt due to unknown mechanism ID: {}", rq.getMechId());
+			return failure(outcome, INVALID_KEY);
 		}
 
-		// Verify nonce A
-		if (rq.getNonce() == null) {
-			connector.send(rs(m, failure(outcome)));
-			return;
-		}
-		byte[] nonceA = rq.getNonce().toByteArray();
+		Sand5Handler sand5 = Sand5Handler.registerRequestHandler(connector.channel(), mech.getServer());
+		Future<Boolean> future = sand5.challengeFuture();
 
-		// Send nonce B
-		byte[] nonceB = CryptoUtil.SAND5.getNonce();
-		Message rs = NetworkStore.route(rs(m).setImNonce(IM_Nonce.newBuilder().setNonce(ByteString.copyFrom(nonceB))),
-				"net.timeout.response.default").get();
-
-		// Check nonce B
-		if (rs.getImNonce() == null
-				|| !CryptoUtil.SAND5.check(mech.getServer(), nonceB, rs.getImNonce().toByteArray())) {
-			connector.send(rs(m, failure(outcome)));
-			return;
-		}
-
-		// Send nonce A
-		rs = NetworkStore.route(
-				rs(m).setImNonce(IM_Nonce.newBuilder()
-						.setNonce(ByteString.copyFrom(CryptoUtil.SAND5.sign(mech.getServer(), nonceA)))),
-				"net.timeout.response.default").get();
-
-		if (rs.getRsOutcome() != null && rs.getRsOutcome().getResult()) {
-			// Mark connection as authenticated
+		if (future.get()) {
+			// Connection is now authenticated
 			connector.authenticate();
 			connector.changeState(ConnectionState.AUTHENTICATED);
+			return success(outcome);
+		} else {
+			log.debug("Refusing key authentication attempt due to failed challenge");
+			return failure(outcome, FAILURE_KEY_CHALLENGE);
 		}
 	}
 }

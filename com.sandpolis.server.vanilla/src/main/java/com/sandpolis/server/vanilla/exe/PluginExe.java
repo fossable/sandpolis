@@ -32,20 +32,20 @@ import org.slf4j.LoggerFactory;
 import com.google.common.io.ByteSource;
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.util.ArtifactUtil;
-import com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate;
-import com.sandpolis.server.vanilla.store.trust.TrustStore;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
-import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCPlugin.RS_ArtifactDownload;
 import com.sandpolis.core.proto.net.MCPlugin.RS_PluginList;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.util.ArtifactUtil;
+import com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.core.util.JarUtil;
 import com.sandpolis.core.util.NetUtil;
+import com.sandpolis.server.vanilla.store.trust.TrustStore;
 
 /**
  * Message handlers for plugin requests.

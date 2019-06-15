@@ -17,7 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.viewer.cmd;
 
-import com.sandpolis.core.net.Cmdlet;
+import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ClientPipelineInit;
 import com.sandpolis.core.net.store.connection.ConnectionStore;

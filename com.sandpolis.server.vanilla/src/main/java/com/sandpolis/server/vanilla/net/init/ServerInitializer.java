@@ -26,7 +26,7 @@ import javax.net.ssl.SSLException;
 import com.google.common.primitives.Bytes;
 import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.net.Exelet;
+import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.CvidResponseHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.net.init.PipelineInitializer;

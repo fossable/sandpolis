@@ -20,8 +20,8 @@ package com.sandpolis.server.vanilla.exe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.net.Exelet;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCPing.RS_Ping;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.server.vanilla.store.server.ServerStore;

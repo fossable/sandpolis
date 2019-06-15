@@ -15,22 +15,35 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.net.plugin;
+package com.sandpolis.core.net.command;
 
-import org.pf4j.ExtensionPoint;
+import com.google.protobuf.Message;
+import com.sandpolis.core.proto.util.Result.Outcome;
 
-import com.sandpolis.core.net.command.Exelet;
+import io.netty.util.concurrent.Future;
 
 /**
+ * A {@link Future} that represents the completion of a {@link Cmdlet} command.
+ * 
  * @author cilki
  * @since 5.0.0
  */
-public interface ExeletProvider extends ExtensionPoint {
+public interface CommandFuture extends Future<Outcome> {
 
 	/**
-	 * Get the {@link Exelet} classes that the plugin contains.
-	 * 
-	 * @return A list of {@link Exelet} classes
+	 * A generic message handler.
+	 *
+	 * @param <E> The incoming {@link Message} type
 	 */
-	public Class<? extends Exelet>[] getExelets();
+	@FunctionalInterface
+	public static interface MessageHandler<E extends Message> {
+
+		/**
+		 * React to a message.
+		 * 
+		 * @param message A {@link Message}
+		 * @throws Exception
+		 */
+		public void handle(E message) throws Exception;
+	}
 }

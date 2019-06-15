@@ -17,10 +17,14 @@
  *****************************************************************************/
 package com.sandpolis.core.net.future;
 
-import com.google.protobuf.Descriptors.FieldDescriptor;
+import java.util.concurrent.ExecutionException;
+
+import com.google.protobuf.Message;
+import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
+import com.sandpolis.core.net.command.CommandFuture.MessageHandler;
 import com.sandpolis.core.net.exception.InvalidMessageException;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.util.ProtoUtil;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;
@@ -39,7 +43,7 @@ import io.netty.util.concurrent.Future;
  * @author cilki
  * @since 5.0.0
  */
-public class ResponseFuture<E> extends DefaultPromise<E> {
+public class ResponseFuture<E extends Message> extends DefaultPromise<Message> {
 
 	/**
 	 * Construct a new {@link ResponseFuture} that listens on the given
@@ -49,7 +53,7 @@ public class ResponseFuture<E> extends DefaultPromise<E> {
 	 *               response arrives
 	 */
 	public ResponseFuture(MessageFuture future) {
-		this(ThreadStore.get("net.message.incoming"), future);
+		this(ThreadStore.get(net.message.incoming), future);
 	}
 
 	/**
@@ -61,39 +65,50 @@ public class ResponseFuture<E> extends DefaultPromise<E> {
 	 * @param future   The {@link MessageFuture} that will be notified when the
 	 *                 response arrives
 	 */
-	@SuppressWarnings("unchecked")
 	public ResponseFuture(EventExecutor executor, MessageFuture future) {
 		super(executor);
 
 		future.addListener((MessageFuture messageFuture) -> {
-			E response;
 
 			if (!messageFuture.isSuccess()) {
 				setFailure(messageFuture.cause());
 				return;
 			}
 
-			Message message = messageFuture.get();
-			FieldDescriptor oneof = message.getOneofFieldDescriptor(Message.getDescriptor().getOneofs().get(0));
+			var message = (Message) ProtoUtil.getPayload(messageFuture.get());
 
-			if (oneof == null) {
-				setFailure(new InvalidMessageException("Invalid response"));
+			if (message == null) {
+				setFailure(new InvalidMessageException("Empty response"));
 				return;
 			}
 
-			try {
-				response = (E) message.getField(oneof);
-			} catch (ClassCastException e) {
-				setFailure(new InvalidMessageException("Invalid response"));
-				return;
-			}
-
-			if (response == null) {
-				setFailure(new InvalidMessageException("Invalid response"));
-				return;
-			}
-
-			setSuccess(response);
+			setSuccess(message);
 		});
 	}
+
+	@SuppressWarnings("unchecked")
+	public E getExpected() throws InterruptedException, ExecutionException {
+		return (E) get();
+	}
+
+	/**
+	 * Add the given handler to this future.
+	 * 
+	 * @param handler The message handler
+	 * @return {@code this}
+	 */
+	@SuppressWarnings("unchecked")
+	public <M extends Message> ResponseFuture<E> addHandler(MessageHandler<M> handler) {
+		addListener(f -> {
+			try {
+				if (f.isSuccess())
+					handler.handle((M) f.getNow());
+			} catch (ClassCastException e) {
+				// Ignore
+			}
+		});
+
+		return this;
+	}
+
 }
