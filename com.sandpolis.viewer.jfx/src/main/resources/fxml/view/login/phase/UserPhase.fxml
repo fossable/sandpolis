@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -10,7 +11,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.viewer.jfx.view.login.phase.UserPhaseController">
+<VBox xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.viewer.jfx.view.login.phase.UserPhaseController">
 	<children>
 		<TitledPane text="Server Info">
 			<content>
@@ -36,7 +37,10 @@
 						<Label text="Version:" GridPane.columnIndex="2" />
 						<Label text="Ping:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
 						<Label fx:id="server_version" GridPane.columnIndex="3" />
-						<Label fx:id="server_ping" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+						<Label fx:id="server_ping" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                     <graphic>
+                        <ProgressIndicator fx:id="ping_indicator" prefHeight="24.0" prefWidth="24.0" progress="0.0" />
+                     </graphic></Label>
 					</children>
 				</GridPane>
 			</content>
@@ -55,8 +59,8 @@
 					<children>
 						<Label text="Username" GridPane.halignment="CENTER" />
 						<Label text="Password" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
-						<TextField fx:id="username" GridPane.rowIndex="1" text="admin"/>
-						<PasswordField fx:id="password" GridPane.columnIndex="1" GridPane.rowIndex="1" text="password" />
+						<TextField fx:id="username" text="admin" GridPane.rowIndex="1" />
+						<PasswordField fx:id="password" text="password" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 					</children>
 				</GridPane>
 			</content>

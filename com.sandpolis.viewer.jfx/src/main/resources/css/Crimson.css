@@ -1,3 +1,14 @@
+/***********/
+/* GENERAL */
+/***********/
+.progress-indicator .percentage {
+    -fx-fill:null;
+}
+
+.progress-indicator  {
+    -fx-padding: 0 0 -16 0;
+}
+
 /*************/
 /* GENERATOR */
 /*************/

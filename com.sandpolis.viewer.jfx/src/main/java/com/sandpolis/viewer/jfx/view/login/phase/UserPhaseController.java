@@ -28,14 +28,25 @@ import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.view.login.LoginController.LoginPhase;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.util.Duration;
 
 public class UserPhaseController extends AbstractController {
+
+	/**
+	 * The amount of time to wait between pings in milliseconds.
+	 */
+	private static final int PING_PERIOD = 1500;
 
 	@FXML
 	private Label server_ip;
@@ -47,6 +58,8 @@ public class UserPhaseController extends AbstractController {
 	private Label server_version;
 	@FXML
 	private Label server_ping;
+	@FXML
+	private ProgressIndicator ping_indicator;
 	@FXML
 	private TextField username;
 	@FXML
@@ -102,8 +115,17 @@ public class UserPhaseController extends AbstractController {
 			@Override
 			protected Void call() throws Exception {
 				while (!isCancelled()) {
-					updateMessage(sock.ping() + " ms");
-					Thread.sleep(1000);
+					long ping = sock.ping();
+					updateMessage(ping + " ms");
+
+					Platform.runLater(() -> {
+						ping_indicator.setProgress(0);
+
+						// Trigger animation
+						new Timeline(new KeyFrame(calculatePingVisual(ping),
+								new KeyValue(ping_indicator.progressProperty(), 0.999999999))).play();
+					});
+					Thread.sleep(PING_PERIOD);
 				}
 				return null;
 			}
@@ -139,5 +161,16 @@ public class UserPhaseController extends AbstractController {
 	 */
 	public String getPassword() {
 		return password.getText();
+	}
+
+	/**
+	 * Scale the ping approximation so it's easier for the user to distinguish
+	 * between small pings and large pings.
+	 * 
+	 * @param ping The last ping value
+	 * @return A duration representative of the given ping value
+	 */
+	private Duration calculatePingVisual(long ping) {
+		return Duration.millis(Math.min(PING_PERIOD, 4 * ping + 80));
 	}
 }
