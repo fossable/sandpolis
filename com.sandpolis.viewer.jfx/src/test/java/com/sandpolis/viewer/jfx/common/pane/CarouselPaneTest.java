@@ -17,11 +17,12 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.common.pane;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.testfx.assertions.api.Assertions.assertThat;
 
-import java.util.function.Supplier;
 import java.util.prefs.Preferences;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -95,44 +96,34 @@ class CarouselPaneTest {
 
 		// Move view and check state
 		robot.interact(() -> carousel.moveForward());
-		waitCondition(() -> !carousel.isMoving(), 5000);
+		await().atMost(5000, MILLISECONDS).until(() -> !carousel.isMoving());
+		Thread.sleep(400); // A little extra time
 		assertThat(carousel).doesNotHaveChild("#view1");
 		assertThat(carousel).hasChild("#view2");
 		assertThat(carousel).doesNotHaveChild("#view3");
 
 		// Move view and check state
 		robot.interact(() -> carousel.moveForward());
-		waitCondition(() -> !carousel.isMoving(), 5000);
+		await().atMost(5000, MILLISECONDS).until(() -> !carousel.isMoving());
+		Thread.sleep(400); // A little extra time
 		assertThat(carousel).doesNotHaveChild("#view1");
 		assertThat(carousel).doesNotHaveChild("#view2");
 		assertThat(carousel).hasChild("#view3");
 
 		// Move view and check state
 		robot.interact(() -> carousel.moveBackward());
-		waitCondition(() -> !carousel.isMoving(), 5000);
+		await().atMost(5000, MILLISECONDS).until(() -> !carousel.isMoving());
+		Thread.sleep(400); // A little extra time
 		assertThat(carousel).doesNotHaveChild("#view1");
 		assertThat(carousel).hasChild("#view2");
 		assertThat(carousel).doesNotHaveChild("#view3");
 
 		// Move view and check state
 		robot.interact(() -> carousel.moveBackward());
-		waitCondition(() -> !carousel.isMoving(), 5000);
+		await().atMost(5000, MILLISECONDS).until(() -> !carousel.isMoving());
+		Thread.sleep(400); // A little extra time
 		assertThat(carousel).hasChild("#view1");
 		assertThat(carousel).doesNotHaveChild("#view2");
 		assertThat(carousel).doesNotHaveChild("#view3");
-	}
-
-	private void waitCondition(Supplier<Boolean> condition, int timeout) throws InterruptedException {
-		int waited = 0;
-		while (!condition.get()) {
-			if (waited >= timeout)
-				throw new RuntimeException();
-			Thread.sleep(100);
-			waited += 100;
-		}
-
-		// Wait a little longer for the animation hooks to finish
-		// TODO come up with a better way
-		Thread.sleep(400);
 	}
 }
