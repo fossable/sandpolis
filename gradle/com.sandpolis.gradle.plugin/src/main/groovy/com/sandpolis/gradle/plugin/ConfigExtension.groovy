@@ -20,12 +20,17 @@ package com.sandpolis.gradle.plugin
 class ConfigExtension {
 
 	/**
-	 * The plugin id.
+	 * The plugin's Sandpolis ID.
 	 */
 	String id
+	
+	/**
+	 * The plugin's Maven group and artifact name.
+	 */
+	String coordinate
 
 	/**
-	 * The plugin's user friendly name.
+	 * The plugin's user-friendly name.
 	 */
 	String name
 

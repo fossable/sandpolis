@@ -27,6 +27,7 @@ import "com/sandpolis/core/proto/util/Platform.proto";
  */
 message PluginDescriptor {
 	string id = 1;
+	string coordinate = 12;
 	string name = 2;
 	string version = 3;
 	string description = 4;

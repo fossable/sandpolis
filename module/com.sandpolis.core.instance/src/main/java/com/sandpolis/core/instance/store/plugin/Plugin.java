@@ -49,6 +49,12 @@ public final class Plugin {
 	private String id;
 
 	/**
+	 * The plugin's Maven group and artifact name.
+	 */
+	@Column(nullable = false, unique = true)
+	private String coordinate;
+
+	/**
 	 * The plugin's user-friendly name.
 	 */
 	@Column(nullable = false)
@@ -108,8 +114,10 @@ public final class Plugin {
 	@Column(nullable = true)
 	private int component_size_cli;
 
-	public Plugin(String id, String name, String version, String description, boolean enabled, byte[] hash) {
+	public Plugin(String id, String coordinate, String name, String version, String description, boolean enabled,
+			byte[] hash) {
 		this.id = Objects.requireNonNull(id);
+		this.coordinate = Objects.requireNonNull(coordinate);
 		this.name = Objects.requireNonNull(name);
 		this.version = Objects.requireNonNull(version);
 		this.hash = Objects.requireNonNull(hash);
@@ -154,8 +162,8 @@ public final class Plugin {
 	 * @return A new {@link PluginDescriptor}
 	 */
 	public PluginDescriptor toDescriptor() {
-		var plugin = PluginDescriptor.newBuilder().setId(getId()).setName(getName()).setVersion(getVersion())
-				.setEnabled(isEnabled());
+		var plugin = PluginDescriptor.newBuilder().setId(getId()).setCoordinate(coordinate).setName(getName())
+				.setVersion(getVersion()).setEnabled(isEnabled());
 
 		if (icon != null)
 			plugin.setIcon(ByteString.copyFrom(getIcon()));

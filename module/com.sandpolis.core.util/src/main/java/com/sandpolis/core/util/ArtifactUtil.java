@@ -231,7 +231,7 @@ public final class ArtifactUtil {
 				coordinate += " ";
 
 			String[] gav = coordinate.split(":");
-			checkArgument(gav.length == 3, "Coordinate format: group:artifact:version");
+			checkArgument(gav.length == 3, "Coordinate format: %s", coordinate);
 
 			// Trim fields
 			for (int i = 0; i < gav.length; i++)

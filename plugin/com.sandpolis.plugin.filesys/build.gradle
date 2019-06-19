@@ -37,6 +37,7 @@ apply plugin: 'com.sandpolis.gradle.plugin'
 
 sandpolis_plugin {
 	id = 'com.sandpolis.plugin.filesys'
+	coordinate = 'com.sandpolis:sandpolis-plugin-filesys'
 	name = 'Filesystem Plugin'
 	description = 'Provides access to the filesystem'
 }

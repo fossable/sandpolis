@@ -256,6 +256,7 @@ public final class PluginStore {
 
 			var manifest = JarUtil.getManifest(path.toFile());
 			String id = manifest.getValue("Plugin-Id");
+			String coordinate = manifest.getValue("Plugin-Coordinate");
 			String name = manifest.getValue("Plugin-Name");
 			String version = manifest.getValue("Plugin-Version");
 			String description = manifest.getValue("Description");
@@ -263,7 +264,7 @@ public final class PluginStore {
 			// TODO validate info
 			log.debug("Installing plugin: {}", path.toString());
 
-			Plugin plugin = new Plugin(id, name, version, description, true, hash);
+			Plugin plugin = new Plugin(id, coordinate, name, version, description, true, hash);
 			provider.add(plugin);
 			manager.loadPlugin(path);
 		} catch (IOException e) {

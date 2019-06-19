@@ -49,6 +49,7 @@ apply plugin: 'com.sandpolis.gradle.soi'
 
 sandpolis_plugin {
 	id = 'com.sandpolis.plugin.sysinfo'
+	coordinate = 'com.sandpolis:sandpolis-plugin-sysinfo'
 	name = 'System Info Plugin'
 	description = ''
 }
