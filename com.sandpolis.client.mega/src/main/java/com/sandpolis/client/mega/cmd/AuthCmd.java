@@ -42,7 +42,7 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	 * @return A response future
 	 */
 	public ResponseFuture<Outcome> none() {
-		return route(RQ_NoAuth.newBuilder());
+		return request(RQ_NoAuth.newBuilder());
 	}
 
 	/**
@@ -53,7 +53,7 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	public ResponseFuture<Outcome> password(String password) {
 		checkNotNull(password);
 
-		return route(RQ_PasswordAuth.newBuilder().setPassword(password));
+		return request(RQ_PasswordAuth.newBuilder().setPassword(password));
 	}
 
 	/**
@@ -69,7 +69,7 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 		checkNotNull(key);
 
 		Sand5Handler.registerResponseHandler(sock.channel(), key);
-		return route(RQ_KeyAuth.newBuilder().setGroupId(group).setMechId(mech));
+		return request(RQ_KeyAuth.newBuilder().setGroupId(group).setMechId(mech));
 	}
 
 	/**

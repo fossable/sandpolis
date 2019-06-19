@@ -370,7 +370,7 @@ public class Sock {
 	 * @param unit    The timeout unit
 	 * @return A {@link MessageFuture}
 	 */
-	public MessageFuture read(int id, int timeout, TimeUnit unit) {
+	public MessageFuture read(int id, long timeout, TimeUnit unit) {
 		return channel.attr(ChannelConstant.HANDLER_EXECUTE).get().putResponseFuture(id,
 				new MessageFuture(timeout, unit));
 	}
@@ -397,7 +397,7 @@ public class Sock {
 	 * @return A {@link MessageFuture} which will be notified when the response is
 	 *         received
 	 */
-	public MessageFuture request(Message message, int timeout, TimeUnit unit) {
+	public MessageFuture request(Message message, long timeout, TimeUnit unit) {
 		MessageFuture future = read(message.getId(), timeout, unit);
 		send(message);
 		return future;
@@ -426,7 +426,7 @@ public class Sock {
 	 * @return A {@link MessageFuture} which will be notified when the response is
 	 *         received
 	 */
-	public MessageFuture request(Message.Builder message, int timeout, TimeUnit unit) {
+	public MessageFuture request(Message.Builder message, long timeout, TimeUnit unit) {
 		if (message.getId() == 0)
 			message.setId(0);// TODO GET FROM ID UTIL!
 		return request(message.build(), timeout, unit);

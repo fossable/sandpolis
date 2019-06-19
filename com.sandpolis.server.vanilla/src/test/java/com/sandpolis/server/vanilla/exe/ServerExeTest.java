@@ -27,8 +27,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.Signaler;
-import com.sandpolis.core.net.ExeletTest;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;

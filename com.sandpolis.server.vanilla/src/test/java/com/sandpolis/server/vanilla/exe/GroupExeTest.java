@@ -28,8 +28,8 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
-import com.sandpolis.core.net.ExeletTest;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCGroup.RQ_AddGroup;
 import com.sandpolis.core.proto.net.MCGroup.RQ_RemoveGroup;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;

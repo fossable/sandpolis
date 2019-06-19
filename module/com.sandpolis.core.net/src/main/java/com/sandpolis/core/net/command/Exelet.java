@@ -32,8 +32,13 @@ import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ProtoUtil;
 
 /**
- * An {@code Exelet} handles incoming messages from a {@link Sock}. All
- * {@code Exelet}s are non-static.
+ * An {@link Exelet} handles incoming messages from a {@link Sock}.<br>
+ * <br>
+ * There are two types of message handlers:
+ * <ul>
+ * <li>Simple</li>
+ * <li>Request Shortcut</li>
+ * </ul>
  * 
  * @author cilki
  * @since 5.0.0
@@ -41,7 +46,7 @@ import com.sandpolis.core.util.ProtoUtil;
 public abstract class Exelet {
 
 	/**
-	 * The {@link Sock} this {@link Exelet} is handling.
+	 * The remote endpoint.
 	 */
 	protected Sock connector;
 
@@ -113,27 +118,52 @@ public abstract class Exelet {
 	}
 
 	/**
-	 * Check that the user associated with the connection is a superuser.
+	 * Begin a message handler.
 	 * 
-	 * @return Whether the access check passed
+	 * @return A new intermediate outcome
 	 */
-	@AccessPredicate
-	protected boolean superuser(long id) {
-		return false;// TODO
-	}
-
 	protected Outcome.Builder begin() {
 		return ProtoUtil.begin();
 	}
 
+	/**
+	 * Complete the given handler outcome as failed.
+	 * 
+	 * @param outcome The handler outcome
+	 * @return {@code outcome}
+	 */
+	protected Outcome.Builder failure(Outcome.Builder outcome) {
+		return outcome.setTime(System.currentTimeMillis() - outcome.getTime()).setResult(false);
+	}
+
+	/**
+	 * Complete the given handler outcome as failed.
+	 * 
+	 * @param outcome The handler outcome
+	 * @param code    The error code
+	 * @return {@code outcome}
+	 */
 	protected Outcome.Builder failure(Outcome.Builder outcome, ErrorCode code) {
 		return outcome.setTime(System.currentTimeMillis() - outcome.getTime()).setResult(false).setError(code);
 	}
 
+	/**
+	 * Complete the given handler outcome as succeeded.
+	 * 
+	 * @param outcome The handler outcome
+	 * @return {@code outcome}
+	 */
 	protected Outcome.Builder success(Outcome.Builder outcome) {
 		return outcome.setTime(System.currentTimeMillis() - outcome.getTime()).setResult(true);
 	}
 
+	/**
+	 * Complete the given handler outcome (as failed or succeeded depending on the
+	 * error code).
+	 * 
+	 * @param outcome The handler outcome
+	 * @return {@code outcome}
+	 */
 	protected Outcome.Builder complete(Outcome.Builder outcome, ErrorCode code) {
 		return code == ErrorCode.OK ? success(outcome) : failure(outcome, code);
 	}

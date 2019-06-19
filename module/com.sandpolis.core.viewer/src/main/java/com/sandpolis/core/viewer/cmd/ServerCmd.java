@@ -31,7 +31,7 @@ import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 public final class ServerCmd extends Cmdlet<ServerCmd> {
 
 	public ResponseFuture<RS_ServerBanner> getServerBanner() {
-		return route(RQ_ServerBanner.newBuilder());
+		return request(RQ_ServerBanner.newBuilder());
 	}
 
 	/**

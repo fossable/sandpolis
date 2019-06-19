@@ -57,18 +57,16 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 		var session = begin();
 
 		session.request(RQ_PluginList.newBuilder(), (RS_PluginList rs) -> {
-			rs.getPluginList().stream()
-					// Skip up-to-date plugins
-					.filter(descriptor -> {
-						Optional<Plugin> plugin = PluginStore.getPlugin(descriptor.getId());
-						if (plugin.isEmpty())
-							return true;
+			rs.getPluginList().stream().filter(descriptor -> {
+				Optional<Plugin> plugin = PluginStore.getPlugin(descriptor.getId());
+				if (plugin.isEmpty())
+					return true;
 
-						// Check versions
-						return !plugin.get().getVersion().equals(descriptor.getVersion());
-					}).forEach(descriptor -> {
-						session.subcommand(install(descriptor.getId()));
-					});
+				// Check versions
+				return !plugin.get().getVersion().equals(descriptor.getVersion());
+			}).forEach(descriptor -> {
+				session.sub(install(descriptor.getId()));
+			});
 		});
 
 		return session;
@@ -84,7 +82,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 		checkNotNull(gav);
 		var session = begin();
 
-		session.subcommand(installDependency(gav), outcome -> {
+		session.sub(installDependency(gav), outcome -> {
 			PluginStore.installPlugin(Environment.get(LIB).resolve(fromCoordinate(gav).filename));
 		});
 
@@ -127,7 +125,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 			try {
 				// Get any missing dependencies recursively
 				SoiUtil.getMatrix(destination).getAllDependencies()
-						.forEach(dep -> session.subcommand(installDependency(dep.getCoordinates())));
+						.forEach(dep -> session.sub(installDependency(dep.getCoordinates())));
 			} catch (NoSuchFileException e) {
 				// This dependency does not have a soi/matrix.bin (skip it)
 			}

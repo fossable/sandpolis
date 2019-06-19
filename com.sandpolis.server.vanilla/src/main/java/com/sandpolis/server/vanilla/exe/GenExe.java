@@ -18,17 +18,18 @@
 package com.sandpolis.server.vanilla.exe;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.proto.net.MCGenerator.RQ_Generate;
 import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
-import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.server.vanilla.PoolConstant.server;
 import com.sandpolis.server.vanilla.gen.FileGenerator;
 import com.sandpolis.server.vanilla.gen.generator.MegaGen;
@@ -48,40 +49,38 @@ public class GenExe extends Exelet {
 	}
 
 	@Auth
-	public void rq_generate(Message m) throws Exception {
-		var config = m.getRqGenerate().getConfig();
-
+	public Message.Builder rq_generate(RQ_Generate rq) throws Exception {
 		ExecutorService pool = ThreadStore.get(server.generator);
-		pool.execute(() -> {
+
+		Future<Message.Builder> future = pool.submit(() -> {
+			var outcome = begin();
+
 			FileGenerator generator;
-			switch (config.getPayload()) {
+			switch (rq.getConfig().getPayload()) {
 			case OUTPUT_MEGA:
-				generator = new MegaGen(config);
+				generator = new MegaGen(rq.getConfig());
 				break;
 			case OUTPUT_MICRO:
 			default:
-				log.warn("No generator found for type: {}", config.getPayload());
-				reply(m, Outcome.newBuilder().setResult(false));
-				return;
+				log.warn("No generator found for type: {}", rq.getConfig().getPayload());
+				return failure(outcome);
 			}
 
 			try {
 				generator.generate();
 			} catch (Exception e) {
 				log.error("Generation failed", e);
-				reply(m, Outcome.newBuilder().setResult(false));
-				return;
+				return failure(outcome);
 			}
 
-			if (generator.getResult() == null) {
-				reply(m, RS_Generate.newBuilder().setReport(generator.getReport()));
-			} else {
-				reply(m, RS_Generate.newBuilder().setReport(generator.getReport())
-						.setOutput(ByteString.copyFrom(generator.getResult())));
-			}
+			var rs = RS_Generate.newBuilder().setReport(generator.getReport());
+			if (generator.getResult() != null)
+				rs.setOutput(ByteString.copyFrom(generator.getResult()));
 
+			return rs;
 		});
 
+		return future.get();
 	}
 
 }

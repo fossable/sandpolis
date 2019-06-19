@@ -38,7 +38,7 @@ public final class GenCmd extends Cmdlet<GenCmd> {
 	 * @return A future that will receive the outcome of this action
 	 */
 	public ResponseFuture<RS_Generate> generate(GenConfig config) {
-		return route(RQ_Generate.newBuilder().setConfig(config));
+		return request(RQ_Generate.newBuilder().setConfig(config));
 	}
 
 	/**

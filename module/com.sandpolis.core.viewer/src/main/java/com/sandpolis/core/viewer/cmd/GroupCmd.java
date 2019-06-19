@@ -43,11 +43,11 @@ import com.sandpolis.core.proto.util.Result.Outcome;
 public final class GroupCmd extends Cmdlet<GroupCmd> {
 
 	public ResponseFuture<Outcome> create(String name) {
-		return route(RQ_AddGroup.newBuilder().setConfig(GroupConfig.newBuilder().setName(name)));
+		return request(RQ_AddGroup.newBuilder().setConfig(GroupConfig.newBuilder().setName(name)));
 	}
 
 	public ResponseFuture<Outcome> remove(String id) {
-		return route(RQ_RemoveGroup.newBuilder().setId(id));
+		return request(RQ_RemoveGroup.newBuilder().setId(id));
 	}
 
 	public static ResponseFuture<Outcome> exportToFile(File group, String groupId, String password) throws Exception {

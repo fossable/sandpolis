@@ -37,8 +37,8 @@ import io.netty.util.concurrent.EventExecutor;
 
 /**
  * A {@link Cmdlet} contains commands that can be run against a CVID.
- * {@link Cmdlet}s usually produce messages and the corresponding {@link Exelet}
- * handles the response.
+ * {@link Cmdlet}s usually produce requests and the corresponding {@link Exelet}
+ * returns a response.
  * 
  * @author cilki
  * @since 5.0.0
@@ -54,25 +54,18 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	/**
 	 * The response timeout in milliseconds.
 	 */
-	private int timeout = Config.getInteger(ConfigConstant.net.message.default_timeout);
+	private long timeout = Config.getInteger(ConfigConstant.net.message.default_timeout);
 
 	/**
-	 * The target CVID. If {@code null} and {@link sock} is {@code null}, the
-	 * default server will be used.
+	 * The target CVID. Defaults to the default server CVID.
 	 */
-	private Integer cvid;
+	private Integer cvid = NetworkStore.getPreferredServer();
 
 	/**
-	 * The target sock which will be used to send and receive messages. If
-	 * {@code null} and {@link cvid} is {@code null}, the default server will be
-	 * used.
+	 * The target sock which will be used to send and receive messages. Defaults to
+	 * the default server.
 	 */
-	protected Sock sock;
-
-	/**
-	 * The current command session.
-	 */
-	private CommandSession session;
+	protected Sock sock = ConnectionStore.get(cvid);
 
 	/**
 	 * Explicitly set a thread pool for the completion listeners.
@@ -86,7 +79,8 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	}
 
 	/**
-	 * Explicitly set a response timeout.
+	 * Set a session timeout for all {@link CommandSession}s spawned from this
+	 * {@link Cmdlet}.
 	 * 
 	 * @param timeout The timeout class
 	 * @return {@code this}
@@ -97,24 +91,52 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	}
 
 	/**
-	 * Explicitly set the recipient {@link Sock}.
+	 * Set a session timeout for all {@link CommandSession}s spawned from this
+	 * {@link Cmdlet}.
+	 * 
+	 * @param timeout The timeout
+	 * @param unit    The time unit
+	 * @return {@code this}
+	 */
+	public E timeout(long timeout, TimeUnit unit) {
+		this.timeout = unit.convert(timeout, TimeUnit.MILLISECONDS);
+		return (E) this;
+	}
+
+	/**
+	 * Explicitly set the remote endpoint by {@link Sock}.
 	 * 
 	 * @param sock The target sock
 	 * @return {@code this}
 	 */
 	public E target(Sock sock) {
 		this.sock = checkNotNull(sock);
+		this.cvid = sock.getRemoteCvid();
 		return (E) this;
 	}
 
 	/**
-	 * Explicitly set the recipient CVID.
+	 * Explicitly set the remote endpoint by CVID.
 	 * 
 	 * @param cvid The target CVID
 	 * @return {@code this}
 	 */
 	public E target(int cvid) {
 		this.cvid = cvid;
+		this.sock = ConnectionStore.get(cvid);
+		return (E) this;
+	}
+
+	/**
+	 * Explicitly set the remote endpoint.
+	 * 
+	 * @param cvid The target CVID
+	 * @param sock The target sock
+	 * @return {@code this}
+	 */
+	public E target(int cvid, Sock sock) {
+		this.cvid = cvid;
+		this.sock = checkNotNull(sock);
 		return (E) this;
 	}
 
@@ -124,12 +146,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 * @return A new {@link CommandSession}
 	 */
 	protected CommandSession begin() {
-		if (session == null) {
-			session = new CommandSession(pool);
-		} else {
-			session = new CommandSession(session);
-		}
-		return session;
+		return new CommandSession(pool, cvid, sock, timeout);
 	}
 
 	/**
@@ -138,21 +155,8 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 * @param payload The message payload
 	 * @return A new response future
 	 */
-	protected <R extends Message> ResponseFuture<R> route(MessageOrBuilder payload) {
+	protected <R extends Message> ResponseFuture<R> request(MessageOrBuilder payload) {
 		checkNotNull(payload);
-
-		// TODO move somewhere else
-		if (sock == null || cvid == null) {
-			// Resolve target
-			if (sock == null && cvid == null) {
-				cvid = NetworkStore.getPreferredServer();
-				sock = ConnectionStore.get(cvid);
-			} else if (cvid == null) {
-				cvid = sock.getRemoteCvid();
-			} else if (sock == null) {
-				sock = ConnectionStore.get(cvid);
-			}
-		}
 
 		return new ResponseFuture<>(pool, sock.request(ProtoUtil.setPayload(ProtoUtil.rq().setTo(cvid), payload),
 				timeout, TimeUnit.MILLISECONDS));

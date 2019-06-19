@@ -41,7 +41,7 @@ public final class ListenerCmd extends Cmdlet<ListenerCmd> {
 	 * @return A future that will receive the outcome of this action
 	 */
 	public ResponseFuture<Outcome> addListener(ListenerConfig conf) {
-		return route(RQ_AddListener.newBuilder().setConfig(conf));
+		return request(RQ_AddListener.newBuilder().setConfig(conf));
 
 	}
 
@@ -52,7 +52,7 @@ public final class ListenerCmd extends Cmdlet<ListenerCmd> {
 	 * @return A future that will receive the outcome of this action
 	 */
 	public ResponseFuture<Outcome> removeListener(int id) {
-		return route(RQ_RemoveListener.newBuilder().setId(id));
+		return request(RQ_RemoveListener.newBuilder().setId(id));
 
 	}
 
@@ -64,7 +64,7 @@ public final class ListenerCmd extends Cmdlet<ListenerCmd> {
 	 * @return A future that will receive the outcome of this action
 	 */
 	public ResponseFuture<Outcome> changeListenerState(ListenerState state, long id) {
-		return route(RQ_ChangeListener.newBuilder().setId(id).setState(state));
+		return request(RQ_ChangeListener.newBuilder().setId(id).setState(state));
 
 	}
 

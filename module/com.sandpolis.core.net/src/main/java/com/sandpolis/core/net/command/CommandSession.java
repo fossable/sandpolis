@@ -19,11 +19,10 @@ package com.sandpolis.core.net.command;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +33,8 @@ import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.ResponseFuture;
+import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.proto.net.MSG;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ProtoUtil;
 
@@ -44,7 +43,14 @@ import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Future;
 
 /**
- * A {@link CommandSession} contains the state of a command.
+ * A {@link CommandSession} maintains the state of an interaction between the
+ * local instance and a remote endpoint.<br>
+ * <br>
+ * A {@code CommandSession} is considered successful if all of its components
+ * are successful. If any component fails with an exception, the entire session
+ * fails with the same exception. Sessions can also be explicitly aborted or
+ * succeeded from a handler context using {@link #abort()} and
+ * {@link #success()}.
  * 
  * @author cilki
  * @since 5.0.2
@@ -60,55 +66,52 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 
 	/**
 	 * A {@link Sock} that leads to the remote endpoint. If there's only one hop,
-	 * the CVID of {@link #sock} will be equal to {@link #cvid}.
+	 * the CVID of {@link #gateway} will be equal to {@link #cvid}.
 	 */
-	private Sock sock;
+	private Sock gateway;
 
 	/**
-	 * An in-progress outcome for the command.
+	 * The in-progress outcome of the command.
 	 */
 	private Outcome.Builder outcome;
 
 	/**
-	 * Actions that make up the overall command.
+	 * Actions that compose the overall command.
 	 */
 	private List<Future<?>> components;
 
-	public CommandSession(CommandSession parent) {
-		this();
-		parent.add(this);
+	/**
+	 * The command timeout in milliseconds.
+	 */
+	private long timeout;
 
-		this.cvid = parent.cvid;
-		this.sock = parent.sock;
-	}
-
-	public CommandSession() {
-		this((EventExecutor) ThreadStore.get(net.message.incoming));
-	}
-
-	public CommandSession(EventExecutor executor) {
+	public CommandSession(EventExecutor executor, Integer cvid, Sock sock, long timeout) {
 		super(executor);
+		checkArgument(cvid != null || sock != null);
 
 		outcome = ProtoUtil.begin();
 		components = new LinkedList<>();
-	}
-
-	public CommandSession(Integer cvid, Sock sock) {
-		this();
-		checkArgument(cvid != null || sock != null);
 
 		if (cvid == null)
 			cvid = sock.getRemoteCvid();
-		if (sock == null)
+		else if (sock == null)
 			// TODO get sock from NetworkStore
-			throw new RuntimeException();
+			sock = ConnectionStore.get(cvid);
 
-		this.cvid = Objects.requireNonNull(cvid);
-		this.sock = Objects.requireNonNull(sock);
+		this.cvid = checkNotNull(cvid);
+		this.gateway = checkNotNull(sock);
+		this.timeout = timeout;
 	}
 
+	/**
+	 * Add a new component to the {@link CommandSession}.
+	 * 
+	 * @param <R>      The component's expected result type
+	 * @param future   The component
+	 * @param handlers A list of completion handlers
+	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private <R extends Message> void add(Future<R> future, MessageHandler... handlers) {
+	private <R extends Message> void addComponent(Future<R> future, MessageHandler... handlers) {
 		checkNotNull(future);
 		checkArgument(future != this);
 
@@ -117,9 +120,13 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 		future.addListener(f -> {
 
 			if (future.isSuccess()) {
+				boolean handled = false;
+				R rs = future.get();
+
 				for (var handler : handlers) {
 					try {
-						handler.handle(future.get());
+						handler.handle(rs);
+						handled = true;
 						break;
 					} catch (ClassCastException e) {
 						// Try the next handler
@@ -130,21 +137,25 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 					}
 				}
 
+				if (!handled && handlers.length > 0) {
+					abort("Failed to handle message");
+					return;
+				}
+
 				tryComplete();
 			} else {
-				abort(future.cause());
+				if (!isDone())
+					abort(future.cause());
 			}
 		});
 	}
 
 	/**
-	 * Immediately complete the command with a postive outcome.
-	 * 
-	 * @return {@code this}
+	 * Complete the session if all components have been completed.
 	 */
-	public CommandSession success() {
-		complete(outcome.setTime(System.currentTimeMillis() - outcome.getTime()).setResult(true).build());
-		return this;
+	private void tryComplete() {
+		if (!isDone() && components.stream().allMatch(future -> future.isDone()))
+			setSuccess(ProtoUtil.success(outcome));
 	}
 
 	/**
@@ -160,6 +171,16 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	}
 
 	/**
+	 * Immediately complete the command with a postive outcome.
+	 * 
+	 * @return {@code this}
+	 */
+	public CommandSession success() {
+		complete(outcome.setTime(System.currentTimeMillis() - outcome.getTime()).setResult(true).build());
+		return this;
+	}
+
+	/**
 	 * Halt the entire command. All components will be interrupted and the command
 	 * will enter the failed state.
 	 * 
@@ -168,6 +189,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	public void abort(String message) {
 		components.forEach(future -> future.cancel(true));
 		setFailure(new Exception(message));
+		log.error("Command aborted: {}", message);
 	}
 
 	/**
@@ -179,46 +201,35 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	public void abort(Throwable cause) {
 		components.forEach(future -> future.cancel(true));
 		setFailure(cause);
-	}
-
-	public CommandSession failure(ErrorCode code) {
-		complete(outcome.setTime(System.currentTimeMillis() - outcome.getTime()).setResult(false).setError(code)
-				.build());
-		return this;
+		log.error("Command aborted", cause);
 	}
 
 	/**
-	 * Complete the overall command session if all components have been completed.
-	 */
-	private void tryComplete() {
-		checkState(!isDone());
-
-		if (components.stream().allMatch(future -> future.isDone()))
-			setSuccess(ProtoUtil.success(outcome));
-	}
-
-	/**
+	 * Add a subcommand to the current session.
 	 * 
-	 * 
-	 * @param future
+	 * @param future The subsession
+	 * @return {@code future}
 	 */
-	public void subcommand(CommandFuture future) {
+	public CommandFuture sub(CommandFuture future) {
 		checkArgument(future instanceof CommandSession);
 
-		add(future);
+		addComponent(future);
+		return future;
 	}
 
 	/**
+	 * Add a subcommand to the current session.
 	 * 
-	 * 
-	 * @param future
-	 * @param handler
+	 * @param future  The subsession
+	 * @param handler The subsession's completion handler
+	 * @return {@code future}
 	 */
-	public void subcommand(CommandFuture future, MessageHandler<Outcome> handler) {
+	public CommandFuture sub(CommandFuture future, MessageHandler<Outcome> handler) {
 		checkArgument(future instanceof CommandSession);
 		checkNotNull(handler);
 
-		add(future, handler);
+		addComponent(future, handler);
+		return future;
 	}
 
 	/**
@@ -229,7 +240,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	public void send(MessageOrBuilder payload) {
 		checkNotNull(payload);
 
-		sock.send(ProtoUtil.setPayload(MSG.Message.newBuilder().setTo(cvid), payload));
+		gateway.send(ProtoUtil.setPayload(MSG.Message.newBuilder().setTo(cvid), payload));
 	}
 
 	/**
@@ -242,8 +253,38 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	public void request(MessageOrBuilder payload, MessageHandler<?>... handlers) {
 		var rq = ProtoUtil.setPayload(ProtoUtil.rq().setTo(cvid), payload);
 
-		var future = new ResponseFuture<>(ThreadStore.get(""), sock.request(rq));
-		add(future, handlers);
+		var future = new ResponseFuture<>(ThreadStore.get(net.message.incoming),
+				gateway.request(rq, timeout, TimeUnit.MILLISECONDS));
+		addComponent(future, handlers);
+	}
+
+	/**
+	 * Build a {@code String} representation of this {@link CommandSession} for
+	 * debugging purposes.
+	 */
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(format(this));
+
+		for (Future<?> f : components) {
+			if (f instanceof CommandSession) {
+				String subcommand = f.toString();
+
+				// Insert indention
+				subcommand = "\t" + subcommand.replaceAll("\n", "\n\t");
+				sb.append(subcommand);
+			} else {
+				sb.append("\t");
+				sb.append(format(f));
+			}
+		}
+		return sb.toString();
+	}
+
+	private String format(Future<?> f) {
+		return String.format("%s: %4s %7s %9s%n", f.getClass().getSimpleName(), f.isDone() ? "done" : "wait",
+				f.isDone() ? (f.isSuccess() ? "success" : "failure") : "", f.isCancelled() ? "cancelled" : "");
 	}
 
 }

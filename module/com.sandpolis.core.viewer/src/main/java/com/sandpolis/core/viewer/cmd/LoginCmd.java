@@ -46,7 +46,7 @@ public final class LoginCmd extends Cmdlet<LoginCmd> {
 		Objects.requireNonNull(user);
 		Objects.requireNonNull(pass);
 
-		return route(RQ_Login.newBuilder().setUsername(user).setPassword(CryptoUtil.hash(SHA256, pass)));
+		return request(RQ_Login.newBuilder().setUsername(user).setPassword(CryptoUtil.hash(SHA256, pass)));
 	}
 
 	/**
