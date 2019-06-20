@@ -37,7 +37,7 @@ dependencies {
 	implementation 'io.netty:netty-resolver-dns:4.1.36.Final'
 
 	// https://github.com/pf4j/pf4j
-	implementation 'org.pf4j:pf4j:2.6.0'
+	implementation 'org.pf4j:pf4j:3.0.1'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'

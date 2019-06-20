@@ -46,7 +46,7 @@ dependencies {
 	implementation 'org.hibernate:hibernate-core:5.4.3.Final'
 
 	// https://github.com/pf4j/pf4j
-	implementation 'org.pf4j:pf4j:2.6.0'
+	implementation 'org.pf4j:pf4j:3.0.1'
 	annotationProcessor 'org.pf4j:pf4j:2.6.0'
 
 	// https://github.com/qos-ch/slf4j
