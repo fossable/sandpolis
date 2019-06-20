@@ -20,7 +20,6 @@ package com.sandpolis.plugin.sysinfo;
 import java.util.function.Function;
 
 import org.pf4j.Plugin;
-import org.pf4j.PluginException;
 import org.pf4j.PluginWrapper;
 
 import com.sandpolis.core.attribute.AttributeKey;
@@ -37,13 +36,13 @@ public class SysinfoPlugin extends Plugin implements ExeletProvider {
 	}
 
 	@Override
-	public void start() throws PluginException {
+	public void start() {
 		setupAttributes();
 		super.start();
 	}
 
 	@Override
-	public void stop() throws PluginException {
+	public void stop() {
 		// TODO Auto-generated method stub
 		super.stop();
 	}
