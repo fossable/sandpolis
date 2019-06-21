@@ -43,6 +43,8 @@ import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.util.Generator.LoopConfig;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
 
 /**
  * A static store for managing direct connections and connection attempt
@@ -158,6 +160,20 @@ public final class ConnectionStore extends Store {
 
 		threads.add(loop);
 		return loop;
+	}
+
+	/**
+	 * Attempt to connect to a Sandpolis listener.
+	 * 
+	 * @param address The IP address or DNS name
+	 * @param port    The port number
+	 * @return The future of the action
+	 */
+	public static SockFuture connect(String address, int port) {
+		return connect(new Bootstrap().channel(NioSocketChannel.class).group(new NioEventLoopGroup())
+				.remoteAddress(address, port)
+				// TODO use static pipeline initializer defined somewhere
+				.handler(new ClientPipelineInit(new Class[] {})));
 	}
 
 	private ConnectionStore() {

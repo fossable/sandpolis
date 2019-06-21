@@ -22,10 +22,10 @@ import java.util.Objects;
 import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.SockFuture;
+import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
-import com.sandpolis.core.viewer.cmd.NetworkCmd;
 import com.sandpolis.core.viewer.cmd.ServerCmd;
 import com.sandpolis.viewer.jfx.PoolConstant.ui;
 import com.sandpolis.viewer.jfx.PrefConstant;
@@ -136,7 +136,7 @@ public class LoginController extends FxController {
 	private void btn_continue(ActionEvent event) {
 		switch (phase.get()) {
 		case SERVER_INPUT:
-			NetworkCmd.async().connect(serverPhaseController.getAddress(), serverPhaseController.getPort())
+			ConnectionStore.connect(serverPhaseController.getAddress(), serverPhaseController.getPort())
 					.addListener((SockFuture sockFuture) -> {
 						if (sockFuture.isSuccess()) {
 							connection = sockFuture.get();

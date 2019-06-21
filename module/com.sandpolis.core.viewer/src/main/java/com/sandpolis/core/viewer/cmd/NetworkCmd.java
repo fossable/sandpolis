@@ -18,13 +18,6 @@
 package com.sandpolis.core.viewer.cmd;
 
 import com.sandpolis.core.net.command.Cmdlet;
-import com.sandpolis.core.net.future.SockFuture;
-import com.sandpolis.core.net.init.ClientPipelineInit;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
-
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
 
 /**
  * Contains network commands.
@@ -33,20 +26,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
  * @since 5.0.0
  */
 public final class NetworkCmd extends Cmdlet<NetworkCmd> {
-
-	/**
-	 * Attempt to connect to a Sandpolis listener.
-	 * 
-	 * @param address The IP address or DNS name
-	 * @param port    The port number
-	 * @return The future of the action
-	 */
-	public SockFuture connect(String address, int port) {
-		return ConnectionStore.connect(new Bootstrap().channel(NioSocketChannel.class).group(new NioEventLoopGroup())
-				.remoteAddress(address, port)
-				// TODO use static pipeline initializer defined somewhere
-				.handler(new ClientPipelineInit(new Class[] {})));
-	}
 
 	/**
 	 * Prepare for an asynchronous command.
