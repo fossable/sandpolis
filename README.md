@@ -5,7 +5,6 @@
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 ![GitHub repo size](https://img.shields.io/github/repo-size/Subterranean-Security/Sandpolis.svg)
 ![GitHub release](https://img.shields.io/github/release-pre/Subterranean-Security/Sandpolis.svg?color=blue)
-![GitHub All Releases](https://img.shields.io/github/downloads/Subterranean-Security/Sandpolis/total.svg?color=blue)
 [![Build Status](https://travis-ci.org/Subterranean-Security/Sandpolis.svg?branch=master)](https://travis-ci.org/Subterranean-Security/Sandpolis)
 [![Build status](https://ci.appveyor.com/api/projects/status/8a2xdoy8pt21k77g?svg=true)](https://ci.appveyor.com/project/cilki/sandpolis)
 
@@ -13,8 +12,7 @@
 
 Sandpolis is targeted at sysadmins and power users, but can be used by anyone once it's configured. Most users will want to use Sandpolis via the JavaFX desktop application, but alternative user interfaces (like web and mobile applications) are planned.
 
-##### Project Status
-**Sandpolis is very much unfinished and therefore should only be used in a testing environment**. There are a few releases up, but don't expect much from them until things are more complete.
+**Sandpolis is unfinished and therefore should only be used in a testing environment**. There are a few pre-releases available, but don't expect much from them until things are more complete.
 
 ### How
 There are three components in any Sandpolis network:
@@ -76,10 +74,7 @@ Building the entire project is as easy as running `./gradlew assemble` from the 
 
 Setting up the execution environment for testing can be a burden, so the `com.sandpolis.gradle.deploy` plugin was created to make deploying an instance to any machine possible with a single command. To use it, create an entry in `remote.gradle` for the machine you wish to execute on and run the corresponding Gradle task. For example, `./gradlew :com.sandpolis.server:user@localhost` will deploy the server instance to the local machine via SSH and run it in a `screen` session.
 
-### Sandpolis Cloud
-It's 100% free to run your own on-premise Sandpolis server and always will be. If you'd rather not maintain another application or you want to take advantage of hyper-scaling in the cloud, we also offer a SaaS-style cloud service at [sandpolis.com](http://sandpolis.com). Sandpolis Cloud gives you access to a private server instance running in the cloud which can be used just like a self-hosted server.
-
 ### A Brief History of Sandpolis
-Sandpolis evolved out of an immature project called Crimson which was initially released in 2013. Retrospectively, Crimson was an experiment in what kinds of features an administration system can (and should) contain. Overall, Crimson provided valuable experience which heavily informed the development of Sandpolis.
+Sandpolis evolved out of an application called Crimson which was initially released in 2013. Retrospectively, Crimson was an experiment in what kinds of features an administration system can (and should) contain. Overall, Crimson was a valuable experience which heavily informed the development of Sandpolis.
 
-After four years of sporadic development, Crimson was officially abandoned and Sandpolis was created to take its place. The old [repository](https://github.com/Subterranean-Security/Crimson) is now archived for the software archaeologists out there. Although almost none of the Crimson codebase has survived into Sandpolis, the overall goal has remained the same: **build the ultimate system management utility**.
+After four years of sporadic development, Crimson was finally abandoned and Sandpolis was created to take its place. The old [repository](https://github.com/Subterranean-Security/Crimson) is now archived for the software archaeologists out there. Although almost none of the Crimson codebase has survived into Sandpolis, the overall goal has remained the same: **build the ultimate system management utility**.
