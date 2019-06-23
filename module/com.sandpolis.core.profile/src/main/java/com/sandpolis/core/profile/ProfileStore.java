@@ -20,11 +20,8 @@ package com.sandpolis.core.profile;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.Store.ManualInitializer;
@@ -34,7 +31,6 @@ import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.proto.net.MCDelta.EV_ProfileDelta;
 import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.util.IDUtil;
 
 /**
  * @author cilki
@@ -52,20 +48,12 @@ public final class ProfileStore extends Store {
 
 	/**
 	 * The {@link StoreProvider}'s backing container if configured with
-	 * {@link #load(Database)}.
+	 * {@link #load(List)}.
 	 */
 	private static List<Profile> providerContainer;
 
-	/**
-	 * Recently used profiles that are mapped to a CVID.
-	 */
-	private static Cache<Integer, Profile> profileCache;
-
 	public static void init(StoreProvider<Profile> provider) {
 		ProfileStore.provider = Objects.requireNonNull(provider);
-
-		// Load profile cache
-		profileCache = CacheBuilder.newBuilder().expireAfterAccess(PROFILE_EXPIRATION, TimeUnit.MINUTES).build();
 	}
 
 	public static void load(Database main) {
@@ -97,6 +85,22 @@ public final class ProfileStore extends Store {
 	}
 
 	/**
+	 * Get an existing {@link Profile} from the store or create a new one.
+	 * 
+	 * @param cvid The profile CVID
+	 * @param uuid The profile UUID
+	 * @return A new or existing profile
+	 */
+	public static Profile getProfileOrCreate(int cvid, String uuid) {
+		Profile profile = provider.get("uuid", uuid).orElse(null);
+		if (profile == null) {
+			profile = new Profile(cvid, uuid);
+			provider.add(profile);
+		}
+		return profile;
+	}
+
+	/**
 	 * Retrieve a {@link Profile} by CVID.
 	 * 
 	 * @param cvid The profile's CVID
@@ -120,7 +124,7 @@ public final class ProfileStore extends Store {
 		for (EV_ProfileDelta update : updates) {
 			Profile profile = getProfile(update.getCvid()).orElse(null);
 			if (profile == null) {
-				profile = new Profile(IDUtil.CVID.extractInstance(update.getCvid()));
+				profile = new Profile(update.getCvid(), "TODO");// TODO
 
 				profile.merge(update.getUpdate());
 				provider.add(profile);

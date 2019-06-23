@@ -32,6 +32,8 @@ import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.ConnectionState;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.Sand5Handler;
+import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MCAuth.RQ_KeyAuth;
 import com.sandpolis.core.proto.net.MCAuth.RQ_NoAuth;
 import com.sandpolis.core.proto.net.MCAuth.RQ_PasswordAuth;
@@ -65,6 +67,7 @@ public class AuthExe extends Exelet {
 			return failure(outcome, UNKNOWN_GROUP);
 		}
 
+		Profile client = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
 		groups.forEach(group -> {
 			// TODO add client to group
 		});
@@ -86,6 +89,7 @@ public class AuthExe extends Exelet {
 			return failure(outcome, UNKNOWN_GROUP);
 		}
 
+		Profile client = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
 		groups.forEach(group -> {
 			// TODO add client to group
 		});
@@ -117,6 +121,9 @@ public class AuthExe extends Exelet {
 		Future<Boolean> future = sand5.challengeFuture();
 
 		if (future.get()) {
+			Profile client = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
+			// TODO add client to group
+
 			// Connection is now authenticated
 			connector.authenticate();
 			connector.changeState(ConnectionState.AUTHENTICATED);

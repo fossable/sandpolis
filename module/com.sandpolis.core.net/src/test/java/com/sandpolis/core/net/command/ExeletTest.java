@@ -80,6 +80,7 @@ public class ExeletTest {
 		channel = new EmbeddedChannel();
 		channel.attr(ChannelConstant.HANDLER_EXECUTE).set(new ExecuteHandler(new Class[] {}));
 		channel.attr(ChannelConstant.CVID).set(0);
+		channel.attr(ChannelConstant.UUID).set("123");
 		channel.attr(ChannelConstant.CONNECTION_STATE).set(ConnectionState.CONNECTED);
 	}
 

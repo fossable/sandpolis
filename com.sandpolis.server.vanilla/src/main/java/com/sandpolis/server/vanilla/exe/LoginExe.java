@@ -33,7 +33,6 @@ import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.net.MSG;
-import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.user.User;
@@ -100,9 +99,8 @@ public class LoginExe extends Exelet {
 		Profile viewer = ProfileStore.getViewer(username).orElse(null);
 		if (viewer == null) {
 			// Build new profile
-			viewer = new Profile(Instance.VIEWER);
+			viewer = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
 			viewer.set(AK_VIEWER.USERNAME, username);
-			// TODO add to store
 		}
 
 		viewer.set(AK_VIEWER.LOGIN_IP, connector.getRemoteIP());

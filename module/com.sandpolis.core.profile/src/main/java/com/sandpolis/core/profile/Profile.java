@@ -41,6 +41,7 @@ import com.sandpolis.core.instance.storage.database.converter.InstanceConverter;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
 import com.sandpolis.core.proto.util.Update.ProfileUpdate;
+import com.sandpolis.core.util.IDUtil;
 
 /**
  * A {@link Profile} is a generic container that stores data for an instance.
@@ -82,10 +83,15 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	private int cvid;
 
 	/**
-	 * Initialize a {@link Profile}.
+	 * Initialize an empty {@link Profile}.
+	 * 
+	 * @param cvid The initial CVID
+	 * @param uuid The profile's permanent UUID
 	 */
-	public Profile(Instance instance) {
-		this.instance = Objects.requireNonNull(instance);
+	public Profile(int cvid, String uuid) {
+		this.instance = IDUtil.CVID.extractInstance(cvid);
+		this.uuid = Objects.requireNonNull(uuid);
+		this.cvid = cvid;
 		this.domains = new HashMap<>();
 
 		// TODO

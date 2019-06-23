@@ -204,12 +204,21 @@ public class Sock {
 	}
 
 	/**
-	 * Get the remote {@code CVID}.
+	 * Get the remote host's CVID.
 	 * 
 	 * @return The CVID of the remote host
 	 */
 	public int getRemoteCvid() {
 		return channel.attr(ChannelConstant.CVID).get();
+	}
+
+	/**
+	 * Get the remote host's UUID.
+	 * 
+	 * @return The UUID of the remote host
+	 */
+	public String getRemoteUuid() {
+		return channel.attr(ChannelConstant.UUID).get();
 	}
 
 	/**
