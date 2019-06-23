@@ -175,7 +175,7 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 	}
 
 	@Override
-	public Stream<E> stream() {
+	public Stream<E> safeStream() {
 		beginStream();
 		return unsafeStream().onClose(() -> endStream());
 	}

@@ -35,7 +35,7 @@ import java.util.concurrent.Semaphore;
 public abstract class ConcurrentStoreProvider<E> implements StoreProvider<E> {
 
 	/**
-	 * The maximum number of concurrent iterations.
+	 * The maximum number of concurrent iterators.
 	 */
 	private static final int CONCURRENCY = 8;
 
@@ -67,6 +67,7 @@ public abstract class ConcurrentStoreProvider<E> implements StoreProvider<E> {
 	 * JDK doesn't have a single method interface with:
 	 * {@code void run() throws Exception}.
 	 */
+	@FunctionalInterface
 	public static interface Mutator {
 		public void run() throws Exception;
 	}

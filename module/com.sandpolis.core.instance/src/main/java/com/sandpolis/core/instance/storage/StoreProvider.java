@@ -19,6 +19,7 @@ package com.sandpolis.core.instance.storage;
 
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.Store;
@@ -129,13 +130,22 @@ public interface StoreProvider<E> {
 	 * }
 	 * </pre>
 	 * 
+	 * @return A new {@link Stream} over the elements in the store
+	 */
+	public Stream<E> safeStream();
+
+	/**
 	 * The streams produced by this method are eagerly loaded. For performance
 	 * improvements when filtering, use #stream(String) which delegates
 	 * responsibility to the database itself.
 	 * 
 	 * @return A new {@link Stream} over the elements in the store
 	 */
-	public Stream<E> stream();
+	default public Stream<E> stream() {
+		try (var stream = safeStream()) {
+			return stream.collect(Collectors.toList()).stream();
+		}
+	}
 
 	// TODO JPQL stream for better filtering and ordering performance
 	// public Stream<E> stream(String query);

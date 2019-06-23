@@ -78,7 +78,7 @@ public class MemoryListStoreProvider<E> extends EphemeralStoreProvider<E> implem
 	}
 
 	@Override
-	public Stream<E> stream() {
+	public Stream<E> safeStream() {
 		beginStream();
 		return list.stream().onClose(() -> endStream());
 	}

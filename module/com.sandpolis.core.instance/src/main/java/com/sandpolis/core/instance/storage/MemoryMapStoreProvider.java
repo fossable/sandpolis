@@ -69,7 +69,7 @@ public class MemoryMapStoreProvider<E> extends EphemeralStoreProvider<E> impleme
 	}
 
 	@Override
-	public Stream<E> stream() {
+	public Stream<E> safeStream() {
 		beginStream();
 		return map.values().stream().onClose(() -> endStream());
 	}
