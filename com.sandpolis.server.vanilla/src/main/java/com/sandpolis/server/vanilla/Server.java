@@ -122,7 +122,7 @@ public final class Server {
 	 * Load the Server instance's configuration.
 	 */
 	@InitializationTask(name = "Load server configuration", fatal = true)
-	private static final Task loadConfiguration = new Task((task) -> {
+	public static final Task loadConfiguration = new Task((task) -> {
 		Config.register(server.db.provider, "hibernate");
 		Config.register(server.db.url);
 		Config.register(server.db.username);
@@ -140,7 +140,7 @@ public final class Server {
 	 * Check the runtime environment for fatal errors.
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
-	private static final Task loadEnvironment = new Task((task) -> {
+	public static final Task loadEnvironment = new Task((task) -> {
 
 		if (!Environment.load(DB.setDefault(Config.get(server.path.db)), GEN.setDefault(Config.get(server.path.gen)),
 				LOG.setDefault(Config.get(path.log)), TMP.setDefault(Config.get(path.tmp)),
@@ -163,7 +163,7 @@ public final class Server {
 	 * Load static stores.
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
-	private static final Task loadServerStores = new Task((task) -> {
+	public static final Task loadServerStores = new Task((task) -> {
 
 		// Load ThreadStore
 		ThreadStore.register(new NioEventLoopGroup(2), net.exelet);
@@ -213,7 +213,7 @@ public final class Server {
 	 * Load socket listeners.
 	 */
 	@InitializationTask(name = "Load socket listeners")
-	private static final Task loadListeners = new Task((task) -> {
+	public static final Task loadListeners = new Task((task) -> {
 		// TODO debug listener
 		ListenerStore.start();
 
@@ -224,7 +224,7 @@ public final class Server {
 	 * Load plugins.
 	 */
 	@InitializationTask(name = "Load server plugins", condition = plugin.enabled)
-	private static final Task loadPlugins = new Task((task) -> {
+	public static final Task loadPlugins = new Task((task) -> {
 		PluginStore.scanPluginDirectory();
 		PluginStore.loadPlugins();
 
@@ -235,7 +235,7 @@ public final class Server {
 	 * Install a debug client on the local machine.
 	 */
 	@InitializationTask(name = "Install debug client", debug = true, condition = server.debug_client)
-	private static final Task installDebugClient = new Task((task) -> {
+	public static final Task installDebugClient = new Task((task) -> {
 
 		// Create user and listener
 		UserStore.add(
@@ -262,7 +262,7 @@ public final class Server {
 	 * Perform a self-test.
 	 */
 	@InitializationTask(name = "Power-on self test", debug = true)
-	private static final Task post = new Task((task) -> {
+	public static final Task post = new Task((task) -> {
 		return task.complete(Post.smokeTest());
 	});
 

@@ -26,6 +26,12 @@ include 'com.sandpolis.viewer.cli'
 include 'com.sandpolis.viewer.jfx'
 include 'com.sandpolis.viewer.jfx:constants'
 
+// Optional Instances
+if (INSTANCE_DEMO.toBoolean())
+	include 'com.sandpolis.server.demo'
+if (INSTANCE_CLOUD.toBoolean())
+	include 'com.sandpolis.server.cloud'
+
 // Dependency Projects
 include 'module:com.sandpolis.core.instance'
 include 'module:com.sandpolis.core.instance:constants'
