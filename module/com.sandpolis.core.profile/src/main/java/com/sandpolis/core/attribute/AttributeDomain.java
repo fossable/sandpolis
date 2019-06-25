@@ -48,4 +48,7 @@ public class AttributeDomain extends AttributeGroup {
 	public String getDomain() {
 		return domain;
 	}
+
+	AttributeDomain() {
+	}
 }
