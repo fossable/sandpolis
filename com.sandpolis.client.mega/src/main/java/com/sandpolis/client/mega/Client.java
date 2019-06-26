@@ -20,6 +20,7 @@ package com.sandpolis.client.mega;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
+import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_ESTABLISHED;
 import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_LOST;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.cmd.PluginCmd;
 import com.sandpolis.core.instance.BasicTasks;
+import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
@@ -91,23 +93,23 @@ public final class Client {
 		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
 				Core.SO_BUILD.getNumber());
 
-		MainDispatch.register(BasicTasks.loadConfiguration);
-		MainDispatch.register(IPCTask.load);
-		MainDispatch.register(IPCTask.checkLock);
-		MainDispatch.register(IPCTask.setLock);
-		MainDispatch.register(Client.install);
-		MainDispatch.register(Client.loadEnvironment);
-		MainDispatch.register(BasicTasks.loadStores);
-		MainDispatch.register(Client.loadStores);
-		MainDispatch.register(Client.loadPlugins);
-		MainDispatch.register(Client.beginConnectionRoutine);
+		register(BasicTasks.loadConfiguration);
+		register(IPCTask.load);
+		register(IPCTask.checkLock);
+		register(IPCTask.setLock);
+		register(Client.install);
+		register(Client.loadEnvironment);
+		register(BasicTasks.loadStores);
+		register(Client.loadStores);
+		register(Client.loadPlugins);
+		register(Client.beginConnectionRoutine);
 	}
 
 	/**
 	 * Install the client if necessary.
 	 */
 	@InitializationTask(name = "Install client", fatal = true)
-	private static final Task install = new Task((task) -> {
+	public static final Task install = new Task((task) -> {
 
 		if (Environment.JAR == null)
 			return task.skipped();
@@ -135,7 +137,7 @@ public final class Client {
 	 * Load the runtime environment.
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
-	private static final Task loadEnvironment = new Task((task) -> {
+	public static final Task loadEnvironment = new Task((task) -> {
 
 		if (!Environment.load(TMP, LOG, LIB))
 			Environment.setup();
@@ -147,7 +149,7 @@ public final class Client {
 	 * Load static stores.
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
-	private static final Task loadStores = new Task((task) -> {
+	public static final Task loadStores = new Task((task) -> {
 
 		// Load ThreadStore
 		ThreadStore.register(new NioEventLoopGroup(2).next(), net.exelet);
@@ -167,7 +169,7 @@ public final class Client {
 	 * Load plugins.
 	 */
 	@InitializationTask(name = "Load client plugins", condition = plugin.enabled)
-	private static final Task loadPlugins = new Task((task) -> {
+	public static final Task loadPlugins = new Task((task) -> {
 		PluginStore.scanPluginDirectory();
 		PluginStore.loadPlugins();
 
@@ -178,7 +180,7 @@ public final class Client {
 	 * Begin the connection routine.
 	 */
 	@InitializationTask(name = "Begin the connection routine", fatal = true)
-	private static final Task beginConnectionRoutine = new Task((task) -> {
+	public static final Task beginConnectionRoutine = new Task((task) -> {
 
 		Signaler.register(SRV_ESTABLISHED, () -> {
 			ResponseFuture<Outcome> future;
@@ -199,10 +201,12 @@ public final class Client {
 				break;
 			}
 
-			future.addHandler((Outcome rs) -> {
-				// Synchronize plugins
-				PluginCmd.async().sync();
-			});
+			if (Config.getBoolean(plugin.enabled)) {
+				future.addHandler((Outcome rs) -> {
+					// Synchronize plugins
+					PluginCmd.async().sync();
+				});
+			}
 		});
 
 		Signaler.register(SRV_LOST, () -> {

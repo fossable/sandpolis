@@ -31,13 +31,18 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteSource;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
+import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginInstall;
+import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginList;
 import com.sandpolis.core.proto.net.MCPlugin.RS_ArtifactDownload;
 import com.sandpolis.core.proto.net.MCPlugin.RS_PluginList;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ArtifactUtil;
@@ -62,7 +67,7 @@ public class PluginExe extends Exelet {
 	}
 
 	@Auth
-	public void rq_artifact_download(Message m) {
+	public void rq_artifact_download(MSG.Message m) {
 		var rq = Objects.requireNonNull(m.getRqArtifactDownload());
 		var rs = RS_ArtifactDownload.newBuilder();
 
@@ -123,13 +128,18 @@ public class PluginExe extends Exelet {
 	}
 
 	@Auth
-	public void rq_plugin_list(Message m) {
-		reply(m, RS_PluginList.newBuilder().addAllPlugin(() -> PluginStore.getPluginDescriptors().iterator()));
+	public Message.Builder rq_plugin_list(RQ_PluginList rq) {
+		if (!Config.getBoolean(plugin.enabled))
+			return failure(begin());
+
+		return RS_PluginList.newBuilder().addAllPlugin(() -> PluginStore.getPluginDescriptors().iterator());
 	}
 
 	@Auth
-	public void rq_plugin_install(Message m) throws Exception {
-		var rq = Objects.requireNonNull(m.getRqPluginInstall());
+	public Message.Builder rq_plugin_install(RQ_PluginInstall rq) throws Exception {
+		var outcome = begin();
+		if (!Config.getBoolean(plugin.enabled))
+			return failure(outcome);
 
 		Path binary = Files.createTempFile("", ".jar");
 		switch (rq.getSourceCase()) {
@@ -145,8 +155,7 @@ public class PluginExe extends Exelet {
 			binary = binary.resolveSibling("TODO");// TODO
 			break;
 		default:
-			// TODO
-			return;
+			return failure(outcome);
 		}
 
 		var manifest = JarUtil.getManifest(binary);
@@ -159,11 +168,11 @@ public class PluginExe extends Exelet {
 
 		// Verify certificate
 		if (!TrustStore.verifyPluginCertificate(cert))
-			// TODO reply
-			return;
+			return failure(outcome);
 
 		// Move into library directory
 		Files.move(binary, Environment.get(LIB).resolve(id + ".jar"));
+		return success(outcome);
 	}
 
 }
