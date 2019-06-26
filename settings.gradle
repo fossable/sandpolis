@@ -27,8 +27,10 @@ include 'com.sandpolis.viewer.jfx'
 include 'com.sandpolis.viewer.jfx:constants'
 
 // Optional Instances
-if (INSTANCE_DEMO.toBoolean())
+if (INSTANCE_DEMO_SERVER.toBoolean())
 	include 'com.sandpolis.server.demo'
+if (INSTANCE_DEMO_CLIENT.toBoolean())
+	include 'com.sandpolis.client.mega.demo'
 if (INSTANCE_CLOUD.toBoolean())
 	include 'com.sandpolis.server.cloud'
 
