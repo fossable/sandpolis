@@ -32,21 +32,31 @@ enum Instance {
 }
 
 /**
- * An enumeration of all official instance subtypes (flavors).
+ * An enumeration of all official instance subtypes (codenames).
  */
 enum InstanceFlavor {
 	NONE = 0;
 
-	// Server types
+	// The original Java-based server instance
 	VANILLA = 1;
 
-	// Client types
+	// A heavy-weight cross-platform client instance
 	MEGA = 2;
+
+	// A light-weight native client instance
 	MICRO = 3;
 
-	// Viewer types
-	CLI = 4;
-	JFX = 5;
+	// A terminal-only viewer instance
+	ASCETIC = 4;
+
+	// A JavaFX viewer instance
+	LIFEGEM = 5;
+
+	// An Android viewer instance
+	SOAPSTONE = 6;
+
+	// An iOS viewer instance
+	LOCKSTONE = 7;
 }
 
 /**
