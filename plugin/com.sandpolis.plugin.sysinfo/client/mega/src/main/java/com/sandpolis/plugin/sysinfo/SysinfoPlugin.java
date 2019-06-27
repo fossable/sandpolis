@@ -23,8 +23,8 @@ import org.pf4j.Plugin;
 import org.pf4j.PluginWrapper;
 
 import com.sandpolis.core.attribute.AttributeKey;
+import com.sandpolis.core.instance.plugin.ExeletProvider;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.plugin.ExeletProvider;
 
 import oshi.hardware.CentralProcessor;
 import oshi.software.os.NetworkParams;

@@ -15,11 +15,9 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.net.plugin;
+package com.sandpolis.core.instance.plugin;
 
 import org.pf4j.ExtensionPoint;
-
-import com.sandpolis.core.net.command.Exelet;
 
 /**
  * @author cilki
@@ -28,9 +26,9 @@ import com.sandpolis.core.net.command.Exelet;
 public interface ExeletProvider extends ExtensionPoint {
 
 	/**
-	 * Get the {@link Exelet} classes that the plugin contains.
+	 * Get the Exelet classes that the plugin contains.
 	 * 
-	 * @return A list of {@link Exelet} classes
+	 * @return A list of Exelet classes
 	 */
-	public Class<? extends Exelet>[] getExelets();
+	public Class<?>[] getExelets();
 }

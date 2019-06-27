@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
+ *                    Copyright 2019 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,52 +15,41 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-syntax = "proto3";
+package com.sandpolis.plugin.desktop.exe;
 
-package net;
-option java_package = "com.sandpolis.plugin.desktop.net";
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 
-message RQ_Screenshot {
-}
+import javax.imageio.ImageIO;
 
-message RS_Screenshot {
-	bytes data = 1;
-}
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
+import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.plugin.desktop.net.Desktop.RQ_Screenshot;
+import com.sandpolis.plugin.desktop.net.Desktop.RS_Screenshot;
 
-message DesktopEvent {
-	int32 keyPressed = 1;
-	int32 keyReleased = 2;
-	int32 mousePressed = 3;
-	int32 mouseReleased = 4;
-	
-	int32 mouseMovedX = 5;
-	int32 mouseMovedY = 6;
-	
-	double scale_update = 7;
-}
+public class DesktopExe extends Exelet {
 
-/**
- * An arbitrary rectangle update.
- */
-message DirtyRect {
+	public DesktopExe(Sock connector) {
+		super(connector);
+	}
 
-	// The coordinates of the rectangle's top left pixel
-	int32 x = 1;
-	int32 y = 2;
+	@Auth
+	public Message.Builder rq_screenshot(RQ_Screenshot rq) {
+		var outcome = begin();
+		try (var in = new PipedInputStream(); var out = new PipedOutputStream(in)) {
+			BufferedImage screenshot = new Robot()
+					.createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
+			ImageIO.write(screenshot, "jpg", out);
 
-	// The width of the rectangle in pixels
-	int32 w = 3;
-
-	// The pixel data
-	bytes data = 4;
-}
-
-/**
- * An arbitrary block update.
- */
-message DirtyBlock {
-	int32 block_id = 1;
-
-	// The pixel data
-	bytes data = 2;
+			return RS_Screenshot.newBuilder().setData(ByteString.readFrom(in));
+		} catch (Exception e) {
+			return failure(outcome);
+		}
+	}
 }

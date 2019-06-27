@@ -6,6 +6,7 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
+	id 'com.google.protobuf' version '0.8.8'
 }
 
 eclipse {
@@ -15,10 +16,20 @@ eclipse {
 	}
 }
 
+sourceSets {
+	main {
+		java {
+			srcDirs 'src/main/proto'
+			srcDirs 'gen/main/java'
+		}
+	}
+}
+
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 
 	implementation project(':module:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.proto')
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.25'
@@ -34,4 +45,12 @@ sandpolis_plugin {
 	coordinate = 'com.sandpolis:sandpolis-plugin-desktop'
 	name = 'Desktop Plugin'
 	description = ''
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.8.0'
+	}
+
+	generatedFilesBaseDir = "$projectDir/gen/"
 }
