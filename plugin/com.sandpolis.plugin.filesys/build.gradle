@@ -6,6 +6,7 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
+	id 'com.google.protobuf' version '0.8.8'
 }
 
 eclipse {
@@ -15,11 +16,21 @@ eclipse {
 	}
 }
 
+sourceSets {
+	main {
+		java {
+			srcDirs 'src/main/proto'
+			srcDirs 'gen/main/java'
+		}
+	}
+}
+
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
 	testImplementation 'org.zeroturnaround:zt-zip:1.13'
 
 	implementation project(':module:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.net')
 	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':module:com.sandpolis.core.util')
 
@@ -40,4 +51,12 @@ sandpolis_plugin {
 	coordinate = 'com.sandpolis:sandpolis-plugin-filesys'
 	name = 'Filesystem Plugin'
 	description = 'Provides access to the filesystem'
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.8.0'
+	}
+
+	generatedFilesBaseDir = "$projectDir/gen/"
 }

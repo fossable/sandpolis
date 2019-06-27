@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
+ *                    Copyright 2019 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,30 +15,15 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.gradle.codegen
+package com.sandpolis.plugin.filesys.exe;
 
-import com.sandpolis.gradle.codegen.AttributeGenerator
+import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.command.Exelet;
 
-import org.gradle.api.Plugin
-import org.gradle.api.Project
+public class FilesysExe extends Exelet {
 
-/**
- * This plugin adds code generation tasks to the build.
- *
- * @author cilki
- */
-public class CodeGen implements Plugin<Project> {
-
-	void apply(Project project) {
-
-		// Look for attribute files
-		if (project.file("attribute.yml").exists()) {
-			project.tasks.getByName('compileJava').dependsOn(project.task("generateAttributes", type: AttributeGenerator))
-		}
-
-		// Setup protobuf compilation
-		if (project.file("src/main/proto").exists()) {
-			// TODO
-		}
+	public FilesysExe(Sock connector) {
+		super(connector);
 	}
+
 }

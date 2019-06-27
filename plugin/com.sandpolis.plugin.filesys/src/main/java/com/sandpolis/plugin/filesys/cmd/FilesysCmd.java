@@ -1,6 +1,6 @@
 /******************************************************************************
  *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
+ *                    Copyright 2019 Subterranean Security                    *
  *                                                                            *
  *  Licensed under the Apache License, Version 2.0 (the "License");           *
  *  you may not use this file except in compliance with the License.          *
@@ -15,30 +15,28 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.gradle.codegen
+package com.sandpolis.plugin.filesys.cmd;
 
-import com.sandpolis.gradle.codegen.AttributeGenerator
-
-import org.gradle.api.Plugin
-import org.gradle.api.Project
+import com.sandpolis.core.net.command.Cmdlet;
 
 /**
- * This plugin adds code generation tasks to the build.
- *
+ * Contains filesystem commands.
+ * 
  * @author cilki
+ * @since 5.0.2
  */
-public class CodeGen implements Plugin<Project> {
+public final class FilesysCmd extends Cmdlet<FilesysCmd> {
 
-	void apply(Project project) {
+	/**
+	 * Prepare for an asynchronous command.
+	 * 
+	 * @return A configurable object from which all asynchronous (nonstatic)
+	 *         commands in {@link FilesysCmd} can be invoked
+	 */
+	public static FilesysCmd async() {
+		return new FilesysCmd();
+	}
 
-		// Look for attribute files
-		if (project.file("attribute.yml").exists()) {
-			project.tasks.getByName('compileJava').dependsOn(project.task("generateAttributes", type: AttributeGenerator))
-		}
-
-		// Setup protobuf compilation
-		if (project.file("src/main/proto").exists()) {
-			// TODO
-		}
+	private FilesysCmd() {
 	}
 }

@@ -1,27 +1,25 @@
 /*******************************************************************************
 * SANDPOLIS                                                                    *
-* com.sandpolis.plugin.desktop                                                 *
+* com.sandpolis.plugin.filesys                                                 *
 *******************************************************************************/
+
+buildscript {
+	dependencies {
+		classpath ':com.sandpolis.gradle.soi:'
+	}
+}
 
 plugins {
 	id 'eclipse'
 	id 'java-library'
-	id 'com.google.protobuf' version '0.8.8'
 }
+
+apply plugin: 'com.sandpolis.gradle.soi'
 
 eclipse {
 	project {
-		name = 'com.sandpolis.plugin.desktop'
-		comment = 'The desktop plugin'
-	}
-}
-
-sourceSets {
-	main {
-		java {
-			srcDirs 'src/main/proto'
-			srcDirs 'gen/main/java'
-		}
+		name = 'com.sandpolis.plugin.filesys:client:mega'
+		comment = "The filesys plugin's Mega client component"
 	}
 }
 
@@ -31,27 +29,12 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':module:com.sandpolis.core.net')
 	implementation project(':module:com.sandpolis.core.proto')
+	implementation project(':plugin:com.sandpolis.plugin.filesys')
 
 	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.25'
-	
+	implementation 'org.slf4j:slf4j-api:1.7.26'
+
 	// https://github.com/pf4j/pf4j
 	implementation 'org.pf4j:pf4j:3.0.1'
-}
-
-apply plugin: 'com.sandpolis.gradle.plugin'
-
-sandpolis_plugin {
-	id = 'com.sandpolis.plugin.desktop'
-	coordinate = 'com.sandpolis:sandpolis-plugin-desktop'
-	name = 'Desktop Plugin'
-	description = ''
-}
-
-protobuf {
-	protoc {
-		artifact = 'com.google.protobuf:protoc:3.8.0'
-	}
-
-	generatedFilesBaseDir = "$projectDir/gen/"
+	annotationProcessor 'org.pf4j:pf4j:2.6.0'
 }
