@@ -129,8 +129,13 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 						handled = true;
 						break;
 					} catch (ClassCastException e) {
-						// Try the next handler
-						continue;
+						if (CommandSession.class.getName().equals(e.getStackTrace()[0].getClassName()))
+							// The exception came from the act of passing the message to the handler and not
+							// from the handler itself. Continue to the next handler.
+							continue;
+
+						abort(e);
+						return;
 					} catch (Exception e) {
 						abort(e);
 						return;
