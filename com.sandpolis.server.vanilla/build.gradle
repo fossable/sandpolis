@@ -21,7 +21,7 @@ eclipse {
 
 dependencies {
 	testImplementation project(path: ':module:com.sandpolis.core.net', configuration: 'tests')
-	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.0'
 
 	compileOnly project(':module:com.sandpolis.core.instance:constants')
 	compileOnly project('constants')
