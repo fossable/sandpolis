@@ -28,6 +28,7 @@ import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.IDUtil;
 
 import io.netty.channel.Channel;
@@ -57,7 +58,13 @@ public class CvidResponseHandler extends SimpleChannelInboundHandler<Message> {
 		ch.pipeline().remove(this);
 
 		RQ_Cvid rq = msg.getRqCvid();
-		if (rq != null && !rq.getUuid().isEmpty() && rq.getInstance() != Instance.SERVER) {
+		if (rq == null) {
+			ch.attr(ChannelConstant.FUTURE_CVID).get().setFailure(new MessageFlowException(RQ_Cvid.class, msg));
+		} else if (rq.getUuid().isEmpty() || rq.getInstance() == Instance.UNRECOGNIZED
+				|| rq.getInstance() == Instance.SERVER || rq.getInstanceFlavor() == InstanceFlavor.UNRECOGNIZED) {
+			log.debug("Received invalid CVID request on channel: {}", ch.id());
+			ch.attr(ChannelConstant.FUTURE_CVID).get().setFailure(new Exception("Invalid CVID request"));
+		} else {
 			RS_Cvid.Builder rs = RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.UUID)
 					.setCvid(IDUtil.CVID.cvid(rq.getInstance(), rq.getInstanceFlavor()));
 
@@ -70,8 +77,6 @@ public class CvidResponseHandler extends SimpleChannelInboundHandler<Message> {
 
 			ch.attr(ChannelConstant.SOCK).set(new Sock(ch));
 			ch.attr(ChannelConstant.SOCK).get().preauthenticate();
-		} else {
-			ch.attr(ChannelConstant.FUTURE_CVID).get().setFailure(new MessageFlowException(RQ_Cvid.class, msg));
 		}
 	}
 
