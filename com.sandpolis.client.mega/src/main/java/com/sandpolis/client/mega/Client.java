@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.cmd.PluginCmd;
+import com.sandpolis.client.mega.exe.ClientExe;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.plugin;
@@ -210,7 +211,7 @@ public final class Client {
 		});
 
 		Signaler.register(SRV_LOST, () -> {
-			ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] {});
+			ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class });
 		});
 		Signaler.fire(SRV_LOST);
 
