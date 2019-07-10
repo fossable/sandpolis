@@ -15,23 +15,17 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.stream;
+package com.sandpolis.core.viewer.stream;
 
-import com.sandpolis.core.util.IDUtil;
+import com.sandpolis.core.proto.net.MCStream.ProfileStreamData;
+import com.sandpolis.core.stream.store.StreamSink;
 
-/**
- * @author cilki
- * @since 5.0.2
- */
-public class Stream {
+public class ProfileStreamSink extends StreamSink<ProfileStreamData> {
 
-	private int streamID;
+	@Override
+	public void onNext(ProfileStreamData item) {
+		super.onNext(item);
 
-	public Stream() {
-		streamID = IDUtil.stream();
-	}
-
-	public int getStreamID() {
-		return streamID;
+		// TODO update profile store
 	}
 }

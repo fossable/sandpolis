@@ -24,8 +24,8 @@ import java.util.Base64;
 import javax.net.ssl.SSLException;
 
 import com.google.common.primitives.Bytes;
-import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.CvidResponseHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
@@ -37,6 +37,7 @@ import com.sandpolis.server.vanilla.exe.ListenerExe;
 import com.sandpolis.server.vanilla.exe.LoginExe;
 import com.sandpolis.server.vanilla.exe.PluginExe;
 import com.sandpolis.server.vanilla.exe.ServerExe;
+import com.sandpolis.server.vanilla.exe.StreamExe;
 import com.sandpolis.server.vanilla.exe.UserExe;
 import com.sandpolis.server.vanilla.net.handler.ProxyHandler;
 
@@ -68,7 +69,7 @@ public class ServerInitializer extends PipelineInitializer {
 	 */
 	@SuppressWarnings("unchecked")
 	private static final Class<? extends Exelet>[] exelets = new Class[] { AuthExe.class, GenExe.class, GroupExe.class,
-			ListenerExe.class, LoginExe.class, ServerExe.class, UserExe.class, PluginExe.class };
+			ListenerExe.class, LoginExe.class, ServerExe.class, UserExe.class, PluginExe.class, StreamExe.class };
 
 	/**
 	 * The certificate in PEM format.

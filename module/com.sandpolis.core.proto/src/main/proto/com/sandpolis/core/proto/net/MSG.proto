@@ -21,7 +21,7 @@ package net;
 option java_package = "com.sandpolis.core.proto.net";
 
 import "com/sandpolis/core/proto/net/MC_Auth.proto";
-//import "com/sandpolis/core/proto/net/MC_Client.proto";
+import "com/sandpolis/core/proto/net/MC_Client.proto";
 import "com/sandpolis/core/proto/net/MC_Cvid.proto";
 //import "com/sandpolis/core/proto/net/MC_Debug.proto";
 import "com/sandpolis/core/proto/net/MC_Delta.proto";
@@ -34,9 +34,11 @@ import "com/sandpolis/core/proto/net/MC_Ping.proto";
 import "com/sandpolis/core/proto/net/MC_Plugin.proto";
 import "com/sandpolis/core/proto/net/MC_Server.proto";
 import "com/sandpolis/core/proto/net/MC_Shell.proto";
-//import "com/sandpolis/core/proto/net/MC_Stream.proto";
+import "com/sandpolis/core/proto/net/MC_Stream.proto";
 import "com/sandpolis/core/proto/net/MC_User.proto";
 import "com/sandpolis/core/proto/util/Result.proto";
+
+import "google/protobuf/any.proto";
 
 /**
  * A message type for typical communication among instances.
@@ -61,6 +63,12 @@ message Message {
     int32 id = 3;
 
     oneof msg_oneof {
+
+        // A plugin message
+        google.protobuf.Any            plugin                         = 6;
+        
+        // Stream data
+        EV_StreamData                  ev_stream_data                 = 7;
         
         // A generic response indicating the outcome of some operation
         util.Outcome                   rs_outcome                     = 10;
@@ -133,11 +141,19 @@ message Message {
         RS_ShellHandle                 rs_shell_handle                = 1802;
         
         // MC_Stream
+        RQ_StreamStart                 rq_stream_start                = 1900;
+        RS_StreamStart                 rs_stream_start                = 1901;
+        RQ_StreamStop                  rq_stream_stop                 = 1902;
         
         // MC_User
         RQ_AddUser                     rq_add_user                    = 1700;
         RQ_RemoveUser                  rq_remove_user                 = 1701;
         RQ_UserDelta                   rq_user_delta                  = 1702;
+        
+        // MC_Client
+        RQ_ClientMetadata              rq_client_metadata             = 2000;
+        RS_ClientMetadata              rs_client_metadata             = 2001;
+        RQ_PowerChange                 rq_power_change                = 2002;
 
     }
 }

@@ -15,23 +15,39 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.stream;
+package com.sandpolis.core.stream.store;
 
-import com.sandpolis.core.util.IDUtil;
+import static com.google.common.base.Preconditions.checkArgument;
+
+import java.util.concurrent.SubmissionPublisher;
+
+import com.google.protobuf.MessageOrBuilder;
 
 /**
  * @author cilki
  * @since 5.0.2
  */
-public class Stream {
+public abstract class StreamSource<E extends MessageOrBuilder> extends SubmissionPublisher<E> {
 
-	private int streamID;
+	/**
+	 * Immediately halt the flow of events from the source.
+	 */
+	public abstract void stop();
 
-	public Stream() {
-		streamID = IDUtil.stream();
+	/**
+	 * Begin the flow of events from the source.
+	 */
+	public abstract void start();
+
+	public void addOutbound(OutboundStreamAdapter<E> out) {
+		checkArgument(!isSubscribed(out));
+		subscribe(out);
+		StreamStore.outbound.add(out);
 	}
 
-	public int getStreamID() {
-		return streamID;
+	public void addSink(StreamSink<E> s) {
+		checkArgument(!isSubscribed(s));
+		subscribe(s);
+		StreamStore.sink.add(s);
 	}
 }

@@ -19,8 +19,10 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.0'
 
 	implementation project(':module:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.net')
 	implementation project(':module:com.sandpolis.core.profile')
 	implementation project(':module:com.sandpolis.core.proto')
+	implementation project(':module:com.sandpolis.core.util')
 	
 	implementation 'javax.persistence:javax.persistence-api:2.2'
 

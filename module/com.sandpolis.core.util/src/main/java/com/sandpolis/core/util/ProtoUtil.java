@@ -23,10 +23,13 @@ import java.io.StringWriter;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
+import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.OneofDescriptor;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -44,6 +47,8 @@ public final class ProtoUtil {
 	 * The {@code oneof} descriptor that will contain the message response.
 	 */
 	public static final OneofDescriptor MSG_ONEOF = MSG.Message.getDescriptor().getOneofs().get(0);
+
+	public static final OneofDescriptor STREAM_ONEOF = EV_StreamData.getDescriptor().getOneofs().get(0);
 
 	/**
 	 * Begin an action that should be completed with {@link #success} or
@@ -206,12 +211,15 @@ public final class ProtoUtil {
 		if (payload instanceof Outcome)
 			return msg.setRsOutcome((Outcome) payload);
 
-		String field = convertMessageClassToFieldName(payload.getClass());
+		FieldDescriptor field = Message.getDescriptor()
+				.findFieldByName(convertMessageClassToFieldName(payload.getClass()));
 
-		try {
-			return msg.setField(Message.getDescriptor().findFieldByName(field), payload);
-		} catch (Exception e) {
-			throw new IllegalArgumentException("Failed to find type: " + field, e);
+		if (field != null) {
+			return msg.setField(field, payload);
+		} else {
+			// Assume this is a plugin message
+			// TODO use package for url prefix rather than the full classname
+			return msg.setPlugin(Any.pack((com.google.protobuf.Message) payload, payload.getClass().getName()));
 		}
 	}
 
@@ -219,14 +227,75 @@ public final class ProtoUtil {
 	 * Get the payload from the given message.
 	 * 
 	 * @param msg The message
-	 * @return The message's payload
+	 * @return The message's payload or {@code null} if none
 	 */
 	public static Object getPayload(Message msg) {
 		FieldDescriptor oneof = msg.getOneofFieldDescriptor(MSG_ONEOF);
 		if (oneof == null)
 			return null;
 
+		var value = msg.getField(oneof);
+
+		// Plugin messages need to be unwrapped
+		if (value instanceof Any) {
+			var any = (Any) value;
+			try {
+				return any.unpack(convertPluginUrl(any.getTypeUrl()));
+			} catch (InvalidProtocolBufferException | ClassNotFoundException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return value;
+	}
+
+	/**
+	 * Set the payload of the given stream message.
+	 * 
+	 * @param msg     The message to receive the payload
+	 * @param payload The payload to insert
+	 * @return {@code msg}
+	 */
+	public static EV_StreamData.Builder setPayload(EV_StreamData.Builder msg, MessageOrBuilder payload) {
+
+		// Build the payload if not already built
+		if (payload instanceof Builder)
+			payload = ((Builder) payload).build();
+
+		String name = payload.getClass().getSimpleName();
+		FieldDescriptor field = EV_StreamData.getDescriptor()
+				.findFieldByName(name.substring(0, name.indexOf("StreamData")).toLowerCase());
+
+		if (field != null) {
+			return msg.setField(field, payload);
+		} else {
+			// Assume this is a plugin message
+			return msg.setPlugin(((com.google.protobuf.Message) payload).toByteString());
+		}
+	}
+
+	/**
+	 * Get the payload from the given stream message.
+	 * 
+	 * @param msg The stream message
+	 * @return The message's payload or {@code null} if none
+	 */
+	public static Object getPayload(EV_StreamData msg) {
+		FieldDescriptor oneof = msg.getOneofFieldDescriptor(STREAM_ONEOF);
+		if (oneof == null)
+			return null;
+
 		return msg.getField(oneof);
+	}
+
+	/**
+	 * Load a plugin message class from its Any URL.
+	 * 
+	 * @param url The message URL
+	 * @return The loaded message class
+	 * @throws ClassNotFoundException
+	 */
+	private static Class<? extends Message> convertPluginUrl(String url) throws ClassNotFoundException {
+		return (Class<? extends Message>) Class.forName(url.split("/")[0]);
 	}
 
 	/**

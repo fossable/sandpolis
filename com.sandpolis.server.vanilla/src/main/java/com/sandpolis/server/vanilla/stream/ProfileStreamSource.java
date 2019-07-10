@@ -15,23 +15,47 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.stream;
+package com.sandpolis.server.vanilla.stream;
 
-import com.sandpolis.core.util.IDUtil;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.Events.SOCK_LOST;
+import static com.sandpolis.core.profile.ProfileStore.Events.PROFILE_ONLINE;
+
+import java.util.function.Consumer;
+
+import com.sandpolis.core.instance.Signaler;
+import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.proto.net.MCStream.ProfileStreamData;
+import com.sandpolis.core.stream.store.StreamSource;
 
 /**
+ * Represents the origin of a profile stream. This source can be safely stopped
+ * and restarted.
+ * 
  * @author cilki
  * @since 5.0.2
  */
-public class Stream {
+public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
 
-	private int streamID;
+	private final Consumer<Profile> online = (Profile profile) -> {
+		submit(ProfileStreamData.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid()).setOnline(true)
+				.build());
+	};
 
-	public Stream() {
-		streamID = IDUtil.stream();
+	private final Consumer<Sock> offline = (Sock sock) -> {
+		submit(ProfileStreamData.newBuilder().setCvid(sock.getRemoteCvid()).setUuid(sock.getRemoteUuid())
+				.setOnline(false).build());
+	};
+
+	@Override
+	public void stop() {
+		Signaler.remove(PROFILE_ONLINE, online);
+		Signaler.remove(SOCK_LOST, offline);
 	}
 
-	public int getStreamID() {
-		return streamID;
+	@Override
+	public void start() {
+		Signaler.register(PROFILE_ONLINE, online);
+		Signaler.register(SOCK_LOST, offline);
 	}
 }

@@ -15,23 +15,54 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.stream;
+package com.sandpolis.core.stream.store;
 
-import com.sandpolis.core.util.IDUtil;
+import java.util.List;
+import java.util.concurrent.Flow.Subscriber;
+import java.util.concurrent.Flow.Subscription;
+import java.util.function.Consumer;
 
-/**
- * @author cilki
- * @since 5.0.2
- */
-public class Stream {
+import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
+import com.sandpolis.core.util.ProtoUtil;
 
+public abstract class StreamSink<E> implements Subscriber<E> {
+
+	private Subscription subscription;
+	private List<Consumer<E>> handlers;
 	private int streamID;
-
-	public Stream() {
-		streamID = IDUtil.stream();
-	}
 
 	public int getStreamID() {
 		return streamID;
+	}
+
+	public void addHandler(Consumer<E> handler) {
+		handlers.add(handler);
+	}
+
+	@Override
+	public void onSubscribe(Subscription subscription) {
+		this.subscription = subscription;
+		this.subscription.request(Long.MAX_VALUE);
+	}
+
+	@Override
+	public void onNext(E item) {
+		handlers.forEach(handler -> handler.accept(item));
+	}
+
+	@SuppressWarnings("unchecked")
+	public void onNext(EV_StreamData data) {
+		onNext((E) ProtoUtil.getPayload(data));
+	}
+
+	@Override
+	public void onError(Throwable throwable) {
+		StreamStore.sink.remove(this);
+		throwable.printStackTrace();
+	}
+
+	@Override
+	public void onComplete() {
+		StreamStore.sink.remove(this);
 	}
 }

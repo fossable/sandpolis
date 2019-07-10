@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.sandpolis.core.attribute.key.AK_VIEWER;
+import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.Store.ManualInitializer;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
@@ -38,11 +39,6 @@ import com.sandpolis.core.proto.util.Platform.Instance;
  */
 @ManualInitializer
 public final class ProfileStore extends Store {
-
-	/**
-	 * How long to keep profiles loaded in minutes.
-	 */
-	public static final int PROFILE_EXPIRATION = 15;
 
 	private static StoreProvider<Profile> provider;
 
@@ -73,6 +69,10 @@ public final class ProfileStore extends Store {
 		init(new MemoryListStoreProvider<Profile>(Profile.class, container));
 	}
 
+	public enum Events {
+		PROFILE_ONLINE, PROFILE_OFFLINE;
+	}
+
 	/**
 	 * Get the {@link StoreProvider}'s backing container if the store was configured
 	 * with {@link #load(List)}.
@@ -96,6 +96,7 @@ public final class ProfileStore extends Store {
 		if (profile == null) {
 			profile = new Profile(cvid, uuid);
 			provider.add(profile);
+			Signaler.fire(Events.PROFILE_ONLINE, profile);
 		}
 		return profile;
 	}

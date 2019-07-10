@@ -22,12 +22,39 @@ option java_package = "com.sandpolis.core.proto.net";
 
 import "com/sandpolis/core/proto/pojo/Stream.proto";
 
+message ProfileStreamParam {
+
+}
+
+message StreamParam {
+
+	// Temporary
+	enum Direction {
+		FORWARD = 0;
+		REVERSE = 1;
+	}
+
+	// The stream direction
+	Direction direction = 2;
+	
+	oneof type {
+		ProfileStreamParam profile = 3;
+	}
+}
+
 /**
  * Request: Begin a new Stream
- * Response: rs_outcome
  */
 message RQ_StreamStart {
-	//pojo.StreamParam param = 1;
+	StreamParam param = 1;
+}
+
+/**
+ * Request: rq_stream_start
+ * Response:
+ */
+message RS_StreamStart {
+	int32 streamID = 1;
 }
 
 /**
@@ -40,9 +67,24 @@ message RQ_StreamStop {
 	int32 streamID = 1;
 }
 
+message ProfileStreamData {
+	int32 cvid = 1;
+	string uuid = 2;
+	bool online = 3;
+}
+
 /**
  *
  */
 message EV_StreamData {
-	int32 streamID = 1;
+
+	// The stream ID
+	int32 id = 1;
+	
+	oneof data {
+		// Plugin stream data
+		bytes plugin = 2;
+		
+		ProfileStreamData profile = 3;
+	}
 }

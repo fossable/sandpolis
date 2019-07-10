@@ -15,23 +15,51 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.stream;
+package com.sandpolis.core.viewer.cmd;
 
-import com.sandpolis.core.util.IDUtil;
+import com.sandpolis.core.net.command.Cmdlet;
+import com.sandpolis.core.net.future.ResponseFuture;
+import com.sandpolis.core.proto.net.MCStream.ProfileStreamParam;
+import com.sandpolis.core.proto.net.MCStream.RQ_StreamStart;
+import com.sandpolis.core.proto.net.MCStream.RQ_StreamStop;
+import com.sandpolis.core.proto.net.MCStream.RS_StreamStart;
+import com.sandpolis.core.proto.net.MCStream.StreamParam;
+import com.sandpolis.core.proto.net.MCStream.StreamParam.Direction;
+import com.sandpolis.core.proto.util.Result.Outcome;
 
 /**
+ * Stream commands.
+ * 
  * @author cilki
  * @since 5.0.2
  */
-public class Stream {
+public class StreamCmd extends Cmdlet<StreamCmd> {
 
-	private int streamID;
-
-	public Stream() {
-		streamID = IDUtil.stream();
+	public ResponseFuture<RS_StreamStart> startProfileStream() {
+		return request(RQ_StreamStart.newBuilder().setParam(
+				StreamParam.newBuilder().setDirection(Direction.REVERSE).setProfile(ProfileStreamParam.newBuilder())));
 	}
 
-	public int getStreamID() {
-		return streamID;
+	/**
+	 * Stop the given stream.
+	 * 
+	 * @param streamID The ID of the stream to stop
+	 * @return A response future
+	 */
+	public ResponseFuture<Outcome> stop(int streamID) {
+		return request(RQ_StreamStop.newBuilder().setStreamID(streamID));
+	}
+
+	/**
+	 * Prepare for an asynchronous command.
+	 * 
+	 * @return A configurable object from which all asynchronous (nonstatic)
+	 *         commands in {@link StreamCmd} can be invoked
+	 */
+	public static StreamCmd async() {
+		return new StreamCmd();
+	}
+
+	private StreamCmd() {
 	}
 }

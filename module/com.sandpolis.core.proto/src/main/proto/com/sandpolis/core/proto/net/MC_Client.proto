@@ -15,23 +15,39 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.stream;
+syntax = "proto3";
 
-import com.sandpolis.core.util.IDUtil;
+package net;
+option java_package = "com.sandpolis.core.proto.net";
+
+import "com/sandpolis/core/proto/util/Platform.proto";
 
 /**
- * @author cilki
- * @since 5.0.2
+ * Request client metadata.
  */
-public class Stream {
+message RQ_ClientMetadata {
+}
 
-	private int streamID;
+message RS_ClientMetadata {
 
-	public Stream() {
-		streamID = IDUtil.stream();
+	// The client's network hostname
+	string hostname = 1;
+
+	// The client user 
+	string username = 2;
+	
+	// The OS family
+	util.OsType os_type = 3;
+	
+	// The system architecture
+	util.Architecture arch = 4;
+}
+
+message RQ_PowerChange {
+	enum PowerChange {
+		POWEROFF = 0;
+		RESTART = 1;
 	}
-
-	public int getStreamID() {
-		return streamID;
-	}
+	
+	PowerChange change = 1;
 }

@@ -15,23 +15,54 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.stream;
+package com.sandpolis.core.stream.store;
 
-import com.sandpolis.core.util.IDUtil;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * @author cilki
- * @since 5.0.2
- */
-public class Stream {
+import java.util.concurrent.Flow.Subscriber;
+import java.util.concurrent.Flow.Subscription;
 
+import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
+import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.util.ProtoUtil;
+
+public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscriber<E> {
+
+	private Subscription subscription;
 	private int streamID;
+	private Sock sock;
 
-	public Stream() {
-		streamID = IDUtil.stream();
+	public OutboundStreamAdapter(int streamID, Sock sock) {
+		this.streamID = streamID;
+		this.sock = checkNotNull(sock);
 	}
 
 	public int getStreamID() {
 		return streamID;
+	}
+
+	@Override
+	public void onSubscribe(Subscription subscription) {
+		this.subscription = subscription;
+		this.subscription.request(Long.MAX_VALUE);
+	}
+
+	@Override
+	public void onError(Throwable throwable) {
+		StreamStore.outbound.remove(this);
+		throwable.printStackTrace();
+	}
+
+	@Override
+	public void onComplete() {
+		StreamStore.outbound.remove(this);
+	}
+
+	@Override
+	public void onNext(E item) {
+		sock.send(Message.newBuilder()
+				.setEvStreamData(ProtoUtil.setPayload(EV_StreamData.newBuilder().setId(streamID), item)));
 	}
 }

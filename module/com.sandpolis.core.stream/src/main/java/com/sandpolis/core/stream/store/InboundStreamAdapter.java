@@ -15,23 +15,37 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.stream;
+package com.sandpolis.core.stream.store;
 
-import com.sandpolis.core.util.IDUtil;
+import static com.google.common.base.Preconditions.checkArgument;
 
-/**
- * @author cilki
- * @since 5.0.2
- */
-public class Stream {
+import java.util.concurrent.SubmissionPublisher;
 
+import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
+import com.sandpolis.core.util.ProtoUtil;
+
+public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> {
 	private int streamID;
-
-	public Stream() {
-		streamID = IDUtil.stream();
-	}
 
 	public int getStreamID() {
 		return streamID;
+	}
+
+	@SuppressWarnings("unchecked")
+	public void submit(EV_StreamData msg) {
+		submit((E) ProtoUtil.getPayload(msg));
+	}
+
+	public void addOutbound(OutboundStreamAdapter<E> out) {
+		checkArgument(!isSubscribed(out));
+		subscribe(out);
+		StreamStore.outbound.add(out);
+	}
+
+	public void addSink(StreamSink<E> s) {
+		checkArgument(!isSubscribed(s));
+		subscribe(s);
+		StreamStore.sink.add(s);
 	}
 }

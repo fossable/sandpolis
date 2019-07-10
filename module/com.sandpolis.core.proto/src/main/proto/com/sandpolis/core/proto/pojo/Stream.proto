@@ -27,14 +27,14 @@ message StreamConfig {
 
 	enum Direction {
 	
-		// Data moves from _ to _
+		// Data moves into the target
 		FORWARD = 0;
 		
-		// Data moves from _ to _
+		// Data moves from the target
 		REVERSE = 1;
 	}
 	
-	// The unique stream ID
+	// The stream ID
 	optional int32 id = 1;
 
 	// The stream direction

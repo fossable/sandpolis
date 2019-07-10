@@ -15,23 +15,65 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.core.stream;
+package com.sandpolis.core.stream.store;
 
-import com.sandpolis.core.util.IDUtil;
+import java.util.LinkedList;
+import java.util.List;
+
+import com.sandpolis.core.instance.Store.AutoInitializer;
+import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
 
 /**
+ * There are four "banks" that each serve a specific purpose.
+ * 
+ * <pre>
+ * IN     OUT    SRC    SINK
+ * [A]    [B]    [B]    [A]
+ * [ ]    [A]    [ ]    [ ]
+ * [ ]    [A]    [ ]    [ ]
+ * [ ]    [ ]    [ ]    [ ]
+ * [ ]    [ ]    [ ]    [ ]
+ * </pre>
+ * 
  * @author cilki
  * @since 5.0.2
  */
-public class Stream {
+@AutoInitializer
+public final class StreamStore {
 
-	private int streamID;
+	/**
+	 * The SOURCE bank.
+	 */
+	static List<StreamSource<?>> source = new LinkedList<>();
 
-	public Stream() {
-		streamID = IDUtil.stream();
+	/**
+	 * The SINK bank.
+	 */
+	static List<StreamSink<?>> sink = new LinkedList<>();
+
+	/**
+	 * The INBOUND bank.
+	 */
+	static List<InboundStreamAdapter<?>> inbound = new LinkedList<>();
+
+	/**
+	 * The OUTBOUND bank.
+	 */
+	static List<OutboundStreamAdapter<?>> outbound = new LinkedList<>();
+
+	public static void streamData(EV_StreamData data) {
+		for (var adapter : inbound) {
+			if (adapter.getStreamID() == data.getId()) {
+				adapter.submit(data);
+				break;
+			}
+		}
 	}
 
-	public int getStreamID() {
-		return streamID;
+	public static void stop(int streamID) {
+//		streams.stream().filter(s -> s.getId() == streamID).findAny().ifPresent(s -> {
+//			s.getDownstream().forEach(DownstreamEndpoint::close);
+//		});
 	}
+
 }
