@@ -20,9 +20,9 @@ package com.sandpolis.core.net.init;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.logging;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
@@ -30,7 +30,10 @@ import com.sandpolis.core.net.handler.EventHandler;
 import com.sandpolis.core.net.handler.ExecuteHandler;
 import com.sandpolis.core.proto.net.MSG.Message;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.protobuf.ProtobufDecoder;
@@ -59,11 +62,6 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 	 * How often to compute traffic statistics in milliseconds.
 	 */
 	private static final long TRAFFIC_INTERVAL = 4000;
-
-	/**
-	 * The global protocol buffer frame encoder.
-	 */
-	protected static final ProtobufVarint32LengthFieldPrepender PROTO_FRAME_ENCODER = new ProtobufVarint32LengthFieldPrepender();
 
 	/**
 	 * The global protocol buffer decoder.
@@ -104,6 +102,41 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 			this.exelets = exelets;
 	}
 
+	// TODO move
+	public static class ProtobufShortcutFrameEncoder extends ProtobufVarint32LengthFieldPrepender {
+
+		private ChannelHandlerContext context;
+
+		@Override
+		public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+			super.handlerAdded(ctx);
+			this.context = ctx;
+		}
+
+		public void shortcut(ByteBuf msg) throws Exception {
+			ByteBuf out = Unpooled.buffer(msg.readableBytes() + computeRawVarint32Size(msg.readableBytes()));
+			encode(context, msg, out);
+			context.writeAndFlush(out);
+
+			// TODO necessary?
+			// out.release();
+		}
+
+		// TODO remove
+		private int computeRawVarint32Size(final int value) {
+			if ((value & (0xffffffff << 7)) == 0)
+				return 1;
+			if ((value & (0xffffffff << 14)) == 0)
+				return 2;
+			if ((value & (0xffffffff << 21)) == 0)
+				return 3;
+			if ((value & (0xffffffff << 28)) == 0)
+				return 4;
+
+			return 5;
+		}
+	}
+
 	@Override
 	protected void initChannel(Channel ch) throws Exception {
 		ChannelPipeline p = ch.pipeline();
@@ -120,7 +153,7 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 
 		p.addLast("protobuf.frame_decoder", new ProtobufVarint32FrameDecoder());
 		p.addLast("protobuf.decoder", PROTO_DECODER);
-		p.addLast("protobuf.frame_encoder", PROTO_FRAME_ENCODER);
+		p.addLast("protobuf.frame_encoder", new ProtobufShortcutFrameEncoder());
 		p.addLast("protobuf.encoder", PROTO_ENCODER);
 
 		if (Config.getBoolean(logging.net.traffic.decoded))

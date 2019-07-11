@@ -20,6 +20,7 @@ package com.sandpolis.server.vanilla.net.handler;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.net.init.PipelineInitializer.ProtobufShortcutFrameEncoder;
 import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.proto.net.MCNetwork.EV_EndpointClosed;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -30,7 +31,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
-import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
 import io.netty.util.ReferenceCountUtil;
 
 /**
@@ -89,9 +89,11 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 				Sock con = ConnectionStore.get(to);
 				if (con != null) {
 					msg.resetReaderIndex();
+					msg.retain();
+
 					// Skip to the middle of the pipeline
-					((ProtobufVarint32LengthFieldPrepender) con.channel().pipeline().get("protobuf.frame_encoder"))
-							.acceptOutboundMessage(msg);
+					((ProtobufShortcutFrameEncoder) con.channel().pipeline().get("protobuf.frame_encoder"))
+							.shortcut(msg);
 				} else {
 					ctx.channel().writeAndFlush(Message.newBuilder()
 							.setEvEndpointClosed(EV_EndpointClosed.newBuilder().setCvid(to)).build());
