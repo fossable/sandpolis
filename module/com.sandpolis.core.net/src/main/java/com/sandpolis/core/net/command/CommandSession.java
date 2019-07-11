@@ -49,7 +49,7 @@ import io.netty.util.concurrent.Future;
  * A {@code CommandSession} is considered successful if all of its components
  * are successful. If any component fails with an exception, the entire session
  * fails with the same exception. Sessions can also be explicitly aborted or
- * succeeded from a handler context using {@link #abort()} and
+ * succeeded from a handler context using {@link #abort(Throwable)} and
  * {@link #success()}.
  * 
  * @author cilki

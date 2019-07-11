@@ -61,6 +61,7 @@ def publishProjects = [
 	'com.sandpolis.core.proto',
 	'com.sandpolis.core.soi',
 	'com.sandpolis.core.storage.hibernate',
+	'com.sandpolis.core.stream',
 	'com.sandpolis.core.util',
 	'com.sandpolis.core.viewer',
 	'com.sandpolis.plugin.desktop',
