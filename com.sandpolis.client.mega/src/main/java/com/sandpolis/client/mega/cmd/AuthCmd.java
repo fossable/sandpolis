@@ -42,6 +42,7 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	 * @return A response future
 	 */
 	public ResponseFuture<Outcome> none() {
+		sock.authenticate();// TODO do after successful response
 		return request(RQ_NoAuth.newBuilder());
 	}
 
@@ -53,6 +54,7 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	public ResponseFuture<Outcome> password(String password) {
 		checkNotNull(password);
 
+		sock.authenticate();// TODO do after successful response
 		return request(RQ_PasswordAuth.newBuilder().setPassword(password));
 	}
 
@@ -68,6 +70,7 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 		checkNotNull(group);
 		checkNotNull(key);
 
+		sock.authenticate();// TODO do after successful response
 		Sand5Handler.registerResponseHandler(sock.channel(), key);
 		return request(RQ_KeyAuth.newBuilder().setGroupId(group).setMechId(mech));
 	}

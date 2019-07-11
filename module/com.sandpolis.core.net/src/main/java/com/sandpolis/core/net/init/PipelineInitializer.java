@@ -114,12 +114,13 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		}
 
 		public void shortcut(ByteBuf msg) throws Exception {
-			ByteBuf out = Unpooled.buffer(msg.readableBytes() + computeRawVarint32Size(msg.readableBytes()));
-			encode(context, msg, out);
-			context.writeAndFlush(out);
-
-			// TODO necessary?
-			// out.release();
+			try {
+				ByteBuf out = Unpooled.buffer(msg.readableBytes() + computeRawVarint32Size(msg.readableBytes()));
+				encode(context, msg, out);
+				context.writeAndFlush(out);
+			} finally {
+				msg.release();
+			}
 		}
 
 		// TODO remove

@@ -170,7 +170,12 @@ public final class ProtoUtil {
 	 * @return A new response builder
 	 */
 	public static Message.Builder rs(Message m) {
-		return rs(m.getId());
+		var rs = rs(m.getId());
+		if (m.getFrom() != 0)
+			rs.setTo(m.getFrom());
+		if (m.getTo() != 0)
+			rs.setFrom(m.getTo());
+		return rs;
 	}
 
 	/**
