@@ -35,8 +35,8 @@ import com.sandpolis.core.net.handler.Sand5Handler;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MCAuth.RQ_KeyAuth;
-import com.sandpolis.core.proto.net.MCAuth.RQ_NoAuth;
 import com.sandpolis.core.proto.net.MCAuth.RQ_PasswordAuth;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.store.group.Group;
 import com.sandpolis.server.vanilla.store.group.GroupStore;
@@ -57,26 +57,51 @@ public class AuthExe extends Exelet {
 		super(connector);
 	}
 
+//	@Unauth
+//	public Message.Builder rq_no_auth(RQ_NoAuth rq) {
+//		var outcome = begin();
+//
+//		List<Group> groups = GroupStore.getUnauthGroups();
+//		if (groups.size() == 0) {
+//			log.debug("Refusing free authentication attempt because there are no unauth groups");
+//			return failure(outcome, UNKNOWN_GROUP);
+//		}
+//
+//		Profile client = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
+//		groups.forEach(group -> {
+//			// TODO add client to group
+//		});
+//
+//		// Connection is now authenticated
+//		connector.authenticate();
+//		connector.changeState(ConnectionState.AUTHENTICATED);
+//
+//		return success(outcome);
+//	}
+
+	// TODO temporarily use void-style handler to avoid creating profile before
+	// response is sent.
 	@Unauth
-	public Message.Builder rq_no_auth(RQ_NoAuth rq) {
+	public void rq_no_auth(MSG.Message m) {
 		var outcome = begin();
 
 		List<Group> groups = GroupStore.getUnauthGroups();
 		if (groups.size() == 0) {
 			log.debug("Refusing free authentication attempt because there are no unauth groups");
-			return failure(outcome, UNKNOWN_GROUP);
+			reply(m, failure(outcome, UNKNOWN_GROUP));
+			return;
 		}
-
-		Profile client = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
-		groups.forEach(group -> {
-			// TODO add client to group
-		});
 
 		// Connection is now authenticated
 		connector.authenticate();
 		connector.changeState(ConnectionState.AUTHENTICATED);
 
-		return success(outcome);
+		reply(m, success(outcome));
+
+		Profile client = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
+		groups.forEach(group -> {
+			// TODO add client to group
+		});
 	}
 
 	@Unauth
