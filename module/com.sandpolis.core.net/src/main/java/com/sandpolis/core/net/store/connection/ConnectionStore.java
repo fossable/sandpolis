@@ -68,6 +68,9 @@ public final class ConnectionStore extends Store {
 	 * A list of connection threads that are currently attempting connections.
 	 */
 	private static final List<ConnectionLoop> threads = new LinkedList<>();
+	
+	// Temporary
+	public static void init() {}
 
 	/**
 	 * Connection events.

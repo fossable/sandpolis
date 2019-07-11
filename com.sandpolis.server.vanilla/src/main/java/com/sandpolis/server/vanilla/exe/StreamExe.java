@@ -21,7 +21,6 @@ import com.google.protobuf.Message;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCStream.ProfileStreamData;
-import com.sandpolis.core.proto.net.MCStream.RQ_StreamStart;
 import com.sandpolis.core.proto.net.MCStream.RQ_StreamStop;
 import com.sandpolis.core.proto.net.MCStream.RS_StreamStart;
 import com.sandpolis.core.proto.net.MSG;
@@ -43,21 +42,21 @@ public class StreamExe extends Exelet {
 	}
 
 	@Auth
-	public Message.Builder rq_stream_start(RQ_StreamStart rq) {
-		var outcome = begin();
+	public void rq_stream_start(MSG.Message m) {
+		var rq = m.getRqStreamStart();
 
 		Stream stream = new Stream();
+		reply(m, RS_StreamStart.newBuilder().setStreamID(stream.getStreamID()));
+
 		switch (rq.getParam().getTypeCase()) {
 		case PROFILE:
 			ProfileStreamSource source = new ProfileStreamSource();// TODO get from store
-			source.start();
 			source.addOutbound(new OutboundStreamAdapter<ProfileStreamData>(stream.getStreamID(), connector));
+			source.start();
 			break;
 		default:
-			return failure(outcome);
+			break;
 		}
-
-		return RS_StreamStart.newBuilder().setStreamID(stream.getStreamID());
 	}
 
 	@Auth

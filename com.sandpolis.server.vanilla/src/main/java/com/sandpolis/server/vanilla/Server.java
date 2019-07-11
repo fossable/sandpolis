@@ -53,6 +53,7 @@ import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.task.IPCTask;
+import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.ProfileStore;
@@ -174,6 +175,8 @@ public final class Server {
 		// Load NetworkStore and choose a new CVID
 		Core.setCvid(IDUtil.CVID.cvid(Instance.SERVER));
 		NetworkStore.updateCvid(Core.cvid());
+		
+		ConnectionStore.init();
 
 		// Load PrefStore
 		PrefStore.load(Core.INSTANCE, Core.FLAVOR);

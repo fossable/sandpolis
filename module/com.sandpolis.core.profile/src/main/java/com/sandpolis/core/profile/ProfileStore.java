@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.instance.Signaler;
@@ -141,6 +142,10 @@ public final class ProfileStore extends Store {
 				// TODO set cvid or uuid in update
 				.collect(Collectors.toList());
 
+	}
+
+	public static Stream<Profile> getProfiles() {
+		return provider.stream();
 	}
 
 }

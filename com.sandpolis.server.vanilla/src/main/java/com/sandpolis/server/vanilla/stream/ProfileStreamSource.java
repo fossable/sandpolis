@@ -25,7 +25,9 @@ import java.util.function.Consumer;
 import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MCStream.ProfileStreamData;
+import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.stream.store.StreamSource;
 
 /**
@@ -57,5 +59,9 @@ public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
 	public void start() {
 		Signaler.register(PROFILE_ONLINE, online);
 		Signaler.register(SOCK_LOST, offline);
+
+		// TODO temporary
+		// Send existing profiles
+		ProfileStore.getProfiles().filter(profile -> profile.getInstance() == Instance.CLIENT).forEach(online);
 	}
 }
