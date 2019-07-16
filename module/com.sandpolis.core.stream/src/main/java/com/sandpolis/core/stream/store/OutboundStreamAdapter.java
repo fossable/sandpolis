@@ -28,19 +28,24 @@ import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.util.ProtoUtil;
 
-public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscriber<E> {
+public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscriber<E>, StreamEndpoint {
 
-	private Subscription subscription;
-	private int streamID;
+	private int id;
 	private Sock sock;
+	private Subscription subscription;
 
-	public OutboundStreamAdapter(int streamID, Sock sock) {
-		this.streamID = streamID;
-		this.sock = checkNotNull(sock);
+	@Override
+	public int getStreamID() {
+		return id;
 	}
 
-	public int getStreamID() {
-		return streamID;
+	public Sock getSock() {
+		return sock;
+	}
+
+	public OutboundStreamAdapter(int streamID, Sock sock) {
+		this.id = streamID;
+		this.sock = checkNotNull(sock);
 	}
 
 	@Override
@@ -62,7 +67,7 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 
 	@Override
 	public void onNext(E item) {
-		sock.send(Message.newBuilder()
-				.setEvStreamData(ProtoUtil.setPayload(EV_StreamData.newBuilder().setId(streamID), item)));
+		sock.send(
+				Message.newBuilder().setEvStreamData(ProtoUtil.setPayload(EV_StreamData.newBuilder().setId(id), item)));
 	}
 }

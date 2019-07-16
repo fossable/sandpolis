@@ -25,14 +25,15 @@ import java.util.function.Consumer;
 import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
 import com.sandpolis.core.util.ProtoUtil;
 
-public abstract class StreamSink<E> implements Subscriber<E> {
+public abstract class StreamSink<E> implements Subscriber<E>, StreamEndpoint {
 
-	private Subscription subscription;
+	private int id;
 	private List<Consumer<E>> handlers;
-	private int streamID;
+	private Subscription subscription;
 
+	@Override
 	public int getStreamID() {
-		return streamID;
+		return id;
 	}
 
 	public void addHandler(Consumer<E> handler) {
@@ -64,5 +65,10 @@ public abstract class StreamSink<E> implements Subscriber<E> {
 	@Override
 	public void onComplete() {
 		StreamStore.sink.remove(this);
+	}
+
+	public void close() {
+		subscription.cancel();
+		subscription = null;
 	}
 }

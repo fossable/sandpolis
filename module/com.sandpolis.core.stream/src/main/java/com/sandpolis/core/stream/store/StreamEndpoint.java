@@ -17,45 +17,13 @@
  *****************************************************************************/
 package com.sandpolis.core.stream.store;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-import java.util.concurrent.SubmissionPublisher;
-
-import com.google.protobuf.MessageOrBuilder;
-
-/**
- * @author cilki
- * @since 5.0.2
- */
-public abstract class StreamSource<E extends MessageOrBuilder> extends SubmissionPublisher<E>
-		implements StreamEndpoint {
-
-	private int id;
-
-	@Override
-	public int getStreamID() {
-		return id;
-	}
+public interface StreamEndpoint {
 
 	/**
-	 * Immediately halt the flow of events from the source.
+	 * Get the StreamID of the stream that this endpoint is a member of.
+	 * 
+	 * @return The endpoint's stream ID
 	 */
-	public abstract void stop();
+	public int getStreamID();
 
-	/**
-	 * Begin the flow of events from the source.
-	 */
-	public abstract void start();
-
-	public void addOutbound(OutboundStreamAdapter<E> out) {
-		checkArgument(!isSubscribed(out));
-		subscribe(out);
-		StreamStore.outbound.add(out);
-	}
-
-	public void addSink(StreamSink<E> s) {
-		checkArgument(!isSubscribed(s));
-		subscribe(s);
-		StreamStore.sink.add(s);
-	}
 }

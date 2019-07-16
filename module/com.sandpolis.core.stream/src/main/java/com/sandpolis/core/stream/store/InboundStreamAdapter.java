@@ -18,18 +18,32 @@
 package com.sandpolis.core.stream.store;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.SubmissionPublisher;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
 import com.sandpolis.core.util.ProtoUtil;
 
-public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> {
-	private int streamID;
+public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> implements StreamEndpoint {
 
+	private int id;
+	private Sock sock;
+
+	@Override
 	public int getStreamID() {
-		return streamID;
+		return id;
+	}
+
+	public Sock getSock() {
+		return sock;
+	}
+
+	public InboundStreamAdapter(int streamID, Sock sock) {
+		this.id = streamID;
+		this.sock = checkNotNull(sock);
 	}
 
 	@SuppressWarnings("unchecked")

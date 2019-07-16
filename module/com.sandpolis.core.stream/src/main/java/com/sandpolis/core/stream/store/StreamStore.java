@@ -17,10 +17,16 @@
  *****************************************************************************/
 package com.sandpolis.core.stream.store;
 
+import static com.sandpolis.core.net.store.connection.ConnectionStore.Events.SOCK_LOST;
+
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
+import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.Store.AutoInitializer;
+import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
 
 /**
@@ -71,9 +77,121 @@ public final class StreamStore {
 	}
 
 	public static void stop(int streamID) {
-//		streams.stream().filter(s -> s.getId() == streamID).findAny().ifPresent(s -> {
-//			s.getDownstream().forEach(DownstreamEndpoint::close);
-//		});
+		iterateInbound(it -> {
+			while (it.hasNext()) {
+				var adapter = it.next();
+				if (adapter.getStreamID() == streamID) {
+					it.remove();
+					adapter.close();
+					break;
+				}
+			}
+		});
+		iterateOutbound(it -> {
+			while (it.hasNext()) {
+				var adapter = it.next();
+				if (adapter.getStreamID() == streamID) {
+					it.remove();
+					// adapter.close();
+					break;
+				}
+			}
+		});
+		iterateSource(it -> {
+			while (it.hasNext()) {
+				var source = it.next();
+				if (source.getStreamID() == streamID) {
+					it.remove();
+					source.close();
+					break;
+				}
+			}
+		});
+		iterateSink(it -> {
+			while (it.hasNext()) {
+				var sink = it.next();
+				if (sink.getStreamID() == streamID) {
+					it.remove();
+					sink.close();
+					break;
+				}
+			}
+		});
+
+		// TODO find dependent streams to also close
+	}
+
+	private static void iterateSource(Consumer<Iterator<StreamSource<?>>> mutator) {
+		synchronized (source) {
+			synchronized (sink) {
+				synchronized (inbound) {
+					synchronized (outbound) {
+						mutator.accept(source.iterator());
+					}
+				}
+			}
+		}
+	}
+
+	private static void iterateSink(Consumer<Iterator<StreamSink<?>>> mutator) {
+		synchronized (source) {
+			synchronized (sink) {
+				synchronized (inbound) {
+					synchronized (outbound) {
+						mutator.accept(sink.iterator());
+					}
+				}
+			}
+		}
+	}
+
+	private static void iterateInbound(Consumer<Iterator<InboundStreamAdapter<?>>> mutator) {
+		synchronized (source) {
+			synchronized (sink) {
+				synchronized (inbound) {
+					synchronized (outbound) {
+						mutator.accept(inbound.iterator());
+					}
+				}
+			}
+		}
+	}
+
+	private static void iterateOutbound(Consumer<Iterator<OutboundStreamAdapter<?>>> mutator) {
+		synchronized (source) {
+			synchronized (sink) {
+				synchronized (inbound) {
+					synchronized (outbound) {
+						mutator.accept(outbound.iterator());
+					}
+				}
+			}
+		}
+	}
+
+	static {
+		Signaler.register(SOCK_LOST, (Sock sock) -> {
+			iterateInbound(it -> {
+				while (it.hasNext()) {
+					var adapter = it.next();
+					if (adapter.getSock().equals(sock)) {
+						it.remove();
+						adapter.close();
+						break;
+					}
+				}
+			});
+			iterateOutbound(it -> {
+				while (it.hasNext()) {
+					var adapter = it.next();
+					if (adapter.getSock().equals(sock)) {
+						it.remove();
+						// adapter.close();
+						break;
+					}
+				}
+			});
+		});
 	}
 
 }
