@@ -17,6 +17,9 @@
  *****************************************************************************/
 package com.sandpolis.core.net.handler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.CertificateState;
 import com.sandpolis.core.net.Sock.ConnectionState;
@@ -36,6 +39,8 @@ import io.netty.handler.ssl.SslHandshakeCompletionEvent;
  */
 @Sharable
 public class EventHandler extends ChannelInboundHandlerAdapter {
+
+	private static final Logger log = LoggerFactory.getLogger(EventHandler.class);
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -61,8 +66,8 @@ public class EventHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		// TODO Auto-generated method stub
-		super.exceptionCaught(ctx, cause);
+		log.trace("An exception occurred in the pipeline", cause);
+		ctx.close();
 	}
 
 	@Override

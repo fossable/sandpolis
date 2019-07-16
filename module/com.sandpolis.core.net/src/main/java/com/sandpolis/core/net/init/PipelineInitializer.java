@@ -150,8 +150,6 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		if (Config.getBoolean(logging.net.traffic.raw))
 			p.addLast(LOGGING);
 
-		p.addLast(EVENT);
-
 		p.addLast("protobuf.frame_decoder", new ProtobufVarint32FrameDecoder());
 		p.addLast("protobuf.decoder", PROTO_DECODER);
 		p.addLast("protobuf.frame_encoder", new ProtobufShortcutFrameEncoder());
@@ -165,6 +163,8 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		p.addLast(ThreadStore.get(net.exelet), "exe", execute);
 		ch.attr(ChannelConstant.HANDLER_EXECUTE).set(execute);
 
+		// Sock management handler
+		p.addLast(EVENT);
 	}
 
 }
