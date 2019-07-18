@@ -18,4 +18,17 @@
 syntax = "proto3";
 
 package net;
-option java_package = "com.sandpolis.plugin.sysinfo";
+option java_package = "com.sandpolis.plugin.filesys.net";
+
+import "com/sandpolis/plugin/filesys/net/MC_Filesys.proto";
+
+message FilesysMessage {
+
+	oneof filesys_msg_type {
+
+		// MC_Filesys
+        RQ_FileListing                 rq_file_listing                = 100;
+        RS_FileListing                 rs_file_listing                = 101;
+
+	}
+}

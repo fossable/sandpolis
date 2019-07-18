@@ -77,8 +77,6 @@ message Message {
         RQ_NoAuth                      rq_no_auth                     = 100;
         RQ_PasswordAuth                rq_password_auth               = 101;
         RQ_KeyAuth                     rq_key_auth                    = 102;
-        
-        // MC_Client
 
         // MC_Cvid
         RQ_Cvid                        rq_cvid                        = 300;

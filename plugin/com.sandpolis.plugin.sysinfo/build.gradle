@@ -12,12 +12,14 @@ buildscript {
 plugins {
 	id 'eclipse'
 	id 'java-library'
+	id 'com.google.protobuf' version '0.8.8'
 }
 
 sourceSets {
 	main {
 		java {
-			srcDirs 'src/gen/java'
+			srcDirs 'src/main/proto'
+			srcDirs 'gen/main/java'
 		}
 	}
 }
@@ -35,6 +37,7 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':module:com.sandpolis.core.net')
 	implementation project(':module:com.sandpolis.core.profile')
+	implementation project(':module:com.sandpolis.core.proto')
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.26'
@@ -52,4 +55,12 @@ sandpolis_plugin {
 	coordinate = 'com.sandpolis:sandpolis-plugin-sysinfo'
 	name = 'System Info Plugin'
 	description = ''
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.8.0'
+	}
+
+	generatedFilesBaseDir = "$projectDir/gen/"
 }

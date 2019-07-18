@@ -18,45 +18,12 @@
 syntax = "proto3";
 
 package net;
-option java_package = "com.sandpolis.core.proto.net";
+option java_package = "com.sandpolis.plugin.sysinfo.net";
 
-import "com/sandpolis/core/proto/util/Platform.proto";
-
-/**
- * Request client metadata.
- */
-message RQ_ClientMetadata {
+message RQ_NicTotals {
 }
 
-message RS_ClientMetadata {
-
-	// The client's network hostname
-	string hostname = 1;
-
-	// The client user 
-	string username = 2;
-	
-	// The OS family
-	util.OsType os_type = 3;
-	
-	// The system architecture
-	util.Architecture arch = 4;
-	
-	// The OS version
-	string os_version = 5;
-	
-	// The TimeZone identifier
-	string timezone = 6;
-	
-	// The JVM start time
-	int64 start_timestamp = 7;
-}
-
-message RQ_PowerChange {
-	enum PowerChange {
-		POWEROFF = 0;
-		RESTART = 1;
-	}
-	
-	PowerChange change = 1;
+message RS_NicTotals {
+	int64 download = 1;
+	int64 upload = 2;
 }
