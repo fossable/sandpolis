@@ -32,7 +32,9 @@ import io.netty.handler.ssl.SslHandshakeCompletionEvent;
 
 /**
  * A channel-safe handler that performs logistical functions for a {@link Sock}.
- * Messages and events are not modified by this handler.
+ * Messages and events are consumed by this handler.<br>
+ * <br>
+ * Note: This handler should always be last in the pipeline.
  * 
  * @author cilki
  * @since 5.0.0
@@ -45,11 +47,10 @@ public class EventHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		var attribute = ctx.channel().attr(ChannelConstant.CONNECTION_STATE);
+
 		synchronized (attribute) {
 			attribute.set(ConnectionState.CONNECTED);
 		}
-
-		super.channelActive(ctx);
 	}
 
 	@Override
@@ -61,7 +62,6 @@ public class EventHandler extends ChannelInboundHandlerAdapter {
 			; // The channel was closed before a Sock could be assigned
 
 		ctx.close();
-		super.channelInactive(ctx);
 	}
 
 	@Override
@@ -87,7 +87,11 @@ public class EventHandler extends ChannelInboundHandlerAdapter {
 				}
 			}
 		}
+	}
 
-		super.userEventTriggered(ctx, evt);
+	@Override
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		// Drop the message
+		log.warn("Dropped incoming message: {}", msg.toString());
 	}
 }

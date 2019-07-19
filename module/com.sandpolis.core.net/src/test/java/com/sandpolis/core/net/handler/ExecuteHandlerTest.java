@@ -20,10 +20,6 @@ package com.sandpolis.core.net.handler;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +28,6 @@ import com.sandpolis.core.instance.PoolConstant;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -93,19 +88,6 @@ class ExecuteHandlerTest {
 		assertFalse(rq_cvid_triggered);
 		channel.writeInbound(Message.newBuilder().setRqCvid(RQ_Cvid.newBuilder()).build());
 		assertTrue(rq_cvid_triggered);
-
-	}
-
-	@Test
-	void testResponse() throws InterruptedException, ExecutionException, TimeoutException {
-		ExecuteHandler execute = new ExecuteHandler(new Class[] { TestExe.class, Test2Exe.class });
-		EmbeddedChannel channel = new EmbeddedChannel(execute);
-
-		MessageFuture future = new MessageFuture();
-		execute.putResponseFuture(14, future);
-		channel.writeInbound(Message.newBuilder().setId(14).build());
-		assertTrue(future.get(100, TimeUnit.MILLISECONDS) != null);
-		assertTrue(execute.getResponseCount() == 0);
 
 	}
 

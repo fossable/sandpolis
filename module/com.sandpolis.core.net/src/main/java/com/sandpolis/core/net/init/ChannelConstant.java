@@ -21,6 +21,7 @@ import java.util.concurrent.Future;
 
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.handler.ExecuteHandler;
+import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.proto.util.Platform.Instance;
 
 import io.netty.channel.Channel;
@@ -60,6 +61,11 @@ public final class ChannelConstant {
 	 * The remote host's {@link ExecuteHandler}.
 	 */
 	public static final AttributeKey<ExecuteHandler> HANDLER_EXECUTE = AttributeKey.valueOf("handler.execute");
+
+	/**
+	 * The remote host's {@link ResponseHandler}.
+	 */
+	public static final AttributeKey<ResponseHandler> HANDLER_RESPONSE = AttributeKey.valueOf("handler.response");
 
 	/**
 	 * The remote host's {@link SslHandler} or {@code null} if SSL was not used.

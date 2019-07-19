@@ -28,6 +28,7 @@ import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.EventHandler;
 import com.sandpolis.core.net.handler.ExecuteHandler;
+import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.proto.net.MSG.Message;
 
 import io.netty.buffer.ByteBuf;
@@ -158,7 +159,10 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		if (Config.getBoolean(logging.net.traffic.decoded))
 			p.addLast(LOGGING);
 
-		// Business logic
+		ResponseHandler response = new ResponseHandler();
+		p.addLast(ThreadStore.get(net.exelet), "response", response);
+		ch.attr(ChannelConstant.HANDLER_RESPONSE).set(response);
+
 		ExecuteHandler execute = new ExecuteHandler(exelets);
 		p.addLast(ThreadStore.get(net.exelet), "exe", execute);
 		ch.attr(ChannelConstant.HANDLER_EXECUTE).set(execute);

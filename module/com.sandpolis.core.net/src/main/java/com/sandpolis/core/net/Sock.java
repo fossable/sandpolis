@@ -367,7 +367,7 @@ public class Sock {
 	 * @return A {@link MessageFuture}
 	 */
 	public MessageFuture read(int id) {
-		return channel.attr(ChannelConstant.HANDLER_EXECUTE).get().putResponseFuture(id, new MessageFuture());
+		return channel.attr(ChannelConstant.HANDLER_RESPONSE).get().putResponseFuture(id, new MessageFuture());
 	}
 
 	/**
@@ -380,7 +380,7 @@ public class Sock {
 	 * @return A {@link MessageFuture}
 	 */
 	public MessageFuture read(int id, long timeout, TimeUnit unit) {
-		return channel.attr(ChannelConstant.HANDLER_EXECUTE).get().putResponseFuture(id,
+		return channel.attr(ChannelConstant.HANDLER_RESPONSE).get().putResponseFuture(id,
 				new MessageFuture(timeout, unit));
 	}
 
