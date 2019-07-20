@@ -54,7 +54,8 @@ class ListenerExeTest extends ExeletTest {
 		ListenerStore.add(ListenerConfig.newBuilder().setOwner("junit").setPort(5000).setAddress("0.0.0.0").build());
 
 		initChannel();
-		exe = new ListenerExe(new Sock(channel));
+		exe = new ListenerExe();
+		exe.setConnector(new Sock(channel));
 	}
 
 	@Test

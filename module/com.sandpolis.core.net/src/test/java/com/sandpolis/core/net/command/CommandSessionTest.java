@@ -38,7 +38,7 @@ import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.ConnectionState;
-import com.sandpolis.core.net.handler.ExecuteHandler;
+import com.sandpolis.core.net.handler.ExeletHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -61,10 +61,10 @@ class CommandSessionTest {
 	@BeforeEach
 	private void setup() {
 		channel = new EmbeddedChannel();
-		channel.attr(ChannelConstant.HANDLER_EXECUTE).set(new ExecuteHandler(new Class[] {}));
+		channel.attr(ChannelConstant.HANDLER_EXELET).set(new ExeletHandler(new Class[] {}));
 		channel.attr(ChannelConstant.CVID).set(10);
 		channel.attr(ChannelConstant.CONNECTION_STATE).set(ConnectionState.CONNECTED);
-		channel.pipeline().addFirst(channel.attr(ChannelConstant.HANDLER_EXECUTE).get());
+		channel.pipeline().addFirst(channel.attr(ChannelConstant.HANDLER_EXELET).get());
 
 		sock = new Sock(channel);
 	}

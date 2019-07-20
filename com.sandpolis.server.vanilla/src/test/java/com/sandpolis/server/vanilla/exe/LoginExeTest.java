@@ -49,7 +49,8 @@ class LoginExeTest extends ExeletTest {
 		Signaler.init(Executors.newSingleThreadExecutor());
 
 		initChannel();
-		exe = new LoginExe(new Sock(channel));
+		exe = new LoginExe();
+		exe.setConnector(new Sock(channel));
 	}
 
 	@Test

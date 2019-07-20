@@ -43,7 +43,8 @@ class ServerExeTest extends ExeletTest {
 		Signaler.init(Executors.newSingleThreadExecutor());
 
 		initChannel();
-		exe = new ServerExe(new Sock(channel));
+		exe = new ServerExe();
+		exe.setConnector(new Sock(channel));
 	}
 
 	@Test

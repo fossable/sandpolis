@@ -52,7 +52,8 @@ class GroupExeTest extends ExeletTest {
 		Signaler.init(Executors.newSingleThreadExecutor());
 
 		initChannel();
-		exe = new GroupExe(new Sock(channel));
+		exe = new GroupExe();
+		exe.setConnector(new Sock(channel));
 	}
 
 	@Test
