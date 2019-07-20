@@ -21,10 +21,9 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -34,9 +33,9 @@ import com.google.protobuf.Message;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.command.Exelet.Auth;
+import com.sandpolis.core.net.command.Exelet.Handler;
 import com.sandpolis.core.net.command.Exelet.Permission;
 import com.sandpolis.core.net.command.Exelet.Unauth;
-import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -45,48 +44,40 @@ import com.sandpolis.core.util.ProtoUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-/**
- * This mutable handler dispatches messages to their handlers or to a waiting
- * Thread via a {@link MessageFuture}. Messages that don't have a registered
- * handler or have a Thread waiting for them are dropped.
- * 
- * @author cilki
- * @since 5.0.0
- */
-public final class ExecuteHandler extends SimpleChannelInboundHandler<MSG.Message> {
+public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 
-	private static final Logger log = LoggerFactory.getLogger(ExecuteHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(ExeletHandler.class);
+
+	private Sock sock;
+
+	public void setSock(Sock sock) {
+		this.sock = sock;
+		initUnauth();
+	}
 
 	/**
 	 * A list of {@link Exelet}s available to this handler.
 	 */
 	private final Map<Class<? extends Exelet>, Exelet> exelets;
 
+	private Map<String, Consumer<MSG.Message>[]> pluginHandlers;
+
 	/**
-	 * Maps message types to the relevant handler. A specific handler will only be
-	 * present in the map if its annotated requirements (permissions and
+	 * Maps message tags (indicies) to the relevant handler. A specific handler will
+	 * only be present in the list if its annotated requirements (permissions and
 	 * authentication state) are met. Therefore, invalid messages will always be
 	 * ignored.
 	 */
-	private final Map<MsgOneofCase, Consumer<MSG.Message>> handles;
+	@SuppressWarnings("unchecked")
+	private Consumer<MSG.Message>[] coreHandlers = new Consumer[0];
 
 	/**
-	 * When a response message is desired, a {@link MessageFuture} is placed into
-	 * this map. If a message is received which is not associated with any handler
-	 * in {@link #handles} and the message's ID is in {@link #responseMap}, the
-	 * MessageFuture is removed and notified.
-	 */
-	private final ConcurrentMap<Integer, MessageFuture> responseMap;
-
-	/**
-	 * Create a new {@link ExecuteHandler} with the given {@link Exelet} list.
+	 * Create a new {@link ExeletHandler} with the given {@link Exelet} list.
 	 * 
 	 * @param exelets A list of available {@link Exelet}s or {@code null} for none
 	 */
-	public ExecuteHandler(Class<? extends Exelet>[] exelets) {
-
-		this.responseMap = new ConcurrentHashMap<>();
-		this.handles = new HashMap<>();
+	public ExeletHandler(Class<? extends Exelet>[] exelets) {
+		this.pluginHandlers = new HashMap<>();
 		this.exelets = new HashMap<>();
 
 		if (exelets != null)
@@ -97,68 +88,37 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<MSG.Messag
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, MSG.Message msg) throws Exception {
+		var msgType = msg.getMsgOneofCase();
 
-		Consumer<MSG.Message> handle = handles.get(msg.getMsgOneofCase());
-		if (handle != null) {
-			// Execute the message with the predefined handler
-			handle.accept(msg);
-			return;
+		if (msgType == MsgOneofCase.PLUGIN) {
+			String url = msg.getPlugin().getTypeUrl();
+			var handlers = pluginHandlers.get(url.substring(0, url.indexOf('/')));
+			if (handlers != null) {
+				Message plugin = ProtoUtil.getPayload(msg);
+				var pluginType = plugin.getClass().getMethod("getPluginTypeCase").invoke(plugin);
+				int pluginNumber = (int) pluginType.getClass().getMethod("getNumber").invoke(pluginType);
+
+				if (handlers.length > pluginNumber) {
+					Consumer<MSG.Message> handle = handlers[pluginNumber];
+					if (handle != null) {
+						// Execute the message with the predefined handler
+						handle.accept(msg);
+						return;
+					}
+				}
+			}
+		} else if (msgType != MsgOneofCase.MSGONEOF_NOT_SET) {
+			if (coreHandlers.length > msgType.getNumber()) {
+				var handle = coreHandlers[msgType.getNumber()];
+				if (handle != null) {
+					// Execute the message with the predefined handler
+					handle.accept(msg);
+					return;
+				}
+			}
 		}
 
-		MessageFuture future = responseMap.remove(msg.getId());
-		if (future != null && !future.isCancelled()) {
-			// Give the message to a waiting Thread
-			future.setSuccess(msg);
-			return;
-		}
-
-		// Drop the message
-		log.warn("Dropping a message of type: {}", msg.getMsgOneofCase());
-		if (log.isDebugEnabled())
-			log.debug("Dropped message ({})", msg.toString());
-	}
-
-	/**
-	 * Add a new response callback to the response map unless one is already
-	 * present.
-	 * 
-	 * @param id     The message ID
-	 * @param future A new {@link MessageFuture}
-	 * @return An existing future or the given parameter
-	 */
-	public MessageFuture putResponseFuture(int id, MessageFuture future) {
-		if (!responseMap.containsKey(id))
-			responseMap.put(id, future);
-
-		return responseMap.get(id);
-	}
-
-	/**
-	 * Get the number of futures waiting for a response.
-	 * 
-	 * @return The number of entries in the response map
-	 */
-	public int getResponseCount() {
-		return responseMap.size();
-	}
-
-	/**
-	 * Indicates whether the {@code ExecuteHandler} has a registered handler for the
-	 * given message type.
-	 * 
-	 * @param type The message type
-	 * @return True if there exists an {@link Exelet} handler for the message type
-	 */
-	public boolean containsHandler(MsgOneofCase type) {
-		return handles.containsKey(type);
-	}
-
-	/**
-	 * Reset all {@link Exelet} handlers.
-	 */
-	public void resetHandlers() {
-		// TODO disable channel reads
-		handles.clear();
+		ctx.fireChannelRead(msg);
 	}
 
 	/**
@@ -167,12 +127,12 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<MSG.Messag
 	 * 
 	 * @param sock The connector for each {@link Exelet}
 	 */
-	public void initUnauth(Sock sock) {
+	public void initUnauth() {
 		try {
 			for (Class<? extends Exelet> _class : exelets.keySet()) {
 				for (Method m : _class.getMethods()) {
 					if (m.isAnnotationPresent(Unauth.class)) {
-						register(sock, _class, m);
+						register(_class, m);
 					}
 				}
 			}
@@ -187,7 +147,7 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<MSG.Messag
 	 * 
 	 * @param sock The connector for each {@link Exelet}
 	 */
-	public void initAuth(Sock sock) {
+	public void initAuth() {
 		try {
 			for (Class<? extends Exelet> _class : exelets.keySet()) {
 				for (Method m : _class.getMethods()) {
@@ -200,13 +160,17 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<MSG.Messag
 						}
 
 						if (passed)
-							register(sock, _class, m);
+							register(_class, m);
 					}
 				}
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public void deauth() {
+		// TODO
 	}
 
 	/**
@@ -217,17 +181,39 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<MSG.Messag
 	 * @param _class The {@link Exelet} class that contains the message handler
 	 * @param method The message handler
 	 */
-	private void register(Sock sock, Class<? extends Exelet> _class, Method method) throws Exception {
-		// Retrieve the message type
-		MsgOneofCase type = MsgOneofCase.valueOf(method.getName().toUpperCase());
-		if (type == MsgOneofCase.MSGONEOF_NOT_SET)
-			throw new RuntimeException();
+	private void register(Class<? extends Exelet> _class, Method method) throws Exception {
+		var handler = method.getAnnotation(Handler.class);
+		if (handler == null)
+			throw new RuntimeException("Missing required @Handler annotation on: " + method.getName());
 
-		Exelet exelet = exelets.get(_class);
-		if (exelet == null) {
+		// Build Exelet instance
+		final Exelet exelet;
+		if (exelets.get(_class) != null) {
+			exelet = exelets.get(_class);
+		} else {
 			// Build a new exelet for the given class
-			exelet = _class.getConstructor(Sock.class).newInstance(sock);
+			exelet = _class.getConstructor().newInstance();
+			exelet.setConnector(sock);
 			exelets.put(_class, exelet);
+		}
+
+		// Select a handler vector
+		Consumer<MSG.Message>[] handlers = null;
+		if (exelet.getPluginPrefix() == null) {
+			// Ensure size of core vector
+			if (coreHandlers.length <= handler.tag())
+				coreHandlers = Arrays.copyOf(coreHandlers, handler.tag() + 1);
+			handlers = coreHandlers;
+		} else {
+			// Ensure size of plugin vector
+			handlers = pluginHandlers.get(exelet.getPluginPrefix());
+			if (handlers == null) {
+				handlers = new Consumer[handler.tag() + 1];
+				pluginHandlers.put(exelet.getPluginPrefix(), handlers);
+			} else if (handlers.length <= handler.tag()) {
+				handlers = Arrays.copyOf(handlers, handler.tag() + 1);
+				pluginHandlers.put(exelet.getPluginPrefix(), handlers);
+			}
 		}
 
 		// Simple request style: public Message.Builder rq_command(RQ_Command rq)
@@ -235,15 +221,15 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<MSG.Messag
 			MethodHandle handle = MethodHandles.publicLookup().bind(exelet, method.getName(),
 					MethodType.methodType(method.getReturnType(), method.getParameterTypes()[0]));
 
-			handles.put(type, msg -> {
+			handlers[handler.tag()] = msg -> {
 				try {
 					Message.Builder rs = (Message.Builder) handle.invoke(ProtoUtil.getPayload(msg));
-					sock.send(ProtoUtil.rs(msg, rs));
+					exelet.reply(msg, rs);
 				} catch (Throwable e) {
 					log.warn("Message handler failed", e);
-					sock.send(ProtoUtil.rs(msg, Outcome.newBuilder().setResult(false)));
+					sock.send(ProtoUtil.rs((MSG.Message) msg, Outcome.newBuilder().setResult(false)));
 				}
-			});
+			};
 		}
 
 		// Void request style: public void rq_command(Message rq)
@@ -252,18 +238,17 @@ public final class ExecuteHandler extends SimpleChannelInboundHandler<MSG.Messag
 			MethodHandle handle = MethodHandles.publicLookup().bind(exelet, method.getName(),
 					MethodType.methodType(method.getReturnType(), method.getParameterTypes()[0]));
 
-			handles.put(type, msg -> {
+			handlers[handler.tag()] = msg -> {
 				try {
 					handle.invoke(msg);
 				} catch (Throwable e) {
 					log.warn("Message handler failed", e);
 				}
-			});
+			};
 		}
 
 		// Unknown format
-		else {
+		else
 			throw new RuntimeException("Unknown handler format for method: " + method.getName());
-		}
 	}
 }

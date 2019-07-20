@@ -19,13 +19,13 @@ package com.sandpolis.server.vanilla.exe;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PermissionConstant.server;
-import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCGroup.RQ_AddGroup;
 import com.sandpolis.core.proto.net.MCGroup.RQ_GroupDelta;
 import com.sandpolis.core.proto.net.MCGroup.RQ_ListGroups;
 import com.sandpolis.core.proto.net.MCGroup.RQ_RemoveGroup;
 import com.sandpolis.core.proto.net.MCGroup.RS_ListGroups;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.server.vanilla.store.group.Group;
 import com.sandpolis.server.vanilla.store.group.GroupStore;
@@ -38,12 +38,9 @@ import com.sandpolis.server.vanilla.store.group.GroupStore;
  */
 public class GroupExe extends Exelet {
 
-	public GroupExe(Sock connector) {
-		super(connector);
-	}
-
 	@Auth
 	@Permission(permission = server.group.create)
+	@Handler(tag = MSG.Message.RQ_ADD_GROUP_FIELD_NUMBER)
 	public Message.Builder rq_add_group(RQ_AddGroup rq) {
 		var outcome = begin();
 
@@ -52,6 +49,7 @@ public class GroupExe extends Exelet {
 	}
 
 	@Auth
+	@Handler(tag = MSG.Message.RQ_REMOVE_GROUP_FIELD_NUMBER)
 	public Message.Builder rq_remove_group(RQ_RemoveGroup rq) {
 		var outcome = begin();
 		if (!ownership(rq.getId()))
@@ -63,6 +61,7 @@ public class GroupExe extends Exelet {
 
 	@Auth
 	@Permission(permission = server.group.view)
+	@Handler(tag = MSG.Message.RQ_LIST_GROUPS_FIELD_NUMBER)
 	public Message.Builder rq_list_groups(RQ_ListGroups rq) {
 		var rs = RS_ListGroups.newBuilder();
 
@@ -72,6 +71,7 @@ public class GroupExe extends Exelet {
 	}
 
 	@Auth
+	@Handler(tag = MSG.Message.RQ_GROUP_DELTA_FIELD_NUMBER)
 	public Message.Builder rq_group_delta(RQ_GroupDelta rq) {
 		var outcome = begin();
 		if (!ownership(rq.getDelta().getConfig().getId()))

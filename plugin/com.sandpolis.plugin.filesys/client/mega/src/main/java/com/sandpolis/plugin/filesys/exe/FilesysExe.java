@@ -17,13 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.plugin.filesys.exe;
 
-import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 
 public class FilesysExe extends Exelet {
-
-	public FilesysExe(Sock connector) {
-		super(connector);
-	}
 
 }

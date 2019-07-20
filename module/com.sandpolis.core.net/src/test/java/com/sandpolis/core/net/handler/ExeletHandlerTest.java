@@ -28,16 +28,17 @@ import com.sandpolis.core.instance.PoolConstant;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
 
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 
 @SuppressWarnings("unchecked")
-class ExecuteHandlerTest {
+class ExeletHandlerTest {
 
 	static boolean rq_login_triggered;
 	static boolean rq_cvid_triggered;
@@ -55,12 +56,11 @@ class ExecuteHandlerTest {
 
 	@Test
 	void testUnauth() {
-		ExecuteHandler execute = new ExecuteHandler(new Class[] { TestExe.class, Test2Exe.class });
+		ExeletHandler execute = new ExeletHandler(new Class[] { TestExe.class, Test2Exe.class });
 		EmbeddedChannel channel = new EmbeddedChannel(execute);
-		execute.initUnauth(new Sock(channel));
+		channel.attr(ChannelConstant.HANDLER_EXELET).set(execute);
+		execute.setSock(new Sock(channel));
 
-		assertTrue(execute.containsHandler(MsgOneofCase.RQ_LOGIN));
-		assertFalse(execute.containsHandler(MsgOneofCase.RQ_CVID));
 		channel.writeInbound(Message.newBuilder().build());
 		assertFalse(rq_login_triggered);
 		assertFalse(rq_cvid_triggered);
@@ -72,14 +72,12 @@ class ExecuteHandlerTest {
 
 	@Test
 	void testAuth() {
-		ExecuteHandler execute = new ExecuteHandler(new Class[] { TestExe.class, Test2Exe.class });
+		ExeletHandler execute = new ExeletHandler(new Class[] { TestExe.class, Test2Exe.class });
 		EmbeddedChannel channel = new EmbeddedChannel(execute);
-		Sock sock = new Sock(channel);
-		execute.initUnauth(sock);
-		execute.initAuth(sock);
+		channel.attr(ChannelConstant.HANDLER_EXELET).set(execute);
+		execute.setSock(new Sock(channel));
+		execute.initAuth();
 
-		assertTrue(execute.containsHandler(MsgOneofCase.RQ_LOGIN));
-		assertTrue(execute.containsHandler(MsgOneofCase.RQ_CVID));
 		channel.writeInbound(Message.newBuilder().build());
 		assertFalse(rq_login_triggered);
 		assertFalse(rq_cvid_triggered);
@@ -94,11 +92,8 @@ class ExecuteHandlerTest {
 	// Sandbox Exelets
 	public static class TestExe extends Exelet {
 
-		public TestExe(Sock connector) {
-			super(connector);
-		}
-
 		@Unauth
+		@Handler(tag = MSG.Message.RQ_LOGIN_FIELD_NUMBER)
 		public void rq_login(Message msg) {
 			rq_login_triggered = true;
 		}
@@ -107,11 +102,8 @@ class ExecuteHandlerTest {
 
 	public static class Test2Exe extends Exelet {
 
-		public Test2Exe(Sock connector) {
-			super(connector);
-		}
-
 		@Auth
+		@Handler(tag = MSG.Message.RQ_CVID_FIELD_NUMBER)
 		public void rq_cvid(Message msg) {
 			rq_cvid_triggered = true;
 		}

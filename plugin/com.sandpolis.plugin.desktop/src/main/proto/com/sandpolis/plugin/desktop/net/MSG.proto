@@ -24,11 +24,11 @@ import "com/sandpolis/plugin/desktop/net/MC_Desktop.proto";
 
 message DesktopMessage {
 
-	oneof desktop_msg_type {
+	oneof plugin_type {
 
 		// MC_Desktop
-        RQ_Screenshot                  rq_screenshot                  = 100;
-        RS_Screenshot                  rs_screenshot                  = 101;
+        RQ_Screenshot                  rq_screenshot                  = 1;
+        RS_Screenshot                  rs_screenshot                  = 1001;
 
 	}
 }

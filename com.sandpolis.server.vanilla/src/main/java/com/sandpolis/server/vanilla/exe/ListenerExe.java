@@ -21,12 +21,12 @@ import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PermissionConstant.server;
-import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
 import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener;
 import com.sandpolis.core.proto.net.MCListener.RQ_ListenerDelta;
 import com.sandpolis.core.proto.net.MCListener.RQ_RemoveListener;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.server.vanilla.store.listener.Listener;
 import com.sandpolis.server.vanilla.store.listener.ListenerStore;
 
@@ -38,12 +38,9 @@ import com.sandpolis.server.vanilla.store.listener.ListenerStore;
  */
 public class ListenerExe extends Exelet {
 
-	public ListenerExe(Sock connector) {
-		super(connector);
-	}
-
 	@Auth
 	@Permission(permission = server.listener.create)
+	@Handler(tag = MSG.Message.RQ_ADD_LISTENER_FIELD_NUMBER)
 	public Message.Builder rq_add_listener(RQ_AddListener rq) {
 		var outcome = begin();
 
@@ -52,6 +49,7 @@ public class ListenerExe extends Exelet {
 	}
 
 	@Auth
+	@Handler(tag = MSG.Message.RQ_REMOVE_LISTENER_FIELD_NUMBER)
 	public Message.Builder rq_remove_listener(RQ_RemoveListener rq) {
 		var outcome = begin();
 		if (!ownership(rq.getId()))
@@ -62,6 +60,7 @@ public class ListenerExe extends Exelet {
 	}
 
 	@Auth
+	@Handler(tag = MSG.Message.RQ_LISTENER_DELTA_FIELD_NUMBER)
 	public Message.Builder rq_listener_delta(RQ_ListenerDelta rq) {
 		var outcome = begin();
 		if (!ownership(rq.getId()))
@@ -71,6 +70,7 @@ public class ListenerExe extends Exelet {
 	}
 
 	@Auth
+	@Handler(tag = MSG.Message.RQ_CHANGE_LISTENER_FIELD_NUMBER)
 	public Message.Builder rq_change_listener(RQ_ChangeListener rq) {
 		var outcome = begin();
 		if (!ownership(rq.getId()))

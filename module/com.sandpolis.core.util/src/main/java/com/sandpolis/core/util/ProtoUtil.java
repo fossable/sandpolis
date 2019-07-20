@@ -25,12 +25,10 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors.FieldDescriptor;
-import com.google.protobuf.Descriptors.OneofDescriptor;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
@@ -42,13 +40,6 @@ import com.sandpolis.core.proto.util.Result.Outcome;
  * @since 5.0.0
  */
 public final class ProtoUtil {
-
-	/**
-	 * The {@code oneof} descriptor that will contain the message response.
-	 */
-	public static final OneofDescriptor MSG_ONEOF = MSG.Message.getDescriptor().getOneofs().get(0);
-
-	public static final OneofDescriptor STREAM_ONEOF = EV_StreamData.getDescriptor().getOneofs().get(0);
 
 	/**
 	 * Begin an action that should be completed with {@link #success} or
@@ -228,14 +219,32 @@ public final class ProtoUtil {
 		}
 	}
 
+	// TODO clean up
+	public static com.google.protobuf.Message.Builder setPluginPayload(com.google.protobuf.Message.Builder msg,
+			MessageOrBuilder payload) {
+
+		// Build the payload if not already built
+		if (payload instanceof Builder)
+			payload = ((Builder) payload).build();
+
+		FieldDescriptor field = Message.getDescriptor()
+				.findFieldByName(convertMessageClassToFieldName(payload.getClass()));
+
+		if (field != null) {
+			return msg.setField(field, payload);
+		} else {
+			throw new RuntimeException();
+		}
+	}
+
 	/**
 	 * Get the payload from the given message.
 	 * 
 	 * @param msg The message
 	 * @return The message's payload or {@code null} if none
 	 */
-	public static Object getPayload(Message msg) {
-		FieldDescriptor oneof = msg.getOneofFieldDescriptor(MSG_ONEOF);
+	public static com.google.protobuf.Message getPayload(com.google.protobuf.Message msg) {
+		FieldDescriptor oneof = msg.getOneofFieldDescriptor(msg.getDescriptorForType().getOneofs().get(0));
 		if (oneof == null)
 			return null;
 
@@ -250,7 +259,7 @@ public final class ProtoUtil {
 				throw new RuntimeException(e);
 			}
 		}
-		return value;
+		return (com.google.protobuf.Message) value;
 	}
 
 	/**
@@ -285,7 +294,7 @@ public final class ProtoUtil {
 	 * @return The message's payload or {@code null} if none
 	 */
 	public static Object getPayload(EV_StreamData msg) {
-		FieldDescriptor oneof = msg.getOneofFieldDescriptor(STREAM_ONEOF);
+		FieldDescriptor oneof = msg.getOneofFieldDescriptor(msg.getDescriptorForType().getOneofs().get(0));
 		if (oneof == null)
 			return null;
 
@@ -299,7 +308,8 @@ public final class ProtoUtil {
 	 * @return The loaded message class
 	 * @throws ClassNotFoundException
 	 */
-	private static Class<? extends Message> convertPluginUrl(String url) throws ClassNotFoundException {
+	@SuppressWarnings("unchecked")
+	public static Class<? extends Message> convertPluginUrl(String url) throws ClassNotFoundException {
 		return (Class<? extends Message>) Class.forName(url.split("/")[0]);
 	}
 

@@ -66,7 +66,7 @@ public class SysinfoPlugin extends Plugin implements ExeletProvider {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Class<? extends Exelet>[] getExelets() {
-		return new Class[] { SysinfoExelet.class };
+		return new Class[] { SysinfoExe.class };
 	}
 
 }

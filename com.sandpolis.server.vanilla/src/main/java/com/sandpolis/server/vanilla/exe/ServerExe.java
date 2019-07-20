@@ -20,9 +20,9 @@ package com.sandpolis.server.vanilla.exe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCPing.RS_Ping;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.server.vanilla.store.server.ServerStore;
 
@@ -36,16 +36,14 @@ public class ServerExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(ServerExe.class);
 
-	public ServerExe(Sock connector) {
-		super(connector);
-	}
-
 	@Unauth
+	@Handler(tag = MSG.Message.RQ_SERVER_BANNER_FIELD_NUMBER)
 	public void rq_server_banner(Message m) {
 		reply(m, ServerStore.getBanner());
 	}
 
 	@Unauth
+	@Handler(tag = MSG.Message.RQ_PING_FIELD_NUMBER)
 	public void rq_ping(Message m) {
 		reply(m, RS_Ping.newBuilder());
 	}

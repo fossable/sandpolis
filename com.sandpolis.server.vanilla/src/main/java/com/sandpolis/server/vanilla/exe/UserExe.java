@@ -21,11 +21,11 @@ import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PermissionConstant.server;
-import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCUser.RQ_AddUser;
 import com.sandpolis.core.proto.net.MCUser.RQ_RemoveUser;
 import com.sandpolis.core.proto.net.MCUser.RQ_UserDelta;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.server.vanilla.store.user.User;
 import com.sandpolis.server.vanilla.store.user.UserStore;
 
@@ -37,12 +37,9 @@ import com.sandpolis.server.vanilla.store.user.UserStore;
  */
 public class UserExe extends Exelet {
 
-	public UserExe(Sock connector) {
-		super(connector);
-	}
-
 	@Auth
 	@Permission(permission = server.user.create)
+	@Handler(tag = MSG.Message.RQ_ADD_USER_FIELD_NUMBER)
 	public Message.Builder rq_add_user(RQ_AddUser rq) {
 		var outcome = begin();
 
@@ -51,6 +48,7 @@ public class UserExe extends Exelet {
 	}
 
 	@Auth
+	@Handler(tag = MSG.Message.RQ_REMOVE_USER_FIELD_NUMBER)
 	public Message.Builder rq_remove_user(RQ_RemoveUser rq) {
 		var outcome = begin();
 		if (!ownership(rq.getId()))
@@ -61,6 +59,7 @@ public class UserExe extends Exelet {
 	}
 
 	@Auth
+	@Handler(tag = MSG.Message.RQ_USER_DELTA_FIELD_NUMBER)
 	public Message.Builder rq_user_delta(RQ_UserDelta rq) {
 		var outcome = begin();
 		if (!ownership(rq.getDelta().getConfig().getId()))

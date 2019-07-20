@@ -26,10 +26,10 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
-import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCGenerator.RQ_Generate;
 import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.server.vanilla.PoolConstant.server;
 import com.sandpolis.server.vanilla.gen.FileGenerator;
 import com.sandpolis.server.vanilla.gen.generator.MegaGen;
@@ -44,11 +44,8 @@ public class GenExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(GenExe.class);
 
-	public GenExe(Sock connector) {
-		super(connector);
-	}
-
 	@Auth
+	@Handler(tag = MSG.Message.RQ_GENERATE_FIELD_NUMBER)
 	public Message.Builder rq_generate(RQ_Generate rq) throws Exception {
 		ExecutorService pool = ThreadStore.get(server.generator);
 

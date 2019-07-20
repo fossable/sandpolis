@@ -17,24 +17,29 @@
  *****************************************************************************/
 package com.sandpolis.plugin.sysinfo;
 
-import com.sandpolis.core.net.Sock;
+import com.google.protobuf.Message;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.plugin.sysinfo.net.MCSysinfo.RQ_NicTotals;
+import com.sandpolis.plugin.sysinfo.net.MCSysinfo.RS_NicTotals;
+import com.sandpolis.plugin.sysinfo.net.MSG;
 
-public class SysinfoExelet extends Exelet {
+import oshi.SystemInfo;
 
-	public SysinfoExelet(Sock connector) {
-		super(connector);
-	}
-
-	@Auth
-	public void rq_query(Message m) {
-		// TODO
-	}
+public class SysinfoExe extends Exelet {
 
 	@Auth
-	public void rq_enumerate(Message m) {
-		// TODO
-	}
+	@Handler(tag = MSG.SysinfoMessage.RQ_NIC_TOTALS_FIELD_NUMBER)
+	public Message.Builder rq_nic_totals(RQ_NicTotals rq) {
 
+		long upload = 0;
+		long download = 0;
+
+		for (var nif : new SystemInfo().getHardware().getNetworkIFs()) {
+			nif.updateNetworkStats();
+			download += nif.getBytesRecv();
+			upload += nif.getBytesSent();
+		}
+
+		return RS_NicTotals.newBuilder().setUpload(upload).setDownload(download);
+	}
 }

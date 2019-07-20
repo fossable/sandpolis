@@ -18,7 +18,6 @@
 package com.sandpolis.server.vanilla.exe;
 
 import com.google.protobuf.Message;
-import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCStream.ProfileStreamData;
 import com.sandpolis.core.proto.net.MCStream.RQ_StreamStop;
@@ -37,11 +36,8 @@ import com.sandpolis.server.vanilla.stream.ProfileStreamSource;
  */
 public class StreamExe extends Exelet {
 
-	public StreamExe(Sock connector) {
-		super(connector);
-	}
-
 	@Auth
+	@Handler(tag = MSG.Message.RQ_STREAM_START_FIELD_NUMBER)
 	public void rq_stream_start(MSG.Message m) {
 		var rq = m.getRqStreamStart();
 
@@ -60,6 +56,7 @@ public class StreamExe extends Exelet {
 	}
 
 	@Auth
+	@Handler(tag = MSG.Message.RQ_STREAM_STOP_FIELD_NUMBER)
 	public Message.Builder rq_stream_stop(RQ_StreamStop rq) {
 		var outcome = begin();
 
@@ -68,6 +65,7 @@ public class StreamExe extends Exelet {
 	}
 
 	@Auth
+	@Handler(tag = MSG.Message.EV_STREAM_DATA_FIELD_NUMBER)
 	public void ev_stream_data(MSG.Message m) {
 		StreamStore.streamData(m.getEvStreamData());
 	}

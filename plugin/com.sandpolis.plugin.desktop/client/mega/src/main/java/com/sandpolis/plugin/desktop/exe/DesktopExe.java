@@ -28,18 +28,32 @@ import javax.imageio.ImageIO;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import com.sandpolis.core.net.Sock;
+import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.util.ProtoUtil;
 import com.sandpolis.plugin.desktop.net.Desktop.RQ_Screenshot;
 import com.sandpolis.plugin.desktop.net.Desktop.RS_Screenshot;
+import com.sandpolis.plugin.desktop.net.MSG;
 
 public class DesktopExe extends Exelet {
 
-	public DesktopExe(Sock connector) {
-		super(connector);
+	@Override
+	public String getPluginPrefix() {
+		return "com.sandpolis.plugin.desktop";
+	}
+
+	@Override
+	public void reply(com.sandpolis.core.proto.net.MSG.Message msg, MessageOrBuilder payload) {
+		connector.send(ProtoUtil.rs(msg, ProtoUtil.setPluginPayload(MSG.DesktopMessage.newBuilder(), payload)));
+	}
+
+	@Override
+	public Message extractPayload(com.sandpolis.core.proto.net.MSG.Message msg) {
+		return ProtoUtil.getPayload(ProtoUtil.getPayload(msg));
 	}
 
 	@Auth
+	@Handler(tag = MSG.DesktopMessage.RQ_SCREENSHOT_FIELD_NUMBER)
 	public Message.Builder rq_screenshot(RQ_Screenshot rq) {
 		var outcome = begin();
 		try (var in = new PipedInputStream(); var out = new PipedOutputStream(in)) {

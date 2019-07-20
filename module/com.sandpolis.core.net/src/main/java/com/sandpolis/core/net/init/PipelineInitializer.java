@@ -27,7 +27,7 @@ import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.EventHandler;
-import com.sandpolis.core.net.handler.ExecuteHandler;
+import com.sandpolis.core.net.handler.ExeletHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.proto.net.MSG.Message;
 
@@ -163,9 +163,9 @@ public abstract class PipelineInitializer extends ChannelInitializer<Channel> {
 		p.addLast(ThreadStore.get(net.exelet), "response", response);
 		ch.attr(ChannelConstant.HANDLER_RESPONSE).set(response);
 
-		ExecuteHandler execute = new ExecuteHandler(exelets);
+		ExeletHandler execute = new ExeletHandler(exelets);
 		p.addLast(ThreadStore.get(net.exelet), "exe", execute);
-		ch.attr(ChannelConstant.HANDLER_EXECUTE).set(execute);
+		ch.attr(ChannelConstant.HANDLER_EXELET).set(execute);
 
 		// Sock management handler
 		p.addLast(EVENT);

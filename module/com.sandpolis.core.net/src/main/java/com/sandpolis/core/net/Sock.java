@@ -150,6 +150,9 @@ public class Sock {
 			log.debug("[CVID {}] Connection state changed: {}->{}", getRemoteCvid(), NOT_CONNECTED, CONNECTED);
 			Signaler.fire(Events.SOCK_ESTABLISHED, this);
 		}
+
+		this.channel.attr(ChannelConstant.HANDLER_EXELET).get().setSock(this);
+		this.channel.attr(ChannelConstant.HANDLER_EXELET).get().initUnauth();
 	}
 
 	/**
@@ -162,19 +165,16 @@ public class Sock {
 		channel.eventLoop().shutdownGracefully();
 	}
 
-	public void preauthenticate() {
-		log.debug("Preauthenticating");
-		channel.attr(ChannelConstant.HANDLER_EXECUTE).get().initUnauth(this);
-	}
-
 	public void authenticate() {
-		log.debug("Authenticating");
-		channel.attr(ChannelConstant.HANDLER_EXECUTE).get().initAuth(this);
+		requireState(CONNECTED);
+		channel.attr(ChannelConstant.HANDLER_EXELET).get().initAuth();
+		changeState(AUTHENTICATED);
 	}
 
 	public void deauthenticate() {
-		log.debug("Deauthenticating");
-		channel.attr(ChannelConstant.HANDLER_EXECUTE).get().resetHandlers();
+		requireState(AUTHENTICATED);
+		channel.attr(ChannelConstant.HANDLER_EXELET).get().deauth();
+		changeState(CONNECTED);
 	}
 
 	/**

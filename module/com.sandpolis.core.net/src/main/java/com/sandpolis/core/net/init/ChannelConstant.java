@@ -20,7 +20,7 @@ package com.sandpolis.core.net.init;
 import java.util.concurrent.Future;
 
 import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.handler.ExecuteHandler;
+import com.sandpolis.core.net.handler.ExeletHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.proto.util.Platform.Instance;
 
@@ -60,7 +60,7 @@ public final class ChannelConstant {
 	/**
 	 * The remote host's {@link ExecuteHandler}.
 	 */
-	public static final AttributeKey<ExecuteHandler> HANDLER_EXECUTE = AttributeKey.valueOf("handler.execute");
+	public static final AttributeKey<ExeletHandler> HANDLER_EXELET = AttributeKey.valueOf("handler.exelet");
 
 	/**
 	 * The remote host's {@link ResponseHandler}.

@@ -26,8 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.attribute.key.AK_VIEWER;
-import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.Sock.ConnectionState;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.ProfileStore;
@@ -48,11 +46,8 @@ public class LoginExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(LoginExe.class);
 
-	public LoginExe(Sock connector) {
-		super(connector);
-	}
-
 	@Auth
+	@Handler(tag = MSG.Message.RQ_LOGOUT_FIELD_NUMBER)
 	public void rq_logout(MSG.Message rq) {
 		log.debug("Processing logout request from: {}", connector.getRemoteIP());
 
@@ -60,6 +55,7 @@ public class LoginExe extends Exelet {
 	}
 
 	@Unauth
+	@Handler(tag = MSG.Message.RQ_LOGIN_FIELD_NUMBER)
 	public Message.Builder rq_login(RQ_Login rq) {
 		log.debug("Processing login request from: {}", connector.getRemoteIP());
 		var outcome = begin();
@@ -93,7 +89,6 @@ public class LoginExe extends Exelet {
 
 		// Mark connection as authenticated
 		connector.authenticate();
-		connector.changeState(ConnectionState.AUTHENTICATED);
 
 		// Update login metadata
 		Profile viewer = ProfileStore.getViewer(username).orElse(null);

@@ -23,10 +23,12 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Objects;
 
+import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ProtoUtil;
@@ -50,8 +52,22 @@ public abstract class Exelet {
 	 */
 	protected Sock connector;
 
-	public Exelet(Sock connector) {
-		this.connector = connector;
+	/**
+	 * Defines the message type that the target {@link Exelet} method handles.
+	 * 
+	 * @author cilki
+	 * @since 5.1.0
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	public static @interface Handler {
+
+		/**
+		 * The message tag of the message that is handled.
+		 * 
+		 * @return The message tag
+		 */
+		public int tag();
 	}
 
 	/**
@@ -88,10 +104,6 @@ public abstract class Exelet {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
 	public static @interface Permission {
-
-		/**
-		 * The permission identifier.
-		 */
 		short permission();
 	}
 
@@ -107,13 +119,36 @@ public abstract class Exelet {
 	public static @interface AccessPredicate {
 	}
 
+	public void setConnector(Sock connector) {
+		this.connector = Objects.requireNonNull(connector);
+	}
+
+	/**
+	 * Get the {@link Exelet}'s plugin message URL prefix.
+	 * 
+	 * @return The URL prefix or {@code null} if the exelet is not for plugins
+	 */
+	public String getPluginPrefix() {
+		return null;
+	}
+
+	/**
+	 * Get the given message's payload. Plugin exelets should override this method.
+	 * 
+	 * @param msg The message
+	 * @return The message's payload
+	 */
+	public Message extractPayload(MSG.Message msg) {
+		return ProtoUtil.getPayload(msg);
+	}
+
 	/**
 	 * Send a response to a message using {@link Sock#send}.
 	 * 
 	 * @param m        The original message
 	 * @param response The response payload
 	 */
-	protected void reply(Message m, MessageOrBuilder response) {
+	public void reply(MSG.Message m, MessageOrBuilder response) {
 		connector.send(rs(m, response));
 	}
 

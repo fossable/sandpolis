@@ -17,17 +17,21 @@
  *****************************************************************************/
 package com.sandpolis.client.mega.exe;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCClient.RQ_ClientMetadata;
 import com.sandpolis.core.proto.net.MCClient.RS_ClientMetadata;
 import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.util.Platform.Architecture;
 
 /**
  * @author cilki
@@ -38,30 +42,62 @@ public class ClientExe extends Exelet {
 	private static final Logger log = LoggerFactory.getLogger(ClientExe.class);
 
 	@Auth
+	@Handler(tag = MSG.Message.RQ_CLIENT_METADATA_FIELD_NUMBER)
 	public Message.Builder rq_client_metadata(RQ_ClientMetadata rq) throws Exception {
 		return RS_ClientMetadata.newBuilder().setUsername(System.getProperty("user.name"))
-				.setHostname(InetAddress.getLocalHost().getHostName());
+				.setOsVersion(System.getProperty("os.name") + " " + System.getProperty("os.version"))
+				.setHostname(InetAddress.getLocalHost().getHostName()).setOsType(PlatformUtil.queryOsType())
+				.setTimezone(TimeZone.getDefault().getID()).setStartTimestamp(Environment.JVM_TIMESTAMP.getTime())
+				// TODO
+				.setArch(Architecture.X86_64);
 	}
 
 	@Auth
-	public void rq_power_change(MSG.Message m) {
+	@Handler(tag = MSG.Message.RQ_POWER_CHANGE_FIELD_NUMBER)
+	public void rq_power_change(MSG.Message m) throws InterruptedException, IOException {
 		var rq = m.getRqPowerChange();
 		// TODO check permissions
 		// TODO avoid switches
-		switch (rq.getChange()) {
-		case POWEROFF:
-			// TODO
+		switch (PlatformUtil.queryOsType()) {
+		case LINUX:
+			switch (rq.getChange()) {
+			case POWEROFF:
+				Runtime.getRuntime().exec("sudo poweroff").waitFor();
+				break;
+			case RESTART:
+				Runtime.getRuntime().exec("sudo reboot").waitFor();
+				break;
+			default:
+				break;
+			}
 			break;
-		case RESTART:
-			// TODO
+		case MACOS:
+			switch (rq.getChange()) {
+			case POWEROFF:
+				Runtime.getRuntime().exec("sudo shutdown -h now").waitFor();
+				break;
+			case RESTART:
+				Runtime.getRuntime().exec("sudo shutdown -r now").waitFor();
+				break;
+			default:
+				break;
+			}
+			break;
+		case WINDOWS:
+			switch (rq.getChange()) {
+			case POWEROFF:
+				Runtime.getRuntime().exec("shutdown /p").waitFor();
+				break;
+			case RESTART:
+				Runtime.getRuntime().exec("shutdown /r").waitFor();
+				break;
+			default:
+				break;
+			}
 			break;
 		default:
 			break;
 		}
-	}
-
-	public ClientExe(Sock connector) {
-		super(connector);
 	}
 
 }

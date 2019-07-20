@@ -28,8 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
-import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.Sock.ConnectionState;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.Sand5Handler;
 import com.sandpolis.core.profile.Profile;
@@ -52,10 +50,6 @@ import io.netty.util.concurrent.Future;
 public class AuthExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(AuthExe.class);
-
-	public AuthExe(Sock connector) {
-		super(connector);
-	}
 
 //	@Unauth
 //	public Message.Builder rq_no_auth(RQ_NoAuth rq) {
@@ -82,6 +76,7 @@ public class AuthExe extends Exelet {
 	// TODO temporarily use void-style handler to avoid creating profile before
 	// response is sent.
 	@Unauth
+	@Handler(tag = MSG.Message.RQ_NO_AUTH_FIELD_NUMBER)
 	public void rq_no_auth(MSG.Message m) {
 		var outcome = begin();
 
@@ -94,7 +89,6 @@ public class AuthExe extends Exelet {
 
 		// Connection is now authenticated
 		connector.authenticate();
-		connector.changeState(ConnectionState.AUTHENTICATED);
 
 		reply(m, success(outcome));
 
@@ -105,6 +99,7 @@ public class AuthExe extends Exelet {
 	}
 
 	@Unauth
+	@Handler(tag = MSG.Message.RQ_PASSWORD_AUTH_FIELD_NUMBER)
 	public Message.Builder rq_password_auth(RQ_PasswordAuth rq) {
 		var outcome = begin();
 
@@ -121,12 +116,12 @@ public class AuthExe extends Exelet {
 
 		// Connection is now authenticated
 		connector.authenticate();
-		connector.changeState(ConnectionState.AUTHENTICATED);
 
 		return success(outcome);
 	}
 
 	@Unauth
+	@Handler(tag = MSG.Message.RQ_KEY_AUTH_FIELD_NUMBER)
 	public Message.Builder rq_key_auth(RQ_KeyAuth rq) throws InterruptedException, ExecutionException {
 		var outcome = begin();
 
@@ -151,7 +146,6 @@ public class AuthExe extends Exelet {
 
 			// Connection is now authenticated
 			connector.authenticate();
-			connector.changeState(ConnectionState.AUTHENTICATED);
 			return success(outcome);
 		} else {
 			log.debug("Refusing key authentication attempt due to failed challenge");

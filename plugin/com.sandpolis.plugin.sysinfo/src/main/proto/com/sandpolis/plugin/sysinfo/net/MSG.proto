@@ -24,11 +24,11 @@ import "com/sandpolis/plugin/sysinfo/net/MC_Sysinfo.proto";
 
 message SysinfoMessage {
 
-	oneof sysinfo_msg_type {
+	oneof plugin_type {
 
 		// MC_Sysinfo
-        RQ_NicTotals                   rq_nic_totals                  = 100;
-        RS_NicTotals                   rs_nic_totals                  = 101;
+        RQ_NicTotals                   rq_nic_totals                  = 1;
+        RS_NicTotals                   rs_nic_totals                  = 1001;
 
 	}
 }
