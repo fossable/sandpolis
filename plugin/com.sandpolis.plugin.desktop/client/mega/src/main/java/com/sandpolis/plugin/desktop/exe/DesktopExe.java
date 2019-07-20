@@ -31,8 +31,8 @@ import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.util.ProtoUtil;
-import com.sandpolis.plugin.desktop.net.Desktop.RQ_Screenshot;
-import com.sandpolis.plugin.desktop.net.Desktop.RS_Screenshot;
+import com.sandpolis.plugin.desktop.net.MCDesktop.RQ_Screenshot;
+import com.sandpolis.plugin.desktop.net.MCDesktop.RS_Screenshot;
 import com.sandpolis.plugin.desktop.net.MSG;
 
 public class DesktopExe extends Exelet {

@@ -36,6 +36,8 @@ import "com/sandpolis/core/proto/net/MC_Stream.proto";
 import "com/sandpolis/core/proto/net/MC_User.proto";
 import "com/sandpolis/core/proto/util/Result.proto";
 
+import "com/sandpolis/core/proto/net/MC_Temp.proto";
+
 import "google/protobuf/any.proto";
 
 /**
@@ -146,5 +148,15 @@ message Message {
         RS_ClientMetadata              rs_client_metadata             = 1037;
         RQ_PowerChange                 rq_power_change                = 38;
 
+		// Temporary:
+		RQ_NicTotals                   rq_nic_totals                  = 39;
+		RS_NicTotals                   rs_nic_totals                  = 1039;
+		RQ_Screenshot                  rq_screenshot                  = 40;
+		RS_Screenshot                  rs_screenshot                  = 1040;
+		EV_FileListing                 ev_file_listing                = 41;
+		RQ_FileListing                 rq_file_listing                = 42;
+		RS_FileListing                 rs_file_listing                = 1042;
+		RQ_Execute                     rq_execute                     = 43;
+		RS_Execute                     rs_execute                     = 1043;
     }
 }

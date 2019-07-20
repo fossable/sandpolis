@@ -19,8 +19,8 @@ package com.sandpolis.plugin.desktop.cmd;
 
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.plugin.desktop.net.Desktop.RQ_Screenshot;
-import com.sandpolis.plugin.desktop.net.Desktop.RS_Screenshot;
+import com.sandpolis.plugin.desktop.net.MCDesktop.RQ_Screenshot;
+import com.sandpolis.plugin.desktop.net.MCDesktop.RS_Screenshot;
 
 /**
  * Contains desktop commands.

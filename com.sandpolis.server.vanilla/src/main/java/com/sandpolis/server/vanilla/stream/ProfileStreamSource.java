@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 
 import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MCStream.ProfileStreamData;
@@ -40,8 +41,8 @@ import com.sandpolis.core.stream.store.StreamSource;
 public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
 
 	private final Consumer<Profile> online = (Profile profile) -> {
-		submit(ProfileStreamData.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid()).setOnline(true)
-				.build());
+		submit(ProfileStreamData.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid())
+				.setIp(ConnectionStore.get(profile.getCvid()).getRemoteIP()).setOnline(true).build());
 	};
 
 	private final Consumer<Sock> offline = (Sock sock) -> {

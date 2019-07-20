@@ -70,7 +70,8 @@ message RQ_StreamStop {
 message ProfileStreamData {
 	int32 cvid = 1;
 	string uuid = 2;
-	bool online = 3;
+	string ip = 3; // Temporary
+	bool online = 4;
 }
 
 /**
