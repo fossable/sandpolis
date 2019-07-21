@@ -153,10 +153,12 @@ message Message {
 		RS_NicTotals                   rs_nic_totals                  = 1039;
 		RQ_Screenshot                  rq_screenshot                  = 40;
 		RS_Screenshot                  rs_screenshot                  = 1040;
-		EV_FileListing                 ev_file_listing                = 41;
-		RQ_FileListing                 rq_file_listing                = 42;
-		RS_FileListing                 rs_file_listing                = 1042;
-		RQ_Execute                     rq_execute                     = 43;
-		RS_Execute                     rs_execute                     = 1043;
+		RQ_FileHandle                  rq_file_handle                 = 41;
+		RS_FileHandle                  rs_file_handle                 = 1041;
+		EV_FileListing                 ev_file_listing                = 42;
+		RQ_FileListing                 rq_file_listing                = 43;
+		RS_FileListing                 rs_file_listing                = 1043;
+		RQ_Execute                     rq_execute                     = 44;
+		RS_Execute                     rs_execute                     = 1044;
     }
 }

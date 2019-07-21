@@ -16,7 +16,7 @@
  *                                                                            *
  *****************************************************************************/
 
-package com.sandpolis.plugin.filesys;
+package com.sandpolis.client.mega.temp;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -48,11 +48,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.sandpolis.core.proto.net.MCTemp.EV_FileListing;
+import com.sandpolis.core.proto.net.MCTemp.FileListlet;
+import com.sandpolis.core.proto.net.MCTemp.FileListlet.UpdateType;
+import com.sandpolis.core.proto.net.MCTemp.FsHandleOptions;
 import com.sandpolis.core.util.IDUtil;
-import com.sandpolis.plugin.filesys.net.Filesys.EV_FileListing;
-import com.sandpolis.plugin.filesys.net.Filesys.FileListlet;
-import com.sandpolis.plugin.filesys.net.Filesys.FileListlet.UpdateType;
-import com.sandpolis.plugin.filesys.net.Filesys.FsHandleOptions;
 
 /**
  * This class provides a convenient handle on the local filesystem.

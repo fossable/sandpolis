@@ -104,6 +104,22 @@ message FileListlet {
 }
 
 /**
+ * Request to open a new filesystem handle.
+ */
+message RQ_FileHandle {
+	FsHandleOptions options = 1;
+}
+
+/**
+ * Response to a handle request.
+ */
+message RS_FileHandle {
+
+	// The filesystem handle's ID
+	int32 fmid = 1;
+}
+
+/**
  * Updates to a directory listing.
  */
 message EV_FileListing {

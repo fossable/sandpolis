@@ -7,16 +7,23 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
+import com.sandpolis.client.mega.temp.FsHandle;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCTemp.RQ_Execute;
+import com.sandpolis.core.proto.net.MCTemp.RQ_FileHandle;
+import com.sandpolis.core.proto.net.MCTemp.RQ_FileListing;
 import com.sandpolis.core.proto.net.MCTemp.RQ_NicTotals;
 import com.sandpolis.core.proto.net.MCTemp.RQ_Screenshot;
 import com.sandpolis.core.proto.net.MCTemp.RS_Execute;
+import com.sandpolis.core.proto.net.MCTemp.RS_FileHandle;
+import com.sandpolis.core.proto.net.MCTemp.RS_FileListing;
 import com.sandpolis.core.proto.net.MCTemp.RS_NicTotals;
 import com.sandpolis.core.proto.net.MCTemp.RS_Screenshot;
 import com.sandpolis.core.proto.net.MSG;
@@ -77,4 +84,27 @@ public class TempExe extends Exelet {
 			return RS_Execute.newBuilder().setResult(buffer.toString());
 		}
 	}
+
+	private static Map<Integer, FsHandle> handles = new HashMap<>();
+
+	@Auth
+	@Handler(tag = MSG.Message.RQ_FILE_HANDLE_FIELD_NUMBER)
+	// Duplicated from FilesysExe
+	public Message.Builder rq_file_handle(RQ_FileHandle rq) {
+		var handle = new FsHandle(System.getProperty("user.home"), rq.getOptions());
+		handles.put(handle.getId(), handle);
+
+		return RS_FileHandle.newBuilder().setFmid(handle.getId());
+	}
+
+	@Auth
+	@Handler(tag = MSG.Message.RQ_FILE_LISTING_FIELD_NUMBER)
+	// Duplicated from FilesysExe
+	public Message.Builder rq_file_listing(RQ_FileListing rq) throws Exception {
+		var handle = handles.get(rq.getFmid());
+		handle.down(rq.getDown());
+
+		return RS_FileListing.newBuilder().addAllListing(handle.list());
+	}
+
 }
