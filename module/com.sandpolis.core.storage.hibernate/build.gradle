@@ -38,7 +38,7 @@ dependencies {
 
 	// https://github.com/hibernate/hibernate-orm
 	implementation 'org.hibernate:hibernate-core:5.4.3.Final'
-	implementation 'org.hibernate:hibernate-c3p0:5.4.0.Final'
+	implementation 'org.hibernate:hibernate-c3p0:5.4.4.Final'
 	implementation 'javax.xml.bind:jaxb-api:2.3.0'
 
 	// https://github.com/gwenn/sqlite-dialect
