@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.client.mega.cmd.AuthCmd;
-import com.sandpolis.client.mega.cmd.PluginCmd;
 import com.sandpolis.client.mega.exe.ClientExe;
 import com.sandpolis.client.mega.exe.TempExe;
 import com.sandpolis.core.instance.BasicTasks;
@@ -206,14 +205,15 @@ public final class Client {
 			if (Config.getBoolean(plugin.enabled)) {
 				future.addHandler((Outcome rs) -> {
 					// Synchronize plugins
-					//PluginCmd.async().sync().sync();
-					//PluginStore.loadPlugins();
+					// PluginCmd.async().sync().sync();
+					// PluginStore.loadPlugins();
 				});
 			}
 		});
 
 		Signaler.register(SRV_LOST, () -> {
-			ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class, TempExe.class });
+			ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(),
+					new Class[] { ClientExe.class, TempExe.class });
 		});
 		Signaler.fire(SRV_LOST);
 

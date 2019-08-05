@@ -255,7 +255,7 @@ public final class Server {
 				GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
 						.setMega(MegaConfig.newBuilder().setNetwork(NetworkConfig.newBuilder()
 								.setLoopConfig(LoopConfig.newBuilder().setTimeout(1000).setMaxTimeout(1000)
-										.addTarget(NetworkTarget.newBuilder().setAddress("127.0.0.1").setPort(10101)))))
+										.addTarget(NetworkTarget.newBuilder().setAddress("demo.sandpolis.com").setPort(10101)))))
 						.build()).generate();
 
 		return task.success();

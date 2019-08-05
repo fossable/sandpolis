@@ -21,15 +21,7 @@ package net;
 option java_package = "com.sandpolis.core.proto.net";
 
 // TEMPORARY:
-// This file was duplicated to avoid plugins for now
-
-message RQ_NicTotals {
-}
-
-message RS_NicTotals {
-	int64 download = 1;
-	int64 upload = 2;
-}
+// This entire file was duplicated to avoid plugins for now
 
 message RQ_Screenshot {
 }
@@ -104,22 +96,6 @@ message FileListlet {
 }
 
 /**
- * Request to open a new filesystem handle.
- */
-message RQ_FileHandle {
-	FsHandleOptions options = 1;
-}
-
-/**
- * Response to a handle request.
- */
-message RS_FileHandle {
-
-	// The filesystem handle's ID
-	int32 fmid = 1;
-}
-
-/**
  * Updates to a directory listing.
  */
 message EV_FileListing {
@@ -137,20 +113,9 @@ message EV_FileListing {
  * Request a directory listing.
  */
 message RQ_FileListing {
-
-	int32 fmid = 1;
-
-	oneof target {
+	string path = 1;
 	
-		// Moves the working directory up one level
-		bool up = 2;
-		
-		// Moves the working directory down into the given directory
-		string down = 3;
-		
-		// Moves the working directory to the given path
-		string absolute = 4;
-	}
+	FsHandleOptions options = 2;
 }
 
 /**
@@ -165,11 +130,16 @@ message RS_FileListing {
 	repeated FileListlet listing = 2;
 }
 
+message RQ_FileDelete {
+	string path = 1;
+}
+
 message RQ_Execute {
 	string type = 1;
 	string command = 2;
 }
 
 message RS_Execute {
-	string result = 1;
+	int32 exitCode = 1;
+	string result = 2;
 }

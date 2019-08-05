@@ -81,7 +81,7 @@ public class MegaGen extends FileGenerator {
 					// Add library
 					output.add("lib/" + source.getFileName(), source);
 
-					// Skip native dependencies if possible
+					// Strip native dependencies if possible
 					artifact.getArtifact().getNativeComponentList().stream()
 							// Filter out unnecessary platform-specific libraries
 							.filter(component -> !features.getSupportedOsList()
@@ -89,7 +89,7 @@ public class MegaGen extends FileGenerator {
 							.filter(component -> !features.getSupportedArchList()
 									.contains(Architecture.valueOf(component.getArchitecture())))
 							.forEach(component -> {
-								output.sub(EntryPath.get("lib/" + source.getFileName(), component.getPath()));
+//								output.sub(EntryPath.get("lib/" + source.getFileName(), component.getPath()));
 							});
 
 				});

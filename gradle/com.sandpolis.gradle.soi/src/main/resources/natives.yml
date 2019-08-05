@@ -23,7 +23,7 @@ jna:
   aix:
     PPC: '/com/sun/jna/aix-ppc/libjnidispatch.a'
     PPC64: '/com/sun/jna/aix-ppc64/libjnidispatch.a'
-  osx:
+  macos:
     X86_64: '/com/sun/jna/darwin/libjnidispatch.jnilib'
   linux:
     X86: '/com/sun/jna/linux-x86/libjnidispatch.so'

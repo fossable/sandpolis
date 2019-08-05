@@ -32,6 +32,9 @@ import com.sandpolis.core.proto.net.MCClient.RQ_ClientMetadata;
 import com.sandpolis.core.proto.net.MCClient.RS_ClientMetadata;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Platform.Architecture;
+import com.sandpolis.core.proto.util.Result.Outcome;
+
+import oshi.SystemInfo;
 
 /**
  * @author cilki
@@ -44,18 +47,52 @@ public class ClientExe extends Exelet {
 	@Auth
 	@Handler(tag = MSG.Message.RQ_CLIENT_METADATA_FIELD_NUMBER)
 	public Message.Builder rq_client_metadata(RQ_ClientMetadata rq) throws Exception {
-		return RS_ClientMetadata.newBuilder().setUsername(System.getProperty("user.name"))
-				.setOsVersion(System.getProperty("os.name") + " " + System.getProperty("os.version"))
-				.setHostname(InetAddress.getLocalHost().getHostName()).setOsType(PlatformUtil.queryOsType())
-				.setTimezone(TimeZone.getDefault().getID()).setStartTimestamp(Environment.JVM_TIMESTAMP.getTime())
-				// TODO
-				.setArch(Architecture.X86_64);
+
+		// Temporarily calculate nic totals
+		long upload = 0;
+		long download = 0;
+
+		try {
+			for (var nif : new SystemInfo().getHardware().getNetworkIFs()) {
+				nif.updateNetworkStats();
+				download += nif.getBytesRecv();
+				upload += nif.getBytesSent();
+			}
+		} catch (Throwable e) {
+			// Ignore
+			System.out.println("Failed to query network usage");
+		}
+
+		// Temporary hostname
+		String hostname = InetAddress.getLocalHost().getHostName();
+		if (!hostname.contains("VM"))
+			hostname = "AWS-" + hostname;
+
+		// Temporary user home
+		String userhome = System.getProperty("user.home");
+		if (!userhome.startsWith("/"))
+			userhome = "/" + userhome;
+
+		try {
+			return RS_ClientMetadata.newBuilder().setUsername(System.getProperty("user.name"))
+					.setOsVersion(System.getProperty("os.name") + " " + System.getProperty("os.version"))
+					.setHostname(hostname).setOsType(PlatformUtil.queryOsType())
+					.setTimezone(TimeZone.getDefault().getID()).setStartTimestamp(Environment.JVM_TIMESTAMP.getTime())
+					.setUserhome(userhome)
+					// Temporary:
+					.setArch(Architecture.X86_64).setUpload(upload).setDownload(download);
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_POWER_CHANGE_FIELD_NUMBER)
 	public void rq_power_change(MSG.Message m) throws InterruptedException, IOException {
 		var rq = m.getRqPowerChange();
+		reply(m, Outcome.newBuilder().setResult(true));
 		// TODO check permissions
 		// TODO avoid switches
 		switch (PlatformUtil.queryOsType()) {
@@ -98,6 +135,8 @@ public class ClientExe extends Exelet {
 		default:
 			break;
 		}
+
+		System.exit(0);
 	}
 
 }

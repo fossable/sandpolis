@@ -41,8 +41,15 @@ import com.sandpolis.core.stream.store.StreamSource;
 public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
 
 	private final Consumer<Profile> online = (Profile profile) -> {
-		submit(ProfileStreamData.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid())
-				.setIp(ConnectionStore.get(profile.getCvid()).getRemoteIP()).setOnline(true).build());
+		var data = ProfileStreamData.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid()).setOnline(true);
+
+		Sock sock = ConnectionStore.get(profile.getCvid());
+		if (sock != null) {
+			data.setIp(sock.getRemoteIP());
+			submit(data.build());
+		} else {
+			System.out.println("Failed to find connection to: " + profile.getCvid());
+		}
 	};
 
 	private final Consumer<Sock> offline = (Sock sock) -> {

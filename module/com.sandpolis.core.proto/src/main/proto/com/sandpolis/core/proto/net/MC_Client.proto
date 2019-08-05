@@ -50,6 +50,11 @@ message RS_ClientMetadata {
 	
 	// The JVM start time
 	int64 start_timestamp = 7;
+	
+	// Temporary:
+	int64 upload = 8;
+	int64 download = 9;
+	string userhome = 10;
 }
 
 message RQ_PowerChange {
