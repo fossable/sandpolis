@@ -26,7 +26,7 @@ sourceSets {
 
 dependencies {
 	// https://github.com/protocolbuffers/protobuf
-	api 'com.google.protobuf:protobuf-java:3.8.0'
+	api 'com.google.protobuf:protobuf-java:3.9.1'
 }
 
 protobuf {
