@@ -47,8 +47,6 @@ public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
 		if (sock != null) {
 			data.setIp(sock.getRemoteIP());
 			submit(data.build());
-		} else {
-			System.out.println("Failed to find connection to: " + profile.getCvid());
 		}
 	};
 

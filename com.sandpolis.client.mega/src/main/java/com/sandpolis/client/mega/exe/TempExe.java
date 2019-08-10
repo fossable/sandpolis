@@ -7,14 +7,18 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.Base64;
 
 import javax.imageio.ImageIO;
 
 import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.sandpolis.client.mega.temp.FsHandle;
+import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCTemp.RQ_Execute;
 import com.sandpolis.core.proto.net.MCTemp.RQ_FileDelete;
@@ -23,8 +27,8 @@ import com.sandpolis.core.proto.net.MCTemp.RQ_Screenshot;
 import com.sandpolis.core.proto.net.MCTemp.RS_Execute;
 import com.sandpolis.core.proto.net.MCTemp.RS_FileListing;
 import com.sandpolis.core.proto.net.MCTemp.RS_Screenshot;
-import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.util.Result.Outcome;
 
 // Temporary:
 // Delete this class once plugins are working
@@ -50,7 +54,26 @@ public class TempExe extends Exelet {
 	@Handler(tag = MSG.Message.RQ_EXECUTE_FIELD_NUMBER)
 	// Duplicated from ShellExe
 	public Message.Builder rq_execute(RQ_Execute rq) throws Exception {
-		Process p = Runtime.getRuntime().exec(rq.getCommand());
+
+		String[] command;
+		switch (PlatformUtil.queryOsType()) {
+		case LINUX:
+			command = new String[] { "sh", "-c",
+					"base64 -d <<< " + Base64.getEncoder().encodeToString(rq.getCommand().getBytes()) + " | sh" };
+			break;
+		case MACOS:
+			command = new String[] { "sh", "-c",
+					"base64 -D <<< " + Base64.getEncoder().encodeToString(rq.getCommand().getBytes()) + " | sh" };
+			break;
+		case WINDOWS:
+			command = new String[] { "powershell", "-encodedCommand",
+					Base64.getEncoder().encodeToString(rq.getCommand().getBytes(StandardCharsets.UTF_16LE)) };
+			break;
+		default:
+			throw new RuntimeException();
+		}
+
+		Process p = Runtime.getRuntime().exec(command);
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
 			int exit = p.waitFor();
 
@@ -68,7 +91,16 @@ public class TempExe extends Exelet {
 	@Handler(tag = MSG.Message.RQ_FILE_LISTING_FIELD_NUMBER)
 	// Duplicated from FilesysExe
 	public Message.Builder rq_file_listing(RQ_FileListing rq) throws Exception {
-		try (FsHandle handle = new FsHandle(rq.getPath(), rq.getOptions())) {
+		String path;
+		switch (PlatformUtil.queryOsType()) {
+		case WINDOWS:
+			path = rq.getPath().startsWith("/") ? rq.getPath().substring(1) : rq.getPath();
+			break;
+		default:
+			path = rq.getPath();
+		}
+
+		try (FsHandle handle = new FsHandle(path, rq.getOptions())) {
 			return RS_FileListing.newBuilder().addAllListing(handle.list());
 		}
 	}
@@ -77,7 +109,16 @@ public class TempExe extends Exelet {
 	@Handler(tag = MSG.Message.RQ_FILE_DELETE_FIELD_NUMBER)
 	// Duplicated from FilesysExe
 	public Message.Builder rq_file_delete(RQ_FileDelete rq) throws Exception {
-		MoreFiles.deleteRecursively(Paths.get(rq.getPath()));
+		String path;
+		switch (PlatformUtil.queryOsType()) {
+		case WINDOWS:
+			path = rq.getPath().startsWith("/") ? rq.getPath().substring(1) : rq.getPath();
+			break;
+		default:
+			path = rq.getPath();
+		}
+
+		MoreFiles.deleteRecursively(Paths.get(path), RecursiveDeleteOption.ALLOW_INSECURE);
 		return Outcome.newBuilder().setResult(true);
 	}
 }

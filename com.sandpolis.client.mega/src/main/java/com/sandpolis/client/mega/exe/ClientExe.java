@@ -59,8 +59,7 @@ public class ClientExe extends Exelet {
 				upload += nif.getBytesSent();
 			}
 		} catch (Throwable e) {
-			// Ignore
-			System.out.println("Failed to query network usage");
+			log.error("Failed to query network stats", e);
 		}
 
 		// Temporary hostname
