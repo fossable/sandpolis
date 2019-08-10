@@ -41,7 +41,7 @@ dependencies {
 	implementation 'io.netty:netty-handler:4.1.37.Final'
 
 	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.26'
+	implementation 'org.slf4j:slf4j-api:1.7.27'
 }
 
 jar {
