@@ -19,6 +19,7 @@ package com.sandpolis.client.mega.exe;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.Paths;
 import java.util.TimeZone;
 
 import org.slf4j.Logger;
@@ -67,17 +68,12 @@ public class ClientExe extends Exelet {
 		if (!hostname.contains("VM"))
 			hostname = "AWS-" + hostname;
 
-		// Temporary user home
-		String userhome = System.getProperty("user.home");
-		if (!userhome.startsWith("/"))
-			userhome = "/" + userhome;
-
 		try {
 			return RS_ClientMetadata.newBuilder().setUsername(System.getProperty("user.name"))
 					.setOsVersion(System.getProperty("os.name") + " " + System.getProperty("os.version"))
 					.setHostname(hostname).setOsType(PlatformUtil.queryOsType())
 					.setTimezone(TimeZone.getDefault().getID()).setStartTimestamp(Environment.JVM_TIMESTAMP.getTime())
-					.setUserhome(userhome)
+					.setUserhome(Paths.get(System.getProperty("user.home")).toUri().getPath())
 					// Temporary:
 					.setArch(Architecture.X86_64).setUpload(upload).setDownload(download);
 		} catch (Throwable e) {

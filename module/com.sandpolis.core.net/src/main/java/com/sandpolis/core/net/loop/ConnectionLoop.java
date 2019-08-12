@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ChannelConstant;
@@ -105,7 +104,7 @@ public final class ConnectionLoop implements Runnable {
 
 		bootstrap.attr(ChannelConstant.STRICT_CERTS, config.getStrictCerts());
 
-		future = new SockFuture((EventExecutor) ThreadStore.get(net.connection.outgoing));
+		future = new SockFuture((EventExecutor) ThreadStore.get("temploop"));
 	}
 
 	@Override
@@ -148,7 +147,7 @@ public final class ConnectionLoop implements Runnable {
 	 * @return A {@link SockFuture}
 	 */
 	public SockFuture start() {
-		return start((ExecutorService) ThreadStore.get(net.connection.outgoing));
+		return start((ExecutorService) ThreadStore.get("temploop"));
 	}
 
 	/**

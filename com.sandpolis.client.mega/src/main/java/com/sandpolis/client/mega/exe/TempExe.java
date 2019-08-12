@@ -95,6 +95,8 @@ public class TempExe extends Exelet {
 		switch (PlatformUtil.queryOsType()) {
 		case WINDOWS:
 			path = rq.getPath().startsWith("/") ? rq.getPath().substring(1) : rq.getPath();
+			if (path.equals("C:"))
+				path = "/";
 			break;
 		default:
 			path = rq.getPath();
