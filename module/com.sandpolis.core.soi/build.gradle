@@ -35,7 +35,7 @@ dependencies {
 	api 'com.google.protobuf:protobuf-java:3.8.0'
 	
 	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.27'
+	implementation 'org.slf4j:slf4j-api:1.7.28'
 }
 
 protobuf {

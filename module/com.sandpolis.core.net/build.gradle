@@ -40,7 +40,7 @@ dependencies {
 	implementation 'org.pf4j:pf4j:3.0.1'
 
 	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.27'
+	implementation 'org.slf4j:slf4j-api:1.7.28'
 }
 
 // Allow com.sandpolis.server.vanilla to reuse some unit tests
