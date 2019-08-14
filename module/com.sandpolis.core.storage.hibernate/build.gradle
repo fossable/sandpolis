@@ -20,7 +20,7 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.1'
 
 	// https://github.com/jhalterman/concurrentunit
-	testImplementation 'net.jodah:concurrentunit:0.4.4'
+	testImplementation 'net.jodah:concurrentunit:0.4.6'
 
 	// https://github.com/vorburger/MariaDB4j
 	testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.3.0'
