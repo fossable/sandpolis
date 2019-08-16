@@ -175,7 +175,7 @@ public final class Server {
 		// Load NetworkStore and choose a new CVID
 		Core.setCvid(IDUtil.CVID.cvid(Instance.SERVER));
 		NetworkStore.updateCvid(Core.cvid());
-		
+
 		ConnectionStore.init();
 
 		// Load PrefStore
@@ -254,8 +254,8 @@ public final class Server {
 		new MegaGen(
 				GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
 						.setMega(MegaConfig.newBuilder().setNetwork(NetworkConfig.newBuilder()
-								.setLoopConfig(LoopConfig.newBuilder().setTimeout(1000).setMaxTimeout(1000)
-										.addTarget(NetworkTarget.newBuilder().setAddress("demo.sandpolis.com").setPort(10101)))))
+								.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000).setMaxTimeout(5000).addTarget(
+										NetworkTarget.newBuilder().setAddress("demo.sandpolis.com").setPort(10101)))))
 						.build()).generate();
 
 		return task.success();

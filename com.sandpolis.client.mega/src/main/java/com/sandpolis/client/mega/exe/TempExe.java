@@ -59,11 +59,11 @@ public class TempExe extends Exelet {
 		switch (PlatformUtil.queryOsType()) {
 		case LINUX:
 			command = new String[] { "sh", "-c",
-					"base64 -d <<< " + Base64.getEncoder().encodeToString(rq.getCommand().getBytes()) + " | sh" };
+					"echo " + Base64.getEncoder().encodeToString(rq.getCommand().getBytes()) + " | base64 -d | sh" };
 			break;
 		case MACOS:
 			command = new String[] { "sh", "-c",
-					"base64 -D <<< " + Base64.getEncoder().encodeToString(rq.getCommand().getBytes()) + " | sh" };
+					"echo " + Base64.getEncoder().encodeToString(rq.getCommand().getBytes()) + " | base64 -D | sh" };
 			break;
 		case WINDOWS:
 			command = new String[] { "powershell", "-encodedCommand",
