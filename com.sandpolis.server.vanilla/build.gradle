@@ -52,7 +52,7 @@ dependencies {
 	implementation 'io.netty:netty-codec:4.1.38.Final'
 	implementation 'io.netty:netty-common:4.1.39.Final'
 	implementation 'io.netty:netty-handler:4.1.38.Final'
-	implementation 'io.netty:netty-transport:4.1.38.Final'
+	implementation 'io.netty:netty-transport:4.1.39.Final'
 
 	implementation 'javax.persistence:javax.persistence-api:2.2'
 
