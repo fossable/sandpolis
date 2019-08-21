@@ -1,0 +1,166 @@
+PODS:
+  - CNIOAtomics (2.0.0)
+  - CNIODarwin (2.0.0)
+  - CNIOLinux (2.0.0)
+  - CNIOSHA1 (2.0.0)
+  - CryptoSwift (1.0.0)
+  - Firebase/Auth (6.4.0):
+    - Firebase/CoreOnly
+    - FirebaseAuth (~> 6.2.0)
+  - Firebase/Core (6.4.0):
+    - Firebase/CoreOnly
+    - FirebaseAnalytics (= 6.0.3)
+  - Firebase/CoreOnly (6.4.0):
+    - FirebaseCore (= 6.0.4)
+  - Firebase/Database (6.4.0):
+    - Firebase/CoreOnly
+    - FirebaseDatabase (~> 6.0.0)
+  - FirebaseAnalytics (6.0.3):
+    - FirebaseCore (~> 6.0)
+    - FirebaseInstanceID (~> 4.2)
+    - GoogleAppMeasurement (= 6.0.3)
+    - GoogleUtilities/AppDelegateSwizzler (~> 6.0)
+    - GoogleUtilities/MethodSwizzler (~> 6.0)
+    - GoogleUtilities/Network (~> 6.0)
+    - "GoogleUtilities/NSData+zlib (~> 6.0)"
+    - nanopb (~> 0.3)
+  - FirebaseAuth (6.2.0):
+    - FirebaseAuthInterop (~> 1.0)
+    - FirebaseCore (~> 6.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 6.2)
+    - GoogleUtilities/Environment (~> 6.2)
+    - GTMSessionFetcher/Core (~> 1.1)
+  - FirebaseAuthInterop (1.0.0)
+  - FirebaseCore (6.0.4):
+    - GoogleUtilities/Environment (~> 6.0)
+    - GoogleUtilities/Logger (~> 6.0)
+  - FirebaseDatabase (6.0.0):
+    - FirebaseAuthInterop (~> 1.0)
+    - FirebaseCore (~> 6.0)
+    - leveldb-library (~> 1.18)
+  - FirebaseInstanceID (4.2.1):
+    - FirebaseCore (~> 6.0)
+    - GoogleUtilities/Environment (~> 6.0)
+    - GoogleUtilities/UserDefaults (~> 6.0)
+  - GoogleAppMeasurement (6.0.3):
+    - GoogleUtilities/AppDelegateSwizzler (~> 6.0)
+    - GoogleUtilities/MethodSwizzler (~> 6.0)
+    - GoogleUtilities/Network (~> 6.0)
+    - "GoogleUtilities/NSData+zlib (~> 6.0)"
+    - nanopb (~> 0.3)
+  - GoogleSignIn (4.4.0):
+    - "GoogleToolboxForMac/NSDictionary+URLArguments (~> 2.1)"
+    - "GoogleToolboxForMac/NSString+URLArguments (~> 2.1)"
+    - GTMSessionFetcher/Core (~> 1.1)
+  - GoogleToolboxForMac/DebugUtils (2.2.1):
+    - GoogleToolboxForMac/Defines (= 2.2.1)
+  - GoogleToolboxForMac/Defines (2.2.1)
+  - "GoogleToolboxForMac/NSDictionary+URLArguments (2.2.1)":
+    - GoogleToolboxForMac/DebugUtils (= 2.2.1)
+    - GoogleToolboxForMac/Defines (= 2.2.1)
+    - "GoogleToolboxForMac/NSString+URLArguments (= 2.2.1)"
+  - "GoogleToolboxForMac/NSString+URLArguments (2.2.1)"
+  - GoogleUtilities/AppDelegateSwizzler (6.2.3):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Network
+  - GoogleUtilities/Environment (6.2.3)
+  - GoogleUtilities/Logger (6.2.3):
+    - GoogleUtilities/Environment
+  - GoogleUtilities/MethodSwizzler (6.2.3):
+    - GoogleUtilities/Logger
+  - GoogleUtilities/Network (6.2.3):
+    - GoogleUtilities/Logger
+    - "GoogleUtilities/NSData+zlib"
+    - GoogleUtilities/Reachability
+  - "GoogleUtilities/NSData+zlib (6.2.3)"
+  - GoogleUtilities/Reachability (6.2.3):
+    - GoogleUtilities/Logger
+  - GoogleUtilities/UserDefaults (6.2.3):
+    - GoogleUtilities/Logger
+  - GTMSessionFetcher/Core (1.2.2)
+  - Highlightr (2.1.0)
+  - leveldb-library (1.20)
+  - MultiSelectSegmentedControl (1.2.1)
+  - nanopb (0.3.901):
+    - nanopb/decode (= 0.3.901)
+    - nanopb/encode (= 0.3.901)
+  - nanopb/decode (0.3.901)
+  - nanopb/encode (0.3.901)
+  - SwiftNIO (2.0.0):
+    - CNIOAtomics (= 2.0.0)
+    - CNIODarwin (= 2.0.0)
+    - CNIOLinux (= 2.0.0)
+    - CNIOSHA1 (= 2.0.0)
+    - SwiftNIOConcurrencyHelpers (= 2.0.0)
+  - SwiftNIOConcurrencyHelpers (2.0.0):
+    - CNIOAtomics (= 2.0.0)
+  - SwiftProtobuf (1.5.0)
+
+DEPENDENCIES:
+  - CryptoSwift (= 1.0.0)
+  - Firebase/Auth (= 6.4.0)
+  - Firebase/Core (= 6.4.0)
+  - Firebase/Database (= 6.4.0)
+  - GoogleSignIn (= 4.4.0)
+  - Highlightr (= 2.1.0)
+  - MultiSelectSegmentedControl (= 1.2.1)
+  - SwiftNIO (= 2.0.0)
+  - SwiftProtobuf (= 1.5.0)
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - CNIOAtomics
+    - CNIODarwin
+    - CNIOLinux
+    - CNIOSHA1
+    - CryptoSwift
+    - Firebase
+    - FirebaseAnalytics
+    - FirebaseAuth
+    - FirebaseAuthInterop
+    - FirebaseCore
+    - FirebaseDatabase
+    - FirebaseInstanceID
+    - GoogleAppMeasurement
+    - GoogleSignIn
+    - GoogleToolboxForMac
+    - GoogleUtilities
+    - GTMSessionFetcher
+    - Highlightr
+    - leveldb-library
+    - MultiSelectSegmentedControl
+    - nanopb
+    - SwiftNIO
+    - SwiftNIOConcurrencyHelpers
+    - SwiftProtobuf
+
+SPEC CHECKSUMS:
+  CNIOAtomics: 740c1b1186b544f6aea3c5d70251cdcacac2131f
+  CNIODarwin: 7b5f756eeadb4c6de6ea2d557427c74c5ee3c531
+  CNIOLinux: 26befd30c9c349ee50c789cecba0749dab5d0de3
+  CNIOSHA1: c732b8be9a737bb1a87078e4753914153f573549
+  CryptoSwift: d81eeaa59dc5a8d03720fe919a6fd07b51f7439f
+  Firebase: 9445469655a98e9010737f4bc4720e5bda465873
+  FirebaseAnalytics: 69fe25866d2ec87c6f02d72c3c9a82bce9c065a0
+  FirebaseAuth: 68cfa47997f53d29ce978e7a615fb78d7925fcbe
+  FirebaseAuthInterop: 0ffa57668be100582bb7643d4fcb7615496c41fc
+  FirebaseCore: 7ea99e200f0024262650be56623fbe6a7bef1707
+  FirebaseDatabase: f48e067716864be2b855cf716b927ef375d6cfa0
+  FirebaseInstanceID: 9782fcfb89e4d7da76cc28eac4b8543dc7be4a4b
+  GoogleAppMeasurement: 1e45fa601e6280c180880d57010390f6679cd971
+  GoogleSignIn: 7ff245e1a7b26d379099d3243a562f5747e23d39
+  GoogleToolboxForMac: b3553629623a3b1bff17f555e736cd5a6d95ad55
+  GoogleUtilities: d2b0e277a95962e09bb27f5cd42f5f0b6a506c7d
+  GTMSessionFetcher: 61bb0f61a4cb560030f1222021178008a5727a23
+  Highlightr: 595f3e100737c8de41113385da8bd0b5b65212c6
+  leveldb-library: 08cba283675b7ed2d99629a4bc5fd052cd2bb6a5
+  MultiSelectSegmentedControl: 495230a5a5fbb6edb03d541f173433922ef0c592
+  nanopb: 2901f78ea1b7b4015c860c2fdd1ea2fee1a18d48
+  SwiftNIO: 90e2f451448a4a275d2bce0edb780281c1715780
+  SwiftNIOConcurrencyHelpers: a79f8bb5ae0f342107b2f33b1764eb78891dcf54
+  SwiftProtobuf: 241400280f912735c1e1b9fe675fdd2c6c4d42e2
+
+PODFILE CHECKSUM: dee501bbd57b984c370323cdbdb846ff2b25845d
+
+COCOAPODS: 1.7.5

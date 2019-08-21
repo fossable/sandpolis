@@ -1,0 +1,28 @@
+platform :ios, '12.2'
+
+target 'Sandpolis' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Provides protocol buffer support
+  pod 'SwiftProtobuf', '1.5.0'
+  
+  # Provides networking
+  pod 'SwiftNIO', '2.0.0'
+
+  # Provides SHA256 hashing for passwords
+  pod 'CryptoSwift', '1.0.0'
+  
+  # Provides segmented control for macro editor
+  pod 'MultiSelectSegmentedControl', '1.2.1'
+  
+  # Provides syntax highlighting for macro editor
+  pod 'Highlightr', '2.1.0'
+  
+  # Provides integration with Firebase
+  pod 'Firebase/Core', '6.4.0'
+  pod 'Firebase/Database', '6.4.0'
+  pod 'Firebase/Auth', '6.4.0'
+  pod 'GoogleSignIn', '4.4.0'
+  
+end

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="MacroResultHeader" customModule="Sandpolis" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="50"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="hostname" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0If-TA-p4K">
+                    <rect key="frame" x="40" y="6" width="303" height="20.5"/>
+                    <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="▼" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Bkk-uX-H2B">
+                    <rect key="frame" x="344" y="14.5" width="15" height="21"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="FP2-yK-4Rj">
+                    <rect key="frame" x="8" y="13" width="24" height="24"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="24" id="Kou-Wf-sBA"/>
+                        <constraint firstAttribute="width" constant="24" id="SIk-yi-6ay"/>
+                    </constraints>
+                </imageView>
+                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" animating="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="ih8-HL-gBR">
+                    <rect key="frame" x="339" y="15" width="20" height="20"/>
+                </activityIndicatorView>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="status" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" enabled="NO" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0AV-Hl-UYw">
+                    <rect key="frame" x="40" y="28.5" width="303" height="18"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstItem="FP2-yK-4Rj" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="2j2-TH-ohJ"/>
+                <constraint firstAttribute="trailing" secondItem="0AV-Hl-UYw" secondAttribute="trailing" constant="32" id="8lc-a9-LZi"/>
+                <constraint firstAttribute="trailing" secondItem="ih8-HL-gBR" secondAttribute="trailing" constant="16" id="Pyp-TM-Ejv"/>
+                <constraint firstItem="0AV-Hl-UYw" firstAttribute="top" secondItem="0If-TA-p4K" secondAttribute="bottom" constant="2" id="RoN-76-Ecc"/>
+                <constraint firstItem="0If-TA-p4K" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="40" id="VYN-MJ-Ox8"/>
+                <constraint firstItem="0AV-Hl-UYw" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="40" id="ZYR-Hy-cbn"/>
+                <constraint firstItem="FP2-yK-4Rj" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="8" id="Zr6-b0-WYy"/>
+                <constraint firstItem="ih8-HL-gBR" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="hkg-fc-kSb"/>
+                <constraint firstAttribute="trailing" secondItem="0If-TA-p4K" secondAttribute="trailing" constant="32" id="k6d-5q-cXA"/>
+                <constraint firstItem="0If-TA-p4K" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="6" id="lMM-Ki-dyO"/>
+                <constraint firstItem="Bkk-uX-H2B" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="n5g-bf-i2w"/>
+                <constraint firstAttribute="trailing" secondItem="Bkk-uX-H2B" secondAttribute="trailing" constant="16" id="oF9-cA-KKz"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="arrow" destination="Bkk-uX-H2B" id="2dz-C8-ajH"/>
+                <outlet property="hostname" destination="0If-TA-p4K" id="Ren-Un-eeJ"/>
+                <outlet property="platform" destination="FP2-yK-4Rj" id="CjC-sP-8mf"/>
+                <outlet property="progress" destination="ih8-HL-gBR" id="ePW-a4-pE4"/>
+                <outlet property="status" destination="0AV-Hl-UYw" id="sBd-Jn-kdf"/>
+            </connections>
+        </view>
+    </objects>
+</document>

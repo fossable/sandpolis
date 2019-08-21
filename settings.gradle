@@ -25,6 +25,7 @@ include 'com.sandpolis.server.vanilla:constants'
 include 'com.sandpolis.viewer.cli'
 include 'com.sandpolis.viewer.jfx'
 include 'com.sandpolis.viewer.jfx:constants'
+include 'com.sandpolis.viewer.lockstone'
 
 // Optional Instances
 if (INSTANCE_DEMO_SERVER.toBoolean())

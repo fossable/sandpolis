@@ -1,0 +1,13 @@
+/*******************************************************************************
+* SANDPOLIS                                                                    *
+* com.sandpolis.viewer.lockstone                                               *
+*******************************************************************************/
+
+plugins {
+	id "org.openbakery.xcode-plugin" version "0.19.1"
+}
+
+xcodebuild {
+	scheme = 'Sandpolis'
+	target = 'Sandpolis'
+}
