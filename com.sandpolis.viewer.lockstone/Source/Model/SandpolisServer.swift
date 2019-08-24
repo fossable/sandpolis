@@ -15,10 +15,12 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-import FirebaseDatabase
+import FirebaseFirestore
 
 /// Represents a Sandpolis server
 class SandpolisServer {
+	
+	var reference: DocumentReference
 
     /// The server name
     var name: String
@@ -41,25 +43,12 @@ class SandpolisServer {
     /// The server's country code
     var countryCode: String?
     
-	init(name: String, address: String, username: String, password: String, cloud: Bool) {
-        self.name = name
-        self.address = address
-        self.username = username
-        self.password = password
-		self.cloud = cloud
+	init(_ server: DocumentSnapshot) {
+		self.reference = server.reference
+        self.name = server["name"] as! String
+        self.address = server["address"] as! String
+        self.username = server["username"] as! String
+        self.password = server["password"] as! String
+		self.cloud = server["cloud"] as! Bool
     }
-	
-	convenience init?(_ snapshot: DataSnapshot) {
-		guard let content = snapshot.value as? [String: AnyObject],
-			let name = content["name"] as? String,
-			let address = content["address"] as? String,
-			let username = content["username"] as? String,
-			let password = content["password"] as? String,
-			let cloud = content["cloud"] as? Bool
-			else {
-				return nil
-		}
-		
-		self.init(name: name, address: address, username: username, password: password, cloud: cloud)
-	}
 }

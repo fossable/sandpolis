@@ -5,10 +5,10 @@ target 'Sandpolis' do
   use_frameworks!
 
   # Provides protocol buffer support
-  pod 'SwiftProtobuf', '1.5.0'
+  pod 'SwiftProtobuf', '1.6.0'
   
   # Provides networking
-  pod 'SwiftNIO', '2.0.0'
+  pod 'SwiftNIO', '2.7.0'
 
   # Provides SHA256 hashing for passwords
   pod 'CryptoSwift', '1.0.0'
@@ -20,9 +20,7 @@ target 'Sandpolis' do
   pod 'Highlightr', '2.1.0'
   
   # Provides integration with Firebase
-  pod 'Firebase/Core', '6.4.0'
-  pod 'Firebase/Database', '6.4.0'
-  pod 'Firebase/Auth', '6.4.0'
-  pod 'GoogleSignIn', '4.4.0'
+  pod 'Firebase/Firestore', '6.7.0'
+  pod 'Firebase/Auth', '6.7.0'
   
 end

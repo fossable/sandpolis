@@ -16,8 +16,7 @@
  *                                                                            *
  *****************************************************************************/
 import UIKit
-import FirebaseAuth
-import FirebaseDatabase
+import FirebaseFirestore
 
 class ClientList: UITableViewController {
 
@@ -40,24 +39,13 @@ class ClientList: UITableViewController {
 
 	var selectedIndexPaths = Set<IndexPath>()
 
-	/// Firebase reference
-	private let ref = Database.database().reference(withPath: "\(Auth.auth().currentUser!.uid)/hostGroups")
-
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		toggleMultiSelect(toggle: false)
 		SandpolisUtil.registerHostUpdates(self.onHostUpdate)
 		SandpolisUtil.registerDisconnectHandler(self.onServerDisconnect)
-		let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(onLongPress))
-		tableView.addGestureRecognizer(longPressGesture)
-		ref.observe(.value) { snapshot in
-			self.rawHostGroups = snapshot.children.map { item -> HostGroup in
-				return self.loadHostGroupFromData(snapshot: item as! DataSnapshot)
-			}
-			DispatchQueue.main.async {
-				self.refreshTableData()
-			}
-		}
+
+		tableView.addGestureRecognizer(UILongPressGestureRecognizer(target: self, action: #selector(onLongPress)))
 	}
 
 	override func viewWillAppear(_ animated: Bool) {
@@ -190,12 +178,12 @@ class ClientList: UITableViewController {
 		for profile in profiles {
 			hostIds.append(profile.uuid)
 		}
-		ref.child(identifier).setValue([
+		/*ref.child(identifier).setValue([
 			"identifier": identifier,
 			"serverName": server.name,
 			"groupName": groupName,
 			"hostIds": hostIds
-			])
+			])*/
 		return ""
 	}
 
@@ -204,7 +192,7 @@ class ClientList: UITableViewController {
 	}
 
 	func deleteHostGroup(hostGroup: HostGroup) {
-		ref.child(hostGroup.identifier).removeValue()
+		//ref.child(hostGroup.identifier).removeValue()
 	}
 
 	func onHostUpdate(_ profile: SandpolisProfile) {
@@ -261,16 +249,6 @@ class ClientList: UITableViewController {
 			}
 		}
 		return Array(ungroupedHostIds)
-	}
-
-	// converts Firebase data to HostGroup object
-	func loadHostGroupFromData(snapshot: DataSnapshot) -> HostGroup {
-		let content = snapshot.value as! [String: AnyObject]
-		let identifier = content["identifier"] as! String
-		let serverName = content["serverName"] as! String
-		let groupName = content["groupName"] as! String
-		let hostIds = content["hostIds"] as! [String]
-		return HostGroup(identifier: identifier, serverName: serverName, groupName: groupName, hostIds: hostIds)
 	}
 
 	// add or remove the selected cell to multi-selection

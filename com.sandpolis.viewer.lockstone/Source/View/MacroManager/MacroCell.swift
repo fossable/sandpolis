@@ -16,6 +16,7 @@
  *                                                                            *
  *****************************************************************************/
 import UIKit
+import FirebaseFirestore
 
 /// A table entry representing a macro
 class MacroCell: UITableViewCell {
@@ -25,13 +26,13 @@ class MacroCell: UITableViewCell {
     @IBOutlet weak var icon_macos: UIImageView!
     @IBOutlet weak var icon_linux: UIImageView!
     
-    func setContent(_ macro: Macro) {
+	func setContent(_ macro: DocumentSnapshot) {
         // Macro name
-        name.text = macro.name
+        name.text = macro["name"] as? String
         
         // Compatibility icons
-        icon_windows.isHidden = !macro.windows
-        icon_macos.isHidden = !macro.macos
-        icon_linux.isHidden = !macro.linux
+        icon_windows.isHidden = !(macro["windows"] as! Bool)
+        icon_macos.isHidden = !(macro["macos"] as! Bool)
+        icon_linux.isHidden = !(macro["linux"] as! Bool)
     }
 }

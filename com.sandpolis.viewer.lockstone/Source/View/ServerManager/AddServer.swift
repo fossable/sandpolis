@@ -16,6 +16,7 @@
  *                                                                            *
  *****************************************************************************/
 import UIKit
+import FirebaseFirestore
 
 class AddServer: UIViewController {
 
@@ -26,25 +27,18 @@ class AddServer: UIViewController {
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var errorLabel: UILabel!
 
-    var serverListViewController: ServerManager!
-    var editMode = false
-    var originalName = ""
-    var originalServer: SandpolisServer!
-
-    func setEditMode(server: SandpolisServer) {
-        editMode = true
-        originalName = server.name
-        originalServer = server
-    }
+    var server: SandpolisServer!
+	
+	var serverReference: DocumentReference!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        errorLabel.text = ""
-        if editMode {
-            nameTextField.text = originalServer.name
-            addressTextField.text = originalServer.address
-            usernameTextField.text = originalServer.username
-            passwordTextField.text = originalServer.password
+        errorLabel.text = nil
+        if server != nil {
+            nameTextField.text = server.name
+            addressTextField.text = server.address
+            usernameTextField.text = server.username
+            passwordTextField.text = server.password
             titleLabel.title = "Edit Server"
         }
     }
@@ -54,12 +48,16 @@ class AddServer: UIViewController {
             errorLabel.text = "Please fill out all fields."
             return
         }
-        let error = serverListViewController.addServer(edit: editMode, originalName: originalName, name: nameTextField.text!, address: addressTextField.text!, username: usernameTextField.text!, password: passwordTextField.text!)
-        if error == "" {
-            dismiss(animated: true, completion: nil)
-        } else {
-            errorLabel.text = error
-        }
+		
+		serverReference.setData([
+			"name": nameTextField.text!,
+			"address": addressTextField.text!,
+			"username": usernameTextField.text!,
+			"password": passwordTextField.text!,
+			"cloud": false
+		])
+
+        dismiss(animated: true, completion: nil)
     }
 
     @IBAction func cancelButtonPressed(_ sender: Any) {

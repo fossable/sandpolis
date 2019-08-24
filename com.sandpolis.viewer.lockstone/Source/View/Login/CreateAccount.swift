@@ -16,8 +16,8 @@
  *                                                                            *
  *****************************************************************************/
 import UIKit
-import Firebase
 import FirebaseAuth
+import FirebaseFirestore
 
 class CreateAccount: UIViewController {
 
@@ -45,15 +45,17 @@ class CreateAccount: UIViewController {
 		Auth.auth().createUser(withEmail: email.text!, password: password.text!) { authResult, error in
 			if error == nil {
 				Auth.auth().signIn(withEmail: self.email.text!, password: self.password.text!) { result, error in
-					self.copyDefaults()
-					self.loginContainer.performSegue(withIdentifier: "LoginCompleteSegue", sender: self)
+					if error != nil {
+						let alert = UIAlertController(title: "Error", message: error?.localizedDescription, preferredStyle: .alert)
+						alert.addAction(UIAlertAction(title: "OK", style: .default))
+
+						self.present(alert, animated: true, completion: nil)
+					} else {
+						self.copyDefaults()
+					}
 				}
 			} else {
-				//Tells the user that there is an error and then gets firebase to tell them the error
-				let alert = UIAlertController(title: "Error",
-					message: error?.localizedDescription,
-					preferredStyle: .alert)
-
+				let alert = UIAlertController(title: "Error", message: error?.localizedDescription, preferredStyle: .alert)
 				alert.addAction(UIAlertAction(title: "OK", style: .default))
 
 				self.present(alert, animated: true, completion: nil)
@@ -67,16 +69,29 @@ class CreateAccount: UIViewController {
 
 	/// Copy default user data on account creation
 	private func copyDefaults() {
-		let userServers = Database.database().reference(withPath: "\(Auth.auth().currentUser!.uid)/servers")
-		let defaultServers = Database.database().reference(withPath: "default/servers")
-		let userMacros = Database.database().reference(withPath: "\(Auth.auth().currentUser!.uid)/macros")
-		let defaultMacros = Database.database().reference(withPath: "default/macros")
+		let userServers = Firestore.firestore().collection("/user/\(Auth.auth().currentUser!.uid)/server")
+		let defaultServers = Firestore.firestore().collection("/default/server/list")
+		let userMacros = Firestore.firestore().collection("/user/\(Auth.auth().currentUser!.uid)/macro")
+		let defaultMacros = Firestore.firestore().collection("/default/macro/list")
 
-		defaultServers.observeSingleEvent(of: .value) { snapshot in
-			userServers.setValue(snapshot.value)
+		defaultServers.getDocuments { querySnapshot, error in
+			guard let servers = querySnapshot?.documents else {
+				return
+			}
+
+			for server in servers {
+				userServers.addDocument(data: server.data())
+			}
 		}
-		defaultMacros.observeSingleEvent(of: .value) { snapshot in
-			userMacros.setValue(snapshot.value)
+
+		defaultMacros.getDocuments { querySnapshot, error in
+			guard let macros = querySnapshot?.documents else {
+				return
+			}
+
+			for macro in macros {
+				userMacros.addDocument(data: macro.data())
+			}
 		}
 	}
 }

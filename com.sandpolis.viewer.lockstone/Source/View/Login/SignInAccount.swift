@@ -17,73 +17,58 @@
  *****************************************************************************/
 import UIKit
 import FirebaseAuth
-import GoogleSignIn
 
-class SignInAccount: UIViewController, GIDSignInUIDelegate {
+class SignInAccount: UIViewController {
 
-    @IBOutlet weak var textFieldLoginEmail: UITextField!
-    @IBOutlet weak var textFieldLoginPassword: UITextField!
-    @IBOutlet weak var googleSignInButton: GIDSignInButton!
-    @IBOutlet weak var loginButton: UIButton!
-    @IBOutlet weak var forgotPasswordButton: UIButton!
-    @IBOutlet weak var createAccountButton: UIButton!
+	@IBOutlet weak var textFieldLoginEmail: UITextField!
+	@IBOutlet weak var textFieldLoginPassword: UITextField!
+	@IBOutlet weak var loginButton: UIButton!
+	@IBOutlet weak var forgotPasswordButton: UIButton!
+	@IBOutlet weak var createAccountButton: UIButton!
 
-    var loginContainer: Login!
+	var loginContainer: Login!
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+	override func viewDidDisappear(_ animated: Bool) {
+		// Clean up fields
+		textFieldLoginEmail.text = nil
+		textFieldLoginPassword.text = nil
+	}
 
-        GIDSignIn.sharedInstance().uiDelegate = self
-    }
+	func textFieldShouldReturn(textField: UITextField) -> Bool {
+		textField.resignFirstResponder()
+		return true
+	}
 
-    override func viewDidDisappear(_ animated: Bool) {
-        // Clean up fields
-        textFieldLoginEmail.text = nil
-        textFieldLoginPassword.text = nil
-    }
+	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+		self.view.endEditing(true)
+	}
 
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
-    }
+	@IBAction func loginDidTouch(_ sender: UIButton) {
+		guard
+			let email = textFieldLoginEmail.text,
+			let password = textFieldLoginPassword.text,
+			email.count > 0,
+			password.count > 0
+			else {
+				return
+		}
 
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.view.endEditing(true)
-    }
+		Auth.auth().signIn(withEmail: self.textFieldLoginEmail.text!, password: self.textFieldLoginPassword.text!) { (user, error) in
+			if error != nil {
+				let alert = UIAlertController(title: "Sign In Failed", message: error?.localizedDescription, preferredStyle: .alert)
+				alert.addAction(UIAlertAction(title: "OK", style: .default))
 
-    @IBAction func loginDidTouch(_ sender: UIButton) {
-        guard
-            let email = textFieldLoginEmail.text,
-            let password = textFieldLoginPassword.text,
-            email.count > 0,
-            password.count > 0
-            else {
-                return
-        }
+				self.present(alert, animated: true, completion: nil)
+			}
+		}
+	}
 
-        Auth.auth().signIn(withEmail: self.textFieldLoginEmail.text!, password: self.textFieldLoginPassword.text!) { (user, error) in
-            if error == nil {
-                self.loginContainer.performSegue(withIdentifier: "LoginCompleteSegue", sender: self)
-            }
-            else {
-                //Tells the user that there is an error and then gets firebase to tell them the error
-                let alert = UIAlertController(title: "Sign In Failed",
-                    message: error?.localizedDescription,
-                    preferredStyle: .alert)
+	@IBAction func createAccount(_ sender: Any) {
+		loginContainer.openCreateAccount()
+	}
 
-                alert.addAction(UIAlertAction(title: "OK", style: .default))
+	@IBAction func forgotPassword(_ sender: Any) {
+		loginContainer.openForgotPassword()
+	}
 
-                self.present(alert, animated: true, completion: nil)
-            }
-        }
-    }
-
-    @IBAction func createAccount(_ sender: Any) {
-        loginContainer.openCreateAccount()
-    }
-
-    @IBAction func forgotPassword(_ sender: Any) {
-        loginContainer.openForgotPassword()
-    }
-    
 }

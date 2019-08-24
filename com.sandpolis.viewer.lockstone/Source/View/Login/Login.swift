@@ -39,17 +39,28 @@ class Login: UIViewController {
 	override var preferredStatusBarStyle: UIStatusBarStyle {
 		return .lightContent
 	}
+	
+	private var loginListener: AuthStateDidChangeListenerHandle!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		openLogin()
-
-
-		Auth.auth().addStateDidChangeListener() { auth, user in
+	}
+	
+	override func viewWillAppear(_ animated: Bool) {
+		super.viewWillAppear(animated)
+		
+		loginListener = Auth.auth().addStateDidChangeListener() { auth, user in
 			if user != nil {
 				self.performSegue(withIdentifier: "LoginCompleteSegue", sender: nil)
 			}
 		}
+	}
+	
+	override func viewWillDisappear(_ animated: Bool) {
+		super.viewWillDisappear(animated)
+		
+		Auth.auth().removeStateDidChangeListener(loginListener!)
 	}
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {

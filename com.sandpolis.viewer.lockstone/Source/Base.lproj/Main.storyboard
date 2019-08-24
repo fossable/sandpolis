@@ -215,7 +215,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <stackView opaque="NO" contentMode="scaleToFill" spacing="46" translatesAutoresizingMaskIntoConstraints="NO" id="UZs-az-c67">
-                                <rect key="frame" x="64" y="347" width="286" height="40"/>
+                                <rect key="frame" x="147" y="347" width="120" height="40"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XXR-c1-iwh">
                                         <rect key="frame" x="0.0" y="0.0" width="120" height="40"/>
@@ -236,14 +236,6 @@
                                             <action selector="createAccount:" destination="Pxc-v7-mA9" eventType="touchUpInside" id="Iy6-ik-JH1"/>
                                         </connections>
                                     </button>
-                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fOc-4i-6zJ" customClass="GIDSignInButton">
-                                        <rect key="frame" x="166" y="0.0" width="120" height="40"/>
-                                        <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="40" id="O3z-wQ-CTI"/>
-                                            <constraint firstAttribute="width" constant="120" id="zec-OP-Ysk"/>
-                                        </constraints>
-                                    </view>
                                 </subviews>
                             </stackView>
                         </subviews>
@@ -273,7 +265,6 @@
                     <connections>
                         <outlet property="createAccountButton" destination="XXR-c1-iwh" id="rK8-OZ-DMn"/>
                         <outlet property="forgotPasswordButton" destination="Crt-9m-NmI" id="NUA-BE-biQ"/>
-                        <outlet property="googleSignInButton" destination="fOc-4i-6zJ" id="jRb-EE-LLV"/>
                         <outlet property="loginButton" destination="S5q-JR-97G" id="uO7-Hk-mnf"/>
                         <outlet property="textFieldLoginEmail" destination="P1W-9i-HlN" id="mWH-wC-l6e"/>
                         <outlet property="textFieldLoginPassword" destination="fxM-2h-xt7" id="Ieg-qM-lcX"/>
@@ -727,7 +718,7 @@
                                     <outlet property="icon_macos" destination="QYA-qx-vRi" id="Cb4-2x-UgE"/>
                                     <outlet property="icon_windows" destination="Ltx-ZD-6c8" id="fNW-3d-vnU"/>
                                     <outlet property="name" destination="fC3-uS-q9Y" id="JtT-m8-HPj"/>
-                                    <segue destination="dPQ-WO-hYN" kind="show" identifier="EditorSegue" id="xCx-EK-m09"/>
+                                    <segue destination="dPQ-WO-hYN" kind="show" identifier="EditSegue" id="xCx-EK-m09"/>
                                 </connections>
                             </tableViewCell>
                         </prototypes>
@@ -739,7 +730,7 @@
                     <navigationItem key="navigationItem" title="Macro Manager" id="OUQ-2c-gPj">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="69U-Lg-5km">
                             <connections>
-                                <segue destination="dPQ-WO-hYN" kind="show" identifier="EditorSegue" id="Ctk-xo-rgy"/>
+                                <segue destination="dPQ-WO-hYN" kind="show" identifier="AddSegue" id="Ctk-xo-rgy"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>

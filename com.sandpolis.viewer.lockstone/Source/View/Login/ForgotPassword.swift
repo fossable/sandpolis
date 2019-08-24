@@ -21,42 +21,38 @@ import FirebaseAuth
 
 class ForgotPassword: UIViewController {
 
-    @IBOutlet weak var email: UITextField!
+	@IBOutlet weak var email: UITextField!
 
-    var loginContainer: Login!
+	var loginContainer: Login!
 
-    override func viewDidDisappear(_ animated: Bool) {
-        // Clean up fields
-        email.text = nil
-    }
+	override func viewDidDisappear(_ animated: Bool) {
+		// Clean up fields
+		email.text = nil
+	}
 
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
-    }
+	func textFieldShouldReturn(textField: UITextField) -> Bool {
+		textField.resignFirstResponder()
+		return true
+	}
 
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.view.endEditing(true)
-    }
+	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+		self.view.endEditing(true)
+	}
 
-    @IBAction func touchUpButton(_ sender: UIButton) {
-        Auth.auth().sendPasswordReset(withEmail: email.text!) { error in
-            if error == nil {
-                self.loginContainer.openLogin()
-            } else {
-                //Tells the user that there is an error and then gets firebase to tell them the error
-                let alert = UIAlertController(title: "Error",
-                    message: error?.localizedDescription,
-                    preferredStyle: .alert)
+	@IBAction func touchUpButton(_ sender: UIButton) {
+		Auth.auth().sendPasswordReset(withEmail: email.text!) { error in
+			if error == nil {
+				self.loginContainer.openLogin()
+			} else {
+				let alert = UIAlertController(title: "Error", message: error?.localizedDescription, preferredStyle: .alert)
+				alert.addAction(UIAlertAction(title: "OK", style: .default))
 
-                alert.addAction(UIAlertAction(title: "OK", style: .default))
+				self.present(alert, animated: true, completion: nil)
+			}
+		}
+	}
 
-                self.present(alert, animated: true, completion: nil)
-            }
-        }
-    }
-
-    @IBAction func login(_ sender: Any) {
-        loginContainer.openLogin()
-    }
+	@IBAction func login(_ sender: Any) {
+		loginContainer.openLogin()
+	}
 }

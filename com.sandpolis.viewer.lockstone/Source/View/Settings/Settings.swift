@@ -18,7 +18,6 @@
 import UIKit
 import Firebase
 import FirebaseAuth
-import GoogleSignIn
 import Highlightr
 
 class Settings: UITableViewController {
@@ -48,7 +47,6 @@ class Settings: UITableViewController {
             } catch let signOutError as NSError {
                 print ("Error signing out: %@", signOutError)
             }
-            GIDSignIn.sharedInstance()?.signOut()
             performSegue(withIdentifier: "UnwindLoginSegue", sender: self)
         }
     }

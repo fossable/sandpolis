@@ -17,80 +17,81 @@
  *****************************************************************************/
 import UIKit
 import FirebaseAuth
-import FirebaseDatabase
+import FirebaseFirestore
 
 class MacroSelect: UITableViewController {
 
-    /// Firebase reference
-    private let ref = Database.database().reference(withPath: "\(Auth.auth().currentUser!.uid)/macros")
+	/// Firebase reference
+	private let ref = Firestore.firestore().collection("/user/\(Auth.auth().currentUser!.uid)/macro")
 
-    var profiles = [SandpolisProfile]()
+	var profiles = [SandpolisProfile]()
 
-    var macros = [Macro]()
+	var macroList = [DocumentSnapshot]()
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+	override func viewDidLoad() {
+		super.viewDidLoad()
 
-        // Synchronize list with Firebase
-        ref.observe(.value) { snapshot in
-            self.macros = snapshot.children.map { item -> Macro in
-                return Macro(item as! DataSnapshot)!
-            }.filter { macro in
-                // Ensure macro is compatible with every profile
-                for profile in self.profiles {
-                    switch profile.platform {
-                    case .linux:
-                        if !macro.linux {
-                            return false
-                        }
-                    case .windows:
-                        if !macro.windows {
-                            return false
-                        }
-                    case .macos:
-                        if !macro.macos {
-                            return false
-                        }
-                    default:
-                        print("Warning: Unknown platform")
-                    }
-                }
-                return true
-            }
+		// Synchronize list with Firebase
+		ref.getDocuments { querySnapshot, error in
+			guard let macros = querySnapshot?.documents else {
+				return
+			}
 
-            self.tableView.reloadData()
-        }
-    }
+			self.macroList = macros.filter { macro in
+				// Ensure macro is compatible with every profile
+				for profile in self.profiles {
+					switch profile.platform {
+					case .linux:
+						if !(macro["linux"] as! Bool) {
+							return false
+						}
+					case .windows:
+						if !(macro["windows"] as! Bool) {
+							return false
+						}
+					case .macos:
+						if !(macro["macos"] as! Bool) {
+							return false
+						}
+					default:
+						print("Warning: Unknown platform")
+					}
+				}
+				return true
+			}
+			self.tableView.reloadData()
+		}
+	}
 
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "MacroExecuteSegue",
-            let resultView = segue.destination as? MacroResults {
+	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+		if segue.identifier == "MacroExecuteSegue",
+			let resultView = segue.destination as? MacroResults {
 
-            resultView.profiles = profiles
-            resultView.macro = macros[tableView.indexPathForSelectedRow!.row]
-        } else {
-            fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
-        }
-    }
+			resultView.profiles = profiles
+			resultView.macro = macroList[tableView.indexPathForSelectedRow!.row]
+		} else {
+			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
+		}
+	}
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if macros.count == 0 {
-            let message = UILabel(frame: tableView.bounds)
-            message.textAlignment = .center
-            message.sizeToFit()
-            message.text = "No compatible macros found!"
-            message.isEnabled = false
-            tableView.backgroundView = message
-        } else {
-            tableView.backgroundView = nil
-        }
-        return macros.count
-    }
+	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+		if macroList.count == 0 {
+			let message = UILabel(frame: tableView.bounds)
+			message.textAlignment = .center
+			message.sizeToFit()
+			message.text = "No compatible macros found!"
+			message.isEnabled = false
+			tableView.backgroundView = message
+		} else {
+			tableView.backgroundView = nil
+		}
+		return macroList.count
+	}
 
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "MacroSelectCell") as! MacroSelectCell
-        cell.setContent(macros[indexPath.row])
-        return cell
-    }
+	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+		let cell = tableView.dequeueReusableCell(withIdentifier: "MacroSelectCell") as! MacroSelectCell
+		cell.setContent(macroList[indexPath.row])
+		return cell
+	}
 
 }

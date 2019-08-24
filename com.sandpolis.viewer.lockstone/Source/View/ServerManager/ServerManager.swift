@@ -17,47 +17,33 @@
  *****************************************************************************/
 import UIKit
 import FirebaseAuth
-import FirebaseDatabase
-import Foundation
+import FirebaseFirestore
 
 class ServerManager: UITableViewController {
 
     /// Firebase reference
-    private let ref = Database.database().reference(withPath: "\(Auth.auth().currentUser!.uid)/servers")
+	private let ref = Firestore.firestore().collection("/user/\(Auth.auth().currentUser!.uid)/server")
 
     private var serverList = [SandpolisServer]()
-
-    func addServer(edit: Bool, originalName: String, name: String, address: String, username: String, password: String) -> String {
-        if edit {
-            // when editing we remove the original and add in the modified version
-            ref.child(originalName).removeValue()
-        } else {
-            // check for duplicate server name/IP address
-            for server in serverList {
-                if server.name.lowercased() == name.lowercased() || server.address.lowercased() == address.lowercased() {
-                    return "Server with that name or address already exists."
-                }
-            }
-        }
-        ref.child(name).setValue([
-            "name": name,
-            "address": address,
-            "username": username,
-            "password": password
-            ])
-        return ""
-    }
+	
+	private var serverListener: ListenerRegistration!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        ref.observe(.value) { snapshot in
-            self.serverList = snapshot.children.map { item -> SandpolisServer in
-                return SandpolisServer(item as! DataSnapshot)!
-            }
-            self.tableView.reloadData()
-            self.refreshServerStates()
-            self.refreshServerLocations()
-        }
+
+		// Synchronize table data
+		serverListener = ref.addSnapshotListener({ querySnapshot, error in
+			guard let servers = querySnapshot?.documents else {
+				return
+			}
+			
+			self.serverList = servers.map { server -> SandpolisServer in
+				return SandpolisServer(server)
+			}
+			self.tableView.reloadData()
+			self.refreshServerStates()
+			self.refreshServerLocations()
+		})
     }
 
     /// Attempt to connect to each server in the list
@@ -111,19 +97,18 @@ class ServerManager: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
-        let server = serverList[indexPath.row]
-        return server.online ?? false
+        return serverList[indexPath.row].online ?? false
     }
 
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath:
             IndexPath) -> UISwipeActionsConfiguration? {
-        let delete = UIContextualAction(style: .destructive, title: "Delete") { (action, view, completionHandler) in
-            self.ref.child(self.serverList[indexPath.row].name).removeValue()
-            completionHandler(true)
+        let delete = UIContextualAction(style: .destructive, title: "Delete") { action, view, completion in
+			self.serverList[indexPath.row].reference.delete()
+            completion(true)
         }
-        let edit = UIContextualAction(style: .normal, title: "Edit") { (action, view, completionHandler) in
+        let edit = UIContextualAction(style: .normal, title: "Edit") { action, view, completion in
             self.performSegue(withIdentifier: "ShowEditServerSegue", sender: indexPath)
-            completionHandler(true)
+            completion(true)
         }
         let config = UISwipeActionsConfiguration(actions: [delete, edit])
         config.performsFirstActionWithFullSwipe = false
@@ -133,12 +118,12 @@ class ServerManager: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowAddServerSegue",
             let addServerView = segue.destination as? AddServer {
-            addServerView.serverListViewController = self
+            addServerView.serverReference = ref.document()
         } else if segue.identifier == "ShowEditServerSegue",
             let addServerView = segue.destination as? AddServer {
-            addServerView.serverListViewController = self
             let indexPath = sender as! IndexPath
-            addServerView.setEditMode(server: serverList[indexPath.row])
+			addServerView.server = serverList[indexPath.row]
+			addServerView.serverReference = addServerView.server.reference
         } else if segue.identifier == "ShowHostSegue",
             let mainTab = segue.destination as? MainTabController {
             mainTab.server = serverList[tableView.indexPathForSelectedRow!.row]

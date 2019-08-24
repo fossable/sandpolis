@@ -18,6 +18,7 @@
 import UIKit
 import Highlightr
 import MultiSelectSegmentedControl
+import FirebaseFirestore
 
 class MacroEditor: UIViewController {
 
@@ -25,17 +26,18 @@ class MacroEditor: UIViewController {
     @IBOutlet weak var genericView: UIView!
     @IBOutlet weak var languageBar: UILabel!
 
-    var nameField: UITextField = UITextField(frame: CGRect(x: 0, y: 0, width: 210, height: 21))
+    private let nameField: UITextField = UITextField(frame: CGRect(x: 0, y: 0, width: 210, height: 21))
 
-    let textStorage = CodeAttributedString()
-    var highlightr: Highlightr!
-    var textView: UITextView!
-    var saveButton: UIBarButtonItem!
+    private let textStorage = CodeAttributedString()
+    private var highlightr: Highlightr!
+    private var textView: UITextView!
+    private var saveButton: UIBarButtonItem!
 
-    /// The macro that is being edited
-    var editMacro: Macro!
-
-    var delegate: MacroManagerDelegate!
+    /// The macro being edited or nil for a new macro
+	var macro: DocumentSnapshot!
+	
+	/// The macro reference
+	var macroReference: DocumentReference!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,7 +48,7 @@ class MacroEditor: UIViewController {
         nameField.addTarget(self, action: #selector(refreshSaveButton), for: .editingChanged)
         navigationItem.titleView = nameField
 
-        saveButton = UIBarButtonItem(title: editMacro == nil ? "Save" : "Update", style: .done, target: self, action: #selector(saveMacro))
+        saveButton = UIBarButtonItem(title: macro != nil ? "Update" : "Save", style: .done, target: self, action: #selector(saveMacro))
         navigationItem.rightBarButtonItem = saveButton
 
         let layoutManager = NSLayoutManager()
@@ -68,17 +70,17 @@ class MacroEditor: UIViewController {
             changeTheme("zenburn")
         }
 
-        if editMacro != nil {
-            nameField.text = editMacro.name
-            textView.text = editMacro.script
+        if macro != nil {
+            nameField.text = macro["name"] as? String
+            textView.text = macro["script"] as? String
 
-            if editMacro.windows {
+            if macro["windows"] as! Bool {
                 platformSelector.selectedSegmentIndexes.insert(0)
             }
-            if editMacro.macos {
+            if macro["macos"] as! Bool {
                 platformSelector.selectedSegmentIndexes.insert(1)
             }
-            if editMacro.linux {
+            if macro["linux"] as! Bool {
                 platformSelector.selectedSegmentIndexes.insert(2)
             }
             platformChanged(self)
@@ -99,7 +101,13 @@ class MacroEditor: UIViewController {
     }
 
     @objc private func saveMacro(_ sender: Any) {
-        delegate.updateMacro(editMacro, nameField.text!, textView.text!, platformSelector.selectedSegmentTitles.contains("Windows"), platformSelector.selectedSegmentTitles.contains("Linux"), platformSelector.selectedSegmentTitles.contains("macOS"))
+		macroReference.setData([
+			"name": nameField.text!,
+			"script": textView.text!,
+			"windows": platformSelector.selectedSegmentTitles.contains("Windows"),
+			"macos": platformSelector.selectedSegmentTitles.contains("macOS"),
+			"linux": platformSelector.selectedSegmentTitles.contains("Linux")
+		])
 
         navigationController?.popViewController(animated: true)
     }

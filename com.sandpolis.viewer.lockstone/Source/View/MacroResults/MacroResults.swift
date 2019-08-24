@@ -16,11 +16,12 @@
  *                                                                            *
  *****************************************************************************/
 import UIKit
+import FirebaseFirestore
 
 class MacroResults: UITableViewController, CollapsibleTableViewHeaderDelegate {
 
 	/// The macro to execute
-	var macro: Macro!
+	var macro: DocumentSnapshot!
 
 	/// The list of target clients
 	var profiles = [SandpolisProfile]()
@@ -48,7 +49,7 @@ class MacroResults: UITableViewController, CollapsibleTableViewHeaderDelegate {
 		// Execute on all profiles
 		for profile in profiles {
 			let result = results[profiles.firstIndex(where: { $0.cvid == profile.cvid })!]
-			SandpolisUtil.execute(profile.cvid, macro.script).whenSuccess { rs in
+			SandpolisUtil.execute(profile.cvid, macro["script"] as! String).whenSuccess { rs in
 				result.output = rs.rsExecute.result
 				result.returnValue = rs.rsExecute.exitCode
 				DispatchQueue.main.async {

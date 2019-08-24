@@ -17,31 +17,38 @@
  *****************************************************************************/
 import UIKit
 import FirebaseAuth
-import FirebaseDatabase
+import FirebaseFirestore
 
-protocol MacroManagerDelegate {
-    func updateMacro(_ macro: Macro?, _ name: String, _ script: String, _ windows: Bool, _ linux: Bool, _ macos: Bool)
-}
-
-class MacroManager: UITableViewController, MacroManagerDelegate {
+class MacroManager: UITableViewController {
 
     /// Firebase reference
-    private let ref = Database.database().reference(withPath: "\(Auth.auth().currentUser!.uid)/macros")
+	private let ref = Firestore.firestore().collection("/user/\(Auth.auth().currentUser!.uid)/macro")
 
-    private var macroList = [Macro]()
+    private var macroList = [DocumentSnapshot]()
+	
+	private var macroListener: ListenerRegistration?
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+	override func viewWillAppear(_ animated: Bool) {
+		super.viewWillAppear(animated)
 
-        // Synchronize list with Firebase
-        ref.observe(.value) { snapshot in
-            self.macroList = snapshot.children.map { item -> Macro in
-                return Macro(item as! DataSnapshot)!
-            }
-
-            self.tableView.reloadData()
-        }
-    }
+		// Synchronize table data
+		macroListener = ref.addSnapshotListener({ querySnapshot, error in
+			guard let macros = querySnapshot?.documents else {
+				return
+			}
+			
+			self.macroList = macros
+			self.tableView.reloadData()
+		})
+	}
+	
+	override func viewWillDisappear(_ animated: Bool) {
+		super.viewWillDisappear(animated)
+		
+		if let listener = macroListener {
+			listener.remove()
+		}
+	}
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return macroList.count
@@ -59,7 +66,7 @@ class MacroManager: UITableViewController, MacroManagerDelegate {
             IndexPath) -> UISwipeActionsConfiguration? {
         let delete = UIContextualAction(style: .destructive, title: "Delete") { (action, view, completionHandler) in
             // Delete the macro
-            self.ref.child(self.macroList[indexPath.row].name).removeValue()
+			self.macroList[indexPath.row].reference.delete()
             completionHandler(true)
         }
 
@@ -67,29 +74,19 @@ class MacroManager: UITableViewController, MacroManagerDelegate {
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "EditorSegue",
+		if segue.identifier == "AddSegue",
+			let editor = segue.destination as? MacroEditor {
+
+			editor.macroReference = ref.document()
+		} else if segue.identifier == "EditSegue",
             let editor = segue.destination as? MacroEditor {
-            editor.delegate = self
 
             if tableView.indexPathForSelectedRow != nil {
-                editor.editMacro = macroList[tableView.indexPathForSelectedRow!.row]
+                editor.macro = macroList[tableView.indexPathForSelectedRow!.row]
+				editor.macroReference = editor.macro.reference
             }
         } else {
             fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
         }
-    }
-
-    func updateMacro(_ macro: Macro?, _ name: String, _ script: String, _ windows: Bool, _ linux: Bool, _ macos: Bool) {
-        if let macro = macro {
-            ref.child(macro.name).removeValue()
-        }
-
-        ref.child(name).setValue([
-            "name": name,
-            "script": script,
-            "windows": windows,
-            "linux": linux,
-            "macos": macos
-            ])
     }
 }
