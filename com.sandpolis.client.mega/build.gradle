@@ -36,7 +36,7 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.util')
 
 	// https://github.com/google/guava
-	implementation 'com.google.guava:guava:28.0-jre'
+	implementation 'com.google.guava:guava:28.1-jre'
 
 	// https://github.com/netty/netty
 	implementation 'io.netty:netty-common:4.1.39.Final'
