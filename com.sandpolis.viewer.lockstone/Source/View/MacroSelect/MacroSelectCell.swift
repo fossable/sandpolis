@@ -21,17 +21,9 @@ import FirebaseFirestore
 class MacroSelectCell: UITableViewCell {
 
     @IBOutlet weak var name: UILabel!
-    @IBOutlet weak var windows: UIImageView!
-    @IBOutlet weak var macos: UIImageView!
-    @IBOutlet weak var linux: UIImageView!
 
 	func setContent(_ macro: DocumentSnapshot) {
 		// Macro name
 		name.text = macro["name"] as? String
-		
-		// Compatibility icons
-		windows.isHidden = !(macro["windows"] as! Bool)
-		macos.isHidden = !(macro["macos"] as! Bool)
-		linux.isHidden = !(macro["linux"] as! Bool)
 	}
 }

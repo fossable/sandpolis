@@ -33,6 +33,7 @@ class Settings: UITableViewController {
         
         if indexPath.row == 1 {
             let alert = UIAlertController(title: "Terminal Themes", message: nil, preferredStyle: .actionSheet)
+			alert.popoverPresentationController?.sourceView = tableView
 
             for theme in Highlightr()!.availableThemes(){
                 alert.addAction(UIAlertAction(title: theme, style: .default) { action in

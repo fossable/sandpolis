@@ -22,17 +22,21 @@ import FirebaseFirestore
 class MacroCell: UITableViewCell {
     
     @IBOutlet weak var name: UILabel!
-    @IBOutlet weak var icon_windows: UIImageView!
-    @IBOutlet weak var icon_macos: UIImageView!
-    @IBOutlet weak var icon_linux: UIImageView!
-    
+	@IBOutlet weak var type: UILabel!
+	@IBOutlet weak var size: UILabel!
+	
 	func setContent(_ macro: DocumentSnapshot) {
         // Macro name
         name.text = macro["name"] as? String
-        
-        // Compatibility icons
-        icon_windows.isHidden = !(macro["windows"] as! Bool)
-        icon_macos.isHidden = !(macro["macos"] as! Bool)
-        icon_linux.isHidden = !(macro["linux"] as! Bool)
+		
+		// Macro size
+		if let scriptLength = (macro["script"] as? String)?.count {
+			size.text = FormatUtil.formatFileSize(Int64(scriptLength))
+		} else {
+			size.text = "0 bytes"
+		}
+		
+		// Macro type
+		// TODO
     }
 }

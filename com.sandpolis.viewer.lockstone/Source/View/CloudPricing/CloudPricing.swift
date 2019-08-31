@@ -16,15 +16,31 @@
  *                                                                            *
  *****************************************************************************/
 import UIKit
+import StoreKit
 
 class CloudPricing: UIViewController {
 	
-	override var preferredStatusBarStyle: UIStatusBarStyle {
+    @IBOutlet weak var monthlyButton: UIButton!
+    @IBOutlet weak var yearlyButton: UIButton!
+	
+	private var monthlyProduct: SKProduct?
+	private var yearlyProduct: SKProduct?
+
+    override var preferredStatusBarStyle: UIStatusBarStyle {
 		return .lightContent
+	}
+	
+	override func viewDidLoad() {
+		SKPaymentQueue.default().add(self)
+		// Get the product list
+		let request = SKProductsRequest(productIdentifiers: ["cloud_monthly", "cloud_yearly"])
+		request.delegate = self
+		request.start()
 	}
 
     @IBAction func buyMonthly(_ sender: Any) {
-		CloudUtil.createCloudInstance(subscription: "", hostname: "test123") { json, error in
+		if let product = monthlyProduct {
+			SKPaymentQueue.default().add(SKPayment(product: product))
 		}
     }
 	
@@ -32,6 +48,47 @@ class CloudPricing: UIViewController {
     }
     
     @IBAction func openWebsite(_ sender: Any) {
-		UIApplication.shared.open(URL(string: "https://sandpolis.com")!, options: [:], completionHandler: nil)
+		//UIApplication.shared.open(URL(string: "https://sandpolis.com")!, options: [:], completionHandler: nil)
     }
+}
+
+extension CloudPricing: SKProductsRequestDelegate {
+	func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse){
+		for product in response.products {
+			switch product.productIdentifier {
+			case "cloud_monthly":
+				monthlyProduct = product
+				monthlyButton.isEnabled = true
+				monthlyButton.setTitle("One cloud server for \(product.priceLocale.currencyCode!)\(product.price) / month", for: .normal)
+			case "cloud_yearly":
+				yearlyProduct = product
+				yearlyButton.isEnabled = true
+				yearlyButton.setTitle("One cloud server for \(product.priceLocale.currencyCode!)\(product.price) / year", for: .normal)
+			default:
+				break
+			}
+		}
+	}
+}
+
+extension CloudPricing: SKPaymentTransactionObserver {
+	func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
+		for transaction in transactions {
+			switch transaction.transactionState {
+			case .purchased:
+				print("Purchased")
+				self.performSegue(withIdentifier: "ServerCreator", sender: self)
+			case .purchasing:
+				print("Purchasing")
+			case .failed:
+				print("Failed:", transaction.error)
+			case .restored:
+				print("Restored")
+			case .deferred:
+				print("Deferred")
+			default:
+				break
+			}
+		}
+	}
 }

@@ -41,7 +41,14 @@ class AddServer: UIViewController {
             passwordTextField.text = server.password
             titleLabel.title = "Edit Server"
         }
+		
+		// Search for unused subscriptions
+		
     }
+	
+	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+		self.view.endEditing(true)
+	}
 
     @IBAction func saveButtonPressed(_ sender: Any) {
         if nameTextField.text!.isEmpty || addressTextField.text!.isEmpty || usernameTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
@@ -67,9 +74,5 @@ class AddServer: UIViewController {
     func textFieldShouldReturn(textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
-    }
-
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.view.endEditing(true)
     }
 }

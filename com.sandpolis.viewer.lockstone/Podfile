@@ -1,4 +1,5 @@
-platform :ios, '12.2'
+# Uncomment the next line to define a global platform for your project
+platform :ios, '11'
 
 target 'Sandpolis' do
   # Comment the next line if you don't want to use dynamic frameworks
@@ -22,5 +23,5 @@ target 'Sandpolis' do
   # Provides integration with Firebase
   pod 'Firebase/Firestore', '6.7.0'
   pod 'Firebase/Auth', '6.7.0'
-  
+
 end

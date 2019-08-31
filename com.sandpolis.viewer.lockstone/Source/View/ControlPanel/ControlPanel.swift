@@ -44,17 +44,6 @@ class ControlPanel: UIViewController {
 		// Set profile information
 		hostname.text = profile.hostname
 		location.text = FormatUtil.formatProfileLocation(profile)
-
-		switch profile.platform {
-		case .windows:
-			platform.image = UIImage(named: "platform/windows")
-		case .macos:
-			platform.image = UIImage(named: "platform/macos")
-		case .linux:
-			platform.image = UIImage(named: "platform/linux")
-		default:
-			print("Warning: Unknown platform")
-		}
 	}
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {

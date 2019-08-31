@@ -107,7 +107,7 @@ class ServerManager: UITableViewController {
             completion(true)
         }
         let edit = UIContextualAction(style: .normal, title: "Edit") { action, view, completion in
-            self.performSegue(withIdentifier: "ShowEditServerSegue", sender: indexPath)
+            self.performSegue(withIdentifier: "EditServerSegue", sender: indexPath)
             completion(true)
         }
         let config = UISwipeActionsConfiguration(actions: [delete, edit])
@@ -116,10 +116,10 @@ class ServerManager: UITableViewController {
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "ShowAddServerSegue",
+        if segue.identifier == "AddServerSegue",
             let addServerView = segue.destination as? AddServer {
             addServerView.serverReference = ref.document()
-        } else if segue.identifier == "ShowEditServerSegue",
+        } else if segue.identifier == "EditServerSegue",
             let addServerView = segue.destination as? AddServer {
             let indexPath = sender as! IndexPath
 			addServerView.server = serverList[indexPath.row]

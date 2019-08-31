@@ -19,19 +19,16 @@ import UIKit
 
 class HostCell: UITableViewCell {
 
-	@IBOutlet weak var platformIcon: UIImageView!
+	@IBOutlet weak var screenshot: UIImageView!
 	@IBOutlet weak var nameLabel: UILabel!
 	@IBOutlet weak var addressLabel: UILabel!
 
 	func setContent(_ host: SandpolisProfile) {
 		nameLabel.text = host.hostname
 		addressLabel.text = host.ipAddress
-		if host.platform == Util_OsType.windows {
-			platformIcon.image = UIImage(named: "windows")
-		} else if host.platform == Util_OsType.macos {
-			platformIcon.image = UIImage(named: "macos")
-		} else if host.platform == Util_OsType.linux {
-			platformIcon.image = UIImage(named: "linux")
+		
+		if let screen = host.screenshot {
+			screenshot.image = UIImage(data: screen)
 		}
 	}
 }
