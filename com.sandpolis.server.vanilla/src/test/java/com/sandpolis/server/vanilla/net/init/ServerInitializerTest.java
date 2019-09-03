@@ -55,7 +55,7 @@ class ServerInitializerTest {
 		Config.register(logging.net.traffic.raw, false);
 		Config.register(logging.net.traffic.decoded, false);
 		Config.register(net.connection.tls, true);
-		ThreadStore.register(Executors.newSingleThreadExecutor(), "");
+		//ThreadStore.register(Executors.newSingleThreadExecutor(), "");
 	}
 
 	@BeforeEach

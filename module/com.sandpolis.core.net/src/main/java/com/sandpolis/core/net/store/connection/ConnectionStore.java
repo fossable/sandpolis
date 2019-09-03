@@ -17,28 +17,27 @@
  *****************************************************************************/
 package com.sandpolis.core.net.store.connection;
 
-import static com.sandpolis.core.net.store.connection.ConnectionStore.Events.SOCK_ESTABLISHED;
-import static com.sandpolis.core.net.store.connection.ConnectionStore.Events.SOCK_LOST;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Signaler;
-import com.sandpolis.core.instance.Store;
-import com.sandpolis.core.instance.Store.AutoInitializer;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
+import com.google.common.eventbus.Subscribe;
+import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.Protocol;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ClientPipelineInit;
 import com.sandpolis.core.net.loop.ConnectionLoop;
+import com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStoreConfig;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.util.Generator.LoopConfig;
 
@@ -54,8 +53,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
  * @see NetworkStore
  * @since 5.0.0
  */
-@AutoInitializer
-public final class ConnectionStore extends Store {
+public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionStoreConfig> {
 
 	public static final Logger log = LoggerFactory.getLogger(ConnectionStore.class);
 
@@ -69,8 +67,13 @@ public final class ConnectionStore extends Store {
 	 */
 	private static final List<ConnectionLoop> threads = new LinkedList<>();
 
-	// Temporary
-	public static void init() {
+	@Override
+	public void init(Consumer<ConnectionStoreConfig> c) {
+		register(this);
+	}
+
+	public static final class ConnectionStoreConfig {
+
 	}
 
 	/**
@@ -89,34 +92,14 @@ public final class ConnectionStore extends Store {
 		SOCK_ESTABLISHED;
 	}
 
-	static {
-		Signaler.register(SOCK_LOST, (Sock sock) -> {
-			connections.remove(sock.getRemoteCvid());
-		});
-
-		Signaler.register(SOCK_ESTABLISHED, (Sock sock) -> {
-			connections.put(sock.getRemoteCvid(), sock);
-		});
+	@Subscribe
+	private void onSockLost(Sock sock) {
+		connections.remove(sock.getRemoteCvid());
 	}
 
-	/**
-	 * Retrieve a connection from the store.
-	 * 
-	 * @param cvid The CVID to query
-	 * @return The requested connection or {@code null} if the connection was not
-	 *         found
-	 */
-	public static Sock get(int cvid) {
-		return connections.get(cvid);
-	}
-
-	/**
-	 * Get the number of connections in the store.
-	 * 
-	 * @return The connection count
-	 */
-	public static int getSize() {
-		return connections.size();
+	@Subscribe
+	private void onSockEstablished(Sock sock) {
+		connections.put(sock.getRemoteCvid(), sock);
 	}
 
 	/**
@@ -126,7 +109,7 @@ public final class ConnectionStore extends Store {
 	 * @param cvid
 	 * @return
 	 */
-	public static SockFuture connect(int cvid) {
+	public SockFuture connect(int cvid) {
 		// TODO
 		return null;
 	}
@@ -139,7 +122,7 @@ public final class ConnectionStore extends Store {
 	 * @return A {@link SockFuture} which will complete after the connection is
 	 *         established
 	 */
-	public static SockFuture connect(Bootstrap bootstrap) {
+	public SockFuture connect(Bootstrap bootstrap) {
 		Objects.requireNonNull(bootstrap);
 
 		return new SockFuture(bootstrap.connect());
@@ -152,7 +135,7 @@ public final class ConnectionStore extends Store {
 	 * @param config The connection loop configuration
 	 * @return The new connection loop
 	 */
-	public static ConnectionLoop connect(LoopConfig config, Class<? extends Exelet>[] exelets) {
+	public ConnectionLoop connect(LoopConfig config, Class<? extends Exelet>[] exelets) {
 		Objects.requireNonNull(config);
 
 		// Build a bootstrap
@@ -173,14 +156,12 @@ public final class ConnectionStore extends Store {
 	 * @param port    The port number
 	 * @return The future of the action
 	 */
-	public static SockFuture connect(String address, int port) {
+	public SockFuture connect(String address, int port) {
 		return connect(new Bootstrap().channel(NioSocketChannel.class).group(new NioEventLoopGroup())
 				.remoteAddress(address, port)
 				// TODO use static pipeline initializer defined somewhere
 				.handler(new ClientPipelineInit(new Class[] {})));
 	}
 
-	private ConnectionStore() {
-	}
-
+	public static final ConnectionStore ConnectionStore = new ConnectionStore();
 }

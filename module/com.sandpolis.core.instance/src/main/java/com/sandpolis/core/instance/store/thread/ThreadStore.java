@@ -21,11 +21,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Store.AutoInitializer;
+import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStoreConfig;
 
 /**
  * The {@link ThreadStore} manages all of the application's
@@ -34,27 +36,9 @@ import com.sandpolis.core.instance.Store.AutoInitializer;
  * @author cilki
  * @since 5.0.0
  */
-@AutoInitializer
-public final class ThreadStore {
+public final class ThreadStore extends MapStore<String, ExecutorService, ThreadStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ThreadStore.class);
-
-	private static Map<String, ExecutorService> map;
-
-	/**
-	 * Associate each id in the given list with the given {@link ExecutorService}.
-	 * 
-	 * @param executor The new {@link ExecutorService}
-	 * @param id       The list of IDs
-	 */
-	public static void register(ExecutorService executor, String... id) {
-		Objects.requireNonNull(executor);
-		if (map == null)
-			map = new HashMap<>();
-
-		for (String s : id)
-			map.put(s, executor);
-	}
 
 	/**
 	 * Get the {@link ExecutorService} corresponding to the given identifier.
@@ -64,19 +48,40 @@ public final class ThreadStore {
 	 *         exist
 	 */
 	@SuppressWarnings("unchecked")
-	public static <E> E get(String id) {
+	public <E extends ExecutorService> E get(String id) {
 		return (E) map.get(Objects.requireNonNull(id));
 	}
 
-	/**
-	 * Shutdown all threads in the {@link ThreadStore}.
-	 */
-	public static void shutdown() {
+	@Override
+	public void close() throws Exception {
+		log.debug("Closing ThreadStore (provider: " + map + ")");
 		log.debug("Shutting down {} thread pools", map.size());
 		map.values().forEach(service -> service.shutdownNow());
-		map.clear();
+		map = null;
 	}
 
-	private ThreadStore() {
+	public static final ThreadStore ThreadStore = new ThreadStore();
+
+	@Override
+	public void init(Consumer<ThreadStoreConfig> c) {
+
+	}
+
+	public static final class ThreadStoreConfig {
+
+		private Map<String, ExecutorService> map;
+
+		/**
+		 * Associate each id in the given list with the given {@link ExecutorService}.
+		 * 
+		 * @param executor The new {@link ExecutorService}
+		 * @param id       The list of IDs
+		 */
+		public void register(ExecutorService executor, String... id) {
+			Objects.requireNonNull(executor);
+
+			for (String s : id)
+				map.put(s, executor);
+		}
 	}
 }

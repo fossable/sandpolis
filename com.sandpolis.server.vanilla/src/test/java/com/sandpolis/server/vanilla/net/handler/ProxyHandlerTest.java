@@ -22,13 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.concurrent.Executors;
-
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
@@ -145,10 +141,5 @@ class ProxyHandlerTest {
 	private ByteBuf encode(Message message) {
 		assertTrue(encoder.writeOutbound(message));
 		return encoder.readOutbound();
-	}
-
-	@BeforeAll
-	private static void init() {
-		Signaler.init(Executors.newSingleThreadExecutor());
 	}
 }

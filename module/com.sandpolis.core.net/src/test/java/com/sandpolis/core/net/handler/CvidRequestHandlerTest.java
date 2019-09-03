@@ -23,13 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.concurrent.Executors;
-
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
@@ -46,11 +42,6 @@ class CvidRequestHandlerTest {
 
 	private static final CvidRequestHandler clientHandler = new CvidRequestHandler();
 	private EmbeddedChannel client;
-
-	@BeforeAll
-	static void configure() {
-		Signaler.init(Executors.newSingleThreadExecutor());
-	}
 
 	@BeforeEach
 	void setup() {

@@ -18,6 +18,7 @@
 package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.io.IOException;
@@ -35,7 +36,6 @@ import com.google.protobuf.Message;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginInstall;
 import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginList;

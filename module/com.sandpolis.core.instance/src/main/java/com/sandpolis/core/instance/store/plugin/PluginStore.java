@@ -29,8 +29,8 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -43,10 +43,9 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.Resources;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.Store.ManualInitializer;
-import com.sandpolis.core.instance.storage.StoreProvider;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.plugin.PluginStore.PluginStoreConfig;
 import com.sandpolis.core.proto.net.MCPlugin.PluginDescriptor;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
@@ -72,12 +71,9 @@ import com.sandpolis.core.util.JarUtil;
  * @author cilki
  * @since 5.0.0
  */
-@ManualInitializer
-public final class PluginStore {
+public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(PluginStore.class);
-
-	private static StoreProvider<Plugin> provider;
 
 	/**
 	 * The PF4J plugin manager.
@@ -89,23 +85,14 @@ public final class PluginStore {
 	 */
 	private static Function<X509Certificate, Boolean> verifier = c -> true;
 
-	public static void init(StoreProvider<Plugin> provider) {
-		PluginStore.provider = Objects.requireNonNull(provider);
+	public static final class PluginStoreConfig {
+		public Database database;
+		public Function<X509Certificate, Boolean> verifier;
 	}
 
-	public static void load(Database main) {
-		checkNotNull(main);
+	@Override
+	public void init(Consumer<PluginStoreConfig> c) {
 
-		init(StoreProviderFactory.database(Plugin.class, main));
-	}
-
-	/**
-	 * Set the plugin certificate verifier for the store.
-	 * 
-	 * @param verifier A new certificate verifier
-	 */
-	public static void setCertVerifier(Function<X509Certificate, Boolean> verifier) {
-		PluginStore.verifier = Objects.requireNonNull(verifier);
 	}
 
 	/**
@@ -113,17 +100,8 @@ public final class PluginStore {
 	 * 
 	 * @return A new plugin descriptor stream
 	 */
-	public static Stream<PluginDescriptor> getPluginDescriptors() {
+	public Stream<PluginDescriptor> getPluginDescriptors() {
 		return provider.stream().map(plugin -> plugin.toDescriptor());
-	}
-
-	/**
-	 * Get all plugins.
-	 * 
-	 * @return A new plugin stream
-	 */
-	public static Stream<Plugin> getPlugins() {
-		return provider.stream();
 	}
 
 	/**
@@ -132,7 +110,7 @@ public final class PluginStore {
 	 * @param id The plugin id
 	 * @return The plugin
 	 */
-	public static Optional<Plugin> getPlugin(String id) {
+	public Optional<Plugin> getPlugin(String id) {
 		checkNotNull(id);
 
 		return provider.stream().filter(plugin -> plugin.getId().equals(id)).findAny();
@@ -147,7 +125,7 @@ public final class PluginStore {
 	 * @return The component as a {@link ByteSource} or {@code null} if the
 	 *         component does not exist
 	 */
-	public static ByteSource getPluginComponent(Plugin plugin, Instance instance, InstanceFlavor sub) {
+	public ByteSource getPluginComponent(Plugin plugin, Instance instance, InstanceFlavor sub) {
 		URL url = getPluginComponentUrl(plugin, instance, sub);
 
 		return url != null ? Resources.asByteSource(url) : null;
@@ -159,7 +137,7 @@ public final class PluginStore {
 	 * @param plugin The plugin to search
 	 * @return A list of components that were found in the plugin
 	 */
-	public static List<InstanceFlavor> findComponentTypes(Plugin plugin) {
+	public List<InstanceFlavor> findComponentTypes(Plugin plugin) {
 		checkNotNull(plugin);
 
 		List<InstanceFlavor> types = new LinkedList<>();
@@ -181,7 +159,7 @@ public final class PluginStore {
 	 * @param sub      The instance subtype
 	 * @return A url for the component or {@code null} if not found
 	 */
-	public static URL getPluginComponentUrl(Plugin plugin, Instance instance, InstanceFlavor sub) {
+	public URL getPluginComponentUrl(Plugin plugin, Instance instance, InstanceFlavor sub) {
 		checkNotNull(plugin);
 		checkNotNull(instance);
 		checkNotNull(sub);
@@ -200,7 +178,7 @@ public final class PluginStore {
 	 * @param plugin The plugin
 	 * @return The plugin artifact
 	 */
-	public static Path getArtifact(Plugin plugin) {
+	public Path getArtifact(Plugin plugin) {
 		checkNotNull(plugin);
 
 		Path path;
@@ -222,7 +200,7 @@ public final class PluginStore {
 	 * 
 	 * @throws IOException If a filesystem error occurs
 	 */
-	public static void scanPluginDirectory() throws IOException {
+	public void scanPluginDirectory() throws IOException {
 		// TODO will install an arbitrary version if there's more than one
 		Files.list(Environment.get(LIB))
 				// Core plugins only
@@ -239,7 +217,7 @@ public final class PluginStore {
 	/**
 	 * Load all enabled plugins.
 	 */
-	public static void loadPlugins() {
+	public void loadPlugins() {
 		provider.stream().filter(plugin -> plugin.isEnabled()).forEach(PluginStore::loadPlugin);
 	}
 
@@ -248,7 +226,7 @@ public final class PluginStore {
 	 * 
 	 * @param path The plugin's filesystem artifact
 	 */
-	public static synchronized void installPlugin(Path path) {
+	public synchronized void installPlugin(Path path) {
 		// TODO check state
 
 		try {
@@ -278,7 +256,7 @@ public final class PluginStore {
 	 * 
 	 * @param plugin The plugin to load
 	 */
-	private static void loadPlugin(Plugin plugin) {
+	private void loadPlugin(Plugin plugin) {
 		// TODO check state
 
 		// Locate plugin
@@ -316,10 +294,9 @@ public final class PluginStore {
 	 * @return The file hash
 	 * @throws IOException
 	 */
-	private static byte[] hashPlugin(Path path) throws IOException {
+	private byte[] hashPlugin(Path path) throws IOException {
 		return MoreFiles.asByteSource(path).hash(Hashing.sha256()).asBytes();
 	}
 
-	private PluginStore() {
-	}
+	public static final PluginStore PluginStore = new PluginStore();
 }

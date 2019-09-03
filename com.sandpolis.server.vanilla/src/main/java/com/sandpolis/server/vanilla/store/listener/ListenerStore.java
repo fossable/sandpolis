@@ -21,20 +21,20 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Store;
 import com.sandpolis.core.instance.storage.StoreProvider;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
-import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener.ListenerState;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.util.ValidationUtil;
+import com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStoreConfig;
 
 /**
  * The {@link ListenerStore} manages network listeners.
@@ -42,22 +42,11 @@ import com.sandpolis.core.util.ValidationUtil;
  * @author cilki
  * @since 1.0.0
  */
-public final class ListenerStore extends Store {
+public final class ListenerStore extends StoreBase<ListenerStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ListenerStore.class);
 
 	private static StoreProvider<Listener> provider;
-
-	public static void init(StoreProvider<Listener> provider) {
-		ListenerStore.provider = Objects.requireNonNull(provider);
-
-		if (log.isDebugEnabled())
-			log.debug("Initialized store containing {} entities", provider.count());
-	}
-
-	public static void load(Database main) {
-		init(StoreProviderFactory.database(Listener.class, Objects.requireNonNull(main)));
-	}
 
 	/**
 	 * Start all enabled, unstarted listeners in the store.
@@ -198,4 +187,16 @@ public final class ListenerStore extends Store {
 
 	private ListenerStore() {
 	}
+
+	@Override
+	public void init(Consumer<ListenerStoreConfig> o) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public static final class ListenerStoreConfig {
+
+	}
+
+	public static final ListenerStore ListenerStore = new ListenerStore();
 }

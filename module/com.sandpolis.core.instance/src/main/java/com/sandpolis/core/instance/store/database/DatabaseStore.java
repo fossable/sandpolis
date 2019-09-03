@@ -34,7 +34,7 @@ import com.sandpolis.core.instance.storage.database.DatabaseFactory;
  * @author cilki
  * @since 5.0.0
  */
-public final class DatabaseStore extends Store {
+public final class DatabaseStore extends StoreBase {
 	private DatabaseStore() {
 	}
 

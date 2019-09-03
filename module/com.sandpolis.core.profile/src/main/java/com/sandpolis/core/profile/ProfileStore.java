@@ -20,17 +20,18 @@ package com.sandpolis.core.profile;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.instance.Signaler;
-import com.sandpolis.core.instance.Store;
-import com.sandpolis.core.instance.Store.ManualInitializer;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.profile.ProfileStore.ProfileStoreConfig;
 import com.sandpolis.core.proto.net.MCDelta.EV_ProfileDelta;
 import com.sandpolis.core.proto.util.Platform.Instance;
 
@@ -38,8 +39,7 @@ import com.sandpolis.core.proto.util.Platform.Instance;
  * @author cilki
  * @since 4.0.0
  */
-@ManualInitializer
-public final class ProfileStore extends Store {
+public final class ProfileStore extends StoreBase<ProfileStoreConfig> {
 
 	private static StoreProvider<Profile> provider;
 
@@ -146,6 +146,18 @@ public final class ProfileStore extends Store {
 
 	public static Stream<Profile> getProfiles() {
 		return provider.stream();
+	}
+
+	public static final class ProfileStoreConfig {
+
+	}
+
+	public static final ProfileStore ProfileStore = new ProfileStore();
+
+	@Override
+	public void init(Consumer<ProfileStoreConfig> o) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

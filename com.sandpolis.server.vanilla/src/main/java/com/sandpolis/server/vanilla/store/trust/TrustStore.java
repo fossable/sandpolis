@@ -29,6 +29,7 @@ import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,11 +38,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Resources;
 import com.sandpolis.core.instance.MainDispatch;
-import com.sandpolis.core.instance.Store.ManualInitializer;
 import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.util.CertUtil;
+import com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStoreConfig;
 
 /**
  * The {@link TrustStore} contains trust anchors for plugin certificate
@@ -50,8 +52,7 @@ import com.sandpolis.core.util.CertUtil;
  * @author cilki
  * @since 5.0.0
  */
-@ManualInitializer
-public final class TrustStore {
+public final class TrustStore extends StoreBase<TrustStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(TrustStore.class);
 
@@ -128,6 +129,15 @@ public final class TrustStore {
 		return true;
 	}
 
-	private TrustStore() {
+	public static final class TrustStoreConfig {
+
+	}
+
+	public static final TrustStore TrustStore = new TrustStore();
+
+	@Override
+	public void init(Consumer<TrustStoreConfig> o) {
+		// TODO Auto-generated method stub
+
 	}
 }

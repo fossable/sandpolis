@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.core.ipc;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -34,10 +37,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.Store;
-import com.sandpolis.core.instance.Store.AutoInitializer;
+import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.pref.PrefStore;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
+import com.sandpolis.core.ipc.IPCStore.IPCStoreConfig;
 import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
 import com.sandpolis.core.ipc.MSG.Message;
 import com.sandpolis.core.ipc.MSG.Message.MsgCase;
@@ -50,8 +52,7 @@ import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
  * @author cilki
  * @since 5.0.0
  */
-@AutoInitializer
-public final class IPCStore extends Store {
+public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	public static final Logger log = LoggerFactory.getLogger(IPCStore.class);
 
@@ -231,7 +232,15 @@ public final class IPCStore extends Store {
 		return PrefStore.getPreferences(instance, flavor).getInt("ipc.port", 0);
 	}
 
-	private IPCStore() {
+	public static final class IPCStoreConfig {
+
 	}
 
+	public static final IPCStore IPCStore = new IPCStore();
+
+	@Override
+	public void init(Consumer<IPCStoreConfig> o) {
+		// TODO Auto-generated method stub
+
+	}
 }

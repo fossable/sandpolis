@@ -17,16 +17,12 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.stream;
 
-import static com.sandpolis.core.net.store.connection.ConnectionStore.Events.SOCK_LOST;
-import static com.sandpolis.core.profile.ProfileStore.Events.PROFILE_ONLINE;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 
-import java.util.function.Consumer;
-
-import com.sandpolis.core.instance.Signaler;
+import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.profile.Profile;
-import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MCStream.ProfileStreamData;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.stream.store.StreamSource;
@@ -40,34 +36,36 @@ import com.sandpolis.core.stream.store.StreamSource;
  */
 public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
 
-	private final Consumer<Profile> online = (Profile profile) -> {
-		var data = ProfileStreamData.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid()).setOnline(true);
-
-		Sock sock = ConnectionStore.get(profile.getCvid());
-		if (sock != null) {
-			data.setIp(sock.getRemoteIP());
-			submit(data.build());
-		}
-	};
-
-	private final Consumer<Sock> offline = (Sock sock) -> {
-		submit(ProfileStreamData.newBuilder().setCvid(sock.getRemoteCvid()).setUuid(sock.getRemoteUuid())
-				.setOnline(false).build());
-	};
-
 	@Override
 	public void stop() {
-		Signaler.remove(PROFILE_ONLINE, online);
-		Signaler.remove(SOCK_LOST, offline);
+		ProfileStore.unregister(this);
+		ConnectionStore.unregister(this);
 	}
 
 	@Override
 	public void start() {
-		Signaler.register(PROFILE_ONLINE, online);
-		Signaler.register(SOCK_LOST, offline);
+		ProfileStore.register(this);
+		ConnectionStore.register(this);
 
 		// TODO temporary
 		// Send existing profiles
-		ProfileStore.getProfiles().filter(profile -> profile.getInstance() == Instance.CLIENT).forEach(online);
+		ProfileStore.getProfiles().filter(profile -> profile.getInstance() == Instance.CLIENT)
+				.forEach(this::onProfileOnline);
+	}
+
+	@Subscribe
+	private void onProfileOnline(Profile profile) {
+		var data = ProfileStreamData.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid()).setOnline(true);
+
+		ConnectionStore.get(profile.getCvid()).ifPresent(sock -> {
+			data.setIp(sock.getRemoteIP());
+			submit(data.build());
+		});
+	}
+
+	@Subscribe
+	private void onSockLost(Sock sock) {
+		submit(ProfileStreamData.newBuilder().setCvid(sock.getRemoteCvid()).setUuid(sock.getRemoteUuid())
+				.setOnline(false).build());
 	}
 }

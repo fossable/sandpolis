@@ -20,6 +20,7 @@ package com.sandpolis.viewer.jfx;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
+import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
 
 import java.util.Date;
 
@@ -88,6 +89,9 @@ public final class Viewer {
 	private static final Task loadConfiguration = new Task((task) -> {
 
 		// Load PrefStore
+		PrefStore.init(config -> {
+
+		});
 		PrefStore.load(Core.INSTANCE, Core.FLAVOR);
 
 		PrefStore.register(ui.help, true);

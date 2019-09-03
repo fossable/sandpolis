@@ -22,21 +22,20 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Store;
-import com.sandpolis.core.instance.Store.ManualInitializer;
 import com.sandpolis.core.instance.storage.StoreProvider;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
-import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Group.ProtoGroup;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.util.ValidationUtil;
+import com.sandpolis.server.vanilla.store.group.GroupStore.GroupStoreConfig;
 import com.sandpolis.server.vanilla.store.user.User;
 
 /**
@@ -45,23 +44,11 @@ import com.sandpolis.server.vanilla.store.user.User;
  * @author cilki
  * @since 5.0.0
  */
-@ManualInitializer
-public final class GroupStore extends Store {
+public final class GroupStore extends StoreBase<GroupStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(GroupStore.class);
 
 	private static StoreProvider<Group> provider;
-
-	public static void init(StoreProvider<Group> provider) {
-		GroupStore.provider = Objects.requireNonNull(provider);
-
-		if (log.isDebugEnabled())
-			log.debug("Initialized store containing {} entities", provider.count());
-	}
-
-	public static void load(Database main) {
-		init(StoreProviderFactory.database(Group.class, Objects.requireNonNull(main)));
-	}
 
 	/**
 	 * Get a group from the store.
@@ -183,7 +170,15 @@ public final class GroupStore extends Store {
 		return group.merge(delta);
 	}
 
-	private GroupStore() {
+	public static final class GroupStoreConfig {
+
 	}
 
+	public static final GroupStore GroupStore = new GroupStore();
+
+	@Override
+	public void init(Consumer<GroupStoreConfig> o) {
+		// TODO Auto-generated method stub
+
+	}
 }

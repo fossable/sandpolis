@@ -22,23 +22,23 @@ import static com.sandpolis.core.util.CryptoUtil.SHA256;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Store;
-import com.sandpolis.core.instance.Store.ManualInitializer;
 import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.proto.pojo.User.ProtoUser;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
+import com.sandpolis.server.vanilla.store.user.UserStore.UserStoreConfig;
 
-@ManualInitializer
-public final class UserStore extends Store {
+public final class UserStore extends StoreBase<UserStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(UserStore.class);
 
@@ -197,6 +197,15 @@ public final class UserStore extends Store {
 		return user.merge(delta);
 	}
 
-	private UserStore() {
+	public static final class UserStoreConfig {
+
+	}
+
+	public static final UserStore UserStore = new UserStore();
+
+	@Override
+	public void init(Consumer<UserStoreConfig> o) {
+		// TODO Auto-generated method stub
+
 	}
 }

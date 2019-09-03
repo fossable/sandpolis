@@ -23,6 +23,10 @@ import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 import static com.sandpolis.core.instance.MainDispatch.register;
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 
 import java.util.Date;
@@ -49,11 +53,8 @@ import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.storage.database.DatabaseFactory;
 import com.sandpolis.core.instance.store.database.DatabaseStore;
 import com.sandpolis.core.instance.store.plugin.Plugin;
-import com.sandpolis.core.instance.store.plugin.PluginStore;
-import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.task.IPCTask;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.profile.ProfileStore;
@@ -167,19 +168,25 @@ public final class Server {
 	public static final Task loadServerStores = new Task((task) -> {
 
 		// Load ThreadStore
-		ThreadStore.register(new NioEventLoopGroup(2), net.exelet);
-		ThreadStore.register(new NioEventLoopGroup(2), net.connection.outgoing);
-		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
-		ThreadStore.register(Executors.newCachedThreadPool(), PoolConstant.server.generator);
+		ThreadStore.init(config -> {
+			config.register(new NioEventLoopGroup(2), net.exelet);
+			config.register(new NioEventLoopGroup(2), net.connection.outgoing);
+			config.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
+			config.register(Executors.newCachedThreadPool(), PoolConstant.server.generator);
+		});
 
 		// Load NetworkStore and choose a new CVID
 		Core.setCvid(IDUtil.CVID.cvid(Instance.SERVER));
 		NetworkStore.updateCvid(Core.cvid());
 
-		ConnectionStore.init();
+		ConnectionStore.init(config -> {
+		});
 
 		// Load PrefStore
-		PrefStore.load(Core.INSTANCE, Core.FLAVOR);
+		PrefStore.init(config -> {
+			config.instance = Core.INSTANCE;
+			config.flavor = Core.FLAVOR;
+		});
 
 		// Load DatabaseStore
 		if (!Config.has(server.db.url)) {
@@ -206,8 +213,10 @@ public final class Server {
 		TrustStore.load(DatabaseStore.main());
 
 		// Load PluginStore
-		PluginStore.load(DatabaseStore.main());
-		PluginStore.setCertVerifier(TrustStore::verifyPluginCertificate);
+		PluginStore.init(config -> {
+			config.database = DatabaseStore.main();
+			config.verifier = TrustStore::verifyPluginCertificate;
+		});
 
 		return task.success();
 	});

@@ -17,10 +17,11 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.view.generator.detail;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+
 import java.util.concurrent.ExecutorService;
 
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.util.DnsUtil;
 import com.sandpolis.core.util.NetUtil;
 import com.sandpolis.core.util.ValidationUtil;

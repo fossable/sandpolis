@@ -20,13 +20,10 @@ package com.sandpolis.server.vanilla.exe;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.concurrent.Executors;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.ExeletTest;
@@ -46,7 +43,6 @@ class LoginExeTest extends ExeletTest {
 	void setup() {
 		UserStore.init(StoreProviderFactory.memoryList(User.class));
 		ProfileStore.init(StoreProviderFactory.memoryList(Profile.class));
-		Signaler.init(Executors.newSingleThreadExecutor());
 
 		initChannel();
 		exe = new LoginExe();

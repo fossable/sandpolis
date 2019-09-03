@@ -17,17 +17,20 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.store.stage;
 
+import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import com.sandpolis.core.instance.Store.AutoInitializer;
-import com.sandpolis.core.instance.store.pref.PrefStore;
+import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.viewer.jfx.PrefConstant.ui;
 import com.sandpolis.viewer.jfx.common.FxUtil;
+import com.sandpolis.viewer.jfx.store.stage.StageStore.StageStoreConfig;
 
 import javafx.application.Platform;
 import javafx.scene.Parent;
@@ -42,20 +45,19 @@ import javafx.stage.Stage;
  * @author cilki
  * @since 5.0.0
  */
-@AutoInitializer
-public final class StageStore {
+public final class StageStore extends StoreBase<StageStoreConfig> {
 
 	/**
 	 * A list of loaded {@link Stage}s.
 	 */
-	private static List<Stage> loaded = new ArrayList<>();
+	private List<Stage> loaded = new ArrayList<>();
 
 	/**
 	 * Begin stage building.
 	 * 
 	 * @return A new {@link StageBuilder}
 	 */
-	public static StageBuilder newStage() {
+	public StageBuilder newStage() {
 		return new StageBuilder();
 	}
 
@@ -65,14 +67,14 @@ public final class StageStore {
 	 * @param stage The initial stage
 	 * @return A new {@link StageBuilder}
 	 */
-	public static StageBuilder newStage(Stage stage) {
+	public StageBuilder newStage(Stage stage) {
 		return new StageBuilder().stage(stage);
 	}
 
 	/**
 	 * Hide all stages in the store.
 	 */
-	public static void hideAll() {
+	public void hideAll() {
 		Platform.runLater(() -> {
 			loaded.stream().forEach(stage -> stage.hide());
 		});
@@ -81,7 +83,7 @@ public final class StageStore {
 	/**
 	 * Show all stages in the store.
 	 */
-	public static void showAll() {
+	public void showAll() {
 		Platform.runLater(() -> {
 			loaded.stream().forEach(stage -> stage.show());
 		});
@@ -92,7 +94,7 @@ public final class StageStore {
 	 * 
 	 * @param stage The stage to close
 	 */
-	public static void close(Stage stage) {
+	public void close(Stage stage) {
 		loaded.remove(stage);
 		Platform.runLater(() -> {
 			stage.close();
@@ -104,7 +106,7 @@ public final class StageStore {
 	 * 
 	 * @param theme The new theme
 	 */
-	public static void changeTheme(String theme) {
+	public void changeTheme(String theme) {
 		Objects.requireNonNull(theme);
 
 		PrefStore.putString(ui.theme, theme);
@@ -115,6 +117,12 @@ public final class StageStore {
 			});
 		});
 	}
+
+	public static final class StageStoreConfig {
+
+	}
+
+	public static final StageStore StageStore = new StageStore();
 
 	public final static class StageBuilder {
 
@@ -218,5 +226,11 @@ public final class StageStore {
 
 			loaded.add(stage);
 		}
+	}
+
+	@Override
+	public void init(Consumer<StageStoreConfig> o) {
+		// TODO Auto-generated method stub
+
 	}
 }

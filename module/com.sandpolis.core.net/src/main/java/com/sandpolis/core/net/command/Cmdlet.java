@@ -18,6 +18,7 @@
 package com.sandpolis.core.net.command;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import java.util.concurrent.TimeUnit;
 
@@ -26,7 +27,6 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant;
 import com.sandpolis.core.instance.PoolConstant;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.store.connection.ConnectionStore;

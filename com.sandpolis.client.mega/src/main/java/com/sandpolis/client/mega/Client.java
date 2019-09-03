@@ -21,6 +21,7 @@ import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 import static com.sandpolis.core.instance.MainDispatch.register;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_ESTABLISHED;
 import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_LOST;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
@@ -34,6 +35,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.Subscribe;
 import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.exe.ClientExe;
 import com.sandpolis.client.mega.exe.TempExe;
@@ -183,43 +185,44 @@ public final class Client {
 	 */
 	@InitializationTask(name = "Begin the connection routine", fatal = true)
 	public static final Task beginConnectionRoutine = new Task((task) -> {
-
-		Signaler.register(SRV_ESTABLISHED, () -> {
-			ResponseFuture<Outcome> future;
-			var auth = SO_CONFIG.getAuthentication();
-
-			switch (auth.getAuthOneofCase()) {
-			case KEY:
-				KeyContainer mech = auth.getKey();
-				ReciprocalKeyPair key = new ReciprocalKeyPair(mech.getClient().getVerifier().toByteArray(),
-						mech.getClient().getSigner().toByteArray());
-				future = AuthCmd.async().key(auth.getGroupName(), mech.getId(), key);
-				break;
-			case PASSWORD:
-				future = AuthCmd.async().password(auth.getPassword().getPassword());
-				break;
-			default:
-				future = AuthCmd.async().none();
-				break;
-			}
-
-			if (Config.getBoolean(plugin.enabled)) {
-				future.addHandler((Outcome rs) -> {
-					// Synchronize plugins
-					// PluginCmd.async().sync().sync();
-					// PluginStore.loadPlugins();
-				});
-			}
-		});
-
-		Signaler.register(SRV_LOST, () -> {
-			ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(),
-					new Class[] { ClientExe.class, TempExe.class });
-		});
-		Signaler.fire(SRV_LOST);
+		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class, TempExe.class });
 
 		return task.success();
 	});
+
+	@Subscribe
+	private void onSrvLost() {
+		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class, TempExe.class });
+	}
+
+	@Subscribe
+	private void onSrvEstablished() {
+		ResponseFuture<Outcome> future;
+		var auth = SO_CONFIG.getAuthentication();
+
+		switch (auth.getAuthOneofCase()) {
+		case KEY:
+			KeyContainer mech = auth.getKey();
+			ReciprocalKeyPair key = new ReciprocalKeyPair(mech.getClient().getVerifier().toByteArray(),
+					mech.getClient().getSigner().toByteArray());
+			future = AuthCmd.async().key(auth.getGroupName(), mech.getId(), key);
+			break;
+		case PASSWORD:
+			future = AuthCmd.async().password(auth.getPassword().getPassword());
+			break;
+		default:
+			future = AuthCmd.async().none();
+			break;
+		}
+
+		if (Config.getBoolean(plugin.enabled)) {
+			future.addHandler((Outcome rs) -> {
+				// Synchronize plugins
+				// PluginCmd.async().sync().sync();
+				// PluginStore.loadPlugins();
+			});
+		}
+	}
 
 	private Client() {
 	}

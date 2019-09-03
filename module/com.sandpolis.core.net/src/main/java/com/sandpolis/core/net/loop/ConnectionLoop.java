@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.core.net.loop;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.util.Generator.LoopConfig;
