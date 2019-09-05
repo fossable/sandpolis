@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.instance.store.pref.PrefStore.PrefStoreConfig;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
@@ -203,24 +204,22 @@ public final class PrefStore extends StoreBase<PrefStoreConfig> {
 		}
 	}
 
-	private PrefStore() {
-	}
-
-	public static final PrefStore PrefStore = new PrefStore();
-
 	@Override
-	public void init(Consumer<PrefStoreConfig> c) {
+	public PrefStore init(Consumer<PrefStoreConfig> configurator) {
 		var config = new PrefStoreConfig();
-		c.accept(config);
+		configurator.accept(config);
 
 		if (provider != null)
 			log.warn("Reinitializing store without flushing Preferences");
 		provider = getPreferences(config.instance, config.flavor);
+
+		return (PrefStore) super.init(null);
 	}
 
-	public static final class PrefStoreConfig {
+	public final class PrefStoreConfig extends StoreConfig {
 		public Instance instance;
 		public InstanceFlavor flavor;
 	}
 
+	public static final PrefStore PrefStore = new PrefStore();
 }

@@ -20,7 +20,12 @@ package com.sandpolis.viewer.jfx;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
+import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.viewer.jfx.store.stage.StageStore.StageStore;
 
 import java.util.Date;
 
@@ -36,20 +41,12 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
-import com.sandpolis.core.instance.store.plugin.Plugin;
-import com.sandpolis.core.instance.store.plugin.PluginStore;
-import com.sandpolis.core.instance.store.pref.PrefStore;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.task.IPCTask;
-import com.sandpolis.core.net.store.network.NetworkStore;
-import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.viewer.jfx.PrefConstant.ui;
 import com.sandpolis.viewer.jfx.attribute.ObservableAttribute;
 import com.sandpolis.viewer.jfx.common.FxEventExecutor;
 import com.sandpolis.viewer.jfx.common.FxUtil;
-import com.sandpolis.viewer.jfx.store.stage.StageStore;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
@@ -76,7 +73,6 @@ public final class Viewer {
 		MainDispatch.register(IPCTask.checkLock);
 		MainDispatch.register(IPCTask.setLock);
 		MainDispatch.register(Viewer.loadEnvironment);
-		MainDispatch.register(BasicTasks.loadStores);
 		MainDispatch.register(Viewer.loadStores);
 		MainDispatch.register(Viewer.loadPlugins);
 		MainDispatch.register(Viewer.loadUserInterface);
@@ -90,9 +86,9 @@ public final class Viewer {
 
 		// Load PrefStore
 		PrefStore.init(config -> {
-
+			config.instance = Core.INSTANCE;
+			config.flavor = Core.FLAVOR;
 		});
-		PrefStore.load(Core.INSTANCE, Core.FLAVOR);
 
 		PrefStore.register(ui.help, true);
 		PrefStore.register(ui.animations, true);
@@ -131,22 +127,28 @@ public final class Viewer {
 	@InitializationTask(name = "Load static stores", fatal = true)
 	private static final Task loadStores = new Task((task) -> {
 
-		// Load ThreadStore
-		ThreadStore.register(new NioEventLoopGroup(2), net.exelet);
-		ThreadStore.register(new NioEventLoopGroup(2), net.connection.outgoing);
-		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
-		ThreadStore.register(new FxEventExecutor(), PoolConstant.ui.fx_thread);
+		ThreadStore.init(config -> {
+			config.ephemeral();
+			config.register(new NioEventLoopGroup(2), net.exelet);
+			config.register(new NioEventLoopGroup(2), net.connection.outgoing);
+			config.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
+			config.register(new FxEventExecutor(), PoolConstant.ui.fx_thread);
+		});
 
-		// Load NetworkStore
-		NetworkStore.init();
+		NetworkStore.init(config -> {
+			config.ephemeral();
+		});
 
-		// Load PluginStore
-		PluginStore.init(new MemoryListStoreProvider<Plugin>(Plugin.class));
+		PluginStore.init(config -> {
+			config.ephemeral();
+		});
 
-		// Load ProfileStore
-		ProfileStore.load(FXCollections.observableArrayList());
+		ProfileStore.init(config -> {
+			// TODO
+			FXCollections.observableArrayList();
+		});
 
-		// Configure attributekeys
+		// TODO
 		AttributeKey.setDefaultAttributeClass(ObservableAttribute.class);
 
 		return task.success();

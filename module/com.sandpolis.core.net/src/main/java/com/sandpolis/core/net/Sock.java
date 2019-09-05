@@ -20,6 +20,7 @@ package com.sandpolis.core.net;
 import static com.sandpolis.core.net.Sock.ConnectionState.AUTHENTICATED;
 import static com.sandpolis.core.net.Sock.ConnectionState.CONNECTED;
 import static com.sandpolis.core.net.Sock.ConnectionState.NOT_CONNECTED;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
@@ -34,10 +35,10 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.init.ChannelConstant;
-import com.sandpolis.core.net.store.connection.ConnectionStore.Events;
+import com.sandpolis.core.net.store.connection.Events.SockEstablishedEvent;
+import com.sandpolis.core.net.store.connection.Events.SockLostEvent;
 import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
@@ -115,7 +116,7 @@ public class Sock {
 
 		switch (state) {
 		case NOT_CONNECTED:
-			Signaler.fire(Events.SOCK_LOST, this);
+			ConnectionStore.post(SockLostEvent::new, this);
 			break;
 		default:
 			break;
@@ -148,7 +149,7 @@ public class Sock {
 
 		if (getState() == CONNECTED) {
 			log.debug("[CVID {}] Connection state changed: {}->{}", getRemoteCvid(), NOT_CONNECTED, CONNECTED);
-			Signaler.fire(Events.SOCK_ESTABLISHED, this);
+			ConnectionStore.post(SockEstablishedEvent::new, this);
 		}
 
 		this.channel.attr(ChannelConstant.HANDLER_EXELET).get().setSock(this);

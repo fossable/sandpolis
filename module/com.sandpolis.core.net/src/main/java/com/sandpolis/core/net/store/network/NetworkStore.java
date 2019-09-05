@@ -34,9 +34,12 @@ import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.store.connection.ConnectionStore;
+import com.sandpolis.core.net.store.network.Events.ServerEstablishedEvent;
+import com.sandpolis.core.net.store.network.Events.ServerLostEvent;
 import com.sandpolis.core.net.store.network.NetworkStore.NetworkStoreConfig;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkAdded;
@@ -91,7 +94,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 		// See if that was the last connection to a server
 		if (sock.getRemoteInstance() == Instance.SERVER) {
 			// TODO
-			Signaler.fire(SRV_LOST, sock.getRemoteCvid());
+			post(ServerLostEvent::new, sock.getRemoteCvid());
 		}
 	}
 
@@ -103,19 +106,8 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 		// See if that was the first connection to a server
 		if (sock.getRemoteInstance() == Instance.SERVER) {
 			// TODO
-			Signaler.fire(SRV_ESTABLISHED, sock.getRemoteCvid());
+			post(ServerEstablishedEvent::new, sock.getRemoteCvid());
 		}
-	}
-
-	@Override
-	public void init(Consumer<NetworkStoreConfig> o) {
-		network = NetworkBuilder.undirected().allowsSelfLoops(false).allowsParallelEdges(true).build();
-		preferredServer = 0;
-		ConnectionStore.register(this);
-	}
-
-	public static final class NetworkStoreConfig {
-
 	}
 
 	public static void updateCvid(int cvid) {
@@ -309,6 +301,25 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 		return sock.get().read(id, timeout, unit);
 	}
 
-	private NetworkStore() {
+	@Override
+	public NetworkStore init(Consumer<NetworkStoreConfig> configurator) {
+		var config = new NetworkStoreConfig();
+		configurator.accept(config);
+
+		preferredServer = 0;
+		ConnectionStore.register(this);
+
+		return (NetworkStore) super.init(null);
 	}
+
+	public final class NetworkStoreConfig extends StoreConfig {
+
+		@Override
+		public void ephemeral() {
+			network = NetworkBuilder.undirected().allowsSelfLoops(false).allowsParallelEdges(true).build();
+		}
+
+	}
+
+	public static final NetworkStore NetworkStore = new NetworkStore();
 }

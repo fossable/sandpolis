@@ -20,6 +20,7 @@ package com.sandpolis.server.vanilla.exe;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -49,7 +50,6 @@ import com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.core.util.JarUtil;
 import com.sandpolis.core.util.NetUtil;
-import com.sandpolis.server.vanilla.store.trust.TrustStore;
 
 /**
  * Message handlers for plugin requests.

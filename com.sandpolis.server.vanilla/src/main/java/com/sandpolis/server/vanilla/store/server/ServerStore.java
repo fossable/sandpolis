@@ -33,6 +33,7 @@ import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 import com.sandpolis.server.vanilla.ConfigConstant.server;
 import com.sandpolis.server.vanilla.store.server.ServerStore.ServerStoreConfig;
@@ -60,7 +61,10 @@ public final class ServerStore extends StoreBase<ServerStoreConfig> {
 	}
 
 	@Override
-	public void init(Consumer<ServerStoreConfig> o) {
+	public ServerStore init(Consumer<ServerStoreConfig> configurator) {
+		var config = new ServerStoreConfig();
+		configurator.accept(config);
+
 		if (banner != null)
 			log.debug("Reloading server banner");
 
@@ -89,10 +93,11 @@ public final class ServerStore extends StoreBase<ServerStoreConfig> {
 		}
 
 		banner = b.build();
+
+		return (ServerStore) super.init(null);
 	}
 
-	public static final class ServerStoreConfig {
-
+	public final class ServerStoreConfig extends StoreConfig {
 	}
 
 	public static final ServerStore ServerStore = new ServerStore();

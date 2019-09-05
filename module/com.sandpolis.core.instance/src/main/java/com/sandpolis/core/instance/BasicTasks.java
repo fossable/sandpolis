@@ -62,17 +62,6 @@ public final class BasicTasks {
 	});
 
 	/**
-	 * Load static stores.
-	 */
-	@InitializationTask(name = "Load instance stores", fatal = true)
-	public static final Task loadStores = new Task((task) -> {
-		ThreadStore.register(Executors.newSingleThreadExecutor(), PoolConstant.signaler);
-		Signaler.init(ThreadStore.get(PoolConstant.signaler));
-
-		return task.success();
-	});
-
-	/**
 	 * Cleanup static stores.
 	 */
 	@ShutdownTask

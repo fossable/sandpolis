@@ -21,7 +21,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.sandpolis.core.attribute.AttributeDomainKey;
-import com.sandpolis.core.instance.Store.AutoInitializer;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.storage.StoreProvider;
 
@@ -31,7 +30,6 @@ import com.sandpolis.core.instance.storage.StoreProvider;
  * @author cilki
  * @since 5.0.0
  */
-@AutoInitializer
 public final class DomainStore {
 
 	private static StoreProvider<AttributeDomainKey> provider;

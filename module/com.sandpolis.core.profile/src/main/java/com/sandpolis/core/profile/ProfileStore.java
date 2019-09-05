@@ -22,15 +22,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.sandpolis.core.attribute.key.AK_VIEWER;
-import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
-import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.profile.Events.ProfileOnlineEvent;
 import com.sandpolis.core.profile.ProfileStore.ProfileStoreConfig;
 import com.sandpolis.core.proto.net.MCDelta.EV_ProfileDelta;
 import com.sandpolis.core.proto.util.Platform.Instance;
@@ -39,40 +39,13 @@ import com.sandpolis.core.proto.util.Platform.Instance;
  * @author cilki
  * @since 4.0.0
  */
-public final class ProfileStore extends StoreBase<ProfileStoreConfig> {
-
-	private static StoreProvider<Profile> provider;
+public final class ProfileStore extends MapStore<Integer, Profile, ProfileStoreConfig> {
 
 	/**
 	 * The {@link StoreProvider}'s backing container if configured with
 	 * {@link #load(List)}.
 	 */
 	private static List<Profile> providerContainer;
-
-	public static void init(StoreProvider<Profile> provider) {
-		ProfileStore.provider = Objects.requireNonNull(provider);
-	}
-
-	public static void load(Database main) {
-		Objects.requireNonNull(main);
-
-		init(StoreProviderFactory.database(Profile.class, main));
-	}
-
-	/**
-	 * Initialize the store and expose its backing container.
-	 * 
-	 * @param container The container to use when building the {@link StoreProvider}
-	 */
-	public static void load(List<Profile> container) {
-		ProfileStore.providerContainer = Objects.requireNonNull(container);
-
-		init(new MemoryListStoreProvider<Profile>(Profile.class, container));
-	}
-
-	public enum Events {
-		PROFILE_ONLINE, PROFILE_OFFLINE;
-	}
 
 	/**
 	 * Get the {@link StoreProvider}'s backing container if the store was configured
@@ -81,7 +54,7 @@ public final class ProfileStore extends StoreBase<ProfileStoreConfig> {
 	 * @return The store's backing container or {@code null} if access to the
 	 *         container is not allowed
 	 */
-	public static List<Profile> getContainer() {
+	public List<Profile> getContainer() {
 		return providerContainer;
 	}
 
@@ -92,24 +65,14 @@ public final class ProfileStore extends StoreBase<ProfileStoreConfig> {
 	 * @param uuid The profile UUID
 	 * @return A new or existing profile
 	 */
-	public static Profile getProfileOrCreate(int cvid, String uuid) {
+	public Profile getProfileOrCreate(int cvid, String uuid) {
 		Profile profile = provider.get("uuid", uuid).orElse(null);
 		if (profile == null) {
 			profile = new Profile(cvid, uuid);
 			provider.add(profile);
-			Signaler.fire(Events.PROFILE_ONLINE, profile);
+			post(ProfileOnlineEvent::new, profile);
 		}
 		return profile;
-	}
-
-	/**
-	 * Retrieve a {@link Profile} by CVID.
-	 * 
-	 * @param cvid The profile's CVID
-	 * @return The requested {@link Profile}
-	 */
-	public static Optional<Profile> getProfile(int cvid) {
-		return provider.get("cvid", cvid);
 	}
 
 	/**
@@ -118,13 +81,13 @@ public final class ProfileStore extends StoreBase<ProfileStoreConfig> {
 	 * @param username The username of the requested profile
 	 * @return The requested {@link Profile}
 	 */
-	public static Optional<Profile> getViewer(String username) {
+	public Optional<Profile> getViewer(String username) {
 		return provider.stream().filter(profile -> username.equals(profile.get(AK_VIEWER.USERNAME))).findFirst();
 	}
 
-	public static void merge(List<EV_ProfileDelta> updates) throws Exception {
+	public void merge(List<EV_ProfileDelta> updates) throws Exception {
 		for (EV_ProfileDelta update : updates) {
-			Profile profile = getProfile(update.getCvid()).orElse(null);
+			Profile profile = get(update.getCvid()).orElse(null);
 			if (profile == null) {
 				profile = new Profile(update.getCvid(), "TODO");// TODO
 
@@ -136,7 +99,7 @@ public final class ProfileStore extends StoreBase<ProfileStoreConfig> {
 		}
 	}
 
-	public static List<EV_ProfileDelta> getUpdates(long timestamp, int cvid) {
+	public List<EV_ProfileDelta> getUpdates(long timestamp, int cvid) {
 		return provider.stream().filter(profile -> profile.getInstance() == Instance.CLIENT)// TODO filter permissions
 				.map(profile -> EV_ProfileDelta.newBuilder().setUpdate(profile.getUpdates(timestamp)).build())
 				// TODO set cvid or uuid in update
@@ -144,20 +107,26 @@ public final class ProfileStore extends StoreBase<ProfileStoreConfig> {
 
 	}
 
-	public static Stream<Profile> getProfiles() {
-		return provider.stream();
+	@Override
+	public ProfileStore init(Consumer<ProfileStoreConfig> configurator) {
+		var config = new ProfileStoreConfig();
+		configurator.accept(config);
+
+		return (ProfileStore) super.init(null);
 	}
 
-	public static final class ProfileStoreConfig {
+	public final class ProfileStoreConfig extends StoreConfig {
 
+		@Override
+		public void ephemeral() {
+			provider = new MemoryListStoreProvider<>(Profile.class);
+		}
+
+		@Override
+		public void persistent(Database database) {
+			provider = StoreProviderFactory.database(Profile.class, Objects.requireNonNull(database));
+		}
 	}
 
 	public static final ProfileStore ProfileStore = new ProfileStore();
-
-	@Override
-	public void init(Consumer<ProfileStoreConfig> o) {
-		// TODO Auto-generated method stub
-		
-	}
-
 }

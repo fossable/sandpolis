@@ -23,11 +23,18 @@ import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 import static com.sandpolis.core.instance.MainDispatch.register;
+import static com.sandpolis.core.instance.store.database.DatabaseStore.DatabaseStore;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
+import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
+import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
+import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
+import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
+import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import java.util.Date;
 import java.util.concurrent.Executors;
@@ -51,13 +58,9 @@ import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.storage.database.DatabaseFactory;
-import com.sandpolis.core.instance.store.database.DatabaseStore;
 import com.sandpolis.core.instance.store.plugin.Plugin;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.task.IPCTask;
-import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.profile.Profile;
-import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
@@ -78,13 +81,9 @@ import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.auth.PasswordMechanism;
 import com.sandpolis.server.vanilla.gen.generator.MegaGen;
 import com.sandpolis.server.vanilla.store.group.Group;
-import com.sandpolis.server.vanilla.store.group.GroupStore;
 import com.sandpolis.server.vanilla.store.listener.Listener;
-import com.sandpolis.server.vanilla.store.listener.ListenerStore;
 import com.sandpolis.server.vanilla.store.trust.TrustAnchor;
-import com.sandpolis.server.vanilla.store.trust.TrustStore;
 import com.sandpolis.server.vanilla.store.user.User;
-import com.sandpolis.server.vanilla.store.user.UserStore;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
@@ -111,7 +110,6 @@ public final class Server {
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
 		register(Server.loadEnvironment);
-		register(BasicTasks.loadStores);
 		register(Server.loadServerStores);
 		register(Server.loadPlugins);
 		register(Server.installDebugClient);
@@ -167,8 +165,8 @@ public final class Server {
 	@InitializationTask(name = "Load static stores", fatal = true)
 	public static final Task loadServerStores = new Task((task) -> {
 
-		// Load ThreadStore
 		ThreadStore.init(config -> {
+			config.ephemeral();
 			config.register(new NioEventLoopGroup(2), net.exelet);
 			config.register(new NioEventLoopGroup(2), net.connection.outgoing);
 			config.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
@@ -177,44 +175,50 @@ public final class Server {
 
 		// Load NetworkStore and choose a new CVID
 		Core.setCvid(IDUtil.CVID.cvid(Instance.SERVER));
-		NetworkStore.updateCvid(Core.cvid());
-
-		ConnectionStore.init(config -> {
+		NetworkStore.init(config -> {
+			config.ephemeral();
 		});
 
-		// Load PrefStore
+		ConnectionStore.init(config -> {
+			config.ephemeral();
+		});
+
 		PrefStore.init(config -> {
 			config.instance = Core.INSTANCE;
 			config.flavor = Core.FLAVOR;
 		});
 
-		// Load DatabaseStore
-		if (!Config.has(server.db.url)) {
-			DatabaseStore.load(DatabaseFactory.create("h2", Environment.get(DB).resolve("server.db").toFile()),
-					ORM_CLASSES);
-		} else {
-			DatabaseStore.load(DatabaseFactory.create(Config.get(server.db.url), Config.get(server.db.username),
-					Config.get(server.db.password)), ORM_CLASSES);
-		}
+		DatabaseStore.init(config -> {
+			if (!Config.has(server.db.url)) {
+				DatabaseFactory.create("h2", Environment.get(DB).resolve("server.db").toFile());
+			} else {
+				DatabaseFactory.create(Config.get(server.db.url), Config.get(server.db.username),
+						Config.get(server.db.password));
+			}
+		});
 
-		// Load UserStore
-		UserStore.load(DatabaseStore.main());
+		UserStore.init(config -> {
+			config.persistent(DatabaseStore.main());
+		});
 
-		// Load ListenerStore
-		ListenerStore.load(DatabaseStore.main());
+		ListenerStore.init(config -> {
+			config.persistent(DatabaseStore.main());
+		});
 
-		// Load GroupStore
-		GroupStore.load(DatabaseStore.main());
+		GroupStore.init(config -> {
+			config.persistent(DatabaseStore.main());
+		});
 
-		// Load ProfileStore
-		ProfileStore.load(DatabaseStore.main());
+		ProfileStore.init(config -> {
+			config.persistent(DatabaseStore.main());
+		});
 
-		// Load TrustStore
-		TrustStore.load(DatabaseStore.main());
+		TrustStore.init(config -> {
+			config.persistent(DatabaseStore.main());
+		});
 
-		// Load PluginStore
 		PluginStore.init(config -> {
-			config.database = DatabaseStore.main();
+			config.persistent(DatabaseStore.main());
 			config.verifier = TrustStore::verifyPluginCertificate;
 		});
 

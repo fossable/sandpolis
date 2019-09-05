@@ -17,11 +17,11 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.net.handler;
 
-import com.sandpolis.core.net.Sock;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.net.init.PipelineInitializer.ProtobufShortcutFrameEncoder;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.proto.net.MCNetwork.EV_EndpointClosed;
 import com.sandpolis.core.proto.net.MSG.Message;
 
@@ -85,14 +85,14 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 					throw new InvalidMessageException("Message specifies 'to' but not 'from'");
 				}
 
-				// route
-				Sock con = ConnectionStore.get(to);
-				if (con != null) {
+				// Route the message
+				var sock = ConnectionStore.get(to);
+				if (sock.isPresent()) {
 					msg.resetReaderIndex();
 					msg.retain();
 
 					// Skip to the middle of the pipeline
-					((ProtobufShortcutFrameEncoder) con.channel().pipeline().get("protobuf.frame_encoder"))
+					((ProtobufShortcutFrameEncoder) sock.get().channel().pipeline().get("protobuf.frame_encoder"))
 							.shortcut(msg);
 				} else {
 					ctx.channel().writeAndFlush(Message.newBuilder()

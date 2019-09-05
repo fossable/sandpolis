@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -24,16 +26,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.ExeletTest;
-import com.sandpolis.core.profile.Profile;
-import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.server.vanilla.store.user.User;
-import com.sandpolis.server.vanilla.store.user.UserStore;
 
 class LoginExeTest extends ExeletTest {
 
@@ -41,8 +38,12 @@ class LoginExeTest extends ExeletTest {
 
 	@BeforeEach
 	void setup() {
-		UserStore.init(StoreProviderFactory.memoryList(User.class));
-		ProfileStore.init(StoreProviderFactory.memoryList(Profile.class));
+		UserStore.init(config -> {
+			config.ephemeral();
+		});
+		ProfileStore.init(config -> {
+			config.ephemeral();
+		});
 
 		initChannel();
 		exe = new LoginExe();

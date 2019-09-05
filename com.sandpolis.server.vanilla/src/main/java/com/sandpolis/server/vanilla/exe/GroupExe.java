@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
+
 import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PermissionConstant.server;
 import com.sandpolis.core.net.command.Exelet;
@@ -28,7 +30,6 @@ import com.sandpolis.core.proto.net.MCGroup.RS_ListGroups;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.server.vanilla.store.group.Group;
-import com.sandpolis.server.vanilla.store.group.GroupStore;
 
 /**
  * Group message handlers.

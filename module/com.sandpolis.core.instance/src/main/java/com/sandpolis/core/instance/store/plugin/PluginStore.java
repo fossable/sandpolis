@@ -29,6 +29,7 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -43,8 +44,11 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.Resources;
 import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
+import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.instance.store.plugin.PluginStore.PluginStoreConfig;
 import com.sandpolis.core.proto.net.MCPlugin.PluginDescriptor;
 import com.sandpolis.core.proto.util.Platform.Instance;
@@ -84,16 +88,6 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	 * The default certificate verifier which allows all plugins.
 	 */
 	private static Function<X509Certificate, Boolean> verifier = c -> true;
-
-	public static final class PluginStoreConfig {
-		public Database database;
-		public Function<X509Certificate, Boolean> verifier;
-	}
-
-	@Override
-	public void init(Consumer<PluginStoreConfig> c) {
-
-	}
 
 	/**
 	 * Get the plugins in descriptor form.
@@ -296,6 +290,29 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	 */
 	private byte[] hashPlugin(Path path) throws IOException {
 		return MoreFiles.asByteSource(path).hash(Hashing.sha256()).asBytes();
+	}
+
+	@Override
+	public PluginStore init(Consumer<PluginStoreConfig> configurator) {
+		var config = new PluginStoreConfig();
+		configurator.accept(config);
+
+		return (PluginStore) super.init(null);
+	}
+
+	public final class PluginStoreConfig extends StoreConfig {
+
+		public Function<X509Certificate, Boolean> verifier;
+
+		@Override
+		public void ephemeral() {
+			provider = new MemoryListStoreProvider<>(Plugin.class);
+		}
+
+		@Override
+		public void persistent(Database database) {
+			provider = StoreProviderFactory.database(Plugin.class, Objects.requireNonNull(database));
+		}
 	}
 
 	public static final PluginStore PluginStore = new PluginStore();

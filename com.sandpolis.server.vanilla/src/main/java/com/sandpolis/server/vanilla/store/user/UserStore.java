@@ -21,16 +21,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.storage.StoreProvider;
+import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
-import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.proto.pojo.User.ProtoUser;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
@@ -38,44 +38,9 @@ import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.user.UserStore.UserStoreConfig;
 
-public final class UserStore extends StoreBase<UserStoreConfig> {
+public final class UserStore extends MapStore<String, User, UserStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(UserStore.class);
-
-	private static StoreProvider<User> provider;
-
-	public static void init(StoreProvider<User> provider) {
-		UserStore.provider = Objects.requireNonNull(provider);
-
-		if (log.isDebugEnabled())
-			log.debug("Initialized store containing {} entities", provider.count());
-	}
-
-	public static void load(Database main) {
-		init(StoreProviderFactory.database(User.class, Objects.requireNonNull(main)));
-	}
-
-	/**
-	 * Check if a user exists in the store.
-	 * 
-	 * @param username The user's username
-	 * @return Whether the given user exists
-	 */
-	public static boolean exists(String username) {
-		Objects.requireNonNull(username);
-
-		return get(username).isPresent();
-	}
-
-	/**
-	 * Check if a user exists in the store.
-	 * 
-	 * @param id The user's ID
-	 * @return Whether the given user exists
-	 */
-	public static boolean exists(long id) {
-		return get(id).isPresent();
-	}
 
 	/**
 	 * Check a user's expiration status.
@@ -83,7 +48,7 @@ public final class UserStore extends StoreBase<UserStoreConfig> {
 	 * @param user The user to check
 	 * @return Whether the given user is currently expired
 	 */
-	public static boolean isExpired(User user) {
+	public boolean isExpired(User user) {
 		Objects.requireNonNull(user);
 
 		return user.getExpiration() > 0 && user.getExpiration() < System.currentTimeMillis();
@@ -95,52 +60,10 @@ public final class UserStore extends StoreBase<UserStoreConfig> {
 	 * @param user The user to check
 	 * @return Whether the given user is currently expired
 	 */
-	public static boolean isExpired(String user) {
+	public boolean isExpired(String user) {
 		Objects.requireNonNull(user);
 
 		return isExpired(get(user).get());
-	}
-
-	/**
-	 * Get a {@link User} from the store.
-	 * 
-	 * @param username The username to query
-	 * @return The requested user
-	 */
-	public static Optional<User> get(String username) {
-		return provider.get("username", username);
-	}
-
-	/**
-	 * Get a {@link User} from the store.
-	 * 
-	 * @param id The user ID to query
-	 * @return The requested user
-	 */
-	public static Optional<User> get(long id) {
-		return provider.get("id", id);
-	}
-
-	/**
-	 * Remove a {@link User} from the store if it exists.
-	 * 
-	 * @param username The username to remove
-	 */
-	public static void remove(String username) {
-		log.debug("Deleting user \"{}\"", username);
-
-		get(username).ifPresent(provider::remove);
-	}
-
-	/**
-	 * Remove a {@link User} from the store if it exists.
-	 * 
-	 * @param id The ID of the user to remove
-	 */
-	public static void remove(long id) {
-		log.debug("Deleting user {}", id);
-
-		get(id).ifPresent(provider::remove);
 	}
 
 	/**
@@ -148,7 +71,7 @@ public final class UserStore extends StoreBase<UserStoreConfig> {
 	 * 
 	 * @param config The user configuration
 	 */
-	public static void add(UserConfig.Builder config) {
+	public void add(UserConfig.Builder config) {
 		add(config.build());
 	}
 
@@ -157,7 +80,7 @@ public final class UserStore extends StoreBase<UserStoreConfig> {
 	 * 
 	 * @param config The user configuration
 	 */
-	public static void add(UserConfig config) {
+	public void add(UserConfig config) {
 		Objects.requireNonNull(config);
 		checkArgument(ValidationUtil.Config.valid(config) == ErrorCode.OK, "Invalid configuration");
 
@@ -174,7 +97,7 @@ public final class UserStore extends StoreBase<UserStoreConfig> {
 	 * 
 	 * @param user The new user
 	 */
-	public static void add(User user) {
+	public void add(User user) {
 		Objects.requireNonNull(user);
 		checkArgument(get(user.getUsername()).isEmpty(), "Username conflict");
 
@@ -189,7 +112,7 @@ public final class UserStore extends StoreBase<UserStoreConfig> {
 	 * @param delta The changes
 	 * @return The outcome of the action
 	 */
-	public static ErrorCode delta(long id, ProtoUser delta) {
+	public ErrorCode delta(long id, ProtoUser delta) {
 		User user = get(id).orElse(null);
 		if (user == null)
 			return ErrorCode.UNKNOWN_USER;
@@ -197,15 +120,26 @@ public final class UserStore extends StoreBase<UserStoreConfig> {
 		return user.merge(delta);
 	}
 
-	public static final class UserStoreConfig {
+	@Override
+	public UserStore init(Consumer<UserStoreConfig> configurator) {
+		var config = new UserStoreConfig();
+		configurator.accept(config);
 
+		return (UserStore) super.init(null);
+	}
+
+	public final class UserStoreConfig extends StoreConfig {
+
+		@Override
+		public void ephemeral() {
+			provider = new MemoryListStoreProvider<>(User.class);
+		}
+
+		@Override
+		public void persistent(Database database) {
+			provider = StoreProviderFactory.database(User.class, Objects.requireNonNull(database));
+		}
 	}
 
 	public static final UserStore UserStore = new UserStore();
-
-	@Override
-	public void init(Consumer<UserStoreConfig> o) {
-		// TODO Auto-generated method stub
-
-	}
 }

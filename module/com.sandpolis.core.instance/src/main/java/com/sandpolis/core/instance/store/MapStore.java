@@ -16,4 +16,12 @@ public abstract class MapStore<K, V, E> extends StoreBase<E> {
 	public Optional<V> get(K key) {
 		return null;
 	}
+
+	public Optional<V> remove(K key) {
+		return null;
+	}
+
+	public boolean exists(K key) {
+		return false;
+	}
 }

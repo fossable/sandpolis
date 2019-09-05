@@ -22,7 +22,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.sandpolis.core.instance.Store;
+import org.junit.jupiter.api.extension.ExtensionContext.Store;
 
 /**
  * A {@link StoreProvider} manages the artifacts of a {@link Store}. The
@@ -114,7 +114,7 @@ public interface StoreProvider<E> {
 	 * @return The number of elements in the store
 	 */
 	default public long count() {
-		try (Stream<E> stream = stream()) {
+		try (Stream<E> stream = unsafeStream()) {
 			return stream.count();
 		}
 	}
@@ -125,14 +125,14 @@ public interface StoreProvider<E> {
 	 * immutable</b>. Always use the following idiom:
 	 * 
 	 * <pre>
-	 * try (Stream stream = provider.stream()) {
+	 * try (Stream stream = provider.unsafeStream()) {
 	 * 	...
 	 * }
 	 * </pre>
 	 * 
 	 * @return A new {@link Stream} over the elements in the store
 	 */
-	public Stream<E> safeStream();
+	public Stream<E> unsafeStream();
 
 	/**
 	 * The streams produced by this method are eagerly loaded. For performance
@@ -142,7 +142,7 @@ public interface StoreProvider<E> {
 	 * @return A new {@link Stream} over the elements in the store
 	 */
 	default public Stream<E> stream() {
-		try (var stream = safeStream()) {
+		try (var stream = unsafeStream()) {
 			return stream.collect(Collectors.toList()).stream();
 		}
 	}

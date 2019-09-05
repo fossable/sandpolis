@@ -18,6 +18,7 @@
 package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
+import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PermissionConstant.server;

@@ -17,16 +17,17 @@
  *****************************************************************************/
 package com.sandpolis.core.instance.store.database;
 
-import java.util.stream.Stream;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Store;
-import com.sandpolis.core.instance.storage.StoreProvider;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.storage.database.DatabaseFactory;
+import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.store.database.DatabaseStore.DatabaseStoreConfig;
 
 /**
  * The {@link DatabaseStore} manages various types of SQL databases.
@@ -34,39 +35,17 @@ import com.sandpolis.core.instance.storage.database.DatabaseFactory;
  * @author cilki
  * @since 5.0.0
  */
-public final class DatabaseStore extends StoreBase {
-	private DatabaseStore() {
-	}
+public final class DatabaseStore extends MapStore<String, Database, DatabaseStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(DatabaseStore.class);
-
-	private static StoreProvider<Database> provider;
 
 	/**
 	 * The main instance database.
 	 */
-	private static Database main;
+	private Database main;
 
-	public static void init(StoreProvider<Database> provider) {
-		if (provider == null)
-			throw new IllegalArgumentException();
-
-		DatabaseStore.provider = provider;
-	}
-
-	public static void load(Database main, Class<?>[] cls) {
-		if (main == null)
-			throw new IllegalArgumentException();
-
-		if (!main.isOpen()) {
-			DatabaseFactory.init(main, cls);
-		}
-
-		init(StoreProviderFactory.database(Database.class, main));
-		DatabaseStore.main = main;
-	}
-
-	public static void close() throws Exception {
+	@Override
+	public void close() throws Exception {
 		main.close();
 	}
 
@@ -75,26 +54,31 @@ public final class DatabaseStore extends StoreBase {
 	 * 
 	 * @return The instance database or {@code null}
 	 */
-	public static Database main() {
+	public Database main() {
 		return main;
 	}
 
-	/**
-	 * Add a {@link Database} to the store.
-	 * 
-	 * @param db A new database
-	 */
-	public static void add(Database db) {
-		provider.add(db);
+	@Override
+	public DatabaseStore init(Consumer<DatabaseStoreConfig> configurator) {
+		var config = new DatabaseStoreConfig();
+		configurator.accept(config);
+
+		DatabaseFactory.init(config.main, null);
+		this.main = config.main;
+
+		return (DatabaseStore) super.init(null);
 	}
 
-	/**
-	 * Get a new database stream.
-	 * 
-	 * @return A stream over the elements in this store
-	 */
-	public static Stream<Database> stream() {
-		return provider.stream();
+	public final class DatabaseStoreConfig extends StoreConfig {
+
+		public Database main;
+
+		@Override
+		public void ephemeral() {
+			provider = new MemoryListStoreProvider<>(Database.class);
+		}
+
 	}
 
+	public static final DatabaseStore DatabaseStore = new DatabaseStore();
 }

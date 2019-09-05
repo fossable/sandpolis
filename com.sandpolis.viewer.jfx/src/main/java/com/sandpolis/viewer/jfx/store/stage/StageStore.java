@@ -27,7 +27,9 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
+import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.viewer.jfx.PrefConstant.ui;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.store.stage.StageStore.StageStoreConfig;
@@ -45,12 +47,7 @@ import javafx.stage.Stage;
  * @author cilki
  * @since 5.0.0
  */
-public final class StageStore extends StoreBase<StageStoreConfig> {
-
-	/**
-	 * A list of loaded {@link Stage}s.
-	 */
-	private List<Stage> loaded = new ArrayList<>();
+public final class StageStore extends MapStore<String, Stage, StageStoreConfig> {
 
 	/**
 	 * Begin stage building.
@@ -76,7 +73,7 @@ public final class StageStore extends StoreBase<StageStoreConfig> {
 	 */
 	public void hideAll() {
 		Platform.runLater(() -> {
-			loaded.stream().forEach(stage -> stage.hide());
+			stream().forEach(stage -> stage.hide());
 		});
 	}
 
@@ -85,7 +82,7 @@ public final class StageStore extends StoreBase<StageStoreConfig> {
 	 */
 	public void showAll() {
 		Platform.runLater(() -> {
-			loaded.stream().forEach(stage -> stage.show());
+			stream().forEach(stage -> stage.show());
 		});
 	}
 
@@ -95,7 +92,7 @@ public final class StageStore extends StoreBase<StageStoreConfig> {
 	 * @param stage The stage to close
 	 */
 	public void close(Stage stage) {
-		loaded.remove(stage);
+		remove(stage);
 		Platform.runLater(() -> {
 			stage.close();
 		});
@@ -111,20 +108,14 @@ public final class StageStore extends StoreBase<StageStoreConfig> {
 
 		PrefStore.putString(ui.theme, theme);
 		Platform.runLater(() -> {
-			loaded.stream().map(stage -> stage.getScene().getStylesheets()).forEach(styles -> {
+			stream().map(stage -> stage.getScene().getStylesheets()).forEach(styles -> {
 				styles.clear();
 				styles.add("/css/" + theme + ".css");
 			});
 		});
 	}
 
-	public static final class StageStoreConfig {
-
-	}
-
-	public static final StageStore StageStore = new StageStore();
-
-	public final static class StageBuilder {
+	public final class StageBuilder {
 
 		private Stage stage;
 		private Parent root;
@@ -229,8 +220,21 @@ public final class StageStore extends StoreBase<StageStoreConfig> {
 	}
 
 	@Override
-	public void init(Consumer<StageStoreConfig> o) {
-		// TODO Auto-generated method stub
+	public StageStore init(Consumer<StageStoreConfig> configurator) {
+		var config = new StageStoreConfig();
+		configurator.accept(config);
+
+		return (StageStore) super.init(null);
+	}
+
+	public final class StageStoreConfig extends StoreConfig {
+
+		@Override
+		public void ephemeral() {
+			provider = new MemoryListStoreProvider<>(Stage.class);
+		}
 
 	}
+
+	public static final StageStore StageStore = new StageStore();
 }

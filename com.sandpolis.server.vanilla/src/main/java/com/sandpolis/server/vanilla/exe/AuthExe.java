@@ -17,9 +17,11 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.FAILURE_KEY_CHALLENGE;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_KEY;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.UNKNOWN_GROUP;
+import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -31,13 +33,11 @@ import com.google.protobuf.Message;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.Sand5Handler;
 import com.sandpolis.core.profile.Profile;
-import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MCAuth.RQ_KeyAuth;
 import com.sandpolis.core.proto.net.MCAuth.RQ_PasswordAuth;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.store.group.Group;
-import com.sandpolis.server.vanilla.store.group.GroupStore;
 
 import io.netty.util.concurrent.Future;
 

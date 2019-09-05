@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.core.ipc.task;
 
+import static com.sandpolis.core.ipc.IPCStore.IPCStore;
+
 import java.util.concurrent.Executors;
 
 import com.sandpolis.core.instance.ConfigConstant.net;

@@ -27,8 +27,12 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.storage.StoreProvider;
-import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener.ListenerState;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
@@ -42,16 +46,14 @@ import com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStoreCo
  * @author cilki
  * @since 1.0.0
  */
-public final class ListenerStore extends StoreBase<ListenerStoreConfig> {
+public final class ListenerStore extends MapStore<String, Listener, ListenerStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ListenerStore.class);
-
-	private static StoreProvider<Listener> provider;
 
 	/**
 	 * Start all enabled, unstarted listeners in the store.
 	 */
-	public static void start() {
+	public void start() {
 		try (Stream<Listener> stream = provider.stream()) {
 			stream.filter(listener -> !listener.isListening() && listener.isEnabled()).map(listener -> listener.getId())
 					.forEach(ListenerStore::start);
@@ -63,7 +65,7 @@ public final class ListenerStore extends StoreBase<ListenerStoreConfig> {
 	 * 
 	 * @param id A listener ID
 	 */
-	public static void start(long id) {
+	public void start(long id) {
 		log.debug("Starting listener: {}", id);
 
 		get(id).ifPresent(listener -> listener.start());
@@ -72,7 +74,7 @@ public final class ListenerStore extends StoreBase<ListenerStoreConfig> {
 	/**
 	 * Stop all running listeners in the store.
 	 */
-	public static void stop() {
+	public void stop() {
 		try (Stream<Listener> stream = provider.stream()) {
 			stream.filter(listener -> listener.isListening()).map(listener -> listener.getId())
 					.forEach(ListenerStore::stop);
@@ -84,20 +86,10 @@ public final class ListenerStore extends StoreBase<ListenerStoreConfig> {
 	 * 
 	 * @param id A listener ID
 	 */
-	public static void stop(long id) {
+	public void stop(long id) {
 		log.debug("Stopping listener: {}", id);
 
 		get(id).ifPresent(listener -> listener.stop());
-	}
-
-	/**
-	 * Get a listener in the store.
-	 * 
-	 * @param id A listener ID
-	 * @return The associated listener
-	 */
-	public static Optional<Listener> get(long id) {
-		return provider.get("id", id);
 	}
 
 	/**
@@ -105,7 +97,7 @@ public final class ListenerStore extends StoreBase<ListenerStoreConfig> {
 	 * 
 	 * @param config The listener configuration
 	 */
-	public static void add(ListenerConfig.Builder config) {
+	public void add(ListenerConfig.Builder config) {
 		add(config.build());
 	}
 
@@ -114,7 +106,7 @@ public final class ListenerStore extends StoreBase<ListenerStoreConfig> {
 	 * 
 	 * @param config The listener configuration
 	 */
-	public static void add(ListenerConfig config) {
+	public void add(ListenerConfig config) {
 		Objects.requireNonNull(config);
 		checkArgument(ValidationUtil.Config.valid(config) == ErrorCode.OK, "Invalid configuration");
 		checkArgument(ValidationUtil.Config.complete(config) == ErrorCode.OK, "Incomplete configuration");
@@ -127,23 +119,12 @@ public final class ListenerStore extends StoreBase<ListenerStoreConfig> {
 	 * 
 	 * @param listener The listener to add
 	 */
-	public static void add(Listener listener) {
+	public void add(Listener listener) {
 		Objects.requireNonNull(listener);
 		checkArgument(get(listener.getId()).isEmpty(), "ID conflict");
 
 		log.debug("Adding new listener: {}", listener.getId());
 		provider.add(listener);
-	}
-
-	/**
-	 * Remove a listener from the store.
-	 * 
-	 * @param id A listener ID
-	 */
-	public static void remove(long id) {
-		log.debug("Deleting listener {}", id);
-
-		get(id).ifPresent(provider::remove);
 	}
 
 	/**
@@ -153,7 +134,7 @@ public final class ListenerStore extends StoreBase<ListenerStoreConfig> {
 	 * @param delta The changes
 	 * @return The outcome of the action
 	 */
-	public static ErrorCode delta(long id, ProtoListener delta) {
+	public ErrorCode delta(long id, ProtoListener delta) {
 		Listener listener = get(id).orElse(null);
 		if (listener == null)
 			return ErrorCode.UNKNOWN_LISTENER;
@@ -170,7 +151,7 @@ public final class ListenerStore extends StoreBase<ListenerStoreConfig> {
 	 * @param state The new listener state
 	 * @return The outcome of the action
 	 */
-	public static ErrorCode change(long id, ListenerState state) {
+	public ErrorCode change(long id, ListenerState state) {
 		switch (state) {
 		case LISTENING:
 			start(id);
@@ -185,17 +166,25 @@ public final class ListenerStore extends StoreBase<ListenerStoreConfig> {
 		return ErrorCode.OK;
 	}
 
-	private ListenerStore() {
-	}
-
 	@Override
-	public void init(Consumer<ListenerStoreConfig> o) {
-		// TODO Auto-generated method stub
+	public ListenerStore init(Consumer<ListenerStoreConfig> configurator) {
+		var config = new ListenerStoreConfig();
+		configurator.accept(config);
 
+		return (ListenerStore) super.init(null);
 	}
 
-	public static final class ListenerStoreConfig {
+	public final class ListenerStoreConfig extends StoreConfig {
 
+		@Override
+		public void ephemeral() {
+			provider = new MemoryListStoreProvider<>(Listener.class);
+		}
+
+		@Override
+		public void persistent(Database database) {
+			provider = StoreProviderFactory.database(Listener.class, Objects.requireNonNull(database));
+		}
 	}
 
 	public static final ListenerStore ListenerStore = new ListenerStore();

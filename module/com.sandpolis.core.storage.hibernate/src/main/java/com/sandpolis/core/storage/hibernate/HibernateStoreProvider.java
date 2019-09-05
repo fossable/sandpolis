@@ -17,7 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.core.storage.hibernate;
 
-import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -175,25 +174,15 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 	}
 
 	@Override
-	public Stream<E> safeStream() {
+	public Stream<E> unsafeStream() {
 		beginStream();
-		return unsafeStream().onClose(() -> endStream());
-	}
-
-	/**
-	 * Get a new {@link Stream} that does not register itself with
-	 * {@link ConcurrentStoreProvider} and therefore is not protected from
-	 * {@link ConcurrentModificationException}s.
-	 * 
-	 * @return A new unsafe stream
-	 */
-	private Stream<E> unsafeStream() {
 		EntityManager em = emf.createEntityManager();
 		try {
 			CriteriaQuery<E> cq = em.getCriteriaBuilder().createQuery(cls);
-			return em.createQuery(cq.select(cq.from(cls))).getResultList().stream();
+			return em.createQuery(cq.select(cq.from(cls))).getResultList().stream().onClose(() -> endStream());
 		} finally {
 			em.close();
 		}
 	}
+
 }

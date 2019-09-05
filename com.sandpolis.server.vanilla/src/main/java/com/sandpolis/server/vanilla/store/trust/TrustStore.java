@@ -38,10 +38,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Resources;
 import com.sandpolis.core.instance.MainDispatch;
+import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.storage.StoreProvider;
 import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.instance.storage.database.Database;
-import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStoreConfig;
 
@@ -52,51 +54,9 @@ import com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStoreConfig;
  * @author cilki
  * @since 5.0.0
  */
-public final class TrustStore extends StoreBase<TrustStoreConfig> {
+public final class TrustStore extends MapStore<String, TrustAnchor, TrustStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(TrustStore.class);
-
-	private static StoreProvider<TrustAnchor> provider;
-
-	public static void init(StoreProvider<TrustAnchor> provider) {
-		TrustStore.provider = Objects.requireNonNull(provider);
-
-		// Install root CA if required
-		if (get("PLUGIN CA").isEmpty()) {
-			try {
-				add(new TrustAnchor("PLUGIN CA",
-						CertUtil.parse(Resources.toByteArray(MainDispatch.class.getResource("/cert/plugin.cert")))));
-			} catch (CertificateException | IOException e) {
-				throw new RuntimeException("Failed to load certificate", e);
-			}
-		}
-
-		if (log.isDebugEnabled())
-			log.debug("Initialized store containing {} entities", provider.count());
-	}
-
-	public static void load(Database main) {
-		init(StoreProviderFactory.database(TrustAnchor.class, Objects.requireNonNull(main)));
-	}
-
-	/**
-	 * Add a new trust anchor to the store.
-	 * 
-	 * @param anchor A new trust anchor
-	 */
-	public static void add(TrustAnchor anchor) {
-		provider.add(Objects.requireNonNull(anchor));
-	}
-
-	/**
-	 * Get a trust anchor from the store.
-	 * 
-	 * @param name The name of the trust anchor
-	 * @return The requested {@link TrustAnchor}
-	 */
-	public static Optional<TrustAnchor> get(String name) {
-		return provider.get("name", name);
-	}
 
 	/**
 	 * Verify a plugin certificate against the trust anchors in the store.
@@ -104,7 +64,7 @@ public final class TrustStore extends StoreBase<TrustStoreConfig> {
 	 * @param cert The plugin's certificate
 	 * @return Whether the certificate could be validated
 	 */
-	public static boolean verifyPluginCertificate(X509Certificate cert) {
+	public boolean verifyPluginCertificate(X509Certificate cert) {
 		Objects.requireNonNull(cert);
 
 		PKIXParameters params;
@@ -129,15 +89,37 @@ public final class TrustStore extends StoreBase<TrustStoreConfig> {
 		return true;
 	}
 
-	public static final class TrustStoreConfig {
+	@Override
+	public TrustStore init(Consumer<TrustStoreConfig> configurator) {
+		var config = new TrustStoreConfig();
+		configurator.accept(config);
+
+		// Install root CA if required
+		if (get("PLUGIN CA").isEmpty()) {
+			try {
+				add(new TrustAnchor("PLUGIN CA",
+						CertUtil.parse(Resources.toByteArray(MainDispatch.class.getResource("/cert/plugin.cert")))));
+			} catch (CertificateException | IOException e) {
+				throw new RuntimeException("Failed to load certificate", e);
+			}
+		}
+
+		return (TrustStore) super.init(null);
+	}
+
+	public final class TrustStoreConfig extends StoreConfig {
+
+		@Override
+		public void ephemeral() {
+			provider = new MemoryListStoreProvider<>(TrustAnchor.class);
+		}
+
+		@Override
+		public void persistent(Database database) {
+			provider = StoreProviderFactory.database(TrustAnchor.class, Objects.requireNonNull(database));
+		}
 
 	}
 
 	public static final TrustStore TrustStore = new TrustStore();
-
-	@Override
-	public void init(Consumer<TrustStoreConfig> o) {
-		// TODO Auto-generated method stub
-
-	}
 }

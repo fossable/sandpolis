@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.store.listener;
 
+import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -40,7 +42,6 @@ import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.net.init.ServerInitializer;
 import com.sandpolis.server.vanilla.store.user.User;
-import com.sandpolis.server.vanilla.store.user.UserStore;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;

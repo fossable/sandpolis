@@ -26,7 +26,8 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStoreConfig;
 
 /**
@@ -36,9 +37,11 @@ import com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStoreConfig;
  * @author cilki
  * @since 5.0.0
  */
-public final class ThreadStore extends MapStore<String, ExecutorService, ThreadStoreConfig> {
+public final class ThreadStore extends StoreBase<ThreadStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ThreadStore.class);
+
+	private Map<String, ExecutorService> map;
 
 	/**
 	 * Get the {@link ExecutorService} corresponding to the given identifier.
@@ -60,16 +63,15 @@ public final class ThreadStore extends MapStore<String, ExecutorService, ThreadS
 		map = null;
 	}
 
-	public static final ThreadStore ThreadStore = new ThreadStore();
-
 	@Override
-	public void init(Consumer<ThreadStoreConfig> c) {
+	public ThreadStore init(Consumer<ThreadStoreConfig> configurator) {
+		var config = new ThreadStoreConfig();
+		configurator.accept(config);
 
+		return (ThreadStore) super.init(null);
 	}
 
-	public static final class ThreadStoreConfig {
-
-		private Map<String, ExecutorService> map;
+	public final class ThreadStoreConfig extends StoreConfig {
 
 		/**
 		 * Associate each id in the given list with the given {@link ExecutorService}.
@@ -83,5 +85,13 @@ public final class ThreadStore extends MapStore<String, ExecutorService, ThreadS
 			for (String s : id)
 				map.put(s, executor);
 		}
+
+		@Override
+		public void ephemeral() {
+			map = new HashMap<>();
+		}
+
 	}
+
+	public static final ThreadStore ThreadStore = new ThreadStore();
 }

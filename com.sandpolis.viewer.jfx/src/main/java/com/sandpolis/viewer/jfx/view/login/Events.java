@@ -17,7 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.view.login;
 
-import com.sandpolis.viewer.jfx.common.event.Event;
+import com.sandpolis.core.instance.event.Event;
 
 public final class Events {
 

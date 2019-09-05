@@ -17,17 +17,19 @@
  *****************************************************************************/
 package com.sandpolis.core.stream.store;
 
-import static com.sandpolis.core.net.store.connection.ConnectionStore.Events.SOCK_LOST;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.sandpolis.core.instance.Signaler;
-import com.sandpolis.core.instance.Store.AutoInitializer;
-import com.sandpolis.core.net.Sock;
+import com.google.common.eventbus.Subscribe;
+import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.net.store.connection.Events.SockLostEvent;
 import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
+import com.sandpolis.core.stream.store.StreamStore.StreamStoreConfig;
 
 /**
  * There are four "banks" that each serve a specific purpose.
@@ -44,28 +46,27 @@ import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
  * @author cilki
  * @since 5.0.2
  */
-@AutoInitializer
-public final class StreamStore {
+public final class StreamStore extends StoreBase<StreamStoreConfig> {
 
 	/**
 	 * The SOURCE bank.
 	 */
-	static List<StreamSource<?>> source = new LinkedList<>();
+	static List<StreamSource<?>> source;
 
 	/**
 	 * The SINK bank.
 	 */
-	static List<StreamSink<?>> sink = new LinkedList<>();
+	static List<StreamSink<?>> sink;
 
 	/**
 	 * The INBOUND bank.
 	 */
-	static List<InboundStreamAdapter<?>> inbound = new LinkedList<>();
+	static List<InboundStreamAdapter<?>> inbound;
 
 	/**
 	 * The OUTBOUND bank.
 	 */
-	static List<OutboundStreamAdapter<?>> outbound = new LinkedList<>();
+	static List<OutboundStreamAdapter<?>> outbound;
 
 	public static void streamData(EV_StreamData data) {
 		for (var adapter : inbound) {
@@ -169,29 +170,50 @@ public final class StreamStore {
 		}
 	}
 
-	static {
-		Signaler.register(SOCK_LOST, (Sock sock) -> {
-			iterateInbound(it -> {
-				while (it.hasNext()) {
-					var adapter = it.next();
-					if (adapter.getSock().equals(sock)) {
-						it.remove();
-						adapter.close();
-						break;
-					}
+	@Subscribe
+	private void onSockLost(SockLostEvent event) {
+		iterateInbound(it -> {
+			while (it.hasNext()) {
+				var adapter = it.next();
+				if (adapter.getSock().equals(event.get())) {
+					it.remove();
+					adapter.close();
+					break;
 				}
-			});
-			iterateOutbound(it -> {
-				while (it.hasNext()) {
-					var adapter = it.next();
-					if (adapter.getSock().equals(sock)) {
-						it.remove();
-						// adapter.close();
-						break;
-					}
+			}
+		});
+		iterateOutbound(it -> {
+			while (it.hasNext()) {
+				var adapter = it.next();
+				if (adapter.getSock().equals(event.get())) {
+					it.remove();
+					// adapter.close();
+					break;
 				}
-			});
+			}
 		});
 	}
 
+	@Override
+	public StreamStore init(Consumer<StreamStoreConfig> configurator) {
+		var config = new StreamStoreConfig();
+		configurator.accept(config);
+
+		ConnectionStore.register(this);
+
+		return (StreamStore) super.init(null);
+	}
+
+	public final class StreamStoreConfig extends StoreConfig {
+
+		@Override
+		public void ephemeral() {
+			source = new LinkedList<>();
+			sink = new LinkedList<>();
+			inbound = new LinkedList<>();
+			outbound = new LinkedList<>();
+		}
+	}
+
+	public static final StreamStore StreamStore = new StreamStore();
 }
