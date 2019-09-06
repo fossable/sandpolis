@@ -20,7 +20,9 @@ import UIKit
 
 class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 	
-	override var prefersStatusBarHidden: Bool {
+    @IBOutlet weak var progress: UIActivityIndicatorView!
+
+    override var prefersStatusBarHidden: Bool {
 		return true
 	}
 	
@@ -45,7 +47,7 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 			return
 		}
 		
-		if (captureSession.canAddInput(videoInput)) {
+		if captureSession.canAddInput(videoInput) {
 			captureSession.addInput(videoInput)
 		} else {
 			failed()
@@ -54,7 +56,7 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 		
 		let metadataOutput = AVCaptureMetadataOutput()
 		
-		if (captureSession.canAddOutput(metadataOutput)) {
+		if captureSession.canAddOutput(metadataOutput) {
 			captureSession.addOutput(metadataOutput)
 			
 			metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
@@ -67,7 +69,7 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 		let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
 		previewLayer.frame = view.layer.bounds
 		previewLayer.videoGravity = .resizeAspectFill
-		view.layer.addSublayer(previewLayer)
+        view.layer.insertSublayer(previewLayer, at: 0)
 		
 		captureSession.startRunning()
 	}
@@ -75,7 +77,7 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 	override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
 		
-		if (captureSession?.isRunning == false) {
+		if !captureSession.isRunning {
 			captureSession.startRunning()
 		}
 	}
@@ -83,22 +85,26 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 	override func viewWillDisappear(_ animated: Bool) {
 		super.viewWillDisappear(animated)
 		
-		if (captureSession?.isRunning == true) {
+		if captureSession.isRunning {
 			captureSession.stopRunning()
 		}
 	}
 	
-	func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
+    @IBAction func cancel(_ sender: Any) {
+        dismiss(animated: true)
+    }
+
+    func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
 		captureSession.stopRunning()
 		
 		if let metadataObject = metadataObjects.first {
 			guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject else { return }
 			guard let stringValue = readableObject.stringValue else { return }
 			AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
-			found(code: stringValue)
+			found(token: stringValue)
 		}
-		
-		dismiss(animated: true)
+
+		//dismiss(animated: true)
 	}
 	
 	private func failed() {
@@ -108,7 +114,12 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 		captureSession = nil
 	}
 	
-	private func found(code: String) {
-		print(code)
+	private func found(token: String) {
+        progress.startAnimating()
+		
+        CloudUtil.addCloudClient(token: token) { json, error in
+            print("Error:", error)
+            print("JSON:", json)
+        }
 	}
 }

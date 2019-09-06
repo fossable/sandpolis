@@ -47,8 +47,9 @@ class CloudPricing: UIViewController {
     @IBAction func buyYearly(_ sender: Any) {
     }
     
+    @available(iOS 10.0, *)
     @IBAction func openWebsite(_ sender: Any) {
-		//UIApplication.shared.open(URL(string: "https://sandpolis.com")!, options: [:], completionHandler: nil)
+		UIApplication.shared.open(URL(string: "https://sandpolis.com")!, options: [:], completionHandler: nil)
     }
 }
 
@@ -59,11 +60,11 @@ extension CloudPricing: SKProductsRequestDelegate {
 			case "cloud_monthly":
 				monthlyProduct = product
 				monthlyButton.isEnabled = true
-				monthlyButton.setTitle("One cloud server for \(product.priceLocale.currencyCode!)\(product.price) / month", for: .normal)
+				monthlyButton.setTitle("One cloud server for \(product.priceLocale.currencySymbol!)\(product.price) / month", for: .normal)
 			case "cloud_yearly":
 				yearlyProduct = product
 				yearlyButton.isEnabled = true
-				yearlyButton.setTitle("One cloud server for \(product.priceLocale.currencyCode!)\(product.price) / year", for: .normal)
+				yearlyButton.setTitle("One cloud server for \(product.priceLocale.currencySymbol!)\(product.price) / year", for: .normal)
 			default:
 				break
 			}
@@ -77,7 +78,8 @@ extension CloudPricing: SKPaymentTransactionObserver {
 			switch transaction.transactionState {
 			case .purchased:
 				print("Purchased")
-				self.performSegue(withIdentifier: "ServerCreator", sender: self)
+                SKPaymentQueue.default().finishTransaction(transaction)
+				//self.performSegue(withIdentifier: "CreateServerSegue", sender: self)
 			case .purchasing:
 				print("Purchasing")
 			case .failed:

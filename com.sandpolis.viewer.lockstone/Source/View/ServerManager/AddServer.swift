@@ -26,7 +26,8 @@ class AddServer: UIViewController {
     @IBOutlet weak var usernameTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var errorLabel: UILabel!
-
+    @IBOutlet weak var cloudButton: UIButton!
+    
     var server: SandpolisServer!
 	
 	var serverReference: DocumentReference!
@@ -39,10 +40,12 @@ class AddServer: UIViewController {
             addressTextField.text = server.address
             usernameTextField.text = server.username
             passwordTextField.text = server.password
+            cloudButton.isHidden = true
             titleLabel.title = "Edit Server"
         }
 		
 		// Search for unused subscriptions
+        cloudButton.setTitle(true ? "Don't have your own server yet?" : "Launch new cloud server", for: .normal)
 		
     }
 	
@@ -69,6 +72,10 @@ class AddServer: UIViewController {
 
     @IBAction func cancelButtonPressed(_ sender: Any) {
         dismiss(animated: true, completion: nil)
+    }
+
+    @IBAction func cloudButtonPressed(_ sender: Any) {
+        performSegue(withIdentifier: "PricingSegue", sender: self)
     }
 
     func textFieldShouldReturn(textField: UITextField) -> Bool {
