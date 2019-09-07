@@ -17,6 +17,31 @@ buildscript {
 	}
 }
 
+plugins {
+	id "com.diffplug.gradle.spotless" version "3.24.2"
+}
+
+spotless {
+	format 'java', {
+		target '**/*.java'
+		licenseHeaderFile file('gradle/resources/header_java.txt'), "package "
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+	format 'groovy', {
+		target '**/*.groovy'
+		licenseHeaderFile file('gradle/resources/header_java.txt'), "package "
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+	format 'swift', {
+		target '**/*.swift'
+		licenseHeaderFile file('gradle/resources/header_swift.txt'), "import "
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+}
+
 if (PLUGINS_DEPLOY.toBoolean())
 	apply plugin: 'com.sandpolis.gradle.deploy'
 
