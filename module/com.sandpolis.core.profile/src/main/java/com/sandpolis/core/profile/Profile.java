@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.profile;
 
 import java.util.HashMap;
@@ -48,7 +48,7 @@ import com.sandpolis.core.util.IDUtil;
  * A {@link Profile} is a generic container that stores data for an instance.
  * Every {@link Instance#SERVER}, {@link Instance#CLIENT}, and
  * {@link Instance#VIEWER} may have a separate profile.
- * 
+ *
  * @author cilki
  * @since 4.0.0
  */
@@ -85,7 +85,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 
 	/**
 	 * Initialize an empty {@link Profile}.
-	 * 
+	 *
 	 * @param cvid The initial CVID
 	 * @param uuid The profile's permanent UUID
 	 */
@@ -105,7 +105,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 
 	/**
 	 * Get an {@link Attribute}.
-	 * 
+	 *
 	 * @param key The {@link AttributeKey} to query.
 	 * @return The corresponding attribute.
 	 */
@@ -129,7 +129,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 
 	/**
 	 * Get the value of the specified {@link Attribute}.
-	 * 
+	 *
 	 * @param key The {@link AttributeKey} to query.
 	 * @return The value of the corresponding attribute.
 	 */
@@ -139,7 +139,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 
 	/**
 	 * Set an {@link Attribute}'s value.
-	 * 
+	 *
 	 * @param key   The {@link AttributeKey}.
 	 * @param value The new value.
 	 */
@@ -163,7 +163,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 
 	/**
 	 * Get the profile's instance.
-	 * 
+	 *
 	 * @return The profile's instance type
 	 */
 	public Instance getInstance() {
@@ -172,7 +172,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 
 	/**
 	 * Shortcut for {@code get(AK_META.UUID);}.
-	 * 
+	 *
 	 * @return The current UUID.
 	 */
 	public String getUuid() {
@@ -181,7 +181,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 
 	/**
 	 * Shortcut for {@code get(AK_META.CVID);}.
-	 * 
+	 *
 	 * @return The current CVID.
 	 */
 	public int getCvid() {
@@ -190,7 +190,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 
 	/**
 	 * Shortcut for {@code set(AK_META.CVID, cvid);}.
-	 * 
+	 *
 	 * @param cvid The new CVID
 	 */
 	public void setCvid(int cvid) {

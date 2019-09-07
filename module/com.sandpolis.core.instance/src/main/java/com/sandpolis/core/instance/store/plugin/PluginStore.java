@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.instance.store.plugin;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -69,7 +69,7 @@ import com.sandpolis.core.util.JarUtil;
  * <li>LOADED: The plugin is INSTALLED and all extension points have been
  * loaded.</li>
  * </ul>
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -89,7 +89,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 	/**
 	 * Get the plugins in descriptor form.
-	 * 
+	 *
 	 * @return A new plugin descriptor stream
 	 */
 	public Stream<PluginDescriptor> getPluginDescriptors() {
@@ -98,7 +98,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 	/**
 	 * Get a plugin by id.
-	 * 
+	 *
 	 * @param id The plugin id
 	 * @return The plugin
 	 */
@@ -110,7 +110,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 	/**
 	 * Get a component of a plugin archive.
-	 * 
+	 *
 	 * @param plugin   The plugin
 	 * @param instance The instance type of the component
 	 * @param sub      The subtype of the component
@@ -125,7 +125,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 	/**
 	 * Find all components that the given plugin contains.
-	 * 
+	 *
 	 * @param plugin The plugin to search
 	 * @return A list of components that were found in the plugin
 	 */
@@ -145,7 +145,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 	/**
 	 * Get a {@link URL} representing a component of the given plugin.
-	 * 
+	 *
 	 * @param plugin   The target plugin
 	 * @param instance The instance type
 	 * @param sub      The instance subtype
@@ -166,7 +166,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 	/**
 	 * Get a plugin's filesystem artifact.
-	 * 
+	 *
 	 * @param plugin The plugin
 	 * @return The plugin artifact
 	 */
@@ -189,7 +189,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 	/**
 	 * Scan the plugin directory for uninstalled core plugins and install them.
-	 * 
+	 *
 	 * @throws IOException If a filesystem error occurs
 	 */
 	public void scanPluginDirectory() throws IOException {
@@ -215,7 +215,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 	/**
 	 * Install a plugin.
-	 * 
+	 *
 	 * @param path The plugin's filesystem artifact
 	 */
 	public synchronized void installPlugin(Path path) {
@@ -245,7 +245,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 	/**
 	 * Load a plugin. This method verifies the plugin artifact's hash.
-	 * 
+	 *
 	 * @param plugin The plugin to load
 	 */
 	private void loadPlugin(Plugin plugin) {
@@ -281,7 +281,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 	/**
 	 * Hash a plugin's filesystem artifact.
-	 * 
+	 *
 	 * @param path The plugin artifact
 	 * @return The file hash
 	 * @throws IOException

@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.viewer.jfx.common.pane;
 
 import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
@@ -39,7 +39,7 @@ import javafx.util.Duration;
  * A CarouselPane holds multiple panes vertically or horizonally. A direction
  * must be specified as the "forward" transition direction otherwise
  * {@code RIGHT} will be used.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -111,7 +111,7 @@ public class CarouselPane extends StackPane {
 
 	/**
 	 * Create a new {@code CarouselPane} from the given components.
-	 * 
+	 *
 	 * @param direction The direction that should be considered "forward" in the
 	 *                  transitions
 	 * @param duration  The transition time in milliseconds
@@ -148,7 +148,7 @@ public class CarouselPane extends StackPane {
 
 	/**
 	 * Add a node to the end of the carousel. This method does not move the view.
-	 * 
+	 *
 	 * @param name The node's name
 	 * @param node The node to add
 	 */
@@ -159,7 +159,7 @@ public class CarouselPane extends StackPane {
 
 	/**
 	 * Add a node to the end of the carousel. This method does not move the view.
-	 * 
+	 *
 	 * @param node The node to add
 	 */
 	public void add(Node node) {
@@ -182,7 +182,7 @@ public class CarouselPane extends StackPane {
 
 	/**
 	 * Move the view to the pane n spots behind the current pane.
-	 * 
+	 *
 	 * @param n The number of pages to jump
 	 */
 	public void moveBackward(int n) {
@@ -191,7 +191,7 @@ public class CarouselPane extends StackPane {
 
 	/**
 	 * Move the view to the pane n spots ahead of the current pane.
-	 * 
+	 *
 	 * @param n The number of pages to jump
 	 */
 	public void moveForward(int n) {
@@ -201,7 +201,7 @@ public class CarouselPane extends StackPane {
 	/**
 	 * Move the view to the page associated with the given name (which comes from a
 	 * node's {@code userData}).
-	 * 
+	 *
 	 * @param name The page's name
 	 */
 	public void moveTo(String name) {
@@ -219,7 +219,7 @@ public class CarouselPane extends StackPane {
 
 	/**
 	 * Move the view to the given index.
-	 * 
+	 *
 	 * @param n The desired index
 	 */
 	public void moveTo(int n) {
@@ -284,7 +284,7 @@ public class CarouselPane extends StackPane {
 
 	/**
 	 * Get the pane's transition status.
-	 * 
+	 *
 	 * @return Whether the pane is currently transitioning
 	 */
 	public boolean isMoving() {

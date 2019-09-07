@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -37,7 +37,7 @@ import com.google.common.io.Resources;
 
 /**
  * Utilities for working with jar files and their resources.
- * 
+ *
  * @author cilki
  * @since 4.0.0
  */
@@ -45,7 +45,7 @@ public final class JarUtil {
 
 	/**
 	 * Retrieve the value of a manifest attribute from the given jar.
-	 * 
+	 *
 	 * @param file      The target jar file
 	 * @param attribute The attribute to query
 	 * @return The attribute's value
@@ -60,7 +60,7 @@ public final class JarUtil {
 
 	/**
 	 * Retrieve the value of a manifest attribute from the given jar.
-	 * 
+	 *
 	 * @param file      The target jar file
 	 * @param attribute The attribute to query
 	 * @return The attribute's value
@@ -79,7 +79,7 @@ public final class JarUtil {
 
 	/**
 	 * Retrieve the attribute map from the manifest of the given jar.
-	 * 
+	 *
 	 * @param file The target jar file
 	 * @return The jar's manifest attributes
 	 * @throws IOException
@@ -90,7 +90,7 @@ public final class JarUtil {
 
 	/**
 	 * Retrieve the attribute map from the manifest of the given jar.
-	 * 
+	 *
 	 * @param file The target jar file
 	 * @return The jar's manifest attributes
 	 * @throws IOException
@@ -108,7 +108,7 @@ public final class JarUtil {
 
 	/**
 	 * Calculate the size of a resource by (probably) reading it entirely.
-	 * 
+	 *
 	 * @param file     The target jar file
 	 * @param resource Absolute location of target resource within the given jar
 	 * @return The size of the target resource in bytes
@@ -127,7 +127,7 @@ public final class JarUtil {
 
 	/**
 	 * Calculate the size of a resource by (probably) reading it entirely.
-	 * 
+	 *
 	 * @param file     The target jar file
 	 * @param resource Absolute location of target resource within the given jar
 	 * @return The size of the target resource in bytes
@@ -143,7 +143,7 @@ public final class JarUtil {
 	/**
 	 * Get a {@link URL} representing some entry of a jar file. The file and entry
 	 * must both exist.
-	 * 
+	 *
 	 * @param file     The target jar file
 	 * @param resource Absolute location of target resource within the given jar
 	 * @return A URL representing the resource or {@code null} if not found
@@ -164,7 +164,7 @@ public final class JarUtil {
 
 	/**
 	 * Check if a resource exists within the given jar file.
-	 * 
+	 *
 	 * @param file     The target jar file
 	 * @param resource Absolute location of target resource within the given jar
 	 * @return Whether the target resource exists

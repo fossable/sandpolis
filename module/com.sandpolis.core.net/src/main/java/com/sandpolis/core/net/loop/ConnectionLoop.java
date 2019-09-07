@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.net.loop;
 
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
@@ -39,7 +39,7 @@ import io.netty.util.concurrent.EventExecutor;
  * {@link NetworkTarget}s until a connection is made or the maximum iteration
  * count has been reached. The connection attempt interval can be configured to
  * slowly back off.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -70,7 +70,7 @@ public final class ConnectionLoop implements Runnable {
 
 	/**
 	 * Create a new single-iteration {@link ConnectionLoop}.
-	 * 
+	 *
 	 * @param address The target address
 	 * @param port    The target port
 	 * @param timeout The connection timeout in milliseconds
@@ -82,7 +82,7 @@ public final class ConnectionLoop implements Runnable {
 
 	/**
 	 * Create a new {@link ConnectionLoop}.
-	 * 
+	 *
 	 * @param config The configuration object
 	 */
 	public ConnectionLoop(LoopConfig.Builder config, Bootstrap bootstrap) {
@@ -91,7 +91,7 @@ public final class ConnectionLoop implements Runnable {
 
 	/**
 	 * Create a new {@link ConnectionLoop}.
-	 * 
+	 *
 	 * @param config The configuration object
 	 */
 	public ConnectionLoop(LoopConfig config, Bootstrap bootstrap) {
@@ -144,7 +144,7 @@ public final class ConnectionLoop implements Runnable {
 
 	/**
 	 * Start the {@link ConnectionLoop}.
-	 * 
+	 *
 	 * @return A {@link SockFuture}
 	 */
 	public SockFuture start() {
@@ -153,7 +153,7 @@ public final class ConnectionLoop implements Runnable {
 
 	/**
 	 * Start the {@link ConnectionLoop}.
-	 * 
+	 *
 	 * @param executor The executor service
 	 * @return A {@link SockFuture}
 	 */
@@ -164,7 +164,7 @@ public final class ConnectionLoop implements Runnable {
 
 	/**
 	 * Get the loop's {@link SockFuture}.
-	 * 
+	 *
 	 * @return The connection future
 	 */
 	public SockFuture future() {
@@ -173,7 +173,7 @@ public final class ConnectionLoop implements Runnable {
 
 	/**
 	 * Get the loop's {@link LoopConfig}.
-	 * 
+	 *
 	 * @return The immutable configuration of this {@link ConnectionLoop}
 	 */
 	public LoopConfig getConfig() {

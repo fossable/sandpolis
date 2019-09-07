@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.ipc;
 
 import static com.sandpolis.core.ipc.IPCStore.IPCStore;
@@ -37,7 +37,7 @@ import com.sandpolis.core.ipc.MSG.Message;
 /**
  * A simple IPC receiver that processes messages serially from an underlying
  * {@link Socket}.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -63,7 +63,7 @@ public class Receptor implements Runnable, Closeable {
 
 	/**
 	 * Create a new {@link Receptor} around an established socket.
-	 * 
+	 *
 	 * @param socket A socket pre-established by an IPC Listener.
 	 */
 	public Receptor(Socket socket) {
@@ -99,7 +99,7 @@ public class Receptor implements Runnable, Closeable {
 
 	/**
 	 * Start the receptor on the given {@link ExecutorService}.
-	 * 
+	 *
 	 * @param service The executor service
 	 */
 	public void start(ExecutorService service) {

@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.util;
 
 import java.io.ByteArrayInputStream;
@@ -32,7 +32,7 @@ import java.util.Base64;
 
 /**
  * Certificate utilities.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -42,7 +42,7 @@ public final class CertUtil {
 
 	/**
 	 * Load a {@link X509Certificate}.
-	 * 
+	 *
 	 * @param cert A Base64-encoded certificate
 	 * @return The new certificate
 	 * @throws CertificateException If the certificate format is invalid
@@ -56,7 +56,7 @@ public final class CertUtil {
 
 	/**
 	 * Load a {@link X509Certificate}.
-	 * 
+	 *
 	 * @param cert A certificate on the filesystem
 	 * @return The new certificate
 	 * @throws CertificateException If the certificate format is invalid
@@ -71,7 +71,7 @@ public final class CertUtil {
 
 	/**
 	 * Load a {@link X509Certificate}.
-	 * 
+	 *
 	 * @param cert An unencoded certificate
 	 * @return The new certificate
 	 * @throws CertificateException If the certificate format is invalid
@@ -89,7 +89,7 @@ public final class CertUtil {
 
 	/**
 	 * Get certificate information as a formatted String.
-	 * 
+	 *
 	 * @param cert A Base64-encoded certificate
 	 * @return A nicely formatted String
 	 * @throws CertificateException If the certificate format is invalid
@@ -103,7 +103,7 @@ public final class CertUtil {
 
 	/**
 	 * Get certificate information as a formatted String.
-	 * 
+	 *
 	 * @param cert A certificate
 	 * @return A nicely formatted String
 	 */
@@ -134,7 +134,7 @@ public final class CertUtil {
 
 	/**
 	 * Get certificate information as a formatted HTML String.
-	 * 
+	 *
 	 * @param cert A certificate
 	 * @return A nicely formatted HTML String
 	 */
@@ -148,7 +148,7 @@ public final class CertUtil {
 
 	/**
 	 * Format a binary key into hexidecimal colon format.
-	 * 
+	 *
 	 * @param data    Key data
 	 * @param columns Formatted key width in bytes
 	 * @param padding A padding String to go before the first byte in each row
@@ -172,7 +172,7 @@ public final class CertUtil {
 
 	/**
 	 * Get the root Sandpolis certificate.
-	 * 
+	 *
 	 * @return The root certificate
 	 * @throws CertificateException If the certificate format is invalid
 	 * @throws IOException          If there was an error reading the resource
@@ -185,7 +185,7 @@ public final class CertUtil {
 
 	/**
 	 * Indicates whether the given certificate is within the timestamp constraints.
-	 * 
+	 *
 	 * @param certificate The certificate to check
 	 * @return True if the current time is after the begin timestamp, but before the
 	 *         expiration timestamp

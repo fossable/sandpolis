@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.server.vanilla.net.handler;
 
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
@@ -39,14 +39,14 @@ import io.netty.util.ReferenceCountUtil;
  * {@link ByteBuf} will be efficiently forwarded. Otherwise the {@link ByteBuf}
  * will be decoded and executed for this instance.<br>
  * <br>
- * 
+ *
  * This handler MUST be placed after a {@link ProtobufVarint32FrameDecoder}!
  * Otherwise a malicious instance could send messages to unauthorized instances
  * by sending two messages in rapid succession. Since this handler only verifies
  * the first few bytes and then routes the entire buffer accordingly, sending
  * one small valid message followed by an invalid message would lead to the
  * invalid message being delivered to the receiver.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -110,7 +110,7 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
 	/**
 	 * Read a CVID varint from the given {@link ByteBuf}.
-	 * 
+	 *
 	 * @param buffer The buffer to read (read pointer will be modified)
 	 * @return The decoded CVID
 	 */

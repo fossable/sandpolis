@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -73,7 +73,7 @@ public final class ArtifactUtil {
 	/**
 	 * Find all artifacts with the given artifact name. The results will be in
 	 * decreasing version order if applicable.
-	 * 
+	 *
 	 * @param directory  The directory containing artifacts
 	 * @param artifactId The artifact to search for
 	 * @return A stream of all matching artifacts
@@ -117,7 +117,7 @@ public final class ArtifactUtil {
 
 	/**
 	 * Check an artifact's hash.
-	 * 
+	 *
 	 * @param directory The artifact directory
 	 * @param gav       The artifact coordinate in standard Gradle form
 	 *                  (group:name:version)
@@ -152,7 +152,7 @@ public final class ArtifactUtil {
 
 	/**
 	 * Query the latest version of an artifact.
-	 * 
+	 *
 	 * @param gav The artifact coordinate in standard Gradle form
 	 *            (group:name:version)
 	 * @return The artifact's latest version string
@@ -198,7 +198,7 @@ public final class ArtifactUtil {
 
 		/**
 		 * Parse an artifact's filename.
-		 * 
+		 *
 		 * @param filename The standard filename
 		 * @return A new {@link ParsedCoordinate}
 		 */
@@ -219,7 +219,7 @@ public final class ArtifactUtil {
 
 		/**
 		 * Parse a coordinate.
-		 * 
+		 *
 		 * @param coordinate The coordinate to parse
 		 * @return A new {@link ParsedCoordinate}
 		 */

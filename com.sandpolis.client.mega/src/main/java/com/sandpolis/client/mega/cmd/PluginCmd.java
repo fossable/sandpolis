@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.client.mega.cmd;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -42,7 +42,7 @@ import com.sandpolis.core.util.NetUtil;
 
 /**
  * Contains plugin commands.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -51,7 +51,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 	/**
 	 * Initiate plugin synchronization. Any plugins that are missing from the
 	 * {@link PluginStore} will be downloaded and installed (but not loaded).
-	 * 
+	 *
 	 * @return The command future
 	 */
 	public CommandFuture sync() {
@@ -75,7 +75,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 
 	/**
 	 * Download a plugin to the plugin directory.
-	 * 
+	 *
 	 * @param gav The plugin coordinate
 	 * @return The command future
 	 */
@@ -92,7 +92,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 
 	/**
 	 * Download a dependency to the library directory.
-	 * 
+	 *
 	 * @return The command future
 	 */
 	public CommandFuture installDependency(String gav) {
@@ -137,7 +137,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 
 	/**
 	 * Prepare for an asynchronous command.
-	 * 
+	 *
 	 * @return A configurable object from which all asynchronous (nonstatic)
 	 *         commands in {@link PluginCmd} can be invoked
 	 */

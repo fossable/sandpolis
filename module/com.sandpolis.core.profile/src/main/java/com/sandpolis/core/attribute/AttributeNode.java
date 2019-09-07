@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.attribute;
 
 import java.util.Iterator;
@@ -45,7 +45,7 @@ import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
  * {@link AttributeNode}s. They can have an unlimited number of levels and each
  * node can have a maximum of {@code 2^Integer.SIZE} children.<br>
  * <br>
- * 
+ *
  * There are two {@link AttributeNode} implementations: a branch type which may
  * exist anywhere in the tree ({@link AttributeGroup}) and a leaf type
  * ({@link Attribute}) that contains data.<br>
@@ -55,7 +55,7 @@ import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
  * <br>
  * The children of a {@link AttributeNode} can be iterated using
  * {@link #stream}.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -95,7 +95,7 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	 * call {@link getNode} recursively on each level until the {@link ByteString}
 	 * runs out. When this method is called with an exhausted iterator, it should
 	 * return {@code this}.
-	 * 
+	 *
 	 * @param key An {@link Iterator} for a {@link ByteString} which fully describes
 	 *            the relative location of the desired {@link AttributeNode}
 	 * @return The requested {@link AttributeNode} or {@code null}
@@ -105,7 +105,7 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	/**
 	 * Get a descendent of this {@link AttributeNode} according to the given
 	 * {@link ByteString}.
-	 * 
+	 *
 	 * @param key A {@link ByteString} which fully describes the location of the
 	 *            desired {@link AttributeNode}
 	 * @return The requested {@link AttributeNode} or {@code null}
@@ -118,7 +118,7 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	 * Get a descendent of this {@link AttributeNode} according to the given
 	 * {@link AttributeNodeKey}. This method cannot be used for plural
 	 * {@link AttributeNode}s because {@link AttributeNodeKey}s are strictly static.
-	 * 
+	 *
 	 * @param key A {@link AttributeNodeKey} which corresponds to the desired
 	 *            {@link AttributeNode}
 	 * @return The requested {@link AttributeNode} or {@code null}
@@ -130,14 +130,14 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	/**
 	 * Add a child node. The implementing class must not be a leaf type otherwise
 	 * {@link UnsupportedOperationException} will be thrown.
-	 * 
+	 *
 	 * @param node A new {@link AttributeNode} which may be a branch or leaf
 	 */
 	public abstract void addNode(AttributeNode node);
 
 	/**
 	 * Get the number of children of this node.
-	 * 
+	 *
 	 * @return The number of children
 	 */
 	public abstract int getSize();
@@ -145,7 +145,7 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	/**
 	 * Get the characteristic ID which uniquely identifies a node among its sibling
 	 * nodes.
-	 * 
+	 *
 	 * @return The node's characteristic ID
 	 */
 	public abstract int getCharacteristic();
@@ -154,14 +154,14 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	 * Indicates whether this {@link AttributeNode} is anonymous and therefore has
 	 * no corresponding {@link AttributeNodeKey}. The parent of an anonymous node
 	 * must be plural and all children of a plural node must be anonymous.
-	 * 
+	 *
 	 * @return Whether this {@link AttributeNode} is anonymous
 	 */
 	public abstract boolean isAnonymous();
 
 	/**
 	 * Get a {@link Stream} of the {@link AttributeNode}'s descendents.
-	 * 
+	 *
 	 * @return A new stream
 	 */
 	public abstract Stream<AttributeNode> stream();
@@ -172,7 +172,7 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 	/**
 	 * Register a new listener on this {@link AttributeNode} and all of its
 	 * descendents.
-	 * 
+	 *
 	 * @param listener
 	 */
 	public void register(Consumer<AttributeNode> listener) {
@@ -185,7 +185,7 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 
 	/**
 	 * Remove a listener from this {@link AttributeNode} and all of its descendents.
-	 * 
+	 *
 	 * @param listener The listener to remove
 	 */
 	public void deregister(Consumer<AttributeNode> listener) {
@@ -198,7 +198,7 @@ public abstract class AttributeNode extends AbstractUpdatable<AttributeNodeUpdat
 
 	/**
 	 * Fire a change event.
-	 * 
+	 *
 	 * @param node The node that changed
 	 */
 	public void fireChanged(AttributeNode node) {

@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.util;
 
 import java.io.DataInputStream;
@@ -32,7 +32,7 @@ import org.apache.commons.validator.routines.InetAddressValidator;
 
 /**
  * Network utilities.
- * 
+ *
  * @author cilki
  * @since 3.0.0
  */
@@ -55,7 +55,7 @@ public final class NetUtil {
 	/**
 	 * Download a file from the Internet. The entire file is loaded into memory, so
 	 * only use with small files!
-	 * 
+	 *
 	 * @param url The resource location
 	 * @return A byte array containing the file
 	 * @throws IOException
@@ -67,7 +67,7 @@ public final class NetUtil {
 	/**
 	 * Download a file from the Internet. The entire file is loaded into memory, so
 	 * only use with small files!
-	 * 
+	 *
 	 * @param url The resource location
 	 * @return A byte array containing the file
 	 * @throws IOException
@@ -91,7 +91,7 @@ public final class NetUtil {
 	/**
 	 * Download a file from the Internet to a local file. This method has no size
 	 * limits.
-	 * 
+	 *
 	 * @param url  The resource location
 	 * @param file The output file
 	 * @throws IOException
@@ -103,7 +103,7 @@ public final class NetUtil {
 	/**
 	 * Download a file from the Internet to a local file. This method has no size
 	 * limits.
-	 * 
+	 *
 	 * @param url  The resource location
 	 * @param file The output file
 	 * @throws IOException
@@ -126,7 +126,7 @@ public final class NetUtil {
 	/**
 	 * Tests the visibility of a port on a remote host by attempting a socket
 	 * connection.
-	 * 
+	 *
 	 * @param host The target DNS name or IP address
 	 * @param port The target port
 	 * @return True if the port is open, false if the port is closed or there was a

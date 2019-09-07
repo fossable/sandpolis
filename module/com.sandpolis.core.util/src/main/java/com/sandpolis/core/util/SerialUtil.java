@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.util;
 
 import java.io.ByteArrayInputStream;
@@ -30,7 +30,7 @@ import java.util.zip.InflaterInputStream;
 
 /**
  * Object serialization utilities using default Java serialization.
- * 
+ *
  * @author cilki
  * @since 1.0.0
  */
@@ -40,7 +40,7 @@ public final class SerialUtil {
 
 	/**
 	 * Serialize an object using the default serializer.
-	 * 
+	 *
 	 * @param object
 	 *            A {@link Serializable} object
 	 * @return An array representing the object
@@ -52,7 +52,7 @@ public final class SerialUtil {
 
 	/**
 	 * Serialize an object using the default serializer.
-	 * 
+	 *
 	 * @param object
 	 *            A {@link Serializable} object
 	 * @param compressed
@@ -69,7 +69,7 @@ public final class SerialUtil {
 
 	/**
 	 * Serialize an object using the default serializer.
-	 * 
+	 *
 	 * @param object
 	 *            A {@link Serializable} object
 	 * @param out
@@ -96,7 +96,7 @@ public final class SerialUtil {
 
 	/**
 	 * Deserialize an object with the default deserializer.
-	 * 
+	 *
 	 * @param object
 	 *            A serialized object
 	 * @return The restored object
@@ -110,7 +110,7 @@ public final class SerialUtil {
 
 	/**
 	 * Deserialize an object with the default deserializer.
-	 * 
+	 *
 	 * @param object
 	 * @param compressed
 	 *            Indicates whether the serialized data is compressed
@@ -129,7 +129,7 @@ public final class SerialUtil {
 
 	/**
 	 * Deserialize an object with the default deserializer.
-	 * 
+	 *
 	 * @param in
 	 *            The serialized data
 	 * @param compressed

@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.instance;
 
 import java.io.File;
@@ -31,10 +31,10 @@ import java.util.stream.Collectors;
 /**
  * This class contains important information about the runtime environment.<br>
  * <br>
- * 
+ *
  * Implementation note: Only standard Java classes may be used so this class can
  * be loaded regardless of the classpath situation.
- * 
+ *
  * @author cilki
  * @since 4.0.0
  */
@@ -103,7 +103,7 @@ public final class Environment {
 
 		/**
 		 * Build a {@link EnvPath} with the given default.
-		 * 
+		 *
 		 * @param def The default path
 		 */
 		private EnvPath(String def) {
@@ -112,7 +112,7 @@ public final class Environment {
 
 		/**
 		 * Get the {@link EnvPath}'s default path.
-		 * 
+		 *
 		 * @return The default path or {@code null} if none
 		 */
 		public Path getDefault() {
@@ -121,7 +121,7 @@ public final class Environment {
 
 		/**
 		 * Set the default path for this {@link EnvPath}.
-		 * 
+		 *
 		 * @param d The new default path
 		 * @return {@code this}
 		 */
@@ -136,7 +136,7 @@ public final class Environment {
 
 	/**
 	 * Get an environment path.
-	 * 
+	 *
 	 * @param path The path type
 	 * @return The corresponding {@link Path}
 	 */
@@ -146,7 +146,7 @@ public final class Environment {
 
 	/**
 	 * Load the filesystem environment.
-	 * 
+	 *
 	 * @param paths
 	 * @return Whether the environment is set up
 	 */
@@ -186,7 +186,7 @@ public final class Environment {
 
 	/**
 	 * Locate the instance jar.
-	 * 
+	 *
 	 * @return A {@link Path} representing the main jar file
 	 */
 	private static Path discoverJar() {
@@ -202,7 +202,7 @@ public final class Environment {
 
 	/**
 	 * Locate the base directory.
-	 * 
+	 *
 	 * @return A {@link File} representing the base directory or {@code null} if an
 	 *         error occurred
 	 */
@@ -220,7 +220,7 @@ public final class Environment {
 	/**
 	 * Locate a subdirectory of the {@link #BASE} directory. This method resolves
 	 * symbolic links.
-	 * 
+	 *
 	 * @param sub The desired subdirectory
 	 * @return A {@link Path} representing the subdirectory or {@code null} if an
 	 *         error occurred

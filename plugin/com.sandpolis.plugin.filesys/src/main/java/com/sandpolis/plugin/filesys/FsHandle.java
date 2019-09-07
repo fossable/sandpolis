@@ -1,21 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
-
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.plugin.filesys;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
@@ -56,7 +55,7 @@ import com.sandpolis.plugin.filesys.net.Filesys.FsHandleOptions;
 
 /**
  * This class provides a convenient handle on the local filesystem.
- * 
+ *
  * @author cilki
  * @since 1.0.0
  */
@@ -149,7 +148,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Construct a new handle on the given directory.
-	 * 
+	 *
 	 * @param start The start directory's path
 	 */
 	public FsHandle(String start) {
@@ -158,7 +157,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Construct a new handle on the given directory.
-	 * 
+	 *
 	 * @param start   The initial working directory
 	 * @param options The handle's immutable options
 	 */
@@ -168,7 +167,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Construct a new handle on the given directory.
-	 * 
+	 *
 	 * @param fs      The {@link FileSystem}
 	 * @param start   The initial working directory
 	 * @param options The handle's immutable options
@@ -211,7 +210,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Get the unique handle ID.
-	 * 
+	 *
 	 * @return The ID associated with this handle
 	 */
 	public int getId() {
@@ -220,7 +219,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Get the path of the working directory.
-	 * 
+	 *
 	 * @return The absolute path of the working directory
 	 */
 	public String pwd() {
@@ -229,7 +228,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Add a new callback function.
-	 * 
+	 *
 	 * @param callback A function that will receive file updates from the working
 	 *                 directory
 	 */
@@ -242,7 +241,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Fire each callback with the given update.
-	 * 
+	 *
 	 * @param update The update event
 	 */
 	private void fireCallbacks(EV_FileListing update) {
@@ -253,7 +252,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Move the working directory up a single level.
-	 * 
+	 *
 	 * @return True if the working directory has been changed, false otherwise
 	 */
 	public boolean up() {
@@ -267,7 +266,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Move the working directory down into the specified directory.
-	 * 
+	 *
 	 * @param directory The desired directory relative to the current working
 	 *                  directory
 	 * @return True if the working directory has been changed, false otherwise
@@ -286,7 +285,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Move the working directory to the specified path.
-	 * 
+	 *
 	 * @param path The absolute path which will become the new working directory
 	 * @return True if the working directory has been changed, false otherwise
 	 */
@@ -305,7 +304,7 @@ public class FsHandle implements Closeable {
 	/**
 	 * Get a new listing of the present working directory according to the internal
 	 * option values.
-	 * 
+	 *
 	 * @return A list of the files and directories in the working directory
 	 * @throws IOException
 	 */
@@ -339,7 +338,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Change the current reference path to the given path.
-	 * 
+	 *
 	 * @param potential The new reference path
 	 */
 	private void movePath(Path potential) {
@@ -377,7 +376,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Build a new {@link FileListlet} out of a {@link WatchEvent}.
-	 * 
+	 *
 	 * @param event The watch event
 	 * @return A new {@link FileListlet} update
 	 */
@@ -398,7 +397,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Build a new {@link FileListlet} out of a {@link Path}.
-	 * 
+	 *
 	 * @param path The path
 	 * @return A new {@link FileListlet}
 	 */
@@ -451,7 +450,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Build a new {@link FileListlet} out of a deleted {@link Path}.
-	 * 
+	 *
 	 * @param path The path
 	 * @return A new {@link FileListlet}
 	 */
@@ -465,7 +464,7 @@ public class FsHandle implements Closeable {
 
 	/**
 	 * Build a new {@link FileListlet} out of a modified {@link Path}.
-	 * 
+	 *
 	 * @param path The path
 	 * @return A new {@link FileListlet}
 	 */
@@ -559,7 +558,7 @@ public class FsHandle implements Closeable {
 
 		/**
 		 * Get the path's current listing.
-		 * 
+		 *
 		 * @return The updated listing.
 		 */
 		public List<FileListlet> getListing() {

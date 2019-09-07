@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.server.vanilla.store.listener;
 
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
@@ -51,7 +51,7 @@ import io.netty.channel.ServerChannel;
 
 /**
  * A network listener that binds to a port and handles new connections.
- * 
+ *
  * @author cilki
  * @since 1.0.0
  */
@@ -157,7 +157,7 @@ public class Listener implements ProtoType<ProtoListener> {
 
 	/**
 	 * Construct a new {@link Listener} from a configuration.
-	 * 
+	 *
 	 * @param config The configuration which should be prevalidated and complete
 	 */
 	public Listener(ListenerConfig config) {
@@ -220,7 +220,7 @@ public class Listener implements ProtoType<ProtoListener> {
 
 	/**
 	 * Indicates whether the {@link Listener} is currently accepting connections.
-	 * 
+	 *
 	 * @return True if this listener is currently listening on the socket; false
 	 *         otherwise
 	 */

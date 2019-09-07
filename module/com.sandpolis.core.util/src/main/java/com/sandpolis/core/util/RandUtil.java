@@ -1,27 +1,27 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.util;
 
 import java.util.Random;
 
 /**
  * Utility methods for obtaining random values.
- * 
+ *
  * @author cilki
  * @since 4.0.0
  */
@@ -36,7 +36,7 @@ public final class RandUtil {
 
 	/**
 	 * Get a random boolean value.
-	 * 
+	 *
 	 * @return The next boolean value from a Random object.
 	 */
 	public static boolean nextBoolean() {
@@ -45,7 +45,7 @@ public final class RandUtil {
 
 	/**
 	 * Get a random int value.
-	 * 
+	 *
 	 * @return The next int value from a Random object.
 	 */
 	public static int nextInt() {
@@ -54,7 +54,7 @@ public final class RandUtil {
 
 	/**
 	 * Get a random int value.
-	 * 
+	 *
 	 * @param lower The minimum bound (inclusive)
 	 * @param upper The maximum bound (inclusive)
 	 * @return The next int value from a Random object.
@@ -66,7 +66,7 @@ public final class RandUtil {
 
 	/**
 	 * Get a random long value from the range [0, n].
-	 * 
+	 *
 	 * @param n The maximum bound (inclusive)
 	 * @return The next random long
 	 */
@@ -76,7 +76,7 @@ public final class RandUtil {
 
 	/**
 	 * Get a random long value from the specified range.
-	 * 
+	 *
 	 * @param lower The minimum bound (inclusive)
 	 * @param upper The maximum bound (inclusive)
 	 * @return The next random long
@@ -87,7 +87,7 @@ public final class RandUtil {
 
 	/**
 	 * Get a random long value.
-	 * 
+	 *
 	 * @return The next random long
 	 */
 	public static long nextLong() {
@@ -129,7 +129,7 @@ public final class RandUtil {
 
 	/**
 	 * Get a random item from an array.
-	 * 
+	 *
 	 * @param array The source array
 	 * @return A random item from the array
 	 */

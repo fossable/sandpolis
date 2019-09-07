@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.net.command;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -39,7 +39,7 @@ import io.netty.util.concurrent.EventExecutor;
  * A {@link Cmdlet} contains commands that can be run against a CVID.
  * {@link Cmdlet}s usually produce requests and the corresponding {@link Exelet}
  * returns a response.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -69,7 +69,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 
 	/**
 	 * Explicitly set a thread pool for the completion listeners.
-	 * 
+	 *
 	 * @param pool The pool class
 	 * @return {@code this}
 	 */
@@ -81,7 +81,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	/**
 	 * Set a session timeout for all {@link CommandSession}s spawned from this
 	 * {@link Cmdlet}.
-	 * 
+	 *
 	 * @param timeout The timeout class
 	 * @return {@code this}
 	 */
@@ -93,7 +93,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	/**
 	 * Set a session timeout for all {@link CommandSession}s spawned from this
 	 * {@link Cmdlet}.
-	 * 
+	 *
 	 * @param timeout The timeout
 	 * @param unit    The time unit
 	 * @return {@code this}
@@ -105,7 +105,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 
 	/**
 	 * Explicitly set the remote endpoint by {@link Sock}.
-	 * 
+	 *
 	 * @param sock The target sock
 	 * @return {@code this}
 	 */
@@ -117,7 +117,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 
 	/**
 	 * Explicitly set the remote endpoint by CVID.
-	 * 
+	 *
 	 * @param cvid The target CVID
 	 * @return {@code this}
 	 */
@@ -129,7 +129,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 
 	/**
 	 * Explicitly set the remote endpoint.
-	 * 
+	 *
 	 * @param cvid The target CVID
 	 * @param sock The target sock
 	 * @return {@code this}
@@ -142,7 +142,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 
 	/**
 	 * Start a new command session.
-	 * 
+	 *
 	 * @return A new {@link CommandSession}
 	 */
 	protected CommandSession begin() {
@@ -151,7 +151,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 
 	/**
 	 * Send the given request according to the current configuration.
-	 * 
+	 *
 	 * @param payload The message payload
 	 * @return A new response future
 	 */

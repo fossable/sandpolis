@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.net.store.network;
 
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
@@ -56,7 +56,7 @@ import com.sandpolis.core.util.IDUtil;
  * A static store for managing network connections, which may or may not be
  * directly connected and therefore present in the {@link ConnectionStore}.<br>
  * <br>
- * 
+ *
  * @author cilki
  * @see ConnectionStore
  * @since 5.0.0
@@ -106,7 +106,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	/**
 	 * Get an immutable representation of the network.
-	 * 
+	 *
 	 * @return The underlying network graph of the store
 	 */
 	public Network<Integer, SockLink> getNetwork() {
@@ -115,7 +115,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	/**
 	 * Explicitly set the preferred server CVID.
-	 * 
+	 *
 	 * @param cvid The new preferred server
 	 */
 	public void setPreferredServer(int cvid) {
@@ -135,7 +135,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * Update the network tree with the given delta. If the result of an operation
 	 * is already present in the network (e.g. a node is already present and the
 	 * operation is NodeAdd), then the operation is ignored.
-	 * 
+	 *
 	 * @param delta The delta event that describes the change
 	 */
 	public void updateNetwork(EV_NetworkDelta delta) {
@@ -152,7 +152,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	/**
 	 * Get the CVIDs of every node directly connected to the given CVID.
-	 * 
+	 *
 	 * @param cvid The CVID
 	 * @return A set of all directly connected CVIDs
 	 */
@@ -162,7 +162,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	/**
 	 * Get all links involving the given CVID.
-	 * 
+	 *
 	 * @param cvid The CVID
 	 * @return A set of all links involving the CVID
 	 */
@@ -172,7 +172,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	/**
 	 * Get all links involving both given CVIDs.
-	 * 
+	 *
 	 * @param cvid1 The first CVID
 	 * @param cvid2 The second CVID
 	 * @return A set of all links between the two CVIDs
@@ -184,7 +184,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	/**
 	 * Transmit a message into the network, taking a path through the preferred
 	 * server.
-	 * 
+	 *
 	 * @param message The message
 	 * @return The next hop
 	 */
@@ -196,7 +196,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	/**
 	 * Transmit a message into the network, taking a path through the preferred
 	 * server.
-	 * 
+	 *
 	 * @param message The message
 	 * @return The next hop
 	 */
@@ -206,7 +206,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	/**
 	 * Transmit a message into the network, taking the most direct path.
-	 * 
+	 *
 	 * @param message The message
 	 * @return The next hop
 	 */
@@ -221,7 +221,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	/**
 	 * Transmit a message into the network, taking the most direct path.
-	 * 
+	 *
 	 * @param message The message
 	 * @return The next hop
 	 */
@@ -235,7 +235,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * Implementation note: this method cannot use {@link #route(Message)} because
 	 * it must place the receive request before actually sending the message. (To
 	 * avoid missing a message that is received extremely quickly).
-	 * 
+	 *
 	 * @param message      The message
 	 * @param timeoutClass The message timeout class
 	 * @return The next hop
@@ -260,7 +260,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	/**
 	 * Receive a message from the given source.
-	 * 
+	 *
 	 * @param cvid The message source
 	 * @param id   The response ID
 	 * @return A MessageFuture
@@ -275,7 +275,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	/**
 	 * Receive a message from the given source.
-	 * 
+	 *
 	 * @param cvid    The message source
 	 * @param id      The message ID
 	 * @param timeout The message timeout

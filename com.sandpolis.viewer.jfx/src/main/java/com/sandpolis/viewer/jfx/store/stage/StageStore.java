@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2019 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.viewer.jfx.store.stage;
 
 import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
@@ -41,7 +41,7 @@ import javafx.stage.Stage;
 /**
  * The {@link StageStore} keeps track of the application's loaded
  * {@link Stage}s.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -49,7 +49,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 
 	/**
 	 * Begin stage building.
-	 * 
+	 *
 	 * @return A new {@link StageBuilder}
 	 */
 	public StageBuilder newStage() {
@@ -58,7 +58,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 
 	/**
 	 * Begin stage building.
-	 * 
+	 *
 	 * @param stage The initial stage
 	 * @return A new {@link StageBuilder}
 	 */
@@ -86,7 +86,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 
 	/**
 	 * Close a stage.
-	 * 
+	 *
 	 * @param stage The stage to close
 	 */
 	public void close(Stage stage) {
@@ -98,7 +98,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 
 	/**
 	 * Change the application's global theme.
-	 * 
+	 *
 	 * @param theme The new theme
 	 */
 	public void changeTheme(String theme) {
@@ -128,7 +128,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 
 		/**
 		 * Specify a custom {@link Stage}.
-		 * 
+		 *
 		 * @param stage The stage
 		 * @return {@code this}
 		 */
@@ -142,7 +142,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 
 		/**
 		 * Specify the scene's size.
-		 * 
+		 *
 		 * @param width  The scene's width
 		 * @param height The scene's height
 		 * @return {@code this}
@@ -155,7 +155,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 
 		/**
 		 * Specify the stage's resizable property.
-		 * 
+		 *
 		 * @param resizable Whether the stage can resize
 		 * @return {@code this}
 		 */
@@ -166,7 +166,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 
 		/**
 		 * Specify the stage's title property.
-		 * 
+		 *
 		 * @param title The stage title
 		 * @return {@code this}
 		 */
@@ -177,7 +177,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 
 		/**
 		 * Load the root of the scene graph.
-		 * 
+		 *
 		 * @param root   The root location
 		 * @param params Parameters to pass to the controller
 		 * @return {@code this}

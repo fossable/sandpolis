@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.server.vanilla.store.group;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -41,7 +41,7 @@ import com.sandpolis.server.vanilla.store.user.User;
 
 /**
  * The {@link GroupStore} manages groups and authentication mechanisms.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -51,7 +51,7 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 
 	/**
 	 * Create a new group from the given configuration and add it to the store.
-	 * 
+	 *
 	 * @param config The group configuration
 	 */
 	public void add(GroupConfig.Builder config) {
@@ -60,7 +60,7 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 
 	/**
 	 * Create a new group from the given configuration and add it to the store.
-	 * 
+	 *
 	 * @param config The group configuration
 	 */
 	public void add(GroupConfig config) {
@@ -73,7 +73,7 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 
 	/**
 	 * Add a group to the store.
-	 * 
+	 *
 	 * @param group The group to add
 	 */
 	public void add(Group group) {
@@ -85,7 +85,7 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 
 	/**
 	 * Get all groups that the given user owns or is a member of.
-	 * 
+	 *
 	 * @param user A user
 	 * @return A list of the user's groups
 	 */
@@ -96,7 +96,7 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 
 	/**
 	 * Get a list of groups without an auth mechanism.
-	 * 
+	 *
 	 * @return A list of unauth groups
 	 */
 	public List<Group> getUnauthGroups() {
@@ -106,7 +106,7 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 
 	/**
 	 * Get a list of groups with the given password.
-	 * 
+	 *
 	 * @param password The password
 	 * @return A list of groups with the password
 	 */
@@ -118,7 +118,7 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 
 	/**
 	 * Change a group's configuration or statistics.
-	 * 
+	 *
 	 * @param id    The ID of the group to modify
 	 * @param delta The changes
 	 * @return The outcome of the action

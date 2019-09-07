@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.ipc;
 
 import java.io.IOException;
@@ -47,7 +47,7 @@ import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
 /**
  * This store manages interprocess connections.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -84,7 +84,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	/**
 	 * Register a new message handler for the given type.
-	 * 
+	 *
 	 * @param type    The message type
 	 * @param handler The message handler
 	 */
@@ -94,7 +94,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	/**
 	 * Get an unmodifiable view of the {@link Receptor} list.
-	 * 
+	 *
 	 * @return The store's receptor list
 	 */
 	public List<Receptor> getReceptors() {
@@ -107,7 +107,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	/**
 	 * Get an unmodifiable view of the {@link Connector} list.
-	 * 
+	 *
 	 * @return The store's connector list
 	 */
 	public List<Connector> getConnectors() {
@@ -120,7 +120,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	/**
 	 * Get an unmodifiable view of the {@link Listener} list.
-	 * 
+	 *
 	 * @return The store's listener list
 	 */
 	public List<Listener> getListeners() {
@@ -133,7 +133,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	/**
 	 * Get an unmodifiable view of the {@link Handler} list.
-	 * 
+	 *
 	 * @return The store's message handlers
 	 */
 	public Map<MsgCase, Handler> getHandlers() {
@@ -142,7 +142,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	/**
 	 * Attempt to get an instance's metadata over IPC.
-	 * 
+	 *
 	 * @param instance The instance type to target
 	 * @param flavor   The instance subtype
 	 * @return The received metadata object or {@code null} if an error occurred.
@@ -159,7 +159,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	/**
 	 * Start a new listener for the given instance type.
-	 * 
+	 *
 	 * @param instance The instance type
 	 * @param flavor   The instance subtype
 	 * @throws IOException
@@ -187,7 +187,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	/**
 	 * Make a connection to the given instance type.
-	 * 
+	 *
 	 * @param instance The instance type
 	 * @param flavor   The instance subtype
 	 * @return The established connection
@@ -208,7 +208,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	/**
 	 * Get the IPC listening port for the specified {@link Instance}.
-	 * 
+	 *
 	 * @param instance The instance type
 	 * @param flavor   The instance subtype
 	 * @return The IPC port or 0 for not found

@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2019 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.viewer.jfx.common.controller;
 
 import java.lang.reflect.Field;
@@ -30,7 +30,7 @@ import com.sandpolis.core.instance.event.ParameterizedEvent;
 
 /**
  * A superclass for controllers that need access to an {@link EventBus}.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -46,7 +46,7 @@ public abstract class AbstractController {
 	/**
 	 * Register the child controllers of {@code this} so they receive the same
 	 * {@link EventBus}. This may be called in {@code initialize()}.
-	 * 
+	 *
 	 * @param children A list of subcontrollers
 	 */
 	public void register(AbstractController... children) {
@@ -64,7 +64,7 @@ public abstract class AbstractController {
 	/**
 	 * Set the {@link EventBus} for this controller and all children. This method
 	 * can be called once.
-	 * 
+	 *
 	 * @param bus The new {@link EventBus}
 	 */
 	public void setBus(EventBus bus) {
@@ -85,7 +85,7 @@ public abstract class AbstractController {
 
 	/**
 	 * Get the {@link EventBus} for the controller hierarchy.
-	 * 
+	 *
 	 * @return The {@link EventBus} or {@code null} if {@link #setBus(EventBus)} has
 	 *         not been called
 	 */
@@ -95,7 +95,7 @@ public abstract class AbstractController {
 
 	/**
 	 * Post the given {@link Event} to the {@link EventBus}.
-	 * 
+	 *
 	 * @param c The event constructor
 	 */
 	protected void post(Supplier<? extends Event> c) {
@@ -104,7 +104,7 @@ public abstract class AbstractController {
 
 	/**
 	 * Post the given {@link ParameterizedEvent} to the {@link EventBus}.
-	 * 
+	 *
 	 * @param c         The event constructor
 	 * @param parameter The event parameter
 	 */

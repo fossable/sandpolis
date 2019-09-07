@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.net;
 
 import static com.sandpolis.core.net.Sock.ConnectionState.AUTHENTICATED;
@@ -59,7 +59,7 @@ import io.netty.handler.traffic.TrafficCounter;
 
 /**
  * This class wraps a {@link Channel} instance and provides helpful utilities.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -74,7 +74,7 @@ public class Sock {
 
 	/**
 	 * Get the {@link Channel} of this {@link Sock}.
-	 * 
+	 *
 	 * @return The {@code Sock}'s underlying {@link Channel}
 	 */
 	public Channel channel() {
@@ -83,7 +83,7 @@ public class Sock {
 
 	/**
 	 * Get the {@link Sock}'s {@link ConnectionState}.
-	 * 
+	 *
 	 * @return The {@link ConnectionState}
 	 */
 	public ConnectionState getState() {
@@ -92,7 +92,7 @@ public class Sock {
 
 	/**
 	 * Get the {@link Sock}'s {@link CertificateState}.
-	 * 
+	 *
 	 * @return The {@link CertificateState}
 	 */
 	public CertificateState getCertState() {
@@ -101,7 +101,7 @@ public class Sock {
 
 	/**
 	 * Change the Sock's connection state.
-	 * 
+	 *
 	 * @param state The new connection state
 	 */
 	public void changeState(ConnectionState state) {
@@ -125,7 +125,7 @@ public class Sock {
 
 	/**
 	 * Change the Sock's certificate state.
-	 * 
+	 *
 	 * @param certState The new certificate state
 	 */
 	public void changeCertState(CertificateState certState) {
@@ -141,7 +141,7 @@ public class Sock {
 
 	/**
 	 * Build a new {@link Sock} around the given {@link Channel}.
-	 * 
+	 *
 	 * @param channel An active or inactive {@link Channel}
 	 */
 	public Sock(Channel channel) {
@@ -180,7 +180,7 @@ public class Sock {
 
 	/**
 	 * Get the IP address of the remote host.
-	 * 
+	 *
 	 * @return The IPv4 address of the remote host
 	 */
 	public String getRemoteIP() {
@@ -195,7 +195,7 @@ public class Sock {
 
 	/**
 	 * Get the remote port.
-	 * 
+	 *
 	 * @return The remote port to which the local host is connected
 	 */
 	public int getRemotePort() {
@@ -206,7 +206,7 @@ public class Sock {
 
 	/**
 	 * Get the remote host's CVID.
-	 * 
+	 *
 	 * @return The CVID of the remote host
 	 */
 	public int getRemoteCvid() {
@@ -215,7 +215,7 @@ public class Sock {
 
 	/**
 	 * Get the remote host's UUID.
-	 * 
+	 *
 	 * @return The UUID of the remote host
 	 */
 	public String getRemoteUuid() {
@@ -224,7 +224,7 @@ public class Sock {
 
 	/**
 	 * Get the remote {@link Instance}.
-	 * 
+	 *
 	 * @return The instance type of the remote host
 	 */
 	public Instance getRemoteInstance() {
@@ -233,7 +233,7 @@ public class Sock {
 
 	/**
 	 * Get the remote {@link InstanceFlavor}.
-	 * 
+	 *
 	 * @return The instance flavor of the remote host
 	 */
 	public InstanceFlavor getRemoteInstanceFlavor() {
@@ -242,7 +242,7 @@ public class Sock {
 
 	/**
 	 * Get the local port.
-	 * 
+	 *
 	 * @return The local port to which the remote host is connected
 	 */
 	public int getLocalPort() {
@@ -253,7 +253,7 @@ public class Sock {
 
 	/**
 	 * Get the remote host's SSL certificate.
-	 * 
+	 *
 	 * @return The remote host's certificate
 	 * @throws SSLPeerUnverifiedException
 	 */
@@ -269,7 +269,7 @@ public class Sock {
 
 	/**
 	 * Get the {@link ChannelTrafficShapingHandler} for the {@link Sock}.
-	 * 
+	 *
 	 * @return The associated {@link ChannelTrafficShapingHandler}
 	 */
 	public ChannelTrafficShapingHandler getTrafficLimiter() {
@@ -278,7 +278,7 @@ public class Sock {
 
 	/**
 	 * Get the {@link TrafficCounter} for the {@link Sock}.
-	 * 
+	 *
 	 * @return The associated {@link TrafficCounter}
 	 */
 	public TrafficCounter getTrafficInfo() {
@@ -287,7 +287,7 @@ public class Sock {
 
 	/**
 	 * Get the cumulative number of bytes received.
-	 * 
+	 *
 	 * @return The count in bytes
 	 */
 	public long getRxBytes() {
@@ -296,7 +296,7 @@ public class Sock {
 
 	/**
 	 * Get the cumulative number of bytes transmitted.
-	 * 
+	 *
 	 * @return The count in bytes
 	 */
 	public long getTxBytes() {
@@ -305,7 +305,7 @@ public class Sock {
 
 	/**
 	 * Get the current receieve speed.
-	 * 
+	 *
 	 * @return The speed in bytes/second
 	 */
 	public long getRxSpeed() {
@@ -314,7 +314,7 @@ public class Sock {
 
 	/**
 	 * Get the current transmit speed.
-	 * 
+	 *
 	 * @return The speed in bytes/second
 	 */
 	public long getTxSpeed() {
@@ -323,7 +323,7 @@ public class Sock {
 
 	/**
 	 * Set a receive speed limit.
-	 * 
+	 *
 	 * @param limit The limit in bytes/second
 	 */
 	public void setRxLimit(long limit) {
@@ -332,7 +332,7 @@ public class Sock {
 
 	/**
 	 * Set a transmit speed limit.
-	 * 
+	 *
 	 * @param limit The limit in bytes/second
 	 */
 	public void setTxLimit(long limit) {
@@ -342,7 +342,7 @@ public class Sock {
 	/**
 	 * Estimate the link latency by measuring how long it takes to receive a
 	 * message.
-	 * 
+	 *
 	 * @return The approximate time for a message to travel to the remote host in
 	 *         milliseconds
 	 * @throws InterruptedException
@@ -363,7 +363,7 @@ public class Sock {
 	/**
 	 * Get a {@link MessageFuture} that will be triggered by the arrival of a
 	 * {@link Message} with the given ID.
-	 * 
+	 *
 	 * @param id The ID of the desired {@link Message}
 	 * @return A {@link MessageFuture}
 	 */
@@ -374,7 +374,7 @@ public class Sock {
 	/**
 	 * Get a {@link MessageFuture} that will be triggered by the arrival of a
 	 * {@link Message} with the given ID.
-	 * 
+	 *
 	 * @param id      The ID of the desired {@link Message}
 	 * @param timeout The message timeout
 	 * @param unit    The timeout unit
@@ -387,7 +387,7 @@ public class Sock {
 
 	/**
 	 * Send a {@link Message} with the intention of receiving a reply.
-	 * 
+	 *
 	 * @param message The {@link Message} to send
 	 * @return A {@link MessageFuture} which will be notified when the response is
 	 *         received
@@ -400,7 +400,7 @@ public class Sock {
 
 	/**
 	 * Send a {@link Message} with the intention of receiving a reply.
-	 * 
+	 *
 	 * @param message The {@link Message} to send
 	 * @param timeout The response timeout
 	 * @param unit    The timeout unit
@@ -416,7 +416,7 @@ public class Sock {
 	/**
 	 * Send a {@link Message} with the intention of receiving a reply. The ID field
 	 * will be populated if empty.
-	 * 
+	 *
 	 * @param message The {@link Message} to send
 	 * @return A {@link MessageFuture} which will be notified when the response is
 	 *         received
@@ -429,7 +429,7 @@ public class Sock {
 
 	/**
 	 * Send a {@link Message} with the intention of receiving a reply.
-	 * 
+	 *
 	 * @param message The {@link Message} to send
 	 * @param timeout The response timeout
 	 * @param unit    The timeout unit
@@ -444,7 +444,7 @@ public class Sock {
 
 	/**
 	 * Write a {@link Message} and flush the {@link Channel}.
-	 * 
+	 *
 	 * @param message The {@link Message} to send
 	 */
 	public void send(Message message) {
@@ -460,7 +460,7 @@ public class Sock {
 
 	/**
 	 * Write a {@link Message} to the {@link Channel}, but do not flush it.
-	 * 
+	 *
 	 * @param m The {@link Message} to write
 	 */
 	public void write(Message m) {
@@ -496,7 +496,7 @@ public class Sock {
 	/**
 	 * Require that the {@link Sock} be in one of the given states. Otherwise throw
 	 * an exception.
-	 * 
+	 *
 	 * @param states A list of acceptable states
 	 */
 	private void requireState(ConnectionState... states) {
@@ -570,7 +570,7 @@ public class Sock {
 		/**
 		 * Get the transport type for this platform. The classpath availablity of the
 		 * native transport module is also checked.
-		 * 
+		 *
 		 * @return The transport type for this platform
 		 */
 		private static Transport getTransport() {
@@ -581,7 +581,7 @@ public class Sock {
 		/**
 		 * Get the appropriate {@link ServerChannel} type for this {@code Transport}
 		 * type.
-		 * 
+		 *
 		 * @return A {@code ServerChannel} class
 		 */
 		@SuppressWarnings("unchecked")
@@ -605,7 +605,7 @@ public class Sock {
 		/**
 		 * Get the appropriate {@link EventLoopGroup} type for this {@code Transport}
 		 * type.
-		 * 
+		 *
 		 * @return A new {@code EventLoopGroup} object
 		 */
 		public EventLoopGroup getEventLoopGroup() {

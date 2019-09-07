@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.util;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ import com.sandpolis.core.proto.util.Result.Outcome;
 /**
  * Utilities for simplifying common operations related to protocol buffers.
  * Using a static import is a convenient way to use these methods.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -44,7 +44,7 @@ public final class ProtoUtil {
 	/**
 	 * Begin an action that should be completed with {@link #success} or
 	 * {@link #failure}.
-	 * 
+	 *
 	 * @return A new outcome builder
 	 */
 	public static Outcome.Builder begin() {
@@ -54,7 +54,7 @@ public final class ProtoUtil {
 	/**
 	 * Begin an action that should be completed with {@link #success} or
 	 * {@link #failure}.
-	 * 
+	 *
 	 * @param action The action description
 	 * @return A new outcome builder
 	 */
@@ -64,7 +64,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Complete an action with a successful result.
-	 * 
+	 *
 	 * @param outcome The outcome builder to complete
 	 * @return The final outcome
 	 */
@@ -74,7 +74,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Complete an action with a successful result.
-	 * 
+	 *
 	 * @param outcome The outcome builder to complete
 	 * @param comment The action comment
 	 * @return The final outcome
@@ -86,7 +86,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Complete an action with an unsuccessful result.
-	 * 
+	 *
 	 * @param outcome The outcome builder to complete
 	 * @param comment The action comment
 	 * @return The final outcome
@@ -97,7 +97,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Complete an action with an unsuccessful result.
-	 * 
+	 *
 	 * @param outcome The outcome builder to complete
 	 * @param cause   The exception that caused the failure
 	 * @return The final outcome
@@ -117,7 +117,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Complete an action with an unsuccessful result.
-	 * 
+	 *
 	 * @param outcome The outcome builder to complete
 	 * @return The final outcome
 	 */
@@ -127,7 +127,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Complete an action with an unspecified result.
-	 * 
+	 *
 	 * @param outcome The outcome builder to complete
 	 * @return The final outcome
 	 */
@@ -137,7 +137,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Create a new request message.
-	 * 
+	 *
 	 * @return A new request builder
 	 */
 	public static Message.Builder rq() {
@@ -146,7 +146,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Create a new response message.
-	 * 
+	 *
 	 * @param id The sequence ID
 	 * @return A new response builder
 	 */
@@ -156,7 +156,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Create a new response message.
-	 * 
+	 *
 	 * @param m The message needing a response
 	 * @return A new response builder
 	 */
@@ -171,7 +171,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Create a new request message.
-	 * 
+	 *
 	 * @param payload The request payload
 	 * @return A new request builder
 	 */
@@ -181,7 +181,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Create a new response message.
-	 * 
+	 *
 	 * @param msg     The message needing a response
 	 * @param payload The response payload
 	 * @return A new response builder
@@ -192,7 +192,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Set the payload of the given message.
-	 * 
+	 *
 	 * @param msg     The message to receive the payload
 	 * @param payload The payload to insert
 	 * @return {@code msg}
@@ -239,7 +239,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Get the payload from the given message.
-	 * 
+	 *
 	 * @param msg The message
 	 * @return The message's payload or {@code null} if none
 	 */
@@ -264,7 +264,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Set the payload of the given stream message.
-	 * 
+	 *
 	 * @param msg     The message to receive the payload
 	 * @param payload The payload to insert
 	 * @return {@code msg}
@@ -289,7 +289,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Get the payload from the given stream message.
-	 * 
+	 *
 	 * @param msg The stream message
 	 * @return The message's payload or {@code null} if none
 	 */
@@ -303,7 +303,7 @@ public final class ProtoUtil {
 
 	/**
 	 * Load a plugin message class from its Any URL.
-	 * 
+	 *
 	 * @param url The message URL
 	 * @return The loaded message class
 	 * @throws ClassNotFoundException
@@ -316,7 +316,7 @@ public final class ProtoUtil {
 	/**
 	 * Convert a message class name (RQ_ExampleMessage) to its message field name
 	 * (rq_example_message).
-	 * 
+	 *
 	 * @param payload The payload class
 	 * @return The field name
 	 */

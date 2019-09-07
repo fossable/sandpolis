@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.util;
 
 import java.security.InvalidKeyException;
@@ -46,7 +46,7 @@ import com.google.common.io.BaseEncoding;
 
 /**
  * Cryptographic utilities including password hashing and SAND5 key generation.
- * 
+ *
  * @author cilki
  * @since 4.0.0
  */
@@ -81,7 +81,7 @@ public final class CryptoUtil {
 
 	/**
 	 * Compute a hash of the inputs. Parameter order changes the result of the hash!
-	 * 
+	 *
 	 * @param digest The hash algorithm
 	 * @param input  The hash inputs
 	 * @return The hash as a lowercase hexadecimal String
@@ -102,7 +102,7 @@ public final class CryptoUtil {
 
 	/**
 	 * Compute a hash of the inputs. Parameter order changes the result of the hash!
-	 * 
+	 *
 	 * @param digest The hash algorithm
 	 * @param input  The hash inputs
 	 * @return The unencoded hash
@@ -119,7 +119,7 @@ public final class CryptoUtil {
 
 	/**
 	 * Compute a hash of the inputs. Parameter order changes the result of the hash!
-	 * 
+	 *
 	 * @param digest The hash algorithm
 	 * @param input  The hash inputs
 	 * @return The hash as a lowercase hexadecimal String
@@ -136,7 +136,7 @@ public final class CryptoUtil {
 
 	/**
 	 * Sign the nonce using SHA256.
-	 * 
+	 *
 	 * @param nonce The data to be signed
 	 * @param key   The signing key
 	 * @return The signed nonce in base64
@@ -147,7 +147,7 @@ public final class CryptoUtil {
 
 	/**
 	 * Sign the nonce using SHA256.
-	 * 
+	 *
 	 * @param nonce The data to be signed
 	 * @param key   The signing key
 	 * @return The signed nonce in base64
@@ -158,7 +158,7 @@ public final class CryptoUtil {
 
 	/**
 	 * Sign the nonce using SHA256.
-	 * 
+	 *
 	 * @param nonce The data to be signed
 	 * @param key   The signing key
 	 * @return The signed nonce in base64
@@ -169,7 +169,7 @@ public final class CryptoUtil {
 
 	/**
 	 * Get a random byte array of given size.
-	 * 
+	 *
 	 * @param length The size of the resulting nonce
 	 * @return A secure nonce
 	 */
@@ -183,7 +183,7 @@ public final class CryptoUtil {
 	 * This class provides fundamental SAND5 utilities and the
 	 * {@code ReciprocalKeyPair} class which is essential to the authentication
 	 * process.
-	 * 
+	 *
 	 * @author cilki
 	 * @since 5.0.0
 	 */
@@ -202,12 +202,12 @@ public final class CryptoUtil {
 		/**
 		 * A {@code ReciprocalKeyPair} contains two keys and allows the instance to both
 		 * sign and verify nonces.<br>
-		 * 
+		 *
 		 * Each {@code ReciprocalKeyPair} has a public and private key that are
 		 * completely independent. The corresponding private key for the public key in a
 		 * given {@code ReciprocalKeyPair} is located in the keypair's reciprocal
 		 * {@code ReciprocalKeyPair} (which may be located on a different machine).
-		 * 
+		 *
 		 * @author cilki
 		 * @since 5.0.0
 		 */
@@ -245,7 +245,7 @@ public final class CryptoUtil {
 
 		/**
 		 * Generate a new DSA keypair for use as a SAND5 reciprocal keypair.
-		 * 
+		 *
 		 * @return A new {@code KeyPair}
 		 */
 		public static KeyPair generate() {
@@ -261,7 +261,7 @@ public final class CryptoUtil {
 
 		/**
 		 * Sign the given nonce.
-		 * 
+		 *
 		 * @param key   The SAND5 keypair to use during signing
 		 * @param nonce The original nonce
 		 * @return The signed nonce
@@ -287,7 +287,7 @@ public final class CryptoUtil {
 
 		/**
 		 * Verify a SAND5 signature.
-		 * 
+		 *
 		 * @param key       The SAND5 keypair to use during verification
 		 * @param nonce     The original nonce
 		 * @param signature The signed nonce
@@ -316,7 +316,7 @@ public final class CryptoUtil {
 
 		/**
 		 * Get a random nonce for use in a SAND5 exchange.
-		 * 
+		 *
 		 * @return A random nonce of size {@link NONCE_SIZE}
 		 */
 		public static byte[] getNonce() {
@@ -326,7 +326,7 @@ public final class CryptoUtil {
 
 	/**
 	 * A wrapper for the Password-Based Key Derivation Function 2 (PBKDF2).
-	 * 
+	 *
 	 * @author cilki
 	 * @since 5.0.0
 	 */
@@ -350,7 +350,7 @@ public final class CryptoUtil {
 		/**
 		 * Compute a hash of the given password with a random salt. Repeated calls to
 		 * this method with the same input should always produce different outputs.
-		 * 
+		 *
 		 * @param pass The password to hash
 		 * @return A PBKDF2 hash of the password
 		 */
@@ -367,7 +367,7 @@ public final class CryptoUtil {
 		 * Check a password against a known hash. This implementation does not run in
 		 * constant time, so brute-force timing attacks could possibly reveal the hash
 		 * given enough attempts.
-		 * 
+		 *
 		 * @param pass The password to verify
 		 * @param ref  The reference password hash
 		 * @return True if the password matches the hash; false otherwise
@@ -397,7 +397,7 @@ public final class CryptoUtil {
 
 		/**
 		 * Compute a raw PBKDF2 hash.
-		 * 
+		 *
 		 * @param pass       The characters to hash
 		 * @param salt       The unencoded salt to include in the hash
 		 * @param iterations The number of iterations to perform

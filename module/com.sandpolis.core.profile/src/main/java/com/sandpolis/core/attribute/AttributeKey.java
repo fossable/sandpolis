@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.attribute;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -31,7 +31,7 @@ import com.sandpolis.core.proto.util.Platform.OsType;
 /**
  * An {@link AttributeKey} corresponds to an {@link Attribute} in an attribute
  * tree.
- * 
+ *
  * @author cilki
  * @since 4.0.0
  */
@@ -79,7 +79,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 	/**
 	 * Check whether the given instance type is compatible with the corresponding
 	 * attribute.
-	 * 
+	 *
 	 * @param instance The instance
 	 * @return Whether the given instance type is compatible
 	 */
@@ -94,7 +94,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 	/**
 	 * Check whether the given OS type is compatible with the corresponding
 	 * attribute.
-	 * 
+	 *
 	 * @param os The OS type
 	 * @return Whether the given instance type is compatible
 	 */
@@ -110,7 +110,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 	 * Indicates whether the associated attribute is static or dynamic. Static
 	 * attributes are not expected to change throughout the lifetime of an attribute
 	 * group.
-	 * 
+	 *
 	 * @return Whether the associated attribute is static
 	 */
 	public boolean isStatic() {
@@ -119,7 +119,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 
 	/**
 	 * Get the dot path.
-	 * 
+	 *
 	 * @return The key's dot path
 	 */
 	public String getDotPath() {
@@ -128,7 +128,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 
 	/**
 	 * Build a new attribute using the attribute factory.
-	 * 
+	 *
 	 * @return A new attribute
 	 */
 	@SuppressWarnings("unchecked")
@@ -146,7 +146,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 
 	/**
 	 * Build a new {@link AttributeKey} that is specific to the given group and id.
-	 * 
+	 *
 	 * @param group The target group
 	 * @param id    An ID within the target group
 	 * @return A new {@link AttributeKey} derived from {@code this}
@@ -165,7 +165,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 	/**
 	 * Override the default attribute factory for the {@link Attribute} that
 	 * corresponds to this {@link AttributeKey}.
-	 * 
+	 *
 	 * @param factory An attribute factory
 	 */
 	public void setFactory(Supplier<Attribute<E>> factory) {
@@ -189,7 +189,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 
 		/**
 		 * Add one or more {@link Instance}s to the whitelist.
-		 * 
+		 *
 		 * @param compatible Instances that will be whitelisted
 		 * @return {@code this}
 		 */
@@ -202,7 +202,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 
 		/**
 		 * Add one or more {@link OsType}s to the whitelist.
-		 * 
+		 *
 		 * @param compatible Platforms that will be whitelisted
 		 * @return {@code this}
 		 */
@@ -215,7 +215,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 
 		/**
 		 * Add one or more {@link Instance}s to the blacklist.
-		 * 
+		 *
 		 * @param incompatible Instances that will be blacklisted
 		 * @return {@code this}
 		 */
@@ -228,7 +228,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 
 		/**
 		 * Add one or more {@link OsType}s to the blacklist.
-		 * 
+		 *
 		 * @param incompatible Platforms that will be blacklisted
 		 * @return {@code this}
 		 */
@@ -241,7 +241,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 
 		/**
 		 * Set the {@code static} flag.
-		 * 
+		 *
 		 * @param value The flag's new value
 		 * @return {@code this}
 		 */
@@ -252,7 +252,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 
 		/**
 		 * Set the {@code dotPath} field.
-		 * 
+		 *
 		 * @param value The field's new value
 		 * @return {@code this}
 		 */
@@ -263,7 +263,7 @@ public class AttributeKey<E> extends AttributeNodeKey {
 
 		/**
 		 * Build the {@link AttributeKey} from the current state of this builder.
-		 * 
+		 *
 		 * @return A new attribute key
 		 */
 		@SuppressWarnings("unchecked")

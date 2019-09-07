@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.net.store.connection;
 
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
@@ -50,7 +50,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 /**
  * A static store for managing direct connections and connection attempt
  * threads.
- * 
+ *
  * @author cilki
  * @see NetworkStore
  * @since 5.0.0
@@ -77,7 +77,7 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 	/**
 	 * Attempt to establish a peer-to-peer connection with the given instance. The
 	 * server will coordinate the connection process.
-	 * 
+	 *
 	 * @param cvid
 	 * @return
 	 */
@@ -89,7 +89,7 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 	/**
 	 * Establish a connection. The resulting {@link Sock} will be added to the store
 	 * automatically.
-	 * 
+	 *
 	 * @param bootstrap The connection bootstrap
 	 * @return A {@link SockFuture} which will complete after the connection is
 	 *         established
@@ -103,7 +103,7 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 	/**
 	 * Create a new {@link ConnectionLoop} with the given configuration. The loop is
 	 * automatically started.
-	 * 
+	 *
 	 * @param config The connection loop configuration
 	 * @return The new connection loop
 	 */
@@ -123,7 +123,7 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 
 	/**
 	 * Attempt to connect to a Sandpolis listener.
-	 * 
+	 *
 	 * @param address The IP address or DNS name
 	 * @param port    The port number
 	 * @return The future of the action

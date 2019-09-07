@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.server.vanilla.store.listener;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -41,7 +41,7 @@ import com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStoreCo
 
 /**
  * The {@link ListenerStore} manages network listeners.
- * 
+ *
  * @author cilki
  * @since 1.0.0
  */
@@ -61,7 +61,7 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 
 	/**
 	 * Start the given listener.
-	 * 
+	 *
 	 * @param id A listener ID
 	 */
 	public void start(long id) {
@@ -82,7 +82,7 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 
 	/**
 	 * Stop the given listener.
-	 * 
+	 *
 	 * @param id A listener ID
 	 */
 	public void stop(long id) {
@@ -93,7 +93,7 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 
 	/**
 	 * Create a new listener from the given configuration and add it to the store.
-	 * 
+	 *
 	 * @param config The listener configuration
 	 */
 	public void add(ListenerConfig.Builder config) {
@@ -102,7 +102,7 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 
 	/**
 	 * Create a new listener from the given configuration and add it to the store.
-	 * 
+	 *
 	 * @param config The listener configuration
 	 */
 	public void add(ListenerConfig config) {
@@ -115,7 +115,7 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 
 	/**
 	 * Add a listener to the store.
-	 * 
+	 *
 	 * @param listener The listener to add
 	 */
 	public void add(Listener listener) {
@@ -128,7 +128,7 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 
 	/**
 	 * Change a listener's configuration or statistics.
-	 * 
+	 *
 	 * @param id    The ID of the listener to modify
 	 * @param delta The changes
 	 * @return The outcome of the action
@@ -145,7 +145,7 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 
 	/**
 	 * Change a listener's state.
-	 * 
+	 *
 	 * @param id    A listener ID
 	 * @param state The new listener state
 	 * @return The outcome of the action

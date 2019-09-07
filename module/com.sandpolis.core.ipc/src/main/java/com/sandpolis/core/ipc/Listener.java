@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.ipc;
 
 import static com.sandpolis.core.ipc.IPCStore.IPCStore;
@@ -32,7 +32,7 @@ import com.google.common.util.concurrent.RateLimiter;
 /**
  * A listener that binds to a port on the loopback interface. The listener
  * spawns {@link Receptor}s for each incoming connection.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -60,7 +60,7 @@ public class Listener implements Runnable, Closeable {
 
 	/**
 	 * Create a new IPC listener on an ephemeral port.
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	public Listener() throws IOException {
@@ -71,7 +71,7 @@ public class Listener implements Runnable, Closeable {
 	 * Create a new IPC listener on the specified port. A new socket will be bound
 	 * to the port immediately, but connections will not be accepted until the
 	 * listener is started.
-	 * 
+	 *
 	 * @param port The listening port
 	 * @throws IOException
 	 */
@@ -81,7 +81,7 @@ public class Listener implements Runnable, Closeable {
 
 	/**
 	 * Get the listener's local port.
-	 * 
+	 *
 	 * @return The local port number
 	 */
 	public int getPort() {
@@ -90,7 +90,7 @@ public class Listener implements Runnable, Closeable {
 
 	/**
 	 * Start the listener on the given {@link ExecutorService}.
-	 * 
+	 *
 	 * @param listenerService The listener executor service
 	 * @param receptorService The receptor executor service
 	 */

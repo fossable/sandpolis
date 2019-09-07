@@ -1,15 +1,25 @@
-//
-//  Step3.swift
-//  Sandpolis
-//
-//  Created by Tyler Cook on 8/30/19.
-//
-
+//****************************************************************************//
+//                                                                            //
+//                Copyright © 2015 - 2019 Subterranean Security               //
+//                                                                            //
+//  Licensed under the Apache License, Version 2.0 (the "License");           //
+//  you may not use this file except in compliance with the License.          //
+//  You may obtain a copy of the License at                                   //
+//                                                                            //
+//      http://www.apache.org/licenses/LICENSE-2.0                            //
+//                                                                            //
+//  Unless required by applicable law or agreed to in writing, software       //
+//  distributed under the License is distributed on an "AS IS" BASIS,         //
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  //
+//  See the License for the specific language governing permissions and       //
+//  limitations under the License.                                            //
+//                                                                            //
+//****************************************************************************//
 import UIKit
 import MapKit
 
 class Step3: UIViewController {
-    
+
     private let locations = [
 		["id": "us-east-2", "name": "Ohio, United States", "coordinate": CLLocationCoordinate2D(latitude: 40.4173, longitude: -82.9071)],
         ["id": "us-east-1", "name": "Virginia, United States", "coordinate": CLLocationCoordinate2D(latitude: 37.4316, longitude: -78.6569)],
@@ -31,9 +41,9 @@ class Step3: UIViewController {
     @IBOutlet weak var map: MKMapView!
     @IBOutlet weak var locationButton: UIButton!
     @IBOutlet weak var launchButton: UIButton!
-	
+
 	var parentController: ServerCreator!
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
     }
@@ -41,7 +51,7 @@ class Step3: UIViewController {
     @IBAction func changeLocation(_ sender: Any) {
 		let alert = UIAlertController(title: "Available Locations", message: nil, preferredStyle: .actionSheet)
 		alert.popoverPresentationController?.sourceView = locationButton
-		
+
 		for data in locations {
 			alert.addAction(UIAlertAction(title: data["name"] as? String, style: .default) { action in
 				self.locationButton.setTitle(data["id"] as? String, for: .normal)
@@ -56,7 +66,7 @@ class Step3: UIViewController {
 
 		present(alert, animated: true, completion: nil)
     }
-    
+
     @IBAction func back(_ sender: Any) {
         parentController.showStep2()
     }
@@ -67,7 +77,7 @@ class Step3: UIViewController {
 			if let error = error {
 				let alert = UIAlertController(title: "Launch failed", message: error.localizedDescription, preferredStyle: .alert)
 				self.present(alert, animated: true) {
-					
+
 				}
 			}
 		}

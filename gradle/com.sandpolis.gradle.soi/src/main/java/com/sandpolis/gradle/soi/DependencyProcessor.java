@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.gradle.soi;
 
 import java.io.File;
@@ -41,7 +41,7 @@ import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact.NativeComp
  * <br>
  * Note: this class is NOT thread-safe. Concurrent operations will produce an
  * invalid {@link SO_DependencyMatrix} result.
- * 
+ *
  * @author cilki
  */
 @SuppressWarnings("unchecked")
@@ -67,7 +67,7 @@ public final class DependencyProcessor {
 
 	/**
 	 * Build a new {@link DependencyProcessor} for the given {@link Project}.
-	 * 
+	 *
 	 * @param project The root project
 	 */
 	public DependencyProcessor(Project project) {
@@ -79,7 +79,7 @@ public final class DependencyProcessor {
 	/**
 	 * Build the contents of the {@link DependencyProcessor} into a
 	 * {@link SO_DependencyMatrix}.
-	 * 
+	 *
 	 * @return A new {@link SO_DependencyMatrix}
 	 */
 	public SO_DependencyMatrix build() {
@@ -90,7 +90,7 @@ public final class DependencyProcessor {
 
 	/**
 	 * Add a new {@link Project} to the processor.
-	 * 
+	 *
 	 * @param project The new project
 	 */
 	public void add(Project project) {
@@ -112,7 +112,7 @@ public final class DependencyProcessor {
 
 	/**
 	 * Add a new dependency relationship to the processor.
-	 * 
+	 *
 	 * @param parent     The id of the parent artifact
 	 * @param dependency A dependency of the parent
 	 */
@@ -138,7 +138,7 @@ public final class DependencyProcessor {
 
 	/**
 	 * Add an artifact to the in-progress matrix.
-	 * 
+	 *
 	 * @param artifact The artifact to add
 	 * @return The artifact's new id
 	 */
@@ -154,7 +154,7 @@ public final class DependencyProcessor {
 
 	/**
 	 * Build a new {@link Artifact.Builder} for the given {@link Project}.
-	 * 
+	 *
 	 * @param project The project to include
 	 * @return A new artifact
 	 */
@@ -164,7 +164,7 @@ public final class DependencyProcessor {
 
 	/**
 	 * Build a {@link Artifact.Builder} for the given {@link File}.
-	 * 
+	 *
 	 * @param coordinates The artifact's coordinates
 	 * @param file        The file to include
 	 * @return A new artifact
@@ -203,7 +203,7 @@ public final class DependencyProcessor {
 
 	/**
 	 * Find an existing artifact for a project.
-	 * 
+	 *
 	 * @param project The project
 	 * @return The artifact
 	 */
@@ -215,7 +215,7 @@ public final class DependencyProcessor {
 
 	/**
 	 * Find an existing artifact for a dependency.
-	 * 
+	 *
 	 * @param dependency The dependency
 	 * @return The artifact
 	 */
@@ -227,7 +227,7 @@ public final class DependencyProcessor {
 
 	/**
 	 * Find an existing artifact in {@link #matrix} by its coordinates.
-	 * 
+	 *
 	 * @param coordinates The artifact's coordinates
 	 * @return The artifact
 	 */
@@ -239,7 +239,7 @@ public final class DependencyProcessor {
 
 	/**
 	 * Get a project's coordinates in standard Gradle form.
-	 * 
+	 *
 	 * @param project The project
 	 * @return The project's coordinates
 	 */
@@ -252,7 +252,7 @@ public final class DependencyProcessor {
 
 	/**
 	 * Get a dependency's coordinates in standard Gradle form.
-	 * 
+	 *
 	 * @param dependency The dependency
 	 * @return The dependency's coordinates
 	 */

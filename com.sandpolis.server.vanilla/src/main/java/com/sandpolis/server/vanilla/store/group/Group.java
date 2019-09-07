@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.server.vanilla.store.group;
 
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
@@ -61,7 +61,7 @@ import com.sandpolis.server.vanilla.store.user.User;
  * For example, if a group has a {@link PasswordMechanism} installed, clients
  * can supply the correct password during the authentication phase to be added
  * to the group.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -129,7 +129,7 @@ public class Group implements ProtoType<ProtoGroup> {
 
 	/**
 	 * Construct a new {@link Group} from a configuration.
-	 * 
+	 *
 	 * @param config The configuration which should be prevalidated and complete
 	 */
 	public Group(GroupConfig config) {
@@ -147,7 +147,7 @@ public class Group implements ProtoType<ProtoGroup> {
 
 	/**
 	 * Install a new {@link PasswordMechanism} in the group.
-	 * 
+	 *
 	 * @param mechanism The new authentication mechanism
 	 */
 	public void addPasswordMechanism(PasswordMechanism mechanism) {
@@ -156,7 +156,7 @@ public class Group implements ProtoType<ProtoGroup> {
 
 	/**
 	 * Install a new {@link KeyMechanism} in the group.
-	 * 
+	 *
 	 * @param mechanism The new authentication mechanism
 	 */
 	public void addKeyMechanism(KeyMechanism mechanism) {

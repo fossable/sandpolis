@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.net.handler;
 
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
@@ -40,9 +40,9 @@ import io.netty.channel.SimpleChannelInboundHandler;
 /**
  * This handler manages the CVID handshake for the requesting instance. Usually
  * the requesting instance will be the client or viewer.
- * 
+ *
  * @see CvidResponseHandler
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -81,7 +81,7 @@ public class CvidRequestHandler extends SimpleChannelInboundHandler<Message> {
 
 	/**
 	 * Begin the CVID handshake phase.
-	 * 
+	 *
 	 * @param channel  The channel
 	 * @param instance The instance type
 	 * @param flavor   The instance flavor

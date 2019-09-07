@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2018 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.viewer.jfx.common.pane;
 
 import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
@@ -38,7 +38,7 @@ import javafx.util.Duration;
  * An {@link ExtendPane} allows {@link Region}s to be raised over a central
  * primary {@link Node} similar to a {@link BorderPane}. This class is not
  * thread-safe.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -76,7 +76,7 @@ public class ExtendPane extends BorderPane {
 
 	/**
 	 * Construct a new {@link ExtendPane} around the given {@link Node}.
-	 * 
+	 *
 	 * @param main The central node which will take up the entire container until
 	 *             something is extended
 	 */
@@ -86,7 +86,7 @@ public class ExtendPane extends BorderPane {
 
 	/**
 	 * Get the {@link Region} that is currently extended on the given side.
-	 * 
+	 *
 	 * @param side An {@link ExtendSide}
 	 * @return The {@link Region} extended on the given side
 	 */
@@ -98,7 +98,7 @@ public class ExtendPane extends BorderPane {
 
 	/**
 	 * Get whether the given side has a running animation.
-	 * 
+	 *
 	 * @param side The given side
 	 * @return Whether the side has a running animation
 	 */
@@ -110,7 +110,7 @@ public class ExtendPane extends BorderPane {
 
 	/**
 	 * Drop the given side if extended.
-	 * 
+	 *
 	 * @param side The side to drop
 	 */
 	public void drop(ExtendSide side) {
@@ -130,7 +130,7 @@ public class ExtendPane extends BorderPane {
 	/**
 	 * Move a new {@link Region} in from the given side. If the side is already
 	 * extended, it will be dropped first.
-	 * 
+	 *
 	 * @param region   The pane to extend
 	 * @param side     The side to extend from
 	 * @param duration The duration of the transition in milliseconds
@@ -153,7 +153,7 @@ public class ExtendPane extends BorderPane {
 	/**
 	 * Move a new {@link Region} in from the given side. If the side is already
 	 * extended, it will be dropped first.
-	 * 
+	 *
 	 * @param region   The region to extend
 	 * @param side     The side to extend from
 	 * @param duration The duration of the transition in milliseconds
@@ -303,7 +303,7 @@ public class ExtendPane extends BorderPane {
 
 	/**
 	 * Add the given node to the border layout.
-	 * 
+	 *
 	 * @param side The side
 	 * @param node The node to add or {@code null}
 	 */

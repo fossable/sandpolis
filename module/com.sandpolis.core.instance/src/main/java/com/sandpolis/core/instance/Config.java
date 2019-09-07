@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.instance;
 
 import java.util.HashMap;
@@ -30,13 +30,13 @@ import org.slf4j.LoggerFactory;
 /**
  * This class manages the instance configuration. It reads values from the
  * following sources in order from highest to lowest precedence:
- * 
+ *
  * <ul>
  * <li>Main Arguments</li>
  * <li>System Properties</li>
  * <li>Environment Variables</li>
  * </ul>
- * 
+ *
  * Note: environment variables are uppercase and separated with underscores
  * rather than dots. Therefore the equivalent environment variable for
  * "install.path" is "INSTALL_PATH".
@@ -60,7 +60,7 @@ public final class Config {
 
 	/**
 	 * Set the main argument list.
-	 * 
+	 *
 	 * @param args The main arguments to use for configuration
 	 */
 	public static void setArguments(String[] args) {
@@ -69,7 +69,7 @@ public final class Config {
 
 	/**
 	 * Check that the configuration contains a property.
-	 * 
+	 *
 	 * @param property The property to check
 	 * @return Whether the property exists in the configuration
 	 */
@@ -79,7 +79,7 @@ public final class Config {
 
 	/**
 	 * Get the value of a String property.
-	 * 
+	 *
 	 * @param property The property to request
 	 * @return The property value
 	 */
@@ -89,7 +89,7 @@ public final class Config {
 
 	/**
 	 * Get the value of a Boolean property.
-	 * 
+	 *
 	 * @param property The property to request
 	 * @return The property value
 	 */
@@ -99,7 +99,7 @@ public final class Config {
 
 	/**
 	 * Get the value of an Integer property.
-	 * 
+	 *
 	 * @param property The property to request
 	 * @return The property value
 	 */
@@ -110,7 +110,7 @@ public final class Config {
 	/**
 	 * Insist that the runtime environment provide the given property of the given
 	 * type. If the property is missing, an exception will be thrown.
-	 * 
+	 *
 	 * @param property The property name
 	 * @param type     The property type
 	 */
@@ -138,7 +138,7 @@ public final class Config {
 	 * Suggest that the given property may be supplied by the runtime environment.
 	 * If the property is missing, the given default will be used. A default of
 	 * {@code null} implies the property's type should be {@link String}.
-	 * 
+	 *
 	 * @param property The property name
 	 * @param def      The default value
 	 */
@@ -166,7 +166,7 @@ public final class Config {
 	/**
 	 * Suggest that the given {@link String} property may be supplied by the runtime
 	 * environment.
-	 * 
+	 *
 	 * @param property The property name
 	 */
 	public static void register(String property) {
@@ -175,7 +175,7 @@ public final class Config {
 
 	/**
 	 * Get the store's configuration.
-	 * 
+	 *
 	 * @return The configuration data
 	 */
 	public static Set<Entry<String, Object>> entries() {
@@ -192,7 +192,7 @@ public final class Config {
 
 	/**
 	 * Query the runtime environment for the given property.
-	 * 
+	 *
 	 * @param property The property name
 	 * @return The property value
 	 */

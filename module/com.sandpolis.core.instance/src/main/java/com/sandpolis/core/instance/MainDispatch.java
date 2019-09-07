@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.instance;
 
 import java.lang.annotation.Annotation;
@@ -43,7 +43,7 @@ import com.sandpolis.core.util.ProtoUtil;
  * {@link MainDispatch} allows the instance's main method to configure
  * initialization tasks before they are sequentially executed by this class.
  * Idle tasks and shutdown tasks are also managed by this class.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -83,7 +83,7 @@ public final class MainDispatch {
 
 	/**
 	 * Get the {@link Class} that was dispatched.
-	 * 
+	 *
 	 * @return The dispatched {@link Class} or {@code MainDispatch.class} if
 	 *         {@link #dispatch} has not been called
 	 */
@@ -93,7 +93,7 @@ public final class MainDispatch {
 
 	/**
 	 * Get the {@link Instance} type.
-	 * 
+	 *
 	 * @return The dispatched {@link Instance} or {@code null} if {@link #dispatch}
 	 *         has not been called
 	 */
@@ -103,7 +103,7 @@ public final class MainDispatch {
 
 	/**
 	 * Get the {@link InstanceFlavor} type.
-	 * 
+	 *
 	 * @return The dispatched {@link InstanceFlavor} or {@code null} if
 	 *         {@link #dispatch} has not been called
 	 */
@@ -113,7 +113,7 @@ public final class MainDispatch {
 
 	/**
 	 * Get the {@link IdleLoop}.
-	 * 
+	 *
 	 * @return The registered {@link IdleLoop} or {@code null} if one has not been
 	 *         registered
 	 */
@@ -124,7 +124,7 @@ public final class MainDispatch {
 	/**
 	 * Invokes the instance's main method (which should register initialization
 	 * tasks with {@link MainDispatch}) and then initializes the instance.
-	 * 
+	 *
 	 * @param main     The {@link Class} which contains the {@code main} to invoke
 	 * @param args     The arguments to be passed to the {@code main}
 	 * @param instance The instance's {@link Instance}
@@ -255,7 +255,7 @@ public final class MainDispatch {
 	/**
 	 * Register an {@link IdleLoop} with {@link MainDispatch}. The loop will be
 	 * started during dispatch.
-	 * 
+	 *
 	 * @param idle The new {@link IdleLoop}
 	 */
 	public static void register(IdleLoop idle) {
@@ -269,7 +269,7 @@ public final class MainDispatch {
 
 	/**
 	 * Register an idle task with the {@link IdleLoop}.
-	 * 
+	 *
 	 * @param task The new idle task which returns true if the task should be
 	 *             rescheduled after completion or false if the task should be
 	 *             dropped
@@ -286,7 +286,7 @@ public final class MainDispatch {
 	 * Register a new initialization task which will be executed during the
 	 * dispatch. Tasks registered with this method are executed sequentially in the
 	 * same order as the method calls.
-	 * 
+	 *
 	 * @param task The task reference
 	 */
 	public static void register(Task task) {
@@ -365,7 +365,7 @@ public final class MainDispatch {
 
 		/**
 		 * Get the task's skipped flag.
-		 * 
+		 *
 		 * @return Whether the task was skipped
 		 */
 		public boolean isSkipped() {
@@ -374,7 +374,7 @@ public final class MainDispatch {
 
 		/**
 		 * Get the task's outcome.
-		 * 
+		 *
 		 * @return The task's outcome
 		 */
 		public Outcome getOutcome() {
@@ -383,7 +383,7 @@ public final class MainDispatch {
 
 		/**
 		 * Mark the task as skipped.
-		 * 
+		 *
 		 * @return A completed {@link TaskOutcome}
 		 */
 		public TaskOutcome skipped() {
@@ -397,7 +397,7 @@ public final class MainDispatch {
 
 		/**
 		 * Mark the task as succeeded.
-		 * 
+		 *
 		 * @return A completed {@link TaskOutcome}
 		 */
 		public TaskOutcome success() {
@@ -410,7 +410,7 @@ public final class MainDispatch {
 
 		/**
 		 * Mark the task as failed.
-		 * 
+		 *
 		 * @return A completed {@link TaskOutcome}
 		 */
 		public TaskOutcome failure() {
@@ -423,7 +423,7 @@ public final class MainDispatch {
 
 		/**
 		 * Mark the task as failed with an exception.
-		 * 
+		 *
 		 * @param t The relevant exception
 		 * @return A completed {@link TaskOutcome}
 		 */
@@ -437,7 +437,7 @@ public final class MainDispatch {
 
 		/**
 		 * Mark the task as failed with a comment.
-		 * 
+		 *
 		 * @param comment The relevant comment
 		 * @return A completed {@link TaskOutcome}
 		 */
@@ -451,7 +451,7 @@ public final class MainDispatch {
 
 		/**
 		 * Mark the task as complete.
-		 * 
+		 *
 		 * @param result The task result
 		 * @return A completed {@link TaskOutcome}
 		 */
@@ -465,7 +465,7 @@ public final class MainDispatch {
 
 		/**
 		 * Mark the task as complete and merge the given outcome.
-		 * 
+		 *
 		 * @param _outcome The outcome to merge
 		 * @return A completed {@link TaskOutcome}
 		 */
@@ -510,7 +510,7 @@ public final class MainDispatch {
 
 	/**
 	 * Serach for task fields in the given class and inject annotations into them.
-	 * 
+	 *
 	 * @param c The class to search
 	 */
 	public static void register(Class<?> c) {

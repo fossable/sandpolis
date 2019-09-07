@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.util;
 
 import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_ADDRESS;
@@ -42,7 +42,7 @@ import com.sandpolis.core.proto.util.Result.ErrorCode;
 
 /**
  * Utilities that validate user input.
- * 
+ *
  * @author cilki
  * @since 4.0.0
  */
@@ -111,7 +111,7 @@ public final class ValidationUtil {
 
 	/**
 	 * Validate a user name.
-	 * 
+	 *
 	 * @param user The candidate username
 	 * @return The username validity
 	 */
@@ -121,7 +121,7 @@ public final class ValidationUtil {
 
 	/**
 	 * Validate a group name.
-	 * 
+	 *
 	 * @param group The candidate group name
 	 * @return The group name validity
 	 */
@@ -131,7 +131,7 @@ public final class ValidationUtil {
 
 	/**
 	 * Validate a password.
-	 * 
+	 *
 	 * @param password The candidate password
 	 * @return The password validity
 	 */
@@ -141,7 +141,7 @@ public final class ValidationUtil {
 
 	/**
 	 * Validate a private IPv4 address.
-	 * 
+	 *
 	 * @param ip The candidate IP address
 	 * @return The IP validity
 	 */
@@ -151,7 +151,7 @@ public final class ValidationUtil {
 
 	/**
 	 * Validate a DNS name or IP address.
-	 * 
+	 *
 	 * @param address The candidate address
 	 * @return The address validity
 	 */
@@ -161,7 +161,7 @@ public final class ValidationUtil {
 
 	/**
 	 * Validate a port number.
-	 * 
+	 *
 	 * @param port The candidate port
 	 * @return The port validity
 	 */
@@ -175,7 +175,7 @@ public final class ValidationUtil {
 
 	/**
 	 * Validate a port number.
-	 * 
+	 *
 	 * @param port The candidate port
 	 * @return The port validity
 	 */
@@ -185,7 +185,7 @@ public final class ValidationUtil {
 
 	/**
 	 * Validate a filesystem path.
-	 * 
+	 *
 	 * @param path The candidate path
 	 * @return The path validity
 	 */
@@ -200,7 +200,7 @@ public final class ValidationUtil {
 
 	/**
 	 * Validate a Sandpolis version number.
-	 * 
+	 *
 	 * @param version The candidate version
 	 * @return The version validity
 	 */
@@ -211,19 +211,19 @@ public final class ValidationUtil {
 	/**
 	 * This static class checks protobuf configurations for validity and
 	 * completeness.
-	 * 
+	 *
 	 * A config is <b>complete</b> if:
 	 * <ul>
 	 * <li>Every required field is present in the config.</li>
 	 * </ul>
-	 * 
+	 *
 	 * A config is <b>valid</b> if:
 	 * <ul>
 	 * <li>Every field present in the config passes all input restrictions.</li>
 	 * </ul>
-	 * 
+	 *
 	 * A config may be in any combination of the two states.
-	 * 
+	 *
 	 * @author cilki
 	 * @since 5.0.0
 	 */
@@ -231,7 +231,7 @@ public final class ValidationUtil {
 
 		/**
 		 * Validate a {@link ListenerConfig}.
-		 * 
+		 *
 		 * @param config The candidate configuration
 		 * @return An error code or {@link ErrorCode#OK}
 		 */
@@ -269,7 +269,7 @@ public final class ValidationUtil {
 
 		/**
 		 * Check a {@link ListenerConfig} for completeness.
-		 * 
+		 *
 		 * @param config The candidate configuration
 		 * @return An error code or {@link ErrorCode#OK}
 		 */
@@ -289,7 +289,7 @@ public final class ValidationUtil {
 
 		/**
 		 * Validate a {@link UserConfig}.
-		 * 
+		 *
 		 * @param config The candidate configuration
 		 * @return An error code or {@link ErrorCode#OK}
 		 */
@@ -307,7 +307,7 @@ public final class ValidationUtil {
 
 		/**
 		 * Check a {@link UserConfig} for completeness.
-		 * 
+		 *
 		 * @param config The candidate configuration
 		 * @return An error code or {@link ErrorCode#OK}
 		 */
@@ -323,7 +323,7 @@ public final class ValidationUtil {
 
 		/**
 		 * Validate a {@link GroupConfig}.
-		 * 
+		 *
 		 * @param config The candidate configuration
 		 * @return An error code or {@link ErrorCode#OK}
 		 */
@@ -344,7 +344,7 @@ public final class ValidationUtil {
 
 		/**
 		 * Check a {@link GroupConfig} for completeness.
-		 * 
+		 *
 		 * @param config The candidate configuration
 		 * @return An error code or {@link ErrorCode#OK}
 		 */

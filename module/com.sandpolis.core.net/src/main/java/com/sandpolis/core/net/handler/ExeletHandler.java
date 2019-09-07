@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2017 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.net.handler;
 
 import java.lang.invoke.MethodHandle;
@@ -73,7 +73,7 @@ public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 
 	/**
 	 * Create a new {@link ExeletHandler} with the given {@link Exelet} list.
-	 * 
+	 *
 	 * @param exelets A list of available {@link Exelet}s or {@code null} for none
 	 */
 	public ExeletHandler(Class<? extends Exelet>[] exelets) {
@@ -124,7 +124,7 @@ public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 	/**
 	 * Setup the handler for unauthenticated messages. Permission annotations are
 	 * ignored for unauth handlers.
-	 * 
+	 *
 	 * @param sock The connector for each {@link Exelet}
 	 */
 	public void initUnauth() {
@@ -144,7 +144,7 @@ public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 	/**
 	 * Setup the handler for authenticated messages. Permission annotations will be
 	 * checked.
-	 * 
+	 *
 	 * @param sock The connector for each {@link Exelet}
 	 */
 	public void initAuth() {
@@ -176,7 +176,7 @@ public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 	/**
 	 * Associate a message type with a handler. In the event of multiple
 	 * registrations of the same message type, the last registration wins.
-	 * 
+	 *
 	 * @param sock   The connector for the {@link Exelet} instance if necessary
 	 * @param _class The {@link Exelet} class that contains the message handler
 	 * @param method The message handler

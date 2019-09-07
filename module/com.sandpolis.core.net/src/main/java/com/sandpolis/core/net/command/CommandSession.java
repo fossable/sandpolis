@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2019 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.net.command;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -51,7 +51,7 @@ import io.netty.util.concurrent.Future;
  * fails with the same exception. Sessions can also be explicitly aborted or
  * succeeded from a handler context using {@link #abort(Throwable)} and
  * {@link #success()}.
- * 
+ *
  * @author cilki
  * @since 5.0.2
  */
@@ -105,7 +105,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 
 	/**
 	 * Add a new component to the {@link CommandSession}.
-	 * 
+	 *
 	 * @param <R>      The component's expected result type
 	 * @param future   The component
 	 * @param handlers A list of completion handlers
@@ -166,7 +166,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	/**
 	 * Complete the command with the given outcome. The command will enter the
 	 * success state regardless of the outcome contents.
-	 * 
+	 *
 	 * @param outcome The command outcome
 	 * @return {@code this}
 	 */
@@ -177,7 +177,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 
 	/**
 	 * Immediately complete the command with a postive outcome.
-	 * 
+	 *
 	 * @return {@code this}
 	 */
 	public CommandSession success() {
@@ -188,7 +188,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	/**
 	 * Halt the entire command. All components will be interrupted and the command
 	 * will enter the failed state.
-	 * 
+	 *
 	 * @param message The failure message
 	 */
 	public void abort(String message) {
@@ -200,7 +200,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	/**
 	 * Halt the entire command. All components will be interrupted and the command
 	 * will enter the failed state.
-	 * 
+	 *
 	 * @param cause The exception that aborted the command
 	 */
 	public void abort(Throwable cause) {
@@ -211,7 +211,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 
 	/**
 	 * Add a subcommand to the current session.
-	 * 
+	 *
 	 * @param future The subsession
 	 * @return {@code future}
 	 */
@@ -224,7 +224,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 
 	/**
 	 * Add a subcommand to the current session.
-	 * 
+	 *
 	 * @param future  The subsession
 	 * @param handler The subsession's completion handler
 	 * @return {@code future}
@@ -239,7 +239,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 
 	/**
 	 * Send a message to the remote endpoint without expecting a response.
-	 * 
+	 *
 	 * @param payload The message payload
 	 */
 	public void send(MessageOrBuilder payload) {
@@ -251,7 +251,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	/**
 	 * Send a request to the remote endpoint and register the given handlers for the
 	 * response.
-	 * 
+	 *
 	 * @param payload  The message payload
 	 * @param handlers The response handlers
 	 */

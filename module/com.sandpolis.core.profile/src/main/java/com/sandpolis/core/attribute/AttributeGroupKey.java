@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2019 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.attribute;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -25,7 +25,7 @@ import com.google.protobuf.ByteString;
 
 /**
  * Corresponds to an {@link AttributeGroup}.
- * 
+ *
  * @author cilki
  * @since 5.0.0
  */
@@ -40,7 +40,7 @@ public class AttributeGroupKey extends AttributeNodeKey {
 	/**
 	 * Build an {@link AttributeGroupKey} that corresponds to a singular
 	 * {@link AttributeGroup}.
-	 * 
+	 *
 	 * @param parent         The parent key
 	 * @param characteristic The characteristic ID
 	 */
@@ -51,7 +51,7 @@ public class AttributeGroupKey extends AttributeNodeKey {
 	/**
 	 * Build an {@link AttributeGroupKey} that corresponds to a plural
 	 * {@link AttributeGroup}.
-	 * 
+	 *
 	 * @param parent         The parent key
 	 * @param characteristic The characteristic ID
 	 * @param plurality      The plurality size
@@ -70,7 +70,7 @@ public class AttributeGroupKey extends AttributeNodeKey {
 	/**
 	 * Build an {@link AttributeGroupKey} whose parent is the default attribute
 	 * domain.
-	 * 
+	 *
 	 * @param characteristic The characteristic ID
 	 * @param plurality      The plurality size
 	 */
@@ -84,7 +84,7 @@ public class AttributeGroupKey extends AttributeNodeKey {
 	/**
 	 * Get the number of bytes allocated to the plural ID. A value of 0 implies the
 	 * corresponding node is not plural.
-	 * 
+	 *
 	 * @return The corresponding node's plurality number
 	 */
 	public int getPlurality() {
