@@ -43,7 +43,7 @@ class GroupExeTest extends ExeletTest {
 		UserStore.init(config -> {
 			config.ephemeral();
 
-			config.add(UserConfig.newBuilder().setUsername("admin").setPassword("123"));
+			config.defaults.add(UserConfig.newBuilder().setUsername("admin").setPassword("123").build());
 		});
 		GroupStore.init(config -> {
 			config.ephemeral();

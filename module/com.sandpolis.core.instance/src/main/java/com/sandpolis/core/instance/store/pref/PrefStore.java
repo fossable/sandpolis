@@ -18,6 +18,8 @@
 package com.sandpolis.core.instance.store.pref;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.prefs.BackingStoreException;
@@ -211,7 +213,19 @@ public final class PrefStore extends StoreBase<PrefStoreConfig> {
 
 		if (provider != null)
 			log.warn("Reinitializing store without flushing Preferences");
-		provider = getPreferences(config.instance, config.flavor);
+
+		if (config.prefNodeClass != null) {
+			provider = Preferences.userNodeForPackage(config.prefNodeClass);
+		} else if (config.instance != null && config.flavor != null) {
+			provider = getPreferences(config.instance, config.flavor);
+		}
+
+		try {
+			for (var entry : config.defaults.entrySet())
+				register(entry.getKey(), entry.getValue());
+		} catch (BackingStoreException e) {
+			throw new RuntimeException(e);
+		}
 
 		return (PrefStore) super.init(null);
 	}
@@ -219,6 +233,9 @@ public final class PrefStore extends StoreBase<PrefStoreConfig> {
 	public final class PrefStoreConfig extends StoreConfig {
 		public Instance instance;
 		public InstanceFlavor flavor;
+		public Class<?> prefNodeClass;
+
+		public final Map<String, Object> defaults = new HashMap<>();
 	}
 
 	public static final PrefStore PrefStore = new PrefStore();

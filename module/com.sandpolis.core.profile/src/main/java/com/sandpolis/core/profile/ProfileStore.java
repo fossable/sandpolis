@@ -18,15 +18,13 @@
 package com.sandpolis.core.profile;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
-import com.sandpolis.core.instance.storage.StoreProvider;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
@@ -41,21 +39,10 @@ import com.sandpolis.core.proto.util.Platform.Instance;
  */
 public final class ProfileStore extends MapStore<Integer, Profile, ProfileStoreConfig> {
 
-	/**
-	 * The {@link StoreProvider}'s backing container if configured with
-	 * {@link #load(List)}.
-	 */
-	private static List<Profile> providerContainer;
+	private Object container;
 
-	/**
-	 * Get the {@link StoreProvider}'s backing container if the store was configured
-	 * with {@link #load(List)}.
-	 * 
-	 * @return The store's backing container or {@code null} if access to the
-	 *         container is not allowed
-	 */
-	public List<Profile> getContainer() {
-		return providerContainer;
+	public <E> E getContainer() {
+		return (E) container;
 	}
 
 	/**
@@ -119,12 +106,17 @@ public final class ProfileStore extends MapStore<Integer, Profile, ProfileStoreC
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryListStoreProvider<>(Profile.class);
+			provider = new MemoryMapStoreProvider<>(Profile.class, Profile::getCvid);
+		}
+
+		public void ephemeral(List<Profile> list) {
+			container = list;
+			provider = new MemoryListStoreProvider<>(Profile.class, Profile::getCvid, list);
 		}
 
 		@Override
 		public void persistent(Database database) {
-			provider = StoreProviderFactory.database(Profile.class, Objects.requireNonNull(database));
+			provider = database.getConnection().provider(Profile.class, "cvid");
 		}
 	}
 

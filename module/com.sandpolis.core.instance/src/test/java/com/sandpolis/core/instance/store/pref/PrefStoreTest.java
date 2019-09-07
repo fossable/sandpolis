@@ -21,8 +21,6 @@ import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.prefs.Preferences;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +29,9 @@ class PrefStoreTest {
 
 	@BeforeAll
 	public static void setup() {
-		PrefStore.init(Preferences.userRoot().node("/com/sandpolis/test"));
+		PrefStore.init(config -> {
+			config.prefNodeClass = PrefStoreTest.class;
+		});
 	}
 
 	@Test

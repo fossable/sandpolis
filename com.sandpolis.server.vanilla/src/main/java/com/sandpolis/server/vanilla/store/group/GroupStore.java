@@ -19,6 +19,7 @@ package com.sandpolis.server.vanilla.store.group;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -27,8 +28,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
@@ -136,19 +136,23 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 		var config = new GroupStoreConfig();
 		configurator.accept(config);
 
+		config.defaults.forEach(this::add);
+
 		return (GroupStore) super.init(null);
 	}
 
 	public final class GroupStoreConfig extends StoreConfig {
 
+		public final List<GroupConfig> defaults = new ArrayList<>();
+
 		@Override
 		public void ephemeral() {
-			provider = new MemoryListStoreProvider<>(Group.class);
+			provider = new MemoryMapStoreProvider<String, Group>(Group.class, Group::getGroupId);
 		}
 
 		@Override
 		public void persistent(Database database) {
-			provider = StoreProviderFactory.database(Group.class, Objects.requireNonNull(database));
+			provider = database.getConnection().provider(Group.class, "id");
 		}
 	}
 

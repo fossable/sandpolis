@@ -10,6 +10,9 @@ public final class Events {
 	public static final class ServerEstablishedEvent extends ParameterizedEvent<Integer> {
 	}
 
+	public static final class CvidChangedEvent extends ParameterizedEvent<Integer> {
+	}
+
 	private Events() {
 	}
 }

@@ -41,7 +41,7 @@ public final class ThreadStore extends StoreBase<ThreadStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ThreadStore.class);
 
-	private Map<String, ExecutorService> map;
+	private Map<String, ExecutorService> provider;
 
 	/**
 	 * Get the {@link ExecutorService} corresponding to the given identifier.
@@ -52,15 +52,15 @@ public final class ThreadStore extends StoreBase<ThreadStoreConfig> {
 	 */
 	@SuppressWarnings("unchecked")
 	public <E extends ExecutorService> E get(String id) {
-		return (E) map.get(Objects.requireNonNull(id));
+		return (E) provider.get(Objects.requireNonNull(id));
 	}
 
 	@Override
 	public void close() throws Exception {
-		log.debug("Closing ThreadStore (provider: " + map + ")");
-		log.debug("Shutting down {} thread pools", map.size());
-		map.values().forEach(service -> service.shutdownNow());
-		map = null;
+		log.debug("Closing ThreadStore (provider: " + provider + ")");
+		log.debug("Shutting down {} thread pools", provider.size());
+		provider.values().forEach(service -> service.shutdownNow());
+		provider = null;
 	}
 
 	@Override
@@ -68,27 +68,18 @@ public final class ThreadStore extends StoreBase<ThreadStoreConfig> {
 		var config = new ThreadStoreConfig();
 		configurator.accept(config);
 
+		provider.putAll(config.defaults);
+
 		return (ThreadStore) super.init(null);
 	}
 
 	public final class ThreadStoreConfig extends StoreConfig {
 
-		/**
-		 * Associate each id in the given list with the given {@link ExecutorService}.
-		 * 
-		 * @param executor The new {@link ExecutorService}
-		 * @param id       The list of IDs
-		 */
-		public void register(ExecutorService executor, String... id) {
-			Objects.requireNonNull(executor);
-
-			for (String s : id)
-				map.put(s, executor);
-		}
+		public final Map<String, ExecutorService> defaults = new HashMap<>();
 
 		@Override
 		public void ephemeral() {
-			map = new HashMap<>();
+			provider = new HashMap<>();
 		}
 
 	}

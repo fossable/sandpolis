@@ -49,7 +49,7 @@ public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
 
 		// TODO temporary
 		// Send existing profiles
-		ProfileStore.getProfiles().filter(profile -> profile.getInstance() == Instance.CLIENT)
+		ProfileStore.stream().filter(profile -> profile.getInstance() == Instance.CLIENT)
 				.forEach(this::onProfileOnline);
 	}
 

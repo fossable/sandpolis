@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.net.store.network;
 
+import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -35,8 +36,11 @@ class NetworkStoreTest {
 
 	@BeforeEach
 	void setup() {
-		NetworkStore.updateCvid(123);
-		NetworkStore.setPreferredServer(100);
+		NetworkStore.init(config -> {
+			config.ephemeral();
+			config.preferredServer = 100;
+			config.cvid = 123;
+		});
 	}
 
 	@Test

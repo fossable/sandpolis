@@ -49,7 +49,6 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
@@ -149,16 +148,19 @@ public final class Client {
 	public static final Task loadStores = new Task((task) -> {
 
 		ThreadStore.init(config -> {
-			config.register(new NioEventLoopGroup(2).next(), net.exelet);
-			config.register(new NioEventLoopGroup(2).next(), net.connection.outgoing);
-			config.register(new NioEventLoopGroup(2).next(), "temploop");
-			config.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
+			config.ephemeral();
+			config.defaults.put(net.exelet, new NioEventLoopGroup(2).next());
+			config.defaults.put(net.connection.outgoing, new NioEventLoopGroup(2).next());
+			config.defaults.put("temploop", new NioEventLoopGroup(2).next());
+			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(2));
 		});
 
 		NetworkStore.init(config -> {
+			config.ephemeral();
 		});
 
 		PluginStore.init(config -> {
+			config.ephemeral();
 		});
 
 		return task.success();

@@ -22,17 +22,15 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.extension.ExtensionContext.Store;
-
 /**
- * A {@link StoreProvider} manages the artifacts of a {@link Store}. The
+ * A {@link StoreProvider} manages the artifacts of a Store. The
  * {@code StoreProvider} "provides" basic storage of objects via a list-like
  * interface to remove the burden of object management in the {@code Store}
  * itself.<br>
  * <br>
  * 
  * An additional benefit of offloading this duty to a provider class is that
- * {@link Store}s that rely on a database can be easily unit tested by using a
+ * Stores that rely on a database can be easily unit tested by using a
  * memory-only implementation such as {@link MemoryListStoreProvider}.<br>
  * <br>
  * Note: default implementations should be overridden if more efficient

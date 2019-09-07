@@ -18,10 +18,12 @@
 package com.sandpolis.server.vanilla.net.handler;
 
 import static com.sandpolis.core.net.init.ChannelConstant.CVID;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -50,6 +52,13 @@ class ProxyHandlerTest {
 	 */
 	private final EmbeddedChannel encoder = new EmbeddedChannel(new ProtobufVarint32LengthFieldPrepender(),
 			new ProtobufEncoder());
+
+	@BeforeAll
+	static void setup() {
+		ConnectionStore.init(config -> {
+			config.ephemeral();
+		});
+	}
 
 	@Test
 	@DisplayName("Check that important field numbers will never change")

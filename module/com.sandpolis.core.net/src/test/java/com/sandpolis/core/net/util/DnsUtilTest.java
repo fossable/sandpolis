@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.net.util;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.PoolConstant;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 
@@ -35,7 +35,10 @@ class DnsUtilTest {
 
 	@BeforeAll
 	static void configure() {
-		ThreadStore.register(new NioEventLoopGroup(1).next(), PoolConstant.net.dns.resolver);
+		ThreadStore.init(config -> {
+			config.ephemeral();
+			config.defaults.put(PoolConstant.net.dns.resolver, new NioEventLoopGroup(1).next());
+		});
 	}
 
 	@Test

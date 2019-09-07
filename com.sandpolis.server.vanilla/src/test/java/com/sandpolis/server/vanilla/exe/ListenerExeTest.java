@@ -24,15 +24,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.server.vanilla.store.listener.Listener;
-import com.sandpolis.server.vanilla.store.user.User;
 import com.sandpolis.server.vanilla.store.user.UserStore;
 
 class ListenerExeTest extends ExeletTest {
@@ -44,13 +41,14 @@ class ListenerExeTest extends ExeletTest {
 		UserStore.UserStore.init(config -> {
 			config.ephemeral();
 
-			config.add(UserConfig.newBuilder().setUsername("junit").setPassword("12345678").build());
+			config.defaults.add(UserConfig.newBuilder().setUsername("junit").setPassword("12345678").build());
 		});
 
 		ListenerStore.init(config -> {
 			config.ephemeral();
 
-			config.add(ListenerConfig.newBuilder().setOwner("junit").setPort(5000).setAddress("0.0.0.0").build());
+			config.defaults
+					.add(ListenerConfig.newBuilder().setOwner("junit").setPort(5000).setAddress("0.0.0.0").build());
 		});
 
 		initChannel();

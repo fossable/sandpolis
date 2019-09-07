@@ -17,8 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.core.ipc;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
@@ -28,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -36,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.instance.store.pref.PrefStore;
@@ -181,7 +179,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 			throw new IOException(e);
 		}
 
-		listener.start(ThreadStore.get(net.ipc.listener), ThreadStore.get(net.ipc.receptor));
+		listener.start(Executors.newSingleThreadExecutor(), Executors.newSingleThreadExecutor());
 		listeners.add(listener);
 
 		log.debug("Opened IPC listener on port: {}", listener.getPort());

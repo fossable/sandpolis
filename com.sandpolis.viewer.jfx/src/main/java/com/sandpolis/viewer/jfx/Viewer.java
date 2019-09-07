@@ -20,9 +20,11 @@ package com.sandpolis.viewer.jfx;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
+import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.viewer.jfx.store.stage.StageStore.StageStore;
@@ -39,6 +41,7 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
+import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.ipc.task.IPCTask;
@@ -67,15 +70,17 @@ public final class Viewer {
 		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
 				Core.SO_BUILD.getNumber());
 
-		MainDispatch.register(BasicTasks.loadConfiguration);
-		MainDispatch.register(Viewer.loadConfiguration);
-		MainDispatch.register(IPCTask.load);
-		MainDispatch.register(IPCTask.checkLock);
-		MainDispatch.register(IPCTask.setLock);
-		MainDispatch.register(Viewer.loadEnvironment);
-		MainDispatch.register(Viewer.loadStores);
-		MainDispatch.register(Viewer.loadPlugins);
-		MainDispatch.register(Viewer.loadUserInterface);
+		register(BasicTasks.loadConfiguration);
+		register(Viewer.loadConfiguration);
+		register(IPCTask.load);
+		register(IPCTask.checkLock);
+		register(IPCTask.setLock);
+		register(Viewer.loadEnvironment);
+		register(Viewer.loadStores);
+		register(Viewer.loadPlugins);
+		register(Viewer.loadUserInterface);
+
+		register(Viewer.shutdown);
 	}
 
 	/**
@@ -129,14 +134,23 @@ public final class Viewer {
 
 		ThreadStore.init(config -> {
 			config.ephemeral();
-			config.register(new NioEventLoopGroup(2), net.exelet);
-			config.register(new NioEventLoopGroup(2), net.connection.outgoing);
-			config.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
-			config.register(new FxEventExecutor(), PoolConstant.ui.fx_thread);
+			config.defaults.put(net.exelet, new NioEventLoopGroup(2));
+			config.defaults.put(net.connection.outgoing, new NioEventLoopGroup(2));
+			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(2));
+			config.defaults.put(PoolConstant.ui.fx_thread, new FxEventExecutor());
 		});
 
 		NetworkStore.init(config -> {
 			config.ephemeral();
+		});
+
+		ConnectionStore.init(config -> {
+			config.ephemeral();
+		});
+
+		PrefStore.init(config -> {
+			config.instance = Core.INSTANCE;
+			config.flavor = Core.FLAVOR;
 		});
 
 		PluginStore.init(config -> {
@@ -144,12 +158,23 @@ public final class Viewer {
 		});
 
 		ProfileStore.init(config -> {
-			// TODO
-			FXCollections.observableArrayList();
+			config.ephemeral(FXCollections.observableArrayList());
 		});
 
 		// TODO
 		AttributeKey.setDefaultAttributeClass(ObservableAttribute.class);
+
+		return task.success();
+	});
+
+	@ShutdownTask
+	public static final Task shutdown = new Task((task) -> {
+		ThreadStore.close();
+		NetworkStore.close();
+		ConnectionStore.close();
+		PrefStore.close();
+		PluginStore.close();
+		ProfileStore.close();
 
 		return task.success();
 	});

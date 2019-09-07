@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.storage.database.DatabaseFactory;
 import com.sandpolis.core.instance.store.MapStore;
@@ -63,21 +63,23 @@ public final class DatabaseStore extends MapStore<String, Database, DatabaseStor
 		var config = new DatabaseStoreConfig();
 		configurator.accept(config);
 
-		DatabaseFactory.init(config.main, null);
-		this.main = config.main;
-
 		return (DatabaseStore) super.init(null);
 	}
 
 	public final class DatabaseStoreConfig extends StoreConfig {
 
-		public Database main;
-
 		@Override
 		public void ephemeral() {
-			provider = new MemoryListStoreProvider<>(Database.class);
+			provider = new MemoryMapStoreProvider<>(Database.class, Database::getUrl);
 		}
 
+		public Class<?>[] entities;
+
+		@Override
+		public void persistent(Database database) {
+			main = DatabaseFactory.init(database, entities);
+			provider = main.getConnection().provider(Database.class, "id");
+		}
 	}
 
 	public static final DatabaseStore DatabaseStore = new DatabaseStore();

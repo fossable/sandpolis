@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.net.command;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,18 +25,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.PoolConstant;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.Sock.ConnectionState;
 import com.sandpolis.core.net.handler.ExeletHandler;
@@ -46,7 +43,6 @@ import com.sandpolis.core.proto.util.Result.Outcome;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 
-@Disabled("FIX ME")
 class CommandSessionTest {
 
 	private EmbeddedChannel channel;
@@ -54,8 +50,10 @@ class CommandSessionTest {
 
 	@BeforeAll
 	private static void init() {
-		ThreadStore.register(new UnorderedThreadPoolEventExecutor(4), net.message.incoming);
-		ThreadStore.register(Executors.newSingleThreadExecutor(), PoolConstant.signaler);
+		ThreadStore.init(config -> {
+			config.ephemeral();
+			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(4));
+		});
 	}
 
 	@BeforeEach

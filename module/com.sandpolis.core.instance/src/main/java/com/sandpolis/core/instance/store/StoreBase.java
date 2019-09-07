@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.SubscriberExceptionContext;
 import com.sandpolis.core.instance.event.ParameterizedEvent;
 import com.sandpolis.core.instance.storage.database.Database;
 
@@ -18,7 +19,9 @@ public abstract class StoreBase<E> {
 	/**
 	 * A bus that is used to deliver events to the users of the store.
 	 */
-	private EventBus bus = new EventBus();
+	private EventBus bus = new EventBus((Throwable exception, SubscriberExceptionContext context) -> {
+		exception.printStackTrace();
+	});
 
 	public void register(Object object) {
 		bus.register(object);

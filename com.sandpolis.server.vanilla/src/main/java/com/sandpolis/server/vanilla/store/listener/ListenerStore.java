@@ -19,17 +19,16 @@ package com.sandpolis.server.vanilla.store.listener;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
-import com.sandpolis.core.instance.storage.StoreProvider;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
@@ -46,7 +45,7 @@ import com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStoreCo
  * @author cilki
  * @since 1.0.0
  */
-public final class ListenerStore extends MapStore<String, Listener, ListenerStoreConfig> {
+public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ListenerStore.class);
 
@@ -171,19 +170,23 @@ public final class ListenerStore extends MapStore<String, Listener, ListenerStor
 		var config = new ListenerStoreConfig();
 		configurator.accept(config);
 
+		config.defaults.forEach(this::add);
+
 		return (ListenerStore) super.init(null);
 	}
 
 	public final class ListenerStoreConfig extends StoreConfig {
 
+		public final List<ListenerConfig> defaults = new ArrayList<>();
+
 		@Override
 		public void ephemeral() {
-			provider = new MemoryListStoreProvider<>(Listener.class);
+			provider = new MemoryMapStoreProvider<>(Listener.class, Listener::getId);
 		}
 
 		@Override
 		public void persistent(Database database) {
-			provider = StoreProviderFactory.database(Listener.class, Objects.requireNonNull(database));
+			provider = database.getConnection().provider(Listener.class, "id");
 		}
 	}
 

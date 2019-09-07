@@ -277,8 +277,8 @@ class StoreProviderTest {
 	}
 
 	static Stream<StoreProvider<TestObject>> implementations() {
-		return Stream.of(new MemoryListStoreProvider<>(TestObject.class),
-				new MemoryMapStoreProvider<>(TestObject.class));
+		return Stream.of(new MemoryListStoreProvider<>(TestObject.class, TestObject::getId),
+				new MemoryMapStoreProvider<>(TestObject.class, TestObject::getId));
 	}
 
 }

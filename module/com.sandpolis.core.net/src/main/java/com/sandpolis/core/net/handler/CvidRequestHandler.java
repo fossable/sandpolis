@@ -17,13 +17,15 @@
  *****************************************************************************/
 package com.sandpolis.core.net.handler;
 
+import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.exception.MessageFlowException;
 import com.sandpolis.core.net.init.ChannelConstant;
-import com.sandpolis.core.net.store.network.NetworkStore;
+import com.sandpolis.core.net.store.network.Events.CvidChangedEvent;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -60,7 +62,7 @@ public class CvidRequestHandler extends SimpleChannelInboundHandler<Message> {
 		if (rs != null && !rs.getServerUuid().isEmpty()) {
 
 			Core.setCvid(rs.getCvid());
-			NetworkStore.updateCvid(Core.cvid());
+			NetworkStore.post(CvidChangedEvent::new, Core.cvid());
 			ch.attr(ChannelConstant.CVID).set(rs.getServerCvid());
 			ch.attr(ChannelConstant.UUID).set(rs.getServerUuid());
 			ch.attr(ChannelConstant.FUTURE_CVID).get().setSuccess(rs.getCvid());

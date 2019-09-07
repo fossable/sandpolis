@@ -29,7 +29,6 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -44,8 +43,7 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.Resources;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
@@ -306,12 +304,12 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryListStoreProvider<>(Plugin.class);
+			provider = new MemoryMapStoreProvider<>(Plugin.class, Plugin::getId);
 		}
 
 		@Override
 		public void persistent(Database database) {
-			provider = StoreProviderFactory.database(Plugin.class, Objects.requireNonNull(database));
+			provider = database.getConnection().provider(Plugin.class, "id");
 		}
 	}
 

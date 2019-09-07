@@ -28,7 +28,6 @@ import java.security.cert.PKIXParameters;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,9 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Resources;
 import com.sandpolis.core.instance.MainDispatch;
-import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
-import com.sandpolis.core.instance.storage.StoreProvider;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
@@ -111,12 +108,12 @@ public final class TrustStore extends MapStore<String, TrustAnchor, TrustStoreCo
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryListStoreProvider<>(TrustAnchor.class);
+			provider = new MemoryMapStoreProvider<>(TrustAnchor.class, TrustAnchor::getName);
 		}
 
 		@Override
 		public void persistent(Database database) {
-			provider = StoreProviderFactory.database(TrustAnchor.class, Objects.requireNonNull(database));
+			provider = database.getConnection().provider(TrustAnchor.class, "name");
 		}
 
 	}

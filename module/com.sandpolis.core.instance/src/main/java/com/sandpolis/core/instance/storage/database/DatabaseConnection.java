@@ -40,6 +40,6 @@ public abstract class DatabaseConnection implements AutoCloseable {
 	 * @param cls The class type that the provider will manage
 	 * @return A new provider for the given class
 	 */
-	public abstract <E> StoreProvider<E> provider(Class<E> cls);
+	public abstract <E> StoreProvider<E> provider(Class<E> cls, String idField);
 
 }

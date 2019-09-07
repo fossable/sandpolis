@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.net.future;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,7 +31,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
@@ -43,7 +43,10 @@ class ResponseFutureTest {
 
 	@BeforeEach
 	private void setup() {
-		ThreadStore.register(GlobalEventExecutor.INSTANCE, net.message.incoming);
+		ThreadStore.init(config -> {
+			config.ephemeral();
+			config.defaults.put(net.message.incoming, GlobalEventExecutor.INSTANCE);
+		});
 	}
 
 	@Test

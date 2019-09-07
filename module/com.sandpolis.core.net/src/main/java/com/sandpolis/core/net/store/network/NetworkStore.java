@@ -35,9 +35,11 @@ import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
-import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.store.connection.ConnectionStore;
+import com.sandpolis.core.net.store.connection.Events.SockEstablishedEvent;
+import com.sandpolis.core.net.store.connection.Events.SockLostEvent;
+import com.sandpolis.core.net.store.network.Events.CvidChangedEvent;
 import com.sandpolis.core.net.store.network.Events.ServerEstablishedEvent;
 import com.sandpolis.core.net.store.network.Events.ServerLostEvent;
 import com.sandpolis.core.net.store.network.NetworkStore.NetworkStoreConfig;
@@ -63,56 +65,43 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(NetworkStore.class);
 
-	public enum Events {
-
-		/**
-		 * Indicates that the last connection to a server has been lost.
-		 */
-		SRV_LOST,
-
-		/**
-		 * Indicates that the first connection to a server has been established.
-		 */
-		SRV_ESTABLISHED;
-	}
-
 	/**
 	 * The undirected graph which describes the visible connections between nodes on
 	 * the network.
 	 */
-	private static MutableNetwork<Integer, SockLink> network;
+	private MutableNetwork<Integer, SockLink> network;
 
 	/**
 	 * The CVID of the preferred server on the network.
 	 */
-	private static int preferredServer;
+	private int preferredServer;
 
 	@Subscribe
-	private void onSockLost(Sock sock) {
-		network.edgeConnecting(Core.cvid(), sock.getRemoteCvid()).ifPresent(network::removeEdge);
+	private void onSockLost(SockLostEvent event) {
+		network.edgeConnecting(Core.cvid(), event.get().getRemoteCvid()).ifPresent(network::removeEdge);
 
 		// See if that was the last connection to a server
-		if (sock.getRemoteInstance() == Instance.SERVER) {
+		if (event.get().getRemoteInstance() == Instance.SERVER) {
 			// TODO
-			post(ServerLostEvent::new, sock.getRemoteCvid());
+			post(ServerLostEvent::new, event.get().getRemoteCvid());
 		}
 	}
 
 	@Subscribe
-	private void onSockEstablished(Sock sock) {
-		network.addNode(sock.getRemoteCvid());
+	private void onSockEstablished(SockEstablishedEvent event) {
+		network.addNode(event.get().getRemoteCvid());
 		// TODO add edge
 
 		// See if that was the first connection to a server
-		if (sock.getRemoteInstance() == Instance.SERVER) {
+		if (event.get().getRemoteInstance() == Instance.SERVER) {
 			// TODO
-			post(ServerEstablishedEvent::new, sock.getRemoteCvid());
+			post(ServerEstablishedEvent::new, event.get().getRemoteCvid());
 		}
 	}
 
-	public static void updateCvid(int cvid) {
-		init();
-		network.addNode(cvid);
+	@Subscribe
+	private void onCvidChanged(CvidChangedEvent event) {
+		network.addNode(event.get());
 	}
 
 	/**
@@ -120,7 +109,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * 
 	 * @return The underlying network graph of the store
 	 */
-	public static Network<Integer, SockLink> getNetwork() {
+	public Network<Integer, SockLink> getNetwork() {
 		return network;
 	}
 
@@ -129,11 +118,11 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * 
 	 * @param cvid The new preferred server
 	 */
-	public static void setPreferredServer(int cvid) {
+	public void setPreferredServer(int cvid) {
 		preferredServer = cvid;
 	}
 
-	public static int getPreferredServer() {
+	public int getPreferredServer() {
 		if (preferredServer == 0)
 			// Choose a server at random
 			preferredServer = network.nodes().stream()
@@ -149,7 +138,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * 
 	 * @param delta The delta event that describes the change
 	 */
-	public static void updateNetwork(EV_NetworkDelta delta) {
+	public void updateNetwork(EV_NetworkDelta delta) {
 		for (NodeAdded na : delta.getNodeAddedList())
 			network.addNode(na.getCvid());
 		for (NodeRemoved nr : delta.getNodeRemovedList())
@@ -167,7 +156,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param cvid The CVID
 	 * @return A set of all directly connected CVIDs
 	 */
-	public static Set<Integer> getDirect(int cvid) {
+	public Set<Integer> getDirect(int cvid) {
 		return network.adjacentNodes(cvid);
 	}
 
@@ -177,7 +166,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param cvid The CVID
 	 * @return A set of all links involving the CVID
 	 */
-	public static Set<SockLink> getDirectLinks(int cvid) {
+	public Set<SockLink> getDirectLinks(int cvid) {
 		return network.incidentEdges(cvid);
 	}
 
@@ -188,7 +177,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param cvid2 The second CVID
 	 * @return A set of all links between the two CVIDs
 	 */
-	public static Set<SockLink> getDirectLinks(int cvid1, int cvid2) {
+	public Set<SockLink> getDirectLinks(int cvid1, int cvid2) {
 		return network.edgesConnecting(cvid1, cvid2);
 	}
 
@@ -199,7 +188,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param message The message
 	 * @return The next hop
 	 */
-	public static int deliver(Message message) {
+	public int deliver(Message message) {
 		ConnectionStore.get(getPreferredServer()).get().send(message);
 		return getPreferredServer();
 	}
@@ -211,7 +200,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param message The message
 	 * @return The next hop
 	 */
-	public static int deliver(Message.Builder message) {
+	public int deliver(Message.Builder message) {
 		return deliver(message.build());
 	}
 
@@ -221,7 +210,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param message The message
 	 * @return The next hop
 	 */
-	public static int route(Message message) {
+	public int route(Message message) {
 		if (network.adjacentNodes(Core.cvid()).contains(message.getTo())) {
 			ConnectionStore.get(message.getTo()).get().send(message);
 			return message.getTo();
@@ -236,7 +225,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param message The message
 	 * @return The next hop
 	 */
-	public static int route(Message.Builder message) {
+	public int route(Message.Builder message) {
 		return route(message.build());
 	}
 
@@ -251,7 +240,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param timeoutClass The message timeout class
 	 * @return The next hop
 	 */
-	public static MessageFuture route(Message.Builder message, String timeoutClass) {
+	public MessageFuture route(Message.Builder message, String timeoutClass) {
 		int hop = findHop(message);
 		if (!Config.has(timeoutClass))
 			timeoutClass = net.message.default_timeout;
@@ -262,7 +251,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	}
 
 	// TODO temporary
-	private static int findHop(Message.Builder message) {
+	private int findHop(Message.Builder message) {
 		if (network.adjacentNodes(Core.cvid()).contains(message.getTo()))
 			return message.getTo();
 
@@ -276,7 +265,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param id   The response ID
 	 * @return A MessageFuture
 	 */
-	public static MessageFuture receive(int cvid, int id) {
+	public MessageFuture receive(int cvid, int id) {
 		var sock = ConnectionStore.get(cvid);
 		if (sock.isEmpty())
 			return null;
@@ -293,7 +282,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param unit    The timeout unit
 	 * @return A MessageFuture
 	 */
-	public static MessageFuture receive(int cvid, int id, int timeout, TimeUnit unit) {
+	public MessageFuture receive(int cvid, int id, int timeout, TimeUnit unit) {
 		var sock = ConnectionStore.get(cvid);
 		if (sock.isEmpty())
 			return null;
@@ -306,13 +295,19 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 		var config = new NetworkStoreConfig();
 		configurator.accept(config);
 
-		preferredServer = 0;
+		preferredServer = config.preferredServer;
+		network.addNode(config.cvid);
+
 		ConnectionStore.register(this);
+		post(CvidChangedEvent::new, config.cvid);
 
 		return (NetworkStore) super.init(null);
 	}
 
 	public final class NetworkStoreConfig extends StoreConfig {
+
+		public int preferredServer;
+		public int cvid;
 
 		@Override
 		public void ephemeral() {

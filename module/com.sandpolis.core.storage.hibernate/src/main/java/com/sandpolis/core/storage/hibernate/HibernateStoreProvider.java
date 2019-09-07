@@ -49,14 +49,17 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 	 */
 	private final Class<E> cls;
 
+	private final String idField;
+
 	/**
 	 * The Hibernate session factory for this {@link StoreProvider}.
 	 */
 	private final EntityManagerFactory emf;
 
-	public HibernateStoreProvider(Class<E> cls, EntityManagerFactory emf) {
+	public HibernateStoreProvider(EntityManagerFactory emf, Class<E> cls, String idField) {
 		this.cls = Objects.requireNonNull(cls);
 		this.emf = Objects.requireNonNull(emf);
+		this.idField = idField;
 	}
 
 	@Override
@@ -75,16 +78,17 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 
 	@Override
 	public Optional<E> get(Object id) {
-		EntityManager em = emf.createEntityManager();
-
-		try {
-			em.getTransaction().begin();
-			E e = em.find(cls, id);
-			em.getTransaction().commit();
-			return Optional.ofNullable(e);
-		} finally {
-			em.close();
-		}
+		return get(idField, id);
+//		EntityManager em = emf.createEntityManager();
+//
+//		try {
+//			em.getTransaction().begin();
+//			E e = em.find(cls, id);
+//			em.getTransaction().commit();
+//			return Optional.ofNullable(e);
+//		} finally {
+//			em.close();
+//		}
 	}
 
 	@Override

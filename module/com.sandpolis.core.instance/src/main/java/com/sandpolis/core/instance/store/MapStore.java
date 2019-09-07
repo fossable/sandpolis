@@ -10,18 +10,25 @@ public abstract class MapStore<K, V, E> extends StoreBase<E> {
 	protected StoreProvider<V> provider;
 
 	public Stream<V> stream() {
-		return null;
+		return provider.stream();
 	}
 
 	public Optional<V> get(K key) {
-		return null;
+		return provider.get(key);
 	}
 
 	public Optional<V> remove(K key) {
-		return null;
+		var item = get(key);
+		if (item.isPresent())
+			removeValue(item.get());
+		return item;
 	}
 
-	public boolean exists(K key) {
-		return false;
+	public void removeValue(V value) {
+		provider.remove(value);
+	}
+
+	public void add(V item) {
+		provider.add(item);
 	}
 }

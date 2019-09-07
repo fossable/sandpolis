@@ -20,14 +20,15 @@ package com.sandpolis.server.vanilla.store.user;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
@@ -93,19 +94,6 @@ public final class UserStore extends MapStore<String, User, UserStoreConfig> {
 	}
 
 	/**
-	 * Add a user to the store.
-	 * 
-	 * @param user The new user
-	 */
-	public void add(User user) {
-		Objects.requireNonNull(user);
-		checkArgument(get(user.getUsername()).isEmpty(), "Username conflict");
-
-		log.debug("Adding new user: {}", user.getUsername());
-		provider.add(user);
-	}
-
-	/**
 	 * Change a user's configuration or statistics.
 	 * 
 	 * @param id    The ID of the user to modify
@@ -113,7 +101,7 @@ public final class UserStore extends MapStore<String, User, UserStoreConfig> {
 	 * @return The outcome of the action
 	 */
 	public ErrorCode delta(long id, ProtoUser delta) {
-		User user = get(id).orElse(null);
+		User user = null;// get(id).orElse(null);
 		if (user == null)
 			return ErrorCode.UNKNOWN_USER;
 
@@ -125,19 +113,23 @@ public final class UserStore extends MapStore<String, User, UserStoreConfig> {
 		var config = new UserStoreConfig();
 		configurator.accept(config);
 
+		config.defaults.forEach(this::add);
+
 		return (UserStore) super.init(null);
 	}
 
 	public final class UserStoreConfig extends StoreConfig {
 
+		public final List<UserConfig> defaults = new ArrayList<>();
+
 		@Override
 		public void ephemeral() {
-			provider = new MemoryListStoreProvider<>(User.class);
+			provider = new MemoryMapStoreProvider<>(User.class, User::getUsername);
 		}
 
 		@Override
 		public void persistent(Database database) {
-			provider = StoreProviderFactory.database(User.class, Objects.requireNonNull(database));
+			provider = database.getConnection().provider(User.class, "username");
 		}
 	}
 

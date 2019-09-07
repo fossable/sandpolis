@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.net.Sock;
@@ -71,7 +71,7 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 
 	@Subscribe
 	private void onSockEstablished(SockEstablishedEvent event) {
-		connections.put(event.get().getRemoteCvid(), event.get());
+		add(event.get());
 	}
 
 	/**
@@ -149,9 +149,8 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryListStoreProvider<>(Sock.class);
+			provider = new MemoryMapStoreProvider<>(Sock.class, Sock::getRemoteCvid);
 		}
-
 	}
 
 	public static final ConnectionStore ConnectionStore = new ConnectionStore();

@@ -45,8 +45,8 @@ public class HibernateConnection extends DatabaseConnection {
 	}
 
 	@Override
-	public <E> StoreProvider<E> provider(Class<E> cls) {
-		return new HibernateStoreProvider<>(cls, emf);
+	public <E> StoreProvider<E> provider(Class<E> cls, String idField) {
+		return new HibernateStoreProvider<>(emf, cls, idField);
 	}
 
 	@Override

@@ -36,6 +36,8 @@ import static com.sandpolis.server.vanilla.store.listener.ListenerStore.Listener
 import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.concurrent.Executors;
 
@@ -54,7 +56,9 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
+import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
+import com.sandpolis.core.instance.PoolConstant;
 import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.storage.database.DatabaseFactory;
@@ -116,6 +120,7 @@ public final class Server {
 		register(Server.loadListeners);
 		register(Server.post);
 
+		register(Server.shutdown);
 	}
 
 	/**
@@ -152,14 +157,6 @@ public final class Server {
 	});
 
 	/**
-	 * A list of classes that are managed by the ORM for this instance.
-	 */
-	private static final Class<?>[] ORM_CLASSES = new Class<?>[] { Database.class, Listener.class, Group.class,
-			ReciprocalKeyPair.class, KeyMechanism.class, PasswordMechanism.class, User.class, Profile.class,
-			AttributeNode.class, AttributeGroup.class, AttributeDomain.class, UntrackedAttribute.class, Plugin.class,
-			TrustAnchor.class };
-
-	/**
 	 * Load static stores.
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
@@ -167,16 +164,19 @@ public final class Server {
 
 		ThreadStore.init(config -> {
 			config.ephemeral();
-			config.register(new NioEventLoopGroup(2), net.exelet);
-			config.register(new NioEventLoopGroup(2), net.connection.outgoing);
-			config.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
-			config.register(Executors.newCachedThreadPool(), PoolConstant.server.generator);
+			config.defaults.put(net.exelet, new NioEventLoopGroup(2));
+			config.defaults.put(net.connection.outgoing, new NioEventLoopGroup(2));
+			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(2));
+			config.defaults.put("server.generator", Executors.newCachedThreadPool());
+			config.defaults.put(PoolConstant.net.ipc.listener, Executors.newSingleThreadExecutor());
+			config.defaults.put(PoolConstant.net.ipc.receptor, Executors.newSingleThreadExecutor());
 		});
 
 		// Load NetworkStore and choose a new CVID
 		Core.setCvid(IDUtil.CVID.cvid(Instance.SERVER));
 		NetworkStore.init(config -> {
 			config.ephemeral();
+			config.cvid = Core.cvid();
 		});
 
 		ConnectionStore.init(config -> {
@@ -189,11 +189,26 @@ public final class Server {
 		});
 
 		DatabaseStore.init(config -> {
+			config.entities = new Class<?>[] { Database.class, Listener.class, Group.class, ReciprocalKeyPair.class,
+					KeyMechanism.class, PasswordMechanism.class, User.class, Profile.class, AttributeNode.class,
+					AttributeGroup.class, AttributeDomain.class, UntrackedAttribute.class, Plugin.class,
+					TrustAnchor.class };
+
 			if (!Config.has(server.db.url)) {
-				DatabaseFactory.create("h2", Environment.get(DB).resolve("server.db").toFile());
+				try {
+					config.persistent(DatabaseFactory.create("h2", Environment.get(DB).resolve("server.db").toFile()));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			} else {
-				DatabaseFactory.create(Config.get(server.db.url), Config.get(server.db.username),
-						Config.get(server.db.password));
+				try {
+					config.persistent(DatabaseFactory.create(Config.get(server.db.url), Config.get(server.db.username),
+							Config.get(server.db.password)));
+				} catch (URISyntaxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		});
 
@@ -221,6 +236,23 @@ public final class Server {
 			config.persistent(DatabaseStore.main());
 			config.verifier = TrustStore::verifyPluginCertificate;
 		});
+
+		return task.success();
+	});
+
+	@ShutdownTask
+	public static final Task shutdown = new Task((task) -> {
+		ThreadStore.close();
+		NetworkStore.close();
+		ConnectionStore.close();
+		PrefStore.close();
+		DatabaseStore.close();
+		UserStore.close();
+		ListenerStore.close();
+		GroupStore.close();
+		ProfileStore.close();
+		TrustStore.close();
+		PluginStore.close();
 
 		return task.success();
 	});
@@ -267,8 +299,8 @@ public final class Server {
 		new MegaGen(
 				GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
 						.setMega(MegaConfig.newBuilder().setNetwork(NetworkConfig.newBuilder()
-								.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000).setMaxTimeout(5000).addTarget(
-										NetworkTarget.newBuilder().setAddress("demo.sandpolis.com").setPort(10101)))))
+								.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000).setMaxTimeout(5000)
+										.addTarget(NetworkTarget.newBuilder().setAddress("127.0.0.1").setPort(10101)))))
 						.build()).generate();
 
 		return task.success();

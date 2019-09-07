@@ -20,14 +20,12 @@ package com.sandpolis.viewer.jfx.store.stage;
 import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.viewer.jfx.PrefConstant.ui;
@@ -92,7 +90,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 	 * @param stage The stage to close
 	 */
 	public void close(Stage stage) {
-		remove(stage);
+		removeValue(stage);
 		Platform.runLater(() -> {
 			stage.close();
 		});
@@ -215,7 +213,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 			stage.setTitle(title);
 			stage.show();
 
-			loaded.add(stage);
+			add(stage);
 		}
 	}
 
@@ -231,9 +229,8 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryListStoreProvider<>(Stage.class);
+			provider = new MemoryMapStoreProvider<>(Stage.class, Stage::getTitle);
 		}
-
 	}
 
 	public static final StageStore StageStore = new StageStore();

@@ -43,11 +43,11 @@ class UserStoreTest {
 	@Test
 	@DisplayName("Check basic usage of exists")
 	void exists() {
-		assertFalse(UserStore.exists("TESTUSER"));
+		assertFalse(UserStore.get("TESTUSER").isPresent());
 		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER").setPassword("abc1234c"));
-		assertTrue(UserStore.exists("TESTUSER"));
+		assertTrue(UserStore.get("TESTUSER").isPresent());
 		UserStore.remove("TESTUSER");
-		assertFalse(UserStore.exists("TESTUSER"));
+		assertFalse(UserStore.get("TESTUSER").isPresent());
 	}
 
 	@Test
