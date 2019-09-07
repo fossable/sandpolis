@@ -18,6 +18,7 @@
 package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
+import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PermissionConstant.server;
@@ -28,7 +29,6 @@ import com.sandpolis.core.proto.net.MCListener.RQ_ListenerDelta;
 import com.sandpolis.core.proto.net.MCListener.RQ_RemoveListener;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.server.vanilla.store.listener.Listener;
-import com.sandpolis.server.vanilla.store.listener.ListenerStore;
 
 /**
  * Listener message handlers.

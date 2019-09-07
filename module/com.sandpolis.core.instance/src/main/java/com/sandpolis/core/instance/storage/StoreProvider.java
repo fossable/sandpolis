@@ -22,17 +22,15 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.sandpolis.core.instance.Store;
-
 /**
- * A {@link StoreProvider} manages the artifacts of a {@link Store}. The
+ * A {@link StoreProvider} manages the artifacts of a Store. The
  * {@code StoreProvider} "provides" basic storage of objects via a list-like
  * interface to remove the burden of object management in the {@code Store}
  * itself.<br>
  * <br>
  * 
  * An additional benefit of offloading this duty to a provider class is that
- * {@link Store}s that rely on a database can be easily unit tested by using a
+ * Stores that rely on a database can be easily unit tested by using a
  * memory-only implementation such as {@link MemoryListStoreProvider}.<br>
  * <br>
  * Note: default implementations should be overridden if more efficient
@@ -114,7 +112,7 @@ public interface StoreProvider<E> {
 	 * @return The number of elements in the store
 	 */
 	default public long count() {
-		try (Stream<E> stream = stream()) {
+		try (Stream<E> stream = unsafeStream()) {
 			return stream.count();
 		}
 	}
@@ -125,14 +123,14 @@ public interface StoreProvider<E> {
 	 * immutable</b>. Always use the following idiom:
 	 * 
 	 * <pre>
-	 * try (Stream stream = provider.stream()) {
+	 * try (Stream stream = provider.unsafeStream()) {
 	 * 	...
 	 * }
 	 * </pre>
 	 * 
 	 * @return A new {@link Stream} over the elements in the store
 	 */
-	public Stream<E> safeStream();
+	public Stream<E> unsafeStream();
 
 	/**
 	 * The streams produced by this method are eagerly loaded. For performance
@@ -142,7 +140,7 @@ public interface StoreProvider<E> {
 	 * @return A new {@link Stream} over the elements in the store
 	 */
 	default public Stream<E> stream() {
-		try (var stream = safeStream()) {
+		try (var stream = unsafeStream()) {
 			return stream.collect(Collectors.toList()).stream();
 		}
 	}

@@ -17,11 +17,12 @@
  *****************************************************************************/
 package com.sandpolis.core.net.future;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+
 import java.util.concurrent.ExecutionException;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.command.CommandFuture.MessageHandler;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.util.ProtoUtil;

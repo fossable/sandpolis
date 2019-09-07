@@ -18,6 +18,7 @@
 package com.sandpolis.core.net.handler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import java.util.LinkedList;
 
@@ -25,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 

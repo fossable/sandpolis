@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -33,11 +35,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.Store;
-import com.sandpolis.core.instance.Store.AutoInitializer;
+import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.instance.store.pref.PrefStore;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
+import com.sandpolis.core.ipc.IPCStore.IPCStoreConfig;
 import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
 import com.sandpolis.core.ipc.MSG.Message;
 import com.sandpolis.core.ipc.MSG.Message.MsgCase;
@@ -50,8 +51,7 @@ import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
  * @author cilki
  * @since 5.0.0
  */
-@AutoInitializer
-public final class IPCStore extends Store {
+public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	public static final Logger log = LoggerFactory.getLogger(IPCStore.class);
 
@@ -65,36 +65,22 @@ public final class IPCStore extends Store {
 	/**
 	 * A list of open incoming connections spawned from the listener.
 	 */
-	private static List<Receptor> receptors;
+	private List<Receptor> receptors;
 
 	/**
 	 * A list of open outgoing connections.
 	 */
-	private static List<Connector> connectors;
+	private List<Connector> connectors;
 
 	/**
 	 * A list of running listeners.
 	 */
-	private static List<Listener> listeners;
+	private List<Listener> listeners;
 
 	/**
 	 * A list of registered message handlers.
 	 */
-	private static Map<MsgCase, Handler> handlers;
-
-	public static void init() {
-		receptors = Collections.synchronizedList(new LinkedList<>());
-		connectors = Collections.synchronizedList(new LinkedList<>());
-		listeners = Collections.synchronizedList(new LinkedList<>());
-		handlers = Collections.synchronizedMap(new HashMap<>());
-
-		register(MsgCase.RQ_METADATA, (Message message, OutputStream out) -> {
-			Message.newBuilder()
-					.setRsMetadata(RS_Metadata.newBuilder().setInstance(Core.INSTANCE.name())
-							.setVersion(Core.SO_BUILD.getVersion()).setPid(ProcessHandle.current().pid()))
-					.build().writeDelimitedTo(out);
-		});
-	}
+	private Map<MsgCase, Handler> handlers;
 
 	/**
 	 * Register a new message handler for the given type.
@@ -102,7 +88,7 @@ public final class IPCStore extends Store {
 	 * @param type    The message type
 	 * @param handler The message handler
 	 */
-	public static void register(MsgCase type, Handler handler) {
+	public void register(MsgCase type, Handler handler) {
 		handlers.put(type, handler);
 	}
 
@@ -111,11 +97,11 @@ public final class IPCStore extends Store {
 	 * 
 	 * @return The store's receptor list
 	 */
-	public static List<Receptor> getReceptors() {
+	public List<Receptor> getReceptors() {
 		return Collections.unmodifiableList(receptors);
 	}
 
-	static List<Receptor> getMutableReceptors() {
+	List<Receptor> getMutableReceptors() {
 		return receptors;
 	}
 
@@ -124,11 +110,11 @@ public final class IPCStore extends Store {
 	 * 
 	 * @return The store's connector list
 	 */
-	public static List<Connector> getConnectors() {
+	public List<Connector> getConnectors() {
 		return Collections.unmodifiableList(connectors);
 	}
 
-	static List<Connector> getMutableConnectors() {
+	List<Connector> getMutableConnectors() {
 		return connectors;
 	}
 
@@ -137,11 +123,11 @@ public final class IPCStore extends Store {
 	 * 
 	 * @return The store's listener list
 	 */
-	public static List<Listener> getListeners() {
+	public List<Listener> getListeners() {
 		return Collections.unmodifiableList(listeners);
 	}
 
-	static List<Listener> getMutableListeners() {
+	List<Listener> getMutableListeners() {
 		return listeners;
 	}
 
@@ -150,7 +136,7 @@ public final class IPCStore extends Store {
 	 * 
 	 * @return The store's message handlers
 	 */
-	public static Map<MsgCase, Handler> getHandlers() {
+	public Map<MsgCase, Handler> getHandlers() {
 		return Collections.unmodifiableMap(handlers);
 	}
 
@@ -161,7 +147,7 @@ public final class IPCStore extends Store {
 	 * @param flavor   The instance subtype
 	 * @return The received metadata object or {@code null} if an error occurred.
 	 */
-	public static Optional<RS_Metadata> queryInstance(Instance instance, InstanceFlavor flavor) {
+	public Optional<RS_Metadata> queryInstance(Instance instance, InstanceFlavor flavor) {
 		log.debug("Performing IPC query for {}:{} instances", instance, flavor);
 
 		try (Connector connector = connect(instance, flavor)) {
@@ -178,7 +164,7 @@ public final class IPCStore extends Store {
 	 * @param flavor   The instance subtype
 	 * @throws IOException
 	 */
-	public static void listen(Instance instance, InstanceFlavor flavor) throws IOException {
+	public void listen(Instance instance, InstanceFlavor flavor) throws IOException {
 		Objects.requireNonNull(instance);
 		Objects.requireNonNull(flavor);
 
@@ -193,7 +179,7 @@ public final class IPCStore extends Store {
 			throw new IOException(e);
 		}
 
-		listener.start(ThreadStore.get(net.ipc.listener), ThreadStore.get(net.ipc.receptor));
+		listener.start(Executors.newSingleThreadExecutor(), Executors.newSingleThreadExecutor());
 		listeners.add(listener);
 
 		log.debug("Opened IPC listener on port: {}", listener.getPort());
@@ -207,7 +193,7 @@ public final class IPCStore extends Store {
 	 * @return The established connection
 	 * @throws IOException
 	 */
-	public static Connector connect(Instance instance, InstanceFlavor flavor) throws IOException {
+	public Connector connect(Instance instance, InstanceFlavor flavor) throws IOException {
 		Objects.requireNonNull(instance);
 		Objects.requireNonNull(flavor);
 
@@ -227,11 +213,35 @@ public final class IPCStore extends Store {
 	 * @param flavor   The instance subtype
 	 * @return The IPC port or 0 for not found
 	 */
-	public static int getPort(Instance instance, InstanceFlavor flavor) {
+	public int getPort(Instance instance, InstanceFlavor flavor) {
 		return PrefStore.getPreferences(instance, flavor).getInt("ipc.port", 0);
 	}
 
-	private IPCStore() {
+	@Override
+	public IPCStore init(Consumer<IPCStoreConfig> configurator) {
+		var config = new IPCStoreConfig();
+		configurator.accept(config);
+
+		register(MsgCase.RQ_METADATA, (Message message, OutputStream out) -> {
+			Message.newBuilder()
+					.setRsMetadata(RS_Metadata.newBuilder().setInstance(Core.INSTANCE.name())
+							.setVersion(Core.SO_BUILD.getVersion()).setPid(ProcessHandle.current().pid()))
+					.build().writeDelimitedTo(out);
+		});
+
+		return (IPCStore) super.init(null);
 	}
 
+	public final class IPCStoreConfig extends StoreConfig {
+
+		@Override
+		public void ephemeral() {
+			receptors = Collections.synchronizedList(new LinkedList<>());
+			connectors = Collections.synchronizedList(new LinkedList<>());
+			listeners = Collections.synchronizedList(new LinkedList<>());
+			handlers = Collections.synchronizedMap(new HashMap<>());
+		}
+	}
+
+	public static final IPCStore IPCStore = new IPCStore();
 }

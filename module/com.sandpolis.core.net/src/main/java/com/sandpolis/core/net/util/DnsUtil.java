@@ -17,12 +17,13 @@
  *****************************************************************************/
 package com.sandpolis.core.net.util;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.util.ValidationUtil;
 
 import io.netty.buffer.ByteBuf;

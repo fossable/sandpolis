@@ -18,6 +18,8 @@
 package com.sandpolis.installer;
 
 import static com.sandpolis.core.instance.MainDispatch.register;
+import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import java.util.stream.Stream;
 
@@ -26,8 +28,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
+import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.util.AsciiUtil;
@@ -59,9 +63,10 @@ public final class Installer {
 		register(IPCTask.load);
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
+		register(Installer.loadStores);
 		register(Installer.loadUserInterface);
 
-		register(BasicTasks.shutdownStores);
+		register(Installer.shutdown);
 	}
 
 	/**
@@ -83,6 +88,29 @@ public final class Installer {
 	@InitializationTask(name = "Load user interface", fatal = true)
 	private static final Task loadUserInterface = new Task((task) -> {
 		new Thread(() -> Application.launch(UI.class)).start();
+
+		return task.success();
+	});
+
+	@InitializationTask(name = "Load stores", fatal = true)
+	public static final Task loadStores = new Task((task) -> {
+
+		ThreadStore.init(config -> {
+			config.ephemeral();
+		});
+
+		PrefStore.init(config -> {
+			config.instance = Core.INSTANCE;
+			config.flavor = Core.FLAVOR;
+		});
+
+		return task.success();
+	});
+
+	@ShutdownTask
+	public static final Task shutdown = new Task((task) -> {
+		ThreadStore.close();
+		PrefStore.close();
 
 		return task.success();
 	});

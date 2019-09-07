@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -31,20 +32,23 @@ import java.util.stream.Stream;
  * @author cilki
  * @since 5.0.0
  */
-public class MemoryMapStoreProvider<E> extends EphemeralStoreProvider<E> implements StoreProvider<E> {
+public class MemoryMapStoreProvider<K, E> extends EphemeralStoreProvider<E> implements StoreProvider<E> {
 
 	/**
 	 * The backing storage for this {@code StoreProvider}.
 	 */
 	private final Map<Object, E> map;
 
-	public MemoryMapStoreProvider(Class<E> cls) {
-		this(cls, new HashMap<>());
+	private final Function<E, K> keyFunction;
+
+	public MemoryMapStoreProvider(Class<E> cls, Function<E, K> keyFunction) {
+		this(cls, keyFunction, new HashMap<>());
 	}
 
-	public MemoryMapStoreProvider(Class<E> cls, Map<Object, E> map) {
+	public MemoryMapStoreProvider(Class<E> cls, Function<E, K> keyFunction, Map<Object, E> map) {
 		super(cls);
 		this.map = Objects.requireNonNull(map);
+		this.keyFunction = keyFunction;
 	}
 
 	@Override
@@ -69,19 +73,19 @@ public class MemoryMapStoreProvider<E> extends EphemeralStoreProvider<E> impleme
 	}
 
 	@Override
-	public Stream<E> safeStream() {
+	public Stream<E> unsafeStream() {
 		beginStream();
 		return map.values().stream().onClose(() -> endStream());
 	}
 
 	@Override
 	public void add(E e) {
-		mutate(() -> map.put(getId(e), e));
+		mutate(() -> map.put(keyFunction.apply(e), e));
 	}
 
 	@Override
 	public void remove(E e) {
-		mutate(() -> map.remove(getId(e)));
+		mutate(() -> map.remove(keyFunction.apply(e)));
 	}
 
 	@Override

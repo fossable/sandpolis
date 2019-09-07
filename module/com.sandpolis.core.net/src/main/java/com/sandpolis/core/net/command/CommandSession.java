@@ -19,6 +19,8 @@ package com.sandpolis.core.net.command;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -30,10 +32,8 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ProtoUtil;
@@ -96,7 +96,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 			cvid = sock.getRemoteCvid();
 		else if (sock == null)
 			// TODO get sock from NetworkStore
-			sock = ConnectionStore.get(cvid);
+			sock = ConnectionStore.get(cvid).get();
 
 		this.cvid = checkNotNull(cvid);
 		this.gateway = checkNotNull(sock);

@@ -17,25 +17,19 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.Signaler;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.server.vanilla.store.listener.Listener;
-import com.sandpolis.server.vanilla.store.listener.ListenerStore;
-import com.sandpolis.server.vanilla.store.user.User;
 import com.sandpolis.server.vanilla.store.user.UserStore;
 
 class ListenerExeTest extends ExeletTest {
@@ -44,14 +38,18 @@ class ListenerExeTest extends ExeletTest {
 
 	@BeforeEach
 	void setup() {
-		Signaler.init(Executors.newSingleThreadExecutor());
+		UserStore.UserStore.init(config -> {
+			config.ephemeral();
 
-		UserStore.init(StoreProviderFactory.memoryList(User.class));
-		UserStore.add(UserConfig.newBuilder().setUsername("junit").setPassword("12345678").build());
-		UserStore.get("junit").get().setCvid(90);
+			config.defaults.add(UserConfig.newBuilder().setUsername("junit").setPassword("12345678").build());
+		});
 
-		ListenerStore.init(StoreProviderFactory.memoryList(Listener.class));
-		ListenerStore.add(ListenerConfig.newBuilder().setOwner("junit").setPort(5000).setAddress("0.0.0.0").build());
+		ListenerStore.init(config -> {
+			config.ephemeral();
+
+			config.defaults
+					.add(ListenerConfig.newBuilder().setOwner("junit").setPort(5000).setAddress("0.0.0.0").build());
+		});
 
 		initChannel();
 		exe = new ListenerExe();

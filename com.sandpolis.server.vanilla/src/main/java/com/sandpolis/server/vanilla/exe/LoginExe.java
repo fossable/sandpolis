@@ -17,9 +17,11 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_USERNAME;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
+import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,13 +30,11 @@ import com.google.protobuf.Message;
 import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.profile.Profile;
-import com.sandpolis.core.profile.ProfileStore;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.user.User;
-import com.sandpolis.server.vanilla.store.user.UserStore;
 
 /**
  * This {@link Exelet} handles login and logout requests from viewer instances.

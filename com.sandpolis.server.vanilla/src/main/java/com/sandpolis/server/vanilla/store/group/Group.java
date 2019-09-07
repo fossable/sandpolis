@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.store.group;
 
+import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
@@ -49,7 +51,6 @@ import com.sandpolis.server.vanilla.auth.AuthenticationMechanism;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.auth.PasswordMechanism;
 import com.sandpolis.server.vanilla.store.user.User;
-import com.sandpolis.server.vanilla.store.user.UserStore;
 
 /**
  * A {@link Group} is a collection of users that share permissions on a

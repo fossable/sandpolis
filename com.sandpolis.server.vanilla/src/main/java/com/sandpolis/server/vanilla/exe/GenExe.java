@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -25,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCGenerator.RQ_Generate;
 import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;

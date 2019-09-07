@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.net.loop;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -31,7 +32,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -39,12 +39,16 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 class ConnectionLoopTest {
 
 	@BeforeAll
 	private static void setup() {
-		ThreadStore.register(new NioEventLoopGroup().next(), net.connection.outgoing);
+		ThreadStore.init(config -> {
+			config.ephemeral();
+			config.defaults.put(net.connection.outgoing, GlobalEventExecutor.INSTANCE);
+		});
 	}
 
 	@Test

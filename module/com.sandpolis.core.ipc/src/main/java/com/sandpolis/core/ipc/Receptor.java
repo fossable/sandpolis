@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.core.ipc;
 
+import static com.sandpolis.core.ipc.IPCStore.IPCStore;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;

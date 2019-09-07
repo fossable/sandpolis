@@ -21,11 +21,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Store.AutoInitializer;
+import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStoreConfig;
 
 /**
  * The {@link ThreadStore} manages all of the application's
@@ -34,27 +37,11 @@ import com.sandpolis.core.instance.Store.AutoInitializer;
  * @author cilki
  * @since 5.0.0
  */
-@AutoInitializer
-public final class ThreadStore {
+public final class ThreadStore extends StoreBase<ThreadStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ThreadStore.class);
 
-	private static Map<String, ExecutorService> map;
-
-	/**
-	 * Associate each id in the given list with the given {@link ExecutorService}.
-	 * 
-	 * @param executor The new {@link ExecutorService}
-	 * @param id       The list of IDs
-	 */
-	public static void register(ExecutorService executor, String... id) {
-		Objects.requireNonNull(executor);
-		if (map == null)
-			map = new HashMap<>();
-
-		for (String s : id)
-			map.put(s, executor);
-	}
+	private Map<String, ExecutorService> provider;
 
 	/**
 	 * Get the {@link ExecutorService} corresponding to the given identifier.
@@ -64,19 +51,38 @@ public final class ThreadStore {
 	 *         exist
 	 */
 	@SuppressWarnings("unchecked")
-	public static <E> E get(String id) {
-		return (E) map.get(Objects.requireNonNull(id));
+	public <E extends ExecutorService> E get(String id) {
+		return (E) provider.get(Objects.requireNonNull(id));
 	}
 
-	/**
-	 * Shutdown all threads in the {@link ThreadStore}.
-	 */
-	public static void shutdown() {
-		log.debug("Shutting down {} thread pools", map.size());
-		map.values().forEach(service -> service.shutdownNow());
-		map.clear();
+	@Override
+	public void close() throws Exception {
+		log.debug("Closing ThreadStore (provider: " + provider + ")");
+		log.debug("Shutting down {} thread pools", provider.size());
+		provider.values().forEach(service -> service.shutdownNow());
+		provider = null;
 	}
 
-	private ThreadStore() {
+	@Override
+	public ThreadStore init(Consumer<ThreadStoreConfig> configurator) {
+		var config = new ThreadStoreConfig();
+		configurator.accept(config);
+
+		provider.putAll(config.defaults);
+
+		return (ThreadStore) super.init(null);
 	}
+
+	public final class ThreadStoreConfig extends StoreConfig {
+
+		public final Map<String, ExecutorService> defaults = new HashMap<>();
+
+		@Override
+		public void ephemeral() {
+			provider = new HashMap<>();
+		}
+
+	}
+
+	public static final ThreadStore ThreadStore = new ThreadStore();
 }

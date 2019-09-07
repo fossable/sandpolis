@@ -17,17 +17,15 @@
  *****************************************************************************/
 package com.sandpolis.core.net.store.network;
 
+import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Set;
-import java.util.concurrent.Executors;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkAdded;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkRemoved;
@@ -36,15 +34,13 @@ import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.NodeRemoved;
 
 class NetworkStoreTest {
 
-	@BeforeAll
-	static void configure() {
-		Signaler.init(Executors.newSingleThreadExecutor());
-	}
-
 	@BeforeEach
 	void setup() {
-		NetworkStore.updateCvid(123);
-		NetworkStore.setPreferredServer(100);
+		NetworkStore.init(config -> {
+			config.ephemeral();
+			config.preferredServer = 100;
+			config.cvid = 123;
+		});
 	}
 
 	@Test

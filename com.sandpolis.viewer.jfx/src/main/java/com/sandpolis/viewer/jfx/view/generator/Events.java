@@ -17,9 +17,9 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.view.generator;
 
+import com.sandpolis.core.instance.event.Event;
+import com.sandpolis.core.instance.event.ParameterizedEvent;
 import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
-import com.sandpolis.viewer.jfx.common.event.Event;
-import com.sandpolis.viewer.jfx.common.event.ParameterizedEvent;
 
 public final class Events {
 

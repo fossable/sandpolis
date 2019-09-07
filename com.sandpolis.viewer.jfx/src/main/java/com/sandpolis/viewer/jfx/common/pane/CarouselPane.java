@@ -17,12 +17,13 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.common.pane;
 
+import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.viewer.jfx.PrefConstant.ui;
 
 import javafx.animation.Animation.Status;

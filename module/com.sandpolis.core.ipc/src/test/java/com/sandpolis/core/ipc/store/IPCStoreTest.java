@@ -17,6 +17,9 @@
  *****************************************************************************/
 package com.sandpolis.core.ipc.store;
 
+import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.ipc.IPCStore.IPCStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
@@ -28,11 +31,8 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant;
-import com.sandpolis.core.instance.PoolConstant;
-import com.sandpolis.core.instance.store.pref.PrefStore;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
+import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.ipc.Connector;
-import com.sandpolis.core.ipc.IPCStore;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
@@ -40,11 +40,19 @@ class IPCStoreTest {
 
 	@BeforeEach
 	private void init() {
-		PrefStore.load(Instance.CHARCOAL, InstanceFlavor.NONE);
-		IPCStore.init();
+		PrefStore.init(config -> {
+			config.instance = Instance.CHARCOAL;
+			config.flavor = InstanceFlavor.NONE;
+		});
+		IPCStore.init(config -> {
+			config.ephemeral();
+		});
+		ThreadStore.init(config -> {
+			config.defaults.put(net.ipc.listener, Executors.newCachedThreadPool());
+			config.defaults.put(net.ipc.receptor, Executors.newCachedThreadPool());
+		});
+
 		Config.register(ConfigConstant.net.ipc.timeout, 1000);
-		ThreadStore.register(Executors.newCachedThreadPool(), PoolConstant.net.ipc.listener,
-				PoolConstant.net.ipc.receptor);
 	}
 
 	@Test

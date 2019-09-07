@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.net.handler;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,13 +26,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.PoolConstant;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.init.ChannelConstant;
-import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
+import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.net.MSG.Message;
 
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -45,7 +45,10 @@ class ExeletHandlerTest {
 
 	@BeforeAll
 	static void configure() {
-		ThreadStore.register(new NioEventLoopGroup(1).next(), PoolConstant.net.message.incoming);
+		ThreadStore.init(config -> {
+			config.ephemeral();
+			config.defaults.put(PoolConstant.net.message.incoming, new NioEventLoopGroup(1).next());
+		});
 	}
 
 	@BeforeEach

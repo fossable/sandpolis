@@ -18,6 +18,7 @@
 package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
+import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PermissionConstant.server;
@@ -27,7 +28,6 @@ import com.sandpolis.core.proto.net.MCUser.RQ_RemoveUser;
 import com.sandpolis.core.proto.net.MCUser.RQ_UserDelta;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.server.vanilla.store.user.User;
-import com.sandpolis.server.vanilla.store.user.UserStore;
 
 /**
  * User message handlers.
@@ -54,7 +54,8 @@ public class UserExe extends Exelet {
 		if (!ownership(rq.getId()))
 			return failure(outcome, ACCESS_DENIED);
 
-		UserStore.remove(rq.getId());
+		// TODO
+		// UserStore.remove(rq.getId());
 		return success(outcome);
 	}
 
@@ -76,7 +77,8 @@ public class UserExe extends Exelet {
 	 */
 	@AccessPredicate
 	private boolean ownership(long id) {
-		User user = UserStore.get(id).orElse(null);
+		// TODO
+		User user = null;// UserStore.get(id).orElse(null);
 		if (user == null)
 			// User does not exist
 			return false;

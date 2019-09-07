@@ -17,10 +17,11 @@
  *****************************************************************************/
 package com.sandpolis.core.net.future;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+
 import java.util.concurrent.TimeUnit;
 
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.proto.net.MSG.Message;
 
 import io.netty.util.concurrent.DefaultPromise;

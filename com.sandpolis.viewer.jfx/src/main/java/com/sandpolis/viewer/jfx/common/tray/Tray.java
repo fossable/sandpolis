@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.common.tray;
 
+import static com.sandpolis.viewer.jfx.store.stage.StageStore.StageStore;
+
 import java.awt.AWTException;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
@@ -25,8 +27,6 @@ import java.awt.TrayIcon;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-
-import com.sandpolis.viewer.jfx.store.stage.StageStore;
 
 /**
  * A singleton for interacting with the AWT system tray.

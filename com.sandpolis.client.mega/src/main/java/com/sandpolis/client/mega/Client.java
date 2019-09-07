@@ -21,8 +21,10 @@ import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
 import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 import static com.sandpolis.core.instance.MainDispatch.register;
-import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_ESTABLISHED;
-import static com.sandpolis.core.net.store.network.NetworkStore.Events.SRV_LOST;
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.io.IOException;
@@ -34,6 +36,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.Subscribe;
 import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.exe.ClientExe;
 import com.sandpolis.client.mega.exe.TempExe;
@@ -46,15 +49,8 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.Signaler;
-import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
-import com.sandpolis.core.instance.store.plugin.Plugin;
-import com.sandpolis.core.instance.store.plugin.PluginStore;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
-import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -100,7 +96,6 @@ public final class Client {
 		register(IPCTask.setLock);
 		register(Client.install);
 		register(Client.loadEnvironment);
-		register(BasicTasks.loadStores);
 		register(Client.loadStores);
 		register(Client.loadPlugins);
 		register(Client.beginConnectionRoutine);
@@ -152,17 +147,21 @@ public final class Client {
 	@InitializationTask(name = "Load static stores", fatal = true)
 	public static final Task loadStores = new Task((task) -> {
 
-		// Load ThreadStore
-		ThreadStore.register(new NioEventLoopGroup(2).next(), net.exelet);
-		ThreadStore.register(new NioEventLoopGroup(2).next(), net.connection.outgoing);
-		ThreadStore.register(new NioEventLoopGroup(2).next(), "temploop");
-		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
+		ThreadStore.init(config -> {
+			config.ephemeral();
+			config.defaults.put(net.exelet, new NioEventLoopGroup(2).next());
+			config.defaults.put(net.connection.outgoing, new NioEventLoopGroup(2).next());
+			config.defaults.put("temploop", new NioEventLoopGroup(2).next());
+			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(2));
+		});
 
-		// Load NetworkStore
-		NetworkStore.init();
+		NetworkStore.init(config -> {
+			config.ephemeral();
+		});
 
-		// Load PluginStore
-		PluginStore.init(new MemoryListStoreProvider<Plugin>(Plugin.class));
+		PluginStore.init(config -> {
+			config.ephemeral();
+		});
 
 		return task.success();
 	});
@@ -183,43 +182,44 @@ public final class Client {
 	 */
 	@InitializationTask(name = "Begin the connection routine", fatal = true)
 	public static final Task beginConnectionRoutine = new Task((task) -> {
-
-		Signaler.register(SRV_ESTABLISHED, () -> {
-			ResponseFuture<Outcome> future;
-			var auth = SO_CONFIG.getAuthentication();
-
-			switch (auth.getAuthOneofCase()) {
-			case KEY:
-				KeyContainer mech = auth.getKey();
-				ReciprocalKeyPair key = new ReciprocalKeyPair(mech.getClient().getVerifier().toByteArray(),
-						mech.getClient().getSigner().toByteArray());
-				future = AuthCmd.async().key(auth.getGroupName(), mech.getId(), key);
-				break;
-			case PASSWORD:
-				future = AuthCmd.async().password(auth.getPassword().getPassword());
-				break;
-			default:
-				future = AuthCmd.async().none();
-				break;
-			}
-
-			if (Config.getBoolean(plugin.enabled)) {
-				future.addHandler((Outcome rs) -> {
-					// Synchronize plugins
-					// PluginCmd.async().sync().sync();
-					// PluginStore.loadPlugins();
-				});
-			}
-		});
-
-		Signaler.register(SRV_LOST, () -> {
-			ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(),
-					new Class[] { ClientExe.class, TempExe.class });
-		});
-		Signaler.fire(SRV_LOST);
+		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class, TempExe.class });
 
 		return task.success();
 	});
+
+	@Subscribe
+	private void onSrvLost() {
+		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class, TempExe.class });
+	}
+
+	@Subscribe
+	private void onSrvEstablished() {
+		ResponseFuture<Outcome> future;
+		var auth = SO_CONFIG.getAuthentication();
+
+		switch (auth.getAuthOneofCase()) {
+		case KEY:
+			KeyContainer mech = auth.getKey();
+			ReciprocalKeyPair key = new ReciprocalKeyPair(mech.getClient().getVerifier().toByteArray(),
+					mech.getClient().getSigner().toByteArray());
+			future = AuthCmd.async().key(auth.getGroupName(), mech.getId(), key);
+			break;
+		case PASSWORD:
+			future = AuthCmd.async().password(auth.getPassword().getPassword());
+			break;
+		default:
+			future = AuthCmd.async().none();
+			break;
+		}
+
+		if (Config.getBoolean(plugin.enabled)) {
+			future.addHandler((Outcome rs) -> {
+				// Synchronize plugins
+				// PluginCmd.async().sync().sync();
+				// PluginStore.loadPlugins();
+			});
+		}
+	}
 
 	private Client() {
 	}

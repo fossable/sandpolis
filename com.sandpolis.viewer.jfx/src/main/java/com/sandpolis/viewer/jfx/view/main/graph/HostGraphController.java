@@ -17,15 +17,16 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.view.main.graph;
 
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
+import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fxgraph.graph.Graph;
 import com.fxgraph.graph.Model;
-import com.sandpolis.core.instance.Signaler;
-import com.sandpolis.core.net.store.connection.ConnectionStore.Events;
-import com.sandpolis.core.net.store.network.NetworkStore;
-import com.sandpolis.core.profile.ProfileStore;
+import com.google.common.eventbus.Subscribe;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 
 import javafx.application.Platform;
@@ -51,7 +52,7 @@ public class HostGraphController extends AbstractController {
 		// Load the network's current state
 		graph.beginUpdate();
 		for (int cvid : NetworkStore.getNetwork().nodes()) {
-			ProfileStore.getProfile(cvid).ifPresentOrElse(profile -> {
+			ProfileStore.get(cvid).ifPresentOrElse(profile -> {
 				model.addCell(HostCell.build(profile));
 			}, () -> {
 				log.warn("No profile found for: {}", cvid);
@@ -60,18 +61,23 @@ public class HostGraphController extends AbstractController {
 		graph.endUpdate();
 
 		// Setup network change listeners
-		Signaler.register(Events.SOCK_LOST, sock -> {
-			Platform.runLater(() -> {
-				graph.beginUpdate();
-				// TODO condition
-				graph.getModel().getAllEdges().removeIf(edge -> true);
-				graph.endUpdate();
-			});
+		ConnectionStore.register(this);
+	}
+
+	@Subscribe
+	private void onSockLost() {
+		Platform.runLater(() -> {
+			graph.beginUpdate();
+			// TODO condition
+			graph.getModel().getAllEdges().removeIf(edge -> true);
+			graph.endUpdate();
 		});
-		Signaler.register(Events.SOCK_ESTABLISHED, sock -> {
-			Platform.runLater(() -> {
-				// TODO
-			});
+	}
+
+	@Subscribe
+	private void onSockEstablished() {
+		Platform.runLater(() -> {
+			// TODO
 		});
 	}
 

@@ -18,10 +18,11 @@
 package com.sandpolis.core.instance.storage;
 
 import java.lang.invoke.MethodHandle;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -31,18 +32,18 @@ import java.util.stream.Stream;
  * @author cilki
  * @since 5.0.0
  */
-public class MemoryListStoreProvider<E> extends EphemeralStoreProvider<E> implements StoreProvider<E> {
+public class MemoryListStoreProvider<K, E> extends EphemeralStoreProvider<E> implements StoreProvider<E> {
 
 	/**
 	 * The backing storage for this {@link StoreProvider}.
 	 */
 	private final List<E> list;
 
-	public MemoryListStoreProvider(Class<E> cls) {
-		this(cls, new LinkedList<>());
+	public MemoryListStoreProvider(Class<E> cls, Function<E, K> keyFunction) {
+		this(cls, keyFunction, new ArrayList<>());
 	}
 
-	public MemoryListStoreProvider(Class<E> cls, List<E> list) {
+	public MemoryListStoreProvider(Class<E> cls, Function<E, K> keyFunction, List<E> list) {
 		super(cls);
 		this.list = Objects.requireNonNull(list);
 	}
@@ -78,13 +79,14 @@ public class MemoryListStoreProvider<E> extends EphemeralStoreProvider<E> implem
 	}
 
 	@Override
-	public Stream<E> safeStream() {
+	public Stream<E> unsafeStream() {
 		beginStream();
 		return list.stream().onClose(() -> endStream());
 	}
 
 	@Override
 	public void add(E e) {
+		// TODO check for duplicate IDs
 		mutate(() -> list.add(e));
 	}
 

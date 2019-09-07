@@ -17,13 +17,14 @@
  *****************************************************************************/
 package com.sandpolis.core.net.init;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.logging;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.EventHandler;

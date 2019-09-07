@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.net.handler;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,7 +30,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
@@ -47,7 +47,10 @@ class Sand5HandlerTest {
 
 	@BeforeAll
 	private static void init() {
-		ThreadStore.register(new UnorderedThreadPoolEventExecutor(2), net.message.incoming);
+		ThreadStore.init(config -> {
+			config.ephemeral();
+			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(2));
+		});
 	}
 
 	@BeforeEach

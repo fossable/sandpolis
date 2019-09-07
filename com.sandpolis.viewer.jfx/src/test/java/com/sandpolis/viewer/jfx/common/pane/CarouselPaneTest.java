@@ -17,13 +17,12 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.common.pane;
 
+import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.testfx.assertions.api.Assertions.assertThat;
-
-import java.util.prefs.Preferences;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +32,6 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.viewer.jfx.PrefConstant.ui;
 
 import javafx.scene.Scene;
@@ -45,8 +43,11 @@ class CarouselPaneTest {
 
 	@BeforeAll
 	private static void init() throws Exception {
-		PrefStore.init(Preferences.userNodeForPackage(CarouselPaneTest.class));
-		PrefStore.register(ui.animations, true);
+		PrefStore.init(config -> {
+			config.prefNodeClass = CarouselPaneTest.class;
+
+			config.defaults.put(ui.animations, true);
+		});
 
 		System.setProperty("java.awt.headless", "true");
 		System.setProperty("testfx.headless", "true");

@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.core.net.future;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -24,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,8 +32,6 @@ import org.junit.jupiter.api.Test;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.logging;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.Signaler;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.init.ChannelConstant;
 
@@ -53,8 +51,10 @@ class SockFutureTest {
 	static void configure() {
 		Config.register(logging.net.traffic.raw, false);
 		Config.register(logging.net.traffic.decoded, false);
-		ThreadStore.register(new NioEventLoopGroup().next(), net.exelet);
-		Signaler.init(Executors.newSingleThreadExecutor());
+		ThreadStore.init(config -> {
+			config.ephemeral();
+			config.defaults.put(net.exelet, new NioEventLoopGroup().next());
+		});
 	}
 
 	@Test

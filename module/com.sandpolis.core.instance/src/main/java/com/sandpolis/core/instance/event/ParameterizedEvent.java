@@ -15,15 +15,28 @@
  *  limitations under the License.                                            *
  *                                                                            *
  *****************************************************************************/
-package com.sandpolis.viewer.jfx.common.event;
-
-import com.google.common.eventbus.EventBus;
+package com.sandpolis.core.instance.event;
 
 /**
- * An event for use with an {@link EventBus}.
+ * An event that contains an {@link Object} parameter.
  * 
  * @author cilki
  * @since 5.0.0
  */
-public abstract class Event {
+public abstract class ParameterizedEvent<E> extends Event {
+
+	/**
+	 * The parameter which will be modified reflectively.
+	 */
+	private E object;
+
+	/**
+	 * Get the event's parameter.
+	 * 
+	 * @return The event parameter
+	 */
+	public E get() {
+		return object;
+	}
+
 }

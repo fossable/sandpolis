@@ -17,9 +17,13 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla;
 
+import static com.sandpolis.core.instance.store.database.DatabaseStore.DatabaseStore;
 import static com.sandpolis.core.util.ProtoUtil.begin;
 import static com.sandpolis.core.util.ProtoUtil.failure;
 import static com.sandpolis.core.util.ProtoUtil.success;
+import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
+import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
+import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.database.DatabaseStore;
@@ -31,7 +35,6 @@ import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.store.group.Group;
 import com.sandpolis.server.vanilla.store.group.GroupStore;
-import com.sandpolis.server.vanilla.store.listener.ListenerStore;
 import com.sandpolis.server.vanilla.store.user.UserStore;
 
 public final class Post {

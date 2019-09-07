@@ -17,12 +17,14 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.view.login;
 
+import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.viewer.jfx.store.stage.StageStore.StageStore;
+
 import java.util.Objects;
 
-import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.SockFuture;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
@@ -32,7 +34,6 @@ import com.sandpolis.viewer.jfx.PrefConstant;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.common.controller.FxController;
 import com.sandpolis.viewer.jfx.common.pane.CarouselPane;
-import com.sandpolis.viewer.jfx.store.stage.StageStore;
 import com.sandpolis.viewer.jfx.view.login.phase.ServerPhaseController;
 import com.sandpolis.viewer.jfx.view.login.phase.UserPhaseController;
 

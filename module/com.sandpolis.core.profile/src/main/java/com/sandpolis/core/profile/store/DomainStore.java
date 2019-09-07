@@ -17,12 +17,10 @@
  *****************************************************************************/
 package com.sandpolis.core.profile.store;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import com.sandpolis.core.attribute.AttributeDomainKey;
-import com.sandpolis.core.instance.Store.AutoInitializer;
-import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.StoreProvider;
 
 /**
@@ -31,18 +29,10 @@ import com.sandpolis.core.instance.storage.StoreProvider;
  * @author cilki
  * @since 5.0.0
  */
-@AutoInitializer
 public final class DomainStore {
 
-	private static StoreProvider<AttributeDomainKey> provider;
-
-	static {
-		init(new MemoryListStoreProvider<>(AttributeDomainKey.class));
-	}
-
-	public static void init(StoreProvider<AttributeDomainKey> provider) {
-		DomainStore.provider = Objects.requireNonNull(provider);
-	}
+	private static StoreProvider<AttributeDomainKey> provider = new MemoryMapStoreProvider<String, AttributeDomainKey>(
+			AttributeDomainKey.class, AttributeDomainKey::getDomain);
 
 	/**
 	 * Get a root {@link AttributeDomainKey} from the store.
@@ -60,8 +50,5 @@ public final class DomainStore {
 
 		provider.add(new AttributeDomainKey(id));
 		return provider.get(id).get();
-	}
-
-	private DomainStore() {
 	}
 }

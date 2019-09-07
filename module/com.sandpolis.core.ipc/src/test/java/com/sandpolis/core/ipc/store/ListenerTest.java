@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.core.ipc.store;
 
+import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.ipc.IPCStore.IPCStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,8 +34,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.store.pref.PrefStore;
-import com.sandpolis.core.ipc.IPCStore;
 import com.sandpolis.core.ipc.Listener;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
@@ -45,8 +45,13 @@ class ListenerTest {
 
 	@BeforeEach
 	private void init() {
-		PrefStore.load(Instance.CHARCOAL, InstanceFlavor.NONE);
-		IPCStore.init();
+		PrefStore.init(config -> {
+			config.instance = Instance.CHARCOAL;
+			config.flavor = InstanceFlavor.NONE;
+		});
+		IPCStore.init(config -> {
+			config.ephemeral();
+		});
 
 		if (service != null)
 			service.shutdownNow();

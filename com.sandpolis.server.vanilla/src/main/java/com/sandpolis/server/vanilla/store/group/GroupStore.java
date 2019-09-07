@@ -19,24 +19,24 @@ package com.sandpolis.server.vanilla.store.group;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Store;
-import com.sandpolis.core.instance.Store.ManualInitializer;
-import com.sandpolis.core.instance.storage.StoreProvider;
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Group.ProtoGroup;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.util.ValidationUtil;
+import com.sandpolis.server.vanilla.store.group.GroupStore.GroupStoreConfig;
 import com.sandpolis.server.vanilla.store.user.User;
 
 /**
@@ -45,40 +45,16 @@ import com.sandpolis.server.vanilla.store.user.User;
  * @author cilki
  * @since 5.0.0
  */
-@ManualInitializer
-public final class GroupStore extends Store {
+public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(GroupStore.class);
-
-	private static StoreProvider<Group> provider;
-
-	public static void init(StoreProvider<Group> provider) {
-		GroupStore.provider = Objects.requireNonNull(provider);
-
-		if (log.isDebugEnabled())
-			log.debug("Initialized store containing {} entities", provider.count());
-	}
-
-	public static void load(Database main) {
-		init(StoreProviderFactory.database(Group.class, Objects.requireNonNull(main)));
-	}
-
-	/**
-	 * Get a group from the store.
-	 * 
-	 * @param id The ID of a group
-	 * @return The requested {@link Group}
-	 */
-	public static Optional<Group> get(String id) {
-		return provider.get("id", id);
-	}
 
 	/**
 	 * Create a new group from the given configuration and add it to the store.
 	 * 
 	 * @param config The group configuration
 	 */
-	public static void add(GroupConfig.Builder config) {
+	public void add(GroupConfig.Builder config) {
 		add(config.build());
 	}
 
@@ -87,7 +63,7 @@ public final class GroupStore extends Store {
 	 * 
 	 * @param config The group configuration
 	 */
-	public static void add(GroupConfig config) {
+	public void add(GroupConfig config) {
 		Objects.requireNonNull(config);
 		checkArgument(ValidationUtil.Config.valid(config) == ErrorCode.OK, "Invalid configuration");
 		checkArgument(ValidationUtil.Config.complete(config) == ErrorCode.OK, "Incomplete configuration");
@@ -100,22 +76,11 @@ public final class GroupStore extends Store {
 	 * 
 	 * @param group The group to add
 	 */
-	public static void add(Group group) {
+	public void add(Group group) {
 		checkArgument(get(group.getGroupId()).isEmpty(), "ID conflict");
 
 		log.debug("Adding new group: {}", group.getGroupId());
 		provider.add(group);
-	}
-
-	/**
-	 * Remove a group from the store.
-	 * 
-	 * @param id The group's ID
-	 */
-	public static void remove(String id) {
-		log.debug("Deleting group {}", id);
-
-		get(id).ifPresent(provider::remove);
 	}
 
 	/**
@@ -124,22 +89,9 @@ public final class GroupStore extends Store {
 	 * @param user A user
 	 * @return A list of the user's groups
 	 */
-	public static List<Group> getMembership(User user) {
-		try (Stream<Group> stream = provider.stream()) {
-			return stream.filter(group -> user.equals(group.getOwner()) || group.getMembers().contains(user))
-					.collect(Collectors.toList());
-		}
-	}
-
-	/**
-	 * Get a list of all groups.
-	 * 
-	 * @return A list of all groups in the store
-	 */
-	public static List<Group> getGroups() {
-		try (Stream<Group> stream = provider.stream()) {
-			return stream.collect(Collectors.toList());
-		}
+	public List<Group> getMembership(User user) {
+		return stream().filter(group -> user.equals(group.getOwner()) || group.getMembers().contains(user))
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -147,11 +99,9 @@ public final class GroupStore extends Store {
 	 * 
 	 * @return A list of unauth groups
 	 */
-	public static List<Group> getUnauthGroups() {
-		try (Stream<Group> stream = provider.stream()) {
-			return stream.filter(group -> group.getKeys().size() == 0 && group.getPasswords().size() == 0)
-					.collect(Collectors.toList());
-		}
+	public List<Group> getUnauthGroups() {
+		return stream().filter(group -> group.getKeys().size() == 0 && group.getPasswords().size() == 0)
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -160,12 +110,10 @@ public final class GroupStore extends Store {
 	 * @param password The password
 	 * @return A list of groups with the password
 	 */
-	public static List<Group> getByPassword(String password) {
-		try (Stream<Group> stream = provider.stream()) {
-			return stream.filter(
-					group -> group.getPasswords().stream().anyMatch(mech -> mech.getPassword().equals(password)))
-					.collect(Collectors.toList());
-		}
+	public List<Group> getByPassword(String password) {
+		return stream()
+				.filter(group -> group.getPasswords().stream().anyMatch(mech -> mech.getPassword().equals(password)))
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -175,7 +123,7 @@ public final class GroupStore extends Store {
 	 * @param delta The changes
 	 * @return The outcome of the action
 	 */
-	public static ErrorCode delta(String id, ProtoGroup delta) {
+	public ErrorCode delta(String id, ProtoGroup delta) {
 		Group group = get(id).orElse(null);
 		if (group == null)
 			return ErrorCode.UNKNOWN_GROUP;
@@ -183,7 +131,30 @@ public final class GroupStore extends Store {
 		return group.merge(delta);
 	}
 
-	private GroupStore() {
+	@Override
+	public GroupStore init(Consumer<GroupStoreConfig> configurator) {
+		var config = new GroupStoreConfig();
+		configurator.accept(config);
+
+		config.defaults.forEach(this::add);
+
+		return (GroupStore) super.init(null);
 	}
 
+	public final class GroupStoreConfig extends StoreConfig {
+
+		public final List<GroupConfig> defaults = new ArrayList<>();
+
+		@Override
+		public void ephemeral() {
+			provider = new MemoryMapStoreProvider<String, Group>(Group.class, Group::getGroupId);
+		}
+
+		@Override
+		public void persistent(Database database) {
+			provider = database.getConnection().provider(Group.class, "id");
+		}
+	}
+
+	public static final GroupStore GroupStore = new GroupStore();
 }

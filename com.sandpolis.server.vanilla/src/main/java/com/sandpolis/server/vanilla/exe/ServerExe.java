@@ -17,6 +17,8 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.server.vanilla.store.server.ServerStore.ServerStore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +26,6 @@ import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCPing.RS_Ping;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.server.vanilla.store.server.ServerStore;
 
 /**
  * Message handlers for server requests.

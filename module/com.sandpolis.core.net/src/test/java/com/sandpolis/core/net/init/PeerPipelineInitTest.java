@@ -17,19 +17,16 @@
  *****************************************************************************/
 package com.sandpolis.core.net.init;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-
-import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.logging;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
-import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.util.RandUtil;
 
@@ -51,8 +48,10 @@ class PeerPipelineInitTest {
 	static void configure() {
 		Config.register(logging.net.traffic.raw, false);
 		Config.register(logging.net.traffic.decoded, false);
-		ThreadStore.register(new NioEventLoopGroup().next(), net.exelet);
-		Signaler.init(Executors.newSingleThreadExecutor());
+		ThreadStore.init(config -> {
+			config.ephemeral();
+			config.defaults.put(net.exelet, new NioEventLoopGroup().next());
+		});
 	}
 
 	@Test

@@ -18,17 +18,15 @@
 package com.sandpolis.server.vanilla.net.handler;
 
 import static com.sandpolis.core.net.init.ChannelConstant.CVID;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.Signaler;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
@@ -54,6 +52,13 @@ class ProxyHandlerTest {
 	 */
 	private final EmbeddedChannel encoder = new EmbeddedChannel(new ProtobufVarint32LengthFieldPrepender(),
 			new ProtobufEncoder());
+
+	@BeforeAll
+	static void setup() {
+		ConnectionStore.init(config -> {
+			config.ephemeral();
+		});
+	}
 
 	@Test
 	@DisplayName("Check that important field numbers will never change")
@@ -145,10 +150,5 @@ class ProxyHandlerTest {
 	private ByteBuf encode(Message message) {
 		assertTrue(encoder.writeOutbound(message));
 		return encoder.readOutbound();
-	}
-
-	@BeforeAll
-	private static void init() {
-		Signaler.init(Executors.newSingleThreadExecutor());
 	}
 }

@@ -309,10 +309,10 @@ class HibernateStoreProviderTest {
 				new Database("jdbc:mysql://127.0.0.1:8001/test?serverTimezone=America/Chicago", "root", ""));
 
 		// Reset table
-		StoreProvider<TestObject> mysqlProvider = mysql.getConnection().provider(TestObject.class);
+		StoreProvider<TestObject> mysqlProvider = mysql.getConnection().provider(TestObject.class, "id");
 		mysqlProvider.clear();
 
-		return Stream.of(sqlite.getConnection().provider(TestObject.class), mysqlProvider);
+		return Stream.of(sqlite.getConnection().provider(TestObject.class, "id"), mysqlProvider);
 	}
 
 }

@@ -17,7 +17,6 @@
  *****************************************************************************/
 package com.sandpolis.core.storage.hibernate;
 
-import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -50,14 +49,17 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 	 */
 	private final Class<E> cls;
 
+	private final String idField;
+
 	/**
 	 * The Hibernate session factory for this {@link StoreProvider}.
 	 */
 	private final EntityManagerFactory emf;
 
-	public HibernateStoreProvider(Class<E> cls, EntityManagerFactory emf) {
+	public HibernateStoreProvider(EntityManagerFactory emf, Class<E> cls, String idField) {
 		this.cls = Objects.requireNonNull(cls);
 		this.emf = Objects.requireNonNull(emf);
+		this.idField = idField;
 	}
 
 	@Override
@@ -76,16 +78,17 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 
 	@Override
 	public Optional<E> get(Object id) {
-		EntityManager em = emf.createEntityManager();
-
-		try {
-			em.getTransaction().begin();
-			E e = em.find(cls, id);
-			em.getTransaction().commit();
-			return Optional.ofNullable(e);
-		} finally {
-			em.close();
-		}
+		return get(idField, id);
+//		EntityManager em = emf.createEntityManager();
+//
+//		try {
+//			em.getTransaction().begin();
+//			E e = em.find(cls, id);
+//			em.getTransaction().commit();
+//			return Optional.ofNullable(e);
+//		} finally {
+//			em.close();
+//		}
 	}
 
 	@Override
@@ -175,25 +178,15 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 	}
 
 	@Override
-	public Stream<E> safeStream() {
+	public Stream<E> unsafeStream() {
 		beginStream();
-		return unsafeStream().onClose(() -> endStream());
-	}
-
-	/**
-	 * Get a new {@link Stream} that does not register itself with
-	 * {@link ConcurrentStoreProvider} and therefore is not protected from
-	 * {@link ConcurrentModificationException}s.
-	 * 
-	 * @return A new unsafe stream
-	 */
-	private Stream<E> unsafeStream() {
 		EntityManager em = emf.createEntityManager();
 		try {
 			CriteriaQuery<E> cq = em.getCriteriaBuilder().createQuery(cls);
-			return em.createQuery(cq.select(cq.from(cls))).getResultList().stream();
+			return em.createQuery(cq.select(cq.from(cls))).getResultList().stream().onClose(() -> endStream());
 		} finally {
 			em.close();
 		}
 	}
+
 }

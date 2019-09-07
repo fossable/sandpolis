@@ -18,14 +18,19 @@
 package com.sandpolis.core.instance.store.pref;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Store;
+import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.store.pref.PrefStore.PrefStoreConfig;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
@@ -36,30 +41,14 @@ import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
  * @author cilki
  * @since 5.0.0
  */
-public final class PrefStore extends Store {
+public final class PrefStore extends StoreBase<PrefStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(PrefStore.class);
 
 	/**
 	 * The backing {@link Preferences} object.
 	 */
-	private static Preferences provider;
-
-	/**
-	 * Initialize the store from the given {@link Preferences}.
-	 * 
-	 * @param prefs The store provider
-	 */
-	public static void init(Preferences prefs) {
-		// if (provider != null)
-		// provider.flush();
-
-		provider = Objects.requireNonNull(prefs);
-	}
-
-	public static void load(Instance instance, InstanceFlavor flavor) {
-		init(getPreferences(instance, flavor));
-	}
+	private Preferences provider;
 
 	/**
 	 * Get the {@link Preferences} object unique to the given instance.
@@ -79,7 +68,7 @@ public final class PrefStore extends Store {
 	 * @param tag A unique String whose associated value is to be returned
 	 * @return The String value associated with the provided tag
 	 */
-	public static String getString(String tag) {
+	public String getString(String tag) {
 		return getString(tag, null);
 	}
 
@@ -90,7 +79,7 @@ public final class PrefStore extends Store {
 	 * @param def The default value
 	 * @return The String value associated with the provided tag
 	 */
-	public static String getString(String tag, String def) {
+	public String getString(String tag, String def) {
 		return provider.get(tag, def);
 	}
 
@@ -100,7 +89,7 @@ public final class PrefStore extends Store {
 	 * @param tag   The unique key which will become associated with the new value
 	 * @param value The new value
 	 */
-	public static void putString(String tag, String value) {
+	public void putString(String tag, String value) {
 		log.trace("Associating \"{}\": \"{}\"", tag, value);
 		provider.put(tag, value);
 	}
@@ -111,7 +100,7 @@ public final class PrefStore extends Store {
 	 * @param tag A unique String whose associated value is to be returned
 	 * @return The boolean value associated with the provided tag
 	 */
-	public static boolean getBoolean(String tag) {
+	public boolean getBoolean(String tag) {
 		return provider.getBoolean(tag, false);
 	}
 
@@ -121,7 +110,7 @@ public final class PrefStore extends Store {
 	 * @param tag   The unique key which will become associated with the new value
 	 * @param value The new value
 	 */
-	public static void putBoolean(String tag, boolean value) {
+	public void putBoolean(String tag, boolean value) {
 		log.trace("Associating \"{}\": {}", tag, value);
 		provider.putBoolean(tag, value);
 	}
@@ -132,7 +121,7 @@ public final class PrefStore extends Store {
 	 * @param tag A unique String whose associated value is to be returned
 	 * @return The int value associated with the provided tag
 	 */
-	public static int getInt(String tag) {
+	public int getInt(String tag) {
 		return provider.getInt(tag, 0);
 	}
 
@@ -142,7 +131,7 @@ public final class PrefStore extends Store {
 	 * @param tag   The unique key which will become associated with the new value
 	 * @param value The new value
 	 */
-	public static void putInt(String tag, int value) {
+	public void putInt(String tag, int value) {
 		log.trace("Associating \"{}\": {}", tag, value);
 		provider.putInt(tag, value);
 	}
@@ -153,7 +142,7 @@ public final class PrefStore extends Store {
 	 * @param tag A unique String whose associated value is to be returned
 	 * @return The byte[] value associated with the provided tag
 	 */
-	public static byte[] getBytes(String tag) {
+	public byte[] getBytes(String tag) {
 		return provider.getByteArray(tag, null);
 	}
 
@@ -163,7 +152,7 @@ public final class PrefStore extends Store {
 	 * @param tag   The unique key which will become associated with the new value
 	 * @param value The new value
 	 */
-	public static void putBytes(String tag, byte[] value) {
+	public void putBytes(String tag, byte[] value) {
 		log.trace("Associating \"{}\": {}", tag, value);
 		provider.putByteArray(tag, value);
 	}
@@ -174,7 +163,7 @@ public final class PrefStore extends Store {
 	 * @param tag   The unique key which will become associated with the new value
 	 * @param value The new value
 	 */
-	public static void put(String tag, Object value) {
+	public void put(String tag, Object value) {
 		Objects.requireNonNull(tag);
 		Objects.requireNonNull(value);
 
@@ -198,7 +187,7 @@ public final class PrefStore extends Store {
 	 * @param value The new value
 	 * @throws BackingStoreException
 	 */
-	public static void register(String tag, Object value) throws BackingStoreException {
+	public void register(String tag, Object value) throws BackingStoreException {
 		Objects.requireNonNull(tag);
 		Objects.requireNonNull(value);
 
@@ -207,11 +196,9 @@ public final class PrefStore extends Store {
 		}
 	}
 
-	/**
-	 * Flush and shutdown the store. Any subsequent interaction will fail until the
-	 * store is reinitialized.
-	 */
-	public static void close() throws BackingStoreException {
+	@Override
+	public void close() throws BackingStoreException {
+		log.debug("Closing PrefStore (provider: " + provider + ")");
 		try {
 			provider.flush();
 		} finally {
@@ -219,6 +206,37 @@ public final class PrefStore extends Store {
 		}
 	}
 
-	private PrefStore() {
+	@Override
+	public PrefStore init(Consumer<PrefStoreConfig> configurator) {
+		var config = new PrefStoreConfig();
+		configurator.accept(config);
+
+		if (provider != null)
+			log.warn("Reinitializing store without flushing Preferences");
+
+		if (config.prefNodeClass != null) {
+			provider = Preferences.userNodeForPackage(config.prefNodeClass);
+		} else if (config.instance != null && config.flavor != null) {
+			provider = getPreferences(config.instance, config.flavor);
+		}
+
+		try {
+			for (var entry : config.defaults.entrySet())
+				register(entry.getKey(), entry.getValue());
+		} catch (BackingStoreException e) {
+			throw new RuntimeException(e);
+		}
+
+		return (PrefStore) super.init(null);
 	}
+
+	public final class PrefStoreConfig extends StoreConfig {
+		public Instance instance;
+		public InstanceFlavor flavor;
+		public Class<?> prefNodeClass;
+
+		public final Map<String, Object> defaults = new HashMap<>();
+	}
+
+	public static final PrefStore PrefStore = new PrefStore();
 }

@@ -19,6 +19,7 @@ package com.sandpolis.client.mega.cmd;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.nio.file.Files;

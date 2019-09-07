@@ -17,17 +17,20 @@
  *****************************************************************************/
 package com.sandpolis.viewer.jfx.store.stage;
 
+import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import com.sandpolis.core.instance.Store.AutoInitializer;
-import com.sandpolis.core.instance.store.pref.PrefStore;
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
+import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.viewer.jfx.PrefConstant.ui;
 import com.sandpolis.viewer.jfx.common.FxUtil;
+import com.sandpolis.viewer.jfx.store.stage.StageStore.StageStoreConfig;
 
 import javafx.application.Platform;
 import javafx.scene.Parent;
@@ -42,20 +45,14 @@ import javafx.stage.Stage;
  * @author cilki
  * @since 5.0.0
  */
-@AutoInitializer
-public final class StageStore {
-
-	/**
-	 * A list of loaded {@link Stage}s.
-	 */
-	private static List<Stage> loaded = new ArrayList<>();
+public final class StageStore extends MapStore<String, Stage, StageStoreConfig> {
 
 	/**
 	 * Begin stage building.
 	 * 
 	 * @return A new {@link StageBuilder}
 	 */
-	public static StageBuilder newStage() {
+	public StageBuilder newStage() {
 		return new StageBuilder();
 	}
 
@@ -65,25 +62,25 @@ public final class StageStore {
 	 * @param stage The initial stage
 	 * @return A new {@link StageBuilder}
 	 */
-	public static StageBuilder newStage(Stage stage) {
+	public StageBuilder newStage(Stage stage) {
 		return new StageBuilder().stage(stage);
 	}
 
 	/**
 	 * Hide all stages in the store.
 	 */
-	public static void hideAll() {
+	public void hideAll() {
 		Platform.runLater(() -> {
-			loaded.stream().forEach(stage -> stage.hide());
+			stream().forEach(stage -> stage.hide());
 		});
 	}
 
 	/**
 	 * Show all stages in the store.
 	 */
-	public static void showAll() {
+	public void showAll() {
 		Platform.runLater(() -> {
-			loaded.stream().forEach(stage -> stage.show());
+			stream().forEach(stage -> stage.show());
 		});
 	}
 
@@ -92,8 +89,8 @@ public final class StageStore {
 	 * 
 	 * @param stage The stage to close
 	 */
-	public static void close(Stage stage) {
-		loaded.remove(stage);
+	public void close(Stage stage) {
+		removeValue(stage);
 		Platform.runLater(() -> {
 			stage.close();
 		});
@@ -104,19 +101,19 @@ public final class StageStore {
 	 * 
 	 * @param theme The new theme
 	 */
-	public static void changeTheme(String theme) {
+	public void changeTheme(String theme) {
 		Objects.requireNonNull(theme);
 
 		PrefStore.putString(ui.theme, theme);
 		Platform.runLater(() -> {
-			loaded.stream().map(stage -> stage.getScene().getStylesheets()).forEach(styles -> {
+			stream().map(stage -> stage.getScene().getStylesheets()).forEach(styles -> {
 				styles.clear();
 				styles.add("/css/" + theme + ".css");
 			});
 		});
 	}
 
-	public final static class StageBuilder {
+	public final class StageBuilder {
 
 		private Stage stage;
 		private Parent root;
@@ -216,7 +213,25 @@ public final class StageStore {
 			stage.setTitle(title);
 			stage.show();
 
-			loaded.add(stage);
+			add(stage);
 		}
 	}
+
+	@Override
+	public StageStore init(Consumer<StageStoreConfig> configurator) {
+		var config = new StageStoreConfig();
+		configurator.accept(config);
+
+		return (StageStore) super.init(null);
+	}
+
+	public final class StageStoreConfig extends StoreConfig {
+
+		@Override
+		public void ephemeral() {
+			provider = new MemoryMapStoreProvider<>(Stage.class, Stage::getTitle);
+		}
+	}
+
+	public static final StageStore StageStore = new StageStore();
 }

@@ -18,6 +18,9 @@
 package com.sandpolis.core.net.command;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 
 import java.util.concurrent.TimeUnit;
 
@@ -26,11 +29,8 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant;
 import com.sandpolis.core.instance.PoolConstant;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
-import com.sandpolis.core.net.store.network.NetworkStore;
 import com.sandpolis.core.util.ProtoUtil;
 
 import io.netty.util.concurrent.EventExecutor;
@@ -65,7 +65,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 * The target sock which will be used to send and receive messages. Defaults to
 	 * the default server.
 	 */
-	protected Sock sock = ConnectionStore.get(cvid);
+	protected Sock sock = ConnectionStore.get(cvid).get();
 
 	/**
 	 * Explicitly set a thread pool for the completion listeners.
@@ -123,7 +123,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 */
 	public E target(int cvid) {
 		this.cvid = cvid;
-		this.sock = ConnectionStore.get(cvid);
+		this.sock = ConnectionStore.get(cvid).get();
 		return (E) this;
 	}
 

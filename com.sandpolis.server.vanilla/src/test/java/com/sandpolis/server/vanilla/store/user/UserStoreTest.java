@@ -17,6 +17,7 @@
  *****************************************************************************/
 package com.sandpolis.server.vanilla.store.user;
 
+import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -28,24 +29,25 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.storage.StoreProviderFactory;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 
 class UserStoreTest {
 
 	@BeforeEach
 	void setup() throws URISyntaxException {
-		UserStore.init(StoreProviderFactory.memoryList(User.class));
+		UserStore.init(config -> {
+			config.ephemeral();
+		});
 	}
 
 	@Test
 	@DisplayName("Check basic usage of exists")
 	void exists() {
-		assertFalse(UserStore.exists("TESTUSER"));
+		assertFalse(UserStore.get("TESTUSER").isPresent());
 		UserStore.add(UserConfig.newBuilder().setUsername("TESTUSER").setPassword("abc1234c"));
-		assertTrue(UserStore.exists("TESTUSER"));
+		assertTrue(UserStore.get("TESTUSER").isPresent());
 		UserStore.remove("TESTUSER");
-		assertFalse(UserStore.exists("TESTUSER"));
+		assertFalse(UserStore.get("TESTUSER").isPresent());
 	}
 
 	@Test
