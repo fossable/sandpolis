@@ -9,7 +9,7 @@ plugins {
 	id 'application'
 
 	id 'com.sandpolis.gradle.soi'
-	id 'com.bmuschko.docker-java-application' version '4.10.0'
+	id 'com.bmuschko.docker-java-application' version '5.0.0'
 }
 
 eclipse {
