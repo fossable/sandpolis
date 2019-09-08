@@ -71,7 +71,6 @@ public final class Viewer {
 				Core.SO_BUILD.getNumber());
 
 		register(BasicTasks.loadConfiguration);
-		register(Viewer.loadConfiguration);
 		register(IPCTask.load);
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
@@ -82,37 +81,6 @@ public final class Viewer {
 
 		register(Viewer.shutdown);
 	}
-
-	/**
-	 * Load the configuration from the runtime environment.
-	 */
-	@InitializationTask(name = "Load viewer configuration", fatal = true)
-	private static final Task loadConfiguration = new Task((task) -> {
-
-		// Load PrefStore
-		PrefStore.init(config -> {
-			config.instance = Core.INSTANCE;
-			config.flavor = Core.FLAVOR;
-		});
-
-		PrefStore.register(ui.help, true);
-		PrefStore.register(ui.animations, true);
-		PrefStore.register(ui.main.view, "list");
-		PrefStore.register(ui.main.console, false);
-		PrefStore.register(ui.tray.minimize, true);
-		PrefStore.register(ui.theme, "Crimson");
-
-		PrefStore.register(ui.view.login.width, 535);
-		PrefStore.register(ui.view.login.height, 380);
-		PrefStore.register(ui.view.main.width, 770);
-		PrefStore.register(ui.view.main.height, 345);
-		PrefStore.register(ui.view.about.width, 660);
-		PrefStore.register(ui.view.about.height, 400);
-		PrefStore.register(ui.view.generator.width, 700);
-		PrefStore.register(ui.view.generator.height, 400);
-
-		return task.success();
-	});
 
 	/**
 	 * Load the runtime environment.
@@ -140,6 +108,27 @@ public final class Viewer {
 			config.defaults.put(PoolConstant.ui.fx_thread, new FxEventExecutor());
 		});
 
+		PrefStore.init(config -> {
+			config.instance = Core.INSTANCE;
+			config.flavor = Core.FLAVOR;
+
+			config.defaults.put(ui.help, true);
+			config.defaults.put(ui.animations, true);
+			config.defaults.put(ui.main.view, "list");
+			config.defaults.put(ui.main.console, false);
+			config.defaults.put(ui.tray.minimize, true);
+			config.defaults.put(ui.theme, "Crimson");
+
+			config.defaults.put(ui.view.login.width, 535);
+			config.defaults.put(ui.view.login.height, 380);
+			config.defaults.put(ui.view.main.width, 770);
+			config.defaults.put(ui.view.main.height, 345);
+			config.defaults.put(ui.view.about.width, 660);
+			config.defaults.put(ui.view.about.height, 400);
+			config.defaults.put(ui.view.generator.width, 700);
+			config.defaults.put(ui.view.generator.height, 400);
+		});
+
 		NetworkStore.init(config -> {
 			config.ephemeral();
 		});
@@ -148,17 +137,16 @@ public final class Viewer {
 			config.ephemeral();
 		});
 
-		PrefStore.init(config -> {
-			config.instance = Core.INSTANCE;
-			config.flavor = Core.FLAVOR;
-		});
-
 		PluginStore.init(config -> {
 			config.ephemeral();
 		});
 
 		ProfileStore.init(config -> {
 			config.ephemeral(FXCollections.observableArrayList());
+		});
+
+		StageStore.init(config -> {
+			config.ephemeral();
 		});
 
 		// TODO

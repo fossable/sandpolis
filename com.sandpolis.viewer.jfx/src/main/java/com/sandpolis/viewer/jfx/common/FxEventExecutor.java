@@ -34,34 +34,27 @@ import javafx.application.Platform;
  */
 public final class FxEventExecutor extends AbstractEventExecutor {
 
+	private boolean shutdown = false;
+
 	@Override
 	public boolean isShuttingDown() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Future<?> terminationFuture() {
-		throw new UnsupportedOperationException();
+		return shutdown;
 	}
 
 	@Override
 	public boolean isShutdown() {
-		throw new UnsupportedOperationException();
+		return shutdown;
 	}
 
 	@Override
 	public boolean isTerminated() {
-		throw new UnsupportedOperationException();
+		return shutdown;
 	}
 
 	@Override
-	public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-		throw new UnsupportedOperationException();
+	public void shutdown() {
+		shutdown = true;
+		// Nothing to clean up
 	}
 
 	@Override
@@ -79,7 +72,17 @@ public final class FxEventExecutor extends AbstractEventExecutor {
 	}
 
 	@Override
-	public void shutdown() {
+	public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Future<?> terminationFuture() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
 		throw new UnsupportedOperationException();
 	}
 

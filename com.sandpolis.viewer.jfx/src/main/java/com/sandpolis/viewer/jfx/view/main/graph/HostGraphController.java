@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import com.fxgraph.graph.Graph;
 import com.fxgraph.graph.Model;
 import com.google.common.eventbus.Subscribe;
+import com.sandpolis.core.net.store.connection.Events.SockEstablishedEvent;
+import com.sandpolis.core.net.store.connection.Events.SockLostEvent;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 
 import javafx.application.Platform;
@@ -65,7 +67,7 @@ public class HostGraphController extends AbstractController {
 	}
 
 	@Subscribe
-	private void onSockLost() {
+	private void onSockLost(SockLostEvent event) {
 		Platform.runLater(() -> {
 			graph.beginUpdate();
 			// TODO condition
@@ -75,7 +77,7 @@ public class HostGraphController extends AbstractController {
 	}
 
 	@Subscribe
-	private void onSockEstablished() {
+	private void onSockEstablished(SockEstablishedEvent event) {
 		Platform.runLater(() -> {
 			// TODO
 		});

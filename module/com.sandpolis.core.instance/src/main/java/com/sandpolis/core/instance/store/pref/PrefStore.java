@@ -198,7 +198,7 @@ public final class PrefStore extends StoreBase<PrefStoreConfig> {
 
 	@Override
 	public void close() throws BackingStoreException {
-		log.debug("Closing PrefStore (provider: " + provider + ")");
+		log.debug("Closing preference node: " + provider.absolutePath());
 		try {
 			provider.flush();
 		} finally {

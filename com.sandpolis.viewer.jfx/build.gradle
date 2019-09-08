@@ -12,6 +12,7 @@ plugins {
 
 javafx {
 	modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+	version = "12.0.2"
 }
 
 eclipse {

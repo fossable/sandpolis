@@ -57,8 +57,7 @@ public final class ThreadStore extends StoreBase<ThreadStoreConfig> {
 
 	@Override
 	public void close() throws Exception {
-		log.debug("Closing ThreadStore (provider: " + provider + ")");
-		log.debug("Shutting down {} thread pools", provider.size());
+		log.debug("Closing {} active thread pools", provider.size());
 		provider.values().forEach(service -> service.shutdownNow());
 		provider = null;
 	}
