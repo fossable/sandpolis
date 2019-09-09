@@ -48,6 +48,7 @@ class ConnectionLoopTest {
 		ThreadStore.init(config -> {
 			config.ephemeral();
 			config.defaults.put(net.connection.outgoing, GlobalEventExecutor.INSTANCE);
+			config.defaults.put("temploop", GlobalEventExecutor.INSTANCE);
 		});
 	}
 
@@ -84,6 +85,5 @@ class ConnectionLoopTest {
 
 		assertTrue(loop.future().isDone());
 		assertTrue(loop.future().isSuccess());
-		assertNotNull(loop.future().getNow());
 	}
 }

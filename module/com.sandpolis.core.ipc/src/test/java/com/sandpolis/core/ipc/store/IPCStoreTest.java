@@ -48,6 +48,7 @@ class IPCStoreTest {
 			config.ephemeral();
 		});
 		ThreadStore.init(config -> {
+			config.ephemeral();
 			config.defaults.put(net.ipc.listener, Executors.newCachedThreadPool());
 			config.defaults.put(net.ipc.receptor, Executors.newCachedThreadPool());
 		});
