@@ -38,7 +38,7 @@ class CertUtilTest {
 	@Test
 	@DisplayName("Parse a base-64 encoded certificate")
 	void parseString_1() throws CertificateException {
-		X509Certificate cert = CertUtil.parse(testCert);
+		X509Certificate cert = CertUtil.parseCert(testCert);
 
 		assertEquals(new Date(1495861281000L), cert.getNotBefore());
 		assertEquals(new Date(1527397281000L), cert.getNotAfter());
@@ -48,7 +48,7 @@ class CertUtilTest {
 	@Test
 	@DisplayName("Parse a certificate")
 	void parseBytes_1() throws CertificateException {
-		X509Certificate cert = CertUtil.parse(Base64.getDecoder().decode(testCert));
+		X509Certificate cert = CertUtil.parseCert(Base64.getDecoder().decode(testCert));
 
 		assertEquals(new Date(1495861281000L), cert.getNotBefore());
 		assertEquals(new Date(1527397281000L), cert.getNotAfter());
@@ -68,7 +68,7 @@ class CertUtilTest {
 	@Test
 	@DisplayName("Check timestamp validity of an expired certificate")
 	void getValidity_1() throws CertificateException {
-		assertFalse(CertUtil.getValidity(CertUtil.parse(Base64.getDecoder().decode(testCert))));
+		assertFalse(CertUtil.checkValidity(CertUtil.parseCert(Base64.getDecoder().decode(testCert))));
 	}
 
 }

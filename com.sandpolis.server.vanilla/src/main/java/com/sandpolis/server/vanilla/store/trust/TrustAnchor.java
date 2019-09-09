@@ -86,7 +86,7 @@ public class TrustAnchor {
 		@Override
 		public X509Certificate convertToEntityAttribute(String dbData) {
 			try {
-				return CertUtil.parse(dbData);
+				return CertUtil.parseCert(dbData);
 			} catch (CertificateException e) {
 				throw new RuntimeException(e);
 			}

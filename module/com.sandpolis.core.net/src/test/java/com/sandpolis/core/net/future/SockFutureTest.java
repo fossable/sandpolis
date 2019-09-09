@@ -33,6 +33,7 @@ import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.logging;
 import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.handler.ExeletHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
 
 import io.netty.bootstrap.Bootstrap;
@@ -95,6 +96,10 @@ class SockFutureTest {
 		// Set CVIDs manually
 		server.channel().attr(ChannelConstant.CVID).set(123);
 		client.channel().attr(ChannelConstant.CVID).set(321);
+
+		// Set exelet handlers manually
+		server.channel().attr(ChannelConstant.HANDLER_EXELET).set(new ExeletHandler(null));
+		client.channel().attr(ChannelConstant.HANDLER_EXELET).set(new ExeletHandler(null));
 
 		SockFuture sf = new SockFuture(client);
 		sf.sync();

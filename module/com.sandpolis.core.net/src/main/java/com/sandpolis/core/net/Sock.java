@@ -660,15 +660,8 @@ public class Sock {
 
 		/**
 		 * The peer's certificate is either revoked, expired, invalid, self-signed, or
-		 * missing. The {@code Sock} has nevertheless established a connection because
-		 * strict certificate checking was disabled.
+		 * missing.
 		 */
-		INVALID,
-
-		/**
-		 * The peer's certificate is {@link #INVALID} and the {@code Sock} refused to
-		 * proceed because strict certificate checking was enabled.
-		 */
-		REFUSED;
+		INVALID;
 	}
 }

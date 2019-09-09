@@ -47,7 +47,7 @@ public final class BasicTasks {
 		Config.register(logging.startup.summary, false);
 
 		Config.register(net.connection.outgoing.pool_size, 2);
-		Config.register(net.connection.tls, false);
+		Config.register(net.connection.tls, true);
 		Config.register(net.message.default_timeout, 2000);
 
 		Config.register(plugin.enabled, true);

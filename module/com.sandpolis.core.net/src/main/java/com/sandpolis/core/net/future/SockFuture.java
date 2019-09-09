@@ -75,14 +75,10 @@ public class SockFuture extends DefaultPromise<Sock> {
 			if (ch.attr(ChannelConstant.FUTURE_CVID).get() != null) {
 				// Wait for the CVID handshake to complete
 				ch.attr(ChannelConstant.FUTURE_CVID).get().addListener((DefaultPromise<Integer> promise) -> {
-					if (!promise.isSuccess()) {
-						SockFuture.this.setFailure(promise.cause());
-						return;
-					}
-
 					complete(ch);
 				});
 			} else {
+				// The CVID handshake must be done already
 				complete(ch);
 			}
 		});

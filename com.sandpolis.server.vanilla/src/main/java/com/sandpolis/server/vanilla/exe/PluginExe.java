@@ -162,7 +162,7 @@ public class PluginExe extends Exelet {
 		String id = manifest.getValue("Plugin-Id");
 
 		// Read certificate
-		var cert = CertUtil.parse(manifest.getValue("Plugin-Cert"));
+		var cert = CertUtil.parseCert(manifest.getValue("Plugin-Cert"));
 
 		// Verify certificate
 		if (!TrustStore.verifyPluginCertificate(cert))

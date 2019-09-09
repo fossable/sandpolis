@@ -55,7 +55,6 @@ public class ClientExe extends Exelet {
 
 		try {
 			for (var nif : new SystemInfo().getHardware().getNetworkIFs()) {
-				nif.updateNetworkStats();
 				download += nif.getBytesRecv();
 				upload += nif.getBytesSent();
 			}

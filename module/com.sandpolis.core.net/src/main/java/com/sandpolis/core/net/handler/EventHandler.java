@@ -75,23 +75,14 @@ public class EventHandler extends ChannelInboundHandlerAdapter {
 		if (evt instanceof SslHandshakeCompletionEvent) {
 			SslHandshakeCompletionEvent event = (SslHandshakeCompletionEvent) evt;
 
-			if (event.isSuccess()) {
-				ctx.channel().attr(ChannelConstant.CERTIFICATE_STATE).set(CertificateState.VALID);
-			} else {
-				Boolean strict = ctx.channel().attr(ChannelConstant.STRICT_CERTS).get();
-				if (strict == null || strict) {
-					ctx.channel().attr(ChannelConstant.CERTIFICATE_STATE).set(CertificateState.REFUSED);
-					ctx.close();
-				} else {
-					ctx.channel().attr(ChannelConstant.CERTIFICATE_STATE).set(CertificateState.INVALID);
-				}
-			}
+			ctx.channel().attr(ChannelConstant.CERTIFICATE_STATE)
+					.set(event.isSuccess() ? CertificateState.VALID : CertificateState.INVALID);
 		}
 	}
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		// Drop the message
+		// The message reached the end of the pipeline
 		log.warn("Dropped incoming message: {}", msg.toString());
 	}
 }

@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
@@ -112,7 +113,8 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 
 		// Build a bootstrap
 		Bootstrap bootstrap = new Bootstrap().channel(Protocol.TCP.getChannel())
-				.group(ThreadStore.get("net.connection.outgoing")).handler(new ClientPipelineInit(exelets));
+				.group(ThreadStore.get(net.connection.outgoing))
+				.handler(new ClientPipelineInit(exelets, config.getStrictCerts()));
 
 		ConnectionLoop loop = new ConnectionLoop(config, bootstrap);
 		loop.start();
@@ -132,7 +134,7 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 		return connect(new Bootstrap().channel(NioSocketChannel.class).group(new NioEventLoopGroup())
 				.remoteAddress(address, port)
 				// TODO use static pipeline initializer defined somewhere
-				.handler(new ClientPipelineInit(new Class[] {})));
+				.handler(new ClientPipelineInit(new Class[] {}, true)));
 	}
 
 	@Override

@@ -22,13 +22,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
+import java.util.Objects;
 
 /**
  * Certificate utilities.
@@ -37,53 +44,126 @@ import java.util.Base64;
  * @since 5.0.0
  */
 public final class CertUtil {
-	private CertUtil() {
+
+	/**
+	 * Get the root server certificate. This certificate is used for authenticating
+	 * server connections.
+	 *
+	 * @return The root certificate
+	 */
+	public static X509Certificate getServerRoot() {
+		try (InputStream in = CertUtil.class.getResourceAsStream("/cert/server.cert")) {
+			return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**
-	 * Load a {@link X509Certificate}.
+	 * Get the root plugin certificate. This certificate is used for authenticating
+	 * plugin binaries.
+	 *
+	 * @return The root certificate
+	 */
+	public static X509Certificate getPluginRoot() {
+		try (InputStream in = CertUtil.class.getResourceAsStream("/cert/plugin.cert")) {
+			return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Indicates whether the given certificate is within the timestamp constraints.
+	 *
+	 * @param cert The certificate to check
+	 * @return True if the current time is after the begin timestamp, but before the
+	 *         expiration timestamp
+	 */
+	public static boolean checkValidity(X509Certificate cert) {
+		try {
+			Objects.requireNonNull(cert).checkValidity();
+			return true;
+		} catch (CertificateExpiredException | CertificateNotYetValidException e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Check that the given hostname matches the given certificate.
+	 * 
+	 * @param cert
+	 * @param hostname
+	 * @return
+	 * @throws CertificateParsingException
+	 */
+	public static boolean checkHostname(X509Certificate cert, String hostname) throws CertificateException {
+		var sans = cert.getSubjectAlternativeNames();
+		if (sans == null)
+			throw new CertificateException();
+
+		for (var san : sans) {
+			if ((int) san.get(0) == 2) { // 2 indicates DNS
+				if (hostname.equals(san.get(1)))
+					return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Load an {@link X509Certificate}.
 	 *
 	 * @param cert A Base64-encoded certificate
 	 * @return The new certificate
 	 * @throws CertificateException If the certificate format is invalid
 	 */
-	public static X509Certificate parse(String cert) throws CertificateException {
-		if (cert == null)
-			throw new IllegalArgumentException();
-
-		return parse(Base64.getDecoder().decode(cert));
+	public static X509Certificate parseCert(String cert) throws CertificateException {
+		return parseCert(Base64.getDecoder().decode(Objects.requireNonNull(cert)));
 	}
 
 	/**
-	 * Load a {@link X509Certificate}.
+	 * Load an {@link X509Certificate}.
 	 *
 	 * @param cert A certificate on the filesystem
 	 * @return The new certificate
 	 * @throws CertificateException If the certificate format is invalid
 	 * @throws IOException          If there was an error reading the file
 	 */
-	public static X509Certificate parse(File cert) throws CertificateException, IOException {
-		if (cert == null)
-			throw new IllegalArgumentException();
-
-		return parse(Files.readAllBytes(cert.toPath()));
+	public static X509Certificate parseCert(File cert) throws CertificateException, IOException {
+		return parseCert(Files.readAllBytes(Objects.requireNonNull(cert).toPath()));
 	}
 
 	/**
-	 * Load a {@link X509Certificate}.
+	 * Load an {@link X509Certificate}.
 	 *
-	 * @param cert An unencoded certificate
+	 * @param cert A decoded certificate
 	 * @return The new certificate
 	 * @throws CertificateException If the certificate format is invalid
 	 */
-	public static X509Certificate parse(byte[] cert) throws CertificateException {
-		if (cert == null)
-			throw new IllegalArgumentException();
+	public static X509Certificate parseCert(byte[] cert) throws CertificateException {
+		Objects.requireNonNull(cert);
 
 		try (InputStream in = new ByteArrayInputStream(cert)) {
 			return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
 		} catch (IOException e) {
-			throw new IllegalArgumentException("The argument caused an IOException");
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Load a {@link PrivateKey}.
+	 * 
+	 * @param key A decoded private key
+	 * @return The new private key
+	 * @throws InvalidKeySpecException If the key format is invalid
+	 */
+	public static PrivateKey parseKey(byte[] key) throws InvalidKeySpecException {
+		try {
+			return KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(key));
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -95,10 +175,7 @@ public final class CertUtil {
 	 * @throws CertificateException If the certificate format is invalid
 	 */
 	public static String getInfoString(String cert) throws CertificateException {
-		if (cert == null)
-			throw new IllegalArgumentException();
-
-		return getInfoString(parse(cert));
+		return getInfoString(parseCert(Objects.requireNonNull(cert)));
 	}
 
 	/**
@@ -108,8 +185,7 @@ public final class CertUtil {
 	 * @return A nicely formatted String
 	 */
 	public static String getInfoString(X509Certificate cert) {
-		if (cert == null)
-			throw new IllegalArgumentException();
+		Objects.requireNonNull(cert);
 
 		StringBuffer buffer = new StringBuffer();
 
@@ -139,15 +215,14 @@ public final class CertUtil {
 	 * @return A nicely formatted HTML String
 	 */
 	public static String getInfoHtml(X509Certificate cert) {
-		if (cert == null)
-			throw new IllegalArgumentException();
+		Objects.requireNonNull(cert);
 
 		return String.format("<html>%s</html>",
 				getInfoString(cert).replaceAll(String.format("%n"), "<br>").replaceAll("\t", "&emsp;"));
 	}
 
 	/**
-	 * Format a binary key into hexidecimal colon format.
+	 * Format a binary key in hexidecimal-colon form.
 	 *
 	 * @param data    Key data
 	 * @param columns Formatted key width in bytes
@@ -170,35 +245,6 @@ public final class CertUtil {
 		return buffer.toString();
 	}
 
-	/**
-	 * Get the root Sandpolis certificate.
-	 *
-	 * @return The root certificate
-	 * @throws CertificateException If the certificate format is invalid
-	 * @throws IOException          If there was an error reading the resource
-	 */
-	public static X509Certificate getRoot() throws CertificateException, IOException {
-		try (InputStream in = CertUtil.class.getResourceAsStream("/cert/root.cert")) {
-			return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
-		}
-	}
-
-	/**
-	 * Indicates whether the given certificate is within the timestamp constraints.
-	 *
-	 * @param certificate The certificate to check
-	 * @return True if the current time is after the begin timestamp, but before the
-	 *         expiration timestamp
-	 */
-	public static boolean getValidity(X509Certificate certificate) {
-		if (certificate == null)
-			throw new IllegalArgumentException();
-
-		try {
-			certificate.checkValidity();
-			return true;
-		} catch (CertificateExpiredException | CertificateNotYetValidException e) {
-			return false;
-		}
+	private CertUtil() {
 	}
 }

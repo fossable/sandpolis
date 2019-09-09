@@ -90,7 +90,7 @@ public class UserPhaseController extends AbstractController {
 			server_certificate.setTooltip(new Tooltip(CertUtil.getInfoString(certificate)));
 
 			// Set validity
-			if (CertUtil.getValidity(certificate)) {
+			if (CertUtil.checkValidity(certificate)) {
 				server_certificate.setText("Valid certificate");
 				// TODO colorize
 			} else {

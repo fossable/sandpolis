@@ -29,6 +29,7 @@ import static com.sandpolis.core.proto.util.Result.ErrorCode.OK;
 
 import java.io.File;
 import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 
 import org.apache.commons.validator.routines.DomainValidator;
 import org.apache.commons.validator.routines.EmailValidator;
@@ -252,14 +253,14 @@ public final class ValidationUtil {
 			if (config.hasCert() && config.hasKey()) {
 				// Check certificate and key formats
 				try {
-					CertUtil.parse(config.getCert().toByteArray());
+					CertUtil.parseCert(config.getCert().toByteArray());
 				} catch (CertificateException e) {
 					return INVALID_CERTIFICATE;
 				}
 
 				try {
-					CertUtil.parse(config.getKey().toByteArray());
-				} catch (CertificateException e) {
+					CertUtil.parseKey(config.getKey().toByteArray());
+				} catch (InvalidKeySpecException e) {
 					return INVALID_KEY;
 				}
 			}

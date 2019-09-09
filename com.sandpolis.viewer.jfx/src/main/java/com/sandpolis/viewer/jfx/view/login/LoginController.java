@@ -141,6 +141,7 @@ public class LoginController extends FxController {
 					.addListener((SockFuture sockFuture) -> {
 						if (sockFuture.isSuccess()) {
 							connection = sockFuture.get();
+							// TODO check sock state
 							ServerCmd.async().target(connection).pool(ui.fx_thread).getServerBanner()
 									.addHandler((RS_ServerBanner rs) -> {
 										if (!rs.getBannerImage().isEmpty())

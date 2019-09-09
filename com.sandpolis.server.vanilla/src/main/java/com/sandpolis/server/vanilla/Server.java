@@ -30,9 +30,11 @@ import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
+import static com.sandpolis.server.vanilla.store.server.ServerStore.ServerStore;
 import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
@@ -44,6 +46,7 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.protobuf.ByteString;
 import com.sandpolis.core.attribute.AttributeDomain;
 import com.sandpolis.core.attribute.AttributeGroup;
 import com.sandpolis.core.attribute.AttributeNode;
@@ -183,6 +186,10 @@ public final class Server {
 			config.ephemeral();
 		});
 
+		StreamStore.init(config -> {
+			config.ephemeral();
+		});
+
 		PrefStore.init(config -> {
 			config.instance = Core.INSTANCE;
 			config.flavor = Core.FLAVOR;
@@ -235,6 +242,9 @@ public final class Server {
 		PluginStore.init(config -> {
 			config.persistent(DatabaseStore.main());
 			config.verifier = TrustStore::verifyPluginCertificate;
+		});
+
+		ServerStore.init(config -> {
 		});
 
 		return task.success();
@@ -300,6 +310,7 @@ public final class Server {
 				GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
 						.setMega(MegaConfig.newBuilder().setNetwork(NetworkConfig.newBuilder()
 								.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000).setMaxTimeout(5000)
+										.setStrictCerts(false)
 										.addTarget(NetworkTarget.newBuilder().setAddress("127.0.0.1").setPort(10101)))))
 						.build()).generate();
 

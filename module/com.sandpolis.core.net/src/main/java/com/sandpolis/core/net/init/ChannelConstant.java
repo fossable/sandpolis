@@ -58,7 +58,7 @@ public final class ChannelConstant {
 	public static final AttributeKey<Promise<Integer>> FUTURE_CVID = AttributeKey.valueOf("future.cvid");
 
 	/**
-	 * The remote host's {@link ExecuteHandler}.
+	 * The remote host's {@link ExeletHandler}.
 	 */
 	public static final AttributeKey<ExeletHandler> HANDLER_EXELET = AttributeKey.valueOf("handler.exelet");
 

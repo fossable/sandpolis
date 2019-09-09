@@ -17,7 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.store.trust;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertPathValidator;
@@ -35,8 +34,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.Resources;
-import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
@@ -93,12 +90,7 @@ public final class TrustStore extends MapStore<String, TrustAnchor, TrustStoreCo
 
 		// Install root CA if required
 		if (get("PLUGIN CA").isEmpty()) {
-			try {
-				add(new TrustAnchor("PLUGIN CA",
-						CertUtil.parse(Resources.toByteArray(MainDispatch.class.getResource("/cert/plugin.cert")))));
-			} catch (CertificateException | IOException e) {
-				throw new RuntimeException("Failed to load certificate", e);
-			}
+			add(new TrustAnchor("PLUGIN CA", CertUtil.getPluginRoot()));
 		}
 
 		return (TrustStore) super.init(null);

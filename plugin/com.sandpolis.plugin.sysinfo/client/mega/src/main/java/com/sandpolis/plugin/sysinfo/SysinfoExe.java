@@ -35,7 +35,6 @@ public class SysinfoExe extends Exelet {
 		long download = 0;
 
 		for (var nif : new SystemInfo().getHardware().getNetworkIFs()) {
-			nif.updateNetworkStats();
 			download += nif.getBytesRecv();
 			upload += nif.getBytesSent();
 		}

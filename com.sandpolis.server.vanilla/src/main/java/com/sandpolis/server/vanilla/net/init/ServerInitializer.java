@@ -17,19 +17,21 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.net.init;
 
-import java.io.ByteArrayInputStream;
 import java.security.cert.CertificateException;
-import java.util.Base64;
+import java.security.spec.InvalidKeySpecException;
 
 import javax.net.ssl.SSLException;
 
-import com.google.common.primitives.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.CvidResponseHandler;
 import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.net.init.PipelineInitializer;
+import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.server.vanilla.exe.AuthExe;
 import com.sandpolis.server.vanilla.exe.GenExe;
 import com.sandpolis.server.vanilla.exe.GroupExe;
@@ -58,6 +60,8 @@ import io.netty.util.concurrent.DefaultPromise;
  * @since 5.0.0
  */
 public class ServerInitializer extends PipelineInitializer {
+
+	private static final Logger log = LoggerFactory.getLogger(ServerInitializer.class);
 
 	// This will cause problems if the server CVID is allowed to change because
 	// CvidResponseHandler always uses the latest CVID while ServerInitializer is
@@ -115,17 +119,8 @@ public class ServerInitializer extends PipelineInitializer {
 		if (cert == null || key == null)
 			throw new IllegalArgumentException();
 
-		byte[] begin_cert = "-----BEGIN CERTIFICATE-----\n".getBytes();
-		byte[] begin_key = "-----BEGIN PRIVATE KEY-----\n".getBytes();
-		byte[] end_cert = "-----END CERTIFICATE-----\n".getBytes();
-		byte[] end_key = "-----END PRIVATE KEY-----\n".getBytes();
-
-		// Convert to PEM format if necessary
-		this.cert = (Bytes.indexOf(cert, begin_cert) == 0) ? cert
-				: Bytes.concat(begin_cert, Base64.getEncoder().encode(cert), end_cert);
-		this.key = (Bytes.indexOf(key, begin_key) == 0) ? key
-				: Bytes.concat(begin_key, Base64.getEncoder().encode(key), end_key);
-
+		this.cert = cert;
+		this.key = key;
 	}
 
 	@Override
@@ -160,11 +155,16 @@ public class ServerInitializer extends PipelineInitializer {
 
 	private SslContext buildSslContext() throws CertificateException, SSLException {
 		if (cert != null && key != null)
-			return SslContextBuilder.forServer(new ByteArrayInputStream(cert), new ByteArrayInputStream(key)).build();
+			try {
+				return SslContextBuilder.forServer(CertUtil.parseKey(key), CertUtil.parseCert(cert)).build();
+			} catch (InvalidKeySpecException e) {
+				throw new RuntimeException(e);
+			}
 
-		// fallback to a self-signed certificate
+		// Fallback certificate
+		log.debug("Generating self-signed fallback certificate");
 		SelfSignedCertificate ssc = new SelfSignedCertificate();
-		return SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
+		return SslContextBuilder.forServer(ssc.key(), ssc.cert()).build();
 	}
 
 }

@@ -264,7 +264,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 		// Verify certificate
 		try {
-			var cert = CertUtil.parse(JarUtil.getManifestValue(path, "Plugin-Cert").get());
+			var cert = CertUtil.parseCert(JarUtil.getManifestValue(path, "Plugin-Cert").get());
 			if (!verifier.apply(cert))
 				throw new CertificateException("Certificate verification failed");
 		} catch (CertificateException | IOException e) {

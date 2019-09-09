@@ -26,6 +26,7 @@ import com.sandpolis.core.util.CertUtil;
 import io.netty.channel.Channel;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.concurrent.DefaultPromise;
 
 /**
@@ -39,8 +40,12 @@ public class ClientPipelineInit extends PipelineInitializer {
 
 	private static final CvidRequestHandler cvidHandler = new CvidRequestHandler();
 
-	public ClientPipelineInit(Class<? extends Exelet>[] exelets) {
+	private final boolean strictCerts;
+
+	public ClientPipelineInit(Class<? extends Exelet>[] exelets, boolean strictCerts) {
 		super(exelets);
+
+		this.strictCerts = strictCerts;
 	}
 
 	@Override
@@ -48,10 +53,16 @@ public class ClientPipelineInit extends PipelineInitializer {
 		super.initChannel(ch);
 
 		if (Config.getBoolean(net.connection.tls)) {
-			SslHandler ssl = SslContextBuilder.forClient().trustManager(CertUtil.getRoot()).build()
-					.newHandler(ch.alloc());
-			ch.pipeline().addAfter("traffic", "ssl", ssl);
-			ch.attr(ChannelConstant.HANDLER_SSL).set(ssl);
+			var ssl = SslContextBuilder.forClient();
+
+			if (strictCerts)
+				ssl.trustManager(CertUtil.getServerRoot());
+			else
+				ssl.trustManager(InsecureTrustManagerFactory.INSTANCE);
+
+			SslHandler sslHandler = ssl.build().newHandler(ch.alloc());
+			ch.pipeline().addAfter("traffic", "ssl", sslHandler);
+			ch.attr(ChannelConstant.HANDLER_SSL).set(sslHandler);
 		}
 
 		ch.pipeline().addBefore("exe", "cvid", cvidHandler);
