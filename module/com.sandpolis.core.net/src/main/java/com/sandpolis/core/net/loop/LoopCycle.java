@@ -51,8 +51,7 @@ public class LoopCycle {
 	/**
 	 * Create an unchanging {@code LoopCycle}.
 	 *
-	 * @param timeout
-	 *            The timeout in milliseconds
+	 * @param timeout The timeout in milliseconds
 	 */
 	public LoopCycle(int timeout) {
 		this(timeout, timeout);
@@ -61,10 +60,8 @@ public class LoopCycle {
 	/**
 	 * Create a {@code LoopCycle} which increases at the default rate.
 	 *
-	 * @param timeout
-	 *            The initial timeout in milliseconds
-	 * @param maximum
-	 *            The maximum timeout in milliseconds
+	 * @param timeout The initial timeout in milliseconds
+	 * @param maximum The maximum timeout in milliseconds
 	 */
 	public LoopCycle(int timeout, int maximum) {
 		this(timeout, maximum, 8);
@@ -73,13 +70,10 @@ public class LoopCycle {
 	/**
 	 * Create a {@code LoopCycle} which increases with the given smoothness.
 	 *
-	 * @param timeout
-	 *            The initial timeout in milliseconds
-	 * @param maximum
-	 *            The maximum timeout in milliseconds
-	 * @param flatness
-	 *            The smoothness factor which controls how quickly the maximum is
-	 *            achieved
+	 * @param timeout  The initial timeout in milliseconds
+	 * @param maximum  The maximum timeout in milliseconds
+	 * @param flatness The smoothness factor which controls how quickly the maximum
+	 *                 is achieved
 	 */
 	public LoopCycle(int timeout, int maximum, double flatness) {
 		if (timeout < 0)

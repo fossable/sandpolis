@@ -20,13 +20,13 @@ import StoreKit
 
 class CloudPricing: UIViewController {
 
-    @IBOutlet weak var monthlyButton: UIButton!
-    @IBOutlet weak var yearlyButton: UIButton!
+	@IBOutlet weak var monthlyButton: UIButton!
+	@IBOutlet weak var yearlyButton: UIButton!
 
 	private var monthlyProduct: SKProduct?
 	private var yearlyProduct: SKProduct?
 
-    override var preferredStatusBarStyle: UIStatusBarStyle {
+	override var preferredStatusBarStyle: UIStatusBarStyle {
 		return .lightContent
 	}
 
@@ -38,19 +38,19 @@ class CloudPricing: UIViewController {
 		request.start()
 	}
 
-    @IBAction func buyMonthly(_ sender: Any) {
+	@IBAction func buyMonthly(_ sender: Any) {
 		if let product = monthlyProduct {
 			SKPaymentQueue.default().add(SKPayment(product: product))
 		}
-    }
+	}
 
-    @IBAction func buyYearly(_ sender: Any) {
-    }
+	@IBAction func buyYearly(_ sender: Any) {
+	}
 
-    @available(iOS 10.0, *)
-    @IBAction func openWebsite(_ sender: Any) {
+	@available(iOS 10.0, *)
+	@IBAction func openWebsite(_ sender: Any) {
 		UIApplication.shared.open(URL(string: "https://sandpolis.com")!, options: [:], completionHandler: nil)
-    }
+	}
 }
 
 extension CloudPricing: SKProductsRequestDelegate {
@@ -78,7 +78,7 @@ extension CloudPricing: SKPaymentTransactionObserver {
 			switch transaction.transactionState {
 			case .purchased:
 				print("Purchased")
-                SKPaymentQueue.default().finishTransaction(transaction)
+				SKPaymentQueue.default().finishTransaction(transaction)
 				//self.performSegue(withIdentifier: "CreateServerSegue", sender: self)
 			case .purchasing:
 				print("Purchasing")

@@ -19,14 +19,14 @@ import UIKit
 
 class ServerCreator: UIViewController {
 
-    @IBOutlet weak var step1: UIView!
-    @IBOutlet weak var step2: UIView!
-    @IBOutlet weak var step3: UIView!
+	@IBOutlet weak var step1: UIView!
+	@IBOutlet weak var step2: UIView!
+	@IBOutlet weak var step3: UIView!
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+	override func viewDidLoad() {
+		super.viewDidLoad()
 		showStep1()
-    }
+	}
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "Step1Embed", let dest = segue.destination as? Step1 {

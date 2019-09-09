@@ -19,31 +19,31 @@ import UIKit
 
 class GroupPanelTable: UITableViewController {
 
-    @IBOutlet weak var uptime: UILabel!
-    @IBOutlet weak var upload: UILabel!
-    @IBOutlet weak var download: UILabel!
+	@IBOutlet weak var uptime: UILabel!
+	@IBOutlet weak var upload: UILabel!
+	@IBOutlet weak var download: UILabel!
 
-    var profiles: [SandpolisProfile]!
+	var profiles: [SandpolisProfile]!
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+	override func viewDidLoad() {
+		super.viewDidLoad()
 
-        // Compute cumulative download
-        download.text = FormatUtil.formatFileSize(profiles.reduce(0) { intermediate, profile in
-            return intermediate + profile.downloadTotal
-        })
+		// Compute cumulative download
+		download.text = FormatUtil.formatFileSize(profiles.reduce(0) { intermediate, profile in
+			return intermediate + profile.downloadTotal
+		})
 
-        // Compute cumulative upload
-        upload.text = FormatUtil.formatFileSize(profiles.reduce(0) { intermediate, profile in
-            return intermediate + profile.uploadTotal
-        })
+		// Compute cumulative upload
+		upload.text = FormatUtil.formatFileSize(profiles.reduce(0) { intermediate, profile in
+			return intermediate + profile.uploadTotal
+		})
 
-        // Compute cumulative uptime
-        let reference = Int64(Date().timeIntervalSince1970) * 1000
-        uptime.text = FormatUtil.timeSince(reference - profiles.reduce(0) { intermediate, profile in
-            return intermediate + max(reference - profile.startTime, 0)
-        })
+		// Compute cumulative uptime
+		let reference = Int64(Date().timeIntervalSince1970) * 1000
+		uptime.text = FormatUtil.timeSince(reference - profiles.reduce(0) { intermediate, profile in
+			return intermediate + max(reference - profile.startTime, 0)
+		})
 
-        tableView.allowsSelection = false
-    }
+		tableView.allowsSelection = false
+	}
 }

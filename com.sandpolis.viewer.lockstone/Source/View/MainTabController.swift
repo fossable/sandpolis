@@ -19,18 +19,18 @@ import UIKit
 
 class MainTabController: UITabBarController {
 
-    var server: SandpolisServer!
+	var server: SandpolisServer!
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        navigationItem.title = server.name
-        let hostListVC = viewControllers![0] as! ClientList
-        hostListVC.server = server
-        let listFirst = UserDefaults.standard.integer(forKey: "defaultView")
-        if listFirst == 0 {
-            self.selectedIndex = 0
-        } else {
-            self.selectedIndex = 1
-        }
-    }
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		navigationItem.title = server.name
+		let hostListVC = viewControllers![0] as! ClientList
+		hostListVC.server = server
+		let listFirst = UserDefaults.standard.integer(forKey: "defaultView")
+		if listFirst == 0 {
+			self.selectedIndex = 0
+		} else {
+			self.selectedIndex = 1
+		}
+	}
 }

@@ -32,11 +32,11 @@ class BackgroundView: UIView {
 		bg.addLine(to: CGPoint(x: CGFloat(bounds.width / 2), y: bounds.height))
 
 		bg.close()
-        if #available(iOS 11.0, *) {
-            UIColor(named: "grid/background")!.setStroke()
-        } else {
-            UIColor.darkGray.setStroke()
-        }
+		if #available(iOS 11.0, *) {
+			UIColor(named: "grid/background")!.setStroke()
+		} else {
+			UIColor.darkGray.setStroke()
+		}
 		bg.lineWidth = bounds.width
 		bg.stroke()
 
@@ -52,11 +52,11 @@ class BackgroundView: UIView {
 		}
 
 		grid.close()
-        if #available(iOS 11.0, *) {
-            UIColor(named: "grid/foreground")!.setStroke()
-        } else {
-            UIColor.darkGray.setStroke()
-        }
+		if #available(iOS 11.0, *) {
+			UIColor(named: "grid/foreground")!.setStroke()
+		} else {
+			UIColor.darkGray.setStroke()
+		}
 		grid.lineWidth = lineWidth
 		grid.stroke()
 	}

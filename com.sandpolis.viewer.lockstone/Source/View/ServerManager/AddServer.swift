@@ -20,44 +20,44 @@ import FirebaseFirestore
 
 class AddServer: UIViewController {
 
-    @IBOutlet weak var titleLabel: UINavigationItem!
-    @IBOutlet weak var nameTextField: UITextField!
-    @IBOutlet weak var addressTextField: UITextField!
-    @IBOutlet weak var usernameTextField: UITextField!
-    @IBOutlet weak var passwordTextField: UITextField!
-    @IBOutlet weak var errorLabel: UILabel!
-    @IBOutlet weak var cloudButton: UIButton!
+	@IBOutlet weak var titleLabel: UINavigationItem!
+	@IBOutlet weak var nameTextField: UITextField!
+	@IBOutlet weak var addressTextField: UITextField!
+	@IBOutlet weak var usernameTextField: UITextField!
+	@IBOutlet weak var passwordTextField: UITextField!
+	@IBOutlet weak var errorLabel: UILabel!
+	@IBOutlet weak var cloudButton: UIButton!
 
-    var server: SandpolisServer!
+	var server: SandpolisServer!
 
 	var serverReference: DocumentReference!
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        errorLabel.text = nil
-        if server != nil {
-            nameTextField.text = server.name
-            addressTextField.text = server.address
-            usernameTextField.text = server.username
-            passwordTextField.text = server.password
-            cloudButton.isHidden = true
-            titleLabel.title = "Edit Server"
-        }
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		errorLabel.text = nil
+		if server != nil {
+			nameTextField.text = server.name
+			addressTextField.text = server.address
+			usernameTextField.text = server.username
+			passwordTextField.text = server.password
+			cloudButton.isHidden = true
+			titleLabel.title = "Edit Server"
+		}
 
 		// Search for unused subscriptions
-        cloudButton.setTitle(true ? "Don't have your own server yet?" : "Launch new cloud server", for: .normal)
+		cloudButton.setTitle(true ? "Don't have your own server yet?" : "Launch new cloud server", for: .normal)
 
-    }
+	}
 
 	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
 		self.view.endEditing(true)
 	}
 
-    @IBAction func saveButtonPressed(_ sender: Any) {
-        if nameTextField.text!.isEmpty || addressTextField.text!.isEmpty || usernameTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
-            errorLabel.text = "Please fill out all fields."
-            return
-        }
+	@IBAction func saveButtonPressed(_ sender: Any) {
+		if nameTextField.text!.isEmpty || addressTextField.text!.isEmpty || usernameTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
+			errorLabel.text = "Please fill out all fields."
+			return
+		}
 
 		serverReference.setData([
 			"name": nameTextField.text!,
@@ -67,19 +67,19 @@ class AddServer: UIViewController {
 			"cloud": false
 		])
 
-        dismiss(animated: true, completion: nil)
-    }
+		dismiss(animated: true, completion: nil)
+	}
 
-    @IBAction func cancelButtonPressed(_ sender: Any) {
-        dismiss(animated: true, completion: nil)
-    }
+	@IBAction func cancelButtonPressed(_ sender: Any) {
+		dismiss(animated: true, completion: nil)
+	}
 
-    @IBAction func cloudButtonPressed(_ sender: Any) {
-        performSegue(withIdentifier: "PricingSegue", sender: self)
-    }
+	@IBAction func cloudButtonPressed(_ sender: Any) {
+		performSegue(withIdentifier: "PricingSegue", sender: self)
+	}
 
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
-    }
+	func textFieldShouldReturn(textField: UITextField) -> Bool {
+		textField.resignFirstResponder()
+		return true
+	}
 }

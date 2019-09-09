@@ -19,20 +19,20 @@ import UIKit
 
 class GroupHostCell: UITableViewCell {
 
-    @IBOutlet weak var platform: UIImageView!
-    @IBOutlet weak var hostname: UILabel!
+	@IBOutlet weak var platform: UIImageView!
+	@IBOutlet weak var hostname: UILabel!
 
-    func setContent(_ profile: SandpolisProfile) {
-        hostname.text = profile.hostname
-        switch profile.platform {
-        case .linux:
-            platform.image = UIImage(named: "platform/linux")
-        case .macos:
-            platform.image = UIImage(named: "platform/macos")
-        case .windows:
-            platform.image = UIImage(named: "platform/windows")
-        default:
-            break
-        }
-    }
+	func setContent(_ profile: SandpolisProfile) {
+		hostname.text = profile.hostname
+		switch profile.platform {
+		case .linux:
+			platform.image = UIImage(named: "platform/linux")
+		case .macos:
+			platform.image = UIImage(named: "platform/macos")
+		case .windows:
+			platform.image = UIImage(named: "platform/windows")
+		default:
+			break
+		}
+	}
 }

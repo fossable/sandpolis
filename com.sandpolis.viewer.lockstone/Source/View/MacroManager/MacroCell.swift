@@ -21,13 +21,13 @@ import FirebaseFirestore
 /// A table entry representing a macro
 class MacroCell: UITableViewCell {
 
-    @IBOutlet weak var name: UILabel!
+	@IBOutlet weak var name: UILabel!
 	@IBOutlet weak var type: UILabel!
 	@IBOutlet weak var size: UILabel!
 
 	func setContent(_ macro: DocumentSnapshot) {
-        // Macro name
-        name.text = macro["name"] as? String
+		// Macro name
+		name.text = macro["name"] as? String
 
 		// Macro size
 		if let scriptLength = (macro["script"] as? String)?.count {
@@ -38,5 +38,5 @@ class MacroCell: UITableViewCell {
 
 		// Macro type
 		// TODO
-    }
+	}
 }

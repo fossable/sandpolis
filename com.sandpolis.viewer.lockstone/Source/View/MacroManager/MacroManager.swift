@@ -21,10 +21,10 @@ import FirebaseFirestore
 
 class MacroManager: UITableViewController {
 
-    /// Firebase reference
+	/// Firebase reference
 	private let ref = Firestore.firestore().collection("/user/\(Auth.auth().currentUser!.uid)/macro")
 
-    private var macroList = [DocumentSnapshot]()
+	private var macroList = [DocumentSnapshot]()
 
 	private var macroListener: ListenerRegistration?
 
@@ -50,43 +50,43 @@ class MacroManager: UITableViewController {
 		}
 	}
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return macroList.count
-    }
+	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+		return macroList.count
+	}
 
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let macro = macroList[indexPath.row]
+	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+		let macro = macroList[indexPath.row]
 
-        let cell = tableView.dequeueReusableCell(withIdentifier: "MacroCell", for: indexPath) as! MacroCell
-        cell.setContent(macro)
-        return cell
-    }
+		let cell = tableView.dequeueReusableCell(withIdentifier: "MacroCell", for: indexPath) as! MacroCell
+		cell.setContent(macro)
+		return cell
+	}
 
-    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath:
-            IndexPath) -> UISwipeActionsConfiguration? {
-        let delete = UIContextualAction(style: .destructive, title: "Delete") { (action, view, completionHandler) in
-            // Delete the macro
+	override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath:
+			IndexPath) -> UISwipeActionsConfiguration? {
+		let delete = UIContextualAction(style: .destructive, title: "Delete") { (action, view, completionHandler) in
+			// Delete the macro
 			self.macroList[indexPath.row].reference.delete()
-            completionHandler(true)
-        }
+			completionHandler(true)
+		}
 
-        return UISwipeActionsConfiguration(actions: [delete])
-    }
+		return UISwipeActionsConfiguration(actions: [delete])
+	}
 
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "AddSegue",
 			let editor = segue.destination as? MacroEditor {
 
 			editor.macroReference = ref.document()
 		} else if segue.identifier == "EditSegue",
-            let editor = segue.destination as? MacroEditor {
+			let editor = segue.destination as? MacroEditor {
 
-            if tableView.indexPathForSelectedRow != nil {
-                editor.macro = macroList[tableView.indexPathForSelectedRow!.row]
+			if tableView.indexPathForSelectedRow != nil {
+				editor.macro = macroList[tableView.indexPathForSelectedRow!.row]
 				editor.macroReference = editor.macro.reference
-            }
-        } else {
-            fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
-        }
-    }
+			}
+		} else {
+			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
+		}
+	}
 }

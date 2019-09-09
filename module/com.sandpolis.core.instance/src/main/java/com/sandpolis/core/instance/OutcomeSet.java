@@ -38,8 +38,7 @@ public final class OutcomeSet extends HashSet<Outcome> {
 	/**
 	 * Add an outcome to the set.
 	 *
-	 * @param outcome
-	 *            The outcome to add
+	 * @param outcome The outcome to add
 	 */
 	public void add(Outcome.Builder outcome) {
 		add(outcome.build());

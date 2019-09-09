@@ -20,7 +20,7 @@ import FirebaseFirestore
 
 class MacroSelectCell: UITableViewCell {
 
-    @IBOutlet weak var name: UILabel!
+	@IBOutlet weak var name: UILabel!
 
 	func setContent(_ macro: DocumentSnapshot) {
 		// Macro name

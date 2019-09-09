@@ -91,7 +91,7 @@ public final class CertUtil {
 
 	/**
 	 * Check that the given hostname matches the given certificate.
-	 * 
+	 *
 	 * @param cert
 	 * @param hostname
 	 * @return
@@ -154,7 +154,7 @@ public final class CertUtil {
 
 	/**
 	 * Load a {@link PrivateKey}.
-	 * 
+	 *
 	 * @param key A decoded private key
 	 * @return The new private key
 	 * @throws InvalidKeySpecException If the key format is invalid

@@ -33,7 +33,7 @@ spotless {
 	}
 	format 'groovy', {
 		target '**/*.groovy'
-		
+
 		trimTrailingWhitespace()
 		endWithNewline()
 
@@ -48,11 +48,11 @@ spotless {
 	}
 	format 'swift', {
 		target '**/*.swift'
-		
+
 		trimTrailingWhitespace()
 		endWithNewline()
 		indentWithTabs()
-		
+
 		licenseHeaderFile file('gradle/resources/header_swift.txt'), "import "
 	}
 }

@@ -19,45 +19,45 @@ import UIKit
 
 class ServerCell: UITableViewCell {
 
-    @IBOutlet weak var nameLabel: UILabel!
-    @IBOutlet weak var addressLabel: UILabel!
-    @IBOutlet weak var statusLabel: UILabel!
-    @IBOutlet weak var locationIcon: UIImageView!
+	@IBOutlet weak var nameLabel: UILabel!
+	@IBOutlet weak var addressLabel: UILabel!
+	@IBOutlet weak var statusLabel: UILabel!
+	@IBOutlet weak var locationIcon: UIImageView!
 
-    func setContent(_ server: SandpolisServer) {
-        addressLabel.text = server.address
-        nameLabel.text = server.name
+	func setContent(_ server: SandpolisServer) {
+		addressLabel.text = server.address
+		nameLabel.text = server.name
 
-        // Set IP location
-        if let countryCode = server.countryCode {
-            if let flag = UIImage(named: "flag/\(countryCode.lowercased())") {
-                locationIcon.isHidden = false
-                locationIcon.image = flag
-            } else {
-                locationIcon.isHidden = true
-                print("Missing image for country code:", countryCode)
-            }
-        } else {
-            locationIcon.isHidden = true
-        }
+		// Set IP location
+		if let countryCode = server.countryCode {
+			if let flag = UIImage(named: "flag/\(countryCode.lowercased())") {
+				locationIcon.isHidden = false
+				locationIcon.image = flag
+			} else {
+				locationIcon.isHidden = true
+				print("Missing image for country code:", countryCode)
+			}
+		} else {
+			locationIcon.isHidden = true
+		}
 
-        // Set online status
-        if let online = server.online {
-            if online {
-                accessoryType = .disclosureIndicator
-                statusLabel.isEnabled = false
-                statusLabel.text = ""
-            } else {
-                accessoryType = .none
-                statusLabel.isEnabled = true
-                statusLabel.text = "offline"
-                statusLabel.textColor = UIColor.red
-            }
-        } else {
-            accessoryType = .none
-            statusLabel.isEnabled = false
-            statusLabel.text = "connecting"
-            statusLabel.textColor = UIColor.black
-        }
-    }
+		// Set online status
+		if let online = server.online {
+			if online {
+				accessoryType = .disclosureIndicator
+				statusLabel.isEnabled = false
+				statusLabel.text = ""
+			} else {
+				accessoryType = .none
+				statusLabel.isEnabled = true
+				statusLabel.text = "offline"
+				statusLabel.textColor = UIColor.red
+			}
+		} else {
+			accessoryType = .none
+			statusLabel.isEnabled = false
+			statusLabel.text = "connecting"
+			statusLabel.textColor = UIColor.black
+		}
+	}
 }

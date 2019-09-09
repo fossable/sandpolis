@@ -20,27 +20,27 @@ import UIKit
 /// A cell representing a file
 class FileCell: UITableViewCell {
 
-    @IBOutlet weak var icon: UIImageView!
-    @IBOutlet weak var name: UILabel!
-    @IBOutlet weak var size: UILabel!
-    @IBOutlet weak var mtime: UILabel!
+	@IBOutlet weak var icon: UIImageView!
+	@IBOutlet weak var name: UILabel!
+	@IBOutlet weak var size: UILabel!
+	@IBOutlet weak var mtime: UILabel!
 
-    func setContent(_ file: Net_FileListlet) {
-        // File name
-        name.text = file.name
+	func setContent(_ file: Net_FileListlet) {
+		// File name
+		name.text = file.name
 
-        // File size
-        size.text = FormatUtil.formatFileSize(file.size)
+		// File size
+		size.text = FormatUtil.formatFileSize(file.size)
 
-        // Modification timestamp
-        mtime.text = FormatUtil.formatTimestamp(file.mtime)
+		// Modification timestamp
+		mtime.text = FormatUtil.formatTimestamp(file.mtime)
 
-        // File icon
-        let ext = (file.name as NSString).pathExtension
-        if let extIcon = UIImage(named: "extensions/\(ext.lowercased())") {
-            icon.image = extIcon
-        } else {
-            icon.image = UIImage(named: "extensions/blank")
-        }
-    }
+		// File icon
+		let ext = (file.name as NSString).pathExtension
+		if let extIcon = UIImage(named: "extensions/\(ext.lowercased())") {
+			icon.image = extIcon
+		} else {
+			icon.image = UIImage(named: "extensions/blank")
+		}
+	}
 }

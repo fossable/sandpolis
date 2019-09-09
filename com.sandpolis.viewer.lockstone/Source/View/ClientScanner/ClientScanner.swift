@@ -20,9 +20,9 @@ import UIKit
 
 class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 
-    @IBOutlet weak var progress: UIActivityIndicatorView!
+	@IBOutlet weak var progress: UIActivityIndicatorView!
 
-    override var prefersStatusBarHidden: Bool {
+	override var prefersStatusBarHidden: Bool {
 		return true
 	}
 
@@ -69,7 +69,7 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 		let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
 		previewLayer.frame = view.layer.bounds
 		previewLayer.videoGravity = .resizeAspectFill
-        view.layer.insertSublayer(previewLayer, at: 0)
+		view.layer.insertSublayer(previewLayer, at: 0)
 
 		captureSession.startRunning()
 	}
@@ -90,11 +90,11 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 		}
 	}
 
-    @IBAction func cancel(_ sender: Any) {
-        dismiss(animated: true)
-    }
+	@IBAction func cancel(_ sender: Any) {
+		dismiss(animated: true)
+	}
 
-    func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
+	func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
 		captureSession.stopRunning()
 
 		if let metadataObject = metadataObjects.first {
@@ -115,11 +115,11 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 	}
 
 	private func found(token: String) {
-        progress.startAnimating()
+		progress.startAnimating()
 
-        CloudUtil.addCloudClient(token: token) { json, error in
-            print("Error:", error)
-            print("JSON:", json)
-        }
+		CloudUtil.addCloudClient(token: token) { json, error in
+			print("Error:", error)
+			print("JSON:", json)
+		}
 	}
 }

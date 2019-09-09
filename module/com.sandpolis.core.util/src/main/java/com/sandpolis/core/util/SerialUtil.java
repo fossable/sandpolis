@@ -41,8 +41,7 @@ public final class SerialUtil {
 	/**
 	 * Serialize an object using the default serializer.
 	 *
-	 * @param object
-	 *            A {@link Serializable} object
+	 * @param object A {@link Serializable} object
 	 * @return An array representing the object
 	 * @throws IOException
 	 */
@@ -53,10 +52,8 @@ public final class SerialUtil {
 	/**
 	 * Serialize an object using the default serializer.
 	 *
-	 * @param object
-	 *            A {@link Serializable} object
-	 * @param compressed
-	 *            Indicates whether the serialized data should be compressed
+	 * @param object     A {@link Serializable} object
+	 * @param compressed Indicates whether the serialized data should be compressed
 	 * @return An array representing the object
 	 * @throws IOException
 	 */
@@ -70,11 +67,9 @@ public final class SerialUtil {
 	/**
 	 * Serialize an object using the default serializer.
 	 *
-	 * @param object
-	 *            A {@link Serializable} object
+	 * @param object     A {@link Serializable} object
 	 * @param out
-	 * @param compressed
-	 *            Indicates whether the serialized data should be compressed
+	 * @param compressed Indicates whether the serialized data should be compressed
 	 * @throws IOException
 	 */
 	public static void serialize(Object object, OutputStream out, boolean compressed) throws IOException {
@@ -97,12 +92,10 @@ public final class SerialUtil {
 	/**
 	 * Deserialize an object with the default deserializer.
 	 *
-	 * @param object
-	 *            A serialized object
+	 * @param object A serialized object
 	 * @return The restored object
 	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 *             If the referenced class is not loaded
+	 * @throws ClassNotFoundException If the referenced class is not loaded
 	 */
 	public static Serializable deserialize(byte[] object) throws IOException, ClassNotFoundException {
 		return deserialize(object, false);
@@ -112,12 +105,10 @@ public final class SerialUtil {
 	 * Deserialize an object with the default deserializer.
 	 *
 	 * @param object
-	 * @param compressed
-	 *            Indicates whether the serialized data is compressed
+	 * @param compressed Indicates whether the serialized data is compressed
 	 * @return The restored object
 	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 *             If the referenced class is not loaded
+	 * @throws ClassNotFoundException If the referenced class is not loaded
 	 */
 	public static Serializable deserialize(byte[] object, boolean compressed)
 			throws IOException, ClassNotFoundException {
@@ -130,14 +121,11 @@ public final class SerialUtil {
 	/**
 	 * Deserialize an object with the default deserializer.
 	 *
-	 * @param in
-	 *            The serialized data
-	 * @param compressed
-	 *            Indicates whether the serialized data is compressed
+	 * @param in         The serialized data
+	 * @param compressed Indicates whether the serialized data is compressed
 	 * @return The restored object
 	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 *             If the referenced class is not loaded
+	 * @throws ClassNotFoundException If the referenced class is not loaded
 	 */
 	public static Serializable deserialize(InputStream in, boolean compressed)
 			throws IOException, ClassNotFoundException {

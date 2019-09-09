@@ -20,29 +20,29 @@ import Highlightr
 
 class MacroResultCell: UITableViewCell {
 
-    @IBOutlet weak var textView: UILabel!
+	@IBOutlet weak var textView: UILabel!
 
-    func setContent(_ output: String) {
-        textView.text = output
+	func setContent(_ output: String) {
+		textView.text = output
 
-        let highlightr = Highlightr()!
-        if let theme = UserDefaults.standard.string(forKey: "terminalTheme") {
-            highlightr.setTheme(to: theme)
-        } else {
-            highlightr.setTheme(to: "zenburn")
-        }
+		let highlightr = Highlightr()!
+		if let theme = UserDefaults.standard.string(forKey: "terminalTheme") {
+			highlightr.setTheme(to: theme)
+		} else {
+			highlightr.setTheme(to: "zenburn")
+		}
 
-        textView.font = highlightr.theme!.codeFont
-        textView.backgroundColor = highlightr.theme!.themeBackgroundColor
+		textView.font = highlightr.theme!.codeFont
+		textView.backgroundColor = highlightr.theme!.themeBackgroundColor
 
-        // Choose a visible text color for background
-        textView.textColor = chooseTextColor(textView.backgroundColor!)
-    }
+		// Choose a visible text color for background
+		textView.textColor = chooseTextColor(textView.backgroundColor!)
+	}
 
-    private func chooseTextColor(_ background: UIColor) -> UIColor {
-        var r, g, b, a: CGFloat
-        (r, g, b, a) = (0, 0, 0, 0)
-        background.getRed(&r, green: &g, blue: &b, alpha: &a)
-        return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 0.5 ? UIColor.white : UIColor.black
-    }
+	private func chooseTextColor(_ background: UIColor) -> UIColor {
+		var r, g, b, a: CGFloat
+		(r, g, b, a) = (0, 0, 0, 0)
+		background.getRed(&r, green: &g, blue: &b, alpha: &a)
+		return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 0.5 ? UIColor.white : UIColor.black
+	}
 }

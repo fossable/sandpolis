@@ -22,85 +22,85 @@ import FirebaseFirestore
 
 class MacroEditor: UIViewController {
 
-    @IBOutlet weak var platformSelector: MultiSelectSegmentedControl!
-    @IBOutlet weak var genericView: UIView!
-    @IBOutlet weak var languageBar: UILabel!
+	@IBOutlet weak var platformSelector: MultiSelectSegmentedControl!
+	@IBOutlet weak var genericView: UIView!
+	@IBOutlet weak var languageBar: UILabel!
 
-    private let nameField: UITextField = UITextField(frame: CGRect(x: 0, y: 0, width: 210, height: 21))
+	private let nameField: UITextField = UITextField(frame: CGRect(x: 0, y: 0, width: 210, height: 21))
 
-    private let textStorage = CodeAttributedString()
-    private var highlightr: Highlightr!
-    private var textView: UITextView!
-    private var saveButton: UIBarButtonItem!
+	private let textStorage = CodeAttributedString()
+	private var highlightr: Highlightr!
+	private var textView: UITextView!
+	private var saveButton: UIBarButtonItem!
 
-    /// The macro being edited or nil for a new macro
+	/// The macro being edited or nil for a new macro
 	var macro: DocumentSnapshot!
 
 	/// The macro reference
 	var macroReference: DocumentReference!
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+	override func viewDidLoad() {
+		super.viewDidLoad()
 
-        nameField.placeholder = "Enter a macro name"
-        nameField.textAlignment = .center
-        nameField.borderStyle = .roundedRect
-        nameField.addTarget(self, action: #selector(refreshSaveButton), for: .editingChanged)
-        navigationItem.titleView = nameField
+		nameField.placeholder = "Enter a macro name"
+		nameField.textAlignment = .center
+		nameField.borderStyle = .roundedRect
+		nameField.addTarget(self, action: #selector(refreshSaveButton), for: .editingChanged)
+		navigationItem.titleView = nameField
 
-        saveButton = UIBarButtonItem(title: macro != nil ? "Update" : "Save", style: .done, target: self, action: #selector(saveMacro))
-        navigationItem.rightBarButtonItem = saveButton
+		saveButton = UIBarButtonItem(title: macro != nil ? "Update" : "Save", style: .done, target: self, action: #selector(saveMacro))
+		navigationItem.rightBarButtonItem = saveButton
 
-        let layoutManager = NSLayoutManager()
-        textStorage.addLayoutManager(layoutManager)
+		let layoutManager = NSLayoutManager()
+		textStorage.addLayoutManager(layoutManager)
 
-        let textContainer = NSTextContainer(size: view.bounds.size)
-        layoutManager.addTextContainer(textContainer)
+		let textContainer = NSTextContainer(size: view.bounds.size)
+		layoutManager.addTextContainer(textContainer)
 
-        textView = UITextView(frame: genericView.bounds, textContainer: textContainer)
-        textView.autoresizingMask = [.flexibleHeight, .flexibleWidth]
-        textView.autocorrectionType = .no
-        textView.autocapitalizationType = .none
-        genericView.addSubview(textView)
+		textView = UITextView(frame: genericView.bounds, textContainer: textContainer)
+		textView.autoresizingMask = [.flexibleHeight, .flexibleWidth]
+		textView.autocorrectionType = .no
+		textView.autocapitalizationType = .none
+		genericView.addSubview(textView)
 
-        highlightr = textStorage.highlightr
-        if let theme = UserDefaults.standard.string(forKey: "terminalTheme") {
-            changeTheme(theme)
-        } else {
-            changeTheme("zenburn")
-        }
+		highlightr = textStorage.highlightr
+		if let theme = UserDefaults.standard.string(forKey: "terminalTheme") {
+			changeTheme(theme)
+		} else {
+			changeTheme("zenburn")
+		}
 
-        if macro != nil {
-            nameField.text = macro["name"] as? String
-            textView.text = macro["script"] as? String
+		if macro != nil {
+			nameField.text = macro["name"] as? String
+			textView.text = macro["script"] as? String
 
-            if macro["windows"] as! Bool {
-                platformSelector.selectedSegmentIndexes.insert(0)
-            }
-            if macro["macos"] as! Bool {
-                platformSelector.selectedSegmentIndexes.insert(1)
-            }
-            if macro["linux"] as! Bool {
-                platformSelector.selectedSegmentIndexes.insert(2)
-            }
-            platformChanged(self)
-        } else {
-            // Default to linux
-            platformSelector.selectedSegmentIndexes.insert(2)
-            platformChanged(self)
-        }
-    }
+			if macro["windows"] as! Bool {
+				platformSelector.selectedSegmentIndexes.insert(0)
+			}
+			if macro["macos"] as! Bool {
+				platformSelector.selectedSegmentIndexes.insert(1)
+			}
+			if macro["linux"] as! Bool {
+				platformSelector.selectedSegmentIndexes.insert(2)
+			}
+			platformChanged(self)
+		} else {
+			// Default to linux
+			platformSelector.selectedSegmentIndexes.insert(2)
+			platformChanged(self)
+		}
+	}
 
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
-    }
+	func textFieldShouldReturn(textField: UITextField) -> Bool {
+		textField.resignFirstResponder()
+		return true
+	}
 
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.view.endEditing(true)
-    }
+	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+		self.view.endEditing(true)
+	}
 
-    @objc private func saveMacro(_ sender: Any) {
+	@objc private func saveMacro(_ sender: Any) {
 		macroReference.setData([
 			"name": nameField.text!,
 			"script": textView.text!,
@@ -109,44 +109,44 @@ class MacroEditor: UIViewController {
 			"linux": platformSelector.selectedSegmentTitles.contains("Linux")
 		])
 
-        navigationController?.popViewController(animated: true)
-    }
+		navigationController?.popViewController(animated: true)
+	}
 
-    @IBAction func platformChanged(_ sender: Any) {
-        let selected = Set(platformSelector.selectedSegmentTitles)
+	@IBAction func platformChanged(_ sender: Any) {
+		let selected = Set(platformSelector.selectedSegmentTitles)
 
-        if selected == ["Linux"] {
-            changeLanguage("bash")
-        } else if selected == ["macOS"] {
-            changeLanguage("bash")
-        } else if selected == ["macOS", "Linux"] {
-            changeLanguage("bash")
-        } else if selected == ["Windows"] {
-            changeLanguage("powershell")
-        } else {
-            changeLanguage("Python is currently unsupported!")
-        }
+		if selected == ["Linux"] {
+			changeLanguage("bash")
+		} else if selected == ["macOS"] {
+			changeLanguage("bash")
+		} else if selected == ["macOS", "Linux"] {
+			changeLanguage("bash")
+		} else if selected == ["Windows"] {
+			changeLanguage("powershell")
+		} else {
+			changeLanguage("Python is currently unsupported!")
+		}
 
-        refreshSaveButton()
-    }
+		refreshSaveButton()
+	}
 
-    private func changeTheme(_ theme: String) {
-        highlightr.setTheme(to: theme)
+	private func changeTheme(_ theme: String) {
+		highlightr.setTheme(to: theme)
 
-        textView.backgroundColor = highlightr.theme.themeBackgroundColor
-        languageBar.backgroundColor = highlightr.theme.themeBackgroundColor
-    }
+		textView.backgroundColor = highlightr.theme.themeBackgroundColor
+		languageBar.backgroundColor = highlightr.theme.themeBackgroundColor
+	}
 
-    private func changeLanguage(_ language: String) {
-        textStorage.language = language
-        languageBar.text = language
-    }
+	private func changeLanguage(_ language: String) {
+		textStorage.language = language
+		languageBar.text = language
+	}
 
-    @objc private func refreshSaveButton() {
-        if nameField.text!.count > 0, languageBar.text! == "bash" || languageBar.text! == "powershell" {
-            saveButton.isEnabled = true
-        } else {
-            saveButton.isEnabled = false
-        }
-    }
+	@objc private func refreshSaveButton() {
+		if nameField.text!.count > 0, languageBar.text! == "bash" || languageBar.text! == "powershell" {
+			saveButton.isEnabled = true
+		} else {
+			saveButton.isEnabled = false
+		}
+	}
 }

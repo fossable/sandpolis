@@ -51,33 +51,33 @@ class CloudUtil {
 		}
 	}
 
-    static func addCloudClient(token: String, _ completion: @escaping(NSDictionary?, Error?) -> Void) {
-        Auth.auth().currentUser?.getIDToken { token, error in
-            guard error == nil else {
-                completion(nil, error)
-                return
-            }
+	static func addCloudClient(token: String, _ completion: @escaping(NSDictionary?, Error?) -> Void) {
+		Auth.auth().currentUser?.getIDToken { token, error in
+			guard error == nil else {
+				completion(nil, error)
+				return
+			}
 
-            var request = URLRequest(url: URL(string: "https://api.sandpolis.com/v1/cloud/client/add")!)
-            request.addValue("Bearer " + token!, forHTTPHeaderField: "Authorization")
-            request.httpMethod = "POST"
-            request.httpBody = try? JSONSerialization.data(withJSONObject: [
-                "token": token,
-                ], options: [])
+			var request = URLRequest(url: URL(string: "https://api.sandpolis.com/v1/cloud/client/add")!)
+			request.addValue("Bearer " + token!, forHTTPHeaderField: "Authorization")
+			request.httpMethod = "POST"
+			request.httpBody = try? JSONSerialization.data(withJSONObject: [
+				"token": token,
+				], options: [])
 
-            URLSession.shared.dataTask(with: request) { data, response, error in
-                if let content = data {
-                    do {
-                        if let json = try JSONSerialization.jsonObject(with: content, options: .allowFragments) as? NSDictionary {
-                            completion(json, error)
-                        }
-                    } catch {
-                        completion(nil, error)
-                    }
-                } else {
-                    completion(nil, error)
-                }
-                }.resume()
-        }
-    }
+			URLSession.shared.dataTask(with: request) { data, response, error in
+				if let content = data {
+					do {
+						if let json = try JSONSerialization.jsonObject(with: content, options: .allowFragments) as? NSDictionary {
+							completion(json, error)
+						}
+					} catch {
+						completion(nil, error)
+					}
+				} else {
+					completion(nil, error)
+				}
+				}.resume()
+		}
+	}
 }

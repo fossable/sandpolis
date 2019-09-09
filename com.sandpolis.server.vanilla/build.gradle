@@ -36,7 +36,7 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.storage.hibernate')
 	implementation project(':module:com.sandpolis.core.stream')
 	implementation project(':module:com.sandpolis.core.util')
-	
+
 	// Core plugins
 	implementation project(':plugin:com.sandpolis.plugin.desktop')
 	implementation project(':plugin:com.sandpolis.plugin.sysinfo')
@@ -58,7 +58,7 @@ dependencies {
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.28'
-	
+
 	// https://github.com/cilki/zipset
 	implementation 'com.github.cilki:zipset:1.1.0'
 }
