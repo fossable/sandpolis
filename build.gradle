@@ -22,23 +22,38 @@ plugins {
 }
 
 spotless {
-	format 'java', {
+	java {
 		target '**/*.java'
-		licenseHeaderFile file('gradle/resources/header_java.txt'), "package "
+
+		eclipse().configFile('gradle/resources/EclipseConventions.xml')
 		trimTrailingWhitespace()
 		endWithNewline()
+
+		licenseHeaderFile file('gradle/resources/header_java.txt'), "package "
 	}
 	format 'groovy', {
 		target '**/*.groovy'
-		licenseHeaderFile file('gradle/resources/header_java.txt'), "package "
+		
 		trimTrailingWhitespace()
 		endWithNewline()
+
+		licenseHeaderFile file('gradle/resources/header_java.txt'), "package "
+	}
+	format 'gradle', {
+		target '**/*.gradle'
+
+		trimTrailingWhitespace()
+		endWithNewline()
+		indentWithTabs()
 	}
 	format 'swift', {
 		target '**/*.swift'
-		licenseHeaderFile file('gradle/resources/header_swift.txt'), "import "
+		
 		trimTrailingWhitespace()
 		endWithNewline()
+		indentWithTabs()
+		
+		licenseHeaderFile file('gradle/resources/header_swift.txt'), "import "
 	}
 }
 
