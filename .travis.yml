@@ -25,3 +25,5 @@ matrix:
       osx_image: xcode10.3
       script:
         - ./gradlew :com.sandpolis.viewer.lockstone:build -PPLUGINS_DEPLOY=false -PLOCKSTONE=true --console=plain
+      cache:
+        cocoapods: true
