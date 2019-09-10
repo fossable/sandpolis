@@ -22,6 +22,9 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
@@ -39,7 +42,13 @@ import com.sandpolis.core.proto.util.Platform.Instance;
  */
 public final class ProfileStore extends MapStore<Integer, Profile, ProfileStoreConfig> {
 
+	private static final Logger log = LoggerFactory.getLogger(ProfileStore.class);
+
 	private Object container;
+
+	public ProfileStore() {
+		super(log);
+	}
 
 	public <E> E getContainer() {
 		return (E) container;

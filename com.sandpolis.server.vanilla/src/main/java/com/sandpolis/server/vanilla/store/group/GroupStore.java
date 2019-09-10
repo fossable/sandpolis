@@ -49,6 +49,10 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 
 	private static final Logger log = LoggerFactory.getLogger(GroupStore.class);
 
+	public GroupStore() {
+		super(log);
+	}
+
 	/**
 	 * Create a new group from the given configuration and add it to the store.
 	 *

@@ -41,6 +41,10 @@ public final class ThreadStore extends StoreBase<ThreadStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ThreadStore.class);
 
+	public ThreadStore() {
+		super(log);
+	}
+
 	private Map<String, ExecutorService> provider;
 
 	/**

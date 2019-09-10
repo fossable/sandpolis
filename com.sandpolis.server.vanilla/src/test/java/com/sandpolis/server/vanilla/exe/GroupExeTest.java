@@ -17,10 +17,13 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +50,11 @@ class GroupExeTest extends ExeletTest {
 		});
 		GroupStore.init(config -> {
 			config.ephemeral();
+		});
+		ThreadStore.init(config -> {
+			config.ephemeral();
+
+			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
 		initChannel();

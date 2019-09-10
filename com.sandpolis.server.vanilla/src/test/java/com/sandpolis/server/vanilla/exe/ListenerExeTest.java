@@ -17,8 +17,12 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
+import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +34,6 @@ import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.server.vanilla.store.user.UserStore;
 
 class ListenerExeTest extends ExeletTest {
 
@@ -38,17 +41,21 @@ class ListenerExeTest extends ExeletTest {
 
 	@BeforeEach
 	void setup() {
-		UserStore.UserStore.init(config -> {
+		UserStore.init(config -> {
 			config.ephemeral();
 
 			config.defaults.add(UserConfig.newBuilder().setUsername("junit").setPassword("12345678").build());
 		});
-
 		ListenerStore.init(config -> {
 			config.ephemeral();
 
 			config.defaults
 					.add(ListenerConfig.newBuilder().setOwner("junit").setPort(5000).setAddress("0.0.0.0").build());
+		});
+		ThreadStore.init(config -> {
+			config.ephemeral();
+
+			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
 		initChannel();

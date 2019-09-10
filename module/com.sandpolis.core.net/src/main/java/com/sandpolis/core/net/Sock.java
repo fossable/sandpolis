@@ -149,11 +149,12 @@ public class Sock {
 
 		if (getState() == CONNECTED) {
 			log.debug("[CVID {}] Connection state changed: {}->{}", getRemoteCvid(), NOT_CONNECTED, CONNECTED);
-			ConnectionStore.post(SockEstablishedEvent::new, this);
-		}
 
-		this.channel.attr(ChannelConstant.HANDLER_EXELET).get().setSock(this);
-		this.channel.attr(ChannelConstant.HANDLER_EXELET).get().initUnauth();
+			this.channel.attr(ChannelConstant.HANDLER_EXELET).get().setSock(this);
+			this.channel.attr(ChannelConstant.HANDLER_EXELET).get().initUnauth();
+
+			ConnectionStore.postAsync(SockEstablishedEvent::new, this);
+		}
 	}
 
 	/**

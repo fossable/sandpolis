@@ -24,6 +24,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
@@ -47,6 +50,12 @@ import com.sandpolis.core.stream.store.StreamStore.StreamStoreConfig;
  * @since 5.0.2
  */
 public final class StreamStore extends StoreBase<StreamStoreConfig> {
+
+	private static final Logger log = LoggerFactory.getLogger(StreamStore.class);
+
+	public StreamStore() {
+		super(log);
+	}
 
 	/**
 	 * The SOURCE bank.

@@ -30,6 +30,7 @@ import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.viewer.jfx.store.stage.StageStore.StageStore;
 
 import java.util.Date;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,6 +107,7 @@ public final class Viewer {
 			config.defaults.put(net.connection.outgoing, new NioEventLoopGroup(2));
 			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(2));
 			config.defaults.put(PoolConstant.ui.fx_thread, new FxEventExecutor());
+			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
 		PrefStore.init(config -> {

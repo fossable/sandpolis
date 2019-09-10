@@ -22,6 +22,8 @@ import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.store.connection.Events.SockLostEvent;
+import com.sandpolis.core.profile.Events.ProfileOnlineEvent;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.proto.net.MCStream.ProfileStreamData;
 import com.sandpolis.core.proto.util.Platform.Instance;
@@ -53,7 +55,6 @@ public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
 				.forEach(this::onProfileOnline);
 	}
 
-	@Subscribe
 	private void onProfileOnline(Profile profile) {
 		var data = ProfileStreamData.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid()).setOnline(true);
 
@@ -64,7 +65,13 @@ public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
 	}
 
 	@Subscribe
-	private void onSockLost(Sock sock) {
+	private void onProfileOnline(ProfileOnlineEvent event) {
+		onProfileOnline(event.get());
+	}
+
+	@Subscribe
+	private void onSockLost(SockLostEvent event) {
+		Sock sock = event.get();
 		submit(ProfileStreamData.newBuilder().setCvid(sock.getRemoteCvid()).setUuid(sock.getRemoteUuid())
 				.setOnline(false).build());
 	}

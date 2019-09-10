@@ -46,6 +46,10 @@ public final class ServerStore extends StoreBase<ServerStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ServerStore.class);
 
+	public ServerStore() {
+		super(log);
+	}
+
 	/**
 	 * The cached server banner response.
 	 */

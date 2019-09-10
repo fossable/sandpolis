@@ -126,7 +126,7 @@ public final class ConnectionLoop implements Runnable {
 					Sock sock = future.getNow();
 					if (future.isSuccess() && sock != null) {
 						// Check connection state
-						if (sock.getState() == ConnectionState.CONNECTED) {
+						if (sock.getState() != ConnectionState.NOT_CONNECTED) {
 							this.future.setSuccess(sock);
 							return;
 						}

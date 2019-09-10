@@ -49,6 +49,10 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 
 	private static final Logger log = LoggerFactory.getLogger(ListenerStore.class);
 
+	public ListenerStore() {
+		super(log);
+	}
+
 	/**
 	 * Start all enabled, unstarted listeners in the store.
 	 */

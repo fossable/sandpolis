@@ -65,6 +65,10 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(NetworkStore.class);
 
+	public NetworkStore() {
+		super(log);
+	}
+
 	/**
 	 * The undirected graph which describes the visible connections between nodes on
 	 * the network.

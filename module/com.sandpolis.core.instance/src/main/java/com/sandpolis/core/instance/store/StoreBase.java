@@ -17,80 +17,105 @@
  ******************************************************************************/
 package com.sandpolis.core.instance.store;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+
 import java.lang.reflect.Field;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.slf4j.Logger;
+
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.SubscriberExceptionContext;
+import com.sandpolis.core.instance.event.Event;
 import com.sandpolis.core.instance.event.ParameterizedEvent;
 import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 
 /**
- * A Store is designed to provide extremely convenient access to
- * optionally-persistent objects with a static context. Stores cannot be
- * instantiated and may require external initialization before being used.
+ * A Store is designed to provide extremely convenient access to a collection of
+ * objects.
  */
-public abstract class StoreBase<E> {
+public abstract class StoreBase<E extends StoreConfig> {
+
+	private Logger log;
+
+	protected StoreBase(Logger log) {
+		this.log = log;
+	}
 
 	/**
 	 * A bus that is used to deliver events to the users of the store.
 	 */
-	private EventBus bus = new EventBus((Throwable exception, SubscriberExceptionContext context) -> {
-		exception.printStackTrace();
+	private final EventBus bus = new EventBus((Throwable exception, SubscriberExceptionContext context) -> {
+		log.error("Exception occurred in event handler", exception);
 	});
 
-	public void register(Object object) {
+	/**
+	 * Add the given subscriber from the store bus.
+	 * 
+	 * @param object The subscriber to add
+	 */
+	public final void register(Object object) {
 		bus.register(object);
 	}
 
-	public void unregister(Object object) {
+	/**
+	 * Remove the given subscriber from the store bus.
+	 * 
+	 * @param object The subscriber to remove
+	 */
+	public final void unregister(Object object) {
 		bus.unregister(object);
 	}
 
 	/**
-	 * Uninitialize and release the resources in the store.
+	 * Broadcast the given event asynchronously to the store's bus.
 	 *
-	 * @throws Exception
+	 * @param constructor The event constructor
 	 */
-	public void close() throws Exception {
-		bus.post(Event.STORE_CLOSE);
-	}
-
-	public StoreBase<E> init(Consumer<E> configurator) {
-		bus.post(Event.STORE_INITIALIZED);
-		return this;
-	}
-
-	public static enum Event {
-		/**
-		 * Indicates that the store has just been fully initialized.
-		 */
-		STORE_INITIALIZED,
-
-		/**
-		 * Indicates that the store is about to close.
-		 */
-		STORE_CLOSE;
+	public final void postAsync(Supplier<? extends Event> constructor) {
+		ThreadStore.get("store.event_bus").submit(() -> {
+			post(constructor);
+		});
 	}
 
 	/**
-	 * Post the given {@link Event} to the {@link EventBus}.
-	 *
-	 * @param c The event constructor
+	 * Broadcast the given event asynchronously to the store's bus.
+	 * 
+	 * @param <P>         The event parameter's type
+	 * @param constructor The event constructor
+	 * @param parameter   The event parameter
 	 */
-	public void post(Supplier<? extends Event> c) {
-		bus.post(c.get());
+	public final <P> void postAsync(Supplier<? extends ParameterizedEvent<P>> constructor, P parameter) {
+		ThreadStore.get("store.event_bus").submit(() -> {
+			post(constructor, parameter);
+		});
 	}
 
 	/**
-	 * Post the given {@link ParameterizedEvent} to the {@link EventBus}.
+	 * Broadcast the given event to the store's bus. This method blocks until every
+	 * event handler completes.
 	 *
-	 * @param c         The event constructor
-	 * @param parameter The event parameter
+	 * @param constructor The event constructor
 	 */
-	public <F> void post(Supplier<? extends ParameterizedEvent<F>> c, F parameter) {
-		ParameterizedEvent<F> event = c.get();
+	public final void post(Supplier<? extends Event> constructor) {
+		Event event = constructor.get();
+
+		log.debug("Event fired: " + event);// TODO toString
+		bus.post(event);
+	}
+
+	/**
+	 * Broadcast the given event to the store's bus. This method blocks until every
+	 * event handler completes.
+	 * 
+	 * @param <P>         The event parameter's type
+	 * @param constructor The event constructor
+	 * @param parameter   The event parameter
+	 */
+	public final <P> void post(Supplier<? extends ParameterizedEvent<P>> constructor, P parameter) {
+		ParameterizedEvent<P> event = constructor.get();
 
 		try {
 			// Set the parameter with reflection
@@ -101,15 +126,45 @@ public abstract class StoreBase<E> {
 			throw new RuntimeException(e);
 		}
 
+		log.debug("Event fired: " + event);// TODO toString
 		bus.post(event);
 	}
 
+	/**
+	 * Uninitialize and release the resources in the store.
+	 *
+	 * @throws Exception
+	 */
+	public void close() throws Exception {
+	}
+
+	/**
+	 * Initialize the store.
+	 * 
+	 * @param configurator The configuration block
+	 * @return {@code this}
+	 */
+	public StoreBase<E> init(Consumer<E> configurator) {
+		return this;
+	}
+
+	/**
+	 * A superclass for all store configurations.
+	 */
 	public abstract static class StoreConfig {
 
+		/**
+		 * Indicates that the store's data should not survive the closing of the store.
+		 */
 		public void ephemeral() {
 			throw new UnsupportedOperationException("Store does not support ephemeral providers");
 		}
 
+		/**
+		 * Indicates that the store's data should be persisted to the given database.
+		 * 
+		 * @param database The database handle
+		 */
 		public void persistent(Database database) {
 			throw new UnsupportedOperationException("Store does not support persistent providers");
 		}

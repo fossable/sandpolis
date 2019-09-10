@@ -43,6 +43,10 @@ public final class UserStore extends MapStore<String, User, UserStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(UserStore.class);
 
+	public UserStore() {
+		super(log);
+	}
+
 	/**
 	 * Check a user's expiration status.
 	 *

@@ -32,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,8 @@ import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.future.ResponseFuture;
+import com.sandpolis.core.net.store.network.Events.ServerEstablishedEvent;
+import com.sandpolis.core.net.store.network.Events.ServerLostEvent;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -153,6 +156,11 @@ public final class Client {
 			config.defaults.put(net.connection.outgoing, new NioEventLoopGroup(2).next());
 			config.defaults.put("temploop", new NioEventLoopGroup(2).next());
 			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(2));
+			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
+		});
+
+		ConnectionStore.init(config -> {
+			config.ephemeral();
 		});
 
 		NetworkStore.init(config -> {
@@ -162,6 +170,10 @@ public final class Client {
 		PluginStore.init(config -> {
 			config.ephemeral();
 		});
+
+		// Register the subscribers in this class by building a temporary instance
+		var client = new Client();
+		NetworkStore.register(client);
 
 		return task.success();
 	});
@@ -188,12 +200,12 @@ public final class Client {
 	});
 
 	@Subscribe
-	private void onSrvLost() {
+	private void onSrvLost(ServerLostEvent event) {
 		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class, TempExe.class });
 	}
 
 	@Subscribe
-	private void onSrvEstablished() {
+	private void onSrvEstablished(ServerEstablishedEvent event) {
 		ResponseFuture<Outcome> future;
 		var auth = SO_CONFIG.getAuthentication();
 

@@ -25,6 +25,9 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
@@ -46,6 +49,12 @@ import javafx.stage.Stage;
  * @since 5.0.0
  */
 public final class StageStore extends MapStore<String, Stage, StageStoreConfig> {
+
+	private static final Logger log = LoggerFactory.getLogger(StageStore.class);
+
+	public StageStore() {
+		super(log);
+	}
 
 	/**
 	 * Begin stage building.

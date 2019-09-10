@@ -52,6 +52,10 @@ public final class TrustStore extends MapStore<String, TrustAnchor, TrustStoreCo
 
 	private static final Logger log = LoggerFactory.getLogger(TrustStore.class);
 
+	public TrustStore() {
+		super(log);
+	}
+
 	/**
 	 * Verify a plugin certificate against the trust anchors in the store.
 	 *

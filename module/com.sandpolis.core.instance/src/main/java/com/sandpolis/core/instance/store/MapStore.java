@@ -20,11 +20,18 @@ package com.sandpolis.core.instance.store;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.sandpolis.core.instance.storage.StoreProvider;
+import org.slf4j.Logger;
 
-public abstract class MapStore<K, V, E> extends StoreBase<E> {
+import com.sandpolis.core.instance.storage.StoreProvider;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+
+public abstract class MapStore<K, V, E extends StoreConfig> extends StoreBase<E> {
 
 	protected StoreProvider<V> provider;
+
+	protected MapStore(Logger log) {
+		super(log);
+	}
 
 	public Stream<V> stream() {
 		return provider.stream();
@@ -47,5 +54,10 @@ public abstract class MapStore<K, V, E> extends StoreBase<E> {
 
 	public void add(V item) {
 		provider.add(item);
+	}
+
+	@Override
+	public void close() throws Exception {
+		provider = null;
 	}
 }

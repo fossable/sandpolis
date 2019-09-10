@@ -17,8 +17,11 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.util.ProtoUtil.rq;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +39,12 @@ class ServerExeTest extends ExeletTest {
 
 	@BeforeEach
 	void setup() {
+		ThreadStore.init(config -> {
+			config.ephemeral();
+
+			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
+		});
+
 		initChannel();
 		exe = new ServerExe();
 		exe.setConnector(new Sock(channel));

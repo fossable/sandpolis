@@ -17,6 +17,14 @@
  ******************************************************************************/
 package com.sandpolis.core.instance.store;
 
-public abstract class ListStore<V, E> extends StoreBase<E> {
+import org.slf4j.Logger;
+
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+
+public abstract class ListStore<V, E extends StoreConfig> extends StoreBase<E> {
+
+	protected ListStore(Logger log) {
+		super(log);
+	}
 
 }

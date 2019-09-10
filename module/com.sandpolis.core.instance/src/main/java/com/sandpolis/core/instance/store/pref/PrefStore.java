@@ -45,6 +45,10 @@ public final class PrefStore extends StoreBase<PrefStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(PrefStore.class);
 
+	public PrefStore() {
+		super(log);
+	}
+
 	/**
 	 * The backing {@link Preferences} object.
 	 */

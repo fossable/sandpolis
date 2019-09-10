@@ -39,6 +39,10 @@ public final class DatabaseStore extends MapStore<String, Database, DatabaseStor
 
 	private static final Logger log = LoggerFactory.getLogger(DatabaseStore.class);
 
+	public DatabaseStore() {
+		super(log);
+	}
+
 	/**
 	 * The main instance database.
 	 */

@@ -173,6 +173,7 @@ public final class Server {
 			config.defaults.put("server.generator", Executors.newCachedThreadPool());
 			config.defaults.put(PoolConstant.net.ipc.listener, Executors.newSingleThreadExecutor());
 			config.defaults.put(PoolConstant.net.ipc.receptor, Executors.newSingleThreadExecutor());
+			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
 		// Load NetworkStore and choose a new CVID

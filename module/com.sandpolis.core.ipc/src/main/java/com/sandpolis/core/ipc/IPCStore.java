@@ -55,6 +55,10 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 
 	public static final Logger log = LoggerFactory.getLogger(IPCStore.class);
 
+	public IPCStore() {
+		super(log);
+	}
+
 	/**
 	 * An IPC message handler.
 	 */

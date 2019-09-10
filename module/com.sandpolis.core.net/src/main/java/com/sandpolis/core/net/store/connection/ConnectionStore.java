@@ -60,6 +60,10 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 
 	public static final Logger log = LoggerFactory.getLogger(ConnectionStore.class);
 
+	public ConnectionStore() {
+		super(log);
+	}
+
 	/**
 	 * A list of connection threads that are currently attempting connections.
 	 */

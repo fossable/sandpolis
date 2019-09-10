@@ -77,6 +77,10 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 	private static final Logger log = LoggerFactory.getLogger(PluginStore.class);
 
+	public PluginStore() {
+		super(log);
+	}
+
 	/**
 	 * The PF4J plugin manager.
 	 */
