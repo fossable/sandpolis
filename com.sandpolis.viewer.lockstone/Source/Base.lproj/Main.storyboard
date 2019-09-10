@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="uYO-SL-qbN">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
     <device id="retina6_1" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
@@ -13,7 +13,7 @@
         <!--CreateAccount-->
         <scene sceneID="oba-aR-1KM">
             <objects>
-                <viewController title="CreateAccount" id="jpL-Bl-Icn" customClass="CreateAccount" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="CreateAccount" id="jpL-Bl-Icn" customClass="CreateAccount" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" opaque="NO" contentMode="scaleToFill" id="WPG-e0-b8n">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="630"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -102,7 +102,7 @@
         <!--ForgotPassword-->
         <scene sceneID="AdJ-C5-kOT">
             <objects>
-                <viewController title="ForgotPassword" id="QOx-kU-Ozb" customClass="ForgotPassword" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="ForgotPassword" id="QOx-kU-Ozb" customClass="ForgotPassword" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" opaque="NO" contentMode="scaleToFill" id="9FK-fz-zX5">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="630"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -160,7 +160,7 @@
         <!--Sign In Account-->
         <scene sceneID="pDL-ph-onq">
             <objects>
-                <viewController id="Pxc-v7-mA9" customClass="SignInAccount" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="Pxc-v7-mA9" customClass="SignInAccount" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" opaque="NO" contentMode="scaleToFill" id="y6a-o6-oWO">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="630"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -277,12 +277,12 @@
         <!--Login-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController title="Login" id="BYZ-38-t0r" customClass="Login" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Login" id="BYZ-38-t0r" customClass="Login" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7G9-OE-rjf" customClass="BackgroundView" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7G9-OE-rjf" customClass="BackgroundView" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
@@ -350,13 +350,13 @@
         <!--Server List-->
         <scene sceneID="GJz-TJ-WdH">
             <objects>
-                <tableViewController title="Server List" id="7TR-Kp-aAg" customClass="ServerManager" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController title="Server List" id="7TR-Kp-aAg" customClass="ServerManager" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="80" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="4R0-aj-7AG">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="ServerCell" rowHeight="80" id="YPi-WP-cAG" customClass="ServerCell" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="ServerCell" rowHeight="80" id="YPi-WP-cAG" customClass="ServerCell" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="28" width="414" height="80"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="YPi-WP-cAG" id="ers-lz-riR">
@@ -437,7 +437,7 @@
         <!--Add Server-->
         <scene sceneID="MRi-RI-jvX">
             <objects>
-                <viewController title="Add Server" id="uYO-SL-qbN" customClass="AddServer" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Add Server" id="uYO-SL-qbN" customClass="AddServer" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="S9H-po-a5d">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -550,12 +550,12 @@
         <!--Server Creator-->
         <scene sceneID="5mS-9m-wyh">
             <objects>
-                <viewController id="fpe-Di-Cqy" customClass="ServerCreator" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="fpe-Di-Cqy" customClass="ServerCreator" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="IbF-3o-4Nq">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bcq-bc-9PP" customClass="BackgroundView" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bcq-bc-9PP" customClass="BackgroundView" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
@@ -621,12 +621,12 @@
         <!--Cloud Pricing-->
         <scene sceneID="BOm-Ne-E5R">
             <objects>
-                <viewController id="HCf-MA-wmr" customClass="CloudPricing" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="HCf-MA-wmr" customClass="CloudPricing" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="1Uw-Fg-oD4">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Qwp-Jp-2Hx" customClass="BackgroundView" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Qwp-Jp-2Hx" customClass="BackgroundView" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="21B-8g-J9x">
@@ -649,6 +649,7 @@
                                             <constraint firstAttribute="height" constant="80" id="0Mr-Vm-fEc"/>
                                         </constraints>
                                         <string key="text">The Sandpolis Cloud subscription gives you access to a private server instance in the cloud that you can use just like a self-hosted server.</string>
+                                        <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                     </textView>
@@ -757,13 +758,13 @@
         <!--Macro Manager-->
         <scene sceneID="3JR-YY-Au7">
             <objects>
-                <tableViewController title="Macro Manager" id="x6s-yq-3Z8" customClass="MacroManager" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController title="Macro Manager" id="x6s-yq-3Z8" customClass="MacroManager" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="PW2-fF-sRJ">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" accessoryType="disclosureIndicator" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="MacroCell" id="djB-Px-e2O" customClass="MacroCell" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" accessoryType="disclosureIndicator" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="MacroCell" id="djB-Px-e2O" customClass="MacroCell" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="28" width="414" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="djB-Px-e2O" id="qxF-VG-I6v">
@@ -826,7 +827,7 @@
         <!--Macro Editor-->
         <scene sceneID="Snt-PN-Kg0">
             <objects>
-                <viewController title="Macro Editor" hidesBottomBarWhenPushed="YES" id="dPQ-WO-hYN" customClass="MacroEditor" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Macro Editor" hidesBottomBarWhenPushed="YES" id="dPQ-WO-hYN" customClass="MacroEditor" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="pyt-aK-xgM">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -883,7 +884,7 @@
         <!--Group Control Panel-->
         <scene sceneID="BSv-xh-2Ll">
             <objects>
-                <viewController title="Group Control Panel" id="BoR-93-Gkk" customClass="GroupPanel" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Group Control Panel" id="BoR-93-Gkk" customClass="GroupPanel" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="xTr-GC-eDo">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -930,7 +931,7 @@
                                         <rect key="frame" x="0.0" y="215" width="374" height="450"/>
                                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                         <prototypes>
-                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" accessoryType="disclosureIndicator" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="GroupHostCell" id="Bdt-at-pxY" customClass="GroupHostCell" customModule="CompatibilityLayer" customModuleProvider="target">
+                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" accessoryType="disclosureIndicator" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="GroupHostCell" id="Bdt-at-pxY" customClass="GroupHostCell" customModule="Sandpolis" customModuleProvider="target">
                                                 <rect key="frame" x="0.0" y="55.5" width="374" height="44"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Bdt-at-pxY" id="7dQ-Tq-cye">
@@ -1000,7 +1001,7 @@
         <!--File Manager-->
         <scene sceneID="2Z2-fe-Suh">
             <objects>
-                <tableViewController id="SCA-yA-s2x" customClass="FileManager" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController id="SCA-yA-s2x" customClass="FileManager" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="hmz-fI-y9H">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1019,7 +1020,7 @@
                             </items>
                         </navigationBar>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="FolderUpCell" id="wQm-ae-fmi" customClass="FolderUpCell" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="FolderUpCell" id="wQm-ae-fmi" customClass="FolderUpCell" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="72" width="414" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="wQm-ae-fmi" id="K9e-7r-mz1">
@@ -1049,7 +1050,7 @@
                                     </constraints>
                                 </tableViewCellContentView>
                             </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" accessoryType="disclosureIndicator" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="FolderCell" id="7qf-7D-DUR" customClass="FolderCell" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" accessoryType="disclosureIndicator" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="FolderCell" id="7qf-7D-DUR" customClass="FolderCell" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="116" width="414" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="7qf-7D-DUR" id="ZVl-QE-IhD">
@@ -1083,7 +1084,7 @@
                                     <outlet property="name" destination="a9R-Eh-Skz" id="jVa-wl-NRG"/>
                                 </connections>
                             </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="FileCell" id="LuX-gZ-mG1" customClass="FileCell" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="FileCell" id="LuX-gZ-mG1" customClass="FileCell" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="160" width="414" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="LuX-gZ-mG1" id="AVl-GQ-hX9">
@@ -1157,7 +1158,7 @@
         <!--Host Map-->
         <scene sceneID="vGu-jn-ctS">
             <objects>
-                <viewController title="Host Map" id="UyJ-Lr-hxt" customClass="ClientMap" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Host Map" id="UyJ-Lr-hxt" customClass="ClientMap" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="AhP-hW-cBX">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1188,7 +1189,7 @@
         <!--Control Panel-->
         <scene sceneID="YG1-LZ-h1P">
             <objects>
-                <viewController title="Control Panel" hidesBottomBarWhenPushed="YES" id="7xX-30-789" customClass="ControlPanel" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Control Panel" hidesBottomBarWhenPushed="YES" id="7xX-30-789" customClass="ControlPanel" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="40A-6h-ShR">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1324,7 +1325,7 @@
         <!--Control Panel Info-->
         <scene sceneID="HZI-A1-Vp4">
             <objects>
-                <tableViewController id="HUm-Oc-1Of" userLabel="Control Panel Info" customClass="ControlPanelTable" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController id="HUm-Oc-1Of" userLabel="Control Panel Info" customClass="ControlPanelTable" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="static" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="bnq-ze-1iU">
                         <rect key="frame" x="0.0" y="0.0" width="374" height="400"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1529,7 +1530,7 @@
         <!--Group Panel Table-->
         <scene sceneID="aPx-sT-tcB">
             <objects>
-                <tableViewController id="5em-3f-doN" customClass="GroupPanelTable" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController id="5em-3f-doN" customClass="GroupPanelTable" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="static" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="910-Oy-0Jk">
                         <rect key="frame" x="0.0" y="0.0" width="374" height="215"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1634,13 +1635,13 @@
         <!--Macro Select-->
         <scene sceneID="7eK-ud-Dwd">
             <objects>
-                <tableViewController id="wk3-g5-icu" customClass="MacroSelect" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController id="wk3-g5-icu" customClass="MacroSelect" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="mti-dF-xJA">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="MacroSelectCell" id="Ho5-jr-s7a" customClass="MacroSelectCell" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="MacroSelectCell" id="Ho5-jr-s7a" customClass="MacroSelectCell" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="28" width="414" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Ho5-jr-s7a" id="4xi-HE-jWX">
@@ -1679,13 +1680,13 @@
         <!--Macro Results-->
         <scene sceneID="L0Y-f0-fbM">
             <objects>
-                <tableViewController id="fXu-Bw-A5b" customClass="MacroResults" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController id="fXu-Bw-A5b" customClass="MacroResults" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="18" sectionFooterHeight="18" id="zpZ-K4-SKj">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="MacroResultCell" id="lD1-9b-hy5" customClass="MacroResultCell" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="MacroResultCell" id="lD1-9b-hy5" customClass="MacroResultCell" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="55.5" width="414" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="lD1-9b-hy5" id="oYQ-6f-0aL">
@@ -1724,7 +1725,7 @@
         <!--Host List-->
         <scene sceneID="4SU-f1-Edx">
             <objects>
-                <tableViewController title="Host List" hidesBottomBarWhenPushed="YES" id="Zr7-Yd-1dv" customClass="ClientList" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController title="Host List" hidesBottomBarWhenPushed="YES" id="Zr7-Yd-1dv" customClass="ClientList" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="80" estimatedRowHeight="-1" sectionHeaderHeight="40" estimatedSectionHeaderHeight="-1" sectionFooterHeight="40" estimatedSectionFooterHeight="-1" id="fU6-dp-HAA">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1757,7 +1758,7 @@
                             </constraints>
                         </view>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="HostCell" rowHeight="80" id="eyh-Hm-sOL" customClass="HostCell" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="HostCell" rowHeight="80" id="eyh-Hm-sOL" customClass="HostCell" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="40" width="414" height="80"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="eyh-Hm-sOL" id="b3Q-mt-JvS">
@@ -1798,7 +1799,7 @@
                                     <outlet property="screenshot" destination="ABr-Ku-1tH" id="EU5-TQ-IF6"/>
                                 </connections>
                             </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="HostGroupHeaderCell" rowHeight="40" id="bvp-9i-RM5" customClass="HostGroupHeaderCell" customModule="CompatibilityLayer" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="HostGroupHeaderCell" rowHeight="40" id="bvp-9i-RM5" customClass="HostGroupHeaderCell" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="120" width="414" height="40"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="bvp-9i-RM5" id="pHb-6D-acL">
@@ -1894,7 +1895,7 @@
         <!--Client Scanner-->
         <scene sceneID="flc-LV-9YF">
             <objects>
-                <viewController id="654-4d-6yS" customClass="ClientScanner" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="654-4d-6yS" customClass="ClientScanner" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Bdk-rL-u6q">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1982,7 +1983,7 @@
         <!--Settings-->
         <scene sceneID="Y8q-yg-OLj">
             <objects>
-                <tableViewController title="Settings" id="2A8-D6-bel" customClass="Settings" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController title="Settings" id="2A8-D6-bel" customClass="Settings" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="static" style="plain" separatorStyle="default" rowHeight="80" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="92R-Aj-pw4">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -2143,7 +2144,7 @@
         <!--Change Account Password-->
         <scene sceneID="gMd-bg-czv">
             <objects>
-                <viewController title="Change Account Password" id="fjo-xx-WLR" customClass="ChangePassword" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Change Account Password" id="fjo-xx-WLR" customClass="ChangePassword" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="cIN-Jp-R2j">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -2272,7 +2273,7 @@
         <!--Main Tab Controller-->
         <scene sceneID="d4I-lf-oL7">
             <objects>
-                <tabBarController automaticallyAdjustsScrollViewInsets="NO" hidesBottomBarWhenPushed="YES" id="z06-cS-ZjJ" customClass="MainTabController" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <tabBarController automaticallyAdjustsScrollViewInsets="NO" hidesBottomBarWhenPushed="YES" id="z06-cS-ZjJ" customClass="MainTabController" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <toolbarItems/>
                     <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="eH6-gU-4Mo">
                         <rect key="frame" x="0.0" y="0.0" width="1000" height="1000"/>
@@ -2291,7 +2292,7 @@
         <!--Step1-->
         <scene sceneID="MBa-oy-TIx">
             <objects>
-                <viewController id="P8F-0C-DFk" customClass="Step1" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="P8F-0C-DFk" customClass="Step1" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="0Oy-ba-CJ2">
                         <rect key="frame" x="0.0" y="0.0" width="398" height="658"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -2398,7 +2399,7 @@
         <!--Step3-->
         <scene sceneID="NRf-Z5-dtp">
             <objects>
-                <viewController id="4lQ-jJ-tZg" customClass="Step3" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="4lQ-jJ-tZg" customClass="Step3" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="9Lk-tu-eSF">
                         <rect key="frame" x="0.0" y="0.0" width="398" height="658"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -2503,7 +2504,7 @@
         <scene sceneID="THJ-0Q-4iJ">
             <objects>
                 <tableViewController id="0DW-0g-vpQ" sceneMemberID="viewController">
-                    <tableView key="view" opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="static" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="9zD-h1-24q">
+                    <tableView key="view" opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="static" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="9zD-h1-24q">
                         <rect key="frame" x="0.0" y="0.0" width="380" height="300"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -2521,18 +2522,24 @@
                                             <rect key="frame" x="0.0" y="0.0" width="380" height="56"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="6kN-C5-AAN">
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="cloud" translatesAutoresizingMaskIntoConstraints="NO" id="6kN-C5-AAN">
                                                     <rect key="frame" x="12" y="4" width="48" height="48"/>
+                                                    <color key="tintColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="48" id="aG4-6a-e49"/>
                                                         <constraint firstAttribute="height" constant="48" id="add-te-iy9"/>
                                                     </constraints>
+                                                    <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="color" keyPath="tintColor">
+                                                            <color key="value" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                        </userDefinedRuntimeAttribute>
+                                                    </userDefinedRuntimeAttributes>
                                                 </imageView>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No need to run your own server" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="u8E-RB-1IO">
-                                                    <rect key="frame" x="68" y="17.5" width="284" height="21"/>
+                                                    <rect key="frame" x="68" y="17.5" width="292" height="21"/>
                                                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                    <nil key="textColor"/>
+                                                    <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                             </subviews>
@@ -2542,7 +2549,7 @@
                                                 <constraint firstItem="6kN-C5-AAN" firstAttribute="leading" secondItem="xMJ-LD-Z4r" secondAttribute="leading" constant="12" id="LZu-VE-L1E"/>
                                                 <constraint firstItem="6kN-C5-AAN" firstAttribute="centerY" secondItem="xMJ-LD-Z4r" secondAttribute="centerY" id="NgL-5A-Csj"/>
                                                 <constraint firstItem="u8E-RB-1IO" firstAttribute="leading" secondItem="6kN-C5-AAN" secondAttribute="trailing" constant="8" id="vXL-vB-E30"/>
-                                                <constraint firstAttribute="trailingMargin" secondItem="u8E-RB-1IO" secondAttribute="trailing" constant="8" id="wYQ-OK-Jjr"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="u8E-RB-1IO" secondAttribute="trailing" id="wYQ-OK-Jjr"/>
                                             </constraints>
                                         </tableViewCellContentView>
                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -2554,17 +2561,18 @@
                                             <rect key="frame" x="0.0" y="0.0" width="380" height="56"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="FdG-88-HyV">
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="refresh" translatesAutoresizingMaskIntoConstraints="NO" id="FdG-88-HyV">
                                                     <rect key="frame" x="12" y="4" width="48" height="48"/>
+                                                    <color key="tintColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="48" id="oHM-G1-vvy"/>
                                                         <constraint firstAttribute="height" constant="48" id="tiW-zD-Iqx"/>
                                                     </constraints>
                                                 </imageView>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Automatic upgrades and free support" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Qnj-9i-dhW">
-                                                    <rect key="frame" x="68" y="17.5" width="318" height="21"/>
+                                                    <rect key="frame" x="68" y="17.5" width="292" height="21"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                    <nil key="textColor"/>
+                                                    <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                             </subviews>
@@ -2573,9 +2581,10 @@
                                                 <constraint firstItem="Qnj-9i-dhW" firstAttribute="centerY" secondItem="Xsg-zk-9Fn" secondAttribute="centerY" id="D5V-pS-6oD"/>
                                                 <constraint firstItem="FdG-88-HyV" firstAttribute="centerY" secondItem="Xsg-zk-9Fn" secondAttribute="centerY" id="DX6-zU-Ttv"/>
                                                 <constraint firstItem="Qnj-9i-dhW" firstAttribute="leading" secondItem="FdG-88-HyV" secondAttribute="trailing" constant="8" id="JOo-23-P3l"/>
-                                                <constraint firstAttribute="trailingMargin" secondItem="Qnj-9i-dhW" secondAttribute="trailing" constant="8" id="uTg-aO-AMs"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="Qnj-9i-dhW" secondAttribute="trailing" id="uTg-aO-AMs"/>
                                             </constraints>
                                         </tableViewCellContentView>
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="56" id="rXh-Ub-cEz">
                                         <rect key="frame" x="0.0" y="112" width="380" height="56"/>
@@ -2584,28 +2593,30 @@
                                             <rect key="frame" x="0.0" y="0.0" width="380" height="56"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Nxp-6E-ieJ">
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="machine" translatesAutoresizingMaskIntoConstraints="NO" id="Nxp-6E-ieJ">
                                                     <rect key="frame" x="12" y="4" width="48" height="48"/>
+                                                    <color key="tintColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="48" id="H3z-9O-wcB"/>
                                                         <constraint firstAttribute="height" constant="48" id="Lwy-WK-VPm"/>
                                                     </constraints>
                                                 </imageView>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Unlimited users and host machines" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iaM-lK-qPd">
-                                                    <rect key="frame" x="68" y="17.5" width="318" height="21"/>
+                                                    <rect key="frame" x="68" y="17.5" width="292" height="21"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                    <nil key="textColor"/>
+                                                    <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                             </subviews>
                                             <constraints>
-                                                <constraint firstAttribute="trailingMargin" secondItem="iaM-lK-qPd" secondAttribute="trailing" constant="8" id="6QE-X0-2g8"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="iaM-lK-qPd" secondAttribute="trailing" id="6QE-X0-2g8"/>
                                                 <constraint firstItem="Nxp-6E-ieJ" firstAttribute="centerY" secondItem="f4c-04-Vw7" secondAttribute="centerY" id="I5L-dt-neJ"/>
                                                 <constraint firstItem="Nxp-6E-ieJ" firstAttribute="leading" secondItem="f4c-04-Vw7" secondAttribute="leading" constant="12" id="ajx-Vc-zwu"/>
                                                 <constraint firstItem="iaM-lK-qPd" firstAttribute="centerY" secondItem="f4c-04-Vw7" secondAttribute="centerY" id="apF-Iq-ZAR"/>
                                                 <constraint firstItem="iaM-lK-qPd" firstAttribute="leading" secondItem="Nxp-6E-ieJ" secondAttribute="trailing" constant="8" id="fep-lu-9mD"/>
                                             </constraints>
                                         </tableViewCellContentView>
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="56" id="NsV-hj-ByB">
                                         <rect key="frame" x="0.0" y="168" width="380" height="56"/>
@@ -2614,17 +2625,18 @@
                                             <rect key="frame" x="0.0" y="0.0" width="380" height="56"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="FQH-SQ-jSJ">
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="globe" translatesAutoresizingMaskIntoConstraints="NO" id="FQH-SQ-jSJ">
                                                     <rect key="frame" x="12" y="4" width="48" height="48"/>
+                                                    <color key="tintColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="48" id="UaX-3m-W5e"/>
                                                         <constraint firstAttribute="height" constant="48" id="cNl-LC-PcI"/>
                                                     </constraints>
                                                 </imageView>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="5 Gbps maximum bandwidth" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gSu-Ug-7Ao">
-                                                    <rect key="frame" x="68" y="17.5" width="318" height="21"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="5 Gigabit network bandwidth" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gSu-Ug-7Ao">
+                                                    <rect key="frame" x="68" y="17.5" width="292" height="21"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                    <nil key="textColor"/>
+                                                    <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                             </subviews>
@@ -2632,10 +2644,11 @@
                                                 <constraint firstItem="gSu-Ug-7Ao" firstAttribute="centerY" secondItem="nEn-0f-x69" secondAttribute="centerY" id="A5j-Pf-hW7"/>
                                                 <constraint firstItem="gSu-Ug-7Ao" firstAttribute="leading" secondItem="FQH-SQ-jSJ" secondAttribute="trailing" constant="8" id="l7n-YF-SON"/>
                                                 <constraint firstItem="FQH-SQ-jSJ" firstAttribute="centerY" secondItem="nEn-0f-x69" secondAttribute="centerY" id="pof-uZ-RVE"/>
-                                                <constraint firstAttribute="trailingMargin" secondItem="gSu-Ug-7Ao" secondAttribute="trailing" constant="8" id="qfl-MM-wM2"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="gSu-Ug-7Ao" secondAttribute="trailing" id="qfl-MM-wM2"/>
                                                 <constraint firstItem="FQH-SQ-jSJ" firstAttribute="leading" secondItem="nEn-0f-x69" secondAttribute="leading" constant="12" id="zk5-l9-pIJ"/>
                                             </constraints>
                                         </tableViewCellContentView>
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </tableViewCell>
                                 </cells>
                             </tableViewSection>
@@ -2653,7 +2666,7 @@
         <!--Step2-->
         <scene sceneID="we4-6Y-5tN">
             <objects>
-                <viewController id="IS9-1n-3rW" customClass="Step2" customModule="CompatibilityLayer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="IS9-1n-3rW" customClass="Step2" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="b6y-D9-Y3A">
                         <rect key="frame" x="0.0" y="0.0" width="398" height="658"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -2756,9 +2769,13 @@
         </scene>
     </scenes>
     <resources>
+        <image name="cloud" width="48" height="48"/>
         <image name="extensions/folder" width="44" height="44"/>
+        <image name="globe" width="48" height="48"/>
         <image name="linux" width="16" height="16"/>
         <image name="login" width="384" height="185"/>
+        <image name="machine" width="48" height="48"/>
+        <image name="refresh" width="48" height="48"/>
         <image name="tab/hostlist" width="23" height="23"/>
         <image name="tab/hostmap" width="23" height="23"/>
         <image name="tab/hostmap_selected" width="23" height="23"/>
