@@ -26,8 +26,7 @@ include 'com.sandpolis.viewer.cli'
 include 'com.sandpolis.viewer.jfx'
 include 'com.sandpolis.viewer.jfx:constants'
 
-import org.apache.tools.ant.taskdefs.condition.Os
-if (Os.isFamily(Os.FAMILY_MAC))
+if (LOCKSTONE.toBoolean())
 	include 'com.sandpolis.viewer.lockstone'
 
 // Optional Instances
