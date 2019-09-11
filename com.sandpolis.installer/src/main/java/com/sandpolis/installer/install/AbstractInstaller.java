@@ -71,9 +71,9 @@ public abstract class AbstractInstaller extends Task<Void> {
 	protected String password;
 
 	/**
-	 * The client sync key.
+	 * The client configuration.
 	 */
-	protected String key;
+	protected String config;
 
 	/**
 	 * Whether the installation completed successfully.
@@ -130,11 +130,11 @@ public abstract class AbstractInstaller extends Task<Void> {
 		return installer;
 	}
 
-	public static AbstractInstaller newClientInstaller(String key) {
+	public static AbstractInstaller newClientInstaller(String config) {
 		AbstractInstaller installer = newInstaller();
 		installer.coordinate = "com.sandpolis:sandpolis-client-mega:";
 		installer.postHook = installer::clientPostInstall;
-		installer.key = key;
+		installer.config = config;
 		return installer;
 	}
 

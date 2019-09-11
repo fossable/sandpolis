@@ -17,23 +17,31 @@
  ******************************************************************************/
 package com.sandpolis.installer.scene.main;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
+import com.sandpolis.core.util.RandUtil;
 import com.sandpolis.installer.install.AbstractInstaller;
+import com.sandpolis.installer.util.CloudUtil;
+import com.sandpolis.installer.util.QrUtil;
 
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.Clipboard;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 
 public class MainController {
 
@@ -68,22 +76,26 @@ public class MainController {
 	private PasswordField password;
 
 	@FXML
-	private TextField client_key;
-
-	@FXML
 	private Button btn_install;
 
 	@FXML
 	private ImageView banner;
 
+	@FXML
+	private VBox qr_box;
+
 	/**
-	 * An executor that will run the installation.
+	 * An executor that can run background tasks for the installer.
 	 */
-	private static final ExecutorService service = Executors.newSingleThreadExecutor((Runnable r) -> {
-		Thread thread = new Thread(r, "installation_thread");
+	private static final ExecutorService service = Executors.newCachedThreadPool((Runnable r) -> {
+		Thread thread = new Thread(r, "background_thread");
 		thread.setDaemon(true);
 		return thread;
 	});
+
+	private Future<?> qrTask;
+
+	private String client_config;
 
 	@FXML
 	private void initialize() {
@@ -91,7 +103,7 @@ public class MainController {
 		chk_server.selectedProperty().addListener(this::refreshScene);
 		chk_viewer_jfx.selectedProperty().addListener(this::refreshScene);
 		chk_viewer_cli.selectedProperty().addListener(this::refreshScene);
-		chk_client.selectedProperty().addListener(this::refreshScene);
+		chk_client.selectedProperty().addListener(this::refreshClient);
 
 		pane_server.expandedProperty().bindBidirectional(chk_server.selectedProperty());
 		pane_viewer_jfx.expandedProperty().bindBidirectional(chk_viewer_jfx.selectedProperty());
@@ -101,15 +113,55 @@ public class MainController {
 		banner.setImage(new Image(MainController.class.getResourceAsStream("/image/logo.png")));
 	}
 
-	private void refreshScene(ObservableValue<?> p, boolean o, boolean n) {
-		// Ensure at least one box is checked
-		btn_install.setDisable(!chk_server.isSelected() && !chk_viewer_jfx.isSelected() && !chk_viewer_cli.isSelected()
-				&& !chk_client.isSelected());
+	private void refreshClient(ObservableValue<?> p, boolean o, boolean n) {
+		if (o == false && n == true) {
+			qrTask = service.submit(() -> {
+				do {
+					String token = RandUtil.nextAlphabetic(32).toUpperCase();
+					Node node = QrUtil.buildQr(token, qr_box.widthProperty(), qr_box.heightProperty(), Color.BLACK);
+					Platform.runLater(() -> {
+						qr_box.getChildren().setAll(node);
+					});
+					try {
+						var result = CloudUtil.listen(token);
+						if (result.status != 200) {
+							setQrMessage("An error occurred");
+							return;
+						}
+
+						client_config = result.config;
+					} catch (IOException e) {
+						setQrMessage("An error occurred");
+						return;
+					} catch (InterruptedException e) {
+						return;
+					}
+				} while (!Thread.currentThread().isInterrupted() && client_config == null);
+
+				setQrMessage("Association successful");
+				qrTask = null;
+			});
+		} else if (o == true && n == false) {
+			if (qrTask != null) {
+				qrTask.cancel(true);
+				qrTask = null;
+			}
+		}
+		refreshScene(p, o, n);
 	}
 
-	@FXML
-	private void paste_key() {
-		client_key.setText(Clipboard.getSystemClipboard().getString());
+	private void setQrMessage(String message) {
+		Platform.runLater(() -> {
+			var label = new Label(message);
+			label.setWrapText(true);
+			qr_box.getChildren().setAll(label);
+		});
+	}
+
+	private void refreshScene(ObservableValue<?> p, boolean o, boolean n) {
+		// Ensure at least one box is checked
+		btn_install.setDisable((!chk_server.isSelected() && !chk_viewer_jfx.isSelected() && !chk_viewer_cli.isSelected()
+				&& !chk_client.isSelected()) || qrTask != null);
 	}
 
 	@FXML
@@ -139,7 +191,7 @@ public class MainController {
 			pane_server.setCollapsible(false);
 		}
 		if (chk_client.isSelected()) {
-			install(pane_client, AbstractInstaller.newClientInstaller(client_key.getText()));
+			install(pane_client, AbstractInstaller.newClientInstaller(client_config));
 		} else {
 			pane_client.setCollapsible(false);
 		}

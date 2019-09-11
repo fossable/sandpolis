@@ -12,6 +12,9 @@
     -fx-padding: 0 0 -16 0;
 }
 
-#btn_paste {
-	-fx-background-image: url("/image/icon16/clipboard.png");
+#qr_box {
+	-fx-border-color: black;
+    -fx-border-width: 4; 
+    -fx-border-insets: -8;
+    -fx-border-radius: 4;
 }
