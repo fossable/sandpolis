@@ -32,7 +32,7 @@ dependencies {
 	implementation 'io.netty:netty-common:4.1.39.Final'
 	implementation 'io.netty:netty-codec:4.1.39.Final'
 	implementation 'io.netty:netty-transport:4.1.39.Final'
-	implementation 'io.netty:netty-handler:4.1.39.Final'
+	implementation 'io.netty:netty-handler:4.1.40.Final'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.28'
