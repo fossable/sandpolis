@@ -43,7 +43,7 @@ dependencies {
 	implementation 'org.slf4j:slf4j-api:1.7.28'
 
 	// https://github.com/pf4j/pf4j
-	implementation 'org.pf4j:pf4j:3.0.1'
+	implementation 'org.pf4j:pf4j:3.1.0'
 }
 
 apply plugin: 'com.sandpolis.gradle.plugin'
