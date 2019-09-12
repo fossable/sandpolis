@@ -31,6 +31,14 @@ spotless {
 
 		licenseHeaderFile file('gradle/resources/header_java.txt'), "package "
 	}
+	format 'proto', {
+		target '**/*.proto'
+
+		trimTrailingWhitespace()
+		endWithNewline()
+
+		licenseHeaderFile file('gradle/resources/header_java.txt'), "syntax "
+	}
 	format 'groovy', {
 		target '**/*.groovy'
 
