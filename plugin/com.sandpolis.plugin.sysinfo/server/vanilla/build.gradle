@@ -35,11 +35,6 @@ dependencies {
 	implementation 'org.slf4j:slf4j-api:1.7.28'
 
 	// https://github.com/pf4j/pf4j
-<<<<<<< HEAD
 	implementation 'org.pf4j:pf4j:3.1.0'
 	annotationProcessor 'org.pf4j:pf4j:3.1.0'
-=======
-	implementation 'org.pf4j:pf4j:3.0.1'
-	annotationProcessor 'org.pf4j:pf4j:3.0.1'
->>>>>>> refs/heads/reverse-temp
 }
