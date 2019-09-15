@@ -53,7 +53,7 @@ public abstract class StoreBase<E extends StoreConfig> {
 
 	/**
 	 * Add the given subscriber from the store bus.
-	 * 
+	 *
 	 * @param object The subscriber to add
 	 */
 	public final void register(Object object) {
@@ -62,7 +62,7 @@ public abstract class StoreBase<E extends StoreConfig> {
 
 	/**
 	 * Remove the given subscriber from the store bus.
-	 * 
+	 *
 	 * @param object The subscriber to remove
 	 */
 	public final void unregister(Object object) {
@@ -82,7 +82,7 @@ public abstract class StoreBase<E extends StoreConfig> {
 
 	/**
 	 * Broadcast the given event asynchronously to the store's bus.
-	 * 
+	 *
 	 * @param <P>         The event parameter's type
 	 * @param constructor The event constructor
 	 * @param parameter   The event parameter
@@ -109,7 +109,7 @@ public abstract class StoreBase<E extends StoreConfig> {
 	/**
 	 * Broadcast the given event to the store's bus. This method blocks until every
 	 * event handler completes.
-	 * 
+	 *
 	 * @param <P>         The event parameter's type
 	 * @param constructor The event constructor
 	 * @param parameter   The event parameter
@@ -140,7 +140,7 @@ public abstract class StoreBase<E extends StoreConfig> {
 
 	/**
 	 * Initialize the store.
-	 * 
+	 *
 	 * @param configurator The configuration block
 	 * @return {@code this}
 	 */
@@ -162,7 +162,7 @@ public abstract class StoreBase<E extends StoreConfig> {
 
 		/**
 		 * Indicates that the store's data should be persisted to the given database.
-		 * 
+		 *
 		 * @param database The database handle
 		 */
 		public void persistent(Database database) {

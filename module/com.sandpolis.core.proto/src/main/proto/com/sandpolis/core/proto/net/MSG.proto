@@ -1,20 +1,20 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 syntax = "proto3";
 
 package net;
@@ -45,7 +45,7 @@ import "google/protobuf/any.proto";
  *  RQ_*    Request message
  *  RS_*    Response message
  *  EV_*    Asynchronous event
- *  
+ *
  * Message category naming conventions:
  *  MC_*    Message category
 */
@@ -53,7 +53,7 @@ message Message {
 
     // The final destination CVID
     int32 to = 1;
-    
+
     // The original source CVID
     int32 from = 2;
 
@@ -64,13 +64,13 @@ message Message {
 
         // A plugin message
         google.protobuf.Any            plugin                         = 4;
-        
+
         // Stream data
         EV_StreamData                  ev_stream_data                 = 5;
-        
+
         // A generic response indicating the outcome of some operation
         util.Outcome                   rs_outcome                     = 6;
-        
+
         // MC_Auth
         RQ_NoAuth                      rq_no_auth                     = 7;
         RQ_PasswordAuth                rq_password_auth               = 8;
@@ -79,7 +79,7 @@ message Message {
         // MC_Cvid
         RQ_Cvid                        rq_cvid                        = 100;
         RS_Cvid                        rs_cvid                        = 101;
-        
+
         // MC_Debug
 
         // MC_Delta
@@ -91,7 +91,7 @@ message Message {
         // MC_Generator
         RQ_Generate                    rq_generate                    = 13;
         RS_Generate                    rs_generate                    = 1013;
-        
+
         // MC_Group
         RQ_AddGroup                    rq_add_group                   = 14;
         RQ_RemoveGroup                 rq_remove_group                = 15;
@@ -104,22 +104,22 @@ message Message {
         RQ_RemoveListener              rq_remove_listener             = 19;
         RQ_ListenerDelta               rq_listener_delta              = 20;
         RQ_ChangeListener              rq_change_listener             = 21;
-        
+
         // MC_Login
         RQ_Login                       rq_login                       = 22;
         RQ_Logout                      rq_logout                      = 1022;
-        
+
         // MC_Network
         EV_EndpointClosed              ev_endpoint_closed             = 23;
         EV_NetworkDelta                ev_network_delta               = 24;
         RQ_DirectConnection            rq_direct_connection           = 25;
         RS_DirectConnection            rs_direct_connection           = 1025;
         RQ_Connection                  rq_connection                  = 26;
-        
+
         // MC_Ping
         RQ_Ping                        rq_ping                        = 27;
         RS_Ping                        rs_ping                        = 1027;
-        
+
         // MC_Plugin
         RQ_ArtifactDownload            rq_artifact_download           = 28;
         RS_ArtifactDownload            rs_artifact_download           = 1028;
@@ -130,17 +130,17 @@ message Message {
         // MC_Server
         RQ_ServerBanner                rq_server_banner               = 31;
         RS_ServerBanner                rs_server_banner               = 1031;
-        
+
         // MC_Stream
         RQ_StreamStart                 rq_stream_start                = 32;
         RS_StreamStart                 rs_stream_start                = 1032;
         RQ_StreamStop                  rq_stream_stop                 = 33;
-        
+
         // MC_User
         RQ_AddUser                     rq_add_user                    = 34;
         RQ_RemoveUser                  rq_remove_user                 = 35;
         RQ_UserDelta                   rq_user_delta                  = 36;
-        
+
         // MC_Client
         RQ_ClientMetadata              rq_client_metadata             = 37;
         RS_ClientMetadata              rs_client_metadata             = 1037;

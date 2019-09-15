@@ -1,42 +1,42 @@
-/******************************************************************************
- *                                                                            *
- *                    Copyright 2016 Subterranean Security                    *
- *                                                                            *
- *  Licensed under the Apache License, Version 2.0 (the "License");           *
- *  you may not use this file except in compliance with the License.          *
- *  You may obtain a copy of the License at                                   *
- *                                                                            *
- *      http://www.apache.org/licenses/LICENSE-2.0                            *
- *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
- *                                                                            *
- *****************************************************************************/
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 syntax = "proto3";
 
 package net;
 option java_package = "com.sandpolis.plugin.filesys.net";
 
 message FsHandleOptions {
-	
+
 	// Indicates whether size should be included in listings
 	bool size = 1;
-	
+
 	// Indicates whether creation timestamps should be included in listings
 	bool ctime = 2;
-	
+
 	// Indicates whether modification timestamps should be included in listings
 	bool mtime = 3;
-	
+
 	// Indicates whether access timestamps should be included in listings
 	bool atime = 4;
-	
+
 	// Indicates whether MIME types should be included in listings
 	bool mime = 5;
-	
+
 	// The file owner
 	bool owner = 6;
 }
@@ -51,37 +51,37 @@ message FileListlet {
 
 	// The file's name
 	string name = 2;
-	
+
 	// The file's creation time
 	int64 ctime = 3;
-	
+
 	// The file's modification time
 	int64 mtime = 4;
-	
+
 	// The file's access time
 	int64 atime = 5;
-	
+
 	// The file's size in bytes or number of elements if directory
 	int64 size = 6;
-	
+
 	// The file's MIME type
 	string mime = 7;
-	
+
 	enum UpdateType {
-	
+
 		// Indicates an entry has been added
 		ENTRY_CREATE = 0;
-		
+
 		// Indicates an entry has been removed
 		ENTRY_DELETE = 1;
-		
+
 		// Indicates an entry has been modified
 		ENTRY_MODIFY = 2;
-		
+
 		// Indicates some updates were dropped and the listing should be refreshed
 		OVERFLOW = 3;
 	}
-	
+
 	UpdateType update_type = 8;
 }
 
@@ -91,10 +91,10 @@ message FileListlet {
 message EV_FileListing {
 
 	int32 fmid = 1;
-	
+
 	// The directory's absolute path
 	string path = 2;
-	
+
 	// Listing updates
 	repeated FileListlet listing = 3;
 }
@@ -104,7 +104,7 @@ message EV_FileListing {
  */
 message RQ_FileListing {
 	string path = 1;
-	
+
 	FsHandleOptions options = 2;
 }
 
@@ -115,7 +115,7 @@ message RS_FileListing {
 
 	// The directory's absolute path
 	string path = 1;
-	
+
 	// The directory listing
 	repeated FileListlet listing = 2;
 }
@@ -136,25 +136,25 @@ message RS_FileInfo {
 
 	// The file's icon on the local platform
 	bytes local_icon = 1;
-	
+
 	// The file's location
 	string path = 2;
-	
+
 	// The file's name
 	string name = 3;
-	
+
 	// The file's creation time
 	int64 ctime = 4;
-	
+
 	// The file's modification time
 	int64 mtime = 5;
-	
+
 	// The file's access time
 	int64 atime = 6;
-	
+
 	// The file's size in bytes or number of elements if directory
 	int64 size = 7;
-	
+
 	// The file's MIME type
 	string mime = 8;
 }
