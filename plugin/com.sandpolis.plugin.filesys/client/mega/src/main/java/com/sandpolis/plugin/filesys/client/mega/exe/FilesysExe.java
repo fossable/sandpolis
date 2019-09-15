@@ -24,10 +24,11 @@ import com.google.common.io.RecursiveDeleteOption;
 import com.google.protobuf.Message;
 import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.proto.net.MCTemp.RQ_FileDelete;
-import com.sandpolis.core.proto.net.MCTemp.RQ_FileListing;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.plugin.filesys.FsHandle;
+import com.sandpolis.plugin.filesys.net.MCFilesys.RQ_FileDelete;
+import com.sandpolis.plugin.filesys.net.MCFilesys.RQ_FileListing;
+import com.sandpolis.plugin.filesys.net.MCFilesys.RS_FileListing;
 import com.sandpolis.plugin.filesys.net.MSG;
 
 public class FilesysExe extends Exelet {
@@ -47,24 +48,26 @@ public class FilesysExe extends Exelet {
 		}
 
 		try (FsHandle handle = new FsHandle(path)) {
-			//return RS_FileListing.newBuilder().addAllListing(handle.list());
-			return null;
+			return RS_FileListing.newBuilder().addAllListing(handle.list());
 		}
 	}
 
 	@Auth
-	//@Handler(tag = MSG.FilesysMessage.RQ_FILE_DELETE_FIELD_NUMBER)
+	@Handler(tag = MSG.FilesysMessage.RQ_FILE_DELETE_FIELD_NUMBER)
 	public Message.Builder rq_file_delete(RQ_FileDelete rq) throws Exception {
-		String path;
 		switch (PlatformUtil.queryOsType()) {
 		case WINDOWS:
-			path = rq.getPath().startsWith("/") ? rq.getPath().substring(1) : rq.getPath();
+			for (var path : rq.getTargetList()) {
+				MoreFiles.deleteRecursively(Paths.get(path.startsWith("/") ? path.substring(1) : path),
+						RecursiveDeleteOption.ALLOW_INSECURE);
+			}
 			break;
 		default:
-			path = rq.getPath();
+			for (var path : rq.getTargetList()) {
+				MoreFiles.deleteRecursively(Paths.get(path), RecursiveDeleteOption.ALLOW_INSECURE);
+			}
 		}
 
-		MoreFiles.deleteRecursively(Paths.get(path), RecursiveDeleteOption.ALLOW_INSECURE);
 		return Outcome.newBuilder().setResult(true);
 	}
 }

@@ -30,5 +30,6 @@ message FilesysMessage {
         RQ_FileListing                 rq_file_listing                = 1;
         RS_FileListing                 rs_file_listing                = 1001;
 
+		RQ_FileDelete                  rq_file_delete                 = 2;
 	}
 }
