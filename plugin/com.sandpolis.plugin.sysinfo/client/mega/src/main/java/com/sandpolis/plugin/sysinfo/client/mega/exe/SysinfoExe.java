@@ -15,7 +15,7 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.plugin.sysinfo;
+package com.sandpolis.plugin.sysinfo.client.mega.exe;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.net.command.Exelet;

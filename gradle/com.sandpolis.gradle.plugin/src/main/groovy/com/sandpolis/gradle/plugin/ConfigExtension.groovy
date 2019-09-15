@@ -35,8 +35,7 @@ class ConfigExtension {
 	String name
 
 	/**
-	 * The plugin's description.
+	 * The plugin's user-friendly description.
 	 */
 	String description
-
 }

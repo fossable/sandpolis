@@ -15,36 +15,32 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.plugin.desktop.exe;
+package com.sandpolis.plugin.shell.client.mega.exe;
 
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.Toolkit;
-import java.awt.image.BufferedImage;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
-import javax.imageio.ImageIO;
-
-import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.proto.net.MCTemp.RQ_Execute;
+import com.sandpolis.core.proto.net.MCTemp.RS_Execute;
 import com.sandpolis.core.util.ProtoUtil;
-import com.sandpolis.plugin.desktop.net.MCDesktop.RQ_Screenshot;
-import com.sandpolis.plugin.desktop.net.MCDesktop.RS_Screenshot;
-import com.sandpolis.plugin.desktop.net.MSG;
+import com.sandpolis.plugin.shell.client.mega.CommandEncoders.BashEncoder;
+import com.sandpolis.plugin.shell.client.mega.CommandEncoders.PowerShellEncoder;
+import com.sandpolis.plugin.shell.net.MSG;
 
-public class DesktopExe extends Exelet {
+public class ShellExe extends Exelet {
 
 	@Override
 	public String getPluginPrefix() {
-		return "com.sandpolis.plugin.desktop";
+		return "com.sandpolis.plugin.shell";
 	}
 
 	@Override
 	public void reply(com.sandpolis.core.proto.net.MSG.Message msg, MessageOrBuilder payload) {
-		connector.send(ProtoUtil.rs(msg, ProtoUtil.setPluginPayload(MSG.DesktopMessage.newBuilder(), payload)));
+		connector.send(ProtoUtil.rs(msg, ProtoUtil.setPluginPayload(MSG.ShellMessage.newBuilder(), payload)));
 	}
 
 	@Override
@@ -53,17 +49,33 @@ public class DesktopExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.DesktopMessage.RQ_SCREENSHOT_FIELD_NUMBER)
-	public Message.Builder rq_screenshot(RQ_Screenshot rq) {
-		var outcome = begin();
-		try (var in = new PipedInputStream(); var out = new PipedOutputStream(in)) {
-			BufferedImage screenshot = new Robot()
-					.createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
-			ImageIO.write(screenshot, "jpg", out);
+	@Handler(tag = MSG.ShellMessage.RQ_EXECUTE_FIELD_NUMBER)
+	public Message.Builder rq_execute(RQ_Execute rq) throws Exception {
 
-			return RS_Screenshot.newBuilder().setData(ByteString.readFrom(in));
-		} catch (Exception e) {
-			return failure(outcome);
+		String[] command;
+		switch (PlatformUtil.queryOsType()) {
+		case LINUX:
+		case MACOS:
+			command = BashEncoder.encode(rq.getCommand());
+			break;
+		case WINDOWS:
+			command = PowerShellEncoder.encode(rq.getCommand());
+			break;
+		default:
+			throw new RuntimeException();
+		}
+
+		Process p = Runtime.getRuntime().exec(command);
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+			int exit = p.waitFor();
+
+			String line;
+			StringBuffer buffer = new StringBuffer();
+			while ((line = reader.readLine()) != null) {
+				buffer.append(line);
+				buffer.append("\n");
+			}
+			return RS_Execute.newBuilder().setResult(buffer.toString()).setExitCode(exit);
 		}
 	}
 }

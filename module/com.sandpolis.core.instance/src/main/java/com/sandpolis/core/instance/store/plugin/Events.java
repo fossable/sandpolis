@@ -15,15 +15,21 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.plugin.desktop;
+package com.sandpolis.core.instance.store.plugin;
 
-import org.pf4j.Plugin;
-import org.pf4j.PluginWrapper;
+import com.sandpolis.core.instance.event.ParameterizedEvent;
 
-public class DesktopPlugin extends Plugin {
+public final class Events {
 
-	public DesktopPlugin(PluginWrapper wrapper) {
-		super(wrapper);
+	/**
+	 * Indicates that a plugin was just loaded successfully.
+	 */
+	public static final class PluginLoadedEvent extends ParameterizedEvent<Plugin> {
 	}
 
+	public static final class PluginUnloadedEvent extends ParameterizedEvent<Plugin> {
+	}
+
+	private Events() {
+	}
 }

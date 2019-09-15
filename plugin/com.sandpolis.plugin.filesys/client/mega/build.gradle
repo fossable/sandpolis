@@ -31,6 +31,9 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':plugin:com.sandpolis.plugin.filesys')
 
+	// https://github.com/google/guava
+	implementation 'com.google.guava:guava:28.1-jre'
+
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.28'
 

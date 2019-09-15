@@ -15,25 +15,28 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.plugin.filesys;
+package com.sandpolis.plugin.shell.client.mega;
 
+import org.pf4j.Extension;
 import org.pf4j.Plugin;
 import org.pf4j.PluginWrapper;
 
 import com.sandpolis.core.instance.plugin.ExeletProvider;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.plugin.filesys.exe.FilesysExe;
+import com.sandpolis.plugin.shell.client.mega.exe.ShellExe;
 
-public class FilesysPlugin extends Plugin implements ExeletProvider {
+public class ShellPlugin extends Plugin {
 
-	public FilesysPlugin(PluginWrapper wrapper) {
+	public ShellPlugin(PluginWrapper wrapper) {
 		super(wrapper);
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public Class<? extends Exelet>[] getExelets() {
-		return new Class[] { FilesysExe.class };
+	@Extension
+	public static final class Exelets implements ExeletProvider {
+		@Override
+		@SuppressWarnings("unchecked")
+		public Class<? extends Exelet>[] getExelets() {
+			return new Class[] { ShellExe.class };
+		}
 	}
-
 }

@@ -57,6 +57,8 @@ public class PluginPackager implements Plugin<Project> {
 				def name = extension.id.substring(extension.id.lastIndexOf('.') + 1)
 				name = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase()
 
+				def cls = it.path.substring(it.path.indexOf(extension.id)).replace(':', '.') + "." + name + "Plugin"
+
 				if (tasks.findByPath('jar') != null) {
 					jar {
 						manifest {
@@ -66,7 +68,7 @@ public class PluginPackager implements Plugin<Project> {
 								'Plugin-Version': project.version,
 								'Plugin-Name': extension.name,
 								'Plugin-Description': extension.description,
-								'Plugin-Class': "${extension.id}.${name}Plugin",
+								'Plugin-Class': cls,
 								'Plugin-Cert': cert
 							)
 						}

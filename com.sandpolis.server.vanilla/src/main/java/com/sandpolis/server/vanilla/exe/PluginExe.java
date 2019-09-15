@@ -70,7 +70,7 @@ public class PluginExe extends Exelet {
 		ParsedCoordinate coordinate = fromCoordinate(rq.getCoordinates());
 		log.debug("Received artifact request: " + coordinate.coordinate);
 
-		PluginStore.getPlugin(coordinate.artifactId).ifPresentOrElse(plugin -> {
+		PluginStore.get(coordinate.artifactId).ifPresentOrElse(plugin -> {
 			if (!PluginStore.findComponentTypes(plugin).contains(connector.getRemoteInstanceFlavor()))
 				reply(m, Outcome.newBuilder().setResult(false));// TODO message
 			else if (rq.getLocation()) {

@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.pf4j.AbstractPluginManager;
 import org.pf4j.DefaultExtensionFactory;
@@ -43,11 +46,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.cilki.compact.CompactClassLoader;
-import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
 public final class SandpolisPluginManager extends AbstractPluginManager {
 
 	private static final Logger log = LoggerFactory.getLogger(SandpolisPluginManager.class);
+
+	private final String componentPath;
+
+	public SandpolisPluginManager(Instance instance, InstanceFlavor flavor) {
+		componentPath = String.format("%s/%s.jar", instance.toString().toLowerCase(), flavor.toString().toLowerCase());
+	}
 
 	@Override
 	protected PluginRepository createPluginRepository() {
@@ -66,7 +76,30 @@ public final class SandpolisPluginManager extends AbstractPluginManager {
 
 	@Override
 	protected PluginDescriptorFinder createPluginDescriptorFinder() {
-		return new ManifestPluginDescriptorFinder();
+		return new ManifestPluginDescriptorFinder() {
+			@Override
+			protected Manifest readManifest(Path pluginPath) {
+				try (var in = new ZipInputStream(Files.newInputStream(pluginPath))) {
+					ZipEntry entry;
+					while ((entry = in.getNextEntry()) != null) {
+						if (entry.getName().equals(componentPath)) {
+							try (var component = new ZipInputStream(in)) {
+								while ((entry = component.getNextEntry()) != null) {
+									if (entry.getName().equals("META-INF/MANIFEST.MF")) {
+										return new Manifest(component);
+									}
+								}
+							}
+							log.warn("Missing component manifest");
+							return super.readManifest(pluginPath);
+						}
+					}
+				} catch (IOException e) {
+					log.warn("Failed to read plugin archive", e);
+				}
+				return super.readManifest(pluginPath);
+			}
+		};
 	}
 
 	@Override
@@ -98,15 +131,14 @@ public final class SandpolisPluginManager extends AbstractPluginManager {
 
 			@Override
 			public ClassLoader loadPlugin(Path pluginPath, PluginDescriptor pluginDescriptor) {
-				CompactClassLoader ccl = new CompactClassLoader(ClassLoader.getSystemClassLoader());
+				log.trace("Building plugin classloader for plugin archive: {}", pluginPath);
+
+				CompactClassLoader ccl = new CompactClassLoader(Thread.currentThread().getContextClassLoader());
 				try {
 					// Add common classes
 					ccl.add(pluginPath.toUri().toURL(), false);
 
-					// Add instance specific classes
-					String componentPath = String.format("%s/%s.jar", Core.INSTANCE.toString().toLowerCase(),
-							Core.FLAVOR.toString().toLowerCase());
-
+					// Add instance specific classes if it exists
 					if (ccl.getResource(componentPath) != null) {
 						ccl.add(new URL(String.format("file:%s!/%s", pluginPath, componentPath)), false);
 

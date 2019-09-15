@@ -36,8 +36,6 @@ import "com/sandpolis/core/proto/net/MC_Stream.proto";
 import "com/sandpolis/core/proto/net/MC_User.proto";
 import "com/sandpolis/core/proto/util/Result.proto";
 
-import "com/sandpolis/core/proto/net/MC_Temp.proto";
-
 import "google/protobuf/any.proto";
 
 /**
@@ -147,14 +145,5 @@ message Message {
         RQ_ClientMetadata              rq_client_metadata             = 37;
         RS_ClientMetadata              rs_client_metadata             = 1037;
         RQ_PowerChange                 rq_power_change                = 38;
-
-		// Temporary:
-		RQ_Screenshot                  rq_screenshot                  = 40;
-		RS_Screenshot                  rs_screenshot                  = 1040;
-		RQ_FileDelete                  rq_file_delete                 = 42;
-		RQ_FileListing                 rq_file_listing                = 43;
-		RS_FileListing                 rs_file_listing                = 1043;
-		RQ_Execute                     rq_execute                     = 44;
-		RS_Execute                     rs_execute                     = 1044;
     }
 }

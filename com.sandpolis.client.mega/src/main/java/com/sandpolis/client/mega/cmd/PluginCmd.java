@@ -59,7 +59,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 
 		session.request(RQ_PluginList.newBuilder(), (RS_PluginList rs) -> {
 			rs.getPluginList().stream().filter(descriptor -> {
-				Optional<Plugin> plugin = PluginStore.getPlugin(descriptor.getId());
+				Optional<Plugin> plugin = PluginStore.get(descriptor.getId());
 				if (plugin.isEmpty())
 					return true;
 

@@ -29,7 +29,6 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -42,11 +41,14 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.Resources;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.plugin.ExeletProvider;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.store.plugin.Events.PluginLoadedEvent;
 import com.sandpolis.core.instance.store.plugin.PluginStore.PluginStoreConfig;
 import com.sandpolis.core.proto.net.MCPlugin.PluginDescriptor;
 import com.sandpolis.core.proto.util.Platform.Instance;
@@ -84,7 +86,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	/**
 	 * The PF4J plugin manager.
 	 */
-	private static PluginManager manager = new SandpolisPluginManager();
+	private static PluginManager manager = new SandpolisPluginManager(Core.INSTANCE, Core.FLAVOR);
 
 	/**
 	 * The default certificate verifier which allows all plugins.
@@ -98,18 +100,6 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	 */
 	public Stream<PluginDescriptor> getPluginDescriptors() {
 		return provider.stream().map(plugin -> plugin.toDescriptor());
-	}
-
-	/**
-	 * Get a plugin by id.
-	 *
-	 * @param id The plugin id
-	 * @return The plugin
-	 */
-	public Optional<Plugin> getPlugin(String id) {
-		checkNotNull(id);
-
-		return provider.stream().filter(plugin -> plugin.getId().equals(id)).findAny();
 	}
 
 	/**
@@ -276,11 +266,16 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 			return;
 		}
 
-		log.debug("Loading plugin: {}", plugin.getName());
+		log.debug("Loading plugin: {} ({})", plugin.getName(), plugin.getId());
 		manager.startPlugin(plugin.getId());
-		// TODO load extensions
-		// manager.getExtensions(SandpolisPlugin.class,
-		// plugin.getId()).stream().forEach(SandpolisPlugin::load);
+
+		// Load extensions
+		manager.getExtensions(ExeletProvider.class, plugin.getId()).stream().forEach(provider -> {
+			// TODO
+			System.out.println(provider);
+		});
+
+		post(PluginLoadedEvent::new, plugin);
 	}
 
 	/**

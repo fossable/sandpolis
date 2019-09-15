@@ -15,14 +15,14 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.plugin.sysinfo;
+package com.sandpolis.plugin.shell;
 
 import org.pf4j.Plugin;
 import org.pf4j.PluginWrapper;
 
-public class SysinfoPlugin extends Plugin {
+public class ShellPlugin extends Plugin {
 
-	public SysinfoPlugin(PluginWrapper wrapper) {
+	public ShellPlugin(PluginWrapper wrapper) {
 		super(wrapper);
 	}
 

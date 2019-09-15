@@ -39,8 +39,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.client.mega.cmd.AuthCmd;
+import com.sandpolis.client.mega.cmd.PluginCmd;
 import com.sandpolis.client.mega.exe.ClientExe;
-import com.sandpolis.client.mega.exe.TempExe;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.plugin;
@@ -194,14 +194,14 @@ public final class Client {
 	 */
 	@InitializationTask(name = "Begin the connection routine", fatal = true)
 	public static final Task beginConnectionRoutine = new Task((task) -> {
-		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class, TempExe.class });
+		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class });
 
 		return task.success();
 	});
 
 	@Subscribe
 	private void onSrvLost(ServerLostEvent event) {
-		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class, TempExe.class });
+		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class });
 	}
 
 	@Subscribe
@@ -227,8 +227,8 @@ public final class Client {
 		if (Config.getBoolean(plugin.enabled)) {
 			future.addHandler((Outcome rs) -> {
 				// Synchronize plugins
-				// PluginCmd.async().sync().sync();
-				// PluginStore.loadPlugins();
+				PluginCmd.async().sync().sync();
+				PluginStore.loadPlugins();
 			});
 		}
 	}

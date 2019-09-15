@@ -15,21 +15,20 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.plugin.sysinfo;
+package com.sandpolis.plugin.sysinfo.client.mega;
 
 import java.util.function.Function;
 
+import org.pf4j.Extension;
 import org.pf4j.Plugin;
 import org.pf4j.PluginWrapper;
 
 import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.instance.plugin.ExeletProvider;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.plugin.sysinfo.client.mega.exe.SysinfoExe;
 
-import oshi.hardware.CentralProcessor;
-import oshi.software.os.NetworkParams;
-
-public class SysinfoPlugin extends Plugin implements ExeletProvider {
+public class SysinfoPlugin extends Plugin {
 
 	public SysinfoPlugin(PluginWrapper wrapper) {
 		super(wrapper);
@@ -48,9 +47,9 @@ public class SysinfoPlugin extends Plugin implements ExeletProvider {
 	}
 
 	private void setupAttributes() {
-		associate(AK_CPU.VENDOR, (CentralProcessor cpu) -> cpu.getVendor());
-		associate(AK_CPU.MODEL, (CentralProcessor cpu) -> cpu.getModel());
-		associate(AK_NET.HOSTNAME, (NetworkParams net) -> net.getHostName());
+//		associate(AK_CPU.VENDOR, (CentralProcessor cpu) -> cpu.getVendor());
+//		associate(AK_CPU.MODEL, (CentralProcessor cpu) -> cpu.getModel());
+//		associate(AK_NET.HOSTNAME, (NetworkParams net) -> net.getHostName());
 	}
 
 	/**
@@ -63,10 +62,12 @@ public class SysinfoPlugin extends Plugin implements ExeletProvider {
 		key.putObject("retriever", retriever);
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public Class<? extends Exelet>[] getExelets() {
-		return new Class[] { SysinfoExe.class };
+	@Extension
+	public static final class Exelets implements ExeletProvider {
+		@Override
+		@SuppressWarnings("unchecked")
+		public Class<? extends Exelet>[] getExelets() {
+			return new Class[] { SysinfoExe.class };
+		}
 	}
-
 }

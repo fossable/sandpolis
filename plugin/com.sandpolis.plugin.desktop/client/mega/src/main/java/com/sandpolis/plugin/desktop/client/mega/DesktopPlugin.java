@@ -15,25 +15,29 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.plugin.desktop;
+package com.sandpolis.plugin.desktop.client.mega;
 
+import org.pf4j.Extension;
 import org.pf4j.Plugin;
 import org.pf4j.PluginWrapper;
 
 import com.sandpolis.core.instance.plugin.ExeletProvider;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.plugin.desktop.exe.DesktopExe;
+import com.sandpolis.plugin.desktop.client.mega.exe.DesktopExe;
 
-public class DesktopPlugin extends Plugin implements ExeletProvider {
+public class DesktopPlugin extends Plugin {
 
 	public DesktopPlugin(PluginWrapper wrapper) {
 		super(wrapper);
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public Class<? extends Exelet>[] getExelets() {
-		return new Class[] { DesktopExe.class };
-	}
+	@Extension
+	public static final class Exelets implements ExeletProvider {
 
+		@Override
+		@SuppressWarnings("unchecked")
+		public Class<? extends Exelet>[] getExelets() {
+			return new Class[] { DesktopExe.class };
+		}
+	}
 }

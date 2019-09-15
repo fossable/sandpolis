@@ -39,6 +39,7 @@ dependencies {
 
 	// Core plugins
 	implementation project(':plugin:com.sandpolis.plugin.desktop')
+	implementation project(':plugin:com.sandpolis.plugin.shell')
 	implementation project(':plugin:com.sandpolis.plugin.sysinfo')
 	implementation project(':plugin:com.sandpolis.plugin.filesys')
 

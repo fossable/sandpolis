@@ -15,10 +15,15 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.plugin.filesys.exe;
+package com.sandpolis.plugin.sysinfo.server.vanilla;
 
-import com.sandpolis.core.net.command.Exelet;
+import org.pf4j.Plugin;
+import org.pf4j.PluginWrapper;
 
-public class FilesysExe extends Exelet {
+public class SysinfoPlugin extends Plugin {
+
+	public SysinfoPlugin(PluginWrapper wrapper) {
+		super(wrapper);
+	}
 
 }

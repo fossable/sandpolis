@@ -1,0 +1,42 @@
+/*******************************************************************************
+* SANDPOLIS                                                                    *
+* com.sandpolis.plugin.shell                                                   *
+*******************************************************************************/
+
+buildscript {
+	dependencies {
+		classpath ':com.sandpolis.gradle.soi:'
+	}
+}
+
+plugins {
+	id 'eclipse'
+	id 'java-library'
+}
+
+apply plugin: 'com.sandpolis.gradle.soi'
+
+eclipse {
+	project {
+		name = 'com.sandpolis.plugin.shell:client:mega'
+		comment = "The shell plugin's Mega client component"
+	}
+}
+
+dependencies {
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+
+	implementation project(':module:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.net')
+	implementation project(':module:com.sandpolis.core.proto')
+	implementation project(':module:com.sandpolis.core.stream')
+	implementation project(':module:com.sandpolis.core.util')
+	implementation project(':plugin:com.sandpolis.plugin.shell')
+
+	// https://github.com/qos-ch/slf4j
+	implementation 'org.slf4j:slf4j-api:1.7.28'
+
+	// https://github.com/pf4j/pf4j
+	implementation 'org.pf4j:pf4j:3.1.0'
+	annotationProcessor 'org.pf4j:pf4j:3.1.0'
+}
