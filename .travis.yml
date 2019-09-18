@@ -1,8 +1,6 @@
 sudo: false
 
 matrix:
-  fast_finish: true
-
   include:
     - language: java
       name: Java 12 Linux
@@ -18,12 +16,12 @@ matrix:
       script:
         - ./gradlew test -PPLUGINS_DEPLOY=false --console=plain
 
-    allow_failures:
-    - language: swift
-      name: Lockstone iOS
-      os: osx
-      osx_image: xcode10.3
-      script:
-        - ./gradlew :com.sandpolis.viewer.lockstone:build -PPLUGINS_DEPLOY=false -PLOCKSTONE=true --console=plain
-      cache:
-        cocoapods: true
+    #allow_failures:
+    #- language: swift
+    #  name: Lockstone iOS
+    #  os: osx
+    #  osx_image: xcode10.3
+    #  script:
+    #    - ./gradlew :com.sandpolis.viewer.lockstone:build -PPLUGINS_DEPLOY=false -PLOCKSTONE=true --console=plain
+    #  cache:
+    #    cocoapods: true
