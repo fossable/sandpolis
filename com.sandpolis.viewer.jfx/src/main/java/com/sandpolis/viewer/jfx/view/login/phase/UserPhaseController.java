@@ -22,9 +22,10 @@ import java.security.cert.X509Certificate;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 import com.sandpolis.core.util.CertUtil;
+import com.sandpolis.core.viewer.cmd.ServerCmd;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.view.login.LoginController.LoginPhase;
 
@@ -115,7 +116,7 @@ public class UserPhaseController extends AbstractController {
 			@Override
 			protected Void call() throws Exception {
 				while (!isCancelled()) {
-					long ping = sock.ping();
+					long ping = ServerCmd.async().target(sock).ping();// TODO not async
 					updateMessage(ping + " ms");
 
 					Platform.runLater(() -> {

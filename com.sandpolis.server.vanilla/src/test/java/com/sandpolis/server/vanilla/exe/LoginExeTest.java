@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
@@ -55,7 +55,7 @@ class LoginExeTest extends ExeletTest {
 
 		initChannel();
 		exe = new LoginExe();
-		exe.setConnector(new Sock(channel));
+		exe.connector = new UnitSock(channel);
 	}
 
 	@Test

@@ -15,7 +15,7 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.handler;
+package com.sandpolis.core.net.handler.peer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import org.junit.jupiter.api.Test;
+
+import com.sandpolis.core.net.handler.peer.HolePunchHandler;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;

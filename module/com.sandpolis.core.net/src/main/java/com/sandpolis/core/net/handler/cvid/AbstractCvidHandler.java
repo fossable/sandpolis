@@ -15,51 +15,41 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.stream.store;
+package com.sandpolis.core.net.handler.cvid;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.sandpolis.core.proto.net.MSG.Message;
 
-import java.util.concurrent.SubmissionPublisher;
+import io.netty.channel.ChannelHandler.Sharable;
+import io.netty.channel.SimpleChannelInboundHandler;
 
-import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.util.ProtoUtil;
+@Sharable
+public abstract class AbstractCvidHandler extends SimpleChannelInboundHandler<Message> {
 
-public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> implements StreamEndpoint {
+	/**
+	 * This event is emitted by both {@link CvidRequestHandler} and
+	 * {@link CvidResponseHandler} on the completion of the CVID handshake.
+	 */
+	public static final class CvidHandshakeCompletionEvent {
 
-	private int id;
-	private Sock sock;
+		private final boolean success;
+		private final int cvid;
 
-	@Override
-	public int getStreamID() {
-		return id;
-	}
+		public CvidHandshakeCompletionEvent(int cvid) {
+			this.success = true;
+			this.cvid = cvid;
+		}
 
-	public Sock getSock() {
-		return sock;
-	}
+		public CvidHandshakeCompletionEvent() {
+			this.success = false;
+			this.cvid = 0;
+		}
 
-	public InboundStreamAdapter(int streamID, Sock sock) {
-		this.id = streamID;
-		this.sock = checkNotNull(sock);
-	}
+		public boolean isSuccess() {
+			return success;
+		}
 
-	@SuppressWarnings("unchecked")
-	public void submit(EV_StreamData msg) {
-		submit((E) ProtoUtil.getPayload(msg));
-	}
-
-	public void addOutbound(OutboundStreamAdapter<E> out) {
-		checkArgument(!isSubscribed(out));
-		subscribe(out);
-		StreamStore.outbound.add(out);
-	}
-
-	public void addSink(StreamSink<E> s) {
-		checkArgument(!isSubscribed(s));
-		subscribe(s);
-		StreamStore.sink.add(s);
+		public int getCvid() {
+			return cvid;
+		}
 	}
 }

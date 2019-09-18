@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
-import com.sandpolis.core.net.store.connection.Events.SockLostEvent;
+import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
 import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
 import com.sandpolis.core.stream.store.StreamStore.StreamStoreConfig;
 

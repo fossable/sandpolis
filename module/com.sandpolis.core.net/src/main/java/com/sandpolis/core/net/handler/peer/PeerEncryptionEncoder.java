@@ -15,51 +15,26 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.stream.store;
+package com.sandpolis.core.net.handler.peer;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.List;
 
-import java.util.concurrent.SubmissionPublisher;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageEncoder;
 
-import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.util.ProtoUtil;
-
-public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> implements StreamEndpoint {
-
-	private int id;
-	private Sock sock;
+/**
+ * This handler encrypts outgoing messages on a peer connection.
+ *
+ * @author cilki
+ * @since 5.0.0
+ */
+public class PeerEncryptionEncoder extends MessageToMessageEncoder<ByteBuf> {
 
 	@Override
-	public int getStreamID() {
-		return id;
+	protected void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+		// TODO Auto-generated method stub
+		out.add(msg);
 	}
 
-	public Sock getSock() {
-		return sock;
-	}
-
-	public InboundStreamAdapter(int streamID, Sock sock) {
-		this.id = streamID;
-		this.sock = checkNotNull(sock);
-	}
-
-	@SuppressWarnings("unchecked")
-	public void submit(EV_StreamData msg) {
-		submit((E) ProtoUtil.getPayload(msg));
-	}
-
-	public void addOutbound(OutboundStreamAdapter<E> out) {
-		checkArgument(!isSubscribed(out));
-		subscribe(out);
-		StreamStore.outbound.add(out);
-	}
-
-	public void addSink(StreamSink<E> s) {
-		checkArgument(!isSubscribed(s));
-		subscribe(s);
-		StreamStore.sink.add(s);
-	}
 }

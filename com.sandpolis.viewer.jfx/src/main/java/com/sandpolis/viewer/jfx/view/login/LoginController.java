@@ -23,8 +23,8 @@ import static com.sandpolis.viewer.jfx.store.stage.StageStore.StageStore;
 
 import java.util.Objects;
 
-import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.future.SockFuture;
+import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
@@ -137,7 +137,7 @@ public class LoginController extends FxController {
 	private void btn_continue(ActionEvent event) {
 		switch (phase.get()) {
 		case SERVER_INPUT:
-			ConnectionStore.connect(serverPhaseController.getAddress(), serverPhaseController.getPort())
+			ConnectionStore.connect(serverPhaseController.getAddress(), serverPhaseController.getPort(), false)
 					.addListener((SockFuture sockFuture) -> {
 						if (sockFuture.isSuccess()) {
 							connection = sockFuture.get();

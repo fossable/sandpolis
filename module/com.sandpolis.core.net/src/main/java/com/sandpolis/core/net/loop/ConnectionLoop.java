@@ -26,10 +26,9 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.Sock.ConnectionState;
+import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.future.SockFuture;
-import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.util.Generator.LoopConfig;
 import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 
@@ -126,7 +125,7 @@ public final class ConnectionLoop implements Runnable {
 					Sock sock = future.getNow();
 					if (future.isSuccess() && sock != null) {
 						// Check connection state
-						if (sock.getState() != ConnectionState.NOT_CONNECTED) {
+						if (sock.isConnected()) {
 							this.future.setSuccess(sock);
 							return;
 						}

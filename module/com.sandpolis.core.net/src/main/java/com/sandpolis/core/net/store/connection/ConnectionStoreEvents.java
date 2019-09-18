@@ -15,26 +15,19 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.codec;
+package com.sandpolis.core.net.store.connection;
 
-import java.util.List;
+import com.sandpolis.core.instance.event.ParameterizedEvent;
+import com.sandpolis.core.net.sock.Sock;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageEncoder;
+public final class ConnectionStoreEvents {
 
-/**
- * This handler encrypts outgoing messages on a peer connection.
- *
- * @author cilki
- * @since 5.0.0
- */
-public class PeerEncryptionEncoder extends MessageToMessageEncoder<ByteBuf> {
-
-	@Override
-	protected void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
-		// TODO Auto-generated method stub
-		out.add(msg);
+	public static final class SockLostEvent extends ParameterizedEvent<Sock> {
 	}
 
+	public static final class SockEstablishedEvent extends ParameterizedEvent<Sock> {
+	}
+
+	private ConnectionStoreEvents() {
+	}
 }

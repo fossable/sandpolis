@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCGroup.RQ_AddGroup;
 import com.sandpolis.core.proto.net.MCGroup.RQ_RemoveGroup;
@@ -59,7 +59,7 @@ class GroupExeTest extends ExeletTest {
 
 		initChannel();
 		exe = new GroupExe();
-		exe.setConnector(new Sock(channel));
+		exe.connector = new UnitSock(channel);
 	}
 
 	@Test

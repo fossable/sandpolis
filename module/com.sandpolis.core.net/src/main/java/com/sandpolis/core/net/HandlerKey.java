@@ -15,21 +15,20 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.store.network;
+package com.sandpolis.core.net;
 
-import com.sandpolis.core.instance.event.ParameterizedEvent;
+import io.netty.channel.ChannelHandler;
 
-public final class Events {
+public final class HandlerKey<E extends ChannelHandler> {
 
-	public static final class ServerLostEvent extends ParameterizedEvent<Integer> {
+	private final String name;
+
+	public HandlerKey(String name) {
+		this.name = name;
 	}
 
-	public static final class ServerEstablishedEvent extends ParameterizedEvent<Integer> {
-	}
-
-	public static final class CvidChangedEvent extends ParameterizedEvent<Integer> {
-	}
-
-	private Events() {
+	@Override
+	public String toString() {
+		return name;
 	}
 }

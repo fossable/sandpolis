@@ -15,19 +15,14 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.store.connection;
+package com.sandpolis.core.net.sock;
 
-import com.sandpolis.core.instance.event.ParameterizedEvent;
-import com.sandpolis.core.net.Sock;
+import io.netty.channel.Channel;
 
-public final class Events {
+public class ServerSock extends AbstractSock {
 
-	public static final class SockLostEvent extends ParameterizedEvent<Sock> {
+	public ServerSock(Channel channel) {
+		super(channel);
 	}
 
-	public static final class SockEstablishedEvent extends ParameterizedEvent<Sock> {
-	}
-
-	private Events() {
-	}
 }

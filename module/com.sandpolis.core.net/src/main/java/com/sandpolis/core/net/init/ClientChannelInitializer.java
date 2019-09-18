@@ -17,40 +17,49 @@
  ******************************************************************************/
 package com.sandpolis.core.net.init;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.net;
+import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.handler.CvidRequestHandler;
+import com.sandpolis.core.net.handler.ExeletHandler;
+import com.sandpolis.core.net.handler.ResponseHandler;
+import com.sandpolis.core.net.handler.cvid.CvidRequestHandler;
+import com.sandpolis.core.net.sock.ClientSock;
 import com.sandpolis.core.util.CertUtil;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelPipeline;
 import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.netty.util.concurrent.DefaultPromise;
 
 /**
- * This {@link PipelineInitializer} configures a {@link Channel} for connections
- * to the server.
+ * This {@link AbstractChannelInitializer} configures a {@link Channel} for
+ * connections to the server.
  *
  * @author cilki
  * @since 5.0.0
  */
-public class ClientPipelineInit extends PipelineInitializer {
+public class ClientChannelInitializer extends AbstractChannelInitializer {
 
-	private static final CvidRequestHandler cvidHandler = new CvidRequestHandler();
+	private static final CvidRequestHandler HANDLER_CVID = new CvidRequestHandler();
+
+	@SuppressWarnings("unchecked")
+	private static final Class<? extends Exelet>[] exelets = new Class[] {};
 
 	private final boolean strictCerts;
 
-	public ClientPipelineInit(Class<? extends Exelet>[] exelets, boolean strictCerts) {
-		super(exelets);
-
+	public ClientChannelInitializer(boolean strictCerts) {
 		this.strictCerts = strictCerts;
 	}
 
 	@Override
 	protected void initChannel(Channel ch) throws Exception {
 		super.initChannel(ch);
+		new ClientSock(ch);
+
+		ChannelPipeline p = ch.pipeline();
 
 		if (Config.getBoolean(net.connection.tls)) {
 			var ssl = SslContextBuilder.forClient();
@@ -60,13 +69,13 @@ public class ClientPipelineInit extends PipelineInitializer {
 			else
 				ssl.trustManager(InsecureTrustManagerFactory.INSTANCE);
 
-			SslHandler sslHandler = ssl.build().newHandler(ch.alloc());
-			ch.pipeline().addAfter("traffic", "ssl", sslHandler);
-			ch.attr(ChannelConstant.HANDLER_SSL).set(sslHandler);
+			engage(p, SSL, ssl.build().newHandler(ch.alloc()));
 		}
 
-		ch.pipeline().addBefore("exe", "cvid", cvidHandler);
-		ch.attr(ChannelConstant.FUTURE_CVID).set(new DefaultPromise<>(ch.eventLoop()));
-	}
+		engage(p, CVID, HANDLER_CVID);
 
+		engage(p, RESPONSE, new ResponseHandler(), ThreadStore.get("net.exelet"));
+		engage(p, EXELET, new ExeletHandler(ch.attr(ChannelConstant.SOCK).get(), exelets),
+				ThreadStore.get("net.exelet"));
+	}
 }

@@ -43,18 +43,19 @@ class ServerInitializerTest {
 	/**
 	 * A ServerInitializer that uses an external certificate
 	 */
-	ServerInitializer secure;
+	ServerChannelInitializer secure;
 
 	/**
 	 * A ServerInitializer that uses a fallback self-signed certificate
 	 */
-	ServerInitializer fallback;
+	ServerChannelInitializer fallback;
 
 	@BeforeAll
 	static void configure() {
 		Config.register(logging.net.traffic.raw, false);
 		Config.register(logging.net.traffic.decoded, false);
 		Config.register(net.connection.tls, true);
+		Config.register("traffic.interval", 4000);
 
 		ThreadStore.ThreadStore.init(config -> {
 			config.ephemeral();
@@ -65,8 +66,8 @@ class ServerInitializerTest {
 	@BeforeEach
 	void setup() throws CertificateException {
 		SelfSignedCertificate ssc = new SelfSignedCertificate();
-		secure = new ServerInitializer(123, ssc.cert().getEncoded(), ssc.key().getEncoded());
-		fallback = new ServerInitializer(123);
+		secure = new ServerChannelInitializer(123, ssc.cert().getEncoded(), ssc.key().getEncoded());
+		fallback = new ServerChannelInitializer(123);
 	}
 
 	@Test

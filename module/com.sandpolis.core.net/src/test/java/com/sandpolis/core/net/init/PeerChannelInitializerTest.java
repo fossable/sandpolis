@@ -40,14 +40,16 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
-class PeerPipelineInitTest {
+class PeerChannelInitializerTest {
 
-	private final PeerPipelineInit init = new PeerPipelineInit(null);
+	private final PeerChannelInitializer init = new PeerChannelInitializer();
 
 	@BeforeAll
 	static void configure() {
 		Config.register(logging.net.traffic.raw, false);
 		Config.register(logging.net.traffic.decoded, false);
+		Config.register("traffic.interval", 4000);
+
 		ThreadStore.init(config -> {
 			config.ephemeral();
 			config.defaults.put(net.exelet, new NioEventLoopGroup().next());

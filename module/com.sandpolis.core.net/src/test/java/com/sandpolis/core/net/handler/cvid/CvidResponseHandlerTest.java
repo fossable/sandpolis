@@ -15,64 +15,78 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.handler;
+package com.sandpolis.core.net.handler.cvid;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.concurrent.TimeUnit;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.handler.cvid.CvidResponseHandler;
+import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.util.IDUtil;
 
-import io.netty.channel.DefaultEventLoop;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
-import io.netty.util.concurrent.DefaultPromise;
 
-public class CvidResponseHandlerTest {
+class CvidResponseHandlerTest {
 
-	private static final CvidResponseHandler serverHandler = new CvidResponseHandler();
+	private static final CvidResponseHandler HANDLER = new CvidResponseHandler();
+
 	private EmbeddedChannel server;
+	private CvidHandshakeCompletionEvent event;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		server = new EmbeddedChannel();
-		server.pipeline().addLast("cvid", serverHandler);
-		server.attr(ChannelConstant.FUTURE_CVID).set(new DefaultPromise<>(new DefaultEventLoop()));
-		server.attr(ChannelConstant.HANDLER_EXELET).set(new ExeletHandler(null));
+		event = null;
+
+		server.pipeline().addFirst(new ChannelInboundHandlerAdapter() {
+			@Override
+			public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+				assertTrue(evt instanceof CvidHandshakeCompletionEvent);
+				event = (CvidHandshakeCompletionEvent) evt;
+			}
+		});
+		server.pipeline().addFirst(HANDLER);
 	}
 
 	@Test
-	public void testReceiveIncorrect() {
-		assertNotNull(server.pipeline().get("cvid"));
-		assertFalse(server.attr(ChannelConstant.FUTURE_CVID).get().isDone());
+	@DisplayName("Receive an invalid response")
+	void testReceiveIncorrect() {
 		server.writeInbound(Message.newBuilder()
 				.setRqCvid(RQ_Cvid.newBuilder().setInstance(Instance.SERVER).setUuid("testuuid2")).build());
-		assertTrue(server.attr(ChannelConstant.FUTURE_CVID).get().isDone());
-		assertFalse(server.attr(ChannelConstant.FUTURE_CVID).get().isSuccess());
-		assertNull(server.pipeline().get("cvid"));
+
+		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
+		assertFalse(event.isSuccess());
+		assertNull(server.pipeline().get(CvidResponseHandler.class), "Handler autoremove failed");
 	}
 
 	@Test
-	public void testReceiveCorrect() {
-		assertNotNull(server.pipeline().get("cvid"));
-		assertFalse(server.attr(ChannelConstant.FUTURE_CVID).get().isDone());
+	@DisplayName("Receive a valid response")
+	void testReceiveCorrect() {
 		server.writeInbound(Message.newBuilder()
 				.setRqCvid(RQ_Cvid.newBuilder().setInstance(Instance.CLIENT).setUuid("testuuid2")).build());
-		assertTrue(server.attr(ChannelConstant.FUTURE_CVID).get().isDone());
-		assertTrue(server.attr(ChannelConstant.FUTURE_CVID).get().isSuccess());
+
+		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
+		assertTrue(event.isSuccess());
 
 		assertEquals(Instance.CLIENT, IDUtil.CVID.extractInstance(server.attr(ChannelConstant.CVID).get()));
 		assertEquals("testuuid2", server.attr(ChannelConstant.UUID).get());
-		assertNull(server.pipeline().get("cvid"));
+		assertNull(server.pipeline().get(CvidResponseHandler.class), "Handler autoremove failed");
 
 		Message msg = server.readOutbound();
 		RS_Cvid rs = msg.getRsCvid();

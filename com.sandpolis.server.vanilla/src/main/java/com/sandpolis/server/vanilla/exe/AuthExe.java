@@ -31,15 +31,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.handler.Sand5Handler;
+import com.sandpolis.core.net.handler.sand5.Sand5Handler;
+import com.sandpolis.core.net.init.AbstractChannelInitializer;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.proto.net.MCAuth.RQ_KeyAuth;
 import com.sandpolis.core.proto.net.MCAuth.RQ_PasswordAuth;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.store.group.Group;
-
-import io.netty.util.concurrent.Future;
 
 /**
  * Authentication message handlers.
@@ -137,10 +136,10 @@ public class AuthExe extends Exelet {
 			return failure(outcome, INVALID_KEY);
 		}
 
-		Sand5Handler sand5 = Sand5Handler.registerRequestHandler(connector.channel(), mech.getServer());
-		Future<Boolean> future = sand5.challengeFuture();
+		Sand5Handler sand5 = Sand5Handler.newRequestHandler(mech.getServer());
+		connector.engage(AbstractChannelInitializer.SAND5, sand5);
 
-		if (future.get()) {
+		if (sand5.challengeFuture().get()) {
 			Profile client = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
 			// TODO add client to group
 

@@ -26,9 +26,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.PoolConstant;
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.init.ChannelConstant;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.net.MSG;
@@ -37,7 +36,6 @@ import com.sandpolis.core.proto.net.MSG.Message;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 
-@SuppressWarnings("unchecked")
 class ExeletHandlerTest {
 
 	static boolean rq_login_triggered;
@@ -59,10 +57,10 @@ class ExeletHandlerTest {
 
 	@Test
 	void testUnauth() {
-		ExeletHandler execute = new ExeletHandler(new Class[] { TestExe.class, Test2Exe.class });
-		EmbeddedChannel channel = new EmbeddedChannel(execute);
-		channel.attr(ChannelConstant.HANDLER_EXELET).set(execute);
-		execute.setSock(new Sock(channel));
+		EmbeddedChannel channel = new EmbeddedChannel();
+		ExeletHandler execute = new ExeletHandler(new UnitSock(channel));
+		channel.pipeline().addFirst(execute);
+		execute.register(TestExe.class, Test2Exe.class);
 
 		channel.writeInbound(Message.newBuilder().build());
 		assertFalse(rq_login_triggered);
@@ -75,11 +73,11 @@ class ExeletHandlerTest {
 
 	@Test
 	void testAuth() {
-		ExeletHandler execute = new ExeletHandler(new Class[] { TestExe.class, Test2Exe.class });
-		EmbeddedChannel channel = new EmbeddedChannel(execute);
-		channel.attr(ChannelConstant.HANDLER_EXELET).set(execute);
-		execute.setSock(new Sock(channel));
-		execute.initAuth();
+		EmbeddedChannel channel = new EmbeddedChannel();
+		ExeletHandler execute = new ExeletHandler(new UnitSock(channel));
+		channel.pipeline().addFirst(execute);
+		execute.register(TestExe.class, Test2Exe.class);
+		execute.authenticate();
 
 		channel.writeInbound(Message.newBuilder().build());
 		assertFalse(rq_login_triggered);

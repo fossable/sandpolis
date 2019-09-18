@@ -15,40 +15,37 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.handler;
+package com.sandpolis.core.net.handler.cvid;
+
+import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.exception.MessageFlowException;
-import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.store.network.NetworkStoreEvents.CvidChangedEvent;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
-import com.sandpolis.core.util.IDUtil;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 
 /**
- * This handler manages the CVID handshake for the responding instance. Usually
- * the responding instance will be the server.
+ * This handler manages the CVID handshake for the requesting instance. Usually
+ * the requesting instance will be the client or viewer.
  *
  * @see CvidResponseHandler
  *
  * @author cilki
  * @since 5.0.0
  */
-@Sharable
-public class CvidResponseHandler extends SimpleChannelInboundHandler<Message> {
+public class CvidRequestHandler extends AbstractCvidHandler {
 
-	private static final Logger log = LoggerFactory.getLogger(CvidResponseHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(CvidRequestHandler.class);
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
@@ -57,25 +54,40 @@ public class CvidResponseHandler extends SimpleChannelInboundHandler<Message> {
 		// Autoremove the handler
 		ch.pipeline().remove(this);
 
-		RQ_Cvid rq = msg.getRqCvid();
-		if (rq == null) {
-			ch.attr(ChannelConstant.FUTURE_CVID).get().setFailure(new MessageFlowException(RQ_Cvid.class, msg));
-		} else if (rq.getUuid().isEmpty() || rq.getInstance() == Instance.UNRECOGNIZED
-				|| rq.getInstance() == Instance.SERVER || rq.getInstanceFlavor() == InstanceFlavor.UNRECOGNIZED) {
-			log.debug("Received invalid CVID request on channel: {}", ch.id());
-			ch.attr(ChannelConstant.FUTURE_CVID).get().setFailure(new Exception("Invalid CVID request"));
+		RS_Cvid rs = msg.getRsCvid();
+		if (rs != null && !rs.getServerUuid().isEmpty()) {
+
+			Core.setCvid(rs.getCvid());
+			NetworkStore.post(CvidChangedEvent::new, Core.cvid());
+			ch.attr(ChannelConstant.CVID).set(rs.getServerCvid());
+			ch.attr(ChannelConstant.UUID).set(rs.getServerUuid());
+
+			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent(rs.getCvid()));
+			log.debug("CVID handshake succeeded ({})", rs.getCvid());
 		} else {
-			RS_Cvid.Builder rs = RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.UUID)
-					.setCvid(IDUtil.CVID.cvid(rq.getInstance(), rq.getInstanceFlavor()));
-
-			ch.writeAndFlush(Message.newBuilder().setRsCvid(rs).build());
-
-			ch.attr(ChannelConstant.INSTANCE).set(rq.getInstance());
-			ch.attr(ChannelConstant.CVID).set(rs.getCvid());
-			ch.attr(ChannelConstant.UUID).set(rq.getUuid());
-			ch.attr(ChannelConstant.FUTURE_CVID).get().setSuccess(rs.getCvid());
-
-			ch.attr(ChannelConstant.SOCK).set(new Sock(ch));
+			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent());
+			log.debug("CVID handshake failed");
 		}
 	}
+
+	@Override
+	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		handshake(ctx.channel(), Core.INSTANCE, Core.FLAVOR, Core.UUID);
+		super.channelActive(ctx);
+	}
+
+	/**
+	 * Begin the CVID handshake phase.
+	 *
+	 * @param channel  The channel
+	 * @param instance The instance type
+	 * @param flavor   The instance flavor
+	 * @param uuid     The instance's UUID
+	 */
+	void handshake(Channel channel, Instance instance, InstanceFlavor flavor, String uuid) {
+		log.debug("Initiating CVID handshake");
+		channel.writeAndFlush(Message.newBuilder()
+				.setRqCvid(RQ_Cvid.newBuilder().setInstance(instance).setInstanceFlavor(flavor).setUuid(uuid)).build());
+	}
+
 }

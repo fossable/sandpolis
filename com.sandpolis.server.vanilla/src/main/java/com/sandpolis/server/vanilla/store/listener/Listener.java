@@ -35,13 +35,13 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.ProtoType;
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.Transport;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.Listener.ListenerStats;
 import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.util.ValidationUtil;
-import com.sandpolis.server.vanilla.net.init.ServerInitializer;
+import com.sandpolis.server.vanilla.net.init.ServerChannelInitializer;
 import com.sandpolis.server.vanilla.store.user.User;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -179,18 +179,18 @@ public class Listener implements ProtoType<ProtoListener> {
 
 		log.debug("Starting listener on port: {}", port);
 
-		parentLoopGroup = Sock.Transport.INSTANCE.getEventLoopGroup();
-		childLoopGroup = Sock.Transport.INSTANCE.getEventLoopGroup();
+		parentLoopGroup = Transport.INSTANCE.getEventLoopGroup();
+		childLoopGroup = Transport.INSTANCE.getEventLoopGroup();
 
 		ServerBootstrap b = new ServerBootstrap();
-		b.group(parentLoopGroup, childLoopGroup).channel(Sock.Transport.INSTANCE.getServerSocketChannel())//
+		b.group(parentLoopGroup, childLoopGroup).channel(Transport.INSTANCE.getServerSocketChannel())//
 				.option(ChannelOption.SO_BACKLOG, 128)// Socket backlog
 				.childOption(ChannelOption.SO_KEEPALIVE, true);
 
 		if (certificate != null && privateKey != null)
-			b.childHandler(new ServerInitializer(Core.cvid(), certificate, privateKey));
+			b.childHandler(new ServerChannelInitializer(Core.cvid(), certificate, privateKey));
 		else
-			b.childHandler(new ServerInitializer(Core.cvid()));
+			b.childHandler(new ServerChannelInitializer(Core.cvid()));
 
 		try {
 			acceptor = (ServerChannel) b.bind(address, port).await().channel();

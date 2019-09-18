@@ -15,51 +15,45 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.stream.store;
+package com.sandpolis.core.net;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import io.netty.channel.Channel;
+import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 
-import java.util.concurrent.SubmissionPublisher;
-
-import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.util.ProtoUtil;
-
-public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> implements StreamEndpoint {
-
-	private int id;
-	private Sock sock;
-
-	@Override
-	public int getStreamID() {
-		return id;
-	}
-
-	public Sock getSock() {
-		return sock;
-	}
-
-	public InboundStreamAdapter(int streamID, Sock sock) {
-		this.id = streamID;
-		this.sock = checkNotNull(sock);
-	}
+public enum Protocol {
+	TCP, UDP;
 
 	@SuppressWarnings("unchecked")
-	public void submit(EV_StreamData msg) {
-		submit((E) ProtoUtil.getPayload(msg));
-	}
-
-	public void addOutbound(OutboundStreamAdapter<E> out) {
-		checkArgument(!isSubscribed(out));
-		subscribe(out);
-		StreamStore.outbound.add(out);
-	}
-
-	public void addSink(StreamSink<E> s) {
-		checkArgument(!isSubscribed(s));
-		subscribe(s);
-		StreamStore.sink.add(s);
+	public Class<? extends Channel> getChannel() {
+		switch (this) {
+		case UDP:
+			try {
+				switch (Transport.INSTANCE) {
+				case EPOLL:
+					return (Class<? extends Channel>) Class.forName("io.netty.channel.epoll.EpollDatagramChannel");
+				case KQUEUE:
+					return (Class<? extends Channel>) Class.forName("io.netty.channel.kqueue.KQueueDatagramChannel");
+				default:
+					return NioDatagramChannel.class;
+				}
+			} catch (ClassNotFoundException ignore) {
+				return NioDatagramChannel.class;
+			}
+		case TCP:
+		default:
+			try {
+				switch (Transport.INSTANCE) {
+				case EPOLL:
+					return (Class<? extends Channel>) Class.forName("io.netty.channel.epoll.EpollSocketChannel");
+				case KQUEUE:
+					return (Class<? extends Channel>) Class.forName("io.netty.channel.kqueue.KQueueSocketChannel");
+				default:
+					return NioSocketChannel.class;
+				}
+			} catch (ClassNotFoundException ignore) {
+				return NioSocketChannel.class;
+			}
+		}
 	}
 }

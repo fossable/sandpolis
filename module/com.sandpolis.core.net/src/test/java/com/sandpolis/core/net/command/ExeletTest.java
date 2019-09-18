@@ -23,9 +23,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import com.sandpolis.core.net.Sock.ConnectionState;
-import com.sandpolis.core.net.handler.ExeletHandler;
-import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
 
@@ -74,13 +72,10 @@ public class ExeletTest {
 	/**
 	 * Initialize a new testing channel.
 	 */
-	@SuppressWarnings("unchecked")
 	protected void initChannel() {
 		channel = new EmbeddedChannel();
-		channel.attr(ChannelConstant.HANDLER_EXELET).set(new ExeletHandler(new Class[] {}));
 		channel.attr(ChannelConstant.CVID).set(0);
 		channel.attr(ChannelConstant.UUID).set("123");
-		channel.attr(ChannelConstant.CONNECTION_STATE).set(ConnectionState.CONNECTED);
 	}
 
 }

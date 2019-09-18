@@ -15,42 +15,26 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.init;
+package com.sandpolis.core.net.handler.peer;
 
-import com.sandpolis.core.net.codec.PeerEncryptionDecoder;
-import com.sandpolis.core.net.codec.PeerEncryptionEncoder;
-import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.handler.HolePunchHandler;
+import java.util.List;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.socket.DatagramChannel;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageDecoder;
 
 /**
- * This {@link PipelineInitializer} configures a {@link Channel} for
- * peer-to-peer connections. Typically this initializer will be used with
- * datagram channels. The {@link Channel} will automatically perform a NAT
- * traversal prior to activation if required.
+ * This handler decrypts incoming messages on a peer connection.
  *
  * @author cilki
  * @since 5.0.0
  */
-public class PeerPipelineInit extends PipelineInitializer {
-
-	public PeerPipelineInit(Class<? extends Exelet>[] exelets) {
-		super(exelets);
-	}
+public class PeerEncryptionDecoder extends MessageToMessageDecoder<ByteBuf> {
 
 	@Override
-	protected void initChannel(Channel ch) throws Exception {
-		super.initChannel(ch);
-		ChannelPipeline p = ch.pipeline();
-
-		p.addFirst(new PeerEncryptionEncoder());
-		p.addFirst(new PeerEncryptionDecoder());
-
-		if (ch instanceof DatagramChannel)
-			p.addFirst(new HolePunchHandler());
+	protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+		// TODO Auto-generated method stub
+		out.add(msg);
 	}
 
 }

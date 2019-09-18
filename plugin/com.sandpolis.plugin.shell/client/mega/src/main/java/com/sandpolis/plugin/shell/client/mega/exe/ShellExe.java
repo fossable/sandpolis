@@ -24,11 +24,11 @@ import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.proto.net.MCTemp.RQ_Execute;
-import com.sandpolis.core.proto.net.MCTemp.RS_Execute;
 import com.sandpolis.core.util.ProtoUtil;
 import com.sandpolis.plugin.shell.client.mega.CommandEncoders.BashEncoder;
 import com.sandpolis.plugin.shell.client.mega.CommandEncoders.PowerShellEncoder;
+import com.sandpolis.plugin.shell.net.MCShell.RQ_Execute;
+import com.sandpolis.plugin.shell.net.MCShell.RS_Execute;
 import com.sandpolis.plugin.shell.net.MSG;
 
 public class ShellExe extends Exelet {

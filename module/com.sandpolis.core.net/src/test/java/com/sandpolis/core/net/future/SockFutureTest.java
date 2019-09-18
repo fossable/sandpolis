@@ -32,9 +32,9 @@ import org.junit.jupiter.api.Test;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.logging;
 import com.sandpolis.core.instance.PoolConstant.net;
-import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.handler.ExeletHandler;
-import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.UnitSock;
+import com.sandpolis.core.net.sock.Sock;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -45,6 +45,7 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.concurrent.Promise;
 
 class SockFutureTest {
 
@@ -97,9 +98,10 @@ class SockFutureTest {
 		server.channel().attr(ChannelConstant.CVID).set(123);
 		client.channel().attr(ChannelConstant.CVID).set(321);
 
-		// Set exelet handlers manually
-		server.channel().attr(ChannelConstant.HANDLER_EXELET).set(new ExeletHandler(null));
-		client.channel().attr(ChannelConstant.HANDLER_EXELET).set(new ExeletHandler(null));
+		// Create Sock
+		var s = new UnitSock(client.channel());
+		client.channel().attr(ChannelConstant.SOCK).set(s);
+		((Promise<Void>) s.getHandshakeFuture()).setSuccess(null);
 
 		SockFuture sf = new SockFuture(client);
 		sf.sync();

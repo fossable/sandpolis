@@ -15,51 +15,47 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.stream.store;
+package com.sandpolis.core.net;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.concurrent.SubmissionPublisher;
-
-import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.net.sock.AbstractSock;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.util.ProtoUtil;
 
-public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> implements StreamEndpoint {
+import io.netty.channel.Channel;
 
-	private int id;
-	private Sock sock;
+/**
+ * A {@link Sock} used for unit testing only.
+ */
+public class UnitSock extends AbstractSock {
+
+	private boolean connected = true;
+	private boolean authenticated = false;
+
+	public UnitSock(Channel channel) {
+		super(channel);
+	}
 
 	@Override
-	public int getStreamID() {
-		return id;
+	public boolean isConnected() {
+		return connected;
 	}
 
-	public Sock getSock() {
-		return sock;
+	@Override
+	public boolean isAuthenticated() {
+		return authenticated;
 	}
 
-	public InboundStreamAdapter(int streamID, Sock sock) {
-		this.id = streamID;
-		this.sock = checkNotNull(sock);
+	@Override
+	public void authenticate() {
+		authenticated = true;
 	}
 
-	@SuppressWarnings("unchecked")
-	public void submit(EV_StreamData msg) {
-		submit((E) ProtoUtil.getPayload(msg));
+	@Override
+	public void deauthenticate() {
+		authenticated = false;
 	}
 
-	public void addOutbound(OutboundStreamAdapter<E> out) {
-		checkArgument(!isSubscribed(out));
-		subscribe(out);
-		StreamStore.outbound.add(out);
-	}
-
-	public void addSink(StreamSink<E> s) {
-		checkArgument(!isSubscribed(s));
-		subscribe(s);
-		StreamStore.sink.add(s);
+	@Override
+	public String getRemoteIP() {
+		return "127.0.0.1";
 	}
 }

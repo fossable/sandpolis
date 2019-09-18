@@ -15,20 +15,14 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.init;
+package com.sandpolis.core.net;
 
-import java.util.concurrent.Future;
-
-import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.handler.ExeletHandler;
-import com.sandpolis.core.net.handler.ResponseHandler;
+import com.sandpolis.core.net.sock.AbstractSock;
+import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.util.Platform.Instance;
 
 import io.netty.channel.Channel;
-import io.netty.handler.ssl.SslHandler;
-import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.util.AttributeKey;
-import io.netty.util.concurrent.Promise;
 
 /**
  * {@link AttributeKey} constants that are useful to {@link Sock} and other
@@ -44,39 +38,9 @@ public final class ChannelConstant {
 	/**
 	 * The remote host's SSL certificate status.
 	 */
-	public static final AttributeKey<Sock.CertificateState> CERTIFICATE_STATE = AttributeKey
-			.valueOf("state.certificate");
+	public static final AttributeKey<Boolean> CERTIFICATE_STATE = AttributeKey.valueOf("state.certificate");
 
-	/**
-	 * The remote host's connection status.
-	 */
-	public static final AttributeKey<Sock.ConnectionState> CONNECTION_STATE = AttributeKey.valueOf("state.connection");
-
-	/**
-	 * The {@link Future} that will be notified when the CVID handshake completes.
-	 */
-	public static final AttributeKey<Promise<Integer>> FUTURE_CVID = AttributeKey.valueOf("future.cvid");
-
-	/**
-	 * The remote host's {@link ExeletHandler}.
-	 */
-	public static final AttributeKey<ExeletHandler> HANDLER_EXELET = AttributeKey.valueOf("handler.exelet");
-
-	/**
-	 * The remote host's {@link ResponseHandler}.
-	 */
-	public static final AttributeKey<ResponseHandler> HANDLER_RESPONSE = AttributeKey.valueOf("handler.response");
-
-	/**
-	 * The remote host's {@link SslHandler} or {@code null} if SSL was not used.
-	 */
-	public static final AttributeKey<SslHandler> HANDLER_SSL = AttributeKey.valueOf("handler.ssl");
-
-	/**
-	 * The remote host's {@link ChannelTrafficShapingHandler}.
-	 */
-	public static final AttributeKey<ChannelTrafficShapingHandler> HANDLER_TRAFFIC = AttributeKey
-			.valueOf("handler.traffic");
+	public static final AttributeKey<Boolean> AUTH_STATE = AttributeKey.valueOf("state.auth");
 
 	/**
 	 * The remote host's instance type.
@@ -86,7 +50,7 @@ public final class ChannelConstant {
 	/**
 	 * The {@link Sock} associated with the {@link Channel}.
 	 */
-	public static final AttributeKey<Sock> SOCK = AttributeKey.valueOf("sock");
+	public static final AttributeKey<AbstractSock> SOCK = AttributeKey.valueOf("sock");
 
 	/**
 	 * Indicates whether an invalid SSL certificate will be allowed.

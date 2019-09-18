@@ -21,7 +21,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.handler.Sand5Handler;
+import com.sandpolis.core.net.handler.sand5.Sand5Handler;
+import com.sandpolis.core.net.init.AbstractChannelInitializer;
 import com.sandpolis.core.proto.net.MCAuth.RQ_KeyAuth;
 import com.sandpolis.core.proto.net.MCAuth.RQ_NoAuth;
 import com.sandpolis.core.proto.net.MCAuth.RQ_PasswordAuth;
@@ -70,8 +71,14 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 		checkNotNull(group);
 		checkNotNull(key);
 
-		sock.authenticate();// TODO do after successful response
-		Sand5Handler.registerResponseHandler(sock.channel(), key);
+		Sand5Handler sand5 = Sand5Handler.newResponseHandler(key);
+		sock.engage(AbstractChannelInitializer.SAND5, sand5);
+
+		sand5.challengeFuture().addListener(future -> {
+			if (future.isSuccess())
+				sock.authenticate();
+		});
+
 		return request(RQ_KeyAuth.newBuilder().setGroupId(group).setMechId(mech));
 	}
 

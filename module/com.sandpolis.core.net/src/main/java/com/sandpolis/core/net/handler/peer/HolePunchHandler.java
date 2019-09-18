@@ -15,7 +15,7 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.handler;
+package com.sandpolis.core.net.handler.peer;
 
 import java.net.ProtocolException;
 

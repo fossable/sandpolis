@@ -15,26 +15,21 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.codec;
+package com.sandpolis.core.net.store.network;
 
-import java.util.List;
+import com.sandpolis.core.instance.event.ParameterizedEvent;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageDecoder;
+public final class NetworkStoreEvents {
 
-/**
- * This handler decrypts incoming messages on a peer connection.
- *
- * @author cilki
- * @since 5.0.0
- */
-public class PeerEncryptionDecoder extends MessageToMessageDecoder<ByteBuf> {
-
-	@Override
-	protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
-		// TODO Auto-generated method stub
-		out.add(msg);
+	public static final class ServerLostEvent extends ParameterizedEvent<Integer> {
 	}
 
+	public static final class ServerEstablishedEvent extends ParameterizedEvent<Integer> {
+	}
+
+	public static final class CvidChangedEvent extends ParameterizedEvent<Integer> {
+	}
+
+	private NetworkStoreEvents() {
+	}
 }

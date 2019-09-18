@@ -17,7 +17,7 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.net.handler;
 
-import static com.sandpolis.core.net.init.ChannelConstant.CVID;
+import static com.sandpolis.core.net.ChannelConstant.CVID;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

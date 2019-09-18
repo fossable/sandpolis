@@ -30,12 +30,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
-import com.sandpolis.core.net.Sock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.command.Exelet.Auth;
 import com.sandpolis.core.net.command.Exelet.Handler;
 import com.sandpolis.core.net.command.Exelet.Permission;
 import com.sandpolis.core.net.command.Exelet.Unauth;
+import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -50,11 +50,6 @@ public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 
 	private Sock sock;
 
-	public void setSock(Sock sock) {
-		this.sock = sock;
-		initUnauth();
-	}
-
 	/**
 	 * A list of {@link Exelet}s available to this handler.
 	 */
@@ -68,22 +63,23 @@ public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 	 * authentication state) are met. Therefore, invalid messages will always be
 	 * ignored.
 	 */
-	@SuppressWarnings("unchecked")
-	private Consumer<MSG.Message>[] coreHandlers = new Consumer[0];
+	private Consumer<MSG.Message>[] coreHandlers;
 
 	/**
 	 * Create a new {@link ExeletHandler} with the given {@link Exelet} list.
 	 *
 	 * @param exelets A list of available {@link Exelet}s or {@code null} for none
 	 */
-	public ExeletHandler(Class<? extends Exelet>[] exelets) {
+	public ExeletHandler(Sock sock) {
+		this.sock = sock;
 		this.pluginHandlers = new HashMap<>();
 		this.exelets = new HashMap<>();
+		this.coreHandlers = new Consumer[0];
+	}
 
-		if (exelets != null)
-			for (Class<? extends Exelet> exelet : exelets)
-				// Use null values to indicate that an exelet has not been loaded yet
-				this.exelets.put(exelet, null);
+	public ExeletHandler(Sock sock, Class<? extends Exelet>[] e) {
+		this(sock);
+		register(e);
 	}
 
 	@Override
@@ -121,56 +117,74 @@ public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 		ctx.fireChannelRead(msg);
 	}
 
-	/**
-	 * Setup the handler for unauthenticated messages. Permission annotations are
-	 * ignored for unauth handlers.
-	 *
-	 * @param sock The connector for each {@link Exelet}
-	 */
-	public void initUnauth() {
-		try {
-			for (Class<? extends Exelet> _class : exelets.keySet()) {
-				for (Method m : _class.getMethods()) {
-					if (m.isAnnotationPresent(Unauth.class)) {
-						register(_class, m);
+	public void register(Class<? extends Exelet>... classes) {
+		synchronized (this) {
+			try {
+				for (var _class : classes) {
+					var exelet = _class.getConstructor().newInstance();
+					var field = _class.getSuperclass().getDeclaredField("connector");
+					field.setAccessible(true);
+					field.set(exelet, sock);
+					exelets.put(_class, exelet);
+
+					for (Method m : _class.getMethods()) {
+						if (m.isAnnotationPresent(Unauth.class)) {
+							engage(_class, m);
+						}
 					}
 				}
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
 		}
 	}
 
-	/**
-	 * Setup the handler for authenticated messages. Permission annotations will be
-	 * checked.
-	 *
-	 * @param sock The connector for each {@link Exelet}
-	 */
-	public void initAuth() {
-		try {
+	public void deregister(Class<? extends Exelet>... classes) {
+		synchronized (this) {
+			for (var _class : classes) {
+				for (Method m : _class.getMethods()) {
+					if (m.isAnnotationPresent(Handler.class)) {
+						disengage(_class, m);
+					}
+				}
+			}
+		}
+	}
+
+	public void authenticate() {
+		synchronized (this) {
+			try {
+				for (Class<? extends Exelet> _class : exelets.keySet()) {
+					for (Method m : _class.getMethods()) {
+						if (m.isAnnotationPresent(Auth.class)) {
+							boolean passed = true;
+
+							// Check permissions
+							for (Permission a : m.getAnnotationsByType(Permission.class)) {
+								// TODO
+							}
+
+							if (passed)
+								engage(_class, m);
+						}
+					}
+				}
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
+	public void deauthenticate() {
+		synchronized (this) {
 			for (Class<? extends Exelet> _class : exelets.keySet()) {
 				for (Method m : _class.getMethods()) {
 					if (m.isAnnotationPresent(Auth.class)) {
-						boolean passed = true;
-
-						// Check permissions
-						for (Permission a : m.getAnnotationsByType(Permission.class)) {
-							// TODO
-						}
-
-						if (passed)
-							register(_class, m);
+						disengage(_class, m);
 					}
 				}
 			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
 		}
-	}
-
-	public void deauth() {
-		// TODO
 	}
 
 	/**
@@ -181,21 +195,12 @@ public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 	 * @param _class The {@link Exelet} class that contains the message handler
 	 * @param method The message handler
 	 */
-	private void register(Class<? extends Exelet> _class, Method method) throws Exception {
+	private void engage(Class<? extends Exelet> _class, Method method) throws Exception {
 		var handler = method.getAnnotation(Handler.class);
 		if (handler == null)
 			throw new RuntimeException("Missing required @Handler annotation on: " + method.getName());
 
-		// Build Exelet instance
-		final Exelet exelet;
-		if (exelets.get(_class) != null) {
-			exelet = exelets.get(_class);
-		} else {
-			// Build a new exelet for the given class
-			exelet = _class.getConstructor().newInstance();
-			exelet.setConnector(sock);
-			exelets.put(_class, exelet);
-		}
+		var exelet = exelets.get(_class);
 
 		// Select a handler vector
 		Consumer<MSG.Message>[] handlers = null;
@@ -226,7 +231,7 @@ public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 					Message.Builder rs = (Message.Builder) handle.invoke(ProtoUtil.getPayload(msg));
 					exelet.reply(msg, rs);
 				} catch (Throwable e) {
-					log.warn("Message handler failed", e);
+					log.error("Failed to handle message", e);
 					sock.send(ProtoUtil.rs((MSG.Message) msg, Outcome.newBuilder().setResult(false)));
 				}
 			};
@@ -242,7 +247,7 @@ public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 				try {
 					handle.invoke(msg);
 				} catch (Throwable e) {
-					log.warn("Message handler failed", e);
+					log.error("Failed to handle message", e);
 				}
 			};
 		}
@@ -250,5 +255,18 @@ public class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
 		// Unknown format
 		else
 			throw new RuntimeException("Unknown handler format for method: " + method.getName());
+	}
+
+	private void disengage(Class<? extends Exelet> _class, Method method) {
+		var handler = method.getAnnotation(Handler.class);
+		if (handler == null)
+			throw new RuntimeException("Missing required @Handler annotation on: " + method.getName());
+
+		var exelet = exelets.get(_class);
+		if (exelet.getPluginPrefix() == null) {
+			coreHandlers[handler.tag()] = null;
+		} else {
+			pluginHandlers.get(exelet.getPluginPrefix())[handler.tag()] = null;
+		}
 	}
 }

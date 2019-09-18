@@ -15,51 +15,14 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.stream.store;
+package com.sandpolis.core.net.sock;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import io.netty.channel.Channel;
 
-import java.util.concurrent.SubmissionPublisher;
+public class ClientSock extends AbstractSock {
 
-import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.util.ProtoUtil;
-
-public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> implements StreamEndpoint {
-
-	private int id;
-	private Sock sock;
-
-	@Override
-	public int getStreamID() {
-		return id;
+	public ClientSock(Channel channel) {
+		super(channel);
 	}
 
-	public Sock getSock() {
-		return sock;
-	}
-
-	public InboundStreamAdapter(int streamID, Sock sock) {
-		this.id = streamID;
-		this.sock = checkNotNull(sock);
-	}
-
-	@SuppressWarnings("unchecked")
-	public void submit(EV_StreamData msg) {
-		submit((E) ProtoUtil.getPayload(msg));
-	}
-
-	public void addOutbound(OutboundStreamAdapter<E> out) {
-		checkArgument(!isSubscribed(out));
-		subscribe(out);
-		StreamStore.outbound.add(out);
-	}
-
-	public void addSink(StreamSink<E> s) {
-		checkArgument(!isSubscribed(s));
-		subscribe(s);
-		StreamStore.sink.add(s);
-	}
 }

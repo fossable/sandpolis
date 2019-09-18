@@ -28,7 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
@@ -60,7 +60,7 @@ class ListenerExeTest extends ExeletTest {
 
 		initChannel();
 		exe = new ListenerExe();
-		exe.setConnector(new Sock(channel));
+		exe.connector = new UnitSock(channel);
 	}
 
 	@Test

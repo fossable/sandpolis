@@ -15,51 +15,49 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.stream.store;
+package com.sandpolis.core.net.handler;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
 
-import java.util.concurrent.SubmissionPublisher;
+/**
+ * A Protobuf frame encoder that also accepts messages from other pipelines.
+ */
+public class ShortcutFrameEncoder extends ProtobufVarint32LengthFieldPrepender {
 
-import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.util.ProtoUtil;
-
-public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> implements StreamEndpoint {
-
-	private int id;
-	private Sock sock;
+	private ChannelHandlerContext context;
 
 	@Override
-	public int getStreamID() {
-		return id;
+	public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+		super.handlerAdded(ctx);
+		this.context = ctx;
 	}
 
-	public Sock getSock() {
-		return sock;
+	public void shortcut(ByteBuf msg) throws Exception {
+		if (context == null)
+			throw new IllegalStateException();
+
+		try {
+			ByteBuf out = Unpooled.buffer(msg.readableBytes() + computeRawVarint32Size(msg.readableBytes()));
+			encode(context, msg, out);
+			context.writeAndFlush(out);
+		} finally {
+			msg.release();
+		}
 	}
 
-	public InboundStreamAdapter(int streamID, Sock sock) {
-		this.id = streamID;
-		this.sock = checkNotNull(sock);
-	}
+	private int computeRawVarint32Size(final int value) {
+		if ((value & (0xffffffff << 7)) == 0)
+			return 1;
+		if ((value & (0xffffffff << 14)) == 0)
+			return 2;
+		if ((value & (0xffffffff << 21)) == 0)
+			return 3;
+		if ((value & (0xffffffff << 28)) == 0)
+			return 4;
 
-	@SuppressWarnings("unchecked")
-	public void submit(EV_StreamData msg) {
-		submit((E) ProtoUtil.getPayload(msg));
-	}
-
-	public void addOutbound(OutboundStreamAdapter<E> out) {
-		checkArgument(!isSubscribed(out));
-		subscribe(out);
-		StreamStore.outbound.add(out);
-	}
-
-	public void addSink(StreamSink<E> s) {
-		checkArgument(!isSubscribed(s));
-		subscribe(s);
-		StreamStore.sink.add(s);
+		return 5;
 	}
 }

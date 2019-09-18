@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.cmd.PluginCmd;
-import com.sandpolis.client.mega.exe.ClientExe;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.ConfigConstant.plugin;
@@ -52,8 +51,8 @@ import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.store.network.Events.ServerEstablishedEvent;
-import com.sandpolis.core.net.store.network.Events.ServerLostEvent;
+import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerEstablishedEvent;
+import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerLostEvent;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -194,14 +193,14 @@ public final class Client {
 	 */
 	@InitializationTask(name = "Begin the connection routine", fatal = true)
 	public static final Task beginConnectionRoutine = new Task((task) -> {
-		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class });
+		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig());
 
 		return task.success();
 	});
 
 	@Subscribe
 	private void onSrvLost(ServerLostEvent event) {
-		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig(), new Class[] { ClientExe.class });
+		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig());
 	}
 
 	@Subscribe

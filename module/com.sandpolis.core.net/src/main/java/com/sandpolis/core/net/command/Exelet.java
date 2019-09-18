@@ -23,11 +23,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.Objects;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.proto.util.Result.Outcome;
@@ -50,7 +49,7 @@ public abstract class Exelet {
 	/**
 	 * The remote endpoint.
 	 */
-	protected Sock connector;
+	public Sock connector;
 
 	/**
 	 * Defines the message type that the target {@link Exelet} method handles.
@@ -117,10 +116,6 @@ public abstract class Exelet {
 	@Retention(RetentionPolicy.CLASS)
 	@Target(ElementType.METHOD)
 	public static @interface AccessPredicate {
-	}
-
-	public void setConnector(Sock connector) {
-		this.connector = Objects.requireNonNull(connector);
 	}
 
 	/**

@@ -20,15 +20,15 @@ package com.sandpolis.core.net.handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.Sock.CertificateState;
-import com.sandpolis.core.net.Sock.ConnectionState;
-import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
+import com.sandpolis.core.net.sock.Sock;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.ssl.SslHandshakeCompletionEvent;
+import io.netty.util.ReferenceCountUtil;
 
 /**
  * A channel-safe handler that performs logistical functions for a {@link Sock}.
@@ -40,49 +40,54 @@ import io.netty.handler.ssl.SslHandshakeCompletionEvent;
  * @since 5.0.0
  */
 @Sharable
-public class EventHandler extends ChannelInboundHandlerAdapter {
+public class ManagementHandler extends ChannelInboundHandlerAdapter {
 
-	private static final Logger log = LoggerFactory.getLogger(EventHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(ManagementHandler.class);
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		var attribute = ctx.channel().attr(ChannelConstant.CONNECTION_STATE);
-
-		synchronized (attribute) {
-			attribute.set(ConnectionState.CONNECTED);
-		}
+		ctx.channel().attr(ChannelConstant.SOCK).get().onActivityChanged(true);
 	}
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		var attribute = ctx.channel().attr(ChannelConstant.SOCK);
-		if (attribute.get() != null)
-			attribute.get().changeState(ConnectionState.NOT_CONNECTED);
-		else
-			; // The channel was closed before a Sock could be assigned
-
+		ctx.channel().attr(ChannelConstant.SOCK).get().onActivityChanged(false);
 		ctx.close();
 	}
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		log.trace("An exception occurred in the pipeline", cause);
-		ctx.close();
+		try {
+			log.trace("An exception occurred in the pipeline", cause);
+		} finally {
+			ReferenceCountUtil.release(cause);
+		}
 	}
 
 	@Override
 	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-		if (evt instanceof SslHandshakeCompletionEvent) {
-			SslHandshakeCompletionEvent event = (SslHandshakeCompletionEvent) evt;
+		try {
+			if (evt instanceof SslHandshakeCompletionEvent) {
+				SslHandshakeCompletionEvent event = (SslHandshakeCompletionEvent) evt;
 
-			ctx.channel().attr(ChannelConstant.CERTIFICATE_STATE)
-					.set(event.isSuccess() ? CertificateState.VALID : CertificateState.INVALID);
+				ctx.channel().attr(ChannelConstant.CERTIFICATE_STATE).set(event.isSuccess());
+			} else if (evt instanceof CvidHandshakeCompletionEvent) {
+				CvidHandshakeCompletionEvent event = (CvidHandshakeCompletionEvent) evt;
+
+				ctx.channel().attr(ChannelConstant.SOCK).get().onCvidCompleted(event.isSuccess());
+			}
+		} finally {
+			ReferenceCountUtil.release(evt);
 		}
 	}
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		// The message reached the end of the pipeline
-		log.warn("Dropped incoming message: {}", msg.toString());
+		try {
+			log.warn("Dropped incoming message: {}", msg.toString());
+		} finally {
+			ReferenceCountUtil.release(msg);
+		}
 	}
 }

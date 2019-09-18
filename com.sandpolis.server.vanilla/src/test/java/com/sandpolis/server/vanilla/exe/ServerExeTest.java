@@ -27,7 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.Sock;
+import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -47,7 +47,7 @@ class ServerExeTest extends ExeletTest {
 
 		initChannel();
 		exe = new ServerExe();
-		exe.setConnector(new Sock(channel));
+		exe.connector = new UnitSock(channel);
 	}
 
 	@Test

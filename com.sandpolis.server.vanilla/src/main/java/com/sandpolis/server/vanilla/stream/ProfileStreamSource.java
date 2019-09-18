@@ -21,8 +21,8 @@ import static com.sandpolis.core.net.store.connection.ConnectionStore.Connection
 import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.store.connection.Events.SockLostEvent;
+import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
 import com.sandpolis.core.profile.Events.ProfileOnlineEvent;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.proto.net.MCStream.ProfileStreamData;

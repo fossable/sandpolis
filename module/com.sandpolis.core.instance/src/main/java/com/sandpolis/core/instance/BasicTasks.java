@@ -40,6 +40,7 @@ public final class BasicTasks {
 	public static final Task loadConfiguration = new Task((task) -> {
 		Config.register(ConfigConstant.post, true);
 
+		Config.register("traffic.interval", 4000);
 		Config.register(net.ipc.mutex, true);
 		Config.register(net.ipc.timeout, 400);
 		Config.register(logging.net.traffic.decoded, false);

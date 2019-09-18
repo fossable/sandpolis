@@ -28,7 +28,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 /**
  * @author cilki
- * @since 5.0.3
+ * @since 5.1.0
  */
 public final class ResponseHandler extends SimpleChannelInboundHandler<MSG.Message> {
 

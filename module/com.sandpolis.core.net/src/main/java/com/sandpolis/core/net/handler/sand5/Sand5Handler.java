@@ -15,11 +15,11 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.handler;
+package com.sandpolis.core.net.handler.sand5;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.slf4j.Logger;
@@ -31,7 +31,6 @@ import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.concurrent.DefaultPromise;
@@ -39,7 +38,7 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 
 /**
- * This handler implements the SAND5 challenge protocol.
+ * This handler implements the entire SAND5 challenge protocol.
  *
  * @author cilki
  * @since 5.0.2
@@ -74,55 +73,56 @@ public class Sand5Handler extends SimpleChannelInboundHandler<ByteBuf> {
 		DONE;
 	}
 
-	public static Sand5Handler registerRequestHandler(Channel channel, ReciprocalKeyPair key) {
-		Sand5Handler handler = new Sand5Handler(Phase.VERIFY_REMOTE, Phase.VERIFY_LOCAL, Phase.DONE);
-		handler.key = checkNotNull(key);
-		channel.pipeline().addFirst(handler);
-		channel.writeAndFlush(Unpooled.wrappedBuffer(handler.challenge));
-
-		return handler;
+	/**
+	 * Build a new {@link Sand5Handler} preconfigured to be used in request mode.
+	 *
+	 * @param key The keypair to use during the challenge
+	 * @return The handler
+	 */
+	public static Sand5Handler newRequestHandler(ReciprocalKeyPair key) {
+		return new Sand5Handler(key, Phase.VERIFY_REMOTE, Phase.VERIFY_LOCAL, Phase.DONE);
 	}
 
-	public static Sand5Handler registerResponseHandler(Channel channel, ReciprocalKeyPair key) {
-		Sand5Handler handler = new Sand5Handler(Phase.VERIFY_LOCAL, Phase.VERIFY_REMOTE, Phase.DONE);
-		handler.key = checkNotNull(key);
-		channel.pipeline().addFirst(handler);
-
-		return handler;
+	/**
+	 * Build a new {@link Sand5Handler} preconfigured to be used in response mode.
+	 *
+	 * @param key The keypair to use during the challenge
+	 * @return The handler
+	 */
+	public static Sand5Handler newResponseHandler(ReciprocalKeyPair key) {
+		return new Sand5Handler(key, Phase.VERIFY_LOCAL, Phase.VERIFY_REMOTE, Phase.DONE);
 	}
 
 	/**
 	 * A list containing the current {@link Phase} at the head.
 	 */
-	private LinkedList<Phase> phase;
+	private final LinkedList<Phase> phase;
 
 	/**
 	 * The challenge nonce.
 	 */
-	private byte[] challenge;
+	private final byte[] challenge;
 
 	/**
 	 * The keypair to use for signing and verifying.
 	 */
-	private ReciprocalKeyPair key;
+	private final ReciprocalKeyPair key;
 
 	/**
 	 * The entire operation's future.
 	 */
-	private Promise<Boolean> future;
+	private final Promise<Boolean> future;
 
 	/**
 	 * Whether the remote endpoint was verified.
 	 */
 	private boolean remoteVerified;
 
-	private Sand5Handler(Phase... sequence) {
-		phase = new LinkedList<>();
-		for (var p : sequence)
-			phase.add(p);
-
-		challenge = CryptoUtil.getNonce(CHALLENGE_SIZE);
-		future = new DefaultPromise<>(ThreadStore.get(net.message.incoming));
+	private Sand5Handler(ReciprocalKeyPair key, Phase... sequence) {
+		this.phase = new LinkedList<>(Arrays.asList(sequence));
+		this.key = key;
+		this.challenge = CryptoUtil.getNonce(CHALLENGE_SIZE);
+		this.future = new DefaultPromise<>(ThreadStore.get(net.message.incoming));
 	}
 
 	@Override
@@ -157,6 +157,14 @@ public class Sand5Handler extends SimpleChannelInboundHandler<ByteBuf> {
 		else if (phase.peek() == Phase.VERIFY_REMOTE) {
 			ctx.writeAndFlush(Unpooled.wrappedBuffer(challenge));
 		}
+	}
+
+	@Override
+	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		if (phase.peek().equals(Phase.VERIFY_REMOTE))
+			ctx.channel().writeAndFlush(Unpooled.wrappedBuffer(challenge));
+
+		super.channelActive(ctx);
 	}
 
 	/**

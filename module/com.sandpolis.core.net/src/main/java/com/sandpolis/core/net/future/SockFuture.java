@@ -17,10 +17,9 @@
  ******************************************************************************/
 package com.sandpolis.core.net.future;
 
-import com.sandpolis.core.net.Sock;
-import com.sandpolis.core.net.init.ChannelConstant;
+import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.sock.Sock;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;
@@ -70,32 +69,13 @@ public class SockFuture extends DefaultPromise<Sock> {
 				return;
 			}
 
-			Channel ch = future.channel();
-
-			if (ch.attr(ChannelConstant.FUTURE_CVID).get() != null) {
-				// Wait for the CVID handshake to complete
-				ch.attr(ChannelConstant.FUTURE_CVID).get().addListener((DefaultPromise<Integer> promise) -> {
-					complete(ch);
-				});
-			} else {
-				// The CVID handshake must be done already
-				complete(ch);
-			}
+			future.channel().attr(ChannelConstant.SOCK).get().getHandshakeFuture().addListener(cvidFuture -> {
+				if (cvidFuture.isSuccess()) {
+					setSuccess(future.channel().attr(ChannelConstant.SOCK).get());
+				} else {
+					setFailure(cvidFuture.cause());
+				}
+			});
 		});
-	}
-
-	/**
-	 * Complete the future successfully.
-	 *
-	 * @param channel The successful channel
-	 */
-	private void complete(Channel channel) {
-		if (isDone())
-			throw new IllegalStateException();
-
-		Sock sock = new Sock(channel);
-		channel.attr(ChannelConstant.SOCK).set(sock);
-
-		setSuccess(sock);
 	}
 }

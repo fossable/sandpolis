@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.pf4j.ExtensionPoint;
 import org.pf4j.PluginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,6 @@ import com.google.common.io.MoreFiles;
 import com.google.common.io.Resources;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.plugin.ExeletProvider;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
@@ -269,13 +269,11 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 		log.debug("Loading plugin: {} ({})", plugin.getName(), plugin.getId());
 		manager.startPlugin(plugin.getId());
 
-		// Load extensions
-		manager.getExtensions(ExeletProvider.class, plugin.getId()).stream().forEach(provider -> {
-			// TODO
-			System.out.println(provider);
-		});
-
 		post(PluginLoadedEvent::new, plugin);
+	}
+
+	public <E extends ExtensionPoint> Stream<E> getExtensions(Class<E> extension, Plugin plugin) {
+		return manager.getExtensions(extension, plugin.getId()).stream();
 	}
 
 	/**

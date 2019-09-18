@@ -15,7 +15,7 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.net.handler;
+package com.sandpolis.core.net.handler.sand5;
 
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,6 +30,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.PoolConstant.net;
+import com.sandpolis.core.net.handler.sand5.Sand5Handler;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
@@ -61,14 +62,16 @@ class Sand5HandlerTest {
 		clientKey = new ReciprocalKeyPair(k1.getPrivate().getEncoded(), k2.getPublic().getEncoded());
 		serverKey = new ReciprocalKeyPair(k2.getPrivate().getEncoded(), k1.getPublic().getEncoded());
 
-		clientChannel = new EmbeddedChannel();
-		serverChannel = new EmbeddedChannel();
+		clientChannel = null;
+		serverChannel = null;
 	}
 
 	@Test
 	void testSuccess_1() throws Exception {
-		Sand5Handler serverHandler = Sand5Handler.registerRequestHandler(serverChannel, serverKey);
-		Sand5Handler clientHandler = Sand5Handler.registerResponseHandler(clientChannel, clientKey);
+		Sand5Handler serverHandler = Sand5Handler.newRequestHandler(serverKey);
+		serverChannel = new EmbeddedChannel(serverHandler);
+		Sand5Handler clientHandler = Sand5Handler.newResponseHandler(clientKey);
+		clientChannel = new EmbeddedChannel(clientHandler);
 
 		assertFalse(serverHandler.challengeFuture().isDone());
 		assertFalse(clientHandler.challengeFuture().isDone());
@@ -97,8 +100,10 @@ class Sand5HandlerTest {
 	@Test
 	@DisplayName("Try to use the wrong key")
 	void testFailure_1() throws Exception {
-		Sand5Handler serverHandler = Sand5Handler.registerRequestHandler(serverChannel, serverKey);
-		Sand5Handler clientHandler = Sand5Handler.registerResponseHandler(clientChannel, serverKey);
+		Sand5Handler serverHandler = Sand5Handler.newRequestHandler(serverKey);
+		serverChannel = new EmbeddedChannel(serverHandler);
+		Sand5Handler clientHandler = Sand5Handler.newResponseHandler(serverKey);
+		clientChannel = new EmbeddedChannel(clientHandler);
 
 		assertFalse(serverHandler.challengeFuture().isDone());
 		assertFalse(clientHandler.challengeFuture().isDone());

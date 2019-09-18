@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
 import com.fxgraph.graph.Graph;
 import com.fxgraph.graph.Model;
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.net.store.connection.Events.SockEstablishedEvent;
-import com.sandpolis.core.net.store.connection.Events.SockLostEvent;
+import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockEstablishedEvent;
+import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 
 import javafx.application.Platform;
