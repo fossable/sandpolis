@@ -71,6 +71,7 @@ if (PLUGINS_DEPLOY.toBoolean())
 // Apply repository configuration
 allprojects {
 	repositories {
+		mavenLocal()
 		mavenCentral()
 	}
 

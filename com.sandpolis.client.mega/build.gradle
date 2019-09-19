@@ -23,6 +23,10 @@ eclipse {
 	}
 }
 
+configurations {
+	internal
+}
+
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
 
@@ -34,6 +38,9 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':module:com.sandpolis.core.soi')
 	implementation project(':module:com.sandpolis.core.util')
+
+	// https://github.com/cilki/CompactClassLoader
+	internal 'com.github.cilki:compact-classloader:1.2.3'
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:28.1-jre'
@@ -61,11 +68,5 @@ jar {
 		)
 	}
 
-	from {
-		configurations.runtimeClasspath.filter {
-			it.name.startsWith("compact-classloader")
-		}.collect {
-			zipTree(it)
-		}
-	}
+	from configurations.internal.collect {zipTree(it)}
 }

@@ -28,6 +28,7 @@ configurations {
 	jfxWin
 	jfxLin
 	jfxMac
+	internal
 }
 
 dependencies {
@@ -38,6 +39,9 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':module:com.sandpolis.core.soi')
 	implementation project(':module:com.sandpolis.core.util')
+
+	// https://github.com/cilki/CompactClassLoader
+	internal 'com.github.cilki:compact-classloader:1.2.3'
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:28.1-jre'
@@ -79,11 +83,8 @@ jar {
 		)
 	}
 
-	from {
-		configurations.runtimeClasspath.collect {
-			it.name.startsWith("compact-classloader") ? zipTree(it) : it
-		}
-	}
+	from configurations.internal.collect {zipTree(it)}
+	from configurations.runtimeClasspath.collect {it}
 }
 
 task jarOnlineWin(type: Jar, dependsOn: jar) {
