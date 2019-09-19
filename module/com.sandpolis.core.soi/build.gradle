@@ -32,7 +32,7 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
 
 	// https://github.com/protocolbuffers/protobuf
-	api 'com.google.protobuf:protobuf-java:3.9.1'
+	api 'com.google.protobuf:protobuf-java:3.10.0'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.28'
