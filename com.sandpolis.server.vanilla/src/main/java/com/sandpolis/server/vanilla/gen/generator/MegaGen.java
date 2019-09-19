@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.cilki.zipset.ZipSet;
-import com.github.cilki.zipset.ZipSet.EntryPath;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.proto.util.Generator.FeatureSet;
@@ -49,10 +48,14 @@ public class MegaGen extends FileGenerator {
 	private static final Logger log = LoggerFactory.getLogger(MegaGen.class);
 
 	/**
-	 * Dependencies that are required for the client to run and therefore should
-	 * always be included in the output.
+	 * Dependencies that must be packaged under every circumstance.
 	 */
-	private static final List<String> required = List.of("sandpolis-core-soi", "sandpolis-core-instance");
+	private static final List<String> include = List.of("sandpolis-core-soi", "sandpolis-core-instance");
+
+	/**
+	 * Dependencies that should not be packaged under any circumstance.
+	 */
+	private static final List<String> exclude = List.of("compact-classloader");
 
 	public MegaGen(GenConfig config) {
 		super(config);
@@ -73,7 +76,8 @@ public class MegaGen extends FileGenerator {
 		// Add client dependencies
 		SoiUtil.getMatrix(client).getAllDependencies()
 				// Skip unnecessary dependencies if allowed
-				.filter(artifact -> !config.getMega().getDownloader() || required.contains(artifact.getArtifactId()))
+				.filter(artifact -> !config.getMega().getDownloader() || include.contains(artifact.getArtifactId()))
+				.filter(artifact -> !exclude.contains(artifact.getArtifactId())) //
 				.forEach(artifact -> {
 					Path source = ArtifactUtil.getArtifactFile(Environment.get(LIB),
 							artifact.getArtifact().getCoordinates());

@@ -55,18 +55,15 @@ public final class Dep {
 	}
 
 	public String getVersion() {
-		// TODO
-		return null;
+		return artifact.getCoordinates().split(":")[2];
 	}
 
 	public String getArtifactId() {
-		// TODO
-		return null;
+		return artifact.getCoordinates().split(":")[1];
 	}
 
 	public String getGroupId() {
-		// TODO
-		return null;
+		return artifact.getCoordinates().split(":")[0];
 	}
 
 	public long getSize() {
