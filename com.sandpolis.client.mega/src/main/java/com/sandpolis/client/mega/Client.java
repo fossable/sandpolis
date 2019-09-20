@@ -96,7 +96,7 @@ public final class Client {
 		register(IPCTask.load);
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
-		register(Client.install);
+//		register(Client.install);
 		register(Client.loadEnvironment);
 		register(Client.loadStores);
 		register(Client.loadPlugins);

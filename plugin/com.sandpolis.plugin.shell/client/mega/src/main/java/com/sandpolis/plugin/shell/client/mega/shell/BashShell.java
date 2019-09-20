@@ -15,21 +15,25 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-syntax = "proto3";
+package com.sandpolis.plugin.shell.client.mega.shell;
 
-package net;
-option java_package = "com.sandpolis.plugin.shell.net";
+import java.util.Base64;
 
-import "com/sandpolis/plugin/shell/net/MC_Shell.proto";
+public class BashShell extends AbstractShell {
 
-message ShellMessage {
+	@Override
+	public String[] searchPath() {
+		return new String[] { "/bin/sh" };
+	}
 
-	oneof plugin_type {
-		// MC_Shell
-        RQ_Execute                     rq_execute                     = 1;
-        RS_Execute                     rs_execute                     = 1001;
-        RQ_ListShells                  rq_list_shells                 = 2;
-        RS_ListShells                  rs_list_shells                 = 1002;
-        RQ_PowerChange                 rq_power_change                = 3;
+	@Override
+	public String[] buildSession() {
+		return new String[] { location };
+	}
+
+	@Override
+	public String[] buildCommand(String command) {
+		return new String[] { location, "-c",
+				"echo " + Base64.getEncoder().encodeToString(command.getBytes()) + " | base64 --decode | " + location };
 	}
 }

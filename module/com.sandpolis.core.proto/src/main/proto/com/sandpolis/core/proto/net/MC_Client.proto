@@ -56,12 +56,3 @@ message RS_ClientMetadata {
 	int64 download = 9;
 	string userhome = 10;
 }
-
-message RQ_PowerChange {
-	enum PowerChange {
-		POWEROFF = 0;
-		RESTART = 1;
-	}
-
-	PowerChange change = 1;
-}

@@ -20,12 +20,51 @@ syntax = "proto3";
 package net;
 option java_package = "com.sandpolis.plugin.shell.net";
 
+enum Shell {
+	// Microsoft PowerShell
+	PWSH = 0;
+
+	// Microsoft CMD.EXE
+	CMD = 1;
+
+	// Bourne Again Shell
+	BASH = 2;
+}
+
 message RQ_Execute {
-	string type = 1;
+	Shell type = 1;
 	string command = 2;
 }
 
 message RS_Execute {
 	int32 exitCode = 1;
 	string result = 2;
+}
+
+message RQ_ListShells {
+}
+
+message RS_ListShells {
+	message ShellListing {
+		Shell type = 1;
+		string location = 2;
+	}
+
+	repeated ShellListing listing = 1;
+}
+
+message RQ_OpenShellSession {
+}
+
+message RS_OpenShellSession {
+	int64 id = 1;
+}
+
+message RQ_PowerChange {
+	enum PowerChange {
+		POWEROFF = 0;
+		RESTART = 1;
+	}
+
+	PowerChange change = 1;
 }

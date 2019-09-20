@@ -17,7 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.client.mega.exe;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Paths;
 import java.util.TimeZone;
@@ -32,7 +31,6 @@ import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCClient.RQ_ClientMetadata;
 import com.sandpolis.core.proto.net.MCClient.RS_ClientMetadata;
 import com.sandpolis.core.proto.net.MSG;
-import com.sandpolis.core.proto.util.Result.Outcome;
 
 /**
  * @author cilki
@@ -57,57 +55,6 @@ public class ClientExe extends Exelet {
 			e.printStackTrace();
 			throw e;
 		}
-	}
-
-	@Auth
-	@Handler(tag = MSG.Message.RQ_POWER_CHANGE_FIELD_NUMBER)
-	public void rq_power_change(MSG.Message m) throws InterruptedException, IOException {
-		var rq = m.getRqPowerChange();
-		reply(m, Outcome.newBuilder().setResult(true));
-		// TODO check permissions
-		// TODO avoid switches
-		switch (PlatformUtil.queryOsType()) {
-		case LINUX:
-			switch (rq.getChange()) {
-			case POWEROFF:
-				Runtime.getRuntime().exec("sudo poweroff").waitFor();
-				break;
-			case RESTART:
-				Runtime.getRuntime().exec("sudo reboot").waitFor();
-				break;
-			default:
-				break;
-			}
-			break;
-		case MACOS:
-			switch (rq.getChange()) {
-			case POWEROFF:
-				Runtime.getRuntime().exec("sudo shutdown -h now").waitFor();
-				break;
-			case RESTART:
-				Runtime.getRuntime().exec("sudo shutdown -r now").waitFor();
-				break;
-			default:
-				break;
-			}
-			break;
-		case WINDOWS:
-			switch (rq.getChange()) {
-			case POWEROFF:
-				Runtime.getRuntime().exec("shutdown /p").waitFor();
-				break;
-			case RESTART:
-				Runtime.getRuntime().exec("shutdown /r").waitFor();
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-
-		System.exit(0);
 	}
 
 }

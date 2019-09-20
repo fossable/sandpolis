@@ -144,6 +144,5 @@ message Message {
         // MC_Client
         RQ_ClientMetadata              rq_client_metadata             = 37;
         RS_ClientMetadata              rs_client_metadata             = 1037;
-        RQ_PowerChange                 rq_power_change                = 38;
     }
 }

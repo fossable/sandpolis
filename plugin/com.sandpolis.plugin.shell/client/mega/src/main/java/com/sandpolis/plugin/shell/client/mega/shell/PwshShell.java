@@ -15,24 +15,27 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.plugin.shell.client.mega;
+package com.sandpolis.plugin.shell.client.mega.shell;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-public class CommandEncoders {
+public class PwshShell extends AbstractShell {
 
-	public static final class BashEncoder {
-		public static String[] encode(String command) {
-			return new String[] { "sh", "-c",
-					"echo " + Base64.getEncoder().encodeToString(command.getBytes()) + " | base64 --decode | sh" };
-		}
+	@Override
+	public String[] searchPath() {
+		return new String[] { "/usr/bin/pwsh", "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+				"C:/Windows/SysWOW64/WindowsPowerShell/v1.0/powershell.exe" };
 	}
 
-	public static final class PowerShellEncoder {
-		public static String[] encode(String command) {
-			return new String[] { "powershell", "-encodedCommand",
-					Base64.getEncoder().encodeToString(command.getBytes(StandardCharsets.UTF_16LE)) };
-		}
+	@Override
+	public String[] buildSession() {
+		return new String[] { location };
+	}
+
+	@Override
+	public String[] buildCommand(String command) {
+		return new String[] { location, "-encodedCommand",
+				Base64.getEncoder().encodeToString(command.getBytes(StandardCharsets.UTF_16LE)) };
 	}
 }

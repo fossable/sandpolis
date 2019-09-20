@@ -15,21 +15,33 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-syntax = "proto3";
+package com.sandpolis.plugin.shell.client.mega.shell;
 
-package net;
-option java_package = "com.sandpolis.plugin.shell.net";
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-import "com/sandpolis/plugin/shell/net/MC_Shell.proto";
+public abstract class AbstractShell {
 
-message ShellMessage {
+	protected final String location = findShell();
 
-	oneof plugin_type {
-		// MC_Shell
-        RQ_Execute                     rq_execute                     = 1;
-        RS_Execute                     rs_execute                     = 1001;
-        RQ_ListShells                  rq_list_shells                 = 2;
-        RS_ListShells                  rs_list_shells                 = 1002;
-        RQ_PowerChange                 rq_power_change                = 3;
+	private String findShell() {
+
+		for (String path : searchPath()) {
+			Path p = Paths.get(path);
+			if (Files.exists(p) && Files.isExecutable(p))
+				return path;
+		}
+		return null;
 	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public abstract String[] searchPath();
+
+	public abstract String[] buildSession();
+
+	public abstract String[] buildCommand(String command);
 }

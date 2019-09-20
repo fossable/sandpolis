@@ -17,18 +17,22 @@
  ******************************************************************************/
 package com.sandpolis.plugin.shell.client.mega.exe;
 
-import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import com.google.common.io.CharStreams;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.util.ProtoUtil;
-import com.sandpolis.plugin.shell.client.mega.CommandEncoders.BashEncoder;
-import com.sandpolis.plugin.shell.client.mega.CommandEncoders.PowerShellEncoder;
+import com.sandpolis.plugin.shell.client.mega.Shells;
 import com.sandpolis.plugin.shell.net.MCShell.RQ_Execute;
+import com.sandpolis.plugin.shell.net.MCShell.RQ_ListShells;
+import com.sandpolis.plugin.shell.net.MCShell.RQ_PowerChange;
 import com.sandpolis.plugin.shell.net.MCShell.RS_Execute;
+import com.sandpolis.plugin.shell.net.MCShell.RS_ListShells;
+import com.sandpolis.plugin.shell.net.MCShell.RS_ListShells.ShellListing;
+import com.sandpolis.plugin.shell.net.MCShell.Shell;
 import com.sandpolis.plugin.shell.net.MSG;
 
 public class ShellExe extends Exelet {
@@ -53,29 +57,91 @@ public class ShellExe extends Exelet {
 	public Message.Builder rq_execute(RQ_Execute rq) throws Exception {
 
 		String[] command;
-		switch (PlatformUtil.queryOsType()) {
-		case LINUX:
-		case MACOS:
-			command = BashEncoder.encode(rq.getCommand());
+		switch (rq.getType()) {
+		case BASH:
+			command = Shells.BASH.buildCommand(rq.getCommand());
 			break;
-		case WINDOWS:
-			command = PowerShellEncoder.encode(rq.getCommand());
+		case PWSH:
+			command = Shells.PWSH.buildCommand(rq.getCommand());
+			break;
+		case CMD:
+			command = Shells.CMD.buildCommand(rq.getCommand());
 			break;
 		default:
 			throw new RuntimeException();
 		}
 
 		Process p = Runtime.getRuntime().exec(command);
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+		try (var in = new InputStreamReader(p.getInputStream())) {
 			int exit = p.waitFor();
-
-			String line;
-			StringBuffer buffer = new StringBuffer();
-			while ((line = reader.readLine()) != null) {
-				buffer.append(line);
-				buffer.append("\n");
-			}
-			return RS_Execute.newBuilder().setResult(buffer.toString()).setExitCode(exit);
+			return RS_Execute.newBuilder().setResult(CharStreams.toString(in)).setExitCode(exit);
 		}
+	}
+
+	@Auth
+	@Handler(tag = MSG.ShellMessage.RQ_LIST_SHELLS_FIELD_NUMBER)
+	public Message.Builder rq_list_shells(RQ_ListShells rq) throws Exception {
+		var rs = RS_ListShells.newBuilder();
+
+		if (Shells.PWSH.getLocation() != null) {
+			rs.addListing(ShellListing.newBuilder().setType(Shell.PWSH).setLocation(Shells.PWSH.getLocation()));
+		}
+		if (Shells.BASH.getLocation() != null) {
+			rs.addListing(ShellListing.newBuilder().setType(Shell.BASH).setLocation(Shells.BASH.getLocation()));
+		}
+		if (Shells.CMD.getLocation() != null) {
+			rs.addListing(ShellListing.newBuilder().setType(Shell.CMD).setLocation(Shells.CMD.getLocation()));
+		}
+
+		return rs;
+	}
+
+	@Auth
+	@Handler(tag = MSG.ShellMessage.RQ_POWER_CHANGE_FIELD_NUMBER)
+	public void rq_power_change(RQ_PowerChange rq) throws Exception {
+		// TODO check permissions
+		// TODO avoid switches
+		switch (PlatformUtil.queryOsType()) {
+		case LINUX:
+			switch (rq.getChange()) {
+			case POWEROFF:
+				Runtime.getRuntime().exec("sudo poweroff").waitFor();
+				break;
+			case RESTART:
+				Runtime.getRuntime().exec("sudo reboot").waitFor();
+				break;
+			default:
+				break;
+			}
+			break;
+		case MACOS:
+			switch (rq.getChange()) {
+			case POWEROFF:
+				Runtime.getRuntime().exec("sudo shutdown -h now").waitFor();
+				break;
+			case RESTART:
+				Runtime.getRuntime().exec("sudo shutdown -r now").waitFor();
+				break;
+			default:
+				break;
+			}
+			break;
+		case WINDOWS:
+			switch (rq.getChange()) {
+			case POWEROFF:
+				Runtime.getRuntime().exec("shutdown /p").waitFor();
+				break;
+			case RESTART:
+				Runtime.getRuntime().exec("shutdown /r").waitFor();
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+
+		System.exit(0);
 	}
 }

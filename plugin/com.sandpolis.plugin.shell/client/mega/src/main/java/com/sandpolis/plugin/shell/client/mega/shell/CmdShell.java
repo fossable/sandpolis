@@ -15,21 +15,23 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-syntax = "proto3";
+package com.sandpolis.plugin.shell.client.mega.shell;
 
-package net;
-option java_package = "com.sandpolis.plugin.shell.net";
+public class CmdShell extends AbstractShell {
 
-import "com/sandpolis/plugin/shell/net/MC_Shell.proto";
-
-message ShellMessage {
-
-	oneof plugin_type {
-		// MC_Shell
-        RQ_Execute                     rq_execute                     = 1;
-        RS_Execute                     rs_execute                     = 1001;
-        RQ_ListShells                  rq_list_shells                 = 2;
-        RS_ListShells                  rs_list_shells                 = 1002;
-        RQ_PowerChange                 rq_power_change                = 3;
+	@Override
+	public String[] searchPath() {
+		return new String[] { "C:/Windows/System32/cmd.exe" };
 	}
+
+	@Override
+	public String[] buildSession() {
+		return new String[] { location };
+	}
+
+	@Override
+	public String[] buildCommand(String command) {
+		return new String[] { location, "/C", command };// TODO encode command
+	}
+
 }

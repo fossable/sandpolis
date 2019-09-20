@@ -15,21 +15,20 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-syntax = "proto3";
+package com.sandpolis.plugin.shell.client.mega;
 
-package net;
-option java_package = "com.sandpolis.plugin.shell.net";
+import com.sandpolis.plugin.shell.client.mega.shell.BashShell;
+import com.sandpolis.plugin.shell.client.mega.shell.CmdShell;
+import com.sandpolis.plugin.shell.client.mega.shell.PwshShell;
 
-import "com/sandpolis/plugin/shell/net/MC_Shell.proto";
+public final class Shells {
 
-message ShellMessage {
+	public static final PwshShell PWSH = new PwshShell();
 
-	oneof plugin_type {
-		// MC_Shell
-        RQ_Execute                     rq_execute                     = 1;
-        RS_Execute                     rs_execute                     = 1001;
-        RQ_ListShells                  rq_list_shells                 = 2;
-        RS_ListShells                  rs_list_shells                 = 1002;
-        RQ_PowerChange                 rq_power_change                = 3;
+	public static final CmdShell CMD = new CmdShell();
+
+	public static final BashShell BASH = new BashShell();
+
+	private Shells() {
 	}
 }
