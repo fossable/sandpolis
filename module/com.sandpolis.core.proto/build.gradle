@@ -20,6 +20,7 @@ sourceSets {
 	main {
 		java {
 			srcDirs 'src/main/proto'
+			srcDirs 'gen/main/java'
 		}
 	}
 }
@@ -34,5 +35,9 @@ protobuf {
 		artifact = 'com.google.protobuf:protoc:3.9.1'
 	}
 
-	generatedFilesBaseDir = "$projectDir/src/"
+	generatedFilesBaseDir = "$projectDir/gen/"
+
+	clean {
+		delete generatedFilesBaseDir
+	}
 }

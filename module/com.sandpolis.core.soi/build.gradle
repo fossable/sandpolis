@@ -19,7 +19,8 @@ eclipse {
 sourceSets {
 	main {
 		java {
-			srcDirs 'src/gen/main/java' // TODO
+			srcDirs 'src/main/proto'
+			srcDirs 'gen/main/java'
 		}
 	}
 }
@@ -43,5 +44,9 @@ protobuf {
 		artifact = 'com.google.protobuf:protoc:3.9.1'
 	}
 
-	generatedFilesBaseDir = "$projectDir/src/gen"
+	generatedFilesBaseDir = "$projectDir/gen/"
+
+	clean {
+		delete generatedFilesBaseDir
+	}
 }

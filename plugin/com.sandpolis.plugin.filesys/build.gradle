@@ -60,4 +60,8 @@ protobuf {
 	}
 
 	generatedFilesBaseDir = "$projectDir/gen/"
+
+	clean {
+		delete generatedFilesBaseDir
+	}
 }
