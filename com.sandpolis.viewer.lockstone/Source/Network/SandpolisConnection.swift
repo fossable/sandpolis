@@ -38,10 +38,10 @@ public class SandpolisConnection {
 		os_log("Using default trust store")
 		return .default
 	}()
-	
+
 	/// The server connection
 	var channel: Channel!
-	
+
 	/// The local CVID established via handshake
 	var cvid: Int32!
 
@@ -50,7 +50,7 @@ public class SandpolisConnection {
 
 	/// A list of client profiles
 	var profiles = [SandpolisProfile]()
-	
+
 	/// A promise that's notified when the connection completes
 	let connectionPromise: EventLoopPromise<Void>
 	let connectionFuture: EventLoopFuture<Void>
@@ -115,7 +115,7 @@ public class SandpolisConnection {
 			self.channel = ch
 		}
 	}
-	
+
 	private func buildSslHandler(_ context: NIOSSLContext, _ hostname: String) -> NIOSSLClientHandler {
 		do {
 			return try NIOSSLClientHandler(context: context, serverHostname: hostname)

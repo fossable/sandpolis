@@ -19,7 +19,7 @@ import NIO
 
 /// Represents the endpoint of a server stream
 class SandpolisStream {
-	
+
 	private let connection: SandpolisConnection
 
 	let id: Int32

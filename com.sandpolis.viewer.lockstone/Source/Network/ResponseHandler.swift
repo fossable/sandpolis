@@ -43,7 +43,7 @@ final class ResponseHandler: ChannelInboundHandler {
 			context.fireChannelRead(data)
 		}
 	}
-	
+
 	/// Register the given promise to receive a response message.
 	///
 	/// - Parameter id: The message id

@@ -22,7 +22,7 @@ import NIOSSL
 /// A handler for lifecycle events
 final class ManagementHandler: ChannelInboundHandler {
 	typealias InboundIn = Any
-	
+
 	private let connection: SandpolisConnection
 
 	init(_ connection: SandpolisConnection) {
@@ -33,7 +33,7 @@ final class ManagementHandler: ChannelInboundHandler {
 		if !connection.handshakeCompleted {
 			connection.connectionPromise.fail(error)
 		}
-		
+
 		connection.disconnect()
 	}
 
