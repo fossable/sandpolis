@@ -16,15 +16,16 @@
 //                                                                            //
 //****************************************************************************//
 import NIO
+import Foundation
 
-/// Handles the CVID handshake and removes itself from the pipeline on completion
+/// Handles the CVID handshake
 final class CvidRequestHandler: ChannelInboundHandler, RemovableChannelHandler {
 	typealias InboundIn = Net_Message
 
-	var handshakePromise: EventLoopPromise<Int32>
+	private let connection: SandpolisConnection
 
-	init(_ eventLoop: EventLoop) {
-		self.handshakePromise = eventLoop.makePromise()
+	init(_ connection: SandpolisConnection) {
+		self.connection = connection
 	}
 
 	func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -32,8 +33,9 @@ final class CvidRequestHandler: ChannelInboundHandler, RemovableChannelHandler {
 		_ = context.channel.pipeline.removeHandler(self)
 
 		let rs = self.unwrapInboundIn(data).rsCvid
-		SandpolisUtil.cvid = rs.cvid
-		handshakePromise.succeed(rs.cvid)
+		connection.cvid = rs.cvid
+		connection.handshakeCompleted = true
+		connection.connectionPromise.succeed(Void())
 	}
 
 	func channelActive(context: ChannelHandlerContext) {
@@ -41,7 +43,7 @@ final class CvidRequestHandler: ChannelInboundHandler, RemovableChannelHandler {
 			$0.rqCvid = Net_RQ_Cvid.with({
 				$0.instance = Util_Instance.viewer
 				$0.instanceFlavor = Util_InstanceFlavor.lockstone
-				$0.uuid = SandpolisUtil.uuid
+				$0.uuid = UserDefaults.standard.string(forKey: "uuid")!
 			})
 		})
 

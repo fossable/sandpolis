@@ -15,40 +15,29 @@
 //  limitations under the License.                                            //
 //                                                                            //
 //****************************************************************************//
+import Foundation
 import NIO
+import NIOSSL
 
-/// Represents the endpoint of a server stream
-class SandpolisStream {
+/// A handler for lifecycle events
+final class ManagementHandler: ChannelInboundHandler {
+	typealias InboundIn = Any
 	
 	private let connection: SandpolisConnection
 
-	let id: Int32
-
-	private var listeners = [(Net_EV_StreamData) -> Void]()
-
-	init(_ connection: SandpolisConnection, _ id: Int32) {
+	init(_ connection: SandpolisConnection) {
 		self.connection = connection
-		self.id = id
 	}
 
-	func consume(_ data: Net_EV_StreamData) {
-		for listener in listeners {
-			listener(data)
+	func errorCaught(context: ChannelHandlerContext, error: Error) {
+		if !connection.handshakeCompleted {
+			connection.connectionPromise.fail(error)
 		}
+		
+		connection.disconnect()
 	}
 
-	func register(_ handler: @escaping (Net_EV_StreamData) -> Void) {
-		listeners.append(handler)
-	}
-
-	/// Close the stream
-	func close() -> EventLoopFuture<Net_Message> {
-		var rq = Net_Message.with {
-			$0.rqStreamStop = Net_RQ_StreamStop.with {
-				$0.streamID = id
-			}
-		}
-
-		return connection.request(&rq)
+	func channelInactive(context: ChannelHandlerContext) {
+		connection.disconnect()
 	}
 }

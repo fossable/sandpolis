@@ -16,113 +16,128 @@
 //                                                                            //
 //****************************************************************************//
 import NIO
+import NIOSSL
 import CryptoSwift
 import SwiftProtobuf
 import os
 
-/// A utility class for interacting with the Sandpolis backend
-public class SandpolisUtil {
+/// Represents a connection to a Sandpolis server
+public class SandpolisConnection {
 
-	/// The local CVID established via handshake in CvidRequestHandler
-	static var cvid: Int32 = 0
+	/// The global application trust store
+	private static let trustRoots: NIOSSLTrustRoots = {
+		if let ca = NSDataAsset(name: "cert/ca"), let server = NSDataAsset(name: "cert/int_server") {
+			return .certificates([
+				// The root CA certificate
+				try! NIOSSLCertificate(bytes: ca.data.bytes, format: .pem),
+				// The server intermediate certificate
+				try! NIOSSLCertificate(bytes: server.data.bytes, format: .pem)
+			])
+		}
 
-	/// The local UUID
-	static let uuid = UUID().uuidString
+		os_log("Using default trust store")
+		return .default
+	}()
+	
+	/// The server connection
+	var channel: Channel!
+	
+	/// The local CVID established via handshake
+	var cvid: Int32!
 
 	/// A list of active streams
-	private static var streams = [SandpolisStream]()
+	var streams = [SandpolisStream]()
 
-	/// The client list
-	static var profiles = [SandpolisProfile]()
+	/// A list of client profiles
+	var profiles = [SandpolisProfile]()
+	
+	/// A promise that's notified when the connection completes
+	let connectionPromise: EventLoopPromise<Void>
+	let connectionFuture: EventLoopFuture<Void>
+
+	/// Whether the CVID handshake has completed successfully
+	var handshakeCompleted = false
 
 	/// A list of profile listeners
-	private static var profileListeners = [(SandpolisProfile) -> Void]()
+	private var profileListeners = [(SandpolisProfile) -> Void]()
 
 	/// A list of disconnection listeners
-	private static var disconnectListeners = [() -> Void]()
-
-	/// The server connection
-	private static var channel: Channel!
+	private var disconnectListeners = [() -> Void]()
 
 	/// The response handler
-	private static var responseHandler: ResponseHandler!
+	private var responseHandler = ResponseHandler()
 
 	/// The networking I/O loop group
-	private static var loopGroup: EventLoopGroup!
+	private let loopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
 	/// An executor for all response handlers
-	private static let responseLoop = MultiThreadedEventLoopGroup(numberOfThreads: 1).next()
-
-	/// Test a server's availability by briefly connecting.
-	///
-	/// - Parameter server: The server address
-	/// - Returns: Whether the connection was successful
-	static func testConnect(_ server: String) -> Bool {
-		os_log("Probing server: %s", server)
-
-		let testLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-		defer {
-			try! testLoopGroup.syncShutdownGracefully()
-		}
-
-		let bootstrap = ClientBootstrap(group: testLoopGroup).channelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
-		do {
-			_ = try bootstrap.connect(host: server, port: 10101).wait()
-			return true
-		} catch {
-			return false
-		}
-	}
+	private let responseLoop = MultiThreadedEventLoopGroup(numberOfThreads: 1).next()
 
 	/// Connect to a server.
 	///
 	/// - Parameter server: The server IP address or DNS name
-	/// - Returns: A future that is notified when the CVID handshake completes
-	static func connect(_ server: String) -> EventLoopFuture<Int32> {
+	/// - Parameter port The server port number
+	/// - Parameter certificateVerification: The type of certificate verification to perform
+	init(_ server: String, _ port: Int, certificateVerification: CertificateVerification = .fullVerification) {
 		os_log("Attempting connection to server: %s", server)
 
-		if channel != nil {
-			disconnect()
-		}
+		connectionPromise = responseLoop.makePromise()
+		connectionFuture = connectionPromise.futureResult
 
-		responseHandler = ResponseHandler()
-		loopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+		let sslContext = try! NIOSSLContext(configuration: TLSConfiguration.forClient(
+			//minimumTLSVersion: .tlsv13,
+			certificateVerification: certificateVerification,
+			trustRoots: SandpolisConnection.trustRoots
+		))
 
-		let cvidHandler = CvidRequestHandler(responseLoop)
 		let bootstrap = ClientBootstrap(group: loopGroup)
 			.channelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
 			.channelInitializer {
 				$0.pipeline.addHandlers([
+					self.buildSslHandler(sslContext, server),
 					ByteToMessageHandler(VarintFrameDecoder()),
 					ByteToMessageHandler(ProtobufDecoder<Net_Message>()),
 					MessageToByteHandler(VarintLengthFieldPrepender()),
 					MessageToByteHandler(ProtobufEncoder<Net_Message>()),
-					cvidHandler,
-					responseHandler,
-					ClientHandler()])
+					CvidRequestHandler(self),
+					self.responseHandler,
+					ClientHandler(self),
+					ManagementHandler(self)
+				])
 		}
 
-		let connect = bootstrap.connect(host: server, port: 10101)
+		let connect = bootstrap.connect(host: server, port: port)
 
 		connect.whenFailure { error in
-			cvidHandler.handshakePromise.fail(error)
+			self.connectionPromise.fail(error)
 		}
-		return connect.flatMap { ch in
-			channel = ch
-			return cvidHandler.handshakePromise.futureResult
+		connect.whenSuccess { ch in
+			self.channel = ch
+		}
+	}
+	
+	private func buildSslHandler(_ context: NIOSSLContext, _ hostname: String) -> NIOSSLClientHandler {
+		do {
+			return try NIOSSLClientHandler(context: context, serverHostname: hostname)
+		} catch {
+			// Probably because hostname is an IP address
+			return try! NIOSSLClientHandler(context: context, serverHostname: nil)
 		}
 	}
 
+	func isConnected() -> Bool {
+		return channel != nil && channel.isActive && handshakeCompleted
+	}
+
 	/// Disconnect from the current server.
-	static func disconnect() {
-		guard loopGroup != nil else {
-			return
-		}
+	func disconnect() {
 		DispatchQueue.main.async {
-			for listener in disconnectListeners {
+			for listener in self.disconnectListeners {
 				listener()
 			}
 		}
+
+		_ = channel.close()
 
 		do {
 			// Shutdown loop group
@@ -130,29 +145,20 @@ public class SandpolisUtil {
 		} catch {
 			// Ignore
 		}
-		loopGroup = nil
-
-		// Reset everything else
-		channel = nil
-		cvid = 0
-		responseHandler = nil
-		profiles.removeAll()
-		streams.removeAll()
-		profileListeners.removeAll()
 	}
 
 	/// A non-blocking method that sends a request and returns a response future.
 	///
 	/// - Parameter rq: The request message
 	/// - Returns: A response future
-	static func request(_ rq: inout Net_Message) -> EventLoopFuture<Net_Message> {
+	func request(_ rq: inout Net_Message) -> EventLoopFuture<Net_Message> {
 		rq.id = Int32.random(in: 1 ... Int32.max)
 		rq.from = cvid
 
 		let p = responseLoop.makePromise(of: Net_Message.self)
 		responseHandler.register(rq.id, p)
 
-		channel.writeAndFlush(rq)
+		_ = channel.writeAndFlush(rq)
 		return p.futureResult
 	}
 
@@ -162,7 +168,7 @@ public class SandpolisUtil {
 	///   - username: The user's username
 	///   - password: The user's plaintext password
 	/// - Returns: A response future
-	static func login(_ username: String, _ password: String) -> EventLoopFuture<Net_Message> {
+	func login(_ username: String, _ password: String) -> EventLoopFuture<Net_Message> {
 		var rq = Net_Message.with {
 			$0.rqLogin = Net_RQ_Login.with {
 				$0.username = username
@@ -178,10 +184,10 @@ public class SandpolisUtil {
 	///
 	/// - Parameter target: The target client's CVID
 	/// - Returns: A response future
-	static func screenshot(_ target: Int32) -> EventLoopFuture<Net_Message> {
+	func screenshot(_ target: Int32) -> EventLoopFuture<Net_Message> {
 		var rq = Net_Message.with {
 			$0.to = target
-			$0.rqScreenshot = Net_RQ_Screenshot()
+			$0.plugin = try! Google_Protobuf_Any(message: Net_RQ_Screenshot(), typePrefix: "com.sandpolis.plugin.desktop")
 		}
 
 		os_log("Requesting screenshot for client: %d", target)
@@ -192,7 +198,7 @@ public class SandpolisUtil {
 	///
 	/// - Parameter target: The target client's CVID
 	/// - Returns: A response future
-	static func poweroff(_ target: Int32) -> EventLoopFuture<Net_Message> {
+	func poweroff(_ target: Int32) -> EventLoopFuture<Net_Message> {
 		var rq = Net_Message.with {
 			$0.to = target
 			$0.rqPowerChange = Net_RQ_PowerChange.with {
@@ -208,7 +214,7 @@ public class SandpolisUtil {
 	///
 	/// - Parameter target: The target client's CVID
 	/// - Returns: A response future
-	static func restart(_ target: Int32) -> EventLoopFuture<Net_Message> {
+	func restart(_ target: Int32) -> EventLoopFuture<Net_Message> {
 		var rq = Net_Message.with {
 			$0.to = target
 			$0.rqPowerChange = Net_RQ_PowerChange.with {
@@ -228,16 +234,16 @@ public class SandpolisUtil {
 	///   - mtimes: Whether modification times will be returned
 	///   - sizes: Whether file sizes will be returned
 	/// - Returns: A response future
-	static func fm_list(_ target: Int32, _ path: String, mtimes: Bool, sizes: Bool) -> EventLoopFuture<Net_Message> {
+	func fm_list(_ target: Int32, _ path: String, mtimes: Bool, sizes: Bool) -> EventLoopFuture<Net_Message> {
 		var rq = Net_Message.with {
 			$0.to = target
-			$0.rqFileListing = Net_RQ_FileListing.with {
+			$0.plugin = try! Google_Protobuf_Any(message: Net_RQ_FileListing.with {
 				$0.path = path
 				$0.options = Net_FsHandleOptions.with {
 					$0.mtime = mtimes
 					$0.size = sizes
 				}
-			}
+			}, typePrefix: "com.sandpolis.plugin.filesys")
 		}
 
 		os_log("Requesting file listing for client: %d, path: %s", target, path)
@@ -249,12 +255,12 @@ public class SandpolisUtil {
 	/// - Parameter target: The target client's CVID
 	/// - Parameter path: The target file
 	/// - Returns: A response future
-	static func fm_delete(_ target: Int32, _ path: String) -> EventLoopFuture<Net_Message> {
+	func fm_delete(_ target: Int32, _ path: String) -> EventLoopFuture<Net_Message> {
 		var rq = Net_Message.with {
 			$0.to = target
-			$0.rqFileDelete = Net_RQ_FileDelete.with {
+			$0.plugin = try! Google_Protobuf_Any(message: Net_RQ_FileDelete.with {
 				$0.path = path
-			}
+			}, typePrefix: "com.sandpolis.plugin.filesys")
 		}
 
 		os_log("Requesting file deletion for client: %d, path: %s", target, path)
@@ -266,12 +272,12 @@ public class SandpolisUtil {
 	/// - Parameter cvid: The target client's CVID
 	/// - Parameter script: The macro script
 	/// - Returns: A response future
-	static func execute(_ target: Int32, _ script: String) -> EventLoopFuture<Net_Message> {
+	func execute(_ target: Int32, _ script: String) -> EventLoopFuture<Net_Message> {
 		var rq = Net_Message.with {
 			$0.to = target
-			$0.rqExecute = Net_RQ_Execute.with {
+			$0.plugin = try! Google_Protobuf_Any(message: Net_RQ_Execute.with {
 				$0.command = script
-			}
+			}, typePrefix: "com.sandpolis.plugin.shell")
 		}
 
 		os_log("Requesting macro execution for client: %d, script: %s", target, script)
@@ -281,7 +287,7 @@ public class SandpolisUtil {
 	/// Open a new profile stream.
 	///
 	/// - Returns: A response future
-	static func openProfileStream() -> EventLoopFuture<Net_Message> {
+	func openProfileStream() -> EventLoopFuture<Net_Message> {
 		var rq = Net_Message.with {
 			$0.rqStreamStart = Net_RQ_StreamStart.with {
 				$0.param = Net_StreamParam.with {
@@ -292,18 +298,18 @@ public class SandpolisUtil {
 		}
 
 		return request(&rq).map { rs in
-			buildProfileStream(rs.rsStreamStart.streamID)
+			self.buildProfileStream(rs.rsStreamStart.streamID)
 			return rs
 		}
 	}
 
-	private static func buildProfileStream(_ streamID: Int32) {
-		let stream = SandpolisStream(streamID)
+	private func buildProfileStream(_ streamID: Int32) {
+		let stream = SandpolisStream(self, streamID)
 		stream.register { (ev: Net_EV_StreamData) -> Void in
 			if ev.profile.online {
 
 				// Query metadata
-				getClientMetadata(ev.profile.cvid).whenSuccess { rs in
+				self.getClientMetadata(ev.profile.cvid).whenSuccess { rs in
 					let metadata = rs.rsClientMetadata
 					var profile = SandpolisProfile(
 						uuid: ev.profile.uuid,
@@ -331,17 +337,17 @@ public class SandpolisUtil {
 							profile.city = json["city"] as? String
 						}
 
-						profiles.append(profile)
-						for handler in profileListeners {
+						self.profiles.append(profile)
+						for handler in self.profileListeners {
 							handler(profile)
 						}
 					}
 				}
 			} else {
-				if let index = profiles.firstIndex(where: { $0.cvid == ev.profile.cvid }) {
-					let profile = profiles.remove(at: index)
+				if let index = self.profiles.firstIndex(where: { $0.cvid == ev.profile.cvid }) {
+					let profile = self.profiles.remove(at: index)
 					profile.online = ev.profile.online
-					for handler in profileListeners {
+					for handler in self.profileListeners {
 						handler(profile)
 					}
 				}
@@ -354,7 +360,7 @@ public class SandpolisUtil {
 	///
 	/// - Parameter target: The target client's CVID
 	/// - Returns: A response future
-	static func getClientMetadata(_ target: Int32) -> EventLoopFuture<Net_Message> {
+	func getClientMetadata(_ target: Int32) -> EventLoopFuture<Net_Message> {
 		var rq = Net_Message.with {
 			$0.to = target
 			$0.rqClientMetadata = Net_RQ_ClientMetadata()
@@ -366,55 +372,14 @@ public class SandpolisUtil {
 	/// Register the given handler to receive profile updates.
 	///
 	/// - Parameter handler: The profile handler
-	static func registerHostUpdates(_ handler: @escaping (SandpolisProfile) -> Void) {
+	func registerHostUpdates(_ handler: @escaping (SandpolisProfile) -> Void) {
 		profileListeners.append(handler)
 	}
 
 	/// Register the given handler to receive disconnection updates.
 	///
 	/// - Parameter handler: The disconnect handler
-	static func registerDisconnectHandler(_ handler: @escaping () -> Void) {
+	func registerDisconnectHandler(_ handler: @escaping () -> Void) {
 		disconnectListeners.append(handler)
-	}
-
-	/// Handles non-request messages
-	private final class ClientHandler: ChannelInboundHandler {
-		typealias InboundIn = Net_Message
-
-		func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-			let rs = self.unwrapInboundIn(data)
-
-			if rs.msgOneof == nil {
-				return
-			}
-
-			switch rs.msgOneof! {
-			case .evStreamData:
-				DispatchQueue.global(qos: .default).async {
-					// Linear search to find stream
-					if let stream = streams.first(where: { $0.id == rs.evStreamData.id }) {
-						stream.consume(rs.evStreamData)
-					} else {
-						// Wait one second and try again before dropping
-						sleep(1)
-						if let stream = streams.first(where: { $0.id == rs.evStreamData.id }) {
-							stream.consume(rs.evStreamData)
-						} else {
-							print("Warning: dropped data for stream:", rs.evStreamData.id)
-						}
-					}
-				}
-			default:
-				print("Warning: Missing handler:", rs.msgOneof!)
-			}
-		}
-
-		func channelInactive(context: ChannelHandlerContext) {
-			SandpolisUtil.disconnect()
-		}
-
-		func errorCaught(context: ChannelHandlerContext, error: Error) {
-			SandpolisUtil.disconnect()
-		}
 	}
 }

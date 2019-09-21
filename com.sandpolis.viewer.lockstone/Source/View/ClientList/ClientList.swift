@@ -42,8 +42,8 @@ class ClientList: UITableViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		toggleMultiSelect(toggle: false)
-		SandpolisUtil.registerHostUpdates(self.onHostUpdate)
-		SandpolisUtil.registerDisconnectHandler(self.onServerDisconnect)
+		SandpolisUtil.connection.registerHostUpdates(self.onHostUpdate)
+		SandpolisUtil.connection.registerDisconnectHandler(self.onServerDisconnect)
 
 		tableView.addGestureRecognizer(UILongPressGestureRecognizer(target: self, action: #selector(onLongPress)))
 	}
@@ -206,7 +206,7 @@ class ClientList: UITableViewController {
 		idToProfile.removeAll()
 		hostGroups.removeAll()
 		// create the host uuid to host profile map
-		for profile in SandpolisUtil.profiles {
+		for profile in SandpolisUtil.connection.profiles {
 			idToProfile[profile.uuid] = profile
 		}
 		// filter all host groups found in firebase to only host groups in this server

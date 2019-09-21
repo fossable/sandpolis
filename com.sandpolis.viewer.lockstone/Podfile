@@ -5,12 +5,6 @@ target 'Sandpolis' do
   # Comment the next line if you don't want to use dynamic frameworks
   use_frameworks!
 
-  # Provides protocol buffer support
-  pod 'SwiftProtobuf', '1.6.0'
-  
-  # Provides networking
-  pod 'SwiftNIO', '2.7.0'
-
   # Provides SHA256 hashing for passwords
   pod 'CryptoSwift', '1.0.0'
   

@@ -63,7 +63,7 @@ class GroupPanel: UIViewController, UITableViewDelegate, UITableViewDataSource {
 		let alert = UIAlertController(title: "Are you sure?", message: "\(profiles.count) hosts will be powered off immediately", preferredStyle: .alert)
 		alert.addAction(UIAlertAction(title: "Poweroff", style: .destructive) { _ in
 				for profile in self.profiles {
-					SandpolisUtil.poweroff(profile.cvid)
+					_ = SandpolisUtil.connection.poweroff(profile.cvid)
 				}
 				self.navigationController?.popViewController(animated: true)
 			})
@@ -76,7 +76,7 @@ class GroupPanel: UIViewController, UITableViewDelegate, UITableViewDataSource {
 		let alert = UIAlertController(title: "Are you sure?", message: "\(profiles.count) hosts will be restarted immediately", preferredStyle: .alert)
 		alert.addAction(UIAlertAction(title: "Restart", style: .destructive) { _ in
 				for profile in self.profiles {
-					SandpolisUtil.restart(profile.cvid)
+					_ = SandpolisUtil.connection.restart(profile.cvid)
 				}
 				self.navigationController?.popViewController(animated: true)
 			})

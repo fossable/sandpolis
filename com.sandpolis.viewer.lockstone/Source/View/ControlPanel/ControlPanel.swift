@@ -64,7 +64,7 @@ class ControlPanel: UIViewController {
 	@IBAction func poweroff(_ sender: Any) {
 		let alert = UIAlertController(title: "Are you sure?", message: "The host will need to be powered-on manually", preferredStyle: .alert)
 		alert.addAction(UIAlertAction(title: "Poweroff", style: .destructive) { _ in
-			_ = SandpolisUtil.poweroff(self.profile.cvid)
+			_ = SandpolisUtil.connection.poweroff(self.profile.cvid)
 			self.navigationController?.popViewController(animated: true)
 		})
 		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
@@ -75,7 +75,7 @@ class ControlPanel: UIViewController {
 	@IBAction func reboot(_ sender: Any) {
 		let alert = UIAlertController(title: "Are you sure?", message: "The host will not reconnect unless persistence is enabled", preferredStyle: .alert)
 		alert.addAction(UIAlertAction(title: "Restart", style: .destructive) { _ in
-			_ = SandpolisUtil.restart(self.profile.cvid)
+			_ = SandpolisUtil.connection.restart(self.profile.cvid)
 			self.navigationController?.popViewController(animated: true)
 		})
 		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
@@ -90,7 +90,7 @@ class ControlPanel: UIViewController {
 	/// Refresh the screenshot view
 	private func refreshScreenshot() {
 		screenshotProgress.startAnimating()
-		SandpolisUtil.screenshot(profile.cvid).whenSuccess { rs in
+		SandpolisUtil.connection.screenshot(profile.cvid).whenSuccess { rs in
 			if rs.rsScreenshot.data.count == 0 {
 				DispatchQueue.main.async {
 					self.screenshotProgress.stopAnimating()

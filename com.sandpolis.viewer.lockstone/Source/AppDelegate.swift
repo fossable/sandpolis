@@ -16,7 +16,6 @@
 //                                                                            //
 //****************************************************************************//
 import UIKit
-import CoreData
 import Firebase
 import FirebaseAuth
 
@@ -28,6 +27,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 		FirebaseApp.configure()
 		UserDefaults.standard.set(0, forKey: "defaultView")
+
+		if let _ = UserDefaults.standard.string(forKey: "uuid") {
+		} else {
+			UserDefaults.standard.set(UUID().uuidString, forKey: "uuid")
+		}
+
 		return true
 	}
 

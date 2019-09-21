@@ -32,12 +32,12 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 
 		map.delegate = self
 		map.showsUserLocation = true
-		for host in SandpolisUtil.profiles {
+		for host in SandpolisUtil.connection.profiles {
 			if let pin = ClientAnnotation(host) {
 				map.addAnnotation(pin)
 			}
 		}
-		SandpolisUtil.registerHostUpdates(self.onHostUpdate)
+		SandpolisUtil.connection.registerHostUpdates(self.onHostUpdate)
 
 		// Save navigation bar properties so they can be restored later
 		navBackground = navigationController?.navigationBar.backgroundImage(for: .default)

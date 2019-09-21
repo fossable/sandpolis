@@ -5,10 +5,6 @@ PODS:
   - BoringSSL-GRPC/Implementation (0.0.3):
     - BoringSSL-GRPC/Interface (= 0.0.3)
   - BoringSSL-GRPC/Interface (0.0.3)
-  - CNIOAtomics (2.7.0)
-  - CNIODarwin (2.7.0)
-  - CNIOLinux (2.7.0)
-  - CNIOSHA1 (2.7.0)
   - CryptoSwift (1.0.0)
   - Firebase/Auth (6.7.0):
     - Firebase/CoreOnly
@@ -95,15 +91,6 @@ PODS:
   - nanopb/decode (0.3.901)
   - nanopb/encode (0.3.901)
   - Protobuf (3.9.0)
-  - SwiftNIO (2.7.0):
-    - CNIOAtomics (= 2.7.0)
-    - CNIODarwin (= 2.7.0)
-    - CNIOLinux (= 2.7.0)
-    - CNIOSHA1 (= 2.7.0)
-    - SwiftNIOConcurrencyHelpers (= 2.7.0)
-  - SwiftNIOConcurrencyHelpers (2.7.0):
-    - CNIOAtomics (= 2.7.0)
-  - SwiftProtobuf (1.6.0)
 
 DEPENDENCIES:
   - CryptoSwift (= 1.0.0)
@@ -111,16 +98,10 @@ DEPENDENCIES:
   - Firebase/Firestore (= 6.7.0)
   - Highlightr (= 2.1.0)
   - MultiSelectSegmentedControl (= 1.2.1)
-  - SwiftNIO (= 2.7.0)
-  - SwiftProtobuf (= 1.6.0)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
     - BoringSSL-GRPC
-    - CNIOAtomics
-    - CNIODarwin
-    - CNIOLinux
-    - CNIOSHA1
     - CryptoSwift
     - Firebase
     - FirebaseAuth
@@ -140,16 +121,9 @@ SPEC REPOS:
     - MultiSelectSegmentedControl
     - nanopb
     - Protobuf
-    - SwiftNIO
-    - SwiftNIOConcurrencyHelpers
-    - SwiftProtobuf
 
 SPEC CHECKSUMS:
   BoringSSL-GRPC: db8764df3204ccea016e1c8dd15d9a9ad63ff318
-  CNIOAtomics: 22341aaeaaf7129e89eebbccfd69d08ad8877b9f
-  CNIODarwin: 1ea25f41ab02d28363b3d34a2f0a39a746427e74
-  CNIOLinux: 33a28c60794e3c7b5a94e7306bfb80bb9ac6ac07
-  CNIOSHA1: dc27be120a2b9ac456f5fd479518f049c342367e
   CryptoSwift: d81eeaa59dc5a8d03720fe919a6fd07b51f7439f
   Firebase: 291d7b0a7b393f252358083b5d224884126fa46d
   FirebaseAuth: e7f86c2dfc57281cd01f7da5e4b40e01e4510a4a
@@ -169,10 +143,7 @@ SPEC CHECKSUMS:
   MultiSelectSegmentedControl: 495230a5a5fbb6edb03d541f173433922ef0c592
   nanopb: 2901f78ea1b7b4015c860c2fdd1ea2fee1a18d48
   Protobuf: 1097ca58584c8d9be81bfbf2c5ff5975648dd87a
-  SwiftNIO: 34dd40f533f1b6764f2f4d5c2271efb5f6253d7e
-  SwiftNIOConcurrencyHelpers: 513e837bee60e27febc4273fb79eb84d2d138831
-  SwiftProtobuf: e905ca1366405696411aaf174411c4b19c0ef73d
 
-PODFILE CHECKSUM: 99b4def22466efe40d85ad1c2c93a14fe78656e2
+PODFILE CHECKSUM: ef324014891d7cf54a95a45fda3fd2b5ca863a81
 
 COCOAPODS: 1.7.5

@@ -110,7 +110,7 @@ class FileManager: UITableViewController {
 		}
 
 		let delete = UIContextualAction(style: .destructive, title: "Delete") { (action, view, completionHandler) in
-			SandpolisUtil.fm_delete(self.profile.cvid, self.path.appendingPathComponent(self.files[indexPath.row - (self.root ? 0 : 1)].name).path)
+			SandpolisUtil.connection.fm_delete(self.profile.cvid, self.path.appendingPathComponent(self.files[indexPath.row - (self.root ? 0 : 1)].name).path)
 			completionHandler(true)
 		}
 
@@ -136,7 +136,7 @@ class FileManager: UITableViewController {
 
 	/// Request a new listing for the current directory
 	private func requestListing() {
-		SandpolisUtil.fm_list(profile.cvid, path.path, mtimes: true, sizes: true).whenSuccess { rs in
+		SandpolisUtil.connection.fm_list(profile.cvid, path.path, mtimes: true, sizes: true).whenSuccess { rs in
 			self.loadListing(rs)
 
 			DispatchQueue.main.async {

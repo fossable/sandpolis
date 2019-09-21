@@ -15,16 +15,17 @@
 //  limitations under the License.                                            //
 //                                                                            //
 //****************************************************************************//
+import Foundation
 import NIO
 
-/// Handles request responses
+/// A handler for request responses
 final class ResponseHandler: ChannelInboundHandler {
 	typealias InboundIn = Net_Message
 
 	/// A map of response IDs to response future
 	private var responseMap: [Int32: EventLoopPromise<Net_Message>] = [:]
 
-	/// An internal queue for syncronization
+	/// An internal queue for synchronization
 	private let queue = DispatchQueue(label: "ResponseHandlerInternal")
 
 	func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -42,8 +43,12 @@ final class ResponseHandler: ChannelInboundHandler {
 			context.fireChannelRead(data)
 		}
 	}
-
-	func register(_ id: Int32, _ promise: EventLoopPromise<Net_Message>) {
+	
+	/// Register the given promise to receive a response message.
+	///
+	/// - Parameter id: The message id
+	/// - Parameter promise: The response promise
+	public func register(_ id: Int32, _ promise: EventLoopPromise<Net_Message>) {
 		queue.sync {
 			responseMap[id] = promise
 		}

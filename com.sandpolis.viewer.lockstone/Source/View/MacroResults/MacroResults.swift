@@ -49,7 +49,7 @@ class MacroResults: UITableViewController, CollapsibleTableViewHeaderDelegate {
 		// Execute on all profiles
 		for profile in profiles {
 			let result = results[profiles.firstIndex(where: { $0.cvid == profile.cvid })!]
-			SandpolisUtil.execute(profile.cvid, macro["script"] as! String).whenSuccess { rs in
+			SandpolisUtil.connection.execute(profile.cvid, macro["script"] as! String).whenSuccess { rs in
 				result.output = rs.rsExecute.result
 				result.returnValue = rs.rsExecute.exitCode
 				DispatchQueue.main.async {
