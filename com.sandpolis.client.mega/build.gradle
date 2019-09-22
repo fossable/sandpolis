@@ -12,9 +12,10 @@ buildscript {
 plugins {
 	id 'eclipse'
 	id 'java'
-}
 
-apply plugin: 'com.sandpolis.gradle.soi'
+	id 'com.sandpolis.gradle.soi'
+	id 'com.sandpolis.gradle.deploy'
+}
 
 eclipse {
 	project {
@@ -69,4 +70,14 @@ jar {
 	}
 
 	from configurations.internal.collect {zipTree(it)}
+}
+
+deploy {
+	jvmArgs = [
+		'-Djava.system.class.loader=com.github.cilki.compact.CompactClassLoader',
+		'-Dlogging.net.traffic.raw=false',
+		'-Dlogging.net.traffic.decoded=false',
+		'-Dnet.connection.tls=true',
+		'-Dplugin.enabled=true'
+	]
 }

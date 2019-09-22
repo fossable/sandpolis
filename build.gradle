@@ -12,8 +12,7 @@ buildscript {
 	dependencies {
 		classpath ':com.sandpolis.gradle.plugin:'
 		classpath ':com.sandpolis.gradle.soi:'
-		if (PLUGINS_DEPLOY.toBoolean())
-			classpath ':com.sandpolis.gradle.deploy:'
+		classpath ':com.sandpolis.gradle.deploy:'
 	}
 }
 
@@ -64,9 +63,6 @@ spotless {
 		licenseHeaderFile file('gradle/resources/header_swift.txt'), "import "
 	}
 }
-
-if (PLUGINS_DEPLOY.toBoolean())
-	apply plugin: 'com.sandpolis.gradle.deploy'
 
 // Apply repository configuration
 allprojects {

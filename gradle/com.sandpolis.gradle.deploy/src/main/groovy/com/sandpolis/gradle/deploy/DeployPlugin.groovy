@@ -59,51 +59,31 @@ public class DeployPlugin implements Plugin<Project> {
 		}
 	}
 
-	void apply(Project root) {
+	void apply(Project project) {
 
-		// Abort if no remote configuration is found
-		if(!root.file("remote.gradle").exists())
-			return;
+		// Setup deploy extension
+		def extension = project.extensions.create('deploy', DeployExtension)
 
 		// Apply the required SSH plugin to the root project
-		root.apply(plugin: SshPlugin)
+		project.apply(plugin: SshPlugin)
 
 		// Load the remote settings
-		root.apply(from: "remote.gradle")
+		project.apply(from: project.rootProject.file("remote.gradle"))
 
-		// Add the deployment tasks to each instance module
-		root.subprojects { sub ->
-			afterEvaluate {
+		// Add the deployment tasks
+		project.afterEvaluate {
 
-				def deploy_type
-				switch (getName()){
-					case "com.sandpolis.charcoal":
-					case "com.sandpolis.server.vanilla":
-					case "com.sandpolis.client.mega":
-					case "com.sandpolis.viewer.cli":
-					case "com.sandpolis.viewer.jfx":
-						deploy_type = DeployInstance
-						break
-					default:
-						return
+			// Create a task for each remote
+			project.remotes.each { remote ->
+				def taskName = remote.user + "@" + remote.name
+				project.task(taskName, type: DeployInstance, group: 'deploy') {
+					rhost = remote
+					project_deploy = project
+					jvmArgs = project.extensions.deploy.jvmArgs
 				}
 
-				// Create deploy tasks
-				remotes.each { remote ->
-					def taskName = remote.user + "@" + remote.name
-					task(taskName, type: deploy_type, group: 'deploy') {
-						rhost = remote
-						project_deploy = sub
-						project_root = root
-
-						// TODO: parse platform and directory by name rather than rely on order
-						platform = remote.extensions[0].platform()
-						directory = remote.extensions[1].directory() + sub.getName()
-					}
-
-					// Setup task dependencies
-					setupDepends(sub.tasks.getByName(taskName), sub)
-				}
+				// Setup task dependencies
+				setupDepends(project.tasks.getByName(taskName), project)
 			}
 		}
 	}

@@ -9,6 +9,7 @@ plugins {
 	id 'application'
 
 	id 'com.sandpolis.gradle.soi'
+	id 'com.sandpolis.gradle.deploy'
 	id 'com.bmuschko.docker-java-application' version '5.0.0'
 }
 
@@ -17,6 +18,10 @@ eclipse {
 		name = 'com.sandpolis.server.vanilla'
 		comment = 'The server instance'
 	}
+}
+
+configurations {
+	internal
 }
 
 dependencies {
@@ -42,6 +47,9 @@ dependencies {
 	implementation project(':plugin:com.sandpolis.plugin.shell')
 	implementation project(':plugin:com.sandpolis.plugin.sysinfo')
 	implementation project(':plugin:com.sandpolis.plugin.filesys')
+
+	// https://github.com/cilki/CompactClassLoader
+	internal 'com.github.cilki:compact-classloader:1.2.3'
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:28.1-jre'
@@ -80,7 +88,7 @@ mainClassName = 'com.sandpolis.server.vanilla.Main'
 
 docker {
 	javaApplication {
-		baseImage = 'openjdk:11-jre-slim'
+		baseImage = 'openjdk:12.0.2'
 		maintainer = 'tcc@sandpolis.com'
 		tag = "sandpolis/sandpolis-server:${project.version}"
 		jvmArgs = [
@@ -92,12 +100,12 @@ docker {
 	}
 }
 
-// Copy dependencies to a path given by STDIN
-task installDependencies {
-	doLast {
-		copy {
-			from(configurations.runtimeClasspath)
-			into(new java.util.Scanner(System.in).nextLine())
-		}
-	}
+deploy {
+	jvmArgs = [
+		'-Djava.system.class.loader=com.github.cilki.compact.CompactClassLoader',
+		'-Dlogging.net.traffic.raw=false',
+		'-Dlogging.net.traffic.decoded=false',
+		'-Dnet.connection.tls=true',
+		'-Dplugin.enabled=true'
+	]
 }

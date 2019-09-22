@@ -6,8 +6,10 @@
 plugins {
 	id 'eclipse'
 	id 'java'
-	id 'org.openjfx.javafxplugin' version '0.0.8'
+
 	id 'com.sandpolis.gradle.soi'
+	id 'com.sandpolis.gradle.deploy'
+	id 'org.openjfx.javafxplugin' version '0.0.8'
 }
 
 javafx {
@@ -73,12 +75,12 @@ jar {
 	}
 }
 
-// Copy dependencies to a path given by STDIN
-task installDependencies {
-	doLast {
-		copy {
-			from(configurations.runtimeClasspath)
-			into(new java.util.Scanner(System.in).nextLine())
-		}
-	}
+deploy {
+	jvmArgs = [
+		'-Djava.system.class.loader=com.github.cilki.compact.CompactClassLoader',
+		'-Dlogging.net.traffic.raw=false',
+		'-Dlogging.net.traffic.decoded=false',
+		'-Dnet.connection.tls=true',
+		'-Dplugin.enabled=true'
+	]
 }

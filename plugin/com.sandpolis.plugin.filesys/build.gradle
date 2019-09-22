@@ -6,6 +6,9 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
+
+	id 'com.sandpolis.gradle.soi'
+	id 'com.sandpolis.gradle.plugin'
 	id 'com.google.protobuf' version '0.8.10'
 }
 
@@ -44,8 +47,6 @@ dependencies {
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.28'
 }
-
-apply plugin: 'com.sandpolis.gradle.plugin'
 
 sandpolis_plugin {
 	id = 'com.sandpolis.plugin.filesys'
