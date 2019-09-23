@@ -13,7 +13,9 @@ plugins {
 }
 
 javafx {
+	version = '12'
 	modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+	configuration = 'compileOnly'
 }
 
 eclipse {
@@ -24,11 +26,15 @@ eclipse {
 }
 
 configurations {
-	installTargets
-	jfxWin
-	jfxLin
-	jfxMac
 	internal
+	installTargets
+	windows
+	linux
+	mac
+	
+	windows.extendsFrom(runtimeClasspath)
+	linux.extendsFrom(runtimeClasspath)
+	mac.extendsFrom(runtimeClasspath)
 }
 
 dependencies {
@@ -59,32 +65,24 @@ dependencies {
 	installTargets project(':com.sandpolis.client.mega')
 
 	// JavaFX runtimes
-	jfxWin 'org.openjfx:javafx-base:11.0.2:win'
-	jfxWin 'org.openjfx:javafx-fxml:11.0.2:win'
-	jfxWin 'org.openjfx:javafx-graphics:11.0.2:win'
-	jfxWin 'org.openjfx:javafx-controls:11.0.2:win'
+	windows 'org.openjfx:javafx-base:12.0.2:win'
+	windows 'org.openjfx:javafx-fxml:12.0.2:win'
+	windows 'org.openjfx:javafx-graphics:12.0.2:win'
+	windows 'org.openjfx:javafx-controls:12.0.2:win'
 
-	jfxLin 'org.openjfx:javafx-base:11.0.2:linux'
-	jfxLin 'org.openjfx:javafx-fxml:11.0.2:linux'
-	jfxLin 'org.openjfx:javafx-graphics:11.0.2:linux'
-	jfxLin 'org.openjfx:javafx-controls:11.0.2:linux'
+	linux 'org.openjfx:javafx-base:12.0.2:linux'
+	linux 'org.openjfx:javafx-fxml:12.0.2:linux'
+	linux 'org.openjfx:javafx-graphics:12.0.2:linux'
+	linux 'org.openjfx:javafx-controls:12.0.2:linux'
 
-	jfxMac 'org.openjfx:javafx-base:11.0.2:mac'
-	jfxMac 'org.openjfx:javafx-fxml:11.0.2:mac'
-	jfxMac 'org.openjfx:javafx-graphics:11.0.2:mac'
-	jfxMac 'org.openjfx:javafx-controls:11.0.2:mac'
+	mac 'org.openjfx:javafx-base:12.0.2:mac'
+	mac 'org.openjfx:javafx-fxml:12.0.2:mac'
+	mac 'org.openjfx:javafx-graphics:12.0.2:mac'
+	mac 'org.openjfx:javafx-controls:12.0.2:mac'
 }
 
 jar {
-	manifest {
-		attributes(
-			'Main-Class': 'com.github.cilki.compact.BootProxy',
-			'Boot-Class': 'com.sandpolis.installer.Main'
-		)
-	}
-
 	from configurations.internal.collect {zipTree(it)}
-	from configurations.runtimeClasspath.collect {it}
 }
 
 task jarOnlineWin(type: Jar, dependsOn: jar) {
@@ -92,17 +90,15 @@ task jarOnlineWin(type: Jar, dependsOn: jar) {
 	manifest {
 		attributes(
 			'Main-Class': 'com.github.cilki.compact.BootProxy',
-			'Boot-Class': 'com.sandpolis.installer.Main'
+			'Boot-Class': 'com.sandpolis.installer.Main',
+			'Compact-Class-Path': configurations.windows
+				.collect { it.getName() }
+				.join(' ')
 		)
 	}
 
-	from (zipTree(jar.archivePath)) {
-		exclude "javafx-*"
-	}
-
-	from {
-		configurations.jfxWin
-	}
+	from zipTree(jar.archivePath)
+	from configurations.windows
 }
 
 task jarOnlineLin(type: Jar, dependsOn: jar) {
@@ -110,17 +106,15 @@ task jarOnlineLin(type: Jar, dependsOn: jar) {
 	manifest {
 		attributes(
 			'Main-Class': 'com.github.cilki.compact.BootProxy',
-			'Boot-Class': 'com.sandpolis.installer.Main'
+			'Boot-Class': 'com.sandpolis.installer.Main',
+			'Compact-Class-Path': configurations.linux
+				.collect { it.getName() }
+				.join(' ')
 		)
 	}
 
-	from (zipTree(jar.archivePath)) {
-		exclude "javafx-*"
-	}
-
-	from {
-		configurations.jfxLin
-	}
+	from zipTree(jar.archivePath)
+	from configurations.linux
 }
 
 task jarOnlineMac(type: Jar, dependsOn: jar) {
@@ -128,17 +122,15 @@ task jarOnlineMac(type: Jar, dependsOn: jar) {
 	manifest {
 		attributes(
 			'Main-Class': 'com.github.cilki.compact.BootProxy',
-			'Boot-Class': 'com.sandpolis.installer.Main'
+			'Boot-Class': 'com.sandpolis.installer.Main',
+			'Compact-Class-Path': configurations.mac
+				.collect { it.getName() }
+				.join(' ')
 		)
 	}
 
-	from (zipTree(jar.archivePath)) {
-		exclude "javafx-*"
-	}
-
-	from {
-		configurations.jfxMac
-	}
+	from zipTree(jar.archivePath)
+	from configurations.mac
 }
 
 task jarOffline(type: Jar, dependsOn: jar) {
@@ -146,29 +138,17 @@ task jarOffline(type: Jar, dependsOn: jar) {
 	manifest {
 		attributes(
 			'Main-Class': 'com.github.cilki.compact.BootProxy',
-			'Boot-Class': 'com.sandpolis.installer.Main'
+			'Boot-Class': 'com.sandpolis.installer.Main',
+			'Compact-Class-Path': configurations.linux.plus(configurations.windows).plus(configurations.mac)
+				.collect { it.getName() }
+				.join(' ')
 		)
 	}
 
-	from (zipTree(jar.archivePath)) {
-		exclude "javafx-*"
-	}
+	from zipTree(jar.archivePath)
+	from configurations.installTargets
 
-	from {
-		configurations.installTargets
-	}
-
-	from {
-		configurations.jfxWin
-	}
-
-	from {
-		configurations.jfxLin
-	}
-
-	from {
-		configurations.jfxMac
-	}
+	from configurations.linux.plus(configurations.windows).plus(configurations.mac)
 }
 
 artifacts {
