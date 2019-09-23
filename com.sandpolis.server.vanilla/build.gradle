@@ -49,7 +49,7 @@ dependencies {
 	implementation project(':plugin:com.sandpolis.plugin.filesys')
 
 	// https://github.com/cilki/CompactClassLoader
-	internal 'com.github.cilki:compact-classloader:1.2.3'
+	internal 'com.github.cilki:compact-classloader:1.3.0'
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:28.1-jre'
