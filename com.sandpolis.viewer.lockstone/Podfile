@@ -8,9 +8,6 @@ target 'Sandpolis' do
   # Provides SHA256 hashing for passwords
   pod 'CryptoSwift', '1.0.0'
   
-  # Provides segmented control for macro editor
-  pod 'MultiSelectSegmentedControl', '1.2.1'
-  
   # Provides syntax highlighting for macro editor
   pod 'Highlightr', '2.1.0'
   

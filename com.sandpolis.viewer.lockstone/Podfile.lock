@@ -84,7 +84,6 @@ PODS:
   - GTMSessionFetcher/Core (1.2.2)
   - Highlightr (2.1.0)
   - leveldb-library (1.22)
-  - MultiSelectSegmentedControl (1.2.1)
   - nanopb (0.3.901):
     - nanopb/decode (= 0.3.901)
     - nanopb/encode (= 0.3.901)
@@ -97,7 +96,6 @@ DEPENDENCIES:
   - Firebase/Auth (= 6.7.0)
   - Firebase/Firestore (= 6.7.0)
   - Highlightr (= 2.1.0)
-  - MultiSelectSegmentedControl (= 1.2.1)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
@@ -118,7 +116,6 @@ SPEC REPOS:
     - GTMSessionFetcher
     - Highlightr
     - leveldb-library
-    - MultiSelectSegmentedControl
     - nanopb
     - Protobuf
 
@@ -140,10 +137,9 @@ SPEC CHECKSUMS:
   GTMSessionFetcher: 61bb0f61a4cb560030f1222021178008a5727a23
   Highlightr: 595f3e100737c8de41113385da8bd0b5b65212c6
   leveldb-library: 55d93ee664b4007aac644a782d11da33fba316f7
-  MultiSelectSegmentedControl: 495230a5a5fbb6edb03d541f173433922ef0c592
   nanopb: 2901f78ea1b7b4015c860c2fdd1ea2fee1a18d48
   Protobuf: 1097ca58584c8d9be81bfbf2c5ff5975648dd87a
 
-PODFILE CHECKSUM: ef324014891d7cf54a95a45fda3fd2b5ca863a81
+PODFILE CHECKSUM: a684e7e4ab360fa4e718536af9f1862937608229
 
 COCOAPODS: 1.7.5

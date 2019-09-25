@@ -17,14 +17,12 @@
 //****************************************************************************//
 import UIKit
 import Highlightr
-import MultiSelectSegmentedControl
 import FirebaseFirestore
 
 class MacroEditor: UIViewController {
 
-	@IBOutlet weak var platformSelector: MultiSelectSegmentedControl!
+	@IBOutlet weak var platformSelector: UISegmentedControl!
 	@IBOutlet weak var genericView: UIView!
-	@IBOutlet weak var languageBar: UILabel!
 
 	private let nameField: UITextField = UITextField(frame: CGRect(x: 0, y: 0, width: 210, height: 21))
 
@@ -74,19 +72,22 @@ class MacroEditor: UIViewController {
 			nameField.text = macro["name"] as? String
 			textView.text = macro["script"] as? String
 
-			if macro["windows"] as! Bool {
-				platformSelector.selectedSegmentIndexes.insert(0)
-			}
-			if macro["macos"] as! Bool {
-				platformSelector.selectedSegmentIndexes.insert(1)
-			}
-			if macro["linux"] as! Bool {
-				platformSelector.selectedSegmentIndexes.insert(2)
+			switch macro["type"] as! String {
+			case "powershell":
+				platformSelector.selectedSegmentIndex = 0
+			case "cmd":
+				platformSelector.selectedSegmentIndex = 1
+			case "bash":
+				platformSelector.selectedSegmentIndex = 2
+			case "tcsh":
+				platformSelector.selectedSegmentIndex = 3
+			default:
+				break
 			}
 			platformChanged(self)
 		} else {
-			// Default to linux
-			platformSelector.selectedSegmentIndexes.insert(2)
+			// Default to bash
+			platformSelector.selectedSegmentIndex = 2
 			platformChanged(self)
 		}
 	}
@@ -101,30 +102,41 @@ class MacroEditor: UIViewController {
 	}
 
 	@objc private func saveMacro(_ sender: Any) {
+		var type: String = ""
+		switch platformSelector.selectedSegmentIndex {
+		case 0:
+			type = "powershell"
+		case 1:
+			type = "cmd"
+		case 2:
+			type = "bash"
+		case 3:
+			type = "tcsh"
+		default:
+			break
+		}
+		
 		macroReference.setData([
 			"name": nameField.text!,
 			"script": textView.text!,
-			"windows": platformSelector.selectedSegmentTitles.contains("Windows"),
-			"macos": platformSelector.selectedSegmentTitles.contains("macOS"),
-			"linux": platformSelector.selectedSegmentTitles.contains("Linux")
+			"type": type
 		])
 
 		navigationController?.popViewController(animated: true)
 	}
 
 	@IBAction func platformChanged(_ sender: Any) {
-		let selected = Set(platformSelector.selectedSegmentTitles)
-
-		if selected == ["Linux"] {
-			changeLanguage("bash")
-		} else if selected == ["macOS"] {
-			changeLanguage("bash")
-		} else if selected == ["macOS", "Linux"] {
-			changeLanguage("bash")
-		} else if selected == ["Windows"] {
-			changeLanguage("powershell")
-		} else {
-			changeLanguage("Python is currently unsupported!")
+		switch platformSelector.selectedSegmentIndex {
+		case 0:
+			textStorage.language = "powershell"
+		case 1:
+			textStorage.language = "dos"
+		case 2:
+			textStorage.language = "bash"
+		case 3:
+			textStorage.language = "plaintext"
+		default:
+			break
 		}
 
 		refreshSaveButton()
@@ -134,16 +146,10 @@ class MacroEditor: UIViewController {
 		highlightr.setTheme(to: theme)
 
 		textView.backgroundColor = highlightr.theme.themeBackgroundColor
-		languageBar.backgroundColor = highlightr.theme.themeBackgroundColor
-	}
-
-	private func changeLanguage(_ language: String) {
-		textStorage.language = language
-		languageBar.text = language
 	}
 
 	@objc private func refreshSaveButton() {
-		if nameField.text!.count > 0, languageBar.text! == "bash" || languageBar.text! == "powershell" {
+		if nameField.text!.count > 0 {
 			saveButton.isEnabled = true
 		} else {
 			saveButton.isEnabled = false
