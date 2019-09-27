@@ -11,7 +11,7 @@ buildscript {
 
 plugins {
 	id 'eclipse'
-	id 'java'
+	id 'java-library'
 
 	id 'com.sandpolis.gradle.soi'
 	id 'com.sandpolis.gradle.deploy'
@@ -33,39 +33,42 @@ dependencies {
 
 	compileOnly project(':module:com.sandpolis.core.instance:constants')
 
-	implementation project(':module:com.sandpolis.core.instance')
-	implementation project(':module:com.sandpolis.core.ipc')
-	implementation project(':module:com.sandpolis.core.net')
-	implementation project(':module:com.sandpolis.core.proto')
-	implementation project(':module:com.sandpolis.core.soi')
-	implementation project(':module:com.sandpolis.core.util')
+	api project(':module:com.sandpolis.core.instance')
+	api project(':module:com.sandpolis.core.ipc')
+	api project(':module:com.sandpolis.core.net')
+	api project(':module:com.sandpolis.core.proto')
+	api project(':module:com.sandpolis.core.soi')
+	api project(':module:com.sandpolis.core.util')
 
 	// https://github.com/cilki/CompactClassLoader
 	internal 'com.github.cilki:compact-classloader:1.3.0'
 
 	// https://github.com/google/guava
-	implementation 'com.google.guava:guava:28.1-jre'
+	api 'com.google.guava:guava:28.1-jre'
 
 	// https://github.com/netty/netty
-	implementation 'io.netty:netty-common:4.1.41.Final'
-	implementation 'io.netty:netty-codec:4.1.41.Final'
-	implementation 'io.netty:netty-transport:4.1.41.Final'
-	implementation 'io.netty:netty-handler:4.1.41.Final'
+	api 'io.netty:netty-common:4.1.41.Final'
+	api 'io.netty:netty-codec:4.1.41.Final'
+	api 'io.netty:netty-transport:4.1.41.Final'
+	api 'io.netty:netty-handler:4.1.41.Final'
 
-	implementation 'javax.persistence:javax.persistence-api:2.2'
+	api 'javax.persistence:javax.persistence-api:2.2'
 
 	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.28'
+	api 'org.slf4j:slf4j-api:1.7.28'
 
 	// https://github.com/pf4j/pf4j
-	implementation 'org.pf4j:pf4j:3.1.0'
+	api 'org.pf4j:pf4j:3.1.0'
 }
 
 jar {
 	manifest {
 		attributes(
 			'Main-Class': 'com.github.cilki.compact.BootProxy',
-			'Boot-Class': 'com.sandpolis.client.mega.Main'
+			'Boot-Class': 'com.sandpolis.client.mega.Main',
+			'Compact-Class-Path': configurations.runtimeClasspath
+				.collect { 'lib/' + it.getName() }
+				.join(' ')
 		)
 	}
 
