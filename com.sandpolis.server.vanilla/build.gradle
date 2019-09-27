@@ -58,7 +58,7 @@ dependencies {
 	api 'com.h2database:h2:1.4.199'
 
 	// https://github.com/netty/netty
-	api 'io.netty:netty-codec:4.1.41.Final'
+	api 'io.netty:netty-codec:4.1.42.Final'
 	api 'io.netty:netty-common:4.1.41.Final'
 	api 'io.netty:netty-handler:4.1.41.Final'
 	api 'io.netty:netty-transport:4.1.41.Final'
