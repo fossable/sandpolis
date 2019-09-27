@@ -6,14 +6,10 @@
 rootProject.name = 'Sandpolis'
 
 // Composite Builds
-if (PLUGINS_CODEGEN.toBoolean())
-	includeBuild 'gradle/com.sandpolis.gradle.codegen'
-if (PLUGINS_PLUGIN.toBoolean())
-	includeBuild 'gradle/com.sandpolis.gradle.plugin'
-if (PLUGINS_SOI.toBoolean())
-	includeBuild 'gradle/com.sandpolis.gradle.soi'
-if (PLUGINS_DEPLOY.toBoolean())
-	includeBuild 'gradle/com.sandpolis.gradle.deploy'
+includeBuild 'gradle/com.sandpolis.gradle.codegen'
+includeBuild 'gradle/com.sandpolis.gradle.plugin'
+includeBuild 'gradle/com.sandpolis.gradle.soi'
+includeBuild 'gradle/com.sandpolis.gradle.deploy'
 
 // Instance Projects
 include 'com.sandpolis.charcoal'

@@ -20,7 +20,7 @@ install:
   - gradlew --version
 
 build_script:
-  - gradlew assemble -PPLUGINS_DEPLOY=false
+  - gradlew assemble --console=plain
 
 test_script:
-  - gradlew test -PPLUGINS_DEPLOY=false
+  - gradlew test --console=plain
