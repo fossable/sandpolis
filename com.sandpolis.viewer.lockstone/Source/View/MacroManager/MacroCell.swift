@@ -37,6 +37,6 @@ class MacroCell: UITableViewCell {
 		}
 
 		// Macro type
-		// TODO
+		type.text = macro["type"] as? String
 	}
 }

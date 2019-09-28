@@ -76,7 +76,6 @@
 		AA752B4622F2340100E90B54 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA752B4522F2340100E90B54 /* BackgroundView.swift */; };
 		AA75D6DC2316DBCB002152DA /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA75D6DB2316DBCB002152DA /* StoreKit.framework */; };
 		AA766B0622C944530053777B /* FileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA766B0522C944530053777B /* FileManager.swift */; };
-		AA7D8F4022F6554D00C73E48 /* LocationUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7D8F3F22F6554D00C73E48 /* LocationUtil.swift */; };
 		AA81DD5322BD8C5200024120 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA81DD5222BD8C5200024120 /* AppDelegate.swift */; };
 		AA81DD5822BD8C5200024120 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA81DD5622BD8C5200024120 /* Main.storyboard */; };
 		AA81DD5D22BD8C5400024120 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA81DD5C22BD8C5400024120 /* Assets.xcassets */; };
@@ -174,7 +173,6 @@
 		AA752B4522F2340100E90B54 /* BackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView.swift; sourceTree = "<group>"; };
 		AA75D6DB2316DBCB002152DA /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		AA766B0522C944530053777B /* FileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManager.swift; sourceTree = "<group>"; };
-		AA7D8F3F22F6554D00C73E48 /* LocationUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationUtil.swift; sourceTree = "<group>"; };
 		AA81DD4F22BD8C5200024120 /* Sandpolis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sandpolis.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA81DD5222BD8C5200024120 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AA81DD5722BD8C5200024120 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -435,7 +433,6 @@
 			children = (
 				AA61588D2335A4300035622F /* SandpolisUtil.swift */,
 				AA6CACEA22DD34A900041AF3 /* FormatUtil.swift */,
-				AA7D8F3F22F6554D00C73E48 /* LocationUtil.swift */,
 				AA07249F2311E6F20087190F /* CloudUtil.swift */,
 			);
 			path = Util;
@@ -720,7 +717,6 @@
 				AA61588E2335A4300035622F /* SandpolisUtil.swift in Sources */,
 				AA65A6EF22D01D2B00556249 /* MC_Ping.pb.swift in Sources */,
 				8E653C2222E6595D00BB8FEA /* MainTabController.swift in Sources */,
-				AA7D8F4022F6554D00C73E48 /* LocationUtil.swift in Sources */,
 				AA65A6E722D01D2B00556249 /* MC_Listener.pb.swift in Sources */,
 				AA6CACFF22DD78FC00041AF3 /* MacroResultCell.swift in Sources */,
 				8EAD841C22CBD80700B49D59 /* ClientMap.swift in Sources */,

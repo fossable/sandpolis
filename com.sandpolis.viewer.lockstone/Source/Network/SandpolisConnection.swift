@@ -327,20 +327,9 @@ public class SandpolisConnection {
 						online: ev.profile.online
 					)
 
-					LocationUtil.queryIpLocation(ev.profile.ip) { json, error in
-						if let json = json, let status = json["status"] as? String, status == "success" {
-							profile.latitude = json["lat"] as? Double
-							profile.longitude = json["lon"] as? Double
-							profile.country = json["country"] as? String
-							profile.countryCode = json["countryCode"] as? String
-							profile.region = json["regionName"] as? String
-							profile.city = json["city"] as? String
-						}
-
-						self.profiles.append(profile)
-						for handler in self.profileListeners {
-							handler(profile)
-						}
+					self.profiles.append(profile)
+					for handler in self.profileListeners {
+						handler(profile)
 					}
 				}
 			} else {

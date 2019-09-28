@@ -43,7 +43,7 @@ class ServerManager: UITableViewController {
 			}
 			self.tableView.reloadData()
 			self.refreshServerStates()
-			self.refreshServerLocations()
+			//self.refreshServerLocations()
 		})
 	}
 
@@ -56,24 +56,6 @@ class ServerManager: UITableViewController {
 				server.online = SandpolisUtil.testConnect(server.address, 10101)
 				DispatchQueue.main.async {
 					self.tableView.reloadData()
-				}
-			}
-		}
-	}
-
-	func refreshServerLocations() {
-		DispatchQueue.global(qos: .utility).async {
-			for server in self.serverList {
-				if server.countryCode == nil {
-					LocationUtil.queryIpLocation(server.address, fields: ["countryCode"]) { json, error in
-						if let json = json, let status = json["status"] as? String, status == "success" {
-							server.countryCode = json["countryCode"] as? String
-
-							DispatchQueue.main.async {
-								self.tableView.reloadData()
-							}
-						}
-					}
 				}
 			}
 		}
