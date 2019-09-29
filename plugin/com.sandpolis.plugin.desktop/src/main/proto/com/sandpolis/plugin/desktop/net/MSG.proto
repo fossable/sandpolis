@@ -23,12 +23,10 @@ option java_package = "com.sandpolis.plugin.desktop.net";
 import "com/sandpolis/plugin/desktop/net/MC_Desktop.proto";
 
 message DesktopMessage {
-
-	oneof plugin_type {
+	oneof payload {
 
 		// MC_Desktop
         RQ_Screenshot                  rq_screenshot                  = 1;
         RS_Screenshot                  rs_screenshot                  = 1001;
-
 	}
 }

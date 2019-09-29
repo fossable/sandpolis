@@ -33,7 +33,7 @@ import "com/sandpolis/core/ipc/MC_Metadata.proto";
  *	MC_*		Message Category
  */
 message Message {
-	oneof msg {
+	oneof payload {
 
 		// MC_Metadata
 		RQ_Metadata rq_metadata = 1;

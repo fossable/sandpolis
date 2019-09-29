@@ -50,30 +50,6 @@ public class AuthExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(AuthExe.class);
 
-//	@Unauth
-//	public Message.Builder rq_no_auth(RQ_NoAuth rq) {
-//		var outcome = begin();
-//
-//		List<Group> groups = GroupStore.getUnauthGroups();
-//		if (groups.size() == 0) {
-//			log.debug("Refusing free authentication attempt because there are no unauth groups");
-//			return failure(outcome, UNKNOWN_GROUP);
-//		}
-//
-//		Profile client = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
-//		groups.forEach(group -> {
-//			// TODO add client to group
-//		});
-//
-//		// Connection is now authenticated
-//		connector.authenticate();
-//		connector.changeState(ConnectionState.AUTHENTICATED);
-//
-//		return success(outcome);
-//	}
-
-	// TODO temporarily use void-style handler to avoid creating profile before
-	// response is sent.
 	@Unauth
 	@Handler(tag = MSG.Message.RQ_NO_AUTH_FIELD_NUMBER)
 	public void rq_no_auth(MSG.Message m) {

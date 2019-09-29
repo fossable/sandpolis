@@ -84,10 +84,10 @@ public class Receptor implements Runnable, Closeable {
 					return;
 
 				// Delegate to handler
-				if (IPCStore.getHandlers().containsKey(message.getMsgCase()))
-					IPCStore.getHandlers().get(message.getMsgCase()).handle(message, out);
+				if (IPCStore.getHandlers().containsKey(message.getPayloadCase()))
+					IPCStore.getHandlers().get(message.getPayloadCase()).handle(message, out);
 				else
-					log.warn("Dropping unknown IPC message: {}", message.getMsgCase());
+					log.warn("Dropping unknown IPC message: {}", message.getPayloadCase());
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);

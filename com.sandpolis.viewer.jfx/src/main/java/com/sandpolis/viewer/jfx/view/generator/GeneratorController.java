@@ -223,7 +223,7 @@ public class GeneratorController extends FxController {
 	}
 
 	private ExecutionConfig getExecutionConfig() {
-		return ExecutionConfig.newBuilder().setMelt(Boolean.parseBoolean(exe_melt.value().get()))
+		return ExecutionConfig.newBuilder().setCleanup(Boolean.parseBoolean(exe_melt.value().get()))
 				.setRecover(Boolean.parseBoolean(exe_recovery.value().get())).build();
 	}
 

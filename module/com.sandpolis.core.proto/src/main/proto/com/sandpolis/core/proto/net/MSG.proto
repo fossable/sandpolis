@@ -60,7 +60,7 @@ message Message {
     // The response ID
     int32 id = 3;
 
-    oneof msg_oneof {
+    oneof payload {
 
         // A plugin message
         google.protobuf.Any            plugin                         = 4;

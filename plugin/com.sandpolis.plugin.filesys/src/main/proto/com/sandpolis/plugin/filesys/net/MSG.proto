@@ -23,8 +23,7 @@ option java_package = "com.sandpolis.plugin.filesys.net";
 import "com/sandpolis/plugin/filesys/net/MC_Filesys.proto";
 
 message FilesysMessage {
-
-	oneof plugin_type {
+	oneof payload {
 
 		// MC_Filesys
         RQ_FileListing                 rq_file_listing                = 1;

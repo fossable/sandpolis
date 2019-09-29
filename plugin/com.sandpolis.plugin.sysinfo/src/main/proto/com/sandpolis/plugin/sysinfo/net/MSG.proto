@@ -23,12 +23,10 @@ option java_package = "com.sandpolis.plugin.sysinfo.net";
 import "com/sandpolis/plugin/sysinfo/net/MC_Sysinfo.proto";
 
 message SysinfoMessage {
-
-	oneof plugin_type {
+	oneof payload {
 
 		// MC_Sysinfo
         RQ_NicTotals                   rq_nic_totals                  = 1;
         RS_NicTotals                   rs_nic_totals                  = 1001;
-
 	}
 }

@@ -41,7 +41,7 @@ public class MessageFlowException extends RuntimeException {
 	 */
 	public MessageFlowException(Class<?> sent, Message received, Class<?> expected) {
 		super(String.format("After sending a %s message, an unexpected %s was received. Expected: %s.",
-				sent.getClass().getSimpleName(), received.getMsgOneofCase(), expected.getClass().getSimpleName()));
+				sent.getClass().getSimpleName(), received.getPayloadCase(), expected.getClass().getSimpleName()));
 	}
 
 	/**
@@ -52,7 +52,7 @@ public class MessageFlowException extends RuntimeException {
 	 */
 	public MessageFlowException(Class<?> sent, Message received) {
 		super(String.format("After sending a %s message, an unexpected %s was received.",
-				sent.getClass().getSimpleName(), received.getMsgOneofCase()));
+				sent.getClass().getSimpleName(), received.getPayloadCase()));
 	}
 
 }

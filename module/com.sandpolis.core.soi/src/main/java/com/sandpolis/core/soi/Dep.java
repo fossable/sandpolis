@@ -95,4 +95,9 @@ public final class Dep {
 
 		return false;
 	}
+
+	@Override
+	public int hashCode() {
+		return getCoordinates().hashCode();
+	}
 }

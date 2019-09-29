@@ -23,8 +23,8 @@ option java_package = "com.sandpolis.plugin.shell.net";
 import "com/sandpolis/plugin/shell/net/MC_Shell.proto";
 
 message ShellMessage {
+	oneof payload {
 
-	oneof plugin_type {
 		// MC_Shell
         RQ_Execute                     rq_execute                     = 1;
         RS_Execute                     rs_execute                     = 1001;

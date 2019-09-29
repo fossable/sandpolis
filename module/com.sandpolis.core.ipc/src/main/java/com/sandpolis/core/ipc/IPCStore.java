@@ -41,7 +41,7 @@ import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.ipc.IPCStore.IPCStoreConfig;
 import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
 import com.sandpolis.core.ipc.MSG.Message;
-import com.sandpolis.core.ipc.MSG.Message.MsgCase;
+import com.sandpolis.core.ipc.MSG.Message.PayloadCase;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
@@ -84,7 +84,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 	/**
 	 * A list of registered message handlers.
 	 */
-	private Map<MsgCase, Handler> handlers;
+	private Map<PayloadCase, Handler> handlers;
 
 	/**
 	 * Register a new message handler for the given type.
@@ -92,7 +92,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 	 * @param type    The message type
 	 * @param handler The message handler
 	 */
-	public void register(MsgCase type, Handler handler) {
+	public void register(PayloadCase type, Handler handler) {
 		handlers.put(type, handler);
 	}
 
@@ -140,7 +140,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 	 *
 	 * @return The store's message handlers
 	 */
-	public Map<MsgCase, Handler> getHandlers() {
+	public Map<PayloadCase, Handler> getHandlers() {
 		return Collections.unmodifiableMap(handlers);
 	}
 
@@ -226,7 +226,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 		var config = new IPCStoreConfig();
 		configurator.accept(config);
 
-		register(MsgCase.RQ_METADATA, (Message message, OutputStream out) -> {
+		register(PayloadCase.RQ_METADATA, (Message message, OutputStream out) -> {
 			Message.newBuilder()
 					.setRsMetadata(RS_Metadata.newBuilder().setInstance(Core.INSTANCE.name())
 							.setVersion(Core.SO_BUILD.getVersion()).setPid(ProcessHandle.current().pid()))

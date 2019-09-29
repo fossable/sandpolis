@@ -25,7 +25,7 @@ import java.lang.reflect.Modifier;
 
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
+import com.sandpolis.core.proto.net.MSG.Message.PayloadCase;
 
 import io.netty.channel.Channel;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -61,7 +61,7 @@ public class ExeletTest {
 
 				// Check name
 				try {
-					MsgOneofCase.valueOf(m.getName().toUpperCase());
+					PayloadCase.valueOf(m.getName().toUpperCase());
 				} catch (IllegalArgumentException e) {
 					fail("Missing Message for method: " + m.getName());
 				}
