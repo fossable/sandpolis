@@ -31,7 +31,7 @@ import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
 import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
+import com.sandpolis.core.proto.net.MSG.Message.PayloadCase;
 
 class ServerExeTest extends ExeletTest {
 
@@ -60,6 +60,6 @@ class ServerExeTest extends ExeletTest {
 	void rq_ping_1() {
 		exe.rq_ping(rq(RQ_Ping.newBuilder()).build());
 
-		assertEquals(MsgOneofCase.RS_PING, ((Message) channel.readOutbound()).getMsgOneofCase());
+		assertEquals(PayloadCase.RS_PING, ((Message) channel.readOutbound()).getPayloadCase());
 	}
 }

@@ -23,10 +23,6 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':plugin:com.sandpolis.plugin.desktop')
 
-	// https://github.com/pf4j/pf4j
-	implementation 'org.pf4j:pf4j:3.1.0'
-	annotationProcessor 'org.pf4j:pf4j:3.1.0'
-
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.28'
 }

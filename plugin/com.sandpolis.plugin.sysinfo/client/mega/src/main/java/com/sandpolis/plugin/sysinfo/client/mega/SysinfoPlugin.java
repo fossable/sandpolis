@@ -19,32 +19,15 @@ package com.sandpolis.plugin.sysinfo.client.mega;
 
 import java.util.function.Function;
 
-import org.pf4j.Extension;
-import org.pf4j.Plugin;
-import org.pf4j.PluginWrapper;
-
+import com.google.protobuf.Message;
 import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.instance.plugin.ExeletProvider;
+import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.plugin.sysinfo.client.mega.exe.SysinfoExe;
+import com.sandpolis.plugin.sysinfo.net.MSG;
 
-public class SysinfoPlugin extends Plugin {
-
-	public SysinfoPlugin(PluginWrapper wrapper) {
-		super(wrapper);
-	}
-
-	@Override
-	public void start() {
-		setupAttributes();
-		super.start();
-	}
-
-	@Override
-	public void stop() {
-		// TODO Auto-generated method stub
-		super.stop();
-	}
+public final class SysinfoPlugin extends SandpolisPlugin implements ExeletProvider {
 
 	private void setupAttributes() {
 //		associate(AK_CPU.VENDOR, (CentralProcessor cpu) -> cpu.getVendor());
@@ -62,12 +45,14 @@ public class SysinfoPlugin extends Plugin {
 		key.putObject("retriever", retriever);
 	}
 
-	@Extension
-	public static final class Exelets implements ExeletProvider {
-		@Override
-		@SuppressWarnings("unchecked")
-		public Class<? extends Exelet>[] getExelets() {
-			return new Class[] { SysinfoExe.class };
-		}
+	@Override
+	@SuppressWarnings("unchecked")
+	public Class<? extends Exelet>[] getExelets() {
+		return new Class[] { SysinfoExe.class };
+	}
+
+	@Override
+	public Class<? extends Message> getMessageType() {
+		return MSG.SysinfoMessage.class;
 	}
 }

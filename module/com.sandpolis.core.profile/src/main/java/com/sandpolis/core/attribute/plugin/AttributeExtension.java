@@ -19,11 +19,9 @@ package com.sandpolis.core.attribute.plugin;
 
 import java.util.List;
 
-import org.pf4j.ExtensionPoint;
-
 import com.sandpolis.core.attribute.AttributeKey;
 
-public interface AttributeExtension extends ExtensionPoint {
+public interface AttributeExtension {
 
 	/**
 	 * Get the plugin's attribute keys.

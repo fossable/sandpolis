@@ -17,13 +17,13 @@
  ******************************************************************************/
 package com.sandpolis.core.instance.plugin;
 
-import org.pf4j.ExtensionPoint;
+import com.google.protobuf.Message;
 
 /**
  * @author cilki
  * @since 5.0.0
  */
-public interface ExeletProvider extends ExtensionPoint {
+public interface ExeletProvider {
 
 	/**
 	 * Get the Exelet classes that the plugin contains.
@@ -31,4 +31,6 @@ public interface ExeletProvider extends ExtensionPoint {
 	 * @return A list of Exelet classes
 	 */
 	public Class<?>[] getExelets();
+
+	public Class<? extends Message> getMessageType();
 }

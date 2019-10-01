@@ -17,13 +17,8 @@
  ******************************************************************************/
 package com.sandpolis.plugin.sysinfo.server.vanilla;
 
-import org.pf4j.Plugin;
-import org.pf4j.PluginWrapper;
+import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 
-public class SysinfoPlugin extends Plugin {
-
-	public SysinfoPlugin(PluginWrapper wrapper) {
-		super(wrapper);
-	}
+public final class SysinfoPlugin extends SandpolisPlugin {
 
 }

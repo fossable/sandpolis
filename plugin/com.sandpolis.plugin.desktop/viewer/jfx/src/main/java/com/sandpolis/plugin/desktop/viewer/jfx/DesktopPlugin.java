@@ -17,13 +17,8 @@
  ******************************************************************************/
 package com.sandpolis.plugin.desktop.viewer.jfx;
 
-import org.pf4j.Plugin;
-import org.pf4j.PluginWrapper;
+import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 
-public class DesktopPlugin extends Plugin {
-
-	public DesktopPlugin(PluginWrapper wrapper) {
-		super(wrapper);
-	}
+public final class DesktopPlugin extends SandpolisPlugin {
 
 }

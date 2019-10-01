@@ -17,27 +17,23 @@
  ******************************************************************************/
 package com.sandpolis.plugin.filesys.client.mega;
 
-import org.pf4j.Extension;
-import org.pf4j.Plugin;
-import org.pf4j.PluginWrapper;
-
+import com.google.protobuf.Message;
 import com.sandpolis.core.instance.plugin.ExeletProvider;
+import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.plugin.filesys.client.mega.exe.FilesysExe;
+import com.sandpolis.plugin.filesys.net.MSG;
 
-public class FilesysPlugin extends Plugin {
+public final class FilesysPlugin extends SandpolisPlugin implements ExeletProvider {
 
-	public FilesysPlugin(PluginWrapper wrapper) {
-		super(wrapper);
+	@Override
+	@SuppressWarnings("unchecked")
+	public Class<? extends Exelet>[] getExelets() {
+		return new Class[] { FilesysExe.class };
 	}
 
-	@Extension
-	public static final class Exelets implements ExeletProvider {
-		@Override
-		@SuppressWarnings("unchecked")
-		public Class<? extends Exelet>[] getExelets() {
-			return new Class[] { FilesysExe.class };
-		}
+	@Override
+	public Class<? extends Message> getMessageType() {
+		return MSG.FilesysMessage.class;
 	}
-
 }

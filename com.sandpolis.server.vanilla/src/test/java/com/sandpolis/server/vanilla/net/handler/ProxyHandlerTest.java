@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.core.proto.net.MSG.Message.MsgOneofCase;
+import com.sandpolis.core.proto.net.MSG.Message.PayloadCase;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -124,7 +124,7 @@ class ProxyHandlerTest {
 		proxy.attr(CVID).set(4321);
 
 		proxy.writeInbound(encode(Message.newBuilder().setTo(1234).setFrom(4321).build()));
-		assertEquals(MsgOneofCase.EV_ENDPOINT_CLOSED, ((Message) proxy.readOutbound()).getMsgOneofCase());
+		assertEquals(PayloadCase.EV_ENDPOINT_CLOSED, ((Message) proxy.readOutbound()).getPayloadCase());
 
 		// Ensure no messages were passed through
 		assertTrue(proxy.inboundMessages().isEmpty());

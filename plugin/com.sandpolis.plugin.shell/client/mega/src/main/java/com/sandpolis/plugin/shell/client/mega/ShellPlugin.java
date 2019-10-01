@@ -17,26 +17,23 @@
  ******************************************************************************/
 package com.sandpolis.plugin.shell.client.mega;
 
-import org.pf4j.Extension;
-import org.pf4j.Plugin;
-import org.pf4j.PluginWrapper;
-
+import com.google.protobuf.Message;
 import com.sandpolis.core.instance.plugin.ExeletProvider;
+import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.plugin.shell.client.mega.exe.ShellExe;
+import com.sandpolis.plugin.shell.net.MSG;
 
-public class ShellPlugin extends Plugin {
+public final class ShellPlugin extends SandpolisPlugin implements ExeletProvider {
 
-	public ShellPlugin(PluginWrapper wrapper) {
-		super(wrapper);
+	@Override
+	@SuppressWarnings("unchecked")
+	public Class<? extends Exelet>[] getExelets() {
+		return new Class[] { ShellExe.class };
 	}
 
-	@Extension
-	public static final class Exelets implements ExeletProvider {
-		@Override
-		@SuppressWarnings("unchecked")
-		public Class<? extends Exelet>[] getExelets() {
-			return new Class[] { ShellExe.class };
-		}
+	@Override
+	public Class<? extends Message> getMessageType() {
+		return MSG.ShellMessage.class;
 	}
 }
