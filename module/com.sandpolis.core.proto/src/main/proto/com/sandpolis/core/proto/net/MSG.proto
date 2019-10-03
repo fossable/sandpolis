@@ -107,7 +107,7 @@ message Message {
 
         // MC_Login
         RQ_Login                       rq_login                       = 22;
-        RQ_Logout                      rq_logout                      = 1022;
+        RQ_Logout                      rq_logout                      = 38;
 
         // MC_Network
         EV_EndpointClosed              ev_endpoint_closed             = 23;

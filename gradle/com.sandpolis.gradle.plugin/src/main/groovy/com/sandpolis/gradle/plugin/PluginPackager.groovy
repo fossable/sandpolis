@@ -64,8 +64,7 @@ public class PluginPackager implements Plugin<Project> {
 						manifest {
 							attributes(
 								'Plugin-Id': extension.id,
-								'Plugin-Coordinate': extension.coordinate,
-								'Plugin-Version': project.version,
+								'Plugin-Coordinate': extension.coordinate + ':' + project.version,
 								'Plugin-Name': extension.name,
 								'Plugin-Description': extension.description,
 								'Plugin-Class': cls,
