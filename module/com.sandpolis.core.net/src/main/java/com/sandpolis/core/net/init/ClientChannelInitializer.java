@@ -20,12 +20,11 @@ package com.sandpolis.core.net.init;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.handler.ExeletHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.cvid.CvidRequestHandler;
+import com.sandpolis.core.net.handler.exelet.ExeletHandler;
 import com.sandpolis.core.net.sock.ClientSock;
 import com.sandpolis.core.util.CertUtil;
 
@@ -61,7 +60,7 @@ public class ClientChannelInitializer extends AbstractChannelInitializer {
 
 		ChannelPipeline p = ch.pipeline();
 
-		if (Config.getBoolean(net.connection.tls)) {
+		if (Config.getBoolean("net.connection.tls")) {
 			var ssl = SslContextBuilder.forClient();
 
 			if (strictCerts)

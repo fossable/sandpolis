@@ -66,7 +66,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 				// Check versions
 				return !plugin.get().getVersion().equals(descriptor.getVersion());
 			}).forEach(descriptor -> {
-				session.sub(install(descriptor.getCoordinate() + ":" + descriptor.getVersion()));
+				session.sub(install(descriptor.getCoordinate()));
 			});
 		});
 

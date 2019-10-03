@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.MSG;
@@ -258,7 +257,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	public void request(MessageOrBuilder payload, MessageHandler<?>... handlers) {
 		var rq = ProtoUtil.setPayload(ProtoUtil.rq().setTo(cvid), payload);
 
-		var future = new ResponseFuture<>(ThreadStore.get(net.message.incoming),
+		var future = new ResponseFuture<>(ThreadStore.get("net.message.incoming"),
 				gateway.request(rq, timeout, TimeUnit.MILLISECONDS));
 		addComponent(future, handlers);
 	}

@@ -46,23 +46,18 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.ByteString;
 import com.sandpolis.core.attribute.AttributeDomain;
 import com.sandpolis.core.attribute.AttributeGroup;
 import com.sandpolis.core.attribute.AttributeNode;
 import com.sandpolis.core.attribute.UntrackedAttribute;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.ConfigConstant.path;
-import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.PoolConstant;
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.storage.database.DatabaseFactory;
 import com.sandpolis.core.instance.store.plugin.Plugin;
@@ -71,6 +66,8 @@ import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
+import com.sandpolis.core.proto.util.Generator.ExecutionConfig;
+import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.LoopConfig;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
@@ -79,11 +76,11 @@ import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 import com.sandpolis.core.proto.util.Generator.OutputFormat;
 import com.sandpolis.core.proto.util.Generator.OutputPayload;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.OsType;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 import com.sandpolis.core.util.IDUtil;
-import com.sandpolis.server.vanilla.ConfigConstant.server;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.auth.PasswordMechanism;
 import com.sandpolis.server.vanilla.gen.generator.MegaGen;
@@ -131,15 +128,15 @@ public final class Server {
 	 */
 	@InitializationTask(name = "Load server configuration", fatal = true)
 	public static final Task loadConfiguration = new Task((task) -> {
-		Config.register(server.db.provider, "hibernate");
-		Config.register(server.db.url);
-		Config.register(server.db.username);
-		Config.register(server.db.password);
+		Config.register("server.db.provider", "hibernate");
+		Config.register("server.db.url");
+		Config.register("server.db.username");
+		Config.register("server.db.password");
 
-		Config.register(server.debug_client, true);
+		Config.register("server.debug_client", true);
 
-		Config.register(server.banner.text, "Welcome to a Sandpolis Server");
-		Config.register(server.banner.image);
+		Config.register("server.banner.text", "Welcome to a Sandpolis Server");
+		Config.register("server.banner.image");
 
 		return task.success();
 	});
@@ -150,9 +147,9 @@ public final class Server {
 	@InitializationTask(name = "Load runtime environment", fatal = true)
 	public static final Task loadEnvironment = new Task((task) -> {
 
-		if (!Environment.load(DB.setDefault(Config.get(server.path.db)), GEN.setDefault(Config.get(server.path.gen)),
-				LOG.setDefault(Config.get(path.log)), TMP.setDefault(Config.get(path.tmp)),
-				LIB.setDefault(Config.get(path.lib)))) {
+		if (!Environment.load(DB.setDefault(Config.get("server.path.db")),
+				GEN.setDefault(Config.get("server.path.gen")), LOG.setDefault(Config.get("path.log")),
+				TMP.setDefault(Config.get("path.tmp")), LIB.setDefault(Config.get("path.lib")))) {
 			Environment.setup();
 		}
 
@@ -167,12 +164,12 @@ public final class Server {
 
 		ThreadStore.init(config -> {
 			config.ephemeral();
-			config.defaults.put(net.exelet, new NioEventLoopGroup(2));
-			config.defaults.put(net.connection.outgoing, new NioEventLoopGroup(2));
-			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(2));
+			config.defaults.put("net.exelet", new NioEventLoopGroup(2));
+			config.defaults.put("net.connection.outgoing", new NioEventLoopGroup(2));
+			config.defaults.put("net.message.incoming", new UnorderedThreadPoolEventExecutor(2));
 			config.defaults.put("server.generator", Executors.newCachedThreadPool());
-			config.defaults.put(PoolConstant.net.ipc.listener, Executors.newSingleThreadExecutor());
-			config.defaults.put(PoolConstant.net.ipc.receptor, Executors.newSingleThreadExecutor());
+			config.defaults.put("net.ipc.listener", Executors.newSingleThreadExecutor());
+			config.defaults.put("net.ipc.receptor", Executors.newSingleThreadExecutor());
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
@@ -202,7 +199,7 @@ public final class Server {
 					AttributeGroup.class, AttributeDomain.class, UntrackedAttribute.class, Plugin.class,
 					TrustAnchor.class };
 
-			if (!Config.has(server.db.url)) {
+			if (!Config.has("server.db.url")) {
 				try {
 					config.persistent(DatabaseFactory.create("h2", Environment.get(DB).resolve("server.db").toFile()));
 				} catch (IOException e) {
@@ -211,8 +208,8 @@ public final class Server {
 				}
 			} else {
 				try {
-					config.persistent(DatabaseFactory.create(Config.get(server.db.url), Config.get(server.db.username),
-							Config.get(server.db.password)));
+					config.persistent(DatabaseFactory.create(Config.get("server.db.url"),
+							Config.get("server.db.username"), Config.get("server.db.password")));
 				} catch (URISyntaxException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -282,7 +279,7 @@ public final class Server {
 	/**
 	 * Load plugins.
 	 */
-	@InitializationTask(name = "Load server plugins", condition = plugin.enabled)
+	@InitializationTask(name = "Load server plugins", condition = "plugin.enabled")
 	public static final Task loadPlugins = new Task((task) -> {
 		PluginStore.scanPluginDirectory();
 		PluginStore.loadPlugins();
@@ -293,7 +290,7 @@ public final class Server {
 	/**
 	 * Install a debug client on the local machine.
 	 */
-	@InitializationTask(name = "Install debug client", debug = true, condition = server.debug_client)
+	@InitializationTask(name = "Install debug client", debug = true, condition = "server.debug_client")
 	public static final Task installDebugClient = new Task((task) -> {
 
 		// Create user and listener
@@ -307,13 +304,18 @@ public final class Server {
 		GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin").build());
 
 		// Generate client
-		new MegaGen(
-				GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
-						.setMega(MegaConfig.newBuilder().setNetwork(NetworkConfig.newBuilder()
+		new MegaGen(GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
+				.setMega(MegaConfig.newBuilder().setMemory(false)
+						.setFeatures(FeatureSet.newBuilder().addPlugin("sandpolis-plugin-desktop")
+								.addPlugin("sandpolis-plugin-filesys").addPlugin("sandpolis-plugin-sysinfo")
+								.addPlugin("sandpolis-plugin-shell"))
+						.setExecution(ExecutionConfig.newBuilder().putInstallPath(OsType.LINUX_VALUE,
+								"/home/cilki/.sandpolis"))
+						.setNetwork(NetworkConfig.newBuilder()
 								.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000).setMaxTimeout(5000)
 										.setStrictCerts(false)
 										.addTarget(NetworkTarget.newBuilder().setAddress("127.0.0.1").setPort(10101)))))
-						.build()).generate();
+				.build()).generate();
 
 		return task.success();
 	});

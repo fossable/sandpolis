@@ -37,17 +37,14 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.instance.BasicTasks;
-import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.util.AsciiUtil;
-import com.sandpolis.viewer.jfx.PrefConstant.ui;
 import com.sandpolis.viewer.jfx.attribute.ObservableAttribute;
 import com.sandpolis.viewer.jfx.common.FxEventExecutor;
 import com.sandpolis.viewer.jfx.common.FxUtil;
@@ -103,10 +100,10 @@ public final class Viewer {
 
 		ThreadStore.init(config -> {
 			config.ephemeral();
-			config.defaults.put(net.exelet, new NioEventLoopGroup(2));
-			config.defaults.put(net.connection.outgoing, new NioEventLoopGroup(2));
-			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(2));
-			config.defaults.put(PoolConstant.ui.fx_thread, new FxEventExecutor());
+			config.defaults.put("net.exelet", new NioEventLoopGroup(2));
+			config.defaults.put("net.connection.outgoing", new NioEventLoopGroup(2));
+			config.defaults.put("net.message.incoming", new UnorderedThreadPoolEventExecutor(2));
+			config.defaults.put("ui.fx_thread", new FxEventExecutor());
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
@@ -114,21 +111,21 @@ public final class Viewer {
 			config.instance = Core.INSTANCE;
 			config.flavor = Core.FLAVOR;
 
-			config.defaults.put(ui.help, true);
-			config.defaults.put(ui.animations, true);
-			config.defaults.put(ui.main.view, "list");
-			config.defaults.put(ui.main.console, false);
-			config.defaults.put(ui.tray.minimize, true);
-			config.defaults.put(ui.theme, "Crimson");
+			config.defaults.put("ui.help", true);
+			config.defaults.put("ui.animations", true);
+			config.defaults.put("ui.main.view", "list");
+			config.defaults.put("ui.main.console", false);
+			config.defaults.put("ui.tray.minimize", true);
+			config.defaults.put("ui.theme", "Crimson");
 
-			config.defaults.put(ui.view.login.width, 535);
-			config.defaults.put(ui.view.login.height, 380);
-			config.defaults.put(ui.view.main.width, 770);
-			config.defaults.put(ui.view.main.height, 345);
-			config.defaults.put(ui.view.about.width, 660);
-			config.defaults.put(ui.view.about.height, 400);
-			config.defaults.put(ui.view.generator.width, 700);
-			config.defaults.put(ui.view.generator.height, 400);
+			config.defaults.put("ui.view.login.width", 535);
+			config.defaults.put("ui.view.login.height", 380);
+			config.defaults.put("ui.view.main.width", 770);
+			config.defaults.put("ui.view.main.height", 345);
+			config.defaults.put("ui.view.about.width", 660);
+			config.defaults.put("ui.view.about.height", 400);
+			config.defaults.put("ui.view.generator.width", 700);
+			config.defaults.put("ui.view.generator.height", 400);
 		});
 
 		NetworkStore.init(config -> {
@@ -174,7 +171,7 @@ public final class Viewer {
 	 *
 	 * @return The task's outcome
 	 */
-	@InitializationTask(name = "Load viewer plugins", condition = plugin.enabled)
+	@InitializationTask(name = "Load viewer plugins", condition = "plugin.enabled")
 	private static final Task loadPlugins = new Task((task) -> {
 		PluginStore.scanPluginDirectory();
 		PluginStore.loadPlugins();
@@ -220,7 +217,7 @@ public final class Viewer {
 		@Override
 		public void start(Stage stage) throws Exception {
 			StageStore.newStage().stage(stage).root("/fxml/view/login/Login.fxml")
-					.size(PrefStore.getInt(ui.view.login.width), PrefStore.getInt(ui.view.login.height))
+					.size(PrefStore.getInt("ui.view.login.width"), PrefStore.getInt("ui.view.login.height"))
 					.resizable(false).title(FxUtil.translate("stage.login.title")).show();
 		}
 	}

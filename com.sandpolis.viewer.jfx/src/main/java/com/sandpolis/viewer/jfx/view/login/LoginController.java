@@ -29,8 +29,6 @@ import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
 import com.sandpolis.core.viewer.cmd.ServerCmd;
-import com.sandpolis.viewer.jfx.PoolConstant.ui;
-import com.sandpolis.viewer.jfx.PrefConstant;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.common.controller.FxController;
 import com.sandpolis.viewer.jfx.common.pane.CarouselPane;
@@ -142,7 +140,7 @@ public class LoginController extends FxController {
 						if (sockFuture.isSuccess()) {
 							connection = sockFuture.get();
 							// TODO check sock state
-							ServerCmd.async().target(connection).pool(ui.fx_thread).getServerBanner()
+							ServerCmd.async().target(connection).pool("ui.fx_thread").getServerBanner()
 									.addHandler((RS_ServerBanner rs) -> {
 										if (!rs.getBannerImage().isEmpty())
 											setBannerImage(new Image(rs.getBannerImage().newInput()));
@@ -157,7 +155,7 @@ public class LoginController extends FxController {
 					});
 			break;
 		case USER_INPUT:
-			LoginCmd.async().target(connection).pool(ui.fx_thread)
+			LoginCmd.async().target(connection).pool("ui.fx_thread")
 					.login(userPhaseController.getUsername(), userPhaseController.getPassword())
 					.addHandler((Outcome rs) -> {
 						if (rs.getResult()) {
@@ -214,8 +212,7 @@ public class LoginController extends FxController {
 	private void launchApplication() {
 		StageStore.close(stage);
 		StageStore.newStage().root("/fxml/view/main/Main.fxml")
-				.size(PrefStore.getInt(PrefConstant.ui.view.main.width),
-						PrefStore.getInt(PrefConstant.ui.view.main.height))
+				.size(PrefStore.getInt("ui.view.main.width"), PrefStore.getInt("ui.view.main.height"))
 				.title(FxUtil.translate("stage.main.title")).show();
 	}
 

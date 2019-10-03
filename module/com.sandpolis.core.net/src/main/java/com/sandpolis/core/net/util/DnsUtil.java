@@ -23,7 +23,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.util.ValidationUtil;
 
 import io.netty.buffer.ByteBuf;
@@ -37,7 +36,7 @@ import io.netty.handler.codec.dns.DnsSection;
 import io.netty.resolver.dns.DnsNameResolverBuilder;
 
 /**
- * DNS-related utilities.
+ * DNS utilities.
  *
  * @author cilki
  * @since 5.0.0
@@ -56,7 +55,7 @@ public final class DnsUtil {
 		Objects.requireNonNull(server);
 
 		DnsQuestion question = new DefaultDnsQuestion(server, DnsRecordType.SRV);
-		DnsResponse response = new DnsNameResolverBuilder(ThreadStore.get(net.dns.resolver))
+		DnsResponse response = new DnsNameResolverBuilder(ThreadStore.get("net.dns.resolver"))
 				.channelFactory(() -> new NioDatagramChannel()).build().query(question).get().content();
 		DnsRawRecord record = response.recordAt(DnsSection.ANSWER);
 		if (record == null)

@@ -21,7 +21,6 @@ import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import java.util.concurrent.TimeUnit;
 
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.proto.net.MSG.Message;
 
 import io.netty.util.concurrent.DefaultPromise;
@@ -43,7 +42,7 @@ public class MessageFuture extends DefaultPromise<Message> {
 	 */
 	public MessageFuture() {
 		// Don't bother setting a timer
-		super(ThreadStore.get(net.message.incoming));
+		super(ThreadStore.get("net.message.incoming"));
 	}
 
 	/**
@@ -54,7 +53,7 @@ public class MessageFuture extends DefaultPromise<Message> {
 	 * @param unit    The timeout unit
 	 */
 	public MessageFuture(long timeout, TimeUnit unit) {
-		this(ThreadStore.get(net.message.incoming), timeout, unit);
+		this(ThreadStore.get("net.message.incoming"), timeout, unit);
 	}
 
 	/**

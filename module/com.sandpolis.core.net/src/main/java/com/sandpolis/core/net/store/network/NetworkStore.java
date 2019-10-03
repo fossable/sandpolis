@@ -31,7 +31,6 @@ import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
 import com.google.common.graph.NetworkBuilder;
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
@@ -39,10 +38,10 @@ import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
+import com.sandpolis.core.net.store.network.NetworkStore.NetworkStoreConfig;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.CvidChangedEvent;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerEstablishedEvent;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerLostEvent;
-import com.sandpolis.core.net.store.network.NetworkStore.NetworkStoreConfig;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkAdded;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkRemoved;
@@ -247,7 +246,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	public MessageFuture route(Message.Builder message, String timeoutClass) {
 		int hop = findHop(message);
 		if (!Config.has(timeoutClass))
-			timeoutClass = net.message.default_timeout;
+			timeoutClass = "net.message.default_timeout";
 
 		MessageFuture mf = receive(hop, message.getId(), Config.getInteger(timeoutClass), TimeUnit.MILLISECONDS);
 		ConnectionStore.get(hop).get().send(message);

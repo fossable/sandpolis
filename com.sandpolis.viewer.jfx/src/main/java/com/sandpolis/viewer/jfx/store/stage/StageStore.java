@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
-import com.sandpolis.viewer.jfx.PrefConstant.ui;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.store.stage.StageStore.StageStoreConfig;
 
@@ -113,7 +112,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 	public void changeTheme(String theme) {
 		Objects.requireNonNull(theme);
 
-		PrefStore.putString(ui.theme, theme);
+		PrefStore.putString("ui.theme", theme);
 		Platform.runLater(() -> {
 			stream().map(stage -> stage.getScene().getStylesheets()).forEach(styles -> {
 				styles.clear();
@@ -209,7 +208,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 		 */
 		public void show() {
 			Scene scene = new Scene(root, width, height);
-			scene.getStylesheets().add("/css/" + PrefStore.getString(ui.theme) + ".css");
+			scene.getStylesheets().add("/css/" + PrefStore.getString("ui.theme") + ".css");
 
 			// Set default icons unless they were manually specified
 			if (stage.getIcons().size() == 0) {

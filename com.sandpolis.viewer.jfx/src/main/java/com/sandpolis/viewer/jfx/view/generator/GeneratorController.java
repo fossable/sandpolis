@@ -38,7 +38,6 @@ import com.sandpolis.core.proto.util.Generator.OutputFormat;
 import com.sandpolis.core.proto.util.Generator.OutputPayload;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.core.viewer.cmd.GenCmd;
-import com.sandpolis.viewer.jfx.PoolConstant.ui;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.common.controller.FxController;
@@ -281,7 +280,7 @@ public class GeneratorController extends FxController {
 		extend.raise(progress, ExtendSide.BOTTOM, 500, 150);
 
 		// Execute
-		GenCmd.async().pool(ui.fx_thread).generate(config).addHandler((RS_Generate rs) -> {
+		GenCmd.async().pool("ui.fx_thread").generate(config).addHandler((RS_Generate rs) -> {
 			post(GenerationCompletedEvent::new, rs);
 
 			// TODO worker thread

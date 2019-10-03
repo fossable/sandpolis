@@ -50,7 +50,8 @@ public final class DatabaseStore extends MapStore<String, Database, DatabaseStor
 
 	@Override
 	public void close() throws Exception {
-		main.close();
+		if (main != null)
+			main.close();
 	}
 
 	/**

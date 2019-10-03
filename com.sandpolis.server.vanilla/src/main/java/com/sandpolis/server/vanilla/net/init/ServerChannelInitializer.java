@@ -28,13 +28,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.handler.ExeletHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.cvid.CvidResponseHandler;
+import com.sandpolis.core.net.handler.exelet.ExeletHandler;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
 import com.sandpolis.core.net.sock.ServerSock;
 import com.sandpolis.core.util.CertUtil;
@@ -135,7 +134,7 @@ public class ServerChannelInitializer extends AbstractChannelInitializer {
 
 		ChannelPipeline p = ch.pipeline();
 
-		if (Config.getBoolean(net.connection.tls))
+		if (Config.getBoolean("net.connection.tls"))
 			engage(p, SSL, getSslContext().newHandler(ch.alloc()));
 
 		// Add proxy handler
@@ -151,7 +150,7 @@ public class ServerChannelInitializer extends AbstractChannelInitializer {
 	}
 
 	public SslContext getSslContext() throws Exception {
-		if (sslCtx == null && Config.getBoolean(net.connection.tls)) {
+		if (sslCtx == null && Config.getBoolean("net.connection.tls")) {
 			sslCtx = buildSslContext();
 
 			// No point in keeping these around anymore

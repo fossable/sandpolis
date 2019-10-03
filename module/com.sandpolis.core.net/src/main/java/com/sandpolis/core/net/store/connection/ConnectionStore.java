@@ -25,10 +25,8 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.net.Protocol;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ClientChannelInitializer;
@@ -109,7 +107,7 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 		Objects.requireNonNull(bootstrap);
 
 		if (bootstrap.config().group() == null)
-			bootstrap.group(ThreadStore.get(net.connection.outgoing));
+			bootstrap.group(ThreadStore.get("net.connection.outgoing"));
 		if (bootstrap.config().channelFactory() == null)
 			bootstrap.channel(Protocol.TCP.getChannel());
 	}

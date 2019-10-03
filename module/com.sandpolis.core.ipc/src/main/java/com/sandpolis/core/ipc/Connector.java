@@ -28,7 +28,6 @@ import java.net.Socket;
 import java.util.Optional;
 
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.ipc.MCMetadata.RQ_Metadata;
 import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
 import com.sandpolis.core.ipc.MSG.Message;
@@ -58,7 +57,7 @@ public class Connector implements Closeable {
 
 	public Connector(int port) throws IOException {
 		socket = new Socket();
-		socket.connect(new InetSocketAddress("127.0.0.1", port), Config.getInteger(net.ipc.timeout));
+		socket.connect(new InetSocketAddress("127.0.0.1", port), Config.getInteger("net.ipc.timeout"));
 
 		if (socket.isConnected()) {
 			in = socket.getInputStream();

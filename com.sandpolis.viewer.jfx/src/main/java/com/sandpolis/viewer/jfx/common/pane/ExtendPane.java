@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import com.sandpolis.viewer.jfx.PrefConstant.ui;
-
 import javafx.animation.Animation.Status;
 import javafx.animation.Transition;
 import javafx.beans.NamedArg;
@@ -170,7 +168,7 @@ public class ExtendPane extends BorderPane {
 			throw new IllegalArgumentException();
 
 		// Bypass animation if possible
-		if (!PrefStore.getBoolean(ui.animations)) {
+		if (!PrefStore.getBoolean("ui.animations")) {
 			switch (side) {
 			case TOP:
 			case BOTTOM:

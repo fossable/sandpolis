@@ -20,8 +20,6 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.2'
 	testImplementation 'net.jodah:concurrentunit:0.4.6'
 
-	compileOnly project('constants')
-
 	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':module:com.sandpolis.core.soi')
 	implementation project(':module:com.sandpolis.core.util')

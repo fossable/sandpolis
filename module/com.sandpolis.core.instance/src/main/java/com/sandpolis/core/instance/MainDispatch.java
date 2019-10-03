@@ -32,7 +32,6 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.ConfigConstant.logging;
 import com.sandpolis.core.instance.idle.IdleLoop;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
@@ -195,7 +194,7 @@ public final class MainDispatch {
 			logTaskSummary();
 
 		// Print task summary if required
-		else if (!Config.has(logging.startup.summary) || !Config.getBoolean(logging.startup.summary))
+		else if (!Config.has("logging.startup.summary") || !Config.getBoolean("logging.startup.summary"))
 			logTaskSummary();
 
 		// Launch idle loop

@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.ConfigConstant;
-import com.sandpolis.core.instance.PoolConstant;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.util.ProtoUtil;
@@ -49,12 +47,12 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	/**
 	 * The {@link EventExecutor} that will be used to execute completion listeners.
 	 */
-	private EventExecutor pool = ThreadStore.get(PoolConstant.net.message.incoming);
+	private EventExecutor pool = ThreadStore.get("net.message.incoming");
 
 	/**
 	 * The response timeout in milliseconds.
 	 */
-	private long timeout = Config.getInteger(ConfigConstant.net.message.default_timeout);
+	private long timeout = Config.getInteger("net.message.default_timeout");
 
 	/**
 	 * The target CVID. Defaults to the default server CVID.

@@ -25,7 +25,6 @@ import java.util.LinkedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
@@ -122,7 +121,7 @@ public class Sand5Handler extends SimpleChannelInboundHandler<ByteBuf> {
 		this.phase = new LinkedList<>(Arrays.asList(sequence));
 		this.key = key;
 		this.challenge = CryptoUtil.getNonce(CHALLENGE_SIZE);
-		this.future = new DefaultPromise<>(ThreadStore.get(net.message.incoming));
+		this.future = new DefaultPromise<>(ThreadStore.get("net.message.incoming"));
 	}
 
 	@Override

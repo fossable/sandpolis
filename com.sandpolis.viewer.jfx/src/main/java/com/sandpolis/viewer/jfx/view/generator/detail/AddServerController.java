@@ -21,7 +21,6 @@ import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import java.util.concurrent.ExecutorService;
 
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.net.util.DnsUtil;
 import com.sandpolis.core.util.NetUtil;
 import com.sandpolis.core.util.ValidationUtil;
@@ -113,7 +112,7 @@ public class AddServerController extends AbstractController {
 		fld_port.setDisable(true);
 		btn_test.setDisable(true);
 
-		ExecutorService executor = ThreadStore.get(net.connection.outgoing);
+		ExecutorService executor = ThreadStore.get("net.connection.outgoing");
 		executor.submit(portCheck);
 
 	}

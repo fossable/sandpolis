@@ -24,8 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import com.sandpolis.viewer.jfx.PrefConstant.ui;
-
 import javafx.animation.Animation.Status;
 import javafx.animation.Transition;
 import javafx.beans.NamedArg;
@@ -127,8 +125,8 @@ public class CarouselPane extends StackPane {
 		if (duration < 0)
 			throw new IllegalArgumentException();
 
-		right.setDuration(PrefStore.getBoolean(ui.animations) ? Duration.millis(duration) : Duration.ZERO);
-		down.setDuration(PrefStore.getBoolean(ui.animations) ? Duration.millis(duration) : Duration.ZERO);
+		right.setDuration(PrefStore.getBoolean("ui.animations") ? Duration.millis(duration) : Duration.ZERO);
+		down.setDuration(PrefStore.getBoolean("ui.animations") ? Duration.millis(duration) : Duration.ZERO);
 		this.views = Arrays.asList(children);
 		this.direction = Side.valueOf(direction.toUpperCase());
 

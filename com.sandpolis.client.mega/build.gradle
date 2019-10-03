@@ -31,8 +31,6 @@ configurations {
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
 
-	compileOnly project(':module:com.sandpolis.core.instance:constants')
-
 	api project(':module:com.sandpolis.core.instance')
 	api project(':module:com.sandpolis.core.ipc')
 	api project(':module:com.sandpolis.core.net')

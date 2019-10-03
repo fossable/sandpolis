@@ -17,10 +17,8 @@ include 'com.sandpolis.client.mega'
 include 'com.sandpolis.client.micro'
 include 'com.sandpolis.installer'
 include 'com.sandpolis.server.vanilla'
-include 'com.sandpolis.server.vanilla:constants'
 include 'com.sandpolis.viewer.cli'
 include 'com.sandpolis.viewer.jfx'
-include 'com.sandpolis.viewer.jfx:constants'
 
 if (LOCKSTONE.toBoolean())
 	include 'com.sandpolis.viewer.lockstone'
@@ -35,7 +33,6 @@ if (INSTANCE_CLOUD.toBoolean())
 
 // Dependency Projects
 include 'module:com.sandpolis.core.instance'
-include 'module:com.sandpolis.core.instance:constants'
 include 'module:com.sandpolis.core.ipc'
 include 'module:com.sandpolis.core.net'
 include 'module:com.sandpolis.core.profile'

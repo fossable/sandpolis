@@ -23,13 +23,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.ConfigConstant.logging;
 import com.sandpolis.core.net.HandlerKey;
-import com.sandpolis.core.net.handler.ExeletHandler;
 import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.ShortcutFrameEncoder;
 import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler;
+import com.sandpolis.core.net.handler.exelet.ExeletHandler;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.MSG.Message;
@@ -117,7 +116,7 @@ public abstract class AbstractChannelInitializer extends ChannelInitializer<Chan
 		// Traffic management handler
 		engage(p, TRAFFIC, new ChannelTrafficShapingHandler(Config.getInteger("traffic.interval")));
 
-		if (Config.getBoolean(logging.net.traffic.raw))
+		if (Config.getBoolean("logging.net.traffic.raw"))
 			engage(p, LOG_RAW, HANDLER_LOGGING);
 
 		//
@@ -126,7 +125,7 @@ public abstract class AbstractChannelInitializer extends ChannelInitializer<Chan
 		engage(p, FRAME_ENCODER, new ShortcutFrameEncoder());
 		engage(p, PROTO_ENCODER, HANDLER_PROTO_ENCODER);
 
-		if (Config.getBoolean(logging.net.traffic.decoded))
+		if (Config.getBoolean("logging.net.traffic.decoded"))
 			engage(p, LOG_DECODED, HANDLER_LOGGING);
 
 		// Sock management handler

@@ -22,7 +22,6 @@ import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import java.util.concurrent.ExecutionException;
 
 import com.google.protobuf.Message;
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.net.command.CommandFuture.MessageHandler;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.util.ProtoUtil;
@@ -54,7 +53,7 @@ public class ResponseFuture<E extends Message> extends DefaultPromise<Message> {
 	 *               response arrives
 	 */
 	public ResponseFuture(MessageFuture future) {
-		this(ThreadStore.get(net.message.incoming), future);
+		this(ThreadStore.get("net.message.incoming"), future);
 	}
 
 	/**

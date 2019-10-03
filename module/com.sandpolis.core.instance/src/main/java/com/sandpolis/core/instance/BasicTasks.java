@@ -17,10 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.core.instance;
 
-import com.sandpolis.core.instance.ConfigConstant.logging;
-import com.sandpolis.core.instance.ConfigConstant.net;
-import com.sandpolis.core.instance.ConfigConstant.path;
-import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 
@@ -38,22 +34,22 @@ public final class BasicTasks {
 	 */
 	@InitializationTask(name = "Load instance configuration", fatal = true)
 	public static final Task loadConfiguration = new Task((task) -> {
-		Config.register(ConfigConstant.post, true);
+		Config.register("post", true);
 
 		Config.register("traffic.interval", 4000);
-		Config.register(net.ipc.mutex, true);
-		Config.register(net.ipc.timeout, 400);
-		Config.register(logging.net.traffic.decoded, false);
-		Config.register(logging.net.traffic.raw, false);
-		Config.register(logging.startup.summary, false);
+		Config.register("net.ipc.mutex", true);
+		Config.register("net.ipc.timeout", 400);
+		Config.register("logging.net.traffic.decoded", false);
+		Config.register("logging.net.traffic.raw", false);
+		Config.register("logging.startup.summary", false);
 
-		Config.register(net.connection.outgoing.pool_size, 2);
-		Config.register(net.connection.tls, true);
-		Config.register(net.message.default_timeout, 2000);
+		Config.register("net.connection.outgoing.pool_size", 2);
+		Config.register("net.connection.tls", true);
+		Config.register("net.message.default_timeout", 2000);
 
-		Config.register(plugin.enabled, true);
+		Config.register("plugin.enabled", true);
 
-		Config.register(path.log);
+		Config.register("path.log");
 
 		return task.success();
 	});
