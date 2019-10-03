@@ -30,30 +30,6 @@
 		AA61588C23359FF50035622F /* ClientHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA61588B23359FF50035622F /* ClientHandler.swift */; };
 		AA61588E2335A4300035622F /* SandpolisUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA61588D2335A4300035622F /* SandpolisUtil.swift */; };
 		AA642E442308BC4D0027BEC2 /* ClientAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA642E432308BC4D0027BEC2 /* ClientAnnotation.swift */; };
-		AA65A6E622D01D2B00556249 /* MC_Generator.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6CC22D01D2B00556249 /* MC_Generator.pb.swift */; };
-		AA65A6E722D01D2B00556249 /* MC_Listener.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6CD22D01D2B00556249 /* MC_Listener.pb.swift */; };
-		AA65A6E822D01D2B00556249 /* MC_User.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6CE22D01D2B00556249 /* MC_User.pb.swift */; };
-		AA65A6E922D01D2B00556249 /* MC_Server.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6CF22D01D2B00556249 /* MC_Server.pb.swift */; };
-		AA65A6EA22D01D2B00556249 /* MC_Group.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6D022D01D2B00556249 /* MC_Group.pb.swift */; };
-		AA65A6EB22D01D2B00556249 /* MC_Delta.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6D122D01D2B00556249 /* MC_Delta.pb.swift */; };
-		AA65A6EC22D01D2B00556249 /* MC_Stream.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6D222D01D2B00556249 /* MC_Stream.pb.swift */; };
-		AA65A6ED22D01D2B00556249 /* MC_Login.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6D322D01D2B00556249 /* MC_Login.pb.swift */; };
-		AA65A6EE22D01D2B00556249 /* MC_Auth.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6D422D01D2B00556249 /* MC_Auth.pb.swift */; };
-		AA65A6EF22D01D2B00556249 /* MC_Ping.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6D522D01D2B00556249 /* MC_Ping.pb.swift */; };
-		AA65A6F022D01D2B00556249 /* MC_Shell.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6D622D01D2B00556249 /* MC_Shell.pb.swift */; };
-		AA65A6F122D01D2B00556249 /* MSG.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6D722D01D2B00556249 /* MSG.pb.swift */; };
-		AA65A6F222D01D2B00556249 /* MC_Plugin.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6D822D01D2B00556249 /* MC_Plugin.pb.swift */; };
-		AA65A6F322D01D2B00556249 /* MC_Cvid.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6D922D01D2B00556249 /* MC_Cvid.pb.swift */; };
-		AA65A6F422D01D2B00556249 /* MC_Network.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6DA22D01D2B00556249 /* MC_Network.pb.swift */; };
-		AA65A6F522D01D2B00556249 /* Result.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6DC22D01D2B00556249 /* Result.pb.swift */; };
-		AA65A6F622D01D2B00556249 /* Generator.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6DD22D01D2B00556249 /* Generator.pb.swift */; };
-		AA65A6F722D01D2B00556249 /* Platform.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6DE22D01D2B00556249 /* Platform.pb.swift */; };
-		AA65A6F822D01D2B00556249 /* Update.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6DF22D01D2B00556249 /* Update.pb.swift */; };
-		AA65A6F922D01D2B00556249 /* Auth.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6E022D01D2B00556249 /* Auth.pb.swift */; };
-		AA65A6FA22D01D2B00556249 /* Listener.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6E222D01D2B00556249 /* Listener.pb.swift */; };
-		AA65A6FB22D01D2B00556249 /* Stream.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6E322D01D2B00556249 /* Stream.pb.swift */; };
-		AA65A6FC22D01D2B00556249 /* User.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6E422D01D2B00556249 /* User.pb.swift */; };
-		AA65A6FD22D01D2B00556249 /* Group.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65A6E522D01D2B00556249 /* Group.pb.swift */; };
 		AA69CCA122DE85CC00DFD721 /* MacroResultHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA69CCA022DE85CC00DFD721 /* MacroResultHeader.swift */; };
 		AA69CCA522DE8F2700DFD721 /* MacroResultHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = AA69CCA422DE8F2700DFD721 /* MacroResultHeader.xib */; };
 		AA69CCA722DE9E0000DFD721 /* MacroSelect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA69CCA622DE9E0000DFD721 /* MacroSelect.swift */; };
@@ -65,7 +41,6 @@
 		AA6CACFC22DD658C00041AF3 /* MacroResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACFB22DD658C00041AF3 /* MacroResults.swift */; };
 		AA6CACFF22DD78FC00041AF3 /* MacroResultCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACFE22DD78FC00041AF3 /* MacroResultCell.swift */; };
 		AA6E007222F73C1400BB51ED /* Login.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6E007122F73C1400BB51ED /* Login.swift */; };
-		AA6F8C0722D2B694008756D9 /* MC_Client.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6F8C0622D2B694008756D9 /* MC_Client.pb.swift */; };
 		AA70158422D7C93900A1E4ED /* SandpolisProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70158322D7C93900A1E4ED /* SandpolisProfile.swift */; };
 		AA70158622D7C98D00A1E4ED /* SandpolisServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70158522D7C98D00A1E4ED /* SandpolisServer.swift */; };
 		AA70158922D7CAD800A1E4ED /* SandpolisStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70158822D7CAD800A1E4ED /* SandpolisStream.swift */; };
@@ -89,7 +64,39 @@
 		AABF01E923349D6800DEA0E4 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01E823349D6800DEA0E4 /* NIO */; };
 		AABF01EC23349DE300DEA0E4 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01EB23349DE300DEA0E4 /* NIOSSL */; };
 		AABF01EF23349ED300DEA0E4 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01EE23349ED300DEA0E4 /* SwiftProtobuf */; };
-		AAC198F722E37974004361C5 /* MC_Temp.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198F622E37974004361C5 /* MC_Temp.pb.swift */; };
+		AAC163C223458A3E006A4920 /* MC_Generator.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639623458A3E006A4920 /* MC_Generator.pb.swift */; };
+		AAC163C323458A3E006A4920 /* MC_Listener.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639723458A3E006A4920 /* MC_Listener.pb.swift */; };
+		AAC163C423458A3E006A4920 /* MC_User.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639823458A3E006A4920 /* MC_User.pb.swift */; };
+		AAC163C523458A3E006A4920 /* MC_Server.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639923458A3E006A4920 /* MC_Server.pb.swift */; };
+		AAC163C623458A3E006A4920 /* MC_Group.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639A23458A3E006A4920 /* MC_Group.pb.swift */; };
+		AAC163C723458A3E006A4920 /* MC_Delta.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639B23458A3E006A4920 /* MC_Delta.pb.swift */; };
+		AAC163C823458A3E006A4920 /* MC_Stream.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639C23458A3E006A4920 /* MC_Stream.pb.swift */; };
+		AAC163C923458A3E006A4920 /* MC_Login.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639D23458A3E006A4920 /* MC_Login.pb.swift */; };
+		AAC163CA23458A3E006A4920 /* MC_Auth.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639E23458A3E006A4920 /* MC_Auth.pb.swift */; };
+		AAC163CB23458A3E006A4920 /* MC_Ping.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639F23458A3E006A4920 /* MC_Ping.pb.swift */; };
+		AAC163CC23458A3E006A4920 /* MSG.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A023458A3E006A4920 /* MSG.pb.swift */; };
+		AAC163CD23458A3E006A4920 /* MC_Plugin.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A123458A3E006A4920 /* MC_Plugin.pb.swift */; };
+		AAC163CE23458A3E006A4920 /* MC_Client.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A223458A3E006A4920 /* MC_Client.pb.swift */; };
+		AAC163CF23458A3E006A4920 /* MC_Cvid.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A323458A3E006A4920 /* MC_Cvid.pb.swift */; };
+		AAC163D023458A3E006A4920 /* MC_Network.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A423458A3E006A4920 /* MC_Network.pb.swift */; };
+		AAC163D123458A3E006A4920 /* Result.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A623458A3E006A4920 /* Result.pb.swift */; };
+		AAC163D223458A3E006A4920 /* Generator.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A723458A3E006A4920 /* Generator.pb.swift */; };
+		AAC163D323458A3E006A4920 /* Platform.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A823458A3E006A4920 /* Platform.pb.swift */; };
+		AAC163D423458A3E006A4920 /* Update.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A923458A3E006A4920 /* Update.pb.swift */; };
+		AAC163D523458A3E006A4920 /* Auth.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163AA23458A3E006A4920 /* Auth.pb.swift */; };
+		AAC163D623458A3E006A4920 /* Listener.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163AC23458A3E006A4920 /* Listener.pb.swift */; };
+		AAC163D723458A3E006A4920 /* Stream.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163AD23458A3E006A4920 /* Stream.pb.swift */; };
+		AAC163D823458A3E006A4920 /* User.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163AE23458A3E006A4920 /* User.pb.swift */; };
+		AAC163D923458A3E006A4920 /* Group.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163AF23458A3E006A4920 /* Group.pb.swift */; };
+		AAC163DA23458A3E006A4920 /* MC_Shell.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163B323458A3E006A4920 /* MC_Shell.pb.swift */; };
+		AAC163DB23458A3E006A4920 /* ShellMSG.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163B423458A3E006A4920 /* ShellMSG.pb.swift */; };
+		AAC163DC23458A3E006A4920 /* FilesysMSG.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163B723458A3E006A4920 /* FilesysMSG.pb.swift */; };
+		AAC163DD23458A3E006A4920 /* MC_Filesys.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163B823458A3E006A4920 /* MC_Filesys.pb.swift */; };
+		AAC163DE23458A3E006A4920 /* DesktopMSG.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163BB23458A3E006A4920 /* DesktopMSG.pb.swift */; };
+		AAC163DF23458A3E006A4920 /* DesktopStream.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163BC23458A3E006A4920 /* DesktopStream.pb.swift */; };
+		AAC163E023458A3E006A4920 /* MC_Desktop.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163BD23458A3E006A4920 /* MC_Desktop.pb.swift */; };
+		AAC163E123458A3E006A4920 /* SysinfoMSG.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163C023458A3E006A4920 /* SysinfoMSG.pb.swift */; };
+		AAC163E223458A3E006A4920 /* MC_Sysinfo.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163C123458A3E006A4920 /* MC_Sysinfo.pb.swift */; };
 		AAC198F922E40CA6004361C5 /* FileCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198F822E40CA6004361C5 /* FileCell.swift */; };
 		AAC198FD22E40D27004361C5 /* FolderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198FC22E40D27004361C5 /* FolderCell.swift */; };
 		AAC4B69422BDE54500B0E354 /* SandpolisConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */; };
@@ -127,30 +134,6 @@
 		AA61588B23359FF50035622F /* ClientHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientHandler.swift; sourceTree = "<group>"; };
 		AA61588D2335A4300035622F /* SandpolisUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisUtil.swift; sourceTree = "<group>"; };
 		AA642E432308BC4D0027BEC2 /* ClientAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientAnnotation.swift; sourceTree = "<group>"; };
-		AA65A6CC22D01D2B00556249 /* MC_Generator.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Generator.pb.swift; sourceTree = "<group>"; };
-		AA65A6CD22D01D2B00556249 /* MC_Listener.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Listener.pb.swift; sourceTree = "<group>"; };
-		AA65A6CE22D01D2B00556249 /* MC_User.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_User.pb.swift; sourceTree = "<group>"; };
-		AA65A6CF22D01D2B00556249 /* MC_Server.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Server.pb.swift; sourceTree = "<group>"; };
-		AA65A6D022D01D2B00556249 /* MC_Group.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Group.pb.swift; sourceTree = "<group>"; };
-		AA65A6D122D01D2B00556249 /* MC_Delta.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Delta.pb.swift; sourceTree = "<group>"; };
-		AA65A6D222D01D2B00556249 /* MC_Stream.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Stream.pb.swift; sourceTree = "<group>"; };
-		AA65A6D322D01D2B00556249 /* MC_Login.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Login.pb.swift; sourceTree = "<group>"; };
-		AA65A6D422D01D2B00556249 /* MC_Auth.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Auth.pb.swift; sourceTree = "<group>"; };
-		AA65A6D522D01D2B00556249 /* MC_Ping.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Ping.pb.swift; sourceTree = "<group>"; };
-		AA65A6D622D01D2B00556249 /* MC_Shell.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Shell.pb.swift; sourceTree = "<group>"; };
-		AA65A6D722D01D2B00556249 /* MSG.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MSG.pb.swift; sourceTree = "<group>"; };
-		AA65A6D822D01D2B00556249 /* MC_Plugin.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Plugin.pb.swift; sourceTree = "<group>"; };
-		AA65A6D922D01D2B00556249 /* MC_Cvid.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Cvid.pb.swift; sourceTree = "<group>"; };
-		AA65A6DA22D01D2B00556249 /* MC_Network.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Network.pb.swift; sourceTree = "<group>"; };
-		AA65A6DC22D01D2B00556249 /* Result.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Result.pb.swift; sourceTree = "<group>"; };
-		AA65A6DD22D01D2B00556249 /* Generator.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Generator.pb.swift; sourceTree = "<group>"; };
-		AA65A6DE22D01D2B00556249 /* Platform.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Platform.pb.swift; sourceTree = "<group>"; };
-		AA65A6DF22D01D2B00556249 /* Update.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Update.pb.swift; sourceTree = "<group>"; };
-		AA65A6E022D01D2B00556249 /* Auth.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Auth.pb.swift; sourceTree = "<group>"; };
-		AA65A6E222D01D2B00556249 /* Listener.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Listener.pb.swift; sourceTree = "<group>"; };
-		AA65A6E322D01D2B00556249 /* Stream.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stream.pb.swift; sourceTree = "<group>"; };
-		AA65A6E422D01D2B00556249 /* User.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.pb.swift; sourceTree = "<group>"; };
-		AA65A6E522D01D2B00556249 /* Group.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Group.pb.swift; sourceTree = "<group>"; };
 		AA69CCA022DE85CC00DFD721 /* MacroResultHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroResultHeader.swift; sourceTree = "<group>"; };
 		AA69CCA422DE8F2700DFD721 /* MacroResultHeader.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MacroResultHeader.xib; sourceTree = "<group>"; };
 		AA69CCA622DE9E0000DFD721 /* MacroSelect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroSelect.swift; sourceTree = "<group>"; };
@@ -162,7 +145,6 @@
 		AA6CACFB22DD658C00041AF3 /* MacroResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroResults.swift; sourceTree = "<group>"; };
 		AA6CACFE22DD78FC00041AF3 /* MacroResultCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MacroResultCell.swift; path = ../../TableCells/MacroResultCell.swift; sourceTree = "<group>"; };
 		AA6E007122F73C1400BB51ED /* Login.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Login.swift; sourceTree = "<group>"; };
-		AA6F8C0622D2B694008756D9 /* MC_Client.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Client.pb.swift; sourceTree = "<group>"; };
 		AA70158322D7C93900A1E4ED /* SandpolisProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisProfile.swift; sourceTree = "<group>"; };
 		AA70158522D7C98D00A1E4ED /* SandpolisServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisServer.swift; sourceTree = "<group>"; };
 		AA70158822D7CAD800A1E4ED /* SandpolisStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisStream.swift; sourceTree = "<group>"; };
@@ -185,7 +167,39 @@
 		AA899D31231A066500E7C703 /* Step2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step2.swift; sourceTree = "<group>"; };
 		AA899D33231A067A00E7C703 /* Step3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step3.swift; sourceTree = "<group>"; };
 		AA8B1BAE22CB1AC0009DB0EC /* MacroEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroEditor.swift; sourceTree = "<group>"; };
-		AAC198F622E37974004361C5 /* MC_Temp.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Temp.pb.swift; sourceTree = "<group>"; };
+		AAC1639623458A3E006A4920 /* MC_Generator.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Generator.pb.swift; sourceTree = "<group>"; };
+		AAC1639723458A3E006A4920 /* MC_Listener.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Listener.pb.swift; sourceTree = "<group>"; };
+		AAC1639823458A3E006A4920 /* MC_User.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_User.pb.swift; sourceTree = "<group>"; };
+		AAC1639923458A3E006A4920 /* MC_Server.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Server.pb.swift; sourceTree = "<group>"; };
+		AAC1639A23458A3E006A4920 /* MC_Group.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Group.pb.swift; sourceTree = "<group>"; };
+		AAC1639B23458A3E006A4920 /* MC_Delta.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Delta.pb.swift; sourceTree = "<group>"; };
+		AAC1639C23458A3E006A4920 /* MC_Stream.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Stream.pb.swift; sourceTree = "<group>"; };
+		AAC1639D23458A3E006A4920 /* MC_Login.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Login.pb.swift; sourceTree = "<group>"; };
+		AAC1639E23458A3E006A4920 /* MC_Auth.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Auth.pb.swift; sourceTree = "<group>"; };
+		AAC1639F23458A3E006A4920 /* MC_Ping.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Ping.pb.swift; sourceTree = "<group>"; };
+		AAC163A023458A3E006A4920 /* MSG.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MSG.pb.swift; sourceTree = "<group>"; };
+		AAC163A123458A3E006A4920 /* MC_Plugin.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Plugin.pb.swift; sourceTree = "<group>"; };
+		AAC163A223458A3E006A4920 /* MC_Client.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Client.pb.swift; sourceTree = "<group>"; };
+		AAC163A323458A3E006A4920 /* MC_Cvid.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Cvid.pb.swift; sourceTree = "<group>"; };
+		AAC163A423458A3E006A4920 /* MC_Network.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Network.pb.swift; sourceTree = "<group>"; };
+		AAC163A623458A3E006A4920 /* Result.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Result.pb.swift; sourceTree = "<group>"; };
+		AAC163A723458A3E006A4920 /* Generator.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Generator.pb.swift; sourceTree = "<group>"; };
+		AAC163A823458A3E006A4920 /* Platform.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Platform.pb.swift; sourceTree = "<group>"; };
+		AAC163A923458A3E006A4920 /* Update.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Update.pb.swift; sourceTree = "<group>"; };
+		AAC163AA23458A3E006A4920 /* Auth.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Auth.pb.swift; sourceTree = "<group>"; };
+		AAC163AC23458A3E006A4920 /* Listener.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Listener.pb.swift; sourceTree = "<group>"; };
+		AAC163AD23458A3E006A4920 /* Stream.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stream.pb.swift; sourceTree = "<group>"; };
+		AAC163AE23458A3E006A4920 /* User.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.pb.swift; sourceTree = "<group>"; };
+		AAC163AF23458A3E006A4920 /* Group.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Group.pb.swift; sourceTree = "<group>"; };
+		AAC163B323458A3E006A4920 /* MC_Shell.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Shell.pb.swift; sourceTree = "<group>"; };
+		AAC163B423458A3E006A4920 /* ShellMSG.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShellMSG.pb.swift; sourceTree = "<group>"; };
+		AAC163B723458A3E006A4920 /* FilesysMSG.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilesysMSG.pb.swift; sourceTree = "<group>"; };
+		AAC163B823458A3E006A4920 /* MC_Filesys.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Filesys.pb.swift; sourceTree = "<group>"; };
+		AAC163BB23458A3E006A4920 /* DesktopMSG.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DesktopMSG.pb.swift; sourceTree = "<group>"; };
+		AAC163BC23458A3E006A4920 /* DesktopStream.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DesktopStream.pb.swift; sourceTree = "<group>"; };
+		AAC163BD23458A3E006A4920 /* MC_Desktop.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Desktop.pb.swift; sourceTree = "<group>"; };
+		AAC163C023458A3E006A4920 /* SysinfoMSG.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SysinfoMSG.pb.swift; sourceTree = "<group>"; };
+		AAC163C123458A3E006A4920 /* MC_Sysinfo.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Sysinfo.pb.swift; sourceTree = "<group>"; };
 		AAC198F822E40CA6004361C5 /* FileCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCell.swift; sourceTree = "<group>"; };
 		AAC198FC22E40D27004361C5 /* FolderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderCell.swift; sourceTree = "<group>"; };
 		AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisConnection.swift; sourceTree = "<group>"; };
@@ -356,68 +370,10 @@
 			path = MacroResults;
 			sourceTree = "<group>";
 		};
-		AA65A6CA22D01D2B00556249 /* Proto */ = {
-			isa = PBXGroup;
-			children = (
-				AA65A6CB22D01D2B00556249 /* net */,
-				AA65A6DB22D01D2B00556249 /* util */,
-				AA65A6E122D01D2B00556249 /* pojo */,
-			);
-			path = Proto;
-			sourceTree = "<group>";
-		};
-		AA65A6CB22D01D2B00556249 /* net */ = {
-			isa = PBXGroup;
-			children = (
-				AAC198F622E37974004361C5 /* MC_Temp.pb.swift */,
-				AA6F8C0622D2B694008756D9 /* MC_Client.pb.swift */,
-				AA65A6CC22D01D2B00556249 /* MC_Generator.pb.swift */,
-				AA65A6CD22D01D2B00556249 /* MC_Listener.pb.swift */,
-				AA65A6CE22D01D2B00556249 /* MC_User.pb.swift */,
-				AA65A6CF22D01D2B00556249 /* MC_Server.pb.swift */,
-				AA65A6D022D01D2B00556249 /* MC_Group.pb.swift */,
-				AA65A6D122D01D2B00556249 /* MC_Delta.pb.swift */,
-				AA65A6D222D01D2B00556249 /* MC_Stream.pb.swift */,
-				AA65A6D322D01D2B00556249 /* MC_Login.pb.swift */,
-				AA65A6D422D01D2B00556249 /* MC_Auth.pb.swift */,
-				AA65A6D522D01D2B00556249 /* MC_Ping.pb.swift */,
-				AA65A6D622D01D2B00556249 /* MC_Shell.pb.swift */,
-				AA65A6D722D01D2B00556249 /* MSG.pb.swift */,
-				AA65A6D822D01D2B00556249 /* MC_Plugin.pb.swift */,
-				AA65A6D922D01D2B00556249 /* MC_Cvid.pb.swift */,
-				AA65A6DA22D01D2B00556249 /* MC_Network.pb.swift */,
-			);
-			path = net;
-			sourceTree = "<group>";
-		};
-		AA65A6DB22D01D2B00556249 /* util */ = {
-			isa = PBXGroup;
-			children = (
-				AA65A6DC22D01D2B00556249 /* Result.pb.swift */,
-				AA65A6DD22D01D2B00556249 /* Generator.pb.swift */,
-				AA65A6DE22D01D2B00556249 /* Platform.pb.swift */,
-				AA65A6DF22D01D2B00556249 /* Update.pb.swift */,
-				AA65A6E022D01D2B00556249 /* Auth.pb.swift */,
-			);
-			path = util;
-			sourceTree = "<group>";
-		};
-		AA65A6E122D01D2B00556249 /* pojo */ = {
-			isa = PBXGroup;
-			children = (
-				AA65A6E222D01D2B00556249 /* Listener.pb.swift */,
-				AA65A6E322D01D2B00556249 /* Stream.pb.swift */,
-				AA65A6E422D01D2B00556249 /* User.pb.swift */,
-				AA65A6E522D01D2B00556249 /* Group.pb.swift */,
-			);
-			path = pojo;
-			sourceTree = "<group>";
-		};
 		AA68C84122D1552F008EF53E /* Network */ = {
 			isa = PBXGroup;
 			children = (
 				AA70FD1922BEF326006A4C6F /* Codec */,
-				AA65A6CA22D01D2B00556249 /* Proto */,
 				AA70158822D7CAD800A1E4ED /* SandpolisStream.swift */,
 				AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */,
 				AAF390E4230BC796008C9469 /* CvidRequestHandler.swift */,
@@ -436,6 +392,14 @@
 				AA07249F2311E6F20087190F /* CloudUtil.swift */,
 			);
 			path = Util;
+			sourceTree = "<group>";
+		};
+		AA6EAC38234583C9003AB166 /* Proto */ = {
+			isa = PBXGroup;
+			children = (
+				AAC1639123458A3E006A4920 /* com */,
+			);
+			path = Proto;
 			sourceTree = "<group>";
 		};
 		AA70FD1922BEF326006A4C6F /* Codec */ = {
@@ -492,6 +456,7 @@
 		AA81DD5122BD8C5200024120 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				AA6EAC38234583C9003AB166 /* Proto */,
 				AA88FB6D230C454700196B4B /* Model */,
 				AA68C84122D1552F008EF53E /* Network */,
 				AA6CACE922DD348F00041AF3 /* Util */,
@@ -526,6 +491,166 @@
 				AA899D33231A067A00E7C703 /* Step3.swift */,
 			);
 			path = ServerCreator;
+			sourceTree = "<group>";
+		};
+		AAC1639123458A3E006A4920 /* com */ = {
+			isa = PBXGroup;
+			children = (
+				AAC1639223458A3E006A4920 /* sandpolis */,
+			);
+			path = com;
+			sourceTree = "<group>";
+		};
+		AAC1639223458A3E006A4920 /* sandpolis */ = {
+			isa = PBXGroup;
+			children = (
+				AAC1639323458A3E006A4920 /* core */,
+				AAC163B023458A3E006A4920 /* plugin */,
+			);
+			path = sandpolis;
+			sourceTree = "<group>";
+		};
+		AAC1639323458A3E006A4920 /* core */ = {
+			isa = PBXGroup;
+			children = (
+				AAC1639423458A3E006A4920 /* proto */,
+			);
+			path = core;
+			sourceTree = "<group>";
+		};
+		AAC1639423458A3E006A4920 /* proto */ = {
+			isa = PBXGroup;
+			children = (
+				AAC1639523458A3E006A4920 /* net */,
+				AAC163A523458A3E006A4920 /* util */,
+				AAC163AB23458A3E006A4920 /* pojo */,
+			);
+			path = proto;
+			sourceTree = "<group>";
+		};
+		AAC1639523458A3E006A4920 /* net */ = {
+			isa = PBXGroup;
+			children = (
+				AAC1639623458A3E006A4920 /* MC_Generator.pb.swift */,
+				AAC1639723458A3E006A4920 /* MC_Listener.pb.swift */,
+				AAC1639823458A3E006A4920 /* MC_User.pb.swift */,
+				AAC1639923458A3E006A4920 /* MC_Server.pb.swift */,
+				AAC1639A23458A3E006A4920 /* MC_Group.pb.swift */,
+				AAC1639B23458A3E006A4920 /* MC_Delta.pb.swift */,
+				AAC1639C23458A3E006A4920 /* MC_Stream.pb.swift */,
+				AAC1639D23458A3E006A4920 /* MC_Login.pb.swift */,
+				AAC1639E23458A3E006A4920 /* MC_Auth.pb.swift */,
+				AAC1639F23458A3E006A4920 /* MC_Ping.pb.swift */,
+				AAC163A023458A3E006A4920 /* MSG.pb.swift */,
+				AAC163A123458A3E006A4920 /* MC_Plugin.pb.swift */,
+				AAC163A223458A3E006A4920 /* MC_Client.pb.swift */,
+				AAC163A323458A3E006A4920 /* MC_Cvid.pb.swift */,
+				AAC163A423458A3E006A4920 /* MC_Network.pb.swift */,
+			);
+			path = net;
+			sourceTree = "<group>";
+		};
+		AAC163A523458A3E006A4920 /* util */ = {
+			isa = PBXGroup;
+			children = (
+				AAC163A623458A3E006A4920 /* Result.pb.swift */,
+				AAC163A723458A3E006A4920 /* Generator.pb.swift */,
+				AAC163A823458A3E006A4920 /* Platform.pb.swift */,
+				AAC163A923458A3E006A4920 /* Update.pb.swift */,
+				AAC163AA23458A3E006A4920 /* Auth.pb.swift */,
+			);
+			path = util;
+			sourceTree = "<group>";
+		};
+		AAC163AB23458A3E006A4920 /* pojo */ = {
+			isa = PBXGroup;
+			children = (
+				AAC163AC23458A3E006A4920 /* Listener.pb.swift */,
+				AAC163AD23458A3E006A4920 /* Stream.pb.swift */,
+				AAC163AE23458A3E006A4920 /* User.pb.swift */,
+				AAC163AF23458A3E006A4920 /* Group.pb.swift */,
+			);
+			path = pojo;
+			sourceTree = "<group>";
+		};
+		AAC163B023458A3E006A4920 /* plugin */ = {
+			isa = PBXGroup;
+			children = (
+				AAC163B123458A3E006A4920 /* shell */,
+				AAC163B523458A3E006A4920 /* filesys */,
+				AAC163B923458A3E006A4920 /* desktop */,
+				AAC163BE23458A3E006A4920 /* sysinfo */,
+			);
+			path = plugin;
+			sourceTree = "<group>";
+		};
+		AAC163B123458A3E006A4920 /* shell */ = {
+			isa = PBXGroup;
+			children = (
+				AAC163B223458A3E006A4920 /* net */,
+			);
+			path = shell;
+			sourceTree = "<group>";
+		};
+		AAC163B223458A3E006A4920 /* net */ = {
+			isa = PBXGroup;
+			children = (
+				AAC163B323458A3E006A4920 /* MC_Shell.pb.swift */,
+				AAC163B423458A3E006A4920 /* ShellMSG.pb.swift */,
+			);
+			path = net;
+			sourceTree = "<group>";
+		};
+		AAC163B523458A3E006A4920 /* filesys */ = {
+			isa = PBXGroup;
+			children = (
+				AAC163B623458A3E006A4920 /* net */,
+			);
+			path = filesys;
+			sourceTree = "<group>";
+		};
+		AAC163B623458A3E006A4920 /* net */ = {
+			isa = PBXGroup;
+			children = (
+				AAC163B723458A3E006A4920 /* FilesysMSG.pb.swift */,
+				AAC163B823458A3E006A4920 /* MC_Filesys.pb.swift */,
+			);
+			path = net;
+			sourceTree = "<group>";
+		};
+		AAC163B923458A3E006A4920 /* desktop */ = {
+			isa = PBXGroup;
+			children = (
+				AAC163BA23458A3E006A4920 /* net */,
+			);
+			path = desktop;
+			sourceTree = "<group>";
+		};
+		AAC163BA23458A3E006A4920 /* net */ = {
+			isa = PBXGroup;
+			children = (
+				AAC163BB23458A3E006A4920 /* DesktopMSG.pb.swift */,
+				AAC163BC23458A3E006A4920 /* DesktopStream.pb.swift */,
+				AAC163BD23458A3E006A4920 /* MC_Desktop.pb.swift */,
+			);
+			path = net;
+			sourceTree = "<group>";
+		};
+		AAC163BE23458A3E006A4920 /* sysinfo */ = {
+			isa = PBXGroup;
+			children = (
+				AAC163BF23458A3E006A4920 /* net */,
+			);
+			path = sysinfo;
+			sourceTree = "<group>";
+		};
+		AAC163BF23458A3E006A4920 /* net */ = {
+			isa = PBXGroup;
+			children = (
+				AAC163C023458A3E006A4920 /* SysinfoMSG.pb.swift */,
+				AAC163C123458A3E006A4920 /* MC_Sysinfo.pb.swift */,
+			);
+			path = net;
 			sourceTree = "<group>";
 		};
 		B7C4FB1F962489AA256A0158 /* Pods */ = {
@@ -669,87 +794,94 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA65A6F922D01D2B00556249 /* Auth.pb.swift in Sources */,
+				AAC163E123458A3E006A4920 /* SysinfoMSG.pb.swift in Sources */,
+				AAC163C323458A3E006A4920 /* MC_Listener.pb.swift in Sources */,
+				AAC163C623458A3E006A4920 /* MC_Group.pb.swift in Sources */,
 				AA6CACEB22DD34A900041AF3 /* FormatUtil.swift in Sources */,
 				AA6E007222F73C1400BB51ED /* Login.swift in Sources */,
 				AA0724A32312203C0087190F /* ClientScanner.swift in Sources */,
 				AAF113B922CC50C800987EAF /* MacroManager.swift in Sources */,
+				AAC163D923458A3E006A4920 /* Group.pb.swift in Sources */,
 				AA70FD1F22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift in Sources */,
 				AA72362B22D42F27004EE888 /* ControlPanel.swift in Sources */,
+				AAC163C223458A3E006A4920 /* MC_Generator.pb.swift in Sources */,
 				8542D3FE22D66E0300F56F70 /* ServerManager.swift in Sources */,
-				AA65A6F222D01D2B00556249 /* MC_Plugin.pb.swift in Sources */,
 				AAF390E5230BC796008C9469 /* CvidRequestHandler.swift in Sources */,
 				8542D40022D69CBF00F56F70 /* ClientList.swift in Sources */,
 				AA899D30231A065000E7C703 /* Step1.swift in Sources */,
-				AAC198F722E37974004361C5 /* MC_Temp.pb.swift in Sources */,
+				AAC163CE23458A3E006A4920 /* MC_Client.pb.swift in Sources */,
 				AA766B0622C944530053777B /* FileManager.swift in Sources */,
+				AAC163C823458A3E006A4920 /* MC_Stream.pb.swift in Sources */,
 				AA0724A02311E6F20087190F /* CloudUtil.swift in Sources */,
-				AA65A6FD22D01D2B00556249 /* Group.pb.swift in Sources */,
-				AA65A6EB22D01D2B00556249 /* MC_Delta.pb.swift in Sources */,
+				AAC163DC23458A3E006A4920 /* FilesysMSG.pb.swift in Sources */,
 				AA6CACFC22DD658C00041AF3 /* MacroResults.swift in Sources */,
+				AAC163DD23458A3E006A4920 /* MC_Filesys.pb.swift in Sources */,
 				AA8B1BAF22CB1AC0009DB0EC /* MacroEditor.swift in Sources */,
-				AA65A6F722D01D2B00556249 /* Platform.pb.swift in Sources */,
 				AA642E442308BC4D0027BEC2 /* ClientAnnotation.swift in Sources */,
+				AAC163D723458A3E006A4920 /* Stream.pb.swift in Sources */,
 				AA899D2E2319E6A000E7C703 /* ServerCreator.swift in Sources */,
-				AA65A6FC22D01D2B00556249 /* User.pb.swift in Sources */,
+				AAC163DB23458A3E006A4920 /* ShellMSG.pb.swift in Sources */,
+				AAC163E223458A3E006A4920 /* MC_Sysinfo.pb.swift in Sources */,
+				AAC163C923458A3E006A4920 /* MC_Login.pb.swift in Sources */,
+				AAC163CC23458A3E006A4920 /* MSG.pb.swift in Sources */,
 				AA6CACED22DD432000041AF3 /* GroupPanelTable.swift in Sources */,
 				AA6CACEF22DD445000041AF3 /* GroupPanel.swift in Sources */,
 				ED5A421222E5284900EA3C98 /* ForgotPassword.swift in Sources */,
 				AA70FD1E22BEF326006A4C6F /* ByteBuffer+varint.swift in Sources */,
+				AAC163D323458A3E006A4920 /* Platform.pb.swift in Sources */,
 				AA6CACE822DD26F600041AF3 /* ControlPanelTable.swift in Sources */,
 				AAC198FD22E40D27004361C5 /* FolderCell.swift in Sources */,
-				AA65A6F822D01D2B00556249 /* Update.pb.swift in Sources */,
+				AAC163DE23458A3E006A4920 /* DesktopMSG.pb.swift in Sources */,
 				85CECBF922D9897400EF1A6E /* Settings.swift in Sources */,
 				AA42524222E953B30083F7F4 /* MacroSelectCell.swift in Sources */,
-				AA65A6F622D01D2B00556249 /* Generator.pb.swift in Sources */,
-				AA65A6E922D01D2B00556249 /* MC_Server.pb.swift in Sources */,
-				AA65A6E622D01D2B00556249 /* MC_Generator.pb.swift in Sources */,
-				AA65A6EA22D01D2B00556249 /* MC_Group.pb.swift in Sources */,
 				AA69CCA722DE9E0000DFD721 /* MacroSelect.swift in Sources */,
-				AA65A6F322D01D2B00556249 /* MC_Cvid.pb.swift in Sources */,
+				AAC163D623458A3E006A4920 /* Listener.pb.swift in Sources */,
 				AA61588A233583CF0035622F /* ManagementHandler.swift in Sources */,
-				AA65A6F522D01D2B00556249 /* Result.pb.swift in Sources */,
-				AA6F8C0722D2B694008756D9 /* MC_Client.pb.swift in Sources */,
-				AA65A6F122D01D2B00556249 /* MSG.pb.swift in Sources */,
-				AA65A6FA22D01D2B00556249 /* Listener.pb.swift in Sources */,
+				AAC163D023458A3E006A4920 /* MC_Network.pb.swift in Sources */,
 				85A2F87D22DAC2F300B2FD7D /* ServerCell.swift in Sources */,
 				AA69CCA122DE85CC00DFD721 /* MacroResultHeader.swift in Sources */,
 				AA61588E2335A4300035622F /* SandpolisUtil.swift in Sources */,
-				AA65A6EF22D01D2B00556249 /* MC_Ping.pb.swift in Sources */,
+				AAC163CF23458A3E006A4920 /* MC_Cvid.pb.swift in Sources */,
 				8E653C2222E6595D00BB8FEA /* MainTabController.swift in Sources */,
-				AA65A6E722D01D2B00556249 /* MC_Listener.pb.swift in Sources */,
+				AAC163C723458A3E006A4920 /* MC_Delta.pb.swift in Sources */,
 				AA6CACFF22DD78FC00041AF3 /* MacroResultCell.swift in Sources */,
 				8EAD841C22CBD80700B49D59 /* ClientMap.swift in Sources */,
-				AA65A6EE22D01D2B00556249 /* MC_Auth.pb.swift in Sources */,
 				ED5A421422E5289C00EA3C98 /* CreateAccount.swift in Sources */,
 				AA70158622D7C98D00A1E4ED /* SandpolisServer.swift in Sources */,
-				AA65A6E822D01D2B00556249 /* MC_User.pb.swift in Sources */,
-				AA65A6F022D01D2B00556249 /* MC_Shell.pb.swift in Sources */,
+				AAC163D823458A3E006A4920 /* User.pb.swift in Sources */,
+				AAC163DF23458A3E006A4920 /* DesktopStream.pb.swift in Sources */,
 				AA70FD1D22BEF326006A4C6F /* ProtobufCodecs.swift in Sources */,
 				AAF390E7230BC7F1008C9469 /* ResponseHandler.swift in Sources */,
+				AAC163D223458A3E006A4920 /* Generator.pb.swift in Sources */,
 				85A2F87C22DAC2F300B2FD7D /* HostCell.swift in Sources */,
 				AA42524422E980380083F7F4 /* MacroResult.swift in Sources */,
+				AAC163C423458A3E006A4920 /* MC_User.pb.swift in Sources */,
 				8542D40622D6A95E00F56F70 /* AddServer.swift in Sources */,
 				AA07249E2311E2A00087190F /* CloudPricing.swift in Sources */,
+				AAC163CA23458A3E006A4920 /* MC_Auth.pb.swift in Sources */,
+				AAC163D523458A3E006A4920 /* Auth.pb.swift in Sources */,
 				AA899D32231A066500E7C703 /* Step2.swift in Sources */,
-				AA65A6ED22D01D2B00556249 /* MC_Login.pb.swift in Sources */,
 				AA6CACF122DD48D300041AF3 /* GroupHostCell.swift in Sources */,
-				AA65A6EC22D01D2B00556249 /* MC_Stream.pb.swift in Sources */,
 				AAC4B69422BDE54500B0E354 /* SandpolisConnection.swift in Sources */,
 				8533115622FEC11800D3B0F9 /* HostGroup.swift in Sources */,
 				ED1FB93F22D83F4200D35565 /* SignInAccount.swift in Sources */,
+				AAC163D123458A3E006A4920 /* Result.pb.swift in Sources */,
 				AA752B4622F2340100E90B54 /* BackgroundView.swift in Sources */,
 				AA899D34231A067A00E7C703 /* Step3.swift in Sources */,
 				AA61588C23359FF50035622F /* ClientHandler.swift in Sources */,
+				AAC163C523458A3E006A4920 /* MC_Server.pb.swift in Sources */,
 				AA70158422D7C93900A1E4ED /* SandpolisProfile.swift in Sources */,
+				AAC163CD23458A3E006A4920 /* MC_Plugin.pb.swift in Sources */,
+				AAC163CB23458A3E006A4920 /* MC_Ping.pb.swift in Sources */,
 				AA70158922D7CAD800A1E4ED /* SandpolisStream.swift in Sources */,
+				AAC163DA23458A3E006A4920 /* MC_Shell.pb.swift in Sources */,
+				AAC163E023458A3E006A4920 /* MC_Desktop.pb.swift in Sources */,
 				8533115A2300183600D3B0F9 /* HostGroupHeaderCell.swift in Sources */,
+				AAC163D423458A3E006A4920 /* Update.pb.swift in Sources */,
 				8E653C2422E661A000BB8FEA /* ChangePassword.swift in Sources */,
 				AACBF8D622F3A9750015DCE6 /* FolderUpCell.swift in Sources */,
-				AA65A6FB22D01D2B00556249 /* Stream.pb.swift in Sources */,
 				AA81DD5322BD8C5200024120 /* AppDelegate.swift in Sources */,
 				AAC198F922E40CA6004361C5 /* FileCell.swift in Sources */,
-				AA65A6F422D01D2B00556249 /* MC_Network.pb.swift in Sources */,
 				AA87A5B722DB78B3007A702E /* MacroCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
