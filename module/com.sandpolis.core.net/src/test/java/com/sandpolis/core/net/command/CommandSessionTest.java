@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.handler.ResponseHandler;
@@ -55,7 +54,7 @@ class CommandSessionTest {
 	private static void init() {
 		ThreadStore.init(config -> {
 			config.ephemeral();
-			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(4));
+			config.defaults.put("net.message.incoming", new UnorderedThreadPoolEventExecutor(4));
 		});
 	}
 

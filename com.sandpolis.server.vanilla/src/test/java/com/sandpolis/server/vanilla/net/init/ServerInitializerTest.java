@@ -28,8 +28,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.ConfigConstant.logging;
-import com.sandpolis.core.instance.ConfigConstant.net;
 import com.sandpolis.core.instance.store.thread.ThreadStore;
 
 import io.netty.channel.Channel;
@@ -52,9 +50,9 @@ class ServerInitializerTest {
 
 	@BeforeAll
 	static void configure() {
-		Config.register(logging.net.traffic.raw, false);
-		Config.register(logging.net.traffic.decoded, false);
-		Config.register(net.connection.tls, true);
+		Config.register("logging.net.traffic.raw", false);
+		Config.register("logging.net.traffic.decoded", false);
+		Config.register("net.connection.tls", true);
 		Config.register("traffic.interval", 4000);
 
 		ThreadStore.ThreadStore.init(config -> {

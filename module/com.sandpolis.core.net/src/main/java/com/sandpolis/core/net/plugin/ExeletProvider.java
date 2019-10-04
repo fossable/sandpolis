@@ -15,9 +15,10 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.instance.plugin;
+package com.sandpolis.core.net.plugin;
 
 import com.google.protobuf.Message;
+import com.sandpolis.core.net.command.Exelet;
 
 /**
  * @author cilki
@@ -30,7 +31,7 @@ public interface ExeletProvider {
 	 *
 	 * @return A list of Exelet classes
 	 */
-	public Class<?>[] getExelets();
+	public Class<? extends Exelet>[] getExelets();
 
 	public Class<? extends Message> getMessageType();
 }

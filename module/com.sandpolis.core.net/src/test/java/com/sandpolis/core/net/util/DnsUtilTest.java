@@ -27,8 +27,6 @@ import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.PoolConstant;
-
 import io.netty.channel.nio.NioEventLoopGroup;
 
 class DnsUtilTest {
@@ -37,7 +35,7 @@ class DnsUtilTest {
 	static void configure() {
 		ThreadStore.init(config -> {
 			config.ephemeral();
-			config.defaults.put(PoolConstant.net.dns.resolver, new NioEventLoopGroup(1).next());
+			config.defaults.put("net.dns.resolver", new NioEventLoopGroup(1).next());
 		});
 	}
 

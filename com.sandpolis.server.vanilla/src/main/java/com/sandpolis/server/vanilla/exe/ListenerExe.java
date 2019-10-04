@@ -18,11 +18,15 @@
 package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
+import static com.sandpolis.core.util.ProtoUtil.begin;
+import static com.sandpolis.core.util.ProtoUtil.complete;
+import static com.sandpolis.core.util.ProtoUtil.failure;
+import static com.sandpolis.core.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
 
-import com.google.protobuf.Message;
-import com.sandpolis.core.instance.PermissionConstant.server;
+import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
 import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener;
 import com.sandpolis.core.proto.net.MCListener.RQ_ListenerDelta;
@@ -36,12 +40,12 @@ import com.sandpolis.server.vanilla.store.listener.Listener;
  * @author cilki
  * @since 5.0.0
  */
-public class ListenerExe extends Exelet {
+public final class ListenerExe extends Exelet {
 
 	@Auth
-	@Permission(permission = server.listener.create)
+	@Permission(permission = 0/* server.listener.create */)
 	@Handler(tag = MSG.Message.RQ_ADD_LISTENER_FIELD_NUMBER)
-	public Message.Builder rq_add_listener(RQ_AddListener rq) {
+	public static MessageOrBuilder rq_add_listener(RQ_AddListener rq) {
 		var outcome = begin();
 
 		ListenerStore.add(rq.getConfig());
@@ -50,10 +54,10 @@ public class ListenerExe extends Exelet {
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_REMOVE_LISTENER_FIELD_NUMBER)
-	public Message.Builder rq_remove_listener(RQ_RemoveListener rq) {
+	public static MessageOrBuilder rq_remove_listener(ExeletContext context, RQ_RemoveListener rq) {
+		if (!checkOwnership(context, rq.getId()))
+			return failure(ACCESS_DENIED);
 		var outcome = begin();
-		if (!ownership(rq.getId()))
-			return failure(outcome, ACCESS_DENIED);
 
 		ListenerStore.remove(rq.getId());
 		return success(outcome);
@@ -61,39 +65,32 @@ public class ListenerExe extends Exelet {
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_LISTENER_DELTA_FIELD_NUMBER)
-	public Message.Builder rq_listener_delta(RQ_ListenerDelta rq) {
+	public static MessageOrBuilder rq_listener_delta(ExeletContext context, RQ_ListenerDelta rq) {
+		if (!checkOwnership(context, rq.getId()))
+			return failure(ACCESS_DENIED);
 		var outcome = begin();
-		if (!ownership(rq.getId()))
-			return failure(outcome, ACCESS_DENIED);
 
 		return complete(outcome, ListenerStore.delta(rq.getId(), rq.getDelta()));
 	}
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_CHANGE_LISTENER_FIELD_NUMBER)
-	public Message.Builder rq_change_listener(RQ_ChangeListener rq) {
+	public static MessageOrBuilder rq_change_listener(ExeletContext context, RQ_ChangeListener rq) {
+		if (!checkOwnership(context, rq.getId()))
+			return failure(ACCESS_DENIED);
 		var outcome = begin();
-		if (!ownership(rq.getId()))
-			return failure(outcome, ACCESS_DENIED);
 
 		return complete(outcome, ListenerStore.change(rq.getId(), rq.getState()));
 	}
 
-	/**
-	 * Check that the user associated with the connection owns the given listener.
-	 *
-	 * @param id The listener ID
-	 * @return Whether the access check passed
-	 */
-	@AccessPredicate
-	private boolean ownership(long id) {
-		Listener listener = ListenerStore.get(id).orElse(null);
+	private static boolean checkOwnership(ExeletContext context, long listenerId) {
+		Listener listener = ListenerStore.get(listenerId).orElse(null);
 		if (listener == null)
-			// Listener does not exist
 			return false;
 
-		// Check CVID
-		return listener.getOwner().getCvid() == connector.getRemoteCvid();
+		return listener.getOwner().getCvid() == context.connector.getRemoteCvid();
 	}
 
+	private ListenerExe() {
+	}
 }

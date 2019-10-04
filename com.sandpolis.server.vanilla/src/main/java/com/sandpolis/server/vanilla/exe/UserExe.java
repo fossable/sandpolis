@@ -18,11 +18,15 @@
 package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
+import static com.sandpolis.core.util.ProtoUtil.begin;
+import static com.sandpolis.core.util.ProtoUtil.complete;
+import static com.sandpolis.core.util.ProtoUtil.failure;
+import static com.sandpolis.core.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
-import com.google.protobuf.Message;
-import com.sandpolis.core.instance.PermissionConstant.server;
+import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.proto.net.MCUser.RQ_AddUser;
 import com.sandpolis.core.proto.net.MCUser.RQ_RemoveUser;
 import com.sandpolis.core.proto.net.MCUser.RQ_UserDelta;
@@ -35,12 +39,12 @@ import com.sandpolis.server.vanilla.store.user.User;
  * @author cilki
  * @since 4.0.0
  */
-public class UserExe extends Exelet {
+public final class UserExe extends Exelet {
 
 	@Auth
-	@Permission(permission = server.user.create)
+	@Permission(permission = 0/* server.user.create */)
 	@Handler(tag = MSG.Message.RQ_ADD_USER_FIELD_NUMBER)
-	public Message.Builder rq_add_user(RQ_AddUser rq) {
+	public static MessageOrBuilder rq_add_user(RQ_AddUser rq) {
 		var outcome = begin();
 
 		UserStore.add(rq.getConfig());
@@ -49,10 +53,10 @@ public class UserExe extends Exelet {
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_REMOVE_USER_FIELD_NUMBER)
-	public Message.Builder rq_remove_user(RQ_RemoveUser rq) {
+	public static MessageOrBuilder rq_remove_user(ExeletContext context, RQ_RemoveUser rq) {
+		if (!checkOwnership(context, rq.getId()))
+			return failure(ACCESS_DENIED);
 		var outcome = begin();
-		if (!ownership(rq.getId()))
-			return failure(outcome, ACCESS_DENIED);
 
 		// TODO
 		// UserStore.remove(rq.getId());
@@ -61,30 +65,22 @@ public class UserExe extends Exelet {
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_USER_DELTA_FIELD_NUMBER)
-	public Message.Builder rq_user_delta(RQ_UserDelta rq) {
+	public static MessageOrBuilder rq_user_delta(ExeletContext context, RQ_UserDelta rq) {
+		if (!checkOwnership(context, rq.getDelta().getConfig().getId()))
+			return failure(ACCESS_DENIED);
 		var outcome = begin();
-		if (!ownership(rq.getDelta().getConfig().getId()))
-			return failure(outcome, ACCESS_DENIED);
 
 		return complete(outcome, UserStore.delta(rq.getId(), rq.getDelta()));
 	}
 
-	/**
-	 * Check that the user associated with the connection owns the given listener.
-	 *
-	 * @param id The user ID
-	 * @return Whether the access check passed
-	 */
-	@AccessPredicate
-	private boolean ownership(long id) {
-		// TODO
-		User user = null;// UserStore.get(id).orElse(null);
+	private static boolean checkOwnership(ExeletContext context, long userId) {
+		User user = null;// UserStore.get(userId).orElse(null);
 		if (user == null)
-			// User does not exist
 			return false;
 
-		// Check CVID
-		return user.getCvid() == connector.getRemoteCvid();
+		return user.getCvid() == context.connector.getRemoteCvid();
 	}
 
+	private UserExe() {
+	}
 }

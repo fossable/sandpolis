@@ -20,17 +20,16 @@ package com.sandpolis.core.net.sock;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.plugin.ExeletProvider;
 import com.sandpolis.core.instance.store.plugin.Events.PluginLoadedEvent;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
+import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
 
@@ -78,10 +77,10 @@ public abstract class AbstractSock implements Sock {
 
 	@Subscribe
 	private void onPluginLoaded(PluginLoadedEvent event) {
-		var exelets = PluginStore.getExtensions(ExeletProvider.class, event.get())
-				.flatMap(provider -> Arrays.stream(provider.getExelets())).toArray(Class[]::new);
-
-		getHandler(AbstractChannelInitializer.EXELET).register(exelets);
+		event.get().getExtensions(ExeletProvider.class).forEach(provider -> {
+			getHandler(AbstractChannelInitializer.EXELET).register(event.get().getId(), provider.getMessageType(),
+					provider.getExelets());
+		});
 	}
 
 	public void onActivityChanged(boolean activity) {

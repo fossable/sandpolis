@@ -21,16 +21,21 @@ import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_USERNAME;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
+import static com.sandpolis.core.util.ProtoUtil.begin;
+import static com.sandpolis.core.util.ProtoUtil.failure;
+import static com.sandpolis.core.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
+import com.sandpolis.core.proto.net.MCLogin.RQ_Logout;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
@@ -42,22 +47,21 @@ import com.sandpolis.server.vanilla.store.user.User;
  * @author cilki
  * @since 4.0.0
  */
-public class LoginExe extends Exelet {
+public final class LoginExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(LoginExe.class);
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_LOGOUT_FIELD_NUMBER)
-	public void rq_logout(MSG.Message rq) {
-		log.debug("Processing logout request from: {}", connector.getRemoteIP());
-
-		connector.close();
+	public static void rq_logout(ExeletContext context, RQ_Logout rq) {
+		log.debug("Processing logout request from: {}", context.connector.getRemoteIP());
+		context.connector.close();
 	}
 
 	@Unauth
 	@Handler(tag = MSG.Message.RQ_LOGIN_FIELD_NUMBER)
-	public Message.Builder rq_login(RQ_Login rq) {
-		log.debug("Processing login request from: {}", connector.getRemoteIP());
+	public static MessageOrBuilder rq_login(ExeletContext context, RQ_Login rq) {
+		log.debug("Processing login request from: {}", context.connector.getRemoteIP());
 		var outcome = begin();
 
 		// Validate username
@@ -88,19 +92,23 @@ public class LoginExe extends Exelet {
 		log.debug("Accepting login request for user: {}", username);
 
 		// Mark connection as authenticated
-		connector.authenticate();
+		context.connector.authenticate();
 
 		// Update login metadata
 		Profile viewer = ProfileStore.getViewer(username).orElse(null);
 		if (viewer == null) {
 			// Build new profile
-			viewer = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
+			viewer = ProfileStore.getProfileOrCreate(context.connector.getRemoteCvid(),
+					context.connector.getRemoteUuid());
 			viewer.set(AK_VIEWER.USERNAME, username);
 		}
 
-		viewer.set(AK_VIEWER.LOGIN_IP, connector.getRemoteIP());
+		viewer.set(AK_VIEWER.LOGIN_IP, context.connector.getRemoteIP());
 		viewer.set(AK_VIEWER.LOGIN_TIME, System.currentTimeMillis());
 
 		return success(outcome);
+	}
+
+	private LoginExe() {
 	}
 }

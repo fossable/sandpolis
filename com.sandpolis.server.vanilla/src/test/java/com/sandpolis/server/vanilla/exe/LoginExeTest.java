@@ -29,15 +29,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 class LoginExeTest extends ExeletTest {
-
-	private LoginExe exe;
 
 	@BeforeEach
 	void setup() {
@@ -53,52 +50,50 @@ class LoginExeTest extends ExeletTest {
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
-		initChannel();
-		exe = new LoginExe();
-		exe.connector = new UnitSock(channel);
+		initTestContext();
 	}
 
 	@Test
 	void testDeclaration() {
-		testDeclaration(LoginExe.class);
+		testNameUniqueness(LoginExe.class);
 	}
 
 	@Test
 	@DisplayName("Login with missing user fails")
 	void rq_login_1() {
-		var rs = (Outcome.Builder) exe
-				.rq_login(RQ_Login.newBuilder().setUsername("user123").setPassword("pass123").build());
+		var rq = RQ_Login.newBuilder().setUsername("user123").setPassword("pass123").build();
+		var rs = LoginExe.rq_login(context, rq);
 
-		assertFalse(rs.getResult());
+		assertFalse(((Outcome) rs).getResult());
 	}
 
 	@Test
 	@DisplayName("Login with incorrect password fails")
 	void rq_login_2() {
 		UserStore.add(UserConfig.newBuilder().setUsername("user123").setPassword("pass123").build());
-		var rs = (Outcome.Builder) exe
-				.rq_login(RQ_Login.newBuilder().setUsername("user123").setPassword("pass1234").build());
+		var rq = RQ_Login.newBuilder().setUsername("user123").setPassword("pass1234").build();
+		var rs = LoginExe.rq_login(context, rq);
 
-		assertFalse(rs.getResult());
+		assertFalse(((Outcome) rs).getResult());
 	}
 
 	@Test
 	@DisplayName("Login with correct credentials succeeds")
 	void rq_login_3() {
 		UserStore.add(UserConfig.newBuilder().setUsername("user123").setPassword("pass123").build());
-		var rs = (Outcome.Builder) exe
-				.rq_login(RQ_Login.newBuilder().setUsername("user123").setPassword("pass123").build());
+		var rq = RQ_Login.newBuilder().setUsername("user123").setPassword("pass123").build();
+		var rs = LoginExe.rq_login(context, rq);
 
-		assertTrue(rs.getResult());
+		assertTrue(((Outcome) rs).getResult());
 	}
 
 	@Test
 	@DisplayName("Login with an expired user fails")
 	void rq_login_4() {
 		UserStore.add(UserConfig.newBuilder().setUsername("user123").setPassword("pass123").setExpiration(123).build());
-		var rs = (Outcome.Builder) exe
-				.rq_login(RQ_Login.newBuilder().setUsername("user123").setPassword("pass123").build());
+		var rq = RQ_Login.newBuilder().setUsername("user123").setPassword("pass123").build();
+		var rs = LoginExe.rq_login(context, rq);
 
-		assertFalse(rs.getResult());
+		assertFalse(((Outcome) rs).getResult());
 	}
 }

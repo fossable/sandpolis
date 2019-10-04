@@ -18,9 +18,9 @@
 package com.sandpolis.plugin.filesys.client.mega;
 
 import com.google.protobuf.Message;
-import com.sandpolis.core.instance.plugin.ExeletProvider;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.plugin.filesys.client.mega.exe.FilesysExe;
 import com.sandpolis.plugin.filesys.net.MSG;
 

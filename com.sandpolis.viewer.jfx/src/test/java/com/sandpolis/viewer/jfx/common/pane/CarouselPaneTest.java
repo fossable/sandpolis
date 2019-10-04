@@ -33,8 +33,6 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-import com.sandpolis.viewer.jfx.PrefConstant.ui;
-
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
@@ -48,7 +46,7 @@ class CarouselPaneTest {
 		PrefStore.init(config -> {
 			config.prefNodeClass = CarouselPaneTest.class;
 
-			config.defaults.put(ui.animations, true);
+			config.defaults.put("ui.animations", true);
 		});
 
 		System.setProperty("java.awt.headless", "true");

@@ -23,13 +23,13 @@ import java.io.StringWriter;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
-import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors.FieldDescriptor;
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 /**
@@ -45,7 +45,7 @@ public final class ProtoUtil {
 	 * Begin an action that should be completed with {@link #success} or
 	 * {@link #failure}.
 	 *
-	 * @return A new outcome builder
+	 * @return A new incomplete outcome
 	 */
 	public static Outcome.Builder begin() {
 		return Outcome.newBuilder().setTime(System.currentTimeMillis());
@@ -56,7 +56,7 @@ public final class ProtoUtil {
 	 * {@link #failure}.
 	 *
 	 * @param action The action description
-	 * @return A new outcome builder
+	 * @return A new incomplete outcome
 	 */
 	public static Outcome.Builder begin(String action) {
 		return begin().setAction(action);
@@ -66,7 +66,7 @@ public final class ProtoUtil {
 	 * Complete an action with a successful result.
 	 *
 	 * @param outcome The outcome builder to complete
-	 * @return The final outcome
+	 * @return The completed outcome
 	 */
 	public static Outcome success(Outcome.Builder outcome) {
 		return outcome.setResult(true).setTime(System.currentTimeMillis() - outcome.getTime()).build();
@@ -77,7 +77,7 @@ public final class ProtoUtil {
 	 *
 	 * @param outcome The outcome builder to complete
 	 * @param comment The action comment
-	 * @return The final outcome
+	 * @return The completed outcome
 	 */
 	public static Outcome success(Outcome.Builder outcome, String comment) {
 		return outcome.setResult(true).setTime(System.currentTimeMillis() - outcome.getTime()).setComment(comment)
@@ -89,7 +89,7 @@ public final class ProtoUtil {
 	 *
 	 * @param outcome The outcome builder to complete
 	 * @param comment The action comment
-	 * @return The final outcome
+	 * @return The completed outcome
 	 */
 	public static Outcome failure(Outcome.Builder outcome, String comment) {
 		return failure(outcome.setComment(comment));
@@ -100,7 +100,7 @@ public final class ProtoUtil {
 	 *
 	 * @param outcome The outcome builder to complete
 	 * @param cause   The exception that caused the failure
-	 * @return The final outcome
+	 * @return The completed outcome
 	 */
 	public static Outcome failure(Outcome.Builder outcome, Throwable cause) {
 		if (cause == null)
@@ -119,53 +119,79 @@ public final class ProtoUtil {
 	 * Complete an action with an unsuccessful result.
 	 *
 	 * @param outcome The outcome builder to complete
-	 * @return The final outcome
+	 * @return The completed outcome
 	 */
 	public static Outcome failure(Outcome.Builder outcome) {
 		return outcome.setResult(false).clearTime().build();
 	}
 
 	/**
+	 * Complete the given handler outcome as failed.
+	 *
+	 * @param outcome The handler outcome
+	 * @param code    The error code
+	 * @return {@code outcome}
+	 */
+	public static Outcome failure(Outcome.Builder outcome, ErrorCode code) {
+		return outcome.setTime(System.currentTimeMillis() - outcome.getTime()).setResult(false).setError(code).build();
+	}
+
+	public static Outcome failure(ErrorCode code) {
+		return Outcome.newBuilder().setResult(false).setError(code).build();
+	}
+
+	/**
 	 * Complete an action with an unspecified result.
 	 *
 	 * @param outcome The outcome builder to complete
-	 * @return The final outcome
+	 * @return The completed outcome
 	 */
 	public static Outcome complete(Outcome.Builder outcome) {
 		return outcome.setTime(System.currentTimeMillis() - outcome.getTime()).build();
 	}
 
 	/**
-	 * Create a new request message.
+	 * Complete the given handler outcome (as failed or succeeded depending on the
+	 * error code).
 	 *
-	 * @return A new request builder
+	 * @param outcome The handler outcome
+	 * @return {@code outcome}
 	 */
-	public static Message.Builder rq() {
-		return Message.newBuilder().setId(IDUtil.msg());
+	public static Outcome complete(Outcome.Builder outcome, ErrorCode code) {
+		return code == ErrorCode.OK ? success(outcome) : failure(outcome, code);
 	}
 
 	/**
-	 * Create a new response message.
+	 * Create a new empty request message.
+	 *
+	 * @return A new request
+	 */
+	public static MSG.Message.Builder rq() {
+		return MSG.Message.newBuilder().setId(IDUtil.msg());
+	}
+
+	/**
+	 * Create a new empty response message.
 	 *
 	 * @param id The sequence ID
-	 * @return A new response builder
+	 * @return A new response
 	 */
-	public static Message.Builder rs(int id) {
-		return Message.newBuilder().setId(id);
+	public static MSG.Message.Builder rs(int id) {
+		return MSG.Message.newBuilder().setId(id);
 	}
 
 	/**
 	 * Create a new response message.
 	 *
-	 * @param m The message needing a response
-	 * @return A new response builder
+	 * @param rq The original request message
+	 * @return A new response
 	 */
-	public static Message.Builder rs(Message m) {
-		var rs = rs(m.getId());
-		if (m.getFrom() != 0)
-			rs.setTo(m.getFrom());
-		if (m.getTo() != 0)
-			rs.setFrom(m.getTo());
+	public static MSG.Message.Builder rs(MSG.Message rq) {
+		var rs = rs(rq.getId());
+		if (rq.getFrom() != 0)
+			rs.setTo(rq.getFrom());
+		if (rq.getTo() != 0)
+			rs.setFrom(rq.getTo());
 		return rs;
 	}
 
@@ -173,20 +199,20 @@ public final class ProtoUtil {
 	 * Create a new request message.
 	 *
 	 * @param payload The request payload
-	 * @return A new request builder
+	 * @return A new request
 	 */
-	public static Message.Builder rq(MessageOrBuilder payload) {
+	public static MSG.Message.Builder rq(MessageOrBuilder payload) {
 		return setPayload(rq(), payload);
 	}
 
 	/**
 	 * Create a new response message.
 	 *
-	 * @param msg     The message needing a response
+	 * @param msg     The original request message
 	 * @param payload The response payload
-	 * @return A new response builder
+	 * @return A new response
 	 */
-	public static Message.Builder rs(Message msg, MessageOrBuilder payload) {
+	public static MSG.Message.Builder rs(MSG.Message msg, MessageOrBuilder payload) {
 		return setPayload(rs(msg), payload);
 	}
 
@@ -197,7 +223,7 @@ public final class ProtoUtil {
 	 * @param payload The payload to insert
 	 * @return {@code msg}
 	 */
-	public static Message.Builder setPayload(Message.Builder msg, MessageOrBuilder payload) {
+	public static MSG.Message.Builder setPayload(MSG.Message.Builder msg, MessageOrBuilder payload) {
 
 		// Build the payload if not already built
 		if (payload instanceof Builder)
@@ -207,59 +233,24 @@ public final class ProtoUtil {
 		if (payload instanceof Outcome)
 			return msg.setRsOutcome((Outcome) payload);
 
-		FieldDescriptor field = Message.getDescriptor()
+		FieldDescriptor field = MSG.Message.getDescriptor()
 				.findFieldByName(convertMessageClassToFieldName(payload.getClass()));
 
-		if (field != null) {
-			return msg.setField(field, payload);
-		} else {
-			// Assume this is a plugin message
-			// TODO use package for url prefix rather than the full classname
-			return msg.setPlugin(Any.pack((com.google.protobuf.Message) payload, payload.getClass().getName()));
-		}
-	}
-
-	// TODO clean up
-	public static com.google.protobuf.Message.Builder setPluginPayload(com.google.protobuf.Message.Builder msg,
-			MessageOrBuilder payload) {
-
-		// Build the payload if not already built
-		if (payload instanceof Builder)
-			payload = ((Builder) payload).build();
-
-		FieldDescriptor field = Message.getDescriptor()
-				.findFieldByName(convertMessageClassToFieldName(payload.getClass()));
-
-		if (field != null) {
-			return msg.setField(field, payload);
-		} else {
-			throw new RuntimeException();
-		}
+		return msg.setField(field, payload);
 	}
 
 	/**
 	 * Get the payload from the given message.
 	 *
 	 * @param msg The message
-	 * @return The message's payload or {@code null} if none
+	 * @return The message's payload or {@code null} if empty
 	 */
-	public static com.google.protobuf.Message getPayload(com.google.protobuf.Message msg) {
+	public static Message getPayload(Message msg) {
 		FieldDescriptor oneof = msg.getOneofFieldDescriptor(msg.getDescriptorForType().getOneofs().get(0));
 		if (oneof == null)
 			return null;
 
-		var value = msg.getField(oneof);
-
-		// Plugin messages need to be unwrapped
-		if (value instanceof Any) {
-			var any = (Any) value;
-			try {
-				return any.unpack(convertPluginUrl(any.getTypeUrl()));
-			} catch (InvalidProtocolBufferException | ClassNotFoundException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		return (com.google.protobuf.Message) value;
+		return (Message) msg.getField(oneof);
 	}
 
 	/**
@@ -283,7 +274,7 @@ public final class ProtoUtil {
 			return msg.setField(field, payload);
 		} else {
 			// Assume this is a plugin message
-			return msg.setPlugin(((com.google.protobuf.Message) payload).toByteString());
+			return msg.setPlugin(((Message) payload).toByteString());
 		}
 	}
 
@@ -299,18 +290,6 @@ public final class ProtoUtil {
 			return null;
 
 		return msg.getField(oneof);
-	}
-
-	/**
-	 * Load a plugin message class from its Any URL.
-	 *
-	 * @param url The message URL
-	 * @return The loaded message class
-	 * @throws ClassNotFoundException
-	 */
-	@SuppressWarnings("unchecked")
-	public static Class<? extends Message> convertPluginUrl(String url) throws ClassNotFoundException {
-		return (Class<? extends Message>) Class.forName(url.split("/")[0]);
 	}
 
 	/**

@@ -29,7 +29,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCGroup.RQ_AddGroup;
 import com.sandpolis.core.proto.net.MCGroup.RQ_RemoveGroup;
@@ -38,8 +37,6 @@ import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 class GroupExeTest extends ExeletTest {
-
-	private GroupExe exe;
 
 	@BeforeEach
 	void setup() {
@@ -57,41 +54,42 @@ class GroupExeTest extends ExeletTest {
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
-		initChannel();
-		exe = new GroupExe();
-		exe.connector = new UnitSock(channel);
+		initTestContext();
 	}
 
 	@Test
 	void testDeclaration() {
-		testDeclaration(GroupExe.class);
+		testNameUniqueness(GroupExe.class);
 	}
 
 	@Test
 	@DisplayName("Add a valid memberless group")
 	void rq_add_group_1() {
-		var rs = (Outcome.Builder) exe.rq_add_group(RQ_AddGroup.newBuilder()
-				.setConfig(GroupConfig.newBuilder().setId("123").setName("default").setOwner("admin")).build());
+		var rq = RQ_AddGroup.newBuilder()
+				.setConfig(GroupConfig.newBuilder().setId("123").setName("default").setOwner("admin")).build();
+		var rs = GroupExe.rq_add_group(rq);
 
-		assertTrue(rs.getResult());
+		assertTrue(((Outcome) rs).getResult());
 	}
 
 	@Test
 	@DisplayName("Add a valid group with members")
 	void rq_add_group_2() {
-		var rs = (Outcome.Builder) exe.rq_add_group(RQ_AddGroup.newBuilder().setConfig(
+		var rq = RQ_AddGroup.newBuilder().setConfig(
 				GroupConfig.newBuilder().setId("123").setName("default2").setOwner("admin").addMember("demouser"))
-				.build());
+				.build();
+		var rs = GroupExe.rq_add_group(rq);
 
-		assertTrue(rs.getResult());
+		assertTrue(((Outcome) rs).getResult());
 	}
 
 	@Test
 	@DisplayName("Try to remove a missing group")
 	void rq_add_group_3() {
-		var rs = (Outcome.Builder) exe.rq_remove_group(RQ_RemoveGroup.newBuilder().setId("9292").build());
+		var rq = RQ_RemoveGroup.newBuilder().setId("9292").build();
+		var rs = GroupExe.rq_remove_group(context, rq);
 
-		assertFalse(rs.getResult());
+		assertFalse(((Outcome) rs).getResult());
 	}
 
 }

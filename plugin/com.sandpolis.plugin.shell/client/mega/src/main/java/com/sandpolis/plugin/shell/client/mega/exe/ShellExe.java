@@ -20,11 +20,9 @@ package com.sandpolis.plugin.shell.client.mega.exe;
 import java.io.InputStreamReader;
 
 import com.google.common.io.CharStreams;
-import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.util.ProtoUtil;
 import com.sandpolis.plugin.shell.client.mega.Shells;
 import com.sandpolis.plugin.shell.net.MCShell.RQ_Execute;
 import com.sandpolis.plugin.shell.net.MCShell.RQ_ListShells;
@@ -35,26 +33,11 @@ import com.sandpolis.plugin.shell.net.MCShell.RS_ListShells.ShellListing;
 import com.sandpolis.plugin.shell.net.MCShell.Shell;
 import com.sandpolis.plugin.shell.net.MSG;
 
-public class ShellExe extends Exelet {
-
-	@Override
-	public String getPluginPrefix() {
-		return "com.sandpolis.plugin.shell";
-	}
-
-	@Override
-	public void reply(com.sandpolis.core.proto.net.MSG.Message msg, MessageOrBuilder payload) {
-		connector.send(ProtoUtil.rs(msg, ProtoUtil.setPluginPayload(MSG.ShellMessage.newBuilder(), payload)));
-	}
-
-	@Override
-	public Message extractPayload(com.sandpolis.core.proto.net.MSG.Message msg) {
-		return ProtoUtil.getPayload(ProtoUtil.getPayload(msg));
-	}
+public final class ShellExe extends Exelet {
 
 	@Auth
 	@Handler(tag = MSG.ShellMessage.RQ_EXECUTE_FIELD_NUMBER)
-	public Message.Builder rq_execute(RQ_Execute rq) throws Exception {
+	public static MessageOrBuilder rq_execute(RQ_Execute rq) throws Exception {
 
 		String[] command;
 		switch (rq.getType()) {
@@ -80,7 +63,7 @@ public class ShellExe extends Exelet {
 
 	@Auth
 	@Handler(tag = MSG.ShellMessage.RQ_LIST_SHELLS_FIELD_NUMBER)
-	public Message.Builder rq_list_shells(RQ_ListShells rq) throws Exception {
+	public static MessageOrBuilder rq_list_shells(RQ_ListShells rq) throws Exception {
 		var rs = RS_ListShells.newBuilder();
 
 		if (Shells.PWSH.getLocation() != null) {
@@ -98,7 +81,7 @@ public class ShellExe extends Exelet {
 
 	@Auth
 	@Handler(tag = MSG.ShellMessage.RQ_POWER_CHANGE_FIELD_NUMBER)
-	public void rq_power_change(RQ_PowerChange rq) throws Exception {
+	public static void rq_power_change(RQ_PowerChange rq) throws Exception {
 		// TODO check permissions
 		// TODO avoid switches
 		switch (PlatformUtil.queryOsType()) {
@@ -143,5 +126,8 @@ public class ShellExe extends Exelet {
 		}
 
 		System.exit(0);
+	}
+
+	private ShellExe() {
 	}
 }

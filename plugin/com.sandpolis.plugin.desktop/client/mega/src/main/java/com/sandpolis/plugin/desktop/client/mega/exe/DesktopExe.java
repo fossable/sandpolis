@@ -17,37 +17,42 @@
  ******************************************************************************/
 package com.sandpolis.plugin.desktop.client.mega.exe;
 
+import static com.sandpolis.core.util.ProtoUtil.begin;
+import static com.sandpolis.core.util.ProtoUtil.failure;
+
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.io.ByteArrayOutputStream;
 
 import javax.imageio.ImageIO;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.plugin.desktop.net.MCDesktop.RQ_Screenshot;
 import com.sandpolis.plugin.desktop.net.MCDesktop.RS_Screenshot;
 import com.sandpolis.plugin.desktop.net.MSG;
 
-public class DesktopExe extends Exelet {
+public final class DesktopExe extends Exelet {
 
 	@Auth
 	@Handler(tag = MSG.DesktopMessage.RQ_SCREENSHOT_FIELD_NUMBER)
-	public Message.Builder rq_screenshot(RQ_Screenshot rq) {
+	public static MessageOrBuilder rq_screenshot(RQ_Screenshot rq) {
 		var outcome = begin();
 
-		try (var in = new PipedInputStream(); var out = new PipedOutputStream(in)) {
+		try (var out = new ByteArrayOutputStream()) {
 			BufferedImage screenshot = new Robot()
 					.createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
 			ImageIO.write(screenshot, "jpg", out);
 
-			return RS_Screenshot.newBuilder().setData(ByteString.readFrom(in));
+			return RS_Screenshot.newBuilder().setData(ByteString.copyFrom(out.toByteArray()));
 		} catch (Exception e) {
 			return failure(outcome);
 		}
+	}
+
+	private DesktopExe() {
 	}
 }

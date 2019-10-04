@@ -18,7 +18,6 @@
 package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
-import static com.sandpolis.core.util.ProtoUtil.rq;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.concurrent.Executors;
@@ -27,15 +26,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
-import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.core.proto.net.MSG.Message.PayloadCase;
+import com.sandpolis.core.proto.net.MCPing.RS_Ping;
 
 class ServerExeTest extends ExeletTest {
-
-	private ServerExe exe;
 
 	@BeforeEach
 	void setup() {
@@ -45,21 +40,20 @@ class ServerExeTest extends ExeletTest {
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
-		initChannel();
-		exe = new ServerExe();
-		exe.connector = new UnitSock(channel);
+		initTestContext();
 	}
 
 	@Test
 	void testDeclaration() {
-		testDeclaration(ServerExe.class);
+		testNameUniqueness(ServerExe.class);
 	}
 
 	@Test
 	@DisplayName("Check that pings get a response")
 	void rq_ping_1() {
-		exe.rq_ping(rq(RQ_Ping.newBuilder()).build());
+		var rq = RQ_Ping.newBuilder().build();
+		var rs = ServerExe.rq_ping(rq);
 
-		assertEquals(PayloadCase.RS_PING, ((Message) channel.readOutbound()).getPayloadCase());
+		assertEquals(RS_Ping.newBuilder().build(), ((RS_Ping.Builder) rs).build());
 	}
 }

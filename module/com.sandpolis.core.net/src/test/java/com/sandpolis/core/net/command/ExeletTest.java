@@ -18,64 +18,39 @@
 package com.sandpolis.core.net.command;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import com.sandpolis.core.net.ChannelConstant;
-import com.sandpolis.core.proto.net.MSG.Message;
-import com.sandpolis.core.proto.net.MSG.Message.PayloadCase;
+import com.sandpolis.core.net.UnitSock;
+import com.sandpolis.core.net.command.Exelet.Handler;
+import com.sandpolis.core.net.handler.exelet.ExeletContext;
 
-import io.netty.channel.Channel;
 import io.netty.channel.embedded.EmbeddedChannel;
 
-public class ExeletTest {
+public abstract class ExeletTest {
 
 	/**
-	 * The {@link Channel} that the {@link Exelet} is connected to.
-	 */
-	protected EmbeddedChannel channel;
-
-	/**
-	 * Test the following aspects of an {@link Exelet} class:
-	 *
-	 * <ul>
-	 * <li>All public methods are unique in name</li>
-	 * <li>All public methods have a name that matches a {@link Message} type</li>
-	 * <li>All public methods have a single {@link Message} parameter</li>
-	 * </ul>
-	 *
-	 * Implementation note: There's no reason to build a set of method names to
-	 * check that they are unique (1st contraint) because the third constraint
-	 * ensures such a situation would never compile.
+	 * Test that all handler methods are unique in name.
 	 *
 	 * @param _class The {@link Exelet} to be tested
 	 */
-	protected void testDeclaration(Class<? extends Exelet> _class) {
-		for (Method m : _class.getDeclaredMethods()) {
-			if (Modifier.isPublic(m.getModifiers())) {
-				// Check parameters
-				Class<?>[] params = m.getParameterTypes();
-				assertEquals(1, params.length);
+	protected void testNameUniqueness(Class<? extends Exelet> _class) {
+		var handlers = Arrays.stream(_class.getDeclaredMethods()).filter(m -> m.getAnnotation(Handler.class) != null)
+				.map(m -> m.getName()).collect(Collectors.toList());
 
-				// Check name
-				try {
-					PayloadCase.valueOf(m.getName().toUpperCase());
-				} catch (IllegalArgumentException e) {
-					fail("Missing Message for method: " + m.getName());
-				}
-			}
-		}
+		assertEquals(handlers.size(), handlers.stream().distinct().count());
 	}
 
-	/**
-	 * Initialize a new testing channel.
-	 */
-	protected void initChannel() {
-		channel = new EmbeddedChannel();
+	protected ExeletContext context;
+
+	protected void initTestContext() {
+		var channel = new EmbeddedChannel();
 		channel.attr(ChannelConstant.CVID).set(0);
 		channel.attr(ChannelConstant.UUID).set("123");
+
+		context = new ExeletContext(new UnitSock(channel));
 	}
 
 }

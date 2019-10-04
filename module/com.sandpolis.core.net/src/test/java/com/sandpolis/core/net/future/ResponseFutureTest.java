@@ -30,7 +30,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
@@ -45,7 +44,7 @@ class ResponseFutureTest {
 	private void setup() {
 		ThreadStore.init(config -> {
 			config.ephemeral();
-			config.defaults.put(net.message.incoming, GlobalEventExecutor.INSTANCE);
+			config.defaults.put("net.message.incoming", GlobalEventExecutor.INSTANCE);
 		});
 	}
 

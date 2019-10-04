@@ -30,8 +30,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.ConfigConstant;
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.ipc.Connector;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
@@ -49,11 +47,11 @@ class IPCStoreTest {
 		});
 		ThreadStore.init(config -> {
 			config.ephemeral();
-			config.defaults.put(net.ipc.listener, Executors.newCachedThreadPool());
-			config.defaults.put(net.ipc.receptor, Executors.newCachedThreadPool());
+			config.defaults.put("net.ipc.listener", Executors.newCachedThreadPool());
+			config.defaults.put("net.ipc.receptor", Executors.newCachedThreadPool());
 		});
 
-		Config.register(ConfigConstant.net.ipc.timeout, 1000);
+		Config.register("net.ipc.timeout", 1000);
 	}
 
 	@Test

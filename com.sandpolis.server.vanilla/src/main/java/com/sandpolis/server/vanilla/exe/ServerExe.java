@@ -22,10 +22,12 @@ import static com.sandpolis.server.vanilla.store.server.ServerStore.ServerStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
 import com.sandpolis.core.proto.net.MCPing.RS_Ping;
+import com.sandpolis.core.proto.net.MCServer.RQ_ServerBanner;
 import com.sandpolis.core.proto.net.MSG;
-import com.sandpolis.core.proto.net.MSG.Message;
 
 /**
  * Message handlers for server requests.
@@ -33,19 +35,22 @@ import com.sandpolis.core.proto.net.MSG.Message;
  * @author cilki
  * @since 4.0.0
  */
-public class ServerExe extends Exelet {
+public final class ServerExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(ServerExe.class);
 
 	@Unauth
 	@Handler(tag = MSG.Message.RQ_SERVER_BANNER_FIELD_NUMBER)
-	public void rq_server_banner(Message m) {
-		reply(m, ServerStore.getBanner());
+	public static MessageOrBuilder rq_server_banner(RQ_ServerBanner rq) {
+		return ServerStore.getBanner();
 	}
 
 	@Unauth
 	@Handler(tag = MSG.Message.RQ_PING_FIELD_NUMBER)
-	public void rq_ping(Message m) {
-		reply(m, RS_Ping.newBuilder());
+	public static MessageOrBuilder rq_ping(RQ_Ping rq) {
+		return RS_Ping.newBuilder();
+	}
+
+	private ServerExe() {
 	}
 }

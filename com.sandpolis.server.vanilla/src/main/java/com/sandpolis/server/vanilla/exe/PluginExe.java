@@ -20,12 +20,14 @@ package com.sandpolis.server.vanilla.exe;
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.core.util.ProtoUtil.begin;
+import static com.sandpolis.core.util.ProtoUtil.failure;
+import static com.sandpolis.core.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -33,11 +35,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteSource;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.proto.net.MCPlugin.RQ_ArtifactDownload;
 import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginInstall;
 import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginList;
 import com.sandpolis.core.proto.net.MCPlugin.RS_ArtifactDownload;
@@ -57,35 +60,34 @@ import com.sandpolis.core.util.NetUtil;
  * @author cilki
  * @since 5.0.0
  */
-public class PluginExe extends Exelet {
+public final class PluginExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(PluginExe.class);
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_ARTIFACT_DOWNLOAD_FIELD_NUMBER)
-	public void rq_artifact_download(MSG.Message m) {
-		var rq = Objects.requireNonNull(m.getRqArtifactDownload());
+	public static void rq_artifact_download(ExeletContext context, RQ_ArtifactDownload rq) {
 		var rs = RS_ArtifactDownload.newBuilder();
 
 		ParsedCoordinate coordinate = fromCoordinate(rq.getCoordinates());
 		log.debug("Received artifact request: " + coordinate.coordinate);
 
 		PluginStore.get(coordinate.artifactId).ifPresentOrElse(plugin -> {
-			if (!PluginStore.findComponentTypes(plugin).contains(connector.getRemoteInstanceFlavor()))
-				reply(m, Outcome.newBuilder().setResult(false));// TODO message
+			if (!PluginStore.findComponentTypes(plugin).contains(context.connector.getRemoteInstanceFlavor()))
+				context.reply(Outcome.newBuilder().setResult(false));// TODO message
 			else if (rq.getLocation()) {
-				reply(m, rs.setCoordinates(String.format(":%s:%s", plugin.getId(), plugin.getVersion())));
+				context.reply(rs.setCoordinates(String.format(":%s:%s", plugin.getId(), plugin.getVersion())));
 			} else {
 				// Send binary for correct component
-				ByteSource component = PluginStore.getPluginComponent(plugin, connector.getRemoteInstance(),
+				ByteSource component = PluginStore.getPluginComponent(plugin, context.connector.getRemoteInstance(),
 						// TODO hardcoded subtype
 						InstanceFlavor.MEGA);
 
 				try (var in = component.openStream()) {
-					reply(m, rs.setBinary(ByteString.readFrom(in)));
+					context.reply(rs.setBinary(ByteString.readFrom(in)));
 				} catch (IOException e) {
 					// Failed to read plugin
-					reply(m, Outcome.newBuilder().setResult(false));// TODO message
+					context.reply(Outcome.newBuilder().setResult(false));// TODO message
 				}
 			}
 		}, () -> {
@@ -105,28 +107,28 @@ public class PluginExe extends Exelet {
 
 			if (artifact != null) {
 				if (rq.getLocation()) {
-					reply(m, rs.setCoordinates("TODO"));
+					context.reply(rs.setCoordinates("TODO"));
 				} else {
 					try (var in = Files.newInputStream(artifact)) {
-						reply(m, rs.setBinary(ByteString.readFrom(in)));
+						context.reply(rs.setBinary(ByteString.readFrom(in)));
 					} catch (IOException e) {
 						// Failed to read artifact
-						reply(m, Outcome.newBuilder().setResult(false));// TODO message
+						context.reply(Outcome.newBuilder().setResult(false));// TODO message
 					}
 				}
 			} else if (rq.getLocation()) {
-				reply(m, rs.setCoordinates("TODO"));
+				context.reply(rs.setCoordinates("TODO"));
 			} else {
 				// No artifact could be found or located
-				reply(m, Outcome.newBuilder().setResult(false));// TODO message
+				context.reply(Outcome.newBuilder().setResult(false));// TODO message
 			}
 		});
 	}
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_PLUGIN_LIST_FIELD_NUMBER)
-	public Message.Builder rq_plugin_list(RQ_PluginList rq) {
-		if (!Config.getBoolean(plugin.enabled))
+	public static MessageOrBuilder rq_plugin_list(RQ_PluginList rq) {
+		if (!Config.getBoolean("plugin.enabled"))
 			return failure(begin());
 
 		return RS_PluginList.newBuilder().addAllPlugin(() -> PluginStore.getPluginDescriptors().iterator());
@@ -134,9 +136,9 @@ public class PluginExe extends Exelet {
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_PLUGIN_INSTALL_FIELD_NUMBER)
-	public Message.Builder rq_plugin_install(RQ_PluginInstall rq) throws Exception {
+	public static MessageOrBuilder rq_plugin_install(RQ_PluginInstall rq) throws Exception {
 		var outcome = begin();
-		if (!Config.getBoolean(plugin.enabled))
+		if (!Config.getBoolean("plugin.enabled"))
 			return failure(outcome);
 
 		Path binary = Files.createTempFile("", ".jar");
@@ -173,4 +175,6 @@ public class PluginExe extends Exelet {
 		return success(outcome);
 	}
 
+	private PluginExe() {
+	}
 }

@@ -19,7 +19,6 @@ package com.sandpolis.core.net.loop;
 
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -30,8 +29,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import com.sandpolis.core.instance.PoolConstant.net;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -47,7 +44,7 @@ class ConnectionLoopTest {
 	private static void setup() {
 		ThreadStore.init(config -> {
 			config.ephemeral();
-			config.defaults.put(net.connection.outgoing, GlobalEventExecutor.INSTANCE);
+			config.defaults.put("net.connection.outgoing", GlobalEventExecutor.INSTANCE);
 			config.defaults.put("temploop", GlobalEventExecutor.INSTANCE);
 		});
 	}

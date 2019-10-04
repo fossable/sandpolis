@@ -28,7 +28,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.ExeletTest;
 import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
@@ -36,8 +35,6 @@ import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 class ListenerExeTest extends ExeletTest {
-
-	private ListenerExe exe;
 
 	@BeforeEach
 	void setup() {
@@ -58,24 +55,23 @@ class ListenerExeTest extends ExeletTest {
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
-		initChannel();
-		exe = new ListenerExe();
-		exe.connector = new UnitSock(channel);
+		initTestContext();
 	}
 
 	@Test
 	void testDeclaration() {
-		testDeclaration(ListenerExe.class);
+		testNameUniqueness(ListenerExe.class);
 	}
 
 	@Test
 	@DisplayName("Add a listener with a valid configuration")
 	void rq_add_listener_1() {
-		var rs = (Outcome.Builder) exe.rq_add_listener(RQ_AddListener.newBuilder()
+		var rq = RQ_AddListener.newBuilder()
 				.setConfig(ListenerConfig.newBuilder().setId(2).setOwner("junit").setPort(5000).setAddress("0.0.0.0"))
-				.build());
+				.build();
+		var rs = ListenerExe.rq_add_listener(rq);
 
-		assertTrue(rs.getResult());
+		assertTrue(((Outcome) rs).getResult());
 	}
 
 }

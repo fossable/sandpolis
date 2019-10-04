@@ -21,6 +21,9 @@ import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.FAILURE_KEY_CHALLENGE;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_KEY;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.UNKNOWN_GROUP;
+import static com.sandpolis.core.util.ProtoUtil.begin;
+import static com.sandpolis.core.util.ProtoUtil.failure;
+import static com.sandpolis.core.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 
 import java.util.List;
@@ -29,12 +32,14 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.proto.net.MCAuth.RQ_KeyAuth;
+import com.sandpolis.core.proto.net.MCAuth.RQ_NoAuth;
 import com.sandpolis.core.proto.net.MCAuth.RQ_PasswordAuth;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
@@ -46,36 +51,38 @@ import com.sandpolis.server.vanilla.store.group.Group;
  * @author cilki
  * @since 5.0.0
  */
-public class AuthExe extends Exelet {
+public final class AuthExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(AuthExe.class);
 
 	@Unauth
 	@Handler(tag = MSG.Message.RQ_NO_AUTH_FIELD_NUMBER)
-	public void rq_no_auth(MSG.Message m) {
+	public static MessageOrBuilder rq_no_auth(ExeletContext context, RQ_NoAuth rq) {
 		var outcome = begin();
 
 		List<Group> groups = GroupStore.getUnauthGroups();
 		if (groups.size() == 0) {
 			log.debug("Refusing free authentication attempt because there are no unauth groups");
-			reply(m, failure(outcome, UNKNOWN_GROUP));
-			return;
+			return failure(outcome, UNKNOWN_GROUP);
 		}
 
-		// Connection is now authenticated
-		connector.authenticate();
+		context.defer(() -> {
+			// Connection is now authenticated
+			context.connector.authenticate();
 
-		reply(m, success(outcome));
-
-		Profile client = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
-		groups.forEach(group -> {
-			// TODO add client to group
+			Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteCvid(),
+					context.connector.getRemoteUuid());
+			groups.forEach(group -> {
+				// TODO add client to group
+			});
 		});
+
+		return success(outcome);
 	}
 
 	@Unauth
 	@Handler(tag = MSG.Message.RQ_PASSWORD_AUTH_FIELD_NUMBER)
-	public Message.Builder rq_password_auth(RQ_PasswordAuth rq) {
+	public static MessageOrBuilder rq_password_auth(ExeletContext context, RQ_PasswordAuth rq) {
 		var outcome = begin();
 
 		List<Group> groups = GroupStore.getByPassword(rq.getPassword());
@@ -84,20 +91,22 @@ public class AuthExe extends Exelet {
 			return failure(outcome, UNKNOWN_GROUP);
 		}
 
-		Profile client = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
+		Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteCvid(),
+				context.connector.getRemoteUuid());
 		groups.forEach(group -> {
 			// TODO add client to group
 		});
 
 		// Connection is now authenticated
-		connector.authenticate();
+		context.connector.authenticate();
 
 		return success(outcome);
 	}
 
 	@Unauth
 	@Handler(tag = MSG.Message.RQ_KEY_AUTH_FIELD_NUMBER)
-	public Message.Builder rq_key_auth(RQ_KeyAuth rq) throws InterruptedException, ExecutionException {
+	public static MessageOrBuilder rq_key_auth(ExeletContext context, RQ_KeyAuth rq)
+			throws InterruptedException, ExecutionException {
 		var outcome = begin();
 
 		Group group = GroupStore.get(rq.getGroupId()).orElse(null);
@@ -113,18 +122,22 @@ public class AuthExe extends Exelet {
 		}
 
 		Sand5Handler sand5 = Sand5Handler.newRequestHandler(mech.getServer());
-		connector.engage(AbstractChannelInitializer.SAND5, sand5);
+		context.connector.engage(AbstractChannelInitializer.SAND5, sand5);
 
 		if (sand5.challengeFuture().get()) {
-			Profile client = ProfileStore.getProfileOrCreate(connector.getRemoteCvid(), connector.getRemoteUuid());
+			Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteCvid(),
+					context.connector.getRemoteUuid());
 			// TODO add client to group
 
 			// Connection is now authenticated
-			connector.authenticate();
+			context.connector.authenticate();
 			return success(outcome);
 		} else {
 			log.debug("Refusing key authentication attempt due to failed challenge");
 			return failure(outcome, FAILURE_KEY_CHALLENGE);
 		}
+	}
+
+	private AuthExe() {
 	}
 }

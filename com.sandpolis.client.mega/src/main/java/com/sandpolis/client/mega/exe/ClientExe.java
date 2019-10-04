@@ -24,7 +24,7 @@ import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
@@ -36,25 +36,22 @@ import com.sandpolis.core.proto.net.MSG;
  * @author cilki
  * @since 5.0.2
  */
-public class ClientExe extends Exelet {
+public final class ClientExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(ClientExe.class);
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_CLIENT_METADATA_FIELD_NUMBER)
-	public Message.Builder rq_client_metadata(RQ_ClientMetadata rq) throws Exception {
+	public static MessageOrBuilder rq_client_metadata(RQ_ClientMetadata rq) throws Exception {
 
-		try {
-			return RS_ClientMetadata.newBuilder().setUsername(System.getProperty("user.name"))
-					.setOsVersion(System.getProperty("os.name") + " " + System.getProperty("os.version"))
-					.setHostname(InetAddress.getLocalHost().getHostName()).setOsType(PlatformUtil.queryOsType())
-					.setTimezone(TimeZone.getDefault().getID()).setStartTimestamp(Environment.JVM_TIMESTAMP.getTime())
-					.setUserhome(Paths.get(System.getProperty("user.home")).toUri().getPath());
-		} catch (Throwable e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw e;
-		}
+		return RS_ClientMetadata.newBuilder().setUsername(System.getProperty("user.name"))
+				.setOsVersion(System.getProperty("os.name") + " " + System.getProperty("os.version"))
+				.setHostname(InetAddress.getLocalHost().getHostName()).setOsType(PlatformUtil.queryOsType())
+				.setTimezone(TimeZone.getDefault().getID()).setStartTimestamp(Environment.JVM_TIMESTAMP.getTime())
+				.setUserhome(Paths.get(System.getProperty("user.home")).toUri().getPath());
+
 	}
 
+	private ClientExe() {
+	}
 }

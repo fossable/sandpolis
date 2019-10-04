@@ -21,9 +21,9 @@ import java.util.function.Function;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.attribute.AttributeKey;
-import com.sandpolis.core.instance.plugin.ExeletProvider;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.plugin.sysinfo.client.mega.exe.SysinfoExe;
 import com.sandpolis.plugin.sysinfo.net.MSG;
 

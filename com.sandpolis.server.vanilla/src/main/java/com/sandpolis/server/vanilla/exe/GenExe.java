@@ -18,6 +18,8 @@
 package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.util.ProtoUtil.begin;
+import static com.sandpolis.core.util.ProtoUtil.failure;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -26,12 +28,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCGenerator.RQ_Generate;
 import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
 import com.sandpolis.core.proto.net.MSG;
-import com.sandpolis.server.vanilla.PoolConstant.server;
 import com.sandpolis.server.vanilla.gen.FileGenerator;
 import com.sandpolis.server.vanilla.gen.generator.MegaGen;
 
@@ -41,16 +42,16 @@ import com.sandpolis.server.vanilla.gen.generator.MegaGen;
  * @author cilki
  * @since 5.0.0
  */
-public class GenExe extends Exelet {
+public final class GenExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(GenExe.class);
 
 	@Auth
 	@Handler(tag = MSG.Message.RQ_GENERATE_FIELD_NUMBER)
-	public Message.Builder rq_generate(RQ_Generate rq) throws Exception {
-		ExecutorService pool = ThreadStore.get(server.generator);
+	public static MessageOrBuilder rq_generate(RQ_Generate rq) throws Exception {
+		ExecutorService pool = ThreadStore.get("server.generator");
 
-		Future<Message.Builder> future = pool.submit(() -> {
+		Future<MessageOrBuilder> future = pool.submit(() -> {
 			var outcome = begin();
 
 			FileGenerator generator;
@@ -81,4 +82,6 @@ public class GenExe extends Exelet {
 		return future.get();
 	}
 
+	private GenExe() {
+	}
 }
