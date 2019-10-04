@@ -17,6 +17,8 @@
  ******************************************************************************/
 package com.sandpolis.core.instance.store.plugin;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -106,6 +108,9 @@ public final class Plugin {
 	@Transient
 	private SandpolisPlugin handle;
 
+	@Transient
+	private boolean loaded;
+
 	public Plugin(Path path, byte[] hash, boolean enabled) throws IOException {
 		this.enabled = enabled;
 		this.hash = hash;
@@ -146,7 +151,7 @@ public final class Plugin {
 	}
 
 	public boolean isLoaded() {
-		return handle != null;
+		return loaded;
 	}
 
 	public String getVersion() {
@@ -176,6 +181,7 @@ public final class Plugin {
 	}
 
 	void load() throws IOException {
+		checkState(!loaded);
 
 		// Build new classloader
 		classloader = new CompactClassLoader(Thread.currentThread().getContextClassLoader());
@@ -206,6 +212,17 @@ public final class Plugin {
 		// Add to application classloader
 		CompactClassLoader system = (CompactClassLoader) ClassLoader.getSystemClassLoader();
 		system.add(classloader);
+
+		loaded = true;
+	}
+
+	void unload() {
+		checkState(loaded);
+
+		if (handle != null)
+			handle.unloaded();
+
+		loaded = false;
 	}
 
 	public <E> Stream<E> getExtensions(Class<E> extension) {

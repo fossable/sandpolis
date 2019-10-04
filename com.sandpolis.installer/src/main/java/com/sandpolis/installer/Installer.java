@@ -72,7 +72,7 @@ public final class Installer {
 	/**
 	 * Load instance configuration.
 	 */
-	@InitializationTask(name = "Load instance configuration")
+	@InitializationTask(name = "Load installer configuration")
 	private static final Task loadConfiguration = new Task((task) -> {
 		Config.register("install.version");
 		Config.register("install.path.windows", System.getProperty("user.home") + "/.sandpolis");

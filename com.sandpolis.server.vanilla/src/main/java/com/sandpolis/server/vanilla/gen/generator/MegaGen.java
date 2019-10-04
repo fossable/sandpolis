@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.cilki.zipset.ZipSet;
+import com.github.cilki.zipset.ZipSet.EntryPath;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.proto.util.Generator.FeatureSet;
@@ -38,7 +39,7 @@ import com.sandpolis.core.util.ArtifactUtil;
 import com.sandpolis.server.vanilla.gen.FileGenerator;
 
 /**
- * This generator builds a MEGA client.
+ * This generator builds a {@code com.sandpolis.client.mega} client.
  *
  * @author cilki
  * @since 2.0.0
@@ -93,7 +94,7 @@ public class MegaGen extends FileGenerator {
 							.filter(component -> !features.getSupportedArchList()
 									.contains(Architecture.valueOf(component.getArchitecture())))
 							.forEach(component -> {
-//								output.sub(EntryPath.get("lib/" + source.getFileName(), component.getPath()));
+								output.sub(EntryPath.get("lib/" + source.getFileName(), component.getPath()));
 							});
 
 				});
@@ -101,14 +102,17 @@ public class MegaGen extends FileGenerator {
 		// Add plugin binaries
 		if (!config.getMega().getDownloader()) {
 			for (String plugin : features.getPluginList()) {
-				Path bin = ArtifactUtil.getArtifactFile(Environment.get(LIB), plugin);
-				output.add("lib/" + fromCoordinate(plugin).filename, bin);
+				Path bin = ArtifactUtil.getArtifactFile(Environment.get(LIB), ":" + plugin + ":5.1.0");
+				output.add("lib/" + fromCoordinate(":" + plugin + ":5.1.0").filename, bin);
 
 				// Add plugin dependencies
 				SoiUtil.readMatrix(bin).getArtifactList().stream().forEach(dep -> {
 					output.add("lib/" + fromCoordinate(dep.getCoordinates()).filename,
 							ArtifactUtil.getArtifactFile(Environment.get(LIB), dep.getCoordinates()));
 				});
+
+				// Remove unnecessary plugin components
+				// TODO
 			}
 		}
 

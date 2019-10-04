@@ -26,6 +26,7 @@ import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,13 +43,12 @@ import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.cmd.PluginCmd;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.ConfigConstant.plugin;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
+import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.PoolConstant.net;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerEstablishedEvent;
@@ -56,7 +56,8 @@ import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerLostEvent;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
+import com.sandpolis.core.soi.Dep;
+import com.sandpolis.core.util.ArtifactUtil;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
@@ -96,7 +97,7 @@ public final class Client {
 		register(IPCTask.load);
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
-//		register(Client.install);
+		register(Client.install);
 		register(Client.loadEnvironment);
 		register(Client.loadStores);
 		register(Client.loadPlugins);
@@ -109,23 +110,61 @@ public final class Client {
 	@InitializationTask(name = "Install client", fatal = true)
 	public static final Task install = new Task((task) -> {
 
-		if (Environment.JAR == null)
+		if (SO_CONFIG.getMemory())
+			// Memory-only installation
 			return task.skipped();
 
-		// Installation mode
-		Path base = Paths.get(SO_CONFIG.getExecution().getInstallPathOrDefault(0, "."));// TODO 0
+		Path base = Paths.get(SO_CONFIG.getExecution().getInstallPathOrDefault(PlatformUtil.queryOsType().getNumber(),
+				System.getProperty("user.home") + "/.sandpolis"));
 		Path lib = base.resolve("lib");
 
-		Files.createDirectories(base);
-		Files.createDirectories(lib);
+		if (Environment.JAR.getParent().equals(lib))
+			// Already installed
+			return task.skipped();
 
-		Files.copy(Client.class.getResourceAsStream("/main/main.jar"), base.resolve("client.jar"));
+		log.debug("Selected base directory: {}", base);
 
-		for (Artifact artifact : Core.SO_MATRIX.getArtifactList()) {
-			String name = fromCoordinate(artifact.getCoordinates()).filename;
-
-			Files.copy(Client.class.getResourceAsStream("/lib/" + name), lib.resolve(name));
+		try {
+			Files.createDirectories(base);
+			Files.createDirectories(lib);
+		} catch (IOException e) {
+			// Force install if enabled
+			// TODO
+			e.printStackTrace();
 		}
+
+		try {
+			// TODO remove nested libraries
+			log.debug("Installing client binary from: {} into: {}", Environment.JAR, lib.toAbsolutePath());
+			Files.copy(Environment.JAR, lib.resolve("sandpolis-client-5.1.0.jar"), REPLACE_EXISTING);
+
+		} catch (IOException e) {
+			// Force install if enabled
+			// TODO
+			e.printStackTrace();
+		}
+
+		// Install dependencies
+		new Dep(Core.SO_MATRIX, Core.SO_MATRIX.getArtifact(0)).getAllDependencies().forEach(dep -> {
+			String name = fromCoordinate(dep.getCoordinates()).filename;
+
+			try {
+				var in = Client.class.getResourceAsStream("/lib/" + name);
+				if (in != null)
+					Files.copy(in, lib.resolve(name), REPLACE_EXISTING);
+				else
+					ArtifactUtil.download(lib.resolve(name), dep.getCoordinates());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		});
+
+		// TODO regular launch
+		var cmd = new String[] { "screen", "-S", "com.sandpolis.client.mega", "-X", "stuff",
+				"clear && java -Djava.system.class.loader=com.github.cilki.compact.CompactClassLoader -jar "
+						+ lib.resolve("sandpolis-client-5.1.0.jar").toAbsolutePath().toString() + "\n" };
+		Runtime.getRuntime().exec(cmd);
 
 		System.exit(0);
 		return task.success();
@@ -151,10 +190,10 @@ public final class Client {
 
 		ThreadStore.init(config -> {
 			config.ephemeral();
-			config.defaults.put(net.exelet, new NioEventLoopGroup(2).next());
-			config.defaults.put(net.connection.outgoing, new NioEventLoopGroup(2).next());
+			config.defaults.put("net.exelet", new NioEventLoopGroup(2).next());
+			config.defaults.put("net.connection.outgoing", new NioEventLoopGroup(2).next());
 			config.defaults.put("temploop", new NioEventLoopGroup(2).next());
-			config.defaults.put(net.message.incoming, new UnorderedThreadPoolEventExecutor(2));
+			config.defaults.put("net.message.incoming", new UnorderedThreadPoolEventExecutor(2));
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
@@ -180,7 +219,7 @@ public final class Client {
 	/**
 	 * Load plugins.
 	 */
-	@InitializationTask(name = "Load client plugins", condition = plugin.enabled)
+	@InitializationTask(name = "Load client plugins", condition = "plugin.enabled")
 	public static final Task loadPlugins = new Task((task) -> {
 		PluginStore.scanPluginDirectory();
 		PluginStore.loadPlugins();
@@ -223,7 +262,7 @@ public final class Client {
 			break;
 		}
 
-		if (Config.getBoolean(plugin.enabled)) {
+		if (Config.getBoolean("plugin.enabled") && !SO_CONFIG.getMemory()) {
 			future.addHandler((Outcome rs) -> {
 				// Synchronize plugins
 				PluginCmd.async().sync().sync();
