@@ -115,7 +115,7 @@ class MacroEditor: UIViewController {
 		default:
 			break
 		}
-		
+
 		macroReference.setData([
 			"name": nameField.text!,
 			"script": textView.text!,

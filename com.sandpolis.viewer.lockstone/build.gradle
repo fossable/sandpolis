@@ -18,20 +18,20 @@ task buildProto {
 		commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
 		workingDir = project(":module:com.sandpolis.core.proto").file("src/main/proto")
 	}
-        project.exec {
-                commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
-                workingDir = project(":plugin:com.sandpolis.plugin.desktop").file("src/main/proto")
-        }
-        project.exec {
-                commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
-                workingDir = project(":plugin:com.sandpolis.plugin.shell").file("src/main/proto")
-        }
-        project.exec {
-                commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
-                workingDir = project(":plugin:com.sandpolis.plugin.sysinfo").file("src/main/proto")
-        }
-        project.exec {
-                commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
-                workingDir = project(":plugin:com.sandpolis.plugin.filesys").file("src/main/proto")
-        }
+	project.exec {
+			commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
+			workingDir = project(":plugin:com.sandpolis.plugin.desktop").file("src/main/proto")
+	}
+	project.exec {
+			commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
+			workingDir = project(":plugin:com.sandpolis.plugin.shell").file("src/main/proto")
+	}
+	project.exec {
+			commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
+			workingDir = project(":plugin:com.sandpolis.plugin.sysinfo").file("src/main/proto")
+	}
+	project.exec {
+			commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
+			workingDir = project(":plugin:com.sandpolis.plugin.filesys").file("src/main/proto")
+	}
 }

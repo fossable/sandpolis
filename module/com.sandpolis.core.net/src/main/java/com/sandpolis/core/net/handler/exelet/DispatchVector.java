@@ -1,3 +1,20 @@
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
 package com.sandpolis.core.net.handler.exelet;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -25,7 +42,7 @@ import com.sandpolis.core.util.ProtoUtil;
 /**
  * Distributes messages to their appropriate handlers. Each plugin get a
  * specialized {@link PluginDispatchVector} capable of handling plugin messages.
- * 
+ *
  * @author cilki
  * @since 5.1.0
  */
@@ -54,7 +71,7 @@ public class DispatchVector {
 
 	/**
 	 * Obtain the payload from a container message.
-	 * 
+	 *
 	 * @param msg The container message
 	 * @return The message's payload
 	 * @throws InvalidProtocolBufferException
@@ -80,7 +97,7 @@ public class DispatchVector {
 
 	/**
 	 * Dispatch an incoming message.
-	 * 
+	 *
 	 * @param msg The incoming message
 	 * @return Whether the message was handled
 	 * @throws Exception
@@ -104,7 +121,7 @@ public class DispatchVector {
 
 	/**
 	 * Immediately remove the handler corresponding to the given {@link Handler}.
-	 * 
+	 *
 	 * @param handler The handler to remove
 	 */
 	public synchronized void disengage(Handler handler) {
@@ -207,7 +224,7 @@ public class DispatchVector {
 	/**
 	 * Ensure that the internal vector is large enough to contain the given handler.
 	 * If not, expand the vector.
-	 * 
+	 *
 	 * @param handler The handler descriptor
 	 */
 	private synchronized void ensureSize(Handler handler) {

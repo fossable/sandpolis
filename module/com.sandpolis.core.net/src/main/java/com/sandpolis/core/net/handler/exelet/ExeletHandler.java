@@ -41,7 +41,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 /**
  * A handler that distributes incoming messages to the appropriate
  * {@link Exelet} handler.
- * 
+ *
  * <p>
  * This handler maintains a separate dispatch vector for each loaded plugin.
  */
@@ -185,7 +185,7 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message
 	/**
 	 * Immediately remove the handler corresponding to the given plugin and exelet
 	 * method.
-	 * 
+	 *
 	 * @param method The handler method
 	 */
 	private void disengage(Class<? extends Exelet> exelet, Method method) {
