@@ -33,8 +33,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.pf4j.ExtensionPoint;
-import org.pf4j.PluginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +40,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.Resources;
-import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
@@ -82,11 +79,6 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	public PluginStore() {
 		super(log);
 	}
-
-	/**
-	 * The PF4J plugin manager.
-	 */
-	private static PluginManager manager = new SandpolisPluginManager(Core.INSTANCE, Core.FLAVOR);
 
 	/**
 	 * The default certificate verifier which allows all plugins.
@@ -151,34 +143,11 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 		checkNotNull(sub);
 
 		try {
-			return JarUtil.getResourceUrl(getArtifact(plugin),
+			return JarUtil.getResourceUrl(plugin.getPath(),
 					String.format("%s/%s.jar", instance.name().toLowerCase(), sub.name().toLowerCase()));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	/**
-	 * Get a plugin's filesystem artifact.
-	 *
-	 * @param plugin The plugin
-	 * @return The plugin artifact
-	 */
-	public Path getArtifact(Plugin plugin) {
-		checkNotNull(plugin);
-
-		Path path;
-		if (manager.getPlugin(plugin.getId()) != null)
-			// First class approach
-			path = manager.getPlugin(plugin.getId()).getPluginPath();
-		else
-			// Fallback approach
-			path = Environment.get(LIB).resolve(plugin.getId() + ".jar");
-
-		if (!Files.exists(path))
-			log.warn("Missing filesystem artifact for plugin: {}", plugin.getId());
-
-		return path;
 	}
 
 	/**
@@ -201,10 +170,11 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	}
 
 	/**
-	 * Load all enabled plugins.
+	 * Load all installed plugins that are enabled and currently unloaded.
 	 */
 	public void loadPlugins() {
-		provider.stream().filter(plugin -> plugin.isEnabled()).forEach(PluginStore::loadPlugin);
+		provider.stream().filter(plugin -> plugin.isEnabled()).filter(plugin -> !plugin.isLoaded())
+				.forEach(PluginStore::loadPlugin);
 	}
 
 	/**
@@ -213,24 +183,15 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	 * @param path The plugin's filesystem artifact
 	 */
 	public synchronized void installPlugin(Path path) {
+		log.debug("Installing plugin: {}", path.toString());
+
 		// TODO check state
 
 		try {
 			byte[] hash = hashPlugin(path);
 
-			var manifest = JarUtil.getManifest(path.toFile());
-			String id = manifest.getValue("Plugin-Id");
-			String coordinate = manifest.getValue("Plugin-Coordinate");
-			String name = manifest.getValue("Plugin-Name");
-			String version = manifest.getValue("Plugin-Version");
-			String description = manifest.getValue("Description");
-
-			// TODO validate info
-			log.debug("Installing plugin: {}", path.toString());
-
-			Plugin plugin = new Plugin(id, coordinate, name, version, description, true, hash);
+			Plugin plugin = new Plugin(path, hash, true);
 			provider.add(plugin);
-			manager.loadPlugin(path);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -245,12 +206,9 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	private void loadPlugin(Plugin plugin) {
 		// TODO check state
 
-		// Locate plugin
-		Path path = getArtifact(plugin);
-
 		// Verify hash
 		try {
-			if (!Arrays.equals(hashPlugin(path), plugin.getHash()))
+			if (!Arrays.equals(hashPlugin(plugin.getPath()), plugin.getHash()))
 				throw new RuntimeException("The stored plugin hash does not match the artifact's hash");
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -258,7 +216,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 		// Verify certificate
 		try {
-			var cert = CertUtil.parseCert(JarUtil.getManifestValue(path, "Plugin-Cert").get());
+			var cert = CertUtil.parseCert(JarUtil.getManifestValue(plugin.getPath(), "Plugin-Cert").get());
 			if (!verifier.apply(cert))
 				throw new CertificateException("Certificate verification failed");
 		} catch (CertificateException | IOException e) {
@@ -267,13 +225,14 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 		}
 
 		log.debug("Loading plugin: {} ({})", plugin.getName(), plugin.getId());
-		manager.startPlugin(plugin.getId());
 
+		try {
+			plugin.load();
+		} catch (IOException e) {
+			log.error("Failed to load plugin", e);
+			return;
+		}
 		post(PluginLoadedEvent::new, plugin);
-	}
-
-	public <E extends ExtensionPoint> Stream<E> getExtensions(Class<E> extension, Plugin plugin) {
-		return manager.getExtensions(extension, plugin.getId()).stream();
 	}
 
 	/**
@@ -283,7 +242,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	 * @return The file hash
 	 * @throws IOException
 	 */
-	private byte[] hashPlugin(Path path) throws IOException {
+	public byte[] hashPlugin(Path path) throws IOException {
 		return MoreFiles.asByteSource(path).hash(Hashing.sha256()).asBytes();
 	}
 

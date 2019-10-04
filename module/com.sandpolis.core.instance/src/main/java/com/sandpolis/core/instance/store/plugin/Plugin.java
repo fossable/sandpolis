@@ -17,19 +17,29 @@
  ******************************************************************************/
 package com.sandpolis.core.instance.store.plugin;
 
-import java.util.Objects;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Transient;
 
-import com.google.protobuf.ByteString;
+import com.github.cilki.compact.CompactClassLoader;
+import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.proto.net.MCPlugin.PluginDescriptor;
+import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.JarUtil;
 
 /**
- * Represents an installed Sandpolis plugin.
+ * Represents a Sandpolis plugin.
  *
  * @author cilki
  * @since 5.0.0
@@ -49,7 +59,7 @@ public final class Plugin {
 	private String id;
 
 	/**
-	 * The plugin's Maven group and artifact name.
+	 * The plugin's Maven central coordinates in G:A:V format.
 	 */
 	@Column(nullable = false, unique = true)
 	private String coordinate;
@@ -61,25 +71,13 @@ public final class Plugin {
 	private String name;
 
 	/**
-	 * The plugin's version string.
-	 */
-	@Column(nullable = false)
-	private String version;
-
-	/**
-	 * The plugin's textual description.
+	 * The plugin's user-friendly description.
 	 */
 	@Column(nullable = true)
 	private String description;
 
 	/**
-	 * The plugin's icon.
-	 */
-	@Column(nullable = true)
-	private byte[] icon;
-
-	/**
-	 * Whether the plugin is enabled.
+	 * Whether the plugin can be loaded.
 	 */
 	@Column(nullable = false)
 	private boolean enabled;
@@ -91,38 +89,33 @@ public final class Plugin {
 	private byte[] hash;
 
 	/**
-	 * The size in bytes of the mega component.
+	 * The plugin's filesystem path.
 	 */
-	@Column(nullable = true)
-	private int component_size_mega;
+	@Column(nullable = false)
+	private String path;
 
 	/**
-	 * The size in bytes of the micro component.
+	 * A classloader for the plugin.
 	 */
-	@Column(nullable = true)
-	private int component_size_micro;
+	@Transient
+	private CompactClassLoader classloader;
 
 	/**
-	 * The size in bytes of the jfx component.
+	 * The plugin handle if available.
 	 */
-	@Column(nullable = true)
-	private int component_size_jfx;
+	@Transient
+	private SandpolisPlugin handle;
 
-	/**
-	 * The size in bytes of the cli component.
-	 */
-	@Column(nullable = true)
-	private int component_size_cli;
-
-	public Plugin(String id, String coordinate, String name, String version, String description, boolean enabled,
-			byte[] hash) {
-		this.id = Objects.requireNonNull(id);
-		this.coordinate = Objects.requireNonNull(coordinate);
-		this.name = Objects.requireNonNull(name);
-		this.version = Objects.requireNonNull(version);
-		this.hash = Objects.requireNonNull(hash);
-		this.description = description;
+	public Plugin(Path path, byte[] hash, boolean enabled) throws IOException {
 		this.enabled = enabled;
+		this.hash = hash;
+		this.path = path.toAbsolutePath().toString();
+
+		var manifest = JarUtil.getManifest(path.toFile());
+		id = manifest.getValue("Plugin-Id");
+		coordinate = manifest.getValue("Plugin-Coordinate");
+		name = manifest.getValue("Plugin-Name");
+		description = manifest.getValue("Description");
 	}
 
 	Plugin() {
@@ -136,16 +129,8 @@ public final class Plugin {
 		return name;
 	}
 
-	public String getVersion() {
-		return version;
-	}
-
 	public String getDescription() {
 		return description;
-	}
-
-	public byte[] getIcon() {
-		return icon;
 	}
 
 	public boolean isEnabled() {
@@ -156,6 +141,26 @@ public final class Plugin {
 		return hash;
 	}
 
+	public Path getPath() {
+		return Paths.get(path);
+	}
+
+	public boolean isLoaded() {
+		return handle != null;
+	}
+
+	public String getVersion() {
+		return coordinate.split(":")[2];
+	}
+
+	public String getCoordinate() {
+		return coordinate;
+	}
+
+	public CompactClassLoader getClassloader() {
+		return classloader;
+	}
+
 	/**
 	 * Build a {@link PluginDescriptor} from the object.
 	 *
@@ -163,13 +168,58 @@ public final class Plugin {
 	 */
 	public PluginDescriptor toDescriptor() {
 		var plugin = PluginDescriptor.newBuilder().setId(getId()).setCoordinate(coordinate).setName(getName())
-				.setVersion(getVersion()).setEnabled(isEnabled());
+				.setEnabled(isEnabled());
 
-		if (icon != null)
-			plugin.setIcon(ByteString.copyFrom(getIcon()));
 		if (description != null)
 			plugin.setDescription(getDescription());
 		return plugin.build();
+	}
+
+	void load() throws IOException {
+
+		// Build new classloader
+		classloader = new CompactClassLoader(Thread.currentThread().getContextClassLoader());
+
+		// Add common classes
+		classloader.add(getPath().toUri().toURL(), false);
+
+		// Add instance specific classes if it exists
+		String componentPath = String.format("%s/%s.jar", Core.INSTANCE.toString().toLowerCase(),
+				Core.FLAVOR.toString().toLowerCase());
+		if (classloader.getResource(componentPath) != null) {
+			classloader.add(new URL(String.format("file:%s!/%s", getPath(), componentPath)), false);
+
+			// TODO component specific dependencies from matrix.bin
+		}
+
+		// Load plugin class if available
+		try {
+			handle = (SandpolisPlugin) classloader.loadClass(getClassName(Core.INSTANCE, Core.FLAVOR)).getConstructor()
+					.newInstance();
+			handle.loaded();
+		} catch (ClassNotFoundException e) {
+			// Do nothing
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
+
+		// Add to application classloader
+		CompactClassLoader system = (CompactClassLoader) ClassLoader.getSystemClassLoader();
+		system.add(classloader);
+	}
+
+	public <E> Stream<E> getExtensions(Class<E> extension) {
+		if (extension.isAssignableFrom(handle.getClass()))
+			return Stream.of((E) handle);
+		else
+			return Stream.empty();
+	}
+
+	private String getClassName(Instance instance, InstanceFlavor flavor) {
+		String lastId = getId().substring(getId().lastIndexOf('.') + 1);
+		return String.format("%s.%s.%s.%sPlugin", getId(), instance.toString().toLowerCase(),
+				flavor.toString().toLowerCase(),
+				lastId.substring(0, 1).toUpperCase() + lastId.substring(1).toLowerCase());
 	}
 
 }
