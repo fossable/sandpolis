@@ -15,7 +15,7 @@ plugins {
 eclipse {
 	project {
 		name = 'com.sandpolis.plugin.shell'
-		comment = ''
+		comment = 'The shell plugin'
 	}
 }
 

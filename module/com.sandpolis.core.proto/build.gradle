@@ -41,3 +41,8 @@ protobuf {
 		delete generatedFilesBaseDir
 	}
 }
+
+// Ignore javadoc errors in generated protobuf sources
+javadoc {
+	failOnError = false
+}
