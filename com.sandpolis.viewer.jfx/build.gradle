@@ -53,7 +53,7 @@ dependencies {
 	api 'io.netty:netty-common:4.1.41.Final'
 	api 'io.netty:netty-codec:4.1.41.Final'
 	api 'io.netty:netty-transport:4.1.41.Final'
-	api 'io.netty:netty-handler:4.1.41.Final'
+	api 'io.netty:netty-handler:4.1.42.Final'
 
 	// https://github.com/javaee/jpa-spec
 	api 'javax.persistence:javax.persistence-api:2.2'
