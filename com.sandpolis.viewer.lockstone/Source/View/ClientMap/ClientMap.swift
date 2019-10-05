@@ -31,7 +31,6 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 		super.viewDidLoad()
 
 		map.delegate = self
-		map.showsUserLocation = true
 		for host in SandpolisUtil.connection.profiles {
 			if let pin = ClientAnnotation(host) {
 				map.addAnnotation(pin)
@@ -59,7 +58,6 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 
 		map.isZoomEnabled = true
 		map.isScrollEnabled = true
-		CLLocationManager().requestWhenInUseAuthorization()
 
 		// Remove navigation bar
 		navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
