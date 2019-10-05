@@ -29,7 +29,7 @@ dependencies {
 	implementation 'com.google.guava:guava:28.1-jre'
 
 	// https://github.com/netty/netty
-	implementation 'io.netty:netty-common:4.1.41.Final'
+	implementation 'io.netty:netty-common:4.1.42.Final'
 	implementation 'io.netty:netty-codec:4.1.42.Final'
 	implementation 'io.netty:netty-transport:4.1.41.Final'
 	implementation 'io.netty:netty-handler:4.1.42.Final'
