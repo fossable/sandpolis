@@ -134,7 +134,7 @@ public final class Installer {
 
 			Parent node = new FXMLLoader(UI.class.getResource("/fxml/Main.fxml")).load();
 
-			Scene scene = new Scene(node, 430, 600);
+			Scene scene = new Scene(node, 430, 650);
 			scene.getStylesheets().add("/css/default.css");
 			stage.setScene(scene);
 			stage.setResizable(false);

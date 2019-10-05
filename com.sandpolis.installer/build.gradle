@@ -160,7 +160,7 @@ artifacts {
 
 launch4j {
 	outfile = "SandpolisInstaller-win-${project.version}.exe"
-	mainClassName = 'com.github.cilki.compact.BootProxy'
+	mainClassName = 'com.sandpolis.installer.Main'
 	headerType = 'gui'
 	stayAlive = 'true'
 	companyName = 'Subterranean Security'

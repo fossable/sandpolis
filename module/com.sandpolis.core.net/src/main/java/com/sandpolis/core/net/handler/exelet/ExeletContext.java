@@ -20,6 +20,7 @@ package com.sandpolis.core.net.handler.exelet;
 import java.util.Objects;
 
 import com.google.protobuf.Message;
+import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.sock.Sock;
 
 /**

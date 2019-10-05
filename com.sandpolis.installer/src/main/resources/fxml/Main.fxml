@@ -18,7 +18,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane id="background" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="604.0" prefWidth="311.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.installer.scene.main.MainController">
+<BorderPane id="background" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="650.0" prefWidth="311.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.installer.scene.main.MainController">
 	<bottom>
 		<BorderPane BorderPane.alignment="CENTER">
 			<center>
@@ -43,7 +43,7 @@
 					<content>
 						<BorderPane>
 							<center>
-								<Label text="The Sandpolis GUI is a rich desktop application that allows you to connect to a Sandpolis server." wrapText="true" BorderPane.alignment="BOTTOM_LEFT">
+								<Label text="The Sandpolis GUI is a rich desktop application that allows you to connect to servers and manage clients." wrapText="true" BorderPane.alignment="BOTTOM_LEFT">
 									<font>
 										<Font size="11.0" />
 									</font>
@@ -59,7 +59,7 @@
 					<content>
 						<BorderPane>
 							<center>
-								<Label text="The Sandpolis CLI is a minimalist text interface that allows you to connect to a Sandpolis server." wrapText="true" BorderPane.alignment="CENTER_LEFT">
+								<Label text="The Sandpolis CLI is a minimalist text interface that can do almost everything the GUI can do." wrapText="true" BorderPane.alignment="CENTER_LEFT">
 									<font>
 										<Font size="11.0" />
 									</font>
@@ -123,7 +123,7 @@
                                        <children>
                                           <ProgressIndicator />
                                        </children></VBox>
-                                    <Label text="Scan the QR code with the Sandpolis viewer application to associate this computer with your server. Once associated, ensure that the server's hostname is what you expect!" wrapText="true">
+                                    <Label text="Scan the QR code with the Sandpolis iOS application to associate this client with your server. Once associated, you can proceed with the installation." wrapText="true">
                                        <font>
                                           <Font size="11.0" />
                                        </font>
@@ -147,7 +147,9 @@
 	</center>
 	<top>
 		<ImageView fx:id="banner" fitHeight="140.0" fitWidth="240.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
-		</ImageView>
+         <BorderPane.margin>
+            <Insets bottom="20.0" top="20.0" />
+         </BorderPane.margin></ImageView>
 	</top>
 	<padding>
 		<Insets left="6.0" right="6.0" top="5.0" />
