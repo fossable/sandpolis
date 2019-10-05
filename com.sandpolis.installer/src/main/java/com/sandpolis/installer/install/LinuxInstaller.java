@@ -19,12 +19,10 @@ package com.sandpolis.installer.install;
 
 import java.nio.file.Paths;
 
-import com.sandpolis.core.instance.Config;
-
 public class LinuxInstaller extends AbstractInstaller {
 
 	public LinuxInstaller() {
-		super(Paths.get(Config.get("install.path.linux")));
+		super(Paths.get(System.getProperty("install.path.linux", System.getProperty("user.home") + "/.sandpolis")));
 	}
 
 }

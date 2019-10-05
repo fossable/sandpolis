@@ -19,12 +19,10 @@ package com.sandpolis.installer.install;
 
 import java.nio.file.Paths;
 
-import com.sandpolis.core.instance.Config;
-
 public class WindowsInstaller extends AbstractInstaller {
 
 	public WindowsInstaller() {
-		super(Paths.get(Config.get("install.path.windows")));
+		super(Paths.get(System.getProperty("install.path.windows", System.getProperty("user.home") + "/.sandpolis")));
 	}
 
 }

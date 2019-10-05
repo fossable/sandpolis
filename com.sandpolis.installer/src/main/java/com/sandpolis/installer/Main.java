@@ -17,13 +17,18 @@
  ******************************************************************************/
 package com.sandpolis.installer;
 
-import com.sandpolis.core.instance.MainDispatch;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import java.util.stream.Stream;
+
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.stage.Stage;
 
 /**
- * This stub is the entry point for Installer instances. Control is given to
- * {@link MainDispatch} for initialization.
+ * This stub is the entry point for Installer instances.
  *
  * @author cilki
  * @since 5.0.0
@@ -33,7 +38,33 @@ public final class Main {
 	}
 
 	public static void main(String[] args) {
-		MainDispatch.dispatch(Installer.class, args, Instance.INSTALLER, InstanceFlavor.NONE);
+		new Thread(() -> Application.launch(UI.class)).start();
 	}
 
+	/**
+	 * The {@link Application} class for starting the user interface.
+	 */
+	public static class UI extends Application {
+
+		@Override
+		public void start(Stage stage) throws Exception {
+			stage.setTitle("Sandpolis Installer");
+			stage.setOnCloseRequest(event -> {
+				Platform.exit();
+				System.exit(0);
+			});
+
+			// Set icons
+			Stream.of("/image/icon.png", "/image/icon@2x.png", "/image/icon@3x.png", "/image/icon@4x.png")
+					.map(UI.class::getResourceAsStream).map(Image::new).forEach(stage.getIcons()::add);
+
+			Parent node = new FXMLLoader(UI.class.getResource("/fxml/Main.fxml")).load();
+
+			Scene scene = new Scene(node, 430, 650);
+			scene.getStylesheets().add("/css/default.css");
+			stage.setScene(scene);
+			stage.setResizable(false);
+			stage.show();
+		}
+	}
 }

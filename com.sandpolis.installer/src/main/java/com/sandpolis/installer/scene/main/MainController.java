@@ -28,15 +28,14 @@ import com.sandpolis.installer.util.CloudUtil;
 import com.sandpolis.installer.util.QrUtil;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -70,12 +69,6 @@ public class MainController {
 	private TitledPane pane_client;
 
 	@FXML
-	private TextField username;
-
-	@FXML
-	private PasswordField password;
-
-	@FXML
 	private Button btn_install;
 
 	@FXML
@@ -97,23 +90,13 @@ public class MainController {
 
 	private String client_config;
 
-	@FXML
-	private void initialize() {
+	private ChangeListener<Boolean> refreshScene = (ObservableValue<? extends Boolean> p, Boolean o, Boolean n) -> {
+		// Ensure at least one box is checked
+		btn_install.setDisable((!chk_server.isSelected() && !chk_viewer_jfx.isSelected() && !chk_viewer_cli.isSelected()
+				&& !chk_client.isSelected()) || qrTask != null);
+	};
 
-		chk_server.selectedProperty().addListener(this::refreshScene);
-		chk_viewer_jfx.selectedProperty().addListener(this::refreshScene);
-		chk_viewer_cli.selectedProperty().addListener(this::refreshScene);
-		chk_client.selectedProperty().addListener(this::refreshClient);
-
-		pane_server.expandedProperty().bindBidirectional(chk_server.selectedProperty());
-		pane_viewer_jfx.expandedProperty().bindBidirectional(chk_viewer_jfx.selectedProperty());
-		pane_viewer_cli.expandedProperty().bindBidirectional(chk_viewer_cli.selectedProperty());
-		pane_client.expandedProperty().bindBidirectional(chk_client.selectedProperty());
-
-		banner.setImage(new Image(MainController.class.getResourceAsStream("/image/logo.png")));
-	}
-
-	private void refreshClient(ObservableValue<?> p, boolean o, boolean n) {
+	private ChangeListener<Boolean> refreshClient = (ObservableValue<? extends Boolean> p, Boolean o, Boolean n) -> {
 		if (o == false && n == true) {
 			qrTask = service.submit(() -> {
 				do {
@@ -147,7 +130,24 @@ public class MainController {
 				qrTask = null;
 			}
 		}
-		refreshScene(p, o, n);
+
+		refreshScene.changed(p, o, n);
+	};
+
+	@FXML
+	private void initialize() {
+
+		chk_server.selectedProperty().addListener(refreshScene);
+		chk_viewer_jfx.selectedProperty().addListener(refreshScene);
+		chk_viewer_cli.selectedProperty().addListener(refreshScene);
+		chk_client.selectedProperty().addListener(refreshClient);
+
+		pane_server.expandedProperty().bindBidirectional(chk_server.selectedProperty());
+		pane_viewer_jfx.expandedProperty().bindBidirectional(chk_viewer_jfx.selectedProperty());
+		pane_viewer_cli.expandedProperty().bindBidirectional(chk_viewer_cli.selectedProperty());
+		pane_client.expandedProperty().bindBidirectional(chk_client.selectedProperty());
+
+		banner.setImage(new Image(MainController.class.getResourceAsStream("/image/logo.png")));
 	}
 
 	private void setQrMessage(String message) {
@@ -158,17 +158,14 @@ public class MainController {
 		});
 	}
 
-	private void refreshScene(ObservableValue<?> p, boolean o, boolean n) {
-		// Ensure at least one box is checked
-		btn_install.setDisable((!chk_server.isSelected() && !chk_viewer_jfx.isSelected() && !chk_viewer_cli.isSelected()
-				&& !chk_client.isSelected()) || qrTask != null);
-	}
-
 	@FXML
 	private void install() {
 
-		username.setDisable(true);
-		password.setDisable(true);
+		chk_server.selectedProperty().removeListener(refreshScene);
+		chk_viewer_jfx.selectedProperty().removeListener(refreshScene);
+		chk_viewer_cli.selectedProperty().removeListener(refreshScene);
+		chk_client.selectedProperty().removeListener(refreshClient);
+
 		chk_server.setDisable(true);
 		chk_viewer_jfx.setDisable(true);
 		chk_viewer_cli.setDisable(true);
@@ -186,7 +183,7 @@ public class MainController {
 			pane_viewer_cli.setCollapsible(false);
 		}
 		if (chk_server.isSelected()) {
-			install(pane_server, AbstractInstaller.newServerInstaller(username.getText(), password.getText()));
+			install(pane_server, AbstractInstaller.newServerInstaller());
 		} else {
 			pane_server.setCollapsible(false);
 		}
@@ -236,7 +233,7 @@ public class MainController {
 
 		// Check outcome of task
 		service.execute(() -> {
-			if (!installer.isCompleted()) {
+			if (installer.isCompleted()) {
 				Platform.runLater(() -> {
 					btn_install.setDisable(false);
 					btn_install.setText("Exit");

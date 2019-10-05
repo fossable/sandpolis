@@ -40,9 +40,6 @@ configurations {
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
 
-	api project(':module:com.sandpolis.core.instance')
-	api project(':module:com.sandpolis.core.ipc')
-	api project(':module:com.sandpolis.core.proto')
 	api project(':module:com.sandpolis.core.soi')
 	api project(':module:com.sandpolis.core.util')
 

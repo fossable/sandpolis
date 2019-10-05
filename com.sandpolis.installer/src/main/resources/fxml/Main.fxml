@@ -5,16 +5,11 @@
 <?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.ProgressIndicator?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
@@ -81,30 +76,16 @@
 									</font>
 								</Label>
 							</top>
-							<center>
-								<GridPane hgap="4.0" BorderPane.alignment="CENTER">
-									<columnConstraints>
-										<ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-										<ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-									</columnConstraints>
-									<rowConstraints>
-										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-									</rowConstraints>
-									<children>
-										<Label text="Create new administrative user:" GridPane.columnSpan="2">
-											<font>
-												<Font size="12.0" />
-											</font>
-										</Label>
-										<TextField fx:id="username" promptText="Username" GridPane.rowIndex="1" />
-										<PasswordField fx:id="password" promptText="Password" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-									</children>
-									<padding>
-										<Insets top="4.0" />
-									</padding>
-								</GridPane>
-							</center>
+                     <bottom>
+                        <Label text="Default user -&gt; admin:password" BorderPane.alignment="CENTER">
+                           <font>
+                              <Font size="11.0" />
+                           </font>
+                           <BorderPane.margin>
+                              <Insets top="8.0" />
+                           </BorderPane.margin>
+                        </Label>
+                     </bottom>
 						</BorderPane>
 					</content>
 				</TitledPane>

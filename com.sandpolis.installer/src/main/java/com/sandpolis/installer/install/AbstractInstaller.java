@@ -29,8 +29,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
 import com.sandpolis.core.soi.SoiUtil;
 import com.sandpolis.core.util.ArtifactUtil;
@@ -61,16 +59,6 @@ public abstract class AbstractInstaller extends Task<Void> {
 	private String version;
 
 	/**
-	 * The server username.
-	 */
-	protected String username;
-
-	/**
-	 * The server password.
-	 */
-	protected String password;
-
-	/**
 	 * The client configuration.
 	 */
 	protected String config;
@@ -89,30 +77,31 @@ public abstract class AbstractInstaller extends Task<Void> {
 		this.destination = Objects.requireNonNull(destination);
 		updateProgress(0, 1);
 
-		if (Config.has("install.version")) {
-			version = Config.get("install.version");
+		String _version = System.getProperty("install.version");
+		if (_version != null) {
+			version = _version;
 		}
 	}
 
 	private static AbstractInstaller newInstaller() {
-		switch (PlatformUtil.queryOsType()) {
-		case LINUX:
-			return new LinuxInstaller();
-		case MACOS:
-			return new LinuxInstaller();
-		case WINDOWS:
+		String name = System.getProperty("os.name").toLowerCase();
+
+		if (name.startsWith("windows"))
 			return new WindowsInstaller();
-		default:
-			throw new RuntimeException("Unsupported platform");
-		}
+
+		if (name.startsWith("linux"))
+			return new LinuxInstaller();
+
+		if (name.startsWith("mac") || name.startsWith("darwin"))
+			return new LinuxInstaller();
+
+		throw new RuntimeException("Unsupported platform");
 	}
 
-	public static AbstractInstaller newServerInstaller(String username, String password) {
+	public static AbstractInstaller newServerInstaller() {
 		AbstractInstaller installer = newInstaller();
 		installer.coordinate = "com.sandpolis:sandpolis-server-vanilla:";
 		installer.postHook = installer::serverPostInstall;
-		installer.username = username;
-		installer.password = password;
 		return installer;
 	}
 
