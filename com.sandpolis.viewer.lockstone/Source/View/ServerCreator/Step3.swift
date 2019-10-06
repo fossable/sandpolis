@@ -40,7 +40,6 @@ class Step3: UIViewController {
 
 	@IBOutlet weak var map: MKMapView!
 	@IBOutlet weak var locationButton: UIButton!
-	@IBOutlet weak var launchButton: UIButton!
 
 	var parentController: ServerCreator!
 
@@ -71,15 +70,7 @@ class Step3: UIViewController {
 		parentController.showStep2()
 	}
 
-	@IBAction func launch(_ sender: Any) {
-		launchButton.isEnabled = false
-		CloudUtil.createCloudInstance(subscription: "", hostname: "") { json, error in
-			if let error = error {
-				let alert = UIAlertController(title: "Launch failed", message: error.localizedDescription, preferredStyle: .alert)
-				self.present(alert, animated: true) {
-
-				}
-			}
-		}
+	@IBAction func next(_ sender: Any) {
+		parentController.showStep4()
 	}
 }

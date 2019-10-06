@@ -20,7 +20,7 @@ import FirebaseAuth
 
 class CloudUtil {
 
-	static func createCloudInstance(subscription: String, hostname: String, _ completion: @escaping(NSDictionary?, Error?) -> Void) {
+	static func createCloudInstance(hostname: String, username: String, password: String, location: String, _ completion: @escaping(NSDictionary?, Error?) -> Void) {
 		Auth.auth().currentUser?.getIDToken { token, error in
 			guard error == nil else {
 				completion(nil, error)
@@ -31,11 +31,15 @@ class CloudUtil {
 			request.addValue("Bearer " + token!, forHTTPHeaderField: "Authorization")
 			request.httpMethod = "POST"
 			request.httpBody = try? JSONSerialization.data(withJSONObject: [
-				"subscription": subscription,
-				"hostname": hostname
+				"location": location,
+				"hostname": hostname,
+				"username": username,
+				"password": password
 			], options: [])
 
 			URLSession.shared.dataTask(with: request) { data, response, error in
+				print("data:", data)
+				print("error:", error)
 				if let content = data {
 					do {
 						if let json = try JSONSerialization.jsonObject(with: content, options: .allowFragments) as? NSDictionary {

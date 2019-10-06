@@ -39,7 +39,7 @@ class Step1: UIViewController {
 
 	@IBAction func nameChange(_ sender: Any) {
 		if !name.text!.isEmpty {
-			fqdn.text = "\(name.text!).sandpolis.com"
+			fqdn.text = "\(name.text!).sandpolis.cloud"
 		} else {
 			fqdn.text = nil
 		}

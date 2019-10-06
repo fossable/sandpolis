@@ -332,29 +332,19 @@ public class SandpolisConnection {
 		stream.register { (ev: Net_EV_StreamData) -> Void in
 			if ev.profile.online {
 
-				// Query metadata
-				self.getClientMetadata(ev.profile.cvid).whenSuccess { rs in
-					let metadata = rs.rsClientMetadata
-					var profile = SandpolisProfile(
-						uuid: ev.profile.uuid,
-						cvid: ev.profile.cvid,
-						hostname: metadata.hostname,
-						ipAddress: ev.profile.ip,
-						uploadTotal: metadata.upload,
-						downloadTotal: metadata.download,
-						platform: metadata.osType,
-						osVersion: metadata.osVersion,
-						username: metadata.username,
-						userhome: metadata.userhome,
-						startTime: metadata.startTimestamp,
-						timezone: TimeZone(identifier: metadata.timezone),
-						online: ev.profile.online
-					)
+				let profile = SandpolisProfile(
+					uuid: ev.profile.uuid,
+					cvid: ev.profile.cvid,
+					hostname: "", // TODO
+					ipAddress: ev.profile.ip,
+					platform: Util_OsType.linux, // TODO
+					architecture: Util_Architecture.x86, // TODO
+					online: ev.profile.online
+				)
 
-					self.profiles.append(profile)
-					for handler in self.profileListeners {
-						handler(profile)
-					}
+				self.profiles.append(profile)
+				for handler in self.profileListeners {
+					handler(profile)
 				}
 			} else {
 				if let index = self.profiles.firstIndex(where: { $0.cvid == ev.profile.cvid }) {
@@ -367,19 +357,6 @@ public class SandpolisConnection {
 			}
 		}
 		streams.append(stream)
-	}
-
-	/// Query client metadata.
-	///
-	/// - Parameter target: The target client's CVID
-	/// - Returns: A response future
-	func getClientMetadata(_ target: Int32) -> EventLoopFuture<Net_Message> {
-		var rq = Net_Message.with {
-			$0.to = target
-			$0.rqClientMetadata = Net_RQ_ClientMetadata()
-		}
-
-		return request(&rq)
 	}
 
 	/// Register the given handler to receive profile updates.

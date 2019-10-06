@@ -41,8 +41,6 @@ class ControlPanelTable: UITableViewController {
 		username.text = profile.username
 
 		ip.text = profile.ipAddress
-		download.text = FormatUtil.formatFileSize(profile.downloadTotal)
-		upload.text = FormatUtil.formatFileSize(profile.uploadTotal)
 	}
 
 	override func viewWillAppear(_ animated: Bool) {
@@ -57,7 +55,9 @@ class ControlPanelTable: UITableViewController {
 	}
 
 	@objc private func update() {
-		uptime.text = FormatUtil.timeSince(profile.startTime)
+		if let start = profile.startTime {
+			uptime.text = FormatUtil.timeSince(start)
+		}
 		if let timezone = profile.timezone {
 			time.text = FormatUtil.formatDateInTimezone(Date(), timezone)
 		} else {

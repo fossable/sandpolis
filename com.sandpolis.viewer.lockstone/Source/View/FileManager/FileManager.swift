@@ -60,7 +60,13 @@ class FileManager: UITableViewController {
 		pathLabel.translatesAutoresizingMaskIntoConstraints = false
 		pathBar.titleView = pathLabel
 
-		path = URL(fileURLWithPath: profile.userhome)
+		if let home = profile.userhome {
+			path = URL(fileURLWithPath: home)
+		} else {
+			// TODO
+			path = URL(fileURLWithPath: ".")
+		}
+
 		requestListing()
 	}
 

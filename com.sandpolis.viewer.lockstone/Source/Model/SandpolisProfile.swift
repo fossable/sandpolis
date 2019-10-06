@@ -29,32 +29,29 @@ class SandpolisProfile {
 	/// The client's hostname
 	var hostname: String
 
-	/// The last desktop screenshot
-	var screenshot: Data?
-
 	/// The client's IP address
 	var ipAddress: String
-
-	/// The client's total upload amount
-	var uploadTotal: Int64
-
-	/// The client's total download amount
-	var downloadTotal: Int64
-
+	
 	/// The client's OS type
 	var platform: Util_OsType
+	
+	/// The client's OS architecture
+	var architecture: Util_Architecture
+	
+	/// The saved desktop screenshot
+	var screenshot: Data?
 
-	/// The client's OS name and version
-	var osVersion: String
+	/// The client's OS version
+	var osVersion: String?
 
-	/// The username
-	var username: String
+	/// The user's username
+	var username: String?
 
 	/// The user's home directory
-	var userhome: String
+	var userhome: String?
 
 	/// The client's start timestamp
-	var startTime: Int64
+	var startTime: Int64?
 
 	/// The client's timezone
 	var timezone: TimeZone?
@@ -80,20 +77,13 @@ class SandpolisProfile {
 	/// Whether the client is online
 	var online: Bool
 
-	init(uuid: String, cvid: Int32, hostname: String, ipAddress: String, uploadTotal: Int64, downloadTotal: Int64, platform: Util_OsType, osVersion: String, username: String, userhome: String, startTime: Int64, timezone: TimeZone?, online: Bool) {
+	init(uuid: String, cvid: Int32, hostname: String, ipAddress: String, platform: Util_OsType, architecture: Util_Architecture, online: Bool) {
 		self.uuid = uuid
 		self.cvid = cvid
 		self.hostname = hostname
-		self.screenshot = nil
 		self.ipAddress = ipAddress
-		self.uploadTotal = uploadTotal
-		self.downloadTotal = downloadTotal
 		self.platform = platform
-		self.osVersion = osVersion
-		self.username = username
-		self.userhome = userhome
-		self.startTime = startTime
-		self.timezone = timezone
+		self.architecture = architecture
 		self.online = online
 	}
 }

@@ -55,6 +55,7 @@
 		AA81DD5822BD8C5200024120 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA81DD5622BD8C5200024120 /* Main.storyboard */; };
 		AA81DD5D22BD8C5400024120 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA81DD5C22BD8C5400024120 /* Assets.xcassets */; };
 		AA81DD6022BD8C5400024120 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA81DD5E22BD8C5400024120 /* LaunchScreen.storyboard */; };
+		AA86F6DE23497866000C0B94 /* Step4.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA86F6DD23497866000C0B94 /* Step4.swift */; };
 		AA87A5B722DB78B3007A702E /* MacroCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA87A5B622DB78B3007A702E /* MacroCell.swift */; };
 		AA899D2E2319E6A000E7C703 /* ServerCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA899D2D2319E6A000E7C703 /* ServerCreator.swift */; };
 		AA899D30231A065000E7C703 /* Step1.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA899D2F231A065000E7C703 /* Step1.swift */; };
@@ -161,6 +162,7 @@
 		AA81DD5C22BD8C5400024120 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA81DD5F22BD8C5400024120 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		AA81DD6122BD8C5400024120 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA86F6DD23497866000C0B94 /* Step4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step4.swift; sourceTree = "<group>"; };
 		AA87A5B622DB78B3007A702E /* MacroCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroCell.swift; sourceTree = "<group>"; };
 		AA899D2D2319E6A000E7C703 /* ServerCreator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerCreator.swift; sourceTree = "<group>"; };
 		AA899D2F231A065000E7C703 /* Step1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step1.swift; sourceTree = "<group>"; };
@@ -489,6 +491,7 @@
 				AA899D2F231A065000E7C703 /* Step1.swift */,
 				AA899D31231A066500E7C703 /* Step2.swift */,
 				AA899D33231A067A00E7C703 /* Step3.swift */,
+				AA86F6DD23497866000C0B94 /* Step4.swift */,
 			);
 			path = ServerCreator;
 			sourceTree = "<group>";
@@ -844,6 +847,7 @@
 				AAC163CF23458A3E006A4920 /* MC_Cvid.pb.swift in Sources */,
 				8E653C2222E6595D00BB8FEA /* MainTabController.swift in Sources */,
 				AAC163C723458A3E006A4920 /* MC_Delta.pb.swift in Sources */,
+				AA86F6DE23497866000C0B94 /* Step4.swift in Sources */,
 				AA6CACFF22DD78FC00041AF3 /* MacroResultCell.swift in Sources */,
 				8EAD841C22CBD80700B49D59 /* ClientMap.swift in Sources */,
 				ED5A421422E5289C00EA3C98 /* CreateAccount.swift in Sources */,

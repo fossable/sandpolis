@@ -75,7 +75,8 @@ class AddServer: UIViewController {
 	}
 
 	@IBAction func cloudButtonPressed(_ sender: Any) {
-		performSegue(withIdentifier: "PricingSegue", sender: self)
+		performSegue(withIdentifier: "CreateServerSegue", sender: self)
+		//performSegue(withIdentifier: "PricingSegue", sender: self)
 	}
 
 	func textFieldShouldReturn(textField: UITextField) -> Bool {

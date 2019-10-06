@@ -17,33 +17,33 @@
 //****************************************************************************//
 import UIKit
 
-class GroupPanelTable: UITableViewController {
+class Step4: UIViewController {
+	
+	@IBOutlet weak var launchButton: UIButton!
+	@IBOutlet weak var status: UIActivityIndicatorView!
+	
+	var parentController: ServerCreator!
 
-	@IBOutlet weak var uptime: UILabel!
-	@IBOutlet weak var upload: UILabel!
-	@IBOutlet weak var download: UILabel!
+	
+	@IBAction func back(_ sender: Any) {
+		parentController.showStep3()
+	}
 
-	var profiles: [SandpolisProfile]!
+	@IBAction func launch(_ sender: Any) {
+		launchButton.isEnabled = false
+		status.startAnimating()
 
-	override func viewDidLoad() {
-		super.viewDidLoad()
+		CloudUtil.createCloudInstance(hostname: parentController.step1.name.text!, username: parentController.step2.username.text!, password: parentController.step2.password.text!, location: parentController.step3.locationButton.titleLabel!.text!) { json, error in
+			DispatchQueue.main.async {
+				self.status.stopAnimating()
+			}
 
-		// Compute cumulative download
-		// download.text = FormatUtil.formatFileSize(profiles.reduce(0) { intermediate, profile in
-		//	return intermediate + profile.downloadTotal
-		// })
+			if let error = error {
+				let alert = UIAlertController(title: "Launch failed", message: error.localizedDescription, preferredStyle: .alert)
+				self.present(alert, animated: true) {
 
-		// Compute cumulative upload
-		// upload.text = FormatUtil.formatFileSize(profiles.reduce(0) { intermediate, profile in
-		// 	return intermediate + profile.uploadTotal
-		// })
-
-		// Compute cumulative uptime
-		// let reference = Int64(Date().timeIntervalSince1970) * 1000
-		// uptime.text = FormatUtil.timeSince(reference - profiles.reduce(0) { intermediate, profile in
-		// 	return intermediate + max(reference - profile.startTime, 0)
-		// })
-
-		tableView.allowsSelection = false
+				}
+			}
+		}
 	}
 }
