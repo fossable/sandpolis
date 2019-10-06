@@ -15,12 +15,13 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.util;
+package com.sandpolis.core.instance.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
 import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
 import com.sandpolis.core.proto.net.MSG.Message;

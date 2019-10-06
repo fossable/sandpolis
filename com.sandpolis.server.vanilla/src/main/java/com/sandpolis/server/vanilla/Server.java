@@ -62,6 +62,7 @@ import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.storage.database.DatabaseFactory;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.ipc.task.IPCTask;
+import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.profile.Profile;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
@@ -80,7 +81,6 @@ import com.sandpolis.core.proto.util.Platform.OsType;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
-import com.sandpolis.core.util.IDUtil;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.auth.PasswordMechanism;
 import com.sandpolis.server.vanilla.gen.generator.MegaGen;
@@ -174,7 +174,7 @@ public final class Server {
 		});
 
 		// Load NetworkStore and choose a new CVID
-		Core.setCvid(IDUtil.CVID.cvid(Instance.SERVER));
+		Core.setCvid(CvidUtil.cvid(Instance.SERVER));
 		NetworkStore.init(config -> {
 			config.ephemeral();
 			config.cvid = Core.cvid();

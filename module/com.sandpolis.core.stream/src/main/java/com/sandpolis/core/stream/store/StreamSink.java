@@ -22,8 +22,8 @@ import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
 import java.util.function.Consumer;
 
+import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.util.ProtoUtil;
 
 public abstract class StreamSink<E> implements Subscriber<E>, StreamEndpoint {
 

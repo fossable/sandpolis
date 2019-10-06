@@ -39,6 +39,7 @@ import javax.persistence.OneToMany;
 
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.ProtoType;
+import com.sandpolis.core.instance.util.ConfigUtil;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Group.GroupStats;
 import com.sandpolis.core.proto.pojo.Group.ProtoGroup;
@@ -46,7 +47,6 @@ import com.sandpolis.core.proto.util.Auth.KeyContainer;
 import com.sandpolis.core.proto.util.Auth.KeyContainer.KeyPair;
 import com.sandpolis.core.proto.util.Auth.PasswordContainer;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
-import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.auth.AuthenticationMechanism;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.auth.PasswordMechanism;
@@ -213,7 +213,7 @@ public class Group implements ProtoType<ProtoGroup> {
 
 	@Override
 	public ErrorCode merge(ProtoGroup delta) {
-		ErrorCode validity = ValidationUtil.Config.valid(delta.getConfig());
+		ErrorCode validity = ConfigUtil.valid(delta.getConfig());
 		if (validity != ErrorCode.OK)
 			return validity;
 

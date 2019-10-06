@@ -15,7 +15,7 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.util;
+package com.sandpolis.core.instance.util;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -31,6 +31,7 @@ import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.util.IDUtil;
 
 /**
  * Utilities for simplifying common operations related to protocol buffers.

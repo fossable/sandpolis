@@ -32,11 +32,11 @@ import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.util.ConfigUtil;
 import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener.ListenerState;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
-import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStoreConfig;
 
 /**
@@ -111,8 +111,8 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 	 */
 	public void add(ListenerConfig config) {
 		Objects.requireNonNull(config);
-		checkArgument(ValidationUtil.Config.valid(config) == ErrorCode.OK, "Invalid configuration");
-		checkArgument(ValidationUtil.Config.complete(config) == ErrorCode.OK, "Incomplete configuration");
+		checkArgument(ConfigUtil.valid(config) == ErrorCode.OK, "Invalid configuration");
+		checkArgument(ConfigUtil.complete(config) == ErrorCode.OK, "Incomplete configuration");
 
 		add(new Listener(config));
 	}

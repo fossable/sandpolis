@@ -23,9 +23,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.concurrent.SubmissionPublisher;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.util.ProtoUtil;
 
 public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> implements StreamEndpoint {
 

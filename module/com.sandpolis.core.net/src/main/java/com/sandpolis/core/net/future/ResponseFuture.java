@@ -22,9 +22,9 @@ import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import java.util.concurrent.ExecutionException;
 
 import com.google.protobuf.Message;
+import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.net.command.CommandFuture.MessageHandler;
 import com.sandpolis.core.net.exception.InvalidMessageException;
-import com.sandpolis.core.util.ProtoUtil;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;

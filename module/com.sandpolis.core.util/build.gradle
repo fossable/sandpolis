@@ -18,8 +18,6 @@ eclipse {
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
 
-	implementation project(':module:com.sandpolis.core.proto')
-
 	implementation 'commons-validator:commons-validator:1.6'
 
 	// https://github.com/google/guava

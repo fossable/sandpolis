@@ -19,10 +19,10 @@ package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.util.ProtoUtil.begin;
+import static com.sandpolis.core.instance.util.ProtoUtil.failure;
+import static com.sandpolis.core.instance.util.ProtoUtil.success;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.failure;
-import static com.sandpolis.core.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 
 import java.io.IOException;

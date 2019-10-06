@@ -32,10 +32,10 @@ import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.util.ConfigUtil;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Group.ProtoGroup;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
-import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.group.GroupStore.GroupStoreConfig;
 import com.sandpolis.server.vanilla.store.user.User;
 
@@ -69,8 +69,8 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 	 */
 	public void add(GroupConfig config) {
 		Objects.requireNonNull(config);
-		checkArgument(ValidationUtil.Config.valid(config) == ErrorCode.OK, "Invalid configuration");
-		checkArgument(ValidationUtil.Config.complete(config) == ErrorCode.OK, "Incomplete configuration");
+		checkArgument(ConfigUtil.valid(config) == ErrorCode.OK, "Invalid configuration");
+		checkArgument(ConfigUtil.complete(config) == ErrorCode.OK, "Incomplete configuration");
 
 		add(new Group(config));
 	}

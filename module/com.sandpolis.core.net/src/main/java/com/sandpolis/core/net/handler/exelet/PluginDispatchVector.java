@@ -25,10 +25,10 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.core.util.ProtoUtil;
 
 public class PluginDispatchVector extends DispatchVector {
 

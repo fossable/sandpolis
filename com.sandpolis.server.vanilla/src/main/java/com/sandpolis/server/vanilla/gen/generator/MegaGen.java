@@ -102,8 +102,11 @@ public class MegaGen extends FileGenerator {
 		// Add plugin binaries
 		if (!config.getMega().getDownloader()) {
 			for (String plugin : features.getPluginList()) {
-				Path bin = ArtifactUtil.getArtifactFile(Environment.get(LIB), ":" + plugin + ":5.1.0");
-				output.add("lib/" + fromCoordinate(":" + plugin + ":5.1.0").filename, bin);
+				Path bin = ArtifactUtil.getArtifactFile(Environment.get(LIB),
+						":" + plugin + ":" + Core.SO_BUILD.getVersion());
+
+				// Add plugin artifact
+				output.add("lib/" + bin.getFileName(), bin);
 
 				// Add plugin dependencies
 				SoiUtil.readMatrix(bin).getArtifactList().stream().forEach(dep -> {
@@ -111,8 +114,9 @@ public class MegaGen extends FileGenerator {
 							ArtifactUtil.getArtifactFile(Environment.get(LIB), dep.getCoordinates()));
 				});
 
-				// Remove unnecessary plugin components
-				// TODO
+				// Remove unnecessary components if they exist
+				output.sub(EntryPath.get("lib/" + bin.getFileName(), "server/vanilla.jar"));
+				// TODO enumerate over all possibilities
 			}
 		}
 

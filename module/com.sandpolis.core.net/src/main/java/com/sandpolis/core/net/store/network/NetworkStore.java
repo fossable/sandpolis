@@ -42,6 +42,7 @@ import com.sandpolis.core.net.store.network.NetworkStore.NetworkStoreConfig;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.CvidChangedEvent;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerEstablishedEvent;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerLostEvent;
+import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkAdded;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkRemoved;
@@ -49,7 +50,6 @@ import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.NodeAdded;
 import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.NodeRemoved;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.util.IDUtil;
 
 /**
  * A static store for managing network connections, which may or may not be
@@ -128,8 +128,8 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	public int getPreferredServer() {
 		if (preferredServer == 0)
 			// Choose a server at random
-			preferredServer = network.nodes().stream()
-					.filter(cvid -> IDUtil.CVID.extractInstance(cvid) == Instance.SERVER).findAny().orElse(0);
+			preferredServer = network.nodes().stream().filter(cvid -> CvidUtil.extractInstance(cvid) == Instance.SERVER)
+					.findAny().orElse(0);
 
 		return preferredServer;
 	}

@@ -18,8 +18,8 @@
 package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.failure;
+import static com.sandpolis.core.instance.util.ProtoUtil.begin;
+import static com.sandpolis.core.instance.util.ProtoUtil.failure;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;

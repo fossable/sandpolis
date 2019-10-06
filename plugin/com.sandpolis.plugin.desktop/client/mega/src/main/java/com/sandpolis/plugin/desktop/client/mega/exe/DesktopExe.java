@@ -17,8 +17,8 @@
  ******************************************************************************/
 package com.sandpolis.plugin.desktop.client.mega.exe;
 
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.failure;
+import static com.sandpolis.core.instance.util.ProtoUtil.begin;
+import static com.sandpolis.core.instance.util.ProtoUtil.failure;
 
 import java.awt.Rectangle;
 import java.awt.Robot;

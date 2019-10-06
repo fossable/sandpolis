@@ -35,12 +35,12 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.ProtoType;
+import com.sandpolis.core.instance.util.ConfigUtil;
 import com.sandpolis.core.net.Transport;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.Listener.ListenerStats;
 import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
-import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.net.init.ServerChannelInitializer;
 import com.sandpolis.server.vanilla.store.user.User;
 
@@ -317,7 +317,7 @@ public class Listener implements ProtoType<ProtoListener> {
 
 	@Override
 	public ErrorCode merge(ProtoListener delta) {
-		ErrorCode validity = ValidationUtil.Config.valid(delta.getConfig());
+		ErrorCode validity = ConfigUtil.valid(delta.getConfig());
 		if (validity != ErrorCode.OK)
 			return validity;
 

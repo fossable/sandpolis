@@ -29,10 +29,10 @@ import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
+import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
-import com.sandpolis.core.util.IDUtil;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -130,7 +130,7 @@ public interface Sock {
 	 * @return The instance type of the remote host
 	 */
 	public default Instance getRemoteInstance() {
-		return IDUtil.CVID.extractInstance(getRemoteCvid());
+		return CvidUtil.extractInstance(getRemoteCvid());
 	}
 
 	/**
@@ -139,7 +139,7 @@ public interface Sock {
 	 * @return The instance flavor of the remote host
 	 */
 	public default InstanceFlavor getRemoteInstanceFlavor() {
-		return IDUtil.CVID.extractInstanceFlavor(getRemoteCvid());
+		return CvidUtil.extractInstanceFlavor(getRemoteCvid());
 	}
 
 	/**

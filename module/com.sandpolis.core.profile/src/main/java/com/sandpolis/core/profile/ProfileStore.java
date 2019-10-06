@@ -35,12 +35,13 @@ import com.sandpolis.core.profile.Events.ProfileOnlineEvent;
 import com.sandpolis.core.profile.ProfileStore.ProfileStoreConfig;
 import com.sandpolis.core.proto.net.MCDelta.EV_ProfileDelta;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
 /**
  * @author cilki
  * @since 4.0.0
  */
-public final class ProfileStore extends MapStore<Integer, Profile, ProfileStoreConfig> {
+public final class ProfileStore extends MapStore<String, Profile, ProfileStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ProfileStore.class);
 
@@ -57,14 +58,15 @@ public final class ProfileStore extends MapStore<Integer, Profile, ProfileStoreC
 	/**
 	 * Get an existing {@link Profile} from the store or create a new one.
 	 *
-	 * @param cvid The profile CVID
-	 * @param uuid The profile UUID
+	 * @param uuid     The profile's permanent UUID
+	 * @param instance The profile's instance type
+	 * @param flavor   The profile's instance subtype
 	 * @return A new or existing profile
 	 */
-	public Profile getProfileOrCreate(int cvid, String uuid) {
+	public Profile getProfileOrCreate(String uuid, Instance instance, InstanceFlavor flavor) {
 		Profile profile = provider.get("uuid", uuid).orElse(null);
 		if (profile == null) {
-			profile = new Profile(cvid, uuid);
+			profile = new Profile(uuid, instance, flavor);
 			provider.add(profile);
 			post(ProfileOnlineEvent::new, profile);
 		}
@@ -83,15 +85,15 @@ public final class ProfileStore extends MapStore<Integer, Profile, ProfileStoreC
 
 	public void merge(List<EV_ProfileDelta> updates) throws Exception {
 		for (EV_ProfileDelta update : updates) {
-			Profile profile = get(update.getCvid()).orElse(null);
-			if (profile == null) {
-				profile = new Profile(update.getCvid(), "TODO");// TODO
-
-				profile.merge(update.getUpdate());
-				provider.add(profile);
-			} else {
-				profile.merge(update.getUpdate());
-			}
+//			Profile profile = get(update.getCvid()).orElse(null);
+//			if (profile == null) {
+//				profile = new Profile(update.getCvid(), "TODO");// TODO
+//
+//				profile.merge(update.getUpdate());
+//				provider.add(profile);
+//			} else {
+//				profile.merge(update.getUpdate());
+//			}
 		}
 	}
 
@@ -101,6 +103,16 @@ public final class ProfileStore extends MapStore<Integer, Profile, ProfileStoreC
 				// TODO set cvid or uuid in update
 				.collect(Collectors.toList());
 
+	}
+
+	/**
+	 * Get a profile by cvid.
+	 * 
+	 * @param cvid The profile CVID
+	 * @return The profile
+	 */
+	public Optional<Profile> get(int cvid) {
+		return stream().filter(profile -> profile.getCvid() == cvid).findFirst();
 	}
 
 	@Override
@@ -115,17 +127,17 @@ public final class ProfileStore extends MapStore<Integer, Profile, ProfileStoreC
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Profile.class, Profile::getCvid);
+			provider = new MemoryMapStoreProvider<>(Profile.class, Profile::getUuid);
 		}
 
 		public void ephemeral(List<Profile> list) {
 			container = list;
-			provider = new MemoryListStoreProvider<>(Profile.class, Profile::getCvid, list);
+			provider = new MemoryListStoreProvider<>(Profile.class, Profile::getUuid, list);
 		}
 
 		@Override
 		public void persistent(Database database) {
-			provider = database.getConnection().provider(Profile.class, "cvid");
+			provider = database.getConnection().provider(Profile.class, "uuid");
 		}
 	}
 

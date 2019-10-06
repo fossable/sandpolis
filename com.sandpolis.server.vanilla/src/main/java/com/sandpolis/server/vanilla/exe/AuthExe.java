@@ -17,13 +17,13 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.instance.util.ProtoUtil.begin;
+import static com.sandpolis.core.instance.util.ProtoUtil.failure;
+import static com.sandpolis.core.instance.util.ProtoUtil.success;
 import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.FAILURE_KEY_CHALLENGE;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_KEY;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.UNKNOWN_GROUP;
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.failure;
-import static com.sandpolis.core.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 
 import java.util.List;
@@ -70,8 +70,8 @@ public final class AuthExe extends Exelet {
 			// Connection is now authenticated
 			context.connector.authenticate();
 
-			Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteCvid(),
-					context.connector.getRemoteUuid());
+			Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteUuid(),
+					context.connector.getRemoteInstance(), context.connector.getRemoteInstanceFlavor());
 			groups.forEach(group -> {
 				// TODO add client to group
 			});
@@ -91,8 +91,8 @@ public final class AuthExe extends Exelet {
 			return failure(outcome, UNKNOWN_GROUP);
 		}
 
-		Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteCvid(),
-				context.connector.getRemoteUuid());
+		Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteUuid(),
+				context.connector.getRemoteInstance(), context.connector.getRemoteInstanceFlavor());
 		groups.forEach(group -> {
 			// TODO add client to group
 		});
@@ -125,8 +125,8 @@ public final class AuthExe extends Exelet {
 		context.connector.engage(AbstractChannelInitializer.SAND5, sand5);
 
 		if (sand5.challengeFuture().get()) {
-			Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteCvid(),
-					context.connector.getRemoteUuid());
+			Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteUuid(),
+					context.connector.getRemoteInstance(), context.connector.getRemoteInstanceFlavor());
 			// TODO add client to group
 
 			// Connection is now authenticated

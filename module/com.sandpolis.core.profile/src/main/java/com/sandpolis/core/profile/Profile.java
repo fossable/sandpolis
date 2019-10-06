@@ -33,16 +33,18 @@ import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
 import com.sandpolis.core.attribute.Attribute;
 import com.sandpolis.core.attribute.AttributeDomain;
 import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.instance.Updatable.AbstractUpdatable;
 import com.sandpolis.core.instance.storage.database.converter.InstanceConverter;
+import com.sandpolis.core.instance.storage.database.converter.InstanceFlavorConverter;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
 import com.sandpolis.core.proto.util.Update.ProfileUpdate;
-import com.sandpolis.core.util.IDUtil;
 
 /**
  * A {@link Profile} is a generic container that stores data for an instance.
@@ -77,22 +79,30 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	@Convert(converter = InstanceConverter.class)
 	private Instance instance;
 
+	/**
+	 * The profile's instance subtype.
+	 */
+	@Column
+	@Convert(converter = InstanceFlavorConverter.class)
+	private InstanceFlavor flavor;
+
 	@Column
 	private String uuid;
 
-	@Column
+	@Transient
 	private int cvid;
 
 	/**
 	 * Initialize an empty {@link Profile}.
 	 *
-	 * @param cvid The initial CVID
-	 * @param uuid The profile's permanent UUID
+	 * @param uuid     The profile's permanent UUID
+	 * @param instance The profile's instance type
+	 * @param flavor   The profile's instance subtype
 	 */
-	public Profile(int cvid, String uuid) {
-		this.instance = IDUtil.CVID.extractInstance(cvid);
+	public Profile(String uuid, Instance instance, InstanceFlavor flavor) {
 		this.uuid = Objects.requireNonNull(uuid);
-		this.cvid = cvid;
+		this.instance = Objects.requireNonNull(instance);
+		this.flavor = Objects.requireNonNull(flavor);
 		this.domains = new HashMap<>();
 
 		// TODO

@@ -32,11 +32,11 @@ import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.util.ConfigUtil;
 import com.sandpolis.core.proto.pojo.User.ProtoUser;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.util.CryptoUtil;
-import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.user.UserStore.UserStoreConfig;
 
 public final class UserStore extends MapStore<String, User, UserStoreConfig> {
@@ -87,7 +87,7 @@ public final class UserStore extends MapStore<String, User, UserStoreConfig> {
 	 */
 	public void add(UserConfig config) {
 		Objects.requireNonNull(config);
-		checkArgument(ValidationUtil.Config.valid(config) == ErrorCode.OK, "Invalid configuration");
+		checkArgument(ConfigUtil.valid(config) == ErrorCode.OK, "Invalid configuration");
 
 		// Create the user
 		User user = new User(config);

@@ -17,8 +17,8 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.success;
+import static com.sandpolis.core.instance.util.ProtoUtil.begin;
+import static com.sandpolis.core.instance.util.ProtoUtil.success;
 
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;

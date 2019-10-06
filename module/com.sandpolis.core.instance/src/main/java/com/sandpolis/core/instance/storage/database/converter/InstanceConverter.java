@@ -23,9 +23,7 @@ import javax.persistence.Converter;
 import com.sandpolis.core.proto.util.Platform.Instance;
 
 /**
- * When used on a persistent {@link Instance} field, this converter makes
- * database operations much more efficient by replacing {@link Instance}s with
- * their numeric identifier.
+ * This converter replaces {@link Instance}s with their numeric identifier.
  *
  * @author cilki
  * @since 5.0.0

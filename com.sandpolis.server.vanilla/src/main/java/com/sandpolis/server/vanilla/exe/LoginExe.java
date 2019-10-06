@@ -17,13 +17,13 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.instance.util.ProtoUtil.begin;
+import static com.sandpolis.core.instance.util.ProtoUtil.failure;
+import static com.sandpolis.core.instance.util.ProtoUtil.success;
 import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_USERNAME;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
-import static com.sandpolis.core.util.ProtoUtil.begin;
-import static com.sandpolis.core.util.ProtoUtil.failure;
-import static com.sandpolis.core.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import org.slf4j.Logger;
@@ -98,8 +98,8 @@ public final class LoginExe extends Exelet {
 		Profile viewer = ProfileStore.getViewer(username).orElse(null);
 		if (viewer == null) {
 			// Build new profile
-			viewer = ProfileStore.getProfileOrCreate(context.connector.getRemoteCvid(),
-					context.connector.getRemoteUuid());
+			viewer = ProfileStore.getProfileOrCreate(context.connector.getRemoteUuid(),
+					context.connector.getRemoteInstance(), context.connector.getRemoteInstanceFlavor());
 			viewer.set(AK_VIEWER.USERNAME, username);
 		}
 

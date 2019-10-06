@@ -31,11 +31,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.MSG;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.core.util.ProtoUtil;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;

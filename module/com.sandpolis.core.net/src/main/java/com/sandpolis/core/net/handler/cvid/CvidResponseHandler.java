@@ -22,12 +22,12 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
 import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
 import com.sandpolis.core.proto.net.MSG.Message;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
-import com.sandpolis.core.util.IDUtil;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -59,7 +59,7 @@ public class CvidResponseHandler extends AbstractCvidHandler {
 			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent());
 		} else {
 			RS_Cvid.Builder rs = RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.UUID)
-					.setCvid(IDUtil.CVID.cvid(rq.getInstance(), rq.getInstanceFlavor()));
+					.setCvid(CvidUtil.cvid(rq.getInstance(), rq.getInstanceFlavor()));
 
 			ch.writeAndFlush(Message.newBuilder().setRsCvid(rs).build());
 

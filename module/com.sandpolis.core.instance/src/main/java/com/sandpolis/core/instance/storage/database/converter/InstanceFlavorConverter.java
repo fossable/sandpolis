@@ -15,59 +15,31 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.stream.store;
+package com.sandpolis.core.instance.storage.database.converter;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 
-import java.util.concurrent.Flow.Subscriber;
-import java.util.concurrent.Flow.Subscription;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
-import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.util.ProtoUtil;
-import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.proto.net.MSG.Message;
-
-public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscriber<E>, StreamEndpoint {
-
-	private int id;
-	private Sock sock;
-	private Subscription subscription;
+/**
+ * This converter replaces {@link InstanceFlavor}s with their numeric
+ * identifier.
+ *
+ * @author cilki
+ * @since 5.0.0
+ */
+@Converter
+public class InstanceFlavorConverter implements AttributeConverter<InstanceFlavor, Integer> {
 
 	@Override
-	public int getStreamID() {
-		return id;
-	}
-
-	public Sock getSock() {
-		return sock;
-	}
-
-	public OutboundStreamAdapter(int streamID, Sock sock) {
-		this.id = streamID;
-		this.sock = checkNotNull(sock);
+	public Integer convertToDatabaseColumn(InstanceFlavor flavor) {
+		return flavor.getNumber();
 	}
 
 	@Override
-	public void onSubscribe(Subscription subscription) {
-		this.subscription = subscription;
-		this.subscription.request(Long.MAX_VALUE);
+	public InstanceFlavor convertToEntityAttribute(Integer dbData) {
+		return InstanceFlavor.forNumber(dbData);
 	}
 
-	@Override
-	public void onError(Throwable throwable) {
-		StreamStore.outbound.remove(this);
-		throwable.printStackTrace();
-	}
-
-	@Override
-	public void onComplete() {
-		StreamStore.outbound.remove(this);
-	}
-
-	@Override
-	public void onNext(E item) {
-		sock.send(
-				Message.newBuilder().setEvStreamData(ProtoUtil.setPayload(EV_StreamData.newBuilder().setId(id), item)));
-	}
 }
