@@ -22,7 +22,7 @@ import java.nio.file.Paths;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.PlatformUtil;
+import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.plugin.filesys.FsHandle;
@@ -37,7 +37,7 @@ public final class FilesysExe extends Exelet {
 	@Handler(tag = MSG.FilesysMessage.RQ_FILE_LISTING_FIELD_NUMBER)
 	public static MessageOrBuilder rq_file_listing(RQ_FileListing rq) throws Exception {
 		String path;
-		switch (PlatformUtil.queryOsType()) {
+		switch (PlatformUtil.OS_TYPE) {
 		case WINDOWS:
 			path = rq.getPath().startsWith("/") ? rq.getPath().substring(1) : rq.getPath();
 			if (path.equals("C:"))
@@ -55,7 +55,7 @@ public final class FilesysExe extends Exelet {
 	@Auth
 	@Handler(tag = MSG.FilesysMessage.RQ_FILE_DELETE_FIELD_NUMBER)
 	public static MessageOrBuilder rq_file_delete(RQ_FileDelete rq) throws Exception {
-		switch (PlatformUtil.queryOsType()) {
+		switch (PlatformUtil.OS_TYPE) {
 		case WINDOWS:
 			for (var path : rq.getTargetList()) {
 				MoreFiles.deleteRecursively(Paths.get(path.startsWith("/") ? path.substring(1) : path),

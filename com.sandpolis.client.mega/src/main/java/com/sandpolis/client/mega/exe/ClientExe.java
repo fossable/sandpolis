@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.PlatformUtil;
+import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.MCClient.RQ_ClientMetadata;
 import com.sandpolis.core.proto.net.MCClient.RS_ClientMetadata;
@@ -46,7 +46,7 @@ public final class ClientExe extends Exelet {
 
 		return RS_ClientMetadata.newBuilder().setUsername(System.getProperty("user.name"))
 				.setOsVersion(System.getProperty("os.name") + " " + System.getProperty("os.version"))
-				.setHostname(InetAddress.getLocalHost().getHostName()).setOsType(PlatformUtil.queryOsType())
+				.setHostname(InetAddress.getLocalHost().getHostName()).setOsType(PlatformUtil.OS_TYPE)
 				.setTimezone(TimeZone.getDefault().getID()).setStartTimestamp(Environment.JVM_TIMESTAMP.getTime())
 				.setUserhome(Paths.get(System.getProperty("user.home")).toUri().getPath());
 

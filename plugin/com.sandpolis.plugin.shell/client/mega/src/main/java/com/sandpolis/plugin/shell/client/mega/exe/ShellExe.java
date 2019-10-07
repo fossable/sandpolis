@@ -21,7 +21,7 @@ import java.io.InputStreamReader;
 
 import com.google.common.io.CharStreams;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.PlatformUtil;
+import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.plugin.shell.client.mega.Shells;
 import com.sandpolis.plugin.shell.net.MCShell.RQ_Execute;
@@ -84,7 +84,7 @@ public final class ShellExe extends Exelet {
 	public static void rq_power_change(RQ_PowerChange rq) throws Exception {
 		// TODO check permissions
 		// TODO avoid switches
-		switch (PlatformUtil.queryOsType()) {
+		switch (PlatformUtil.OS_TYPE) {
 		case LINUX:
 			switch (rq.getChange()) {
 			case POWEROFF:

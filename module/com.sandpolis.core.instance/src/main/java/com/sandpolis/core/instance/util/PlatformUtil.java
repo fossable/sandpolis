@@ -15,7 +15,7 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.instance;
+package com.sandpolis.core.instance.util;
 
 import static com.sandpolis.core.proto.util.Platform.OsType.AIX;
 import static com.sandpolis.core.proto.util.Platform.OsType.ANDROID;
@@ -29,15 +29,16 @@ import static com.sandpolis.core.proto.util.Platform.OsType.WINDOWS;
 
 import com.sandpolis.core.proto.util.Platform.OsType;
 
-// TODO move this class somewhere better
 public final class PlatformUtil {
+
+	public static final OsType OS_TYPE = queryOsType();
 
 	/**
 	 * Detect the OS type of the current system.
 	 *
 	 * @return The system's {@link OsType} or {@code UNRECOGNIZED}
 	 */
-	public static OsType queryOsType() {
+	private static OsType queryOsType() {
 		String name = System.getProperty("os.name").toLowerCase();
 
 		if (name.startsWith("windows"))
@@ -60,15 +61,6 @@ public final class PlatformUtil {
 
 		if (name.startsWith("openbsd"))
 			return OPENBSD;
-
-		if (name.startsWith("netbsd"))
-			return null;// netbsd
-
-		if (name.equals("gnu"))
-			return null;// gnu
-
-		if (name.equals("gnu/kfreebsd"))
-			return null;// kfreebsd
 
 		if (name.startsWith("aix"))
 			return AIX;

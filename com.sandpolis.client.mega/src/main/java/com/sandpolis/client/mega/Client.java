@@ -46,9 +46,9 @@ import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
-import com.sandpolis.core.instance.PlatformUtil;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
+import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerEstablishedEvent;
@@ -114,7 +114,7 @@ public final class Client {
 			// Memory-only installation
 			return task.skipped();
 
-		Path base = Paths.get(SO_CONFIG.getExecution().getInstallPathOrDefault(PlatformUtil.queryOsType().getNumber(),
+		Path base = Paths.get(SO_CONFIG.getExecution().getInstallPathOrDefault(PlatformUtil.OS_TYPE.getNumber(),
 				System.getProperty("user.home") + "/.sandpolis"));
 		Path lib = base.resolve("lib");
 
