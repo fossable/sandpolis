@@ -178,7 +178,9 @@ githubRelease {
 	draft = true
 	prerelease = true
 	releaseAssets = {[
-		project.file("build/launch4j/${launch4j.outfile}"),
+		// TODO Classpath isn't handled properly with launch4j
+		// project.file("build/launch4j/${launch4j.outfile}"),
+		jarOnlineWin.archivePath,
 		jarOnlineLin.archivePath,
 		jarOnlineMac.archivePath,
 		jarOffline.archivePath
