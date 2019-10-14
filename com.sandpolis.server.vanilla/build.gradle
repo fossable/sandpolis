@@ -52,7 +52,7 @@ dependencies {
 	api 'com.google.guava:guava:28.1-jre'
 
 	// https://github.com/h2database/h2database
-	api 'com.h2database:h2:1.4.199'
+	api 'com.h2database:h2:1.4.200'
 
 	// https://github.com/netty/netty
 	api 'io.netty:netty-codec:4.1.42.Final'
