@@ -30,17 +30,8 @@ public final class IDUtil {
 	 *
 	 * @return A new request ID
 	 */
-	public static int msg() {
-		return RandUtil.nextInt(1, Integer.MAX_VALUE);
-	}
-
-	/**
-	 * Generate a new filesystem handle ID.
-	 *
-	 * @return The FsHandle ID
-	 */
-	public static int fm() {
-		return RandUtil.nextInt();
+	public static int rq() {
+		return RandUtil.nextInt() << 0x01;
 	}
 
 	/**
@@ -49,6 +40,15 @@ public final class IDUtil {
 	 * @return The stream ID
 	 */
 	public static int stream() {
+		return RandUtil.nextInt() | 0x01;
+	}
+
+	/**
+	 * Generate a new filesystem handle ID.
+	 *
+	 * @return The FsHandle ID
+	 */
+	public static int fm() {
 		return RandUtil.nextInt();
 	}
 

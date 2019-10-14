@@ -1,0 +1,41 @@
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
+syntax = "proto3";
+
+package net;
+
+import "com/sandpolis/plugin/shell/net/msg_shell.proto";
+import "com/sandpolis/plugin/shell/net/msg_power.proto";
+
+option java_package = "com.sandpolis.plugin.shell.net";
+
+message ShellMSG {
+    oneof payload {
+
+        // msg_shell
+        RQ_Execute                      rq_execute                      =    1;
+        RS_Execute                      rs_execute                      = 1001;
+        RQ_ListShells                   rq_list_shells                  =    2;
+        RS_ListShells                   rs_list_shells                  = 1002;
+        RQ_ShellStream                  rq_shell_stream                 =    3;
+        EV_ShellStream                  ev_shell_stream                 =    4;
+
+        // msg_power
+        RQ_PowerChange                  rq_power_change                 =    5;
+    }
+}

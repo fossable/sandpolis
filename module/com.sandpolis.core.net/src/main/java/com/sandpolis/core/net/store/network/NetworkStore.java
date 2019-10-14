@@ -43,12 +43,12 @@ import com.sandpolis.core.net.store.network.NetworkStoreEvents.CvidChangedEvent;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerEstablishedEvent;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerLostEvent;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkAdded;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkRemoved;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.NodeAdded;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.NodeRemoved;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta;
+import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.LinkAdded;
+import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.LinkRemoved;
+import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.NodeAdded;
+import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.NodeRemoved;
 import com.sandpolis.core.proto.util.Platform.Instance;
 
 /**
@@ -191,7 +191,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param message The message
 	 * @return The next hop
 	 */
-	public int deliver(Message message) {
+	public int deliver(MSG message) {
 		ConnectionStore.get(getPreferredServer()).get().send(message);
 		return getPreferredServer();
 	}
@@ -203,7 +203,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param message The message
 	 * @return The next hop
 	 */
-	public int deliver(Message.Builder message) {
+	public int deliver(MSG.Builder message) {
 		return deliver(message.build());
 	}
 
@@ -213,7 +213,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param message The message
 	 * @return The next hop
 	 */
-	public int route(Message message) {
+	public int route(MSG message) {
 		if (network.adjacentNodes(Core.cvid()).contains(message.getTo())) {
 			ConnectionStore.get(message.getTo()).get().send(message);
 			return message.getTo();
@@ -228,22 +228,22 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param message The message
 	 * @return The next hop
 	 */
-	public int route(Message.Builder message) {
+	public int route(MSG.Builder message) {
 		return route(message.build());
 	}
 
 	/**
 	 * Transmit a message into the network, taking the most direct path.<br>
 	 * <br>
-	 * Implementation note: this method cannot use {@link #route(Message)} because
-	 * it must place the receive request before actually sending the message. (To
-	 * avoid missing a message that is received extremely quickly).
+	 * Implementation note: this method cannot use {@link #route(MSG)} because it
+	 * must place the receive request before actually sending the message. (To avoid
+	 * missing a message that is received extremely quickly).
 	 *
 	 * @param message      The message
 	 * @param timeoutClass The message timeout class
 	 * @return The next hop
 	 */
-	public MessageFuture route(Message.Builder message, String timeoutClass) {
+	public MessageFuture route(MSG.Builder message, String timeoutClass) {
 		int hop = findHop(message);
 		if (!Config.has(timeoutClass))
 			timeoutClass = "net.message.default_timeout";
@@ -254,7 +254,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	}
 
 	// TODO temporary
-	private int findHop(Message.Builder message) {
+	private int findHop(MSG.Builder message) {
 		if (network.adjacentNodes(Core.cvid()).contains(message.getTo()))
 			return message.getTo();
 

@@ -31,7 +31,7 @@ import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler;
 import com.sandpolis.core.net.handler.exelet.ExeletHandler;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -77,7 +77,7 @@ public abstract class AbstractChannelInitializer extends ChannelInitializer<Chan
 	/**
 	 * The global protocol buffer decoder.
 	 */
-	private static final ProtobufDecoder HANDLER_PROTO_DECODER = new ProtobufDecoder(Message.getDefaultInstance());
+	private static final ProtobufDecoder HANDLER_PROTO_DECODER = new ProtobufDecoder(MSG.getDefaultInstance());
 
 	/**
 	 * The global protocol buffer encoder.

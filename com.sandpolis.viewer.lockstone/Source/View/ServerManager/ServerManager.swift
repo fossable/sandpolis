@@ -150,25 +150,15 @@ class ServerManager: UITableViewController {
 		let login = SandpolisUtil.connection.login(server.username, server.password)
 		login.whenSuccess { rs in
 			if rs.rsOutcome.result {
-				self.openServerStream(server: server)
+				DispatchQueue.main.async {
+					self.performSegue(withIdentifier: "ShowHostSegue", sender: nil)
+				}
 			} else {
 				self.onConnectFail(failureMessage: "Failed to login to server.")
 			}
 		}
 		login.whenFailure { (error: Error) in
 			self.onConnectFail(failureMessage: "Failed to login to server.")
-		}
-	}
-
-	func openServerStream(server: SandpolisServer) {
-		let stream = SandpolisUtil.connection.openProfileStream()
-		stream.whenSuccess { rs in
-			DispatchQueue.main.async {
-				self.performSegue(withIdentifier: "ShowHostSegue", sender: nil)
-			}
-		}
-		stream.whenFailure { (error: Error) in
-			self.onConnectFail(failureMessage: "Failed to open server stream.")
 		}
 	}
 

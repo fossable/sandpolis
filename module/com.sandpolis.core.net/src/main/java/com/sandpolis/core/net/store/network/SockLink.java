@@ -17,7 +17,7 @@
  ******************************************************************************/
 package com.sandpolis.core.net.store.network;
 
-import com.sandpolis.core.proto.net.MCNetwork.LinkType;
+import com.sandpolis.core.proto.net.MsgNetwork.LinkType;
 
 /**
  * This class contains information about a link between two arbitrary instances.

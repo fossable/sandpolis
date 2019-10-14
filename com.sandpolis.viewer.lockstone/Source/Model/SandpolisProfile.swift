@@ -31,13 +31,10 @@ class SandpolisProfile {
 
 	/// The client's IP address
 	var ipAddress: String
-	
+
 	/// The client's OS type
 	var platform: Util_OsType
-	
-	/// The client's OS architecture
-	var architecture: Util_Architecture
-	
+
 	/// The saved desktop screenshot
 	var screenshot: Data?
 
@@ -77,13 +74,12 @@ class SandpolisProfile {
 	/// Whether the client is online
 	var online: Bool
 
-	init(uuid: String, cvid: Int32, hostname: String, ipAddress: String, platform: Util_OsType, architecture: Util_Architecture, online: Bool) {
+	init(uuid: String, cvid: Int32, hostname: String, ipAddress: String, platform: Util_OsType, online: Bool) {
 		self.uuid = uuid
 		self.cvid = cvid
 		self.hostname = hostname
 		self.ipAddress = ipAddress
 		self.platform = platform
-		self.architecture = architecture
 		self.online = online
 	}
 }

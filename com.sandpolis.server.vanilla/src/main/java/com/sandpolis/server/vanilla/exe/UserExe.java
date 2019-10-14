@@ -27,10 +27,10 @@ import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.proto.net.MCUser.RQ_AddUser;
-import com.sandpolis.core.proto.net.MCUser.RQ_RemoveUser;
-import com.sandpolis.core.proto.net.MCUser.RQ_UserDelta;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgUser.RQ_AddUser;
+import com.sandpolis.core.proto.net.MsgUser.RQ_RemoveUser;
+import com.sandpolis.core.proto.net.MsgUser.RQ_UserDelta;
 import com.sandpolis.server.vanilla.store.user.User;
 
 /**
@@ -43,7 +43,7 @@ public final class UserExe extends Exelet {
 
 	@Auth
 	@Permission(permission = 0/* server.user.create */)
-	@Handler(tag = MSG.Message.RQ_ADD_USER_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_ADD_USER_FIELD_NUMBER)
 	public static MessageOrBuilder rq_add_user(RQ_AddUser rq) {
 		var outcome = begin();
 
@@ -52,7 +52,7 @@ public final class UserExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_REMOVE_USER_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_REMOVE_USER_FIELD_NUMBER)
 	public static MessageOrBuilder rq_remove_user(ExeletContext context, RQ_RemoveUser rq) {
 		if (!checkOwnership(context, rq.getId()))
 			return failure(ACCESS_DENIED);
@@ -64,7 +64,7 @@ public final class UserExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_USER_DELTA_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_USER_DELTA_FIELD_NUMBER)
 	public static MessageOrBuilder rq_user_delta(ExeletContext context, RQ_UserDelta rq) {
 		if (!checkOwnership(context, rq.getDelta().getConfig().getId()))
 			return failure(ACCESS_DENIED);

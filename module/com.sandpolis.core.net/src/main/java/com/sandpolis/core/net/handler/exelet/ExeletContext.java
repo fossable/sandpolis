@@ -22,6 +22,7 @@ import java.util.Objects;
 import com.google.protobuf.Message;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.proto.net.Message.MSG;
 
 /**
  * An object that can optionally be passed to {@link Exelet} handlers and
@@ -34,12 +35,15 @@ public final class ExeletContext {
 
 	public final Sock connector;
 
+	public final MSG request;
+
 	Message.Builder reply;
 
 	Runnable deferAction;
 
-	public ExeletContext(Sock connector) {
+	public ExeletContext(Sock connector, MSG request) {
 		this.connector = Objects.requireNonNull(connector);
+		this.request = Objects.requireNonNull(request);
 	}
 
 	/**

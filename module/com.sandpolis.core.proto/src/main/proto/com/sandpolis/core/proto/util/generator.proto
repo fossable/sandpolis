@@ -1,0 +1,246 @@
+/*******************************************************************************
+ *                                                                             *
+ *                Copyright © 2015 - 2019 Subterranean Security                *
+ *                                                                             *
+ *  Licensed under the Apache License, Version 2.0 (the "License");            *
+ *  you may not use this file except in compliance with the License.           *
+ *  You may obtain a copy of the License at                                    *
+ *                                                                             *
+ *      http://www.apache.org/licenses/LICENSE-2.0                             *
+ *                                                                             *
+ *  Unless required by applicable law or agreed to in writing, software        *
+ *  distributed under the License is distributed on an "AS IS" BASIS,          *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ *  See the License for the specific language governing permissions and        *
+ *  limitations under the License.                                             *
+ *                                                                             *
+ ******************************************************************************/
+syntax = "proto3";
+
+package util;
+
+import "com/sandpolis/core/proto/util/auth.proto";
+import "com/sandpolis/core/proto/util/platform.proto";
+
+option java_package = "com.sandpolis.core.proto.util";
+option optimize_for = CODE_SIZE;
+
+/**
+ * Identifies the target host of a potential connection.
+ */
+message NetworkTarget {
+
+    // The network address
+    string address = 1;
+
+    // The numeric port
+    int32 port = 2;
+}
+
+/**
+ * Identifies supported client features, platforms, and architectures.
+ */
+message FeatureSet {
+
+    // Supported operating systems
+    repeated OsType supported_os = 1;
+
+    // Supported system architectures
+    repeated string supported_arch = 2;
+
+    // Supported plugins
+    repeated string plugin = 3;
+}
+
+/**
+ * The payload type.
+ */
+enum OutputPayload {
+    // TODO remove prefix
+    // Output a configuration for another payload type
+    OUTPUT_CONFIG = 0;
+
+    // Output a full-featured heavyweight client written in Java
+    OUTPUT_MEGA = 1;
+
+    // Output a lightweight native client written in C++
+    OUTPUT_MICRO = 2;
+}
+
+/**
+ * The format of the output.
+ */
+enum OutputFormat {
+
+    // File formats
+    JAR = 0;
+    EXE = 1;
+    ELF = 2;
+    BAT = 3;
+    SH = 4;
+    RB = 5;
+    PY = 6;
+
+    // Other formats
+    QR = 7;
+    URL = 8;
+}
+
+/**
+ * Information on the result of a generation.
+ */
+message GenReport {
+
+    // The overall success of the generation attempt
+    bool result = 1;
+
+    // A comment on the result of the generation attempt
+    string comment = 2;
+
+    // The start timestamp of the generation
+    int64 timestamp = 3;
+
+    // How long the generation took in milliseconds
+    int64 duration = 4;
+
+    // A MD5 hash of the result
+    string output_md5 = 5;
+
+    // A SHA256 hash of the result
+    string output_sha256 = 6;
+
+    // A SHA512 hash of the result
+    string output_sha512 = 7;
+
+    // The size of the result in bytes
+    int64 output_size = 9;
+
+    // The type of installer generated
+    OutputPayload payload = 10;
+
+    // The type of installer generated
+    OutputFormat format = 11;
+}
+
+/**
+ * A LoopConfig contains all parameters and information needed to establish a
+ * new connection with a ConnectionLoop.
+ */
+message LoopConfig {
+
+    // The list of network targets to attempt
+    repeated NetworkTarget target = 1;
+
+    // Indicates whether strict certificate checking will be enabled
+    bool strict_certs = 2;
+
+    // The maximum number of conenction iterations to attempt in the worst case
+    int32 max_iterations = 3;
+
+    // The initial connection timeout
+    int32 timeout = 4;
+
+    // The maximum connection timeout
+    int32 max_timeout = 5;
+
+    // The timeout smoothing factor which determines how quickly the maximum
+    // timeout is reached
+    double timeout_flatness = 6;
+}
+
+/**
+ * Configuration specific to the network module.
+ */
+message NetworkConfig {
+
+    // The ConnectionLoop configuration
+    LoopConfig loop_config = 1;
+
+    // When true, the client will not be able to connect to services outside of
+    // the Sandpolis network.
+    bool strict_network = 2;
+}
+
+/**
+ * Configuration specific to payload execution.
+ */
+message ExecutionConfig {
+    // Whether the client installer should be deleted upon successful execution
+    bool cleanup = 1;
+
+    // Whether the client should be automatically started on boot
+    bool auto = 2;
+
+    // Whether the client should force install if the initial installation fails
+    // for any reason.
+    bool recover = 3;
+
+    // Installation paths. Keys are the enum numbers from OsType.
+    map<int32, string> install_path = 4;
+}
+
+/**
+ * Configuration specific to the authentication module.
+ */
+message AuthenticationConfig {
+    // The name of the auth group
+    // (Only needed if group type is KEY)
+    string group_name = 1;
+
+    oneof auth_oneof {
+        // Key authentication mechanism
+        KeyContainer key = 2;
+
+        // Password authentication mechanism
+        PasswordContainer password = 3;
+    }
+}
+
+/**
+ * Configuration specific to MEGA payloads.
+ */
+message MegaConfig {
+    FeatureSet features = 1;
+    NetworkConfig network = 2;
+    ExecutionConfig execution = 3;
+    AuthenticationConfig authentication = 4;
+
+    bool downloader = 5;
+    bool memory = 6;
+}
+
+/**
+ * Configuration specific to MICRO payloads.
+ */
+message MicroConfig {
+    NetworkConfig network = 1;
+    ExecutionConfig execution = 2;
+    AuthenticationConfig authentication = 3;
+}
+
+/**
+ * A GenConfig contains all parameters and information needed to launch a new
+ * generator.
+ */
+message GenConfig {
+
+    // The request ID
+    int64 id = 1;
+
+    // The user that requested the generation
+    string request_user = 2;
+
+    // The payload type
+    OutputPayload payload = 3;
+
+    // The output format of this client
+    OutputFormat format = 4;
+
+    // An optional identifier
+    string client_identifier = 5;
+
+    oneof payload_config {
+        MegaConfig mega = 6;
+        MicroConfig micro = 7;
+    }
+}

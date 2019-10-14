@@ -17,13 +17,13 @@
  ******************************************************************************/
 package com.sandpolis.core.viewer.stream;
 
-import com.sandpolis.core.proto.net.MCStream.ProfileStreamData;
+import com.sandpolis.core.proto.net.MsgStream.EV_ProfileStream;
 import com.sandpolis.core.stream.store.StreamSink;
 
-public class ProfileStreamSink extends StreamSink<ProfileStreamData> {
+public class ProfileStreamSink extends StreamSink<EV_ProfileStream> {
 
 	@Override
-	public void onNext(ProfileStreamData item) {
+	public void onNext(EV_ProfileStream item) {
 		super.onNext(item);
 
 		// TODO update profile store

@@ -31,11 +31,9 @@ import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
-import com.sandpolis.core.profile.Events.ProfileOnlineEvent;
 import com.sandpolis.core.profile.ProfileStore.ProfileStoreConfig;
-import com.sandpolis.core.proto.net.MCDelta.EV_ProfileDelta;
+import com.sandpolis.core.proto.net.MsgDelta.EV_ProfileDelta;
 import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
 /**
  * @author cilki
@@ -53,24 +51,6 @@ public final class ProfileStore extends MapStore<String, Profile, ProfileStoreCo
 
 	public <E> E getContainer() {
 		return (E) container;
-	}
-
-	/**
-	 * Get an existing {@link Profile} from the store or create a new one.
-	 *
-	 * @param uuid     The profile's permanent UUID
-	 * @param instance The profile's instance type
-	 * @param flavor   The profile's instance subtype
-	 * @return A new or existing profile
-	 */
-	public Profile getProfileOrCreate(String uuid, Instance instance, InstanceFlavor flavor) {
-		Profile profile = provider.get("uuid", uuid).orElse(null);
-		if (profile == null) {
-			profile = new Profile(uuid, instance, flavor);
-			provider.add(profile);
-			post(ProfileOnlineEvent::new, profile);
-		}
-		return profile;
 	}
 
 	/**
@@ -107,7 +87,7 @@ public final class ProfileStore extends MapStore<String, Profile, ProfileStoreCo
 
 	/**
 	 * Get a profile by cvid.
-	 * 
+	 *
 	 * @param cvid The profile CVID
 	 * @return The profile
 	 */

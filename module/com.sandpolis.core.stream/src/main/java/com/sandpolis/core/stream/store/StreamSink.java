@@ -22,9 +22,6 @@ import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
 import java.util.function.Consumer;
 
-import com.sandpolis.core.instance.util.ProtoUtil;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-
 public abstract class StreamSink<E> implements Subscriber<E>, StreamEndpoint {
 
 	private int id;
@@ -49,11 +46,6 @@ public abstract class StreamSink<E> implements Subscriber<E>, StreamEndpoint {
 	@Override
 	public void onNext(E item) {
 		handlers.forEach(handler -> handler.accept(item));
-	}
-
-	@SuppressWarnings("unchecked")
-	public void onNext(EV_StreamData data) {
-		onNext((E) ProtoUtil.getPayload(data));
 	}
 
 	@Override

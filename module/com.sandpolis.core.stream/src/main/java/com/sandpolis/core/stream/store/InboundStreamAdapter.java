@@ -23,9 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.concurrent.SubmissionPublisher;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
 
 public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> implements StreamEndpoint {
 
@@ -44,11 +42,6 @@ public class InboundStreamAdapter<E extends MessageOrBuilder> extends Submission
 	public InboundStreamAdapter(int streamID, Sock sock) {
 		this.id = streamID;
 		this.sock = checkNotNull(sock);
-	}
-
-	@SuppressWarnings("unchecked")
-	public void submit(EV_StreamData msg) {
-		submit((E) ProtoUtil.getPayload(msg));
 	}
 
 	public void addOutbound(OutboundStreamAdapter<E> out) {

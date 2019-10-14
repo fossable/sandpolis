@@ -20,7 +20,7 @@ import Foundation
 
 /// Handles the CVID handshake
 final class CvidRequestHandler: ChannelInboundHandler, RemovableChannelHandler {
-	typealias InboundIn = Net_Message
+	typealias InboundIn = Net_MSG
 
 	private let connection: SandpolisConnection
 
@@ -39,7 +39,7 @@ final class CvidRequestHandler: ChannelInboundHandler, RemovableChannelHandler {
 	}
 
 	func channelActive(context: ChannelHandlerContext) {
-		let rq = Net_Message.with({
+		let rq = Net_MSG.with({
 			$0.rqCvid = Net_RQ_Cvid.with({
 				$0.instance = Util_Instance.viewer
 				$0.instanceFlavor = Util_InstanceFlavor.lockstone

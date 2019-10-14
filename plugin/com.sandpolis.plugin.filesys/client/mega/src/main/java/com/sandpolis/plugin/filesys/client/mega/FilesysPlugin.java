@@ -22,7 +22,7 @@ import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.plugin.filesys.client.mega.exe.FilesysExe;
-import com.sandpolis.plugin.filesys.net.MSG;
+import com.sandpolis.plugin.filesys.net.MessageFilesys.FilesysMSG;
 
 public final class FilesysPlugin extends SandpolisPlugin implements ExeletProvider {
 
@@ -34,6 +34,6 @@ public final class FilesysPlugin extends SandpolisPlugin implements ExeletProvid
 
 	@Override
 	public Class<? extends Message> getMessageType() {
-		return MSG.FilesysMessage.class;
+		return FilesysMSG.class;
 	}
 }

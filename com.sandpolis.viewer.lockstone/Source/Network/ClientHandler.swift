@@ -21,7 +21,7 @@ import os
 
 /// A handler for non-request messages
 final class ClientHandler: ChannelInboundHandler {
-	typealias InboundIn = Net_Message
+	typealias InboundIn = Net_MSG
 
 	private let connection: SandpolisConnection
 
@@ -32,26 +32,20 @@ final class ClientHandler: ChannelInboundHandler {
 	func channelRead(context: ChannelHandlerContext, data: NIOAny) {
 		let rs = self.unwrapInboundIn(data)
 
-		if rs.msgOneof == nil {
+		if rs.payload == nil {
 			return
 		}
 
-		switch rs.msgOneof! {
-		case .evStreamData:
-			DispatchQueue.global(qos: .default).async {
-				// Linear search to find stream
-				if let stream = self.connection.streams.first(where: { $0.id == rs.evStreamData.id }) {
-					stream.consume(rs.evStreamData)
-				} else {
-					// Wait one second and try again before dropping
-					sleep(1)
-					if let stream = self.connection.streams.first(where: { $0.id == rs.evStreamData.id }) {
-						stream.consume(rs.evStreamData)
-					} else {
-						os_log("Warning: dropped data for stream: %s", rs.evStreamData.id)
-					}
-				}
+		switch rs.payload! {
+		case .evProfileStream:
+			print("Got EV_ProfileStream")
+			if let stream = self.connection.streams.first(where: { $0.id == rs.id }) {
+				stream.consume(rs)
+			} else {
+				os_log("Warning: dropped data for stream: %s", rs.id)
 			}
+		case .plugin:
+			break
 		default:
 			os_log("Missing handler for message")
 		}

@@ -23,8 +23,8 @@ import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
 import com.sandpolis.core.net.sock.AbstractSock;
-import com.sandpolis.core.proto.net.MCNetwork.EV_EndpointClosed;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgNetwork.EV_EndpointClosed;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -35,7 +35,7 @@ import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
 import io.netty.util.ReferenceCountUtil;
 
 /**
- * This handler reads the first two fields of an incoming {@link Message} to
+ * This handler reads the first two fields of an incoming {@link MSG} to
  * determine its destination. If the destination is another instance, the
  * {@link ByteBuf} will be efficiently forwarded. Otherwise the {@link ByteBuf}
  * will be decoded and executed for this instance.<br>
@@ -95,8 +95,8 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 					// Skip to the middle of the pipeline
 					((AbstractSock) sock.get()).getHandler(AbstractChannelInitializer.FRAME_ENCODER).shortcut(msg);
 				} else {
-					ctx.channel().writeAndFlush(Message.newBuilder()
-							.setEvEndpointClosed(EV_EndpointClosed.newBuilder().setCvid(to)).build());
+					ctx.channel().writeAndFlush(
+							MSG.newBuilder().setEvEndpointClosed(EV_EndpointClosed.newBuilder().setCvid(to)).build());
 				}
 
 				return;

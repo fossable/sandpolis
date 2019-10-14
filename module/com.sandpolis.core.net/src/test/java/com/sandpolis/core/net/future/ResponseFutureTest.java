@@ -31,9 +31,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.exception.InvalidMessageException;
-import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
-import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.proto.net.MsgCvid.RS_Cvid;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 import io.netty.util.concurrent.GlobalEventExecutor;
@@ -55,7 +55,7 @@ class ResponseFutureTest {
 		ResponseFuture<Outcome> response = new ResponseFuture<>(msgFuture);
 		assertFalse(response.isDone());
 
-		msgFuture.setSuccess(Message.newBuilder().setRsOutcome(Outcome.newBuilder().setResult(true)).build());
+		msgFuture.setSuccess(MSG.newBuilder().setRsOutcome(Outcome.newBuilder().setResult(true)).build());
 
 		response.sync();
 		assertTrue(response.isSuccess());
@@ -69,7 +69,7 @@ class ResponseFutureTest {
 		ResponseFuture<Outcome> response = new ResponseFuture<>(msgFuture);
 		assertFalse(response.isDone());
 
-		msgFuture.setSuccess(Message.newBuilder().build());
+		msgFuture.setSuccess(MSG.newBuilder().build());
 
 		assertThrows(InvalidMessageException.class, () -> response.sync());
 		assertTrue(!response.isSuccess());
@@ -97,7 +97,7 @@ class ResponseFutureTest {
 			}
 		});
 
-		msgFuture.setSuccess(Message.newBuilder().setRqCvid(RQ_Cvid.newBuilder()).build());
+		msgFuture.setSuccess(MSG.newBuilder().setRqCvid(RQ_Cvid.newBuilder()).build());
 
 		response.addHandler((Outcome rs) -> {
 			fail();
@@ -130,7 +130,7 @@ class ResponseFutureTest {
 		ResponseFuture<RS_Cvid> response = new ResponseFuture<>(msgFuture);
 		assertFalse(response.isDone());
 
-		msgFuture.setSuccess(Message.newBuilder().setRsOutcome(Outcome.newBuilder().setResult(false)).build());
+		msgFuture.setSuccess(MSG.newBuilder().setRsOutcome(Outcome.newBuilder().setResult(false)).build());
 
 		response.sync();
 		assertThrows(ClassCastException.class, () -> {

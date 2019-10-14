@@ -35,6 +35,7 @@ spotless {
 
 		trimTrailingWhitespace()
 		endWithNewline()
+		indentWithSpaces()
 
 		licenseHeaderFile file('gradle/resources/header_java.txt'), "syntax "
 	}

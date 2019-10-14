@@ -25,7 +25,7 @@ import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.plugin.sysinfo.client.mega.exe.SysinfoExe;
-import com.sandpolis.plugin.sysinfo.net.MSG;
+import com.sandpolis.plugin.sysinfo.net.MessageSysinfo.SysinfoMSG;
 
 public final class SysinfoPlugin extends SandpolisPlugin implements ExeletProvider {
 
@@ -53,6 +53,6 @@ public final class SysinfoPlugin extends SandpolisPlugin implements ExeletProvid
 
 	@Override
 	public Class<? extends Message> getMessageType() {
-		return MSG.SysinfoMessage.class;
+		return SysinfoMSG.class;
 	}
 }

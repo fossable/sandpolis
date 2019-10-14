@@ -20,10 +20,10 @@ import NIO
 
 /// A handler for request responses
 final class ResponseHandler: ChannelInboundHandler {
-	typealias InboundIn = Net_Message
+	typealias InboundIn = Net_MSG
 
 	/// A map of response IDs to response future
-	private var responseMap: [Int32: EventLoopPromise<Net_Message>] = [:]
+	private var responseMap: [Int32: EventLoopPromise<Net_MSG>] = [:]
 
 	/// An internal queue for synchronization
 	private let queue = DispatchQueue(label: "ResponseHandlerInternal")
@@ -48,7 +48,7 @@ final class ResponseHandler: ChannelInboundHandler {
 	///
 	/// - Parameter id: The message id
 	/// - Parameter promise: The response promise
-	public func register(_ id: Int32, _ promise: EventLoopPromise<Net_Message>) {
+	public func register(_ id: Int32, _ promise: EventLoopPromise<Net_MSG>) {
 		queue.sync {
 			responseMap[id] = promise
 		}

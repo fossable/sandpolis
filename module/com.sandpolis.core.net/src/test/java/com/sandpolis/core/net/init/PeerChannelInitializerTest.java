@@ -25,7 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.util.RandUtil;
 
 import io.netty.bootstrap.Bootstrap;
@@ -82,8 +82,8 @@ class PeerChannelInitializerTest {
 	 * Exchange a random message between two peers and check for validity.
 	 */
 	private void exchange(Channel peer1, Channel peer2) {
-		Message rand1 = Message.newBuilder().setId(RandUtil.nextInt()).build();
-		Message rand2 = Message.newBuilder().setId(RandUtil.nextInt()).build();
+		MSG rand1 = MSG.newBuilder().setId(RandUtil.nextInt()).build();
+		MSG rand2 = MSG.newBuilder().setId(RandUtil.nextInt()).build();
 
 		peer1.pipeline().addLast(new ChannelInboundHandlerAdapter() {
 			@Override

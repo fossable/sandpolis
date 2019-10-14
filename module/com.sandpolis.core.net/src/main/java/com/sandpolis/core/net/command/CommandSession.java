@@ -34,7 +34,7 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 import io.netty.util.concurrent.DefaultPromise;
@@ -244,7 +244,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	public void send(MessageOrBuilder payload) {
 		checkNotNull(payload);
 
-		gateway.send(ProtoUtil.setPayload(MSG.Message.newBuilder().setTo(cvid), payload));
+		gateway.send(ProtoUtil.setPayload(MSG.newBuilder().setTo(cvid), payload));
 	}
 
 	/**

@@ -30,13 +30,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.ChannelConstant;
-import com.sandpolis.core.net.handler.cvid.CvidResponseHandler;
 import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
-import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
-import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.net.util.CvidUtil;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.proto.net.MsgCvid.RS_Cvid;
 import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.util.IDUtil;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -67,7 +66,7 @@ class CvidResponseHandlerTest {
 	@Test
 	@DisplayName("Receive an invalid response")
 	void testReceiveIncorrect() {
-		server.writeInbound(Message.newBuilder()
+		server.writeInbound(MSG.newBuilder()
 				.setRqCvid(RQ_Cvid.newBuilder().setInstance(Instance.SERVER).setUuid("testuuid2")).build());
 
 		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
@@ -78,20 +77,20 @@ class CvidResponseHandlerTest {
 	@Test
 	@DisplayName("Receive a valid response")
 	void testReceiveCorrect() {
-		server.writeInbound(Message.newBuilder()
+		server.writeInbound(MSG.newBuilder()
 				.setRqCvid(RQ_Cvid.newBuilder().setInstance(Instance.CLIENT).setUuid("testuuid2")).build());
 
 		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
 		assertTrue(event.isSuccess());
 
-		assertEquals(Instance.CLIENT, IDUtil.CVID.extractInstance(server.attr(ChannelConstant.CVID).get()));
+		assertEquals(Instance.CLIENT, CvidUtil.extractInstance(server.attr(ChannelConstant.CVID).get()));
 		assertEquals("testuuid2", server.attr(ChannelConstant.UUID).get());
 		assertNull(server.pipeline().get(CvidResponseHandler.class), "Handler autoremove failed");
 
-		Message msg = server.readOutbound();
+		MSG msg = server.readOutbound();
 		RS_Cvid rs = msg.getRsCvid();
 
-		assertEquals(Instance.CLIENT, IDUtil.CVID.extractInstance(rs.getCvid()));
+		assertEquals(Instance.CLIENT, CvidUtil.extractInstance(rs.getCvid()));
 		assertFalse(rs.getServerUuid().isEmpty());
 
 	}

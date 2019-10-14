@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.RateLimiter;
-import com.sandpolis.core.ipc.MSG.Message;
+import com.sandpolis.core.ipc.Message.MSG;
 
 /**
  * A simple IPC receiver that processes messages serially from an underlying
@@ -73,9 +73,9 @@ public class Receptor implements Runnable, Closeable {
 	@Override
 	public void run() {
 		try (Socket s = socket; InputStream in = socket.getInputStream(); OutputStream out = socket.getOutputStream()) {
-			Message message;
+			MSG message;
 			while (!s.isClosed()) {
-				message = Message.parseDelimitedFrom(in);
+				message = MSG.parseDelimitedFrom(in);
 				if (message == null)
 					// Stream reached EOF
 					return;

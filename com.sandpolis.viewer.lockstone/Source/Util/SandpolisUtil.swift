@@ -42,4 +42,12 @@ final class SandpolisUtil {
 			return false
 		}
 	}
+
+	static func rq() -> Int32 {
+		return Int32.random(in: Int32.min ... Int32.max) << 1
+	}
+
+	static func stream() -> Int32 {
+		return Int32.random(in: Int32.min ... Int32.max) | 0x01
+	}
 }

@@ -29,10 +29,9 @@ import org.junit.jupiter.api.Test;
 import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletHandler;
-import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
-import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
-import com.sandpolis.core.proto.net.MSG;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.proto.net.MsgLogin.RQ_Login;
 
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -64,12 +63,12 @@ class ExeletHandlerTest {
 		channel.pipeline().addFirst(execute);
 		execute.register(TestExe.class, Test2Exe.class);
 
-		channel.writeInbound(Message.newBuilder().build());
+		channel.writeInbound(MSG.newBuilder().build());
 		assertFalse(rq_login_triggered);
 		assertFalse(rq_cvid_triggered);
-		channel.writeInbound(Message.newBuilder().setRqLogin(RQ_Login.newBuilder()).build());
+		channel.writeInbound(MSG.newBuilder().setRqLogin(RQ_Login.newBuilder()).build());
 		assertTrue(rq_login_triggered);
-		channel.writeInbound(Message.newBuilder().setRqCvid(RQ_Cvid.newBuilder()).build());
+		channel.writeInbound(MSG.newBuilder().setRqCvid(RQ_Cvid.newBuilder()).build());
 		assertFalse(rq_cvid_triggered);
 	}
 
@@ -81,13 +80,13 @@ class ExeletHandlerTest {
 		execute.register(TestExe.class, Test2Exe.class);
 		execute.authenticate();
 
-		channel.writeInbound(Message.newBuilder().build());
+		channel.writeInbound(MSG.newBuilder().build());
 		assertFalse(rq_login_triggered);
 		assertFalse(rq_cvid_triggered);
-		channel.writeInbound(Message.newBuilder().setRqLogin(RQ_Login.newBuilder()).build());
+		channel.writeInbound(MSG.newBuilder().setRqLogin(RQ_Login.newBuilder()).build());
 		assertTrue(rq_login_triggered);
 		assertFalse(rq_cvid_triggered);
-		channel.writeInbound(Message.newBuilder().setRqCvid(RQ_Cvid.newBuilder()).build());
+		channel.writeInbound(MSG.newBuilder().setRqCvid(RQ_Cvid.newBuilder()).build());
 		assertTrue(rq_cvid_triggered);
 
 	}
@@ -96,8 +95,8 @@ class ExeletHandlerTest {
 	public static class TestExe extends Exelet {
 
 		@Unauth
-		@Handler(tag = MSG.Message.RQ_LOGIN_FIELD_NUMBER)
-		public void rq_login(Message msg) {
+		@Handler(tag = MSG.RQ_LOGIN_FIELD_NUMBER)
+		public void rq_login(MSG msg) {
 			rq_login_triggered = true;
 		}
 
@@ -106,8 +105,8 @@ class ExeletHandlerTest {
 	public static class Test2Exe extends Exelet {
 
 		@Auth
-		@Handler(tag = MSG.Message.RQ_CVID_FIELD_NUMBER)
-		public void rq_cvid(Message msg) {
+		@Handler(tag = MSG.RQ_CVID_FIELD_NUMBER)
+		public void rq_cvid(MSG msg) {
 			rq_cvid_triggered = true;
 		}
 

@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
+import com.sandpolis.core.proto.net.MsgGenerator.RS_Generate;
 import com.sandpolis.core.proto.util.Generator.AuthenticationConfig;
 import com.sandpolis.core.proto.util.Generator.ExecutionConfig;
 import com.sandpolis.core.proto.util.Generator.GenConfig;

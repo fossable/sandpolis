@@ -194,7 +194,7 @@ public final class ValidationUtil {
 
 	/**
 	 * Validate an email address.
-	 * 
+	 *
 	 * @param email The candidate email
 	 * @return The email validity
 	 */
@@ -204,7 +204,7 @@ public final class ValidationUtil {
 
 	/**
 	 * Validate an IPv4 address.
-	 * 
+	 *
 	 * @param ipv4 The candidate address
 	 * @return The address validity
 	 */

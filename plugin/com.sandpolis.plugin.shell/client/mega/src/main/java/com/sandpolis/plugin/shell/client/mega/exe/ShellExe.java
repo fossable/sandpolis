@@ -24,19 +24,19 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.plugin.shell.client.mega.Shells;
-import com.sandpolis.plugin.shell.net.MCShell.RQ_Execute;
-import com.sandpolis.plugin.shell.net.MCShell.RQ_ListShells;
-import com.sandpolis.plugin.shell.net.MCShell.RQ_PowerChange;
-import com.sandpolis.plugin.shell.net.MCShell.RS_Execute;
-import com.sandpolis.plugin.shell.net.MCShell.RS_ListShells;
-import com.sandpolis.plugin.shell.net.MCShell.RS_ListShells.ShellListing;
-import com.sandpolis.plugin.shell.net.MCShell.Shell;
-import com.sandpolis.plugin.shell.net.MSG;
+import com.sandpolis.plugin.shell.net.MessageShell.ShellMSG;
+import com.sandpolis.plugin.shell.net.MsgPower.RQ_PowerChange;
+import com.sandpolis.plugin.shell.net.MsgShell.RQ_Execute;
+import com.sandpolis.plugin.shell.net.MsgShell.RQ_ListShells;
+import com.sandpolis.plugin.shell.net.MsgShell.RS_Execute;
+import com.sandpolis.plugin.shell.net.MsgShell.RS_ListShells;
+import com.sandpolis.plugin.shell.net.MsgShell.RS_ListShells.ShellListing;
+import com.sandpolis.plugin.shell.net.MsgShell.Shell;
 
 public final class ShellExe extends Exelet {
 
 	@Auth
-	@Handler(tag = MSG.ShellMessage.RQ_EXECUTE_FIELD_NUMBER)
+	@Handler(tag = ShellMSG.RQ_EXECUTE_FIELD_NUMBER)
 	public static MessageOrBuilder rq_execute(RQ_Execute rq) throws Exception {
 
 		String[] command;
@@ -62,7 +62,7 @@ public final class ShellExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.ShellMessage.RQ_LIST_SHELLS_FIELD_NUMBER)
+	@Handler(tag = ShellMSG.RQ_LIST_SHELLS_FIELD_NUMBER)
 	public static MessageOrBuilder rq_list_shells(RQ_ListShells rq) throws Exception {
 		var rs = RS_ListShells.newBuilder();
 
@@ -80,7 +80,7 @@ public final class ShellExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.ShellMessage.RQ_POWER_CHANGE_FIELD_NUMBER)
+	@Handler(tag = ShellMSG.RQ_POWER_CHANGE_FIELD_NUMBER)
 	public static void rq_power_change(RQ_PowerChange rq) throws Exception {
 		// TODO check permissions
 		// TODO avoid switches

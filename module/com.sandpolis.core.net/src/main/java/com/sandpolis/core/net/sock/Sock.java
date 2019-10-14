@@ -30,7 +30,7 @@ import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
@@ -160,9 +160,9 @@ public interface Sock {
 
 	/**
 	 * Get a {@link MessageFuture} that will be triggered by the arrival of a
-	 * {@link Message} with the given ID.
+	 * {@link MSG} with the given ID.
 	 *
-	 * @param id The ID of the desired {@link Message}
+	 * @param id The ID of the desired {@link MSG}
 	 * @return A {@link MessageFuture}
 	 */
 	public default MessageFuture read(int id) {
@@ -171,9 +171,9 @@ public interface Sock {
 
 	/**
 	 * Get a {@link MessageFuture} that will be triggered by the arrival of a
-	 * {@link Message} with the given ID.
+	 * {@link MSG} with the given ID.
 	 *
-	 * @param id      The ID of the desired {@link Message}
+	 * @param id      The ID of the desired {@link MSG}
 	 * @param timeout The message timeout
 	 * @param unit    The timeout unit
 	 * @return A {@link MessageFuture}
@@ -183,91 +183,91 @@ public interface Sock {
 	}
 
 	/**
-	 * Send a {@link Message} with the intention of receiving a reply.
+	 * Send a {@link MSG} with the intention of receiving a reply.
 	 *
-	 * @param message The {@link Message} to send
+	 * @param message The {@link MSG} to send
 	 * @return A {@link MessageFuture} which will be notified when the response is
 	 *         received
 	 */
-	public default MessageFuture request(Message message) {
+	public default MessageFuture request(MSG message) {
 		MessageFuture future = read(message.getId());
 		send(message);
 		return future;
 	}
 
 	/**
-	 * Send a {@link Message} with the intention of receiving a reply.
+	 * Send a {@link MSG} with the intention of receiving a reply.
 	 *
-	 * @param message The {@link Message} to send
+	 * @param message The {@link MSG} to send
 	 * @param timeout The response timeout
 	 * @param unit    The timeout unit
 	 * @return A {@link MessageFuture} which will be notified when the response is
 	 *         received
 	 */
-	public default MessageFuture request(Message message, long timeout, TimeUnit unit) {
+	public default MessageFuture request(MSG message, long timeout, TimeUnit unit) {
 		MessageFuture future = read(message.getId(), timeout, unit);
 		send(message);
 		return future;
 	}
 
 	/**
-	 * Send a {@link Message} with the intention of receiving a reply. The ID field
-	 * will be populated if empty.
+	 * Send a {@link MSG} with the intention of receiving a reply. The ID field will
+	 * be populated if empty.
 	 *
-	 * @param message The {@link Message} to send
+	 * @param message The {@link MSG} to send
 	 * @return A {@link MessageFuture} which will be notified when the response is
 	 *         received
 	 */
-	public default MessageFuture request(Message.Builder message) {
+	public default MessageFuture request(MSG.Builder message) {
 		if (message.getId() == 0)
 			message.setId(0);// TODO GET FROM ID UTIL!
 		return request(message.build());
 	}
 
 	/**
-	 * Send a {@link Message} with the intention of receiving a reply.
+	 * Send a {@link MSG} with the intention of receiving a reply.
 	 *
-	 * @param message The {@link Message} to send
+	 * @param message The {@link MSG} to send
 	 * @param timeout The response timeout
 	 * @param unit    The timeout unit
 	 * @return A {@link MessageFuture} which will be notified when the response is
 	 *         received
 	 */
-	public default MessageFuture request(Message.Builder message, long timeout, TimeUnit unit) {
+	public default MessageFuture request(MSG.Builder message, long timeout, TimeUnit unit) {
 		if (message.getId() == 0)
 			message.setId(0);// TODO GET FROM ID UTIL!
 		return request(message.build(), timeout, unit);
 	}
 
 	/**
-	 * Write a {@link Message} and flush the {@link Channel}.
+	 * Write a {@link MSG} and flush the {@link Channel}.
 	 *
-	 * @param message The {@link Message} to send
+	 * @param message The {@link MSG} to send
 	 */
-	public default void send(Message message) {
+	public default void send(MSG message) {
 		channel().writeAndFlush(message);
 	}
 
 	/**
-	 * An alias for: {@link #send(Message)}
+	 * An alias for: {@link #send(MSG)}
 	 */
-	public default void send(Message.Builder message) {
+	public default void send(MSG.Builder message) {
 		send(message.build());
 	}
 
 	/**
-	 * Write a {@link Message} to the {@link Channel}, but do not flush it.
+	 * Write a {@link MSG} to the {@link Channel}, but do not flush it.
 	 *
-	 * @param m The {@link Message} to write
+	 * @param m The {@link MSG} to write
 	 */
-	public default void write(Message m) {
+	public default void write(MSG m) {
 		channel().write(m);
 	}
 
 	/**
-	 * A shortcut for {@link #write(Message)}.
+	 * A shortcut for {@link #write(MSG)}.
 	 */
-	public default void write(Message.Builder m) {
+	public default void write(MSG.Builder m) {
 		write(m.build());
 	}
 

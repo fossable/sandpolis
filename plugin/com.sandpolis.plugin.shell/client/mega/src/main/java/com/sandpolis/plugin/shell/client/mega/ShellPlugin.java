@@ -22,7 +22,7 @@ import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.plugin.shell.client.mega.exe.ShellExe;
-import com.sandpolis.plugin.shell.net.MSG;
+import com.sandpolis.plugin.shell.net.MessageShell.ShellMSG;
 
 public final class ShellPlugin extends SandpolisPlugin implements ExeletProvider {
 
@@ -34,6 +34,6 @@ public final class ShellPlugin extends SandpolisPlugin implements ExeletProvider
 
 	@Override
 	public Class<? extends Message> getMessageType() {
-		return MSG.ShellMessage.class;
+		return ShellMSG.class;
 	}
 }

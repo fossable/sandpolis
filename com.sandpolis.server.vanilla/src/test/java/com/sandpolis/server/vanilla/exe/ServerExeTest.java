@@ -27,8 +27,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.command.ExeletTest;
-import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
-import com.sandpolis.core.proto.net.MCPing.RS_Ping;
+import com.sandpolis.core.proto.net.MsgPing.RQ_Ping;
+import com.sandpolis.core.proto.net.MsgPing.RS_Ping;
 
 class ServerExeTest extends ExeletTest {
 

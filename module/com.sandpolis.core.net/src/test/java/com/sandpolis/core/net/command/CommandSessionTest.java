@@ -38,7 +38,7 @@ import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -93,8 +93,8 @@ class CommandSessionTest {
 		assertFalse(session.isSuccess());
 
 		// Transfer messages and wait
-		MSG.Message rq = channel.readOutbound();
-		channel.writeInbound(MSG.Message.newBuilder().setId(rq.getId()).setRsOutcome(Outcome.newBuilder()).build());
+		MSG rq = channel.readOutbound();
+		channel.writeInbound(MSG.newBuilder().setId(rq.getId()).setRsOutcome(Outcome.newBuilder()).build());
 		await().atMost(500, MILLISECONDS).untilTrue(handlerActivated);
 
 		// Check state
@@ -136,11 +136,11 @@ class CommandSessionTest {
 		assertFalse(session.isSuccess());
 
 		// Transfer messages and wait
-		MSG.Message rq = channel.readOutbound();
-		channel.writeInbound(MSG.Message.newBuilder().setId(rq.getId()).setRsOutcome(Outcome.newBuilder()).build());
+		MSG rq = channel.readOutbound();
+		channel.writeInbound(MSG.newBuilder().setId(rq.getId()).setRsOutcome(Outcome.newBuilder()).build());
 		await().atMost(500, MILLISECONDS).untilTrue(handler1Activated);
 		rq = channel.readOutbound();
-		channel.writeInbound(MSG.Message.newBuilder().setId(rq.getId()).setRsOutcome(Outcome.newBuilder()).build());
+		channel.writeInbound(MSG.newBuilder().setId(rq.getId()).setRsOutcome(Outcome.newBuilder()).build());
 		await().atMost(500, MILLISECONDS).untilTrue(handler2Activated);
 
 		// Check state
@@ -164,8 +164,8 @@ class CommandSessionTest {
 			handlerActivated.set(true);
 		});
 
-		MSG.Message rq = channel.readOutbound();
-		channel.writeInbound(MSG.Message.newBuilder().setId(rq.getId()).setRsOutcome(Outcome.newBuilder()).build());
+		MSG rq = channel.readOutbound();
+		channel.writeInbound(MSG.newBuilder().setId(rq.getId()).setRsOutcome(Outcome.newBuilder()).build());
 		await().atMost(500, MILLISECONDS).untilTrue(handlerActivated);
 
 		// Check state
@@ -183,8 +183,8 @@ class CommandSessionTest {
 			throw new Exception("expected exception");
 		});
 
-		MSG.Message rq = channel.readOutbound();
-		channel.writeInbound(MSG.Message.newBuilder().setId(rq.getId()).setRsOutcome(Outcome.newBuilder()).build());
+		MSG rq = channel.readOutbound();
+		channel.writeInbound(MSG.newBuilder().setId(rq.getId()).setRsOutcome(Outcome.newBuilder()).build());
 		await().atMost(500, MILLISECONDS).until(() -> session.isDone());
 
 		// Check state

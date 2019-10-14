@@ -39,9 +39,9 @@ import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.ipc.IPCStore.IPCStoreConfig;
-import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
-import com.sandpolis.core.ipc.MSG.Message;
-import com.sandpolis.core.ipc.MSG.Message.PayloadCase;
+import com.sandpolis.core.ipc.Message.MSG;
+import com.sandpolis.core.ipc.Message.MSG.PayloadCase;
+import com.sandpolis.core.ipc.Metadata.RS_Metadata;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
@@ -63,7 +63,7 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 	 * An IPC message handler.
 	 */
 	public static interface Handler {
-		public void handle(Message message, OutputStream out) throws IOException;
+		public void handle(MSG message, OutputStream out) throws IOException;
 	}
 
 	/**
@@ -226,8 +226,8 @@ public final class IPCStore extends StoreBase<IPCStoreConfig> {
 		var config = new IPCStoreConfig();
 		configurator.accept(config);
 
-		register(PayloadCase.RQ_METADATA, (Message message, OutputStream out) -> {
-			Message.newBuilder()
+		register(PayloadCase.RQ_METADATA, (MSG message, OutputStream out) -> {
+			MSG.newBuilder()
 					.setRsMetadata(RS_Metadata.newBuilder().setInstance(Core.INSTANCE.name())
 							.setVersion(Core.SO_BUILD.getVersion()).setPid(ProcessHandle.current().pid()))
 					.build().writeDelimitedTo(out);

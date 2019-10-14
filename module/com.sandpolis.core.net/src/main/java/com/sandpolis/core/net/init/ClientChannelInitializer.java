@@ -17,6 +17,7 @@
  ******************************************************************************/
 package com.sandpolis.core.net.init;
 
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import com.sandpolis.core.instance.Config;
@@ -25,6 +26,7 @@ import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.cvid.CvidRequestHandler;
 import com.sandpolis.core.net.handler.exelet.ExeletHandler;
+import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.sock.ClientSock;
 import com.sandpolis.core.util.CertUtil;
 
@@ -45,7 +47,12 @@ public class ClientChannelInitializer extends AbstractChannelInitializer {
 	private static final CvidRequestHandler HANDLER_CVID = new CvidRequestHandler();
 
 	@SuppressWarnings("unchecked")
-	private static final Class<? extends Exelet>[] exelets = new Class[] {};
+	private static Class<? extends Exelet>[] exelets = new Class[] {};
+
+	// Temporary
+	public static void setExelets(Class<? extends Exelet>[] exelets) {
+		ClientChannelInitializer.exelets = exelets;
+	}
 
 	private final boolean strictCerts;
 
@@ -74,7 +81,14 @@ public class ClientChannelInitializer extends AbstractChannelInitializer {
 		engage(p, CVID, HANDLER_CVID);
 
 		engage(p, RESPONSE, new ResponseHandler(), ThreadStore.get("net.exelet"));
-		engage(p, EXELET, new ExeletHandler(ch.attr(ChannelConstant.SOCK).get(), exelets),
-				ThreadStore.get("net.exelet"));
+
+		var exeletHandler = new ExeletHandler(ch.attr(ChannelConstant.SOCK).get(), exelets);
+		engage(p, EXELET, exeletHandler, ThreadStore.get("net.exelet"));
+
+		PluginStore.getLoadedPlugins().forEach(plugin -> {
+			plugin.getExtensions(ExeletProvider.class).forEach(provider -> {
+				exeletHandler.register(plugin.getId(), provider.getMessageType(), provider.getExelets());
+			});
+		});
 	}
 }

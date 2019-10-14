@@ -30,14 +30,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.ChannelConstant;
-import com.sandpolis.core.net.handler.cvid.CvidRequestHandler;
 import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
-import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
-import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.net.util.CvidUtil;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.proto.net.MsgCvid.RS_Cvid;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
-import com.sandpolis.core.util.IDUtil;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -70,7 +69,7 @@ class CvidRequestHandlerTest {
 	void testInitiate() {
 		HANDLER.handshake(client, Instance.CLIENT, InstanceFlavor.MEGA, "testuuid");
 
-		Message msg = client.readOutbound();
+		MSG msg = client.readOutbound();
 		RQ_Cvid rq = msg.getRqCvid();
 
 		assertTrue(rq != null);
@@ -82,7 +81,7 @@ class CvidRequestHandlerTest {
 	@Test
 	@DisplayName("Receive an invalid response")
 	void testReceiveIncorrect() {
-		client.writeInbound(Message.newBuilder().setRsCvid(RS_Cvid.newBuilder()).build());
+		client.writeInbound(MSG.newBuilder().setRsCvid(RS_Cvid.newBuilder()).build());
 
 		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
 		assertFalse(event.isSuccess());
@@ -92,8 +91,8 @@ class CvidRequestHandlerTest {
 	@Test
 	@DisplayName("Receive a valid response")
 	void testReceiveCorrect() {
-		client.writeInbound(Message.newBuilder().setRsCvid(RS_Cvid.newBuilder()
-				.setCvid(IDUtil.CVID.cvid(Instance.CLIENT)).setServerCvid(123).setServerUuid("testuuid")).build());
+		client.writeInbound(MSG.newBuilder().setRsCvid(RS_Cvid.newBuilder().setCvid(CvidUtil.cvid(Instance.CLIENT))
+				.setServerCvid(123).setServerUuid("testuuid")).build());
 
 		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
 		assertTrue(event.isSuccess());

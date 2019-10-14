@@ -17,7 +17,7 @@
  ******************************************************************************/
 package com.sandpolis.core.net.exception;
 
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
 
 /**
  * Thrown when the message flow is disrupted. This exception occurs when: <br>
@@ -39,7 +39,7 @@ public class MessageFlowException extends RuntimeException {
 	 * @param received The received message
 	 * @param expected The expected response type
 	 */
-	public MessageFlowException(Class<?> sent, Message received, Class<?> expected) {
+	public MessageFlowException(Class<?> sent, MSG received, Class<?> expected) {
 		super(String.format("After sending a %s message, an unexpected %s was received. Expected: %s.",
 				sent.getClass().getSimpleName(), received.getPayloadCase(), expected.getClass().getSimpleName()));
 	}
@@ -50,7 +50,7 @@ public class MessageFlowException extends RuntimeException {
 	 * @param sent     The sent message's type
 	 * @param received The received message
 	 */
-	public MessageFlowException(Class<?> sent, Message received) {
+	public MessageFlowException(Class<?> sent, MSG received) {
 		super(String.format("After sending a %s message, an unexpected %s was received.",
 				sent.getClass().getSimpleName(), received.getPayloadCase()));
 	}

@@ -152,7 +152,7 @@ class FileManager: UITableViewController {
 	}
 
 	/// Load the file listing from the given message
-	private func loadListing(_ rs: Net_FilesysMessage) {
+	private func loadListing(_ rs: Net_FilesysMSG) {
 		files = rs.rsFileListing.listing
 
 		sortFiles()

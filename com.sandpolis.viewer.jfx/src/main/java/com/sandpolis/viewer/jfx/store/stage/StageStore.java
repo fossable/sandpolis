@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 import com.sandpolis.viewer.jfx.store.stage.StageStore.StageStoreConfig;
 

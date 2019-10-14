@@ -19,13 +19,10 @@ package com.sandpolis.core.viewer.cmd;
 
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.MCStream.ProfileStreamParam;
-import com.sandpolis.core.proto.net.MCStream.RQ_StreamStart;
-import com.sandpolis.core.proto.net.MCStream.RQ_StreamStop;
-import com.sandpolis.core.proto.net.MCStream.RS_StreamStart;
-import com.sandpolis.core.proto.net.MCStream.StreamParam;
-import com.sandpolis.core.proto.net.MCStream.StreamParam.Direction;
+import com.sandpolis.core.proto.net.MsgStream.RQ_ProfileStream;
+import com.sandpolis.core.proto.net.MsgStream.RQ_StreamStop;
 import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.util.IDUtil;
 
 /**
  * Stream commands.
@@ -35,9 +32,8 @@ import com.sandpolis.core.proto.util.Result.Outcome;
  */
 public class StreamCmd extends Cmdlet<StreamCmd> {
 
-	public ResponseFuture<RS_StreamStart> startProfileStream() {
-		return request(RQ_StreamStart.newBuilder().setParam(
-				StreamParam.newBuilder().setDirection(Direction.REVERSE).setProfile(ProfileStreamParam.newBuilder())));
+	public ResponseFuture<Outcome> startProfileStream() {
+		return request(RQ_ProfileStream.newBuilder().setId(IDUtil.stream()));
 	}
 
 	/**
@@ -47,7 +43,7 @@ public class StreamCmd extends Cmdlet<StreamCmd> {
 	 * @return A response future
 	 */
 	public ResponseFuture<Outcome> stop(int streamID) {
-		return request(RQ_StreamStop.newBuilder().setStreamID(streamID));
+		return request(RQ_StreamStop.newBuilder().setId(streamID));
 	}
 
 	/**

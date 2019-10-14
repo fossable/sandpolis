@@ -17,13 +17,13 @@
  ******************************************************************************/
 package com.sandpolis.core.net.handler.cvid;
 
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 @Sharable
-public abstract class AbstractCvidHandler extends SimpleChannelInboundHandler<Message> {
+public abstract class AbstractCvidHandler extends SimpleChannelInboundHandler<MSG> {
 
 	/**
 	 * This event is emitted by both {@link CvidRequestHandler} and

@@ -26,12 +26,12 @@ import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.proto.net.MCGroup.RQ_AddGroup;
-import com.sandpolis.core.proto.net.MCGroup.RQ_GroupDelta;
-import com.sandpolis.core.proto.net.MCGroup.RQ_ListGroups;
-import com.sandpolis.core.proto.net.MCGroup.RQ_RemoveGroup;
-import com.sandpolis.core.proto.net.MCGroup.RS_ListGroups;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgGroup.RQ_AddGroup;
+import com.sandpolis.core.proto.net.MsgGroup.RQ_GroupDelta;
+import com.sandpolis.core.proto.net.MsgGroup.RQ_ListGroups;
+import com.sandpolis.core.proto.net.MsgGroup.RQ_RemoveGroup;
+import com.sandpolis.core.proto.net.MsgGroup.RS_ListGroups;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.server.vanilla.store.group.Group;
 
@@ -45,7 +45,7 @@ public final class GroupExe extends Exelet {
 
 	@Auth
 	@Permission(permission = 0/* server.group.create */)
-	@Handler(tag = MSG.Message.RQ_ADD_GROUP_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_ADD_GROUP_FIELD_NUMBER)
 	public static MessageOrBuilder rq_add_group(RQ_AddGroup rq) {
 		var outcome = begin();
 
@@ -54,7 +54,7 @@ public final class GroupExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_REMOVE_GROUP_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_REMOVE_GROUP_FIELD_NUMBER)
 	public static MessageOrBuilder rq_remove_group(ExeletContext context, RQ_RemoveGroup rq) {
 		if (!checkOwnership(context, rq.getId()))
 			return failure(ErrorCode.ACCESS_DENIED);
@@ -66,7 +66,7 @@ public final class GroupExe extends Exelet {
 
 	@Auth
 	@Permission(permission = 0/* server.group.view */)
-	@Handler(tag = MSG.Message.RQ_LIST_GROUPS_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_LIST_GROUPS_FIELD_NUMBER)
 	public static MessageOrBuilder rq_list_groups(RQ_ListGroups rq) {
 		var rs = RS_ListGroups.newBuilder();
 
@@ -76,7 +76,7 @@ public final class GroupExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_GROUP_DELTA_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_GROUP_DELTA_FIELD_NUMBER)
 	public static MessageOrBuilder rq_group_delta(ExeletContext context, RQ_GroupDelta rq) {
 		if (!checkOwnership(context, rq.getDelta().getConfig().getId()))
 			return failure(ErrorCode.ACCESS_DENIED);

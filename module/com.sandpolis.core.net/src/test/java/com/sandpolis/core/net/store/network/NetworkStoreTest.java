@@ -26,11 +26,11 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkAdded;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.LinkRemoved;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.NodeAdded;
-import com.sandpolis.core.proto.net.MCNetwork.EV_NetworkDelta.NodeRemoved;
+import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta;
+import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.LinkAdded;
+import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.LinkRemoved;
+import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.NodeAdded;
+import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.NodeRemoved;
 
 class NetworkStoreTest {
 

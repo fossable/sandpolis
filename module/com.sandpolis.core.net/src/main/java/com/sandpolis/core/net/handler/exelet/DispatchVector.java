@@ -36,7 +36,7 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.net.command.Exelet.Handler;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 /**
@@ -58,7 +58,7 @@ public class DispatchVector {
 
 	private final Sock sock;
 
-	protected Consumer<MSG.Message>[] vector;
+	protected Consumer<MSG>[] vector;
 
 	/**
 	 * Build a non-plugin {@link DispatchVector}.
@@ -76,11 +76,11 @@ public class DispatchVector {
 	 * @return The message's payload
 	 * @throws InvalidProtocolBufferException
 	 */
-	protected Message unwrapPayload(MSG.Message msg) throws InvalidProtocolBufferException {
+	protected Message unwrapPayload(MSG msg) throws InvalidProtocolBufferException {
 		return ProtoUtil.getPayload(msg);
 	}
 
-	protected MSG.Message wrapPayload(MSG.Message msg, MessageOrBuilder payload) {
+	protected MSG wrapPayload(MSG msg, MessageOrBuilder payload) {
 		// Build the payload if not already built
 		if (payload instanceof Builder)
 			payload = ((Builder) payload).build();
@@ -89,7 +89,7 @@ public class DispatchVector {
 		if (payload instanceof Outcome)
 			return ProtoUtil.rs(msg).setRsOutcome((Outcome) payload).build();
 
-		FieldDescriptor field = MSG.Message.getDescriptor()
+		FieldDescriptor field = MSG.getDescriptor()
 				.findFieldByName(ProtoUtil.convertMessageClassToFieldName(payload.getClass()));
 
 		return ProtoUtil.rs(msg).setField(field, payload).build();
@@ -102,11 +102,11 @@ public class DispatchVector {
 	 * @return Whether the message was handled
 	 * @throws Exception
 	 */
-	public boolean accept(MSG.Message msg) throws Exception {
+	public boolean accept(MSG msg) throws Exception {
 		return dispatch(msg, msg.getPayloadCase().getNumber());
 	}
 
-	protected boolean dispatch(MSG.Message msg, int tag) {
+	protected boolean dispatch(MSG msg, int tag) {
 		if (vector.length > tag) {
 			var handler = vector[tag];
 			if (handler != null) {
@@ -180,7 +180,7 @@ public class DispatchVector {
 				&& Message.class.isAssignableFrom(method.getParameterTypes()[1])) {
 
 			vector[handler.tag()] = msg -> {
-				ExeletContext context = new ExeletContext(sock);
+				ExeletContext context = new ExeletContext(sock, msg);
 				try {
 					handle.invoke(context, unwrapPayload(msg));
 				} catch (Throwable e) {
@@ -201,7 +201,7 @@ public class DispatchVector {
 				&& Message.class.isAssignableFrom(method.getParameterTypes()[1])) {
 
 			vector[handler.tag()] = msg -> {
-				ExeletContext context = new ExeletContext(sock);
+				ExeletContext context = new ExeletContext(sock, msg);
 				try {
 					MessageOrBuilder rs = (MessageOrBuilder) handle.invoke(context, unwrapPayload(msg));
 					if (rs != null)

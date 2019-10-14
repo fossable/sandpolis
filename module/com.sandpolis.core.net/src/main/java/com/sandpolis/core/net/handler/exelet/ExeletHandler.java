@@ -33,7 +33,7 @@ import com.sandpolis.core.net.command.Exelet.Handler;
 import com.sandpolis.core.net.command.Exelet.Permission;
 import com.sandpolis.core.net.command.Exelet.Unauth;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -45,7 +45,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
  * <p>
  * This handler maintains a separate dispatch vector for each loaded plugin.
  */
-public final class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message> {
+public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 
 	private static final Logger log = LoggerFactory.getLogger(ExeletHandler.class);
 
@@ -72,7 +72,7 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message
 	}
 
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, MSG.Message msg) throws Exception {
+	protected void channelRead0(ChannelHandlerContext ctx, MSG msg) throws Exception {
 
 		switch (msg.getPayloadCase()) {
 		case PLUGIN:
@@ -91,7 +91,7 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG.Message
 	}
 
 	public void register(@SuppressWarnings("unchecked") Class<? extends Exelet>... classes) {
-		register("", MSG.Message.class, classes);
+		register("", MSG.class, classes);
 	}
 
 	public synchronized void register(String pluginId, Class<? extends Message> messageType,

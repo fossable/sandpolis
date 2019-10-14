@@ -24,28 +24,28 @@ class SandpolisStream {
 
 	let id: Int32
 
-	private var listeners = [(Net_EV_StreamData) -> Void]()
+	private var listeners = [(Net_MSG) -> Void]()
 
 	init(_ connection: SandpolisConnection, _ id: Int32) {
 		self.connection = connection
 		self.id = id
 	}
 
-	func consume(_ data: Net_EV_StreamData) {
+	func consume(_ data: Net_MSG) {
 		for listener in listeners {
 			listener(data)
 		}
 	}
 
-	func register(_ handler: @escaping (Net_EV_StreamData) -> Void) {
+	func register(_ handler: @escaping (Net_MSG) -> Void) {
 		listeners.append(handler)
 	}
 
 	/// Close the stream
-	func close() -> EventLoopFuture<Net_Message> {
-		var rq = Net_Message.with {
+	func close() -> EventLoopFuture<Net_MSG> {
+		var rq = Net_MSG.with {
 			$0.rqStreamStop = Net_RQ_StreamStop.with {
-				$0.streamID = id
+				$0.id = id
 			}
 		}
 

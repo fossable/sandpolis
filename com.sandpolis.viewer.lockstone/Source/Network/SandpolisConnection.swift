@@ -96,9 +96,9 @@ public class SandpolisConnection {
 				$0.pipeline.addHandlers([
 					self.buildSslHandler(sslContext, server),
 					ByteToMessageHandler(VarintFrameDecoder()),
-					ByteToMessageHandler(ProtobufDecoder<Net_Message>()),
+					ByteToMessageHandler(ProtobufDecoder<Net_MSG>()),
 					MessageToByteHandler(VarintLengthFieldPrepender()),
-					MessageToByteHandler(ProtobufEncoder<Net_Message>()),
+					MessageToByteHandler(ProtobufEncoder<Net_MSG>()),
 					CvidRequestHandler(self),
 					self.responseHandler,
 					ClientHandler(self),
@@ -151,11 +151,11 @@ public class SandpolisConnection {
 	///
 	/// - Parameter rq: The request message
 	/// - Returns: A response future
-	func request(_ rq: inout Net_Message) -> EventLoopFuture<Net_Message> {
-		rq.id = Int32.random(in: 1 ... Int32.max)
+	func request(_ rq: inout Net_MSG) -> EventLoopFuture<Net_MSG> {
+		rq.id = SandpolisUtil.rq()
 		rq.from = cvid
 
-		let p = responseLoop.makePromise(of: Net_Message.self)
+		let p = responseLoop.makePromise(of: Net_MSG.self)
 		responseHandler.register(rq.id, p)
 
 		_ = channel.writeAndFlush(rq)
@@ -168,8 +168,8 @@ public class SandpolisConnection {
 	///   - username: The user's username
 	///   - password: The user's plaintext password
 	/// - Returns: A response future
-	func login(_ username: String, _ password: String) -> EventLoopFuture<Net_Message> {
-		var rq = Net_Message.with {
+	func login(_ username: String, _ password: String) -> EventLoopFuture<Net_MSG> {
+		var rq = Net_MSG.with {
 			$0.rqLogin = Net_RQ_Login.with {
 				$0.username = username
 				$0.password = password.bytes.sha256().toHexString()
@@ -184,17 +184,17 @@ public class SandpolisConnection {
 	///
 	/// - Parameter target: The target client's CVID
 	/// - Returns: A response future
-	func screenshot(_ target: Int32) -> EventLoopFuture<Net_DesktopMessage> {
-		var rq = Net_Message.with {
+	func screenshot(_ target: Int32) -> EventLoopFuture<Net_DesktopMSG> {
+		var rq = Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_DesktopMessage.with {
+			$0.plugin = try! Google_Protobuf_Any(message: Net_DesktopMSG.with {
 				$0.rqScreenshot = Net_RQ_Screenshot()
 			}, typePrefix: "com.sandpolis.plugin.desktop")
 		}
 
 		os_log("Requesting screenshot for client: %d", target)
 		return request(&rq).map { rs in
-			return try! Net_DesktopMessage.init(unpackingAny: rs.plugin)
+			return try! Net_DesktopMSG.init(unpackingAny: rs.plugin)
 		}
 	}
 
@@ -202,10 +202,10 @@ public class SandpolisConnection {
 	///
 	/// - Parameter target: The target client's CVID
 	/// - Returns: A response future
-	func poweroff(_ target: Int32) -> EventLoopFuture<Net_ShellMessage> {
-		var rq = Net_Message.with {
+	func poweroff(_ target: Int32) -> EventLoopFuture<Net_ShellMSG> {
+		var rq = Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMessage.with {
+			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
 				$0.rqPowerChange = Net_RQ_PowerChange.with {
 					$0.change = .poweroff
 				}
@@ -214,7 +214,7 @@ public class SandpolisConnection {
 
 		os_log("Requesting poweroff for client: %d", target)
 		return request(&rq).map { rs in
-			return try! Net_ShellMessage.init(unpackingAny: rs.plugin)
+			return try! Net_ShellMSG.init(unpackingAny: rs.plugin)
 		}
 	}
 
@@ -222,10 +222,10 @@ public class SandpolisConnection {
 	///
 	/// - Parameter target: The target client's CVID
 	/// - Returns: A response future
-	func restart(_ target: Int32) -> EventLoopFuture<Net_ShellMessage> {
-		var rq = Net_Message.with {
+	func restart(_ target: Int32) -> EventLoopFuture<Net_ShellMSG> {
+		var rq = Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMessage.with {
+			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
 				$0.rqPowerChange = Net_RQ_PowerChange.with {
 					$0.change = .restart
 				}
@@ -234,7 +234,7 @@ public class SandpolisConnection {
 
 		os_log("Requesting restart for client: %d", target)
 		return request(&rq).map { rs in
-			return try! Net_ShellMessage.init(unpackingAny: rs.plugin)
+			return try! Net_ShellMSG.init(unpackingAny: rs.plugin)
 		}
 	}
 
@@ -246,10 +246,10 @@ public class SandpolisConnection {
 	///   - mtimes: Whether modification times will be returned
 	///   - sizes: Whether file sizes will be returned
 	/// - Returns: A response future
-	func fm_list(_ target: Int32, _ path: String, mtimes: Bool, sizes: Bool) -> EventLoopFuture<Net_FilesysMessage> {
-		var rq = Net_Message.with {
+	func fm_list(_ target: Int32, _ path: String, mtimes: Bool, sizes: Bool) -> EventLoopFuture<Net_FilesysMSG> {
+		var rq = Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_FilesysMessage.with {
+			$0.plugin = try! Google_Protobuf_Any(message: Net_FilesysMSG.with {
 				$0.rqFileListing = Net_RQ_FileListing.with {
 					$0.path = path
 					$0.options = Net_FsHandleOptions.with {
@@ -262,7 +262,7 @@ public class SandpolisConnection {
 
 		os_log("Requesting file listing for client: %d, path: %s", target, path)
 		return request(&rq).map { rs in
-			return try! Net_FilesysMessage.init(unpackingAny: rs.plugin)
+			return try! Net_FilesysMSG.init(unpackingAny: rs.plugin)
 		}
 	}
 
@@ -271,10 +271,10 @@ public class SandpolisConnection {
 	/// - Parameter target: The target client's CVID
 	/// - Parameter path: The target file
 	/// - Returns: A response future
-	func fm_delete(_ target: Int32, _ path: String) -> EventLoopFuture<Net_FilesysMessage> {
-		var rq = Net_Message.with {
+	func fm_delete(_ target: Int32, _ path: String) -> EventLoopFuture<Net_FilesysMSG> {
+		var rq = Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_FilesysMessage.with {
+			$0.plugin = try! Google_Protobuf_Any(message: Net_FilesysMSG.with {
 				$0.rqFileDelete = Net_RQ_FileDelete.with {
 					$0.target = [path]
 				}
@@ -283,7 +283,7 @@ public class SandpolisConnection {
 
 		os_log("Requesting file deletion for client: %d, path: %s", target, path)
 		return request(&rq).map { rs in
-			return try! Net_FilesysMessage.init(unpackingAny: rs.plugin)
+			return try! Net_FilesysMSG.init(unpackingAny: rs.plugin)
 		}
 	}
 
@@ -292,10 +292,10 @@ public class SandpolisConnection {
 	/// - Parameter cvid: The target client's CVID
 	/// - Parameter script: The macro script
 	/// - Returns: A response future
-	func execute(_ target: Int32, _ script: String) -> EventLoopFuture<Net_ShellMessage> {
-		var rq = Net_Message.with {
+	func execute(_ target: Int32, _ script: String) -> EventLoopFuture<Net_ShellMSG> {
+		var rq = Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMessage.with {
+			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
 				$0.rqExecute = Net_RQ_Execute.with {
 					$0.command = script
 				}
@@ -304,42 +304,26 @@ public class SandpolisConnection {
 
 		os_log("Requesting macro execution for client: %d, script: %s", target, script)
 		return request(&rq).map { rs in
-			return try! Net_ShellMessage.init(unpackingAny: rs.plugin)
+			return try! Net_ShellMSG.init(unpackingAny: rs.plugin)
 		}
 	}
 
 	/// Open a new profile stream.
 	///
 	/// - Returns: A response future
-	func openProfileStream() -> EventLoopFuture<Net_Message> {
-		var rq = Net_Message.with {
-			$0.rqStreamStart = Net_RQ_StreamStart.with {
-				$0.param = Net_StreamParam.with {
-					$0.direction = .reverse
-					$0.type = .profile(Net_ProfileStreamParam())
-				}
-			}
-		}
-
-		return request(&rq).map { rs in
-			self.buildProfileStream(rs.rsStreamStart.streamID)
-			return rs
-		}
-	}
-
-	private func buildProfileStream(_ streamID: Int32) {
-		let stream = SandpolisStream(self, streamID)
-		stream.register { (ev: Net_EV_StreamData) -> Void in
-			if ev.profile.online {
+	func openProfileStream() -> EventLoopFuture<Net_MSG> {
+		let stream = SandpolisStream(self, SandpolisUtil.stream())
+		stream.register { (m: Net_MSG) -> Void in
+			let ev = m.evProfileStream
+			if ev.online {
 
 				let profile = SandpolisProfile(
-					uuid: ev.profile.uuid,
-					cvid: ev.profile.cvid,
-					hostname: "", // TODO
-					ipAddress: ev.profile.ip,
-					platform: Util_OsType.linux, // TODO
-					architecture: Util_Architecture.x86, // TODO
-					online: ev.profile.online
+					uuid: ev.uuid,
+					cvid: ev.cvid,
+					hostname: ev.hostname,
+					ipAddress: ev.ip,
+					platform: ev.platform,
+					online: ev.online
 				)
 
 				self.profiles.append(profile)
@@ -347,9 +331,9 @@ public class SandpolisConnection {
 					handler(profile)
 				}
 			} else {
-				if let index = self.profiles.firstIndex(where: { $0.cvid == ev.profile.cvid }) {
+				if let index = self.profiles.firstIndex(where: { $0.cvid == ev.cvid }) {
 					let profile = self.profiles.remove(at: index)
-					profile.online = ev.profile.online
+					profile.online = ev.online
 					for handler in self.profileListeners {
 						handler(profile)
 					}
@@ -357,6 +341,14 @@ public class SandpolisConnection {
 			}
 		}
 		streams.append(stream)
+
+		var rq = Net_MSG.with {
+			$0.rqProfileStream = Net_RQ_ProfileStream.with {
+				$0.id = stream.id
+			}
+		}
+
+		return request(&rq)
 	}
 
 	/// Register the given handler to receive profile updates.

@@ -230,7 +230,8 @@ public final class Server {
 		});
 
 		ProfileStore.init(config -> {
-			config.persistent(DatabaseStore.main());
+			// config.persistent(DatabaseStore.main());
+			config.ephemeral();
 		});
 
 		TrustStore.init(config -> {

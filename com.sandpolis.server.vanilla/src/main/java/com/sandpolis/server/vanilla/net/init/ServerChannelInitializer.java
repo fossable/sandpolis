@@ -17,6 +17,7 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.net.init;
 
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import java.security.cert.CertificateException;
@@ -35,6 +36,7 @@ import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.cvid.CvidResponseHandler;
 import com.sandpolis.core.net.handler.exelet.ExeletHandler;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
+import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.sock.ServerSock;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.server.vanilla.exe.AuthExe;
@@ -144,9 +146,15 @@ public class ServerChannelInitializer extends AbstractChannelInitializer {
 		engage(p, CVID, HANDLER_CVID);
 
 		engage(p, RESPONSE, new ResponseHandler(), ThreadStore.get("net.exelet"));
-		engage(p, EXELET, new ExeletHandler(ch.attr(ChannelConstant.SOCK).get(), exelets),
-				ThreadStore.get("net.exelet"));
 
+		var exeletHandler = new ExeletHandler(ch.attr(ChannelConstant.SOCK).get(), exelets);
+		engage(p, EXELET, exeletHandler, ThreadStore.get("net.exelet"));
+
+		PluginStore.getLoadedPlugins().forEach(plugin -> {
+			plugin.getExtensions(ExeletProvider.class).forEach(provider -> {
+				exeletHandler.register(plugin.getId(), provider.getMessageType(), provider.getExelets());
+			});
+		});
 	}
 
 	public SslContext getSslContext() throws Exception {

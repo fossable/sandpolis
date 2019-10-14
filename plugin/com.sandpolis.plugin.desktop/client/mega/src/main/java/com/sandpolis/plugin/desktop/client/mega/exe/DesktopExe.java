@@ -19,6 +19,7 @@ package com.sandpolis.plugin.desktop.client.mega.exe;
 
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
+import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
 
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -31,14 +32,17 @@ import javax.imageio.ImageIO;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.plugin.desktop.net.MCDesktop.RQ_Screenshot;
-import com.sandpolis.plugin.desktop.net.MCDesktop.RS_Screenshot;
-import com.sandpolis.plugin.desktop.net.MSG;
+import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.plugin.desktop.net.MessageDesktop.DesktopMSG;
+import com.sandpolis.plugin.desktop.net.MsgDesktop.RQ_Screenshot;
+import com.sandpolis.plugin.desktop.net.MsgDesktop.RS_Screenshot;
+import com.sandpolis.plugin.desktop.net.MsgRd.EV_DesktopStream;
+import com.sandpolis.plugin.desktop.net.MsgRd.RQ_DesktopStream;
 
 public final class DesktopExe extends Exelet {
 
 	@Auth
-	@Handler(tag = MSG.DesktopMessage.RQ_SCREENSHOT_FIELD_NUMBER)
+	@Handler(tag = DesktopMSG.RQ_SCREENSHOT_FIELD_NUMBER)
 	public static MessageOrBuilder rq_screenshot(RQ_Screenshot rq) {
 		var outcome = begin();
 
@@ -51,6 +55,18 @@ public final class DesktopExe extends Exelet {
 		} catch (Exception e) {
 			return failure(outcome);
 		}
+	}
+
+	@Auth
+	@Handler(tag = DesktopMSG.RQ_DESKTOP_STREAM_FIELD_NUMBER)
+	public static MessageOrBuilder rq_desktop_stream(RQ_DesktopStream rq) {
+		throw new RuntimeException();
+	}
+
+	@Auth
+	@Handler(tag = DesktopMSG.EV_DESKTOP_STREAM_FIELD_NUMBER)
+	public static void ev_desktop_stream(ExeletContext context, EV_DesktopStream ev) {
+		StreamStore.streamData(context.request.getId(), ev);
 	}
 
 	private DesktopExe() {

@@ -32,7 +32,6 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.core.proto.util.Platform.Architecture;
 import com.sandpolis.core.proto.util.Platform.OsType;
 import com.sandpolis.core.soi.SoiUtil;
 import com.sandpolis.core.util.ArtifactUtil;
@@ -91,8 +90,7 @@ public class MegaGen extends FileGenerator {
 							// Filter out unnecessary platform-specific libraries
 							.filter(component -> !features.getSupportedOsList()
 									.contains(OsType.valueOf(component.getPlatform())))
-							.filter(component -> !features.getSupportedArchList()
-									.contains(Architecture.valueOf(component.getArchitecture())))
+							.filter(component -> !features.getSupportedArchList().contains(component.getArchitecture()))
 							.forEach(component -> {
 								output.sub(EntryPath.get("lib/" + source.getFileName(), component.getPath()));
 							});
@@ -115,7 +113,8 @@ public class MegaGen extends FileGenerator {
 				});
 
 				// Remove unnecessary components if they exist
-				output.sub(EntryPath.get("lib/" + bin.getFileName(), "server/vanilla.jar"));
+				// output.sub(EntryPath.get("lib/" + bin.getFileName().toString(),
+				// "server/vanilla.jar"));
 				// TODO enumerate over all possibilities
 			}
 		}

@@ -35,7 +35,7 @@ import javax.persistence.Transient;
 import com.github.cilki.compact.CompactClassLoader;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
-import com.sandpolis.core.proto.net.MCPlugin.PluginDescriptor;
+import com.sandpolis.core.proto.net.MsgPlugin.PluginDescriptor;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.JarUtil;

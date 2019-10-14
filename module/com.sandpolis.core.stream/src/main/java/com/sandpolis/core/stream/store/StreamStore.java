@@ -19,8 +19,8 @@ package com.sandpolis.core.stream.store;
 
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -28,10 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import com.google.protobuf.Message;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
 import com.sandpolis.core.stream.store.StreamStore.StreamStoreConfig;
 
 /**
@@ -70,23 +70,23 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 	/**
 	 * The INBOUND bank.
 	 */
-	static List<InboundStreamAdapter<?>> inbound;
+	static List<InboundStreamAdapter<Message>> inbound;
 
 	/**
 	 * The OUTBOUND bank.
 	 */
 	static List<OutboundStreamAdapter<?>> outbound;
 
-	public static void streamData(EV_StreamData data) {
+	public void streamData(int id, Message data) {
 		for (var adapter : inbound) {
-			if (adapter.getStreamID() == data.getId()) {
+			if (adapter.getStreamID() == id) {
 				adapter.submit(data);
 				break;
 			}
 		}
 	}
 
-	public static void stop(int streamID) {
+	public void stop(int streamID) {
 		iterateInbound(it -> {
 			while (it.hasNext()) {
 				var adapter = it.next();
@@ -155,7 +155,7 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 		}
 	}
 
-	private static void iterateInbound(Consumer<Iterator<InboundStreamAdapter<?>>> mutator) {
+	private static void iterateInbound(Consumer<Iterator<InboundStreamAdapter<Message>>> mutator) {
 		synchronized (source) {
 			synchronized (sink) {
 				synchronized (inbound) {
@@ -217,10 +217,10 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 
 		@Override
 		public void ephemeral() {
-			source = new LinkedList<>();
-			sink = new LinkedList<>();
-			inbound = new LinkedList<>();
-			outbound = new LinkedList<>();
+			source = new ArrayList<>();
+			sink = new ArrayList<>();
+			inbound = new ArrayList<>();
+			outbound = new ArrayList<>();
 		}
 	}
 

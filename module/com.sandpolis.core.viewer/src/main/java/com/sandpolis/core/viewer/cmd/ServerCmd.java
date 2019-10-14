@@ -23,10 +23,10 @@ import java.util.concurrent.TimeoutException;
 
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.MCPing.RQ_Ping;
-import com.sandpolis.core.proto.net.MCServer.RQ_ServerBanner;
-import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgPing.RQ_Ping;
+import com.sandpolis.core.proto.net.MsgServer.RQ_ServerBanner;
+import com.sandpolis.core.proto.net.MsgServer.RS_ServerBanner;
 
 /**
  * Contains server commands.
@@ -53,7 +53,7 @@ public final class ServerCmd extends Cmdlet<ServerCmd> {
 	// TODO not async
 	public long ping() throws InterruptedException, ExecutionException, TimeoutException {
 		long t1 = System.nanoTime();
-		sock.request(Message.newBuilder().setRqPing(RQ_Ping.newBuilder())).get(2000, TimeUnit.MILLISECONDS);
+		sock.request(MSG.newBuilder().setRqPing(RQ_Ping.newBuilder())).get(2000, TimeUnit.MILLISECONDS);
 		long t2 = System.nanoTime();
 
 		// To get from 1e9 to (1e3)/2, multiply by (1e-6)/2 = 1/2000000

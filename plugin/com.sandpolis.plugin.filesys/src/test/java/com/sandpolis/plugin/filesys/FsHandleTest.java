@@ -39,8 +39,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.proto.util.Platform.OsType;
-import com.sandpolis.plugin.filesys.net.MCFilesys.FileListlet;
-import com.sandpolis.plugin.filesys.net.MCFilesys.FileListlet.UpdateType;
+import com.sandpolis.plugin.filesys.net.MsgFilesys.FileListlet;
+import com.sandpolis.plugin.filesys.net.MsgFilesys.FileListlet.UpdateType;
 
 class FsHandleTest {
 

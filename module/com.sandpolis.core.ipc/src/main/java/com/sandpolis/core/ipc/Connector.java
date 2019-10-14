@@ -28,9 +28,9 @@ import java.net.Socket;
 import java.util.Optional;
 
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.ipc.MCMetadata.RQ_Metadata;
-import com.sandpolis.core.ipc.MCMetadata.RS_Metadata;
-import com.sandpolis.core.ipc.MSG.Message;
+import com.sandpolis.core.ipc.Message.MSG;
+import com.sandpolis.core.ipc.Metadata.RQ_Metadata;
+import com.sandpolis.core.ipc.Metadata.RS_Metadata;
 
 /**
  * A simple IPC connection.
@@ -85,9 +85,9 @@ public class Connector implements Closeable {
 			throw new IOException("Closed socket");
 
 		synchronized (socket) {
-			Message.newBuilder().setRqMetadata(RQ_Metadata.newBuilder()).build().writeDelimitedTo(out);
+			MSG.newBuilder().setRqMetadata(RQ_Metadata.newBuilder()).build().writeDelimitedTo(out);
 
-			Message message = Message.parseDelimitedFrom(in);
+			MSG message = MSG.parseDelimitedFrom(in);
 			if (message == null)
 				return Optional.empty();
 

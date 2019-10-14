@@ -180,29 +180,14 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 		return instance;
 	}
 
-	/**
-	 * Shortcut for {@code get(AK_META.UUID);}.
-	 *
-	 * @return The current UUID.
-	 */
 	public String getUuid() {
 		return uuid;
 	}
 
-	/**
-	 * Shortcut for {@code get(AK_META.CVID);}.
-	 *
-	 * @return The current CVID.
-	 */
 	public int getCvid() {
 		return cvid;
 	}
 
-	/**
-	 * Shortcut for {@code set(AK_META.CVID, cvid);}.
-	 *
-	 * @param cvid The new CVID
-	 */
 	public void setCvid(int cvid) {
 		this.cvid = cvid;
 	}

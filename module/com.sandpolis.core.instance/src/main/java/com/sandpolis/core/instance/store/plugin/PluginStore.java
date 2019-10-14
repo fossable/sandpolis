@@ -44,10 +44,9 @@ import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.instance.store.plugin.Events.PluginLoadedEvent;
 import com.sandpolis.core.instance.store.plugin.PluginStore.PluginStoreConfig;
-import com.sandpolis.core.proto.net.MCPlugin.PluginDescriptor;
+import com.sandpolis.core.proto.net.MsgPlugin.PluginDescriptor;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.CertUtil;
@@ -244,6 +243,10 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	 */
 	public byte[] hashPlugin(Path path) throws IOException {
 		return MoreFiles.asByteSource(path).hash(Hashing.sha256()).asBytes();
+	}
+
+	public Stream<Plugin> getLoadedPlugins() {
+		return stream().filter(plugin -> plugin.isEnabled()).filter(plugin -> plugin.isLoaded());
 	}
 
 	@Override

@@ -25,7 +25,7 @@ import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
 import com.sandpolis.core.profile.Events.ProfileOnlineEvent;
 import com.sandpolis.core.profile.Profile;
-import com.sandpolis.core.proto.net.MCStream.ProfileStreamData;
+import com.sandpolis.core.proto.net.MsgStream.EV_ProfileStream;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.stream.store.StreamSource;
 
@@ -36,7 +36,7 @@ import com.sandpolis.core.stream.store.StreamSource;
  * @author cilki
  * @since 5.0.2
  */
-public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
+public class ProfileStreamSource extends StreamSource<EV_ProfileStream> {
 
 	@Override
 	public void stop() {
@@ -56,12 +56,13 @@ public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
 	}
 
 	private void onProfileOnline(Profile profile) {
-		var data = ProfileStreamData.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid()).setOnline(true);
+		var ev = EV_ProfileStream.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid()).setOnline(true);
 
 		ConnectionStore.get(profile.getCvid()).ifPresent(sock -> {
-			data.setIp(sock.getRemoteIP());
-			submit(data.build());
+			ev.setIp(sock.getRemoteIP());
 		});
+
+		submit(ev.build());
 	}
 
 	@Subscribe
@@ -72,7 +73,7 @@ public class ProfileStreamSource extends StreamSource<ProfileStreamData> {
 	@Subscribe
 	private void onSockLost(SockLostEvent event) {
 		Sock sock = event.get();
-		submit(ProfileStreamData.newBuilder().setCvid(sock.getRemoteCvid()).setUuid(sock.getRemoteUuid())
+		submit(EV_ProfileStream.newBuilder().setCvid(sock.getRemoteCvid()).setUuid(sock.getRemoteUuid())
 				.setOnline(false).build());
 	}
 }

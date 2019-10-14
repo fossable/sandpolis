@@ -27,11 +27,11 @@ import static com.sandpolis.server.vanilla.store.listener.ListenerStore.Listener
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.proto.net.MCListener.RQ_AddListener;
-import com.sandpolis.core.proto.net.MCListener.RQ_ChangeListener;
-import com.sandpolis.core.proto.net.MCListener.RQ_ListenerDelta;
-import com.sandpolis.core.proto.net.MCListener.RQ_RemoveListener;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgListener.RQ_AddListener;
+import com.sandpolis.core.proto.net.MsgListener.RQ_ChangeListener;
+import com.sandpolis.core.proto.net.MsgListener.RQ_ListenerDelta;
+import com.sandpolis.core.proto.net.MsgListener.RQ_RemoveListener;
 import com.sandpolis.server.vanilla.store.listener.Listener;
 
 /**
@@ -44,7 +44,7 @@ public final class ListenerExe extends Exelet {
 
 	@Auth
 	@Permission(permission = 0/* server.listener.create */)
-	@Handler(tag = MSG.Message.RQ_ADD_LISTENER_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_ADD_LISTENER_FIELD_NUMBER)
 	public static MessageOrBuilder rq_add_listener(RQ_AddListener rq) {
 		var outcome = begin();
 
@@ -53,7 +53,7 @@ public final class ListenerExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_REMOVE_LISTENER_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_REMOVE_LISTENER_FIELD_NUMBER)
 	public static MessageOrBuilder rq_remove_listener(ExeletContext context, RQ_RemoveListener rq) {
 		if (!checkOwnership(context, rq.getId()))
 			return failure(ACCESS_DENIED);
@@ -64,7 +64,7 @@ public final class ListenerExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_LISTENER_DELTA_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_LISTENER_DELTA_FIELD_NUMBER)
 	public static MessageOrBuilder rq_listener_delta(ExeletContext context, RQ_ListenerDelta rq) {
 		if (!checkOwnership(context, rq.getId()))
 			return failure(ACCESS_DENIED);
@@ -74,7 +74,7 @@ public final class ListenerExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_CHANGE_LISTENER_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_CHANGE_LISTENER_FIELD_NUMBER)
 	public static MessageOrBuilder rq_change_listener(ExeletContext context, RQ_ChangeListener rq) {
 		if (!checkOwnership(context, rq.getId()))
 			return failure(ACCESS_DENIED);

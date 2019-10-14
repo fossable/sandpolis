@@ -18,13 +18,13 @@
 import UIKit
 
 class Step4: UIViewController {
-	
+
 	@IBOutlet weak var launchButton: UIButton!
 	@IBOutlet weak var status: UIActivityIndicatorView!
-	
+
 	var parentController: ServerCreator!
 
-	
+
 	@IBAction func back(_ sender: Any) {
 		parentController.showStep3()
 	}

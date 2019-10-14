@@ -30,8 +30,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.command.ExeletTest;
-import com.sandpolis.core.proto.net.MCGroup.RQ_AddGroup;
-import com.sandpolis.core.proto.net.MCGroup.RQ_RemoveGroup;
+import com.sandpolis.core.proto.net.MsgGroup.RQ_AddGroup;
+import com.sandpolis.core.proto.net.MsgGroup.RQ_RemoveGroup;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;

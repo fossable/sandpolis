@@ -28,8 +28,8 @@ import javax.crypto.KeyGenerator;
 
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.MCGroup.RQ_AddGroup;
-import com.sandpolis.core.proto.net.MCGroup.RQ_RemoveGroup;
+import com.sandpolis.core.proto.net.MsgGroup.RQ_AddGroup;
+import com.sandpolis.core.proto.net.MsgGroup.RQ_RemoveGroup;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Group.ProtoGroup;
 import com.sandpolis.core.proto.util.Result.Outcome;

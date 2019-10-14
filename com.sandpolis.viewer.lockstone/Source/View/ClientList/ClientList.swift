@@ -51,6 +51,7 @@ class ClientList: UITableViewController {
 	override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
 		toggleMultiSelect(toggle: false)
+		SandpolisUtil.connection.openProfileStream()
 	}
 
 	override func numberOfSections(in tableView: UITableView) -> Int {

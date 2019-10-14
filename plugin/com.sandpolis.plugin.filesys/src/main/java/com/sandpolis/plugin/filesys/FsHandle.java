@@ -48,10 +48,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.sandpolis.core.util.IDUtil;
-import com.sandpolis.plugin.filesys.net.MCFilesys.EV_FileListing;
-import com.sandpolis.plugin.filesys.net.MCFilesys.FileListlet;
-import com.sandpolis.plugin.filesys.net.MCFilesys.FileListlet.UpdateType;
-import com.sandpolis.plugin.filesys.net.MCFilesys.FsHandleOptions;
+import com.sandpolis.plugin.filesys.net.MsgFilesys.EV_FileListing;
+import com.sandpolis.plugin.filesys.net.MsgFilesys.FileListlet;
+import com.sandpolis.plugin.filesys.net.MsgFilesys.FileListlet.UpdateType;
+import com.sandpolis.plugin.filesys.net.MsgFilesys.FsHandleOptions;
 
 /**
  * This class provides a convenient handle on the local filesystem.

@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.sandpolis.core.net.future.MessageFuture;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -30,7 +30,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
  * @author cilki
  * @since 5.1.0
  */
-public final class ResponseHandler extends SimpleChannelInboundHandler<MSG.Message> {
+public final class ResponseHandler extends SimpleChannelInboundHandler<MSG> {
 
 	/**
 	 * When a response message is desired, a {@link MessageFuture} is placed into
@@ -45,7 +45,7 @@ public final class ResponseHandler extends SimpleChannelInboundHandler<MSG.Messa
 	}
 
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, MSG.Message msg) throws Exception {
+	protected void channelRead0(ChannelHandlerContext ctx, MSG msg) throws Exception {
 		MessageFuture future = responseMap.remove(msg.getId());
 		if (future != null && !future.isCancelled()) {
 			// Give the message to a waiting Thread

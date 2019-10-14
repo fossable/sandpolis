@@ -27,8 +27,7 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.IDUtil;
@@ -167,8 +166,8 @@ public final class ProtoUtil {
 	 *
 	 * @return A new request
 	 */
-	public static MSG.Message.Builder rq() {
-		return MSG.Message.newBuilder().setId(IDUtil.msg());
+	public static MSG.Builder rq() {
+		return MSG.newBuilder().setId(IDUtil.rq());
 	}
 
 	/**
@@ -177,8 +176,8 @@ public final class ProtoUtil {
 	 * @param id The sequence ID
 	 * @return A new response
 	 */
-	public static MSG.Message.Builder rs(int id) {
-		return MSG.Message.newBuilder().setId(id);
+	public static MSG.Builder rs(int id) {
+		return MSG.newBuilder().setId(id);
 	}
 
 	/**
@@ -187,7 +186,7 @@ public final class ProtoUtil {
 	 * @param rq The original request message
 	 * @return A new response
 	 */
-	public static MSG.Message.Builder rs(MSG.Message rq) {
+	public static MSG.Builder rs(MSG rq) {
 		var rs = rs(rq.getId());
 		if (rq.getFrom() != 0)
 			rs.setTo(rq.getFrom());
@@ -202,7 +201,7 @@ public final class ProtoUtil {
 	 * @param payload The request payload
 	 * @return A new request
 	 */
-	public static MSG.Message.Builder rq(MessageOrBuilder payload) {
+	public static MSG.Builder rq(MessageOrBuilder payload) {
 		return setPayload(rq(), payload);
 	}
 
@@ -213,7 +212,7 @@ public final class ProtoUtil {
 	 * @param payload The response payload
 	 * @return A new response
 	 */
-	public static MSG.Message.Builder rs(MSG.Message msg, MessageOrBuilder payload) {
+	public static MSG.Builder rs(MSG msg, MessageOrBuilder payload) {
 		return setPayload(rs(msg), payload);
 	}
 
@@ -224,7 +223,7 @@ public final class ProtoUtil {
 	 * @param payload The payload to insert
 	 * @return {@code msg}
 	 */
-	public static MSG.Message.Builder setPayload(MSG.Message.Builder msg, MessageOrBuilder payload) {
+	public static MSG.Builder setPayload(MSG.Builder msg, MessageOrBuilder payload) {
 
 		// Build the payload if not already built
 		if (payload instanceof Builder)
@@ -234,8 +233,7 @@ public final class ProtoUtil {
 		if (payload instanceof Outcome)
 			return msg.setRsOutcome((Outcome) payload);
 
-		FieldDescriptor field = MSG.Message.getDescriptor()
-				.findFieldByName(convertMessageClassToFieldName(payload.getClass()));
+		FieldDescriptor field = MSG.getDescriptor().findFieldByName(convertMessageClassToFieldName(payload.getClass()));
 
 		return msg.setField(field, payload);
 	}
@@ -252,45 +250,6 @@ public final class ProtoUtil {
 			return null;
 
 		return (Message) msg.getField(oneof);
-	}
-
-	/**
-	 * Set the payload of the given stream message.
-	 *
-	 * @param msg     The message to receive the payload
-	 * @param payload The payload to insert
-	 * @return {@code msg}
-	 */
-	public static EV_StreamData.Builder setPayload(EV_StreamData.Builder msg, MessageOrBuilder payload) {
-
-		// Build the payload if not already built
-		if (payload instanceof Builder)
-			payload = ((Builder) payload).build();
-
-		String name = payload.getClass().getSimpleName();
-		FieldDescriptor field = EV_StreamData.getDescriptor()
-				.findFieldByName(name.substring(0, name.indexOf("StreamData")).toLowerCase());
-
-		if (field != null) {
-			return msg.setField(field, payload);
-		} else {
-			// Assume this is a plugin message
-			return msg.setPlugin(((Message) payload).toByteString());
-		}
-	}
-
-	/**
-	 * Get the payload from the given stream message.
-	 *
-	 * @param msg The stream message
-	 * @return The message's payload or {@code null} if none
-	 */
-	public static Object getPayload(EV_StreamData msg) {
-		FieldDescriptor oneof = msg.getOneofFieldDescriptor(msg.getDescriptorForType().getOneofs().get(0));
-		if (oneof == null)
-			return null;
-
-		return msg.getField(oneof);
 	}
 
 	/**

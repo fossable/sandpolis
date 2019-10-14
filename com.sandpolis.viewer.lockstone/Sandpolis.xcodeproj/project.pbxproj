@@ -62,42 +62,44 @@
 		AA899D32231A066500E7C703 /* Step2.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA899D31231A066500E7C703 /* Step2.swift */; };
 		AA899D34231A067A00E7C703 /* Step3.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA899D33231A067A00E7C703 /* Step3.swift */; };
 		AA8B1BAF22CB1AC0009DB0EC /* MacroEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8B1BAE22CB1AC0009DB0EC /* MacroEditor.swift */; };
+		AA8E7DFB23539FC2007F3EFB /* msg_listener.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DCD23539FC2007F3EFB /* msg_listener.pb.swift */; };
+		AA8E7DFC23539FC2007F3EFB /* msg_user.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DCE23539FC2007F3EFB /* msg_user.pb.swift */; };
+		AA8E7DFD23539FC2007F3EFB /* msg_client.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DCF23539FC2007F3EFB /* msg_client.pb.swift */; };
+		AA8E7DFE23539FC2007F3EFB /* msg_generator.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DD023539FC2007F3EFB /* msg_generator.pb.swift */; };
+		AA8E7DFF23539FC2007F3EFB /* msg_network.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DD123539FC2007F3EFB /* msg_network.pb.swift */; };
+		AA8E7E0023539FC2007F3EFB /* msg_auth.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DD223539FC2007F3EFB /* msg_auth.pb.swift */; };
+		AA8E7E0123539FC2007F3EFB /* msg_plugin.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DD323539FC2007F3EFB /* msg_plugin.pb.swift */; };
+		AA8E7E0223539FC2007F3EFB /* msg_server.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DD423539FC2007F3EFB /* msg_server.pb.swift */; };
+		AA8E7E0323539FC2007F3EFB /* msg_stream.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DD523539FC2007F3EFB /* msg_stream.pb.swift */; };
+		AA8E7E0423539FC2007F3EFB /* msg_ping.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DD623539FC2007F3EFB /* msg_ping.pb.swift */; };
+		AA8E7E0523539FC2007F3EFB /* msg_group.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DD723539FC2007F3EFB /* msg_group.pb.swift */; };
+		AA8E7E0623539FC2007F3EFB /* msg_delta.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DD823539FC2007F3EFB /* msg_delta.pb.swift */; };
+		AA8E7E0723539FC2007F3EFB /* msg_login.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DD923539FC2007F3EFB /* msg_login.pb.swift */; };
+		AA8E7E0823539FC2007F3EFB /* msg_cvid.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DDA23539FC2007F3EFB /* msg_cvid.pb.swift */; };
+		AA8E7E0923539FC2007F3EFB /* message.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DDB23539FC2007F3EFB /* message.pb.swift */; };
+		AA8E7E0A23539FC2007F3EFB /* result.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DDD23539FC2007F3EFB /* result.pb.swift */; };
+		AA8E7E0B23539FC2007F3EFB /* generator.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DDE23539FC2007F3EFB /* generator.pb.swift */; };
+		AA8E7E0C23539FC2007F3EFB /* platform.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DDF23539FC2007F3EFB /* platform.pb.swift */; };
+		AA8E7E0D23539FC2007F3EFB /* update.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DE023539FC2007F3EFB /* update.pb.swift */; };
+		AA8E7E0E23539FC2007F3EFB /* auth.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DE123539FC2007F3EFB /* auth.pb.swift */; };
+		AA8E7E0F23539FC2007F3EFB /* listener.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DE323539FC2007F3EFB /* listener.pb.swift */; };
+		AA8E7E1023539FC2007F3EFB /* stream.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DE423539FC2007F3EFB /* stream.pb.swift */; };
+		AA8E7E1123539FC2007F3EFB /* user.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DE523539FC2007F3EFB /* user.pb.swift */; };
+		AA8E7E1223539FC2007F3EFB /* group.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DE623539FC2007F3EFB /* group.pb.swift */; };
+		AA8E7E1323539FC2007F3EFB /* msg_power.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DEA23539FC2007F3EFB /* msg_power.pb.swift */; };
+		AA8E7E1423539FC2007F3EFB /* msg_shell.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DEB23539FC2007F3EFB /* msg_shell.pb.swift */; };
+		AA8E7E1523539FC2007F3EFB /* message_shell.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DEC23539FC2007F3EFB /* message_shell.pb.swift */; };
+		AA8E7E1623539FC2007F3EFB /* msg_filesys.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DEF23539FC2007F3EFB /* msg_filesys.pb.swift */; };
+		AA8E7E1723539FC2007F3EFB /* message_filesys.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DF023539FC2007F3EFB /* message_filesys.pb.swift */; };
+		AA8E7E1823539FC2007F3EFB /* msg_desktop.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DF323539FC2007F3EFB /* msg_desktop.pb.swift */; };
+		AA8E7E1923539FC2007F3EFB /* message_desktop.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DF423539FC2007F3EFB /* message_desktop.pb.swift */; };
+		AA8E7E1A23539FC2007F3EFB /* msg_clipboard.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DF523539FC2007F3EFB /* msg_clipboard.pb.swift */; };
+		AA8E7E1B23539FC2007F3EFB /* msg_rd.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DF623539FC2007F3EFB /* msg_rd.pb.swift */; };
+		AA8E7E1C23539FC2007F3EFB /* msg_sysinfo.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DF923539FC2007F3EFB /* msg_sysinfo.pb.swift */; };
+		AA8E7E1D23539FC2007F3EFB /* message_sysinfo.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DFA23539FC2007F3EFB /* message_sysinfo.pb.swift */; };
 		AABF01E923349D6800DEA0E4 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01E823349D6800DEA0E4 /* NIO */; };
 		AABF01EC23349DE300DEA0E4 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01EB23349DE300DEA0E4 /* NIOSSL */; };
 		AABF01EF23349ED300DEA0E4 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01EE23349ED300DEA0E4 /* SwiftProtobuf */; };
-		AAC163C223458A3E006A4920 /* MC_Generator.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639623458A3E006A4920 /* MC_Generator.pb.swift */; };
-		AAC163C323458A3E006A4920 /* MC_Listener.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639723458A3E006A4920 /* MC_Listener.pb.swift */; };
-		AAC163C423458A3E006A4920 /* MC_User.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639823458A3E006A4920 /* MC_User.pb.swift */; };
-		AAC163C523458A3E006A4920 /* MC_Server.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639923458A3E006A4920 /* MC_Server.pb.swift */; };
-		AAC163C623458A3E006A4920 /* MC_Group.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639A23458A3E006A4920 /* MC_Group.pb.swift */; };
-		AAC163C723458A3E006A4920 /* MC_Delta.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639B23458A3E006A4920 /* MC_Delta.pb.swift */; };
-		AAC163C823458A3E006A4920 /* MC_Stream.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639C23458A3E006A4920 /* MC_Stream.pb.swift */; };
-		AAC163C923458A3E006A4920 /* MC_Login.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639D23458A3E006A4920 /* MC_Login.pb.swift */; };
-		AAC163CA23458A3E006A4920 /* MC_Auth.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639E23458A3E006A4920 /* MC_Auth.pb.swift */; };
-		AAC163CB23458A3E006A4920 /* MC_Ping.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC1639F23458A3E006A4920 /* MC_Ping.pb.swift */; };
-		AAC163CC23458A3E006A4920 /* MSG.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A023458A3E006A4920 /* MSG.pb.swift */; };
-		AAC163CD23458A3E006A4920 /* MC_Plugin.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A123458A3E006A4920 /* MC_Plugin.pb.swift */; };
-		AAC163CE23458A3E006A4920 /* MC_Client.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A223458A3E006A4920 /* MC_Client.pb.swift */; };
-		AAC163CF23458A3E006A4920 /* MC_Cvid.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A323458A3E006A4920 /* MC_Cvid.pb.swift */; };
-		AAC163D023458A3E006A4920 /* MC_Network.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A423458A3E006A4920 /* MC_Network.pb.swift */; };
-		AAC163D123458A3E006A4920 /* Result.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A623458A3E006A4920 /* Result.pb.swift */; };
-		AAC163D223458A3E006A4920 /* Generator.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A723458A3E006A4920 /* Generator.pb.swift */; };
-		AAC163D323458A3E006A4920 /* Platform.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A823458A3E006A4920 /* Platform.pb.swift */; };
-		AAC163D423458A3E006A4920 /* Update.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163A923458A3E006A4920 /* Update.pb.swift */; };
-		AAC163D523458A3E006A4920 /* Auth.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163AA23458A3E006A4920 /* Auth.pb.swift */; };
-		AAC163D623458A3E006A4920 /* Listener.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163AC23458A3E006A4920 /* Listener.pb.swift */; };
-		AAC163D723458A3E006A4920 /* Stream.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163AD23458A3E006A4920 /* Stream.pb.swift */; };
-		AAC163D823458A3E006A4920 /* User.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163AE23458A3E006A4920 /* User.pb.swift */; };
-		AAC163D923458A3E006A4920 /* Group.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163AF23458A3E006A4920 /* Group.pb.swift */; };
-		AAC163DA23458A3E006A4920 /* MC_Shell.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163B323458A3E006A4920 /* MC_Shell.pb.swift */; };
-		AAC163DB23458A3E006A4920 /* ShellMSG.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163B423458A3E006A4920 /* ShellMSG.pb.swift */; };
-		AAC163DC23458A3E006A4920 /* FilesysMSG.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163B723458A3E006A4920 /* FilesysMSG.pb.swift */; };
-		AAC163DD23458A3E006A4920 /* MC_Filesys.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163B823458A3E006A4920 /* MC_Filesys.pb.swift */; };
-		AAC163DE23458A3E006A4920 /* DesktopMSG.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163BB23458A3E006A4920 /* DesktopMSG.pb.swift */; };
-		AAC163DF23458A3E006A4920 /* DesktopStream.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163BC23458A3E006A4920 /* DesktopStream.pb.swift */; };
-		AAC163E023458A3E006A4920 /* MC_Desktop.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163BD23458A3E006A4920 /* MC_Desktop.pb.swift */; };
-		AAC163E123458A3E006A4920 /* SysinfoMSG.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163C023458A3E006A4920 /* SysinfoMSG.pb.swift */; };
-		AAC163E223458A3E006A4920 /* MC_Sysinfo.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC163C123458A3E006A4920 /* MC_Sysinfo.pb.swift */; };
 		AAC198F922E40CA6004361C5 /* FileCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198F822E40CA6004361C5 /* FileCell.swift */; };
 		AAC198FD22E40D27004361C5 /* FolderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198FC22E40D27004361C5 /* FolderCell.swift */; };
 		AAC4B69422BDE54500B0E354 /* SandpolisConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */; };
@@ -169,39 +171,41 @@
 		AA899D31231A066500E7C703 /* Step2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step2.swift; sourceTree = "<group>"; };
 		AA899D33231A067A00E7C703 /* Step3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step3.swift; sourceTree = "<group>"; };
 		AA8B1BAE22CB1AC0009DB0EC /* MacroEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroEditor.swift; sourceTree = "<group>"; };
-		AAC1639623458A3E006A4920 /* MC_Generator.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Generator.pb.swift; sourceTree = "<group>"; };
-		AAC1639723458A3E006A4920 /* MC_Listener.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Listener.pb.swift; sourceTree = "<group>"; };
-		AAC1639823458A3E006A4920 /* MC_User.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_User.pb.swift; sourceTree = "<group>"; };
-		AAC1639923458A3E006A4920 /* MC_Server.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Server.pb.swift; sourceTree = "<group>"; };
-		AAC1639A23458A3E006A4920 /* MC_Group.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Group.pb.swift; sourceTree = "<group>"; };
-		AAC1639B23458A3E006A4920 /* MC_Delta.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Delta.pb.swift; sourceTree = "<group>"; };
-		AAC1639C23458A3E006A4920 /* MC_Stream.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Stream.pb.swift; sourceTree = "<group>"; };
-		AAC1639D23458A3E006A4920 /* MC_Login.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Login.pb.swift; sourceTree = "<group>"; };
-		AAC1639E23458A3E006A4920 /* MC_Auth.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Auth.pb.swift; sourceTree = "<group>"; };
-		AAC1639F23458A3E006A4920 /* MC_Ping.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Ping.pb.swift; sourceTree = "<group>"; };
-		AAC163A023458A3E006A4920 /* MSG.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MSG.pb.swift; sourceTree = "<group>"; };
-		AAC163A123458A3E006A4920 /* MC_Plugin.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Plugin.pb.swift; sourceTree = "<group>"; };
-		AAC163A223458A3E006A4920 /* MC_Client.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Client.pb.swift; sourceTree = "<group>"; };
-		AAC163A323458A3E006A4920 /* MC_Cvid.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Cvid.pb.swift; sourceTree = "<group>"; };
-		AAC163A423458A3E006A4920 /* MC_Network.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Network.pb.swift; sourceTree = "<group>"; };
-		AAC163A623458A3E006A4920 /* Result.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Result.pb.swift; sourceTree = "<group>"; };
-		AAC163A723458A3E006A4920 /* Generator.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Generator.pb.swift; sourceTree = "<group>"; };
-		AAC163A823458A3E006A4920 /* Platform.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Platform.pb.swift; sourceTree = "<group>"; };
-		AAC163A923458A3E006A4920 /* Update.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Update.pb.swift; sourceTree = "<group>"; };
-		AAC163AA23458A3E006A4920 /* Auth.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Auth.pb.swift; sourceTree = "<group>"; };
-		AAC163AC23458A3E006A4920 /* Listener.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Listener.pb.swift; sourceTree = "<group>"; };
-		AAC163AD23458A3E006A4920 /* Stream.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stream.pb.swift; sourceTree = "<group>"; };
-		AAC163AE23458A3E006A4920 /* User.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.pb.swift; sourceTree = "<group>"; };
-		AAC163AF23458A3E006A4920 /* Group.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Group.pb.swift; sourceTree = "<group>"; };
-		AAC163B323458A3E006A4920 /* MC_Shell.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Shell.pb.swift; sourceTree = "<group>"; };
-		AAC163B423458A3E006A4920 /* ShellMSG.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShellMSG.pb.swift; sourceTree = "<group>"; };
-		AAC163B723458A3E006A4920 /* FilesysMSG.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilesysMSG.pb.swift; sourceTree = "<group>"; };
-		AAC163B823458A3E006A4920 /* MC_Filesys.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Filesys.pb.swift; sourceTree = "<group>"; };
-		AAC163BB23458A3E006A4920 /* DesktopMSG.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DesktopMSG.pb.swift; sourceTree = "<group>"; };
-		AAC163BC23458A3E006A4920 /* DesktopStream.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DesktopStream.pb.swift; sourceTree = "<group>"; };
-		AAC163BD23458A3E006A4920 /* MC_Desktop.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Desktop.pb.swift; sourceTree = "<group>"; };
-		AAC163C023458A3E006A4920 /* SysinfoMSG.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SysinfoMSG.pb.swift; sourceTree = "<group>"; };
-		AAC163C123458A3E006A4920 /* MC_Sysinfo.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MC_Sysinfo.pb.swift; sourceTree = "<group>"; };
+		AA8E7DCD23539FC2007F3EFB /* msg_listener.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_listener.pb.swift; sourceTree = "<group>"; };
+		AA8E7DCE23539FC2007F3EFB /* msg_user.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_user.pb.swift; sourceTree = "<group>"; };
+		AA8E7DCF23539FC2007F3EFB /* msg_client.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_client.pb.swift; sourceTree = "<group>"; };
+		AA8E7DD023539FC2007F3EFB /* msg_generator.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_generator.pb.swift; sourceTree = "<group>"; };
+		AA8E7DD123539FC2007F3EFB /* msg_network.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_network.pb.swift; sourceTree = "<group>"; };
+		AA8E7DD223539FC2007F3EFB /* msg_auth.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_auth.pb.swift; sourceTree = "<group>"; };
+		AA8E7DD323539FC2007F3EFB /* msg_plugin.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_plugin.pb.swift; sourceTree = "<group>"; };
+		AA8E7DD423539FC2007F3EFB /* msg_server.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_server.pb.swift; sourceTree = "<group>"; };
+		AA8E7DD523539FC2007F3EFB /* msg_stream.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_stream.pb.swift; sourceTree = "<group>"; };
+		AA8E7DD623539FC2007F3EFB /* msg_ping.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_ping.pb.swift; sourceTree = "<group>"; };
+		AA8E7DD723539FC2007F3EFB /* msg_group.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_group.pb.swift; sourceTree = "<group>"; };
+		AA8E7DD823539FC2007F3EFB /* msg_delta.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_delta.pb.swift; sourceTree = "<group>"; };
+		AA8E7DD923539FC2007F3EFB /* msg_login.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_login.pb.swift; sourceTree = "<group>"; };
+		AA8E7DDA23539FC2007F3EFB /* msg_cvid.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_cvid.pb.swift; sourceTree = "<group>"; };
+		AA8E7DDB23539FC2007F3EFB /* message.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = message.pb.swift; sourceTree = "<group>"; };
+		AA8E7DDD23539FC2007F3EFB /* result.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = result.pb.swift; sourceTree = "<group>"; };
+		AA8E7DDE23539FC2007F3EFB /* generator.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = generator.pb.swift; sourceTree = "<group>"; };
+		AA8E7DDF23539FC2007F3EFB /* platform.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = platform.pb.swift; sourceTree = "<group>"; };
+		AA8E7DE023539FC2007F3EFB /* update.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = update.pb.swift; sourceTree = "<group>"; };
+		AA8E7DE123539FC2007F3EFB /* auth.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = auth.pb.swift; sourceTree = "<group>"; };
+		AA8E7DE323539FC2007F3EFB /* listener.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = listener.pb.swift; sourceTree = "<group>"; };
+		AA8E7DE423539FC2007F3EFB /* stream.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = stream.pb.swift; sourceTree = "<group>"; };
+		AA8E7DE523539FC2007F3EFB /* user.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = user.pb.swift; sourceTree = "<group>"; };
+		AA8E7DE623539FC2007F3EFB /* group.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = group.pb.swift; sourceTree = "<group>"; };
+		AA8E7DEA23539FC2007F3EFB /* msg_power.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_power.pb.swift; sourceTree = "<group>"; };
+		AA8E7DEB23539FC2007F3EFB /* msg_shell.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_shell.pb.swift; sourceTree = "<group>"; };
+		AA8E7DEC23539FC2007F3EFB /* message_shell.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = message_shell.pb.swift; sourceTree = "<group>"; };
+		AA8E7DEF23539FC2007F3EFB /* msg_filesys.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_filesys.pb.swift; sourceTree = "<group>"; };
+		AA8E7DF023539FC2007F3EFB /* message_filesys.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = message_filesys.pb.swift; sourceTree = "<group>"; };
+		AA8E7DF323539FC2007F3EFB /* msg_desktop.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_desktop.pb.swift; sourceTree = "<group>"; };
+		AA8E7DF423539FC2007F3EFB /* message_desktop.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = message_desktop.pb.swift; sourceTree = "<group>"; };
+		AA8E7DF523539FC2007F3EFB /* msg_clipboard.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_clipboard.pb.swift; sourceTree = "<group>"; };
+		AA8E7DF623539FC2007F3EFB /* msg_rd.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_rd.pb.swift; sourceTree = "<group>"; };
+		AA8E7DF923539FC2007F3EFB /* msg_sysinfo.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_sysinfo.pb.swift; sourceTree = "<group>"; };
+		AA8E7DFA23539FC2007F3EFB /* message_sysinfo.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = message_sysinfo.pb.swift; sourceTree = "<group>"; };
 		AAC198F822E40CA6004361C5 /* FileCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCell.swift; sourceTree = "<group>"; };
 		AAC198FC22E40D27004361C5 /* FolderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderCell.swift; sourceTree = "<group>"; };
 		AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisConnection.swift; sourceTree = "<group>"; };
@@ -399,7 +403,7 @@
 		AA6EAC38234583C9003AB166 /* Proto */ = {
 			isa = PBXGroup;
 			children = (
-				AAC1639123458A3E006A4920 /* com */,
+				AA8E7DC823539FC2007F3EFB /* com */,
 			);
 			path = Proto;
 			sourceTree = "<group>";
@@ -496,162 +500,164 @@
 			path = ServerCreator;
 			sourceTree = "<group>";
 		};
-		AAC1639123458A3E006A4920 /* com */ = {
+		AA8E7DC823539FC2007F3EFB /* com */ = {
 			isa = PBXGroup;
 			children = (
-				AAC1639223458A3E006A4920 /* sandpolis */,
+				AA8E7DC923539FC2007F3EFB /* sandpolis */,
 			);
 			path = com;
 			sourceTree = "<group>";
 		};
-		AAC1639223458A3E006A4920 /* sandpolis */ = {
+		AA8E7DC923539FC2007F3EFB /* sandpolis */ = {
 			isa = PBXGroup;
 			children = (
-				AAC1639323458A3E006A4920 /* core */,
-				AAC163B023458A3E006A4920 /* plugin */,
+				AA8E7DCA23539FC2007F3EFB /* core */,
+				AA8E7DE723539FC2007F3EFB /* plugin */,
 			);
 			path = sandpolis;
 			sourceTree = "<group>";
 		};
-		AAC1639323458A3E006A4920 /* core */ = {
+		AA8E7DCA23539FC2007F3EFB /* core */ = {
 			isa = PBXGroup;
 			children = (
-				AAC1639423458A3E006A4920 /* proto */,
+				AA8E7DCB23539FC2007F3EFB /* proto */,
 			);
 			path = core;
 			sourceTree = "<group>";
 		};
-		AAC1639423458A3E006A4920 /* proto */ = {
+		AA8E7DCB23539FC2007F3EFB /* proto */ = {
 			isa = PBXGroup;
 			children = (
-				AAC1639523458A3E006A4920 /* net */,
-				AAC163A523458A3E006A4920 /* util */,
-				AAC163AB23458A3E006A4920 /* pojo */,
+				AA8E7DCC23539FC2007F3EFB /* net */,
+				AA8E7DDC23539FC2007F3EFB /* util */,
+				AA8E7DE223539FC2007F3EFB /* pojo */,
 			);
 			path = proto;
 			sourceTree = "<group>";
 		};
-		AAC1639523458A3E006A4920 /* net */ = {
+		AA8E7DCC23539FC2007F3EFB /* net */ = {
 			isa = PBXGroup;
 			children = (
-				AAC1639623458A3E006A4920 /* MC_Generator.pb.swift */,
-				AAC1639723458A3E006A4920 /* MC_Listener.pb.swift */,
-				AAC1639823458A3E006A4920 /* MC_User.pb.swift */,
-				AAC1639923458A3E006A4920 /* MC_Server.pb.swift */,
-				AAC1639A23458A3E006A4920 /* MC_Group.pb.swift */,
-				AAC1639B23458A3E006A4920 /* MC_Delta.pb.swift */,
-				AAC1639C23458A3E006A4920 /* MC_Stream.pb.swift */,
-				AAC1639D23458A3E006A4920 /* MC_Login.pb.swift */,
-				AAC1639E23458A3E006A4920 /* MC_Auth.pb.swift */,
-				AAC1639F23458A3E006A4920 /* MC_Ping.pb.swift */,
-				AAC163A023458A3E006A4920 /* MSG.pb.swift */,
-				AAC163A123458A3E006A4920 /* MC_Plugin.pb.swift */,
-				AAC163A223458A3E006A4920 /* MC_Client.pb.swift */,
-				AAC163A323458A3E006A4920 /* MC_Cvid.pb.swift */,
-				AAC163A423458A3E006A4920 /* MC_Network.pb.swift */,
+				AA8E7DCD23539FC2007F3EFB /* msg_listener.pb.swift */,
+				AA8E7DCE23539FC2007F3EFB /* msg_user.pb.swift */,
+				AA8E7DCF23539FC2007F3EFB /* msg_client.pb.swift */,
+				AA8E7DD023539FC2007F3EFB /* msg_generator.pb.swift */,
+				AA8E7DD123539FC2007F3EFB /* msg_network.pb.swift */,
+				AA8E7DD223539FC2007F3EFB /* msg_auth.pb.swift */,
+				AA8E7DD323539FC2007F3EFB /* msg_plugin.pb.swift */,
+				AA8E7DD423539FC2007F3EFB /* msg_server.pb.swift */,
+				AA8E7DD523539FC2007F3EFB /* msg_stream.pb.swift */,
+				AA8E7DD623539FC2007F3EFB /* msg_ping.pb.swift */,
+				AA8E7DD723539FC2007F3EFB /* msg_group.pb.swift */,
+				AA8E7DD823539FC2007F3EFB /* msg_delta.pb.swift */,
+				AA8E7DD923539FC2007F3EFB /* msg_login.pb.swift */,
+				AA8E7DDA23539FC2007F3EFB /* msg_cvid.pb.swift */,
+				AA8E7DDB23539FC2007F3EFB /* message.pb.swift */,
 			);
 			path = net;
 			sourceTree = "<group>";
 		};
-		AAC163A523458A3E006A4920 /* util */ = {
+		AA8E7DDC23539FC2007F3EFB /* util */ = {
 			isa = PBXGroup;
 			children = (
-				AAC163A623458A3E006A4920 /* Result.pb.swift */,
-				AAC163A723458A3E006A4920 /* Generator.pb.swift */,
-				AAC163A823458A3E006A4920 /* Platform.pb.swift */,
-				AAC163A923458A3E006A4920 /* Update.pb.swift */,
-				AAC163AA23458A3E006A4920 /* Auth.pb.swift */,
+				AA8E7DDD23539FC2007F3EFB /* result.pb.swift */,
+				AA8E7DDE23539FC2007F3EFB /* generator.pb.swift */,
+				AA8E7DDF23539FC2007F3EFB /* platform.pb.swift */,
+				AA8E7DE023539FC2007F3EFB /* update.pb.swift */,
+				AA8E7DE123539FC2007F3EFB /* auth.pb.swift */,
 			);
 			path = util;
 			sourceTree = "<group>";
 		};
-		AAC163AB23458A3E006A4920 /* pojo */ = {
+		AA8E7DE223539FC2007F3EFB /* pojo */ = {
 			isa = PBXGroup;
 			children = (
-				AAC163AC23458A3E006A4920 /* Listener.pb.swift */,
-				AAC163AD23458A3E006A4920 /* Stream.pb.swift */,
-				AAC163AE23458A3E006A4920 /* User.pb.swift */,
-				AAC163AF23458A3E006A4920 /* Group.pb.swift */,
+				AA8E7DE323539FC2007F3EFB /* listener.pb.swift */,
+				AA8E7DE423539FC2007F3EFB /* stream.pb.swift */,
+				AA8E7DE523539FC2007F3EFB /* user.pb.swift */,
+				AA8E7DE623539FC2007F3EFB /* group.pb.swift */,
 			);
 			path = pojo;
 			sourceTree = "<group>";
 		};
-		AAC163B023458A3E006A4920 /* plugin */ = {
+		AA8E7DE723539FC2007F3EFB /* plugin */ = {
 			isa = PBXGroup;
 			children = (
-				AAC163B123458A3E006A4920 /* shell */,
-				AAC163B523458A3E006A4920 /* filesys */,
-				AAC163B923458A3E006A4920 /* desktop */,
-				AAC163BE23458A3E006A4920 /* sysinfo */,
+				AA8E7DE823539FC2007F3EFB /* shell */,
+				AA8E7DED23539FC2007F3EFB /* filesys */,
+				AA8E7DF123539FC2007F3EFB /* desktop */,
+				AA8E7DF723539FC2007F3EFB /* sysinfo */,
 			);
 			path = plugin;
 			sourceTree = "<group>";
 		};
-		AAC163B123458A3E006A4920 /* shell */ = {
+		AA8E7DE823539FC2007F3EFB /* shell */ = {
 			isa = PBXGroup;
 			children = (
-				AAC163B223458A3E006A4920 /* net */,
+				AA8E7DE923539FC2007F3EFB /* net */,
 			);
 			path = shell;
 			sourceTree = "<group>";
 		};
-		AAC163B223458A3E006A4920 /* net */ = {
+		AA8E7DE923539FC2007F3EFB /* net */ = {
 			isa = PBXGroup;
 			children = (
-				AAC163B323458A3E006A4920 /* MC_Shell.pb.swift */,
-				AAC163B423458A3E006A4920 /* ShellMSG.pb.swift */,
+				AA8E7DEA23539FC2007F3EFB /* msg_power.pb.swift */,
+				AA8E7DEB23539FC2007F3EFB /* msg_shell.pb.swift */,
+				AA8E7DEC23539FC2007F3EFB /* message_shell.pb.swift */,
 			);
 			path = net;
 			sourceTree = "<group>";
 		};
-		AAC163B523458A3E006A4920 /* filesys */ = {
+		AA8E7DED23539FC2007F3EFB /* filesys */ = {
 			isa = PBXGroup;
 			children = (
-				AAC163B623458A3E006A4920 /* net */,
+				AA8E7DEE23539FC2007F3EFB /* net */,
 			);
 			path = filesys;
 			sourceTree = "<group>";
 		};
-		AAC163B623458A3E006A4920 /* net */ = {
+		AA8E7DEE23539FC2007F3EFB /* net */ = {
 			isa = PBXGroup;
 			children = (
-				AAC163B723458A3E006A4920 /* FilesysMSG.pb.swift */,
-				AAC163B823458A3E006A4920 /* MC_Filesys.pb.swift */,
+				AA8E7DEF23539FC2007F3EFB /* msg_filesys.pb.swift */,
+				AA8E7DF023539FC2007F3EFB /* message_filesys.pb.swift */,
 			);
 			path = net;
 			sourceTree = "<group>";
 		};
-		AAC163B923458A3E006A4920 /* desktop */ = {
+		AA8E7DF123539FC2007F3EFB /* desktop */ = {
 			isa = PBXGroup;
 			children = (
-				AAC163BA23458A3E006A4920 /* net */,
+				AA8E7DF223539FC2007F3EFB /* net */,
 			);
 			path = desktop;
 			sourceTree = "<group>";
 		};
-		AAC163BA23458A3E006A4920 /* net */ = {
+		AA8E7DF223539FC2007F3EFB /* net */ = {
 			isa = PBXGroup;
 			children = (
-				AAC163BB23458A3E006A4920 /* DesktopMSG.pb.swift */,
-				AAC163BC23458A3E006A4920 /* DesktopStream.pb.swift */,
-				AAC163BD23458A3E006A4920 /* MC_Desktop.pb.swift */,
+				AA8E7DF323539FC2007F3EFB /* msg_desktop.pb.swift */,
+				AA8E7DF423539FC2007F3EFB /* message_desktop.pb.swift */,
+				AA8E7DF523539FC2007F3EFB /* msg_clipboard.pb.swift */,
+				AA8E7DF623539FC2007F3EFB /* msg_rd.pb.swift */,
 			);
 			path = net;
 			sourceTree = "<group>";
 		};
-		AAC163BE23458A3E006A4920 /* sysinfo */ = {
+		AA8E7DF723539FC2007F3EFB /* sysinfo */ = {
 			isa = PBXGroup;
 			children = (
-				AAC163BF23458A3E006A4920 /* net */,
+				AA8E7DF823539FC2007F3EFB /* net */,
 			);
 			path = sysinfo;
 			sourceTree = "<group>";
 		};
-		AAC163BF23458A3E006A4920 /* net */ = {
+		AA8E7DF823539FC2007F3EFB /* net */ = {
 			isa = PBXGroup;
 			children = (
-				AAC163C023458A3E006A4920 /* SysinfoMSG.pb.swift */,
-				AAC163C123458A3E006A4920 /* MC_Sysinfo.pb.swift */,
+				AA8E7DF923539FC2007F3EFB /* msg_sysinfo.pb.swift */,
+				AA8E7DFA23539FC2007F3EFB /* message_sysinfo.pb.swift */,
 			);
 			path = net;
 			sourceTree = "<group>";
@@ -797,94 +803,96 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AAC163E123458A3E006A4920 /* SysinfoMSG.pb.swift in Sources */,
-				AAC163C323458A3E006A4920 /* MC_Listener.pb.swift in Sources */,
-				AAC163C623458A3E006A4920 /* MC_Group.pb.swift in Sources */,
+				AA8E7E0923539FC2007F3EFB /* message.pb.swift in Sources */,
+				AA8E7E0D23539FC2007F3EFB /* update.pb.swift in Sources */,
+				AA8E7E0523539FC2007F3EFB /* msg_group.pb.swift in Sources */,
 				AA6CACEB22DD34A900041AF3 /* FormatUtil.swift in Sources */,
 				AA6E007222F73C1400BB51ED /* Login.swift in Sources */,
 				AA0724A32312203C0087190F /* ClientScanner.swift in Sources */,
 				AAF113B922CC50C800987EAF /* MacroManager.swift in Sources */,
-				AAC163D923458A3E006A4920 /* Group.pb.swift in Sources */,
 				AA70FD1F22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift in Sources */,
 				AA72362B22D42F27004EE888 /* ControlPanel.swift in Sources */,
-				AAC163C223458A3E006A4920 /* MC_Generator.pb.swift in Sources */,
+				AA8E7E0B23539FC2007F3EFB /* generator.pb.swift in Sources */,
+				AA8E7E0E23539FC2007F3EFB /* auth.pb.swift in Sources */,
 				8542D3FE22D66E0300F56F70 /* ServerManager.swift in Sources */,
 				AAF390E5230BC796008C9469 /* CvidRequestHandler.swift in Sources */,
 				8542D40022D69CBF00F56F70 /* ClientList.swift in Sources */,
 				AA899D30231A065000E7C703 /* Step1.swift in Sources */,
-				AAC163CE23458A3E006A4920 /* MC_Client.pb.swift in Sources */,
 				AA766B0622C944530053777B /* FileManager.swift in Sources */,
-				AAC163C823458A3E006A4920 /* MC_Stream.pb.swift in Sources */,
 				AA0724A02311E6F20087190F /* CloudUtil.swift in Sources */,
-				AAC163DC23458A3E006A4920 /* FilesysMSG.pb.swift in Sources */,
 				AA6CACFC22DD658C00041AF3 /* MacroResults.swift in Sources */,
-				AAC163DD23458A3E006A4920 /* MC_Filesys.pb.swift in Sources */,
 				AA8B1BAF22CB1AC0009DB0EC /* MacroEditor.swift in Sources */,
 				AA642E442308BC4D0027BEC2 /* ClientAnnotation.swift in Sources */,
-				AAC163D723458A3E006A4920 /* Stream.pb.swift in Sources */,
+				AA8E7DFF23539FC2007F3EFB /* msg_network.pb.swift in Sources */,
 				AA899D2E2319E6A000E7C703 /* ServerCreator.swift in Sources */,
-				AAC163DB23458A3E006A4920 /* ShellMSG.pb.swift in Sources */,
-				AAC163E223458A3E006A4920 /* MC_Sysinfo.pb.swift in Sources */,
-				AAC163C923458A3E006A4920 /* MC_Login.pb.swift in Sources */,
-				AAC163CC23458A3E006A4920 /* MSG.pb.swift in Sources */,
+				AA8E7DFE23539FC2007F3EFB /* msg_generator.pb.swift in Sources */,
+				AA8E7E1123539FC2007F3EFB /* user.pb.swift in Sources */,
 				AA6CACED22DD432000041AF3 /* GroupPanelTable.swift in Sources */,
 				AA6CACEF22DD445000041AF3 /* GroupPanel.swift in Sources */,
 				ED5A421222E5284900EA3C98 /* ForgotPassword.swift in Sources */,
 				AA70FD1E22BEF326006A4C6F /* ByteBuffer+varint.swift in Sources */,
-				AAC163D323458A3E006A4920 /* Platform.pb.swift in Sources */,
 				AA6CACE822DD26F600041AF3 /* ControlPanelTable.swift in Sources */,
 				AAC198FD22E40D27004361C5 /* FolderCell.swift in Sources */,
-				AAC163DE23458A3E006A4920 /* DesktopMSG.pb.swift in Sources */,
+				AA8E7E1B23539FC2007F3EFB /* msg_rd.pb.swift in Sources */,
 				85CECBF922D9897400EF1A6E /* Settings.swift in Sources */,
 				AA42524222E953B30083F7F4 /* MacroSelectCell.swift in Sources */,
+				AA8E7E0C23539FC2007F3EFB /* platform.pb.swift in Sources */,
+				AA8E7E0A23539FC2007F3EFB /* result.pb.swift in Sources */,
 				AA69CCA722DE9E0000DFD721 /* MacroSelect.swift in Sources */,
-				AAC163D623458A3E006A4920 /* Listener.pb.swift in Sources */,
 				AA61588A233583CF0035622F /* ManagementHandler.swift in Sources */,
-				AAC163D023458A3E006A4920 /* MC_Network.pb.swift in Sources */,
+				AA8E7E0623539FC2007F3EFB /* msg_delta.pb.swift in Sources */,
 				85A2F87D22DAC2F300B2FD7D /* ServerCell.swift in Sources */,
 				AA69CCA122DE85CC00DFD721 /* MacroResultHeader.swift in Sources */,
 				AA61588E2335A4300035622F /* SandpolisUtil.swift in Sources */,
-				AAC163CF23458A3E006A4920 /* MC_Cvid.pb.swift in Sources */,
+				AA8E7E1723539FC2007F3EFB /* message_filesys.pb.swift in Sources */,
+				AA8E7E1923539FC2007F3EFB /* message_desktop.pb.swift in Sources */,
+				AA8E7DFC23539FC2007F3EFB /* msg_user.pb.swift in Sources */,
 				8E653C2222E6595D00BB8FEA /* MainTabController.swift in Sources */,
-				AAC163C723458A3E006A4920 /* MC_Delta.pb.swift in Sources */,
 				AA86F6DE23497866000C0B94 /* Step4.swift in Sources */,
+				AA8E7E1D23539FC2007F3EFB /* message_sysinfo.pb.swift in Sources */,
 				AA6CACFF22DD78FC00041AF3 /* MacroResultCell.swift in Sources */,
+				AA8E7E1323539FC2007F3EFB /* msg_power.pb.swift in Sources */,
+				AA8E7E0123539FC2007F3EFB /* msg_plugin.pb.swift in Sources */,
+				AA8E7E0223539FC2007F3EFB /* msg_server.pb.swift in Sources */,
+				AA8E7E1423539FC2007F3EFB /* msg_shell.pb.swift in Sources */,
 				8EAD841C22CBD80700B49D59 /* ClientMap.swift in Sources */,
 				ED5A421422E5289C00EA3C98 /* CreateAccount.swift in Sources */,
 				AA70158622D7C98D00A1E4ED /* SandpolisServer.swift in Sources */,
-				AAC163D823458A3E006A4920 /* User.pb.swift in Sources */,
-				AAC163DF23458A3E006A4920 /* DesktopStream.pb.swift in Sources */,
+				AA8E7E0723539FC2007F3EFB /* msg_login.pb.swift in Sources */,
 				AA70FD1D22BEF326006A4C6F /* ProtobufCodecs.swift in Sources */,
 				AAF390E7230BC7F1008C9469 /* ResponseHandler.swift in Sources */,
-				AAC163D223458A3E006A4920 /* Generator.pb.swift in Sources */,
+				AA8E7E1823539FC2007F3EFB /* msg_desktop.pb.swift in Sources */,
 				85A2F87C22DAC2F300B2FD7D /* HostCell.swift in Sources */,
 				AA42524422E980380083F7F4 /* MacroResult.swift in Sources */,
-				AAC163C423458A3E006A4920 /* MC_User.pb.swift in Sources */,
 				8542D40622D6A95E00F56F70 /* AddServer.swift in Sources */,
 				AA07249E2311E2A00087190F /* CloudPricing.swift in Sources */,
-				AAC163CA23458A3E006A4920 /* MC_Auth.pb.swift in Sources */,
-				AAC163D523458A3E006A4920 /* Auth.pb.swift in Sources */,
 				AA899D32231A066500E7C703 /* Step2.swift in Sources */,
 				AA6CACF122DD48D300041AF3 /* GroupHostCell.swift in Sources */,
+				AA8E7E1023539FC2007F3EFB /* stream.pb.swift in Sources */,
 				AAC4B69422BDE54500B0E354 /* SandpolisConnection.swift in Sources */,
 				8533115622FEC11800D3B0F9 /* HostGroup.swift in Sources */,
+				AA8E7E0323539FC2007F3EFB /* msg_stream.pb.swift in Sources */,
+				AA8E7E0823539FC2007F3EFB /* msg_cvid.pb.swift in Sources */,
 				ED1FB93F22D83F4200D35565 /* SignInAccount.swift in Sources */,
-				AAC163D123458A3E006A4920 /* Result.pb.swift in Sources */,
 				AA752B4622F2340100E90B54 /* BackgroundView.swift in Sources */,
 				AA899D34231A067A00E7C703 /* Step3.swift in Sources */,
+				AA8E7E1A23539FC2007F3EFB /* msg_clipboard.pb.swift in Sources */,
 				AA61588C23359FF50035622F /* ClientHandler.swift in Sources */,
-				AAC163C523458A3E006A4920 /* MC_Server.pb.swift in Sources */,
 				AA70158422D7C93900A1E4ED /* SandpolisProfile.swift in Sources */,
-				AAC163CD23458A3E006A4920 /* MC_Plugin.pb.swift in Sources */,
-				AAC163CB23458A3E006A4920 /* MC_Ping.pb.swift in Sources */,
+				AA8E7DFD23539FC2007F3EFB /* msg_client.pb.swift in Sources */,
+				AA8E7DFB23539FC2007F3EFB /* msg_listener.pb.swift in Sources */,
 				AA70158922D7CAD800A1E4ED /* SandpolisStream.swift in Sources */,
-				AAC163DA23458A3E006A4920 /* MC_Shell.pb.swift in Sources */,
-				AAC163E023458A3E006A4920 /* MC_Desktop.pb.swift in Sources */,
+				AA8E7E1C23539FC2007F3EFB /* msg_sysinfo.pb.swift in Sources */,
 				8533115A2300183600D3B0F9 /* HostGroupHeaderCell.swift in Sources */,
-				AAC163D423458A3E006A4920 /* Update.pb.swift in Sources */,
+				AA8E7E0423539FC2007F3EFB /* msg_ping.pb.swift in Sources */,
 				8E653C2422E661A000BB8FEA /* ChangePassword.swift in Sources */,
 				AACBF8D622F3A9750015DCE6 /* FolderUpCell.swift in Sources */,
+				AA8E7E1223539FC2007F3EFB /* group.pb.swift in Sources */,
+				AA8E7E0023539FC2007F3EFB /* msg_auth.pb.swift in Sources */,
+				AA8E7E0F23539FC2007F3EFB /* listener.pb.swift in Sources */,
+				AA8E7E1623539FC2007F3EFB /* msg_filesys.pb.swift in Sources */,
 				AA81DD5322BD8C5200024120 /* AppDelegate.swift in Sources */,
+				AA8E7E1523539FC2007F3EFB /* message_shell.pb.swift in Sources */,
 				AAC198F922E40CA6004361C5 /* FileCell.swift in Sources */,
 				AA87A5B722DB78B3007A702E /* MacroCell.swift in Sources */,
 			);

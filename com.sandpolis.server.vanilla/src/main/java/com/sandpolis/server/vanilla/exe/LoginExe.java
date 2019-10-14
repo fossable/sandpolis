@@ -34,9 +34,9 @@ import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.profile.Profile;
-import com.sandpolis.core.proto.net.MCLogin.RQ_Login;
-import com.sandpolis.core.proto.net.MCLogin.RQ_Logout;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgLogin.RQ_Login;
+import com.sandpolis.core.proto.net.MsgLogin.RQ_Logout;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.user.User;
@@ -52,14 +52,14 @@ public final class LoginExe extends Exelet {
 	private static final Logger log = LoggerFactory.getLogger(LoginExe.class);
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_LOGOUT_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_LOGOUT_FIELD_NUMBER)
 	public static void rq_logout(ExeletContext context, RQ_Logout rq) {
 		log.debug("Processing logout request from: {}", context.connector.getRemoteIP());
 		context.connector.close();
 	}
 
 	@Unauth
-	@Handler(tag = MSG.Message.RQ_LOGIN_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_LOGIN_FIELD_NUMBER)
 	public static MessageOrBuilder rq_login(ExeletContext context, RQ_Login rq) {
 		log.debug("Processing login request from: {}", context.connector.getRemoteIP());
 		var outcome = begin();
@@ -95,16 +95,17 @@ public final class LoginExe extends Exelet {
 		context.connector.authenticate();
 
 		// Update login metadata
-		Profile viewer = ProfileStore.getViewer(username).orElse(null);
-		if (viewer == null) {
+		Profile profile = ProfileStore.getViewer(username).orElse(null);
+		if (profile == null) {
 			// Build new profile
-			viewer = ProfileStore.getProfileOrCreate(context.connector.getRemoteUuid(),
-					context.connector.getRemoteInstance(), context.connector.getRemoteInstanceFlavor());
-			viewer.set(AK_VIEWER.USERNAME, username);
+			profile = new Profile(context.connector.getRemoteUuid(), context.connector.getRemoteInstance(),
+					context.connector.getRemoteInstanceFlavor());
+			profile.set(AK_VIEWER.USERNAME, username);
+			ProfileStore.add(profile);
 		}
 
-		viewer.set(AK_VIEWER.LOGIN_IP, context.connector.getRemoteIP());
-		viewer.set(AK_VIEWER.LOGIN_TIME, System.currentTimeMillis());
+		profile.set(AK_VIEWER.LOGIN_IP, context.connector.getRemoteIP());
+		profile.set(AK_VIEWER.LOGIN_TIME, System.currentTimeMillis());
 
 		return success(outcome);
 	}

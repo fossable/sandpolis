@@ -25,8 +25,7 @@ import java.util.concurrent.Flow.Subscription;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MCStream.EV_StreamData;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
 
 public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscriber<E>, StreamEndpoint {
 
@@ -67,7 +66,7 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 
 	@Override
 	public void onNext(E item) {
-		sock.send(
-				Message.newBuilder().setEvStreamData(ProtoUtil.setPayload(EV_StreamData.newBuilder().setId(id), item)));
+		sock.send(ProtoUtil.setPayload(MSG.newBuilder().setId(id), item));
+		// TODO plugin messages
 	}
 }

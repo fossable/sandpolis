@@ -23,7 +23,7 @@ class ServerCreator: UIViewController {
 	@IBOutlet weak var s2: UIView!
 	@IBOutlet weak var s3: UIView!
 	@IBOutlet weak var s4: UIView!
-	
+
 	var step1: Step1!
 	var step2: Step2!
 	var step3: Step3!
@@ -76,7 +76,7 @@ class ServerCreator: UIViewController {
 			self.s4.alpha = 0.0
 		}
 	}
-	
+
 	func showStep4() {
 		UIView.animate(withDuration: 1.0) {
 			self.s1.alpha = 0.0

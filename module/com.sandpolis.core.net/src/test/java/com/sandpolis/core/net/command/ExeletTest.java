@@ -26,6 +26,7 @@ import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.command.Exelet.Handler;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.channel.embedded.EmbeddedChannel;
 
@@ -50,7 +51,7 @@ public abstract class ExeletTest {
 		channel.attr(ChannelConstant.CVID).set(0);
 		channel.attr(ChannelConstant.UUID).set("123");
 
-		context = new ExeletContext(new UnitSock(channel));
+		context = new ExeletContext(new UnitSock(channel), MSG.newBuilder().build());
 	}
 
 }

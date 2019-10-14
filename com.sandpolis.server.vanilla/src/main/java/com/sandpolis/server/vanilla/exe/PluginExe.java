@@ -40,12 +40,12 @@ import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.proto.net.MCPlugin.RQ_ArtifactDownload;
-import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginInstall;
-import com.sandpolis.core.proto.net.MCPlugin.RQ_PluginList;
-import com.sandpolis.core.proto.net.MCPlugin.RS_ArtifactDownload;
-import com.sandpolis.core.proto.net.MCPlugin.RS_PluginList;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgPlugin.RQ_ArtifactDownload;
+import com.sandpolis.core.proto.net.MsgPlugin.RQ_PluginInstall;
+import com.sandpolis.core.proto.net.MsgPlugin.RQ_PluginList;
+import com.sandpolis.core.proto.net.MsgPlugin.RS_ArtifactDownload;
+import com.sandpolis.core.proto.net.MsgPlugin.RS_PluginList;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ArtifactUtil;
@@ -65,7 +65,7 @@ public final class PluginExe extends Exelet {
 	private static final Logger log = LoggerFactory.getLogger(PluginExe.class);
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_ARTIFACT_DOWNLOAD_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_ARTIFACT_DOWNLOAD_FIELD_NUMBER)
 	public static void rq_artifact_download(ExeletContext context, RQ_ArtifactDownload rq) {
 		var rs = RS_ArtifactDownload.newBuilder();
 
@@ -126,7 +126,7 @@ public final class PluginExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_PLUGIN_LIST_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_PLUGIN_LIST_FIELD_NUMBER)
 	public static MessageOrBuilder rq_plugin_list(RQ_PluginList rq) {
 		if (!Config.getBoolean("plugin.enabled"))
 			return failure(begin());
@@ -135,7 +135,7 @@ public final class PluginExe extends Exelet {
 	}
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_PLUGIN_INSTALL_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_PLUGIN_INSTALL_FIELD_NUMBER)
 	public static MessageOrBuilder rq_plugin_install(RQ_PluginInstall rq) throws Exception {
 		var outcome = begin();
 		if (!Config.getBoolean("plugin.enabled"))

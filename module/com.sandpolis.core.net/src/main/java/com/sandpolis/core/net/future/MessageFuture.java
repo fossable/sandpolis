@@ -21,7 +21,7 @@ import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import java.util.concurrent.TimeUnit;
 
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;
@@ -35,7 +35,7 @@ import io.netty.util.concurrent.EventExecutor;
  * @author cilki
  * @since 4.0.0
  */
-public class MessageFuture extends DefaultPromise<Message> {
+public class MessageFuture extends DefaultPromise<MSG> {
 
 	/**
 	 * Construct a {@link MessageFuture} that only completes if the message arrives.

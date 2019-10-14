@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.cmd.PluginCmd;
+import com.sandpolis.client.mega.exe.ClientExe;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
@@ -51,6 +52,7 @@ import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.future.ResponseFuture;
+import com.sandpolis.core.net.init.ClientChannelInitializer;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerEstablishedEvent;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerLostEvent;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
@@ -136,7 +138,7 @@ public final class Client {
 		try {
 			// TODO remove nested libraries
 			log.debug("Installing client binary from: {} into: {}", Environment.JAR, lib.toAbsolutePath());
-			Files.copy(Environment.JAR, lib.resolve("sandpolis-client-5.1.0.jar"), REPLACE_EXISTING);
+			Files.copy(Environment.JAR, lib.resolve("sandpolis-client-5.1.1.jar"), REPLACE_EXISTING);
 
 		} catch (IOException e) {
 			// Force install if enabled
@@ -163,7 +165,7 @@ public final class Client {
 		// TODO regular launch
 		var cmd = new String[] { "screen", "-S", "com.sandpolis.client.mega", "-X", "stuff",
 				"clear && java -Djava.system.class.loader=com.github.cilki.compact.CompactClassLoader -jar "
-						+ lib.resolve("sandpolis-client-5.1.0.jar").toAbsolutePath().toString() + "\n" };
+						+ lib.resolve("sandpolis-client-5.1.1.jar").toAbsolutePath().toString() + "\n" };
 		Runtime.getRuntime().exec(cmd);
 
 		System.exit(0);
@@ -232,8 +234,10 @@ public final class Client {
 	 */
 	@InitializationTask(name = "Begin the connection routine", fatal = true)
 	public static final Task beginConnectionRoutine = new Task((task) -> {
-		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig());
+		// Temporary
+		ClientChannelInitializer.setExelets(new Class[] { ClientExe.class });
 
+		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig());
 		return task.success();
 	});
 

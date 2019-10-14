@@ -19,16 +19,16 @@ package com.sandpolis.plugin.sysinfo.client.mega.exe;
 
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.plugin.sysinfo.net.MCSysinfo.RQ_NicTotals;
-import com.sandpolis.plugin.sysinfo.net.MCSysinfo.RS_NicTotals;
-import com.sandpolis.plugin.sysinfo.net.MSG;
+import com.sandpolis.plugin.sysinfo.net.MessageSysinfo.SysinfoMSG;
+import com.sandpolis.plugin.sysinfo.net.MsgSysinfo.RQ_NicTotals;
+import com.sandpolis.plugin.sysinfo.net.MsgSysinfo.RS_NicTotals;
 
 import oshi.SystemInfo;
 
 public final class SysinfoExe extends Exelet {
 
 	@Auth
-	@Handler(tag = MSG.SysinfoMessage.RQ_NIC_TOTALS_FIELD_NUMBER)
+	@Handler(tag = SysinfoMSG.RQ_NIC_TOTALS_FIELD_NUMBER)
 	public static MessageOrBuilder rq_nic_totals(RQ_NicTotals rq) {
 
 		long upload = 0;

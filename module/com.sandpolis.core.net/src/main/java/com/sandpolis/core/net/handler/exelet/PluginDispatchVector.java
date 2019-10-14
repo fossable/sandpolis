@@ -27,7 +27,7 @@ import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.proto.util.Result.Outcome;
 
 public class PluginDispatchVector extends DispatchVector {
@@ -58,12 +58,12 @@ public class PluginDispatchVector extends DispatchVector {
 	}
 
 	@Override
-	protected Message unwrapPayload(MSG.Message msg) throws InvalidProtocolBufferException {
+	protected Message unwrapPayload(MSG msg) throws InvalidProtocolBufferException {
 		return ProtoUtil.getPayload(msg.getPlugin().unpack(messageType));
 	}
 
 	@Override
-	protected MSG.Message wrapPayload(MSG.Message msg, MessageOrBuilder payload) {
+	protected MSG wrapPayload(MSG msg, MessageOrBuilder payload) {
 		// Build the payload if not already built
 		if (payload instanceof Builder)
 			payload = ((Builder) payload).build();
@@ -81,7 +81,7 @@ public class PluginDispatchVector extends DispatchVector {
 	}
 
 	@Override
-	public boolean accept(MSG.Message msg) throws Exception {
+	public boolean accept(MSG msg) throws Exception {
 		Message payload = msg.getPlugin().unpack(messageType);
 
 		var payloadCase = payload.getClass().getMethod("getPayloadCase").invoke(payload);

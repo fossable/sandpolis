@@ -17,6 +17,8 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.net.init;
 
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -28,7 +30,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.store.thread.ThreadStore;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -55,9 +56,13 @@ class ServerInitializerTest {
 		Config.register("net.connection.tls", true);
 		Config.register("traffic.interval", 4000);
 
-		ThreadStore.ThreadStore.init(config -> {
+		ThreadStore.init(config -> {
 			config.ephemeral();
 			config.defaults.put("net.exelet", new NioEventLoopGroup(2));
+		});
+
+		PluginStore.init(config -> {
+			config.ephemeral();
 		});
 	}
 

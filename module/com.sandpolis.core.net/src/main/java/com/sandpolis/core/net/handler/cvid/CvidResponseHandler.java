@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.proto.net.MCCvid.RQ_Cvid;
-import com.sandpolis.core.proto.net.MCCvid.RS_Cvid;
-import com.sandpolis.core.proto.net.MSG.Message;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.proto.net.MsgCvid.RS_Cvid;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
@@ -46,7 +46,7 @@ public class CvidResponseHandler extends AbstractCvidHandler {
 	private static final Logger log = LoggerFactory.getLogger(CvidResponseHandler.class);
 
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
+	protected void channelRead0(ChannelHandlerContext ctx, MSG msg) throws Exception {
 		Channel ch = ctx.channel();
 
 		// Autoremove the handler
@@ -61,7 +61,7 @@ public class CvidResponseHandler extends AbstractCvidHandler {
 			RS_Cvid.Builder rs = RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.UUID)
 					.setCvid(CvidUtil.cvid(rq.getInstance(), rq.getInstanceFlavor()));
 
-			ch.writeAndFlush(Message.newBuilder().setRsCvid(rs).build());
+			ch.writeAndFlush(MSG.newBuilder().setRsCvid(rs).build());
 
 			ch.attr(ChannelConstant.INSTANCE).set(rq.getInstance());
 			ch.attr(ChannelConstant.CVID).set(rs.getCvid());

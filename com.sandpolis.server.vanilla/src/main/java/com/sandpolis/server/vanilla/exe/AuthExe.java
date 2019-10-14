@@ -19,6 +19,7 @@ package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
+import static com.sandpolis.core.instance.util.ProtoUtil.rq;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
 import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.FAILURE_KEY_CHALLENGE;
@@ -37,11 +38,13 @@ import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
+import com.sandpolis.core.profile.Events.ProfileOnlineEvent;
 import com.sandpolis.core.profile.Profile;
-import com.sandpolis.core.proto.net.MCAuth.RQ_KeyAuth;
-import com.sandpolis.core.proto.net.MCAuth.RQ_NoAuth;
-import com.sandpolis.core.proto.net.MCAuth.RQ_PasswordAuth;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgAuth.RQ_KeyAuth;
+import com.sandpolis.core.proto.net.MsgAuth.RQ_NoAuth;
+import com.sandpolis.core.proto.net.MsgAuth.RQ_PasswordAuth;
+import com.sandpolis.core.proto.net.MsgClient.RQ_ClientMetadata;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.store.group.Group;
 
@@ -56,7 +59,7 @@ public final class AuthExe extends Exelet {
 	private static final Logger log = LoggerFactory.getLogger(AuthExe.class);
 
 	@Unauth
-	@Handler(tag = MSG.Message.RQ_NO_AUTH_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_NO_AUTH_FIELD_NUMBER)
 	public static MessageOrBuilder rq_no_auth(ExeletContext context, RQ_NoAuth rq) {
 		var outcome = begin();
 
@@ -67,21 +70,14 @@ public final class AuthExe extends Exelet {
 		}
 
 		context.defer(() -> {
-			// Connection is now authenticated
-			context.connector.authenticate();
-
-			Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteUuid(),
-					context.connector.getRemoteInstance(), context.connector.getRemoteInstanceFlavor());
-			groups.forEach(group -> {
-				// TODO add client to group
-			});
+			auth_success(context, groups);
 		});
 
 		return success(outcome);
 	}
 
 	@Unauth
-	@Handler(tag = MSG.Message.RQ_PASSWORD_AUTH_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_PASSWORD_AUTH_FIELD_NUMBER)
 	public static MessageOrBuilder rq_password_auth(ExeletContext context, RQ_PasswordAuth rq) {
 		var outcome = begin();
 
@@ -91,20 +87,15 @@ public final class AuthExe extends Exelet {
 			return failure(outcome, UNKNOWN_GROUP);
 		}
 
-		Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteUuid(),
-				context.connector.getRemoteInstance(), context.connector.getRemoteInstanceFlavor());
-		groups.forEach(group -> {
-			// TODO add client to group
+		context.defer(() -> {
+			auth_success(context, groups);
 		});
-
-		// Connection is now authenticated
-		context.connector.authenticate();
 
 		return success(outcome);
 	}
 
 	@Unauth
-	@Handler(tag = MSG.Message.RQ_KEY_AUTH_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_KEY_AUTH_FIELD_NUMBER)
 	public static MessageOrBuilder rq_key_auth(ExeletContext context, RQ_KeyAuth rq)
 			throws InterruptedException, ExecutionException {
 		var outcome = begin();
@@ -125,17 +116,47 @@ public final class AuthExe extends Exelet {
 		context.connector.engage(AbstractChannelInitializer.SAND5, sand5);
 
 		if (sand5.challengeFuture().get()) {
-			Profile client = ProfileStore.getProfileOrCreate(context.connector.getRemoteUuid(),
-					context.connector.getRemoteInstance(), context.connector.getRemoteInstanceFlavor());
-			// TODO add client to group
+			context.defer(() -> {
+				auth_success(context, List.of(group));
+			});
 
-			// Connection is now authenticated
-			context.connector.authenticate();
 			return success(outcome);
 		} else {
 			log.debug("Refusing key authentication attempt due to failed challenge");
 			return failure(outcome, FAILURE_KEY_CHALLENGE);
 		}
+	}
+
+	private static void auth_success(ExeletContext context, List<Group> groups) {
+
+		// Connection is now authenticated
+		context.connector.authenticate();
+
+		ProfileStore.get(context.connector.getRemoteUuid()).ifPresentOrElse(profile -> {
+			groups.forEach(group -> {
+				// TODO add client to group
+			});
+
+			ProfileStore.post(ProfileOnlineEvent::new, profile);
+		}, () -> {
+			// Metadata query
+			var future = context.connector.request(rq().setRqClientMetadata(RQ_ClientMetadata.newBuilder()));
+			future.addListener(f -> {
+				if (future.isSuccess()) {
+					var rs = future.get().getRsClientMetadata();
+					var profile = new Profile(context.connector.getRemoteUuid(), context.connector.getRemoteInstance(),
+							context.connector.getRemoteInstanceFlavor());
+					profile.setCvid(context.connector.getRemoteCvid());
+
+					groups.forEach(group -> {
+						// TODO add client to group
+					});
+
+					ProfileStore.add(profile);
+					ProfileStore.post(ProfileOnlineEvent::new, profile);
+				}
+			});
+		});
 	}
 
 	private AuthExe() {

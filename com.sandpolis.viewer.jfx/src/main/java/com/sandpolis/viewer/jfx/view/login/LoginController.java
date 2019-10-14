@@ -25,7 +25,7 @@ import java.util.Objects;
 
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MCServer.RS_ServerBanner;
+import com.sandpolis.core.proto.net.MsgServer.RS_ServerBanner;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
 import com.sandpolis.core.viewer.cmd.ServerCmd;

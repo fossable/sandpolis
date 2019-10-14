@@ -30,9 +30,9 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.proto.net.MCGenerator.RQ_Generate;
-import com.sandpolis.core.proto.net.MCGenerator.RS_Generate;
-import com.sandpolis.core.proto.net.MSG;
+import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.proto.net.MsgGenerator.RQ_Generate;
+import com.sandpolis.core.proto.net.MsgGenerator.RS_Generate;
 import com.sandpolis.server.vanilla.gen.FileGenerator;
 import com.sandpolis.server.vanilla.gen.generator.MegaGen;
 
@@ -47,7 +47,7 @@ public final class GenExe extends Exelet {
 	private static final Logger log = LoggerFactory.getLogger(GenExe.class);
 
 	@Auth
-	@Handler(tag = MSG.Message.RQ_GENERATE_FIELD_NUMBER)
+	@Handler(tag = MSG.RQ_GENERATE_FIELD_NUMBER)
 	public static MessageOrBuilder rq_generate(RQ_Generate rq) throws Exception {
 		ExecutorService pool = ThreadStore.get("server.generator");
 
