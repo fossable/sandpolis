@@ -16,46 +16,52 @@
 //                                                                            //
 //****************************************************************************//
 import UIKit
-import Firebase
-import FirebaseAuth
-import Highlightr
 
-class Settings: UITableViewController {
+class OverviewTable: UITableViewController {
 
-	@IBOutlet weak var hostView: UISegmentedControl!
+	@IBOutlet weak var platform: UILabel!
+	@IBOutlet weak var uptime: UILabel!
+	@IBOutlet weak var username: UILabel!
+	@IBOutlet weak var time: UILabel!
+	@IBOutlet weak var ip: UILabel!
+	@IBOutlet weak var upload: UILabel!
+	@IBOutlet weak var download: UILabel!
 
-	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-		tableView.deselectRow(at: indexPath, animated: true)
+	var profile: SandpolisProfile!
 
-		if indexPath.row == 1 {
-			let alert = UIAlertController(title: "Terminal Themes", message: nil, preferredStyle: .actionSheet)
-			alert.popoverPresentationController?.sourceView = tableView
+	/// The table update timer
+	private var updater: Timer!
 
-			for theme in Highlightr()!.availableThemes(){
-				alert.addAction(UIAlertAction(title: theme, style: .default) { action in
-					UserDefaults.standard.set(theme, forKey: "terminalTheme")
-				})
-			}
+	override func viewDidLoad() {
+		super.viewDidLoad()
 
-			present(alert, animated: true, completion: nil)
-		} else if indexPath.row == 3 {
-			do {
-				try Auth.auth().signOut()
-			} catch let signOutError as NSError {
-				print ("Error signing out: %@", signOutError)
-			}
-			performSegue(withIdentifier: "UnwindLoginSegue", sender: self)
-		}
+		tableView.allowsSelection = false
+
+		platform.text = profile.osVersion
+		username.text = profile.username
+
+		ip.text = profile.ipAddress
 	}
 
-	@IBAction func segmentChanged(_ sender: Any) {
-		switch hostView.selectedSegmentIndex {
-		case 0:
-			UserDefaults.standard.set(0, forKey: "defaultView")
-		case 1:
-			UserDefaults.standard.set(1, forKey: "defaultView")
-		default:
-			break
+	override func viewWillAppear(_ animated: Bool) {
+		// Start updating
+		update()
+		updater = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(update), userInfo: nil, repeats: true)
+	}
+
+	override func viewWillDisappear(_ animated: Bool) {
+		// Stop updating
+		updater.invalidate()
+	}
+
+	@objc private func update() {
+		if let start = profile.startTime {
+			uptime.text = FormatUtil.timeSince(start)
+		}
+		if let timezone = profile.timezone {
+			time.text = FormatUtil.formatDateInTimezone(Date(), timezone)
+		} else {
+			time.text = "Unknown timezone"
 		}
 	}
 }

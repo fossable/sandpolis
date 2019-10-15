@@ -197,6 +197,32 @@ public class SandpolisConnection {
 			return try! Net_DesktopMSG.init(unpackingAny: rs.plugin)
 		}
 	}
+	
+	/// Request a new remote desktop session from the given client.
+	///
+	/// - Parameter target: The target client's CVID
+	/// - Parameter receiver: The controller to receive events
+	/// - Returns: The stream
+	func remote_desktop(_ target: Int32, _ receiver: RemoteDesktop) -> SandpolisStream {
+		let stream = SandpolisStream(self, SandpolisUtil.stream())
+		stream.register { (m: Net_MSG) -> Void in
+			receiver.onEvent(try! Net_DesktopMSG.init(unpackingAny: m.plugin).evDesktopStream)
+		}
+		streams.append(stream)
+		
+		var rq = Net_MSG.with {
+			$0.to = target
+			$0.plugin = try! Google_Protobuf_Any(message: Net_DesktopMSG.with {
+				$0.rqDesktopStream = Net_RQ_DesktopStream.with {
+					$0.id = stream.id
+				}
+			}, typePrefix: "com.sandpolis.plugin.desktop")
+		}
+
+		os_log("Requesting remote desktop session for client: %d", target)
+		_ = request(&rq)
+		return stream
+	}
 
 	/// Request to shutdown the given client.
 	///

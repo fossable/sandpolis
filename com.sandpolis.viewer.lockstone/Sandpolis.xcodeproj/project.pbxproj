@@ -33,7 +33,7 @@
 		AA69CCA122DE85CC00DFD721 /* MacroResultHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA69CCA022DE85CC00DFD721 /* MacroResultHeader.swift */; };
 		AA69CCA522DE8F2700DFD721 /* MacroResultHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = AA69CCA422DE8F2700DFD721 /* MacroResultHeader.xib */; };
 		AA69CCA722DE9E0000DFD721 /* MacroSelect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA69CCA622DE9E0000DFD721 /* MacroSelect.swift */; };
-		AA6CACE822DD26F600041AF3 /* ControlPanelTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACE722DD26F600041AF3 /* ControlPanelTable.swift */; };
+		AA6CACE822DD26F600041AF3 /* OverviewTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACE722DD26F600041AF3 /* OverviewTable.swift */; };
 		AA6CACEB22DD34A900041AF3 /* FormatUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACEA22DD34A900041AF3 /* FormatUtil.swift */; };
 		AA6CACED22DD432000041AF3 /* GroupPanelTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACEC22DD432000041AF3 /* GroupPanelTable.swift */; };
 		AA6CACEF22DD445000041AF3 /* GroupPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACEE22DD445000041AF3 /* GroupPanel.swift */; };
@@ -47,7 +47,7 @@
 		AA70FD1D22BEF326006A4C6F /* ProtobufCodecs.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70FD1A22BEF326006A4C6F /* ProtobufCodecs.swift */; };
 		AA70FD1E22BEF326006A4C6F /* ByteBuffer+varint.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70FD1B22BEF326006A4C6F /* ByteBuffer+varint.swift */; };
 		AA70FD1F22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70FD1C22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift */; };
-		AA72362B22D42F27004EE888 /* ControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA72362A22D42F27004EE888 /* ControlPanel.swift */; };
+		AA72362B22D42F27004EE888 /* Overview.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA72362A22D42F27004EE888 /* Overview.swift */; };
 		AA752B4622F2340100E90B54 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA752B4522F2340100E90B54 /* BackgroundView.swift */; };
 		AA75D6DC2316DBCB002152DA /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA75D6DB2316DBCB002152DA /* StoreKit.framework */; };
 		AA766B0622C944530053777B /* FileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA766B0522C944530053777B /* FileManager.swift */; };
@@ -97,6 +97,9 @@
 		AA8E7E1B23539FC2007F3EFB /* msg_rd.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DF623539FC2007F3EFB /* msg_rd.pb.swift */; };
 		AA8E7E1C23539FC2007F3EFB /* msg_sysinfo.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DF923539FC2007F3EFB /* msg_sysinfo.pb.swift */; };
 		AA8E7E1D23539FC2007F3EFB /* message_sysinfo.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E7DFA23539FC2007F3EFB /* message_sysinfo.pb.swift */; };
+		AAAC2FD42355012000425E9A /* ControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAC2FD32355012000425E9A /* ControlPanel.swift */; };
+		AAAC2FD623550D5900425E9A /* Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAC2FD523550D5900425E9A /* Actions.swift */; };
+		AAAC2FD8235512A200425E9A /* RemoteDesktop.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAC2FD7235512A200425E9A /* RemoteDesktop.swift */; };
 		AABF01E923349D6800DEA0E4 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01E823349D6800DEA0E4 /* NIO */; };
 		AABF01EC23349DE300DEA0E4 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01EB23349DE300DEA0E4 /* NIOSSL */; };
 		AABF01EF23349ED300DEA0E4 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01EE23349ED300DEA0E4 /* SwiftProtobuf */; };
@@ -107,6 +110,7 @@
 		AAF113B922CC50C800987EAF /* MacroManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF113B822CC50C800987EAF /* MacroManager.swift */; };
 		AAF390E5230BC796008C9469 /* CvidRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF390E4230BC796008C9469 /* CvidRequestHandler.swift */; };
 		AAF390E7230BC7F1008C9469 /* ResponseHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF390E6230BC7F1008C9469 /* ResponseHandler.swift */; };
+		AAF3F67123557362003EE9B1 /* ShellSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF3F67023557362003EE9B1 /* ShellSession.swift */; };
 		ED1FB93F22D83F4200D35565 /* SignInAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED1FB93E22D83F4200D35565 /* SignInAccount.swift */; };
 		ED5A420822DFB19A00EA3C98 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = ED5A420722DFB19A00EA3C98 /* GoogleService-Info.plist */; };
 		ED5A421222E5284900EA3C98 /* ForgotPassword.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5A421122E5284900EA3C98 /* ForgotPassword.swift */; };
@@ -140,7 +144,7 @@
 		AA69CCA022DE85CC00DFD721 /* MacroResultHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroResultHeader.swift; sourceTree = "<group>"; };
 		AA69CCA422DE8F2700DFD721 /* MacroResultHeader.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MacroResultHeader.xib; sourceTree = "<group>"; };
 		AA69CCA622DE9E0000DFD721 /* MacroSelect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroSelect.swift; sourceTree = "<group>"; };
-		AA6CACE722DD26F600041AF3 /* ControlPanelTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlPanelTable.swift; sourceTree = "<group>"; };
+		AA6CACE722DD26F600041AF3 /* OverviewTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewTable.swift; sourceTree = "<group>"; };
 		AA6CACEA22DD34A900041AF3 /* FormatUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatUtil.swift; sourceTree = "<group>"; };
 		AA6CACEC22DD432000041AF3 /* GroupPanelTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupPanelTable.swift; sourceTree = "<group>"; };
 		AA6CACEE22DD445000041AF3 /* GroupPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupPanel.swift; sourceTree = "<group>"; };
@@ -154,7 +158,7 @@
 		AA70FD1A22BEF326006A4C6F /* ProtobufCodecs.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProtobufCodecs.swift; sourceTree = "<group>"; };
 		AA70FD1B22BEF326006A4C6F /* ByteBuffer+varint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ByteBuffer+varint.swift"; sourceTree = "<group>"; };
 		AA70FD1C22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProtobufVarintFrameCodecs.swift; sourceTree = "<group>"; };
-		AA72362A22D42F27004EE888 /* ControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlPanel.swift; sourceTree = "<group>"; };
+		AA72362A22D42F27004EE888 /* Overview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Overview.swift; sourceTree = "<group>"; };
 		AA752B4522F2340100E90B54 /* BackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView.swift; sourceTree = "<group>"; };
 		AA75D6DB2316DBCB002152DA /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		AA766B0522C944530053777B /* FileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManager.swift; sourceTree = "<group>"; };
@@ -206,6 +210,9 @@
 		AA8E7DF623539FC2007F3EFB /* msg_rd.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_rd.pb.swift; sourceTree = "<group>"; };
 		AA8E7DF923539FC2007F3EFB /* msg_sysinfo.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_sysinfo.pb.swift; sourceTree = "<group>"; };
 		AA8E7DFA23539FC2007F3EFB /* message_sysinfo.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = message_sysinfo.pb.swift; sourceTree = "<group>"; };
+		AAAC2FD32355012000425E9A /* ControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlPanel.swift; sourceTree = "<group>"; };
+		AAAC2FD523550D5900425E9A /* Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Actions.swift; sourceTree = "<group>"; };
+		AAAC2FD7235512A200425E9A /* RemoteDesktop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDesktop.swift; sourceTree = "<group>"; };
 		AAC198F822E40CA6004361C5 /* FileCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCell.swift; sourceTree = "<group>"; };
 		AAC198FC22E40D27004361C5 /* FolderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderCell.swift; sourceTree = "<group>"; };
 		AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisConnection.swift; sourceTree = "<group>"; };
@@ -213,6 +220,7 @@
 		AAF113B822CC50C800987EAF /* MacroManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroManager.swift; sourceTree = "<group>"; };
 		AAF390E4230BC796008C9469 /* CvidRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CvidRequestHandler.swift; sourceTree = "<group>"; };
 		AAF390E6230BC7F1008C9469 /* ResponseHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseHandler.swift; sourceTree = "<group>"; };
+		AAF3F67023557362003EE9B1 /* ShellSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellSession.swift; sourceTree = "<group>"; };
 		D6FAA9DD9E6A3A54142F1F78 /* Pods-Sandpolis.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sandpolis.release.xcconfig"; path = "Target Support Files/Pods-Sandpolis/Pods-Sandpolis.release.xcconfig"; sourceTree = "<group>"; };
 		ED1FB93E22D83F4200D35565 /* SignInAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInAccount.swift; sourceTree = "<group>"; };
 		ED5A420722DFB19A00EA3C98 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -330,8 +338,12 @@
 		AA642E3D23088EE40027BEC2 /* ControlPanel */ = {
 			isa = PBXGroup;
 			children = (
-				AA72362A22D42F27004EE888 /* ControlPanel.swift */,
-				AA6CACE722DD26F600041AF3 /* ControlPanelTable.swift */,
+				AA72362A22D42F27004EE888 /* Overview.swift */,
+				AA6CACE722DD26F600041AF3 /* OverviewTable.swift */,
+				AAAC2FD32355012000425E9A /* ControlPanel.swift */,
+				AAAC2FD523550D5900425E9A /* Actions.swift */,
+				AAAC2FD7235512A200425E9A /* RemoteDesktop.swift */,
+				AAF3F67023557362003EE9B1 /* ShellSession.swift */,
 			);
 			path = ControlPanel;
 			sourceTree = "<group>";
@@ -811,7 +823,7 @@
 				AA0724A32312203C0087190F /* ClientScanner.swift in Sources */,
 				AAF113B922CC50C800987EAF /* MacroManager.swift in Sources */,
 				AA70FD1F22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift in Sources */,
-				AA72362B22D42F27004EE888 /* ControlPanel.swift in Sources */,
+				AA72362B22D42F27004EE888 /* Overview.swift in Sources */,
 				AA8E7E0B23539FC2007F3EFB /* generator.pb.swift in Sources */,
 				AA8E7E0E23539FC2007F3EFB /* auth.pb.swift in Sources */,
 				8542D3FE22D66E0300F56F70 /* ServerManager.swift in Sources */,
@@ -831,18 +843,20 @@
 				AA6CACEF22DD445000041AF3 /* GroupPanel.swift in Sources */,
 				ED5A421222E5284900EA3C98 /* ForgotPassword.swift in Sources */,
 				AA70FD1E22BEF326006A4C6F /* ByteBuffer+varint.swift in Sources */,
-				AA6CACE822DD26F600041AF3 /* ControlPanelTable.swift in Sources */,
+				AA6CACE822DD26F600041AF3 /* OverviewTable.swift in Sources */,
 				AAC198FD22E40D27004361C5 /* FolderCell.swift in Sources */,
 				AA8E7E1B23539FC2007F3EFB /* msg_rd.pb.swift in Sources */,
 				85CECBF922D9897400EF1A6E /* Settings.swift in Sources */,
 				AA42524222E953B30083F7F4 /* MacroSelectCell.swift in Sources */,
 				AA8E7E0C23539FC2007F3EFB /* platform.pb.swift in Sources */,
 				AA8E7E0A23539FC2007F3EFB /* result.pb.swift in Sources */,
+				AAAC2FD8235512A200425E9A /* RemoteDesktop.swift in Sources */,
 				AA69CCA722DE9E0000DFD721 /* MacroSelect.swift in Sources */,
 				AA61588A233583CF0035622F /* ManagementHandler.swift in Sources */,
 				AA8E7E0623539FC2007F3EFB /* msg_delta.pb.swift in Sources */,
 				85A2F87D22DAC2F300B2FD7D /* ServerCell.swift in Sources */,
 				AA69CCA122DE85CC00DFD721 /* MacroResultHeader.swift in Sources */,
+				AAF3F67123557362003EE9B1 /* ShellSession.swift in Sources */,
 				AA61588E2335A4300035622F /* SandpolisUtil.swift in Sources */,
 				AA8E7E1723539FC2007F3EFB /* message_filesys.pb.swift in Sources */,
 				AA8E7E1923539FC2007F3EFB /* message_desktop.pb.swift in Sources */,
@@ -868,7 +882,9 @@
 				AA07249E2311E2A00087190F /* CloudPricing.swift in Sources */,
 				AA899D32231A066500E7C703 /* Step2.swift in Sources */,
 				AA6CACF122DD48D300041AF3 /* GroupHostCell.swift in Sources */,
+				AAAC2FD623550D5900425E9A /* Actions.swift in Sources */,
 				AA8E7E1023539FC2007F3EFB /* stream.pb.swift in Sources */,
+				AAAC2FD42355012000425E9A /* ControlPanel.swift in Sources */,
 				AAC4B69422BDE54500B0E354 /* SandpolisConnection.swift in Sources */,
 				8533115622FEC11800D3B0F9 /* HostGroup.swift in Sources */,
 				AA8E7E0323539FC2007F3EFB /* msg_stream.pb.swift in Sources */,

@@ -37,17 +37,12 @@ final class ClientHandler: ChannelInboundHandler {
 		}
 
 		switch rs.payload! {
-		case .evProfileStream:
-			print("Got EV_ProfileStream")
+		default:
 			if let stream = self.connection.streams.first(where: { $0.id == rs.id }) {
 				stream.consume(rs)
 			} else {
 				os_log("Warning: dropped data for stream: %s", rs.id)
 			}
-		case .plugin:
-			break
-		default:
-			os_log("Missing handler for message")
 		}
 	}
 }

@@ -17,93 +17,28 @@
 //****************************************************************************//
 import UIKit
 
-class ControlPanel: UIViewController {
+class ControlPanel: UITabBarController {
 
-	@IBOutlet weak var platform: UIImageView!
-	@IBOutlet weak var hostname: UILabel!
-	@IBOutlet weak var location: UILabel!
-	@IBOutlet weak var screenshot: UIImageView!
-	@IBOutlet weak var screenshotMessage: UILabel!
-	@IBOutlet weak var tableContainer: UIView!
-	@IBOutlet weak var screenshotProgress: UIActivityIndicatorView!
-
-	/// The profile that this control panel displays
 	var profile: SandpolisProfile!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-
-		// Set screenshot if it already exists
-		if let img = self.profile.screenshot {
-			self.screenshot.image = UIImage(data: img)
-		} else {
-			// Trigger refresh
-			refreshScreenshot()
-		}
-
-		// Set profile information
-		hostname.text = profile.hostname
-		location.text = FormatUtil.formatProfileLocation(profile)
-	}
-
-	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-		if segue.identifier == "EmbeddedTable",
-			let table = segue.destination as? ControlPanelTable {
-			table.profile = profile
-		} else if segue.identifier == "FileManagerSegue",
-			let fileManager = segue.destination as? FileManager {
-			fileManager.profile = profile
-		} else if segue.identifier == "MacroSegue",
-			let macroSelect = segue.destination as? MacroSelect {
-			macroSelect.profiles.append(profile)
-		} else {
-			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
-		}
-	}
-
-	@IBAction func poweroff(_ sender: Any) {
-		let alert = UIAlertController(title: "Are you sure?", message: "The host will need to be powered-on manually", preferredStyle: .alert)
-		alert.addAction(UIAlertAction(title: "Poweroff", style: .destructive) { _ in
-			_ = SandpolisUtil.connection.poweroff(self.profile.cvid)
-			self.navigationController?.popViewController(animated: true)
-		})
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-
-		present(alert, animated: true)
-	}
-
-	@IBAction func reboot(_ sender: Any) {
-		let alert = UIAlertController(title: "Are you sure?", message: "The host will not reconnect unless persistence is enabled", preferredStyle: .alert)
-		alert.addAction(UIAlertAction(title: "Restart", style: .destructive) { _ in
-			_ = SandpolisUtil.connection.restart(self.profile.cvid)
-			self.navigationController?.popViewController(animated: true)
-		})
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-
-		present(alert, animated: true)
-	}
-
-	@IBAction func screenshotTapped(_ sender: Any) {
-		refreshScreenshot()
-	}
-
-	/// Refresh the screenshot view
-	private func refreshScreenshot() {
-		screenshotProgress.startAnimating()
-		SandpolisUtil.connection.screenshot(profile.cvid).whenSuccess { rs in
-			if rs.rsScreenshot.data.count == 0 {
-				DispatchQueue.main.async {
-					self.screenshotProgress.stopAnimating()
-					self.screenshotMessage.isHidden = false
-				}
-			} else {
-				self.profile.screenshot = rs.rsScreenshot.data
-				DispatchQueue.main.async {
-					self.screenshotProgress.stopAnimating()
-					self.screenshot.image = UIImage(data: self.profile.screenshot!)
-					self.screenshotMessage.isHidden = true
-				}
+		for controller in viewControllers! {
+			if let overview = controller as? Overview {
+				overview.profile = profile
+			}
+			if let fileManager = controller as? FileManager {
+				fileManager.profile = profile
+			}
+			if let actions = controller as? Actions {
+				actions.profile = profile
+			}
+			if let remoteDesktop = controller as? RemoteDesktop {
+				remoteDesktop.profile = profile
 			}
 		}
+
+		// Always select overview
+		self.selectedIndex = 0
 	}
 }

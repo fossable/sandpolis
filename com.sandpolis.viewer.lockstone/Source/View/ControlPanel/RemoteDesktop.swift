@@ -17,51 +17,36 @@
 //****************************************************************************//
 import UIKit
 
-class ControlPanelTable: UITableViewController {
+class RemoteDesktop: UIViewController {
 
-	@IBOutlet weak var platform: UILabel!
-	@IBOutlet weak var uptime: UILabel!
-	@IBOutlet weak var username: UILabel!
-	@IBOutlet weak var time: UILabel!
-	@IBOutlet weak var ip: UILabel!
-	@IBOutlet weak var upload: UILabel!
-	@IBOutlet weak var download: UILabel!
-
+	@IBOutlet weak var imageView: UIImageView!
+	
 	var profile: SandpolisProfile!
-
-	/// The table update timer
-	private var updater: Timer!
-
-	override func viewDidLoad() {
-		super.viewDidLoad()
-
-		tableView.allowsSelection = false
-
-		platform.text = profile.osVersion
-		username.text = profile.username
-
-		ip.text = profile.ipAddress
+	
+	private var stream: SandpolisStream!
+	
+	override func viewDidDisappear(_ animated: Bool) {
+		defer {
+			stream = nil
+		}
+		if stream != nil {
+			stream.close()
+		}
 	}
 
 	override func viewWillAppear(_ animated: Bool) {
-		// Start updating
-		update()
-		updater = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(update), userInfo: nil, repeats: true)
+		stream = SandpolisUtil.connection.remote_desktop(profile.cvid, self)
 	}
 
-	override func viewWillDisappear(_ animated: Bool) {
-		// Stop updating
-		updater.invalidate()
-	}
-
-	@objc private func update() {
-		if let start = profile.startTime {
-			uptime.text = FormatUtil.timeSince(start)
+	public func onEvent(_ ev: Net_EV_DesktopStream) {
+		var rect: CGRect
+		switch ev.data! {
+		case .dirtyBlock:
+			rect = CGRect(x: 0, y: 0, width: 16, height: 16)
+		case .dirtyRect:
+			rect = CGRect(x: Int(ev.dirtyRect.x), y: Int(ev.dirtyRect.y), width: Int(ev.dirtyRect.w), height: ev.dirtyRect.data.count / Int(ev.dirtyRect.w))
 		}
-		if let timezone = profile.timezone {
-			time.text = FormatUtil.formatDateInTimezone(Date(), timezone)
-		} else {
-			time.text = "Unknown timezone"
-		}
+		
+		// TODO draw block
 	}
 }
