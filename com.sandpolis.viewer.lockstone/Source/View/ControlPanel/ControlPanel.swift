@@ -36,6 +36,9 @@ class ControlPanel: UITabBarController {
 			if let remoteDesktop = controller as? RemoteDesktop {
 				remoteDesktop.profile = profile
 			}
+			if let shellSession = controller as? ShellSession {
+				shellSession.profile = profile
+			}
 		}
 
 		// Always select overview

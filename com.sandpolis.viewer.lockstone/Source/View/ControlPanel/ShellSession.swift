@@ -19,4 +19,20 @@ import UIKit
 import Highlightr
 
 class ShellSession: UIViewController {
+	@IBOutlet weak var shellSelector: UISegmentedControl!
+	@IBOutlet weak var textView: UITextView!
+	
+	var profile: SandpolisProfile!
+	
+	private var stream: SandpolisStream!
+	
+	override func viewDidLoad() {
+		stream = SandpolisUtil.connection.shell_session(profile.cvid, self, Net_Shell.bash)
+	}
+	
+	public func onEvent(_ ev: Net_EV_ShellStream) {
+		DispatchQueue.main.async {
+			self.textView.text = (self.textView.text ?? "") + String(decoding: ev.data, as: UTF8.self)
+		}
+	}
 }

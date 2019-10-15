@@ -224,6 +224,33 @@ public class SandpolisConnection {
 		return stream
 	}
 
+	/// Request a new remote desktop session from the given client.
+	///
+	/// - Parameter target: The target client's CVID
+	/// - Parameter receiver: The controller to receive events
+	/// - Returns: The stream
+	func shell_session(_ target: Int32, _ receiver: ShellSession, _ shell: Net_Shell) -> SandpolisStream {
+		let stream = SandpolisStream(self, SandpolisUtil.stream())
+		stream.register { (m: Net_MSG) -> Void in
+			receiver.onEvent(try! Net_ShellMSG.init(unpackingAny: m.plugin).evShellStream)
+		}
+		streams.append(stream)
+		
+		var rq = Net_MSG.with {
+			$0.to = target
+			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
+				$0.rqShellStream = Net_RQ_ShellStream.with {
+					$0.id = stream.id
+					$0.type = shell
+				}
+			}, typePrefix: "com.sandpolis.plugin.shell")
+		}
+
+		os_log("Requesting remote shell session for client: %d", target)
+		_ = request(&rq)
+		return stream
+	}
+	
 	/// Request to shutdown the given client.
 	///
 	/// - Parameter target: The target client's CVID

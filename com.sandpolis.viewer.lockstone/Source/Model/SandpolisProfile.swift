@@ -26,14 +26,14 @@ class SandpolisProfile {
 	/// The client's CVID
 	var cvid: Int32
 
-	/// The client's hostname
-	var hostname: String
-
 	/// The client's IP address
 	var ipAddress: String
 
 	/// The client's OS type
 	var platform: Util_OsType
+	
+	/// The client's hostname
+	var hostname: String?
 
 	/// The saved desktop screenshot
 	var screenshot: Data?

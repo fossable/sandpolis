@@ -19,8 +19,9 @@ import UIKit
 
 class Overview: UIViewController {
 
-	@IBOutlet weak var platform: UIImageView!
+	@IBOutlet weak var flag: UIImageView!
 	@IBOutlet weak var hostname: UILabel!
+	@IBOutlet weak var platform: UILabel!
 	@IBOutlet weak var location: UILabel!
 	@IBOutlet weak var screenshot: UIImageView!
 	@IBOutlet weak var screenshotMessage: UILabel!
@@ -33,16 +34,40 @@ class Overview: UIViewController {
 		super.viewDidLoad()
 
 		// Set screenshot if it already exists
-		if let img = self.profile.screenshot {
-			self.screenshot.image = UIImage(data: img)
+		if let img = profile.screenshot {
+			screenshot.image = UIImage(data: img)
 		} else {
-			// Trigger refresh
+			// Trigger refresh otherwise
 			refreshScreenshot()
 		}
-
-		// Set profile information
-		hostname.text = profile.hostname
-		location.text = FormatUtil.formatProfileLocation(profile)
+		
+		// Set location
+		if let code = profile.countryCode {
+			flag.image = UIImage(named: "flag/\(code)")
+			location.text = FormatUtil.formatProfileLocation(profile)
+		} else {
+			// TODO unknown image
+			location.text = profile.ipAddress
+		}
+		
+		// Set hostname
+		if let host = profile.hostname {
+			hostname.text = host
+		} else {
+			hostname.text = profile.uuid
+		}
+		
+		// Set platform information
+		switch profile.platform {
+		case .linux:
+			platform.text = "(Linux)"
+		case .macos:
+			platform.text = "(macOS)"
+		case .windows:
+			platform.text = "(Windows)"
+		default:
+			platform.text = "(Unknown OS)"
+		}
 	}
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
