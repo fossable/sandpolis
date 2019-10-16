@@ -21,8 +21,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
+import java.util.function.Function;
 
+import com.google.protobuf.Any;
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.Message.MSG;
@@ -32,6 +35,8 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 	private int id;
 	private Sock sock;
 	private Subscription subscription;
+	private Function<E, Any> pluginPacker;
+	private int cvid;
 
 	@Override
 	public int getStreamID() {
@@ -45,6 +50,13 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 	public OutboundStreamAdapter(int streamID, Sock sock) {
 		this.id = streamID;
 		this.sock = checkNotNull(sock);
+	}
+
+	public OutboundStreamAdapter(int streamID, Sock sock, int cvid, Function<E, Any> packer) {
+		this.id = streamID;
+		this.sock = checkNotNull(sock);
+		this.pluginPacker = packer;
+		this.cvid = cvid;
 	}
 
 	@Override
@@ -66,7 +78,9 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 
 	@Override
 	public void onNext(E item) {
-		sock.send(ProtoUtil.setPayload(MSG.newBuilder().setId(id), item));
-		// TODO plugin messages
+		if (pluginPacker == null)
+			sock.send(ProtoUtil.setPayload(MSG.newBuilder().setId(id), item));
+		else
+			sock.send(MSG.newBuilder().setTo(cvid).setFrom(Core.cvid()).setId(id).setPlugin(pluginPacker.apply(item)));
 	}
 }

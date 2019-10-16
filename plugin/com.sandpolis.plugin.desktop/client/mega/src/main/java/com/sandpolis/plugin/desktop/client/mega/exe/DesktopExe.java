@@ -19,6 +19,7 @@ package com.sandpolis.plugin.desktop.client.mega.exe;
 
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
+import static com.sandpolis.core.instance.util.ProtoUtil.success;
 import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
 
 import java.awt.Rectangle;
@@ -29,10 +30,13 @@ import java.io.ByteArrayOutputStream;
 
 import javax.imageio.ImageIO;
 
+import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.stream.store.OutboundStreamAdapter;
+import com.sandpolis.plugin.desktop.client.mega.JavaDesktopSource;
 import com.sandpolis.plugin.desktop.net.MessageDesktop.DesktopMSG;
 import com.sandpolis.plugin.desktop.net.MsgDesktop.RQ_Screenshot;
 import com.sandpolis.plugin.desktop.net.MsgDesktop.RS_Screenshot;
@@ -59,8 +63,22 @@ public final class DesktopExe extends Exelet {
 
 	@Auth
 	@Handler(tag = DesktopMSG.RQ_DESKTOP_STREAM_FIELD_NUMBER)
-	public static MessageOrBuilder rq_desktop_stream(RQ_DesktopStream rq) {
-		throw new RuntimeException();
+	public static MessageOrBuilder rq_desktop_stream(ExeletContext context, RQ_DesktopStream rq) {
+		var outcome = begin();
+		// TODO use correct stream ID
+		// Stream stream = new Stream();
+
+		context.defer(() -> {
+			JavaDesktopSource source = new JavaDesktopSource();
+			source.addOutbound(new OutboundStreamAdapter<EV_DesktopStream>(rq.getId(), context.connector,
+					context.request.getFrom(), ev -> {
+						return Any.pack(DesktopMSG.newBuilder().setEvDesktopStream(ev).build(),
+								"com.sandpolis.plugin.desktop");
+					}));
+			source.start();
+		});
+
+		return success(outcome);
 	}
 
 	@Auth

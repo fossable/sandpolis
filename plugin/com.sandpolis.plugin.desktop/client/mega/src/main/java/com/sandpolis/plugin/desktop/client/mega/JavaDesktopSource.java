@@ -22,9 +22,18 @@ import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.image.Raster;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 
-public class JavaDesktopSource {
+import com.google.protobuf.ByteString;
+import com.sandpolis.core.stream.store.StreamSource;
+import com.sandpolis.plugin.desktop.net.MsgRd.DirtyBlock;
+import com.sandpolis.plugin.desktop.net.MsgRd.EV_DesktopStream;
+import com.sandpolis.plugin.desktop.net.MsgRd.RQ_DesktopStream.ColorMode;
+
+public class JavaDesktopSource extends StreamSource<EV_DesktopStream> {
 
 	private static final int BLOCK_HEIGHT = 16;
 	private static final int BLOCK_WIDTH = 16;
@@ -35,6 +44,8 @@ public class JavaDesktopSource {
 
 	private int[][][] buffer;
 
+	private ColorMode colorMode = ColorMode.RGB888;
+
 	private Rectangle captureArea;
 
 	public JavaDesktopSource() {
@@ -44,8 +55,8 @@ public class JavaDesktopSource {
 			throw new RuntimeException(e);
 		}
 		captureArea = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
-		buffer = new int[captureArea.height / BLOCK_HEIGHT][captureArea.width / BLOCK_WIDTH][BLOCK_WIDTH
-				* BLOCK_HEIGHT];
+		buffer = new int[captureArea.height / BLOCK_HEIGHT][captureArea.width / BLOCK_WIDTH][BLOCK_WIDTH * BLOCK_HEIGHT
+				* 4];
 		hashcode = new int[captureArea.height / BLOCK_HEIGHT][captureArea.width / BLOCK_WIDTH];
 	}
 
@@ -61,9 +72,41 @@ public class JavaDesktopSource {
 				if (hashcode[j][i] != hash) {
 					hashcode[j][i] = hash;
 
-					// TODO convert block to output
+					try (var out = new ByteArrayOutputStream(); var data = new DataOutputStream(out)) {
+						for (int v : buffer[j][i])
+							data.writeInt(v);
+
+						submit(EV_DesktopStream.newBuilder()
+								.setDirtyBlock(DirtyBlock.newBuilder().setData(ByteString.copyFrom(out.toByteArray())))
+								.build());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 		}
+	}
+
+	@Override
+	public void stop() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void start() {
+		// Temporary
+		new Thread(() -> {
+			while (true) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				pump();
+			}
+		}).start();
 	}
 }

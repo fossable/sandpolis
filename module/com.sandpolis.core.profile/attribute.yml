@@ -13,6 +13,8 @@
   children:
     - status = 1: The client's status
       type: String
+    - hostname = 2: The client's hostname
+      type: String
 
 - VIEWER = 3: Viewer-only attributes
   children:

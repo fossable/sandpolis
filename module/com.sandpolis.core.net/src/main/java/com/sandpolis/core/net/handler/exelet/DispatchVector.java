@@ -190,8 +190,13 @@ public class DispatchVector {
 
 				if (context.reply != null)
 					sock.send(wrapPayload(msg, context.reply));
-				if (context.deferAction != null)
-					context.deferAction.run();
+				if (context.deferAction != null) {
+					try {
+						context.deferAction.run();
+					} catch (Exception e) {
+						log.error("Failed to run deferred action", e);
+					}
+				}
 			};
 		}
 
@@ -211,8 +216,13 @@ public class DispatchVector {
 					// TODO error outcome
 				}
 
-				if (context.deferAction != null)
-					context.deferAction.run();
+				if (context.deferAction != null) {
+					try {
+						context.deferAction.run();
+					} catch (Exception e) {
+						log.error("Failed to run deferred action", e);
+					}
+				}
 			};
 		}
 

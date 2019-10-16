@@ -36,6 +36,7 @@ dependencies {
 	api project(':module:com.sandpolis.core.net')
 	api project(':module:com.sandpolis.core.proto')
 	api project(':module:com.sandpolis.core.soi')
+	api project(':module:com.sandpolis.core.stream')
 	api project(':module:com.sandpolis.core.util')
 
 	// https://github.com/cilki/CompactClassLoader

@@ -17,14 +17,51 @@
  ******************************************************************************/
 package com.sandpolis.plugin.shell.client.mega.stream;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.IOException;
 
-public class ShellStreamSource {// extends StreamSource<ShellStreamData> {
+import com.google.protobuf.ByteString;
+import com.sandpolis.core.stream.store.StreamSource;
+import com.sandpolis.plugin.shell.net.MsgShell.EV_ShellStream;
+
+public class ShellStreamSource extends StreamSource<EV_ShellStream> {
 
 	private Process process;
 
-	public void write(String in) throws IOException {
-		process.getOutputStream().write(in.getBytes());
-		process.getOutputStream().flush();
+	private Thread thread = new Thread(() -> {
+		byte[] buffer = new byte[8192];
+		int read;
+
+		try (var out = process.getInputStream()) {
+			while (!Thread.currentThread().isInterrupted()) {
+				while ((read = out.read(buffer, 0, 8192)) >= 0) {
+					submit(EV_ShellStream.newBuilder().setData(ByteString.copyFrom(buffer, 0, read)).build());
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	});
+
+	public ShellStreamSource(Process process) {
+		checkArgument(process.isAlive());
+		this.process = process;
+	}
+
+	@Override
+	public void stop() {
+		if (thread.isAlive()) {
+			thread.interrupt();
+		}
+		if (process.isAlive()) {
+			process.destroy();
+		}
+	}
+
+	@Override
+	public void start() {
+		thread.start();
 	}
 }

@@ -19,7 +19,7 @@ apply plugin: 'com.sandpolis.gradle.codegen'
 sourceSets {
 	main {
 		java {
-			srcDirs 'src/gen/java'
+			srcDirs 'gen/main/java'
 		}
 	}
 }

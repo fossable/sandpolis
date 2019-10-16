@@ -25,6 +25,7 @@ import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
+import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -208,6 +209,10 @@ public final class Client {
 		});
 
 		PluginStore.init(config -> {
+			config.ephemeral();
+		});
+
+		StreamStore.init(config -> {
 			config.ephemeral();
 		});
 

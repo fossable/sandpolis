@@ -17,17 +17,30 @@
  ******************************************************************************/
 package com.sandpolis.plugin.shell.client.mega.exe;
 
+import static com.sandpolis.core.instance.util.ProtoUtil.begin;
+import static com.sandpolis.core.instance.util.ProtoUtil.success;
+import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
+
 import java.io.InputStreamReader;
 
 import com.google.common.io.CharStreams;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.stream.store.InboundStreamAdapter;
+import com.sandpolis.core.stream.store.OutboundStreamAdapter;
 import com.sandpolis.plugin.shell.client.mega.Shells;
+import com.sandpolis.plugin.shell.client.mega.stream.ShellStreamSink;
+import com.sandpolis.plugin.shell.client.mega.stream.ShellStreamSource;
 import com.sandpolis.plugin.shell.net.MessageShell.ShellMSG;
 import com.sandpolis.plugin.shell.net.MsgPower.RQ_PowerChange;
+import com.sandpolis.plugin.shell.net.MsgShell.EV_ShellStream;
 import com.sandpolis.plugin.shell.net.MsgShell.RQ_Execute;
 import com.sandpolis.plugin.shell.net.MsgShell.RQ_ListShells;
+import com.sandpolis.plugin.shell.net.MsgShell.RQ_ShellStream;
 import com.sandpolis.plugin.shell.net.MsgShell.RS_Execute;
 import com.sandpolis.plugin.shell.net.MsgShell.RS_ListShells;
 import com.sandpolis.plugin.shell.net.MsgShell.RS_ListShells.ShellListing;
@@ -126,6 +139,51 @@ public final class ShellExe extends Exelet {
 		}
 
 		System.exit(0);
+	}
+
+	@Auth
+	@Handler(tag = ShellMSG.RQ_SHELL_STREAM_FIELD_NUMBER)
+	public static MessageOrBuilder rq_shell_stream(ExeletContext context, RQ_ShellStream rq) throws Exception {
+		var outcome = begin();
+
+		Process session = null;
+		switch (rq.getType()) {
+		case BASH:
+			if (Shells.BASH.getLocation() != null) {
+				session = Runtime.getRuntime().exec(Shells.BASH.buildSession());
+			}
+			break;
+		case CMD:
+			break;
+		case PWSH:
+			break;
+		default:
+			break;
+		}
+
+		ShellStreamSource source = new ShellStreamSource(session);
+		ShellStreamSink sink = new ShellStreamSink(session);
+
+		var inbound = new InboundStreamAdapter<EV_ShellStream>(rq.getId(), context.connector);
+		var outbound = new OutboundStreamAdapter<EV_ShellStream>(rq.getId(), context.connector,
+				context.request.getFrom(), ev -> {
+					return Any.pack(ShellMSG.newBuilder().setEvShellStream(ev).build(), "com.sandpolis.plugin.shell");
+				});
+
+		inbound.addSink(sink);
+		source.addOutbound(outbound);
+		source.start();
+
+		context.defer(() -> {
+			sink.onNext(EV_ShellStream.newBuilder().setData(ByteString.copyFrom("whoami\n".getBytes())).build());
+		});
+		return success(outcome);
+	}
+
+	@Auth
+	@Handler(tag = ShellMSG.EV_SHELL_STREAM_FIELD_NUMBER)
+	public static void ev_shell_stream(ExeletContext context, EV_ShellStream ev) {
+		StreamStore.streamData(context.request.getId(), ev);
 	}
 
 	private ShellExe() {

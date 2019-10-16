@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.attribute.key.AK_CLIENT;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
@@ -147,6 +148,10 @@ public final class AuthExe extends Exelet {
 					var profile = new Profile(context.connector.getRemoteUuid(), context.connector.getRemoteInstance(),
 							context.connector.getRemoteInstanceFlavor());
 					profile.setCvid(context.connector.getRemoteCvid());
+
+					// Set attributes
+					profile.set(AK_CLIENT.HOSTNAME, rs.getHostname());
+					// TODO
 
 					groups.forEach(group -> {
 						// TODO add client to group

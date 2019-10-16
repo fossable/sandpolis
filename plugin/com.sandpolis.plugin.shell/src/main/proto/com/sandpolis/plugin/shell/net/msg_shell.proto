@@ -69,5 +69,5 @@ message RQ_ShellStream {
 message EV_ShellStream {
 
     // The I/O data
-    string data = 2;
+    bytes data = 1;
 }
