@@ -3,16 +3,16 @@ sudo: false
 matrix:
   include:
     - language: java
-      name: Java 12 Linux
+      name: Java 13 Linux
       os: linux
-      jdk: openjdk12
+      jdk: openjdk13
       script:
         - ./gradlew test --console=plain
 
     - language: java
-      name: Java 12 macOS
+      name: Java 13 macOS
       os: osx
-      jdk: openjdk12
+      jdk: openjdk13
       script:
         - ./gradlew test --console=plain
 

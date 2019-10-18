@@ -53,7 +53,7 @@ public final class SoiUtil {
 	public static SO_Build readBuild(Path file) throws IOException {
 		Objects.requireNonNull(file);
 
-		try (FileSystem zip = FileSystems.newFileSystem(file, null)) {
+		try (FileSystem zip = FileSystems.newFileSystem(file)) {
 			try (var in = Files.newInputStream(zip.getPath("/soi/build.bin"))) {
 				return SO_Build.parseFrom(in);
 			}
@@ -79,7 +79,7 @@ public final class SoiUtil {
 	public static SO_DependencyMatrix readMatrix(Path file) throws IOException {
 		Objects.requireNonNull(file);
 
-		try (FileSystem zip = FileSystems.newFileSystem(file, null)) {
+		try (FileSystem zip = FileSystems.newFileSystem(file)) {
 			try (var in = Files.newInputStream(zip.getPath("/soi/matrix.bin"))) {
 				return SO_DependencyMatrix.parseFrom(in);
 			}

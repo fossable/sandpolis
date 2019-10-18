@@ -180,7 +180,7 @@ public final class JarUtil {
 		if (!resource.startsWith("/"))
 			resource = "/" + resource;
 
-		try (FileSystem fs = FileSystems.newFileSystem(file, null)) {
+		try (FileSystem fs = FileSystems.newFileSystem(file)) {
 			return Files.exists(fs.getPath(resource));
 		} catch (ProviderNotFoundException e) {
 			throw new IOException("Illegal file type");
