@@ -17,28 +17,21 @@
 //****************************************************************************//
 import UIKit
 
-class HostCell: UITableViewCell {
+class InfoCell: UITableViewCell {
 
-	@IBOutlet weak var platform: UIImageView!
-	@IBOutlet weak var nameLabel: UILabel!
-	@IBOutlet weak var addressLabel: UILabel!
+	@IBOutlet weak var title: UILabel!
+	@IBOutlet weak var value: UILabel!
+	@IBOutlet weak var progress: UIActivityIndicatorView!
 
-	func setContent(_ profile: SandpolisProfile) {
-		nameLabel.text = profile.hostname
-		addressLabel.text = profile.ipAddress
-
-		// Set platform information
-		switch profile.platform {
-		case .linux:
-			platform.image = UIImage(named: "platform/linux_large")
-		case .macos:
-			platform.image = UIImage(named: "platform/mac_large")
-		case .windows:
-			platform.image = UIImage(named: "platform/windows_large")
-		case .freebsd:
-			platform.image = UIImage(named: "platform/freebsd_large")
-		default:
-			break
+	public func setAttribute(_ attribute: Attribute) {
+		title.text = attribute.title
+		if let value = attribute.value {
+			self.value.text = value
+			self.value.isHidden = false
+			progress.isHidden = true
+		} else {
+			progress.isHidden = false
+			self.value.isHidden = true
 		}
 	}
 }

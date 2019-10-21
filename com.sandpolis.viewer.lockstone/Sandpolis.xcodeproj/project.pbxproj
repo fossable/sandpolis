@@ -30,6 +30,8 @@
 		AA61588C23359FF50035622F /* ClientHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA61588B23359FF50035622F /* ClientHandler.swift */; };
 		AA61588E2335A4300035622F /* SandpolisUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA61588D2335A4300035622F /* SandpolisUtil.swift */; };
 		AA642E442308BC4D0027BEC2 /* ClientAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA642E432308BC4D0027BEC2 /* ClientAnnotation.swift */; };
+		AA677D1A235D5174001BE400 /* InfoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA677D19235D5174001BE400 /* InfoCell.swift */; };
+		AA677D1C235D5683001BE400 /* Attribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA677D1B235D5683001BE400 /* Attribute.swift */; };
 		AA69CCA122DE85CC00DFD721 /* MacroResultHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA69CCA022DE85CC00DFD721 /* MacroResultHeader.swift */; };
 		AA69CCA522DE8F2700DFD721 /* MacroResultHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = AA69CCA422DE8F2700DFD721 /* MacroResultHeader.xib */; };
 		AA69CCA722DE9E0000DFD721 /* MacroSelect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA69CCA622DE9E0000DFD721 /* MacroSelect.swift */; };
@@ -141,6 +143,8 @@
 		AA61588B23359FF50035622F /* ClientHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientHandler.swift; sourceTree = "<group>"; };
 		AA61588D2335A4300035622F /* SandpolisUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisUtil.swift; sourceTree = "<group>"; };
 		AA642E432308BC4D0027BEC2 /* ClientAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientAnnotation.swift; sourceTree = "<group>"; };
+		AA677D19235D5174001BE400 /* InfoCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoCell.swift; sourceTree = "<group>"; };
+		AA677D1B235D5683001BE400 /* Attribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Attribute.swift; sourceTree = "<group>"; };
 		AA69CCA022DE85CC00DFD721 /* MacroResultHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroResultHeader.swift; sourceTree = "<group>"; };
 		AA69CCA422DE8F2700DFD721 /* MacroResultHeader.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MacroResultHeader.xib; sourceTree = "<group>"; };
 		AA69CCA622DE9E0000DFD721 /* MacroSelect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroSelect.swift; sourceTree = "<group>"; };
@@ -344,6 +348,7 @@
 				AAAC2FD523550D5900425E9A /* Actions.swift */,
 				AAAC2FD7235512A200425E9A /* RemoteDesktop.swift */,
 				AAF3F67023557362003EE9B1 /* ShellSession.swift */,
+				AA677D19235D5174001BE400 /* InfoCell.swift */,
 			);
 			path = ControlPanel;
 			sourceTree = "<group>";
@@ -496,6 +501,7 @@
 				AA70158322D7C93900A1E4ED /* SandpolisProfile.swift */,
 				AA70158522D7C98D00A1E4ED /* SandpolisServer.swift */,
 				8533115522FEC11800D3B0F9 /* HostGroup.swift */,
+				AA677D1B235D5683001BE400 /* Attribute.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -821,6 +827,7 @@
 				AA6CACEB22DD34A900041AF3 /* FormatUtil.swift in Sources */,
 				AA6E007222F73C1400BB51ED /* Login.swift in Sources */,
 				AA0724A32312203C0087190F /* ClientScanner.swift in Sources */,
+				AA677D1C235D5683001BE400 /* Attribute.swift in Sources */,
 				AAF113B922CC50C800987EAF /* MacroManager.swift in Sources */,
 				AA70FD1F22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift in Sources */,
 				AA72362B22D42F27004EE888 /* Overview.swift in Sources */,
@@ -849,6 +856,7 @@
 				85CECBF922D9897400EF1A6E /* Settings.swift in Sources */,
 				AA42524222E953B30083F7F4 /* MacroSelectCell.swift in Sources */,
 				AA8E7E0C23539FC2007F3EFB /* platform.pb.swift in Sources */,
+				AA677D1A235D5174001BE400 /* InfoCell.swift in Sources */,
 				AA8E7E0A23539FC2007F3EFB /* result.pb.swift in Sources */,
 				AAAC2FD8235512A200425E9A /* RemoteDesktop.swift in Sources */,
 				AA69CCA722DE9E0000DFD721 /* MacroSelect.swift in Sources */,

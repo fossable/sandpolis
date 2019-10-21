@@ -19,28 +19,21 @@ import UIKit
 
 class OverviewTable: UITableViewController {
 
-	@IBOutlet weak var platform: UILabel!
-	@IBOutlet weak var uptime: UILabel!
-	@IBOutlet weak var username: UILabel!
-	@IBOutlet weak var time: UILabel!
-	@IBOutlet weak var ip: UILabel!
-	@IBOutlet weak var upload: UILabel!
-	@IBOutlet weak var download: UILabel!
-
 	var profile: SandpolisProfile!
+	
+	var info: [(String, [Attribute])] = [
+		("System", [Attribute("/system/uptime", "Uptime")]),
+		("CPU", [Attribute("/cpu/_/model", "Model"), Attribute("/cpu/_/max_frequency", "Max Frequency")]),
+		("Memory", [Attribute("/memory/usage", "Usage"), Attribute("/memory/swap/usage", "Swap Usage")]),
+		("Processes", [Attribute("/process/count", "Number of Processes")])
+	]
 
 	/// The table update timer
 	private var updater: Timer!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-
 		tableView.allowsSelection = false
-
-		platform.text = profile.osVersion
-		username.text = profile.username
-
-		ip.text = profile.ipAddress
 	}
 
 	override func viewWillAppear(_ animated: Bool) {
@@ -53,15 +46,33 @@ class OverviewTable: UITableViewController {
 		// Stop updating
 		updater.invalidate()
 	}
+	
+	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+		let cell = tableView.dequeueReusableCell(withIdentifier: "InfoCell") as! InfoCell
+		cell.setAttribute(info[indexPath.section].1[indexPath.row])
+		return cell
+	}
+	
+	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+		return info[section].1.count
+	}
+	
+	override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+		return info[section].0
+	}
+	
+	override func numberOfSections(in tableView: UITableView) -> Int {
+		return info.count
+	}
 
 	@objc private func update() {
-		if let start = profile.startTime {
+		/*if let start = profile.startTime {
 			uptime.text = FormatUtil.timeSince(start)
 		}
 		if let timezone = profile.timezone {
 			time.text = FormatUtil.formatDateInTimezone(Date(), timezone)
 		} else {
 			time.text = "Unknown timezone"
-		}
+		}*/
 	}
 }

@@ -21,6 +21,7 @@ class Overview: UIViewController {
 
 	@IBOutlet weak var flag: UIImageView!
 	@IBOutlet weak var hostname: UILabel!
+	@IBOutlet weak var platformLogo: UIImageView!
 	@IBOutlet weak var platform: UILabel!
 	@IBOutlet weak var location: UILabel!
 	@IBOutlet weak var screenshot: UIImageView!
@@ -46,7 +47,6 @@ class Overview: UIViewController {
 			flag.image = UIImage(named: "flag/\(code)")
 			location.text = FormatUtil.formatProfileLocation(profile)
 		} else {
-			// TODO unknown image
 			location.text = profile.ipAddress
 		}
 		
@@ -60,13 +60,19 @@ class Overview: UIViewController {
 		// Set platform information
 		switch profile.platform {
 		case .linux:
-			platform.text = "(Linux)"
+			platform.text = "Linux"
+			platformLogo.image = UIImage(named: "platform/linux_small")
 		case .macos:
-			platform.text = "(macOS)"
+			platform.text = "macOS"
+			platformLogo.image = UIImage(named: "platform/mac_small")
 		case .windows:
-			platform.text = "(Windows)"
+			platform.text = "Windows"
+			platformLogo.image = UIImage(named: "platform/windows_small")
+		case .freebsd:
+			platform.text = "FreeBSD"
+			platformLogo.image = UIImage(named: "platform/freebsd_small")
 		default:
-			platform.text = "(Unknown OS)"
+			platform.text = "Unknown OS"
 		}
 	}
 
