@@ -26,7 +26,7 @@ import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
-import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 import static com.sandpolis.viewer.jfx.store.stage.StageStore.StageStore;
 
 import java.util.Date;
@@ -35,7 +35,6 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
@@ -45,7 +44,6 @@ import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.util.AsciiUtil;
-import com.sandpolis.viewer.jfx.attribute.ObservableAttribute;
 import com.sandpolis.viewer.jfx.common.FxEventExecutor;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 
@@ -147,9 +145,6 @@ public final class Viewer {
 		StageStore.init(config -> {
 			config.ephemeral();
 		});
-
-		// TODO
-		AttributeKey.setDefaultAttributeClass(ObservableAttribute.class);
 
 		return task.success();
 	});

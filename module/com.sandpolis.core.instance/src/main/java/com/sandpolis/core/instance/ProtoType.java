@@ -43,7 +43,7 @@ public interface ProtoType<E extends Message> {
 	 * @param delta The changes
 	 * @return An error code if {@code delta} was invalid or {@link ErrorCode#OK}
 	 */
-	public ErrorCode merge(E delta);
+	public ErrorCode merge(E delta) throws Exception;
 
 	/**
 	 * Convert the object's entire state to a new protocol buffer.
@@ -51,5 +51,9 @@ public interface ProtoType<E extends Message> {
 	 * @return A new protobuf fully representing the object
 	 */
 	public E extract();
+
+	public default E delta(long timestamp) {
+		throw new UnsupportedOperationException();
+	}
 
 }

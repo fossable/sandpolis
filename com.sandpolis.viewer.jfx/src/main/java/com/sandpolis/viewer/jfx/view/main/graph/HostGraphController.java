@@ -19,7 +19,7 @@ package com.sandpolis.viewer.jfx.view.main.graph;
 
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
-import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -28,9 +28,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.MappedSuperclass;
 
-import com.sandpolis.core.instance.ProtoType;
-import com.sandpolis.core.proto.pojo.Stream.ProtoStream;
-
 /**
  * A {@link Stream} is an ephemeral flow of events between two endpoints in the
  * network.
@@ -39,7 +36,7 @@ import com.sandpolis.core.proto.pojo.Stream.ProtoStream;
  * @since 2.0.0
  */
 @MappedSuperclass
-public abstract class Stream implements ProtoType<ProtoStream> {
+public abstract class Stream {// implements ProtoType<ProtoStream> {
 
 	@Id
 	@Column

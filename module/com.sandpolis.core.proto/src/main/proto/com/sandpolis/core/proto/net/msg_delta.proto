@@ -19,38 +19,5 @@ syntax = "proto3";
 
 package net;
 
-import "com/sandpolis/core/proto/util/update.proto";
-
 option java_package = "com.sandpolis.core.proto.net";
 option optimize_for = CODE_SIZE;
-
-/**
- * Request: A list of profile deltas.
- */
-message RQ_ProfileDelta {
-    // <CVID, timestamp>
-    // The most recent update timestamps of desired CVIDs
-    map<int32, int64> timestamp = 1;
-}
-
-message RS_ProfileDelta {
-    repeated EV_ProfileDelta delta = 1;
-}
-
-/**
- * Event: Inform of a relevant change in a single profile.
- */
-message EV_ProfileDelta {
-    // The CVID
-    int32 cvid = 1;
-
-    // The ProfileUpdate
-    util.ProfileUpdate update = 2;
-}
-
-/**
- * Event: Inform of a relevant change in permissions.
- */
-message EV_PermissionDelta {
-
-}

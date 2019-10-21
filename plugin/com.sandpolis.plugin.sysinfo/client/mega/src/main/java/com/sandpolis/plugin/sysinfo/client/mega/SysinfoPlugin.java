@@ -20,19 +20,24 @@ package com.sandpolis.plugin.sysinfo.client.mega;
 import java.util.function.Function;
 
 import com.google.protobuf.Message;
-import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.plugin.ExeletProvider;
+import com.sandpolis.core.profile.AK_CLIENT;
+import com.sandpolis.core.profile.attribute.key.AttributeKey;
+import com.sandpolis.plugin.sysinfo.AK_CPU;
 import com.sandpolis.plugin.sysinfo.client.mega.exe.SysinfoExe;
 import com.sandpolis.plugin.sysinfo.net.MessageSysinfo.SysinfoMSG;
+
+import oshi.hardware.CentralProcessor;
+import oshi.software.os.NetworkParams;
 
 public final class SysinfoPlugin extends SandpolisPlugin implements ExeletProvider {
 
 	private void setupAttributes() {
-//		associate(AK_CPU.VENDOR, (CentralProcessor cpu) -> cpu.getVendor());
-//		associate(AK_CPU.MODEL, (CentralProcessor cpu) -> cpu.getModel());
-//		associate(AK_NET.HOSTNAME, (NetworkParams net) -> net.getHostName());
+		associate(AK_CPU.VENDOR, (CentralProcessor cpu) -> cpu.getVendor());
+		associate(AK_CPU.MODEL, (CentralProcessor cpu) -> cpu.getModel());
+		associate(AK_CLIENT.HOSTNAME, (NetworkParams net) -> net.getHostName());
 	}
 
 	/**

@@ -15,51 +15,79 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.attribute;
+package com.sandpolis.core.profile.attribute.key;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.protobuf.ByteString;
+import com.sandpolis.core.profile.attribute.Attribute;
+import com.sandpolis.core.profile.attribute.Attribute.IntegerAttribute;
+import com.sandpolis.core.profile.attribute.Attribute.LongAttribute;
+import com.sandpolis.core.profile.attribute.Attribute.OsTypeAttribute;
+import com.sandpolis.core.profile.attribute.Attribute.StringAttribute;
+import com.sandpolis.core.proto.util.Platform.OsType;
 
 /**
- * An {@link AttributeNodeKey} corresponds to an {@link AttributeNode} in an
- * attribute tree. All attribute keys are static and form their own tree
- * structure called the attribute-key tree. Every attribute tree mirrors the
- * attribute-key tree. This setup makes it easy to access attributes located on
- * complex paths in the attribute tree because every node of the attribute-key
- * tree is public, static, and final.<br>
- * <br>
- * Although every key has a corresponding node in the attribute tree, the
- * reverse is not true. Nodes that do not have a corresponding key in the
- * attribute-key tree are called anonymous nodes.
+ * An {@link AttributeKey} corresponds to an {@link Attribute} in an attribute
+ * tree.
  *
  * @author cilki
- * @since 5.0.0
+ * @since 4.0.0
  */
-public abstract class AttributeNodeKey {
-
-	/**
-	 * A chain of bytes that uniquely identifies the {@link AttributeNode} in the
-	 * tree that corresponds with this {@link AttributeNodeKey}.
-	 */
-	protected ByteString key;
-
-	/**
-	 * The characteristic identifier which uniquely identifies a node among its
-	 * sibling nodes.
-	 */
-	protected int characteristic;
-
-	/**
-	 * This {@link AttributeNodeKey}'s parent.
-	 */
-	protected AttributeNodeKey parent;
+public final class AttributeKey<E> {
 
 	/**
 	 * A map of auxiliary objects related to this key.
 	 */
-	private Map<String, Object> aux = new HashMap<>();
+	private final Map<String, Object> aux = new HashMap<>();
+
+	private final String path;
+
+	private final String resolved;
+
+	private final Class<E> type;
+
+	private final String domain;
+
+	public AttributeKey(String domain, Class<E> type, String path) {
+		this(domain, type, path, path);
+	}
+
+	private AttributeKey(String domain, Class<E> type, String path, String resolved) {
+		this.domain = domain;
+		this.type = type;
+		this.path = path;
+		this.resolved = resolved;
+	}
+
+	/**
+	 * Build a new attribute using the attribute factory.
+	 *
+	 * @return A new attribute
+	 */
+	@SuppressWarnings("unchecked")
+	public Attribute<E> newAttribute() {
+		if (type == String.class) {
+			return (Attribute<E>) new StringAttribute();
+		} else if (type == Integer.class) {
+			return (Attribute<E>) new IntegerAttribute();
+		} else if (type == Long.class) {
+			return (Attribute<E>) new LongAttribute();
+		} else if (type == OsType.class) {
+			return (Attribute<E>) new OsTypeAttribute();
+		}
+
+		return null;
+	}
+
+	public AttributeKey<E> derive(String... id) {
+		var res = resolved;
+		for (String s : id) {
+			res = res.replaceFirst("_", s);
+		}
+
+		return new AttributeKey<>(domain, type, path, res);
+	}
 
 	/**
 	 * Get whether the given id has an associated auxiliary object for {@code this}.
@@ -92,49 +120,20 @@ public abstract class AttributeNodeKey {
 		aux.put(id, value);
 	}
 
-	/**
-	 * Get the {@link AttributeNode} identifier.
-	 *
-	 * @return The {@link AttributeNode} identifier
-	 */
-	public ByteString chain() {
-		return key;
-	}
-
-	/**
-	 * Get the characteristic ID which uniquely identifies a node among its sibling
-	 * nodes.
-	 *
-	 * @return The corresponding node's characteristic ID
-	 */
-	public int getCharacteristic() {
-		return characteristic;
-	}
-
-	/**
-	 * Get the key's domain recursively.
-	 *
-	 * @return The {@link AttributeNodeKey}'s domain
-	 */
 	public String getDomain() {
-		if (parent == null)
-			return ((AttributeDomainKey) this).getDomain();
-
-		return parent.getDomain();
+		return domain;
 	}
 
-	/**
-	 * Check if the given key is an ancestor or equal to {@code this}.
-	 *
-	 * @param key The key
-	 * @return Whether the key is an ancestor or equal to {@code this}
-	 */
-	public boolean isAncestor(AttributeNodeKey key) {
-		if (this.equals(key))
-			return true;
-		if (parent == null)
-			return false;
-		return parent.isAncestor(key);
+	public String getPath() {
+		return path;
 	}
 
+	public String getResolvedPath() {
+		return resolved;
+	}
+
+	public boolean isResolved() {
+		// Just check for placeholders
+		return !resolved.contains("/_/");
+	}
 }

@@ -19,7 +19,7 @@ package com.sandpolis.viewer.jfx.view.main.graph;
 
 import java.util.Objects;
 
-import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 
 import javafx.beans.property.BooleanProperty;

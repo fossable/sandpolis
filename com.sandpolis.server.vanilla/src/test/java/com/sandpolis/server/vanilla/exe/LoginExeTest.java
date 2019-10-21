@@ -18,7 +18,7 @@
 package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
-import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;

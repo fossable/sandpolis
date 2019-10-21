@@ -15,40 +15,18 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-syntax = "proto3";
+package com.sandpolis.core.profile.store;
 
-package util;
+import com.sandpolis.core.instance.event.ParameterizedEvent;
 
-option java_package = "com.sandpolis.core.proto.util";
-option optimize_for = CODE_SIZE;
+public final class Events {
 
-/**
- * A singular update to an attribute.
- */
-message AttributeUpdate {
-    int64 timestamp = 1;
+	public static final class ProfileOnlineEvent extends ParameterizedEvent<Profile> {
+	}
 
-    oneof update {
-        string	string 	= 3;
-        int32	integer = 4;
-        int64	long	= 5;
-        bool	boolean	= 6;
-        double	double	= 7;
-    }
-}
+	public static final class ProfileOfflineEvent extends ParameterizedEvent<Profile> {
+	}
 
-/**
- * An update for an attribute node.
- */
-message AttributeNodeUpdate {
-
-    // Updates for child attribute nodes
-    map<int32, AttributeNodeUpdate> attribute_node_update = 1;
-
-    // Attribute updates for the current node
-    repeated AttributeUpdate attribute_update = 2;
-}
-
-message ProfileUpdate {
-    AttributeNodeUpdate root_update = 1;
+	private Events() {
+	}
 }

@@ -15,11 +15,13 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.profile;
+package com.sandpolis.core.profile.store;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -29,48 +31,40 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
-import com.sandpolis.core.attribute.Attribute;
-import com.sandpolis.core.attribute.AttributeDomain;
-import com.sandpolis.core.attribute.AttributeKey;
-import com.sandpolis.core.instance.Updatable.AbstractUpdatable;
+import com.sandpolis.core.instance.ProtoType;
 import com.sandpolis.core.instance.storage.database.converter.InstanceConverter;
 import com.sandpolis.core.instance.storage.database.converter.InstanceFlavorConverter;
+import com.sandpolis.core.profile.AK_INSTANCE;
+import com.sandpolis.core.profile.attribute.Attribute;
+import com.sandpolis.core.profile.attribute.Document;
+import com.sandpolis.core.profile.attribute.key.AttributeKey;
+import com.sandpolis.core.proto.pojo.Attribute.ProtoProfile;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
-import com.sandpolis.core.proto.util.Update.AttributeNodeUpdate;
-import com.sandpolis.core.proto.util.Update.ProfileUpdate;
+import com.sandpolis.core.proto.util.Result.ErrorCode;
 
 /**
  * A {@link Profile} is a generic container that stores data for an instance.
- * Every {@link Instance#SERVER}, {@link Instance#CLIENT}, and
- * {@link Instance#VIEWER} may have a separate profile.
+ * Most of the data are stored in a tree structure similar to a document store.
  *
  * @author cilki
  * @since 4.0.0
  */
 @Entity
-public class Profile extends AbstractUpdatable<ProfileUpdate> {
+public class Profile implements ProtoType<ProtoProfile> {
 
 	@Id
 	@Column
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int db_id;
 
-	// TODO
-	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn
-	private AttributeDomain root;
-
-	// TODO
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@MapKeyColumn(name = "db_id")
-	private Map<String, AttributeDomain> domains;
+	@MapKeyColumn
+	private Map<String, Document> root;
 
 	/**
 	 * The profile's instance type.
@@ -86,6 +80,9 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	@Convert(converter = InstanceFlavorConverter.class)
 	private InstanceFlavor flavor;
 
+	/**
+	 * The profile's UUID.
+	 */
 	@Column
 	private String uuid;
 
@@ -100,41 +97,49 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	 * @param flavor   The profile's instance subtype
 	 */
 	public Profile(String uuid, Instance instance, InstanceFlavor flavor) {
-		this.uuid = Objects.requireNonNull(uuid);
-		this.instance = Objects.requireNonNull(instance);
-		this.flavor = Objects.requireNonNull(flavor);
-		this.domains = new HashMap<>();
+		this.uuid = checkNotNull(uuid);
+		this.instance = checkNotNull(instance);
+		this.flavor = checkNotNull(flavor);
 
-		// TODO
-		this.root = new AttributeDomain(null);
+		this.root = new HashMap<>();
+
+		set(AK_INSTANCE.UUID, uuid);
 	}
 
-	Profile() {
-		// JPA
+	protected Profile() {
 	}
 
 	/**
-	 * Get an {@link Attribute}.
+	 * Get an {@link Attribute}. If the attribute doesn't exist, it will be created.
 	 *
-	 * @param key The {@link AttributeKey} to query.
-	 * @return The corresponding attribute.
+	 * @param key The {@link AttributeKey}
+	 * @return The corresponding attribute
 	 */
-	@SuppressWarnings("unchecked")
 	public <E> Attribute<E> getAttribute(AttributeKey<E> key) {
-		Objects.requireNonNull(key);
+		checkNotNull(key);
+		checkArgument(key.isResolved());
 
-		String domain = key.getDomain();
-		if (!domains.containsKey(domain))
-			domains.put(domain, new AttributeDomain(domain));
-
-		var attribute = domains.get(domain).getNode(key.chain().iterator());
-		if (attribute == null) {
-			attribute = key.newAttribute();
-
-			domains.get(domain).addNode(attribute);// TODO fix addNode
+		Document document = root.get(key.getDomain());
+		if (document == null) {
+			document = new Document("");
+			root.put(key.getDomain(), document);
 		}
 
-		return (Attribute<E>) attribute;
+		var path = key.getPath().split("/");
+		var resolved = key.getResolvedPath().split("/");
+
+		for (int i = 0; i < path.length - 1; i++) {
+			if (path[i + 1].equals("_")) {
+				// This is a collection
+				document = document.collection(path[i++]).document(resolved[i]);
+			} else {
+				// This is a document
+				document = document.document(path[i]);
+			}
+		}
+
+		// This is the desired attribute
+		return document.attribute(key, path[path.length - 1]);
 	}
 
 	/**
@@ -158,17 +163,15 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 	}
 
 	@Override
-	public void merge(ProfileUpdate updates) throws Exception {
-		if (updates.hasRootUpdate())
-			root.merge(updates.getRootUpdate());
+	public ErrorCode merge(ProtoProfile delta) throws Exception {
+		// TODO
+		return ErrorCode.OK;
 	}
 
 	@Override
-	public ProfileUpdate getUpdates(long time) {
-		AttributeNodeUpdate rootUpdate = root.getUpdates(time);
-		if (rootUpdate == null)
-			return null;
-		return ProfileUpdate.newBuilder().setRootUpdate(rootUpdate).build();
+	public ProtoProfile extract() {
+		// TODO
+		return null;
 	}
 
 	/**
@@ -190,6 +193,7 @@ public class Profile extends AbstractUpdatable<ProfileUpdate> {
 
 	public void setCvid(int cvid) {
 		this.cvid = cvid;
+		set(AK_INSTANCE.CVID, cvid);
 	}
 
 }

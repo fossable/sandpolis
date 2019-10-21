@@ -1,0 +1,64 @@
+{
+  "documents": [
+    {
+      "name": "instance",
+      "attributes": [
+        {
+          "name": "cvid",
+          "type": "Integer",
+          "description": "The instance CVID"
+        },
+        {
+          "name": "uuid",
+          "type": "String",
+          "description": "The instance UUID"
+        },
+        {
+          "name": "version",
+          "type": "String",
+          "description": "The instance version"
+        },
+        {
+          "name": "os",
+          "type": "com.sandpolis.core.proto.util.Platform.OsType",
+          "description": "The instance OS type"
+        }
+      ]
+    },
+    {
+      "name": "client",
+      "attributes": [
+        {
+          "name": "hostname",
+          "type": "String",
+          "description": "The client hostname"
+        },
+        {
+          "name": "install_directory",
+          "type": "String",
+          "description": "The client installation directory"
+        }
+      ]
+    },
+    {
+      "name": "viewer",
+      "attributes": [
+        {
+          "name": "username",
+          "type": "String",
+          "description": "The viewer username"
+        },
+        {
+          "name": "login_ip",
+          "type": "String",
+          "description": "The viewer login IP address"
+        },
+        {
+          "name": "login_time",
+          "type": "Long",
+          "description": "The viewer login timestamp"
+        }
+      ]
+    }
+  ]
+}

@@ -21,7 +21,7 @@ import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
 import static com.sandpolis.core.instance.util.ProtoUtil.rq;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
-import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.FAILURE_KEY_CHALLENGE;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_KEY;
 import static com.sandpolis.core.proto.util.Result.ErrorCode.UNKNOWN_GROUP;
@@ -34,13 +34,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.attribute.key.AK_CLIENT;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
-import com.sandpolis.core.profile.Events.ProfileOnlineEvent;
-import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.AK_CLIENT;
+import com.sandpolis.core.profile.AK_INSTANCE;
+import com.sandpolis.core.profile.store.Events.ProfileOnlineEvent;
+import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.proto.net.MsgAuth.RQ_KeyAuth;
 import com.sandpolis.core.proto.net.MsgAuth.RQ_NoAuth;
@@ -151,7 +152,8 @@ public final class AuthExe extends Exelet {
 
 					// Set attributes
 					profile.set(AK_CLIENT.HOSTNAME, rs.getHostname());
-					// TODO
+					profile.set(AK_CLIENT.INSTALL_DIRECTORY, rs.getInstallDirectory());
+					profile.set(AK_INSTANCE.OS, rs.getOs());
 
 					groups.forEach(group -> {
 						// TODO add client to group

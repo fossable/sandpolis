@@ -11,9 +11,9 @@ bin
 .settings
 
 # Nested repositories
-/com.sandpolis.server.cloud/
-/com.sandpolis.server.demo/
-/com.sandpolis.client.mega.demo/
+com.sandpolis.server.cloud
+com.sandpolis.server.demo
+com.sandpolis.client.mega.demo
 
 # Annotation processor
 .apt_generated

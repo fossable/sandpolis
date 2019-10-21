@@ -81,10 +81,6 @@ message MSG {
         RS_Cvid                         rs_cvid                         =  101;
 
         // msg_delta
-        RQ_ProfileDelta                 rq_profile_delta                =   10;
-        RS_ProfileDelta                 rs_profile_delta                = 1010;
-        EV_ProfileDelta                 ev_profile_delta                =   11;
-        EV_PermissionDelta              ev_permission_delta             =   12;
 
         // msg_generator
         RQ_Generate                     rq_generate                     =   13;

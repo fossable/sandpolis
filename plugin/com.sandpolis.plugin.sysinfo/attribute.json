@@ -1,0 +1,132 @@
+{
+  "collections": [
+    {
+      "name": "cpu",
+      "attributes": [
+        {
+          "name": "model",
+          "type": "String",
+          "description": "The CPU model string"
+        },
+        {
+          "name": "vendor",
+          "type": "String",
+          "description": "The CPU vendor"
+        }
+      ],
+      "collections": [
+        {
+          "name": "cores",
+          "attributes": [
+            {
+              "name": "usage",
+              "type": "Double",
+              "description": "The core usage percentage"
+            },
+            {
+              "name": "temperature",
+              "type": "Double",
+              "description": "The core temperature in degrees Celsius"
+            }
+          ],
+          "collections": [
+            {
+              "name": "threads",
+              "attributes": [
+                {
+                  "name": "id",
+                  "type": "Integer"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "display",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "resolution",
+          "type": "String",
+          "description": "The display's current resolution in pixels"
+        },
+        {
+          "name": "size",
+          "type": "String",
+          "description": "The display's physical size in pixels"
+        }
+      ]
+    },
+    {
+      "name": "jre",
+      "attributes": [
+        {
+          "name": "architecture",
+          "type": "String"
+        },
+        {
+          "name": "path",
+          "type": "String",
+          "description": ""
+        },
+        {
+          "name": "version",
+          "type": "String",
+          "description": ""
+        }
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "name": "os",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "family",
+          "type": "String"
+        },
+        {
+          "name": "architecture",
+          "type": "String"
+        },
+        {
+          "name": "language",
+          "type": "String"
+        },
+        {
+          "name": "timezone",
+          "type": "String"
+        }
+      ],
+      "documents": [
+        {
+          "name": "linux",
+          "attributes": [
+            {
+              "name": "distribution",
+              "type": "String"
+            }
+          ]
+        },
+        {
+          "name": "windows",
+          "attributes": [
+            {
+              "name": "serial",
+              "type": "String"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

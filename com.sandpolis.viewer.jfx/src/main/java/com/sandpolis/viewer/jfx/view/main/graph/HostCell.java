@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import com.fxgraph.cells.AbstractCell;
 import com.fxgraph.graph.Graph;
-import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 
 import javafx.fxml.FXMLLoader;

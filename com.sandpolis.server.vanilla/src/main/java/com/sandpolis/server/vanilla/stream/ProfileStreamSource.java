@@ -18,13 +18,15 @@
 package com.sandpolis.server.vanilla.stream;
 
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
-import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
-import com.sandpolis.core.profile.Events.ProfileOnlineEvent;
-import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.AK_CLIENT;
+import com.sandpolis.core.profile.AK_INSTANCE;
+import com.sandpolis.core.profile.store.Events.ProfileOnlineEvent;
+import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.core.proto.net.MsgStream.EV_ProfileStream;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.stream.store.StreamSource;
@@ -61,6 +63,10 @@ public class ProfileStreamSource extends StreamSource<EV_ProfileStream> {
 		ConnectionStore.get(profile.getCvid()).ifPresent(sock -> {
 			ev.setIp(sock.getRemoteIP());
 		});
+
+		ev.setHostname(profile.get(AK_CLIENT.HOSTNAME));
+		ev.setInstallDirectory(profile.get(AK_CLIENT.INSTALL_DIRECTORY));
+		ev.setPlatform(profile.get(AK_INSTANCE.OS));
 
 		submit(ev.build());
 	}

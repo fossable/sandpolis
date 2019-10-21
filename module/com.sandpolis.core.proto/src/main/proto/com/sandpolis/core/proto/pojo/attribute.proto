@@ -15,18 +15,48 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.profile;
+syntax = "proto2";
 
-import com.sandpolis.core.instance.event.ParameterizedEvent;
+package pojo;
 
-public final class Events {
+import "com/sandpolis/core/proto/util/platform.proto";
 
-	public static final class ProfileOnlineEvent extends ParameterizedEvent<Profile> {
-	}
+option java_package = "com.sandpolis.core.proto.pojo";
+option optimize_for = CODE_SIZE;
 
-	public static final class ProfileOfflineEvent extends ParameterizedEvent<Profile> {
-	}
+message ProtoAttribute {
+    optional int64 timestamp = 2;
 
-	private Events() {
-	}
+    oneof update {
+        string  string   = 3;
+        int32   integer  = 4;
+        int64   long     = 5;
+        bool    boolean  = 6;
+        double  double   = 7;
+        bytes   bytes    = 8;
+    }
+}
+
+message ProtoDocument {
+    required string id = 1;
+
+    map<string, ProtoDocument> document = 2;
+    map<string, ProtoCollection> collection = 3;
+    map<string, ProtoAttribute> attribute = 4;
+}
+
+message ProtoCollection {
+    required string id = 1;
+
+    map<string, ProtoDocument> document = 2;
+}
+
+message ProtoProfile {
+    optional util.Instance instance = 1;
+    optional util.InstanceFlavor flavor = 2;
+    optional int32 cvid = 3;
+    optional string uuid = 4;
+
+    optional ProtoDocument core = 5;
+    map<string, ProtoDocument> plugin = 6;
 }

@@ -17,7 +17,7 @@
  ******************************************************************************/
 package com.sandpolis.viewer.jfx.view.main.list;
 
-import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -26,9 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.attribute.AttributeKey;
-import com.sandpolis.core.attribute.key.AK_INSTANCE;
-import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.AK_INSTANCE;
+import com.sandpolis.core.profile.attribute.key.AttributeKey;
+import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.view.main.Events.HostDetailCloseEvent;
 import com.sandpolis.viewer.jfx.view.main.Events.HostDetailOpenEvent;

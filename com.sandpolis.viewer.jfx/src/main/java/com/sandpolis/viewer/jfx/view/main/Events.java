@@ -19,10 +19,10 @@ package com.sandpolis.viewer.jfx.view.main;
 
 import java.util.List;
 
-import com.sandpolis.core.attribute.AttributeKey;
 import com.sandpolis.core.instance.event.Event;
 import com.sandpolis.core.instance.event.ParameterizedEvent;
-import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.attribute.key.AttributeKey;
+import com.sandpolis.core.profile.store.Profile;
 
 import javafx.scene.layout.Region;
 

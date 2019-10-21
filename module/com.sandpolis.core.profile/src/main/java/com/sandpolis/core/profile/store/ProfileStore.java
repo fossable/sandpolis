@@ -15,25 +15,22 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.profile;
+package com.sandpolis.core.profile.store;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.attribute.key.AK_VIEWER;
 import com.sandpolis.core.instance.storage.MemoryListStoreProvider;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
-import com.sandpolis.core.profile.ProfileStore.ProfileStoreConfig;
-import com.sandpolis.core.proto.net.MsgDelta.EV_ProfileDelta;
-import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.profile.AK_VIEWER;
+import com.sandpolis.core.profile.store.ProfileStore.ProfileStoreConfig;
 
 /**
  * @author cilki
@@ -63,8 +60,8 @@ public final class ProfileStore extends MapStore<String, Profile, ProfileStoreCo
 		return provider.stream().filter(profile -> username.equals(profile.get(AK_VIEWER.USERNAME))).findFirst();
 	}
 
-	public void merge(List<EV_ProfileDelta> updates) throws Exception {
-		for (EV_ProfileDelta update : updates) {
+//	public void merge(List<EV_ProfileDelta> updates) throws Exception {
+//		for (EV_ProfileDelta update : updates) {
 //			Profile profile = get(update.getCvid()).orElse(null);
 //			if (profile == null) {
 //				profile = new Profile(update.getCvid(), "TODO");// TODO
@@ -74,16 +71,16 @@ public final class ProfileStore extends MapStore<String, Profile, ProfileStoreCo
 //			} else {
 //				profile.merge(update.getUpdate());
 //			}
-		}
-	}
-
-	public List<EV_ProfileDelta> getUpdates(long timestamp, int cvid) {
-		return provider.stream().filter(profile -> profile.getInstance() == Instance.CLIENT)// TODO filter permissions
-				.map(profile -> EV_ProfileDelta.newBuilder().setUpdate(profile.getUpdates(timestamp)).build())
-				// TODO set cvid or uuid in update
-				.collect(Collectors.toList());
-
-	}
+//		}
+//	}
+//
+//	public List<EV_ProfileDelta> getUpdates(long timestamp, int cvid) {
+//		return provider.stream().filter(profile -> profile.getInstance() == Instance.CLIENT)// TODO filter permissions
+//				.map(profile -> EV_ProfileDelta.newBuilder().setUpdate(profile.getUpdates(timestamp)).build())
+//				// TODO set cvid or uuid in update
+//				.collect(Collectors.toList());
+//
+//	}
 
 	/**
 	 * Get a profile by cvid.

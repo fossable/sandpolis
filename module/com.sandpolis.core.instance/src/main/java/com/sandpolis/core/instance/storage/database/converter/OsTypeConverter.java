@@ -15,40 +15,30 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.core.profile.store;
+package com.sandpolis.core.instance.storage.database.converter;
 
-import java.util.Optional;
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 
-import com.sandpolis.core.attribute.AttributeDomainKey;
-import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.storage.StoreProvider;
+import com.sandpolis.core.proto.util.Platform.OsType;
 
 /**
- * A store for the instance's {@link AttributeDomainKey}s.
+ * This converter replaces {@link OsType}s with their numeric identifier.
  *
  * @author cilki
  * @since 5.0.0
  */
-public final class DomainStore {
+@Converter
+public class OsTypeConverter implements AttributeConverter<OsType, Integer> {
 
-	private static StoreProvider<AttributeDomainKey> provider = new MemoryMapStoreProvider<String, AttributeDomainKey>(
-			AttributeDomainKey.class, AttributeDomainKey::getDomain);
-
-	/**
-	 * Get a root {@link AttributeDomainKey} from the store.
-	 *
-	 * @param id The {@link AttributeDomainKey}'s domain
-	 * @return The {@link AttributeDomainKey} for the instance
-	 */
-	public static AttributeDomainKey get(String id) {
-		if (id == null)
-			id = "";
-
-		Optional<AttributeDomainKey> key = provider.get(id);
-		if (key.isPresent())
-			return key.get();
-
-		provider.add(new AttributeDomainKey(id));
-		return provider.get(id).get();
+	@Override
+	public Integer convertToDatabaseColumn(OsType type) {
+		return type.getNumber();
 	}
+
+	@Override
+	public OsType convertToEntityAttribute(Integer dbData) {
+		return OsType.forNumber(dbData);
+	}
+
 }

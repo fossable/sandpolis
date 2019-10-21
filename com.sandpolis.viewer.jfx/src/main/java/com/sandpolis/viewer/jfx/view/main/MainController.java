@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.common.pane.CarouselPane;
 import com.sandpolis.viewer.jfx.common.pane.ExtendPane;

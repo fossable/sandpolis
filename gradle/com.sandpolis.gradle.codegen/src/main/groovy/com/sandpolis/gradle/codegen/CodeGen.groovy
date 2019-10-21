@@ -31,8 +31,8 @@ public class CodeGen implements Plugin<Project> {
 
 	void apply(Project project) {
 
-		// Look for attribute files
-		if (project.file("attribute.yml").exists()) {
+		// Look for attribute descriptor
+		if (project.file("attribute.json").exists()) {
 			project.tasks.getByName('compileJava').dependsOn(project.task("generateAttributes", type: AttributeGenerator))
 		}
 

@@ -22,6 +22,5 @@ dependencies {
 	implementation gradleApi()
 	implementation localGroovy()
 
-	implementation 'org.yaml:snakeyaml:1.22'
 	implementation 'com.squareup:javapoet:1.11.1'
 }
