@@ -43,7 +43,7 @@ dependencies {
 
 	implementation 'javax.persistence:javax.persistence-api:2.2'
 
-	implementation 'org.hibernate:hibernate-core:5.4.6.Final'
+	implementation 'org.hibernate:hibernate-core:5.4.7.Final'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.28'
