@@ -22,14 +22,8 @@ dependencies {
 	// https://github.com/jhalterman/concurrentunit
 	testImplementation 'net.jodah:concurrentunit:0.4.6'
 
-	// https://github.com/vorburger/MariaDB4j
-	testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.3.0'
-
-	// https://github.com/MariaDB/mariadb-connector-j
-	testImplementation 'org.mariadb.jdbc:mariadb-java-client:2.4.3'
-
-	// https://github.com/xerial/sqlite-jdbc
-	testImplementation 'org.xerial:sqlite-jdbc:3.28.0'
+	// https://github.com/h2database/h2database
+	testImplementation 'com.h2database:h2:1.4.200'
 
 	implementation project(':module:com.sandpolis.core.instance')
 
@@ -40,7 +34,4 @@ dependencies {
 	implementation 'org.hibernate:hibernate-core:5.4.6.Final'
 	implementation 'org.hibernate:hibernate-c3p0:5.4.0.Final'
 	implementation 'javax.xml.bind:jaxb-api:2.3.0'
-
-	// https://github.com/gwenn/sqlite-dialect
-	implementation 'com.github.gwenn:sqlite-dialect:0.1.0'
 }

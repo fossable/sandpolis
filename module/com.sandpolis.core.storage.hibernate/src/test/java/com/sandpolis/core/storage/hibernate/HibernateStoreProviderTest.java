@@ -22,11 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -35,16 +32,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import com.sandpolis.core.instance.storage.StoreProvider;
-import com.sandpolis.core.instance.storage.database.Database;
 
-import ch.vorburger.exec.ManagedProcessException;
-import ch.vorburger.mariadb4j.DB;
 import net.jodah.concurrentunit.Waiter;
 
 class HibernateStoreProviderTest {
@@ -301,35 +294,28 @@ class HibernateStoreProviderTest {
 		waiter.await(30000, 18);
 	}
 
-	/**
-	 * A MariaDB database for testing.
-	 */
-	private static DB db;
+	static Stream<StoreProvider<TestObject>> implementations() throws Exception {
+		Configuration conf = new Configuration()
+				// Set the H2 database driver
+				.setProperty("hibernate.connection.driver_class", "org.h2.Driver")
 
-	@BeforeAll
-	private static void setup() throws ManagedProcessException {
-		db = DB.newEmbeddedDB(8001);
-		db.start();
-	}
+				// Set the H2 dialect
+				.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
 
-	@AfterAll
-	private static void cleanup() throws ManagedProcessException {
-		db.stop();
-	}
+				// Set the credentials
+				.setProperty("hibernate.connection.username", "").setProperty("hibernate.connection.password", "")
 
-	static Stream<StoreProvider<TestObject>> implementations()
-			throws URISyntaxException, IOException, SQLException, ManagedProcessException {
-		Database sqlite = new HibernateDatabaseFactory().sqlite(new Class[] { TestObject.class },
-				new Database("jdbc:sqlite:" + Files.createTempFile(null, null).toUri().toURL()));
+				// Set the database URL
+				.setProperty("hibernate.connection.url", "jdbc:h2:mem:junit")
 
-		Database mysql = new HibernateDatabaseFactory().mysql(new Class[] { TestObject.class },
-				new Database("jdbc:mysql://127.0.0.1:8001/test?serverTimezone=America/Chicago", "root", ""));
+				// Set additional options
+				.setProperty("hibernate.connection.shutdown", "true")
+				.setProperty("hibernate.globally_quoted_identifiers", "true")
+				.setProperty("hibernate.hbm2ddl.auto", "create");
 
-		// Reset table
-		StoreProvider<TestObject> mysqlProvider = mysql.getConnection().provider(TestObject.class, "id");
-		mysqlProvider.clear();
+		List.of(TestObject.class).forEach(conf::addAnnotatedClass);
 
-		return Stream.of(sqlite.getConnection().provider(TestObject.class, "id"), mysqlProvider);
+		return Stream.of(new HibernateConnection(conf.buildSessionFactory()).provider(TestObject.class, "id"));
 	}
 
 }

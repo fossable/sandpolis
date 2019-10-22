@@ -29,7 +29,7 @@ import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
-import static com.sandpolis.core.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
@@ -38,18 +38,14 @@ import static com.sandpolis.server.vanilla.store.server.ServerStore.ServerStore;
 import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Executors;
 
+import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.attribute.AttributeDomain;
-import com.sandpolis.core.attribute.AttributeGroup;
-import com.sandpolis.core.attribute.AttributeNode;
-import com.sandpolis.core.attribute.UntrackedAttribute;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
@@ -59,11 +55,20 @@ import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.storage.database.Database;
-import com.sandpolis.core.instance.storage.database.DatabaseFactory;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.profile.Profile;
+import com.sandpolis.core.profile.attribute.Attribute;
+import com.sandpolis.core.profile.attribute.Attribute.BooleanAttribute;
+import com.sandpolis.core.profile.attribute.Attribute.ByteAttribute;
+import com.sandpolis.core.profile.attribute.Attribute.DoubleAttribute;
+import com.sandpolis.core.profile.attribute.Attribute.IntegerAttribute;
+import com.sandpolis.core.profile.attribute.Attribute.LongAttribute;
+import com.sandpolis.core.profile.attribute.Attribute.OsTypeAttribute;
+import com.sandpolis.core.profile.attribute.Attribute.StringAttribute;
+import com.sandpolis.core.profile.attribute.Collection;
+import com.sandpolis.core.profile.attribute.Document;
+import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
@@ -77,7 +82,9 @@ import com.sandpolis.core.proto.util.Generator.NetworkTarget;
 import com.sandpolis.core.proto.util.Generator.OutputFormat;
 import com.sandpolis.core.proto.util.Generator.OutputPayload;
 import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.proto.util.Platform.OsType;
+import com.sandpolis.core.storage.hibernate.HibernateConnection;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
@@ -114,6 +121,7 @@ public final class Server {
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
 		register(Server.loadEnvironment);
+		register(Server.generateCvid);
 		register(Server.loadServerStores);
 		register(Server.loadPlugins);
 		register(Server.installDebugClient);
@@ -157,6 +165,15 @@ public final class Server {
 	});
 
 	/**
+	 * Set a new CVID.
+	 */
+	@InitializationTask(name = "Generate instance CVID", fatal = true)
+	public static final Task generateCvid = new Task((task) -> {
+		Core.setCvid(CvidUtil.cvid(Instance.SERVER));
+		return task.success();
+	});
+
+	/**
 	 * Load static stores.
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
@@ -173,8 +190,6 @@ public final class Server {
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
-		// Load NetworkStore and choose a new CVID
-		Core.setCvid(CvidUtil.cvid(Instance.SERVER));
 		NetworkStore.init(config -> {
 			config.ephemeral();
 			config.cvid = Core.cvid();
@@ -189,32 +204,41 @@ public final class Server {
 		});
 
 		PrefStore.init(config -> {
-			config.instance = Core.INSTANCE;
-			config.flavor = Core.FLAVOR;
+			config.instance = Instance.SERVER;
+			config.flavor = InstanceFlavor.VANILLA;
 		});
 
 		DatabaseStore.init(config -> {
-			config.entities = new Class<?>[] { Database.class, Listener.class, Group.class, ReciprocalKeyPair.class,
-					KeyMechanism.class, PasswordMechanism.class, User.class, Profile.class, AttributeNode.class,
-					AttributeGroup.class, AttributeDomain.class, UntrackedAttribute.class, Plugin.class,
-					TrustAnchor.class };
 
-			if (!Config.has("server.db.url")) {
-				try {
-					config.persistent(DatabaseFactory.create("h2", Environment.get(DB).resolve("server.db").toFile()));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else {
-				try {
-					config.persistent(DatabaseFactory.create(Config.get("server.db.url"),
-							Config.get("server.db.username"), Config.get("server.db.password")));
-				} catch (URISyntaxException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+			// Build connection URL
+			String url = String.format("jdbc:h2:%s", Environment.get(DB).resolve("server.db").toUri());
+
+			Configuration conf = new Configuration()
+					// Set the H2 database driver
+					.setProperty("hibernate.connection.driver_class", "org.h2.Driver")
+
+					// Set the H2 dialect
+					.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
+
+					// Set the credentials
+					.setProperty("hibernate.connection.username", "").setProperty("hibernate.connection.password", "")
+
+					// Set the database URL
+					.setProperty("hibernate.connection.url", url)
+
+					// Set additional options
+					.setProperty("hibernate.connection.shutdown", "true")
+					.setProperty("hibernate.globally_quoted_identifiers", "true")
+					.setProperty("hibernate.hbm2ddl.auto", "create");
+
+			List.of(Database.class, Listener.class, Group.class, User.class, Profile.class, Document.class,
+					Collection.class, Attribute.class, StringAttribute.class, IntegerAttribute.class,
+					LongAttribute.class, BooleanAttribute.class, DoubleAttribute.class, ByteAttribute.class,
+					OsTypeAttribute.class, Plugin.class, TrustAnchor.class, ReciprocalKeyPair.class, KeyMechanism.class,
+					PasswordMechanism.class).forEach(conf::addAnnotatedClass);
+
+			config.main = new Database(url, new HibernateConnection(conf.buildSessionFactory()));
+			config.ephemeral();
 		});
 
 		UserStore.init(config -> {

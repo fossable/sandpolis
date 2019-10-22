@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
-import com.sandpolis.core.instance.storage.database.DatabaseFactory;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.instance.store.database.DatabaseStore.DatabaseStoreConfig;
@@ -73,18 +72,14 @@ public final class DatabaseStore extends MapStore<String, Database, DatabaseStor
 
 	public final class DatabaseStoreConfig extends StoreConfig {
 
+		public Database main;
+
 		@Override
 		public void ephemeral() {
 			provider = new MemoryMapStoreProvider<>(Database.class, Database::getUrl);
+			DatabaseStore.this.main = main;
 		}
 
-		public Class<?>[] entities;
-
-		@Override
-		public void persistent(Database database) {
-			main = DatabaseFactory.init(database, entities);
-			provider = main.getConnection().provider(Database.class, "id");
-		}
 	}
 
 	public static final DatabaseStore DatabaseStore = new DatabaseStore();

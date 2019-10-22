@@ -17,119 +17,26 @@
  ******************************************************************************/
 package com.sandpolis.core.instance.storage.database;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Transient;
+import java.util.Objects;
 
 /**
- * A {@link Database} is a high-level representation of a SQL database which is
- * managed by an ORM.<br>
- * <br>
- *
- * In some cases, the {@link Database} object itself is also stored in another
- * database or within itself.
- *
  * @author cilki
  * @since 3.0.0
  */
-@Entity
 public final class Database implements AutoCloseable {
 
-	@Id
-	@Column
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private int db_id;
-
-	/**
-	 * The unique ID.
-	 */
-	@Column(nullable = false, unique = true)
-	private int id;
-
-	/**
-	 * The database url in standard format.
-	 */
-	@Column(nullable = false)
-	private String url;
-
-	/**
-	 * The database username.
-	 */
-	@Column
-	private String username;
-
-	/**
-	 * The database password.
-	 */
-	@Column
-	private String password;
-
-	/**
-	 * A timestamp of the last successful connection.
-	 */
-	@Column(nullable = false)
-	private long timestamp;
-
-	/**
-	 * The database connection.
-	 */
-	@Transient
 	private DatabaseConnection connection;
+
+	private String url;
 
 	/**
 	 * Construct a new {@link Database} from the given URL with blank credentials.
 	 *
 	 * @param url The database url
-	 * @throws URISyntaxException If the url format is incorrect
 	 */
-	public Database(String url) throws URISyntaxException {
-		if (url == null)
-			throw new IllegalArgumentException();
-
-		this.url = new URI(url).toString();
-		this.username = "";
-		this.password = "";
-	}
-
-	/**
-	 * Construct a new {@link Database} from the given URL with the given
-	 * credentials.
-	 *
-	 * @param url      The database url
-	 * @param username The database username
-	 * @param password The database password
-	 * @throws URISyntaxException If the url format is incorrect
-	 */
-	public Database(String url, String username, String password) throws URISyntaxException {
-		this(url);
-		if (username == null)
-			throw new IllegalArgumentException();
-		if (password == null)
-			throw new IllegalArgumentException();
-
-		this.username = username;
-		this.password = password;
-	}
-
-	/**
-	 * Initialize the database with the given connection.
-	 *
-	 * @param connection An established connection
-	 * @return {@code this}
-	 */
-	public Database init(DatabaseConnection connection) {
-		if (connection == null)
-			throw new IllegalArgumentException();
-
-		this.connection = connection;
-		return this;
+	public Database(String url, DatabaseConnection connection) {
+		this.url = Objects.requireNonNull(url);
+		this.connection = Objects.requireNonNull(connection);
 	}
 
 	/**
@@ -144,70 +51,10 @@ public final class Database implements AutoCloseable {
 	/**
 	 * Indicates the connection status.
 	 *
-	 * @return True if the database is connected; false otherwise
+	 * @return Whether the database is connected
 	 */
 	public boolean isOpen() {
 		return connection != null && connection.isOpen();
-	}
-
-	/**
-	 * Get the local database file if it exists.
-	 *
-	 * @return A {@link File} representing the location of the local database file
-	 *         or {@code null} if the connection is remote
-	 */
-	public File getFile() {
-		if (url.contains("file:"))
-			return new File(url.substring(url.indexOf("file:") + 5));
-		return null;
-	}
-
-	/**
-	 * Get the database's type.
-	 *
-	 * @return The database type
-	 */
-	public String getType() {
-		// Parse the URL for type info
-		String type = url.substring(url.indexOf(':') + 1);
-		type = type.substring(0, type.indexOf(':'));
-		return type;
-	}
-
-	/**
-	 * Get the database URL in standard format.
-	 *
-	 * @return The database URL
-	 */
-	public String getUrl() {
-		return url;
-	}
-
-	/**
-	 * Get the database username.
-	 *
-	 * @return The username
-	 */
-	public String getUsername() {
-		return username;
-	}
-
-	/**
-	 * Get the database password.
-	 *
-	 * @return The password
-	 */
-	public String getPassword() {
-		return password;
-	}
-
-	/**
-	 * Get the timestamp of the last successful connection.
-	 *
-	 * @return The connection timestamp
-	 */
-	public long getTimestamp() {
-		return timestamp;
 	}
 
 	@Override
@@ -220,4 +67,12 @@ public final class Database implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * Get the database URL in standard format.
+	 *
+	 * @return The database URL
+	 */
+	public String getUrl() {
+		return url;
+	}
 }

@@ -17,7 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla;
 
-import static com.sandpolis.core.instance.store.database.DatabaseStore.DatabaseStore;
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
@@ -25,7 +24,6 @@ import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
-import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
@@ -58,8 +56,6 @@ public final class Post {
 			if (testGroup.getKeys().size() != 1)
 				return failure(outcome, "Unexpected size: " + testGroup.getKeys().size());
 
-			// Check DatabaseStore
-			DatabaseStore.add(new Database("jdbc:mysql://127.0.0.1/test"));
 		} catch (Exception e) {
 			return failure(outcome, e);
 		}
