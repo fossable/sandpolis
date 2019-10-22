@@ -25,33 +25,50 @@ class ServerManager: UITableViewController {
 	/// Firebase reference
 	private let ref = Firestore.firestore().collection("/user/\(Auth.auth().currentUser!.uid)/server")
 
-	private var serverList = [SandpolisServer]()
+	private var servers = [SandpolisServer]()
 
-	private var serverListener: ListenerRegistration!
+	private var refListener: ListenerRegistration!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
 		// Synchronize table data
-		serverListener = ref.addSnapshotListener({ querySnapshot, error in
+		refListener = ref.addSnapshotListener({ querySnapshot, error in
 			guard let servers = querySnapshot?.documents else {
 				return
 			}
 
-			self.serverList = servers.map { server -> SandpolisServer in
+			self.servers = servers.map { server -> SandpolisServer in
 				return SandpolisServer(server)
 			}
 			self.tableView.reloadData()
 			self.refreshServerStates()
 			//self.refreshServerLocations()
 		})
+		
+		// Setup refresh control
+		refreshControl = UIRefreshControl()
+		refreshControl?.addTarget(self, action: #selector(refreshTable), for: .valueChanged)
+	}
+	
+	@objc func refreshTable() {
+		// Spawn synchronous connection attempts
+		DispatchQueue.global(qos: .utility).async {
+			for server in self.servers {
+				server.online = SandpolisUtil.testConnect(server.address, 10101)
+			}
+			DispatchQueue.main.async {
+				self.tableView.reloadData()
+				self.refreshControl?.endRefreshing()
+			}
+		}
 	}
 
 	/// Attempt to connect to each server in the list
 	func refreshServerStates() {
 
 		// Spawn concurrent connection attempts
-		for server in serverList {
+		for server in servers {
 			DispatchQueue.global(qos: .utility).async {
 				server.online = SandpolisUtil.testConnect(server.address, 10101)
 				DispatchQueue.main.async {
@@ -62,31 +79,40 @@ class ServerManager: UITableViewController {
 	}
 
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		return serverList.count
+		return servers.count
 	}
 
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-		let server = serverList[indexPath.row]
+		let server = servers[indexPath.row]
 		let cell = tableView.dequeueReusableCell(withIdentifier: "ServerCell", for: indexPath) as! ServerCell
 		cell.setContent(server)
 		return cell
 	}
 
 	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-		let server = serverList[indexPath.row]
-		if server.online ?? false {
-			connectToServer(server: server)
-		}
-	}
+		let server = servers[indexPath.row]
+		if let online = server.online {
+			if online {
+				connectToServer(server: server)
+			} else {
+				server.online = nil
+				self.tableView.reloadData()
 
-	override func tableView(_ tableView: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
-		return serverList[indexPath.row].online ?? false
+				// Retry connection probe
+				DispatchQueue.global(qos: .utility).async {
+					server.online = SandpolisUtil.testConnect(server.address, 10101)
+					DispatchQueue.main.async {
+						self.tableView.reloadData()
+					}
+				}
+			}
+		}
 	}
 
 	override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath:
 			IndexPath) -> UISwipeActionsConfiguration? {
 		let delete = UIContextualAction(style: .destructive, title: "Delete") { action, view, completion in
-			self.serverList[indexPath.row].reference.delete()
+			self.servers[indexPath.row].reference.delete()
 			completion(true)
 		}
 		let edit = UIContextualAction(style: .normal, title: "Edit") { action, view, completion in
@@ -105,11 +131,11 @@ class ServerManager: UITableViewController {
 		} else if segue.identifier == "EditServerSegue",
 			let addServerView = segue.destination as? AddServer {
 			let indexPath = sender as! IndexPath
-			addServerView.server = serverList[indexPath.row]
+			addServerView.server = servers[indexPath.row]
 			addServerView.serverReference = addServerView.server.reference
 		} else if segue.identifier == "ShowHostSegue",
 			let mainTab = segue.destination as? MainTabController {
-			mainTab.server = serverList[tableView.indexPathForSelectedRow!.row]
+			mainTab.server = sender as? SandpolisServer
 		} else {
 			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
 		}
@@ -151,7 +177,7 @@ class ServerManager: UITableViewController {
 		login.whenSuccess { rs in
 			if rs.rsOutcome.result {
 				DispatchQueue.main.async {
-					self.performSegue(withIdentifier: "ShowHostSegue", sender: nil)
+					self.performSegue(withIdentifier: "ShowHostSegue", sender: server)
 				}
 			} else {
 				self.onConnectFail(failureMessage: "Failed to login to server.")
