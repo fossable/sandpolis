@@ -19,10 +19,10 @@ syntax = "proto3";
 
 package net;
 
+import "com/sandpolis/core/proto/net/msg_attribute.proto";
 import "com/sandpolis/core/proto/net/msg_auth.proto";
 import "com/sandpolis/core/proto/net/msg_client.proto";
 import "com/sandpolis/core/proto/net/msg_cvid.proto";
-import "com/sandpolis/core/proto/net/msg_delta.proto";
 import "com/sandpolis/core/proto/net/msg_generator.proto";
 import "com/sandpolis/core/proto/net/msg_group.proto";
 import "com/sandpolis/core/proto/net/msg_listener.proto";
@@ -71,6 +71,12 @@ message MSG {
         // A generic response indicating the outcome of some operation
         util.Outcome                    rs_outcome                      =    6;
 
+        // msg_attribute
+        RQ_AttributeQuery               rq_attribute_query              =   10;
+        RS_AttributeQuery               rs_attribute_query              = 1010;
+        RQ_AttributeStream              rq_attribute_stream             =   11;
+        EV_AttributeStream              ev_attribute_stream             = 1011;
+
         // msg_auth
         RQ_NoAuth                       rq_no_auth                      =    7;
         RQ_PasswordAuth                 rq_password_auth                =    8;
@@ -79,8 +85,6 @@ message MSG {
         // msg_cvid
         RQ_Cvid                         rq_cvid                         =  100;
         RS_Cvid                         rs_cvid                         =  101;
-
-        // msg_delta
 
         // msg_generator
         RQ_Generate                     rq_generate                     =   13;

@@ -25,30 +25,33 @@ option java_package = "com.sandpolis.core.proto.pojo";
 option optimize_for = CODE_SIZE;
 
 message ProtoAttribute {
-    optional int64 timestamp = 2;
+    optional int64 timestamp = 1;
 
-    oneof update {
-        string  string   = 3;
-        int32   integer  = 4;
-        int64   long     = 5;
-        bool    boolean  = 6;
-        double  double   = 7;
-        bytes   bytes    = 8;
+    oneof value {
+        string  string   = 2;
+        int32   integer  = 3;
+        int64   long     = 4;
+        bool    boolean  = 5;
+        double  double   = 6;
+        bytes   bytes    = 7;
+
+        // Additional types
+        util.OsType os_type = 8;
     }
 }
 
 message ProtoDocument {
     required string id = 1;
 
-    map<string, ProtoDocument> document = 2;
-    map<string, ProtoCollection> collection = 3;
-    map<string, ProtoAttribute> attribute = 4;
+    repeated ProtoDocument document = 2;
+    repeated ProtoCollection collection = 3;
+    repeated ProtoAttribute attribute = 4;
 }
 
 message ProtoCollection {
     required string id = 1;
 
-    map<string, ProtoDocument> document = 2;
+    repeated ProtoDocument document = 2;
 }
 
 message ProtoProfile {
@@ -57,6 +60,5 @@ message ProtoProfile {
     optional int32 cvid = 3;
     optional string uuid = 4;
 
-    optional ProtoDocument core = 5;
-    map<string, ProtoDocument> plugin = 6;
+    repeated ProtoDocument root = 6;
 }

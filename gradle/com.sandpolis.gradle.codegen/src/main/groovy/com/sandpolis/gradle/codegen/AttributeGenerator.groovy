@@ -43,28 +43,30 @@ class AttributeGenerator extends DefaultTask {
 	void action () {
 
 		// Parse the attribute file
-		def root = new JsonSlurper().parse(getProject().file("attribute.json"), 'UTF-8')
+		def root = new JsonSlurper().parse(project.file("attribute.json"), 'UTF-8')
 
 		if (root.collections != null) {
 			for (def collection : root.collections) {
 				def ak = TypeSpec.classBuilder("AK_" + collection.name.toUpperCase()).addModifiers(PUBLIC, FINAL)
+					.addAnnotation(ClassName.bestGuess("com.sandpolis.core.profile.AttributeStore.Collection"))
 
 				processCollection(ak, collection, '')
 
 				JavaFile.builder(project.name, ak.build())
 					.addFileComment("This file was automatically generated. Do not edit!")
-					.skipJavaLangImports(true).build().writeTo(getProject().file("gen/main/java"));
+					.skipJavaLangImports(true).build().writeTo(project.file("gen/main/java"));
 			}
 		}
 		if (root.documents != null) {
 			for (def document : root.documents) {
 				def ak = TypeSpec.classBuilder("AK_" + document.name.toUpperCase()).addModifiers(PUBLIC, FINAL)
+					.addAnnotation(ClassName.bestGuess("com.sandpolis.core.profile.AttributeStore.Document"))
 
 				processDocument(ak, document, '')
 
 				JavaFile.builder(project.name, ak.build())
 					.addFileComment("This file was automatically generated. Do not edit!")
-					.skipJavaLangImports(true).build().writeTo(getProject().file("gen/main/java"));
+					.skipJavaLangImports(true).build().writeTo(project.file("gen/main/java"));
 			}
 		}
 		if (root.attributes != null) {
@@ -77,6 +79,7 @@ class AttributeGenerator extends DefaultTask {
 		if (collection.collections != null) {
 			for (def subcollection : collection.collections) {
 				def nested = TypeSpec.classBuilder(subcollection.name.toUpperCase()).addModifiers(PUBLIC, FINAL, STATIC)
+					.addAnnotation(ClassName.bestGuess("com.sandpolis.core.profile.AttributeStore.Collection"))
 				processCollection(nested, subcollection, "$parent/${collection.name}/_")
 				ak.addType(nested.build())
 			}
@@ -84,6 +87,7 @@ class AttributeGenerator extends DefaultTask {
 		if (collection.documents != null) {
 			for (def document : collection.documents) {
 				def nested = TypeSpec.classBuilder(document.name.toUpperCase()).addModifiers(PUBLIC, FINAL, STATIC)
+					.addAnnotation(ClassName.bestGuess("com.sandpolis.core.profile.AttributeStore.Document"))
 				processDocument(nested, document, "$parent/${collection.name}/_")
 				ak.addType(nested.build())
 			}
@@ -99,12 +103,18 @@ class AttributeGenerator extends DefaultTask {
 
 		if (document.collections != null) {
 			for (def collection : document.collections) {
-				processCollection(ak, collection, "$parent/${document.name}")
+				def nested = TypeSpec.classBuilder(collection.name.toUpperCase()).addModifiers(PUBLIC, FINAL, STATIC)
+					.addAnnotation(ClassName.bestGuess("com.sandpolis.core.profile.AttributeStore.Collection"))
+				processCollection(nested, collection, "$parent/${document.name}")
+				ak.addType(nested.build())
 			}
 		}
 		if (document.documents != null) {
 			for (def subdocument : document.documents) {
-				processDocument(ak, subdocument, "$parent/${document.name}")
+				def nested = TypeSpec.classBuilder(subdocument.name.toUpperCase()).addModifiers(PUBLIC, FINAL, STATIC)
+					.addAnnotation(ClassName.bestGuess("com.sandpolis.core.profile.AttributeStore.Document"))
+				processDocument(nested, subdocument, "$parent/${document.name}")
+				ak.addType(nested.build())
 			}
 		}
 		if (document.attributes != null) {

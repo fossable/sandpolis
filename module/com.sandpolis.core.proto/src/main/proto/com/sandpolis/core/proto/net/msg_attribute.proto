@@ -19,5 +19,24 @@ syntax = "proto3";
 
 package net;
 
+import "com/sandpolis/core/proto/pojo/attribute.proto";
+
 option java_package = "com.sandpolis.core.proto.net";
 option optimize_for = CODE_SIZE;
+
+message RQ_AttributeQuery {
+	repeated string path = 1;
+}
+
+message RS_AttributeQuery {
+	pojo.ProtoProfile result = 1;
+}
+
+message RQ_AttributeStream {
+	repeated string path = 1;
+	int32 update_period = 2;
+}
+
+message EV_AttributeStream {
+	pojo.ProtoProfile update = 1;
+}
