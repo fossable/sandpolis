@@ -499,9 +499,9 @@
                                 <color key="textColor" red="1" green="0.41132126070000002" blue="0.41905388580000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Cgf-ve-lTl">
-                                <rect key="frame" x="97.5" y="400" width="219" height="30"/>
-                                <state key="normal" title="Don't have your own server yet?"/>
+                            <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Cgf-ve-lTl">
+                                <rect key="frame" x="119.5" y="400" width="175" height="30"/>
+                                <state key="normal" title="Need a Sandpolis server?"/>
                                 <connections>
                                     <action selector="cloudButtonPressed:" destination="uYO-SL-qbN" eventType="touchUpInside" id="MIe-nD-6Ab"/>
                                 </connections>
@@ -1316,24 +1316,35 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="uNF-ek-aaA">
-                                <rect key="frame" x="87" y="357" width="240" height="128"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="uNF-ek-aaA">
+                                <rect key="frame" x="0.0" y="103" width="414" height="599"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                 <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" smartDashesType="no" smartInsertDeleteType="no" smartQuotesType="no"/>
                             </textView>
-                            <segmentedControl opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="YsL-Yf-Lqm">
-                                <rect key="frame" x="142" y="78" width="131" height="31"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" translatesAutoresizingMaskIntoConstraints="NO" id="YsL-Yf-Lqm">
+                                <rect key="frame" x="31.5" y="64" width="351" height="32"/>
                                 <segments>
-                                    <segment title="First"/>
-                                    <segment title="Second"/>
+                                    <segment title="PowerShell" enabled="NO"/>
+                                    <segment title="Cmd.exe" enabled="NO"/>
+                                    <segment title="Bash" enabled="NO"/>
+                                    <segment title="Tcsh" enabled="NO"/>
                                 </segments>
+                                <connections>
+                                    <action selector="onShellChanged:" destination="aQS-8w-Dow" eventType="valueChanged" id="ieY-MS-Qn5"/>
+                                </connections>
                             </segmentedControl>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="uNF-ek-aaA" firstAttribute="top" secondItem="YsL-Yf-Lqm" secondAttribute="bottom" constant="8" id="9Ec-0k-1Ww"/>
+                            <constraint firstItem="Jbv-Il-y4N" firstAttribute="trailing" secondItem="uNF-ek-aaA" secondAttribute="trailing" id="I49-2z-Y0E"/>
+                            <constraint firstItem="uNF-ek-aaA" firstAttribute="leading" secondItem="Jbv-Il-y4N" secondAttribute="leading" id="K33-xF-yEK"/>
+                            <constraint firstItem="Jbv-Il-y4N" firstAttribute="bottom" secondItem="uNF-ek-aaA" secondAttribute="bottom" constant="8" id="PIy-pa-E6t"/>
+                            <constraint firstItem="YsL-Yf-Lqm" firstAttribute="top" secondItem="Jbv-Il-y4N" secondAttribute="top" constant="8" id="e5Y-ch-oaX"/>
+                            <constraint firstItem="YsL-Yf-Lqm" firstAttribute="centerX" secondItem="hdO-Rd-9b2" secondAttribute="centerX" id="r03-3h-MPz"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="Jbv-Il-y4N"/>
                     </view>
                     <tabBarItem key="tabBarItem" title="Shell" image="tab/macro" selectedImage="tab/macro_selected" id="gLq-I3-Jea"/>
@@ -1507,7 +1518,7 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="Ppg-pd-hr8"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Remote Desktop" image="tab/desktop" selectedImage="tab/desktop_selected" id="nkV-Ro-lsd"/>
+                    <tabBarItem key="tabBarItem" enabled="NO" title="Remote Desktop" image="tab/desktop" selectedImage="tab/desktop_selected" id="nkV-Ro-lsd"/>
                     <connections>
                         <outlet property="imageView" destination="m0t-kA-ZO6" id="wH9-u8-VPa"/>
                     </connections>

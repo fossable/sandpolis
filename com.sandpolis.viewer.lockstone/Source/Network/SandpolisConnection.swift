@@ -161,6 +161,13 @@ public class SandpolisConnection {
 		_ = channel.writeAndFlush(rq)
 		return p.futureResult
 	}
+	
+	/// A non-blocking method that sends an event.
+	///
+	/// - Parameter rq: The event message
+	func send(_ ev: inout Net_MSG) {
+		_ = channel.writeAndFlush(ev)
+	}
 
 	/// Login to the connected server.
 	///
@@ -249,6 +256,24 @@ public class SandpolisConnection {
 		os_log("Requesting remote shell session for client: %d", target)
 		_ = request(&rq)
 		return stream
+	}
+	
+	/// Request the compatible shells on the given client.
+	///
+	/// - Parameter target: The target client's CVID
+	/// - Returns: A response future
+	func shell_list(_ target: Int32) -> EventLoopFuture<Net_ShellMSG> {
+		var rq = Net_MSG.with {
+			$0.to = target
+			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
+				$0.rqListShells = Net_RQ_ListShells()
+			}, typePrefix: "com.sandpolis.plugin.shell")
+		}
+
+		os_log("Requesting shell list for client: %d", target)
+		return request(&rq).map { rs in
+			return try! Net_ShellMSG.init(unpackingAny: rs.plugin)
+		}
 	}
 	
 	/// Request to shutdown the given client.
@@ -358,6 +383,27 @@ public class SandpolisConnection {
 		os_log("Requesting macro execution for client: %d, script: %s", target, script)
 		return request(&rq).map { rs in
 			return try! Net_ShellMSG.init(unpackingAny: rs.plugin)
+		}
+	}
+
+	/// Login to the connected server.
+	///
+	/// - Parameters:
+	///   - target: The target profile
+	///   - attribute: The attribute to query
+	/// - Returns: A response future
+	func query(_ target: SandpolisProfile, _ attribute: String) -> EventLoopFuture<Net_MSG> {
+		var rq = Net_MSG.with {
+			$0.to = target.cvid
+			$0.rqAttributeQuery = Net_RQ_AttributeQuery.with {
+				$0.path = [attribute]
+			}
+		}
+
+		os_log("Requesting attribute: %s", attribute)
+		return request(&rq).map { rs in
+			target.merge(rs.rsAttributeQuery.result)
+			return rs
 		}
 	}
 
