@@ -126,7 +126,6 @@ public final class Server {
 		register(Server.loadPlugins);
 		register(Server.installDebugClient);
 		register(Server.loadListeners);
-		register(Server.post);
 
 		register(Server.shutdown);
 	}
@@ -229,7 +228,7 @@ public final class Server {
 					// Set additional options
 					.setProperty("hibernate.connection.shutdown", "true")
 					.setProperty("hibernate.globally_quoted_identifiers", "true")
-					.setProperty("hibernate.hbm2ddl.auto", "create");
+					.setProperty("hibernate.hbm2ddl.auto", "update");
 
 			List.of(Database.class, Listener.class, Group.class, User.class, Profile.class, Document.class,
 					Collection.class, Attribute.class, StringAttribute.class, IntegerAttribute.class,
@@ -343,14 +342,6 @@ public final class Server {
 				.build()).generate();
 
 		return task.success();
-	});
-
-	/**
-	 * Perform a self-test.
-	 */
-	@InitializationTask(name = "Power-on self test", debug = true)
-	public static final Task post = new Task((task) -> {
-		return task.complete(Post.smokeTest());
 	});
 
 	private Server() {
