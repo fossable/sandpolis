@@ -16,12 +16,12 @@ matrix:
       script:
         - ./gradlew test --console=plain
 
-    #allow_failures:
-    #- language: swift
-    #  name: Lockstone iOS
-    #  os: osx
-    #  osx_image: xcode10.3
-    #  script:
-    #    - ./gradlew :com.sandpolis.viewer.lockstone:build -PLOCKSTONE=true --console=plain
-    #  cache:
-    #    cocoapods: true
+    - language: swift
+      name: Lockstone iOS
+      os: osx
+      osx_image: xcode11.2
+      script:
+        - ./gradlew :com.sandpolis.viewer.lockstone:build -PLOCKSTONE=true --console=plain
+      podfile: com.sandpolis.viewer.lockstone/Podfile
+      cache:
+        cocoapods: true
