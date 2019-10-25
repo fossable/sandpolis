@@ -69,12 +69,13 @@ public final class DesktopExe extends Exelet {
 		// Stream stream = new Stream();
 
 		context.defer(() -> {
-			JavaDesktopSource source = new JavaDesktopSource();
-			source.addOutbound(new OutboundStreamAdapter<EV_DesktopStream>(rq.getId(), context.connector,
+			var source = new JavaDesktopSource();
+			var outbound = new OutboundStreamAdapter<EV_DesktopStream>(rq.getId(), context.connector,
 					context.request.getFrom(), ev -> {
 						return Any.pack(DesktopMSG.newBuilder().setEvDesktopStream(ev).build(),
 								"com.sandpolis.plugin.desktop");
-					}));
+					});
+			StreamStore.add(source, outbound);
 			source.start();
 		});
 

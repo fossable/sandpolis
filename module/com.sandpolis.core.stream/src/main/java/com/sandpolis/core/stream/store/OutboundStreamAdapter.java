@@ -18,6 +18,7 @@
 package com.sandpolis.core.stream.store;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
 
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
@@ -67,13 +68,13 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 
 	@Override
 	public void onError(Throwable throwable) {
-		StreamStore.outbound.remove(this);
+		StreamStore.stop(id);
 		throwable.printStackTrace();
 	}
 
 	@Override
 	public void onComplete() {
-		StreamStore.outbound.remove(this);
+		StreamStore.stop(id);
 	}
 
 	@Override

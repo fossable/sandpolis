@@ -17,8 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.core.stream.store;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import java.util.concurrent.SubmissionPublisher;
 
 import com.google.protobuf.MessageOrBuilder;
@@ -47,15 +45,4 @@ public abstract class StreamSource<E extends MessageOrBuilder> extends Submissio
 	 */
 	public abstract void start();
 
-	public void addOutbound(OutboundStreamAdapter<E> out) {
-		checkArgument(!isSubscribed(out));
-		subscribe(out);
-		StreamStore.outbound.add(out);
-	}
-
-	public void addSink(StreamSink<E> s) {
-		checkArgument(!isSubscribed(s));
-		subscribe(s);
-		StreamStore.sink.add(s);
-	}
 }

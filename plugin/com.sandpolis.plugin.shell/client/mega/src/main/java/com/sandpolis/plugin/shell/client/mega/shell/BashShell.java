@@ -28,7 +28,7 @@ public class BashShell extends AbstractShell {
 
 	@Override
 	public String[] buildSession() {
-		return new String[] { location };
+		return new String[] { location, "-i" };
 	}
 
 	@Override

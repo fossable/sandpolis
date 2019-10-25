@@ -62,6 +62,7 @@ public class ShellStreamSource extends StreamSource<EV_ShellStream> {
 
 	@Override
 	public void start() {
+		thread.setDaemon(true);
 		thread.start();
 	}
 }

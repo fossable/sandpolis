@@ -20,7 +20,6 @@ dependencies {
 
 	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':module:com.sandpolis.core.net')
-	implementation project(':module:com.sandpolis.core.profile')
 	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':module:com.sandpolis.core.util')
 

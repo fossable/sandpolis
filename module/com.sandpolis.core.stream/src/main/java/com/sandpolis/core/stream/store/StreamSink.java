@@ -17,6 +17,8 @@
  ******************************************************************************/
 package com.sandpolis.core.stream.store;
 
+import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
+
 import java.util.List;
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
@@ -50,13 +52,13 @@ public abstract class StreamSink<E> implements Subscriber<E>, StreamEndpoint {
 
 	@Override
 	public void onError(Throwable throwable) {
-		StreamStore.sink.remove(this);
+		StreamStore.stop(id);
 		throwable.printStackTrace();
 	}
 
 	@Override
 	public void onComplete() {
-		StreamStore.sink.remove(this);
+		StreamStore.stop(id);
 	}
 
 	public void close() {

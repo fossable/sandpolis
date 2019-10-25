@@ -18,6 +18,7 @@
 package com.sandpolis.plugin.shell.client.mega.exe;
 
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
+import static com.sandpolis.core.instance.util.ProtoUtil.failure;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
 import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
 
@@ -25,7 +26,7 @@ import java.io.InputStreamReader;
 
 import com.google.common.io.CharStreams;
 import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
@@ -146,37 +147,64 @@ public final class ShellExe extends Exelet {
 	public static MessageOrBuilder rq_shell_stream(ExeletContext context, RQ_ShellStream rq) throws Exception {
 		var outcome = begin();
 
-		Process session = null;
+		ProcessBuilder session = null;
 		switch (rq.getType()) {
 		case BASH:
-			if (Shells.BASH.getLocation() != null) {
-				session = Runtime.getRuntime().exec(Shells.BASH.buildSession());
-			}
+			if (Shells.BASH.getLocation() != null)
+				session = new ProcessBuilder(Shells.BASH.buildSession());
+			else
+				return failure(outcome);
 			break;
 		case CMD:
+			if (Shells.CMD.getLocation() != null)
+				session = new ProcessBuilder(Shells.CMD.buildSession());
+			else
+				return failure(outcome);
 			break;
 		case PWSH:
+			if (Shells.PWSH.getLocation() != null)
+				session = new ProcessBuilder(Shells.PWSH.buildSession());
+			else
+				return failure(outcome);
 			break;
 		default:
-			break;
+			return failure(outcome);
 		}
 
-		ShellStreamSource source = new ShellStreamSource(session);
-		ShellStreamSink sink = new ShellStreamSink(session);
+		session.redirectErrorStream();
 
-		var inbound = new InboundStreamAdapter<EV_ShellStream>(rq.getId(), context.connector);
+		// Set default environment
+		session.environment().put("TERM", "st-256color");
+
+		// Override environment
+		for (var entry : rq.getEnvironmentMap().entrySet()) {
+			session.environment().put(entry.getKey(), entry.getValue());
+		}
+
+		// Launch new process
+		var process = session.start();
+
+		var source = new ShellStreamSource(process);
+		var sink = new ShellStreamSink(process);
+
+		var inbound = new InboundStreamAdapter<EV_ShellStream>(rq.getId(), context.connector, ev -> {
+			try {
+				return ev.getPlugin().unpack(ShellMSG.class).getEvShellStream();
+			} catch (InvalidProtocolBufferException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+		});
 		var outbound = new OutboundStreamAdapter<EV_ShellStream>(rq.getId(), context.connector,
 				context.request.getFrom(), ev -> {
 					return Any.pack(ShellMSG.newBuilder().setEvShellStream(ev).build(), "com.sandpolis.plugin.shell");
 				});
 
-		inbound.addSink(sink);
-		source.addOutbound(outbound);
+		StreamStore.add(inbound, sink);
+		StreamStore.add(source, outbound);
 		source.start();
 
-		context.defer(() -> {
-			sink.onNext(EV_ShellStream.newBuilder().setData(ByteString.copyFrom("whoami\n".getBytes())).build());
-		});
 		return success(outcome);
 	}
 

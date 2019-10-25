@@ -48,7 +48,7 @@ public final class StreamExe extends Exelet {
 
 		context.defer(() -> {
 			ProfileStreamSource source = new ProfileStreamSource();// TODO get from store
-			source.addOutbound(new OutboundStreamAdapter<EV_ProfileStream>(rq.getId(), context.connector));
+			StreamStore.add(source, new OutboundStreamAdapter<EV_ProfileStream>(rq.getId(), context.connector));
 			source.start();
 		});
 

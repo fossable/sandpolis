@@ -17,10 +17,10 @@
  ******************************************************************************/
 package com.sandpolis.core.stream.store;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -29,14 +29,34 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
 import com.sandpolis.core.stream.store.StreamStore.StreamStoreConfig;
 
 /**
- * There are four "banks" that each serve a specific purpose.
+ * The {@link StreamStore} contains four "banks" of stream endpoints that each
+ * serve a specific purpose.
+ * <ul>
+ * <li>INBOUND</li> Receives and unwraps events from the network and routes them
+ * into the OUTBOUND or SINK banks.
+ * <li>OUTBOUND</li> Receives events from the INBOUND or SOURCE banks and routes
+ * them into the network.
+ * <li>SOURCE</li> Streams in this bank produce events and routes them into the
+ * OUTBOUND or SINK banks.
+ * <li>SINK</li> Streams in this bank consume events from the INBOUND or SOURCE
+ * banks.
+ * </ul>
  *
+ * <p>
+ * This architecture elegantly supports multicast streams. For example, an
+ * endpoint in the INBOUND bank can easily and efficiently route incoming
+ * messages from one connection to multiple outgoing connections and vice-versa.
+ *
+ * <p>
+ * The graphic below illustrates a multicast stream A and a unicast stream B.
+ * 
  * <pre>
  * IN     OUT    SRC    SINK
  * [A]    [B]    [B]    [A]
@@ -49,6 +69,7 @@ import com.sandpolis.core.stream.store.StreamStore.StreamStoreConfig;
  * @author cilki
  * @since 5.0.2
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public final class StreamStore extends StoreBase<StreamStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(StreamStore.class);
@@ -60,147 +81,119 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 	/**
 	 * The SOURCE bank.
 	 */
-	static List<StreamSource<?>> source;
+	private List<StreamSource> source;
 
 	/**
 	 * The SINK bank.
 	 */
-	static List<StreamSink<?>> sink;
+	private List<StreamSink> sink;
 
 	/**
 	 * The INBOUND bank.
 	 */
-	static List<InboundStreamAdapter<Message>> inbound;
+	private List<InboundStreamAdapter> inbound;
 
 	/**
 	 * The OUTBOUND bank.
 	 */
-	static List<OutboundStreamAdapter<?>> outbound;
+	private List<OutboundStreamAdapter> outbound;
 
-	public void streamData(int id, Message data) {
-		for (var adapter : inbound) {
-			if (adapter.getStreamID() == id) {
-				adapter.submit(data);
-				break;
-			}
-		}
+	public synchronized <E extends MessageOrBuilder> void add(InboundStreamAdapter<E> in,
+			OutboundStreamAdapter<E> out) {
+		checkArgument(!in.isSubscribed(out));
+		in.subscribe(out);
+
+		this.inbound.add(in);
+		this.outbound.add(out);
 	}
 
-	public void stop(int streamID) {
-		iterateInbound(it -> {
-			while (it.hasNext()) {
-				var adapter = it.next();
-				if (adapter.getStreamID() == streamID) {
-					it.remove();
-					adapter.close();
-					break;
-				}
-			}
+	public synchronized <E extends MessageOrBuilder> void add(InboundStreamAdapter<E> in, StreamSink<E> sink) {
+		checkArgument(!in.isSubscribed(sink));
+		in.subscribe(sink);
+
+		this.inbound.add(in);
+		this.sink.add(sink);
+	}
+
+	public synchronized <E extends MessageOrBuilder> void add(StreamSource<E> source, OutboundStreamAdapter<E> out) {
+		checkArgument(!source.isSubscribed(out));
+		source.subscribe(out);
+
+		this.source.add(source);
+		this.outbound.add(out);
+	}
+
+	public synchronized <E extends MessageOrBuilder> void add(StreamSource<E> source, StreamSink<E> sink) {
+		checkArgument(!source.isSubscribed(sink));
+		source.subscribe(sink);
+
+		this.source.add(source);
+		this.sink.add(sink);
+	}
+
+	public synchronized void streamData(int id, Message data) {
+		inbound.stream().filter(adapter -> adapter.getStreamID() == id).findFirst().ifPresent(adapter -> {
+			adapter.submit(data);
 		});
-		iterateOutbound(it -> {
-			while (it.hasNext()) {
-				var adapter = it.next();
-				if (adapter.getStreamID() == streamID) {
-					it.remove();
-					// adapter.close();
-					break;
-				}
+	}
+
+	/**
+	 * Immediately halt a stream by its ID. Other streams may also be stopped as a
+	 * result of stopping the target stream.
+	 * 
+	 * @param id The stream ID
+	 */
+	public synchronized void stop(int id) {
+		inbound.removeIf(adapter -> {
+			if (adapter.getStreamID() == id) {
+				adapter.close();
+				return true;
 			}
+			return false;
 		});
-		iterateSource(it -> {
-			while (it.hasNext()) {
-				var source = it.next();
-				if (source.getStreamID() == streamID) {
-					it.remove();
-					source.close();
-					break;
-				}
+		outbound.removeIf(adapter -> {
+			if (adapter.getStreamID() == id) {
+//				adapter.close();
+				return true;
 			}
+			return false;
 		});
-		iterateSink(it -> {
-			while (it.hasNext()) {
-				var sink = it.next();
-				if (sink.getStreamID() == streamID) {
-					it.remove();
-					sink.close();
-					break;
-				}
+		source.removeIf(source -> {
+			if (source.getStreamID() == id) {
+				source.close();
+				return true;
 			}
+			return false;
+		});
+		sink.removeIf(sink -> {
+			if (sink.getStreamID() == id) {
+				sink.close();
+				return true;
+			}
+			return false;
 		});
 
 		// TODO find dependent streams to also close
 	}
 
-	private static void iterateSource(Consumer<Iterator<StreamSource<?>>> mutator) {
-		synchronized (source) {
-			synchronized (sink) {
-				synchronized (inbound) {
-					synchronized (outbound) {
-						mutator.accept(source.iterator());
-					}
-				}
-			}
-		}
-	}
-
-	private static void iterateSink(Consumer<Iterator<StreamSink<?>>> mutator) {
-		synchronized (source) {
-			synchronized (sink) {
-				synchronized (inbound) {
-					synchronized (outbound) {
-						mutator.accept(sink.iterator());
-					}
-				}
-			}
-		}
-	}
-
-	private static void iterateInbound(Consumer<Iterator<InboundStreamAdapter<Message>>> mutator) {
-		synchronized (source) {
-			synchronized (sink) {
-				synchronized (inbound) {
-					synchronized (outbound) {
-						mutator.accept(inbound.iterator());
-					}
-				}
-			}
-		}
-	}
-
-	private static void iterateOutbound(Consumer<Iterator<OutboundStreamAdapter<?>>> mutator) {
-		synchronized (source) {
-			synchronized (sink) {
-				synchronized (inbound) {
-					synchronized (outbound) {
-						mutator.accept(outbound.iterator());
-					}
-				}
-			}
-		}
-	}
-
 	@Subscribe
-	private void onSockLost(SockLostEvent event) {
-		iterateInbound(it -> {
-			while (it.hasNext()) {
-				var adapter = it.next();
-				if (adapter.getSock().equals(event.get())) {
-					it.remove();
-					adapter.close();
-					break;
-				}
+	private synchronized void onSockLost(SockLostEvent event) {
+		inbound.removeIf(adapter -> {
+			if (adapter.getSock().equals(event.get())) {
+				adapter.close();
+				return true;
 			}
+			return false;
 		});
-		iterateOutbound(it -> {
-			while (it.hasNext()) {
-				var adapter = it.next();
-				if (adapter.getSock().equals(event.get())) {
-					it.remove();
-					// adapter.close();
-					break;
-				}
+		outbound.removeIf(adapter -> {
+			if (adapter.getSock().equals(event.get())) {
+//				adapter.close();
+				return true;
 			}
+			return false;
 		});
+
+		// TODO find dependent streams to also close
 	}
 
 	@Override

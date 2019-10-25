@@ -17,18 +17,20 @@
  ******************************************************************************/
 package com.sandpolis.core.stream.store;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.SubmissionPublisher;
+import java.util.function.Function;
 
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.proto.net.Message.MSG;
 
 public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E> implements StreamEndpoint {
 
 	private int id;
 	private Sock sock;
+	private Function<MSG, E> converter;
 
 	@Override
 	public int getStreamID() {
@@ -39,20 +41,13 @@ public class InboundStreamAdapter<E extends MessageOrBuilder> extends Submission
 		return sock;
 	}
 
-	public InboundStreamAdapter(int streamID, Sock sock) {
+	public InboundStreamAdapter(int streamID, Sock sock, Function<MSG, E> converter) {
 		this.id = streamID;
 		this.sock = checkNotNull(sock);
+		this.converter = converter;
 	}
 
-	public void addOutbound(OutboundStreamAdapter<E> out) {
-		checkArgument(!isSubscribed(out));
-		subscribe(out);
-		StreamStore.outbound.add(out);
-	}
-
-	public void addSink(StreamSink<E> s) {
-		checkArgument(!isSubscribed(s));
-		subscribe(s);
-		StreamStore.sink.add(s);
+	public int submit(MSG item) {
+		return super.submit(converter.apply(item));
 	}
 }
