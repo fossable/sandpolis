@@ -16,20 +16,19 @@
 //                                                                            //
 //****************************************************************************//
 import UIKit
-import SwiftProtobuf
 
-class ShellSession: UIViewController, UITextViewDelegate {
+class ShellSession: UIViewController {
 
 	@IBOutlet weak var shellSelector: UISegmentedControl!
-	@IBOutlet weak var textView: UITextView!
-	
+
+	private var terminal: TerminalViewController!
+
 	var profile: SandpolisProfile!
-	
+
 	private var stream: SandpolisStream!
-	
+
 	override func viewDidLoad() {
-		textView.delegate = self
-		
+
 		// Find compatible shells
 		SandpolisUtil.connection.shell_list(profile.cvid).whenSuccess { rs in
 			DispatchQueue.main.async {
@@ -48,12 +47,13 @@ class ShellSession: UIViewController, UITextViewDelegate {
 			}
 		}
 	}
-	
+
 	@IBAction func onShellChanged(_ sender: Any) {
 		if stream != nil {
 			stream.close()
 		}
-		
+		terminal.clear()
+
 		switch shellSelector.selectedSegmentIndex {
 		case 0:
 			stream = SandpolisUtil.connection.shell_session(profile.cvid, self, Net_Shell.pwsh)
@@ -64,32 +64,19 @@ class ShellSession: UIViewController, UITextViewDelegate {
 		default:
 			break
 		}
+		terminal.stream = stream
 	}
 
 	public func onEvent(_ ev: Net_EV_ShellStream) {
 		DispatchQueue.main.async {
-			self.textView.text = (self.textView.text ?? "") + String(decoding: ev.data, as: UTF8.self)
+			self.terminal.write(ev.data)
 		}
 	}
-	
-	func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-		
-		var ev = Net_MSG.with {
-			$0.id = stream.id
-			$0.to = profile.cvid
-			$0.from = stream.connection.cvid
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.evShellStream = Net_EV_ShellStream.with {
-					if text == "'" {
-						$0.data = "\n".data(using: .utf8)! // TEMPORARY!!!
-					} else {
-						$0.data = text.data(using: .utf8)!
-					}
-				}
-			}, typePrefix: "com.sandpolis.plugin.shell")
+
+	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+		if segue.identifier == "ShellEmbed" {
+			terminal = segue.destination as? TerminalViewController
+			terminal.profile = profile
 		}
-		stream.connection.send(&ev)
-		
-		return false
 	}
 }

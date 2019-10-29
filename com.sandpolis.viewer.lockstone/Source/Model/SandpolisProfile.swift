@@ -31,7 +31,7 @@ class SandpolisProfile {
 
 	/// The client's OS type
 	var platform: Util_OsType
-	
+
 	/// The client's hostname
 	var hostname: String?
 

@@ -24,7 +24,7 @@ class ServerCell: UITableViewCell {
 	@IBOutlet weak var statusLabel: UILabel!
 	@IBOutlet weak var locationIcon: UIImageView!
 	@IBOutlet weak var progress: UIActivityIndicatorView!
-	
+
 	func setContent(_ server: SandpolisServer) {
 		addressLabel.text = server.address
 		nameLabel.text = server.name

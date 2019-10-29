@@ -35,13 +35,20 @@
 		AA69CCA122DE85CC00DFD721 /* MacroResultHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA69CCA022DE85CC00DFD721 /* MacroResultHeader.swift */; };
 		AA69CCA522DE8F2700DFD721 /* MacroResultHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = AA69CCA422DE8F2700DFD721 /* MacroResultHeader.xib */; };
 		AA69CCA722DE9E0000DFD721 /* MacroSelect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA69CCA622DE9E0000DFD721 /* MacroSelect.swift */; };
+		AA69CF84236284C4008101AA /* terminal.html in Resources */ = {isa = PBXBuildFile; fileRef = AA69CF83236284C4008101AA /* terminal.html */; };
+		AA69CF88236284E1008101AA /* xterm.js in Resources */ = {isa = PBXBuildFile; fileRef = AA69CF85236284E0008101AA /* xterm.js */; };
+		AA69CF89236284E1008101AA /* xterm.css in Resources */ = {isa = PBXBuildFile; fileRef = AA69CF86236284E0008101AA /* xterm.css */; };
+		AA69CF8A236284E1008101AA /* fit.js in Resources */ = {isa = PBXBuildFile; fileRef = AA69CF87236284E0008101AA /* fit.js */; };
+		AA69CFAC2362A325008101AA /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA69CF9E2362A325008101AA /* TerminalTheme.swift */; };
+		AA69CFAD2362A325008101AA /* Ubuntu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA69CF9F2362A325008101AA /* Ubuntu.swift */; };
+		AA6A75B8236154BB00AA1A4D /* Terminal.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6A75B7236154BB00AA1A4D /* Terminal.swift */; };
+		AA6A75BA236156F700AA1A4D /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6A75B9236156F700AA1A4D /* TerminalView.swift */; };
 		AA6CACE822DD26F600041AF3 /* OverviewTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACE722DD26F600041AF3 /* OverviewTable.swift */; };
 		AA6CACEB22DD34A900041AF3 /* FormatUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACEA22DD34A900041AF3 /* FormatUtil.swift */; };
 		AA6CACED22DD432000041AF3 /* GroupPanelTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACEC22DD432000041AF3 /* GroupPanelTable.swift */; };
 		AA6CACEF22DD445000041AF3 /* GroupPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACEE22DD445000041AF3 /* GroupPanel.swift */; };
 		AA6CACF122DD48D300041AF3 /* GroupHostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACF022DD48D300041AF3 /* GroupHostCell.swift */; };
 		AA6CACFC22DD658C00041AF3 /* MacroResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACFB22DD658C00041AF3 /* MacroResults.swift */; };
-		AA6CACFF22DD78FC00041AF3 /* MacroResultCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACFE22DD78FC00041AF3 /* MacroResultCell.swift */; };
 		AA6E007222F73C1400BB51ED /* Login.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6E007122F73C1400BB51ED /* Login.swift */; };
 		AA70158422D7C93900A1E4ED /* SandpolisProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70158322D7C93900A1E4ED /* SandpolisProfile.swift */; };
 		AA70158622D7C98D00A1E4ED /* SandpolisServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70158522D7C98D00A1E4ED /* SandpolisServer.swift */; };
@@ -50,6 +57,8 @@
 		AA70FD1E22BEF326006A4C6F /* ByteBuffer+varint.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70FD1B22BEF326006A4C6F /* ByteBuffer+varint.swift */; };
 		AA70FD1F22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70FD1C22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift */; };
 		AA72362B22D42F27004EE888 /* Overview.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA72362A22D42F27004EE888 /* Overview.swift */; };
+		AA72E0D62367D07600C23D39 /* MacroCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA72E0D52367D07600C23D39 /* MacroCell.swift */; };
+		AA72E0D82367D22F00C23D39 /* MacroResultCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA72E0D72367D22E00C23D39 /* MacroResultCell.swift */; };
 		AA752B4622F2340100E90B54 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA752B4522F2340100E90B54 /* BackgroundView.swift */; };
 		AA75D6DC2316DBCB002152DA /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA75D6DB2316DBCB002152DA /* StoreKit.framework */; };
 		AA766B0622C944530053777B /* FileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA766B0522C944530053777B /* FileManager.swift */; };
@@ -58,7 +67,6 @@
 		AA81DD5D22BD8C5400024120 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA81DD5C22BD8C5400024120 /* Assets.xcassets */; };
 		AA81DD6022BD8C5400024120 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA81DD5E22BD8C5400024120 /* LaunchScreen.storyboard */; };
 		AA86F6DE23497866000C0B94 /* Step4.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA86F6DD23497866000C0B94 /* Step4.swift */; };
-		AA87A5B722DB78B3007A702E /* MacroCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA87A5B622DB78B3007A702E /* MacroCell.swift */; };
 		AA899D2E2319E6A000E7C703 /* ServerCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA899D2D2319E6A000E7C703 /* ServerCreator.swift */; };
 		AA899D30231A065000E7C703 /* Step1.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA899D2F231A065000E7C703 /* Step1.swift */; };
 		AA899D32231A066500E7C703 /* Step2.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA899D31231A066500E7C703 /* Step2.swift */; };
@@ -148,13 +156,20 @@
 		AA69CCA022DE85CC00DFD721 /* MacroResultHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroResultHeader.swift; sourceTree = "<group>"; };
 		AA69CCA422DE8F2700DFD721 /* MacroResultHeader.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MacroResultHeader.xib; sourceTree = "<group>"; };
 		AA69CCA622DE9E0000DFD721 /* MacroSelect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroSelect.swift; sourceTree = "<group>"; };
+		AA69CF83236284C4008101AA /* terminal.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = terminal.html; sourceTree = "<group>"; };
+		AA69CF85236284E0008101AA /* xterm.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = xterm.js; sourceTree = "<group>"; };
+		AA69CF86236284E0008101AA /* xterm.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; path = xterm.css; sourceTree = "<group>"; };
+		AA69CF87236284E0008101AA /* fit.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = fit.js; sourceTree = "<group>"; };
+		AA69CF9E2362A325008101AA /* TerminalTheme.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TerminalTheme.swift; sourceTree = "<group>"; };
+		AA69CF9F2362A325008101AA /* Ubuntu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Ubuntu.swift; sourceTree = "<group>"; };
+		AA6A75B7236154BB00AA1A4D /* Terminal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Terminal.swift; sourceTree = "<group>"; };
+		AA6A75B9236156F700AA1A4D /* TerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalView.swift; sourceTree = "<group>"; };
 		AA6CACE722DD26F600041AF3 /* OverviewTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewTable.swift; sourceTree = "<group>"; };
 		AA6CACEA22DD34A900041AF3 /* FormatUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatUtil.swift; sourceTree = "<group>"; };
 		AA6CACEC22DD432000041AF3 /* GroupPanelTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupPanelTable.swift; sourceTree = "<group>"; };
 		AA6CACEE22DD445000041AF3 /* GroupPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupPanel.swift; sourceTree = "<group>"; };
 		AA6CACF022DD48D300041AF3 /* GroupHostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupHostCell.swift; sourceTree = "<group>"; };
 		AA6CACFB22DD658C00041AF3 /* MacroResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroResults.swift; sourceTree = "<group>"; };
-		AA6CACFE22DD78FC00041AF3 /* MacroResultCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MacroResultCell.swift; path = ../../TableCells/MacroResultCell.swift; sourceTree = "<group>"; };
 		AA6E007122F73C1400BB51ED /* Login.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Login.swift; sourceTree = "<group>"; };
 		AA70158322D7C93900A1E4ED /* SandpolisProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisProfile.swift; sourceTree = "<group>"; };
 		AA70158522D7C98D00A1E4ED /* SandpolisServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisServer.swift; sourceTree = "<group>"; };
@@ -163,6 +178,8 @@
 		AA70FD1B22BEF326006A4C6F /* ByteBuffer+varint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ByteBuffer+varint.swift"; sourceTree = "<group>"; };
 		AA70FD1C22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProtobufVarintFrameCodecs.swift; sourceTree = "<group>"; };
 		AA72362A22D42F27004EE888 /* Overview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Overview.swift; sourceTree = "<group>"; };
+		AA72E0D52367D07600C23D39 /* MacroCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MacroCell.swift; sourceTree = "<group>"; };
+		AA72E0D72367D22E00C23D39 /* MacroResultCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MacroResultCell.swift; sourceTree = "<group>"; };
 		AA752B4522F2340100E90B54 /* BackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView.swift; sourceTree = "<group>"; };
 		AA75D6DB2316DBCB002152DA /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		AA766B0522C944530053777B /* FileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManager.swift; sourceTree = "<group>"; };
@@ -173,7 +190,6 @@
 		AA81DD5F22BD8C5400024120 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		AA81DD6122BD8C5400024120 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA86F6DD23497866000C0B94 /* Step4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step4.swift; sourceTree = "<group>"; };
-		AA87A5B622DB78B3007A702E /* MacroCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroCell.swift; sourceTree = "<group>"; };
 		AA899D2D2319E6A000E7C703 /* ServerCreator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerCreator.swift; sourceTree = "<group>"; };
 		AA899D2F231A065000E7C703 /* Step1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step1.swift; sourceTree = "<group>"; };
 		AA899D31231A066500E7C703 /* Step2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step2.swift; sourceTree = "<group>"; };
@@ -366,7 +382,7 @@
 		AA642E3F23088F580027BEC2 /* MacroManager */ = {
 			isa = PBXGroup;
 			children = (
-				AA87A5B622DB78B3007A702E /* MacroCell.swift */,
+				AA72E0D52367D07600C23D39 /* MacroCell.swift */,
 				AA8B1BAE22CB1AC0009DB0EC /* MacroEditor.swift */,
 				AAF113B822CC50C800987EAF /* MacroManager.swift */,
 			);
@@ -385,7 +401,7 @@
 		AA642E42230890C60027BEC2 /* MacroResults */ = {
 			isa = PBXGroup;
 			children = (
-				AA6CACFE22DD78FC00041AF3 /* MacroResultCell.swift */,
+				AA72E0D72367D22E00C23D39 /* MacroResultCell.swift */,
 				AA69CCA022DE85CC00DFD721 /* MacroResultHeader.swift */,
 				AA69CCA422DE8F2700DFD721 /* MacroResultHeader.xib */,
 				AA6CACFB22DD658C00041AF3 /* MacroResults.swift */,
@@ -405,6 +421,27 @@
 				AA61588B23359FF50035622F /* ClientHandler.swift */,
 			);
 			path = Network;
+			sourceTree = "<group>";
+		};
+		AA69CF82236284B0008101AA /* Terminal */ = {
+			isa = PBXGroup;
+			children = (
+				AA72E0D42367CC1100C23D39 /* Xterm */,
+				AA69CF912362A325008101AA /* Themes */,
+				AA69CF83236284C4008101AA /* terminal.html */,
+				AA6A75B9236156F700AA1A4D /* TerminalView.swift */,
+				AA6A75B7236154BB00AA1A4D /* Terminal.swift */,
+			);
+			path = Terminal;
+			sourceTree = "<group>";
+		};
+		AA69CF912362A325008101AA /* Themes */ = {
+			isa = PBXGroup;
+			children = (
+				AA69CF9E2362A325008101AA /* TerminalTheme.swift */,
+				AA69CF9F2362A325008101AA /* Ubuntu.swift */,
+			);
+			path = Themes;
 			sourceTree = "<group>";
 		};
 		AA6CACE922DD348F00041AF3 /* Util */ = {
@@ -438,6 +475,7 @@
 		AA72362922D41AB7004EE888 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				AA69CF82236284B0008101AA /* Terminal */,
 				AA899D2C2319E46E00E7C703 /* ServerCreator */,
 				AA0724A123121FE10087190F /* ClientScanner */,
 				AA07249C2311E22C0087190F /* CloudPricing */,
@@ -455,6 +493,16 @@
 				8E653C2122E6595D00BB8FEA /* MainTabController.swift */,
 			);
 			path = View;
+			sourceTree = "<group>";
+		};
+		AA72E0D42367CC1100C23D39 /* Xterm */ = {
+			isa = PBXGroup;
+			children = (
+				AA69CF85236284E0008101AA /* xterm.js */,
+				AA69CF86236284E0008101AA /* xterm.css */,
+				AA69CF87236284E0008101AA /* fit.js */,
+			);
+			path = Xterm;
 			sourceTree = "<group>";
 		};
 		AA81DD4622BD8C5200024120 = {
@@ -764,11 +812,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA69CF89236284E1008101AA /* xterm.css in Resources */,
+				AA69CF84236284C4008101AA /* terminal.html in Resources */,
 				AA81DD6022BD8C5400024120 /* LaunchScreen.storyboard in Resources */,
 				AA69CCA522DE8F2700DFD721 /* MacroResultHeader.xib in Resources */,
 				ED5A420822DFB19A00EA3C98 /* GoogleService-Info.plist in Resources */,
 				AA81DD5D22BD8C5400024120 /* Assets.xcassets in Resources */,
 				AA81DD5822BD8C5200024120 /* Main.storyboard in Resources */,
+				AA69CF8A236284E1008101AA /* fit.js in Resources */,
+				AA69CF88236284E1008101AA /* xterm.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -837,6 +889,7 @@
 				AAB6D93E235FDF3F00FED79B /* msg_ping.pb.swift in Sources */,
 				8542D40022D69CBF00F56F70 /* ClientList.swift in Sources */,
 				AAB6D93C235FDF3F00FED79B /* msg_server.pb.swift in Sources */,
+				AA69CFAC2362A325008101AA /* TerminalTheme.swift in Sources */,
 				AA899D30231A065000E7C703 /* Step1.swift in Sources */,
 				AAB6D947235FDF3F00FED79B /* listener.pb.swift in Sources */,
 				AAB6D935235FDF3F00FED79B /* msg_user.pb.swift in Sources */,
@@ -853,6 +906,7 @@
 				AA6CACEF22DD445000041AF3 /* GroupPanel.swift in Sources */,
 				ED5A421222E5284900EA3C98 /* ForgotPassword.swift in Sources */,
 				AA70FD1E22BEF326006A4C6F /* ByteBuffer+varint.swift in Sources */,
+				AA69CFAD2362A325008101AA /* Ubuntu.swift in Sources */,
 				AAB6D954235FDF3F00FED79B /* msg_sysinfo.pb.swift in Sources */,
 				AAB6D950235FDF3F00FED79B /* msg_desktop.pb.swift in Sources */,
 				AA6CACE822DD26F600041AF3 /* OverviewTable.swift in Sources */,
@@ -874,10 +928,10 @@
 				AAF3F67123557362003EE9B1 /* ShellSession.swift in Sources */,
 				AAB6D936235FDF3F00FED79B /* msg_client.pb.swift in Sources */,
 				AA61588E2335A4300035622F /* SandpolisUtil.swift in Sources */,
+				AA72E0D82367D22F00C23D39 /* MacroResultCell.swift in Sources */,
 				AAB6D93D235FDF3F00FED79B /* msg_stream.pb.swift in Sources */,
 				8E653C2222E6595D00BB8FEA /* MainTabController.swift in Sources */,
 				AA86F6DE23497866000C0B94 /* Step4.swift in Sources */,
-				AA6CACFF22DD78FC00041AF3 /* MacroResultCell.swift in Sources */,
 				8EAD841C22CBD80700B49D59 /* ClientMap.swift in Sources */,
 				ED5A421422E5289C00EA3C98 /* CreateAccount.swift in Sources */,
 				AA70158622D7C98D00A1E4ED /* SandpolisServer.swift in Sources */,
@@ -891,6 +945,7 @@
 				AAB6D955235FDF3F00FED79B /* message_sysinfo.pb.swift in Sources */,
 				AAB6D957235FEA6300FED79B /* Document.swift in Sources */,
 				AAB6D94A235FDF3F00FED79B /* group.pb.swift in Sources */,
+				AA72E0D62367D07600C23D39 /* MacroCell.swift in Sources */,
 				AAB6D942235FDF3F00FED79B /* message.pb.swift in Sources */,
 				AA899D32231A066500E7C703 /* Step2.swift in Sources */,
 				AAB6D94D235FDF3F00FED79B /* message_shell.pb.swift in Sources */,
@@ -908,7 +963,9 @@
 				AAB6D93F235FDF3F00FED79B /* msg_group.pb.swift in Sources */,
 				AAB6D939235FDF3F00FED79B /* msg_auth.pb.swift in Sources */,
 				AAB6D944235FDF3F00FED79B /* generator.pb.swift in Sources */,
+				AA6A75B8236154BB00AA1A4D /* Terminal.swift in Sources */,
 				AA70158922D7CAD800A1E4ED /* SandpolisStream.swift in Sources */,
+				AA6A75BA236156F700AA1A4D /* TerminalView.swift in Sources */,
 				8533115A2300183600D3B0F9 /* HostGroupHeaderCell.swift in Sources */,
 				8E653C2422E661A000BB8FEA /* ChangePassword.swift in Sources */,
 				AACBF8D622F3A9750015DCE6 /* FolderUpCell.swift in Sources */,
@@ -918,7 +975,6 @@
 				AA81DD5322BD8C5200024120 /* AppDelegate.swift in Sources */,
 				AAC198F922E40CA6004361C5 /* FileCell.swift in Sources */,
 				AAB6D941235FDF3F00FED79B /* msg_cvid.pb.swift in Sources */,
-				AA87A5B722DB78B3007A702E /* MacroCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1073,7 +1129,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 5.1.0;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sandpolis.viewer.lockstone;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1094,7 +1150,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 5.1.0;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sandpolis.viewer.lockstone;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

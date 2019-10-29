@@ -161,7 +161,7 @@ public class SandpolisConnection {
 		_ = channel.writeAndFlush(rq)
 		return p.futureResult
 	}
-	
+
 	/// A non-blocking method that sends an event.
 	///
 	/// - Parameter rq: The event message
@@ -204,7 +204,7 @@ public class SandpolisConnection {
 			return try! Net_DesktopMSG.init(unpackingAny: rs.plugin)
 		}
 	}
-	
+
 	/// Request a new remote desktop session from the given client.
 	///
 	/// - Parameter target: The target client's CVID
@@ -216,7 +216,7 @@ public class SandpolisConnection {
 			receiver.onEvent(try! Net_DesktopMSG.init(unpackingAny: m.plugin).evDesktopStream)
 		}
 		streams.append(stream)
-		
+
 		var rq = Net_MSG.with {
 			$0.to = target
 			$0.plugin = try! Google_Protobuf_Any(message: Net_DesktopMSG.with {
@@ -242,7 +242,7 @@ public class SandpolisConnection {
 			receiver.onEvent(try! Net_ShellMSG.init(unpackingAny: m.plugin).evShellStream)
 		}
 		streams.append(stream)
-		
+
 		var rq = Net_MSG.with {
 			$0.to = target
 			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
@@ -257,7 +257,7 @@ public class SandpolisConnection {
 		_ = request(&rq)
 		return stream
 	}
-	
+
 	/// Request the compatible shells on the given client.
 	///
 	/// - Parameter target: The target client's CVID
@@ -275,7 +275,7 @@ public class SandpolisConnection {
 			return try! Net_ShellMSG.init(unpackingAny: rs.plugin)
 		}
 	}
-	
+
 	/// Request to shutdown the given client.
 	///
 	/// - Parameter target: The target client's CVID
@@ -402,7 +402,7 @@ public class SandpolisConnection {
 
 		os_log("Requesting attribute: %s", attribute)
 		return request(&rq).map { rs in
-			target.merge(rs.rsAttributeQuery.result)
+			//target.merge(rs.rsAttributeQuery.result)
 			return rs
 		}
 	}

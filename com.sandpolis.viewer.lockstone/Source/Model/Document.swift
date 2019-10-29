@@ -17,13 +17,23 @@
 //****************************************************************************//
 import Foundation
 
-class Attribute {
-	var path: String
-	var title: String
-	var value: String?
+class Document {
 
-	init(_ path: String, _ title: String) {
-		self.path = path
-		self.title = title
+	private var documents = [String: Document]()
+
+	func document(_ id: String) -> Document {
+		if documents[id] == nil {
+			documents[id] = Document()
+		}
+		return documents[id]!
+	}
+
+	private var attributes = [String: Attribute]()
+
+	func attribute(_ id: String) -> Attribute {
+		if attributes[id] == nil {
+			attributes[id] = Attribute("", "")
+		}
+		return attributes[id]!
 	}
 }

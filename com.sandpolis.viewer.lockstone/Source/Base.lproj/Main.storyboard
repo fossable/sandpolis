@@ -1316,13 +1316,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="uNF-ek-aaA">
-                                <rect key="frame" x="0.0" y="103" width="414" height="599"/>
-                                <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
-                                <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" smartDashesType="no" smartInsertDeleteType="no" smartQuotesType="no"/>
-                            </textView>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" translatesAutoresizingMaskIntoConstraints="NO" id="YsL-Yf-Lqm">
                                 <rect key="frame" x="31.5" y="64" width="351" height="32"/>
                                 <segments>
@@ -1335,22 +1328,27 @@
                                     <action selector="onShellChanged:" destination="aQS-8w-Dow" eventType="valueChanged" id="ieY-MS-Qn5"/>
                                 </connections>
                             </segmentedControl>
+                            <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="d4X-8b-SLS">
+                                <rect key="frame" x="0.0" y="103" width="414" height="607"/>
+                                <connections>
+                                    <segue destination="Dgh-EY-Vyd" kind="embed" identifier="ShellEmbed" id="Wen-p8-c3y"/>
+                                </connections>
+                            </containerView>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
-                            <constraint firstItem="uNF-ek-aaA" firstAttribute="top" secondItem="YsL-Yf-Lqm" secondAttribute="bottom" constant="8" id="9Ec-0k-1Ww"/>
-                            <constraint firstItem="Jbv-Il-y4N" firstAttribute="trailing" secondItem="uNF-ek-aaA" secondAttribute="trailing" id="I49-2z-Y0E"/>
-                            <constraint firstItem="uNF-ek-aaA" firstAttribute="leading" secondItem="Jbv-Il-y4N" secondAttribute="leading" id="K33-xF-yEK"/>
-                            <constraint firstItem="Jbv-Il-y4N" firstAttribute="bottom" secondItem="uNF-ek-aaA" secondAttribute="bottom" constant="8" id="PIy-pa-E6t"/>
+                            <constraint firstItem="d4X-8b-SLS" firstAttribute="leading" secondItem="Jbv-Il-y4N" secondAttribute="leading" id="0Uv-eE-9mq"/>
+                            <constraint firstItem="Jbv-Il-y4N" firstAttribute="bottom" secondItem="d4X-8b-SLS" secondAttribute="bottom" id="1KL-5o-XgK"/>
+                            <constraint firstItem="d4X-8b-SLS" firstAttribute="top" secondItem="YsL-Yf-Lqm" secondAttribute="bottom" constant="8" id="Zyj-la-9dz"/>
                             <constraint firstItem="YsL-Yf-Lqm" firstAttribute="top" secondItem="Jbv-Il-y4N" secondAttribute="top" constant="8" id="e5Y-ch-oaX"/>
                             <constraint firstItem="YsL-Yf-Lqm" firstAttribute="centerX" secondItem="hdO-Rd-9b2" secondAttribute="centerX" id="r03-3h-MPz"/>
+                            <constraint firstItem="Jbv-Il-y4N" firstAttribute="trailing" secondItem="d4X-8b-SLS" secondAttribute="trailing" id="t3c-qP-bru"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="Jbv-Il-y4N"/>
                     </view>
                     <tabBarItem key="tabBarItem" title="Shell" image="tab/macro" selectedImage="tab/macro_selected" id="gLq-I3-Jea"/>
                     <connections>
                         <outlet property="shellSelector" destination="YsL-Yf-Lqm" id="sAe-CD-ufU"/>
-                        <outlet property="textView" destination="uNF-ek-aaA" id="iuk-6B-Mwl"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="RCl-Fk-ny0" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -2905,6 +2903,21 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ZE8-s6-yc1" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="6071" y="-1514"/>
+        </scene>
+        <!--Terminal View Controller-->
+        <scene sceneID="GGd-ac-LpW">
+            <objects>
+                <viewController id="Dgh-EY-Vyd" customClass="TerminalViewController" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Za5-26-dlH">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="599"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <viewLayoutGuide key="safeArea" id="SBy-Uv-jlY"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="up0-j1-7bP" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="7590" y="-1334"/>
         </scene>
     </scenes>
     <resources>

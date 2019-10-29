@@ -16,14 +16,26 @@
 //                                                                            //
 //****************************************************************************//
 import Foundation
+import UIKit
 
-class Attribute {
-	var path: String
-	var title: String
-	var value: String?
+// This source file is part of the https://github.com/ColdGrub1384/Pisth open source project
+//
+// Copyright (c) 2017 - 2018 Adrian Labbé
+// Licensed under Apache License v2.0
+//
+// See https://raw.githubusercontent.com/ColdGrub1384/Pisth/master/LICENSE for license information
 
-	init(_ path: String, _ title: String) {
-		self.path = path
-		self.title = title
+open class UbuntuTheme: TerminalTheme {
+
+	open override var backgroundColor: UIColor? {
+		return UIColor(red: 48/255, green: 10/255, blue: 36/255, alpha: 1)
+	}
+
+	open override var foregroundColor: UIColor? {
+		return UIColor(red: 255/255, green: 253/255, blue: 244/255, alpha: 1)
+	}
+
+	open override var cursorColor: UIColor? {
+		return UIColor(red: 251/255, green: 251/255, blue: 251/255, alpha: 1)
 	}
 }

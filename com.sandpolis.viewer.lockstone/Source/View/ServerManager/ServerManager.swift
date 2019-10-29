@@ -45,12 +45,12 @@ class ServerManager: UITableViewController {
 			self.refreshServerStates()
 			//self.refreshServerLocations()
 		})
-		
+
 		// Setup refresh control
 		refreshControl = UIRefreshControl()
 		refreshControl?.addTarget(self, action: #selector(refreshTable), for: .valueChanged)
 	}
-	
+
 	@objc func refreshTable() {
 		// Spawn synchronous connection attempts
 		DispatchQueue.global(qos: .utility).async {

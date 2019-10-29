@@ -3,6 +3,9 @@ build/
 DerivedData/
 Source/Proto
 
+## XTerm
+Source/View/Terminal/Xterm
+
 ## Various settings
 *.pbxuser
 !default.pbxuser

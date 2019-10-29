@@ -20,11 +20,11 @@ import UIKit
 class RemoteDesktop: UIViewController {
 
 	@IBOutlet weak var imageView: UIImageView!
-	
+
 	var profile: SandpolisProfile!
-	
+
 	private var stream: SandpolisStream!
-	
+
 	override func viewDidDisappear(_ animated: Bool) {
 		defer {
 			stream = nil
@@ -46,7 +46,7 @@ class RemoteDesktop: UIViewController {
 		case .dirtyRect:
 			rect = CGRect(x: Int(ev.dirtyRect.x), y: Int(ev.dirtyRect.y), width: Int(ev.dirtyRect.w), height: ev.dirtyRect.data.count / Int(ev.dirtyRect.w))
 		}
-		
+
 		// TODO draw block
 	}
 }

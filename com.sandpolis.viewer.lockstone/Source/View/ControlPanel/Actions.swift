@@ -18,7 +18,7 @@
 import UIKit
 
 class Actions: UITableViewController {
-	
+
 	var profile: SandpolisProfile!
 
 	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -46,7 +46,7 @@ class Actions: UITableViewController {
 			performSegue(withIdentifier: "MacroSelectSegue", sender: self)
 		}
 	}
-	
+
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "MacroSelectSegue", let dest = segue.destination as? MacroSelect {
 			dest.profiles = [profile]

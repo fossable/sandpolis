@@ -20,7 +20,7 @@ import UIKit
 class OverviewTable: UITableViewController {
 
 	var profile: SandpolisProfile!
-	
+
 	var info: [(String, [Attribute])] = [
 		("System", [Attribute("/system/uptime", "Uptime")]),
 		("CPU", [Attribute("/cpu/_/model", "Model"), Attribute("/cpu/_/max_frequency", "Max Frequency")]),
@@ -46,21 +46,21 @@ class OverviewTable: UITableViewController {
 		// Stop updating
 		updater.invalidate()
 	}
-	
+
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "InfoCell") as! InfoCell
 		cell.setAttribute(info[indexPath.section].1[indexPath.row])
 		return cell
 	}
-	
+
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		return info[section].1.count
 	}
-	
+
 	override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
 		return info[section].0
 	}
-	
+
 	override func numberOfSections(in tableView: UITableView) -> Int {
 		return info.count
 	}

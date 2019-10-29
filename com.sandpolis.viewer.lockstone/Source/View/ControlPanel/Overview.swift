@@ -41,7 +41,7 @@ class Overview: UIViewController {
 			// Trigger refresh otherwise
 			refreshScreenshot()
 		}
-		
+
 		// Set location
 		if let code = profile.countryCode {
 			flag.image = UIImage(named: "flag/\(code)")
@@ -49,14 +49,14 @@ class Overview: UIViewController {
 		} else {
 			location.text = profile.ipAddress
 		}
-		
+
 		// Set hostname
 		if let host = profile.hostname {
 			hostname.text = host
 		} else {
 			hostname.text = profile.uuid
 		}
-		
+
 		// Set platform information
 		switch profile.platform {
 		case .linux:
