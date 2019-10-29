@@ -61,7 +61,7 @@ dependencies {
 	api 'io.netty:netty-transport:4.1.42.Final'
 
 	api 'javax.persistence:javax.persistence-api:2.2'
-	
+
 	// https://github.com/hibernate/hibernate-orm
 	api 'org.hibernate:hibernate-core:5.4.6.Final'
 

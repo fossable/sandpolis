@@ -10,28 +10,42 @@ plugins {
 xcodebuild {
 	scheme = 'Sandpolis'
 	target = 'Sandpolis'
+
+	destination {
+		platform = 'iOS Simulator'
+		name = 'iPhone X'
+		os = '12.2'
+	}
 }
 
-// Build all protobuf sources manually :(
-task buildProto {
+afterEvaluate {
+	// Build ProtoBuf sources manually
+	mkdir file("Source/Proto")
 	project.exec {
 		commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
 		workingDir = project(":module:com.sandpolis.core.proto").file("src/main/proto")
 	}
 	project.exec {
-			commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
-			workingDir = project(":plugin:com.sandpolis.plugin.desktop").file("src/main/proto")
+		commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
+		workingDir = project(":plugin:com.sandpolis.plugin.desktop").file("src/main/proto")
 	}
 	project.exec {
-			commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
-			workingDir = project(":plugin:com.sandpolis.plugin.shell").file("src/main/proto")
+		commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
+		workingDir = project(":plugin:com.sandpolis.plugin.shell").file("src/main/proto")
 	}
 	project.exec {
-			commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
-			workingDir = project(":plugin:com.sandpolis.plugin.sysinfo").file("src/main/proto")
+		commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
+		workingDir = project(":plugin:com.sandpolis.plugin.sysinfo").file("src/main/proto")
 	}
 	project.exec {
-			commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
-			workingDir = project(":plugin:com.sandpolis.plugin.filesys").file("src/main/proto")
+		commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
+		workingDir = project(":plugin:com.sandpolis.plugin.filesys").file("src/main/proto")
+	}
+
+	// Create empty xterm files to prevent build failure
+	// TODO Download the npm package and extract instead
+	mkdir file("Source/View/Terminal/Xterm")
+	project.exec {
+		commandLine = ["sh", "-c", "touch " + file("Source/View/Terminal/Xterm") + "/{xterm.js,xterm.css,fit.js}"]
 	}
 }

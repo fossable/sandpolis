@@ -25,3 +25,8 @@ matrix:
       podfile: com.sandpolis.viewer.lockstone/Podfile
       cache:
         cocoapods: true
+      addons:
+        homebrew:
+          packages:
+          - protobuf
+          - swift-protobuf
