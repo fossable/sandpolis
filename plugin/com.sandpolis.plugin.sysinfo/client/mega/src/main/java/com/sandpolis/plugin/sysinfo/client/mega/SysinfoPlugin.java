@@ -17,47 +17,26 @@
  ******************************************************************************/
 package com.sandpolis.plugin.sysinfo.client.mega;
 
-import java.util.function.Function;
-
-import com.google.protobuf.Message;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
-import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.plugin.ExeletProvider;
-import com.sandpolis.core.profile.AK_CLIENT;
-import com.sandpolis.core.profile.attribute.key.AttributeKey;
-import com.sandpolis.plugin.sysinfo.AK_CPU;
-import com.sandpolis.plugin.sysinfo.client.mega.exe.SysinfoExe;
-import com.sandpolis.plugin.sysinfo.net.MessageSysinfo.SysinfoMSG;
 
-import oshi.hardware.CentralProcessor;
-import oshi.software.os.NetworkParams;
+public final class SysinfoPlugin extends SandpolisPlugin {
 
-public final class SysinfoPlugin extends SandpolisPlugin implements ExeletProvider {
+//	private static SystemInfo system = new SystemInfo();
+//
+//	static {
+//		AK_CPU.VENDOR.setQuery((CentralProcessor cpu) -> cpu.getVendor());
+//		AK_CPU.MODEL.setQuery((CentralProcessor cpu) -> cpu.getModel());
+//		AK_CLIENT.HOSTNAME.setQuery(() -> system.getOperatingSystem().getNetworkParams().getHostName());
+//		AK_OS.VERSION.setQuery(() -> system.getOperatingSystem().getVersion().getVersion());
+//		AK_MEMORY.USAGE.setQuery(() -> {
+//			var mem = system.getHardware().getMemory();
+//			return 1.0 - ((double) mem.getAvailable() / (double) mem.getTotal());
+//		});
+//		AK_NIC.IPV4.setQuery((NetworkIF nic) -> nic.getIPv4addr()[0]);
+//		AK_NIC.IPV6.setQuery((NetworkIF nic) -> nic.getIPv6addr()[0]);
+//		AK_NIC.DOWNLOAD.setQuery((NetworkIF nic) -> nic.getBytesRecv());
+//		AK_NIC.UPLOAD.setQuery((NetworkIF nic) -> nic.getBytesSent());
+//		AK_NIC.MAC.setQuery((NetworkIF nic) -> nic.getMacaddr());
+//	}
 
-	private void setupAttributes() {
-		associate(AK_CPU.VENDOR, (CentralProcessor cpu) -> cpu.getVendor());
-		associate(AK_CPU.MODEL, (CentralProcessor cpu) -> cpu.getModel());
-		associate(AK_CLIENT.HOSTNAME, (NetworkParams net) -> net.getHostName());
-	}
-
-	/**
-	 * Associate the given key with the given value retriever.
-	 *
-	 * @param key       An attribute key
-	 * @param retriever A value retriever
-	 */
-	private <T> void associate(AttributeKey<T> key, Function<?, T> retriever) {
-		key.putObject("retriever", retriever);
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Class<? extends Exelet>[] getExelets() {
-		return new Class[] { SysinfoExe.class };
-	}
-
-	@Override
-	public Class<? extends Message> getMessageType() {
-		return SysinfoMSG.class;
-	}
 }

@@ -33,8 +33,12 @@ message RS_AttributeQuery {
 }
 
 message RQ_AttributeStream {
-	repeated string path = 1;
-	int32 update_period = 2;
+
+    // The desired stream ID
+    int32 id = 1;
+
+	repeated string path = 2;
+	int32 update_period = 3;
 }
 
 message EV_AttributeStream {

@@ -142,6 +142,16 @@ public class Profile implements ProtoType<ProtoProfile> {
 		return document.attribute(key, path[path.length - 1]);
 	}
 
+	public boolean hasAttribute(AttributeKey<?> key) {
+		Document document = root.get(key.getDomain());
+		if (document == null) {
+			return false;
+		}
+
+		// TODO
+		return false;
+	}
+
 	/**
 	 * Get the value of the specified {@link Attribute}.
 	 *

@@ -19,6 +19,8 @@ package com.sandpolis.core.profile.attribute.key;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.sandpolis.core.profile.attribute.Attribute;
 import com.sandpolis.core.profile.attribute.Attribute.IntegerAttribute;
@@ -48,6 +50,8 @@ public final class AttributeKey<E> {
 	private final Class<E> type;
 
 	private final String domain;
+
+	private Supplier<E> query;
 
 	public AttributeKey(String domain, Class<E> type, String path) {
 		this(domain, type, path, path);
@@ -118,6 +122,13 @@ public final class AttributeKey<E> {
 	 */
 	public void putObject(String id, Object value) {
 		aux.put(id, value);
+	}
+
+	public void setQuery(Supplier<E> query) {
+		this.query = query;
+	}
+
+	public void setQuery(Function<?, E> query) {
 	}
 
 	public String getDomain() {

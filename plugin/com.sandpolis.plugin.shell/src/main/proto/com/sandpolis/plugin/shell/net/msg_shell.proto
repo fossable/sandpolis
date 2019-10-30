@@ -49,6 +49,7 @@ message RS_ListShells {
     message ShellListing {
         Shell type = 1;
         string location = 2;
+        string version = 3;
     }
 
     repeated ShellListing listing = 1;
@@ -64,6 +65,8 @@ message RQ_ShellStream {
 
     // TODO request permissions
     // Permission permission = 3;
+
+    map<string, string> environment = 4;
 }
 
 message EV_ShellStream {

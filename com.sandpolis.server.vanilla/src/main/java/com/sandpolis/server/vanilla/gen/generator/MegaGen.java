@@ -111,6 +111,7 @@ public class MegaGen extends FileGenerator {
 					output.add("lib/" + fromCoordinate(dep.getCoordinates()).filename,
 							ArtifactUtil.getArtifactFile(Environment.get(LIB), dep.getCoordinates()));
 				});
+				// TODO plugin component dependencies
 
 				// Remove unnecessary components if they exist
 				// output.sub(EntryPath.get("lib/" + bin.getFileName().toString(),
