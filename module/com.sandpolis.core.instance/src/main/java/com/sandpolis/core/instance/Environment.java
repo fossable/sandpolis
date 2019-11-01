@@ -19,12 +19,10 @@ package com.sandpolis.core.instance;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -39,11 +37,6 @@ import java.util.stream.Collectors;
  * @since 4.0.0
  */
 public final class Environment {
-
-	/**
-	 * The initialization timestamp of the process.
-	 */
-	public static final Date JVM_TIMESTAMP = new Date(ManagementFactory.getRuntimeMXBean().getStartTime());
 
 	/**
 	 * The location of the main instance jar.
@@ -244,7 +237,6 @@ public final class Environment {
 	 */
 	public static void print() {
 		System.out.println("\t=== ENVIRONMENT ===");
-		System.out.println("JVM TIMESTAMP: " + JVM_TIMESTAMP.toString());
 		System.out.println("BASE: " + BASE);
 		for (EnvPath p : envpaths.keySet())
 			System.out.println(p + ": " + envpaths.get(p));

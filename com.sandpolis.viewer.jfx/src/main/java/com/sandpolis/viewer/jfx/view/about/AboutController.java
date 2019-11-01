@@ -18,11 +18,11 @@
 package com.sandpolis.viewer.jfx.view.about;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Date;
 
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.Environment;
 import com.sandpolis.viewer.jfx.Viewer.UI;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.common.label.DateLabel;
@@ -102,7 +102,7 @@ public class AboutController extends AbstractController {
 				String.format("%s (%s)", System.getProperty("java.version"), System.getProperty("java.vendor")));
 
 		// Bind uptime
-		java_uptime.referenceProperty().set(Environment.JVM_TIMESTAMP.getTime());
+		java_uptime.referenceProperty().set(ManagementFactory.getRuntimeMXBean().getStartTime());
 
 		// Load configuration data
 		for (var entry : Config.entries())

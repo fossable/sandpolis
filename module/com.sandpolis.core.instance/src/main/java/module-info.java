@@ -19,7 +19,6 @@ module com.sandpolis.core.instance {
 	requires com.sandpolis.core.soi;
 	requires com.sandpolis.core.util;
 	requires compact.classloader;
-	requires java.management;
 	requires java.persistence;
 	requires java.prefs;
 	requires org.slf4j;

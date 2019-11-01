@@ -32,6 +32,7 @@ module com.sandpolis.viewer.jfx {
 	requires transitive io.netty.common;
 	requires transitive io.netty.transport;
 	requires transitive java.desktop;
+	requires transitive java.management;
 	requires transitive java.xml;
 	requires transitive javafx.base;
 	requires transitive javafx.controls;
