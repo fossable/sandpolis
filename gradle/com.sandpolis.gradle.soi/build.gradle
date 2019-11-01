@@ -23,6 +23,6 @@ dependencies {
 
 	implementation project(':module:com.sandpolis.core.soi')
 
-	implementation 'com.google.guava:guava:26.0-jre'
+	implementation 'com.google.guava:guava:28.1-jre'
 	implementation 'org.yaml:snakeyaml:1.24'
 }

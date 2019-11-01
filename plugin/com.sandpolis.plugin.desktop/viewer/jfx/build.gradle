@@ -8,6 +8,7 @@ plugins {
 	id 'java-library'
 
 	id 'com.sandpolis.gradle.soi'
+	id 'org.javamodularity.moduleplugin'
 }
 
 eclipse {

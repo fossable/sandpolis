@@ -12,6 +12,8 @@ buildscript {
 plugins {
 	id 'eclipse'
 	id 'java-library'
+
+	id 'org.javamodularity.moduleplugin'
 }
 
 apply plugin: 'com.sandpolis.gradle.soi'
