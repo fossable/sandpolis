@@ -19,6 +19,8 @@ package com.sandpolis.core.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.nio.file.Files.exists;
+import static java.nio.file.Files.list;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -80,7 +82,7 @@ public final class ArtifactUtil {
 	 * @throws IOException
 	 */
 	public static Stream<Path> findArtifactFile(Path directory, String artifactId) throws IOException {
-		return java.nio.file.Files.list(directory).filter(path -> path.getFileName().toString().startsWith(artifactId))
+		return list(directory).filter(path -> path.getFileName().toString().startsWith(artifactId))
 				// Sort by semantic version number
 				.sorted((path1, path2) -> {
 					// TODO COMPARE CORRECTLY!
@@ -140,7 +142,7 @@ public final class ArtifactUtil {
 
 		// If the directory does not contain the file, the hash doesn't match
 		Path artifact = directory.resolve(coordinate.filename);
-		if (!java.nio.file.Files.exists(artifact))
+		if (!exists(artifact))
 			throw new FileNotFoundException();
 
 		// Download the file hash

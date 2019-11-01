@@ -18,22 +18,16 @@
 package com.sandpolis.gradle.soi;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ResolvedDependency;
-import org.yaml.snakeyaml.Yaml;
 
-import com.google.common.io.Resources;
 import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
 import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact.NativeComponent;
 
 /**
  * This class accepts Gradle dependencies incrementally and produces a
@@ -44,21 +38,7 @@ import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact.NativeComp
  *
  * @author cilki
  */
-@SuppressWarnings("unchecked")
 public final class DependencyProcessor {
-
-	/**
-	 * Native library definitions loaded from the natives.yml resource.
-	 */
-	private static final Map<String, Map<String, Map<String, String>>> natives;
-
-	static {
-		try (var in = DependencyProcessor.class.getResourceAsStream("/natives.yml")) {
-			natives = (Map<String, Map<String, Map<String, String>>>) new Yaml().load(in);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
 
 	/**
 	 * The list artifacts that will be built into a {@link SO_DependencyMatrix}.
@@ -175,29 +155,29 @@ public final class DependencyProcessor {
 
 		var artifact = Artifact.newBuilder().setCoordinates(coordinates).setSize(file.length());
 
-		for (var nativeEntry : natives.entrySet()) {
-			if (artifact.getCoordinates().contains(":" + nativeEntry.getKey() + ":")) {
-				for (var platformEntry : nativeEntry.getValue().entrySet()) {
-					for (var archEntry : platformEntry.getValue().entrySet()) {
-						var component = NativeComponent.newBuilder().setPath(archEntry.getValue())
-								.setArchitecture(archEntry.getKey()).setPlatform(platformEntry.getKey().toUpperCase());
-
-						try {
-							// Get component size
-							component.setSize(Resources
-									.asByteSource(
-											new URL("jar:file:" + file.getAbsolutePath() + "!" + component.getPath()))
-									.size());
-						} catch (IOException e) {
-							throw new RuntimeException("Failed to read component size", e);
-						}
-
-						artifact.addNativeComponent(component);
-					}
-				}
-				break;
-			}
-		}
+//		for (var nativeEntry : natives.entrySet()) {
+//			if (artifact.getCoordinates().contains(":" + nativeEntry.getKey() + ":")) {
+//				for (var platformEntry : nativeEntry.getValue().entrySet()) {
+//					for (var archEntry : platformEntry.getValue().entrySet()) {
+//						var component = NativeComponent.newBuilder().setPath(archEntry.getValue())
+//								.setArchitecture(archEntry.getKey()).setPlatform(platformEntry.getKey().toUpperCase());
+//
+//						try {
+//							// Get component size
+//							component.setSize(Resources
+//									.asByteSource(
+//											new URL("jar:file:" + file.getAbsolutePath() + "!" + component.getPath()))
+//									.size());
+//						} catch (IOException e) {
+//							throw new RuntimeException("Failed to read component size", e);
+//						}
+//
+//						artifact.addNativeComponent(component);
+//					}
+//				}
+//				break;
+//			}
+//		}
 		return artifact;
 	}
 
