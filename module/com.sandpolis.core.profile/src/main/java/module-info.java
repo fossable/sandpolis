@@ -1,4 +1,4 @@
-module com.sandpolis.core.profile {
+open module com.sandpolis.core.profile {
 	exports com.sandpolis.core.profile.attribute.key;
 	exports com.sandpolis.core.profile.attribute;
 	exports com.sandpolis.core.profile.store;

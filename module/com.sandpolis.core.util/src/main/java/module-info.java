@@ -1,4 +1,4 @@
-module com.sandpolis.core.util {
+open module com.sandpolis.core.util {
 	exports com.sandpolis.core.util;
 
 	requires com.google.common;

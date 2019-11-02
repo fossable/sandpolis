@@ -1,4 +1,4 @@
-module com.sandpolis.server.vanilla {
+open module com.sandpolis.server.vanilla {
 	exports com.sandpolis.server.vanilla.auth;
 	exports com.sandpolis.server.vanilla.exe;
 	exports com.sandpolis.server.vanilla.gen.generator;
@@ -33,6 +33,7 @@ module com.sandpolis.server.vanilla {
 	requires transitive io.netty.transport;
 	requires transitive java.desktop;
 	requires transitive java.persistence;
+	requires transitive java.sql;
 	requires transitive org.slf4j;
 	requires transitive zipset;
 }

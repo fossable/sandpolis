@@ -1,4 +1,4 @@
-module com.sandpolis.core.stream {
+open module com.sandpolis.core.stream {
 	exports com.sandpolis.core.stream.store;
 	exports com.sandpolis.core.stream;
 

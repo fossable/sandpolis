@@ -12,4 +12,6 @@ module com.sandpolis.plugin.shell.client.mega {
 	requires com.sandpolis.core.stream;
 	requires com.sandpolis.core.util;
 	requires com.sandpolis.plugin.shell;
+	
+	provides com.sandpolis.core.instance.plugin.SandpolisPlugin with com.sandpolis.plugin.shell.client.mega.ShellPlugin;
 }

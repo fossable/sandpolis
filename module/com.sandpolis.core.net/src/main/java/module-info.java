@@ -1,4 +1,4 @@
-module com.sandpolis.core.net {
+open module com.sandpolis.core.net {
 	exports com.sandpolis.core.net.command;
 	exports com.sandpolis.core.net.exception;
 	exports com.sandpolis.core.net.future;
