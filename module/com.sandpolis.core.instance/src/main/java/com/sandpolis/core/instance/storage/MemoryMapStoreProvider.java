@@ -17,7 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.core.instance.storage;
 
-import java.lang.invoke.MethodHandle;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -32,7 +31,7 @@ import java.util.stream.Stream;
  * @author cilki
  * @since 5.0.0
  */
-public class MemoryMapStoreProvider<K, E> extends EphemeralStoreProvider<E> implements StoreProvider<E> {
+public class MemoryMapStoreProvider<K, E> extends ConcurrentStoreProvider<E> implements StoreProvider<E> {
 
 	/**
 	 * The backing storage for this {@code StoreProvider}.
@@ -46,7 +45,6 @@ public class MemoryMapStoreProvider<K, E> extends EphemeralStoreProvider<E> impl
 	}
 
 	public MemoryMapStoreProvider(Class<E> cls, Function<E, K> keyFunction, Map<Object, E> map) {
-		super(cls);
 		this.map = Objects.requireNonNull(map);
 		this.keyFunction = keyFunction;
 	}
@@ -54,22 +52,6 @@ public class MemoryMapStoreProvider<K, E> extends EphemeralStoreProvider<E> impl
 	@Override
 	public Optional<E> get(Object id) {
 		return Optional.ofNullable(map.get(id));
-	}
-
-	@Override
-	public Optional<E> get(String field, Object id) {
-		beginStream();
-		try {
-			MethodHandle getField = fieldGetter(field);
-			for (E e : map.values())
-				if (id.equals(getField.invoke(e)))
-					return Optional.of(e);
-			return Optional.empty();
-		} catch (Throwable t) {
-			throw new RuntimeException(t);
-		} finally {
-			endStream();
-		}
 	}
 
 	@Override

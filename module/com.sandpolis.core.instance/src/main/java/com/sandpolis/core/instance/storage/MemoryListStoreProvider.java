@@ -17,7 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.core.instance.storage;
 
-import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,20 +31,22 @@ import java.util.stream.Stream;
  * @author cilki
  * @since 5.0.0
  */
-public class MemoryListStoreProvider<K, E> extends EphemeralStoreProvider<E> implements StoreProvider<E> {
+public class MemoryListStoreProvider<K, E> extends ConcurrentStoreProvider<E> implements StoreProvider<E> {
 
 	/**
 	 * The backing storage for this {@link StoreProvider}.
 	 */
 	private final List<E> list;
 
+	private final Function<E, K> keyFunction;
+
 	public MemoryListStoreProvider(Class<E> cls, Function<E, K> keyFunction) {
 		this(cls, keyFunction, new ArrayList<>());
 	}
 
 	public MemoryListStoreProvider(Class<E> cls, Function<E, K> keyFunction, List<E> list) {
-		super(cls);
 		this.list = Objects.requireNonNull(list);
+		this.keyFunction = Objects.requireNonNull(keyFunction);
 	}
 
 	@Override
@@ -53,26 +54,10 @@ public class MemoryListStoreProvider<K, E> extends EphemeralStoreProvider<E> imp
 		beginStream();
 		try {
 			for (E e : list) {
-				if (id.equals(getId(e)))
+				if (id.equals(keyFunction.apply(e)))
 					return Optional.of(e);
 			}
 			return Optional.empty();
-		} finally {
-			endStream();
-		}
-	}
-
-	@Override
-	public Optional<E> get(String field, Object id) {
-		beginStream();
-		try {
-			MethodHandle getField = fieldGetter(field);
-			for (E e : list)
-				if (id.equals(getField.invoke(e)))
-					return Optional.of(e);
-			return Optional.empty();
-		} catch (Throwable t) {
-			throw new RuntimeException(t);
 		} finally {
 			endStream();
 		}

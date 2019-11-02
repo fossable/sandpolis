@@ -17,6 +17,8 @@
  ******************************************************************************/
 package com.sandpolis.core.instance;
 
+import static java.util.UUID.randomUUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,7 +96,7 @@ public final class Core {
 			SO_BUILD = readBuild();
 
 			// TODO set from PrefStore
-			UUID = java.util.UUID.randomUUID().toString();
+			UUID = randomUUID().toString();
 		} else {
 			log.warn("Applying unit test configuration");
 
@@ -102,7 +104,7 @@ public final class Core {
 			FLAVOR = InstanceFlavor.NONE;
 			SO_BUILD = null;
 			SO_MATRIX = null;
-			UUID = java.util.UUID.randomUUID().toString();
+			UUID = randomUUID().toString();
 		}
 	}
 

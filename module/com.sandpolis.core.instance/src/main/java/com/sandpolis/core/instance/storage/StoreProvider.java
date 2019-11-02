@@ -58,15 +58,6 @@ public interface StoreProvider<E> {
 	public Optional<E> get(Object id);
 
 	/**
-	 * Retrieve an object from the store's backing storage by the given identifier.
-	 *
-	 * @param field The field name
-	 * @param id    The field value of the item to retrieve
-	 * @return The requested object
-	 */
-	public Optional<E> get(String field, Object id);
-
-	/**
 	 * Remove an element from the store's backing storage.
 	 *
 	 * @param e The element to remove
@@ -93,17 +84,6 @@ public interface StoreProvider<E> {
 	 */
 	default public boolean exists(Object id) {
 		return get(id).isPresent();
-	}
-
-	/**
-	 * Indicates whether an element exists in the store.
-	 *
-	 * @param field The field name
-	 * @param id    The field value of the element
-	 * @return Whether the requested object exists in the store
-	 */
-	default public boolean exists(String field, Object id) {
-		return get(field, id).isPresent();
 	}
 
 	/**

@@ -78,28 +78,13 @@ public class HibernateStoreProvider<E> extends ConcurrentStoreProvider<E> implem
 
 	@Override
 	public Optional<E> get(Object id) {
-		return get(idField, id);
-//		EntityManager em = emf.createEntityManager();
-//
-//		try {
-//			em.getTransaction().begin();
-//			E e = em.find(cls, id);
-//			em.getTransaction().commit();
-//			return Optional.ofNullable(e);
-//		} finally {
-//			em.close();
-//		}
-	}
-
-	@Override
-	public Optional<E> get(String field, Object id) {
 		EntityManager em = emf.createEntityManager();
 
 		try {
 			CriteriaBuilder cb = em.getCriteriaBuilder();
 			CriteriaQuery<E> cq = cb.createQuery(cls);
 			Root<E> root = cq.from(cls);
-			TypedQuery<E> tq = em.createQuery(cq.select(root).where(cb.equal(root.get(field), id)));
+			TypedQuery<E> tq = em.createQuery(cq.select(root).where(cb.equal(root.get(idField), id)));
 
 			return Optional.of(tq.getSingleResult());
 		} catch (NoResultException e) {
