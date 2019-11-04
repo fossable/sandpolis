@@ -73,6 +73,22 @@ public final class CertUtil {
 		}
 	}
 
+	public static X509Certificate getDefaultCert() {
+		try (InputStream in = CertUtil.class.getResourceAsStream("/cert/default.cert")) {
+			return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static PrivateKey getDefaultKey() {
+		try (InputStream in = CertUtil.class.getResourceAsStream("/cert/default.key")) {
+			return parseKey(in.readAllBytes());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	/**
 	 * Indicates whether the given certificate is within the timestamp constraints.
 	 *

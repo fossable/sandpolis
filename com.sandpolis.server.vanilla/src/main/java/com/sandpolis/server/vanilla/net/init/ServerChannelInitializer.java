@@ -20,11 +20,6 @@ package com.sandpolis.server.vanilla.net.init;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
-import java.security.cert.CertificateException;
-import java.security.spec.InvalidKeySpecException;
-
-import javax.net.ssl.SSLException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +51,6 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 /**
  * This {@link ChannelInitializer} configures a {@link ChannelPipeline} for use
@@ -157,31 +151,25 @@ public class ServerChannelInitializer extends AbstractChannelInitializer {
 		});
 	}
 
+	private static final SslContextBuilder defaultContext = SslContextBuilder.forServer(CertUtil.getDefaultKey(),
+			CertUtil.getDefaultCert());
+
 	public SslContext getSslContext() throws Exception {
 		if (sslCtx == null && Config.getBoolean("net.connection.tls")) {
-			sslCtx = buildSslContext();
+			if (cert != null && key != null) {
+				sslCtx = SslContextBuilder.forServer(CertUtil.parseKey(key), CertUtil.parseCert(cert)).build();
 
-			// No point in keeping these around anymore
-			cert = null;
-			key = null;
+				// No point in keeping these around anymore
+				cert = null;
+				key = null;
+			} else {
+				// Fallback certificate
+				log.debug("Using default certificate");
+
+				sslCtx = defaultContext.build();
+			}
 		}
 
 		return sslCtx;
 	}
-
-	private SslContext buildSslContext() throws CertificateException, SSLException {
-		if (cert != null && key != null) {
-			try {
-				return SslContextBuilder.forServer(CertUtil.parseKey(key), CertUtil.parseCert(cert)).build();
-			} catch (InvalidKeySpecException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
-		// Fallback certificate
-		log.debug("Generating self-signed fallback certificate");
-		SelfSignedCertificate ssc = new SelfSignedCertificate();
-		return SslContextBuilder.forServer(ssc.key(), ssc.cert()).build();
-	}
-
 }
