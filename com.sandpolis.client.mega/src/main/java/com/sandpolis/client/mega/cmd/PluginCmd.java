@@ -18,7 +18,6 @@
 package com.sandpolis.client.mega.cmd;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
@@ -85,7 +84,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 		var session = begin();
 
 		session.sub(installDependency(gav), outcome -> {
-			PluginStore.installPlugin(Environment.get(LIB).resolve(fromCoordinate(gav).filename));
+			PluginStore.installPlugin(Environment.LIB.path().resolve(fromCoordinate(gav).filename));
 		});
 
 		return session;
@@ -100,7 +99,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 		checkNotNull(gav);
 		var session = begin();
 
-		Path destination = Environment.get(LIB).resolve(fromCoordinate(gav).filename);
+		Path destination = Environment.LIB.path().resolve(fromCoordinate(gav).filename);
 		if (Files.exists(destination))
 			// Nothing to do
 			return session.success();

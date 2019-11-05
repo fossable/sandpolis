@@ -17,9 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.viewer.cli;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
-import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
-import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 import static com.sandpolis.core.instance.MainDispatch.register;
 
 import java.util.Date;
@@ -70,9 +67,7 @@ public final class Viewer {
 	@InitializationTask(name = "Load runtime environment", fatal = true)
 	private static final Task loadEnvironment = new Task((task) -> {
 
-		if (!Environment.load(TMP, LOG, LIB))
-			Environment.setup();
-
+		Environment.setup();
 		return task.success();
 	});
 

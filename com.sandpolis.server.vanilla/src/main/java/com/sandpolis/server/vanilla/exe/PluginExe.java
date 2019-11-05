@@ -17,7 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
@@ -92,11 +91,11 @@ public final class PluginExe extends Exelet {
 			}
 		}, () -> {
 			// Check regular artifacts
-			Path artifact = ArtifactUtil.getArtifactFile(Environment.get(LIB), coordinate.coordinate);
+			Path artifact = ArtifactUtil.getArtifactFile(Environment.LIB.path(), coordinate.coordinate);
 
 			if (!Files.exists(artifact)) {
 				// Try to find a suitable artifact
-				try (Stream<Path> artifacts = ArtifactUtil.findArtifactFile(Environment.get(LIB),
+				try (Stream<Path> artifacts = ArtifactUtil.findArtifactFile(Environment.LIB.path(),
 						coordinate.artifactId)) {
 					artifact = artifacts.findAny().orElse(null);
 				} catch (IOException e1) {
@@ -171,7 +170,7 @@ public final class PluginExe extends Exelet {
 			return failure(outcome);
 
 		// Move into library directory
-		Files.move(binary, Environment.get(LIB).resolve(id + ".jar"));
+		Files.move(binary, Environment.LIB.path().resolve(id + ".jar"));
 		return success(outcome);
 	}
 

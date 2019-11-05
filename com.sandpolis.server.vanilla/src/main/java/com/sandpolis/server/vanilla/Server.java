@@ -17,11 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.DB;
-import static com.sandpolis.core.instance.Environment.EnvPath.GEN;
-import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
-import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
-import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.store.database.DatabaseStore.DatabaseStore;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
@@ -154,12 +149,12 @@ public final class Server {
 	@InitializationTask(name = "Load runtime environment", fatal = true)
 	public static final Task loadEnvironment = new Task((task) -> {
 
-		if (!Environment.load(DB.setDefault(Config.get("server.path.db")),
-				GEN.setDefault(Config.get("server.path.gen")), LOG.setDefault(Config.get("path.log")),
-				TMP.setDefault(Config.get("path.tmp")), LIB.setDefault(Config.get("path.lib")))) {
-			Environment.setup();
-		}
+		Environment.DB.set(Config.get("server.path.db"));
+		Environment.GEN.set(Config.get("server.path.gen"));
+		Environment.LOG.set(Config.get("path.log"));
+		Environment.TMP.set(Config.get("path.tmp"));
 
+		Environment.setup();
 		return task.success();
 	});
 
@@ -210,7 +205,7 @@ public final class Server {
 		DatabaseStore.init(config -> {
 
 			// Build connection URL
-			String url = String.format("jdbc:h2:%s", Environment.get(DB).resolve("server.db").toUri());
+			String url = String.format("jdbc:h2:%s", Environment.DB.path().resolve("server.db").toUri());
 
 			Configuration conf = new Configuration()
 					// Set the H2 database driver
@@ -328,18 +323,18 @@ public final class Server {
 		GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin").build());
 
 		// Generate client
-		new MegaGen(GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
-				.setMega(MegaConfig.newBuilder().setMemory(false)
-						.setFeatures(FeatureSet.newBuilder().addPlugin("sandpolis-plugin-desktop")
-								.addPlugin("sandpolis-plugin-filesys").addPlugin("sandpolis-plugin-sysinfo")
-								.addPlugin("sandpolis-plugin-shell"))
-						.setExecution(ExecutionConfig.newBuilder().putInstallPath(OsType.LINUX_VALUE,
-								"/home/cilki/.sandpolis"))
-						.setNetwork(NetworkConfig.newBuilder()
-								.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000).setMaxTimeout(5000)
-										.setStrictCerts(false)
-										.addTarget(NetworkTarget.newBuilder().setAddress("127.0.0.1").setPort(10101)))))
-				.build()).generate();
+		new MegaGen(
+				GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
+						.setMega(MegaConfig.newBuilder().setMemory(false).setFeatures(FeatureSet.newBuilder()
+								.addPlugin("com.sandpolis.plugin.desktop").addPlugin("com.sandpolis.plugin.filesys")
+								.addPlugin("com.sandpolis.plugin.sysinfo").addPlugin("com.sandpolis.plugin.shell"))
+								.setExecution(ExecutionConfig.newBuilder().putInstallPath(OsType.LINUX_VALUE,
+										"/home/cilki/.sandpolis"))
+								.setNetwork(NetworkConfig
+										.newBuilder().setLoopConfig(LoopConfig.newBuilder().setTimeout(5000)
+												.setMaxTimeout(5000).setStrictCerts(false).addTarget(NetworkTarget
+														.newBuilder().setAddress("127.0.0.1").setPort(10101)))))
+						.build()).generate();
 
 		return task.success();
 	});

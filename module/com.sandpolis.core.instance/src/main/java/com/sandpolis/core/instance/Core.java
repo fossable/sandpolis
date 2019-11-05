@@ -114,7 +114,7 @@ public final class Core {
 	 * @return The instance's {@link SO_DependencyMatrix} object
 	 */
 	private static SO_DependencyMatrix readMatrix() {
-		if (MainDispatch.getMain() == MainDispatch.class)
+		if (MainDispatch.getMain() == null)
 			throw new IllegalStateException("Core initialized before dispatch");
 
 		try {
@@ -130,7 +130,7 @@ public final class Core {
 	 * @return The instance's {@link SO_Build} object
 	 */
 	private static SO_Build readBuild() {
-		if (MainDispatch.getMain() == MainDispatch.class)
+		if (MainDispatch.getMain() == null)
 			throw new IllegalStateException("Core initialized before dispatch");
 
 		try {

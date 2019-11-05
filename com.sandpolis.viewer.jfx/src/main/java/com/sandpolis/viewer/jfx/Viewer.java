@@ -17,9 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.viewer.jfx;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
-import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
-import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
@@ -84,9 +81,7 @@ public final class Viewer {
 	@InitializationTask(name = "Load runtime environment", fatal = true)
 	private static final Task loadEnvironment = new Task((task) -> {
 
-		if (!Environment.load(LOG, TMP, LIB))
-			Environment.setup();
-
+		Environment.setup();
 		return task.success();
 	});
 

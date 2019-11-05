@@ -17,9 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.client.mega;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
-import static com.sandpolis.core.instance.Environment.EnvPath.LOG;
-import static com.sandpolis.core.instance.Environment.EnvPath.TMP;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
@@ -121,7 +118,7 @@ public final class Client {
 				System.getProperty("user.home") + "/.sandpolis"));
 		Path lib = base.resolve("lib");
 
-		if (Environment.JAR.getParent().equals(lib))
+		if (Environment.JAR.path().getParent().equals(lib))
 			// Already installed
 			return task.skipped();
 
@@ -138,8 +135,8 @@ public final class Client {
 
 		try {
 			// TODO remove nested libraries
-			log.debug("Installing client binary from: {} into: {}", Environment.JAR, lib.toAbsolutePath());
-			Files.copy(Environment.JAR, lib.resolve("sandpolis-client-5.1.1.jar"), REPLACE_EXISTING);
+			log.debug("Installing client binary from: {} into: {}", Environment.JAR.path(), lib.toAbsolutePath());
+			Files.copy(Environment.JAR.path(), lib.resolve(Environment.JAR.path().getFileName()), REPLACE_EXISTING);
 
 		} catch (IOException e) {
 			// Force install if enabled
@@ -165,8 +162,8 @@ public final class Client {
 
 		// TODO regular launch
 		var cmd = new String[] { "screen", "-S", "com.sandpolis.client.mega", "-X", "stuff",
-				"clear && java -Djava.system.class.loader=com.github.cilki.compact.CompactClassLoader -jar "
-						+ lib.resolve("sandpolis-client-5.1.1.jar").toAbsolutePath().toString() + "\n" };
+				"clear && java -jar "
+						+ lib.resolve(Environment.JAR.path().getFileName()).toAbsolutePath().toString() + "\n" };
 		Runtime.getRuntime().exec(cmd);
 
 		System.exit(0);
@@ -179,9 +176,7 @@ public final class Client {
 	@InitializationTask(name = "Load runtime environment", fatal = true)
 	public static final Task loadEnvironment = new Task((task) -> {
 
-		if (!Environment.load(TMP, LOG, LIB))
-			Environment.setup();
-
+		Environment.setup();
 		return task.success();
 	});
 
@@ -217,9 +212,41 @@ public final class Client {
 			config.ephemeral();
 		});
 
-		// Register the subscribers in this class by building a temporary instance
-		var client = new Client();
-		NetworkStore.register(client);
+		NetworkStore.register(new Object() {
+			@Subscribe
+			private void onSrvLost(ServerLostEvent event) {
+				ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig());
+			}
+
+			@Subscribe
+			private void onSrvEstablished(ServerEstablishedEvent event) {
+				ResponseFuture<Outcome> future;
+				var auth = SO_CONFIG.getAuthentication();
+
+				switch (auth.getAuthOneofCase()) {
+				case KEY:
+					KeyContainer mech = auth.getKey();
+					ReciprocalKeyPair key = new ReciprocalKeyPair(mech.getClient().getVerifier().toByteArray(),
+							mech.getClient().getSigner().toByteArray());
+					future = AuthCmd.async().key(auth.getGroupName(), mech.getId(), key);
+					break;
+				case PASSWORD:
+					future = AuthCmd.async().password(auth.getPassword().getPassword());
+					break;
+				default:
+					future = AuthCmd.async().none();
+					break;
+				}
+
+				if (Config.getBoolean("plugin.enabled") && !SO_CONFIG.getMemory()) {
+					future.addHandler((Outcome rs) -> {
+						// Synchronize plugins
+						PluginCmd.async().sync().sync();
+						PluginStore.loadPlugins();
+					});
+				}
+			}
+		});
 
 		return task.success();
 	});
@@ -246,40 +273,6 @@ public final class Client {
 		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig());
 		return task.success();
 	});
-
-	@Subscribe
-	private void onSrvLost(ServerLostEvent event) {
-		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig());
-	}
-
-	@Subscribe
-	private void onSrvEstablished(ServerEstablishedEvent event) {
-		ResponseFuture<Outcome> future;
-		var auth = SO_CONFIG.getAuthentication();
-
-		switch (auth.getAuthOneofCase()) {
-		case KEY:
-			KeyContainer mech = auth.getKey();
-			ReciprocalKeyPair key = new ReciprocalKeyPair(mech.getClient().getVerifier().toByteArray(),
-					mech.getClient().getSigner().toByteArray());
-			future = AuthCmd.async().key(auth.getGroupName(), mech.getId(), key);
-			break;
-		case PASSWORD:
-			future = AuthCmd.async().password(auth.getPassword().getPassword());
-			break;
-		default:
-			future = AuthCmd.async().none();
-			break;
-		}
-
-		if (Config.getBoolean("plugin.enabled") && !SO_CONFIG.getMemory()) {
-			future.addHandler((Outcome rs) -> {
-				// Synchronize plugins
-				PluginCmd.async().sync().sync();
-				PluginStore.loadPlugins();
-			});
-		}
-	}
 
 	private Client() {
 	}

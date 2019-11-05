@@ -17,231 +17,145 @@
  ******************************************************************************/
 package com.sandpolis.core.instance;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.security.ProtectionDomain;
 
 /**
- * This class contains important information about the runtime environment.<br>
- * <br>
- *
- * Implementation note: Only standard Java classes may be used so this class can
- * be loaded regardless of the classpath situation.
+ * This class contains important information about the runtime file hierarchy.
  *
  * @author cilki
  * @since 4.0.0
  */
-public final class Environment {
+public enum Environment {
 
 	/**
-	 * The location of the main instance jar.
+	 * The main instance jar file.
 	 */
-	public static final Path JAR = discoverJar();
+	JAR(discoverJar()),
 
 	/**
-	 * The location of the base directory.
+	 * The library directory for Java modules.
 	 */
-	public static final Path BASE = discoverBase();
+	LIB(JAR.path() == null ? null : JAR.path().getParent()),
 
 	/**
-	 * The names of common environment directories.
+	 * The log directory.
 	 */
-	public enum EnvPath {
+	LOG(LIB.path() == null ? null : LIB.path().resolveSibling("log")),
 
-		/**
-		 * The location of the database directory.
-		 */
-		DB,
+	/**
+	 * The plugin directory.
+	 */
+	PLUGIN(LIB.path() == null ? null : LIB.path().resolveSibling("plugin")),
 
-		/**
-		 * The location of the payload archive.
-		 */
-		GEN,
+	/**
+	 * The database data directory.
+	 */
+	DB(LIB.path() == null ? null : LIB.path().resolveSibling("db")),
 
-		/**
-		 * The location of the library directory for Java dependencies.
-		 */
-		LIB,
+	/**
+	 * The payload archive.
+	 */
+	GEN(LIB.path() == null ? null : LIB.path().resolveSibling("gen")),
 
-		/**
-		 * The location of the log directory.
-		 */
-		LOG(System.getProperty("user.home") + "/.sandpolis/log"),
+	/**
+	 * The temporary directory.
+	 */
+	TMP(Paths.get(System.getProperty("java.io.tmpdir")));
 
-		/**
-		 * The location of the external plugin directory.
-		 */
-		PLUGIN(System.getProperty("user.home") + "/.sandpolis/plugins"),
+	/**
+	 * The absolute {@link Path} of the environment path.
+	 */
+	private Path path;
 
-		/**
-		 * The location of the temporary directory.
-		 */
-		TMP(System.getProperty("java.io.tmpdir"));
-
-		/**
-		 * A default path.
-		 */
-		private Path def;
-
-		/**
-		 * Build a {@link EnvPath} without a default.
-		 */
-		private EnvPath() {
-		}
-
-		/**
-		 * Build a {@link EnvPath} with the given default.
-		 *
-		 * @param def The default path
-		 */
-		private EnvPath(String def) {
-			setDefault(def);
-		}
-
-		/**
-		 * Get the {@link EnvPath}'s default path.
-		 *
-		 * @return The default path or {@code null} if none
-		 */
-		public Path getDefault() {
-			return def;
-		}
-
-		/**
-		 * Set the default path for this {@link EnvPath}.
-		 *
-		 * @param d The new default path
-		 * @return {@code this}
-		 */
-		public EnvPath setDefault(String d) {
-			if (d != null)
-				this.def = Paths.get(d);
-			return this;
-		}
+	/**
+	 * Build a {@link EnvPath} without a default.
+	 */
+	private Environment() {
 	}
 
-	private static Map<EnvPath, Path> envpaths;
+	/**
+	 * @param def The default path
+	 */
+	private Environment(Path def) {
+		this.path = def.toAbsolutePath();
+	}
 
 	/**
-	 * Get an environment path.
+	 * Get the path.
 	 *
-	 * @param path The path type
-	 * @return The corresponding {@link Path}
+	 * @return The path or {@code null} if none
 	 */
-	public static Path get(EnvPath path) {
-		return envpaths.get(path);
+	public Path path() {
+		return path;
 	}
 
 	/**
-	 * Load the filesystem environment.
+	 * Set the path unless {@code null}.
 	 *
-	 * @param paths
-	 * @return Whether the environment is set up
+	 * @param path The new path or {@code null}
 	 */
-	public static boolean load(EnvPath... paths) {
-		if (envpaths != null)
-			throw new IllegalStateException();
-
-		// Run environment checks
-		if (JAR != null && (!Files.exists(JAR) || Files.isDirectory(JAR)))
-			throw new RuntimeException("Failed to locate instance jar.");
-		if (BASE == null || !Files.exists(BASE) || !Files.isDirectory(BASE))
-			throw new RuntimeException("Failed to locate base directory.");
-
-		envpaths = Arrays.stream(paths).collect(Collectors.toUnmodifiableMap(p -> p, p -> discover(p)));
-
-		for (Path p : envpaths.values())
-			if (!Files.exists(p))
-				return false;
-		return true;
+	public void set(String path) {
+		if (path != null)
+			this.path = Paths.get(path).toAbsolutePath();
 	}
 
-	/**
-	 * Set up the filesystem environment. This method is idempotent.
-	 */
-	public static void setup() {
-		try {
-			for (Path p : envpaths.values()) {
-				if (!Files.exists(p))
-					Files.createDirectories(p);
-				if (!Files.isDirectory(p))
-					throw new RuntimeException("Expected directory: " + p);
+	public static void setup() throws IOException {
+		createDirectories(DB, GEN, LOG, PLUGIN, TMP);
+
+		// Check environment postconditions
+		requireReadable(LIB, DB, GEN, PLUGIN, TMP);
+		requireWritable(DB, GEN, PLUGIN, TMP);
+	}
+
+	private static void createDirectories(Environment... paths) throws IOException {
+		for (var env : paths) {
+			if (env.path != null) {
+				if (Files.exists(env.path)) {
+					if (!Files.isDirectory(env.path)) {
+						throw new RuntimeException();
+					}
+				} else {
+					Files.createDirectories(env.path);
+				}
 			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+		}
+	}
+
+	private static void requireReadable(Environment... paths) {
+		for (var env : paths) {
+			if (env.path != null && !Files.isReadable(env.path)) {
+				throw new RuntimeException("Unreadable directory: " + env.path);
+			}
+		}
+	}
+
+	private static void requireWritable(Environment... paths) {
+		for (var env : paths) {
+			if (env.path != null && !Files.isWritable(env.path)) {
+				throw new RuntimeException("Unwritable directory: " + env.path);
+			}
 		}
 	}
 
 	/**
-	 * Locate the instance jar.
+	 * Locate the instance jar by querying the {@link ProtectionDomain} of the
+	 * instance class.
 	 *
-	 * @return A {@link Path} representing the main jar file
+	 * @return A {@link Path} to the main jar file or {@code null}
 	 */
 	private static Path discoverJar() {
-		try {
-			Path jar = Paths.get(MainDispatch.getMain().getProtectionDomain().getCodeSource().getLocation().toURI());
-			if (Files.isDirectory(jar))
-				return null;
-			return jar;
-		} catch (Exception e) {
+		if (MainDispatch.getMain() == null)
+			// Called before dispatch
 			return null;
-		}
-	}
 
-	/**
-	 * Locate the base directory.
-	 *
-	 * @return A {@link File} representing the base directory or {@code null} if an
-	 *         error occurred
-	 */
-	private static Path discoverBase() {
-		if (JAR == null)
-			// Unit test mode engaged
-			try {
-				return Files.createTempDirectory("unit_environment_");
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		return JAR.getParent();
-	}
-
-	/**
-	 * Locate a subdirectory of the {@link #BASE} directory. This method resolves
-	 * symbolic links.
-	 *
-	 * @param sub The desired subdirectory
-	 * @return A {@link Path} representing the subdirectory or {@code null} if an
-	 *         error occurred
-	 */
-	private static Path discover(EnvPath sub) {
 		try {
-			Path p = BASE.resolve(sub.name().toLowerCase()).toFile().getCanonicalFile().toPath();
-			if (Files.exists(p))
-				return p;
-			if (sub.getDefault() != null)
-				return sub.getDefault();
-
-			return p;
+			return Paths.get(MainDispatch.getMain().getProtectionDomain().getCodeSource().getLocation().toURI());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	/**
-	 * Print the environment for debugging.
-	 */
-	public static void print() {
-		System.out.println("\t=== ENVIRONMENT ===");
-		System.out.println("BASE: " + BASE);
-		for (EnvPath p : envpaths.keySet())
-			System.out.println(p + ": " + envpaths.get(p));
-	}
-
-	private Environment() {
 	}
 }

@@ -1,4 +1,4 @@
-module com.sandpolis.viewer.jfx {
+open module com.sandpolis.viewer.jfx {
 	exports com.sandpolis.viewer.jfx.common.button;
 	exports com.sandpolis.viewer.jfx.common.controller;
 	exports com.sandpolis.viewer.jfx.common.field;

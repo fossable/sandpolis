@@ -17,8 +17,6 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.gen;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.GEN;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,7 +48,7 @@ public abstract class FileGenerator extends Generator {
 		super.generate();
 
 		if (result != null) {
-			resultArchive = Environment.get(GEN).resolve(config.getId() + "." + packager.getFileExtension());
+			resultArchive = Environment.GEN.path().resolve(config.getId() + "." + packager.getFileExtension());
 			Files.write(resultArchive, result);
 
 			computeMetadata();

@@ -68,7 +68,7 @@ public final class MainDispatch {
 	/**
 	 * The instance's main {@link Class}.
 	 */
-	private static Class<?> main = MainDispatch.class;
+	private static Class<?> main;
 
 	/**
 	 * The instance's {@link Instance} type.
@@ -83,8 +83,8 @@ public final class MainDispatch {
 	/**
 	 * Get the {@link Class} that was dispatched.
 	 *
-	 * @return The dispatched {@link Class} or {@code MainDispatch.class} if
-	 *         {@link #dispatch} has not been called
+	 * @return The dispatched {@link Class} or {@code null} if {@link #dispatch} has
+	 *         not been called
 	 */
 	public static Class<?> getMain() {
 		return main;
@@ -130,7 +130,7 @@ public final class MainDispatch {
 	 * @param flavor   The instance's {@link InstanceFlavor}
 	 */
 	public static void dispatch(Class<?> main, String[] args, Instance instance, InstanceFlavor flavor) {
-		if (MainDispatch.main != MainDispatch.class)
+		if (MainDispatch.main != null)
 			throw new IllegalStateException("Dispatch cannot be called more than once");
 
 		MainDispatch.main = Objects.requireNonNull(main);

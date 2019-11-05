@@ -56,7 +56,7 @@ public final class ClientExe extends Exelet {
 				// OS Family
 				.setOs(PlatformUtil.OS_TYPE)
 				// Base directory location
-				.setInstallDirectory(Environment.BASE.toString());
+				.setInstallDirectory(Environment.JAR.path().getParent().toString());
 	}
 
 	@Auth
