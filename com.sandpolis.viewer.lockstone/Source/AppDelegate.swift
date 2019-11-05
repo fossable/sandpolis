@@ -18,6 +18,7 @@
 import UIKit
 import Firebase
 import FirebaseAuth
+import os
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -26,9 +27,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 		FirebaseApp.configure()
-		UserDefaults.standard.set(0, forKey: "defaultView")
 
-		if let _ = UserDefaults.standard.string(forKey: "uuid") {
+		if let uuid = UserDefaults.standard.string(forKey: "uuid") {
+			os_log("Recalled UUID: %s", uuid)
 		} else {
 			UserDefaults.standard.set(UUID().uuidString, forKey: "uuid")
 		}

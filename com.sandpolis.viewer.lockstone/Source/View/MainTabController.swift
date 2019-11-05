@@ -24,13 +24,23 @@ class MainTabController: UITabBarController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		navigationItem.title = server.name
-		let hostListVC = viewControllers![0] as! ClientList
-		hostListVC.server = server
-		let listFirst = UserDefaults.standard.integer(forKey: "defaultView")
-		if listFirst == 0 {
-			self.selectedIndex = 0
-		} else {
-			self.selectedIndex = 1
+		
+		if let list = viewControllers![0] as? ClientList {
+			list.server = server
+		}
+		if let map = viewControllers![1] as? ClientMap {
+			map.server = server
+		}
+		
+		if let defaultView = UserDefaults.standard.string(forKey: "default_view") {
+			switch defaultView {
+			case "list":
+				self.selectedIndex = 0
+			case "map":
+				self.selectedIndex = 1
+			default:
+				break
+			}
 		}
 	}
 }

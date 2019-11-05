@@ -22,6 +22,8 @@ import CoreLocation
 class ClientMap: UIViewController, MKMapViewDelegate {
 
 	@IBOutlet weak var map: MKMapView!
+	
+	var server: SandpolisServer!
 
 	private var navShadow: UIImage?
 	private var navTranslucent: Bool?
@@ -31,6 +33,11 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 		super.viewDidLoad()
 
 		map.delegate = self
+		if UserDefaults.standard.bool(forKey: "map.location") {
+			map.showsUserLocation = true
+			CLLocationManager().requestWhenInUseAuthorization()
+		}
+
 		for host in SandpolisUtil.connection.profiles {
 			if let pin = ClientAnnotation(host) {
 				map.addAnnotation(pin)

@@ -17,7 +17,6 @@
 		85CECBF922D9897400EF1A6E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CECBF822D9897400EF1A6E /* Settings.swift */; };
 		8C36F32D15727B1432C2C03A /* Pods_Sandpolis.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E698DECED333654BF5F210 /* Pods_Sandpolis.framework */; };
 		8E653C2222E6595D00BB8FEA /* MainTabController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E653C2122E6595D00BB8FEA /* MainTabController.swift */; };
-		8E653C2422E661A000BB8FEA /* ChangePassword.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E653C2322E661A000BB8FEA /* ChangePassword.swift */; };
 		8E72F6CE2300C46F000D621A /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E72F6CD2300C46F000D621A /* CoreLocation.framework */; };
 		8E72F6D02300C70E000D621A /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E72F6CF2300C70E000D621A /* MapKit.framework */; };
 		8EAD841C22CBD80700B49D59 /* ClientMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EAD841B22CBD80700B49D59 /* ClientMap.swift */; };
@@ -138,7 +137,6 @@
 		85CECBF822D9897400EF1A6E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		87E698DECED333654BF5F210 /* Pods_Sandpolis.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Sandpolis.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E653C2122E6595D00BB8FEA /* MainTabController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabController.swift; sourceTree = "<group>"; };
-		8E653C2322E661A000BB8FEA /* ChangePassword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePassword.swift; sourceTree = "<group>"; };
 		8E72F6CD2300C46F000D621A /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		8E72F6CF2300C70E000D621A /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		8EAD841B22CBD80700B49D59 /* ClientMap.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientMap.swift; sourceTree = "<group>"; };
@@ -320,7 +318,6 @@
 		AA642E3923088DE70027BEC2 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
-				8E653C2322E661A000BB8FEA /* ChangePassword.swift */,
 				85CECBF822D9897400EF1A6E /* Settings.swift */,
 			);
 			path = Settings;
@@ -967,7 +964,6 @@
 				AA70158922D7CAD800A1E4ED /* SandpolisStream.swift in Sources */,
 				AA6A75BA236156F700AA1A4D /* TerminalView.swift in Sources */,
 				8533115A2300183600D3B0F9 /* HostGroupHeaderCell.swift in Sources */,
-				8E653C2422E661A000BB8FEA /* ChangePassword.swift in Sources */,
 				AACBF8D622F3A9750015DCE6 /* FolderUpCell.swift in Sources */,
 				AAB6D938235FDF3F00FED79B /* msg_network.pb.swift in Sources */,
 				AAB6D934235FDF3F00FED79B /* msg_listener.pb.swift in Sources */,
