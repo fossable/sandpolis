@@ -39,7 +39,7 @@ public class PyPackager extends MegaGen {
 	}
 
 	@Override
-	protected void generate() throws Exception {
+	protected byte[] generate() throws Exception {
 		Map<String, String> cfg = new HashMap<>();
 
 		String stub = CharStreams
@@ -49,6 +49,7 @@ public class PyPackager extends MegaGen {
 						.map(entry -> String.format("config['%s'] = '%s'%n", entry.getKey(), entry.getValue()))
 						.collect(Collectors.joining()));
 
+		return stub.getBytes();
 	}
 
 }

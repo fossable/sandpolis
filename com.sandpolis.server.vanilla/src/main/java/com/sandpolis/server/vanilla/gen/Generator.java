@@ -18,9 +18,11 @@
 package com.sandpolis.server.vanilla.gen;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import com.sandpolis.core.instance.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +30,8 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.GenReport;
+
+import static com.google.common.io.Files.getNameWithoutExtension;
 
 /**
  * The parent class of all output generators.
@@ -65,7 +69,7 @@ public abstract class Generator implements Runnable {
 
 	/**
 	 * Compute output metadata.
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	protected void computeMetadata() throws IOException {
@@ -82,7 +86,7 @@ public abstract class Generator implements Runnable {
 	/**
 	 * Performs the generation synchronously.
 	 */
-	protected abstract void generate() throws Exception;
+	protected abstract byte[] generate() throws Exception;
 
 	/**
 	 * Get the generation report. Each invocation of this method returns a new (yet
@@ -124,8 +128,15 @@ public abstract class Generator implements Runnable {
 				.setDuration(System.currentTimeMillis());
 
 		try {
-			generate();
+			result = generate();
 			computeMetadata();
+
+			// Write to archive
+			int seq = Files.list(Environment.GEN.path()).mapToInt(path -> {
+				return Integer.parseInt(getNameWithoutExtension(path.getFileName().toString()));
+			}).sorted().findFirst().orElse(-1) + 1;
+
+			Files.write(Environment.GEN.path().resolve("" + seq), result);
 		} catch (Exception e) {
 			log.error("Generation failed", e);
 			report.setResult(false);

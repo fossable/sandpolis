@@ -73,8 +73,12 @@ public final class Client {
 	public static final MegaConfig SO_CONFIG;
 
 	static {
-		try {
-			SO_CONFIG = MegaConfig.parseFrom(Client.class.getResourceAsStream("/soi/client.bin"));
+		try (var in = Client.class.getResourceAsStream("/soi/client.bin")) {
+			if (in != null) {
+				SO_CONFIG = MegaConfig.parseFrom(in);
+			} else {
+				throw new RuntimeException("Missing SO_CONFIG!");
+			}
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to read SO_CONFIG!", e);
 		}

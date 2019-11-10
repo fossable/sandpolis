@@ -32,9 +32,7 @@ public class RbPackager extends MegaGen {
 	}
 
 	@Override
-	protected void generate() throws Exception {
-		// TODO Auto-generated method stub
-		
+	protected byte[] generate() throws Exception {
+		return null;
 	}
-
 }

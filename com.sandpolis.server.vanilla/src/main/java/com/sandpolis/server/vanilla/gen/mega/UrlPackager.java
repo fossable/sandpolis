@@ -19,8 +19,6 @@ package com.sandpolis.server.vanilla.gen.mega;
 
 import com.google.common.io.BaseEncoding;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.core.proto.util.Generator.MegaConfig;
-import com.sandpolis.core.proto.util.Generator.MicroConfig;
 import com.sandpolis.server.vanilla.gen.MegaGen;
 
 /**
@@ -34,17 +32,18 @@ public class UrlPackager extends MegaGen {
 		super(config);
 	}
 
-	public byte[] process(GenConfig config, Object payload) throws Exception {
+	@Override
+	protected byte[] generate() throws Exception {
 		String url = "https://sandpolis.com/config?c=";
 
 		switch (config.getPayload()) {
 		case OUTPUT_CONFIG:
 			switch (config.getPayloadConfigCase()) {
 			case MEGA:
-				url += BaseEncoding.base64Url().encode(((MegaConfig) payload).toByteArray());
+				url += BaseEncoding.base64Url().encode(config.getMega().toByteArray());
 				break;
 			case MICRO:
-				url += BaseEncoding.base64Url().encode(((MicroConfig) payload).toByteArray());
+				url += BaseEncoding.base64Url().encode(config.getMicro().toByteArray());
 				break;
 			default:
 				throw new RuntimeException();
@@ -53,11 +52,5 @@ public class UrlPackager extends MegaGen {
 		}
 
 		return url.getBytes();
-	}
-
-	@Override
-	protected void generate() throws Exception {
-		// TODO Auto-generated method stub
-		
 	}
 }

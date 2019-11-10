@@ -84,7 +84,7 @@ jar {
 }
 
 task jarOnlineWin(type: Jar, dependsOn: jar) {
-	baseName = "SandpolisInstaller-win"
+	archiveBaseName = "SandpolisInstaller-win"
 	manifest {
 		attributes(
 			'Main-Class': 'com.github.cilki.compact.BootProxy',
@@ -95,12 +95,12 @@ task jarOnlineWin(type: Jar, dependsOn: jar) {
 		)
 	}
 
-	from zipTree(jar.archivePath)
+	from zipTree(jar.archiveFile)
 	from configurations.windows
 }
 
 task jarOnlineLin(type: Jar, dependsOn: jar) {
-	baseName = "SandpolisInstaller-linux"
+	archiveBaseName = "SandpolisInstaller-linux"
 	manifest {
 		attributes(
 			'Main-Class': 'com.github.cilki.compact.BootProxy',
@@ -111,12 +111,12 @@ task jarOnlineLin(type: Jar, dependsOn: jar) {
 		)
 	}
 
-	from zipTree(jar.archivePath)
+	from zipTree(jar.archiveFile)
 	from configurations.linux
 }
 
 task jarOnlineMac(type: Jar, dependsOn: jar) {
-	baseName = "SandpolisInstaller-mac"
+	archiveBaseName = "SandpolisInstaller-mac"
 	manifest {
 		attributes(
 			'Main-Class': 'com.github.cilki.compact.BootProxy',
@@ -127,33 +127,14 @@ task jarOnlineMac(type: Jar, dependsOn: jar) {
 		)
 	}
 
-	from zipTree(jar.archivePath)
+	from zipTree(jar.archiveFile)
 	from configurations.mac
-}
-
-task jarOffline(type: Jar, dependsOn: jar) {
-	baseName = "SandpolisInstaller-offline"
-	manifest {
-		attributes(
-			'Main-Class': 'com.github.cilki.compact.BootProxy',
-			'Boot-Class': 'com.sandpolis.installer.Main',
-			'Compact-Class-Path': configurations.linux.plus(configurations.windows).plus(configurations.mac)
-				.collect { it.getName() }
-				.join(' ')
-		)
-	}
-
-	from zipTree(jar.archivePath)
-	from configurations.installTargets
-
-	from configurations.linux.plus(configurations.windows).plus(configurations.mac)
 }
 
 artifacts {
 	archives jarOnlineWin
 	archives jarOnlineLin
 	archives jarOnlineMac
-	archives jarOffline
 }
 
 launch4j {
@@ -166,7 +147,7 @@ launch4j {
 	windowTitle = 'Sandpolis Installer'
 	version = "0.${SANDPOLIS_VERSION}"
 	textVersion = "0.${SANDPOLIS_VERSION}"
-	jar = jarOnlineWin.archivePath
+	jar = jarOnlineWin.archiveFile
 	copyConfigurable = jarOnlineWin
 	icon = "${projectDir}/sandpolis.ico"
 }
@@ -181,10 +162,9 @@ githubRelease {
 	releaseAssets = {[
 		// TODO Classpath isn't handled properly with launch4j
 		// project.file("build/launch4j/${launch4j.outfile}"),
-		jarOnlineWin.archivePath,
-		jarOnlineLin.archivePath,
-		jarOnlineMac.archivePath,
-		jarOffline.archivePath
+		jarOnlineWin.archiveBaseName,
+		jarOnlineLin.archiveBaseName,
+		jarOnlineMac.archiveBaseName,
 	]}
 }
 tasks.githubRelease.dependsOn(assemble)

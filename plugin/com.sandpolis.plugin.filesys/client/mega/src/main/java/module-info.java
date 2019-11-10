@@ -8,6 +8,6 @@ module com.sandpolis.plugin.filesys.client.mega {
 	requires com.sandpolis.core.net;
 	requires com.sandpolis.core.proto;
 	requires com.sandpolis.plugin.filesys;
-	
+
 	provides com.sandpolis.core.instance.plugin.SandpolisPlugin with com.sandpolis.plugin.filesys.client.mega.FilesysPlugin;
 }

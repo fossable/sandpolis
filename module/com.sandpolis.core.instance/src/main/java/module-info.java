@@ -21,6 +21,6 @@ open module com.sandpolis.core.instance {
 	requires java.persistence;
 	requires java.prefs;
 	requires org.slf4j;
-	
+
 	uses com.sandpolis.core.instance.plugin.SandpolisPlugin;
 }

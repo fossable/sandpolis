@@ -337,6 +337,8 @@ public final class Server {
 						.build())
 				.run();
 
+		// Execute
+		Runtime.getRuntime().exec(new String[] { "java", "-jar", Environment.GEN.path().resolve("0").toString() });
 		return task.success();
 	});
 

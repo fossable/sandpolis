@@ -45,7 +45,7 @@ public class JarPackager extends MegaGen {
 	}
 
 	@Override
-	protected void generate() throws Exception {
+	protected byte[] generate() throws Exception {
 		Path client = Environment.LIB.path().resolve("sandpolis-client-mega-" + Core.SO_BUILD.getVersion() + ".jar");
 
 		ZipSet output;
@@ -62,6 +62,7 @@ public class JarPackager extends MegaGen {
 			}
 		} else {
 			Properties cfg = new Properties();
+			cfg.setProperty("screen.session", "com.sandpolis.client.mega");
 			cfg.put("modules", getDependencies().stream().collect(Collectors.joining(" ")));
 			for (var entry : config.getMega().getExecution().getInstallPathMap().entrySet()) {
 				switch (entry.getKey()) {
@@ -98,15 +99,8 @@ public class JarPackager extends MegaGen {
 				output.add("config.properties", out.toByteArray());
 			}
 
-			// Add client
-			output.add(EntryPath.get("lib/" + installer.getFileName()), client);
-
-			// Add client configuration
-			output.add(EntryPath.get("lib/" + installer.getFileName(), "soi/client.bin"),
-					config.getMega().toByteArray());
-
 			if (config.getMega().getDownloader()) {
-
+				// TODO
 			} else {
 				for (String dependency : getDependencies()) {
 					Path source = ArtifactUtil.getArtifactFile(Environment.LIB.path(), dependency);
@@ -119,8 +113,11 @@ public class JarPackager extends MegaGen {
 					}
 				}
 			}
+
+			// Add client configuration
+			output.add(EntryPath.get("lib/" + client.getFileName(), "soi/client.bin"), config.getMega().toByteArray());
 		}
 
-		output.build(Environment.GEN.path().resolve("0.jar"));
+		return output.build();
 	}
 }
