@@ -37,7 +37,7 @@ dependencies {
 	api 'com.googlecode.lanterna:lanterna:3.0.1'
 
 	// https://github.com/netty/netty
-	api 'io.netty:netty-common:4.1.42.Final'
+	api 'io.netty:netty-common:4.1.43.Final'
 	api 'io.netty:netty-codec:4.1.42.Final'
 	api 'io.netty:netty-transport:4.1.42.Final'
 	api 'io.netty:netty-handler:4.1.42.Final'
