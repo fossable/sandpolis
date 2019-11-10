@@ -1,4 +1,4 @@
-module com.sandpolis.client.mega {
+open module com.sandpolis.client.mega {
 	exports com.sandpolis.client.mega.cmd;
 	exports com.sandpolis.client.mega.exe;
 	exports com.sandpolis.client.mega;

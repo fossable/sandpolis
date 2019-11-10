@@ -25,10 +25,6 @@ eclipse {
 	}
 }
 
-configurations {
-	internal
-}
-
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
 
@@ -40,9 +36,6 @@ dependencies {
 	api project(':module:com.sandpolis.core.soi')
 	api project(':module:com.sandpolis.core.stream')
 	api project(':module:com.sandpolis.core.util')
-
-	// https://github.com/cilki/CompactClassLoader
-	internal 'com.github.cilki:compact-classloader:1.3.1'
 
 	// https://github.com/google/guava
 	api 'com.google.guava:guava:28.1-jre'
@@ -62,23 +55,7 @@ dependencies {
 jar {
 	manifest {
 		attributes(
-			'Main-Class': 'com.github.cilki.compact.BootProxy',
-			'Boot-Class': 'com.sandpolis.client.mega.Main',
-			'Compact-Class-Path': configurations.runtimeClasspath
-				.collect { 'lib/' + it.getName() }
-				.join(' ')
+			'Main-Class': 'com.sandpolis.client.mega.Main',
 		)
 	}
-
-	from configurations.internal.collect {zipTree(it)}
-}
-
-deploy {
-	jvmArgs = [
-		'-Djava.system.class.loader=com.github.cilki.compact.CompactClassLoader',
-		'-Dlogging.net.traffic.raw=false',
-		'-Dlogging.net.traffic.decoded=false',
-		'-Dnet.connection.tls=true',
-		'-Dplugin.enabled=true'
-	]
 }

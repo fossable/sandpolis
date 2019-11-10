@@ -15,28 +15,40 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.server.vanilla.gen.generator;
+package com.sandpolis.server.vanilla.gen.mega;
 
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.server.vanilla.gen.FileGenerator;
+import com.sandpolis.server.vanilla.gen.MegaGen;
 
 /**
- * This generator builds a MICRO client.
+ * This generator produces a Python script.
  *
  * @author cilki
  * @since 5.0.0
  */
-public class MicroGen extends FileGenerator {
-
-	public MicroGen(GenConfig config) {
+public class PyPackager extends MegaGen {
+	public PyPackager(GenConfig config) {
 		super(config);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
-	protected Object run() throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+	protected void generate() throws Exception {
+		Map<String, String> cfg = new HashMap<>();
+
+		String stub = CharStreams
+				.toString(new InputStreamReader(PyPackager.class.getResourceAsStream("stub.py"), Charsets.UTF_8));
+		stub.replaceFirst("# PLACEHOLDER",
+				cfg.entrySet().stream()
+						.map(entry -> String.format("config['%s'] = '%s'%n", entry.getKey(), entry.getValue()))
+						.collect(Collectors.joining()));
+
 	}
 
 }

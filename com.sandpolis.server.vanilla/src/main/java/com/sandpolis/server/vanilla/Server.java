@@ -85,7 +85,7 @@ import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.auth.PasswordMechanism;
-import com.sandpolis.server.vanilla.gen.generator.MegaGen;
+import com.sandpolis.server.vanilla.gen.MegaGen;
 import com.sandpolis.server.vanilla.store.group.Group;
 import com.sandpolis.server.vanilla.store.listener.Listener;
 import com.sandpolis.server.vanilla.store.trust.TrustAnchor;
@@ -323,7 +323,7 @@ public final class Server {
 		GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin").build());
 
 		// Generate client
-		new MegaGen(
+		MegaGen.build(
 				GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
 						.setMega(MegaConfig.newBuilder().setMemory(false).setFeatures(FeatureSet.newBuilder()
 								.addPlugin("com.sandpolis.plugin.desktop").addPlugin("com.sandpolis.plugin.filesys")
@@ -334,7 +334,8 @@ public final class Server {
 										.newBuilder().setLoopConfig(LoopConfig.newBuilder().setTimeout(5000)
 												.setMaxTimeout(5000).setStrictCerts(false).addTarget(NetworkTarget
 														.newBuilder().setAddress("127.0.0.1").setPort(10101)))))
-						.build()).generate();
+						.build())
+				.run();
 
 		return task.success();
 	});

@@ -15,32 +15,26 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.server.vanilla.gen.packager;
+package com.sandpolis.server.vanilla.gen.mega;
 
 import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.server.vanilla.gen.Packager;
+import com.sandpolis.server.vanilla.gen.MegaGen;
 
 /**
- * This {@link Packager} produces a Python script.
+ * This generator produces a shell script.
  *
  * @author cilki
  * @since 5.0.0
  */
-public class PyPackager extends Packager {
-	private PyPackager() {
+public class ShPackager extends MegaGen {
+	public ShPackager(GenConfig config) {
+		super(config);
 	}
 
-	public static final PyPackager INSTANCE = new PyPackager();
-
 	@Override
-	public byte[] process(GenConfig config, Object payload) throws Exception {
+	protected void generate() throws Exception {
 		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getFileExtension() {
-		return "py";
+		
 	}
 
 }

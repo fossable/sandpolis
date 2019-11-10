@@ -15,33 +15,49 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.server.vanilla.gen.generator;
+package com.sandpolis.server.vanilla.gen.mega;
 
+import com.google.common.io.BaseEncoding;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.server.vanilla.gen.Generator;
+import com.sandpolis.core.proto.util.Generator.MegaConfig;
+import com.sandpolis.core.proto.util.Generator.MicroConfig;
+import com.sandpolis.server.vanilla.gen.MegaGen;
 
 /**
- * This generator builds a client configuration only.
+ * This generator produces a URL with an embedded configuration.
  *
  * @author cilki
  * @since 5.0.0
  */
-public class ConfigGen extends Generator {
-
-	public ConfigGen(GenConfig config) {
+public class UrlPackager extends MegaGen {
+	public UrlPackager(GenConfig config) {
 		super(config);
 	}
 
-	@Override
-	protected Object run() throws Exception {
-		switch (config.getPayloadConfigCase()) {
-		case MEGA:
-			return config.getMega();
-		case MICRO:
-			return config.getMicro();
-		default:
-			throw new RuntimeException();
+	public byte[] process(GenConfig config, Object payload) throws Exception {
+		String url = "https://sandpolis.com/config?c=";
+
+		switch (config.getPayload()) {
+		case OUTPUT_CONFIG:
+			switch (config.getPayloadConfigCase()) {
+			case MEGA:
+				url += BaseEncoding.base64Url().encode(((MegaConfig) payload).toByteArray());
+				break;
+			case MICRO:
+				url += BaseEncoding.base64Url().encode(((MicroConfig) payload).toByteArray());
+				break;
+			default:
+				throw new RuntimeException();
+			}
+			break;
 		}
+
+		return url.getBytes();
 	}
 
+	@Override
+	protected void generate() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
 }

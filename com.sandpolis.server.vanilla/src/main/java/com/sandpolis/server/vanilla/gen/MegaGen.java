@@ -15,13 +15,16 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.server.vanilla.gen.generator;
+package com.sandpolis.server.vanilla.gen;
 
-import static com.sandpolis.core.instance.Environment.EnvPath.LIB;
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,12 +33,23 @@ import com.github.cilki.zipset.ZipSet;
 import com.github.cilki.zipset.ZipSet.EntryPath;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
+import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.proto.util.Platform.OsType;
 import com.sandpolis.core.soi.SoiUtil;
 import com.sandpolis.core.util.ArtifactUtil;
-import com.sandpolis.server.vanilla.gen.FileGenerator;
+import com.sandpolis.server.vanilla.gen.mega.BatPackager;
+import com.sandpolis.server.vanilla.gen.mega.ElfPackager;
+import com.sandpolis.server.vanilla.gen.mega.ExePackager;
+import com.sandpolis.server.vanilla.gen.mega.JarPackager;
+import com.sandpolis.server.vanilla.gen.mega.PyPackager;
+import com.sandpolis.server.vanilla.gen.mega.QrPackager;
+import com.sandpolis.server.vanilla.gen.mega.RbPackager;
+import com.sandpolis.server.vanilla.gen.mega.ShPackager;
+import com.sandpolis.server.vanilla.gen.mega.UrlPackager;
 
 /**
  * This generator builds a {@code com.sandpolis.client.mega} client.
@@ -43,7 +57,11 @@ import com.sandpolis.server.vanilla.gen.FileGenerator;
  * @author cilki
  * @since 2.0.0
  */
-public class MegaGen extends FileGenerator {
+public abstract class MegaGen extends Generator {
+
+	protected MegaGen(GenConfig config) {
+		super(config);
+	}
 
 	private static final Logger log = LoggerFactory.getLogger(MegaGen.class);
 
@@ -55,17 +73,44 @@ public class MegaGen extends FileGenerator {
 	/**
 	 * Dependencies that should not be packaged under any circumstance.
 	 */
-	private static final List<String> exclude = List.of("compact-classloader");
+	private static final List<String> exclude = List.of();
 
-	public MegaGen(GenConfig config) {
-		super(config);
+	public static MegaGen build(GenConfig config) {
+		switch (config.getFormat()) {
+		case BAT:
+			return new BatPackager(config);
+		case ELF:
+			return new ElfPackager(config);
+		case EXE:
+			return new ExePackager(config);
+		case JAR:
+			return new JarPackager(config);
+		case PY:
+			return new PyPackager(config);
+		case QR:
+			return new QrPackager(config);
+		case RB:
+			return new RbPackager(config);
+		case SH:
+			return new ShPackager(config);
+		case URL:
+			return new UrlPackager(config);
+		default:
+			throw new IllegalArgumentException();
+		}
 	}
 
-	@Override
-	protected Object run() throws Exception {
+	protected List<String> getDependencies() throws IOException {
+		Path client = Environment.LIB.path().resolve("sandpolis-client-mega-" + Core.SO_BUILD.getVersion() + ".jar");
+
+		return SoiUtil.getMatrix(client).getAllDependenciesInclude()
+				.map(artifact -> artifact.getArtifact().getCoordinates()).collect(Collectors.toList());
+	}
+
+	protected Object test() throws Exception {
 		log.debug("Computing MEGA payload");
 
-		Path client = Environment.get(LIB).resolve("sandpolis-client-mega-" + Core.SO_BUILD.getVersion() + ".jar");
+		Path client = Environment.LIB.path().resolve("sandpolis-client-mega-" + Core.SO_BUILD.getVersion() + ".jar");
 
 		ZipSet output = new ZipSet(client);
 		FeatureSet features = config.getMega().getFeatures();
@@ -79,7 +124,7 @@ public class MegaGen extends FileGenerator {
 				.filter(artifact -> !config.getMega().getDownloader() || include.contains(artifact.getArtifactId()))
 				.filter(artifact -> !exclude.contains(artifact.getArtifactId())) //
 				.forEach(artifact -> {
-					Path source = ArtifactUtil.getArtifactFile(Environment.get(LIB),
+					Path source = ArtifactUtil.getArtifactFile(Environment.LIB.path(),
 							artifact.getArtifact().getCoordinates());
 
 					// Add library
@@ -99,24 +144,27 @@ public class MegaGen extends FileGenerator {
 
 		// Add plugin binaries
 		if (!config.getMega().getDownloader()) {
-			for (String plugin : features.getPluginList()) {
-				Path bin = ArtifactUtil.getArtifactFile(Environment.get(LIB),
-						":" + plugin + ":" + Core.SO_BUILD.getVersion());
+			for (var plugin : PluginStore.stream().filter(plugin -> features.getPluginList().contains(plugin.getId()))
+					.toArray(Plugin[]::new)) {
+				ZipSet pluginArchive = new ZipSet();
 
-				// Add plugin artifact
-				output.add("lib/" + bin.getFileName(), bin);
-
-				// Add plugin dependencies
-				SoiUtil.readMatrix(bin).getArtifactList().stream().forEach(dep -> {
+				// Add core component
+				Path core = plugin.getComponent(null, null);
+				pluginArchive.add("core.jar", core);
+				SoiUtil.getMatrix(core).getAllDependencies().forEach(dep -> {
 					output.add("lib/" + fromCoordinate(dep.getCoordinates()).filename,
-							ArtifactUtil.getArtifactFile(Environment.get(LIB), dep.getCoordinates()));
+							ArtifactUtil.getArtifactFile(Environment.LIB.path(), dep.getCoordinates()));
 				});
-				// TODO plugin component dependencies
 
-				// Remove unnecessary components if they exist
-				// output.sub(EntryPath.get("lib/" + bin.getFileName().toString(),
-				// "server/vanilla.jar"));
-				// TODO enumerate over all possibilities
+				// Add mega component
+				Path mega = plugin.getComponent(Instance.CLIENT, InstanceFlavor.MEGA);
+				pluginArchive.add("client/mega.jar", mega);
+				SoiUtil.getMatrix(mega).getAllDependencies().forEach(dep -> {
+					output.add("lib/" + fromCoordinate(dep.getCoordinates()).filename,
+							ArtifactUtil.getArtifactFile(Environment.LIB.path(), dep.getCoordinates()));
+				});
+
+				output.add(EntryPath.get("lib/" + plugin.getId() + ".jar"), pluginArchive);
 			}
 		}
 

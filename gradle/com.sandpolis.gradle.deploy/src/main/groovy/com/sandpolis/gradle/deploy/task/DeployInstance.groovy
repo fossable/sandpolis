@@ -37,7 +37,7 @@ class DeployInstance extends RemoteTask {
 				// execute 'rm -rf ~/.java/.userPrefs/com'
 
 				// Transfer instance binary
-				put from: project_deploy.jar.archivePath, into: directory
+				put from: project_deploy.jar.archivePath, into: directory + '/lib'
 
 				// Transfer libraries
 				put from: project_deploy.configurations.runtimeClasspath, into: directory + '/lib'
@@ -48,7 +48,7 @@ class DeployInstance extends RemoteTask {
 					execute 'screen -d -m -S ' + project_deploy.name
 
 				// Run the artifact
-				execute 'screen -S ' + project_deploy.name + ' -X stuff "clear && java ' + jvmArgs.join(' ') + ' -jar ' + directory + '/' + project_deploy.archivesBaseName + '-' + project_deploy.version + '.jar\n"'
+				execute 'screen -S ' + project_deploy.name + ' -X stuff "clear && java --module-path ' + directory + '/lib ' + jvmArgs.join(' ') + '\n"'
 			}
 		}
 	}
@@ -67,7 +67,7 @@ class DeployInstance extends RemoteTask {
 				execute 'reg delete "HKEY_CURRENT_USER\\Software\\JavaSoft\\Prefs" /f', ignoreError: true
 
 				// Transfer instance binary
-				put from: project_deploy.jar.archivePath, into: directory
+				put from: project_deploy.jar.archivePath, into: directory + '/lib'
 
 				// Transfer libraries
 				put from: project_deploy.configurations.runtimeClasspath, into: directory + '/lib'

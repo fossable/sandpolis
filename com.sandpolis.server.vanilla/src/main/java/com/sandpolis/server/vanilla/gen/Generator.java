@@ -17,22 +17,17 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.gen;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteSource;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.GenReport;
-import com.sandpolis.server.vanilla.gen.packager.BatPackager;
-import com.sandpolis.server.vanilla.gen.packager.ElfPackager;
-import com.sandpolis.server.vanilla.gen.packager.ExePackager;
-import com.sandpolis.server.vanilla.gen.packager.JarPackager;
-import com.sandpolis.server.vanilla.gen.packager.PyPackager;
-import com.sandpolis.server.vanilla.gen.packager.QrPackager;
-import com.sandpolis.server.vanilla.gen.packager.RbPackager;
-import com.sandpolis.server.vanilla.gen.packager.ShPackager;
-import com.sandpolis.server.vanilla.gen.packager.UrlPackager;
 
 /**
  * The parent class of all output generators.
@@ -40,7 +35,7 @@ import com.sandpolis.server.vanilla.gen.packager.UrlPackager;
  * @author cilki
  * @since 4.0.0
  */
-public abstract class Generator {
+public abstract class Generator implements Runnable {
 
 	private static final Logger log = LoggerFactory.getLogger(Generator.class);
 
@@ -55,70 +50,39 @@ public abstract class Generator {
 	protected GenReport.Builder report;
 
 	/**
-	 * The intermediate result of the generation.
+	 * The final result of the generation.
 	 */
 	protected byte[] result;
 
 	/**
-	 * The packager which is responsible for producing the final output.
+	 * The final result of the generation.
 	 */
-	protected Packager packager;
+	protected Path resultArchive;
 
 	protected Generator(GenConfig config) {
 		this.config = Objects.requireNonNull(config);
+	}
 
-		switch (config.getFormat()) {
-		case BAT:
-			packager = BatPackager.INSTANCE;
-			break;
-		case ELF:
-			packager = ElfPackager.INSTANCE;
-			break;
-		case EXE:
-			packager = ExePackager.INSTANCE;
-			break;
-		case JAR:
-			packager = JarPackager.INSTANCE;
-			break;
-		case PY:
-			packager = PyPackager.INSTANCE;
-			break;
-		case QR:
-			packager = QrPackager.INSTANCE;
-			break;
-		case RB:
-			packager = RbPackager.INSTANCE;
-			break;
-		case SH:
-			packager = ShPackager.INSTANCE;
-			break;
-		case URL:
-			packager = UrlPackager.INSTANCE;
-			break;
-		default:
-			throw new IllegalArgumentException();
-		}
+	/**
+	 * Compute output metadata.
+	 * 
+	 * @throws IOException
+	 */
+	protected void computeMetadata() throws IOException {
+		if (result == null)
+			throw new IllegalStateException();
+
+		report.setResult(true);
+		report.setOutputSize(result.length);
+		report.setOutputSha256(ByteSource.wrap(result).hash(Hashing.sha256()).toString());
+		report.setOutputSha512(ByteSource.wrap(result).hash(Hashing.sha512()).toString());
+		report.setDuration(System.currentTimeMillis() - report.getDuration());
 	}
 
 	/**
 	 * Performs the generation synchronously.
 	 */
-	protected abstract Object run() throws Exception;
-
-	public void generate() throws Exception {
-		if (report != null)
-			throw new IllegalStateException("The generator has already been started");
-
-		report = GenReport.newBuilder().setTimestamp(System.currentTimeMillis())
-				.setDuration(System.currentTimeMillis());
-
-		try {
-			result = packager.process(config, run());
-		} finally {
-			report.setDuration(System.currentTimeMillis() - report.getDuration());
-			log.debug("Generation completed in {} ms", report.getDuration());
-		}
-	}
+	protected abstract void generate() throws Exception;
 
 	/**
 	 * Get the generation report. Each invocation of this method returns a new (yet
@@ -142,4 +106,29 @@ public abstract class Generator {
 		return result;
 	}
 
+	/**
+	 * Get the location of the generator output in the archive directory.
+	 *
+	 * @return The location of the result
+	 */
+	public Path getResultPath() {
+		return resultArchive;
+	}
+
+	@Override
+	public void run() {
+		if (report != null)
+			throw new IllegalStateException("The generator has already been started");
+
+		report = GenReport.newBuilder().setTimestamp(System.currentTimeMillis())
+				.setDuration(System.currentTimeMillis());
+
+		try {
+			generate();
+			computeMetadata();
+		} catch (Exception e) {
+			log.error("Generation failed", e);
+			report.setResult(false);
+		}
+	}
 }

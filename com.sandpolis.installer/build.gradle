@@ -14,7 +14,7 @@ plugins {
 }
 
 javafx {
-	version = '12'
+	version = '13.0.1'
 	modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
 	configuration = 'compileOnly'
 }
@@ -63,20 +63,20 @@ dependencies {
 	installTargets project(':com.sandpolis.client.mega')
 
 	// JavaFX runtimes
-	windows 'org.openjfx:javafx-base:12.0.2:win'
-	windows 'org.openjfx:javafx-fxml:12.0.2:win'
-	windows 'org.openjfx:javafx-graphics:12.0.2:win'
-	windows 'org.openjfx:javafx-controls:12.0.2:win'
+	windows 'org.openjfx:javafx-base:13.0.1:win'
+	windows 'org.openjfx:javafx-fxml:13.0.1:win'
+	windows 'org.openjfx:javafx-graphics:13.0.1:win'
+	windows 'org.openjfx:javafx-controls:13.0.1:win'
 
-	linux 'org.openjfx:javafx-base:12.0.2:linux'
-	linux 'org.openjfx:javafx-fxml:12.0.2:linux'
-	linux 'org.openjfx:javafx-graphics:12.0.2:linux'
-	linux 'org.openjfx:javafx-controls:12.0.2:linux'
+	linux 'org.openjfx:javafx-base:13.0.1:linux'
+	linux 'org.openjfx:javafx-fxml:13.0.1:linux'
+	linux 'org.openjfx:javafx-graphics:13.0.1:linux'
+	linux 'org.openjfx:javafx-controls:13.0.1:linux'
 
-	mac 'org.openjfx:javafx-base:12.0.2:mac'
-	mac 'org.openjfx:javafx-fxml:12.0.2:mac'
-	mac 'org.openjfx:javafx-graphics:12.0.2:mac'
-	mac 'org.openjfx:javafx-controls:12.0.2:mac'
+	mac 'org.openjfx:javafx-base:13.0.1:mac'
+	mac 'org.openjfx:javafx-fxml:13.0.1:mac'
+	mac 'org.openjfx:javafx-graphics:13.0.1:mac'
+	mac 'org.openjfx:javafx-controls:13.0.1:mac'
 }
 
 jar {

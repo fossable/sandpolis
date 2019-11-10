@@ -15,7 +15,7 @@ plugins {
 
 javafx {
 	modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
-	version = "12.0.2"
+	version = "13.0.1"
 }
 
 eclipse {
@@ -74,10 +74,10 @@ jar {
 
 deploy {
 	jvmArgs = [
-		'-Djava.system.class.loader=com.github.cilki.compact.CompactClassLoader',
 		'-Dlogging.net.traffic.raw=false',
 		'-Dlogging.net.traffic.decoded=false',
 		'-Dnet.connection.tls=true',
-		'-Dplugin.enabled=true'
+		'-Dplugin.enabled=true',
+		'-m com.sandpolis.viewer.jfx/com.sandpolis.viewer.jfx.Main'
 	]
 }

@@ -18,11 +18,16 @@
 package com.sandpolis.core.instance.store.plugin;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.nio.file.Files.exists;
+import static java.nio.file.Files.list;
 
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.ServiceLoader;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.Column;
@@ -32,16 +37,22 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
-import com.github.cilki.compact.CompactClassLoader;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteSource;
+import com.google.common.io.Files;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.Resources;
 import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
+import com.sandpolis.core.instance.util.InstanceUtil;
 import com.sandpolis.core.proto.net.MsgPlugin.PluginDescriptor;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.JarUtil;
 
 /**
- * Represents a Sandpolis plugin.
+ * Represents a Sandpolis plugin installed in the {@code PLUGIN} directory.
  *
  * @author cilki
  * @since 5.0.0
@@ -91,16 +102,16 @@ public final class Plugin {
 	private byte[] hash;
 
 	/**
-	 * The plugin's filesystem path.
+	 * The plugin's certificate.
 	 */
-	@Column(nullable = false)
-	private String path;
+	@Column(nullable = false, length = 2048)
+	private String certificate;
 
 	/**
 	 * A classloader for the plugin.
 	 */
 	@Transient
-	private CompactClassLoader classloader;
+	private ClassLoader classloader;
 
 	/**
 	 * The plugin handle if available.
@@ -108,19 +119,43 @@ public final class Plugin {
 	@Transient
 	private SandpolisPlugin handle;
 
+	/**
+	 * Whether the plugin is currently loaded.
+	 */
 	@Transient
 	private boolean loaded;
 
-	public Plugin(Path path, byte[] hash, boolean enabled) throws IOException {
-		this.enabled = enabled;
-		this.hash = hash;
-		this.path = path.toAbsolutePath().toString();
+	public Plugin(Path path, boolean enabled) throws IOException {
 
 		var manifest = JarUtil.getManifest(path.toFile());
 		id = manifest.getValue("Plugin-Id");
 		coordinate = manifest.getValue("Plugin-Coordinate");
 		name = manifest.getValue("Plugin-Name");
 		description = manifest.getValue("Description");
+		certificate = manifest.getValue("Plugin-Cert");
+
+		// Install core
+		Resources.asByteSource(JarUtil.getResourceUrl(path, "core.jar"))
+				.copyTo(Files.asByteSink(Environment.PLUGIN.path().resolve(getArtifactName(null, null)).toFile()));
+
+		// Install components
+		InstanceUtil.iterate((instance, flavor) -> {
+			try {
+				String component = String.format("%s/%s.jar", instance.toString().toLowerCase(),
+						flavor.toString().toLowerCase());
+				if (JarUtil.resourceExists(path, component)) {
+
+					Resources.asByteSource(JarUtil.getResourceUrl(path, component)).copyTo(Files
+							.asByteSink(Environment.PLUGIN.path().resolve(getArtifactName(instance, flavor)).toFile()));
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		});
+
+		this.enabled = enabled;
+		this.hash = hash();
 	}
 
 	Plugin() {
@@ -146,8 +181,8 @@ public final class Plugin {
 		return hash;
 	}
 
-	public Path getPath() {
-		return Paths.get(path);
+	public String getCertificate() {
+		return certificate;
 	}
 
 	public boolean isLoaded() {
@@ -162,7 +197,7 @@ public final class Plugin {
 		return coordinate;
 	}
 
-	public CompactClassLoader getClassloader() {
+	public ClassLoader getClassloader() {
 		return classloader;
 	}
 
@@ -180,39 +215,42 @@ public final class Plugin {
 		return plugin.build();
 	}
 
+	public <E> Stream<E> getExtensions(Class<E> extension) {
+		if (handle != null && extension.isAssignableFrom(handle.getClass()))
+			return Stream.of((E) handle);
+		else
+			return Stream.empty();
+	}
+
+	public boolean checkHash() throws IOException {
+		return Arrays.equals(hash(), hash);
+	}
+
 	void load() throws IOException {
 		checkState(!loaded);
 
+		Path component = Environment.PLUGIN.path().resolve(getArtifactName(Core.INSTANCE, Core.FLAVOR));
+
 		// Build new classloader
-		classloader = new CompactClassLoader(Thread.currentThread().getContextClassLoader());
-
-		// Add common classes
-		classloader.add(getPath().toUri().toURL(), false);
-
-		// Add instance specific classes if it exists
-		String componentPath = String.format("%s/%s.jar", Core.INSTANCE.toString().toLowerCase(),
-				Core.FLAVOR.toString().toLowerCase());
-		if (classloader.getResource(componentPath) != null) {
-			classloader.add(new URL(String.format("file:%s!/%s", getPath(), componentPath)), false);
-
-			// TODO component specific dependencies from matrix.bin
+		if (exists(component)) {
+			classloader = new URLClassLoader(
+					new URL[] { Environment.PLUGIN.path().resolve(getArtifactName(null, null)).toUri().toURL(),
+							component.toUri().toURL() });
+		} else {
+			classloader = new URLClassLoader(
+					new URL[] { Environment.PLUGIN.path().resolve(getArtifactName(null, null)).toUri().toURL() });
 		}
 
 		// Load plugin class if available
-		try {
-			handle = (SandpolisPlugin) classloader.loadClass(getClassName(Core.INSTANCE, Core.FLAVOR)).getConstructor()
-					.newInstance();
+		handle = ServiceLoader.load(SandpolisPlugin.class, classloader).stream().filter(prov -> {
+			// Restrict to services in the plugin component
+			return prov.type().getName()
+					.startsWith(String.format("%s.%s.%s", id, Core.INSTANCE.toString().toLowerCase(),
+							Core.FLAVOR.toString().toLowerCase()));
+		}).map(prov -> prov.get()).findFirst().orElse(null);
+
+		if (handle != null)
 			handle.loaded();
-		} catch (ClassNotFoundException e) {
-			// Do nothing
-		} catch (Exception e) {
-			throw new IOException(e);
-		}
-
-		// Add to application classloader
-		CompactClassLoader system = (CompactClassLoader) ClassLoader.getSystemClassLoader();
-		system.add(classloader);
-
 		loaded = true;
 	}
 
@@ -225,18 +263,39 @@ public final class Plugin {
 		loaded = false;
 	}
 
-	public <E> Stream<E> getExtensions(Class<E> extension) {
-		if (extension.isAssignableFrom(handle.getClass()))
-			return Stream.of((E) handle);
-		else
-			return Stream.empty();
+	/**
+	 * Search for all plugin components in the {@code PLUGIN} directory.
+	 * 
+	 * @return The component paths
+	 * @throws IOException
+	 */
+	Stream<Path> findComponents() throws IOException {
+		return list(Environment.PLUGIN.path()).filter(path -> path.getFileName().toString().startsWith(id));
 	}
 
-	private String getClassName(Instance instance, InstanceFlavor flavor) {
-		String lastId = getId().substring(getId().lastIndexOf('.') + 1);
-		return String.format("%s.%s.%s.%sPlugin", getId(), instance.toString().toLowerCase(),
-				flavor.toString().toLowerCase(),
-				lastId.substring(0, 1).toUpperCase() + lastId.substring(1).toLowerCase());
+	public Path getComponent(Instance instance, InstanceFlavor flavor) {
+		return Environment.PLUGIN.path().resolve(getArtifactName(instance, flavor));
+	}
+
+	private String getArtifactName(Instance instance, InstanceFlavor flavor) {
+		if (instance == null && flavor == null) {
+			return String.format("%s-%s.jar", id, getVersion());
+		} else {
+			return String.format("%s:%s:%s-%s.jar", id, instance.toString().toLowerCase(),
+					flavor.toString().toLowerCase(), getVersion());
+		}
+	}
+
+	/**
+	 * Hash the plugin components.
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
+	private byte[] hash() throws IOException {
+		return ByteSource
+				.concat(findComponents().map(path -> MoreFiles.asByteSource(path)).collect(Collectors.toList()))
+				.hash(Hashing.sha256()).asBytes();
 	}
 
 }

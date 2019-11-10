@@ -13,6 +13,7 @@ includeBuild 'gradle/com.sandpolis.gradle.deploy'
 
 // Instance Projects
 include 'com.sandpolis.charcoal'
+include 'com.sandpolis.client.installer:jar'
 include 'com.sandpolis.client.mega'
 include 'com.sandpolis.client.micro'
 include 'com.sandpolis.installer'

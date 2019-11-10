@@ -1,0 +1,30 @@
+/*******************************************************************************
+* SANDPOLIS                                                                    *
+* com.sandpolis.client.installer:jar                                           *
+*******************************************************************************/
+
+plugins {
+	id 'eclipse'
+	id 'java-library'
+}
+
+eclipse {
+	project {
+		name = 'com.sandpolis.client.installer:jar'
+		comment = ''
+	}
+}
+
+jar {
+	archiveBaseName = 'sandpolis-client-installer'
+	//archiveBaseName = 'com.sandpolis.client.installer.jar'
+	//version = ''
+}
+
+jar {
+  manifest {
+    attributes(
+      'Main-Class': 'com.sandpolis.client.installer.jar.Main'
+    )
+  }
+}

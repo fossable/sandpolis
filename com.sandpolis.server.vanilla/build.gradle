@@ -12,6 +12,7 @@ plugins {
 	id 'com.sandpolis.gradle.deploy'
 	id 'com.bmuschko.docker-java-application' version '5.2.0'
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
+	id 'org.beryx.jlink' version '2.16.2'
 }
 
 eclipse {
@@ -21,13 +22,12 @@ eclipse {
 	}
 }
 
-configurations {
-	internal
-}
-
 dependencies {
 	testImplementation project(path: ':module:com.sandpolis.core.net', configuration: 'tests')
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+	
+	// Temporary
+	implementation project(':com.sandpolis.client.installer:jar')
 
 	implementation project(':com.sandpolis.client.mega')
 	api project(':module:com.sandpolis.core.instance')
@@ -45,9 +45,6 @@ dependencies {
 	implementation project(':plugin:com.sandpolis.plugin.shell')
 	implementation project(':plugin:com.sandpolis.plugin.sysinfo')
 	implementation project(':plugin:com.sandpolis.plugin.filesys')
-
-	// https://github.com/cilki/CompactClassLoader
-	internal 'com.github.cilki:compact-classloader:1.3.1'
 
 	// https://github.com/google/guava
 	api 'com.google.guava:guava:28.1-jre'
@@ -73,18 +70,6 @@ dependencies {
 	api 'com.github.cilki:zipset:1.1.0'
 }
 
-jar {
-	manifest {
-		attributes(
-			'Main-Class': 'com.sandpolis.server.vanilla.Main',
-			'Class-Path': configurations.runtimeClasspath
-				.filter { !it.getName().contains("sandpolis-plugin") }
-				.collect { 'lib/' + it.getName() }
-				.join(' ')
-		)
-	}
-}
-
 mainClassName = 'com.sandpolis.server.vanilla/com.sandpolis.server.vanilla.Main'
 
 docker {
@@ -103,10 +88,22 @@ docker {
 
 deploy {
 	jvmArgs = [
-		'-Djava.system.class.loader=com.github.cilki.compact.CompactClassLoader',
 		'-Dlogging.net.traffic.raw=false',
 		'-Dlogging.net.traffic.decoded=false',
 		'-Dnet.connection.tls=true',
-		'-Dplugin.enabled=true'
+		'-Dplugin.enabled=true',
+		'-m com.sandpolis.server.vanilla/com.sandpolis.server.vanilla.Main'
 	]
+}
+
+jlink {
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    launcher{
+        name = 'test'
+    }
+
+    mergedModule {
+        uses 'javax.persistence.spi.PersistenceProvider';
+        provides 'javax.persistence.spi.PersistenceProvider' with 'org.hibernate.jpa.HibernatePersistenceProvider';
+    }
 }

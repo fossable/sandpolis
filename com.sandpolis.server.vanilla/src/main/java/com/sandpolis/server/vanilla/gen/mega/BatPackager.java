@@ -15,32 +15,26 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.server.vanilla.gen.packager;
+package com.sandpolis.server.vanilla.gen.mega;
 
 import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.server.vanilla.gen.Packager;
+import com.sandpolis.server.vanilla.gen.MegaGen;
 
 /**
- * This {@link Packager} produces a Windows portable executable.
+ * This generator produces a Windows batch file.
  *
  * @author cilki
  * @since 5.0.0
  */
-public class ExePackager extends Packager {
-	private ExePackager() {
+public class BatPackager extends MegaGen {
+	public BatPackager(GenConfig config) {
+		super(config);
 	}
 
-	public static final ExePackager INSTANCE = new ExePackager();
-
 	@Override
-	public byte[] process(GenConfig config, Object payload) throws Exception {
+	protected void generate() throws Exception {
 		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getFileExtension() {
-		return "exe";
+		
 	}
 
 }

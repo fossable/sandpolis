@@ -88,6 +88,10 @@ public final class Dep {
 		return Stream.concat(getDependencies(), getDependencies().flatMap(dep -> dep.getDependencies())).distinct();
 	}
 
+	public Stream<Dep> getAllDependenciesInclude() {
+		return Stream.concat(Stream.of(this), getAllDependencies());
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Dep)

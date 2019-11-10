@@ -15,53 +15,26 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.server.vanilla.gen.packager;
+package com.sandpolis.server.vanilla.gen.mega;
 
-import com.google.common.io.BaseEncoding;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.core.proto.util.Generator.MegaConfig;
-import com.sandpolis.core.proto.util.Generator.MicroConfig;
-import com.sandpolis.server.vanilla.gen.Packager;
+import com.sandpolis.server.vanilla.gen.MegaGen;
 
 /**
- * This {@link Packager} produces a URL with an embedded configuration.
+ * This generator produces a QR code as a PNG file.
  *
  * @author cilki
  * @since 5.0.0
  */
-public class UrlPackager extends Packager {
-	private UrlPackager() {
-	}
-
-	public static final UrlPackager INSTANCE = new UrlPackager();
-
-	@Override
-	public byte[] process(GenConfig config, Object payload) throws Exception {
-		String url = "https://sandpolis.com/config?c=";
-
-		switch (config.getPayload()) {
-		case OUTPUT_CONFIG:
-			switch (config.getPayloadConfigCase()) {
-			case MEGA:
-				url += BaseEncoding.base64Url().encode(((MegaConfig) payload).toByteArray());
-				break;
-			case MICRO:
-				url += BaseEncoding.base64Url().encode(((MicroConfig) payload).toByteArray());
-				break;
-			default:
-				throw new RuntimeException();
-			}
-			break;
-		default:
-			throw new IncompatiblePayloadException();
-		}
-
-		return url.getBytes();
+public class QrPackager extends MegaGen {
+	public QrPackager(GenConfig config) {
+		super(config);
 	}
 
 	@Override
-	public String getFileExtension() {
-		return "url";
+	protected void generate() throws Exception {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

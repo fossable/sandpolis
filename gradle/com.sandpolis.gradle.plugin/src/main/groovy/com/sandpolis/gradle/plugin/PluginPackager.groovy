@@ -21,6 +21,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.bundling.Jar
 
 /**
  * This plugin packages a Sandpolis plugin into an installable archive.
@@ -29,50 +30,49 @@ import org.gradle.api.tasks.Copy
  */
 public class PluginPackager implements Plugin<Project> {
 
-	void apply(Project project) {
-		def cert = project.file(project.name + ".cert").text.replaceAll("\\R", "").replace("-----BEGIN CERTIFICATE-----", "").replace("-----END CERTIFICATE-----", "")
-		def extension = project.extensions.create('sandpolis_plugin', ConfigExtension)
+	void apply(Project root) {
+		def cert = root.file(root.name + ".cert").text.replaceAll("\\R", "").replace("-----BEGIN CERTIFICATE-----", "").replace("-----END CERTIFICATE-----", "")
+		def extension = root.extensions.create('sandpolis_plugin', ConfigExtension)
 
-		project.subprojects {
+		// Create jar task
+		def pluginArchive = root.tasks.create('pluginArchive', Jar.class)
+		pluginArchive.from(root.sourceSets.main.output)
+		pluginArchive.archiveBaseName = 'core'
+		pluginArchive.archiveVersion = ''
 
-			// Remove version from components so jar task doesn't append it
-			it.version = null
+		root.tasks.getByName('jar').dependsOn(pluginArchive)
 
+		root.subprojects {
 			afterEvaluate {
 				if (tasks.findByPath('jar') != null) {
+					// Clear version identifier
+					tasks.getByName('jar').archiveVersion = ''
 
-					// Setup dependency
-					project.tasks.getByName('jar').dependsOn(tasks.getByName('jar'))
+					// Setup task dependency
+					root.tasks.getByName('jar').dependsOn(tasks.getByName('jar'))
 
 					// Add artifact to root project's jar task
-					project.tasks.getByName('jar')
-						.from(tasks.getByName('jar').archivePath, {into parent.name})
+					root.tasks.getByName('jar').from(tasks.getByName('jar').archivePath, {into parent.name})
 				}
 			}
 		}
 
-		// Setup plugin manifests
-		project.allprojects {
-			afterEvaluate {
-				def name = extension.id.substring(extension.id.lastIndexOf('.') + 1)
-				name = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase()
+		root.afterEvaluate {
 
-				def cls = it.path.substring(it.path.indexOf(extension.id)).replace(':', '.') + "." + name + "Plugin"
+			root.tasks.getByName('jar').from(root.tasks.getByName('pluginArchive').archivePath)
+			root.tasks.getByName('jar').exclude {
+				!it.path.endsWith('.jar')
+			}
 
-				if (tasks.findByPath('jar') != null) {
-					jar {
-						manifest {
-							attributes(
-								'Plugin-Id': extension.id,
-								'Plugin-Coordinate': extension.coordinate + ':' + project.version,
-								'Plugin-Name': extension.name,
-								'Plugin-Description': extension.description,
-								'Plugin-Class': cls,
-								'Plugin-Cert': cert
-							)
-						}
-					}
-				}
+			// Setup manifest
+			root.tasks.getByName('jar').manifest {
+				attributes(
+					'Plugin-Id': extension.id,
+					'Plugin-Coordinate': extension.coordinate + ':' + root.version,
+					'Plugin-Name': extension.name,
+					'Plugin-Description': extension.description,
+					'Plugin-Cert': cert
+				)
 			}
 		}
 	}

@@ -33,8 +33,8 @@ import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.proto.net.MsgGenerator.RQ_Generate;
 import com.sandpolis.core.proto.net.MsgGenerator.RS_Generate;
-import com.sandpolis.server.vanilla.gen.FileGenerator;
-import com.sandpolis.server.vanilla.gen.generator.MegaGen;
+import com.sandpolis.server.vanilla.gen.Generator;
+import com.sandpolis.server.vanilla.gen.MegaGen;
 
 /**
  * Generator message handlers.
@@ -54,10 +54,10 @@ public final class GenExe extends Exelet {
 		Future<MessageOrBuilder> future = pool.submit(() -> {
 			var outcome = begin();
 
-			FileGenerator generator;
+			Generator generator;
 			switch (rq.getConfig().getPayload()) {
 			case OUTPUT_MEGA:
-				generator = new MegaGen(rq.getConfig());
+				generator = MegaGen.build(rq.getConfig());
 				break;
 			case OUTPUT_MICRO:
 			default:
@@ -65,12 +65,7 @@ public final class GenExe extends Exelet {
 				return failure(outcome);
 			}
 
-			try {
-				generator.generate();
-			} catch (Exception e) {
-				log.error("Generation failed", e);
-				return failure(outcome);
-			}
+			generator.run();
 
 			var rs = RS_Generate.newBuilder().setReport(generator.getReport());
 			if (generator.getResult() != null)

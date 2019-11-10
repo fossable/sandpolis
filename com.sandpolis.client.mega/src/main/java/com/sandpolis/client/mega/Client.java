@@ -23,13 +23,8 @@ import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
-import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Date;
 import java.util.concurrent.Executors;
 
@@ -47,7 +42,6 @@ import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.init.ClientChannelInitializer;
@@ -56,8 +50,6 @@ import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerLostEvent;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.core.soi.Dep;
-import com.sandpolis.core.util.ArtifactUtil;
 import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
@@ -97,7 +89,6 @@ public final class Client {
 		register(IPCTask.load);
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
-		register(Client.install);
 		register(Client.loadEnvironment);
 		register(Client.loadStores);
 		register(Client.loadPlugins);
@@ -105,77 +96,19 @@ public final class Client {
 	}
 
 	/**
-	 * Install the client if necessary.
-	 */
-	@InitializationTask(name = "Install client", fatal = true)
-	public static final Task install = new Task((task) -> {
-
-		if (SO_CONFIG.getMemory())
-			// Memory-only installation
-			return task.skipped();
-
-		Path base = Paths.get(SO_CONFIG.getExecution().getInstallPathOrDefault(PlatformUtil.OS_TYPE.getNumber(),
-				System.getProperty("user.home") + "/.sandpolis"));
-		Path lib = base.resolve("lib");
-
-		if (Environment.JAR.path().getParent().equals(lib))
-			// Already installed
-			return task.skipped();
-
-		log.debug("Selected base directory: {}", base);
-
-		try {
-			Files.createDirectories(base);
-			Files.createDirectories(lib);
-		} catch (IOException e) {
-			// Force install if enabled
-			// TODO
-			e.printStackTrace();
-		}
-
-		try {
-			// TODO remove nested libraries
-			log.debug("Installing client binary from: {} into: {}", Environment.JAR.path(), lib.toAbsolutePath());
-			Files.copy(Environment.JAR.path(), lib.resolve(Environment.JAR.path().getFileName()), REPLACE_EXISTING);
-
-		} catch (IOException e) {
-			// Force install if enabled
-			// TODO
-			e.printStackTrace();
-		}
-
-		// Install dependencies
-		new Dep(Core.SO_MATRIX, Core.SO_MATRIX.getArtifact(0)).getAllDependencies().forEach(dep -> {
-			String name = fromCoordinate(dep.getCoordinates()).filename;
-
-			try {
-				var in = Client.class.getResourceAsStream("/lib/" + name);
-				if (in != null)
-					Files.copy(in, lib.resolve(name), REPLACE_EXISTING);
-				else
-					ArtifactUtil.download(lib.resolve(name), dep.getCoordinates());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		});
-
-		// TODO regular launch
-		var cmd = new String[] { "screen", "-S", "com.sandpolis.client.mega", "-X", "stuff",
-				"clear && java -jar "
-						+ lib.resolve(Environment.JAR.path().getFileName()).toAbsolutePath().toString() + "\n" };
-		Runtime.getRuntime().exec(cmd);
-
-		System.exit(0);
-		return task.success();
-	});
-
-	/**
 	 * Load the runtime environment.
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
 	public static final Task loadEnvironment = new Task((task) -> {
 
+		if (SO_CONFIG.getMemory()) {
+			Environment.LIB.set(null);
+			Environment.LOG.set(null);
+			Environment.PLUGIN.set(null);
+			Environment.DB.set(null);
+			Environment.GEN.set(null);
+			Environment.TMP.set(null);
+		}
 		Environment.setup();
 		return task.success();
 	});
@@ -196,19 +129,19 @@ public final class Client {
 			config.defaults.put("attributes", Executors.newScheduledThreadPool(1));
 		});
 
-		ConnectionStore.init(config -> {
-			config.ephemeral();
-		});
-
-		NetworkStore.init(config -> {
-			config.ephemeral();
-		});
-
 		PluginStore.init(config -> {
 			config.ephemeral();
 		});
 
 		StreamStore.init(config -> {
+			config.ephemeral();
+		});
+
+		ConnectionStore.init(config -> {
+			config.ephemeral();
+		});
+
+		NetworkStore.init(config -> {
 			config.ephemeral();
 		});
 

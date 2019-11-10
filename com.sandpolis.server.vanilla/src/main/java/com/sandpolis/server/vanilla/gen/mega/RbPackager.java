@@ -15,32 +15,26 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.server.vanilla.gen.packager;
+package com.sandpolis.server.vanilla.gen.mega;
 
 import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.server.vanilla.gen.Packager;
+import com.sandpolis.server.vanilla.gen.MegaGen;
 
 /**
- * This {@link Packager} produces a unix executable.
+ * This generator produces a Ruby script.
  *
  * @author cilki
  * @since 5.0.0
  */
-public class ElfPackager extends Packager {
-	private ElfPackager() {
+public class RbPackager extends MegaGen {
+	public RbPackager(GenConfig config) {
+		super(config);
 	}
 
-	public static final ElfPackager INSTANCE = new ElfPackager();
-
 	@Override
-	public byte[] process(GenConfig config, Object payload) throws Exception {
+	protected void generate() throws Exception {
 		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getFileExtension() {
-		return "elf";
+		
 	}
 
 }
