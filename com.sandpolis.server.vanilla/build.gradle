@@ -56,7 +56,7 @@ dependencies {
 	api 'io.netty:netty-codec:4.1.42.Final'
 	api 'io.netty:netty-common:4.1.42.Final'
 	api 'io.netty:netty-handler:4.1.42.Final'
-	api 'io.netty:netty-transport:4.1.42.Final'
+	api 'io.netty:netty-transport:4.1.43.Final'
 
 	api 'javax.persistence:javax.persistence-api:2.2'
 
