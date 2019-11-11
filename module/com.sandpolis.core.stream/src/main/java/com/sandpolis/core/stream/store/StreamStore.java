@@ -39,14 +39,14 @@ import com.sandpolis.core.stream.store.StreamStore.StreamStoreConfig;
  * The {@link StreamStore} contains four "banks" of stream endpoints that each
  * serve a specific purpose.
  * <ul>
- * <li>INBOUND</li> Receives and unwraps events from the network and routes them
- * into the OUTBOUND or SINK banks.
- * <li>OUTBOUND</li> Receives events from the INBOUND or SOURCE banks and routes
- * them into the network.
- * <li>SOURCE</li> Streams in this bank produce events and routes them into the
- * OUTBOUND or SINK banks.
- * <li>SINK</li> Streams in this bank consume events from the INBOUND or SOURCE
- * banks.
+ * <li><b>INBOUND:</b> Receives and unwraps events from the network and routes them
+ * into the OUTBOUND or SINK banks.</li>
+ * <li><b>OUTBOUND:</b> Receives events from the INBOUND or SOURCE banks and routes
+ * them into the network.</li>
+ * <li><b>SOURCE:</b> Streams in this bank produce events and routes them into the
+ * OUTBOUND or SINK banks.</li>
+ * <li><b>SINK:</b> Streams in this bank consume events from the INBOUND or SOURCE
+ * banks.</li>
  * </ul>
  *
  * <p>
@@ -56,7 +56,7 @@ import com.sandpolis.core.stream.store.StreamStore.StreamStoreConfig;
  *
  * <p>
  * The graphic below illustrates a multicast stream A and a unicast stream B.
- * 
+ *
  * <pre>
  * IN     OUT    SRC    SINK
  * [A]    [B]    [B]    [A]
@@ -140,7 +140,7 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 	/**
 	 * Immediately halt a stream by its ID. Other streams may also be stopped as a
 	 * result of stopping the target stream.
-	 * 
+	 *
 	 * @param id The stream ID
 	 */
 	public synchronized void stop(int id) {

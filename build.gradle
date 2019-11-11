@@ -128,14 +128,9 @@ configure(subprojects.findAll {publishProjects.contains(it.name)}) {
 	archivesBaseName = it.name.replace("com.", "").replaceAll("\\.", "-")
 
 	afterEvaluate { sub ->
-		task sourcesJar(type: Jar) {
-			from sourceSets.main.allJava
-			archiveClassifier = 'sources'
-		}
-
-		task javadocJar(type: Jar) {
-			from javadoc
-			archiveClassifier = 'javadoc'
+		java {
+			withJavadocJar()
+			withSourcesJar()
 		}
 
 		publishing {
@@ -146,8 +141,6 @@ configure(subprojects.findAll {publishProjects.contains(it.name)}) {
 					version = sub.version
 
 					from sub.components.java
-					artifact sourcesJar
-					artifact javadocJar
 					pom {
 						name = sub.name
 						description = sub.eclipse.project.comment
