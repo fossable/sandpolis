@@ -21,6 +21,8 @@ class ShellSession: UIViewController {
 
 	@IBOutlet weak var shellSelector: UISegmentedControl!
 
+	@IBOutlet weak var terminalContainer: UIView!
+
 	private var terminal: TerminalViewController!
 
 	var profile: SandpolisProfile!
@@ -49,6 +51,9 @@ class ShellSession: UIViewController {
 	}
 
 	@IBAction func onShellChanged(_ sender: Any) {
+		if terminalContainer.isHidden {
+			terminalContainer.isHidden = false
+		}
 		if stream != nil {
 			stream.close()
 		}

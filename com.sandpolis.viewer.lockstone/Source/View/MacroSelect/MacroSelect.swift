@@ -30,6 +30,7 @@ class MacroSelect: UITableViewController {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		navigationItem.title = "\(profiles.count) clients selected"
 
 		// Synchronize list with Firebase
 		ref.getDocuments { querySnapshot, error in
@@ -40,22 +41,7 @@ class MacroSelect: UITableViewController {
 			self.macroList = macros.filter { macro in
 				// Ensure macro is compatible with every profile
 				for profile in self.profiles {
-					switch profile.platform {
-					case .linux:
-						if !(macro["linux"] as! Bool) {
-							return false
-						}
-					case .windows:
-						if !(macro["windows"] as! Bool) {
-							return false
-						}
-					case .macos:
-						if !(macro["macos"] as! Bool) {
-							return false
-						}
-					default:
-						print("Warning: Unknown platform")
-					}
+					// TODO
 				}
 				return true
 			}

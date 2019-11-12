@@ -100,7 +100,7 @@ open class TerminalTheme {
 	///
 	/// Default is black.
 	open var toolbarStyle: UIBarStyle {
-		return .black
+		return .default
 	}
 
 	/// Selection color
