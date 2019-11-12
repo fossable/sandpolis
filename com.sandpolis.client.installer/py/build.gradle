@@ -1,0 +1,11 @@
+
+plugins {
+    id 'eclipse'
+}
+
+eclipse {
+    project {
+        name = 'com.sandpolis.client.installer:py'
+        comment = ''
+    }
+}

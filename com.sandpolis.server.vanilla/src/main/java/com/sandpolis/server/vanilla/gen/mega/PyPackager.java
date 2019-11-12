@@ -35,15 +35,14 @@ import com.sandpolis.server.vanilla.gen.MegaGen;
  */
 public class PyPackager extends MegaGen {
 	public PyPackager(GenConfig config) {
-		super(config);
+		super(config, ".py", "/lib/sandpolis-client-installer.py");
 	}
 
 	@Override
 	protected byte[] generate() throws Exception {
 		Map<String, String> cfg = new HashMap<>();
 
-		String stub = CharStreams
-				.toString(new InputStreamReader(PyPackager.class.getResourceAsStream("stub.py"), Charsets.UTF_8));
+		String stub = readArtifactString();
 		stub.replaceFirst("# PLACEHOLDER",
 				cfg.entrySet().stream()
 						.map(entry -> String.format("config['%s'] = '%s'%n", entry.getKey(), entry.getValue()))

@@ -28,7 +28,7 @@ import com.sandpolis.server.vanilla.gen.MegaGen;
  */
 public class QrPackager extends MegaGen {
 	public QrPackager(GenConfig config) {
-		super(config);
+		super(config, ".png");
 	}
 
 	@Override

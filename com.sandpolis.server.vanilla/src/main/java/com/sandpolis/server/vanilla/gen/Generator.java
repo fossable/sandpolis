@@ -44,6 +44,11 @@ public abstract class Generator implements Runnable {
 	private static final Logger log = LoggerFactory.getLogger(Generator.class);
 
 	/**
+	 * The file extension that should be used for the result archive.
+	 */
+	private String archiveExtension;
+
+	/**
 	 * The generator's configuration.
 	 */
 	protected GenConfig config;
@@ -51,20 +56,16 @@ public abstract class Generator implements Runnable {
 	/**
 	 * The generation report.
 	 */
-	protected GenReport.Builder report;
+	private GenReport.Builder report;
 
 	/**
 	 * The final result of the generation.
 	 */
 	protected byte[] result;
 
-	/**
-	 * The final result of the generation.
-	 */
-	protected Path resultArchive;
-
-	protected Generator(GenConfig config) {
+	protected Generator(GenConfig config, String archiveExtension) {
 		this.config = Objects.requireNonNull(config);
+		this.archiveExtension = Objects.requireNonNull(archiveExtension);
 	}
 
 	/**
@@ -110,15 +111,6 @@ public abstract class Generator implements Runnable {
 		return result;
 	}
 
-	/**
-	 * Get the location of the generator output in the archive directory.
-	 *
-	 * @return The location of the result
-	 */
-	public Path getResultPath() {
-		return resultArchive;
-	}
-
 	@Override
 	public void run() {
 		if (report != null)
@@ -136,7 +128,7 @@ public abstract class Generator implements Runnable {
 				return Integer.parseInt(getNameWithoutExtension(path.getFileName().toString()));
 			}).sorted().findFirst().orElse(-1) + 1;
 
-			Files.write(Environment.GEN.path().resolve("" + seq), result);
+			Files.write(Environment.GEN.path().resolve(String.format("%d%s", seq, archiveExtension)), result);
 		} catch (Exception e) {
 			log.error("Generation failed", e);
 			report.setResult(false);

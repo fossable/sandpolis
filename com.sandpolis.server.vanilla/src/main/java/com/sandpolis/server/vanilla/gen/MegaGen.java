@@ -17,20 +17,10 @@
  ******************************************************************************/
 package com.sandpolis.server.vanilla.gen;
 
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
-import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.github.cilki.zipset.ZipSet;
 import com.github.cilki.zipset.ZipSet.EntryPath;
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.store.plugin.Plugin;
@@ -41,15 +31,21 @@ import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.proto.util.Platform.OsType;
 import com.sandpolis.core.soi.SoiUtil;
 import com.sandpolis.core.util.ArtifactUtil;
-import com.sandpolis.server.vanilla.gen.mega.BatPackager;
-import com.sandpolis.server.vanilla.gen.mega.ElfPackager;
-import com.sandpolis.server.vanilla.gen.mega.ExePackager;
-import com.sandpolis.server.vanilla.gen.mega.JarPackager;
-import com.sandpolis.server.vanilla.gen.mega.PyPackager;
-import com.sandpolis.server.vanilla.gen.mega.QrPackager;
-import com.sandpolis.server.vanilla.gen.mega.RbPackager;
-import com.sandpolis.server.vanilla.gen.mega.ShPackager;
-import com.sandpolis.server.vanilla.gen.mega.UrlPackager;
+import com.sandpolis.server.vanilla.gen.mega.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.stream.Collectors;
+
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 /**
  * This generator builds a {@code com.sandpolis.client.mega} client.
@@ -59,21 +55,18 @@ import com.sandpolis.server.vanilla.gen.mega.UrlPackager;
  */
 public abstract class MegaGen extends Generator {
 
-	protected MegaGen(GenConfig config) {
-		super(config);
-	}
-
 	private static final Logger log = LoggerFactory.getLogger(MegaGen.class);
 
-	/**
-	 * Dependencies that must be packaged under every circumstance.
-	 */
-	private static final List<String> include = List.of("sandpolis-core-soi", "sandpolis-core-instance");
+	private String artifact;
 
-	/**
-	 * Dependencies that should not be packaged under any circumstance.
-	 */
-	private static final List<String> exclude = List.of();
+	protected MegaGen(GenConfig config, String archiveExtension, String artifact) {
+		super(config, archiveExtension);
+		this.artifact = Objects.requireNonNull(artifact);
+	}
+
+	protected MegaGen(GenConfig config, String archiveExtension) {
+		super(config, archiveExtension);
+	}
 
 	public static MegaGen build(GenConfig config) {
 		switch (config.getFormat()) {
@@ -100,6 +93,57 @@ public abstract class MegaGen extends Generator {
 		}
 	}
 
+	protected Properties buildInstallerConfig() throws IOException {
+		Properties cfg = new Properties();
+
+		// Set module dependencies
+		cfg.put("modules", getDependencies().stream().collect(Collectors.joining(" ")));
+
+		// Set installation paths
+		for (var entry : config.getMega().getExecution().getInstallPathMap().entrySet()) {
+			switch (entry.getKey()) {
+				case OsType.AIX_VALUE:
+					cfg.put("path.aix", entry.getValue());
+					break;
+				case OsType.FREEBSD_VALUE:
+					cfg.put("path.freebsd", entry.getValue());
+					break;
+				case OsType.LINUX_VALUE:
+					cfg.put("path.linux", entry.getValue());
+					break;
+				case OsType.MACOS_VALUE:
+					cfg.put("path.mac", entry.getValue());
+					break;
+				case OsType.SOLARIS_VALUE:
+					cfg.put("path.solaris", entry.getValue());
+					break;
+				case OsType.WINDOWS_VALUE:
+					cfg.put("path.windows", entry.getValue());
+					break;
+			}
+		}
+
+		return cfg;
+	}
+
+	protected String readArtifactString() throws IOException {
+		try (var in = MegaGen.class.getResourceAsStream(artifact)) {
+			if (in == null)
+				throw new IOException("Missing resource: " + artifact);
+
+			return CharStreams.toString(new InputStreamReader(in, Charsets.UTF_8));
+		}
+	}
+
+	protected byte[] readArtifactBinary() throws IOException {
+		try (var in = MegaGen.class.getResourceAsStream(artifact)) {
+			if (in == null)
+				throw new IOException("Missing resource: " + artifact);
+
+			return in.readAllBytes();
+		}
+	}
+
 	protected List<String> getDependencies() throws IOException {
 		Path client = Environment.LIB.path().resolve("sandpolis-client-mega-" + Core.SO_BUILD.getVersion() + ".jar");
 
@@ -119,28 +163,23 @@ public abstract class MegaGen extends Generator {
 		output.add("soi/client.bin", config.getMega().toByteArray());
 
 		// Add client dependencies
-		SoiUtil.getMatrix(client).getAllDependencies()
-				// Skip unnecessary dependencies if allowed
-				.filter(artifact -> !config.getMega().getDownloader() || include.contains(artifact.getArtifactId()))
-				.filter(artifact -> !exclude.contains(artifact.getArtifactId())) //
-				.forEach(artifact -> {
-					Path source = ArtifactUtil.getArtifactFile(Environment.LIB.path(),
-							artifact.getArtifact().getCoordinates());
+		SoiUtil.getMatrix(client).getAllDependencies().forEach(artifact -> {
+			Path source = ArtifactUtil.getArtifactFile(Environment.LIB.path(), artifact.getArtifact().getCoordinates());
 
-					// Add library
-					output.add("lib/" + source.getFileName(), source);
+			// Add library
+			output.add("lib/" + source.getFileName(), source);
 
-					// Strip native dependencies if possible
-					artifact.getArtifact().getNativeComponentList().stream()
-							// Filter out unnecessary platform-specific libraries
-							.filter(component -> !features.getSupportedOsList()
-									.contains(OsType.valueOf(component.getPlatform())))
-							.filter(component -> !features.getSupportedArchList().contains(component.getArchitecture()))
-							.forEach(component -> {
-								output.sub(EntryPath.get("lib/" + source.getFileName(), component.getPath()));
-							});
+			// Strip native dependencies if possible
+			artifact.getArtifact().getNativeComponentList().stream()
+					// Filter out unnecessary platform-specific libraries
+					.filter(component -> !features.getSupportedOsList()
+							.contains(OsType.valueOf(component.getPlatform())))
+					.filter(component -> !features.getSupportedArchList().contains(component.getArchitecture()))
+					.forEach(component -> {
+						output.sub(EntryPath.get("lib/" + source.getFileName(), component.getPath()));
+					});
 
-				});
+		});
 
 		// Add plugin binaries
 		if (!config.getMega().getDownloader()) {

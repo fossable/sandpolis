@@ -28,7 +28,7 @@ import com.sandpolis.server.vanilla.gen.MegaGen;
  */
 public class ShPackager extends MegaGen {
 	public ShPackager(GenConfig config) {
-		super(config);
+		super(config, ".sh", "/lib/sandpolis-client-installer.sh");
 	}
 
 	@Override

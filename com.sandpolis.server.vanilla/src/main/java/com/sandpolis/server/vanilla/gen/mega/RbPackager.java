@@ -28,7 +28,7 @@ import com.sandpolis.server.vanilla.gen.MegaGen;
  */
 public class RbPackager extends MegaGen {
 	public RbPackager(GenConfig config) {
-		super(config);
+		super(config, ".rb", "/lib/sandpolis-client-installer.rb");
 	}
 
 	@Override

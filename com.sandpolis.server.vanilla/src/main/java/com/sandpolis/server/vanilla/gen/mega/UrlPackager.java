@@ -29,7 +29,7 @@ import com.sandpolis.server.vanilla.gen.MegaGen;
  */
 public class UrlPackager extends MegaGen {
 	public UrlPackager(GenConfig config) {
-		super(config);
+		super(config, "url");
 	}
 
 	@Override

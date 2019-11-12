@@ -28,7 +28,7 @@ import com.sandpolis.server.vanilla.gen.MegaGen;
  */
 public class ElfPackager extends MegaGen {
 	public ElfPackager(GenConfig config) {
-		super(config);
+		super(config, "", "/lib/sandpolis-client-installer.elf");
 	}
 
 	@Override

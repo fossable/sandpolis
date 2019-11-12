@@ -28,7 +28,7 @@ import com.sandpolis.server.vanilla.gen.MegaGen;
  */
 public class ExePackager extends MegaGen {
 	public ExePackager(GenConfig config) {
-		super(config);
+		super(config, ".exe", "/lib/sandpolis-client-installer.exe");
 	}
 
 	@Override

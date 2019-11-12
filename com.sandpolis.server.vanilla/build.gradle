@@ -25,9 +25,6 @@ eclipse {
 dependencies {
 	testImplementation project(path: ':module:com.sandpolis.core.net', configuration: 'tests')
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
-	
-	// Temporary
-	implementation project(':com.sandpolis.client.installer:jar')
 
 	implementation project(':com.sandpolis.client.mega')
 	api project(':module:com.sandpolis.core.instance')
@@ -67,7 +64,19 @@ dependencies {
 	api 'org.slf4j:slf4j-api:1.7.28'
 
 	// https://github.com/cilki/zipset
-	api 'com.github.cilki:zipset:1.1.0'
+	api 'com.github.cilki:zipset:1.2.1'
+}
+
+project.evaluationDependsOn(":com.sandpolis.client.installer:jar")
+project.evaluationDependsOn(":com.sandpolis.client.installer:py")
+
+jar {
+	from (project(':com.sandpolis.client.installer:jar').tasks.getByName('jar').outputs) {
+		into "lib"
+	}
+	from (project(':com.sandpolis.client.installer:py').file('src/sandpolis-client-installer.py')) {
+		into "lib"
+	}
 }
 
 mainClassName = 'com.sandpolis.server.vanilla/com.sandpolis.server.vanilla.Main'

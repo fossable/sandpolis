@@ -39,14 +39,14 @@ import com.sandpolis.core.stream.store.StreamStore.StreamStoreConfig;
  * The {@link StreamStore} contains four "banks" of stream endpoints that each
  * serve a specific purpose.
  * <ul>
- * <li><b>INBOUND:</b> Receives and unwraps events from the network and routes them
- * into the OUTBOUND or SINK banks.</li>
- * <li><b>OUTBOUND:</b> Receives events from the INBOUND or SOURCE banks and routes
- * them into the network.</li>
- * <li><b>SOURCE:</b> Streams in this bank produce events and routes them into the
- * OUTBOUND or SINK banks.</li>
- * <li><b>SINK:</b> Streams in this bank consume events from the INBOUND or SOURCE
- * banks.</li>
+ * <li><b>INBOUND:</b> Receives and unwraps events from the network and routes
+ * them into the OUTBOUND or SINK banks.</li>
+ * <li><b>OUTBOUND:</b> Receives events from the INBOUND or SOURCE banks and
+ * routes them into the network.</li>
+ * <li><b>SOURCE:</b> Streams in this bank produce events and routes them into
+ * the OUTBOUND or SINK banks.</li>
+ * <li><b>SINK:</b> Streams in this bank consume events from the INBOUND or
+ * SOURCE banks.</li>
  * </ul>
  *
  * <p>

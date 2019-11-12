@@ -28,7 +28,7 @@ import com.sandpolis.server.vanilla.gen.MegaGen;
  */
 public class BatPackager extends MegaGen {
 	public BatPackager(GenConfig config) {
-		super(config);
+		super(config, ".bat", "/lib/sandpolis-client-installer.bat");
 	}
 
 	@Override

@@ -17,14 +17,10 @@ eclipse {
 
 jar {
 	archiveBaseName = 'sandpolis-client-installer'
-	//archiveBaseName = 'com.sandpolis.client.installer.jar'
-	//version = ''
-}
-
-jar {
-  manifest {
-    attributes(
-      'Main-Class': 'com.sandpolis.client.installer.jar.Main'
-    )
-  }
+	archiveVersion = ''
+	manifest {
+		attributes(
+		  'Main-Class': 'com.sandpolis.client.installer.jar.Main'
+		)
+	}
 }
