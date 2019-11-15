@@ -424,6 +424,10 @@ public class SandpolisConnection {
 					platform: ev.platform,
 					online: ev.online
 				)
+				
+				if ev.hasLocation {
+					profile.location = ev.location
+				}
 
 				self.profiles.append(profile)
 				for handler in self.profileListeners {

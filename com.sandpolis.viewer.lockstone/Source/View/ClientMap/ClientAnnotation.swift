@@ -28,7 +28,7 @@ class ClientAnnotation: NSObject, MKAnnotation {
 
 		self.profile = profile
 		self.title = profile.hostname
-		if let latitude = profile.latitude, let longitude = profile.longitude {
+		if let latitude = profile.location?.latitude, let longitude = profile.location?.longitude {
 			self.coordinate = CLLocationCoordinate2DMake(CLLocationDegrees(latitude), CLLocationDegrees(longitude))
 		} else {
 			return nil

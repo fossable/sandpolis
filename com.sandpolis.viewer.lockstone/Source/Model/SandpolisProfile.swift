@@ -50,29 +50,11 @@ class SandpolisProfile {
 	/// The client's start timestamp
 	var startTime: Int64?
 
-	/// The client's timezone
-	var timezone: TimeZone?
-
-	/// The client's latitude
-	var latitude: Double?
-
-	/// The client's longitude
-	var longitude: Double?
-
-	/// The client's country name
-	var country: String?
-
-	/// The client's country code
-	var countryCode: String?
-
-	/// The client's region name
-	var region: String?
-
-	/// The client's city name
-	var city: String?
-
 	/// Whether the client is online
 	var online: Bool
+	
+	// The client's IP location
+	var location: Util_Location?
 
 	init(uuid: String, cvid: Int32, hostname: String, ipAddress: String, platform: Util_OsType, online: Bool) {
 		self.uuid = uuid

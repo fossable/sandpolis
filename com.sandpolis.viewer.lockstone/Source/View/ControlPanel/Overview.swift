@@ -43,7 +43,7 @@ class Overview: UIViewController {
 		}
 
 		// Set location
-		if let code = profile.countryCode {
+		if let code = profile.location?.countryCode {
 			flag.image = UIImage(named: "flag/\(code)")
 			location.text = FormatUtil.formatProfileLocation(profile)
 		} else {

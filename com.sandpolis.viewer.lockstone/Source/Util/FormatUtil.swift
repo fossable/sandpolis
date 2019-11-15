@@ -110,13 +110,13 @@ class FormatUtil {
 	/// - Parameter profile: The given profile
 	/// - Returns: A user-friendly location string
 	static func formatProfileLocation(_ profile: SandpolisProfile) -> String {
-		if let city = profile.city, let region = profile.region, let country = profile.country {
+		if let city = profile.location?.city, let region = profile.location?.region, let country = profile.location?.country {
 			return "\(city), \(region) (\(country))"
 		}
-		if let region = profile.region, let country = profile.country {
+		if let region = profile.location?.region, let country = profile.location?.country {
 			return "\(region), \(country)"
 		}
-		if let country = profile.country {
+		if let country = profile.location?.country {
 			return country
 		}
 
