@@ -22,24 +22,28 @@ afterEvaluate {
 	// Build ProtoBuf sources manually
 	mkdir file("Source/Proto")
 	project.exec {
-		commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
 		workingDir = project(":module:com.sandpolis.core.proto").file("src/main/proto")
+		commandLine = ["protoc", "--swift_out=" + file("Source/Proto"), *fileTree(workingDir).files.collect {
+			workingDir.toPath().relativize(it.toPath())
+		}]
 	}
 	project.exec {
-		commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
 		workingDir = project(":plugin:com.sandpolis.plugin.desktop").file("src/main/proto")
+		commandLine = ["protoc", "--swift_out=" + file("Source/Proto"), *fileTree(workingDir).files.collect {
+			workingDir.toPath().relativize(it.toPath())
+		}]
 	}
 	project.exec {
-		commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
 		workingDir = project(":plugin:com.sandpolis.plugin.shell").file("src/main/proto")
+		commandLine = ["protoc", "--swift_out=" + file("Source/Proto"), *fileTree(workingDir).files.collect {
+			workingDir.toPath().relativize(it.toPath())
+		}]
 	}
 	project.exec {
-		commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
-		workingDir = project(":plugin:com.sandpolis.plugin.sysinfo").file("src/main/proto")
-	}
-	project.exec {
-		commandLine = ["sh", "-c", "protoc --swift_out=" + file("Source/Proto") + " com/sandpolis/*/*/*/*.proto"]
 		workingDir = project(":plugin:com.sandpolis.plugin.filesys").file("src/main/proto")
+		commandLine = ["protoc", "--swift_out=" + file("Source/Proto"), *fileTree(workingDir).files.collect {
+			workingDir.toPath().relativize(it.toPath())
+		}]
 	}
 
 	// Create empty xterm files to prevent build failure
