@@ -17,24 +17,22 @@
 //****************************************************************************//
 import UIKit
 
-class GroupHostCell: UITableViewCell {
+class GroupControlPanel: UITabBarController {
 
-	@IBOutlet weak var platform: UIImageView!
-	@IBOutlet weak var hostname: UILabel!
+	var profiles: [SandpolisProfile]!
 
-	func setContent(_ profile: SandpolisProfile) {
-		hostname.text = profile.hostname
-		switch profile.platform {
-		case .linux:
-			platform.image = UIImage(named: "platform/linux_small")
-		case .macos:
-			platform.image = UIImage(named: "platform/mac_small")
-		case .windows:
-			platform.image = UIImage(named: "platform/windows_small")
-		case .freebsd:
-			platform.image = UIImage(named: "platform/freebsd_small")
-		default:
-			break
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		for controller in viewControllers! {
+			if let overview = controller as? GroupOverview {
+				overview.profiles = profiles
+			}
+			if let actions = controller as? GroupActions {
+				actions.profiles = profiles
+			}
 		}
+
+		// Always select overview
+		self.selectedIndex = 0
 	}
 }

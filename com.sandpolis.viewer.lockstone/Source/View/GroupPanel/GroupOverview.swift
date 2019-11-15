@@ -17,7 +17,7 @@
 //****************************************************************************//
 import UIKit
 
-class GroupPanel: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class GroupOverview: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
 	@IBOutlet weak var table: UITableView!
 	var hostList: ClientList!
@@ -57,51 +57,5 @@ class GroupPanel: UIViewController, UITableViewDelegate, UITableViewDataSource {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "GroupHostCell", for: indexPath) as! GroupHostCell
 		cell.setContent(profiles[indexPath.row])
 		return cell
-	}
-
-	@IBAction func poweroff(_ sender: Any) {
-		let alert = UIAlertController(title: "Are you sure?", message: "\(profiles.count) hosts will be powered off immediately", preferredStyle: .alert)
-		alert.addAction(UIAlertAction(title: "Poweroff", style: .destructive) { _ in
-				for profile in self.profiles {
-					_ = SandpolisUtil.connection.poweroff(profile.cvid)
-				}
-				self.navigationController?.popViewController(animated: true)
-			})
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-
-		present(alert, animated: true)
-	}
-
-	@IBAction func reboot(_ sender: Any) {
-		let alert = UIAlertController(title: "Are you sure?", message: "\(profiles.count) hosts will be restarted immediately", preferredStyle: .alert)
-		alert.addAction(UIAlertAction(title: "Restart", style: .destructive) { _ in
-				for profile in self.profiles {
-					_ = SandpolisUtil.connection.restart(profile.cvid)
-				}
-				self.navigationController?.popViewController(animated: true)
-			})
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-
-		present(alert, animated: true)
-	}
-
-	@IBAction func createGroupButtonPressed(_ sender: Any) {
-		let alert = UIAlertController(title: "Create New Host Group", message: "Enter a group name.", preferredStyle: .alert)
-		alert.addTextField { (textField) in
-			textField.text = ""
-		}
-		alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { [weak alert] (_) in
-			let textField = alert?.textFields![0]
-			let error = self.hostList.addHostGroup(groupName: textField!.text!, profiles: self.profiles)
-			var responseAlert: UIAlertController!
-			if error == "" {
-				responseAlert = UIAlertController(title: "Success", message: "Host group created successfully.", preferredStyle: .alert)
-			} else {
-				responseAlert = UIAlertController(title: "Error", message: error, preferredStyle: .alert)
-			}
-			responseAlert.addAction(UIAlertAction(title: "OK", style: .default))
-			self.present(responseAlert, animated: true, completion: nil)
-		}))
-		self.present(alert, animated: true, completion: nil)
 	}
 }

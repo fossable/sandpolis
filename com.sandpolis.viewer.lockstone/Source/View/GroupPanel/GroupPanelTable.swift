@@ -43,7 +43,5 @@ class GroupPanelTable: UITableViewController {
 		// uptime.text = FormatUtil.timeSince(reference - profiles.reduce(0) { intermediate, profile in
 		// 	return intermediate + max(reference - profile.startTime, 0)
 		// })
-
-		tableView.allowsSelection = false
 	}
 }

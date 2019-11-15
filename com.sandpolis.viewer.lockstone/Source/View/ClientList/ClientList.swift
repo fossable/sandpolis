@@ -132,7 +132,7 @@ class ClientList: UITableViewController {
 			let hostId = hostGroup.hostIds[indexPath.row]
 			controlPanel.profile = idToProfile[hostId]
 		} else if segue.identifier == "ShowGroupControlPanelSegue",
-			let groupControlPanel = segue.destination as? GroupPanel {
+			let groupControlPanel = segue.destination as? GroupControlPanel {
 			// get the list of host profiles that are multi-selected and send it to group control panel
 			var hostIds = Set<String>()
 			var profiles = [SandpolisProfile]()
@@ -145,9 +145,8 @@ class ClientList: UITableViewController {
 				profiles.append(idToProfile[hostId]!)
 			}
 			groupControlPanel.profiles = profiles
-			groupControlPanel.hostList = self
 		} else if segue.identifier == "ShowGroupControlPanelFromHeaderSegue",
-			let groupControlPanel = segue.destination as? GroupPanel {
+			let groupControlPanel = segue.destination as? GroupControlPanel {
 			// get the list of host profiles under the selected host group and send it to group control panel
 			let hostGroup = sender as! HostGroup
 			var profiles = [SandpolisProfile]()
@@ -155,7 +154,6 @@ class ClientList: UITableViewController {
 				profiles.append(idToProfile[hostId]!)
 			}
 			groupControlPanel.profiles = profiles
-			groupControlPanel.hostList = self
 		} else {
 			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
 		}

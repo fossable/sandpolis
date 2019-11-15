@@ -45,7 +45,7 @@
 		AA6CACE822DD26F600041AF3 /* OverviewTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACE722DD26F600041AF3 /* OverviewTable.swift */; };
 		AA6CACEB22DD34A900041AF3 /* FormatUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACEA22DD34A900041AF3 /* FormatUtil.swift */; };
 		AA6CACED22DD432000041AF3 /* GroupPanelTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACEC22DD432000041AF3 /* GroupPanelTable.swift */; };
-		AA6CACEF22DD445000041AF3 /* GroupPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACEE22DD445000041AF3 /* GroupPanel.swift */; };
+		AA6CACEF22DD445000041AF3 /* GroupOverview.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACEE22DD445000041AF3 /* GroupOverview.swift */; };
 		AA6CACF122DD48D300041AF3 /* GroupHostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACF022DD48D300041AF3 /* GroupHostCell.swift */; };
 		AA6CACFC22DD658C00041AF3 /* MacroResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6CACFB22DD658C00041AF3 /* MacroResults.swift */; };
 		AA6E007222F73C1400BB51ED /* Login.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6E007122F73C1400BB51ED /* Login.swift */; };
@@ -112,6 +112,8 @@
 		AABF01E923349D6800DEA0E4 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01E823349D6800DEA0E4 /* NIO */; };
 		AABF01EC23349DE300DEA0E4 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01EB23349DE300DEA0E4 /* NIOSSL */; };
 		AABF01EF23349ED300DEA0E4 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01EE23349ED300DEA0E4 /* SwiftProtobuf */; };
+		AABFEE17237D359D0022C58D /* GroupActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABFEE16237D359C0022C58D /* GroupActions.swift */; };
+		AABFEE19237D397F0022C58D /* GroupControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABFEE18237D397F0022C58D /* GroupControlPanel.swift */; };
 		AAC198F922E40CA6004361C5 /* FileCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198F822E40CA6004361C5 /* FileCell.swift */; };
 		AAC198FD22E40D27004361C5 /* FolderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198FC22E40D27004361C5 /* FolderCell.swift */; };
 		AAC4B69422BDE54500B0E354 /* SandpolisConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */; };
@@ -165,7 +167,7 @@
 		AA6CACE722DD26F600041AF3 /* OverviewTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewTable.swift; sourceTree = "<group>"; };
 		AA6CACEA22DD34A900041AF3 /* FormatUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatUtil.swift; sourceTree = "<group>"; };
 		AA6CACEC22DD432000041AF3 /* GroupPanelTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupPanelTable.swift; sourceTree = "<group>"; };
-		AA6CACEE22DD445000041AF3 /* GroupPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupPanel.swift; sourceTree = "<group>"; };
+		AA6CACEE22DD445000041AF3 /* GroupOverview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupOverview.swift; sourceTree = "<group>"; };
 		AA6CACF022DD48D300041AF3 /* GroupHostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupHostCell.swift; sourceTree = "<group>"; };
 		AA6CACFB22DD658C00041AF3 /* MacroResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroResults.swift; sourceTree = "<group>"; };
 		AA6E007122F73C1400BB51ED /* Login.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Login.swift; sourceTree = "<group>"; };
@@ -231,6 +233,8 @@
 		AAB6D932235FDF3F00FED79B /* msg_sysinfo.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_sysinfo.pb.swift; sourceTree = "<group>"; };
 		AAB6D933235FDF3F00FED79B /* message_sysinfo.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = message_sysinfo.pb.swift; sourceTree = "<group>"; };
 		AAB6D956235FEA6300FED79B /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
+		AABFEE16237D359C0022C58D /* GroupActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupActions.swift; sourceTree = "<group>"; };
+		AABFEE18237D397F0022C58D /* GroupControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupControlPanel.swift; sourceTree = "<group>"; };
 		AAC198F822E40CA6004361C5 /* FileCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCell.swift; sourceTree = "<group>"; };
 		AAC198FC22E40D27004361C5 /* FolderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderCell.swift; sourceTree = "<group>"; };
 		AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisConnection.swift; sourceTree = "<group>"; };
@@ -371,7 +375,9 @@
 			children = (
 				AA6CACF022DD48D300041AF3 /* GroupHostCell.swift */,
 				AA6CACEC22DD432000041AF3 /* GroupPanelTable.swift */,
-				AA6CACEE22DD445000041AF3 /* GroupPanel.swift */,
+				AA6CACEE22DD445000041AF3 /* GroupOverview.swift */,
+				AABFEE16237D359C0022C58D /* GroupActions.swift */,
+				AABFEE18237D397F0022C58D /* GroupControlPanel.swift */,
 			);
 			path = GroupPanel;
 			sourceTree = "<group>";
@@ -875,6 +881,7 @@
 				AA6E007222F73C1400BB51ED /* Login.swift in Sources */,
 				AAB6D94C235FDF3F00FED79B /* msg_shell.pb.swift in Sources */,
 				AAB6D949235FDF3F00FED79B /* user.pb.swift in Sources */,
+				AABFEE19237D397F0022C58D /* GroupControlPanel.swift in Sources */,
 				AA0724A32312203C0087190F /* ClientScanner.swift in Sources */,
 				AA677D1C235D5683001BE400 /* Attribute.swift in Sources */,
 				AAF113B922CC50C800987EAF /* MacroManager.swift in Sources */,
@@ -900,7 +907,7 @@
 				AA899D2E2319E6A000E7C703 /* ServerCreator.swift in Sources */,
 				AAB6D952235FDF3F00FED79B /* msg_clipboard.pb.swift in Sources */,
 				AA6CACED22DD432000041AF3 /* GroupPanelTable.swift in Sources */,
-				AA6CACEF22DD445000041AF3 /* GroupPanel.swift in Sources */,
+				AA6CACEF22DD445000041AF3 /* GroupOverview.swift in Sources */,
 				ED5A421222E5284900EA3C98 /* ForgotPassword.swift in Sources */,
 				AA70FD1E22BEF326006A4C6F /* ByteBuffer+varint.swift in Sources */,
 				AA69CFAD2362A325008101AA /* Ubuntu.swift in Sources */,
@@ -957,6 +964,7 @@
 				AA61588C23359FF50035622F /* ClientHandler.swift in Sources */,
 				AA70158422D7C93900A1E4ED /* SandpolisProfile.swift in Sources */,
 				AAB6D948235FDF3F00FED79B /* attribute.pb.swift in Sources */,
+				AABFEE17237D359D0022C58D /* GroupActions.swift in Sources */,
 				AAB6D93F235FDF3F00FED79B /* msg_group.pb.swift in Sources */,
 				AAB6D939235FDF3F00FED79B /* msg_auth.pb.swift in Sources */,
 				AAB6D944235FDF3F00FED79B /* generator.pb.swift in Sources */,
@@ -1118,6 +1126,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 858CG57YNC;
 				INFOPLIST_FILE = "$(SRCROOT)/Source/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
@@ -1139,6 +1148,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 858CG57YNC;
 				INFOPLIST_FILE = "$(SRCROOT)/Source/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
