@@ -13,8 +13,7 @@ open module com.sandpolis.server.vanilla {
 	exports com.sandpolis.server.vanilla.stream;
 	exports com.sandpolis.server.vanilla;
 
-	requires com.sandpolis.core.storage.hibernate;
-	requires org.hibernate.orm.core;
+	requires com.fasterxml.jackson.databind;
 	requires com.google.common;
 	requires com.google.protobuf;
 	requires com.sandpolis.core.instance;
@@ -23,6 +22,7 @@ open module com.sandpolis.server.vanilla {
 	requires com.sandpolis.core.profile;
 	requires com.sandpolis.core.proto;
 	requires com.sandpolis.core.soi;
+	requires com.sandpolis.core.storage.hibernate;
 	requires com.sandpolis.core.stream;
 	requires com.sandpolis.core.util;
 	requires io.netty.buffer;
@@ -31,8 +31,10 @@ open module com.sandpolis.server.vanilla {
 	requires io.netty.handler;
 	requires io.netty.transport;
 	requires java.desktop;
+	requires java.net.http;
 	requires java.persistence;
 	requires java.sql;
+	requires org.hibernate.orm.core;
 	requires org.slf4j;
 	requires zipset;
 }

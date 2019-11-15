@@ -15,32 +15,69 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.plugin.shell.client.mega.stream;
+syntax = "proto3";
 
-import static com.google.common.base.Preconditions.checkArgument;
+package util;
 
-import java.io.IOException;
+option java_package = "com.sandpolis.core.proto.util";
+option optimize_for = CODE_SIZE;
 
-import com.sandpolis.core.stream.store.StreamSink;
-import com.sandpolis.plugin.shell.net.MsgShell.EV_ShellStream;
+message Location {
 
-public class ShellStreamSink extends StreamSink<EV_ShellStream> {
+    // AS name
+    string as = 1;
 
-	private Process process;
+    // AS number
+    int32 as_code = 2;
 
-	public ShellStreamSink(Process process) {
-		checkArgument(process.isAlive());
-		this.process = process;
-	}
+    // City name
+    string city = 3;
 
-	@Override
-	public void onNext(EV_ShellStream item) {
-		try {
-			process.getOutputStream().write(item.getData().toByteArray());
-			process.getOutputStream().flush();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+    // Continent name
+    string continent = 4;
+
+    // Two-letter continent code
+    string continent_code = 5;
+
+    // Country name
+    string country = 6;
+
+    // Two-letter country code (ISO 3166-1 alpha-2)
+    string country_code = 7;
+
+    // National currency
+    string currency = 8;
+
+    // City district
+    string district = 9;
+
+    // ISP name
+    string isp = 10;
+
+    // Latitude
+    double latitude = 11;
+
+    // Longitude
+    double longitude = 12;
+
+    // Metro code
+    int32 metro_code = 13;
+
+    // Cellular connection
+    bool mobile = 14;
+
+    // Organization name
+    string organization = 15;
+
+    // Zip code
+    int32 postal_code = 16;
+
+    // Region/state
+    string region = 17;
+
+    // Region/state short code (FIPS or ISO)
+    string region_code = 18;
+
+    // Timezone
+    string timezone = 19;
 }

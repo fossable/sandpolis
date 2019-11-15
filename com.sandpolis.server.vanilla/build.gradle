@@ -43,6 +43,9 @@ dependencies {
 	implementation project(':plugin:com.sandpolis.plugin.sysinfo')
 	implementation project(':plugin:com.sandpolis.plugin.filesys')
 
+	// https://github.com/FasterXML/jackson-databind
+	api 'com.fasterxml.jackson.core:jackson-databind:2.10.1'
+
 	// https://github.com/google/guava
 	api 'com.google.guava:guava:28.1-jre'
 

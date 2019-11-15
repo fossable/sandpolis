@@ -37,6 +37,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 
+import com.sandpolis.server.vanilla.geo.IpApi;
+import com.sandpolis.server.vanilla.geo.AbstractGeolocationService;
+import com.sandpolis.server.vanilla.geo.KeyCdn;
 import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,6 +121,7 @@ public final class Server {
 		register(Server.loadEnvironment);
 		register(Server.generateCvid);
 		register(Server.loadServerStores);
+		register(Server.loadGeolocation);
 		register(Server.loadPlugins);
 		register(Server.installDebugClient);
 		register(Server.loadListeners);
@@ -139,6 +143,8 @@ public final class Server {
 
 		Config.register("server.banner.text", "Welcome to a Sandpolis Server");
 		Config.register("server.banner.image");
+
+		Config.register("server.geolocation.service", "ip-api.com");
 
 		return task.success();
 	});
@@ -267,6 +273,30 @@ public final class Server {
 		return task.success();
 	});
 
+	/**
+	 * Load geolocation service.
+	 */
+	@InitializationTask(name = "Load geolocation service")
+	public static final Task loadGeolocation = new Task((task) -> {
+		switch (Config.get("server.geolocation.service")) {
+		case "ip-api.com":
+			String key = Config.get("server.geolocation.key");
+			if (key == null) {
+				AbstractGeolocationService.INSTANCE = new IpApi();
+			} else {
+				AbstractGeolocationService.INSTANCE = new IpApi(key);
+			}
+			break;
+		case "tools.keycdn.com":
+			AbstractGeolocationService.INSTANCE = new KeyCdn();
+			break;
+		default:
+			return task.failure("Could not find geolocation service");
+		}
+
+		return task.success();
+	});
+
 	@ShutdownTask
 	public static final Task shutdown = new Task((task) -> {
 		ThreadStore.close();
@@ -333,12 +363,12 @@ public final class Server {
 								.setNetwork(NetworkConfig
 										.newBuilder().setLoopConfig(LoopConfig.newBuilder().setTimeout(5000)
 												.setMaxTimeout(5000).setStrictCerts(false).addTarget(NetworkTarget
-														.newBuilder().setAddress("127.0.0.1").setPort(10101)))))
+														.newBuilder().setAddress("10.0.1.128").setPort(10101)))))
 						.build())
 				.run();
 
 		// Execute
-		Runtime.getRuntime().exec(new String[] { "java", "-jar", Environment.GEN.path().resolve("0").toString() });
+		Runtime.getRuntime().exec(new String[] { "java", "-jar", Environment.GEN.path().resolve("0.jar").toString() });
 		return task.success();
 	});
 

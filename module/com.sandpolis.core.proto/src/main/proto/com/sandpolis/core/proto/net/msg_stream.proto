@@ -20,6 +20,7 @@ syntax = "proto3";
 package net;
 
 import "com/sandpolis/core/proto/util/platform.proto";
+import "com/sandpolis/core/proto/util/location.proto";
 
 option java_package = "com.sandpolis.core.proto.net";
 option optimize_for = CODE_SIZE;
@@ -50,4 +51,5 @@ message EV_ProfileStream {
     string ip = 5;
     string hostname = 6;
     string install_directory = 7;
+    util.Location location = 8;
 }

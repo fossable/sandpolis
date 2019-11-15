@@ -25,11 +25,11 @@ option java_package = "com.sandpolis.core.proto.net";
 option optimize_for = CODE_SIZE;
 
 message RQ_AttributeQuery {
-	repeated string path = 1;
+    repeated string path = 1;
 }
 
 message RS_AttributeQuery {
-	pojo.ProtoProfile result = 1;
+    pojo.ProtoProfile result = 1;
 }
 
 message RQ_AttributeStream {
@@ -37,10 +37,10 @@ message RQ_AttributeStream {
     // The desired stream ID
     int32 id = 1;
 
-	repeated string path = 2;
-	int32 update_period = 3;
+    repeated string path = 2;
+    int32 update_period = 3;
 }
 
 message EV_AttributeStream {
-	pojo.ProtoProfile update = 1;
+    pojo.ProtoProfile update = 1;
 }

@@ -265,7 +265,7 @@ public final class Plugin {
 
 	/**
 	 * Search for all plugin components in the {@code PLUGIN} directory.
-	 * 
+	 *
 	 * @return The component paths
 	 * @throws IOException
 	 */
@@ -288,7 +288,7 @@ public final class Plugin {
 
 	/**
 	 * Hash the plugin components.
-	 * 
+	 *
 	 * @return
 	 * @throws IOException
 	 */

@@ -102,24 +102,24 @@ public abstract class MegaGen extends Generator {
 		// Set installation paths
 		for (var entry : config.getMega().getExecution().getInstallPathMap().entrySet()) {
 			switch (entry.getKey()) {
-				case OsType.AIX_VALUE:
-					cfg.put("path.aix", entry.getValue());
-					break;
-				case OsType.FREEBSD_VALUE:
-					cfg.put("path.freebsd", entry.getValue());
-					break;
-				case OsType.LINUX_VALUE:
-					cfg.put("path.linux", entry.getValue());
-					break;
-				case OsType.MACOS_VALUE:
-					cfg.put("path.mac", entry.getValue());
-					break;
-				case OsType.SOLARIS_VALUE:
-					cfg.put("path.solaris", entry.getValue());
-					break;
-				case OsType.WINDOWS_VALUE:
-					cfg.put("path.windows", entry.getValue());
-					break;
+			case OsType.AIX_VALUE:
+				cfg.put("path.aix", entry.getValue());
+				break;
+			case OsType.FREEBSD_VALUE:
+				cfg.put("path.freebsd", entry.getValue());
+				break;
+			case OsType.LINUX_VALUE:
+				cfg.put("path.linux", entry.getValue());
+				break;
+			case OsType.MACOS_VALUE:
+				cfg.put("path.mac", entry.getValue());
+				break;
+			case OsType.SOLARIS_VALUE:
+				cfg.put("path.solaris", entry.getValue());
+				break;
+			case OsType.WINDOWS_VALUE:
+				cfg.put("path.windows", entry.getValue());
+				break;
 			}
 		}
 
