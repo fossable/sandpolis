@@ -41,7 +41,7 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.proto')
 
 	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.28'
+	implementation 'org.slf4j:slf4j-api:1.7.29'
 }
 
 apply plugin: 'com.sandpolis.gradle.plugin'

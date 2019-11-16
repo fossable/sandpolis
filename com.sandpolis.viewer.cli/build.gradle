@@ -43,7 +43,7 @@ dependencies {
 	api 'io.netty:netty-handler:4.1.43.Final'
 
 	// https://github.com/qos-ch/slf4j
-	api 'org.slf4j:slf4j-api:1.7.28'
+	api 'org.slf4j:slf4j-api:1.7.29'
 }
 
 jar {
