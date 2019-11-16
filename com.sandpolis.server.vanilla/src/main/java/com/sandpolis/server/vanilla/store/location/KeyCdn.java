@@ -15,18 +15,17 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.server.vanilla.geo;
+package com.sandpolis.server.vanilla.store.location;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableBiMap;
 import com.sandpolis.core.proto.util.LocationOuterClass.Location;
 
-import java.io.IOException;
 import java.util.Set;
 
 public class KeyCdn extends AbstractGeolocationService {
 
-	private static final ImmutableBiMap<Integer, String> mapping = new ImmutableBiMap.Builder<Integer, String>()
+	private static final ImmutableBiMap<Integer, String> attrMap = new ImmutableBiMap.Builder<Integer, String>()
 			.put(Location.AS_CODE_FIELD_NUMBER, "asn").put(Location.CITY_FIELD_NUMBER, "city")
 			.put(Location.CONTINENT_FIELD_NUMBER, "continent_name")
 			.put(Location.CONTINENT_CODE_FIELD_NUMBER, "continent_code")
@@ -37,17 +36,8 @@ public class KeyCdn extends AbstractGeolocationService {
 			.put(Location.REGION_CODE_FIELD_NUMBER, "region_code").put(Location.TIMEZONE_FIELD_NUMBER, "timezone")
 			.build();
 
-	@Override
-	protected ImmutableBiMap<Integer, String> getMapping() {
-		return mapping;
-	}
-
 	public KeyCdn() {
-		super("https");
-	}
-
-	public Location query(String ip) throws IOException, InterruptedException {
-		return query(ip, mapping.keySet());
+		super(attrMap, "https");
 	}
 
 	@Override
@@ -56,11 +46,11 @@ public class KeyCdn extends AbstractGeolocationService {
 	}
 
 	@Override
-	protected Location parseResult(String body) throws Exception {
+	protected Location parseLocation(String result) throws Exception {
 		var location = Location.newBuilder();
-		new ObjectMapper().readTree(body).path("data").path("geo").forEach(node -> {
+		new ObjectMapper().readTree(result).path("data").path("geo").forEach(node -> {
 			node.fields().forEachRemaining(entry -> {
-				var field = Location.getDescriptor().findFieldByNumber(mapping.inverse().get(entry.getKey()));
+				var field = Location.getDescriptor().findFieldByNumber(attrMap.inverse().get(entry.getKey()));
 				switch (field.getNumber()) {
 				case Location.LATITUDE_FIELD_NUMBER:
 				case Location.LONGITUDE_FIELD_NUMBER:

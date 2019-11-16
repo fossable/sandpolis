@@ -15,20 +15,19 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.server.vanilla.geo;
+package com.sandpolis.server.vanilla.store.location;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableBiMap;
 import com.sandpolis.core.proto.util.LocationOuterClass.Location;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class IpApi extends AbstractGeolocationService {
 
-	private static final ImmutableBiMap<Integer, String> mapping = new ImmutableBiMap.Builder<Integer, String>()
+	private static final ImmutableBiMap<Integer, String> attrMap = new ImmutableBiMap.Builder<Integer, String>()
 			.put(Location.AS_FIELD_NUMBER, "as").put(Location.CITY_FIELD_NUMBER, "city")
 			.put(Location.CONTINENT_FIELD_NUMBER, "continent")
 			.put(Location.CONTINENT_CODE_FIELD_NUMBER, "continentCode").put(Location.COUNTRY_FIELD_NUMBER, "country")
@@ -39,37 +38,28 @@ public class IpApi extends AbstractGeolocationService {
 			.put(Location.REGION_FIELD_NUMBER, "regionName").put(Location.REGION_CODE_FIELD_NUMBER, "region")
 			.put(Location.TIMEZONE_FIELD_NUMBER, "timezone").build();
 
-	@Override
-	protected ImmutableBiMap<Integer, String> getMapping() {
-		return mapping;
-	}
-
 	private String key;
 
 	public IpApi() {
-		super("http");
+		super(attrMap, "http");
 	}
 
 	public IpApi(String key) {
-		super("https");
+		super(attrMap, "https");
 		this.key = Objects.requireNonNull(key);
-	}
-
-	public Location query(String ip) throws IOException, InterruptedException {
-		return query(ip, mapping.keySet());
 	}
 
 	@Override
 	protected String buildQuery(String ip, Set<Integer> fields) {
 		return String.format("%s://ip-api.com/json/%s?fields=%s", protocol, ip,
-				fields.stream().map(mapping::get).collect(Collectors.joining(",")));
+				fields.stream().map(attrMap::get).collect(Collectors.joining(",")));
 	}
 
 	@Override
-	protected Location parseResult(String body) throws Exception {
+	protected Location parseLocation(String result) throws Exception {
 		var location = Location.newBuilder();
-		new ObjectMapper().readTree(body).fields().forEachRemaining(entry -> {
-			var field = Location.getDescriptor().findFieldByNumber(mapping.inverse().get(entry.getKey()));
+		new ObjectMapper().readTree(result).fields().forEachRemaining(entry -> {
+			var field = Location.getDescriptor().findFieldByNumber(attrMap.inverse().get(entry.getKey()));
 			switch (field.getNumber()) {
 			case Location.LATITUDE_FIELD_NUMBER:
 			case Location.LONGITUDE_FIELD_NUMBER:

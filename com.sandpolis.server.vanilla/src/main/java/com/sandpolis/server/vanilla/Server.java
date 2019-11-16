@@ -33,13 +33,12 @@ import static com.sandpolis.server.vanilla.store.server.ServerStore.ServerStore;
 import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-import com.sandpolis.server.vanilla.geo.IpApi;
-import com.sandpolis.server.vanilla.geo.AbstractGeolocationService;
-import com.sandpolis.server.vanilla.geo.KeyCdn;
+import com.sandpolis.server.vanilla.store.location.LocationStore;
 import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +120,6 @@ public final class Server {
 		register(Server.loadEnvironment);
 		register(Server.generateCvid);
 		register(Server.loadServerStores);
-		register(Server.loadGeolocation);
 		register(Server.loadPlugins);
 		register(Server.installDebugClient);
 		register(Server.loadListeners);
@@ -270,29 +268,11 @@ public final class Server {
 		ServerStore.init(config -> {
 		});
 
-		return task.success();
-	});
-
-	/**
-	 * Load geolocation service.
-	 */
-	@InitializationTask(name = "Load geolocation service")
-	public static final Task loadGeolocation = new Task((task) -> {
-		switch (Config.get("server.geolocation.service")) {
-		case "ip-api.com":
-			String key = Config.get("server.geolocation.key");
-			if (key == null) {
-				AbstractGeolocationService.INSTANCE = new IpApi();
-			} else {
-				AbstractGeolocationService.INSTANCE = new IpApi(key);
-			}
-			break;
-		case "tools.keycdn.com":
-			AbstractGeolocationService.INSTANCE = new KeyCdn();
-			break;
-		default:
-			return task.failure("Could not find geolocation service");
-		}
+		LocationStore.LocationStore.init(config -> {
+			config.service = Config.get("server.geolocation.service");
+			config.key = Config.get("server.geolocation.key");
+			config.cacheExpiration = Duration.ofDays(10);
+		});
 
 		return task.success();
 	});

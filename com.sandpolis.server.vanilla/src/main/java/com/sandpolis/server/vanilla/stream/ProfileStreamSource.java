@@ -30,7 +30,8 @@ import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.core.proto.net.MsgStream.EV_ProfileStream;
 import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.stream.store.StreamSource;
-import com.sandpolis.server.vanilla.geo.AbstractGeolocationService;
+import com.sandpolis.server.vanilla.store.location.AbstractGeolocationService;
+import com.sandpolis.server.vanilla.store.location.LocationStore;
 
 import java.io.IOException;
 
@@ -66,13 +67,7 @@ public class ProfileStreamSource extends StreamSource<EV_ProfileStream> {
 		ConnectionStore.get(profile.getCvid()).ifPresent(sock -> {
 			ev.setIp(sock.getRemoteIP());
 
-			try {
-				ev.setLocation(AbstractGeolocationService.INSTANCE.query(ev.getIp()));
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			ev.setLocation(LocationStore.LocationStore.query(ev.getIp(), 1000));
 		});
 
 		ev.setHostname(profile.get(AK_CLIENT.HOSTNAME));

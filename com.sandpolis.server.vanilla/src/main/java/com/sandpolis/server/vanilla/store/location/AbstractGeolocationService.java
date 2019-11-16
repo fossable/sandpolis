@@ -15,14 +15,13 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.server.vanilla.geo;
+package com.sandpolis.server.vanilla.store.location;
 
 import com.google.common.collect.ImmutableBiMap;
 import com.sandpolis.core.proto.util.LocationOuterClass.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -30,51 +29,72 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Future;
 
+/**
+ * A geolocation service resolves a set of location attributes for an IP
+ * address. The service may use HTTP, HTTPS, or a local file for resolution.
+ *
+ * @since 5.1.1
+ */
 public abstract class AbstractGeolocationService {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractGeolocationService.class);
 
-	public static AbstractGeolocationService INSTANCE;
+	/**
+	 * Maps tag numbers from {@link Location} to field names specific to the
+	 * particular service.
+	 */
+	public final ImmutableBiMap<Integer, String> attrMap;
 
-	private static final HttpClient client = HttpClient.newHttpClient();
-
-	protected String protocol;
+	/**
+	 * The application protocol which may be 'http', 'https', or 'file'.
+	 */
+	protected final String protocol;
 
 	private int timeout = 5;
 
-	protected AbstractGeolocationService(String protocol) {
+	protected AbstractGeolocationService(ImmutableBiMap<Integer, String> attrMap, String protocol) {
+		this.attrMap = Objects.requireNonNull(attrMap);
 		this.protocol = Objects.requireNonNull(protocol);
 		if (protocol.equals("http")) {
 			log.info("Using an insecure geolocation service");
 		}
 	}
 
+	/**
+	 * Build a geolocation query for the given IP address and location attributes.
+	 *
+	 * @param ip     The IP address
+	 * @param fields The desired attributes from {@link Location}
+	 * @return The query
+	 */
 	protected abstract String buildQuery(String ip, Set<Integer> fields);
 
-	protected abstract Location parseResult(String body) throws Exception;
+	/**
+	 * Convert the query result into a {@link Location} object.
+	 *
+	 * @param result The query result
+	 * @return The location
+	 * @throws Exception
+	 */
+	protected abstract Location parseLocation(String result) throws Exception;
 
-	protected abstract ImmutableBiMap<Integer, String> getMapping();
+	private HttpClient client = HttpClient.newHttpClient();
 
-	public Location query(String ip) throws IOException, InterruptedException {
-		return query(ip, getMapping().keySet());
-	}
-
-	public Location query(String ip, Set<Integer> fields) throws IOException, InterruptedException {
+	public Future<Location> query(String ip, Set<Integer> fields) {
 		var url = URI.create(buildQuery(ip, fields));
 		log.debug("Query URL: {}", url);
 
 		HttpRequest request = HttpRequest.newBuilder().uri(url).timeout(Duration.ofSeconds(timeout)).GET().build();
 
-		HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-		System.out.println("status: " + response.statusCode());
-		if (response.statusCode() == 200) {
+		return client.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenApplyAsync(rs -> {
 			try {
-				return parseResult(response.body());
+				return parseLocation(rs.body());
 			} catch (Exception e) {
-				e.printStackTrace();
+				log.debug("Query failed", e);
+				return null;
 			}
-		}
-		return null;
+		});
 	}
 }
