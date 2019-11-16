@@ -12,7 +12,7 @@ buildscript {
 plugins {
 	id 'eclipse'
 	id 'java-library'
-	id 'org.javamodularity.moduleplugin' version '1.5.0'
+	id 'org.javamodularity.moduleplugin' version '1.6.0'
 }
 
 apply plugin: 'com.sandpolis.gradle.codegen'
