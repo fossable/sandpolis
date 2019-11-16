@@ -52,7 +52,7 @@ class SandpolisProfile {
 
 	/// Whether the client is online
 	var online: Bool
-	
+
 	// The client's IP location
 	var location: Util_Location?
 

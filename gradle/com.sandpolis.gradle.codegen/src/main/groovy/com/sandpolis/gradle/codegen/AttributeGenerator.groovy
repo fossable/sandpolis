@@ -130,7 +130,7 @@ class AttributeGenerator extends DefaultTask {
 			ClassName.bestGuess("com.sandpolis.core.profile.attribute.key.AttributeKey"), ClassName.bestGuess(attribute.type)),
 				attribute.name.toUpperCase(), PUBLIC, STATIC, FINAL)
 			.initializer("new AttributeKey<>(\"${project.name}\", ${attribute.type}.class, \"$parent/${attribute.name}\")")
-		
+
 		if (attribute.description != null)
 			field.addJavadoc('$L.\n', attribute.description)
 

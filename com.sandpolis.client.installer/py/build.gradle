@@ -1,11 +1,11 @@
 
 plugins {
-    id 'eclipse'
+	id 'eclipse'
 }
 
 eclipse {
-    project {
-        name = 'com.sandpolis.client.installer:py'
-        comment = ''
-    }
+	project {
+		name = 'com.sandpolis.client.installer:py'
+		comment = ''
+	}
 }

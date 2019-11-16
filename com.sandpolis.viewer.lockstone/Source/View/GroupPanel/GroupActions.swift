@@ -20,14 +20,14 @@ import UIKit
 class GroupActions: UITableViewController {
 
 	var profiles = [SandpolisProfile]()
-	
+
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "MacroSelectSegue",
 			let macroSelect = segue.destination as? MacroSelect {
 			macroSelect.profiles = profiles
 		}
 	}
-	
+
 	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		tableView.deselectRow(at: indexPath, animated: true)
 

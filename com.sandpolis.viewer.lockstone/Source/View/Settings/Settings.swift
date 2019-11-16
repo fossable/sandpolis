@@ -25,7 +25,7 @@ class Settings: UITableViewController {
 
 	@IBOutlet weak var hostView: UISegmentedControl!
 	@IBOutlet weak var mapLocation: UISegmentedControl!
-	
+
 	override func viewDidLoad() {
 		if let defaultView = UserDefaults.standard.string(forKey: "default_view") {
 			switch defaultView {
@@ -44,7 +44,7 @@ class Settings: UITableViewController {
 			mapLocation.selectedSegmentIndex = 1
 		}
 	}
-	
+
 	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		tableView.deselectRow(at: indexPath, animated: true)
 

@@ -109,13 +109,13 @@ deploy {
 }
 
 jlink {
-    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
-    launcher{
-        name = 'test'
-    }
+	options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+	launcher{
+		name = 'test'
+	}
 
-    mergedModule {
-        uses 'javax.persistence.spi.PersistenceProvider';
-        provides 'javax.persistence.spi.PersistenceProvider' with 'org.hibernate.jpa.HibernatePersistenceProvider';
-    }
+	mergedModule {
+		uses 'javax.persistence.spi.PersistenceProvider';
+		provides 'javax.persistence.spi.PersistenceProvider' with 'org.hibernate.jpa.HibernatePersistenceProvider';
+	}
 }

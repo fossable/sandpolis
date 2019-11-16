@@ -424,7 +424,7 @@ public class SandpolisConnection {
 					platform: ev.platform,
 					online: ev.online
 				)
-				
+
 				if ev.hasLocation {
 					profile.location = ev.location
 				}
