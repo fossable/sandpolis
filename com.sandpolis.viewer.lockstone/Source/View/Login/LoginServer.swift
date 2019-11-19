@@ -16,22 +16,34 @@
 //                                                                            //
 //****************************************************************************//
 import UIKit
+import Firebase
 import FirebaseAuth
 
-class SignInAccount: UIViewController {
+class LoginServer: UIViewController {
 
-	@IBOutlet weak var textFieldLoginEmail: UITextField!
-	@IBOutlet weak var textFieldLoginPassword: UITextField!
-	@IBOutlet weak var loginButton: UIButton!
-	@IBOutlet weak var forgotPasswordButton: UIButton!
-	@IBOutlet weak var createAccountButton: UIButton!
+	@IBOutlet weak var address: UITextField!
+	@IBOutlet weak var username: UITextField!
+	@IBOutlet weak var password: UITextField!
 
 	var loginContainer: Login!
+	
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		
+		address.addTarget(self, action: #selector(refreshAddress), for: .editingChanged)
+		username.addTarget(self, action: #selector(refreshUsername), for: .editingChanged)
+		password.addTarget(self, action: #selector(refreshPassword), for: .editingChanged)
+
+		address.setLeftIcon("field/server")
+		username.setLeftIcon("field/username")
+		password.setLeftIcon("field/password")
+	}
 
 	override func viewDidDisappear(_ animated: Bool) {
 		// Clean up fields
-		textFieldLoginEmail.text = nil
-		textFieldLoginPassword.text = nil
+		address.text = nil
+		username.text = nil
+		password.text = nil
 	}
 
 	func textFieldShouldReturn(textField: UITextField) -> Bool {
@@ -43,32 +55,23 @@ class SignInAccount: UIViewController {
 		self.view.endEditing(true)
 	}
 
-	@IBAction func loginDidTouch(_ sender: UIButton) {
-		guard
-			let email = textFieldLoginEmail.text,
-			let password = textFieldLoginPassword.text,
-			email.count > 0,
-			password.count > 0
-			else {
-				return
-		}
-
-		Auth.auth().signIn(withEmail: self.textFieldLoginEmail.text!, password: self.textFieldLoginPassword.text!) { (user, error) in
-			if error != nil {
-				let alert = UIAlertController(title: "Sign In Failed", message: error?.localizedDescription, preferredStyle: .alert)
-				alert.addAction(UIAlertAction(title: "OK", style: .default))
-
-				self.present(alert, animated: true, completion: nil)
-			}
-		}
+	@IBAction func login(_ sender: Any) {
+		// TODO
 	}
 
-	@IBAction func createAccount(_ sender: Any) {
-		loginContainer.openCreateAccount()
+	@IBAction func openLoginAccount(_ sender: Any) {
+		loginContainer.openLoginAccount()
 	}
-
-	@IBAction func forgotPassword(_ sender: Any) {
-		loginContainer.openForgotPassword()
+	
+	@objc func refreshAddress() {
+		// TODO
 	}
-
+	
+	@objc func refreshUsername() {
+		// TODO
+	}
+	
+	@objc func refreshPassword() {
+		// TODO
+	}
 }

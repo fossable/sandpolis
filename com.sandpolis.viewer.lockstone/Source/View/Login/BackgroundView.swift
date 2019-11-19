@@ -20,11 +20,11 @@ import UIKit
 /// A view with a simple grid pattern for the login screen
 class BackgroundView: UIView {
 
-	/// The size of each grid square
+	/// The size of each grid square in pixels
 	let gridSize = 16
 
-	/// The width of the lines
-	let lineWidth = CGFloat(2)
+	/// The width of the grid lines in pixels
+	let lineWidth = 2
 
 	override func draw(_ rect: CGRect) {
 		let bg = UIBezierPath()
@@ -32,11 +32,7 @@ class BackgroundView: UIView {
 		bg.addLine(to: CGPoint(x: CGFloat(bounds.width / 2), y: bounds.height))
 
 		bg.close()
-		if #available(iOS 11.0, *) {
-			UIColor(named: "grid/background")!.setStroke()
-		} else {
-			UIColor.darkGray.setStroke()
-		}
+		UIColor(named: "grid/background")!.setStroke()
 		bg.lineWidth = bounds.width
 		bg.stroke()
 
@@ -52,12 +48,8 @@ class BackgroundView: UIView {
 		}
 
 		grid.close()
-		if #available(iOS 11.0, *) {
-			UIColor(named: "grid/foreground")!.setStroke()
-		} else {
-			UIColor.darkGray.setStroke()
-		}
-		grid.lineWidth = lineWidth
+		UIColor(named: "grid/foreground")!.setStroke()
+		grid.lineWidth = CGFloat(lineWidth)
 		grid.stroke()
 	}
 }

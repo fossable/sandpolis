@@ -23,6 +23,7 @@
 		AA07249E2311E2A00087190F /* CloudPricing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA07249D2311E2A00087190F /* CloudPricing.swift */; };
 		AA0724A02311E6F20087190F /* CloudUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA07249F2311E6F20087190F /* CloudUtil.swift */; };
 		AA0724A32312203C0087190F /* ClientScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0724A22312203C0087190F /* ClientScanner.swift */; };
+		AA3BDAAD23838FC600540564 /* UITextField+Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3BDAAC23838FC600540564 /* UITextField+Icon.swift */; };
 		AA42524222E953B30083F7F4 /* MacroSelectCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA42524122E953B30083F7F4 /* MacroSelectCell.swift */; };
 		AA42524422E980380083F7F4 /* MacroResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA42524322E980380083F7F4 /* MacroResult.swift */; };
 		AA61588A233583CF0035622F /* ManagementHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA615889233583CF0035622F /* ManagementHandler.swift */; };
@@ -121,9 +122,9 @@
 		AAF390E5230BC796008C9469 /* CvidRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF390E4230BC796008C9469 /* CvidRequestHandler.swift */; };
 		AAF390E7230BC7F1008C9469 /* ResponseHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF390E6230BC7F1008C9469 /* ResponseHandler.swift */; };
 		AAF3F67123557362003EE9B1 /* ShellSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF3F67023557362003EE9B1 /* ShellSession.swift */; };
-		ED1FB93F22D83F4200D35565 /* SignInAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED1FB93E22D83F4200D35565 /* SignInAccount.swift */; };
+		ED1FB93F22D83F4200D35565 /* LoginAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED1FB93E22D83F4200D35565 /* LoginAccount.swift */; };
 		ED5A420822DFB19A00EA3C98 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = ED5A420722DFB19A00EA3C98 /* GoogleService-Info.plist */; };
-		ED5A421222E5284900EA3C98 /* ForgotPassword.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5A421122E5284900EA3C98 /* ForgotPassword.swift */; };
+		ED5A421222E5284900EA3C98 /* LoginServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5A421122E5284900EA3C98 /* LoginServer.swift */; };
 		ED5A421422E5289C00EA3C98 /* CreateAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5A421322E5289C00EA3C98 /* CreateAccount.swift */; };
 /* End PBXBuildFile section */
 
@@ -144,6 +145,7 @@
 		AA07249D2311E2A00087190F /* CloudPricing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudPricing.swift; sourceTree = "<group>"; };
 		AA07249F2311E6F20087190F /* CloudUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUtil.swift; sourceTree = "<group>"; };
 		AA0724A22312203C0087190F /* ClientScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientScanner.swift; sourceTree = "<group>"; };
+		AA3BDAAC23838FC600540564 /* UITextField+Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UITextField+Icon.swift"; sourceTree = "<group>"; };
 		AA42524122E953B30083F7F4 /* MacroSelectCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroSelectCell.swift; sourceTree = "<group>"; };
 		AA42524322E980380083F7F4 /* MacroResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroResult.swift; sourceTree = "<group>"; };
 		AA615889233583CF0035622F /* ManagementHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagementHandler.swift; sourceTree = "<group>"; };
@@ -242,9 +244,9 @@
 		AAF390E6230BC7F1008C9469 /* ResponseHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseHandler.swift; sourceTree = "<group>"; };
 		AAF3F67023557362003EE9B1 /* ShellSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellSession.swift; sourceTree = "<group>"; };
 		D6FAA9DD9E6A3A54142F1F78 /* Pods-Sandpolis.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sandpolis.release.xcconfig"; path = "Target Support Files/Pods-Sandpolis/Pods-Sandpolis.release.xcconfig"; sourceTree = "<group>"; };
-		ED1FB93E22D83F4200D35565 /* SignInAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInAccount.swift; sourceTree = "<group>"; };
+		ED1FB93E22D83F4200D35565 /* LoginAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginAccount.swift; sourceTree = "<group>"; };
 		ED5A420722DFB19A00EA3C98 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		ED5A421122E5284900EA3C98 /* ForgotPassword.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPassword.swift; sourceTree = "<group>"; };
+		ED5A421122E5284900EA3C98 /* LoginServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginServer.swift; sourceTree = "<group>"; };
 		ED5A421322E5289C00EA3C98 /* CreateAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateAccount.swift; sourceTree = "<group>"; };
 		F94C3F7F6540C8FC477A1CB5 /* Pods-Sandpolis.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sandpolis.debug.xcconfig"; path = "Target Support Files/Pods-Sandpolis/Pods-Sandpolis.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -299,8 +301,8 @@
 			children = (
 				AA752B4522F2340100E90B54 /* BackgroundView.swift */,
 				AA6E007122F73C1400BB51ED /* Login.swift */,
-				ED1FB93E22D83F4200D35565 /* SignInAccount.swift */,
-				ED5A421122E5284900EA3C98 /* ForgotPassword.swift */,
+				ED1FB93E22D83F4200D35565 /* LoginAccount.swift */,
+				ED5A421122E5284900EA3C98 /* LoginServer.swift */,
 				ED5A421322E5289C00EA3C98 /* CreateAccount.swift */,
 			);
 			path = Login;
@@ -492,6 +494,7 @@
 				AA642E3823088D740027BEC2 /* FileManager */,
 				AA642E3723088CE80027BEC2 /* Login */,
 				8E653C2122E6595D00BB8FEA /* MainTabController.swift */,
+				AA3BDAAC23838FC600540564 /* UITextField+Icon.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -888,7 +891,7 @@
 				AA899D2E2319E6A000E7C703 /* ServerCreator.swift in Sources */,
 				AA6CACED22DD432000041AF3 /* GroupPanelTable.swift in Sources */,
 				AA6CACEF22DD445000041AF3 /* GroupOverview.swift in Sources */,
-				ED5A421222E5284900EA3C98 /* ForgotPassword.swift in Sources */,
+				ED5A421222E5284900EA3C98 /* LoginServer.swift in Sources */,
 				AAA8BFC9237E53CF00BB4C85 /* msg_server.pb.swift in Sources */,
 				AA70FD1E22BEF326006A4C6F /* ByteBuffer+varint.swift in Sources */,
 				AA69CFAD2362A325008101AA /* Ubuntu.swift in Sources */,
@@ -935,7 +938,7 @@
 				AAAC2FD42355012000425E9A /* ControlPanel.swift in Sources */,
 				AAC4B69422BDE54500B0E354 /* SandpolisConnection.swift in Sources */,
 				8533115622FEC11800D3B0F9 /* HostGroup.swift in Sources */,
-				ED1FB93F22D83F4200D35565 /* SignInAccount.swift in Sources */,
+				ED1FB93F22D83F4200D35565 /* LoginAccount.swift in Sources */,
 				AAA8BFCB237E53CF00BB4C85 /* msg_ping.pb.swift in Sources */,
 				AA752B4622F2340100E90B54 /* BackgroundView.swift in Sources */,
 				AA899D34231A067A00E7C703 /* Step3.swift in Sources */,
@@ -944,6 +947,7 @@
 				AAA8BFCE237E53CF00BB4C85 /* msg_cvid.pb.swift in Sources */,
 				AA70158422D7C93900A1E4ED /* SandpolisProfile.swift in Sources */,
 				AAA8BFD2237E53CF00BB4C85 /* platform.pb.swift in Sources */,
+				AA3BDAAD23838FC600540564 /* UITextField+Icon.swift in Sources */,
 				AABFEE17237D359D0022C58D /* GroupActions.swift in Sources */,
 				AAA8BFC1237E53CE00BB4C85 /* msg_listener.pb.swift in Sources */,
 				AA6A75B8236154BB00AA1A4D /* Terminal.swift in Sources */,

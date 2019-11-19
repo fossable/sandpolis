@@ -25,6 +25,16 @@ class CreateAccount: UIViewController {
 	@IBOutlet weak var password: UITextField!
 
 	var loginContainer: Login!
+	
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		
+		email.addTarget(self, action: #selector(refreshEmail), for: .editingChanged)
+		password.addTarget(self, action: #selector(refreshPassword), for: .editingChanged)
+
+		email.setLeftIcon("field/email")
+		password.setLeftIcon("field/password")
+	}
 
 	override func viewDidDisappear(_ animated: Bool) {
 		// Clean up fields
@@ -41,7 +51,7 @@ class CreateAccount: UIViewController {
 		self.view.endEditing(true)
 	}
 
-	@IBAction func didTouchUpButton(_ sender: UIButton) {
+	@IBAction func create(_ sender: Any) {
 		Auth.auth().createUser(withEmail: email.text!, password: password.text!) { authResult, error in
 			if error == nil {
 				Auth.auth().signIn(withEmail: self.email.text!, password: self.password.text!) { result, error in
@@ -63,8 +73,8 @@ class CreateAccount: UIViewController {
 		}
 	}
 
-	@IBAction func login(_ sender: Any) {
-		loginContainer.openLogin()
+	@IBAction func openLoginAccount(_ sender: Any) {
+		loginContainer.openLoginAccount()
 	}
 
 	/// Copy default user data on account creation
@@ -93,5 +103,13 @@ class CreateAccount: UIViewController {
 				userMacros.addDocument(data: macro.data())
 			}
 		}
+	}
+	
+	@objc func refreshEmail() {
+		// TODO
+	}
+	
+	@objc func refreshPassword() {
+		// TODO
 	}
 }

@@ -20,9 +20,9 @@ import Firebase
 
 class Login: UIViewController {
 
-	@IBOutlet weak var loginView: UIView!
-	@IBOutlet weak var forgotPasswordView: UIView!
-	@IBOutlet weak var createAccountView: UIView!
+	@IBOutlet weak var loginAccount: UIView!
+	@IBOutlet weak var loginServer: UIView!
+	@IBOutlet weak var createAccount: UIView!
 
 	override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
 		get { return UIInterfaceOrientationMask.portrait }
@@ -44,7 +44,7 @@ class Login: UIViewController {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		openLogin()
+		openLoginAccount()
 	}
 
 	override func viewWillAppear(_ animated: Bool) {
@@ -65,10 +65,10 @@ class Login: UIViewController {
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "LoginEmbed",
-			let login = segue.destination as? SignInAccount {
+			let login = segue.destination as? LoginAccount {
 			login.loginContainer = self
 		} else if segue.identifier == "ForgotPasswordEmbed",
-			let forgotPassword = segue.destination as? ForgotPassword {
+			let forgotPassword = segue.destination as? LoginServer {
 			forgotPassword.loginContainer = self
 		} else if segue.identifier == "CreateAccountEmbed",
 			let createAccount = segue.destination as? CreateAccount {
@@ -76,33 +76,42 @@ class Login: UIViewController {
 		}
 	}
 
-	func openLogin() {
-		UIView.animate(withDuration: 2.0) {
-			self.loginView.alpha = 1.0
-			self.forgotPasswordView.alpha = 0.0
-			self.createAccountView.alpha = 0.0
-		}
+	func openLoginAccount() {
+		UIView.animate(withDuration: 0.5, animations: {
+			self.loginServer.alpha = 0.0
+			self.createAccount.alpha = 0.0
+		}, completion: { _ in
+			UIView.animate(withDuration: 0.5) {
+				self.loginAccount.alpha = 1.0
+			}
+		})
 	}
 
-	func openForgotPassword() {
-		UIView.animate(withDuration: 1.0) {
-			self.loginView.alpha = 0.0
-			self.forgotPasswordView.alpha = 1.0
-			self.createAccountView.alpha = 0.0
-		}
+	func openLoginServer() {
+		UIView.animate(withDuration: 0.5, animations: {
+			self.loginAccount.alpha = 0.0
+			self.createAccount.alpha = 0.0
+		}, completion: { _ in
+			UIView.animate(withDuration: 0.5) {
+				self.loginServer.alpha = 1.0
+			}
+		})
 	}
 
 	func openCreateAccount() {
-		UIView.animate(withDuration: 1.0) {
-			self.loginView.alpha = 0.0
-			self.forgotPasswordView.alpha = 0.0
-			self.createAccountView.alpha = 1.0
-		}
+		UIView.animate(withDuration: 0.5, animations: {
+			self.loginAccount.alpha = 0.0
+			self.loginServer.alpha = 0.0
+		}, completion: { _ in
+			UIView.animate(withDuration: 0.5) {
+				self.createAccount.alpha = 1.0
+			}
+		})
 	}
 
 	// Called on logout
 	@IBAction func prepareForUnwind(segue: UIStoryboardSegue) {
-		openLogin()
+		openLoginAccount()
 	}
 
 }

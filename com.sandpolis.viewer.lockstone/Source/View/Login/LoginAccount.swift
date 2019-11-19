@@ -16,18 +16,32 @@
 //                                                                            //
 //****************************************************************************//
 import UIKit
-import Firebase
 import FirebaseAuth
 
-class ForgotPassword: UIViewController {
+class LoginAccount: UIViewController {
 
 	@IBOutlet weak var email: UITextField!
+	@IBOutlet weak var password: UITextField!
+	@IBOutlet weak var loginButton: UIButton!
+	@IBOutlet weak var forgotPasswordButton: UIButton!
+	@IBOutlet weak var createAccountButton: UIButton!
 
 	var loginContainer: Login!
+
+	override func viewDidLoad() {
+		super.viewDidLoad()
+
+		email.addTarget(self, action: #selector(refreshEmail), for: .editingChanged)
+		password.addTarget(self, action: #selector(refreshPassword), for: .editingChanged)
+
+		email.setLeftIcon("field/email")
+		password.setLeftIcon("field/password")
+	}
 
 	override func viewDidDisappear(_ animated: Bool) {
 		// Clean up fields
 		email.text = nil
+		password.text = nil
 	}
 
 	func textFieldShouldReturn(textField: UITextField) -> Bool {
@@ -39,12 +53,10 @@ class ForgotPassword: UIViewController {
 		self.view.endEditing(true)
 	}
 
-	@IBAction func touchUpButton(_ sender: UIButton) {
-		Auth.auth().sendPasswordReset(withEmail: email.text!) { error in
-			if error == nil {
-				self.loginContainer.openLogin()
-			} else {
-				let alert = UIAlertController(title: "Error", message: error?.localizedDescription, preferredStyle: .alert)
+	@IBAction func login(_ sender: Any) {
+		Auth.auth().signIn(withEmail: self.email.text!, password: self.password.text!) { (user, error) in
+			if error != nil {
+				let alert = UIAlertController(title: "Sign In Failed", message: error?.localizedDescription, preferredStyle: .alert)
 				alert.addAction(UIAlertAction(title: "OK", style: .default))
 
 				self.present(alert, animated: true, completion: nil)
@@ -52,7 +64,34 @@ class ForgotPassword: UIViewController {
 		}
 	}
 
-	@IBAction func login(_ sender: Any) {
-		loginContainer.openLogin()
+	@IBAction func openCreateAccount(_ sender: Any) {
+		loginContainer.openCreateAccount()
+	}
+
+	@IBAction func openResetPassword(_ sender: Any) {
+		let alert = UIAlertController(title: "Reset account password", message: "Enter your email address", preferredStyle: .alert)
+		alert.addTextField { field in
+			field.placeholder = "Email"
+		}
+		alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak alert] _ in
+			if let email = alert?.textFields?[0].text {
+				Auth.auth().sendPasswordReset(withEmail: email) { _ in
+					// TODO
+				}
+			}
+		})
+		present(alert, animated: true)
+	}
+
+	@IBAction func openLoginServer(_ sender: Any) {
+		loginContainer.openLoginServer()
+	}
+	
+	@objc func refreshEmail() {
+		// TODO
+	}
+	
+	@objc func refreshPassword() {
+		// TODO
 	}
 }
