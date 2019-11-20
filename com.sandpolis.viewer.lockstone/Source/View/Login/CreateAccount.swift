@@ -52,6 +52,7 @@ class CreateAccount: UIViewController {
 	}
 
 	@IBAction func create(_ sender: Any) {
+		AppDelegate.ensureFirebase()
 		Auth.auth().createUser(withEmail: email.text!, password: password.text!) { authResult, error in
 			if error == nil {
 				Auth.auth().signIn(withEmail: self.email.text!, password: self.password.text!) { result, error in
@@ -62,6 +63,9 @@ class CreateAccount: UIViewController {
 						self.present(alert, animated: true, completion: nil)
 					} else {
 						self.copyDefaults()
+						UserDefaults.standard.set("cloud", forKey: "login.type")
+						UserDefaults.standard.set(true, forKey: "login.auto")
+						self.loginContainer.performSegue(withIdentifier: "LoginCompleteSegue", sender: nil)
 					}
 				}
 			} else {

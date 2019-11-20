@@ -54,12 +54,17 @@ class LoginAccount: UIViewController {
 	}
 
 	@IBAction func login(_ sender: Any) {
+		AppDelegate.ensureFirebase()
 		Auth.auth().signIn(withEmail: self.email.text!, password: self.password.text!) { (user, error) in
 			if error != nil {
 				let alert = UIAlertController(title: "Sign In Failed", message: error?.localizedDescription, preferredStyle: .alert)
 				alert.addAction(UIAlertAction(title: "OK", style: .default))
 
 				self.present(alert, animated: true, completion: nil)
+			} else if user != nil {
+				UserDefaults.standard.set("cloud", forKey: "login.type")
+				UserDefaults.standard.set(true, forKey: "login.auto")
+				self.loginContainer.performSegue(withIdentifier: "LoginCompleteSegue", sender: nil)
 			}
 		}
 	}
@@ -75,11 +80,13 @@ class LoginAccount: UIViewController {
 		}
 		alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak alert] _ in
 			if let email = alert?.textFields?[0].text {
+				AppDelegate.ensureFirebase()
 				Auth.auth().sendPasswordReset(withEmail: email) { _ in
 					// TODO
 				}
 			}
 		})
+		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
 		present(alert, animated: true)
 	}
 

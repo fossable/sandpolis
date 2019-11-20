@@ -72,6 +72,7 @@
 		AA899D32231A066500E7C703 /* Step2.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA899D31231A066500E7C703 /* Step2.swift */; };
 		AA899D34231A067A00E7C703 /* Step3.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA899D33231A067A00E7C703 /* Step3.swift */; };
 		AA8B1BAF22CB1AC0009DB0EC /* MacroEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8B1BAE22CB1AC0009DB0EC /* MacroEditor.swift */; };
+		AAA591B92384CCEF00A2893A /* UIViewController+Login.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA591B82384CCEF00A2893A /* UIViewController+Login.swift */; };
 		AAA8BFC1237E53CE00BB4C85 /* msg_listener.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA8BF97237E53CE00BB4C85 /* msg_listener.pb.swift */; };
 		AAA8BFC2237E53CF00BB4C85 /* msg_user.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA8BF98237E53CE00BB4C85 /* msg_user.pb.swift */; };
 		AAA8BFC3237E53CF00BB4C85 /* msg_client.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA8BF99237E53CE00BB4C85 /* msg_client.pb.swift */; };
@@ -196,6 +197,7 @@
 		AA899D31231A066500E7C703 /* Step2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step2.swift; sourceTree = "<group>"; };
 		AA899D33231A067A00E7C703 /* Step3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Step3.swift; sourceTree = "<group>"; };
 		AA8B1BAE22CB1AC0009DB0EC /* MacroEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroEditor.swift; sourceTree = "<group>"; };
+		AAA591B82384CCEF00A2893A /* UIViewController+Login.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+Login.swift"; sourceTree = "<group>"; };
 		AAA8BF97237E53CE00BB4C85 /* msg_listener.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_listener.pb.swift; sourceTree = "<group>"; };
 		AAA8BF98237E53CE00BB4C85 /* msg_user.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_user.pb.swift; sourceTree = "<group>"; };
 		AAA8BF99237E53CE00BB4C85 /* msg_client.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_client.pb.swift; sourceTree = "<group>"; };
@@ -495,6 +497,7 @@
 				AA642E3723088CE80027BEC2 /* Login */,
 				8E653C2122E6595D00BB8FEA /* MainTabController.swift */,
 				AA3BDAAC23838FC600540564 /* UITextField+Icon.swift */,
+				AAA591B82384CCEF00A2893A /* UIViewController+Login.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -956,6 +959,7 @@
 				AA6A75BA236156F700AA1A4D /* TerminalView.swift in Sources */,
 				AAA8BFDD237E53CF00BB4C85 /* message_filesys.pb.swift in Sources */,
 				AAA8BFC5237E53CF00BB4C85 /* msg_network.pb.swift in Sources */,
+				AAA591B92384CCEF00A2893A /* UIViewController+Login.swift in Sources */,
 				8533115A2300183600D3B0F9 /* HostGroupHeaderCell.swift in Sources */,
 				AAA8BFE1237E53CF00BB4C85 /* msg_rd.pb.swift in Sources */,
 				AACBF8D622F3A9750015DCE6 /* FolderUpCell.swift in Sources */,

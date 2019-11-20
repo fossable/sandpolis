@@ -55,6 +55,7 @@ class Settings: UITableViewController {
 			} catch {
 				os_log("Failed to logout: %s", error.localizedDescription)
 			}
+			UserDefaults.standard.set(false, forKey: "login.auto")
 			performSegue(withIdentifier: "UnwindLoginSegue", sender: self)
 		}
 	}

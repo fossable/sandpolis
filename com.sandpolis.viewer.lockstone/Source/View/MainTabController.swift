@@ -19,18 +19,11 @@ import UIKit
 
 class MainTabController: UITabBarController {
 
-	var server: SandpolisServer!
+	var serverName: String?
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		navigationItem.title = server.name
-
-		if let list = viewControllers![0] as? ClientList {
-			list.server = server
-		}
-		if let map = viewControllers![1] as? ClientMap {
-			map.server = server
-		}
+		navigationItem.title = serverName
 
 		if let defaultView = UserDefaults.standard.string(forKey: "default_view") {
 			switch defaultView {

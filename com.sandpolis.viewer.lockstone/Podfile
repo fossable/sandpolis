@@ -15,4 +15,7 @@ target 'Sandpolis' do
   pod 'Firebase/Firestore', '6.7.0'
   pod 'Firebase/Auth', '6.7.0'
 
+  # Provides keychain wrapper
+  pod 'SwiftKeychainWrapper', '3.4.0'
+
 end

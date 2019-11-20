@@ -17,13 +17,15 @@
 //****************************************************************************//
 import UIKit
 import Firebase
+import SwiftKeychainWrapper
 
 class Login: UIViewController {
 
 	@IBOutlet weak var loginAccount: UIView!
 	@IBOutlet weak var loginServer: UIView!
 	@IBOutlet weak var createAccount: UIView!
-
+	@IBOutlet weak var progress: UIActivityIndicatorView!
+	
 	override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
 		get { return UIInterfaceOrientationMask.portrait }
 	}
@@ -40,27 +42,65 @@ class Login: UIViewController {
 		return .lightContent
 	}
 
-	private var loginListener: AuthStateDidChangeListenerHandle!
-
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		openLoginAccount()
-	}
+		
+		if UserDefaults.standard.bool(forKey: "login.auto") {
+			progress.startAnimating()
+			switch UserDefaults.standard.string(forKey: "login.type") {
+			case "cloud":
+				// Set auth listener
+				AppDelegate.ensureFirebase()
+				let loginListener = Auth.auth().addStateDidChangeListener() { auth, user in
+					if user != nil {
+						self.progress.stopAnimating()
+						self.performSegue(withIdentifier: "LoginCompleteSegue", sender: nil)
+					}
+				}
+				
+				// Set auth timer in case the automatic login fails
+				Timer(timeInterval: 4.0, repeats: false) { _ in
+					Auth.auth().removeStateDidChangeListener(loginListener)
+					if Auth.auth().currentUser == nil {
+						self.progress.stopAnimating()
+						self.openLoginAccount()
+					}
+				}
+				break
+			case "direct":
+				if let address = KeychainWrapper.standard.string(forKey: "login.direct.address"),
+					let username = KeychainWrapper.standard.string(forKey: "login.direct.username"),
+					let password = KeychainWrapper.standard.string(forKey: "login.direct.password") {
 
-	override func viewWillAppear(_ animated: Bool) {
-		super.viewWillAppear(animated)
-
-		loginListener = Auth.auth().addStateDidChangeListener() { auth, user in
-			if user != nil {
-				self.performSegue(withIdentifier: "LoginCompleteSegue", sender: nil)
+					login(address: address, username: username, password: password) { connection in
+						DispatchQueue.main.async {
+							self.progress.stopAnimating()
+							if let connection = connection {
+								SandpolisUtil.connection = connection
+								self.performSegue(withIdentifier: "DirectLoginCompleteSegue", sender: address)
+							} else {
+								self.openLoginServer()
+							}
+						}
+					}
+				} else {
+					progress.stopAnimating()
+					openLoginServer()
+				}
+				break
+			default:
+				fatalError()
+			}
+		} else {
+			switch UserDefaults.standard.string(forKey: "login.type") {
+			case "cloud":
+				openLoginAccount()
+			case "direct":
+				openLoginServer()
+			default:
+				openCreateAccount()
 			}
 		}
-	}
-
-	override func viewWillDisappear(_ animated: Bool) {
-		super.viewWillDisappear(animated)
-
-		Auth.auth().removeStateDidChangeListener(loginListener!)
 	}
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -73,6 +113,9 @@ class Login: UIViewController {
 		} else if segue.identifier == "CreateAccountEmbed",
 			let createAccount = segue.destination as? CreateAccount {
 			createAccount.loginContainer = self
+		} else if segue.identifier == "DirectLoginCompleteSegue",
+			let dest = segue.destination as? MainTabController {
+			dest.serverName = sender as? String
 		}
 	}
 

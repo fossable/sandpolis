@@ -18,6 +18,7 @@
 import UIKit
 import Firebase
 import FirebaseAuth
+import SwiftKeychainWrapper
 
 class LoginServer: UIViewController {
 
@@ -56,7 +57,22 @@ class LoginServer: UIViewController {
 	}
 
 	@IBAction func login(_ sender: Any) {
-		// TODO
+		login(address: address.text!, username: username.text!, password: password.text!) { connection in
+			if let connection = connection {
+				SandpolisUtil.connection = connection
+				
+				UserDefaults.standard.set("direct", forKey: "login.type")
+				UserDefaults.standard.set(true, forKey: "login.auto")
+				
+				DispatchQueue.main.async {
+					KeychainWrapper.standard.set(self.address.text!, forKey: "login.direct.address")
+					KeychainWrapper.standard.set(self.username.text!, forKey: "login.direct.username")
+					KeychainWrapper.standard.set(self.password.text!, forKey: "login.direct.password")
+					
+					self.loginContainer.performSegue(withIdentifier: "DirectLoginCompleteSegue", sender: self.address.text!)
+				}
+			}
+		}
 	}
 
 	@IBAction func openLoginAccount(_ sender: Any) {

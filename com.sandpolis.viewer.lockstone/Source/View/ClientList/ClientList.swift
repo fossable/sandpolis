@@ -22,9 +22,6 @@ class ClientList: UITableViewController {
 
 	@IBOutlet weak var footerView: UIView!
 
-	/// The server for these clients
-	var server: SandpolisServer!
-
 	/// All host groups found in firebase (including those from other servers)
 	var rawHostGroups = [HostGroup]()
 
@@ -167,7 +164,7 @@ class ClientList: UITableViewController {
 		if groupName.isEmpty {
 			return "Host group name cannot be blank."
 		}
-		let identifier = server.name + "-" + groupName
+		let identifier = "TODO" + "-" + groupName
 		for hostGroup in rawHostGroups {
 			if hostGroup.identifier == identifier {
 				return "Host group with that name already exists."
@@ -210,10 +207,10 @@ class ClientList: UITableViewController {
 		}
 		// filter all host groups found in firebase to only host groups in this server
 		for hostGroup in rawHostGroups {
-			if hostGroup.serverName == server.name {
-				let validHostGroup = createValidHostGroup(rawHostGroup: hostGroup)
-				hostGroups.append(validHostGroup)
-			}
+		//	if hostGroup.serverName == server.name {
+		//		let validHostGroup = createValidHostGroup(rawHostGroup: hostGroup)
+		//		hostGroups.append(validHostGroup)
+		//	}
 		}
 		// create a default host group containing leftover hosts and place it at the beginning
 		let ungroupedHostIds = getUngroupedHostIds(hostGroups: hostGroups)

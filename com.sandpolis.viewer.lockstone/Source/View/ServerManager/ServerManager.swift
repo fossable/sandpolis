@@ -93,7 +93,14 @@ class ServerManager: UITableViewController {
 		let server = servers[indexPath.row]
 		if let online = server.online {
 			if online {
-				connectToServer(server: server)
+				login(address: server.address, username: server.username, password: server.password) { connection in
+					if let connection = connection {
+						SandpolisUtil.connection = connection
+						DispatchQueue.main.async {
+							self.performSegue(withIdentifier: "ShowHostSegue", sender: server)
+						}
+					}
+				}
 			} else {
 				server.online = nil
 				self.tableView.reloadData()
@@ -135,65 +142,9 @@ class ServerManager: UITableViewController {
 			addServerView.serverReference = addServerView.server.reference
 		} else if segue.identifier == "ShowHostSegue",
 			let mainTab = segue.destination as? MainTabController {
-			mainTab.server = sender as? SandpolisServer
+			mainTab.title = (sender as! SandpolisServer).name
 		} else {
 			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
-		}
-	}
-
-	func connectToServer(server: SandpolisServer) {
-		let connection = SandpolisConnection(server.address, 10101)
-		connection.connectionFuture.whenSuccess {
-			SandpolisUtil.connection = connection
-			self.loginToServer(server: server)
-		}
-		connection.connectionFuture.whenFailure { (error: Error) in
-			if let sslError = error as? NIOSSLError {
-				DispatchQueue.main.async {
-					let alert = UIAlertController(title: "Continue connection?", message: "The server's certificate is invalid. If you continue, the connection is not guaranteed to be secure. To make a secure connection, install a valid certificate on the server.", preferredStyle: .alert)
-					alert.addAction(UIAlertAction(title: "Continue", style: .destructive) { _ in
-						let connection = SandpolisConnection(server.address, 10101, certificateVerification: .none)
-						connection.connectionFuture.whenSuccess {
-							SandpolisUtil.connection = connection
-							self.loginToServer(server: server)
-						}
-						connection.connectionFuture.whenFailure { (error: Error) in
-							print(error)
-							self.onConnectFail(failureMessage: "Failed to connect to server.")
-						}
-					})
-					alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-
-					self.present(alert, animated: true)
-				}
-			} else {
-				self.onConnectFail(failureMessage: "Failed to connect to server.")
-			}
-		}
-	}
-
-	func loginToServer(server: SandpolisServer) {
-		let login = SandpolisUtil.connection.login(server.username, server.password)
-		login.whenSuccess { rs in
-			if rs.rsOutcome.result {
-				DispatchQueue.main.async {
-					self.performSegue(withIdentifier: "ShowHostSegue", sender: server)
-				}
-			} else {
-				self.onConnectFail(failureMessage: "Failed to login to server.")
-			}
-		}
-		login.whenFailure { (error: Error) in
-			self.onConnectFail(failureMessage: "Failed to login to server.")
-		}
-	}
-
-	func onConnectFail(failureMessage: String) {
-		DispatchQueue.main.async {
-			self.tableView.reloadData()
-			let alert = UIAlertController(title: "Connection failure", message: failureMessage, preferredStyle: .alert)
-			alert.addAction(UIAlertAction(title: "OK", style: .default))
-			self.present(alert, animated: true, completion: nil)
 		}
 	}
 }

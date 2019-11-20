@@ -23,8 +23,6 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 
 	@IBOutlet weak var map: MKMapView!
 
-	var server: SandpolisServer!
-
 	private var navShadow: UIImage?
 	private var navTranslucent: Bool?
 	private var navBackground: UIImage?
