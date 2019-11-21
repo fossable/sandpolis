@@ -144,7 +144,7 @@ public abstract class AbstractInstaller extends Task<Void> {
 
 		// Download executable
 		updateMessage("Downloading " + coordinate);
-		Path executable = ArtifactUtil.download(destination, coordinate);
+		Path executable = ArtifactUtil.download(lib, coordinate);
 
 		// Calculate dependencies
 		SO_DependencyMatrix matrix = SoiUtil.readMatrix(executable);

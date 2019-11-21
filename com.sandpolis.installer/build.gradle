@@ -162,10 +162,10 @@ githubRelease {
 	releaseAssets = {[
 		// TODO Classpath isn't handled properly with launch4j
 		// project.file("build/launch4j/${launch4j.outfile}"),
-		jarOnlineWin.archiveBaseName,
-		jarOnlineLin.archiveBaseName,
-		jarOnlineMac.archiveBaseName,
+		jarOnlineWin.archiveFile,
+		jarOnlineLin.archiveFile,
+		jarOnlineMac.archiveFile,
 	]}
 }
 tasks.githubRelease.dependsOn(assemble)
-tasks.githubRelease.dependsOn(createExe)
+//tasks.githubRelease.dependsOn(createExe)

@@ -84,15 +84,22 @@ allprojects {
 	version = SANDPOLIS_VERSION
 }
 
-// Apply testing configuration to subprojects
 subprojects {
 	plugins.withType(JavaPlugin) {
+		// Apply testing configuration
 		test {
 			useJUnitPlatform()
 
 			testLogging {
 				exceptionFormat = 'full'
 			}
+		}
+		
+		// Provide install task for scripts
+		task install(type: Copy) {
+			from configurations.runtimeClasspath
+			from jar.outputs.files
+			into System.getProperty("lib_dest")
 		}
 	}
 }
