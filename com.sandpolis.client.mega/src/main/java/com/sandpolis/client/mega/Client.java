@@ -112,8 +112,11 @@ public final class Client {
 			Environment.DB.set(null);
 			Environment.GEN.set(null);
 			Environment.TMP.set(null);
+		} else {
+			Environment.LIB.requireReadable();
+			Environment.LOG.set(Config.get("path.log")).requireWritable();
+			Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
 		}
-		Environment.setup();
 		return task.success();
 	});
 

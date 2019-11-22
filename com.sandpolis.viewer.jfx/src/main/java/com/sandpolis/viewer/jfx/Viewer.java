@@ -81,7 +81,9 @@ public final class Viewer {
 	@InitializationTask(name = "Load runtime environment", fatal = true)
 	private static final Task loadEnvironment = new Task((task) -> {
 
-		Environment.setup();
+		Environment.LIB.requireReadable();
+		Environment.LOG.set(Config.get("path.log")).requireWritable();
+		Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
 		return task.success();
 	});
 

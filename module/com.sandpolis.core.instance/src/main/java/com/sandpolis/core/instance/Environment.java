@@ -97,48 +97,47 @@ public enum Environment {
 	 * Set the path unless {@code null}.
 	 *
 	 * @param path The new path or {@code null}
+	 * @return {@code this}
 	 */
-	public void set(String path) {
+	public Environment set(String path) {
 		if (path != null)
 			this.path = Paths.get(path).toAbsolutePath();
+		return this;
 	}
 
-	public static void setup() throws IOException {
-		createDirectories(DB, GEN, LOG, PLUGIN, TMP);
+	/**
+	 * Require that the environment path be readable at runtime.
+	 *
+	 * @return {@code this}
+	 * @throws IOException
+	 */
+	public Environment requireReadable() throws IOException {
+		if (!Files.exists(path))
+			Files.createDirectories(path);
 
-		// Check environment postconditions
-		requireReadable(LIB, DB, GEN, PLUGIN, TMP);
-		requireWritable(DB, GEN, PLUGIN, TMP);
+		if (!Files.isReadable(path))
+			throw new IOException("Unreadable directory");
+
+		return this;
 	}
 
-	private static void createDirectories(Environment... paths) throws IOException {
-		for (var env : paths) {
-			if (env.path != null) {
-				if (Files.exists(env.path)) {
-					if (!Files.isDirectory(env.path)) {
-						throw new RuntimeException();
-					}
-				} else {
-					Files.createDirectories(env.path);
-				}
-			}
-		}
-	}
+	/**
+	 * Require that the environment path be readable and writable at runtime.
+	 *
+	 * @return {@code this}
+	 * @throws IOException
+	 */
+	public Environment requireWritable() throws IOException {
+		if (!Files.exists(path))
+			Files.createDirectories(path);
 
-	private static void requireReadable(Environment... paths) {
-		for (var env : paths) {
-			if (env.path != null && !Files.isReadable(env.path)) {
-				throw new RuntimeException("Unreadable directory: " + env.path);
-			}
-		}
-	}
+		if (!Files.isReadable(path))
+			throw new IOException("Unreadable directory");
 
-	private static void requireWritable(Environment... paths) {
-		for (var env : paths) {
-			if (env.path != null && !Files.isWritable(env.path)) {
-				throw new RuntimeException("Unwritable directory: " + env.path);
-			}
-		}
+		if (!Files.isWritable(path))
+			throw new IOException("Unwritable directory");
+
+		return this;
 	}
 
 	/**

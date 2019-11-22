@@ -153,12 +153,12 @@ public final class Server {
 	@InitializationTask(name = "Load runtime environment", fatal = true)
 	public static final Task loadEnvironment = new Task((task) -> {
 
-		Environment.DB.set(Config.get("server.path.db"));
-		Environment.GEN.set(Config.get("server.path.gen"));
-		Environment.LOG.set(Config.get("path.log"));
-		Environment.TMP.set(Config.get("path.tmp"));
-
-		Environment.setup();
+		Environment.LIB.requireReadable();
+		Environment.DB.set(Config.get("path.db")).requireReadable();
+		Environment.GEN.set(Config.get("path.gen")).requireWritable();
+		Environment.LOG.set(Config.get("path.log")).requireWritable();
+		Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
+		Environment.TMP.set(Config.get("path.tmp")).requireWritable();
 		return task.success();
 	});
 

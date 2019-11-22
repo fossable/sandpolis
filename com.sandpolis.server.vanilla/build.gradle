@@ -91,7 +91,7 @@ docker {
 		tag = "sandpolis/sandpolis-server:${project.version}"
 		jvmArgs = [
 			'-Dpath.lib=/app/libs',
-			'-Dserver.path.gen=/tmp',
+			'-Dpath.gen=/tmp',
 			'-Dserver.debug_client=false',
 			'-Dnet.ipc.mutex=false'
 		]
