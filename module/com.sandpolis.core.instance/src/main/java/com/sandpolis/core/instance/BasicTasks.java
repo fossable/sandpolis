@@ -50,6 +50,8 @@ public final class BasicTasks {
 		Config.register("plugin.enabled", true);
 
 		Config.register("path.log");
+		Config.register("path.plugin");
+		Config.register("path.tmp");
 
 		return task.success();
 	});

@@ -144,6 +144,9 @@ public final class Server {
 
 		Config.register("server.geolocation.service", "ip-api.com");
 
+		Config.register("path.db");
+		Config.register("path.gen");
+
 		return task.success();
 	});
 
@@ -154,7 +157,7 @@ public final class Server {
 	public static final Task loadEnvironment = new Task((task) -> {
 
 		Environment.LIB.requireReadable();
-		Environment.DB.set(Config.get("path.db")).requireReadable();
+		Environment.DB.set(Config.get("path.db")).requireWritable();
 		Environment.GEN.set(Config.get("path.gen")).requireWritable();
 		Environment.LOG.set(Config.get("path.log")).requireWritable();
 		Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
