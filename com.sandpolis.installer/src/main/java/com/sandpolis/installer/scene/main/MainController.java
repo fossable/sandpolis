@@ -18,12 +18,14 @@
 package com.sandpolis.installer.scene.main;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.sandpolis.core.util.RandUtil;
-import com.sandpolis.installer.install.AbstractInstaller;
+import com.sandpolis.installer.JavafxInstaller;
 import com.sandpolis.installer.util.CloudUtil;
 import com.sandpolis.installer.util.QrUtil;
 
@@ -77,10 +79,13 @@ public class MainController {
 	@FXML
 	private VBox qr_box;
 
+	@FXML
+	private Label status;
+
 	/**
 	 * An executor that can run background tasks for the installer.
 	 */
-	private static final ExecutorService service = Executors.newCachedThreadPool((Runnable r) -> {
+	private static final ExecutorService service = Executors.newSingleThreadExecutor((Runnable r) -> {
 		Thread thread = new Thread(r, "background_thread");
 		thread.setDaemon(true);
 		return thread;
@@ -172,27 +177,31 @@ public class MainController {
 		chk_client.setDisable(true);
 		btn_install.setDisable(true);
 
+		Path base = Paths.get(System.getProperty("user.home") + "/.sandpolis");
+
+		// Add installer tasks to the queue
 		if (chk_viewer_jfx.isSelected()) {
-			install(pane_viewer_jfx, AbstractInstaller.newViewerJfxInstaller());
+			install(pane_viewer_jfx, JavafxInstaller.newViewerJfxInstaller(base.resolve("viewer")));
 		} else {
 			pane_viewer_jfx.setCollapsible(false);
 		}
 		if (chk_viewer_cli.isSelected()) {
-			install(pane_viewer_cli, AbstractInstaller.newViewerCliInstaller());
+			install(pane_viewer_cli, JavafxInstaller.newViewerCliInstaller(base.resolve("viewer-cli")));
 		} else {
 			pane_viewer_cli.setCollapsible(false);
 		}
 		if (chk_server.isSelected()) {
-			install(pane_server, AbstractInstaller.newServerInstaller());
+			install(pane_server, JavafxInstaller.newServerInstaller(base.resolve("server")));
 		} else {
 			pane_server.setCollapsible(false);
 		}
 		if (chk_client.isSelected()) {
-			install(pane_client, AbstractInstaller.newClientInstaller(client_config));
+			install(pane_client, JavafxInstaller.newClientInstaller(base.resolve("client"), client_config));
 		} else {
 			pane_client.setCollapsible(false);
 		}
 
+		// The final task only runs if all previous tasks succeeded
 		service.execute(() -> {
 			Platform.runLater(() -> {
 				btn_install.setDisable(false);
@@ -200,16 +209,19 @@ public class MainController {
 				btn_install.setOnAction((e) -> {
 					System.exit(0);
 				});
+				status.textProperty().unbind();
+				status.setText("Installation succeeded!");
 			});
 		});
 	}
 
-	private void install(TitledPane section, AbstractInstaller installer) {
+	private void install(TitledPane section, JavafxInstaller installer) {
 
 		ProgressIndicator progress = new ProgressIndicator(0.0);
 		installer.setOnScheduled(event -> {
 			progress.setPrefHeight(22);
 			progress.progressProperty().bind(installer.progressProperty());
+			status.textProperty().bind(installer.messageProperty());
 			section.setGraphic(progress);
 		});
 
@@ -219,6 +231,7 @@ public class MainController {
 			section.setCollapsible(false);
 
 			progress.progressProperty().unbind();
+			status.textProperty().unbind();
 			progress.setProgress(1.0);
 		});
 
@@ -226,22 +239,28 @@ public class MainController {
 			section.setText("Installation failed!");
 			section.setCollapsible(false);
 
+			progress.progressProperty().unbind();
+			status.textProperty().unbind();
 			installer.getException().printStackTrace();
 		});
 
+		// Schedule the install task
 		service.execute(installer);
 
 		// Check outcome of task
 		service.execute(() -> {
-			if (installer.isCompleted()) {
+			if (!installer.isCompleted()) {
 				Platform.runLater(() -> {
 					btn_install.setDisable(false);
 					btn_install.setText("Exit");
 					btn_install.setOnAction((e) -> {
 						System.exit(0);
 					});
+					status.textProperty().unbind();
+					status.setText("Installation failed!");
 				});
 
+				// Don't let any more tasks execute
 				service.shutdownNow();
 			}
 		});

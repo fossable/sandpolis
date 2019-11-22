@@ -18,3 +18,7 @@
     -fx-border-insets: -8;
     -fx-border-radius: 4;
 }
+
+#status {
+    -fx-text-fill: white;
+}

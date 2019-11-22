@@ -17,6 +17,7 @@
  ******************************************************************************/
 package com.sandpolis.installer;
 
+import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import javafx.application.Application;
@@ -37,8 +38,28 @@ public final class Main {
 	private Main() {
 	}
 
-	public static void main(String[] args) {
-		new Thread(() -> Application.launch(UI.class)).start();
+	public static void main(String[] args) throws Exception {
+		String path = System.getProperty("path");
+		String components = System.getProperty("component", "server,viewer-jfx,viewer-cli");
+
+		if (path != null) {
+			for (String component : components.split(",")) {
+				switch (component) {
+				case "server":
+					CliInstaller.newServerInstaller(Paths.get(path)).call();
+					break;
+				case "viewer-jfx":
+					CliInstaller.newViewerJfxInstaller(Paths.get(path)).call();
+					break;
+				case "viewer-cli":
+					CliInstaller.newViewerCliInstaller(Paths.get(path)).call();
+					break;
+				}
+			}
+		} else {
+			// Start GUI
+			new Thread(() -> Application.launch(UI.class)).start();
+		}
 	}
 
 	/**

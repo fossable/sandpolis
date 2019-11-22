@@ -15,33 +15,31 @@
  *  limitations under the License.                                             *
  *                                                                             *
  ******************************************************************************/
-package com.sandpolis.installer.install;
+package com.sandpolis.installer;
 
-import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import com.sandpolis.core.soi.SoiUtil;
+import com.sandpolis.core.util.ArtifactUtil;
+import com.sandpolis.installer.util.InstallUtil;
+import javafx.concurrent.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
-import com.sandpolis.core.soi.SoiUtil;
-import com.sandpolis.core.util.ArtifactUtil;
-
-import javafx.concurrent.Task;
+import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 /**
  * @author cilki
  * @since 5.0.0
  */
-public abstract class AbstractInstaller extends Task<Void> {
+public class JavafxInstaller extends Task<Void> {
 
-	private static final Logger log = LoggerFactory.getLogger(AbstractInstaller.class);
+	private static final Logger log = LoggerFactory.getLogger(JavafxInstaller.class);
 
 	/**
 	 * The installation directory.
@@ -56,7 +54,7 @@ public abstract class AbstractInstaller extends Task<Void> {
 	/**
 	 * The Sandpolis version that will be installed.
 	 */
-	private String version;
+	private String version = System.getProperty("version");
 
 	/**
 	 * The client configuration.
@@ -69,60 +67,36 @@ public abstract class AbstractInstaller extends Task<Void> {
 	private boolean completed;
 
 	/**
-	 * A post-installation hook.
+	 * A list of installation extensions.
 	 */
-	private Runnable postHook;
+	private List<Runnable> extensions;
 
-	protected AbstractInstaller(Path destination) {
+	protected JavafxInstaller(Path destination) {
 		this.destination = Objects.requireNonNull(destination);
 		updateProgress(0, 1);
-
-		String _version = System.getProperty("install.version");
-		if (_version != null) {
-			version = _version;
-		}
 	}
 
-	private static AbstractInstaller newInstaller() {
-		String name = System.getProperty("os.name").toLowerCase();
-
-		if (name.startsWith("windows"))
-			return new WindowsInstaller();
-
-		if (name.startsWith("linux"))
-			return new LinuxInstaller();
-
-		if (name.startsWith("mac") || name.startsWith("darwin"))
-			return new LinuxInstaller();
-
-		throw new RuntimeException("Unsupported platform");
-	}
-
-	public static AbstractInstaller newServerInstaller() {
-		AbstractInstaller installer = newInstaller();
+	public static JavafxInstaller newServerInstaller(Path destination) {
+		JavafxInstaller installer = new JavafxInstaller(destination);
 		installer.coordinate = "com.sandpolis:sandpolis-server-vanilla:";
-		installer.postHook = installer::serverPostInstall;
 		return installer;
 	}
 
-	public static AbstractInstaller newViewerJfxInstaller() {
-		AbstractInstaller installer = newInstaller();
+	public static JavafxInstaller newViewerJfxInstaller(Path destination) {
+		JavafxInstaller installer = new JavafxInstaller(destination);
 		installer.coordinate = "com.sandpolis:sandpolis-viewer-jfx:";
-		installer.postHook = installer::viewerJfxPostInstall;
 		return installer;
 	}
 
-	public static AbstractInstaller newViewerCliInstaller() {
-		AbstractInstaller installer = newInstaller();
+	public static JavafxInstaller newViewerCliInstaller(Path destination) {
+		JavafxInstaller installer = new JavafxInstaller(destination);
 		installer.coordinate = "com.sandpolis:sandpolis-viewer-cli:";
-		installer.postHook = installer::viewerCliPostInstall;
 		return installer;
 	}
 
-	public static AbstractInstaller newClientInstaller(String config) {
-		AbstractInstaller installer = newInstaller();
+	public static JavafxInstaller newClientInstaller(Path destination, String config) {
+		JavafxInstaller installer = new JavafxInstaller(destination);
 		installer.coordinate = "com.sandpolis:sandpolis-client-mega:";
-		installer.postHook = installer::clientPostInstall;
 		installer.config = config;
 		return installer;
 	}
@@ -147,16 +121,14 @@ public abstract class AbstractInstaller extends Task<Void> {
 		Path executable = ArtifactUtil.download(lib, coordinate);
 
 		// Calculate dependencies
-		SO_DependencyMatrix matrix = SoiUtil.readMatrix(executable);
-		Set<String> dependencies = new HashSet<>();
-		computeDependencies(matrix, dependencies, coordinate);
+		Set<String> dependencies = InstallUtil.computeDependencies(SoiUtil.readMatrix(executable), coordinate);
 
 		double progress = 0;
 		for (String dep : dependencies) {
 			var coordinate = fromCoordinate(dep);
 			Path dependency = lib.resolve(coordinate.filename);
 			if (!Files.exists(dependency)) {
-				InputStream in = AbstractInstaller.class.getResourceAsStream("/" + coordinate.filename);
+				InputStream in = JavafxInstaller.class.getResourceAsStream("/" + coordinate.filename);
 				if (in != null) {
 					updateMessage("Extracting " + dep);
 					try (in) {
@@ -172,63 +144,12 @@ public abstract class AbstractInstaller extends Task<Void> {
 			updateProgress(progress, dependencies.size());
 		}
 
-		postHook.run();
 		completed = true;
 		return null;
 	}
 
-	/**
-	 * Gather all dependencies of the artifact corresponding to the given
-	 * coordinate.
-	 *
-	 * @param matrix       The dependency matrix
-	 * @param dependencies The dependency set
-	 * @param coordinate   The coordinate
-	 */
-	private void computeDependencies(SO_DependencyMatrix matrix, Set<String> dependencies, String coordinate) {
-		if (dependencies.contains(coordinate))
-			return;
-
-		dependencies.add(coordinate);
-
-		matrix.getArtifactList().stream()
-				// Find the artifact in the matrix and iterate over its dependencies
-				.filter(a -> a.getCoordinates().equals(coordinate)).findFirst().get().getDependencyList().stream()
-				.map(matrix.getArtifactList()::get).map(a -> a.getCoordinates())
-				.forEach(c -> computeDependencies(matrix, dependencies, c));
-
-	}
-
 	public boolean isCompleted() {
 		return completed;
-	}
-
-	/**
-	 * A hook invoked after the server has been successfully installed.
-	 */
-	protected void serverPostInstall() {
-		// no op
-	}
-
-	/**
-	 * A hook invoked after the viewer has been successfully installed.
-	 */
-	protected void viewerJfxPostInstall() {
-		// no op
-	}
-
-	/**
-	 * A hook invoked after the viewer cli has been successfully installed.
-	 */
-	protected void viewerCliPostInstall() {
-		// no op
-	}
-
-	/**
-	 * A hook invoked after the client has been successfully installed.
-	 */
-	protected void clientPostInstall() {
-		// no op
 	}
 
 }

@@ -1,5 +1,4 @@
 module com.sandpolis.installer {
-	exports com.sandpolis.installer.install;
 	exports com.sandpolis.installer.scene.main;
 	exports com.sandpolis.installer.util;
 	exports com.sandpolis.installer;
