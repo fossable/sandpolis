@@ -20,6 +20,17 @@ import UIKit
 class Actions: UITableViewController {
 
 	var profile: SandpolisProfile!
+	
+	private let direct = UserDefaults.standard.string(forKey: "login.type") == "direct"
+	
+	override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+		switch indexPath.row {
+		case 2:
+			return direct ? 0 : 80
+		default:
+			return 80
+		}
+	}
 
 	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		tableView.deselectRow(at: indexPath, animated: true)
