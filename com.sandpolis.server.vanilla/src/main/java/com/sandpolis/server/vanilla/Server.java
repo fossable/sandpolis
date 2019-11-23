@@ -336,8 +336,8 @@ public final class Server {
 		GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin").build());
 
 		// Generate client
-		MegaGen.build(
-				GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
+		MegaGen generator = MegaGen
+				.build(GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
 						.setMega(MegaConfig.newBuilder().setMemory(false).setFeatures(FeatureSet.newBuilder()
 								.addPlugin("com.sandpolis.plugin.desktop").addPlugin("com.sandpolis.plugin.filesys")
 								.addPlugin("com.sandpolis.plugin.sysinfo").addPlugin("com.sandpolis.plugin.shell"))
@@ -347,12 +347,17 @@ public final class Server {
 										.newBuilder().setLoopConfig(LoopConfig.newBuilder().setTimeout(5000)
 												.setMaxTimeout(5000).setStrictCerts(false).addTarget(NetworkTarget
 														.newBuilder().setAddress("10.0.1.128").setPort(8768)))))
-						.build())
-				.run();
+						.build());
+		generator.run();
 
-		// Execute
-		Runtime.getRuntime().exec(new String[] { "java", "-jar", Environment.GEN.path().resolve("0.jar").toString() });
-		return task.success();
+		if (generator.getReport().getResult()) {
+			// Execute
+			Runtime.getRuntime()
+					.exec(new String[] { "java", "-jar", Environment.GEN.path().resolve("0.jar").toString() });
+			return task.success();
+		} else {
+			return task.failure(generator.getReport().getComment());
+		}
 	});
 
 	private Server() {

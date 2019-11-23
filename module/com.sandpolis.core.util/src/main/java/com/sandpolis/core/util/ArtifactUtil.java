@@ -85,9 +85,20 @@ public final class ArtifactUtil {
 		return list(directory).filter(path -> path.getFileName().toString().startsWith(artifactId))
 				// Sort by semantic version number
 				.sorted((path1, path2) -> {
-					// TODO COMPARE CORRECTLY!
-					return ParsedCoordinate.fromFilename(path1.getFileName().toString()).version
-							.compareTo(ParsedCoordinate.fromFilename(path2.getFileName().toString()).version);
+					String[] v1 = path1.getFileName().toString().replace(artifactId, "").split("\\.");
+					String[] v2 = path2.getFileName().toString().replace(artifactId, "").split("\\.");
+
+					for (int i = 0; i < Math.min(v1.length, v2.length); i++) {
+						try {
+							int compare = Integer.compare(Integer.parseInt(v1[i]), Integer.parseInt(v2[i]));
+							if (compare != 0)
+								return compare;
+
+						} catch (NumberFormatException e) {
+							return 0;
+						}
+					}
+					return 0;
 				});
 	}
 
@@ -187,36 +198,17 @@ public final class ArtifactUtil {
 		public final String groupId;
 		public final String artifactId;
 		public final String version;
+		public final String classifier;
 		public final String filename;
 
-		private ParsedCoordinate(String coordinate, String groupId, String artifactId, String version,
+		private ParsedCoordinate(String coordinate, String groupId, String artifactId, String version, String classifier,
 				String filename) {
 			this.coordinate = coordinate == null ? "" : coordinate;
 			this.groupId = groupId == null ? "" : groupId;
 			this.artifactId = artifactId == null ? "" : artifactId;
 			this.version = version == null ? "" : version;
+			this.classifier = classifier == null ? "" : classifier;
 			this.filename = filename == null ? "" : filename;
-		}
-
-		/**
-		 * Parse an artifact's filename.
-		 *
-		 * @param filename The standard filename
-		 * @return A new {@link ParsedCoordinate}
-		 */
-		public static ParsedCoordinate fromFilename(String filename) {
-			checkNotNull(filename);
-			filename = filename.trim();
-
-			String version = filename.substring(filename.lastIndexOf('-') + 1, filename.lastIndexOf(".jar"));
-			try {
-				String artifact = filename.substring(0, filename.lastIndexOf('-'));
-				return new ParsedCoordinate(":" + artifact + ":" + version, null, artifact, version, filename);
-			} catch (Exception e) {
-				// Missing version
-				String artifact = filename.substring(0, filename.lastIndexOf(".jar"));
-				return new ParsedCoordinate(":" + artifact + ":", null, artifact, null, filename);
-			}
 		}
 
 		/**
@@ -228,24 +220,24 @@ public final class ArtifactUtil {
 		public static ParsedCoordinate fromCoordinate(String coordinate) {
 			checkNotNull(coordinate);
 
-			// Hack to produce an empty last element if necessary
-			if (coordinate.endsWith(":"))
-				coordinate += " ";
-
 			String[] gav = coordinate.split(":");
-			checkArgument(gav.length == 3, "Coordinate format: %s", coordinate);
 
 			// Trim fields
 			for (int i = 0; i < gav.length; i++)
 				gav[i] = gav[i].trim();
 
-			// Build canonical filename
-			String filename = gav[1];
-			if (!gav[2].isEmpty())
-				filename += "-" + gav[2];
-			filename += ".jar";
-
-			return new ParsedCoordinate(coordinate.trim(), gav[0], gav[1], gav[2], filename);
+			switch (gav.length) {
+				case 1:
+					return new ParsedCoordinate(coordinate.trim(), null, gav[0], null, null, String.format("%s.jar", gav[0]));
+				case 2:
+					return new ParsedCoordinate(coordinate.trim(), gav[0], gav[1], null, null, String.format("%s.jar", gav[1]));
+				case 3:
+					return new ParsedCoordinate(coordinate.trim(), gav[0], gav[1], gav[2], null, String.format("%s-%s.jar", gav[1], gav[2]));
+				case 4:
+					return new ParsedCoordinate(coordinate.trim(), gav[0], gav[1], gav[2], gav[3], String.format("%s-%s-%s.jar", gav[1], gav[2], gav[3]));
+				default:
+					throw new IllegalArgumentException("Coordinate format: " + coordinate);
+			}
 		}
 	}
 

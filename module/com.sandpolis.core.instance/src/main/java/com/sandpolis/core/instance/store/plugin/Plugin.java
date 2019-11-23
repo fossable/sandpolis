@@ -190,7 +190,10 @@ public final class Plugin {
 	}
 
 	public String getVersion() {
-		return coordinate.split(":")[2];
+		String[] gav = coordinate.split(":");
+		if (gav.length == 3)
+			return gav[2];
+		return null;
 	}
 
 	public String getCoordinate() {
@@ -279,7 +282,11 @@ public final class Plugin {
 
 	private String getArtifactName(Instance instance, InstanceFlavor flavor) {
 		if (instance == null && flavor == null) {
-			return String.format("%s-%s.jar", id, getVersion());
+			String version = getVersion();
+			if (version != null)
+				return String.format("%s-%s.jar", id, version);
+			else
+				return String.format("%s.jar", id);
 		} else {
 			return String.format("%s:%s:%s-%s.jar", id, instance.toString().toLowerCase(),
 					flavor.toString().toLowerCase(), getVersion());

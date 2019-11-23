@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 
 import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
@@ -104,14 +105,14 @@ public final class DependencyProcessor {
 			if (!parent.getDependencyList().contains(id))
 				parent.addDependency(id);
 		}, () -> {
-			dependency.getModuleArtifacts().stream().map(ra -> ra.getFile()).forEach(file -> {
-				var artifact = buildArtifact(getCoordinates(dependency), file);
+			dependency.getModuleArtifacts().forEach(resolvedArtifact -> {
+				var artifact = buildArtifact(getCoordinates(dependency), resolvedArtifact);
 
 				// Add to matrix and parent artifact's dependency list
 				parent.addDependency(addArtifact(artifact));
 
 				// Recursively add child dependencies
-				dependency.getChildren().stream().forEach(child -> add(artifact, child));
+				dependency.getChildren().forEach(child -> add(artifact, child));
 			});
 		});
 	}
@@ -145,15 +146,17 @@ public final class DependencyProcessor {
 	/**
 	 * Build a {@link Artifact.Builder} for the given {@link File}.
 	 *
-	 * @param coordinates The artifact's coordinates
-	 * @param file        The file to include
+	 * @param coordinates      The artifact's coordinates
+	 * @param resolvedArtifact The artifact to include
 	 * @return A new artifact
 	 */
-	private Artifact.Builder buildArtifact(String coordinates, File file) {
+	private Artifact.Builder buildArtifact(String coordinates, ResolvedArtifact resolvedArtifact) {
 		Objects.requireNonNull(coordinates);
-		Objects.requireNonNull(file);
+		Objects.requireNonNull(resolvedArtifact);
 
-		var artifact = Artifact.newBuilder().setCoordinates(coordinates).setSize(file.length());
+		var artifact = Artifact.newBuilder().setCoordinates(coordinates).setSize(resolvedArtifact.getFile().length());
+		if (resolvedArtifact.getClassifier() != null)
+			artifact.setCoordinates(artifact.getCoordinates() + ":" + resolvedArtifact.getClassifier());
 
 //		for (var nativeEntry : natives.entrySet()) {
 //			if (artifact.getCoordinates().contains(":" + nativeEntry.getKey() + ":")) {
