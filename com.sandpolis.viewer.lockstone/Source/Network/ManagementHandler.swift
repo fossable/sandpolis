@@ -33,8 +33,6 @@ final class ManagementHandler: ChannelInboundHandler {
 		if !connection.handshakeCompleted {
 			connection.connectionPromise.fail(error)
 		}
-
-		connection.disconnect()
 	}
 
 	func channelInactive(context: ChannelHandlerContext) {

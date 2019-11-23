@@ -151,6 +151,10 @@ class ClientList: UITableViewController {
 				profiles.append(idToProfile[hostId]!)
 			}
 			groupControlPanel.profiles = profiles
+		} else if segue.identifier == "UnwindLoginSegue" {
+			// Nothing to do
+		} else if segue.identifier == "UnwindServerSegue" {
+			// Nothing to do
 		} else {
 			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
 		}
@@ -269,7 +273,17 @@ class ClientList: UITableViewController {
 
 	func onServerDisconnect() {
 		DispatchQueue.main.async {
-			self.navigationController?.popViewController(animated: true)
+			if UserDefaults.standard.string(forKey: "login.type") == "direct" {
+				let alert = UIAlertController(title: "Connection lost", message: "Your connection to the server has been lost.", preferredStyle: .alert)
+				//alert.addAction(UIAlertAction(title: "Reconnect", style: .default) { _ in
+				//})
+				alert.addAction(UIAlertAction(title: "Exit", style: .cancel) { _ in
+					self.performSegue(withIdentifier: "UnwindLoginSegue", sender: self)
+				})
+				self.present(alert, animated: true)
+			} else {
+				self.performSegue(withIdentifier: "UnwindServerSegue", sender: self)
+			}
 		}
 	}
 

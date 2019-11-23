@@ -1960,7 +1960,7 @@
         <!--Host List-->
         <scene sceneID="4SU-f1-Edx">
             <objects>
-                <tableViewController title="Host List" hidesBottomBarWhenPushed="YES" id="Zr7-Yd-1dv" customClass="ClientList" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController title="Host List" definesPresentationContext="YES" hidesBottomBarWhenPushed="YES" id="Zr7-Yd-1dv" customClass="ClientList" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="80" estimatedRowHeight="-1" sectionHeaderHeight="40" estimatedSectionHeaderHeight="-1" sectionFooterHeight="40" estimatedSectionFooterHeight="-1" id="fU6-dp-HAA">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -2121,9 +2121,12 @@
                         <segue destination="654-4d-6yS" kind="show" id="eEU-lA-7YL"/>
                         <segue destination="4M1-5e-ymV" kind="show" identifier="ShowControlPanelSegue" id="493-UJ-XsK"/>
                         <segue destination="Xcc-gi-mQ7" kind="show" identifier="ShowGroupControlPanelFromHeaderSegue" id="OFc-h9-beF"/>
+                        <segue destination="0AE-3y-PIE" kind="unwind" identifier="UnwindLoginSegue" unwindAction="prepareForUnwindWithSegue:" id="juL-4g-Opb"/>
+                        <segue destination="0AE-3y-PIE" kind="unwind" identifier="UnwindServerSegue" unwindAction="unwindToServerWithSegue:" id="pDJ-ST-zZr"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="fyI-TM-Axs" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <exit id="0AE-3y-PIE" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
             <point key="canvasLocation" x="6746.376811594203" y="70.982142857142847"/>
         </scene>
@@ -3035,7 +3038,7 @@
         <segue reference="Tmd-11-lDG"/>
         <segue reference="Tgm-TF-M4i"/>
         <segue reference="OFc-h9-beF"/>
-        <segue reference="kre-RH-OTc"/>
+        <segue reference="493-UJ-XsK"/>
         <segue reference="xI2-Qr-ez5"/>
         <segue reference="xCx-EK-m09"/>
         <segue reference="h7N-WJ-x2L"/>
