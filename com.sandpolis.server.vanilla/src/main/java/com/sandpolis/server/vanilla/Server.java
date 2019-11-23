@@ -329,7 +329,7 @@ public final class Server {
 		UserStore.add(
 				UserConfig.newBuilder().setUsername("admin").setPassword(CryptoUtil.hash(SHA256, "password")).build());
 
-		ListenerStore.add(ListenerConfig.newBuilder().setPort(10101).setAddress("0.0.0.0").setOwner("admin")
+		ListenerStore.add(ListenerConfig.newBuilder().setPort(8768).setAddress("0.0.0.0").setOwner("admin")
 				.setName("test").setEnabled(true).build());
 
 		// Create group
@@ -346,7 +346,7 @@ public final class Server {
 								.setNetwork(NetworkConfig
 										.newBuilder().setLoopConfig(LoopConfig.newBuilder().setTimeout(5000)
 												.setMaxTimeout(5000).setStrictCerts(false).addTarget(NetworkTarget
-														.newBuilder().setAddress("10.0.1.128").setPort(10101)))))
+														.newBuilder().setAddress("10.0.1.128").setPort(8768)))))
 						.build())
 				.run();
 

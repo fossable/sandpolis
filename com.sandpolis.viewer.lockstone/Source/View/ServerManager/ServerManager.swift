@@ -55,7 +55,7 @@ class ServerManager: UITableViewController {
 		// Spawn synchronous connection attempts
 		DispatchQueue.global(qos: .utility).async {
 			for server in self.servers {
-				server.online = SandpolisUtil.testConnect(server.address, 10101)
+				server.online = SandpolisUtil.testConnect(server.address, 8768)
 			}
 			DispatchQueue.main.async {
 				self.tableView.reloadData()
@@ -70,7 +70,7 @@ class ServerManager: UITableViewController {
 		// Spawn concurrent connection attempts
 		for server in servers {
 			DispatchQueue.global(qos: .utility).async {
-				server.online = SandpolisUtil.testConnect(server.address, 10101)
+				server.online = SandpolisUtil.testConnect(server.address, 8768)
 				DispatchQueue.main.async {
 					self.tableView.reloadData()
 				}
@@ -107,7 +107,7 @@ class ServerManager: UITableViewController {
 
 				// Retry connection probe
 				DispatchQueue.global(qos: .utility).async {
-					server.online = SandpolisUtil.testConnect(server.address, 10101)
+					server.online = SandpolisUtil.testConnect(server.address, 8768)
 					DispatchQueue.main.async {
 						self.tableView.reloadData()
 					}

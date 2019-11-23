@@ -5,7 +5,7 @@ import NIOSSL
 extension UIViewController {
 	
 	public func connect(address: String, _ completion: @escaping (SandpolisConnection?) ->()) {
-		let connection = SandpolisConnection(address, 10101)
+		let connection = SandpolisConnection(address, 8768)
 		connection.connectionFuture.whenSuccess {
 			completion(connection)
 		}
@@ -14,7 +14,7 @@ extension UIViewController {
 				DispatchQueue.main.async {
 					let alert = UIAlertController(title: "Continue connection?", message: "The server's certificate is invalid. If you continue, the connection is not guaranteed to be secure. To make a secure connection, install a valid certificate on the server.", preferredStyle: .alert)
 					alert.addAction(UIAlertAction(title: "Continue", style: .destructive) { _ in
-						let connection = SandpolisConnection(address, 10101, certificateVerification: .none)
+						let connection = SandpolisConnection(address, 8768, certificateVerification: .none)
 						connection.connectionFuture.whenSuccess {
 							completion(connection)
 						}

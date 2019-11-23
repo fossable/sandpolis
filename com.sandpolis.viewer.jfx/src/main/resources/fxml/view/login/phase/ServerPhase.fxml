@@ -27,7 +27,7 @@
 						<Label text="Address" />
 						<Label text="Port" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
 						<TextField fx:id="address" GridPane.rowIndex="1" text="127.0.0.1" />
-						<TextField fx:id="port" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="58.0" text="10101" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+						<TextField fx:id="port" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="58.0" text="8768" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 					</children>
 				</GridPane>
 			</content>

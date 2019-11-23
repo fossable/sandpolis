@@ -89,6 +89,7 @@ docker {
 		baseImage = 'openjdk:12.0.2'
 		maintainer = 'tcc@sandpolis.com'
 		tag = "sandpolis/sandpolis-server:${project.version}"
+		ports = [8768]
 		jvmArgs = [
 			'-Dpath.lib=/app/libs',
 			'-Dpath.gen=/tmp',
