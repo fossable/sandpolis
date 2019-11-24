@@ -39,4 +39,8 @@ public abstract class ParameterizedEvent<E> extends Event {
 		return object;
 	}
 
+	@Override
+	public String toString() {
+		return super.toString() + "(" + object + ")";
+	}
 }

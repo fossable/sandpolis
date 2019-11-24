@@ -26,4 +26,8 @@ import com.google.common.eventbus.EventBus;
  * @since 5.0.0
  */
 public abstract class Event {
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
 }

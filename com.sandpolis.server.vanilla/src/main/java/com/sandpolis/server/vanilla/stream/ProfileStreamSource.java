@@ -67,7 +67,9 @@ public class ProfileStreamSource extends StreamSource<EV_ProfileStream> {
 		ConnectionStore.get(profile.getCvid()).ifPresent(sock -> {
 			ev.setIp(sock.getRemoteIP());
 
-			ev.setLocation(LocationStore.LocationStore.query(ev.getIp(), 1000));
+			var location = LocationStore.LocationStore.query(ev.getIp(), 1000);
+			if (location != null)
+				ev.setLocation(location);
 		});
 
 		ev.setHostname(profile.get(AK_CLIENT.HOSTNAME));

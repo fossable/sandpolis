@@ -10,6 +10,9 @@ bin
 .classpath
 .settings
 
+# IDEA metadata
+.idea
+
 # Nested repositories
 com.sandpolis.server.cloud
 com.sandpolis.server.demo

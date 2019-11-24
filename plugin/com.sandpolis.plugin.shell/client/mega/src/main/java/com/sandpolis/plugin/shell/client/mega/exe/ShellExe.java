@@ -171,7 +171,7 @@ public final class ShellExe extends Exelet {
 			return failure(outcome);
 		}
 
-		session.redirectErrorStream();
+		session.redirectErrorStream(true);
 
 		// Set default environment
 		session.environment().put("TERM", "st-256color");
