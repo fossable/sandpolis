@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import com.sandpolis.core.util.JarUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,7 +154,12 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 				// Skip installed plugins
 				.filter(path -> {
 					try (Stream<Plugin> stream = provider.stream()) {
-						return stream.noneMatch(plugin -> path.getFileName().toString().startsWith(plugin.getName()));
+						// Read plugin id
+						String id = JarUtil.getManifestValue(path.toFile(), "Plugin-Id").orElse(null);
+
+						return stream.noneMatch(plugin -> plugin.getId().equals(id));
+					} catch (IOException e) {
+						return false;
 					}
 				}).forEach(PluginStore::installPlugin);
 
@@ -165,7 +171,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	public void loadPlugins() {
 		provider.stream()
 				// Enabled plugins only
-				.filter(plugin -> plugin.isEnabled())
+				.filter(Plugin::isEnabled)
 				// Skip loaded plugins
 				.filter(plugin -> !plugin.isLoaded()).forEach(PluginStore::loadPlugin);
 	}
@@ -230,7 +236,7 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	}
 
 	public Stream<Plugin> getLoadedPlugins() {
-		return stream().filter(plugin -> plugin.isEnabled()).filter(plugin -> plugin.isLoaded());
+		return stream().filter(Plugin::isEnabled).filter(Plugin::isLoaded);
 	}
 
 	@Override

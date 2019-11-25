@@ -22,6 +22,7 @@ import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import com.google.common.eventbus.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,10 +114,22 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 			bootstrap.channel(Protocol.TCP.getChannel());
 	}
 
+	@Subscribe
+	private void onSockEstablished(ConnectionStoreEvents.SockEstablishedEvent event) {
+		add(event.get());
+	}
+
+	@Subscribe
+	private void onSockLost(ConnectionStoreEvents.SockLostEvent event) {
+		remove(event.get().getRemoteCvid());
+	}
+
 	@Override
 	public ConnectionStore init(Consumer<ConnectionStoreConfig> configurator) {
 		var config = new ConnectionStoreConfig();
 		configurator.accept(config);
+
+		register(this);
 
 		return (ConnectionStore) super.init(null);
 	}

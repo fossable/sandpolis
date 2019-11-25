@@ -201,8 +201,8 @@ public final class ArtifactUtil {
 		public final String classifier;
 		public final String filename;
 
-		private ParsedCoordinate(String coordinate, String groupId, String artifactId, String version, String classifier,
-				String filename) {
+		private ParsedCoordinate(String coordinate, String groupId, String artifactId, String version,
+				String classifier, String filename) {
 			this.coordinate = coordinate == null ? "" : coordinate;
 			this.groupId = groupId == null ? "" : groupId;
 			this.artifactId = artifactId == null ? "" : artifactId;
@@ -227,16 +227,20 @@ public final class ArtifactUtil {
 				gav[i] = gav[i].trim();
 
 			switch (gav.length) {
-				case 1:
-					return new ParsedCoordinate(coordinate.trim(), null, gav[0], null, null, String.format("%s.jar", gav[0]));
-				case 2:
-					return new ParsedCoordinate(coordinate.trim(), gav[0], gav[1], null, null, String.format("%s.jar", gav[1]));
-				case 3:
-					return new ParsedCoordinate(coordinate.trim(), gav[0], gav[1], gav[2], null, String.format("%s-%s.jar", gav[1], gav[2]));
-				case 4:
-					return new ParsedCoordinate(coordinate.trim(), gav[0], gav[1], gav[2], gav[3], String.format("%s-%s-%s.jar", gav[1], gav[2], gav[3]));
-				default:
-					throw new IllegalArgumentException("Coordinate format: " + coordinate);
+			case 1:
+				return new ParsedCoordinate(coordinate.trim(), null, gav[0], null, null,
+						String.format("%s.jar", gav[0]));
+			case 2:
+				return new ParsedCoordinate(coordinate.trim(), gav[0], gav[1], null, null,
+						String.format("%s.jar", gav[1]));
+			case 3:
+				return new ParsedCoordinate(coordinate.trim(), gav[0], gav[1], gav[2], null,
+						String.format("%s-%s.jar", gav[1], gav[2]));
+			case 4:
+				return new ParsedCoordinate(coordinate.trim(), gav[0], gav[1], gav[2], gav[3],
+						String.format("%s-%s-%s.jar", gav[1], gav[2], gav[3]));
+			default:
+				throw new IllegalArgumentException("Coordinate format: " + coordinate);
 			}
 		}
 	}

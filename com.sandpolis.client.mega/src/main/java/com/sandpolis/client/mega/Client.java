@@ -168,13 +168,13 @@ public final class Client {
 					KeyContainer mech = auth.getKey();
 					ReciprocalKeyPair key = new ReciprocalKeyPair(mech.getClient().getVerifier().toByteArray(),
 							mech.getClient().getSigner().toByteArray());
-					future = AuthCmd.async().key(auth.getGroupName(), mech.getId(), key);
+					future = AuthCmd.async().target(event.get()).key(auth.getGroupName(), mech.getId(), key);
 					break;
 				case PASSWORD:
-					future = AuthCmd.async().password(auth.getPassword().getPassword());
+					future = AuthCmd.async().target(event.get()).password(auth.getPassword().getPassword());
 					break;
 				default:
-					future = AuthCmd.async().none();
+					future = AuthCmd.async().target(event.get()).none();
 					break;
 				}
 

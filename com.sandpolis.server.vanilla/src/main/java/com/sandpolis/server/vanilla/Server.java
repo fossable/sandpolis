@@ -326,14 +326,17 @@ public final class Server {
 	public static final Task installDebugClient = new Task((task) -> {
 
 		// Create user and listener
-		UserStore.add(
-				UserConfig.newBuilder().setUsername("admin").setPassword(CryptoUtil.hash(SHA256, "password")).build());
+		if (UserStore.get("admin").isEmpty())
+			UserStore.add(UserConfig.newBuilder().setUsername("admin").setPassword(CryptoUtil.hash(SHA256, "password"))
+					.build());
 
-		ListenerStore.add(ListenerConfig.newBuilder().setPort(8768).setAddress("0.0.0.0").setOwner("admin")
-				.setName("test").setEnabled(true).build());
+		if (ListenerStore.get(1L).isEmpty())
+			ListenerStore.add(ListenerConfig.newBuilder().setId(1).setPort(8768).setAddress("0.0.0.0").setOwner("admin")
+					.setName("test").setEnabled(true).build());
 
 		// Create group
-		GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin").build());
+		if (GroupStore.get("1").isEmpty())
+			GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin").build());
 
 		// Generate client
 		MegaGen generator = MegaGen

@@ -53,8 +53,7 @@ import com.sandpolis.core.proto.util.Platform.Instance;
 
 /**
  * A static store for managing network connections, which may or may not be
- * directly connected and therefore present in the {@link ConnectionStore}.<br>
- * <br>
+ * directly connected and therefore present in the {@link ConnectionStore}.
  *
  * @author cilki
  * @see ConnectionStore
@@ -81,7 +80,12 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 	@Subscribe
 	private void onSockLost(SockLostEvent event) {
-		network.edgeConnecting(Core.cvid(), event.get().getRemoteCvid()).ifPresent(network::removeEdge);
+		if (network.nodes().contains(Core.cvid()) && network.nodes().contains(event.get().getRemoteCvid()))
+			network.edgeConnecting(Core.cvid(), event.get().getRemoteCvid()).ifPresent(network::removeEdge);
+
+		// Remove nodes that are now disconnected
+		network.nodes().stream().filter(cvid -> Core.cvid() != cvid).filter(cvid -> network.degree(cvid) == 0)
+				.forEach(network::removeNode);
 
 		// See if that was the last connection to a server
 		if (event.get().getRemoteInstance() == Instance.SERVER) {
@@ -126,7 +130,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	}
 
 	public int getPreferredServer() {
-		if (preferredServer == 0)
+		if (!network.nodes().contains(preferredServer))
 			// Choose a server at random
 			preferredServer = network.nodes().stream().filter(cvid -> CvidUtil.extractInstance(cvid) == Instance.SERVER)
 					.findAny().orElse(0);
@@ -299,7 +303,9 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 		configurator.accept(config);
 
 		preferredServer = config.preferredServer;
-		network.addNode(config.cvid);
+
+		if (config.cvid != 0)
+			network.addNode(config.cvid);
 
 		ConnectionStore.register(this);
 		post(CvidChangedEvent::new, config.cvid);
