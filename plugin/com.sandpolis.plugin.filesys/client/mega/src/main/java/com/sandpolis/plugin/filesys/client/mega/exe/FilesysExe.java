@@ -47,7 +47,7 @@ public final class FilesysExe extends Exelet {
 			path = rq.getPath();
 		}
 
-		try (FsHandle handle = new FsHandle(path)) {
+		try (FsHandle handle = new FsHandle(path, rq.getOptions())) {
 			return RS_FileListing.newBuilder().addAllListing(handle.list());
 		}
 	}

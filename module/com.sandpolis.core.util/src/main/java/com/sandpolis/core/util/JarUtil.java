@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
+import java.util.Map;
 import java.util.Optional;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -180,7 +181,7 @@ public final class JarUtil {
 		if (!resource.startsWith("/"))
 			resource = "/" + resource;
 
-		try (FileSystem fs = FileSystems.newFileSystem(file)) {
+		try (FileSystem fs = FileSystems.newFileSystem(file, (ClassLoader) null)) {
 			return Files.exists(fs.getPath(resource));
 		} catch (ProviderNotFoundException e) {
 			throw new IOException("Illegal file type");

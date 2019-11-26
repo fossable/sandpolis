@@ -113,7 +113,7 @@ public final class Client {
 			Environment.GEN.set(null);
 			Environment.TMP.set(null);
 		} else {
-			Environment.LIB.requireReadable();
+			Environment.LIB.set(Config.get("path.lib")).requireReadable();
 			Environment.LOG.set(Config.get("path.log")).requireWritable();
 			Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
 		}

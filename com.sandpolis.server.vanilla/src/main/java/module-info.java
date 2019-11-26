@@ -12,6 +12,7 @@ open module com.sandpolis.server.vanilla {
 	exports com.sandpolis.server.vanilla.store.user;
 	exports com.sandpolis.server.vanilla.stream;
 	exports com.sandpolis.server.vanilla;
+	exports com.sandpolis.server.vanilla.store.location;
 
 	requires com.fasterxml.jackson.databind;
 	requires com.google.common;

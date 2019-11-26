@@ -23,6 +23,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.zip.ZipFile;
 
@@ -53,7 +54,7 @@ public final class SoiUtil {
 	public static SO_Build readBuild(Path file) throws IOException {
 		Objects.requireNonNull(file);
 
-		try (FileSystem zip = FileSystems.newFileSystem(file)) {
+		try (FileSystem zip = FileSystems.newFileSystem(file, (ClassLoader) null)) {
 			try (var in = Files.newInputStream(zip.getPath("/soi/build.bin"))) {
 				return SO_Build.parseFrom(in);
 			}
@@ -79,7 +80,7 @@ public final class SoiUtil {
 	public static SO_DependencyMatrix readMatrix(Path file) throws IOException {
 		Objects.requireNonNull(file);
 
-		try (FileSystem zip = FileSystems.newFileSystem(file)) {
+		try (FileSystem zip = FileSystems.newFileSystem(file, (ClassLoader) null)) {
 			try (var in = Files.newInputStream(zip.getPath("/soi/matrix.bin"))) {
 				return SO_DependencyMatrix.parseFrom(in);
 			}
