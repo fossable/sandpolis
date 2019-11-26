@@ -98,18 +98,19 @@ class Overview: UIViewController {
 	/// Refresh the screenshot view
 	private func refreshScreenshot() {
 		screenshotProgress.startAnimating()
-		SandpolisUtil.connection.screenshot(profile.cvid).whenSuccess { rs in
-			if rs.rsScreenshot.data.count == 0 {
-				DispatchQueue.main.async {
-					self.screenshotProgress.stopAnimating()
-					self.screenshotMessage.isHidden = false
-				}
-			} else {
+		SandpolisUtil.connection.screenshot(profile.cvid).whenComplete { result in
+			switch result {
+			case .success(let rs as Net_DesktopMSG):
 				self.profile.screenshot = rs.rsScreenshot.data
 				DispatchQueue.main.async {
 					self.screenshotProgress.stopAnimating()
 					self.screenshot.image = UIImage(data: self.profile.screenshot!)
 					self.screenshotMessage.isHidden = true
+				}
+			default:
+				DispatchQueue.main.async {
+					self.screenshotProgress.stopAnimating()
+					self.screenshotMessage.isHidden = false
 				}
 			}
 		}

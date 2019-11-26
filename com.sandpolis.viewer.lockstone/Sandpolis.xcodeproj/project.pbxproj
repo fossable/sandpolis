@@ -119,6 +119,11 @@
 		AAC198FD22E40D27004361C5 /* FolderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198FC22E40D27004361C5 /* FolderCell.swift */; };
 		AAC4B69422BDE54500B0E354 /* SandpolisConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */; };
 		AACBF8D622F3A9750015DCE6 /* FolderUpCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACBF8D522F3A9750015DCE6 /* FolderUpCell.swift */; };
+		AADCAF10238A2BC200E6452E /* AboutTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCAF0F238A2BC200E6452E /* AboutTable.swift */; };
+		AADCAF12238A2CDA00E6452E /* VersionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCAF11238A2CDA00E6452E /* VersionCell.swift */; };
+		AADED2D1238C9E650099D067 /* SandpolisConnection+DesktopPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADED2D0238C9E650099D067 /* SandpolisConnection+DesktopPlugin.swift */; };
+		AADED2D3238CA2F30099D067 /* SandpolisConnection+ShellPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADED2D2238CA2F30099D067 /* SandpolisConnection+ShellPlugin.swift */; };
+		AADED2D5238CA3800099D067 /* SandpolisConnection+FilesysPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADED2D4238CA3800099D067 /* SandpolisConnection+FilesysPlugin.swift */; };
 		AAF113B922CC50C800987EAF /* MacroManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF113B822CC50C800987EAF /* MacroManager.swift */; };
 		AAF390E5230BC796008C9469 /* CvidRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF390E4230BC796008C9469 /* CvidRequestHandler.swift */; };
 		AAF390E7230BC7F1008C9469 /* ResponseHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF390E6230BC7F1008C9469 /* ResponseHandler.swift */; };
@@ -241,6 +246,11 @@
 		AAC198FC22E40D27004361C5 /* FolderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderCell.swift; sourceTree = "<group>"; };
 		AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisConnection.swift; sourceTree = "<group>"; };
 		AACBF8D522F3A9750015DCE6 /* FolderUpCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderUpCell.swift; sourceTree = "<group>"; };
+		AADCAF0F238A2BC200E6452E /* AboutTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutTable.swift; sourceTree = "<group>"; };
+		AADCAF11238A2CDA00E6452E /* VersionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionCell.swift; sourceTree = "<group>"; };
+		AADED2D0238C9E650099D067 /* SandpolisConnection+DesktopPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SandpolisConnection+DesktopPlugin.swift"; sourceTree = "<group>"; };
+		AADED2D2238CA2F30099D067 /* SandpolisConnection+ShellPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SandpolisConnection+ShellPlugin.swift"; sourceTree = "<group>"; };
+		AADED2D4238CA3800099D067 /* SandpolisConnection+FilesysPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SandpolisConnection+FilesysPlugin.swift"; sourceTree = "<group>"; };
 		AAF113B822CC50C800987EAF /* MacroManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroManager.swift; sourceTree = "<group>"; };
 		AAF390E4230BC796008C9469 /* CvidRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CvidRequestHandler.swift; sourceTree = "<group>"; };
 		AAF390E6230BC7F1008C9469 /* ResponseHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseHandler.swift; sourceTree = "<group>"; };
@@ -406,6 +416,7 @@
 		AA642E42230890C60027BEC2 /* MacroResults */ = {
 			isa = PBXGroup;
 			children = (
+				AA42524322E980380083F7F4 /* MacroResult.swift */,
 				AA72E0D72367D22E00C23D39 /* MacroResultCell.swift */,
 				AA69CCA022DE85CC00DFD721 /* MacroResultHeader.swift */,
 				AA69CCA422DE8F2700DFD721 /* MacroResultHeader.xib */,
@@ -424,6 +435,9 @@
 				AAF390E6230BC7F1008C9469 /* ResponseHandler.swift */,
 				AA615889233583CF0035622F /* ManagementHandler.swift */,
 				AA61588B23359FF50035622F /* ClientHandler.swift */,
+				AADED2D0238C9E650099D067 /* SandpolisConnection+DesktopPlugin.swift */,
+				AADED2D2238CA2F30099D067 /* SandpolisConnection+ShellPlugin.swift */,
+				AADED2D4238CA3800099D067 /* SandpolisConnection+FilesysPlugin.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -480,6 +494,7 @@
 		AA72362922D41AB7004EE888 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				AADCAF0E238A2B6500E6452E /* About */,
 				AA69CF82236284B0008101AA /* Terminal */,
 				AA899D2C2319E46E00E7C703 /* ServerCreator */,
 				AA0724A123121FE10087190F /* ClientScanner */,
@@ -552,7 +567,6 @@
 		AA88FB6D230C454700196B4B /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				AA42524322E980380083F7F4 /* MacroResult.swift */,
 				AA70158322D7C93900A1E4ED /* SandpolisProfile.swift */,
 				AA70158522D7C98D00A1E4ED /* SandpolisServer.swift */,
 				8533115522FEC11800D3B0F9 /* HostGroup.swift */,
@@ -716,6 +730,15 @@
 				AAA8BFC0237E53CE00BB4C85 /* msg_rd.pb.swift */,
 			);
 			path = net;
+			sourceTree = "<group>";
+		};
+		AADCAF0E238A2B6500E6452E /* About */ = {
+			isa = PBXGroup;
+			children = (
+				AADCAF0F238A2BC200E6452E /* AboutTable.swift */,
+				AADCAF11238A2CDA00E6452E /* VersionCell.swift */,
+			);
+			path = About;
 			sourceTree = "<group>";
 		};
 		B7C4FB1F962489AA256A0158 /* Pods */ = {
@@ -890,9 +913,11 @@
 				AAA8BFD6237E53CF00BB4C85 /* attribute.pb.swift in Sources */,
 				AAA8BFD5237E53CF00BB4C85 /* listener.pb.swift in Sources */,
 				AA8B1BAF22CB1AC0009DB0EC /* MacroEditor.swift in Sources */,
+				AADED2D1238C9E650099D067 /* SandpolisConnection+DesktopPlugin.swift in Sources */,
 				AA642E442308BC4D0027BEC2 /* ClientAnnotation.swift in Sources */,
 				AA899D2E2319E6A000E7C703 /* ServerCreator.swift in Sources */,
 				AA6CACED22DD432000041AF3 /* GroupPanelTable.swift in Sources */,
+				AADED2D3238CA2F30099D067 /* SandpolisConnection+ShellPlugin.swift in Sources */,
 				AA6CACEF22DD445000041AF3 /* GroupOverview.swift in Sources */,
 				ED5A421222E5284900EA3C98 /* LoginServer.swift in Sources */,
 				AAA8BFC9237E53CF00BB4C85 /* msg_server.pb.swift in Sources */,
@@ -915,10 +940,12 @@
 				AAA8BFC2237E53CF00BB4C85 /* msg_user.pb.swift in Sources */,
 				AAA8BFDC237E53CF00BB4C85 /* msg_filesys.pb.swift in Sources */,
 				AAF3F67123557362003EE9B1 /* ShellSession.swift in Sources */,
+				AADCAF10238A2BC200E6452E /* AboutTable.swift in Sources */,
 				AA61588E2335A4300035622F /* SandpolisUtil.swift in Sources */,
 				AA72E0D82367D22F00C23D39 /* MacroResultCell.swift in Sources */,
 				8E653C2222E6595D00BB8FEA /* MainTabController.swift in Sources */,
 				AAA8BFC4237E53CF00BB4C85 /* msg_generator.pb.swift in Sources */,
+				AADED2D5238CA3800099D067 /* SandpolisConnection+FilesysPlugin.swift in Sources */,
 				AA86F6DE23497866000C0B94 /* Step4.swift in Sources */,
 				8EAD841C22CBD80700B49D59 /* ClientMap.swift in Sources */,
 				ED5A421422E5289C00EA3C98 /* CreateAccount.swift in Sources */,
@@ -952,6 +979,7 @@
 				AAA8BFD2237E53CF00BB4C85 /* platform.pb.swift in Sources */,
 				AA3BDAAD23838FC600540564 /* UITextField+Icon.swift in Sources */,
 				AABFEE17237D359D0022C58D /* GroupActions.swift in Sources */,
+				AADCAF12238A2CDA00E6452E /* VersionCell.swift in Sources */,
 				AAA8BFC1237E53CE00BB4C85 /* msg_listener.pb.swift in Sources */,
 				AA6A75B8236154BB00AA1A4D /* Terminal.swift in Sources */,
 				AA70158922D7CAD800A1E4ED /* SandpolisStream.swift in Sources */,

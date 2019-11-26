@@ -147,16 +147,18 @@ public class SandpolisConnection {
 		}
 	}
 
-	/// A non-blocking method that sends a request and returns a response future.
+	/// A non-blocking method that sends a request and returns a response future. If the timeout elapses before a response is received, the response future fails.
 	///
-	/// - Parameter rq: The request message
+	/// - Parameters:
+	///   - rq: The request message
+	///   - timeout: The request timeout in seconds
 	/// - Returns: A response future
-	func request(_ rq: inout Net_MSG) -> EventLoopFuture<Net_MSG> {
+	func request(_ rq: inout Net_MSG, _ timeout: TimeInterval = 8.0) -> EventLoopFuture<Net_MSG> {
 		rq.id = SandpolisUtil.rq()
 		rq.from = cvid
 
 		let p = responseLoop.makePromise(of: Net_MSG.self)
-		responseHandler.register(rq.id, p)
+		responseHandler.register(rq.id, p, timeout)
 
 		_ = channel.writeAndFlush(rq)
 		return p.futureResult
@@ -185,205 +187,6 @@ public class SandpolisConnection {
 
 		os_log("Requesting login for username: %s", username)
 		return request(&rq)
-	}
-
-	/// Request a screenshot from the given client.
-	///
-	/// - Parameter target: The target client's CVID
-	/// - Returns: A response future
-	func screenshot(_ target: Int32) -> EventLoopFuture<Net_DesktopMSG> {
-		var rq = Net_MSG.with {
-			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_DesktopMSG.with {
-				$0.rqScreenshot = Net_RQ_Screenshot()
-			}, typePrefix: "com.sandpolis.plugin.desktop")
-		}
-
-		os_log("Requesting screenshot for client: %d", target)
-		return request(&rq).map { rs in
-			return try! Net_DesktopMSG.init(unpackingAny: rs.plugin)
-		}
-	}
-
-	/// Request a new remote desktop session from the given client.
-	///
-	/// - Parameter target: The target client's CVID
-	/// - Parameter receiver: The controller to receive events
-	/// - Returns: The stream
-	func remote_desktop(_ target: Int32, _ receiver: RemoteDesktop) -> SandpolisStream {
-		let stream = SandpolisStream(self, SandpolisUtil.stream())
-		stream.register { (m: Net_MSG) -> Void in
-			receiver.onEvent(try! Net_DesktopMSG.init(unpackingAny: m.plugin).evDesktopStream)
-		}
-		streams.append(stream)
-
-		var rq = Net_MSG.with {
-			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_DesktopMSG.with {
-				$0.rqDesktopStream = Net_RQ_DesktopStream.with {
-					$0.id = stream.id
-				}
-			}, typePrefix: "com.sandpolis.plugin.desktop")
-		}
-
-		os_log("Requesting remote desktop session for client: %d", target)
-		_ = request(&rq)
-		return stream
-	}
-
-	/// Request a new remote desktop session from the given client.
-	///
-	/// - Parameter target: The target client's CVID
-	/// - Parameter receiver: The controller to receive events
-	/// - Returns: The stream
-	func shell_session(_ target: Int32, _ receiver: ShellSession, _ shell: Net_Shell) -> SandpolisStream {
-		let stream = SandpolisStream(self, SandpolisUtil.stream())
-		stream.register { (m: Net_MSG) -> Void in
-			receiver.onEvent(try! Net_ShellMSG.init(unpackingAny: m.plugin).evShellStream)
-		}
-		streams.append(stream)
-
-		var rq = Net_MSG.with {
-			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.rqShellStream = Net_RQ_ShellStream.with {
-					$0.id = stream.id
-					$0.type = shell
-				}
-			}, typePrefix: "com.sandpolis.plugin.shell")
-		}
-
-		os_log("Requesting remote shell session for client: %d", target)
-		_ = request(&rq)
-		return stream
-	}
-
-	/// Request the compatible shells on the given client.
-	///
-	/// - Parameter target: The target client's CVID
-	/// - Returns: A response future
-	func shell_list(_ target: Int32) -> EventLoopFuture<Net_ShellMSG> {
-		var rq = Net_MSG.with {
-			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.rqListShells = Net_RQ_ListShells()
-			}, typePrefix: "com.sandpolis.plugin.shell")
-		}
-
-		os_log("Requesting shell list for client: %d", target)
-		return request(&rq).map { rs in
-			return try! Net_ShellMSG.init(unpackingAny: rs.plugin)
-		}
-	}
-
-	/// Request to shutdown the given client.
-	///
-	/// - Parameter target: The target client's CVID
-	/// - Returns: A response future
-	func poweroff(_ target: Int32) -> EventLoopFuture<Net_ShellMSG> {
-		var rq = Net_MSG.with {
-			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.rqPowerChange = Net_RQ_PowerChange.with {
-					$0.change = .poweroff
-				}
-			}, typePrefix: "com.sandpolis.plugin.shell")
-		}
-
-		os_log("Requesting poweroff for client: %d", target)
-		return request(&rq).map { rs in
-			return try! Net_ShellMSG.init(unpackingAny: rs.plugin)
-		}
-	}
-
-	/// Request to restart the given client.
-	///
-	/// - Parameter target: The target client's CVID
-	/// - Returns: A response future
-	func restart(_ target: Int32) -> EventLoopFuture<Net_ShellMSG> {
-		var rq = Net_MSG.with {
-			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.rqPowerChange = Net_RQ_PowerChange.with {
-					$0.change = .restart
-				}
-			}, typePrefix: "com.sandpolis.plugin.shell")
-		}
-
-		os_log("Requesting restart for client: %d", target)
-		return request(&rq).map { rs in
-			return try! Net_ShellMSG.init(unpackingAny: rs.plugin)
-		}
-	}
-
-	/// Request a file listing from the given client.
-	///
-	/// - Parameters:
-	///   - target: The target client's CVID
-	///   - path: The target path
-	///   - mtimes: Whether modification times will be returned
-	///   - sizes: Whether file sizes will be returned
-	/// - Returns: A response future
-	func fm_list(_ target: Int32, _ path: String, mtimes: Bool, sizes: Bool) -> EventLoopFuture<Net_FilesysMSG> {
-		var rq = Net_MSG.with {
-			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_FilesysMSG.with {
-				$0.rqFileListing = Net_RQ_FileListing.with {
-					$0.path = path
-					$0.options = Net_FsHandleOptions.with {
-						$0.mtime = mtimes
-						$0.size = sizes
-					}
-				}
-			}, typePrefix: "com.sandpolis.plugin.filesys")
-		}
-
-		os_log("Requesting file listing for client: %d, path: %s", target, path)
-		return request(&rq).map { rs in
-			return try! Net_FilesysMSG.init(unpackingAny: rs.plugin)
-		}
-	}
-
-	/// Delete a file on the given client.
-	///
-	/// - Parameter target: The target client's CVID
-	/// - Parameter path: The target file
-	/// - Returns: A response future
-	func fm_delete(_ target: Int32, _ path: String) -> EventLoopFuture<Net_FilesysMSG> {
-		var rq = Net_MSG.with {
-			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_FilesysMSG.with {
-				$0.rqFileDelete = Net_RQ_FileDelete.with {
-					$0.target = [path]
-				}
-			}, typePrefix: "com.sandpolis.plugin.filesys")
-		}
-
-		os_log("Requesting file deletion for client: %d, path: %s", target, path)
-		return request(&rq).map { rs in
-			return try! Net_FilesysMSG.init(unpackingAny: rs.plugin)
-		}
-	}
-
-	/// Request to execute the script on the given client.
-	///
-	/// - Parameter cvid: The target client's CVID
-	/// - Parameter script: The macro script
-	/// - Returns: A response future
-	func execute(_ target: Int32, _ script: String) -> EventLoopFuture<Net_ShellMSG> {
-		var rq = Net_MSG.with {
-			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.rqExecute = Net_RQ_Execute.with {
-					$0.command = script
-				}
-			}, typePrefix: "com.sandpolis.plugin.shell")
-		}
-
-		os_log("Requesting macro execution for client: %d, script: %s", target, script)
-		return request(&rq).map { rs in
-			return try! Net_ShellMSG.init(unpackingAny: rs.plugin)
-		}
 	}
 
 	/// Login to the connected server.

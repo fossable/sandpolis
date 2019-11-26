@@ -32,20 +32,25 @@ class ShellSession: UIViewController {
 	override func viewDidLoad() {
 
 		// Find compatible shells
-		SandpolisUtil.connection.shell_list(profile.cvid).whenSuccess { rs in
-			DispatchQueue.main.async {
-				for shell in rs.rsListShells.listing {
-					switch shell.type {
-					case .bash:
-						self.shellSelector.setEnabled(true, forSegmentAt: 2)
-					case .pwsh:
-						self.shellSelector.setEnabled(true, forSegmentAt: 0)
-					case .cmd:
-						self.shellSelector.setEnabled(true, forSegmentAt: 1)
-					default:
-						break
+		SandpolisUtil.connection.shell_list(profile.cvid).whenComplete { result in
+			switch result {
+			case .success(let rs as Net_ShellMSG):
+				DispatchQueue.main.async {
+					for shell in rs.rsListShells.listing {
+						switch shell.type {
+						case .bash:
+							self.shellSelector.setEnabled(true, forSegmentAt: 2)
+						case .pwsh:
+							self.shellSelector.setEnabled(true, forSegmentAt: 0)
+						case .cmd:
+							self.shellSelector.setEnabled(true, forSegmentAt: 1)
+						default:
+							break
+						}
 					}
 				}
+			default:
+				break
 			}
 		}
 	}

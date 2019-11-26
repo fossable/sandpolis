@@ -106,7 +106,7 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 		let OKAction = UIAlertAction(
 			title: "OK",
 			style: .default,
-			handler: { _ in self.performSegue(withIdentifier: "ToControl", sender: nil)
+			handler: { _ in self.performSegue(withIdentifier: "ShowControlPanelSegue", sender: nil)
 				view.glyphTintColor = .white
 			}
 		)
@@ -116,13 +116,11 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 	}
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-		let controlPanel = segue.destination as! ControlPanel
-
-		let selected = map.selectedAnnotations
-		if selected.count == 1, let pin = selected.first as? ClientAnnotation {
-			controlPanel.profile = pin.profile
-		} else {
-			// TODO error
+		if segue.identifier == "ShowControlPanelSegue",
+			let dest = segue.destination as? ControlPanel {
+			if let annotation = map.selectedAnnotations.first as? ClientAnnotation {
+				dest.profile = annotation.profile
+			}
 		}
 	}
 

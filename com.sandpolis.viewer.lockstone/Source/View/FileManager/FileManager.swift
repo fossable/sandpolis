@@ -142,11 +142,16 @@ class FileManager: UITableViewController {
 
 	/// Request a new listing for the current directory
 	private func requestListing() {
-		SandpolisUtil.connection.fm_list(profile.cvid, path.path, mtimes: true, sizes: true).whenSuccess { rs in
-			self.loadListing(rs)
+		SandpolisUtil.connection.fm_list(profile.cvid, path.path, mtimes: true, sizes: true).whenComplete { result in
+			switch result {
+			case .success(let rs as Net_FilesysMSG):
+				self.loadListing(rs)
 
-			DispatchQueue.main.async {
-				self.tableView.reloadData()
+				DispatchQueue.main.async {
+					self.tableView.reloadData()
+				}
+			default:
+				break
 			}
 		}
 	}

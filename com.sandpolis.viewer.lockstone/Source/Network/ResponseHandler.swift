@@ -22,8 +22,8 @@ import NIO
 final class ResponseHandler: ChannelInboundHandler {
 	typealias InboundIn = Net_MSG
 
-	/// A map of response IDs to response future
-	private var responseMap: [Int32: EventLoopPromise<Net_MSG>] = [:]
+	/// A map of response IDs
+	private var responseMap: [Int32: (EventLoopPromise<Net_MSG>, Timer?)] = [:]
 
 	/// An internal queue for synchronization
 	private let queue = DispatchQueue(label: "ResponseHandlerInternal")
@@ -34,12 +34,15 @@ final class ResponseHandler: ChannelInboundHandler {
 		if queue.sync(execute: {
 			if let p = responseMap.removeValue(forKey: rs.id) {
 				// This is a response
-				p.succeed(rs)
+				if let timer = p.1 {
+					timer.invalidate()
+				}
+				p.0.succeed(rs)
 				return false
 			}
 			return true
 		}) {
-			// Pass down pipeline
+			// Pass down the pipeline
 			context.fireChannelRead(data)
 		}
 	}
@@ -48,9 +51,28 @@ final class ResponseHandler: ChannelInboundHandler {
 	///
 	/// - Parameter id: The message id
 	/// - Parameter promise: The response promise
-	public func register(_ id: Int32, _ promise: EventLoopPromise<Net_MSG>) {
+	/// - Parameter timeout: The timeout
+	public func register(_ id: Int32, _ promise: EventLoopPromise<Net_MSG>, _ timeout: TimeInterval) {
 		queue.sync {
-			responseMap[id] = promise
+			if let p = self.responseMap.removeValue(forKey: id) {
+				// Cancel timer before overwriting
+				if let timer = p.1 {
+					timer.invalidate()
+				}
+				p.0.fail(NSError())
+			}
+
+			if timeout > 0 {
+				responseMap[id] = (promise, Timer.scheduledTimer(withTimeInterval: timeout, repeats: false) { _ in
+					self.queue.sync {
+						if let p = self.responseMap.removeValue(forKey: id) {
+							p.0.fail(NSError())
+						}
+					}
+				})
+			} else {
+				responseMap[id] = (promise, nil)
+			}
 		}
 	}
 }

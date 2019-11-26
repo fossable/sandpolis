@@ -59,7 +59,7 @@ class Login: UIViewController {
 				}
 				
 				// Set auth timer in case the automatic login fails
-				Timer(timeInterval: 4.0, repeats: false) { _ in
+				DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
 					Auth.auth().removeStateDidChangeListener(loginListener)
 					if Auth.auth().currentUser == nil {
 						self.progress.stopAnimating()
