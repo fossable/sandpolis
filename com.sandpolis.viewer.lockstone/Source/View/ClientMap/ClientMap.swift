@@ -73,61 +73,57 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 	func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
 		guard let annotation = annotation as? ClientAnnotation else { return nil }
 		var annotationView = MKMarkerAnnotationView()
-		let identifier = "ID"
-		if let dequedView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView {
+		if let dequedView = mapView.dequeueReusableAnnotationView(withIdentifier: "ClientAnnotation") as? MKMarkerAnnotationView {
 			annotationView = dequedView
 		} else {
-			annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+			annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: "ClientAnnotation")
 		}
 		annotationView.markerTintColor = UIColor.red
 		annotationView.glyphImage = UIImage(named: "Image")
 
-		annotationView.clusteringIdentifier = identifier
+		annotationView.clusteringIdentifier = "ClientAnnotation"
 
 		return annotationView
 	}
 
 	func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-		guard let view = view as? MKMarkerAnnotationView else { return }
-		view.glyphTintColor = .black
-
-		let controller = UIAlertController(
-
-			title: (view.annotation?.title)!,
-			message: "Go to Control Panel?",
-			preferredStyle: .actionSheet)
-
-		let cancelAction = UIAlertAction(
-			title: "Cancel",
-			style: .cancel,
-			handler: { (action) in view.glyphTintColor = .white }
-		)
-
-		let OKAction = UIAlertAction(
-			title: "OK",
-			style: .default,
-			handler: { _ in self.performSegue(withIdentifier: "ShowControlPanelSegue", sender: nil)
-				view.glyphTintColor = .white
-			}
-		)
-		controller.addAction(cancelAction)
-		controller.addAction(OKAction)
-		present(controller, animated: true, completion: nil)
+		
+		if let annotation = view.annotation as? MKClusterAnnotation {
+			let alert = UIAlertController(title: "\(annotation.memberAnnotations.count) hosts selected", message: nil, preferredStyle: .actionSheet)
+			alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+			alert.addAction(UIAlertAction(title: "Control Panel", style: .default) { _ in
+				self.performSegue(withIdentifier: "ShowGroupControlPanelSegue", sender: annotation.memberAnnotations.map({($0 as! ClientAnnotation).profile}))
+			})
+			present(alert, animated: true)
+		} else if let annotation = view.annotation as? ClientAnnotation {
+			let alert = UIAlertController(title: annotation.title!, message: nil, preferredStyle: .actionSheet)
+			alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+			alert.addAction(UIAlertAction(title: "Control Panel", style: .default) { _ in
+				self.performSegue(withIdentifier: "ShowControlPanelSegue", sender: annotation.profile)
+			})
+			present(alert, animated: true)
+		}
+		
 	}
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "ShowControlPanelSegue",
 			let dest = segue.destination as? ControlPanel {
-			if let annotation = map.selectedAnnotations.first as? ClientAnnotation {
-				dest.profile = annotation.profile
-			}
+			dest.profile = sender as? SandpolisProfile
+		} else if segue.identifier == "ShowGroupControlPanelSegue",
+			let dest = segue.destination as? GroupControlPanel {
+			dest.profiles = sender as? [SandpolisProfile]
 		}
 	}
 
 	func onHostUpdate(_ profile: SandpolisProfile) {
 		DispatchQueue.main.async {
 			let pin = self.map.annotations.filter { annotation in
-				return (annotation as! ClientAnnotation).profile.cvid == profile.cvid
+				if let annotation = annotation as? ClientAnnotation {
+					return annotation.profile.cvid == profile.cvid
+				} else {
+					return false
+				}
 			}.first
 
 			if profile.online {

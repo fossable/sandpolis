@@ -21,11 +21,16 @@ class OverviewTable: UITableViewController {
 
 	var profile: SandpolisProfile!
 
-	var info: [(String, [Attribute])] = [
+	/*var info: [(String, [Attribute])] = [
 		("System", [Attribute("/system/uptime", "Uptime")]),
 		("CPU", [Attribute("/cpu/_/model", "Model"), Attribute("/cpu/_/max_frequency", "Max Frequency")]),
 		("Memory", [Attribute("/memory/usage", "Usage"), Attribute("/memory/swap/usage", "Swap Usage")]),
 		("Processes", [Attribute("/process/count", "Number of Processes")])
+	]*/
+	
+	var info: [(String, [Attribute])] = [
+		("System", [Attribute("", "Operating System"), Attribute("", "Hostname")]),
+		("Location", [Attribute("", "Latitude"), Attribute("", "Longitude"), Attribute("", "City"), Attribute("", "Country"), Attribute("", "ISP")])
 	]
 
 	/// The table update timer
@@ -34,6 +39,28 @@ class OverviewTable: UITableViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		tableView.allowsSelection = false
+		
+		// Temporarily set values
+		switch profile.platform {
+		case .linux:
+			info[0].1[0].value = "Linux"
+		case .macos:
+			info[0].1[0].value = "macOS"
+		case .windows:
+			info[0].1[0].value = "Windows"
+		case .freebsd:
+			info[0].1[0].value = "FreeBSD"
+		default:
+			info[0].1[0].value = "Unknown OS"
+		}
+		info[0].1[1].value = profile.hostname
+		if let location = profile.location {
+			info[1].1[0].value = String(location.latitude)
+			info[1].1[1].value = String(location.longitude)
+			info[1].1[2].value = location.city
+			info[1].1[3].value = location.country
+			info[1].1[4].value = location.isp
+		}
 	}
 
 	override func viewWillAppear(_ animated: Bool) {

@@ -45,11 +45,22 @@ class MacroResults: UITableViewController, CollapsibleTableViewHeaderDelegate {
 		// Modify back button to skip the last view controller
 		navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Close", style: .plain, target: self, action: #selector(goBack))
 		navigationItem.hidesBackButton = true
+		
+		// Process the target shell type
+		let shell: Net_Shell
+		switch macro["type"] as! String {
+		case "powershell":
+			shell = .pwsh
+		case "cmd":
+			shell = .cmd
+		default:
+			shell = .bash
+		}
 
 		// Execute on all profiles
 		for profile in profiles {
 			let result = results[profiles.firstIndex(where: { $0.cvid == profile.cvid })!]
-			SandpolisUtil.connection.execute(profile.cvid, macro["script"] as! String).whenComplete { res in
+			SandpolisUtil.connection.execute(profile.cvid, shell, macro["script"] as! String).whenComplete { res in
 				switch res {
 				case .success(let rs as Net_ShellMSG):
 					result.output = rs.rsExecute.result

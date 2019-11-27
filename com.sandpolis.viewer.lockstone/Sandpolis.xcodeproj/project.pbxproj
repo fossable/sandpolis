@@ -115,6 +115,7 @@
 		AABF01EF23349ED300DEA0E4 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01EE23349ED300DEA0E4 /* SwiftProtobuf */; };
 		AABFEE17237D359D0022C58D /* GroupActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABFEE16237D359C0022C58D /* GroupActions.swift */; };
 		AABFEE19237D397F0022C58D /* GroupControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABFEE18237D397F0022C58D /* GroupControlPanel.swift */; };
+		AAC170DE238E0D6D0055FC9B /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = AAC170DD238E0D6D0055FC9B /* Charts */; };
 		AAC198F922E40CA6004361C5 /* FileCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198F822E40CA6004361C5 /* FileCell.swift */; };
 		AAC198FD22E40D27004361C5 /* FolderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198FC22E40D27004361C5 /* FolderCell.swift */; };
 		AAC4B69422BDE54500B0E354 /* SandpolisConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */; };
@@ -271,6 +272,7 @@
 				8E72F6D02300C70E000D621A /* MapKit.framework in Frameworks */,
 				8E72F6CE2300C46F000D621A /* CoreLocation.framework in Frameworks */,
 				AABF01EC23349DE300DEA0E4 /* NIOSSL in Frameworks */,
+				AAC170DE238E0D6D0055FC9B /* Charts in Frameworks */,
 				8C36F32D15727B1432C2C03A /* Pods_Sandpolis.framework in Frameworks */,
 				AA75D6DC2316DBCB002152DA /* StoreKit.framework in Frameworks */,
 				AABF01EF23349ED300DEA0E4 /* SwiftProtobuf in Frameworks */,
@@ -772,6 +774,7 @@
 				AABF01E823349D6800DEA0E4 /* NIO */,
 				AABF01EB23349DE300DEA0E4 /* NIOSSL */,
 				AABF01EE23349ED300DEA0E4 /* SwiftProtobuf */,
+				AAC170DD238E0D6D0055FC9B /* Charts */,
 			);
 			productName = Sandpolis;
 			productReference = AA81DD4F22BD8C5200024120 /* Sandpolis.app */;
@@ -810,6 +813,7 @@
 				AABF01E723349D6800DEA0E4 /* XCRemoteSwiftPackageReference "swift-nio" */,
 				AABF01EA23349DE300DEA0E4 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */,
 				AABF01ED23349ED300DEA0E4 /* XCRemoteSwiftPackageReference "swift-protobuf" */,
+				AAC170DC238E0D6D0055FC9B /* XCRemoteSwiftPackageReference "Charts" */,
 			);
 			productRefGroup = AA81DD5022BD8C5200024120 /* Products */;
 			projectDirPath = "";
@@ -1228,6 +1232,14 @@
 				minimumVersion = 1.6.0;
 			};
 		};
+		AAC170DC238E0D6D0055FC9B /* XCRemoteSwiftPackageReference "Charts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/danielgindi/Charts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.4.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1245,6 +1257,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AABF01ED23349ED300DEA0E4 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
 			productName = SwiftProtobuf;
+		};
+		AAC170DD238E0D6D0055FC9B /* Charts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAC170DC238E0D6D0055FC9B /* XCRemoteSwiftPackageReference "Charts" */;
+			productName = Charts;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

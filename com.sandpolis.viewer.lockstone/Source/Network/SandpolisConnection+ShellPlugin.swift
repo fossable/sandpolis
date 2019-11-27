@@ -122,14 +122,16 @@ extension SandpolisConnection {
 	/// Request to execute the script on the given client.
 	///
 	/// - Parameter cvid: The target client's CVID
+	/// - Parameter shell: The target shell type
 	/// - Parameter script: The macro script
 	/// - Parameter timeout: The execution timeout in seconds
 	/// - Returns: A response future
-	func execute(_ target: Int32, _ script: String, _ timeout: TimeInterval = 0) -> EventLoopFuture<Any> {
+	func execute(_ target: Int32, _ shell: Net_Shell, _ script: String, _ timeout: TimeInterval = 0) -> EventLoopFuture<Any> {
 		var rq = Net_MSG.with {
 			$0.to = target
 			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
 				$0.rqExecute = Net_RQ_Execute.with {
+					$0.type = shell
 					$0.command = script
 				}
 			}, typePrefix: "com.sandpolis.plugin.shell")
