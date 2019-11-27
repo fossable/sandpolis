@@ -71,9 +71,9 @@ public class SockFuture extends DefaultPromise<Sock> {
 
 			future.channel().attr(ChannelConstant.SOCK).get().getHandshakeFuture().addListener(cvidFuture -> {
 				if (cvidFuture.isSuccess()) {
-					setSuccess(future.channel().attr(ChannelConstant.SOCK).get());
+					SockFuture.this.setSuccess(future.channel().attr(ChannelConstant.SOCK).get());
 				} else {
-					setFailure(cvidFuture.cause());
+					SockFuture.this.setFailure(cvidFuture.cause());
 				}
 			});
 		});

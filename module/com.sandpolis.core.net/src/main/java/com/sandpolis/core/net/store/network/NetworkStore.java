@@ -79,7 +79,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	private int preferredServer;
 
 	@Subscribe
-	private void onSockLost(SockLostEvent event) {
+	private synchronized void onSockLost(SockLostEvent event) {
 		if (network.nodes().contains(Core.cvid()) && network.nodes().contains(event.get().getRemoteCvid()))
 			network.edgeConnecting(Core.cvid(), event.get().getRemoteCvid()).ifPresent(network::removeEdge);
 
@@ -95,7 +95,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	}
 
 	@Subscribe
-	private void onSockEstablished(SockEstablishedEvent event) {
+	private synchronized void onSockEstablished(SockEstablishedEvent event) {
 		network.addNode(event.get().getRemoteCvid());
 		// TODO add edge
 
@@ -107,7 +107,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	}
 
 	@Subscribe
-	private void onCvidChanged(CvidChangedEvent event) {
+	private synchronized void onCvidChanged(CvidChangedEvent event) {
 		network.addNode(event.get());
 	}
 
@@ -129,7 +129,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 		preferredServer = cvid;
 	}
 
-	public int getPreferredServer() {
+	public synchronized int getPreferredServer() {
 		if (!network.nodes().contains(preferredServer))
 			// Choose a server at random
 			preferredServer = network.nodes().stream().filter(cvid -> CvidUtil.extractInstance(cvid) == Instance.SERVER)
@@ -145,7 +145,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 *
 	 * @param delta The delta event that describes the change
 	 */
-	public void updateNetwork(EV_NetworkDelta delta) {
+	public synchronized void updateNetwork(EV_NetworkDelta delta) {
 		for (NodeAdded na : delta.getNodeAddedList())
 			network.addNode(na.getCvid());
 		for (NodeRemoved nr : delta.getNodeRemovedList())
@@ -163,7 +163,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param cvid The CVID
 	 * @return A set of all directly connected CVIDs
 	 */
-	public Set<Integer> getDirect(int cvid) {
+	public synchronized Set<Integer> getDirect(int cvid) {
 		return network.adjacentNodes(cvid);
 	}
 
@@ -173,7 +173,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param cvid The CVID
 	 * @return A set of all links involving the CVID
 	 */
-	public Set<SockLink> getDirectLinks(int cvid) {
+	public synchronized Set<SockLink> getDirectLinks(int cvid) {
 		return network.incidentEdges(cvid);
 	}
 
@@ -184,7 +184,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param cvid2 The second CVID
 	 * @return A set of all links between the two CVIDs
 	 */
-	public Set<SockLink> getDirectLinks(int cvid1, int cvid2) {
+	public synchronized Set<SockLink> getDirectLinks(int cvid1, int cvid2) {
 		return network.edgesConnecting(cvid1, cvid2);
 	}
 
@@ -217,7 +217,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param message The message
 	 * @return The next hop
 	 */
-	public int route(MSG message) {
+	public synchronized int route(MSG message) {
 		if (network.adjacentNodes(Core.cvid()).contains(message.getTo())) {
 			ConnectionStore.get(message.getTo()).get().send(message);
 			return message.getTo();
@@ -258,7 +258,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	}
 
 	// TODO temporary
-	private int findHop(MSG.Builder message) {
+	private synchronized int findHop(MSG.Builder message) {
 		if (network.adjacentNodes(Core.cvid()).contains(message.getTo()))
 			return message.getTo();
 

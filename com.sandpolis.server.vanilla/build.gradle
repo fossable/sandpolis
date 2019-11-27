@@ -86,7 +86,7 @@ mainClassName = 'com.sandpolis.server.vanilla/com.sandpolis.server.vanilla.Main'
 
 docker {
 	javaApplication {
-		baseImage = 'openjdk:12.0.2'
+		baseImage = 'openjdk:13.0.1-slim'
 		maintainer = 'tcc@sandpolis.com'
 		tag = "sandpolis/sandpolis-server:${project.version}"
 		ports = [8768]
