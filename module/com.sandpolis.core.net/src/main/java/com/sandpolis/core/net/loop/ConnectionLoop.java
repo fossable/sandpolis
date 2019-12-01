@@ -17,29 +17,28 @@
  ******************************************************************************/
 package com.sandpolis.core.net.loop;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
-
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-
+import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.future.SockFuture;
+import com.sandpolis.core.proto.util.Generator.LoopConfig;
+import com.sandpolis.core.proto.util.Generator.NetworkTarget;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelOption;
+import io.netty.util.concurrent.EventExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.net.ChannelConstant;
-import com.sandpolis.core.net.future.SockFuture;
-import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.util.Generator.LoopConfig;
-import com.sandpolis.core.proto.util.Generator.NetworkTarget;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.util.concurrent.EventExecutor;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 /**
  * A {@link ConnectionLoop} makes repeated connection attempts to a list of
  * {@link NetworkTarget}s until a connection is made or the maximum iteration
  * count has been reached. The connection attempt interval can be configured to
- * slowly back off.
+ * slowly ease up on a host that is consistently refusing connections.
  *
  * @author cilki
  * @since 5.0.0
@@ -51,23 +50,33 @@ public final class ConnectionLoop implements Runnable {
 	/**
 	 * The loop configuration.
 	 */
-	private LoopConfig config;
-
-	/**
-	 * The loop cycler which determines the wait interval.
-	 */
-	private LoopCycle cycler;
+	private final LoopConfig config;
 
 	/**
 	 * The {@link Bootstrap} which will be used for each connection attempt.
 	 */
-	private Bootstrap bootstrap;
+	private final Bootstrap bootstrap;
 
 	/**
 	 * The {@link SockFuture} that will be notified by a successful connection
-	 * attempt.
+	 * attempt or when the maximum iteration count is reached.
 	 */
-	private SockFuture future;
+	private final SockFuture future;
+
+	/**
+	 * The exponential function that calculates the connection cooldown.
+	 */
+	private final Supplier<Integer> exponential;
+
+	/**
+	 * The current connection cooldown.
+	 */
+	private int cooldown;
+
+	/**
+	 * The current iteration ordinal.
+	 */
+	private int iteration;
 
 	/**
 	 * Create a new single-iteration {@link ConnectionLoop}.
@@ -78,7 +87,7 @@ public final class ConnectionLoop implements Runnable {
 	 */
 	public ConnectionLoop(String address, int port, int timeout, Bootstrap bootstrap) {
 		this(LoopConfig.newBuilder().addTarget(NetworkTarget.newBuilder().setAddress(address).setPort(port))
-				.setTimeout(timeout).setMaxTimeout(timeout).setMaxIterations(1), bootstrap);
+				.setTimeout(timeout).setIterationLimit(1), bootstrap);
 	}
 
 	/**
@@ -96,53 +105,59 @@ public final class ConnectionLoop implements Runnable {
 	 * @param config The configuration object
 	 */
 	public ConnectionLoop(LoopConfig config, Bootstrap bootstrap) {
+		checkArgument(config.getIterationLimit() >= 0);
+		checkArgument(config.getCooldown() >= 0);
+		checkArgument(config.getTimeout() > 0);
+
 		this.config = Objects.requireNonNull(config);
 		this.bootstrap = Objects.requireNonNull(bootstrap);
 
-		if (config.getTimeoutFlatness() == 0)
-			this.cycler = new LoopCycle(config.getTimeout(), config.getMaxTimeout());
-		else
-			this.cycler = new LoopCycle(config.getTimeout(), config.getMaxTimeout(), config.getTimeoutFlatness());
-
+		// Set channel options
 		bootstrap.attr(ChannelConstant.STRICT_CERTS, config.getStrictCerts());
+		bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getTimeout());
 
-		future = new SockFuture((EventExecutor) ThreadStore.get("temploop"));
+		// Build a SockFuture without a ChannelFuture
+		this.future = new SockFuture((EventExecutor) ThreadStore.get("net.connection.loop"));
+
+		// Setup cooldown supplier
+		if (config.getCooldownConstant() == 0 || config.getCooldownLimit() <= config.getCooldown()) {
+			this.exponential = config::getCooldown;
+		} else {
+			this.exponential = () -> {
+				return (int) Math.min(config.getCooldownLimit(), config.getCooldown() * Math.pow(config.getCooldown(), iteration / config.getCooldownConstant()));
+			};
+		}
+		this.cooldown = config.getCooldown();
 	}
 
 	@Override
 	public void run() {
 
 		try {
-			while (cycler.getIterations() < config.getMaxIterations() || config.getMaxIterations() == 0) {
+			while (iteration < config.getIterationLimit() || config.getIterationLimit() == 0) {
 
-				int timeout = cycler.nextTimeout() / config.getTargetCount();
 				for (NetworkTarget n : config.getTargetList()) {
-					long time = System.currentTimeMillis();
 
-					SockFuture future = new SockFuture(bootstrap.remoteAddress(n.getAddress(), n.getPort()).connect());
-					future.await(timeout, TimeUnit.MILLISECONDS);
-
-					Sock sock = future.getNow();
-					if (future.isSuccess() && sock != null) {
-						// Check connection state
-						if (sock.isConnected()) {
-							this.future.setSuccess(sock);
-							return;
-						}
+					SockFuture connect = new SockFuture(bootstrap.remoteAddress(n.getAddress(), n.getPort()).connect());
+					try {
+						connect.sync();
+					} catch (Exception e) {
+						log.debug("Attempt failed: {}", e.getMessage());
 					}
 
-					future.cancel(true);
+					if (connect.isSuccess()) {
+						this.future.setSuccess(connect.get());
+						return;
+					}
 
-					time = System.currentTimeMillis() - time;
-					if (time < timeout)
-						Thread.sleep(timeout - time);
+					iteration++;
+					cooldown = exponential.get();
+					Thread.sleep(cooldown);
 				}
 			}
 
 			// Maximum iteration count exceeded
 			future.setSuccess(null);
-		} catch (InterruptedException e) {
-			future.setFailure(e);
 		} catch (Exception e) {
 			future.setFailure(e);
 		}
@@ -154,7 +169,7 @@ public final class ConnectionLoop implements Runnable {
 	 * @return A {@link SockFuture}
 	 */
 	public SockFuture start() {
-		return start((ExecutorService) ThreadStore.get("temploop"));
+		return start((ExecutorService) ThreadStore.get("net.connection.loop"));
 	}
 
 	/**

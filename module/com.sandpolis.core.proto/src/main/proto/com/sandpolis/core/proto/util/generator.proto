@@ -30,10 +30,10 @@ option optimize_for = CODE_SIZE;
  */
 message NetworkTarget {
 
-    // The network address
+    // The DNS or IP address
     string address = 1;
 
-    // The numeric port
+    // The port number
     int32 port = 2;
 }
 
@@ -128,24 +128,27 @@ message GenReport {
  */
 message LoopConfig {
 
-    // The list of network targets to attempt
+    // One or more network targets
     repeated NetworkTarget target = 1;
 
-    // Indicates whether strict certificate checking will be enabled
+    // Indicates whether server certificates will be strictly enforced
     bool strict_certs = 2;
 
-    // The maximum number of conenction iterations to attempt in the worst case
-    int32 max_iterations = 3;
+    // The maximum number of connection iterations to attempt. A value of 0 indicates unlimited.
+    int32 iteration_limit = 3;
 
-    // The initial connection timeout
+    // The connection timeout in milliseconds
     int32 timeout = 4;
 
-    // The maximum connection timeout
-    int32 max_timeout = 5;
+    // The time to wait after an unsuccessful connection attempt in milliseconds
+    int32 cooldown = 5;
 
-    // The timeout smoothing factor which determines how quickly the maximum
-    // timeout is reached
-    double timeout_flatness = 6;
+    // The maximum cooldown value. A value less than or equal to the initial cooldown disables cooldown growth.
+    int32 cooldown_limit = 6;
+
+    // The time in milliseconds required to increase the cooldown by one factor of its initial value. Set high to
+    // reduce the speed at which the maximum cooldown is reached. A value of 0 disables cooldown growth entirely.
+    double cooldown_constant = 7;
 }
 
 /**

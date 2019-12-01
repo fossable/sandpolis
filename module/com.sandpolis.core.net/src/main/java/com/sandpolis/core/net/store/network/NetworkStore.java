@@ -22,6 +22,7 @@ import static com.sandpolis.core.net.store.connection.ConnectionStore.Connection
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +86,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 		// Remove nodes that are now disconnected
 		network.nodes().stream().filter(cvid -> Core.cvid() != cvid).filter(cvid -> network.degree(cvid) == 0)
-				.forEach(network::removeNode);
+				.collect(Collectors.toUnmodifiableList()).forEach(network::removeNode);
 
 		// See if that was the last connection to a server
 		if (event.get().getRemoteInstance() == Instance.SERVER) {

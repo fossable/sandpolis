@@ -348,7 +348,7 @@ public final class Server {
 										"/home/cilki/.sandpolis"))
 								.setNetwork(NetworkConfig
 										.newBuilder().setLoopConfig(LoopConfig.newBuilder().setTimeout(5000)
-												.setMaxTimeout(5000).setStrictCerts(false).addTarget(NetworkTarget
+												.setCooldown(5000).addTarget(NetworkTarget
 														.newBuilder().setAddress("10.0.1.128").setPort(8768)))))
 						.build());
 		generator.run();

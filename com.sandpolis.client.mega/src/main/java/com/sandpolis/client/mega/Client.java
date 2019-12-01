@@ -130,7 +130,7 @@ public final class Client {
 			config.ephemeral();
 			config.defaults.put("net.exelet", new NioEventLoopGroup(2).next());
 			config.defaults.put("net.connection.outgoing", new NioEventLoopGroup(2).next());
-			config.defaults.put("temploop", new NioEventLoopGroup(2).next());
+			config.defaults.put("net.connection.loop", new NioEventLoopGroup(2).next());
 			config.defaults.put("net.message.incoming", new UnorderedThreadPoolEventExecutor(2));
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 			config.defaults.put("attributes", Executors.newScheduledThreadPool(1));
