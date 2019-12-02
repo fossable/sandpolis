@@ -43,24 +43,33 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 	}
 
 	public Future<LocationOuterClass.Location> queryAsync(String ip) {
-		// Check for private IP
+		// Private IPs should not be resolved
 		if (ValidationUtil.privateIP(ip)) {
 			return CompletableFuture.completedFuture(null);
 		}
 
 		// Check cache
-		var location = cache.getIfPresent(ip);
-		if (location != null)
-			return CompletableFuture.completedFuture(location);
+		synchronized (cache) {
+			var location = cache.getIfPresent(ip);
+			if (location != null)
+				return CompletableFuture.completedFuture(location);
+		}
 
-		return service.query(ip, service.attrMap.keySet());
+		return service.query(ip, service.attrMap.keySet()).thenApply(location -> {
+			if (location != null) {
+				synchronized (cache) {
+					cache.put(ip, location);
+				}
+			}
+			return location;
+		});
 	}
 
 	public LocationOuterClass.Location query(String ip, long timeout) {
 		try {
 			return queryAsync(ip).get(timeout, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Failed to query location service", e);
 			return null;
 		}
 	}

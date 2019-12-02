@@ -29,7 +29,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * A geolocation service resolves a set of location attributes for an IP
@@ -82,7 +82,7 @@ public abstract class AbstractGeolocationService {
 
 	private HttpClient client = HttpClient.newHttpClient();
 
-	public Future<Location> query(String ip, Set<Integer> fields) {
+	public CompletableFuture<Location> query(String ip, Set<Integer> fields) {
 		var url = URI.create(buildQuery(ip, fields));
 		log.debug("Query URL: {}", url);
 
