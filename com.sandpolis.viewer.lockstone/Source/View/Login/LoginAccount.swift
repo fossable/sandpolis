@@ -54,7 +54,7 @@ class LoginAccount: UIViewController {
 	}
 
 	@IBAction func login(_ sender: Any) {
-		AppDelegate.ensureFirebase()
+		AppDelegate.requireFirebase()
 		Auth.auth().signIn(withEmail: self.email.text!, password: self.password.text!) { (user, error) in
 			if error != nil {
 				let alert = UIAlertController(title: "Sign In Failed", message: error?.localizedDescription, preferredStyle: .alert)
@@ -80,7 +80,7 @@ class LoginAccount: UIViewController {
 		}
 		alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak alert] _ in
 			if let email = alert?.textFields?[0].text {
-				AppDelegate.ensureFirebase()
+				AppDelegate.requireFirebase()
 				Auth.auth().sendPasswordReset(withEmail: email) { _ in
 					// TODO
 				}

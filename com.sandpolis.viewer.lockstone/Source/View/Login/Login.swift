@@ -50,7 +50,7 @@ class Login: UIViewController {
 			switch UserDefaults.standard.string(forKey: "login.type") {
 			case "cloud":
 				// Set auth listener
-				AppDelegate.ensureFirebase()
+				AppDelegate.requireFirebase()
 				let loginListener = Auth.auth().addStateDidChangeListener() { auth, user in
 					if user != nil {
 						self.progress.stopAnimating()
