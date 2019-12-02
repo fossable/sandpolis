@@ -19,6 +19,7 @@ import NIO
 import NIOSSL
 import CryptoSwift
 import SwiftProtobuf
+import SwiftEventBus
 import os
 
 /// Represents a connection to a Sandpolis server
@@ -57,12 +58,6 @@ public class SandpolisConnection {
 
 	/// Whether the CVID handshake has completed successfully
 	var handshakeCompleted = false
-
-	/// A list of profile listeners
-	private var profileListeners = [(SandpolisProfile) -> Void]()
-
-	/// A list of disconnection listeners
-	private var disconnectListeners = [() -> Void]()
 
 	/// The response handler
 	private var responseHandler = ResponseHandler()
@@ -106,13 +101,13 @@ public class SandpolisConnection {
 				])
 		}
 
-		let connect = bootstrap.connect(host: server, port: port)
-
-		connect.whenFailure { error in
-			self.connectionPromise.fail(error)
-		}
-		connect.whenSuccess { ch in
-			self.channel = ch
+		bootstrap.connect(host: server, port: port).whenComplete { result in
+			switch result {
+			case .success(let ch):
+				self.channel = ch
+			case .failure(let error):
+				self.connectionPromise.fail(error)
+			}
 		}
 	}
 
@@ -131,20 +126,12 @@ public class SandpolisConnection {
 
 	/// Disconnect from the current server.
 	func disconnect() {
-		DispatchQueue.main.async {
-			for listener in self.disconnectListeners {
-				listener()
-			}
-		}
+		SwiftEventBus.post("connectionLostEvent")
 
 		_ = channel.close()
 
-		do {
-			// Shutdown loop group
-			try loopGroup.syncShutdownGracefully()
-		} catch {
-			// Ignore
-		}
+		// Shutdown loop group
+		loopGroup.shutdownGracefully { _ in}
 	}
 
 	/// A non-blocking method that sends a request and returns a response future. If the timeout elapses before a response is received, the response future fails.
@@ -233,16 +220,12 @@ public class SandpolisConnection {
 				}
 
 				self.profiles.append(profile)
-				for handler in self.profileListeners {
-					handler(profile)
-				}
+				SwiftEventBus.post("profileOnlineEvent", sender: profile)
 			} else {
 				if let index = self.profiles.firstIndex(where: { $0.cvid == ev.cvid }) {
 					let profile = self.profiles.remove(at: index)
 					profile.online = ev.online
-					for handler in self.profileListeners {
-						handler(profile)
-					}
+					SwiftEventBus.post("profileOfflineEvent", sender: profile)
 				}
 			}
 		}
@@ -255,19 +238,5 @@ public class SandpolisConnection {
 		}
 
 		return request(&rq)
-	}
-
-	/// Register the given handler to receive profile updates.
-	///
-	/// - Parameter handler: The profile handler
-	func registerHostUpdates(_ handler: @escaping (SandpolisProfile) -> Void) {
-		profileListeners.append(handler)
-	}
-
-	/// Register the given handler to receive disconnection updates.
-	///
-	/// - Parameter handler: The disconnect handler
-	func registerDisconnectHandler(_ handler: @escaping () -> Void) {
-		disconnectListeners.append(handler)
 	}
 }

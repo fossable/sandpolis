@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8533115622FEC11800D3B0F9 /* HostGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8533115522FEC11800D3B0F9 /* HostGroup.swift */; };
-		8533115A2300183600D3B0F9 /* HostGroupHeaderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853311592300183600D3B0F9 /* HostGroupHeaderCell.swift */; };
 		8542D3FE22D66E0300F56F70 /* ServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8542D3FD22D66E0300F56F70 /* ServerManager.swift */; };
 		8542D40022D69CBF00F56F70 /* ClientList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8542D3FF22D69CBF00F56F70 /* ClientList.swift */; };
 		8542D40622D6A95E00F56F70 /* AddServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8542D40522D6A95E00F56F70 /* AddServer.swift */; };
@@ -119,6 +117,7 @@
 		AAC198F922E40CA6004361C5 /* FileCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198F822E40CA6004361C5 /* FileCell.swift */; };
 		AAC198FD22E40D27004361C5 /* FolderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC198FC22E40D27004361C5 /* FolderCell.swift */; };
 		AAC4B69422BDE54500B0E354 /* SandpolisConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */; };
+		AAC71BA423939E0B00E6C901 /* SwiftEventBus in Frameworks */ = {isa = PBXBuildFile; productRef = AAC71BA323939E0B00E6C901 /* SwiftEventBus */; };
 		AACBF8D622F3A9750015DCE6 /* FolderUpCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACBF8D522F3A9750015DCE6 /* FolderUpCell.swift */; };
 		AADCAF10238A2BC200E6452E /* AboutTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCAF0F238A2BC200E6452E /* AboutTable.swift */; };
 		AADCAF12238A2CDA00E6452E /* VersionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCAF11238A2CDA00E6452E /* VersionCell.swift */; };
@@ -136,8 +135,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		8533115522FEC11800D3B0F9 /* HostGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostGroup.swift; sourceTree = "<group>"; };
-		853311592300183600D3B0F9 /* HostGroupHeaderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostGroupHeaderCell.swift; sourceTree = "<group>"; };
 		8542D3FD22D66E0300F56F70 /* ServerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerManager.swift; sourceTree = "<group>"; };
 		8542D3FF22D69CBF00F56F70 /* ClientList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientList.swift; sourceTree = "<group>"; };
 		8542D40522D6A95E00F56F70 /* AddServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddServer.swift; sourceTree = "<group>"; };
@@ -274,6 +271,7 @@
 				AABF01EC23349DE300DEA0E4 /* NIOSSL in Frameworks */,
 				AAC170DE238E0D6D0055FC9B /* Charts in Frameworks */,
 				8C36F32D15727B1432C2C03A /* Pods_Sandpolis.framework in Frameworks */,
+				AAC71BA423939E0B00E6C901 /* SwiftEventBus in Frameworks */,
 				AA75D6DC2316DBCB002152DA /* StoreKit.framework in Frameworks */,
 				AABF01EF23349ED300DEA0E4 /* SwiftProtobuf in Frameworks */,
 				AABF01E923349D6800DEA0E4 /* NIO in Frameworks */,
@@ -354,7 +352,6 @@
 		AA642E3B23088E6E0027BEC2 /* ClientList */ = {
 			isa = PBXGroup;
 			children = (
-				853311592300183600D3B0F9 /* HostGroupHeaderCell.swift */,
 				85A2F87A22DAC2F300B2FD7D /* HostCell.swift */,
 				8542D3FF22D69CBF00F56F70 /* ClientList.swift */,
 			);
@@ -571,7 +568,6 @@
 			children = (
 				AA70158322D7C93900A1E4ED /* SandpolisProfile.swift */,
 				AA70158522D7C98D00A1E4ED /* SandpolisServer.swift */,
-				8533115522FEC11800D3B0F9 /* HostGroup.swift */,
 				AA677D1B235D5683001BE400 /* Attribute.swift */,
 				AAB6D956235FEA6300FED79B /* Document.swift */,
 			);
@@ -775,6 +771,7 @@
 				AABF01EB23349DE300DEA0E4 /* NIOSSL */,
 				AABF01EE23349ED300DEA0E4 /* SwiftProtobuf */,
 				AAC170DD238E0D6D0055FC9B /* Charts */,
+				AAC71BA323939E0B00E6C901 /* SwiftEventBus */,
 			);
 			productName = Sandpolis;
 			productReference = AA81DD4F22BD8C5200024120 /* Sandpolis.app */;
@@ -814,6 +811,7 @@
 				AABF01EA23349DE300DEA0E4 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */,
 				AABF01ED23349ED300DEA0E4 /* XCRemoteSwiftPackageReference "swift-protobuf" */,
 				AAC170DC238E0D6D0055FC9B /* XCRemoteSwiftPackageReference "Charts" */,
+				AAC71BA223939E0B00E6C901 /* XCRemoteSwiftPackageReference "SwiftEventBus" */,
 			);
 			productRefGroup = AA81DD5022BD8C5200024120 /* Products */;
 			projectDirPath = "";
@@ -971,7 +969,6 @@
 				AAAC2FD623550D5900425E9A /* Actions.swift in Sources */,
 				AAAC2FD42355012000425E9A /* ControlPanel.swift in Sources */,
 				AAC4B69422BDE54500B0E354 /* SandpolisConnection.swift in Sources */,
-				8533115622FEC11800D3B0F9 /* HostGroup.swift in Sources */,
 				ED1FB93F22D83F4200D35565 /* LoginAccount.swift in Sources */,
 				AAA8BFCB237E53CF00BB4C85 /* msg_ping.pb.swift in Sources */,
 				AA752B4622F2340100E90B54 /* BackgroundView.swift in Sources */,
@@ -992,7 +989,6 @@
 				AAA8BFDD237E53CF00BB4C85 /* message_filesys.pb.swift in Sources */,
 				AAA8BFC5237E53CF00BB4C85 /* msg_network.pb.swift in Sources */,
 				AAA591B92384CCEF00A2893A /* UIViewController+Login.swift in Sources */,
-				8533115A2300183600D3B0F9 /* HostGroupHeaderCell.swift in Sources */,
 				AAA8BFE1237E53CF00BB4C85 /* msg_rd.pb.swift in Sources */,
 				AACBF8D622F3A9750015DCE6 /* FolderUpCell.swift in Sources */,
 				AA81DD5322BD8C5200024120 /* AppDelegate.swift in Sources */,
@@ -1240,6 +1236,14 @@
 				minimumVersion = 3.4.0;
 			};
 		};
+		AAC71BA223939E0B00E6C901 /* XCRemoteSwiftPackageReference "SwiftEventBus" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/cesarferreira/SwiftEventBus";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1262,6 +1266,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AAC170DC238E0D6D0055FC9B /* XCRemoteSwiftPackageReference "Charts" */;
 			productName = Charts;
+		};
+		AAC71BA323939E0B00E6C901 /* SwiftEventBus */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAC71BA223939E0B00E6C901 /* XCRemoteSwiftPackageReference "SwiftEventBus" */;
+			productName = SwiftEventBus;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

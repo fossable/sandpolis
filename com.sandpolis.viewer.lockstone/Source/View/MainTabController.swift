@@ -16,6 +16,7 @@
 //                                                                            //
 //****************************************************************************//
 import UIKit
+import SwiftEventBus
 
 class MainTabController: UITabBarController {
 
@@ -33,6 +34,22 @@ class MainTabController: UITabBarController {
 				self.selectedIndex = 1
 			default:
 				break
+			}
+		}
+
+		SwiftEventBus.unregister(self)
+		SwiftEventBus.onMainThread(self, name: "connectionLostEvent") { _ in
+			SwiftEventBus.unregister(self)
+			if UserDefaults.standard.string(forKey: "login.type") == "direct" {
+				let alert = UIAlertController(title: "Connection lost", message: "Your connection to the server has been lost.", preferredStyle: .alert)
+				//alert.addAction(UIAlertAction(title: "Reconnect", style: .default) { _ in
+				//})
+				alert.addAction(UIAlertAction(title: "Exit", style: .cancel) { _ in
+					self.performSegue(withIdentifier: "UnwindLoginSegue", sender: self)
+				})
+				self.present(alert, animated: true)
+			} else {
+				self.performSegue(withIdentifier: "UnwindServerSegue", sender: self)
 			}
 		}
 	}

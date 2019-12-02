@@ -43,7 +43,6 @@ class ServerManager: UITableViewController {
 			}
 			self.tableView.reloadData()
 			self.refreshServerStates()
-			//self.refreshServerLocations()
 		})
 
 		// Setup refresh control
@@ -96,6 +95,7 @@ class ServerManager: UITableViewController {
 				login(address: server.address, username: server.username, password: server.password) { connection in
 					if let connection = connection {
 						SandpolisUtil.connection = connection
+						connection.openProfileStream()
 						DispatchQueue.main.async {
 							self.performSegue(withIdentifier: "ShowHostSegue", sender: server)
 						}

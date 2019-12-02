@@ -13,7 +13,7 @@
             <objects>
                 <viewController title="CreateAccount" id="jpL-Bl-Icn" customClass="CreateAccount" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" opaque="NO" contentMode="scaleToFill" id="WPG-e0-b8n">
-                        <rect key="frame" x="0.0" y="0.0" width="331" height="440"/>
+                        <rect key="frame" x="0.0" y="0.0" width="331" height="625"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Enter an email address" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="n6Q-5C-6Qh">
@@ -46,7 +46,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rcg-By-jcp">
-                                <rect key="frame" x="80" y="394" width="171" height="30"/>
+                                <rect key="frame" x="80" y="579" width="171" height="30"/>
                                 <state key="normal" title="Login to Sandpolis Cloud"/>
                                 <connections>
                                     <action selector="openLoginAccount:" destination="jpL-Bl-Icn" eventType="touchUpInside" id="xXD-4V-w3n"/>
@@ -104,11 +104,11 @@
             <objects>
                 <viewController title="LoginServer" id="QOx-kU-Ozb" customClass="LoginServer" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" opaque="NO" contentMode="scaleToFill" id="9FK-fz-zX5">
-                        <rect key="frame" x="0.0" y="0.0" width="331" height="440"/>
+                        <rect key="frame" x="0.0" y="0.0" width="331" height="625"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cUO-iB-ReS">
-                                <rect key="frame" x="80" y="394" width="171" height="30"/>
+                                <rect key="frame" x="80" y="579" width="171" height="30"/>
                                 <state key="normal" title="Login to Sandpolis Cloud"/>
                                 <connections>
                                     <action selector="openLoginAccount:" destination="QOx-kU-Ozb" eventType="touchUpInside" id="HgB-np-vl6"/>
@@ -203,7 +203,7 @@
             <objects>
                 <viewController title="LoginAccount" id="Pxc-v7-mA9" customClass="LoginAccount" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" opaque="NO" contentMode="scaleToFill" id="y6a-o6-oWO">
-                        <rect key="frame" x="0.0" y="0.0" width="331" height="440"/>
+                        <rect key="frame" x="0.0" y="0.0" width="331" height="625"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Email Address" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="P1W-9i-HlN">
@@ -265,7 +265,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tUz-vQ-WYC">
-                                <rect key="frame" x="67" y="394" width="197" height="30"/>
+                                <rect key="frame" x="67" y="579" width="197" height="30"/>
                                 <state key="normal" title="Continue without an account"/>
                                 <connections>
                                     <action selector="openLoginServer:" destination="Pxc-v7-mA9" eventType="touchUpInside" id="rWv-gF-w9l"/>
@@ -316,22 +316,22 @@
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="login" translatesAutoresizingMaskIntoConstraints="NO" id="AAR-Z2-KNZ">
-                                <rect key="frame" x="41.5" y="44" width="331" height="370"/>
+                                <rect key="frame" x="41.5" y="44" width="331" height="185"/>
                             </imageView>
                             <containerView opaque="NO" alpha="0.0" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Gqa-vF-Qa6">
-                                <rect key="frame" x="41.5" y="422" width="331" height="440"/>
+                                <rect key="frame" x="41.5" y="237" width="331" height="625"/>
                                 <connections>
                                     <segue destination="Pxc-v7-mA9" kind="embed" identifier="LoginEmbed" id="O3t-zZ-2VH"/>
                                 </connections>
                             </containerView>
                             <containerView opaque="NO" alpha="0.0" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="tA0-vr-FIQ">
-                                <rect key="frame" x="41.5" y="422" width="331" height="440"/>
+                                <rect key="frame" x="41.5" y="237" width="331" height="625"/>
                                 <connections>
                                     <segue destination="QOx-kU-Ozb" kind="embed" identifier="ForgotPasswordEmbed" id="Ux4-R8-Xpw"/>
                                 </connections>
                             </containerView>
                             <containerView opaque="NO" alpha="0.0" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="HVf-Id-uAt">
-                                <rect key="frame" x="41.5" y="422" width="331" height="440"/>
+                                <rect key="frame" x="41.5" y="237" width="331" height="625"/>
                                 <connections>
                                     <segue destination="jpL-Bl-Icn" kind="embed" identifier="CreateAccountEmbed" id="CTd-c3-60R"/>
                                 </connections>
@@ -593,7 +593,7 @@
                                 <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="login" translatesAutoresizingMaskIntoConstraints="NO" id="bOE-Rq-SKp">
-                                        <rect key="frame" x="0.0" y="0.0" width="414" height="370"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="414" height="185"/>
                                     </imageView>
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
@@ -1270,7 +1270,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" showsBuildings="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BZe-e9-8Ia">
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" pitchEnabled="NO" showsBuildings="NO" showsCompass="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BZe-e9-8Ia">
                                 <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                             </mapView>
                         </subviews>
@@ -2068,19 +2068,19 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <view key="tableFooterView" contentMode="scaleToFill" id="NWf-fs-HKS">
-                            <rect key="frame" x="0.0" y="256.00000011920929" width="414" height="44"/>
+                            <rect key="frame" x="0.0" y="136" width="414" height="44"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <subviews>
                                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8tG-HG-s8T">
                                     <rect key="frame" x="20" y="7" width="48" height="30"/>
                                     <state key="normal" title="Cancel"/>
                                     <connections>
-                                        <action selector="cancelButtonPressed:" destination="Zr7-Yd-1dv" eventType="touchUpInside" id="kf6-hW-X0m"/>
+                                        <action selector="cancelSelection:" destination="Zr7-Yd-1dv" eventType="touchUpInside" id="kf6-hW-X0m"/>
                                     </connections>
                                 </button>
                                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="q04-Tu-yVq">
-                                    <rect key="frame" x="296" y="7" width="98" height="30"/>
-                                    <state key="normal" title="View Selected"/>
+                                    <rect key="frame" x="302" y="7" width="92" height="30"/>
+                                    <state key="normal" title="Control Panel"/>
                                     <connections>
                                         <segue destination="Xcc-gi-mQ7" kind="show" identifier="ShowGroupControlPanelSegue" id="p4H-z2-yLu"/>
                                     </connections>
@@ -2136,80 +2136,6 @@
                                     <outlet property="platform" destination="ABr-Ku-1tH" id="EU5-TQ-IF6"/>
                                 </connections>
                             </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="HostGroupHeaderCell" rowHeight="40" id="bvp-9i-RM5" customClass="HostGroupHeaderCell" customModule="Sandpolis" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="108" width="414" height="40"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="bvp-9i-RM5" id="pHb-6D-acL">
-                                    <rect key="frame" x="0.0" y="0.0" width="414" height="40"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Host name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="9S1-HD-mxG">
-                                            <rect key="frame" x="20" y="9.5" width="86.5" height="21"/>
-                                            <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="RnA-vY-muF">
-                                            <rect key="frame" x="203" y="5" width="80" height="30"/>
-                                            <state key="normal" title="View Group"/>
-                                            <connections>
-                                                <action selector="viewButtonPressed:" destination="bvp-9i-RM5" eventType="touchUpInside" id="Pzl-KR-1Vj"/>
-                                            </connections>
-                                        </button>
-                                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bwn-ei-PFj">
-                                            <rect key="frame" x="303" y="5" width="91" height="30"/>
-                                            <state key="normal" title="Delete Group">
-                                                <color key="titleColor" red="1" green="0.41132126070000002" blue="0.41905388580000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                            </state>
-                                            <connections>
-                                                <action selector="deleteButtonPressed:" destination="bvp-9i-RM5" eventType="touchUpInside" id="AYm-Ba-Ndc"/>
-                                            </connections>
-                                        </button>
-                                    </subviews>
-                                    <constraints>
-                                        <constraint firstItem="bwn-ei-PFj" firstAttribute="leading" secondItem="RnA-vY-muF" secondAttribute="trailing" constant="20" id="3vu-ad-Fpy"/>
-                                        <constraint firstAttribute="trailing" secondItem="bwn-ei-PFj" secondAttribute="trailing" constant="20" id="BnO-QS-zxw"/>
-                                        <constraint firstItem="RnA-vY-muF" firstAttribute="centerY" secondItem="pHb-6D-acL" secondAttribute="centerY" id="TMo-FK-Ieu"/>
-                                        <constraint firstItem="9S1-HD-mxG" firstAttribute="leading" secondItem="pHb-6D-acL" secondAttribute="leading" constant="20" id="VoO-Np-prE"/>
-                                        <constraint firstItem="9S1-HD-mxG" firstAttribute="centerY" secondItem="pHb-6D-acL" secondAttribute="centerY" id="ilf-tZ-lLf"/>
-                                        <constraint firstItem="bwn-ei-PFj" firstAttribute="centerY" secondItem="pHb-6D-acL" secondAttribute="centerY" id="yrp-IM-mIC"/>
-                                    </constraints>
-                                </tableViewCellContentView>
-                                <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
-                                <connections>
-                                    <outlet property="deleteButton" destination="bwn-ei-PFj" id="qh2-aB-C72"/>
-                                    <outlet property="groupNameLabel" destination="9S1-HD-mxG" id="ael-12-ulc"/>
-                                    <outlet property="viewButton" destination="RnA-vY-muF" id="m7j-Ce-Pch"/>
-                                </connections>
-                            </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="HostGroupHeaderBlank" rowHeight="0.0" id="AjP-dD-Rf9">
-                                <rect key="frame" x="0.0" y="148" width="414" height="1.1920928955078125e-07"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="AjP-dD-Rf9" id="B7w-cz-3v6">
-                                    <rect key="frame" x="0.0" y="0.0" width="414" height="1.1920928955078125e-07"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                </tableViewCellContentView>
-                                <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
-                            </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="HostCellBlank" rowHeight="80" id="ofx-7M-DTu">
-                                <rect key="frame" x="0.0" y="148.00000011920929" width="414" height="80"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="ofx-7M-DTu" id="xVS-7x-Ajt">
-                                    <rect key="frame" x="0.0" y="0.0" width="414" height="80"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No hosts available in this group." textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Cfx-ke-KbV">
-                                            <rect key="frame" x="20" y="29.5" width="242.5" height="21"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                            <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                    </subviews>
-                                    <constraints>
-                                        <constraint firstItem="Cfx-ke-KbV" firstAttribute="centerY" secondItem="xVS-7x-Ajt" secondAttribute="centerY" id="hfd-Lw-vXh"/>
-                                        <constraint firstItem="Cfx-ke-KbV" firstAttribute="leading" secondItem="xVS-7x-Ajt" secondAttribute="leading" constant="20" id="yNM-PC-aSP"/>
-                                    </constraints>
-                                </tableViewCellContentView>
-                            </tableViewCell>
                         </prototypes>
                         <sections/>
                         <connections>
@@ -2223,12 +2149,9 @@
                         <segue destination="654-4d-6yS" kind="show" id="eEU-lA-7YL"/>
                         <segue destination="4M1-5e-ymV" kind="show" identifier="ShowControlPanelSegue" id="493-UJ-XsK"/>
                         <segue destination="Xcc-gi-mQ7" kind="show" identifier="ShowGroupControlPanelFromHeaderSegue" id="OFc-h9-beF"/>
-                        <segue destination="0AE-3y-PIE" kind="unwind" identifier="UnwindLoginSegue" unwindAction="prepareForUnwindWithSegue:" id="juL-4g-Opb"/>
-                        <segue destination="0AE-3y-PIE" kind="unwind" identifier="UnwindServerSegue" unwindAction="unwindToServerWithSegue:" id="pDJ-ST-zZr"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="fyI-TM-Axs" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                <exit id="0AE-3y-PIE" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
             <point key="canvasLocation" x="6746.376811594203" y="70.982142857142847"/>
         </scene>
@@ -2566,9 +2489,12 @@
                     <connections>
                         <segue destination="Zr7-Yd-1dv" kind="relationship" relationship="viewControllers" id="x1t-fx-tIO"/>
                         <segue destination="UyJ-Lr-hxt" kind="relationship" relationship="viewControllers" id="x9e-iQ-UUy"/>
+                        <segue destination="vKA-RL-z3F" kind="unwind" identifier="UnwindServerSegue" unwindAction="unwindToServerWithSegue:" id="LU9-3d-VrS"/>
+                        <segue destination="vKA-RL-z3F" kind="unwind" identifier="UnwindLoginSegue" unwindAction="prepareForUnwindWithSegue:" id="3va-Jt-COo"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="qwu-zu-ud5" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <exit id="vKA-RL-z3F" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
             <point key="canvasLocation" x="5836.2318840579719" y="70.982142857142847"/>
         </scene>
@@ -3172,8 +3098,8 @@
     <inferredMetricsTieBreakers>
         <segue reference="Tmd-11-lDG"/>
         <segue reference="Tgm-TF-M4i"/>
-        <segue reference="ed6-MZ-Xnu"/>
-        <segue reference="Ak8-SG-WPy"/>
+        <segue reference="p4H-z2-yLu"/>
+        <segue reference="493-UJ-XsK"/>
         <segue reference="xCx-EK-m09"/>
         <segue reference="h7N-WJ-x2L"/>
         <segue reference="BX0-on-vvi"/>

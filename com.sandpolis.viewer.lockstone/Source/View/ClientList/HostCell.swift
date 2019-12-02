@@ -30,13 +30,13 @@ class HostCell: UITableViewCell {
 		// Set platform information
 		switch profile.platform {
 		case .linux:
-			platform.image = UIImage(named: "platform/linux_large")
+			platform.image = UIImage(named: "platform/linux")
 		case .macos:
-			platform.image = UIImage(named: "platform/mac_large")
+			platform.image = UIImage(named: "platform/mac")
 		case .windows:
-			platform.image = UIImage(named: "platform/windows_large")
+			platform.image = UIImage(named: "platform/windows")
 		case .freebsd:
-			platform.image = UIImage(named: "platform/freebsd_large")
+			platform.image = UIImage(named: "platform/freebsd")
 		default:
 			break
 		}

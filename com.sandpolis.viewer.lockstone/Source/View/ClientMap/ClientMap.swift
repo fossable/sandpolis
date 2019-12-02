@@ -18,6 +18,7 @@
 import UIKit
 import MapKit
 import CoreLocation
+import SwiftEventBus
 
 class ClientMap: UIViewController, MKMapViewDelegate {
 
@@ -41,7 +42,18 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 				map.addAnnotation(pin)
 			}
 		}
-		SandpolisUtil.connection.registerHostUpdates(self.onHostUpdate)
+		
+		SwiftEventBus.unregister(self)
+		SwiftEventBus.onMainThread(self, name: "profileOnlineEvent") { result in
+			if let profile = result?.object as? SandpolisProfile, self.findHost(profile) == nil, let annotation = ClientAnnotation(profile) {
+				self.map.addAnnotation(annotation)
+			}
+		}
+		SwiftEventBus.onMainThread(self, name: "profileOfflineEvent") { result in
+			if let profile = result?.object as? SandpolisProfile, let annotation = self.findHost(profile) {
+				self.map.removeAnnotation(annotation)
+			}
+		}
 
 		// Save navigation bar properties so they can be restored later
 		navBackground = navigationController?.navigationBar.backgroundImage(for: .default)
@@ -61,9 +73,6 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 	override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
 
-		map.isZoomEnabled = true
-		map.isScrollEnabled = true
-
 		// Remove navigation bar
 		navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
 		navigationController?.navigationBar.shadowImage = UIImage()
@@ -79,7 +88,18 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 			annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: "ClientAnnotation")
 		}
 		annotationView.markerTintColor = UIColor.red
-		annotationView.glyphImage = UIImage(named: "Image")
+		switch annotation.profile.platform {
+		case .windows:
+			annotationView.glyphImage = UIImage(named: "platform/windows-glyph")
+		case .linux:
+			annotationView.glyphImage = UIImage(named: "platform/linux")
+		case .macos:
+			annotationView.glyphImage = UIImage(named: "platform/mac-glyph")
+		case .freebsd:
+			annotationView.glyphImage = UIImage(named: "platform/freebsd-glyph")
+		default:
+			break
+		}
 
 		annotationView.clusteringIdentifier = "ClientAnnotation"
 
@@ -116,25 +136,13 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 		}
 	}
 
-	func onHostUpdate(_ profile: SandpolisProfile) {
-		DispatchQueue.main.async {
-			let pin = self.map.annotations.filter { annotation in
-				if let annotation = annotation as? ClientAnnotation {
-					return annotation.profile.cvid == profile.cvid
-				} else {
-					return false
-				}
-			}.first
-
-			if profile.online {
-				if pin == nil, let pin = ClientAnnotation(profile) {
-					self.map.addAnnotation(pin)
-				}
+	private func findHost(_ profile: SandpolisProfile) -> MKAnnotation? {
+		return map.annotations.filter { annotation in
+			if let annotation = annotation as? ClientAnnotation {
+				return annotation.profile.cvid == profile.cvid
 			} else {
-				if let pin = pin {
-					self.map.removeAnnotation(pin)
-				}
+				return false
 			}
-		}
+		}.first
 	}
 }

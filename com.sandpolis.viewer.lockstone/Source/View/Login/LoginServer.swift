@@ -60,6 +60,7 @@ class LoginServer: UIViewController {
 		login(address: address.text!, username: username.text!, password: password.text!) { connection in
 			if let connection = connection {
 				SandpolisUtil.connection = connection
+				connection.openProfileStream()
 				
 				UserDefaults.standard.set("direct", forKey: "login.type")
 				UserDefaults.standard.set(true, forKey: "login.auto")
