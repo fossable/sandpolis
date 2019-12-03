@@ -91,6 +91,7 @@ PODS:
   - nanopb/encode (0.3.901)
   - Protobuf (3.9.0)
   - SwiftKeychainWrapper (3.4.0)
+  - SwiftValidators (9.0.2)
 
 DEPENDENCIES:
   - CryptoSwift (= 1.0.0)
@@ -98,6 +99,7 @@ DEPENDENCIES:
   - Firebase/Firestore (= 6.7.0)
   - Highlightr (= 2.1.0)
   - SwiftKeychainWrapper (= 3.4.0)
+  - SwiftValidators (= 9.0.2)
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
@@ -122,6 +124,7 @@ SPEC REPOS:
     - Protobuf
   trunk:
     - SwiftKeychainWrapper
+    - SwiftValidators
 
 SPEC CHECKSUMS:
   BoringSSL-GRPC: db8764df3204ccea016e1c8dd15d9a9ad63ff318
@@ -144,7 +147,8 @@ SPEC CHECKSUMS:
   nanopb: 2901f78ea1b7b4015c860c2fdd1ea2fee1a18d48
   Protobuf: 1097ca58584c8d9be81bfbf2c5ff5975648dd87a
   SwiftKeychainWrapper: 6fc49fbf7d4a6b0772917acb0e53a1639f6078d6
+  SwiftValidators: 9be131cdfadb9a29d31e637c947c7306877bf1d4
 
-PODFILE CHECKSUM: ab64d261edb3464049a08bfbbe346de4ef8afc38
+PODFILE CHECKSUM: 9b66df3ca822c1258c278b5b32b94be522f50f25
 
 COCOAPODS: 1.8.4

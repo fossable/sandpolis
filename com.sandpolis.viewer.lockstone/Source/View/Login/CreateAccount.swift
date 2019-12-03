@@ -18,6 +18,7 @@
 import UIKit
 import FirebaseAuth
 import FirebaseFirestore
+import SwiftValidators
 
 class CreateAccount: UIViewController {
 
@@ -81,6 +82,16 @@ class CreateAccount: UIViewController {
 		loginContainer.openLoginAccount()
 	}
 
+	@IBAction func openLoginServer(_ sender: Any) {
+		loginContainer.openLoginServer()
+	}
+
+	@IBAction func openPrivacyPolicy(_ sender: Any) {
+		if let url = URL(string: "https://sandpolis.com/privacy") {
+			UIApplication.shared.open(url)
+		}
+	}
+
 	/// Copy default user data on account creation
 	private func copyDefaults() {
 		let userServers = Firestore.firestore().collection("/user/\(Auth.auth().currentUser!.uid)/server")
@@ -110,10 +121,18 @@ class CreateAccount: UIViewController {
 	}
 	
 	@objc func refreshEmail() {
-		// TODO
+		if Validator.isEmail().apply(email.text) {
+			email.setLeftIcon("field/email_selected")
+		} else {
+			email.setLeftIcon("field/email")
+		}
 	}
 	
 	@objc func refreshPassword() {
-		// TODO
+		if Validator.minLength(8).apply(password.text) {
+			password.setLeftIcon("field/password_selected")
+		} else {
+			password.setLeftIcon("field/password")
+		}
 	}
 }

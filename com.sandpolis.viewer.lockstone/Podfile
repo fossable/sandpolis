@@ -17,5 +17,8 @@ target 'Sandpolis' do
 
   # Provides keychain wrapper
   pod 'SwiftKeychainWrapper', '3.4.0'
+  
+  # Provides input validation utilities
+  pod 'SwiftValidators', '9.0.2'
 
 end

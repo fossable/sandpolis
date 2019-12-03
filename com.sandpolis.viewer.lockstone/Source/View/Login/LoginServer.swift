@@ -19,6 +19,7 @@ import UIKit
 import Firebase
 import FirebaseAuth
 import SwiftKeychainWrapper
+import SwiftValidators
 
 class LoginServer: UIViewController {
 
@@ -79,16 +80,28 @@ class LoginServer: UIViewController {
 	@IBAction func openLoginAccount(_ sender: Any) {
 		loginContainer.openLoginAccount()
 	}
-	
+
 	@objc func refreshAddress() {
-		// TODO
+		if (Validator.isFQDN() || Validator.isIPv4()).apply(address.text) {
+			address.setLeftIcon("field/server_selected")
+		} else {
+			address.setLeftIcon("field/server")
+		}
 	}
 	
 	@objc func refreshUsername() {
-		// TODO
+		if Validator.minLength(4).apply(username.text) {
+			username.setLeftIcon("field/username_selected")
+		} else {
+			username.setLeftIcon("field/username")
+		}
 	}
 	
 	@objc func refreshPassword() {
-		// TODO
+		if Validator.minLength(8).apply(password.text) {
+			password.setLeftIcon("field/password_selected")
+		} else {
+			password.setLeftIcon("field/password")
+		}
 	}
 }

@@ -17,6 +17,7 @@
 //****************************************************************************//
 import UIKit
 import FirebaseAuth
+import SwiftValidators
 
 class LoginAccount: UIViewController {
 
@@ -95,10 +96,18 @@ class LoginAccount: UIViewController {
 	}
 	
 	@objc func refreshEmail() {
-		// TODO
+		if Validator.isEmail().apply(email.text) {
+			email.setLeftIcon("field/email_selected")
+		} else {
+			email.setLeftIcon("field/email")
+		}
 	}
 	
 	@objc func refreshPassword() {
-		// TODO
+		if Validator.minLength(8).apply(password.text) {
+			password.setLeftIcon("field/password_selected")
+		} else {
+			password.setLeftIcon("field/password")
+		}
 	}
 }

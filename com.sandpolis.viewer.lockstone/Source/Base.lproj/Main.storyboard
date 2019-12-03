@@ -46,44 +46,64 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rcg-By-jcp">
-                                <rect key="frame" x="80" y="579" width="171" height="30"/>
+                                <rect key="frame" x="80" y="543" width="171" height="30"/>
                                 <state key="normal" title="Login to Sandpolis Cloud"/>
                                 <connections>
                                     <action selector="openLoginAccount:" destination="jpL-Bl-Icn" eventType="touchUpInside" id="xXD-4V-w3n"/>
                                 </connections>
                             </button>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" textAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="m6w-Ze-msP">
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" text="By creating an account, you agree to the Sandpolis Cloud privacy policy." textAlignment="center" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="m6w-Ze-msP">
                                 <rect key="frame" x="15.5" y="248" width="300" height="128"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="128" id="6Xj-Ap-xi5"/>
                                     <constraint firstAttribute="width" constant="300" id="zlN-V5-sC3"/>
                                 </constraints>
-                                <string key="text">Sandpolis Cloud provides additional features like user-defined macro scripts. By creating an account, you also agree to Google's Firebase privacy policy.</string>
                                 <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Create a new Sandpolis Cloud account" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Kse-Nu-ooZ">
-                                <rect key="frame" x="33.5" y="34" width="264.5" height="18"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                <rect key="frame" x="25.5" y="34" width="280.5" height="18"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
                                 <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ciU-Fe-lhd">
+                                <rect key="frame" x="67" y="579" width="197" height="30"/>
+                                <state key="normal" title="Continue without an account"/>
+                                <connections>
+                                    <action selector="openLoginServer:" destination="jpL-Bl-Icn" eventType="touchUpInside" id="2Gm-m1-9Jo"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mY2-0G-dIJ">
+                                <rect key="frame" x="123" y="408" width="85" height="29"/>
+                                <fontDescription key="fontDescription" type="system" weight="thin" pointSize="14"/>
+                                <state key="normal" title="Privacy Policy">
+                                    <color key="titleColor" cocoaTouchSystemColor="lightTextColor"/>
+                                </state>
+                                <connections>
+                                    <action selector="openPrivacyPolicy:" destination="jpL-Bl-Icn" eventType="touchUpInside" id="0qi-Hx-IH0"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
+                            <constraint firstItem="ciU-Fe-lhd" firstAttribute="centerX" secondItem="WPG-e0-b8n" secondAttribute="centerX" id="0f6-SS-xsm"/>
                             <constraint firstItem="rcg-By-jcp" firstAttribute="centerX" secondItem="WPG-e0-b8n" secondAttribute="centerX" id="1Ig-HU-WM7"/>
+                            <constraint firstItem="ciU-Fe-lhd" firstAttribute="top" secondItem="rcg-By-jcp" secondAttribute="bottom" constant="6" id="7Oo-2x-hMq"/>
+                            <constraint firstItem="mY2-0G-dIJ" firstAttribute="centerX" secondItem="WPG-e0-b8n" secondAttribute="centerX" id="ALa-Ud-HKF"/>
                             <constraint firstItem="n6Q-5C-6Qh" firstAttribute="leading" secondItem="xGU-LX-FkH" secondAttribute="leading" constant="20" id="AWQ-nA-mtU"/>
                             <constraint firstItem="5n3-WI-dj5" firstAttribute="leading" secondItem="xGU-LX-FkH" secondAttribute="leading" constant="20" id="FjU-su-1U1"/>
+                            <constraint firstItem="xGU-LX-FkH" firstAttribute="bottom" secondItem="ciU-Fe-lhd" secondAttribute="bottom" constant="16" id="Gpg-tg-Bb3"/>
                             <constraint firstItem="GVo-Iy-8BC" firstAttribute="top" secondItem="5n3-WI-dj5" secondAttribute="bottom" constant="24" id="IBS-NG-1BU"/>
                             <constraint firstItem="5n3-WI-dj5" firstAttribute="top" secondItem="n6Q-5C-6Qh" secondAttribute="bottom" constant="16" id="T19-Ns-80S"/>
                             <constraint firstItem="xGU-LX-FkH" firstAttribute="trailing" secondItem="5n3-WI-dj5" secondAttribute="trailing" constant="20" id="WAB-4J-Wc6"/>
-                            <constraint firstItem="xGU-LX-FkH" firstAttribute="bottom" secondItem="rcg-By-jcp" secondAttribute="bottom" constant="16" id="aDx-Gc-BCw"/>
                             <constraint firstItem="Kse-Nu-ooZ" firstAttribute="centerX" secondItem="WPG-e0-b8n" secondAttribute="centerX" id="aMV-Ze-Icr"/>
                             <constraint firstItem="n6Q-5C-6Qh" firstAttribute="top" secondItem="xGU-LX-FkH" secondAttribute="top" constant="32" id="e7G-DS-uy8"/>
                             <constraint firstItem="xGU-LX-FkH" firstAttribute="trailing" secondItem="GVo-Iy-8BC" secondAttribute="trailing" constant="20" id="lEy-pC-Ewx"/>
                             <constraint firstItem="n6Q-5C-6Qh" firstAttribute="top" secondItem="Kse-Nu-ooZ" secondAttribute="bottom" constant="24" id="nJo-hK-UEc"/>
+                            <constraint firstItem="mY2-0G-dIJ" firstAttribute="top" secondItem="m6w-Ze-msP" secondAttribute="bottom" constant="32" id="t45-4z-ME6"/>
                             <constraint firstItem="xGU-LX-FkH" firstAttribute="trailing" secondItem="n6Q-5C-6Qh" secondAttribute="trailing" constant="20" id="uJM-46-xzP"/>
                             <constraint firstItem="m6w-Ze-msP" firstAttribute="top" secondItem="5n3-WI-dj5" secondAttribute="bottom" constant="88" id="ugx-p8-rfl"/>
                             <constraint firstItem="m6w-Ze-msP" firstAttribute="centerX" secondItem="WPG-e0-b8n" secondAttribute="centerX" id="y5S-za-Aa7"/>
@@ -97,7 +117,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="0VM-SO-qTT" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="207" y="768"/>
+            <point key="canvasLocation" x="206.52173913043481" y="767.74553571428567"/>
         </scene>
         <!--LoginServer-->
         <scene sceneID="AdJ-C5-kOT">
@@ -115,15 +135,15 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Login to a Sandpolis server directly" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5dK-Ss-umP">
-                                <rect key="frame" x="45.5" y="34" width="240.5" height="18"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                <rect key="frame" x="37" y="34" width="257" height="18"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
                                 <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Server Address" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Tcn-Nq-H4g">
                                 <rect key="frame" x="20" y="76" width="291" height="34"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" smartDashesType="no" smartInsertDeleteType="no" smartQuotesType="no"/>
                             </textField>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Username" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="bcj-nT-8yM">
                                 <rect key="frame" x="20" y="126" width="291" height="34"/>
@@ -153,14 +173,14 @@
                                     <action selector="login:" destination="QOx-kU-Ozb" eventType="touchUpInside" id="QuO-p5-bUA"/>
                                 </connections>
                             </button>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" textAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="Haz-KH-qVv">
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" textAlignment="center" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Haz-KH-qVv">
                                 <rect key="frame" x="15.5" y="242" width="300" height="128"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="300" id="80s-6c-hjI"/>
                                     <constraint firstAttribute="height" constant="128" id="bAq-nq-3sl"/>
                                 </constraints>
-                                <string key="text">You don't need a cloud account to login directly to a Sandpolis server. Some minor features are unavailable when logged in directly, but your device won't contact third-party services like Google.</string>
+                                <string key="text">Enter your server details to login without using Sandpolis Cloud. Some minor features are unavailable when logged in directly, but your device won't contact third-party services like Google.</string>
                                 <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
@@ -259,8 +279,8 @@
                                 </subviews>
                             </stackView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Login to your Sandpolis Cloud account" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="X18-55-RD4">
-                                <rect key="frame" x="33.5" y="34" width="264" height="18"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                <rect key="frame" x="25.5" y="34" width="280.5" height="18"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
                                 <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
@@ -271,6 +291,18 @@
                                     <action selector="openLoginServer:" destination="Pxc-v7-mA9" eventType="touchUpInside" id="rWv-gF-w9l"/>
                                 </connections>
                             </button>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" textAlignment="center" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tBT-bB-6Sd">
+                                <rect key="frame" x="15.5" y="246" width="300" height="128"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="300" id="Jsz-ye-UaE"/>
+                                    <constraint firstAttribute="height" constant="128" id="Nd8-c6-9fc"/>
+                                </constraints>
+                                <string key="text">Sandpolis Cloud is a convenient way to manage your Sandpolis servers, but isn't required to use this app. You can also login to a Sandpolis server directly if you know your credentials.</string>
+                                <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
@@ -280,8 +312,10 @@
                             <constraint firstItem="P1W-9i-HlN" firstAttribute="leading" secondItem="wCx-Va-ugM" secondAttribute="leading" constant="20" id="EyI-qT-CpC"/>
                             <constraint firstItem="UZs-az-c67" firstAttribute="top" secondItem="fxM-2h-xt7" secondAttribute="bottom" constant="24" id="GPA-WM-CCp"/>
                             <constraint firstItem="wCx-Va-ugM" firstAttribute="bottom" secondItem="tUz-vQ-WYC" secondAttribute="bottom" constant="16" id="N6y-yF-oVx"/>
+                            <constraint firstItem="tBT-bB-6Sd" firstAttribute="centerX" secondItem="y6a-o6-oWO" secondAttribute="centerX" id="NEp-A1-eXj"/>
                             <constraint firstItem="tUz-vQ-WYC" firstAttribute="centerX" secondItem="y6a-o6-oWO" secondAttribute="centerX" id="QsE-YE-2VE"/>
                             <constraint firstItem="fxM-2h-xt7" firstAttribute="top" secondItem="P1W-9i-HlN" secondAttribute="bottom" constant="16" id="Sym-hc-saM"/>
+                            <constraint firstItem="tBT-bB-6Sd" firstAttribute="top" secondItem="Crt-9m-NmI" secondAttribute="bottom" constant="32" id="TeT-MH-x6Z"/>
                             <constraint firstItem="P1W-9i-HlN" firstAttribute="top" secondItem="X18-55-RD4" secondAttribute="bottom" constant="24" id="Ueh-36-QJW"/>
                             <constraint firstItem="fxM-2h-xt7" firstAttribute="leading" secondItem="wCx-Va-ugM" secondAttribute="leading" constant="20" id="WJB-CC-pam"/>
                             <constraint firstItem="wCx-Va-ugM" firstAttribute="trailing" secondItem="S5q-JR-97G" secondAttribute="trailing" constant="20" id="ch3-K3-ttZ"/>
