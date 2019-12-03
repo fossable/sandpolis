@@ -25,7 +25,7 @@ class Login: UIViewController {
 	@IBOutlet weak var loginServer: UIView!
 	@IBOutlet weak var createAccount: UIView!
 	@IBOutlet weak var progress: UIActivityIndicatorView!
-	
+
 	override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
 		get { return UIInterfaceOrientationMask.portrait }
 	}
@@ -44,7 +44,7 @@ class Login: UIViewController {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		
+
 		if UserDefaults.standard.bool(forKey: "login.auto") {
 			progress.startAnimating()
 			switch UserDefaults.standard.string(forKey: "login.type") {
@@ -57,7 +57,7 @@ class Login: UIViewController {
 						self.performSegue(withIdentifier: "LoginCompleteSegue", sender: nil)
 					}
 				}
-				
+
 				// Set auth timer in case the automatic login fails
 				DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
 					Auth.auth().removeStateDidChangeListener(loginListener)

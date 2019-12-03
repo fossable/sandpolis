@@ -45,7 +45,7 @@ class MacroResults: UITableViewController, CollapsibleTableViewHeaderDelegate {
 		// Modify back button to skip the last view controller
 		navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Close", style: .plain, target: self, action: #selector(goBack))
 		navigationItem.hidesBackButton = true
-		
+
 		// Process the target shell type
 		let shell: Net_Shell
 		switch macro["type"] as! String {

@@ -346,10 +346,9 @@ public final class Server {
 								.addPlugin("com.sandpolis.plugin.sysinfo").addPlugin("com.sandpolis.plugin.shell"))
 								.setExecution(ExecutionConfig.newBuilder().putInstallPath(OsType.LINUX_VALUE,
 										"/home/cilki/.sandpolis"))
-								.setNetwork(NetworkConfig
-										.newBuilder().setLoopConfig(LoopConfig.newBuilder().setTimeout(5000)
-												.setCooldown(5000).addTarget(NetworkTarget
-														.newBuilder().setAddress("10.0.1.128").setPort(8768)))))
+								.setNetwork(NetworkConfig.newBuilder().setLoopConfig(
+										LoopConfig.newBuilder().setTimeout(5000).setCooldown(5000).addTarget(
+												NetworkTarget.newBuilder().setAddress("10.0.1.128").setPort(8768)))))
 						.build());
 		generator.run();
 

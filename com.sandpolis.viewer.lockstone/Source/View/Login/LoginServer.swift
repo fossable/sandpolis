@@ -28,10 +28,10 @@ class LoginServer: UIViewController {
 	@IBOutlet weak var password: UITextField!
 
 	var loginContainer: Login!
-	
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		
+
 		address.addTarget(self, action: #selector(refreshAddress), for: .editingChanged)
 		username.addTarget(self, action: #selector(refreshUsername), for: .editingChanged)
 		password.addTarget(self, action: #selector(refreshPassword), for: .editingChanged)
@@ -62,15 +62,15 @@ class LoginServer: UIViewController {
 			if let connection = connection {
 				SandpolisUtil.connection = connection
 				connection.openProfileStream()
-				
+
 				UserDefaults.standard.set("direct", forKey: "login.type")
 				UserDefaults.standard.set(true, forKey: "login.auto")
-				
+
 				DispatchQueue.main.async {
 					KeychainWrapper.standard.set(self.address.text!, forKey: "login.direct.address")
 					KeychainWrapper.standard.set(self.username.text!, forKey: "login.direct.username")
 					KeychainWrapper.standard.set(self.password.text!, forKey: "login.direct.password")
-					
+
 					self.loginContainer.performSegue(withIdentifier: "DirectLoginCompleteSegue", sender: self.address.text!)
 				}
 			}
@@ -88,7 +88,7 @@ class LoginServer: UIViewController {
 			address.setLeftIcon("field/server")
 		}
 	}
-	
+
 	@objc func refreshUsername() {
 		if Validator.minLength(4).apply(username.text) {
 			username.setLeftIcon("field/username_selected")
@@ -96,7 +96,7 @@ class LoginServer: UIViewController {
 			username.setLeftIcon("field/username")
 		}
 	}
-	
+
 	@objc func refreshPassword() {
 		if Validator.minLength(8).apply(password.text) {
 			password.setLeftIcon("field/password_selected")

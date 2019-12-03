@@ -27,14 +27,14 @@ class ClientList: UITableViewController {
 
 	/// The current selection if selection mode is active
 	private var selection = Set<IndexPath>()
-	
+
 	private var connection: SandpolisConnection!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		
+
 		connection = SandpolisUtil.connection
-		
+
 		SwiftEventBus.unregister(self)
 		SwiftEventBus.onMainThread(self, name: "profileOnlineEvent") { _ in
 			self.tableView.reloadData()
@@ -51,7 +51,7 @@ class ClientList: UITableViewController {
 
 		exitSelectionMode()
 	}
-	
+
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		return connection.profiles.count
 	}
@@ -114,7 +114,7 @@ class ClientList: UITableViewController {
 			}
 		}
 	}
-	
+
 	private func addToSelection(_ indexPath: IndexPath) {
 		if selection.contains(indexPath) {
 			selection.remove(indexPath)
@@ -133,7 +133,7 @@ class ClientList: UITableViewController {
 		selection.removeAll()
 		tableView.reloadData()
 	}
-	
+
 	private func exitSelectionMode() {
 		selectionMode = false
 		footerView.isHidden = true

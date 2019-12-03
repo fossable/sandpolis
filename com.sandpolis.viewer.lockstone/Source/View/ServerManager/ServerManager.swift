@@ -147,7 +147,7 @@ class ServerManager: UITableViewController {
 			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
 		}
 	}
-	
+
 	// Called on disconnection
 	@IBAction func unwindToServer(segue: UIStoryboardSegue) {
 	}

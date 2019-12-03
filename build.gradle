@@ -94,7 +94,7 @@ subprojects {
 				exceptionFormat = 'full'
 			}
 		}
-		
+
 		// Provide install task for scripts
 		task install(type: Copy) {
 			from configurations.runtimeClasspath

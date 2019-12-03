@@ -124,7 +124,8 @@ public final class ConnectionLoop implements Runnable {
 			this.exponential = config::getCooldown;
 		} else {
 			this.exponential = () -> {
-				return (int) Math.min(config.getCooldownLimit(), config.getCooldown() * Math.pow(config.getCooldown(), iteration / config.getCooldownConstant()));
+				return (int) Math.min(config.getCooldownLimit(), config.getCooldown()
+						* Math.pow(config.getCooldown(), iteration / config.getCooldownConstant()));
 			};
 		}
 		this.cooldown = config.getCooldown();

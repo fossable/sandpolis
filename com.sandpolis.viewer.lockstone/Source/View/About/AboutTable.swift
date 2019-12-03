@@ -25,11 +25,11 @@ class VersionTable: UITableViewController {
 		["name": "SwiftProtobuf", "id": "org.cocoapods.Protobuf"],
 		["name": "GoogleUtilities", "id": "org.cocoapods.GoogleUtilities"]
 	]
-	
+
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		return bundles.count
 	}
-	
+
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "VersionCell") as! VersionCell
 		cell.setContent(bundles[indexPath.row])

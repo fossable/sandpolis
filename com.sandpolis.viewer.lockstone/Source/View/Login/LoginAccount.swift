@@ -94,7 +94,7 @@ class LoginAccount: UIViewController {
 	@IBAction func openLoginServer(_ sender: Any) {
 		loginContainer.openLoginServer()
 	}
-	
+
 	@objc func refreshEmail() {
 		if Validator.isEmail().apply(email.text) {
 			email.setLeftIcon("field/email_selected")
@@ -102,7 +102,7 @@ class LoginAccount: UIViewController {
 			email.setLeftIcon("field/email")
 		}
 	}
-	
+
 	@objc func refreshPassword() {
 		if Validator.minLength(8).apply(password.text) {
 			password.setLeftIcon("field/password_selected")

@@ -27,7 +27,7 @@ class OverviewTable: UITableViewController {
 		("Memory", [Attribute("/memory/usage", "Usage"), Attribute("/memory/swap/usage", "Swap Usage")]),
 		("Processes", [Attribute("/process/count", "Number of Processes")])
 	]*/
-	
+
 	var info: [(String, [Attribute])] = [
 		("System", [Attribute("", "Operating System"), Attribute("", "Hostname")]),
 		("Location", [Attribute("", "Latitude"), Attribute("", "Longitude"), Attribute("", "City"), Attribute("", "Country"), Attribute("", "ISP")])
@@ -39,7 +39,7 @@ class OverviewTable: UITableViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		tableView.allowsSelection = false
-		
+
 		// Temporarily set values
 		switch profile.platform {
 		case .linux:

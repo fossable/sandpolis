@@ -20,9 +20,9 @@ import UIKit
 class GroupActions: UITableViewController {
 
 	var profiles = [SandpolisProfile]()
-	
+
 	private let direct = UserDefaults.standard.string(forKey: "login.type") == "direct"
-	
+
 	override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
 		switch indexPath.row {
 		case 2, 3:

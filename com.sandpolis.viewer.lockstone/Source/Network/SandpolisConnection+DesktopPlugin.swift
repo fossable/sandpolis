@@ -21,7 +21,7 @@ import SwiftProtobuf
 import os
 
 extension SandpolisConnection {
-	
+
 	/// Request a screenshot from the given client.
 	///
 	/// - Parameter target: The target client's CVID

@@ -21,7 +21,7 @@ import SwiftProtobuf
 import os
 
 extension SandpolisConnection {
-	
+
 	/// Request a file listing from the given client.
 	///
 	/// - Parameters:

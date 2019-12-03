@@ -42,7 +42,7 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 				map.addAnnotation(pin)
 			}
 		}
-		
+
 		SwiftEventBus.unregister(self)
 		SwiftEventBus.onMainThread(self, name: "profileOnlineEvent") { result in
 			if let profile = result?.object as? SandpolisProfile, self.findHost(profile) == nil, let annotation = ClientAnnotation(profile) {
@@ -107,7 +107,7 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 	}
 
 	func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-		
+
 		if let annotation = view.annotation as? MKClusterAnnotation {
 			let alert = UIAlertController(title: "\(annotation.memberAnnotations.count) hosts selected", message: nil, preferredStyle: .actionSheet)
 			alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -123,7 +123,7 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 			})
 			present(alert, animated: true)
 		}
-		
+
 	}
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {

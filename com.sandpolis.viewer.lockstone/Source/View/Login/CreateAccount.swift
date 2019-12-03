@@ -26,10 +26,10 @@ class CreateAccount: UIViewController {
 	@IBOutlet weak var password: UITextField!
 
 	var loginContainer: Login!
-	
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		
+
 		email.addTarget(self, action: #selector(refreshEmail), for: .editingChanged)
 		password.addTarget(self, action: #selector(refreshPassword), for: .editingChanged)
 
@@ -119,7 +119,7 @@ class CreateAccount: UIViewController {
 			}
 		}
 	}
-	
+
 	@objc func refreshEmail() {
 		if Validator.isEmail().apply(email.text) {
 			email.setLeftIcon("field/email_selected")
@@ -127,7 +127,7 @@ class CreateAccount: UIViewController {
 			email.setLeftIcon("field/email")
 		}
 	}
-	
+
 	@objc func refreshPassword() {
 		if Validator.minLength(8).apply(password.text) {
 			password.setLeftIcon("field/password_selected")

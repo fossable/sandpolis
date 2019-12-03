@@ -18,10 +18,10 @@
 import UIKit
 
 class VersionCell: UITableViewCell {
-	
+
 	@IBOutlet weak var title: UILabel!
 	@IBOutlet weak var version: UILabel!
-	
+
 	func setContent(_ dependency: [String: String]) {
 		title.text = dependency["name"]
 		if let version = Bundle(identifier: dependency["id"]!)?.infoDictionary?["CFBundleShortVersionString"] as? String {

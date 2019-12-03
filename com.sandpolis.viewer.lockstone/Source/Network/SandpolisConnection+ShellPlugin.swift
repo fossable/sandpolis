@@ -21,7 +21,7 @@ import SwiftProtobuf
 import os
 
 extension SandpolisConnection {
-	
+
 	/// Request a new remote desktop session from the given client.
 	///
 	/// - Parameter target: The target client's CVID
@@ -118,7 +118,7 @@ extension SandpolisConnection {
 			}
 		}
 	}
-	
+
 	/// Request to execute the script on the given client.
 	///
 	/// - Parameter cvid: The target client's CVID

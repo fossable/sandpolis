@@ -46,7 +46,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	func applicationWillTerminate(_ application: UIApplication) {
 	}
-	
+
 	private static var configured = false
 
 	/// Ensure that Firebase is configured

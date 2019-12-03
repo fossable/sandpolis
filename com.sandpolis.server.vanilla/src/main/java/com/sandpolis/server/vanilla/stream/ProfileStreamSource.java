@@ -62,10 +62,10 @@ public class ProfileStreamSource extends StreamSource<EV_ProfileStream> {
 	}
 
 	private void onProfileOnline(Profile profile) {
-		var ev = EV_ProfileStream.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid()).setOnline(true);
+		var ev = EV_ProfileStream.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid());
 
 		ConnectionStore.get(profile.getCvid()).ifPresent(sock -> {
-			ev.setIp(sock.getRemoteIP());
+			ev.setIp(sock.getRemoteIP()).setOnline(true);
 
 			var location = LocationStore.LocationStore.query(ev.getIp(), 1000);
 			if (location != null)
