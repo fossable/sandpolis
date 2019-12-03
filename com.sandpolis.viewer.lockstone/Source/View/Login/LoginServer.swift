@@ -36,9 +36,9 @@ class LoginServer: UIViewController {
 		username.addTarget(self, action: #selector(refreshUsername), for: .editingChanged)
 		password.addTarget(self, action: #selector(refreshPassword), for: .editingChanged)
 
-		address.setLeftIcon("field/server")
-		username.setLeftIcon("field/username")
-		password.setLeftIcon("field/password")
+		refreshAddress()
+		refreshUsername()
+		refreshPassword()
 	}
 
 	override func viewDidDisappear(_ animated: Bool) {

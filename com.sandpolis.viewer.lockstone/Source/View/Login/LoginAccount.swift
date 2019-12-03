@@ -35,8 +35,8 @@ class LoginAccount: UIViewController {
 		email.addTarget(self, action: #selector(refreshEmail), for: .editingChanged)
 		password.addTarget(self, action: #selector(refreshPassword), for: .editingChanged)
 
-		email.setLeftIcon("field/email")
-		password.setLeftIcon("field/password")
+		refreshEmail()
+		refreshPassword()
 	}
 
 	override func viewDidDisappear(_ animated: Bool) {

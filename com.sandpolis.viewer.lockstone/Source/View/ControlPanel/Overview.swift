@@ -61,16 +61,16 @@ class Overview: UIViewController {
 		switch profile.platform {
 		case .linux:
 			platform.text = "Linux"
-			platformLogo.image = UIImage(named: "platform/linux_small")
+			platformLogo.image = UIImage(named: "platform/linux")
 		case .macos:
 			platform.text = "macOS"
-			platformLogo.image = UIImage(named: "platform/mac_small")
+			platformLogo.image = UIImage(named: "platform/mac")
 		case .windows:
 			platform.text = "Windows"
-			platformLogo.image = UIImage(named: "platform/windows_small")
+			platformLogo.image = UIImage(named: "platform/windows")
 		case .freebsd:
 			platform.text = "FreeBSD"
-			platformLogo.image = UIImage(named: "platform/freebsd_small")
+			platformLogo.image = UIImage(named: "platform/freebsd")
 		default:
 			platform.text = "Unknown OS"
 		}

@@ -17,15 +17,16 @@
 //****************************************************************************//
 import UIKit
 import FirebaseFirestore
+import SwiftValidators
 
 class AddServer: UIViewController {
 
 	@IBOutlet weak var titleLabel: UINavigationItem!
-	@IBOutlet weak var nameTextField: UITextField!
-	@IBOutlet weak var addressTextField: UITextField!
-	@IBOutlet weak var usernameTextField: UITextField!
-	@IBOutlet weak var passwordTextField: UITextField!
-	@IBOutlet weak var errorLabel: UILabel!
+	@IBOutlet weak var name: UITextField!
+	@IBOutlet weak var address: UITextField!
+	@IBOutlet weak var username: UITextField!
+	@IBOutlet weak var password: UITextField!
+	@IBOutlet weak var status: UILabel!
 	@IBOutlet weak var cloudButton: UIButton!
 
 	var server: SandpolisServer!
@@ -34,12 +35,13 @@ class AddServer: UIViewController {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		errorLabel.text = nil
+
+		status.text = nil
 		if server != nil {
-			nameTextField.text = server.name
-			addressTextField.text = server.address
-			usernameTextField.text = server.username
-			passwordTextField.text = server.password
+			name.text = server.name
+			address.text = server.address
+			username.text = server.username
+			password.text = server.password
 			cloudButton.isHidden = true
 			titleLabel.title = "Edit Server"
 		}
@@ -47,6 +49,13 @@ class AddServer: UIViewController {
 		// Search for unused subscriptions
 		cloudButton.setTitle(true ? "Don't have your own server yet?" : "Launch new cloud server", for: .normal)
 
+		address.addTarget(self, action: #selector(refreshAddress), for: .editingChanged)
+		username.addTarget(self, action: #selector(refreshUsername), for: .editingChanged)
+		password.addTarget(self, action: #selector(refreshPassword), for: .editingChanged)
+
+		refreshAddress()
+		refreshUsername()
+		refreshPassword()
 	}
 
 	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -54,16 +63,16 @@ class AddServer: UIViewController {
 	}
 
 	@IBAction func saveButtonPressed(_ sender: Any) {
-		if nameTextField.text!.isEmpty || addressTextField.text!.isEmpty || usernameTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
-			errorLabel.text = "Please fill out all fields."
+		if name.text!.isEmpty || address.text!.isEmpty || username.text!.isEmpty || password.text!.isEmpty {
+			status.text = "Please fill out all fields."
 			return
 		}
 
 		serverReference.setData([
-			"name": nameTextField.text!,
-			"address": addressTextField.text!,
-			"username": usernameTextField.text!,
-			"password": passwordTextField.text!,
+			"name": name.text!,
+			"address": address.text!,
+			"username": username.text!,
+			"password": password.text!,
 			"cloud": false
 		])
 
@@ -82,5 +91,29 @@ class AddServer: UIViewController {
 	func textFieldShouldReturn(textField: UITextField) -> Bool {
 		textField.resignFirstResponder()
 		return true
+	}
+	
+	@objc func refreshAddress() {
+		if (Validator.isFQDN() || Validator.isIPv4()).apply(address.text) {
+			address.setLeftIcon("field/server_selected")
+		} else {
+			address.setLeftIcon("field/server")
+		}
+	}
+
+	@objc func refreshUsername() {
+		if Validator.minLength(4).apply(username.text) {
+			username.setLeftIcon("field/username_selected")
+		} else {
+			username.setLeftIcon("field/username")
+		}
+	}
+
+	@objc func refreshPassword() {
+		if Validator.minLength(8).apply(password.text) {
+			password.setLeftIcon("field/password_selected")
+		} else {
+			password.setLeftIcon("field/password")
+		}
 	}
 }

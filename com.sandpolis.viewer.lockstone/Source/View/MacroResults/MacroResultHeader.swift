@@ -36,19 +36,18 @@ class MacroResultHeader: UITableViewHeaderFooterView {
 		hostname.text = profile.hostname
 		switch profile.platform {
 		case .linux:
-			platform.image = UIImage(named: "linux")
+			platform.image = UIImage(named: "platform/linux")
 		case .macos:
-			platform.image = UIImage(named: "macos")
+			platform.image = UIImage(named: "platform/mac")
 		case .windows:
-			platform.image = UIImage(named: "windows")
+			platform.image = UIImage(named: "platform/windows")
+		case .freebsd:
+			platform.image = UIImage(named: "platform/freebsd")
 		default:
 			break
 		}
 	}
 
-	//
-	// Trigger toggle section when tapping on the header
-	//
 	@objc func didTapHeader(_ gestureRecognizer: UITapGestureRecognizer) {
 		guard let cell = gestureRecognizer.view as? MacroResultHeader else {
 			return
@@ -58,9 +57,6 @@ class MacroResultHeader: UITableViewHeaderFooterView {
 	}
 
 	func setCollapsed(_ collapsed: Bool) {
-		//
-		// Animate the arrow rotation (see Extensions.swf)
-		//
 		arrow.rotate(collapsed ? 0.0 : .pi / 2)
 	}
 
