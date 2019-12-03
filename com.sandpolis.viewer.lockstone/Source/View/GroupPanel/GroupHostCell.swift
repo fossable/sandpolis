@@ -26,13 +26,13 @@ class GroupHostCell: UITableViewCell {
 		hostname.text = profile.hostname
 		switch profile.platform {
 		case .linux:
-			platform.image = UIImage(named: "platform/linux_small")
+			platform.image = UIImage(named: "platform/linux")
 		case .macos:
-			platform.image = UIImage(named: "platform/mac_small")
+			platform.image = UIImage(named: "platform/mac")
 		case .windows:
-			platform.image = UIImage(named: "platform/windows_small")
+			platform.image = UIImage(named: "platform/windows")
 		case .freebsd:
-			platform.image = UIImage(named: "platform/freebsd_small")
+			platform.image = UIImage(named: "platform/freebsd")
 		default:
 			break
 		}

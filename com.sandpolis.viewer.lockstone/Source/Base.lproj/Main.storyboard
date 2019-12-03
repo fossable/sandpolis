@@ -1064,7 +1064,7 @@
                                 <rect key="frame" x="12" y="64" width="390" height="687"/>
                                 <subviews>
                                     <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="18" sectionFooterHeight="18" translatesAutoresizingMaskIntoConstraints="NO" id="Q9z-0d-6J5">
-                                        <rect key="frame" x="0.0" y="0.0" width="390" height="472"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="390" height="687"/>
                                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                         <prototypes>
                                             <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" accessoryType="disclosureIndicator" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="GroupHostCell" id="Bdt-at-pxY" customClass="GroupHostCell" customModule="Sandpolis" customModuleProvider="target">
@@ -1104,8 +1104,8 @@
                                             </tableViewCell>
                                         </prototypes>
                                     </tableView>
-                                    <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="1t4-cV-YWO">
-                                        <rect key="frame" x="0.0" y="472" width="390" height="215"/>
+                                    <containerView hidden="YES" opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="1t4-cV-YWO">
+                                        <rect key="frame" x="0.0" y="0.0" width="390" height="215"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="215" id="OiD-11-Sfq"/>
                                         </constraints>
@@ -1958,7 +1958,7 @@
                                             <segue destination="wk3-g5-icu" kind="show" identifier="MacroSelectSegue" id="Tgm-TF-M4i"/>
                                         </connections>
                                     </tableViewCell>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" accessoryType="disclosureIndicator" indentationWidth="10" rowHeight="80" id="kVM-Nd-Us5">
+                                    <tableViewCell hidden="YES" clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" accessoryType="disclosureIndicator" indentationWidth="10" rowHeight="80" id="kVM-Nd-Us5">
                                         <rect key="frame" x="0.0" y="268" width="414" height="80"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="kVM-Nd-Us5" id="IZ9-7q-rSk">

@@ -34,5 +34,8 @@ class GroupControlPanel: UITabBarController {
 
 		// Always select overview
 		self.selectedIndex = 0
+		
+		// Set title
+		self.navigationItem.title = "\(profiles.count) hosts selected"
 	}
 }
