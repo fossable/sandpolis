@@ -27,16 +27,13 @@ class ShellSession: UIViewController {
 
 	var profile: SandpolisProfile!
 
-	private var stream: SandpolisStream!
-
 	override func viewDidLoad() {
-
-		// Find compatible shells
-		SandpolisUtil.connection.shell_list(profile.cvid).whenComplete { result in
-			switch result {
-			case .success(let rs as Net_ShellMSG):
+		super.viewDidLoad()
+		
+		DispatchQueue.global().async(qos: .userInitiated) {
+			if let shells = self.profile.shells {
 				DispatchQueue.main.async {
-					for shell in rs.rsListShells.listing {
+					for shell in shells {
 						switch shell.type {
 						case .bash:
 							self.shellSelector.setEnabled(true, forSegmentAt: 2)
@@ -49,8 +46,6 @@ class ShellSession: UIViewController {
 						}
 					}
 				}
-			default:
-				break
 			}
 		}
 	}
@@ -59,22 +54,13 @@ class ShellSession: UIViewController {
 		if terminalContainer.isHidden {
 			terminalContainer.isHidden = false
 		}
-		if stream != nil {
-			stream.close()
+		if terminal.stream != nil {
+			terminal.stream.close()
 		}
 		terminal.clear()
-
-		switch shellSelector.selectedSegmentIndex {
-		case 0:
-			stream = SandpolisUtil.connection.shell_session(profile.cvid, self, Net_Shell.pwsh)
-		case 1:
-			stream = SandpolisUtil.connection.shell_session(profile.cvid, self, Net_Shell.cmd)
-		case 2:
-			stream = SandpolisUtil.connection.shell_session(profile.cvid, self, Net_Shell.bash)
-		default:
-			break
+		if let shell = getShellType() {
+			terminal.stream = SandpolisUtil.connection.shell_session(profile.cvid, self, shell)
 		}
-		terminal.stream = stream
 	}
 
 	public func onEvent(_ ev: Net_EV_ShellStream) {
@@ -87,6 +73,19 @@ class ShellSession: UIViewController {
 		if segue.identifier == "ShellEmbed" {
 			terminal = segue.destination as? TerminalViewController
 			terminal.profile = profile
+		}
+	}
+	
+	private func getShellType() -> Net_Shell? {
+		switch shellSelector.selectedSegmentIndex {
+		case 0:
+			return Net_Shell.pwsh
+		case 1:
+			return Net_Shell.cmd
+		case 2:
+			return Net_Shell.bash
+		default:
+			return nil
 		}
 	}
 }

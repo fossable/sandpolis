@@ -39,11 +39,31 @@ class MacroSelect: UITableViewController {
 			}
 
 			self.macroList = macros.filter { macro in
+				
+				let type: Net_Shell
+				switch macro["type"] as! String {
+				case "powershell":
+					type = .pwsh
+				case "cmd":
+					type = .cmd
+				case "bash":
+					type = .bash
+				default:
+					type = .bash
+				}
+				
 				// Ensure macro is compatible with every profile
 				for profile in self.profiles {
-					// TODO
+					if let shells = profile.shells {
+						for shell in shells {
+							if shell.type == type {
+								return true
+							}
+						}
+					}
+					return false
 				}
-				return true
+				return false
 			}
 			self.tableView.reloadData()
 		}

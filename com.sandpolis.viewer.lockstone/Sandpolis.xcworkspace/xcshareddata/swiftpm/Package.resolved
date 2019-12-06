@@ -41,9 +41,9 @@
         "package": "SwiftEventBus",
         "repositoryURL": "https://github.com/cesarferreira/SwiftEventBus",
         "state": {
-          "branch": "master",
-          "revision": "e34a15dadd0890f398b9c23d5f0fcfbe60d7e74d",
-          "version": null
+          "branch": null,
+          "revision": "cea5121162d88f233f392f63acbc8468fdd77927",
+          "version": "5.0.1"
         }
       }
     ]

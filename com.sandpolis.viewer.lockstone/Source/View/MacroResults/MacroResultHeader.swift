@@ -34,18 +34,7 @@ class MacroResultHeader: UITableViewHeaderFooterView {
 
 	func setContent(_ profile: SandpolisProfile) {
 		hostname.text = profile.hostname
-		switch profile.platform {
-		case .linux:
-			platform.image = UIImage(named: "platform/linux")
-		case .macos:
-			platform.image = UIImage(named: "platform/mac")
-		case .windows:
-			platform.image = UIImage(named: "platform/windows")
-		case .freebsd:
-			platform.image = UIImage(named: "platform/freebsd")
-		default:
-			break
-		}
+		platform.image = profile.platformIcon
 	}
 
 	@objc func didTapHeader(_ gestureRecognizer: UITapGestureRecognizer) {

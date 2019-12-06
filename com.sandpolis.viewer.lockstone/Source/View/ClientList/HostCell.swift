@@ -28,17 +28,6 @@ class HostCell: UITableViewCell {
 		addressLabel.text = profile.ipAddress
 
 		// Set platform information
-		switch profile.platform {
-		case .linux:
-			platform.image = UIImage(named: "platform/linux")
-		case .macos:
-			platform.image = UIImage(named: "platform/mac")
-		case .windows:
-			platform.image = UIImage(named: "platform/windows")
-		case .freebsd:
-			platform.image = UIImage(named: "platform/freebsd")
-		default:
-			break
-		}
+		platform.image = profile.platformIcon
 	}
 }

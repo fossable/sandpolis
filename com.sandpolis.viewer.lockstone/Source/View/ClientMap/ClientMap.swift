@@ -88,19 +88,7 @@ class ClientMap: UIViewController, MKMapViewDelegate {
 			annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: "ClientAnnotation")
 		}
 		annotationView.markerTintColor = UIColor.red
-		switch annotation.profile.platform {
-		case .windows:
-			annotationView.glyphImage = UIImage(named: "platform/windows-glyph")
-		case .linux:
-			annotationView.glyphImage = UIImage(named: "platform/linux")
-		case .macos:
-			annotationView.glyphImage = UIImage(named: "platform/mac-glyph")
-		case .freebsd:
-			annotationView.glyphImage = UIImage(named: "platform/freebsd-glyph")
-		default:
-			break
-		}
-
+		annotationView.glyphImage = annotation.profile.platformGlyph
 		annotationView.clusteringIdentifier = "ClientAnnotation"
 
 		return annotationView

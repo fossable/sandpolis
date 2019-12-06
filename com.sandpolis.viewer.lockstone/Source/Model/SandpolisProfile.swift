@@ -16,21 +16,26 @@
 //                                                                            //
 //****************************************************************************//
 import Foundation
+import UIKit
+import os
 
 /// Contains client metadata
 class SandpolisProfile {
 
 	/// The client's UUID
-	var uuid: String
+	let uuid: String
 
 	/// The client's CVID
-	var cvid: Int32
+	let cvid: Int32
+	
+	/// The client's OS type
+	let platform: Util_OsType
+	
+	/// Whether the client is currently online
+	var online: Bool
 
 	/// The client's IP address
-	var ipAddress: String
-
-	/// The client's OS type
-	var platform: Util_OsType
+	var ipAddress: String?
 
 	/// The client's hostname
 	var hostname: String?
@@ -50,11 +55,20 @@ class SandpolisProfile {
 	/// The client's start timestamp
 	var startTime: Int64?
 
-	/// Whether the client is online
-	var online: Bool
-
-	// The client's IP location
+	/// The client's IP location
 	var location: Util_Location?
+	
+	/// A list of shells that the client supports
+	lazy var shells: [Net_RS_ListShells.ShellListing]? = {
+		do {
+			if let rs = try SandpolisUtil.connection.shell_list(cvid).wait() as? Net_ShellMSG {
+				return rs.rsListShells.listing
+			}
+		} catch {
+			os_log("Failed to query shells")
+		}
+		return nil
+	}()
 
 	init(uuid: String, cvid: Int32, hostname: String, ipAddress: String, platform: Util_OsType, online: Bool) {
 		self.uuid = uuid
@@ -63,5 +77,35 @@ class SandpolisProfile {
 		self.ipAddress = ipAddress
 		self.platform = platform
 		self.online = online
+	}
+	
+	var platformIcon: UIImage? {
+		switch platform {
+		case .windows:
+			return UIImage(named: "platform/windows")
+		case .linux:
+			return UIImage(named: "platform/linux")
+		case .macos:
+			return UIImage(named: "platform/mac")
+		case .freebsd:
+			return UIImage(named: "platform/freebsd")
+		default:
+			return nil
+		}
+	}
+	
+	var platformGlyph: UIImage? {
+		switch platform {
+		case .windows:
+			return UIImage(named: "platform/windows-glyph")
+		case .linux:
+			return UIImage(named: "platform/linux")
+		case .macos:
+			return UIImage(named: "platform/mac-glyph")
+		case .freebsd:
+			return UIImage(named: "platform/freebsd-glyph")
+		default:
+			return nil
+		}
 	}
 }
