@@ -17,7 +17,7 @@
 //****************************************************************************//
 import UIKit
 
-class HostCell: UITableViewCell {
+class ClientCell: UITableViewCell {
 
 	@IBOutlet weak var platform: UIImageView!
 	@IBOutlet weak var nameLabel: UILabel!

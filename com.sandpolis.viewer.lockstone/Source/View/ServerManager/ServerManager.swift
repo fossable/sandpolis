@@ -141,8 +141,8 @@ class ServerManager: UITableViewController {
 			addServerView.server = servers[indexPath.row]
 			addServerView.serverReference = addServerView.server.reference
 		} else if segue.identifier == "ShowHostSegue",
-			let mainTab = segue.destination as? MainTabController {
-			mainTab.title = (sender as! SandpolisServer).name
+			let mainTab = segue.destination as? ClientManager {
+			mainTab.serverName = (sender as! SandpolisServer).name
 		} else {
 			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
 		}

@@ -57,7 +57,7 @@ class ClientList: UITableViewController {
 	}
 
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-		let cell = tableView.dequeueReusableCell(withIdentifier: "HostCell", for: indexPath) as! HostCell
+		let cell = tableView.dequeueReusableCell(withIdentifier: "HostCell", for: indexPath) as! ClientCell
 		cell.setContent(connection.profiles[indexPath.row])
 		if selectionMode {
 			if selection.contains(indexPath) {

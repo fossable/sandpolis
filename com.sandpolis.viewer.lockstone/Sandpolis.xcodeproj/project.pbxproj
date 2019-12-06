@@ -10,11 +10,11 @@
 		8542D3FE22D66E0300F56F70 /* ServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8542D3FD22D66E0300F56F70 /* ServerManager.swift */; };
 		8542D40022D69CBF00F56F70 /* ClientList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8542D3FF22D69CBF00F56F70 /* ClientList.swift */; };
 		8542D40622D6A95E00F56F70 /* AddServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8542D40522D6A95E00F56F70 /* AddServer.swift */; };
-		85A2F87C22DAC2F300B2FD7D /* HostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A2F87A22DAC2F300B2FD7D /* HostCell.swift */; };
+		85A2F87C22DAC2F300B2FD7D /* ClientCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A2F87A22DAC2F300B2FD7D /* ClientCell.swift */; };
 		85A2F87D22DAC2F300B2FD7D /* ServerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A2F87B22DAC2F300B2FD7D /* ServerCell.swift */; };
 		85CECBF922D9897400EF1A6E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CECBF822D9897400EF1A6E /* Settings.swift */; };
 		8C36F32D15727B1432C2C03A /* Pods_Sandpolis.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E698DECED333654BF5F210 /* Pods_Sandpolis.framework */; };
-		8E653C2222E6595D00BB8FEA /* MainTabController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E653C2122E6595D00BB8FEA /* MainTabController.swift */; };
+		8E653C2222E6595D00BB8FEA /* ClientManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E653C2122E6595D00BB8FEA /* ClientManager.swift */; };
 		8E72F6CE2300C46F000D621A /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E72F6CD2300C46F000D621A /* CoreLocation.framework */; };
 		8E72F6D02300C70E000D621A /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E72F6CF2300C70E000D621A /* MapKit.framework */; };
 		8EAD841C22CBD80700B49D59 /* ClientMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EAD841B22CBD80700B49D59 /* ClientMap.swift */; };
@@ -138,11 +138,11 @@
 		8542D3FD22D66E0300F56F70 /* ServerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerManager.swift; sourceTree = "<group>"; };
 		8542D3FF22D69CBF00F56F70 /* ClientList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientList.swift; sourceTree = "<group>"; };
 		8542D40522D6A95E00F56F70 /* AddServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddServer.swift; sourceTree = "<group>"; };
-		85A2F87A22DAC2F300B2FD7D /* HostCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HostCell.swift; sourceTree = "<group>"; };
+		85A2F87A22DAC2F300B2FD7D /* ClientCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientCell.swift; sourceTree = "<group>"; };
 		85A2F87B22DAC2F300B2FD7D /* ServerCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerCell.swift; sourceTree = "<group>"; };
 		85CECBF822D9897400EF1A6E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		87E698DECED333654BF5F210 /* Pods_Sandpolis.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Sandpolis.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		8E653C2122E6595D00BB8FEA /* MainTabController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabController.swift; sourceTree = "<group>"; };
+		8E653C2122E6595D00BB8FEA /* ClientManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientManager.swift; sourceTree = "<group>"; };
 		8E72F6CD2300C46F000D621A /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		8E72F6CF2300C70E000D621A /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		8EAD841B22CBD80700B49D59 /* ClientMap.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientMap.swift; sourceTree = "<group>"; };
@@ -352,7 +352,7 @@
 		AA642E3B23088E6E0027BEC2 /* ClientList */ = {
 			isa = PBXGroup;
 			children = (
-				85A2F87A22DAC2F300B2FD7D /* HostCell.swift */,
+				85A2F87A22DAC2F300B2FD7D /* ClientCell.swift */,
 				8542D3FF22D69CBF00F56F70 /* ClientList.swift */,
 			);
 			path = ClientList;
@@ -493,14 +493,12 @@
 		AA72362922D41AB7004EE888 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				AAA03DF82399EAE00037D605 /* ClientManager */,
 				AADCAF0E238A2B6500E6452E /* About */,
 				AA69CF82236284B0008101AA /* Terminal */,
 				AA899D2C2319E46E00E7C703 /* ServerCreator */,
-				AA0724A123121FE10087190F /* ClientScanner */,
 				AA07249C2311E22C0087190F /* CloudPricing */,
 				AA642E3D23088EE40027BEC2 /* ControlPanel */,
-				AA642E3B23088E6E0027BEC2 /* ClientList */,
-				AA642E3C23088E760027BEC2 /* ClientMap */,
 				AA642E42230890C60027BEC2 /* MacroResults */,
 				AA642E41230890810027BEC2 /* MacroSelect */,
 				AA642E3F23088F580027BEC2 /* MacroManager */,
@@ -509,7 +507,6 @@
 				AA642E3923088DE70027BEC2 /* Settings */,
 				AA642E3823088D740027BEC2 /* FileManager */,
 				AA642E3723088CE80027BEC2 /* Login */,
-				8E653C2122E6595D00BB8FEA /* MainTabController.swift */,
 				AA3BDAAC23838FC600540564 /* UITextField+Icon.swift */,
 				AAA591B82384CCEF00A2893A /* UIViewController+Login.swift */,
 			);
@@ -584,6 +581,17 @@
 				AA86F6DD23497866000C0B94 /* Step4.swift */,
 			);
 			path = ServerCreator;
+			sourceTree = "<group>";
+		};
+		AAA03DF82399EAE00037D605 /* ClientManager */ = {
+			isa = PBXGroup;
+			children = (
+				AA0724A123121FE10087190F /* ClientScanner */,
+				AA642E3C23088E760027BEC2 /* ClientMap */,
+				AA642E3B23088E6E0027BEC2 /* ClientList */,
+				8E653C2122E6595D00BB8FEA /* ClientManager.swift */,
+			);
+			path = ClientManager;
 			sourceTree = "<group>";
 		};
 		AAA8BF92237E53CE00BB4C85 /* com */ = {
@@ -945,7 +953,7 @@
 				AADCAF10238A2BC200E6452E /* AboutTable.swift in Sources */,
 				AA61588E2335A4300035622F /* SandpolisUtil.swift in Sources */,
 				AA72E0D82367D22F00C23D39 /* MacroResultCell.swift in Sources */,
-				8E653C2222E6595D00BB8FEA /* MainTabController.swift in Sources */,
+				8E653C2222E6595D00BB8FEA /* ClientManager.swift in Sources */,
 				AAA8BFC4237E53CF00BB4C85 /* msg_generator.pb.swift in Sources */,
 				AADED2D5238CA3800099D067 /* SandpolisConnection+FilesysPlugin.swift in Sources */,
 				AA86F6DE23497866000C0B94 /* Step4.swift in Sources */,
@@ -955,7 +963,7 @@
 				AA70FD1D22BEF326006A4C6F /* ProtobufCodecs.swift in Sources */,
 				AAF390E7230BC7F1008C9469 /* ResponseHandler.swift in Sources */,
 				AAA8BFD1237E53CF00BB4C85 /* generator.pb.swift in Sources */,
-				85A2F87C22DAC2F300B2FD7D /* HostCell.swift in Sources */,
+				85A2F87C22DAC2F300B2FD7D /* ClientCell.swift in Sources */,
 				AA42524422E980380083F7F4 /* MacroResult.swift in Sources */,
 				8542D40622D6A95E00F56F70 /* AddServer.swift in Sources */,
 				AAA8BFCC237E53CF00BB4C85 /* msg_group.pb.swift in Sources */,
@@ -1054,6 +1062,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -1115,6 +1124,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

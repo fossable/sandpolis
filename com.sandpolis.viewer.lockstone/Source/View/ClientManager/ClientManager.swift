@@ -18,8 +18,9 @@
 import UIKit
 import SwiftEventBus
 
-class MainTabController: UITabBarController {
+class ClientManager: UITabBarController {
 
+	/// The server title
 	var serverName: String?
 
 	override func viewDidLoad() {

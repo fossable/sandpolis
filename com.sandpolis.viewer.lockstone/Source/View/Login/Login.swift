@@ -114,7 +114,7 @@ class Login: UIViewController {
 			let createAccount = segue.destination as? CreateAccount {
 			createAccount.loginContainer = self
 		} else if segue.identifier == "DirectLoginCompleteSegue",
-			let dest = segue.destination as? MainTabController {
+			let dest = segue.destination as? ClientManager {
 			dest.serverName = sender as? String
 		}
 	}

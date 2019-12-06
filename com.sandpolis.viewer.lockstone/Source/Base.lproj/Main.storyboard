@@ -1797,7 +1797,7 @@
                                         <rect key="frame" x="0.0" y="172" width="390" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="JKF-7m-zir" id="I02-BI-Pj2">
-                                            <rect key="frame" x="0.0" y="0.0" width="390" height="44"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="576" height="44"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Cumulative Download" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="5ox-rT-XJo">
@@ -1808,7 +1808,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="download" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" enabled="NO" adjustsFontSizeToFit="NO" id="NCQ-ao-yRI">
-                                                    <rect key="frame" x="307.5" y="12" width="74.5" height="20.5"/>
+                                                    <rect key="frame" x="493.5" y="12" width="74.5" height="20.5"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="textColor"/>
@@ -2129,7 +2129,7 @@
                             </constraints>
                         </view>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="HostCell" rowHeight="80" id="eyh-Hm-sOL" customClass="HostCell" customModule="Sandpolis" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="HostCell" rowHeight="80" id="eyh-Hm-sOL" customClass="ClientCell" customModule="Sandpolis" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="28" width="414" height="80"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="eyh-Hm-sOL" id="b3Q-mt-JvS">
@@ -2509,10 +2509,10 @@
             </objects>
             <point key="canvasLocation" x="5080" y="552"/>
         </scene>
-        <!--Main Tab Controller-->
+        <!--Client Manager-->
         <scene sceneID="d4I-lf-oL7">
             <objects>
-                <tabBarController automaticallyAdjustsScrollViewInsets="NO" hidesBottomBarWhenPushed="YES" id="z06-cS-ZjJ" customClass="MainTabController" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
+                <tabBarController automaticallyAdjustsScrollViewInsets="NO" hidesBottomBarWhenPushed="YES" id="z06-cS-ZjJ" customClass="ClientManager" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationItem key="navigationItem" id="BCh-Lh-kfD"/>
                     <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="eH6-gU-4Mo">
@@ -3133,7 +3133,7 @@
         <segue reference="Tmd-11-lDG"/>
         <segue reference="Tgm-TF-M4i"/>
         <segue reference="p4H-z2-yLu"/>
-        <segue reference="kre-RH-OTc"/>
+        <segue reference="493-UJ-XsK"/>
         <segue reference="xCx-EK-m09"/>
         <segue reference="h7N-WJ-x2L"/>
         <segue reference="BX0-on-vvi"/>
