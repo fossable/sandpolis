@@ -136,8 +136,11 @@ class FileManager: UITableViewController {
 				self.tableView.reloadData()
 			})
 		}
+		
+		// Cancel
+		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
-		present(alert, animated: true, completion: nil)
+		present(alert, animated: true)
 	}
 
 	/// Request a new listing for the current directory

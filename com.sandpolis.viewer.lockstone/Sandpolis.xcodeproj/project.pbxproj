@@ -108,6 +108,7 @@
 		AAAC2FD623550D5900425E9A /* Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAC2FD523550D5900425E9A /* Actions.swift */; };
 		AAAC2FD8235512A200425E9A /* RemoteDesktop.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAC2FD7235512A200425E9A /* RemoteDesktop.swift */; };
 		AAB6D957235FEA6300FED79B /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB6D956235FEA6300FED79B /* Document.swift */; };
+		AAB9B6D2239C349F002F192C /* About.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB9B6D1239C349F002F192C /* About.swift */; };
 		AABF01E923349D6800DEA0E4 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01E823349D6800DEA0E4 /* NIO */; };
 		AABF01EC23349DE300DEA0E4 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01EB23349DE300DEA0E4 /* NIOSSL */; };
 		AABF01EF23349ED300DEA0E4 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01EE23349ED300DEA0E4 /* SwiftProtobuf */; };
@@ -238,6 +239,7 @@
 		AAAC2FD523550D5900425E9A /* Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Actions.swift; sourceTree = "<group>"; };
 		AAAC2FD7235512A200425E9A /* RemoteDesktop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDesktop.swift; sourceTree = "<group>"; };
 		AAB6D956235FEA6300FED79B /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
+		AAB9B6D1239C349F002F192C /* About.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = About.swift; sourceTree = "<group>"; };
 		AABFEE16237D359C0022C58D /* GroupActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupActions.swift; sourceTree = "<group>"; };
 		AABFEE18237D397F0022C58D /* GroupControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupControlPanel.swift; sourceTree = "<group>"; };
 		AAC198F822E40CA6004361C5 /* FileCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCell.swift; sourceTree = "<group>"; };
@@ -743,6 +745,7 @@
 			children = (
 				AADCAF0F238A2BC200E6452E /* AboutTable.swift */,
 				AADCAF11238A2CDA00E6452E /* VersionCell.swift */,
+				AAB9B6D1239C349F002F192C /* About.swift */,
 			);
 			path = About;
 			sourceTree = "<group>";
@@ -993,6 +996,7 @@
 				AA6A75B8236154BB00AA1A4D /* Terminal.swift in Sources */,
 				AA70158922D7CAD800A1E4ED /* SandpolisStream.swift in Sources */,
 				AAA8BFC8237E53CF00BB4C85 /* msg_plugin.pb.swift in Sources */,
+				AAB9B6D2239C349F002F192C /* About.swift in Sources */,
 				AA6A75BA236156F700AA1A4D /* TerminalView.swift in Sources */,
 				AAA8BFDD237E53CF00BB4C85 /* message_filesys.pb.swift in Sources */,
 				AAA8BFC5237E53CF00BB4C85 /* msg_network.pb.swift in Sources */,
@@ -1152,7 +1156,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 858CG57YNC;
 				INFOPLIST_FILE = "$(SRCROOT)/Source/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
@@ -1174,7 +1178,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 858CG57YNC;
 				INFOPLIST_FILE = "$(SRCROOT)/Source/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;

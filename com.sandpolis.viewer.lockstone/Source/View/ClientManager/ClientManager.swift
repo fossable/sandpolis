@@ -25,8 +25,14 @@ class ClientManager: UITabBarController {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		
+		// Set navigation bar
 		navigationItem.title = serverName
+		if UserDefaults.standard.string(forKey: "login.type") == "direct" {
+			navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Logout", style: .plain, target: self, action: #selector(logoutDirect))
+		}
 
+		// Set default view
 		if let defaultView = UserDefaults.standard.string(forKey: "default_view") {
 			switch defaultView {
 			case "list":
@@ -53,5 +59,11 @@ class ClientManager: UITabBarController {
 				self.performSegue(withIdentifier: "UnwindServerSegue", sender: self)
 			}
 		}
+	}
+
+	@objc func logoutDirect() {
+		SwiftEventBus.unregister(self)
+		SandpolisUtil.connection.disconnect()
+		performSegue(withIdentifier: "UnwindLoginSegue", sender: self)
 	}
 }

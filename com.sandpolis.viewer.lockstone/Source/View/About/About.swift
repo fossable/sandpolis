@@ -17,21 +17,19 @@
 //****************************************************************************//
 import UIKit
 
-class InfoCell: UITableViewCell {
+class About: UIViewController {
+	
+	override var preferredStatusBarStyle: UIStatusBarStyle {
+		return .lightContent
+	}
 
-	@IBOutlet weak var title: UILabel!
-	@IBOutlet weak var value: UILabel!
-	@IBOutlet weak var progress: UIActivityIndicatorView!
-
-	public func setAttribute(_ attribute: Attribute) {
-		title.text = attribute.title
-		if let value = attribute.value {
-			self.value.text = value
-			self.value.isHidden = false
-			self.progress.stopAnimating()
-		} else {
-			self.value.isHidden = true
-			self.progress.startAnimating()
+	@IBAction func openWebsite(_ sender: Any) {
+		if let url = URL(string: "https://sandpolis.com") {
+			UIApplication.shared.open(url)
 		}
+	}
+	
+	@IBAction func close(_ sender: Any) {
+		self.dismiss(animated: true, completion: nil)
 	}
 }

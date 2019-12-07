@@ -25,7 +25,6 @@ class Overview: UIViewController {
 	@IBOutlet weak var platform: UILabel!
 	@IBOutlet weak var location: UILabel!
 	@IBOutlet weak var screenshot: UIImageView!
-	@IBOutlet weak var screenshotMessage: UILabel!
 	@IBOutlet weak var tableContainer: UIView!
 	@IBOutlet weak var screenshotProgress: UIActivityIndicatorView!
 
@@ -44,9 +43,10 @@ class Overview: UIViewController {
 
 		// Set location
 		if let code = profile.location?.countryCode {
-			flag.image = UIImage(named: "flag/\(code)")
+			flag.image = UIImage(named: "flag/\(code.lowercased())")
 			location.text = FormatUtil.formatProfileLocation(profile)
 		} else {
+			flag.isHidden = true
 			location.text = profile.ipAddress
 		}
 
@@ -58,19 +58,16 @@ class Overview: UIViewController {
 		}
 
 		// Set platform information
+		platformLogo.image = profile.platformIcon
 		switch profile.platform {
 		case .linux:
 			platform.text = "Linux"
-			platformLogo.image = UIImage(named: "platform/linux")
 		case .macos:
 			platform.text = "macOS"
-			platformLogo.image = UIImage(named: "platform/mac")
 		case .windows:
 			platform.text = "Windows"
-			platformLogo.image = UIImage(named: "platform/windows")
 		case .freebsd:
 			platform.text = "FreeBSD"
-			platformLogo.image = UIImage(named: "platform/freebsd")
 		default:
 			platform.text = "Unknown OS"
 		}
@@ -105,12 +102,11 @@ class Overview: UIViewController {
 				DispatchQueue.main.async {
 					self.screenshotProgress.stopAnimating()
 					self.screenshot.image = UIImage(data: self.profile.screenshot!)
-					self.screenshotMessage.isHidden = true
 				}
 			default:
 				DispatchQueue.main.async {
 					self.screenshotProgress.stopAnimating()
-					self.screenshotMessage.isHidden = false
+					self.screenshot.isHidden = true
 				}
 			}
 		}
