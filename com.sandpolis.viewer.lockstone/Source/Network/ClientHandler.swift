@@ -40,8 +40,6 @@ final class ClientHandler: ChannelInboundHandler {
 		default:
 			if let stream = self.connection.streams.first(where: { $0.id == rs.id }) {
 				stream.consume(rs)
-			} else {
-				os_log("Warning: dropped data for stream: %s", rs.id)
 			}
 		}
 	}

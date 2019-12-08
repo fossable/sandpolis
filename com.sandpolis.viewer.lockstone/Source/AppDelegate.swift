@@ -36,15 +36,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	}
 
 	func applicationWillResignActive(_ application: UIApplication) {
-		if let connection = SandpolisUtil.connection, connection.isConnected() {
-			connection.disconnect()
-		}
 	}
 
 	func applicationDidBecomeActive(_ application: UIApplication) {
+		if let connection = SandpolisUtil.connection, !connection.isConnected() {
+			connection.disconnect()
+			SandpolisUtil.connection = nil
+		}
 	}
 
 	func applicationWillTerminate(_ application: UIApplication) {
+		if let connection = SandpolisUtil.connection, connection.isConnected() {
+			connection.disconnect()
+		}
 	}
 
 	private static var configured = false

@@ -59,14 +59,14 @@ final class ResponseHandler: ChannelInboundHandler {
 				if let timer = p.1 {
 					timer.invalidate()
 				}
-				p.0.fail(NSError())
+				p.0.fail(ResponseError.timeout)
 			}
 
 			if timeout > 0 {
 				responseMap[id] = (promise, Timer.scheduledTimer(withTimeInterval: timeout, repeats: false) { _ in
 					self.queue.sync {
 						if let p = self.responseMap.removeValue(forKey: id) {
-							p.0.fail(NSError())
+							p.0.fail(ResponseError.timeout)
 						}
 					}
 				})
@@ -74,5 +74,9 @@ final class ResponseHandler: ChannelInboundHandler {
 				responseMap[id] = (promise, nil)
 			}
 		}
+	}
+	
+	enum ResponseError: Error {
+		case timeout
 	}
 }

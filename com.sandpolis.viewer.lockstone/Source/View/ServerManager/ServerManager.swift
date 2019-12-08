@@ -92,6 +92,7 @@ class ServerManager: UITableViewController {
 		let server = servers[indexPath.row]
 		if let online = server.online {
 			if online {
+				tableView.allowsSelection = false
 				login(address: server.address, username: server.username, password: server.password) { connection in
 					if let connection = connection {
 						SandpolisUtil.connection = connection
@@ -99,6 +100,9 @@ class ServerManager: UITableViewController {
 						DispatchQueue.main.async {
 							self.performSegue(withIdentifier: "ShowHostSegue", sender: server)
 						}
+					}
+					DispatchQueue.main.async {
+						tableView.allowsSelection = true
 					}
 				}
 			} else {
