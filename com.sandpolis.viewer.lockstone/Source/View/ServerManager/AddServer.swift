@@ -19,7 +19,7 @@ import UIKit
 import FirebaseFirestore
 import SwiftValidators
 
-class AddServer: UIViewController {
+class AddServer: UIViewController, UITextFieldDelegate {
 
 	@IBOutlet weak var titleLabel: UINavigationItem!
 	@IBOutlet weak var name: UITextField!
@@ -49,17 +49,37 @@ class AddServer: UIViewController {
 		// Search for unused subscriptions
 		cloudButton.setTitle(true ? "Don't have your own server yet?" : "Launch new cloud server", for: .normal)
 
+		name.delegate = self
+		name.tag = 0
+		
 		address.addTarget(self, action: #selector(refreshAddress), for: .editingChanged)
+		address.delegate = self
+		address.tag = 1
+
 		username.addTarget(self, action: #selector(refreshUsername), for: .editingChanged)
+		username.delegate = self
+		username.tag = 2
+
 		password.addTarget(self, action: #selector(refreshPassword), for: .editingChanged)
+		password.delegate = self
+		password.tag = 3
 
 		refreshAddress()
 		refreshUsername()
 		refreshPassword()
 	}
 
+	func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+		if let next = textField.superview?.viewWithTag(textField.tag + 1) as? UITextField {
+			next.becomeFirstResponder()
+		} else {
+			textField.resignFirstResponder()
+		}
+		return false
+	}
+
 	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-		self.view.endEditing(true)
+		view.endEditing(true)
 	}
 
 	@IBAction func saveButtonPressed(_ sender: Any) {
@@ -86,11 +106,6 @@ class AddServer: UIViewController {
 	@IBAction func cloudButtonPressed(_ sender: Any) {
 		performSegue(withIdentifier: "CreateServerSegue", sender: self)
 		//performSegue(withIdentifier: "PricingSegue", sender: self)
-	}
-
-	func textFieldShouldReturn(textField: UITextField) -> Bool {
-		textField.resignFirstResponder()
-		return true
 	}
 	
 	@objc func refreshAddress() {

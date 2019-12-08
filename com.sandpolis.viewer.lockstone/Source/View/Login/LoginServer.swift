@@ -21,7 +21,7 @@ import FirebaseAuth
 import SwiftKeychainWrapper
 import SwiftValidators
 
-class LoginServer: UIViewController {
+class LoginServer: UIViewController, UITextFieldDelegate {
 
 	@IBOutlet weak var address: UITextField!
 	@IBOutlet weak var username: UITextField!
@@ -33,8 +33,16 @@ class LoginServer: UIViewController {
 		super.viewDidLoad()
 
 		address.addTarget(self, action: #selector(refreshAddress), for: .editingChanged)
+		address.delegate = self
+		address.tag = 0
+
 		username.addTarget(self, action: #selector(refreshUsername), for: .editingChanged)
+		username.delegate = self
+		username.tag = 1
+
 		password.addTarget(self, action: #selector(refreshPassword), for: .editingChanged)
+		password.delegate = self
+		password.tag = 2
 
 		refreshAddress()
 		refreshUsername()
@@ -48,13 +56,17 @@ class LoginServer: UIViewController {
 		password.text = nil
 	}
 
-	func textFieldShouldReturn(textField: UITextField) -> Bool {
-		textField.resignFirstResponder()
-		return true
+	func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+		if let next = textField.superview?.viewWithTag(textField.tag + 1) as? UITextField {
+			next.becomeFirstResponder()
+		} else {
+			textField.resignFirstResponder()
+		}
+		return false
 	}
 
 	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-		self.view.endEditing(true)
+		view.endEditing(true)
 	}
 
 	@IBAction func login(_ sender: Any) {

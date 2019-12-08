@@ -20,7 +20,7 @@ import FirebaseAuth
 import FirebaseFirestore
 import SwiftValidators
 
-class CreateAccount: UIViewController {
+class CreateAccount: UIViewController, UITextFieldDelegate {
 
 	@IBOutlet weak var email: UITextField!
 	@IBOutlet weak var password: UITextField!
@@ -29,9 +29,14 @@ class CreateAccount: UIViewController {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-
+		
 		email.addTarget(self, action: #selector(refreshEmail), for: .editingChanged)
+		email.delegate = self
+		email.tag = 0
+		
 		password.addTarget(self, action: #selector(refreshPassword), for: .editingChanged)
+		password.delegate = self
+		password.tag = 1
 
 		refreshEmail()
 		refreshPassword()
@@ -43,13 +48,17 @@ class CreateAccount: UIViewController {
 		password.text = nil
 	}
 
-	func textFieldShouldReturn(textField: UITextField) -> Bool {
-		textField.resignFirstResponder()
-		return true
+	func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+		if let next = textField.superview?.viewWithTag(textField.tag + 1) as? UITextField {
+			next.becomeFirstResponder()
+		} else {
+			textField.resignFirstResponder()
+		}
+		return false
 	}
 
 	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-		self.view.endEditing(true)
+		view.endEditing(true)
 	}
 
 	@IBAction func create(_ sender: Any) {
