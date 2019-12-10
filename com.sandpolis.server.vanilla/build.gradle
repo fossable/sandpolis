@@ -61,7 +61,7 @@ dependencies {
 	api 'javax.persistence:javax.persistence-api:2.2'
 
 	// https://github.com/hibernate/hibernate-orm
-	api 'org.hibernate:hibernate-core:5.4.9.Final'
+	api 'org.hibernate:hibernate-core:5.4.10.Final'
 
 	// https://github.com/qos-ch/slf4j
 	api 'org.slf4j:slf4j-api:1.7.29'
