@@ -6,11 +6,16 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane id="background" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="721.0" prefWidth="311.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.installer.scene.main.MainController">
+<BorderPane id="background" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="750.0" prefWidth="311.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sandpolis.installer.scene.main.MainController">
 	<bottom>
 		<BorderPane BorderPane.alignment="CENTER">
-			<center>
-				<ButtonBar fx:id="button_bar" prefWidth="303.0">
+         <top>
+			 <HBox BorderPane.alignment="CENTER">
+				 <Label id="status" fx:id="status" />
+			 </HBox>
+         </top>
+         <bottom>
+				<ButtonBar prefHeight="34.0" prefWidth="303.0" BorderPane.alignment="CENTER">
 					<buttons>
 						<Button fx:id="btn_install" disable="true" mnemonicParsing="false" onAction="#install" text="Install" />
 					</buttons>
@@ -18,112 +23,90 @@
 						<Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
 					</padding>
 				</ButtonBar>
-			</center>
-         <top>
-            <HBox BorderPane.alignment="CENTER">
-               <children>
-                  <Label id="status" fx:id="status" />
-               </children>
-            </HBox>
-         </top>
+         </bottom>
 		</BorderPane>
 	</bottom>
 	<center>
 		<VBox prefHeight="200.0" prefWidth="100.0" spacing="4.0" BorderPane.alignment="CENTER">
-			<children>
-				<TitledPane fx:id="pane_viewer_jfx" text="Install Viewer GUI">
-					<graphic>
-						<CheckBox fx:id="chk_viewer_jfx" mnemonicParsing="false" />
-					</graphic>
-					<content>
-						<BorderPane>
-							<center>
-								<Label text="The Sandpolis GUI is a rich desktop application that allows you to connect to servers and manage clients." wrapText="true" BorderPane.alignment="BOTTOM_LEFT">
-									<font>
-										<Font size="11.0" />
-									</font>
-								</Label>
-							</center>
-						</BorderPane>
-					</content>
-				</TitledPane>
-				<TitledPane fx:id="pane_viewer_cli" text="Install Viewer CLI">
-					<graphic>
-						<CheckBox fx:id="chk_viewer_cli" mnemonicParsing="false" />
-					</graphic>
-					<content>
-						<BorderPane>
-							<center>
-								<Label text="The Sandpolis CLI is a minimalist text interface that can do almost everything the GUI can do." wrapText="true" BorderPane.alignment="CENTER_LEFT">
-									<font>
-										<Font size="11.0" />
-									</font>
-								</Label>
-							</center>
-						</BorderPane>
-					</content>
-				</TitledPane>
-				<TitledPane fx:id="pane_server" text="Install Server">
-					<graphic>
-						<CheckBox fx:id="chk_server" mnemonicParsing="false" />
-					</graphic>
-					<content>
-						<BorderPane>
-							<top>
-								<Label text="The Sandpolis server accepts connections from clients and viewers. If you're setting up a Sandpolis network of your own, this is what you need to install. If you're using a cloud service, there's no need to install the server." wrapText="true" BorderPane.alignment="CENTER">
-									<font>
-										<Font size="11.0" />
-									</font>
-								</Label>
-							</top>
-                     <bottom>
-                        <Label text="Default user -&gt; admin:password" BorderPane.alignment="CENTER">
-                           <font>
-                              <Font size="11.0" />
-                           </font>
-                           <BorderPane.margin>
-                              <Insets top="8.0" />
-                           </BorderPane.margin>
-                        </Label>
-                     </bottom>
-						</BorderPane>
-					</content>
-				</TitledPane>
-				<TitledPane fx:id="pane_client" text="Install Client">
-					<graphic>
-						<CheckBox fx:id="chk_client" mnemonicParsing="false" />
-					</graphic>
-					<content>
-						<BorderPane>
-							<bottom>
-								<VBox spacing="2.0" BorderPane.alignment="CENTER">
-									<children>
-										<HBox spacing="12.0">
-											<children>
-                                    <VBox id="qr_box" fx:id="qr_box" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="150.0" prefWidth="150.0">
-                                       <children>
-                                          <ProgressIndicator />
-                                       </children></VBox>
-                                    <Label text="Scan the QR code with the Sandpolis iOS application to associate this client with your server. Once associated, you can proceed with the installation." wrapText="true">
-                                       <font>
-                                          <Font size="11.0" />
-                                       </font>
-                                    </Label>
-											</children>
-										</HBox>
-									</children>
-									<opaqueInsets>
-										<Insets />
-									</opaqueInsets>
-									<padding>
-										<Insets top="5.0" />
-									</padding>
+			<TitledPane fx:id="pane_viewer_jfx" text="Install Viewer GUI">
+				<graphic>
+					<CheckBox fx:id="chk_viewer_jfx" mnemonicParsing="false" />
+				</graphic>
+				<BorderPane>
+					<center>
+						<Label text="The Sandpolis GUI is a rich desktop application that allows you to connect to servers and manage clients." wrapText="true" BorderPane.alignment="BOTTOM_LEFT">
+							<font>
+								<Font size="11.0" />
+							</font>
+						</Label>
+					</center>
+				</BorderPane>
+			</TitledPane>
+			<TitledPane fx:id="pane_viewer_cli" text="Install Viewer CLI">
+				<graphic>
+					<CheckBox fx:id="chk_viewer_cli" mnemonicParsing="false" />
+				</graphic>
+				<BorderPane>
+					<center>
+						<Label text="The Sandpolis CLI is a minimalist text interface that can do almost everything the GUI can do." wrapText="true" BorderPane.alignment="CENTER_LEFT">
+							<font>
+								<Font size="11.0" />
+							</font>
+						</Label>
+					</center>
+				</BorderPane>
+			</TitledPane>
+			<TitledPane fx:id="pane_server" text="Install Server">
+				<graphic>
+					<CheckBox fx:id="chk_server" mnemonicParsing="false" />
+				</graphic>
+				<BorderPane>
+					<top>
+						<Label text="The Sandpolis server accepts connections from clients and viewers. If you're setting up a Sandpolis network of your own, this is what you need to install. If you're using a cloud service, there's no need to install the server." wrapText="true" BorderPane.alignment="CENTER">
+							<font>
+								<Font size="11.0" />
+							</font>
+						</Label>
+					</top>
+					<bottom>
+						<Label text="Default user -&gt; admin:password" BorderPane.alignment="CENTER">
+							<font>
+								<Font size="11.0" />
+							</font>
+							<BorderPane.margin>
+								<Insets top="8.0" />
+							</BorderPane.margin>
+						</Label>
+					</bottom>
+				</BorderPane>
+			</TitledPane>
+			<TitledPane fx:id="pane_client" text="Install Client">
+				<graphic>
+					<CheckBox fx:id="chk_client" mnemonicParsing="false" />
+				</graphic>
+				<BorderPane>
+					<bottom>
+						<VBox spacing="2.0" BorderPane.alignment="CENTER">
+							<opaqueInsets>
+								<Insets />
+							</opaqueInsets>
+							<padding>
+								<Insets top="5.0" />
+							</padding>
+							<HBox spacing="12.0">
+								<VBox id="qr_box" fx:id="qr_box" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="150.0" prefWidth="150.0">
+									<ProgressIndicator />
 								</VBox>
-							</bottom>
-						</BorderPane>
-					</content>
-				</TitledPane>
-			</children>
+								<Label text="Scan the QR code with the Sandpolis iOS application to associate this client with your server. Once associated, you can proceed with the installation." wrapText="true">
+									<font>
+										<Font size="11.0" />
+									</font>
+								</Label>
+							</HBox>
+						</VBox>
+					</bottom>
+				</BorderPane>
+			</TitledPane>
 		</VBox>
 	</center>
 	<top>

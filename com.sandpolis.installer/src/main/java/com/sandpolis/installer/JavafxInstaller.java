@@ -144,6 +144,19 @@ public class JavafxInstaller extends Task<Void> {
 			updateProgress(progress, dependencies.size());
 		}
 
+		if (Main.IS_LINUX) {
+			if (coordinate.contains(":sandpolis-viewer-jfx:")) {
+				InstallUtil.installLinuxDesktopEntry(coordinate, executable, "Sandpolis Viewer");
+			}
+		}
+
+		else if (Main.IS_WINDOWS) {
+			if (coordinate.contains(":sandpolis-viewer-jfx:")) {
+				InstallUtil.installWindowsStartMenuEntry(coordinate);
+				InstallUtil.installWindowsDesktopShortcut();
+			}
+		}
+
 		completed = true;
 		return null;
 	}

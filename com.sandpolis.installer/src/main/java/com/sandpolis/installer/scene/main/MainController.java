@@ -102,7 +102,7 @@ public class MainController {
 	};
 
 	private ChangeListener<Boolean> refreshClient = (ObservableValue<? extends Boolean> p, Boolean o, Boolean n) -> {
-		if (o == false && n == true) {
+		if (!o && n) {
 			qrTask = service.submit(() -> {
 				do {
 					String token = RandUtil.nextAlphabetic(32).toUpperCase();
@@ -129,7 +129,7 @@ public class MainController {
 				setQrMessage("Association successful");
 				qrTask = null;
 			});
-		} else if (o == true && n == false) {
+		} else if (o && !n) {
 			if (qrTask != null) {
 				qrTask.cancel(true);
 				qrTask = null;

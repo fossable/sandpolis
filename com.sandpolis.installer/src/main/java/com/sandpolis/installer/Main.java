@@ -35,7 +35,17 @@ import javafx.stage.Stage;
  * @since 5.0.0
  */
 public final class Main {
-	private Main() {
+
+	public static final boolean IS_WINDOWS;
+	public static final boolean IS_LINUX;
+	public static final boolean IS_MAC;
+
+	static {
+		String name = System.getProperty("os.name").toLowerCase();
+
+		IS_WINDOWS = name.startsWith("windows");
+		IS_LINUX = name.startsWith("linux");
+		IS_MAC = name.startsWith("mac") || name.startsWith("darwin");
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -81,11 +91,14 @@ public final class Main {
 
 			Parent node = new FXMLLoader(UI.class.getResource("/fxml/Main.fxml")).load();
 
-			Scene scene = new Scene(node, 430, 650);
+			Scene scene = new Scene(node, 430, 750);
 			scene.getStylesheets().add("/css/default.css");
 			stage.setScene(scene);
 			stage.setResizable(false);
 			stage.show();
 		}
+	}
+
+	private Main() {
 	}
 }

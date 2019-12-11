@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -136,6 +137,20 @@ public class CliInstaller implements Callable<Void> {
 					log.info("Downloading " + dep);
 					ArtifactUtil.download(lib, dep);
 				}
+			}
+		}
+
+		if (Main.IS_LINUX) {
+			String desktopEntryDest = System.getProperty("desktop-entry");
+			if (desktopEntryDest != null) {
+				InstallUtil.installLinuxDesktopEntry(Paths.get(desktopEntryDest), executable, coordinate, "Sandpolis");
+			}
+		}
+
+		else if (Main.IS_WINDOWS) {
+			if (coordinate.contains(":sandpolis-viewer-jfx:")) {
+				InstallUtil.installWindowsStartMenuEntry(coordinate);
+				InstallUtil.installWindowsDesktopShortcut();
 			}
 		}
 
