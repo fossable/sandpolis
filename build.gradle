@@ -1,7 +1,14 @@
-/*******************************************************************************
-* SANDPOLIS                                                                    *
-*                                                                              *
-*******************************************************************************/
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
 
 buildscript {
 	repositories {
@@ -13,6 +20,7 @@ buildscript {
 		classpath ':com.sandpolis.gradle.plugin:'
 		classpath ':com.sandpolis.gradle.soi:'
 		classpath ':com.sandpolis.gradle.deploy:'
+		classpath ':com.sandpolis.gradle.codegen:'
 	}
 }
 
@@ -28,7 +36,15 @@ spotless {
 		trimTrailingWhitespace()
 		endWithNewline()
 
-		licenseHeaderFile file('gradle/resources/header_java.txt'), "package "
+		licenseHeaderFile file('gradle/resources/header_java.txt'), "package"
+	}
+	format 'javaModules', {
+		target '**/module-info.java'
+
+		trimTrailingWhitespace()
+		endWithNewline()
+
+		licenseHeaderFile file('gradle/resources/header_java.txt'), "(module|open module)"
 	}
 	format 'proto', {
 		target '**/*.proto'
@@ -37,7 +53,7 @@ spotless {
 		endWithNewline()
 		indentWithSpaces()
 
-		licenseHeaderFile file('gradle/resources/header_java.txt'), "syntax "
+		licenseHeaderFile file('gradle/resources/header_java.txt'), "syntax"
 	}
 	format 'groovy', {
 		target '**/*.groovy'
@@ -45,14 +61,16 @@ spotless {
 		trimTrailingWhitespace()
 		endWithNewline()
 
-		licenseHeaderFile file('gradle/resources/header_java.txt'), "package "
+		licenseHeaderFile file('gradle/resources/header_java.txt'), "package"
 	}
 	format 'gradle', {
-		target '**/*.gradle'
+		target '**/build.gradle'
 
 		trimTrailingWhitespace()
 		endWithNewline()
 		indentWithTabs()
+
+		licenseHeaderFile file('gradle/resources/header_gradle.txt'), "(plugins|buildscript)"
 	}
 	format 'swift', {
 		target '**/*.swift'
@@ -61,7 +79,7 @@ spotless {
 		endWithNewline()
 		indentWithTabs()
 
-		licenseHeaderFile file('gradle/resources/header_swift.txt'), "import "
+		licenseHeaderFile file('gradle/resources/header_swift.txt'), "import"
 	}
 }
 
@@ -154,8 +172,8 @@ configure(subprojects.findAll {publishProjects.contains(it.name)}) {
 						url = 'https://github.com/Subterranean-Security/Sandpolis'
 						licenses {
 							license {
-								name = 'The Apache License, Version 2.0'
-								url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+								name = 'Mozilla Public License, Version 2.0'
+								url = 'https://mozilla.org/MPL/2.0'
 							}
 						}
 						developers {

@@ -2,8 +2,6 @@
 	<img src="https://s3.us-east-2.amazonaws.com/github.sandpolis.com/header.png" />
 </p>
 
-![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
-![GitHub repo size](https://img.shields.io/github/repo-size/Subterranean-Security/Sandpolis.svg)
 ![GitHub release](https://img.shields.io/github/release-pre/Subterranean-Security/Sandpolis.svg?color=blue)
 [![Build Status](https://travis-ci.org/Subterranean-Security/Sandpolis.svg?branch=master)](https://travis-ci.org/Subterranean-Security/Sandpolis)
 [![Build status](https://ci.appveyor.com/api/projects/status/8a2xdoy8pt21k77g?svg=true)](https://ci.appveyor.com/project/cilki/sandpolis)

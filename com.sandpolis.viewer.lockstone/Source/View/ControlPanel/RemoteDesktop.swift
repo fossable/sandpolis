@@ -1,20 +1,14 @@
-//****************************************************************************//
+//============================================================================//
 //                                                                            //
-//                Copyright © 2015 - 2019 Subterranean Security               //
+//                Copyright © 2015 - 2020 Subterranean Security               //
 //                                                                            //
-//  Licensed under the Apache License, Version 2.0 (the "License");           //
-//  you may not use this file except in compliance with the License.          //
-//  You may obtain a copy of the License at                                   //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
 //                                                                            //
-//      http://www.apache.org/licenses/LICENSE-2.0                            //
+//    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
-//  Unless required by applicable law or agreed to in writing, software       //
-//  distributed under the License is distributed on an "AS IS" BASIS,         //
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  //
-//  See the License for the specific language governing permissions and       //
-//  limitations under the License.                                            //
-//                                                                            //
-//****************************************************************************//
+//=========================================================S A N D P O L I S==//
 import UIKit
 
 class RemoteDesktop: UIViewController {
