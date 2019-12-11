@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.jfx;
 
+import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
@@ -20,7 +21,6 @@ import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 import static com.sandpolis.viewer.jfx.store.stage.StageStore.StageStore;
 
-import java.util.Date;
 import java.util.concurrent.Executors;
 
 import com.sandpolis.core.instance.*;
@@ -31,7 +31,6 @@ import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.ipc.task.IPCTask;
-import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.viewer.jfx.common.FxEventExecutor;
 import com.sandpolis.viewer.jfx.common.FxUtil;
 
@@ -50,9 +49,7 @@ public final class Viewer {
 	private static final Logger log = LoggerFactory.getLogger(Viewer.class);
 
 	public static void main(String[] args) {
-		log.info("Launching {} ({})", AsciiUtil.toRainbow("Sandpolis Viewer"), Core.SO_BUILD.getVersion());
-		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
-				Core.SO_BUILD.getNumber());
+		printEnvironment(log, "Sandpolis Viewer");
 
 		register(BasicTasks.loadConfiguration);
 		register(IPCTask.load);

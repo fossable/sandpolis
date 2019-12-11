@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla;
 
+import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.store.database.DatabaseStore.DatabaseStore;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
@@ -28,7 +29,6 @@ import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import java.time.Duration;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 
@@ -76,7 +76,6 @@ import com.sandpolis.core.proto.util.Platform.Instance;
 import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.proto.util.Platform.OsType;
 import com.sandpolis.core.storage.hibernate.HibernateConnection;
-import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
@@ -102,9 +101,7 @@ public final class Server {
 	private static final Logger log = LoggerFactory.getLogger(Server.class);
 
 	public static void main(String[] args) {
-		log.info("Launching {} ({})", AsciiUtil.toRainbow("Sandpolis Server"), Core.SO_BUILD.getVersion());
-		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
-				Core.SO_BUILD.getNumber());
+		printEnvironment(log, "Sandpolis Server");
 
 		register(BasicTasks.loadConfiguration);
 		register(Server.loadConfiguration);

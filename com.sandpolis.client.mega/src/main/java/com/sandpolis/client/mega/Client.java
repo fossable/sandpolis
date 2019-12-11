@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.client.mega;
 
+import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
@@ -19,7 +20,6 @@ import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
@@ -31,7 +31,6 @@ import com.sandpolis.client.mega.cmd.PluginCmd;
 import com.sandpolis.client.mega.exe.ClientExe;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
@@ -44,7 +43,6 @@ import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerLostEvent;
 import com.sandpolis.core.proto.util.Auth.KeyContainer;
 import com.sandpolis.core.proto.util.Generator.MegaConfig;
 import com.sandpolis.core.proto.util.Result.Outcome;
-import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -79,9 +77,7 @@ public final class Client {
 	}
 
 	public static void main(String[] args) {
-		log.info("Launching {} ({})", AsciiUtil.toRainbow("Sandpolis Client"), Core.SO_BUILD.getVersion());
-		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
-				Core.SO_BUILD.getNumber());
+		printEnvironment(log, "Sandpolis Client");
 
 		register(BasicTasks.loadConfiguration);
 		register(IPCTask.load);

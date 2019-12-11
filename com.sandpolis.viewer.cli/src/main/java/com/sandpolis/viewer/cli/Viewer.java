@@ -11,9 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.cli;
 
+import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
-
-import java.util.Date;
 
 import com.sandpolis.core.instance.*;
 import org.slf4j.Logger;
@@ -28,7 +27,6 @@ import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.ipc.task.IPCTask;
-import com.sandpolis.core.util.AsciiUtil;
 import com.sandpolis.viewer.cli.view.main.MainWindow;
 
 /**
@@ -40,9 +38,7 @@ public final class Viewer {
 	public static final Logger log = LoggerFactory.getLogger(Viewer.class);
 
 	public static void main(String[] args) {
-		log.info("Launching {} ({})", AsciiUtil.toRainbow("Sandpolis Viewer"), Core.SO_BUILD.getVersion());
-		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
-				Core.SO_BUILD.getNumber());
+		printEnvironment(log, "Sandpolis Viewer");
 
 		register(BasicTasks.loadConfiguration);
 		register(IPCTask.load);

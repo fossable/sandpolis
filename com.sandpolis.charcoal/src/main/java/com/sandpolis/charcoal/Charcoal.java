@@ -11,13 +11,10 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.charcoal;
 
-import java.util.Date;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.util.AsciiUtil;
+import static com.sandpolis.core.instance.Environment.printEnvironment;
 
 /**
  * The entry point for Charcoal instances.
@@ -32,8 +29,6 @@ public final class Charcoal {
 	public static final Logger log = LoggerFactory.getLogger(Charcoal.class);
 
 	public static void main(String[] args) {
-		log.info("Launching {} ({})", AsciiUtil.toRainbow("Charcoal"), Core.SO_BUILD.getVersion());
-		log.debug("Built on {} with {} (Build: {})", new Date(Core.SO_BUILD.getTime()), Core.SO_BUILD.getPlatform(),
-				Core.SO_BUILD.getNumber());
+		printEnvironment(log, "Sandpolis Charcoal");
 	}
 }

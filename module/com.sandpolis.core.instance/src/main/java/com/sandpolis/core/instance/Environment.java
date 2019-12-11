@@ -11,11 +11,15 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance;
 
+import com.sandpolis.core.util.AsciiUtil;
+import org.slf4j.Logger;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.ProtectionDomain;
+import java.util.Date;
 
 /**
  * This class contains important information about the runtime file hierarchy.
@@ -150,5 +154,25 @@ public enum Environment {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	/**
+	 * Print environment details on startup.
+	 *
+	 * @param log  The output log
+	 * @param name The instance name
+	 */
+	public static void printEnvironment(Logger log, String name) {
+		log.info("Launching {} ({})", AsciiUtil.toRainbow(name), Core.SO_BUILD.getVersion());
+		log.debug("Build Environment:");
+		log.debug("  Timestamp: {}", new Date(Core.SO_BUILD.getTime()));
+		log.debug("   Platform: {}", Core.SO_BUILD.getPlatform());
+		log.debug("     Gradle: {}", Core.SO_BUILD.getGradleVersion());
+		log.debug("       Java: {}", Core.SO_BUILD.getJavaVersion());
+		log.debug("Runtime Environment:");
+		log.debug("  Timestamp: {}", new Date());
+		log.debug("   Platform: {} ({})", System.getProperty("os.name"), System.getProperty("os.arch"));
+		log.debug("       Java: {} ({})", System.getProperty("java.version"), System.getProperty("java.vendor"));
+		log.debug("  Libraries: {}", LIB.path);
 	}
 }
