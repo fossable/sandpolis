@@ -20,6 +20,7 @@ import java.util.concurrent.Future;
 
 import com.sandpolis.core.util.RandUtil;
 import com.sandpolis.installer.JavafxInstaller;
+import com.sandpolis.installer.Main;
 import com.sandpolis.installer.util.CloudUtil;
 import com.sandpolis.installer.util.QrUtil;
 
@@ -171,7 +172,7 @@ public class MainController {
 		chk_client.setDisable(true);
 		btn_install.setDisable(true);
 
-		Path base = Paths.get(System.getProperty("user.home") + "/.sandpolis");
+		Path base = Paths.get(Main.PATH);
 
 		// Add installer tasks to the queue
 		if (chk_viewer_jfx.isSelected()) {

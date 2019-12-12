@@ -46,11 +46,6 @@ public class JavafxInstaller extends Task<Void> {
 	private String coordinate;
 
 	/**
-	 * The Sandpolis version that will be installed.
-	 */
-	private String version = System.getProperty("version");
-
-	/**
 	 * The client configuration.
 	 */
 	protected String config;
@@ -99,9 +94,10 @@ public class JavafxInstaller extends Task<Void> {
 	protected Void call() throws Exception {
 		log.debug("Executing installation for " + coordinate);
 
-		if (version == null) {
+		String version = Main.VERSION;
+		if (version == null || version.equalsIgnoreCase("latest")) {
 			// Request latest version number
-			updateMessage("Downloading metadata");
+			log.info("Downloading metadata");
 			version = ArtifactUtil.getLatestVersion(coordinate);
 		}
 		coordinate += version;
@@ -140,7 +136,8 @@ public class JavafxInstaller extends Task<Void> {
 
 		if (Main.IS_LINUX) {
 			if (coordinate.contains(":sandpolis-viewer-jfx:")) {
-				InstallUtil.installLinuxDesktopEntry(coordinate, executable, "Sandpolis Viewer");
+				Path bin = InstallUtil.installLinuxBinaries(executable, coordinate);
+				InstallUtil.installLinuxDesktopEntry(executable, coordinate, bin, "Sandpolis Viewer");
 			}
 		}
 

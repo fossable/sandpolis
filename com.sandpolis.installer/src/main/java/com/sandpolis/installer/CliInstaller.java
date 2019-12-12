@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -45,11 +44,6 @@ public class CliInstaller implements Callable<Void> {
 	 * The Sandpolis instance that will be installed.
 	 */
 	private String coordinate;
-
-	/**
-	 * The Sandpolis version that will be installed.
-	 */
-	private String version = System.getProperty("version");
 
 	/**
 	 * The client configuration.
@@ -99,7 +93,8 @@ public class CliInstaller implements Callable<Void> {
 	public Void call() throws Exception {
 		log.debug("Executing installation for " + coordinate);
 
-		if (version == null) {
+		String version = Main.VERSION;
+		if (version == null || version.equalsIgnoreCase("latest")) {
 			// Request latest version number
 			log.info("Downloading metadata");
 			version = ArtifactUtil.getLatestVersion(coordinate);
@@ -135,9 +130,9 @@ public class CliInstaller implements Callable<Void> {
 		}
 
 		if (Main.IS_LINUX) {
-			String desktopEntryDest = System.getProperty("desktop-entry");
-			if (desktopEntryDest != null) {
-				InstallUtil.installLinuxDesktopEntry(Paths.get(desktopEntryDest), executable, coordinate, "Sandpolis");
+			if (coordinate.contains(":sandpolis-viewer-jfx:")) {
+				Path bin = InstallUtil.installLinuxBinaries(executable, coordinate);
+				InstallUtil.installLinuxDesktopEntry(executable, coordinate, bin, "Sandpolis Viewer");
 			}
 		}
 

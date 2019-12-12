@@ -14,6 +14,8 @@ package com.sandpolis.installer.util;
 import com.sandpolis.core.soi.Dependency;
 import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
 import com.sandpolis.installer.Main;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,11 +25,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static java.nio.file.attribute.PosixFilePermission.*;
+
 /**
  * @author cilki
  * @since 5.1.2
  */
 public final class InstallUtil {
+
+	private static final Logger log = LoggerFactory.getLogger(InstallUtil.class);
 
 	public static Set<String> computeDependencies(Dependency.SO_DependencyMatrix matrix, String coordinate) {
 		Set<String> dependencies = new HashSet<>();
@@ -82,56 +88,86 @@ public final class InstallUtil {
 		return coordinate;
 	}
 
-	public static void installLinuxDesktopEntry(String coordinate, Path executable, String name) throws IOException {
-		Path destination = Paths.get("/usr/share/applications");
-		if (!Files.isWritable(destination)) {
-			destination = Paths.get(System.getProperty("user.home"), ".local/share/applications");
-		}
-
-		installLinuxDesktopEntry(destination, executable, coordinate, name);
-	}
-
-	public static void installLinuxDesktopEntry(Path destination, Path executable, String coordinate, String name)
+	public static Path installLinuxDesktopEntry(Path executable, String coordinate, Path bin, String name)
 			throws IOException {
-		Files.createDirectories(destination);
-		destination = destination.resolve(coordinate.split(":")[1] + ".desktop");
+		for (String dest : Main.EXT_LINUX_DESKTOP.split(";")) {
+			Path destination = Paths.get(dest);
+			if (Files.exists(destination) && !Files.isWritable(destination))
+				continue;
+			try {
+				Files.createDirectories(destination);
+			} catch (IOException e) {
+				continue;
+			}
 
-		if (Files.exists(destination))
-			Files.delete(destination);
-		Files.writeString(destination,
-				String.join("\n",
-						List.of("[Desktop Entry]", "Version=1.1", "Type=Application", "Terminal=false",
-								"Categories=Network;Utility;RemoteAccess;Security;", "Name=" + name,
-								"Exec=\"" + executable.toString() + "\" %f"))
-						+ "\n");
-	}
+			destination = destination.resolve(coordinate.split(":")[1] + ".desktop");
 
-	public static void installWindowsDesktopShortcut() throws IOException, InterruptedException {
-		Path destination = Paths.get(System.getProperty("user.home"), "Desktop");
-
-		Runtime.getRuntime().exec("mklink \"" + destination.toString() + "\"").waitFor();
-	}
-
-	public static void installWindowsStartMenuEntry(String coordinate) throws IOException, InterruptedException {
-		Path destination = Paths.get("C:/ProgramData/Microsoft/Windows/Start Menu/Programs");
-		if (!Files.isWritable(destination)) {
-			destination = Paths.get(System.getProperty("user.home"), "AppData/Microsoft/Windows/Start Menu/Programs");
-		}
-		destination = destination.resolve("Sandpolis/" + coordinate.split(":")[1]);
-		Files.createDirectories(destination);
-
-		Runtime.getRuntime().exec("mklink \"" + destination.toString() + "\"").waitFor();
-	}
-
-	public static void installLinuxBinaries() throws IOException {
-		Path destination = Paths.get("/usr/share/applications");
-		if (!Files.isWritable(destination)) {
-			destination = Paths.get(System.getProperty("user.home"), ".local/share/applications");
+			if (Files.exists(destination))
+				Files.delete(destination);
+			Files.writeString(destination,
+					String.join("\n",
+							List.of("[Desktop Entry]", "Version=1.1", "Type=Application", "Terminal=false",
+									"Categories=Network;Utility;RemoteAccess;Security;", "Name=" + name,
+									"Exec=\"" + bin + "\" %f"))
+							+ "\n");
+			log.debug("Installed desktop entry to: {}", destination);
+			return destination;
 		}
 
-		// TODO
-		Files.writeString(destination,
-				"#!/bin/bash\n" + "exec /usr/bin/java --module-path " + "" + " -m " + "" + " \"%@\"");
+		return null;
+	}
+
+	public static Path installWindowsDesktopShortcut() throws IOException, InterruptedException {
+		for (String dest : Main.EXT_WINDOWS_DESKTOP.split(";")) {
+			Path destination = Paths.get(dest);
+			if (Files.exists(destination) && !Files.isWritable(destination))
+				continue;
+			try {
+				Files.createDirectories(destination);
+			} catch (IOException e) {
+				continue;
+			}
+
+			Runtime.getRuntime().exec("mklink \"" + destination.toString() + "\"").waitFor();
+			log.debug("Installed desktop shortcut to: {}", destination);
+			return destination;
+		}
+
+		return null;
+	}
+
+	public static Path installWindowsStartMenuEntry(String coordinate) throws IOException, InterruptedException {
+		for (String dest : Main.EXT_WINDOWS_START.split(";")) {
+			Path destination = Paths.get(dest);
+			if (!Files.isWritable(destination))
+				continue;
+
+			Runtime.getRuntime().exec("mklink \"" + destination.toString() + "\"").waitFor();
+			log.debug("Installed start menu entry to: {}", destination);
+			return destination;
+		}
+
+		return null;
+	}
+
+	public static Path installLinuxBinaries(Path executable, String coordinate) throws IOException {
+		for (String dest : Main.EXT_LINUX_BIN.split(";")) {
+			Path destination = Paths.get(dest);
+			if (!Files.isWritable(destination))
+				continue;
+			destination = destination.resolve(coordinate.split(":")[1]);
+			coordinate = coordinate.split(":")[1].replaceAll("-", ".");
+
+			Files.writeString(destination,
+					String.format("#!/bin/sh\nexec /usr/bin/java --module-path \"%s\" -m com.%s/com.%s.Main \"%%@\"",
+							executable.getParent(), coordinate, coordinate));
+			Files.setPosixFilePermissions(destination, Set.of(OWNER_READ, OWNER_WRITE, OWNER_EXECUTE, GROUP_READ,
+					GROUP_EXECUTE, OTHERS_READ, OTHERS_EXECUTE));
+			log.debug("Installed binaries to: {}", destination);
+			return destination;
+		}
+
+		return null;
 	}
 
 	private InstallUtil() {

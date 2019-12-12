@@ -42,21 +42,44 @@ public final class Main {
 		IS_MAC = name.startsWith("mac") || name.startsWith("darwin");
 	}
 
-	public static void main(String[] args) throws Exception {
-		String path = System.getProperty("path");
-		String components = System.getProperty("component", "server,viewer-jfx,viewer-cli");
+	/**
+	 * The installation path.
+	 */
+	public static final String PATH = System.getProperty("path", System.getProperty("user.home") + "/.sandpolis");
 
-		if (path != null) {
-			for (String component : components.split(",")) {
+	/**
+	 * The components to install.
+	 */
+	public static final String COMPONENTS = System.getProperty("components", "");
+
+	/**
+	 * The version to install.
+	 */
+	public static final String VERSION = System.getProperty("version", "latest");
+
+	public static final String EXT_LINUX_DESKTOP = System.getProperty("ext.linux.desktop",
+			"/usr/share/applications;" + System.getProperty("user.home") + "/.local/share/applications");
+	public static final String EXT_LINUX_BIN = System.getProperty("ext.linux.bin",
+			"/usr/bin;/usr/local/sbin;/usr/local/bin");
+	public static final String EXT_WINDOWS_START = System.getProperty("ext.windows.start",
+			"C:/ProgramData/Microsoft/Windows/Start Menu/Programs;" + System.getProperty("user.home")
+					+ "/AppData/Microsoft/Windows/Start Menu/Programs");
+	public static final String EXT_WINDOWS_DESKTOP = System.getProperty("ext.windows.desktop",
+			System.getProperty("user.home") + "/Desktop");
+
+	public static void main(String[] args) throws Exception {
+
+		if (System.getProperty("path") != null) {
+			for (String component : COMPONENTS.split(",")) {
 				switch (component) {
 				case "server":
-					CliInstaller.newServerInstaller(Paths.get(path)).call();
+					CliInstaller.newServerInstaller(Paths.get(PATH)).call();
 					break;
 				case "viewer-jfx":
-					CliInstaller.newViewerJfxInstaller(Paths.get(path)).call();
+					CliInstaller.newViewerJfxInstaller(Paths.get(PATH)).call();
 					break;
 				case "viewer-cli":
-					CliInstaller.newViewerCliInstaller(Paths.get(path)).call();
+					CliInstaller.newViewerCliInstaller(Paths.get(PATH)).call();
 					break;
 				}
 			}
