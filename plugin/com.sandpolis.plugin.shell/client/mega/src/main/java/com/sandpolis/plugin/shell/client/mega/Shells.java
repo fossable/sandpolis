@@ -14,6 +14,7 @@ package com.sandpolis.plugin.shell.client.mega;
 import com.sandpolis.plugin.shell.client.mega.shell.BashShell;
 import com.sandpolis.plugin.shell.client.mega.shell.CmdShell;
 import com.sandpolis.plugin.shell.client.mega.shell.PwshShell;
+import com.sandpolis.plugin.shell.client.mega.shell.ZshShell;
 
 public final class Shells {
 
@@ -22,6 +23,8 @@ public final class Shells {
 	public static final CmdShell CMD = new CmdShell();
 
 	public static final BashShell BASH = new BashShell();
+
+	public static final ZshShell ZSH = new ZshShell();
 
 	private Shells() {
 	}

@@ -149,6 +149,12 @@ public final class ShellExe extends Exelet {
 			else
 				return failure(outcome);
 			break;
+		case ZSH:
+			if (Shells.ZSH.getLocation() != null)
+				session = new ProcessBuilder(Shells.ZSH.buildSession());
+			else
+				return failure(outcome);
+			break;
 		case CMD:
 			if (Shells.CMD.getLocation() != null)
 				session = new ProcessBuilder(Shells.CMD.buildSession());
@@ -168,7 +174,11 @@ public final class ShellExe extends Exelet {
 		session.redirectErrorStream(true);
 
 		// Set default environment
-		session.environment().put("TERM", "st-256color");
+		session.environment().put("TERM", "screen-256color");
+
+		// Set initial size
+		session.environment().put("COLS", rq.getCols() == 0 ? "80" : String.valueOf(rq.getCols()));
+		session.environment().put("LINES", rq.getRows() == 0 ? "120" : String.valueOf(rq.getRows()));
 
 		// Override environment
 		for (var entry : rq.getEnvironmentMap().entrySet()) {

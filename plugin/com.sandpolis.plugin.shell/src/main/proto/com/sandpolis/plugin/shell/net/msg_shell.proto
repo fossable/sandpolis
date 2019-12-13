@@ -24,6 +24,9 @@ enum Shell {
 
     // Bourne Again Shell
     BASH = 2;
+
+    // The Z Shell
+    ZSH = 3;
 }
 
 message RQ_Execute {
@@ -61,10 +64,22 @@ message RQ_ShellStream {
     // Permission permission = 3;
 
     map<string, string> environment = 4;
+
+    // The number of rows to request
+    int32 rows = 5;
+
+    // The number of columns to request
+    int32 cols = 6;
 }
 
 message EV_ShellStream {
 
     // The I/O data
     bytes data = 1;
+
+    // Update the number of rows
+    int32 rows = 2;
+
+    // Update the number of columns
+    int32 cols = 3;
 }

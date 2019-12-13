@@ -17,7 +17,7 @@ public class BashShell extends AbstractShell {
 
 	@Override
 	public String[] searchPath() {
-		return new String[] { "/bin/sh" };
+		return new String[] { "/bin/bash" };
 	}
 
 	@Override
