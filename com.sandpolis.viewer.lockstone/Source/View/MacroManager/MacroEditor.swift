@@ -73,7 +73,7 @@ class MacroEditor: UIViewController {
 				platformSelector.selectedSegmentIndex = 1
 			case "bash":
 				platformSelector.selectedSegmentIndex = 2
-			case "tcsh":
+			case "zsh":
 				platformSelector.selectedSegmentIndex = 3
 			default:
 				break
@@ -105,7 +105,7 @@ class MacroEditor: UIViewController {
 		case 2:
 			type = "bash"
 		case 3:
-			type = "tcsh"
+			type = "zsh"
 		default:
 			break
 		}
@@ -128,7 +128,7 @@ class MacroEditor: UIViewController {
 		case 2:
 			textStorage.language = "bash"
 		case 3:
-			textStorage.language = "plaintext"
+			textStorage.language = "bash"
 		default:
 			break
 		}

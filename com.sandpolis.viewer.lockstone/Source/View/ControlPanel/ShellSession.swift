@@ -10,6 +10,7 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 import UIKit
+import os
 
 class ShellSession: UIViewController {
 
@@ -35,6 +36,8 @@ class ShellSession: UIViewController {
 							self.shellSelector.setEnabled(true, forSegmentAt: 0)
 						case .cmd:
 							self.shellSelector.setEnabled(true, forSegmentAt: 1)
+						case .zsh:
+							self.shellSelector.setEnabled(true, forSegmentAt: 3)
 						default:
 							break
 						}
@@ -53,7 +56,8 @@ class ShellSession: UIViewController {
 		}
 		terminal.clear()
 		if let shell = getShellType() {
-			terminal.stream = SandpolisUtil.connection.shell_session(profile.cvid, self, shell)
+			os_log("Initial terminal size: %d cols, %d rows", terminal.cols, terminal.rows)
+			terminal.stream = SandpolisUtil.connection.shell_session(profile.cvid, self, shell, terminal.cols, terminal.rows)
 		}
 	}
 
@@ -78,6 +82,8 @@ class ShellSession: UIViewController {
 			return Net_Shell.cmd
 		case 2:
 			return Net_Shell.bash
+		case 3:
+			return Net_Shell.zsh
 		default:
 			return nil
 		}

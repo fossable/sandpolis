@@ -20,8 +20,11 @@ extension SandpolisConnection {
 	///
 	/// - Parameter target: The target client's CVID
 	/// - Parameter receiver: The controller to receive events
+	/// - Parameter shell: The shell type
+	/// - Parameter cols: The initial column setting
+	/// - Parameter rows: The initial rows setting
 	/// - Returns: The stream
-	func shell_session(_ target: Int32, _ receiver: ShellSession, _ shell: Net_Shell) -> SandpolisStream {
+	func shell_session(_ target: Int32, _ receiver: ShellSession, _ shell: Net_Shell, _ cols: Int32, _ rows: Int32) -> SandpolisStream {
 		let stream = SandpolisStream(self, SandpolisUtil.stream())
 		stream.register { (m: Net_MSG) -> Void in
 			receiver.onEvent(try! Net_ShellMSG.init(unpackingAny: m.plugin).evShellStream)
@@ -34,6 +37,8 @@ extension SandpolisConnection {
 				$0.rqShellStream = Net_RQ_ShellStream.with {
 					$0.id = stream.id
 					$0.type = shell
+					$0.cols = cols
+					$0.rows = rows
 				}
 			}, typePrefix: "com.sandpolis.plugin.shell")
 		}

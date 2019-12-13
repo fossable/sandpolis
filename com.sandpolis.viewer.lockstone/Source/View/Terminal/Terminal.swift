@@ -58,6 +58,10 @@ class TerminalViewController: UIViewController, WKNavigationDelegate, WKUIDelega
 	/// Ignored notifications name strings.
 	/// When a the function linked with a notification listed here, the function will remove the given notification from this array and will return.
 	var ignoredNotifications = [Notification.Name]()
+	
+	var cols: Int32!
+	
+	var rows: Int32!
 
 	/// Change terminal size to page size.
 	///
@@ -65,30 +69,34 @@ class TerminalViewController: UIViewController, WKNavigationDelegate, WKUIDelega
 	///     - completion: Function to call after resizing terminal.
 	func changeSize(completion: (() -> Void)?) {
 
-		var cols_: Any?
-		var rows_: Any?
-
-		func apply() {
-			guard let cols = cols_ as? UInt else { return }
-			guard let rows = rows_ as? UInt else { return }
-
-			// Inform stream
-			// TODO
-		}
-
 		// Get and set columns
 		webView.evaluateJavaScript("term.cols") { (cols, error) in
 
-			if let cols = cols {
-				cols_ = cols
+			if let cols = cols as? Int32 {
+				self.cols = cols
 			}
 
 			// Get and set rows
 			self.webView.evaluateJavaScript("term.rows") { (rows, error) in
-				if let rows = rows {
-					rows_ = rows
+				if let rows = rows as? Int32 {
+					self.rows = rows
 
-					apply()
+					if let stream = self.stream {
+						// Inform stream of change
+						var ev = Net_MSG.with {
+							$0.id = stream.id
+							$0.to = self.profile.cvid
+							$0.from = stream.connection.cvid
+							$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
+								$0.evShellStream = Net_EV_ShellStream.with {
+									$0.cols = self.cols
+									$0.rows = self.rows
+								}
+							}, typePrefix: "com.sandpolis.plugin.shell")
+						}
+						stream.connection.send(&ev)
+					}
+				
 					if let completion = completion {
 						completion()
 					}
