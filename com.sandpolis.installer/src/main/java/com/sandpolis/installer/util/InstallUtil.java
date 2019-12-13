@@ -24,6 +24,9 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import mslinks.ShellLink;
 
 import static java.nio.file.attribute.PosixFilePermission.*;
 
@@ -38,7 +41,7 @@ public final class InstallUtil {
 	public static Set<String> computeDependencies(Dependency.SO_DependencyMatrix matrix, String coordinate) {
 		Set<String> dependencies = new HashSet<>();
 		computeDependencies(matrix, dependencies, coordinate);
-		return dependencies;
+		return dependencies.stream().map(InstallUtil::processJavaFx).collect(Collectors.toSet());
 	}
 
 	/**
@@ -59,7 +62,7 @@ public final class InstallUtil {
 		matrix.getArtifactList().stream()
 				// Find the artifact in the matrix and iterate over its dependencies
 				.filter(a -> a.getCoordinates().equals(coordinate)).findFirst().get().getDependencyList().stream()
-				.map(matrix.getArtifactList()::get).map(Artifact::getCoordinates).map(InstallUtil::processJavaFx)
+				.map(matrix.getArtifactList()::get).map(Artifact::getCoordinates)
 				.forEach(c -> computeDependencies(matrix, dependencies, c));
 
 	}
@@ -117,18 +120,14 @@ public final class InstallUtil {
 		return null;
 	}
 
-	public static Path installWindowsDesktopShortcut() throws IOException, InterruptedException {
+	public static Path installWindowsDesktopShortcut(Path executable, String coordinate) throws IOException, InterruptedException {
 		for (String dest : Main.EXT_WINDOWS_DESKTOP.split(";")) {
 			Path destination = Paths.get(dest);
 			if (Files.exists(destination) && !Files.isWritable(destination))
 				continue;
-			try {
-				Files.createDirectories(destination);
-			} catch (IOException e) {
-				continue;
-			}
+			destination = destination.resolve(coordinate.split(":")[1]);
 
-			Runtime.getRuntime().exec("mklink \"" + destination.toString() + "\"").waitFor();
+			ShellLink.createLink(executable.toString()).saveTo(destination.toString());
 			log.debug("Installed desktop shortcut to: {}", destination);
 			return destination;
 		}
@@ -136,13 +135,14 @@ public final class InstallUtil {
 		return null;
 	}
 
-	public static Path installWindowsStartMenuEntry(String coordinate) throws IOException, InterruptedException {
+	public static Path installWindowsStartMenuEntry(Path executable, String coordinate) throws IOException, InterruptedException {
 		for (String dest : Main.EXT_WINDOWS_START.split(";")) {
 			Path destination = Paths.get(dest);
 			if (!Files.isWritable(destination))
 				continue;
+			destination = destination.resolve(coordinate.split(":")[1]);
 
-			Runtime.getRuntime().exec("mklink \"" + destination.toString() + "\"").waitFor();
+			ShellLink.createLink(executable.toString()).saveTo(destination.toString());
 			log.debug("Installed start menu entry to: {}", destination);
 			return destination;
 		}

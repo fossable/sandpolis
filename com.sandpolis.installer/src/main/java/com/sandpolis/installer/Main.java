@@ -63,7 +63,7 @@ public final class Main {
 			"/usr/bin;/usr/local/sbin;/usr/local/bin");
 	public static final String EXT_WINDOWS_START = System.getProperty("ext.windows.start",
 			"C:/ProgramData/Microsoft/Windows/Start Menu/Programs;" + System.getProperty("user.home")
-					+ "/AppData/Microsoft/Windows/Start Menu/Programs");
+					+ "/AppData/Roaming/Microsoft/Windows/Start Menu/Programs");
 	public static final String EXT_WINDOWS_DESKTOP = System.getProperty("ext.windows.desktop",
 			System.getProperty("user.home") + "/Desktop");
 

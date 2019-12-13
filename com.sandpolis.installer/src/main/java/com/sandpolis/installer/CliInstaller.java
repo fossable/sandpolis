@@ -138,8 +138,8 @@ public class CliInstaller implements Callable<Void> {
 
 		else if (Main.IS_WINDOWS) {
 			if (coordinate.contains(":sandpolis-viewer-jfx:")) {
-				InstallUtil.installWindowsStartMenuEntry(coordinate);
-				InstallUtil.installWindowsDesktopShortcut();
+				InstallUtil.installWindowsStartMenuEntry(executable, coordinate);
+				InstallUtil.installWindowsDesktopShortcut(executable, coordinate);
 			}
 		}
 

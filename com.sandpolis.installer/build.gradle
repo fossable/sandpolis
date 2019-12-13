@@ -67,6 +67,10 @@ dependencies {
 	// https://github.com/qos-ch/slf4j
 	api 'org.slf4j:slf4j-api:1.7.29'
 
+	// https://github.com/DmitriiShamrikov/mslinks
+	compileOnly 'com.github.vatbub:mslinks:1.0.5'
+	windows 'com.github.vatbub:mslinks:1.0.5'
+
 	// Installation targets
 	installTargets project(':com.sandpolis.server.vanilla')
 	installTargets project(':com.sandpolis.viewer.jfx')
