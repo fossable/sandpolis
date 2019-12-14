@@ -10,7 +10,6 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 import UIKit
-import Firebase
 import FirebaseAuth
 import Highlightr
 import os

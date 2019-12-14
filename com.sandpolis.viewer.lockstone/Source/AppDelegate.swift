@@ -11,7 +11,6 @@
 //=========================================================S A N D P O L I S==//
 import UIKit
 import Firebase
-import FirebaseAuth
 import os
 
 @UIApplicationMain

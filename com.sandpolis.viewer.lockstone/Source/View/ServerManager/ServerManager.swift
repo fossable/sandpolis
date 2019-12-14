@@ -131,16 +131,19 @@ class ServerManager: UITableViewController {
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "AddServerSegue",
-			let addServerView = segue.destination as? AddServer {
-			addServerView.serverReference = ref.document()
+			let dest = segue.destination as? AddServer {
+			dest.serverReference = ref.document()
 		} else if segue.identifier == "EditServerSegue",
-			let addServerView = segue.destination as? AddServer {
-			let indexPath = sender as! IndexPath
-			addServerView.server = servers[indexPath.row]
-			addServerView.serverReference = addServerView.server.reference
+			let dest = segue.destination as? AddServer {
+			if let index = sender as? IndexPath {
+				dest.server = servers[index.row]
+				dest.serverReference = dest.server.reference
+			}
 		} else if segue.identifier == "ShowHostSegue",
-			let mainTab = segue.destination as? ClientManager {
-			mainTab.serverName = (sender as! SandpolisServer).name
+			let dest = segue.destination as? ClientManager {
+			if let server = sender as? SandpolisServer {
+				dest.serverName = server.name
+			}
 		} else {
 			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
 		}

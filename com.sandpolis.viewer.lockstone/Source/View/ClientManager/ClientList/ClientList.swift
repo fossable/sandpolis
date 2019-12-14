@@ -75,13 +75,13 @@ class ClientList: UITableViewController {
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "ShowControlPanelSegue",
-			let controlPanel = segue.destination as? ControlPanel {
+			let dest = segue.destination as? ControlPanel {
 
-			controlPanel.profile = sender as? SandpolisProfile
+			dest.profile = sender as? SandpolisProfile
 		} else if segue.identifier == "ShowGroupControlPanelSegue",
-			let groupControlPanel = segue.destination as? GroupControlPanel {
+			let dest = segue.destination as? GroupControlPanel {
 
-			groupControlPanel.profiles = selection.map { indexPath in
+			dest.profiles = selection.map { indexPath in
 				return connection.profiles[indexPath.row]
 			}
 		} else if segue.identifier == "UnwindLoginSegue" {

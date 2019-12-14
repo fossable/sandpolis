@@ -28,8 +28,8 @@ class GroupActions: UITableViewController {
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "MacroSelectSegue",
-			let macroSelect = segue.destination as? MacroSelect {
-			macroSelect.profiles = profiles
+			let dest = segue.destination as? MacroSelect {
+			dest.profiles = profiles
 		}
 	}
 

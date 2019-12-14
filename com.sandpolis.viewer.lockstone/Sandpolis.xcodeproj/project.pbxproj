@@ -51,9 +51,6 @@
 		AA70158422D7C93900A1E4ED /* SandpolisProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70158322D7C93900A1E4ED /* SandpolisProfile.swift */; };
 		AA70158622D7C98D00A1E4ED /* SandpolisServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70158522D7C98D00A1E4ED /* SandpolisServer.swift */; };
 		AA70158922D7CAD800A1E4ED /* SandpolisStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70158822D7CAD800A1E4ED /* SandpolisStream.swift */; };
-		AA70FD1D22BEF326006A4C6F /* ProtobufCodecs.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70FD1A22BEF326006A4C6F /* ProtobufCodecs.swift */; };
-		AA70FD1E22BEF326006A4C6F /* ByteBuffer+varint.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70FD1B22BEF326006A4C6F /* ByteBuffer+varint.swift */; };
-		AA70FD1F22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70FD1C22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift */; };
 		AA72362B22D42F27004EE888 /* Overview.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA72362A22D42F27004EE888 /* Overview.swift */; };
 		AA72E0D62367D07600C23D39 /* MacroCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA72E0D52367D07600C23D39 /* MacroCell.swift */; };
 		AA72E0D82367D22F00C23D39 /* MacroResultCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA72E0D72367D22E00C23D39 /* MacroResultCell.swift */; };
@@ -107,6 +104,7 @@
 		AAAC2FD42355012000425E9A /* ControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAC2FD32355012000425E9A /* ControlPanel.swift */; };
 		AAAC2FD623550D5900425E9A /* Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAC2FD523550D5900425E9A /* Actions.swift */; };
 		AAAC2FD8235512A200425E9A /* RemoteDesktop.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAC2FD7235512A200425E9A /* RemoteDesktop.swift */; };
+		AAB1518623A4671900BCFAFD /* NIOProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = AAB1518523A4671900BCFAFD /* NIOProtobuf */; };
 		AAB6D957235FEA6300FED79B /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB6D956235FEA6300FED79B /* Document.swift */; };
 		AAB9B6D2239C349F002F192C /* About.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB9B6D1239C349F002F192C /* About.swift */; };
 		AABF01E923349D6800DEA0E4 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = AABF01E823349D6800DEA0E4 /* NIO */; };
@@ -180,9 +178,6 @@
 		AA70158322D7C93900A1E4ED /* SandpolisProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisProfile.swift; sourceTree = "<group>"; };
 		AA70158522D7C98D00A1E4ED /* SandpolisServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisServer.swift; sourceTree = "<group>"; };
 		AA70158822D7CAD800A1E4ED /* SandpolisStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandpolisStream.swift; sourceTree = "<group>"; };
-		AA70FD1A22BEF326006A4C6F /* ProtobufCodecs.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProtobufCodecs.swift; sourceTree = "<group>"; };
-		AA70FD1B22BEF326006A4C6F /* ByteBuffer+varint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ByteBuffer+varint.swift"; sourceTree = "<group>"; };
-		AA70FD1C22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProtobufVarintFrameCodecs.swift; sourceTree = "<group>"; };
 		AA72362A22D42F27004EE888 /* Overview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Overview.swift; sourceTree = "<group>"; };
 		AA72E0D52367D07600C23D39 /* MacroCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MacroCell.swift; sourceTree = "<group>"; };
 		AA72E0D72367D22E00C23D39 /* MacroResultCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MacroResultCell.swift; sourceTree = "<group>"; };
@@ -276,6 +271,7 @@
 				AAC71BA423939E0B00E6C901 /* SwiftEventBus in Frameworks */,
 				AA75D6DC2316DBCB002152DA /* StoreKit.framework in Frameworks */,
 				AABF01EF23349ED300DEA0E4 /* SwiftProtobuf in Frameworks */,
+				AAB1518623A4671900BCFAFD /* NIOProtobuf in Frameworks */,
 				AABF01E923349D6800DEA0E4 /* NIO in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -429,7 +425,6 @@
 		AA68C84122D1552F008EF53E /* Network */ = {
 			isa = PBXGroup;
 			children = (
-				AA70FD1922BEF326006A4C6F /* Codec */,
 				AA70158822D7CAD800A1E4ED /* SandpolisStream.swift */,
 				AAC4B69322BDE54500B0E354 /* SandpolisConnection.swift */,
 				AAF390E4230BC796008C9469 /* CvidRequestHandler.swift */,
@@ -480,16 +475,6 @@
 				AAA8BF92237E53CE00BB4C85 /* com */,
 			);
 			path = Proto;
-			sourceTree = "<group>";
-		};
-		AA70FD1922BEF326006A4C6F /* Codec */ = {
-			isa = PBXGroup;
-			children = (
-				AA70FD1A22BEF326006A4C6F /* ProtobufCodecs.swift */,
-				AA70FD1B22BEF326006A4C6F /* ByteBuffer+varint.swift */,
-				AA70FD1C22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift */,
-			);
-			path = Codec;
 			sourceTree = "<group>";
 		};
 		AA72362922D41AB7004EE888 /* View */ = {
@@ -783,6 +768,7 @@
 				AABF01EE23349ED300DEA0E4 /* SwiftProtobuf */,
 				AAC170DD238E0D6D0055FC9B /* Charts */,
 				AAC71BA323939E0B00E6C901 /* SwiftEventBus */,
+				AAB1518523A4671900BCFAFD /* NIOProtobuf */,
 			);
 			productName = Sandpolis;
 			productReference = AA81DD4F22BD8C5200024120 /* Sandpolis.app */;
@@ -823,6 +809,7 @@
 				AABF01ED23349ED300DEA0E4 /* XCRemoteSwiftPackageReference "swift-protobuf" */,
 				AAC170DC238E0D6D0055FC9B /* XCRemoteSwiftPackageReference "Charts" */,
 				AAC71BA223939E0B00E6C901 /* XCRemoteSwiftPackageReference "SwiftEventBus" */,
+				AAB1518423A4671900BCFAFD /* XCRemoteSwiftPackageReference "swift-nio-protobuf" */,
 			);
 			productRefGroup = AA81DD5022BD8C5200024120 /* Products */;
 			projectDirPath = "";
@@ -906,7 +893,6 @@
 				AA0724A32312203C0087190F /* ClientScanner.swift in Sources */,
 				AA677D1C235D5683001BE400 /* Attribute.swift in Sources */,
 				AAF113B922CC50C800987EAF /* MacroManager.swift in Sources */,
-				AA70FD1F22BEF326006A4C6F /* ProtobufVarintFrameCodecs.swift in Sources */,
 				AA72362B22D42F27004EE888 /* Overview.swift in Sources */,
 				AAA8BFD8237E53CF00BB4C85 /* group.pb.swift in Sources */,
 				8542D3FE22D66E0300F56F70 /* ServerManager.swift in Sources */,
@@ -934,7 +920,6 @@
 				AA6CACEF22DD445000041AF3 /* GroupOverview.swift in Sources */,
 				ED5A421222E5284900EA3C98 /* LoginServer.swift in Sources */,
 				AAA8BFC9237E53CF00BB4C85 /* msg_server.pb.swift in Sources */,
-				AA70FD1E22BEF326006A4C6F /* ByteBuffer+varint.swift in Sources */,
 				AA69CFAD2362A325008101AA /* Ubuntu.swift in Sources */,
 				AA6CACE822DD26F600041AF3 /* OverviewTable.swift in Sources */,
 				AAC198FD22E40D27004361C5 /* FolderCell.swift in Sources */,
@@ -963,7 +948,6 @@
 				8EAD841C22CBD80700B49D59 /* ClientMap.swift in Sources */,
 				ED5A421422E5289C00EA3C98 /* CreateAccount.swift in Sources */,
 				AA70158622D7C98D00A1E4ED /* SandpolisServer.swift in Sources */,
-				AA70FD1D22BEF326006A4C6F /* ProtobufCodecs.swift in Sources */,
 				AAF390E7230BC7F1008C9469 /* ResponseHandler.swift in Sources */,
 				AAA8BFD1237E53CF00BB4C85 /* generator.pb.swift in Sources */,
 				85A2F87C22DAC2F300B2FD7D /* ClientCell.swift in Sources */,
@@ -1218,6 +1202,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		AAB1518423A4671900BCFAFD /* XCRemoteSwiftPackageReference "swift-nio-protobuf" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AlanQuatermain/swift-nio-protobuf";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.2;
+			};
+		};
 		AABF01E723349D6800DEA0E4 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-nio.git";
@@ -1261,6 +1253,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		AAB1518523A4671900BCFAFD /* NIOProtobuf */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAB1518423A4671900BCFAFD /* XCRemoteSwiftPackageReference "swift-nio-protobuf" */;
+			productName = NIOProtobuf;
+		};
 		AABF01E823349D6800DEA0E4 /* NIO */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = AABF01E723349D6800DEA0E4 /* XCRemoteSwiftPackageReference "swift-nio" */;

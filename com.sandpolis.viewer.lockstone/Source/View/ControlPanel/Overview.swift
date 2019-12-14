@@ -69,14 +69,14 @@ class Overview: UIViewController {
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "EmbeddedTable",
-			let table = segue.destination as? OverviewTable {
-			table.profile = profile
+			let embed = segue.destination as? OverviewTable {
+			embed.profile = profile
 		} else if segue.identifier == "FileManagerSegue",
-			let fileManager = segue.destination as? FileManager {
-			fileManager.profile = profile
+			let dest = segue.destination as? FileManager {
+			dest.profile = profile
 		} else if segue.identifier == "MacroSegue",
-			let macroSelect = segue.destination as? MacroSelect {
-			macroSelect.profiles.append(profile)
+			let dest = segue.destination as? MacroSelect {
+			dest.profiles.append(profile)
 		} else {
 			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
 		}

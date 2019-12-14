@@ -10,6 +10,7 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 import NIO
+import NIOProtobuf
 import NIOSSL
 import CryptoSwift
 import SwiftProtobuf

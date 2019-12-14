@@ -32,8 +32,6 @@ class CloudUtil {
 			], options: [])
 
 			URLSession.shared.dataTask(with: request) { data, response, error in
-				print("data:", data)
-				print("error:", error)
 				if let content = data {
 					do {
 						if let json = try JSONSerialization.jsonObject(with: content, options: .allowFragments) as? NSDictionary {

@@ -99,14 +99,14 @@ class Login: UIViewController {
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "LoginEmbed",
-			let login = segue.destination as? LoginAccount {
-			login.loginContainer = self
+			let dest = segue.destination as? LoginAccount {
+			dest.loginContainer = self
 		} else if segue.identifier == "ForgotPasswordEmbed",
-			let forgotPassword = segue.destination as? LoginServer {
-			forgotPassword.loginContainer = self
+			let dest = segue.destination as? LoginServer {
+			dest.loginContainer = self
 		} else if segue.identifier == "CreateAccountEmbed",
-			let createAccount = segue.destination as? CreateAccount {
-			createAccount.loginContainer = self
+			let dest = segue.destination as? CreateAccount {
+			dest.loginContainer = self
 		} else if segue.identifier == "DirectLoginCompleteSegue",
 			let dest = segue.destination as? ClientManager {
 			dest.serverName = sender as? String

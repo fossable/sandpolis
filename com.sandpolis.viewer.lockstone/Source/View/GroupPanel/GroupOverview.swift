@@ -26,14 +26,14 @@ class GroupOverview: UIViewController, UITableViewDelegate, UITableViewDataSourc
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "StatsTable",
-			let table = segue.destination as? GroupPanelTable {
-			table.profiles = profiles
+			let dest = segue.destination as? GroupPanelTable {
+			dest.profiles = profiles
 		} else if segue.identifier == "MacroSegue",
-			let resultsView = segue.destination as? MacroSelect {
-			resultsView.profiles = profiles
+			let dest = segue.destination as? MacroSelect {
+			dest.profiles = profiles
 		} else if segue.identifier == "SingleControlPanelSegue",
-			let cpView = segue.destination as? ControlPanel {
-			cpView.profile = profiles[table.indexPathForSelectedRow!.row]
+			let dest = segue.destination as? ControlPanel {
+			dest.profile = profiles[table.indexPathForSelectedRow!.row]
 		} else {
 			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
 		}

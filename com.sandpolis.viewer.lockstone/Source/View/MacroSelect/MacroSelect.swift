@@ -42,6 +42,8 @@ class MacroSelect: UITableViewController {
 					type = .cmd
 				case "bash":
 					type = .bash
+				case "zsh":
+					type = .zsh
 				default:
 					type = .bash
 				}

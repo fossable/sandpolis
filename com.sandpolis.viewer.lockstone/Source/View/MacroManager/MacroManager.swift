@@ -69,15 +69,15 @@ class MacroManager: UITableViewController {
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "AddSegue",
-			let editor = segue.destination as? MacroEditor {
+			let dest = segue.destination as? MacroEditor {
 
-			editor.macroReference = ref.document()
+			dest.macroReference = ref.document()
 		} else if segue.identifier == "EditSegue",
-			let editor = segue.destination as? MacroEditor {
+			let dest = segue.destination as? MacroEditor {
 
 			if tableView.indexPathForSelectedRow != nil {
-				editor.macro = macroList[tableView.indexPathForSelectedRow!.row]
-				editor.macroReference = editor.macro.reference
+				dest.macro = macroList[tableView.indexPathForSelectedRow!.row]
+				dest.macroReference = dest.macro.reference
 			}
 		} else {
 			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")

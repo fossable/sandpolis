@@ -47,6 +47,10 @@ class MacroResults: UITableViewController, CollapsibleTableViewHeaderDelegate {
 			shell = .pwsh
 		case "cmd":
 			shell = .cmd
+		case "bash":
+			shell = .bash
+		case "zsh":
+			shell = .zsh
 		default:
 			shell = .bash
 		}

@@ -76,9 +76,21 @@ class AddServer: UIViewController, UITextFieldDelegate {
 		view.endEditing(true)
 	}
 
-	@IBAction func saveButtonPressed(_ sender: Any) {
-		if name.text!.isEmpty || address.text!.isEmpty || username.text!.isEmpty || password.text!.isEmpty {
-			status.text = "Please fill out all fields."
+	@IBAction func save(_ sender: Any) {
+		guard (Validator.isFQDN() || Validator.isIPv4()).apply(address.text) else {
+			status.text = "Invalid address"
+			return
+		}
+		guard Validator.minLength(4).apply(username.text) else {
+			status.text = "Invalid username"
+			return
+		}
+		guard Validator.minLength(8).apply(password.text) else {
+			status.text = "Invalid password"
+			return
+		}
+		guard Validator.minLength(1).apply(name.text) else {
+			status.text = "Invalid name"
 			return
 		}
 

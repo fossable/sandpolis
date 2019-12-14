@@ -59,7 +59,7 @@ class SandpolisProfile {
 				return rs.rsListShells.listing
 			}
 		} catch {
-			os_log("Failed to query shells")
+			os_log("Failed to query shell compatibility from %d", cvid)
 		}
 		return nil
 	}()
