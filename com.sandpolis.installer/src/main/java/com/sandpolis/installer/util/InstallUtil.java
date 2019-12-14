@@ -13,6 +13,7 @@ package com.sandpolis.installer.util;
 
 import com.sandpolis.core.soi.Dependency;
 import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
+import com.sandpolis.core.util.JarUtil;
 import com.sandpolis.installer.Main;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +92,7 @@ public final class InstallUtil {
 		return coordinate;
 	}
 
-	public static Path installLinuxDesktopEntry(Path executable, String coordinate, Path bin, String name)
+	public static Path installLinuxDesktopEntry(Path bin, Path icon, String coordinate, String name)
 			throws IOException {
 		for (String dest : Main.EXT_LINUX_DESKTOP.split(";")) {
 			Path destination = Paths.get(dest);
@@ -110,7 +111,7 @@ public final class InstallUtil {
 			Files.writeString(destination,
 					String.join("\n",
 							List.of("[Desktop Entry]", "Version=1.1", "Type=Application", "Terminal=false",
-									"Categories=Network;Utility;RemoteAccess;Security;", "Name=" + name,
+									"Categories=Network;Utility;RemoteAccess;Security;", "Name=" + name, "Icon=\"" + icon + "\"",
 									"Exec=\"" + bin + "\" %f"))
 							+ "\n");
 			log.debug("Installed desktop entry to: {}", destination);
@@ -120,14 +121,14 @@ public final class InstallUtil {
 		return null;
 	}
 
-	public static Path installWindowsDesktopShortcut(Path executable, String coordinate) throws IOException, InterruptedException {
+	public static Path installWindowsDesktopShortcut(Path bin, Path icon, String name) throws IOException {
 		for (String dest : Main.EXT_WINDOWS_DESKTOP.split(";")) {
 			Path destination = Paths.get(dest);
 			if (Files.exists(destination) && !Files.isWritable(destination))
 				continue;
-			destination = destination.resolve(coordinate.split(":")[1]);
+			destination = destination.resolve(name + ".lnk");
 
-			ShellLink.createLink(executable.toString()).saveTo(destination.toString());
+			ShellLink.createLink(bin.toString()).setName(name).setIconLocation(icon.toString()).saveTo(destination.toString());
 			log.debug("Installed desktop shortcut to: {}", destination);
 			return destination;
 		}
@@ -135,14 +136,14 @@ public final class InstallUtil {
 		return null;
 	}
 
-	public static Path installWindowsStartMenuEntry(Path executable, String coordinate) throws IOException, InterruptedException {
+	public static Path installWindowsStartMenuEntry(Path bin, Path icon, String name) throws IOException {
 		for (String dest : Main.EXT_WINDOWS_START.split(";")) {
 			Path destination = Paths.get(dest);
 			if (!Files.isWritable(destination))
 				continue;
-			destination = destination.resolve(coordinate.split(":")[1]);
+			destination = destination.resolve(name + ".lnk");
 
-			ShellLink.createLink(executable.toString()).saveTo(destination.toString());
+			ShellLink.createLink(bin.toString()).setName(name).setIconLocation(icon.toString()).saveTo(destination.toString());
 			log.debug("Installed start menu entry to: {}", destination);
 			return destination;
 		}
@@ -150,7 +151,7 @@ public final class InstallUtil {
 		return null;
 	}
 
-	public static Path installLinuxBinaries(Path executable, String coordinate) throws IOException {
+	public static Path installLinuxBinaries(Path instance, String coordinate) throws IOException {
 		for (String dest : Main.EXT_LINUX_BIN.split(";")) {
 			Path destination = Paths.get(dest);
 			if (!Files.isWritable(destination))
@@ -160,7 +161,7 @@ public final class InstallUtil {
 
 			Files.writeString(destination,
 					String.format("#!/bin/sh\nexec /usr/bin/java --module-path \"%s\" -m com.%s/com.%s.Main \"%%@\"",
-							executable.getParent(), coordinate, coordinate));
+							instance.getParent(), coordinate, coordinate));
 			Files.setPosixFilePermissions(destination, Set.of(OWNER_READ, OWNER_WRITE, OWNER_EXECUTE, GROUP_READ,
 					GROUP_EXECUTE, OTHERS_READ, OTHERS_EXECUTE));
 			log.debug("Installed binaries to: {}", destination);
@@ -168,6 +169,32 @@ public final class InstallUtil {
 		}
 
 		return null;
+	}
+
+	public static Path installWindowsBinaries(Path instance, String coordinate) throws IOException {
+
+		Path destination = instance.getParent().resolveSibling(coordinate.split(":")[1] + ".bat");
+		Files.writeString(destination,
+				String.format("@echo off%nstart javaw --module-path \"%s\" -m com.%s/com.%s.Main",
+						instance.getParent(), coordinate, coordinate));
+
+		return destination;
+	}
+
+	/**
+	 * Install an icon from the given instance jar.
+	 *
+	 * @param instance The instance jar
+	 * @param icon The location of the icon to install within the instance jar
+	 * @param output The new icon location
+	 * @return {@code output}
+	 * @throws IOException
+	 */
+	public static Path installIcon(Path instance, String icon, Path output) throws IOException {
+		try(var in = JarUtil.getResourceUrl(instance, icon).openStream()) {
+			Files.copy(in, output);
+		}
+		return output;
 	}
 
 	private InstallUtil() {
