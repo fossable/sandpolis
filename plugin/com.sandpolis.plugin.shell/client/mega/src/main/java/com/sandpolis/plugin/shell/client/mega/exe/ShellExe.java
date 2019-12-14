@@ -58,6 +58,9 @@ public final class ShellExe extends Exelet {
 		case CMD:
 			command = Shells.CMD.buildCommand(rq.getCommand());
 			break;
+		case ZSH:
+			command = Shells.ZSH.buildCommand(rq.getCommand());
+			break;
 		default:
 			throw new RuntimeException();
 		}
@@ -82,6 +85,9 @@ public final class ShellExe extends Exelet {
 		}
 		if (Shells.CMD.getLocation() != null) {
 			rs.addListing(ShellListing.newBuilder().setType(Shell.CMD).setLocation(Shells.CMD.getLocation()));
+		}
+		if (Shells.ZSH.getLocation() != null) {
+			rs.addListing(ShellListing.newBuilder().setType(Shell.ZSH).setLocation(Shells.ZSH.getLocation()));
 		}
 
 		return rs;

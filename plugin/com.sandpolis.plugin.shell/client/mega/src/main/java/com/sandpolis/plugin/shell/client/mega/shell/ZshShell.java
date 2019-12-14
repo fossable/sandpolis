@@ -9,36 +9,25 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.plugin.shell.client.mega.stream;
+package com.sandpolis.plugin.shell.client.mega.shell;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import java.util.Base64;
 
-import java.io.IOException;
+public class ZshShell extends AbstractShell {
 
-import com.sandpolis.core.stream.store.StreamSink;
-import com.sandpolis.plugin.shell.net.MsgShell.EV_ShellStream;
-
-public class ShellStreamSink extends StreamSink<EV_ShellStream> {
-
-	private Process process;
-
-	public ShellStreamSink(Process process) {
-		checkArgument(process.isAlive());
-		this.process = process;
+	@Override
+	public String[] searchPath() {
+		return new String[] { "/bin/zsh", "/usr/bin/zsh" };
 	}
 
 	@Override
-	public void onNext(EV_ShellStream item) {
-		if (!item.getData().isEmpty()) {
-			try {
-				process.getOutputStream().write(item.getData().toByteArray());
-				process.getOutputStream().flush();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+	public String[] buildSession() {
+		return new String[] { location, "-i" };
+	}
 
-		// TODO change terminal size if set
+	@Override
+	public String[] buildCommand(String command) {
+		return new String[] { location, "-c",
+				"echo " + Base64.getEncoder().encodeToString(command.getBytes()) + " | base64 --decode | " + location };
 	}
 }
