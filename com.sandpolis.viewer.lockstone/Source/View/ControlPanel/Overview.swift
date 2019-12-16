@@ -21,6 +21,7 @@ class Overview: UIViewController {
 	@IBOutlet weak var screenshot: UIImageView!
 	@IBOutlet weak var tableContainer: UIView!
 	@IBOutlet weak var screenshotProgress: UIActivityIndicatorView!
+	@IBOutlet weak var screenshotHeight: NSLayoutConstraint!
 
 	var profile: SandpolisProfile!
 
@@ -28,8 +29,9 @@ class Overview: UIViewController {
 		super.viewDidLoad()
 
 		// Set screenshot if it already exists
-		if let img = profile.screenshot {
-			screenshot.image = UIImage(data: img)
+		if let data = profile.screenshot, let image = UIImage(data: data) {
+			screenshotHeight.constant = min(screenshot.bounds.width, (image.size.height / image.size.width) * screenshot.bounds.width)
+			screenshot.image = image
 		} else {
 			// Trigger refresh otherwise
 			refreshScreenshot()
@@ -95,7 +97,10 @@ class Overview: UIViewController {
 				self.profile.screenshot = rs.rsScreenshot.data
 				DispatchQueue.main.async {
 					self.screenshotProgress.stopAnimating()
-					self.screenshot.image = UIImage(data: self.profile.screenshot!)
+					if let image = UIImage(data: self.profile.screenshot!) {
+						self.screenshotHeight.constant = min(self.screenshot.bounds.width, (image.size.height / image.size.width) * self.screenshot.bounds.width)
+						self.screenshot.image = image
+					}
 				}
 			default:
 				DispatchQueue.main.async {
