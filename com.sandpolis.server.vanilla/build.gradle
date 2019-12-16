@@ -13,11 +13,10 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
-	id 'application'
 
 	id 'com.sandpolis.gradle.soi'
 	id 'com.sandpolis.gradle.deploy'
-	id 'com.bmuschko.docker-java-application' version '5.3.0'
+	id 'com.bmuschko.docker-java-application' version '6.1.1'
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
 	id 'org.beryx.jlink' version '2.16.4'
 }
@@ -89,14 +88,13 @@ jar {
 	}
 }
 
-mainClassName = 'com.sandpolis.server.vanilla/com.sandpolis.server.vanilla.Main'
-
 docker {
 	javaApplication {
 		baseImage = 'openjdk:13.0.1-slim'
 		maintainer = 'tcc@sandpolis.com'
-		tag = "sandpolis/sandpolis-server:${project.version}"
+		images = ["sandpolis/sandpolis-server:${project.version}"]
 		ports = [8768]
+		mainClassName = 'com.sandpolis.server.vanilla.Main'
 		jvmArgs = [
 			'-Dpath.lib=/app/libs',
 			'-Dpath.gen=/tmp',
