@@ -65,7 +65,7 @@ dependencies {
 	api 'io.nayuki:qrcodegen:1.5.0'
 
 	// https://github.com/qos-ch/slf4j
-	api 'org.slf4j:slf4j-api:1.7.29'
+	api 'org.slf4j:slf4j-api:1.7.30'
 
 	// https://github.com/DmitriiShamrikov/mslinks
 	compileOnly 'com.github.vatbub:mslinks:1.0.5'

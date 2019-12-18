@@ -43,7 +43,7 @@ dependencies {
 	implementation 'io.netty:netty-resolver-dns:4.1.43.Final'
 
 	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.29'
+	implementation 'org.slf4j:slf4j-api:1.7.30'
 }
 
 // Allow com.sandpolis.server.vanilla to reuse some unit tests
