@@ -111,8 +111,8 @@ public final class InstallUtil {
 			Files.writeString(destination,
 					String.join("\n",
 							List.of("[Desktop Entry]", "Version=1.1", "Type=Application", "Terminal=false",
-									"Categories=Network;Utility;RemoteAccess;Security;", "Name=" + name, "Icon=\"" + icon + "\"",
-									"Exec=\"" + bin + "\" %f"))
+									"Categories=Network;Utility;RemoteAccess;Security;", "Name=" + name,
+									"Icon=\"" + icon + "\"", "Exec=\"" + bin + "\" %f"))
 							+ "\n");
 			log.debug("Installed desktop entry to: {}", destination);
 			return destination;
@@ -128,7 +128,8 @@ public final class InstallUtil {
 				continue;
 			destination = destination.resolve(name + ".lnk");
 
-			ShellLink.createLink(bin.toString()).setName(name).setIconLocation(icon.toString()).saveTo(destination.toString());
+			ShellLink.createLink(bin.toString()).setName(name).setIconLocation(icon.toString())
+					.saveTo(destination.toString());
 			log.debug("Installed desktop shortcut to: {}", destination);
 			return destination;
 		}
@@ -143,7 +144,8 @@ public final class InstallUtil {
 				continue;
 			destination = destination.resolve(name + ".lnk");
 
-			ShellLink.createLink(bin.toString()).setName(name).setIconLocation(icon.toString()).saveTo(destination.toString());
+			ShellLink.createLink(bin.toString()).setName(name).setIconLocation(icon.toString())
+					.saveTo(destination.toString());
 			log.debug("Installed start menu entry to: {}", destination);
 			return destination;
 		}
@@ -175,8 +177,8 @@ public final class InstallUtil {
 
 		Path destination = instance.getParent().resolveSibling(coordinate.split(":")[1] + ".bat");
 		Files.writeString(destination,
-				String.format("@echo off%nstart javaw --module-path \"%s\" -m com.%s/com.%s.Main",
-						instance.getParent(), coordinate, coordinate));
+				String.format("@echo off%nstart javaw --module-path \"%s\" -m com.%s/com.%s.Main", instance.getParent(),
+						coordinate, coordinate));
 
 		return destination;
 	}
@@ -185,13 +187,13 @@ public final class InstallUtil {
 	 * Install an icon from the given instance jar.
 	 *
 	 * @param instance The instance jar
-	 * @param icon The location of the icon to install within the instance jar
-	 * @param output The new icon location
+	 * @param icon     The location of the icon to install within the instance jar
+	 * @param output   The new icon location
 	 * @return {@code output}
 	 * @throws IOException
 	 */
 	public static Path installIcon(Path instance, String icon, Path output) throws IOException {
-		try(var in = JarUtil.getResourceUrl(instance, icon).openStream()) {
+		try (var in = JarUtil.getResourceUrl(instance, icon).openStream()) {
 			Files.copy(in, output);
 		}
 		return output;

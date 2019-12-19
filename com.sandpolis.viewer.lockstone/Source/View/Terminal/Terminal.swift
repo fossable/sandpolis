@@ -58,9 +58,9 @@ class TerminalViewController: UIViewController, WKNavigationDelegate, WKUIDelega
 	/// Ignored notifications name strings.
 	/// When a the function linked with a notification listed here, the function will remove the given notification from this array and will return.
 	var ignoredNotifications = [Notification.Name]()
-	
+
 	var cols: Int32!
-	
+
 	var rows: Int32!
 
 	/// Change terminal size to page size.
@@ -96,7 +96,7 @@ class TerminalViewController: UIViewController, WKNavigationDelegate, WKUIDelega
 						}
 						stream.connection.send(&ev)
 					}
-				
+
 					if let completion = completion {
 						completion()
 					}

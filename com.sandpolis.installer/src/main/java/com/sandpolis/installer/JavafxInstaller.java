@@ -137,7 +137,8 @@ public class JavafxInstaller extends Task<Void> {
 		if (Main.IS_LINUX) {
 			if (coordinate.contains(":sandpolis-viewer-jfx:")) {
 				Path bin = InstallUtil.installLinuxBinaries(executable, coordinate);
-				Path icon = InstallUtil.installIcon(executable, "/image/icon@4x.png", executable.getParent().resolveSibling("Sandpolis.png"));
+				Path icon = InstallUtil.installIcon(executable, "/image/icon@4x.png",
+						executable.getParent().resolveSibling("Sandpolis.png"));
 				InstallUtil.installLinuxDesktopEntry(bin, icon, coordinate, "Sandpolis Viewer");
 			}
 		}
@@ -145,7 +146,8 @@ public class JavafxInstaller extends Task<Void> {
 		else if (Main.IS_WINDOWS) {
 			if (coordinate.contains(":sandpolis-viewer-jfx:")) {
 				Path bin = InstallUtil.installWindowsBinaries(executable, coordinate);
-				Path icon = InstallUtil.installIcon(executable, "/image/icon.ico", executable.getParent().resolveSibling("Sandpolis.ico"));
+				Path icon = InstallUtil.installIcon(executable, "/image/icon.ico",
+						executable.getParent().resolveSibling("Sandpolis.ico"));
 				InstallUtil.installWindowsStartMenuEntry(bin, icon, coordinate);
 				InstallUtil.installWindowsDesktopShortcut(bin, icon, coordinate);
 			}
