@@ -70,7 +70,7 @@ dependencies {
 	api 'org.hibernate:hibernate-core:5.4.10.Final'
 
 	// https://github.com/qos-ch/slf4j
-	api 'org.slf4j:slf4j-api:1.7.29'
+	api 'org.slf4j:slf4j-api:1.7.30'
 
 	// https://github.com/cilki/zipset
 	api 'com.github.cilki:zipset:1.2.1'

@@ -36,7 +36,7 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.instance')
 
 	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.29'
+	implementation 'org.slf4j:slf4j-api:1.7.30'
 
 	// https://github.com/hibernate/hibernate-orm
 	implementation 'org.hibernate:hibernate-core:5.4.10.Final'
