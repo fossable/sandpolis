@@ -12,14 +12,15 @@
 package com.sandpolis.core.instance.store.plugin;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.nio.file.Files.exists;
-import static java.nio.file.Files.list;
+import static java.nio.file.Files.*;
 
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -129,24 +130,26 @@ public final class Plugin {
 		certificate = manifest.getValue("Plugin-Cert");
 
 		// Install core
-		Resources.asByteSource(JarUtil.getResourceUrl(path, "core.jar"))
-				.copyTo(Files.asByteSink(Environment.PLUGIN.path().resolve(getArtifactName(null, null)).toFile()));
+		Path core = getComponent(null, null);
+		if (!exists(core))
+			createDirectories(core.getParent());
+		Resources.asByteSource(JarUtil.getResourceUrl(path, "core.jar")).copyTo(Files.asByteSink(core.toFile()));
 
 		// Install components
-		InstanceUtil.iterate((instance, flavor) -> {
-			try {
-				String component = String.format("%s/%s.jar", instance.toString().toLowerCase(),
+		for (Instance instance : Instance.values()) {
+			for (InstanceFlavor flavor : InstanceFlavor.values()) {
+				String internalPath = String.format("%s/%s.jar", instance.toString().toLowerCase(),
 						flavor.toString().toLowerCase());
-				if (JarUtil.resourceExists(path, component)) {
+				if (JarUtil.resourceExists(path, internalPath)) {
+					Path component = getComponent(instance, flavor);
+					if (!exists(component))
+						createDirectories(component.getParent());
 
-					Resources.asByteSource(JarUtil.getResourceUrl(path, component)).copyTo(Files
-							.asByteSink(Environment.PLUGIN.path().resolve(getArtifactName(instance, flavor)).toFile()));
+					Resources.asByteSource(JarUtil.getResourceUrl(path, internalPath))
+							.copyTo(Files.asByteSink(component.toFile()));
 				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
-		});
+		}
 
 		this.enabled = enabled;
 		this.hash = hash();
@@ -226,16 +229,14 @@ public final class Plugin {
 	void load() throws IOException {
 		checkState(!loaded);
 
-		Path component = Environment.PLUGIN.path().resolve(getArtifactName(Core.INSTANCE, Core.FLAVOR));
+		Path component = getComponent(Core.INSTANCE, Core.FLAVOR);
 
 		// Build new classloader
 		if (exists(component)) {
 			classloader = new URLClassLoader(
-					new URL[] { Environment.PLUGIN.path().resolve(getArtifactName(null, null)).toUri().toURL(),
-							component.toUri().toURL() });
+					new URL[] { getComponent(null, null).toUri().toURL(), component.toUri().toURL() });
 		} else {
-			classloader = new URLClassLoader(
-					new URL[] { Environment.PLUGIN.path().resolve(getArtifactName(null, null)).toUri().toURL() });
+			classloader = new URLClassLoader(new URL[] { getComponent(null, null).toUri().toURL() });
 		}
 
 		// Load plugin class if available
@@ -244,7 +245,7 @@ public final class Plugin {
 			return prov.type().getName()
 					.startsWith(String.format("%s.%s.%s", id, Core.INSTANCE.toString().toLowerCase(),
 							Core.FLAVOR.toString().toLowerCase()));
-		}).map(prov -> prov.get()).findFirst().orElse(null);
+		}).map(ServiceLoader.Provider::get).findFirst().orElse(null);
 
 		if (handle != null)
 			handle.loaded();
@@ -264,38 +265,36 @@ public final class Plugin {
 	 * Search for all plugin components in the {@code PLUGIN} directory.
 	 *
 	 * @return The component paths
-	 * @throws IOException
 	 */
-	Stream<Path> findComponents() throws IOException {
-		return list(Environment.PLUGIN.path()).filter(path -> path.getFileName().toString().startsWith(id));
+	public Stream<Path> components() {
+		List<Path> components = new ArrayList<>();
+		for (Instance instance : Instance.values()) {
+			for (InstanceFlavor flavor : InstanceFlavor.values()) {
+				Path component = getComponent(instance, flavor);
+				if (exists(component))
+					components.add(component);
+			}
+		}
+		return components.stream();
 	}
 
 	public Path getComponent(Instance instance, InstanceFlavor flavor) {
-		return Environment.PLUGIN.path().resolve(getArtifactName(instance, flavor));
-	}
-
-	private String getArtifactName(Instance instance, InstanceFlavor flavor) {
 		if (instance == null && flavor == null) {
-			String version = getVersion();
-			if (version != null)
-				return String.format("%s-%s.jar", id, version);
-			else
-				return String.format("%s.jar", id);
+			return Environment.PLUGIN.path().resolve(getId()).resolve(getVersion()).resolve("core.jar");
 		} else {
-			return String.format("%s:%s:%s-%s.jar", id, instance.toString().toLowerCase(),
-					flavor.toString().toLowerCase(), getVersion());
+			return Environment.PLUGIN.path().resolve(getId()).resolve(getVersion())
+					.resolve(instance.toString().toLowerCase()).resolve(flavor.toString().toLowerCase() + ".jar");
 		}
 	}
 
 	/**
-	 * Hash the plugin components.
+	 * Produce a hash unique to this plugin and version.
 	 *
-	 * @return
-	 * @throws IOException
+	 * @return The plugin hash
+	 * @throws IOException If the plugin's filesystem artifacts could not be read
 	 */
 	private byte[] hash() throws IOException {
-		return ByteSource
-				.concat(findComponents().map(path -> MoreFiles.asByteSource(path)).collect(Collectors.toList()))
+		return ByteSource.concat(components().map(MoreFiles::asByteSource).collect(Collectors.toList()))
 				.hash(Hashing.sha256()).asBytes();
 	}
 
