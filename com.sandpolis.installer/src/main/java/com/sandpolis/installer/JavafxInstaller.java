@@ -148,8 +148,8 @@ public class JavafxInstaller extends Task<Void> {
 				Path bin = InstallUtil.installWindowsBinaries(executable, coordinate);
 				Path icon = InstallUtil.installIcon(executable, "/image/icon.ico",
 						executable.getParent().resolveSibling("Sandpolis.ico"));
-				InstallUtil.installWindowsStartMenuEntry(bin, icon, coordinate);
-				InstallUtil.installWindowsDesktopShortcut(bin, icon, coordinate);
+				InstallUtil.installWindowsStartMenuEntry(bin, icon, "Sandpolis Viewer");
+				InstallUtil.installWindowsDesktopShortcut(bin, icon, "Sandpolis Viewer");
 			}
 		}
 

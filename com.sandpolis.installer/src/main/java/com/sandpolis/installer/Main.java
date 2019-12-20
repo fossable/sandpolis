@@ -11,9 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.installer;
 
-import java.nio.file.Paths;
-import java.util.stream.Stream;
-
+import com.sandpolis.installer.util.InstallUtil.InstallPath;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -21,6 +19,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+
+import java.nio.file.Path;
+import java.util.stream.Stream;
 
 /**
  * This stub is the entry point for Installer instances.
@@ -43,9 +44,9 @@ public final class Main {
 	}
 
 	/**
-	 * The installation path.
+	 * The version to install.
 	 */
-	public static final String PATH = System.getProperty("path", System.getProperty("user.home") + "/.sandpolis");
+	public static final String VERSION = System.getProperty("version", "latest");
 
 	/**
 	 * The components to install.
@@ -53,33 +54,55 @@ public final class Main {
 	public static final String COMPONENTS = System.getProperty("components", "");
 
 	/**
-	 * The version to install.
+	 * The installation path.
 	 */
-	public static final String VERSION = System.getProperty("version", "latest");
+	public static final InstallPath PATH = InstallPath.of(System.getProperty("path"),
+			System.getProperty("user.home") + "/.sandpolis");
 
-	public static final String EXT_LINUX_DESKTOP = System.getProperty("ext.linux.desktop",
-			"/usr/share/applications;" + System.getProperty("user.home") + "/.local/share/applications");
-	public static final String EXT_LINUX_BIN = System.getProperty("ext.linux.bin",
-			"/usr/bin;/usr/local/sbin;/usr/local/bin");
-	public static final String EXT_WINDOWS_START = System.getProperty("ext.windows.start",
-			"C:/ProgramData/Microsoft/Windows/Start Menu/Programs;" + System.getProperty("user.home")
-					+ "/AppData/Roaming/Microsoft/Windows/Start Menu/Programs");
-	public static final String EXT_WINDOWS_DESKTOP = System.getProperty("ext.windows.desktop",
+	/**
+	 * The desktop file install path.
+	 */
+	public static final InstallPath EXT_LINUX_DESKTOP = InstallPath.of(System.getProperty("ext.linux.desktop"),
+			"/usr/share/applications", System.getProperty("user.home") + "/.local/share/applications");
+
+	/**
+	 * The script install path.
+	 */
+	public static final InstallPath EXT_LINUX_BIN = InstallPath.of(System.getProperty("ext.linux.bin"), "/usr/bin",
+			"/usr/local/sbin", "/usr/local/bin", PATH);
+
+	/**
+	 * The start menu install path.
+	 */
+	public static final InstallPath EXT_WINDOWS_START = InstallPath.of(System.getProperty("ext.windows.start"),
+			"C:/ProgramData/Microsoft/Windows/Start Menu/Programs",
+			System.getProperty("user.home") + "/AppData/Roaming/Microsoft/Windows/Start Menu/Programs");
+
+	/**
+	 * The desktop install path.
+	 */
+	public static final InstallPath EXT_WINDOWS_DESKTOP = InstallPath.of(System.getProperty("ext.windows.desktop"),
 			System.getProperty("user.home") + "/Desktop");
+
+	/**
+	 * The script install path.
+	 */
+	public static final InstallPath EXT_WINDOWS_BIN = InstallPath.of(PATH);
 
 	public static void main(String[] args) throws Exception {
 
 		if (System.getProperty("path") != null) {
+			Path path = PATH.evaluate().get();
 			for (String component : COMPONENTS.split(",")) {
 				switch (component) {
 				case "server":
-					CliInstaller.newServerInstaller(Paths.get(PATH)).call();
+					CliInstaller.newServerInstaller(path).call();
 					break;
 				case "viewer-jfx":
-					CliInstaller.newViewerJfxInstaller(Paths.get(PATH)).call();
+					CliInstaller.newViewerJfxInstaller(path).call();
 					break;
 				case "viewer-cli":
-					CliInstaller.newViewerCliInstaller(Paths.get(PATH)).call();
+					CliInstaller.newViewerCliInstaller(path).call();
 					break;
 				}
 			}
@@ -113,6 +136,19 @@ public final class Main {
 			stage.setScene(scene);
 			stage.setResizable(false);
 			stage.show();
+
+			closeSplash();
+		}
+
+		private void closeSplash() {
+			try {
+				var splash = Class.forName("java.awt.SplashScreen").getMethod("getSplashScreen").invoke(null);
+				if (splash != null) {
+					splash.getClass().getMethod("close").invoke(splash);
+				}
+			} catch (Exception e) {
+				// No splash screen found
+			}
 		}
 	}
 

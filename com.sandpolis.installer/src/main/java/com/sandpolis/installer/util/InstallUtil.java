@@ -22,9 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import mslinks.ShellLink;
@@ -94,20 +92,11 @@ public final class InstallUtil {
 
 	public static Path installLinuxDesktopEntry(Path bin, Path icon, String coordinate, String name)
 			throws IOException {
-		for (String dest : Main.EXT_LINUX_DESKTOP.split(";")) {
-			Path destination = Paths.get(dest);
-			if (Files.exists(destination) && !Files.isWritable(destination))
+		for (Path destination : Main.EXT_LINUX_DESKTOP.evaluateWritable()) {
+			if (!Files.exists(destination))
 				continue;
-			try {
-				Files.createDirectories(destination);
-			} catch (IOException e) {
-				continue;
-			}
-
 			destination = destination.resolve(coordinate.split(":")[1] + ".desktop");
 
-			if (Files.exists(destination))
-				Files.delete(destination);
 			Files.writeString(destination,
 					String.join("\n",
 							List.of("[Desktop Entry]", "Version=1.1", "Type=Application", "Terminal=false",
@@ -122,9 +111,8 @@ public final class InstallUtil {
 	}
 
 	public static Path installWindowsDesktopShortcut(Path bin, Path icon, String name) throws IOException {
-		for (String dest : Main.EXT_WINDOWS_DESKTOP.split(";")) {
-			Path destination = Paths.get(dest);
-			if (Files.exists(destination) && !Files.isWritable(destination))
+		for (Path destination : Main.EXT_WINDOWS_DESKTOP.evaluateWritable()) {
+			if (!Files.exists(destination))
 				continue;
 			destination = destination.resolve(name + ".lnk");
 
@@ -138,9 +126,8 @@ public final class InstallUtil {
 	}
 
 	public static Path installWindowsStartMenuEntry(Path bin, Path icon, String name) throws IOException {
-		for (String dest : Main.EXT_WINDOWS_START.split(";")) {
-			Path destination = Paths.get(dest);
-			if (!Files.isWritable(destination))
+		for (Path destination : Main.EXT_WINDOWS_START.evaluateWritable()) {
+			if (!Files.exists(destination))
 				continue;
 			destination = destination.resolve(name + ".lnk");
 
@@ -154,15 +141,14 @@ public final class InstallUtil {
 	}
 
 	public static Path installLinuxBinaries(Path instance, String coordinate) throws IOException {
-		for (String dest : Main.EXT_LINUX_BIN.split(";")) {
-			Path destination = Paths.get(dest);
-			if (!Files.isWritable(destination))
+		for (Path destination : Main.EXT_LINUX_BIN.evaluateWritable()) {
+			if (!Files.exists(destination))
 				continue;
 			destination = destination.resolve(coordinate.split(":")[1]);
 			coordinate = coordinate.split(":")[1].replaceAll("-", ".");
 
 			Files.writeString(destination,
-					String.format("#!/bin/sh\nexec /usr/bin/java --module-path \"%s\" -m com.%s/com.%s.Main \"%%@\"",
+					String.format("#!/bin/sh\nexec /usr/bin/java --module-path \"%s\" -m com.%s/com.%s.Main \"%%@\"\n",
 							instance.getParent(), coordinate, coordinate));
 			Files.setPosixFilePermissions(destination, Set.of(OWNER_READ, OWNER_WRITE, OWNER_EXECUTE, GROUP_READ,
 					GROUP_EXECUTE, OTHERS_READ, OTHERS_EXECUTE));
@@ -174,13 +160,19 @@ public final class InstallUtil {
 	}
 
 	public static Path installWindowsBinaries(Path instance, String coordinate) throws IOException {
+		for (Path destination : Main.EXT_WINDOWS_BIN.evaluateWritable()) {
+			if (!Files.exists(destination))
+				continue;
+			destination = destination.resolve(coordinate.split(":")[1] + ".bat");
+			coordinate = coordinate.split(":")[1].replaceAll("-", ".");
 
-		Path destination = instance.getParent().resolveSibling(coordinate.split(":")[1] + ".bat");
-		Files.writeString(destination,
-				String.format("@echo off%nstart javaw --module-path \"%s\" -m com.%s/com.%s.Main", instance.getParent(),
-						coordinate, coordinate));
-
-		return destination;
+			Files.writeString(destination,
+					String.format("@echo off%nstart javaw --module-path \"%s\" -m com.%s/com.%s.Main",
+							instance.getParent(), coordinate, coordinate));
+			log.debug("Installed binaries to: {}", destination);
+			return destination;
+		}
+		return null;
 	}
 
 	/**
@@ -193,12 +185,82 @@ public final class InstallUtil {
 	 * @throws IOException
 	 */
 	public static Path installIcon(Path instance, String icon, Path output) throws IOException {
-		try (var in = JarUtil.getResourceUrl(instance, icon).openStream()) {
-			Files.copy(in, output);
+		var url = JarUtil.getResourceUrl(instance, icon);
+		if (url != null) {
+			try (var in = url.openStream()) {
+				Files.copy(in, output);
+			}
 		}
 		return output;
 	}
 
 	private InstallUtil() {
+	}
+
+	/**
+	 * Represents a {@link Path} on the system which may receive installation
+	 * artifacts.
+	 */
+	public static final class InstallPath {
+
+		private List<Object> candidates;
+
+		/**
+		 * Get the highest precedence {@link Path}.
+		 *
+		 * @return
+		 */
+		public Optional<Path> evaluate() {
+			return candidates.stream().map(this::convert).filter(Objects::nonNull).findFirst();
+		}
+
+		/**
+		 * Get a list of path candidates that are writable.
+		 *
+		 * @return A list of writable path candidates
+		 */
+		public List<Path> evaluateWritable() {
+			return candidates.stream().map(this::convert).filter(Objects::nonNull).filter(this::isWritable)
+					.collect(Collectors.toList());
+		}
+
+		private Path convert(Object candidate) {
+			if (candidate instanceof String)
+				candidate = Paths.get((String) candidate);
+
+			if (candidate instanceof InstallPath)
+				candidate = ((InstallPath) candidate).evaluate().orElse(null);
+
+			if (candidate instanceof Path)
+				return (Path) candidate;
+
+			return null;
+		}
+
+		/**
+		 * Determine whether a {@link Path} is writable, or if it does not exist, some
+		 * parent path is writable.
+		 *
+		 * @param path The input path
+		 * @return Whether the path is writable
+		 */
+		private boolean isWritable(Path path) {
+			if (Files.exists(path))
+				return Files.isWritable(path);
+			if (path.equals(path.getParent()))
+				// Reached the root path
+				return false;
+			return isWritable(path.getParent());
+		}
+
+		private InstallPath() {
+		}
+
+		public static InstallPath of(Object... candidates) {
+			InstallPath path = new InstallPath();
+			path.candidates = Arrays.stream(candidates).filter(Objects::nonNull)
+					.collect(Collectors.toUnmodifiableList());
+			return path;
+		}
 	}
 }

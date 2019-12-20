@@ -172,29 +172,29 @@ public class MainController {
 		chk_client.setDisable(true);
 		btn_install.setDisable(true);
 
-		Path base = Paths.get(Main.PATH);
-
-		// Add installer tasks to the queue
-		if (chk_viewer_jfx.isSelected()) {
-			install(pane_viewer_jfx, JavafxInstaller.newViewerJfxInstaller(base.resolve("viewer")));
-		} else {
-			pane_viewer_jfx.setCollapsible(false);
-		}
-		if (chk_viewer_cli.isSelected()) {
-			install(pane_viewer_cli, JavafxInstaller.newViewerCliInstaller(base.resolve("viewer-cli")));
-		} else {
-			pane_viewer_cli.setCollapsible(false);
-		}
-		if (chk_server.isSelected()) {
-			install(pane_server, JavafxInstaller.newServerInstaller(base.resolve("server")));
-		} else {
-			pane_server.setCollapsible(false);
-		}
-		if (chk_client.isSelected()) {
-			install(pane_client, JavafxInstaller.newClientInstaller(base.resolve("client"), client_config));
-		} else {
-			pane_client.setCollapsible(false);
-		}
+		Main.PATH.evaluate().ifPresent(base -> {
+			// Add installer tasks to the queue
+			if (chk_viewer_jfx.isSelected()) {
+				install(pane_viewer_jfx, JavafxInstaller.newViewerJfxInstaller(base.resolve("viewer-jfx")));
+			} else {
+				pane_viewer_jfx.setCollapsible(false);
+			}
+			if (chk_viewer_cli.isSelected()) {
+				install(pane_viewer_cli, JavafxInstaller.newViewerCliInstaller(base.resolve("viewer-cli")));
+			} else {
+				pane_viewer_cli.setCollapsible(false);
+			}
+			if (chk_server.isSelected()) {
+				install(pane_server, JavafxInstaller.newServerInstaller(base.resolve("server")));
+			} else {
+				pane_server.setCollapsible(false);
+			}
+			if (chk_client.isSelected()) {
+				install(pane_client, JavafxInstaller.newClientInstaller(base.resolve("client"), client_config));
+			} else {
+				pane_client.setCollapsible(false);
+			}
+		});
 
 		// The final task only runs if all previous tasks succeeded
 		service.execute(() -> {
