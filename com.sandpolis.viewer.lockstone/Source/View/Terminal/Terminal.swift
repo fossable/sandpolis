@@ -59,9 +59,11 @@ class TerminalViewController: UIViewController, WKNavigationDelegate, WKUIDelega
 	/// When a the function linked with a notification listed here, the function will remove the given notification from this array and will return.
 	var ignoredNotifications = [Notification.Name]()
 
-	var cols: Int32!
+	/// The current number of columns
+	var cols: Int32 = 0
 
-	var rows: Int32!
+	/// The current number of rows
+	var rows: Int32 = 0
 
 	/// Change terminal size to page size.
 	///
