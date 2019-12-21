@@ -20,17 +20,14 @@ option java_package = "com.sandpolis.core.soi";
  */
 message SO_Build {
 
-    // The version string in a.b.c format.
+    // The version string
     string version = 1;
-
-    // The build number which uniquely identifies this build.
-    int32 number = 2;
 
     // The build time
     int64 time = 3;
 
-    // Whether this build is a debug or release build
-    bool debug = 4;
+    // Whether this build is a development build
+    bool development = 4;
 
     // The build platform's name
     string platform = 5;

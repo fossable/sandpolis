@@ -58,10 +58,9 @@ public class SoiBuildTask extends DefaultTask {
 		// Application version
 		so.setVersion((String) getProject().findProperty("SANDPOLIS_VERSION"));
 
-		// Build number
-		String number = (String) getProject().findProperty("TRAVIS_BUILD_NUMBER");
-		if (number != null)
-			so.setNumber(Integer.parseInt(number));
+		// Build mode
+		String mode = (String) getProject().findProperty("DEVELOPMENT");
+		so.setDevelopment(mode == null || mode.equalsIgnoreCase("true"));
 
 		// Build platform
 		so.setPlatform(String.format("%s (%s)", System.getProperty("os.name"), System.getProperty("os.arch")));

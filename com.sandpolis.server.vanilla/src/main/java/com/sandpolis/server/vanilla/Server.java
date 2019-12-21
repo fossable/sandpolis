@@ -313,7 +313,7 @@ public final class Server {
 	/**
 	 * Install a debug client on the local machine.
 	 */
-	@InitializationTask(name = "Install debug client", debug = true, condition = "server.debug_client")
+	@InitializationTask(name = "Install debug client", development = true, condition = "server.debug_client")
 	public static final Task installDebugClient = new Task((task) -> {
 
 		// Create user and listener

@@ -291,9 +291,11 @@ public final class MainDispatch {
 		if (shutdown.contains(task))
 			throw new IllegalArgumentException("Shutdown tasks cannot be registered more than once");
 
-		if (task.initMetadata != null)
+		if (task.initMetadata != null) {
+			if (task.initMetadata.development() && !Core.SO_BUILD.getDevelopment())
+				return;
 			tasks.add(task);
-		else if (task.shutdownMetadata != null)
+		} else if (task.shutdownMetadata != null)
 			shutdown.add(task);
 		else
 			throw new RuntimeException("Unknown task type");
@@ -339,10 +341,10 @@ public final class MainDispatch {
 		public boolean fatal() default false;
 
 		/**
-		 * Indicates that the task will run if and only if the instance is in debug
+		 * Indicates that the task will run if and only if the instance is in development
 		 * mode.
 		 */
-		public boolean debug() default false;
+		public boolean development() default false;
 
 	}
 
