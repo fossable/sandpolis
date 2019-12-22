@@ -15,7 +15,11 @@ import UIKit
 class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 
 	@IBOutlet weak var progress: UIActivityIndicatorView!
+	
+	var server: SandpolisServer!
 
+	@IBOutlet weak var enterCodeButton: UIButton!
+	
 	override var prefersStatusBarHidden: Bool {
 		return true
 	}
@@ -28,6 +32,10 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
+
+		#if !DEBUG
+			self.enterCodeButton.isHidden = true
+		#endif
 
 		view.backgroundColor = UIColor.black
 		captureSession = AVCaptureSession()
@@ -88,6 +96,20 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 		dismiss(animated: true)
 	}
 
+	@IBAction func enterCode(_ sender: Any) {
+		let alert = UIAlertController(title: "Enter code", message: "Enter token", preferredStyle: .alert)
+		alert.addTextField { field in
+			field.placeholder = "Token"
+		}
+		alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak alert] _ in
+			if let token = alert?.textFields?[0].text {
+				self.found(token: token)
+			}
+		})
+		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+		present(alert, animated: true)
+	}
+	
 	func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
 		captureSession.stopRunning()
 
@@ -111,9 +133,15 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 	private func found(token: String) {
 		progress.startAnimating()
 
-		CloudUtil.addCloudClient(token: token) { json, error in
-			print("Error:", error)
-			print("JSON:", json)
+		CloudUtil.addCloudClient(server: server, token: token) { json, error in
+			if let json = json {
+				// TODO create auth group
+				self.dismiss(animated: true)
+			} else {
+				if !self.captureSession.isRunning {
+					self.captureSession.startRunning()
+				}
+			}
 		}
 	}
 }

@@ -42,6 +42,9 @@ class LoginAccount: UIViewController, UITextFieldDelegate {
 		// Clean up fields
 		email.text = nil
 		password.text = nil
+
+		refreshEmail()
+		refreshPassword()
 	}
 
 	func textFieldShouldReturn(_ textField: UITextField) -> Bool {

@@ -47,7 +47,7 @@ class CloudUtil {
 		}
 	}
 
-	static func addCloudClient(token: String, _ completion: @escaping(NSDictionary?, Error?) -> Void) {
+	static func addCloudClient(server: SandpolisServer, token: String, _ completion: @escaping(NSDictionary?, Error?) -> Void) {
 		Auth.auth().currentUser?.getIDToken { token, error in
 			guard error == nil else {
 				completion(nil, error)
@@ -59,7 +59,8 @@ class CloudUtil {
 			request.httpMethod = "POST"
 			request.httpBody = try? JSONSerialization.data(withJSONObject: [
 				"token": token,
-				], options: [])
+				"instance_id": server.reference.documentID
+			], options: [])
 
 			URLSession.shared.dataTask(with: request) { data, response, error in
 				if let content = data {
@@ -73,7 +74,7 @@ class CloudUtil {
 				} else {
 					completion(nil, error)
 				}
-				}.resume()
+			}.resume()
 		}
 	}
 }

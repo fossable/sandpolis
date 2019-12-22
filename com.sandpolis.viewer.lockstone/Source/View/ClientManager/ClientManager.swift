@@ -11,19 +11,29 @@
 //=========================================================S A N D P O L I S==//
 import UIKit
 import SwiftEventBus
+import os
 
 class ClientManager: UITabBarController {
 
-	/// The server title
-	var serverName: String?
+	var loginType: LoginType!
+
+	enum LoginType {
+		case direct(String)
+		case cloud(SandpolisServer)
+	}
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-
-		// Set navigation bar
-		navigationItem.title = serverName
-		if UserDefaults.standard.string(forKey: "login.type") == "direct" {
+		
+		switch loginType {
+		case .direct(let name):
+			navigationItem.title = name
 			navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Logout", style: .plain, target: self, action: #selector(logoutDirect))
+		case .cloud(let server):
+			navigationItem.title = server.name
+			navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addClient))
+		default:
+			os_log("Unknown login type")
 		}
 
 		// Set default view
@@ -54,10 +64,26 @@ class ClientManager: UITabBarController {
 			}
 		}
 	}
+	
+	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+		if segue.identifier == "ClientScannerSegue",
+			let dest = segue.destination as? ClientScanner {
+			switch loginType {
+			case .cloud(let server):
+				dest.server = server
+			default:
+				break
+			}
+		}
+	}
 
 	@objc func logoutDirect() {
 		SwiftEventBus.unregister(self)
 		SandpolisUtil.connection.disconnect()
 		performSegue(withIdentifier: "UnwindLoginSegue", sender: self)
+	}
+	
+	@objc func addClient() {
+		performSegue(withIdentifier: "ClientScannerSegue", sender: self)
 	}
 }

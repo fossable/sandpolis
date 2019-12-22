@@ -13,7 +13,7 @@
             <objects>
                 <viewController title="CreateAccount" id="jpL-Bl-Icn" customClass="CreateAccount" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" opaque="NO" contentMode="scaleToFill" id="WPG-e0-b8n">
-                        <rect key="frame" x="0.0" y="0.0" width="331" height="440"/>
+                        <rect key="frame" x="0.0" y="0.0" width="331" height="625"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Enter an email address" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="n6Q-5C-6Qh">
@@ -46,7 +46,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rcg-By-jcp">
-                                <rect key="frame" x="80" y="352" width="171" height="30"/>
+                                <rect key="frame" x="80" y="537" width="171" height="30"/>
                                 <state key="normal" title="Login to Sandpolis Cloud"/>
                                 <connections>
                                     <action selector="openLoginAccount:" destination="jpL-Bl-Icn" eventType="touchUpInside" id="xXD-4V-w3n"/>
@@ -70,14 +70,14 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ciU-Fe-lhd">
-                                <rect key="frame" x="67" y="394" width="197" height="30"/>
+                                <rect key="frame" x="67" y="579" width="197" height="30"/>
                                 <state key="normal" title="Continue without an account"/>
                                 <connections>
                                     <action selector="openLoginServer:" destination="jpL-Bl-Icn" eventType="touchUpInside" id="2Gm-m1-9Jo"/>
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mY2-0G-dIJ">
-                                <rect key="frame" x="123" y="299" width="85" height="29"/>
+                                <rect key="frame" x="123" y="484" width="85" height="29"/>
                                 <fontDescription key="fontDescription" type="system" weight="thin" pointSize="14"/>
                                 <state key="normal" title="Privacy Policy">
                                     <color key="titleColor" cocoaTouchSystemColor="lightTextColor"/>
@@ -124,11 +124,11 @@
             <objects>
                 <viewController title="LoginServer" id="QOx-kU-Ozb" customClass="LoginServer" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" opaque="NO" contentMode="scaleToFill" id="9FK-fz-zX5">
-                        <rect key="frame" x="0.0" y="0.0" width="331" height="440"/>
+                        <rect key="frame" x="0.0" y="0.0" width="331" height="625"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cUO-iB-ReS">
-                                <rect key="frame" x="80" y="394" width="171" height="30"/>
+                                <rect key="frame" x="80" y="579" width="171" height="30"/>
                                 <state key="normal" title="Login to Sandpolis Cloud"/>
                                 <connections>
                                     <action selector="openLoginAccount:" destination="QOx-kU-Ozb" eventType="touchUpInside" id="HgB-np-vl6"/>
@@ -223,7 +223,7 @@
             <objects>
                 <viewController title="LoginAccount" id="Pxc-v7-mA9" customClass="LoginAccount" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" opaque="NO" contentMode="scaleToFill" id="y6a-o6-oWO">
-                        <rect key="frame" x="0.0" y="0.0" width="331" height="440"/>
+                        <rect key="frame" x="0.0" y="0.0" width="331" height="625"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Email Address" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="P1W-9i-HlN">
@@ -285,7 +285,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tUz-vQ-WYC">
-                                <rect key="frame" x="67" y="394" width="197" height="30"/>
+                                <rect key="frame" x="67" y="579" width="197" height="30"/>
                                 <state key="normal" title="Continue without an account"/>
                                 <connections>
                                     <action selector="openLoginServer:" destination="Pxc-v7-mA9" eventType="touchUpInside" id="rWv-gF-w9l"/>
@@ -350,22 +350,22 @@
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="login" translatesAutoresizingMaskIntoConstraints="NO" id="AAR-Z2-KNZ">
-                                <rect key="frame" x="41.5" y="44" width="331" height="370"/>
+                                <rect key="frame" x="41.5" y="44" width="331" height="185"/>
                             </imageView>
                             <containerView opaque="NO" alpha="0.0" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Gqa-vF-Qa6">
-                                <rect key="frame" x="41.5" y="422" width="331" height="440"/>
+                                <rect key="frame" x="41.5" y="237" width="331" height="625"/>
                                 <connections>
                                     <segue destination="Pxc-v7-mA9" kind="embed" identifier="LoginEmbed" id="O3t-zZ-2VH"/>
                                 </connections>
                             </containerView>
                             <containerView opaque="NO" alpha="0.0" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="tA0-vr-FIQ">
-                                <rect key="frame" x="41.5" y="422" width="331" height="440"/>
+                                <rect key="frame" x="41.5" y="237" width="331" height="625"/>
                                 <connections>
                                     <segue destination="QOx-kU-Ozb" kind="embed" identifier="ForgotPasswordEmbed" id="Ux4-R8-Xpw"/>
                                 </connections>
                             </containerView>
                             <containerView opaque="NO" alpha="0.0" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="HVf-Id-uAt">
-                                <rect key="frame" x="41.5" y="422" width="331" height="440"/>
+                                <rect key="frame" x="41.5" y="237" width="331" height="625"/>
                                 <connections>
                                     <segue destination="jpL-Bl-Icn" kind="embed" identifier="CreateAccountEmbed" id="CTd-c3-60R"/>
                                 </connections>
@@ -627,7 +627,7 @@
                                 <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="login" translatesAutoresizingMaskIntoConstraints="NO" id="bOE-Rq-SKp">
-                                        <rect key="frame" x="0.0" y="0.0" width="414" height="370"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="414" height="185"/>
                                     </imageView>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="qms-wD-7pc">
                                         <rect key="frame" x="0.0" y="728" width="414" height="72"/>
@@ -2205,7 +2205,6 @@
                     <tabBarItem key="tabBarItem" title="Host List" image="tab/hostlist" selectedImage="tab/hostlist" id="j29-EF-Bcz"/>
                     <connections>
                         <outlet property="footerView" destination="NWf-fs-HKS" id="GvB-VP-I3w"/>
-                        <segue destination="654-4d-6yS" kind="show" id="eEU-lA-7YL"/>
                         <segue destination="4M1-5e-ymV" kind="show" identifier="ShowControlPanelSegue" id="493-UJ-XsK"/>
                         <segue destination="Xcc-gi-mQ7" kind="show" identifier="ShowGroupControlPanelFromHeaderSegue" id="OFc-h9-beF"/>
                     </connections>
@@ -2223,7 +2222,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Scan a QR code from the Sandpolis Installer" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xYM-Fg-y35">
-                                <rect key="frame" x="20.5" y="120" width="373" height="23"/>
+                                <rect key="frame" x="20.5" y="64" width="373" height="23"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="19"/>
                                 <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
                                 <nil key="highlightedColor"/>
@@ -2244,20 +2243,30 @@
                             <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="bt2-az-wwW">
                                 <rect key="frame" x="197" y="411" width="20" height="20"/>
                             </activityIndicatorView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="89f-0s-VPd">
+                                <rect key="frame" x="168.5" y="778" width="77" height="30"/>
+                                <state key="normal" title="Enter Code"/>
+                                <connections>
+                                    <action selector="enterCode:" destination="654-4d-6yS" eventType="touchUpInside" id="Ryp-H9-Xim"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="dbX-sD-3ws" firstAttribute="centerX" secondItem="Bdk-rL-u6q" secondAttribute="centerX" id="9fh-fC-FMR"/>
+                            <constraint firstItem="89f-0s-VPd" firstAttribute="centerX" secondItem="Bdk-rL-u6q" secondAttribute="centerX" id="E9Q-Wv-epP"/>
                             <constraint firstItem="Q7E-Vi-Fqa" firstAttribute="bottom" secondItem="dbX-sD-3ws" secondAttribute="bottom" constant="64" id="Rl6-Ez-aPU"/>
                             <constraint firstItem="xYM-Fg-y35" firstAttribute="centerX" secondItem="Bdk-rL-u6q" secondAttribute="centerX" id="bm5-FU-5Ab"/>
                             <constraint firstItem="bt2-az-wwW" firstAttribute="centerY" secondItem="Bdk-rL-u6q" secondAttribute="centerY" id="mCS-Qy-mic"/>
                             <constraint firstItem="bt2-az-wwW" firstAttribute="centerX" secondItem="Bdk-rL-u6q" secondAttribute="centerX" id="rvl-XQ-jQr"/>
+                            <constraint firstItem="Q7E-Vi-Fqa" firstAttribute="bottom" secondItem="89f-0s-VPd" secondAttribute="bottom" id="xYP-WK-AGd"/>
                             <constraint firstItem="xYM-Fg-y35" firstAttribute="top" secondItem="Q7E-Vi-Fqa" secondAttribute="top" constant="64" id="zgw-4m-Lg9"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="Q7E-Vi-Fqa"/>
                     </view>
                     <navigationItem key="navigationItem" id="Aza-9O-3ku"/>
                     <connections>
+                        <outlet property="enterCodeButton" destination="89f-0s-VPd" id="YWu-5u-qzd"/>
                         <outlet property="progress" destination="bt2-az-wwW" id="WwD-MA-xUw"/>
                     </connections>
                 </viewController>
@@ -2523,10 +2532,10 @@
             </objects>
             <point key="canvasLocation" x="2563.768115942029" y="70.982142857142847"/>
         </scene>
-        <!--Navigation Controller-->
+        <!--Client Manager Wrapper-->
         <scene sceneID="iza-VM-Pwx">
             <objects>
-                <navigationController modalPresentationStyle="fullScreen" id="Jkw-iU-X4w" sceneMemberID="viewController">
+                <navigationController modalPresentationStyle="fullScreen" id="Jkw-iU-X4w" customClass="ClientManagerWrapper" customModule="Sandpolis" customModuleProvider="target" sceneMemberID="viewController">
                     <navigationItem key="navigationItem" id="eKX-af-CCD"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="UED-Cg-36l">
                         <rect key="frame" x="0.0" y="44" width="414" height="44"/>
@@ -2556,6 +2565,7 @@
                         <segue destination="UyJ-Lr-hxt" kind="relationship" relationship="viewControllers" id="x9e-iQ-UUy"/>
                         <segue destination="vKA-RL-z3F" kind="unwind" identifier="UnwindServerSegue" unwindAction="unwindToServerWithSegue:" id="LU9-3d-VrS"/>
                         <segue destination="vKA-RL-z3F" kind="unwind" identifier="UnwindLoginSegue" unwindAction="prepareForUnwindWithSegue:" id="3va-Jt-COo"/>
+                        <segue destination="654-4d-6yS" kind="presentation" identifier="ClientScannerSegue" id="rWQ-4B-Dky"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="qwu-zu-ud5" userLabel="First Responder" sceneMemberID="firstResponder"/>

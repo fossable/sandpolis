@@ -71,6 +71,8 @@ class Login: UIViewController {
 							self.progress.stopAnimating()
 							if let connection = connection {
 								SandpolisUtil.connection = connection
+								connection.openProfileStream()
+
 								self.performSegue(withIdentifier: "DirectLoginCompleteSegue", sender: address)
 							} else {
 								self.openLoginServer()
@@ -108,8 +110,8 @@ class Login: UIViewController {
 			let dest = segue.destination as? CreateAccount {
 			dest.loginContainer = self
 		} else if segue.identifier == "DirectLoginCompleteSegue",
-			let dest = segue.destination as? ClientManager {
-			dest.serverName = sender as? String
+			let dest = segue.destination as? ClientManagerWrapper {
+			dest.name = sender as? String
 		}
 	}
 

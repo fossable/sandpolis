@@ -48,6 +48,10 @@ class LoginServer: UIViewController, UITextFieldDelegate {
 		address.text = nil
 		username.text = nil
 		password.text = nil
+
+		refreshAddress()
+		refreshUsername()
+		refreshPassword()
 	}
 
 	func textFieldShouldReturn(_ textField: UITextField) -> Bool {

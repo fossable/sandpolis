@@ -142,7 +142,7 @@ class ServerManager: UITableViewController {
 		} else if segue.identifier == "ShowHostSegue",
 			let dest = segue.destination as? ClientManager {
 			if let server = sender as? SandpolisServer {
-				dest.serverName = server.name
+				dest.loginType = .cloud(server)
 			}
 		} else {
 			fatalError("Unexpected segue: \(segue.identifier ?? "unknown")")
