@@ -341,8 +341,8 @@ public final class MainDispatch {
 		public boolean fatal() default false;
 
 		/**
-		 * Indicates that the task will run if and only if the instance is in development
-		 * mode.
+		 * Indicates that the task will run if and only if the instance is in
+		 * development mode.
 		 */
 		public boolean development() default false;
 

@@ -15,11 +15,11 @@ import UIKit
 class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 
 	@IBOutlet weak var progress: UIActivityIndicatorView!
-	
+
 	var server: SandpolisServer!
 
 	@IBOutlet weak var enterCodeButton: UIButton!
-	
+
 	override var prefersStatusBarHidden: Bool {
 		return true
 	}
@@ -109,7 +109,7 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
 		present(alert, animated: true)
 	}
-	
+
 	func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
 		captureSession.stopRunning()
 

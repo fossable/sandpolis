@@ -24,7 +24,7 @@ class ClientManager: UITabBarController {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		
+
 		switch loginType {
 		case .direct(let name):
 			navigationItem.title = name
@@ -64,7 +64,7 @@ class ClientManager: UITabBarController {
 			}
 		}
 	}
-	
+
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "ClientScannerSegue",
 			let dest = segue.destination as? ClientScanner {
@@ -82,7 +82,7 @@ class ClientManager: UITabBarController {
 		SandpolisUtil.connection.disconnect()
 		performSegue(withIdentifier: "UnwindLoginSegue", sender: self)
 	}
-	
+
 	@objc func addClient() {
 		performSegue(withIdentifier: "ClientScannerSegue", sender: self)
 	}

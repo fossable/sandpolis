@@ -44,7 +44,7 @@ public class AboutPanel extends Panel {
 		Label lbl_version = new Label("Sandpolis Version").addStyle(SGR.BOLD);
 		addComponent(lbl_version);
 
-		Label val_version = new Label(Core.SO_BUILD.getVersion() + " (Build: " + Core.SO_BUILD.getNumber() + ")");
+		Label val_version = new Label(Core.SO_BUILD.getVersion());
 		addComponent(val_version);
 
 		Label lbl_timestamp = new Label("Build Timestamp").addStyle(SGR.BOLD);

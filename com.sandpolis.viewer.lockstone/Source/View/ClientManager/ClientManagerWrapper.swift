@@ -15,7 +15,7 @@ import UIKit
 class ClientManagerWrapper: UINavigationController {
 
 	var name: String!
-	
+
 	override func viewDidLoad() {
 		if let dest = self.children.first as? ClientManager {
 			dest.loginType = .direct(name)
