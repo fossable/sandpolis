@@ -11,21 +11,12 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.installer;
 
-import com.sandpolis.core.soi.SoiUtil;
-import com.sandpolis.core.util.ArtifactUtil;
-import com.sandpolis.installer.util.InstallUtil;
 import javafx.concurrent.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-
-import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 /**
  * @author cilki
@@ -35,130 +26,43 @@ public class JavafxInstaller extends Task<Void> {
 
 	private static final Logger log = LoggerFactory.getLogger(JavafxInstaller.class);
 
-	/**
-	 * The installation directory.
-	 */
-	private Path destination;
+	private Installer installer;
 
-	/**
-	 * The Sandpolis instance that will be installed.
-	 */
-	private String coordinate;
-
-	/**
-	 * The client configuration.
-	 */
-	protected String config;
-
-	/**
-	 * Whether the installation completed successfully.
-	 */
-	private boolean completed;
-
-	/**
-	 * A list of installation extensions.
-	 */
-	private List<Runnable> extensions;
-
-	protected JavafxInstaller(Path destination) {
-		this.destination = Objects.requireNonNull(destination);
+	protected JavafxInstaller(Installer installer) {
 		updateProgress(0, 1);
+		this.installer = Objects.requireNonNull(installer);
+		this.installer.status = this::updateMessage;
+		this.installer.progress = this::updateProgress;
 	}
 
 	public static JavafxInstaller newServerInstaller(Path destination) {
-		JavafxInstaller installer = new JavafxInstaller(destination);
-		installer.coordinate = "com.sandpolis:sandpolis-server-vanilla:";
-		return installer;
+		Installer installer = new Installer(destination, "com.sandpolis:sandpolis-server-vanilla:");
+		return new JavafxInstaller(installer);
 	}
 
 	public static JavafxInstaller newViewerJfxInstaller(Path destination) {
-		JavafxInstaller installer = new JavafxInstaller(destination);
-		installer.coordinate = "com.sandpolis:sandpolis-viewer-jfx:";
-		return installer;
+		Installer installer = new Installer(destination, "com.sandpolis:sandpolis-viewer-jfx:");
+		return new JavafxInstaller(installer);
 	}
 
 	public static JavafxInstaller newViewerCliInstaller(Path destination) {
-		JavafxInstaller installer = new JavafxInstaller(destination);
-		installer.coordinate = "com.sandpolis:sandpolis-viewer-cli:";
-		return installer;
+		Installer installer = new Installer(destination, "com.sandpolis:sandpolis-viewer-cli:");
+		return new JavafxInstaller(installer);
 	}
 
 	public static JavafxInstaller newClientInstaller(Path destination, String config) {
-		JavafxInstaller installer = new JavafxInstaller(destination);
-		installer.coordinate = "com.sandpolis:sandpolis-client-mega:";
+		Installer installer = new Installer(destination, "com.sandpolis:sandpolis-client-mega:");
 		installer.config = config;
-		return installer;
+		return new JavafxInstaller(installer);
 	}
 
 	@Override
 	protected Void call() throws Exception {
-		log.debug("Executing installation for " + coordinate);
-
-		String version = Main.VERSION;
-		if (version == null || version.equalsIgnoreCase("latest")) {
-			// Request latest version number
-			log.info("Downloading metadata");
-			version = ArtifactUtil.getLatestVersion(coordinate);
-		}
-		coordinate += version;
-
-		// Create directories
-		Path lib = destination.resolve("lib");
-		Files.createDirectories(lib);
-
-		// Download executable
-		updateMessage("Downloading " + coordinate);
-		Path executable = ArtifactUtil.download(lib, coordinate);
-
-		// Calculate dependencies
-		Set<String> dependencies = InstallUtil.computeDependencies(SoiUtil.readMatrix(executable), coordinate);
-
-		double progress = 0;
-		for (String dep : dependencies) {
-			var coordinate = fromCoordinate(dep);
-			Path dependency = lib.resolve(coordinate.filename);
-			if (!Files.exists(dependency)) {
-				InputStream in = JavafxInstaller.class.getResourceAsStream("/" + coordinate.filename);
-				if (in != null) {
-					updateMessage("Extracting " + dep);
-					try (in) {
-						Files.copy(in, dependency);
-					}
-				} else {
-					updateMessage("Downloading " + dep);
-					ArtifactUtil.download(lib, dep);
-				}
-			}
-
-			progress++;
-			updateProgress(progress, dependencies.size());
-		}
-
-		if (Main.IS_LINUX) {
-			if (coordinate.contains(":sandpolis-viewer-jfx:")) {
-				Path bin = InstallUtil.installLinuxBinaries(executable, coordinate);
-				Path icon = InstallUtil.installIcon(executable, "/image/icon@4x.png",
-						executable.getParent().resolveSibling("Sandpolis.png"));
-				InstallUtil.installLinuxDesktopEntry(bin, icon, coordinate, "Sandpolis Viewer");
-			}
-		}
-
-		else if (Main.IS_WINDOWS) {
-			if (coordinate.contains(":sandpolis-viewer-jfx:")) {
-				Path bin = InstallUtil.installWindowsBinaries(executable, coordinate);
-				Path icon = InstallUtil.installIcon(executable, "/image/icon.ico",
-						executable.getParent().resolveSibling("Sandpolis.ico"));
-				InstallUtil.installWindowsStartMenuEntry(bin, icon, "Sandpolis Viewer");
-				InstallUtil.installWindowsDesktopShortcut(bin, icon, "Sandpolis Viewer");
-			}
-		}
-
-		completed = true;
+		installer.run();
 		return null;
 	}
 
 	public boolean isCompleted() {
-		return completed;
+		return installer.completed;
 	}
-
 }

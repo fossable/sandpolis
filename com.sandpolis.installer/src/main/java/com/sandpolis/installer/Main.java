@@ -66,10 +66,16 @@ public final class Main {
 			"/usr/share/applications", System.getProperty("user.home") + "/.local/share/applications");
 
 	/**
-	 * The script install path.
+	 * The launch script install path.
 	 */
 	public static final InstallPath EXT_LINUX_BIN = InstallPath.of(System.getProperty("ext.linux.bin"), "/usr/bin",
 			"/usr/local/sbin", "/usr/local/bin", PATH);
+
+	/**
+	 * The service install path.
+	 */
+	public static final InstallPath EXT_LINUX_SERVICE = InstallPath.of(System.getProperty("ext.linux.service"),
+			"/usr/lib/systemd/system");
 
 	/**
 	 * The start menu install path.
@@ -85,7 +91,7 @@ public final class Main {
 			System.getProperty("user.home") + "/Desktop");
 
 	/**
-	 * The script install path.
+	 * The launch script install path.
 	 */
 	public static final InstallPath EXT_WINDOWS_BIN = InstallPath.of(PATH);
 
