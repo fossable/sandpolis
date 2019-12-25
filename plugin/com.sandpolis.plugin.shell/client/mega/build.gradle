@@ -24,6 +24,11 @@ eclipse {
 		name = 'com.sandpolis.plugin.shell:client:mega'
 		comment = "The shell plugin's Mega client component"
 	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
 }
 
 dependencies {

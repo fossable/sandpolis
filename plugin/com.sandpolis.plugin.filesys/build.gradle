@@ -25,6 +25,11 @@ eclipse {
 		name = 'com.sandpolis.plugin.filesys'
 		comment = 'The filesystem plugin'
 	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
 }
 
 sourceSets {

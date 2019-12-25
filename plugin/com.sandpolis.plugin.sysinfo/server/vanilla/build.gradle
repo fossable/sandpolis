@@ -24,6 +24,11 @@ eclipse {
 		name = 'com.sandpolis.plugin.sysinfo:server:vanilla'
 		comment = "The sysinfo plugin's vanilla server component"
 	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
 }
 
 dependencies {

@@ -23,6 +23,11 @@ eclipse {
 		name = 'com.sandpolis.plugin.desktop:viewer:jfx'
 		comment = "The desktop plugin's JavaFX component"
 	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
 }
 
 dependencies {

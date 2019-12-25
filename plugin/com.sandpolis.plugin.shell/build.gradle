@@ -25,6 +25,11 @@ eclipse {
 		name = 'com.sandpolis.plugin.shell'
 		comment = 'The shell plugin'
 	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
 }
 
 sourceSets {

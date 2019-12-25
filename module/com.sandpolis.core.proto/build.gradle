@@ -22,6 +22,11 @@ eclipse {
 		name = 'com.sandpolis.core.proto'
 		comment = 'The protobuf library module'
 	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
 }
 
 sourceSets {

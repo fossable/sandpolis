@@ -21,6 +21,11 @@ eclipse {
 		name = 'com.sandpolis.core.instance'
 		comment = 'The instance library module'
 	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
 }
 
 dependencies {

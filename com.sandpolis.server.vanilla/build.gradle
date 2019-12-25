@@ -26,6 +26,11 @@ eclipse {
 		name = 'com.sandpolis.server.vanilla'
 		comment = 'The server instance'
 	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
 }
 
 dependencies {

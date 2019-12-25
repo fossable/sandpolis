@@ -21,6 +21,11 @@ eclipse {
 		name = 'com.sandpolis.charcoal'
 		comment = 'The Charcoal instance'
 	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
 }
 
 dependencies {

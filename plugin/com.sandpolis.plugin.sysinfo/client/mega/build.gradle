@@ -24,6 +24,11 @@ eclipse {
 		name = 'com.sandpolis.plugin.sysinfo:client:mega'
 		comment = "The sysinfo plugin's Mega client component"
 	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
 }
 
 dependencies {

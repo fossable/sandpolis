@@ -23,6 +23,11 @@ eclipse {
 		name = 'com.sandpolis.viewer.cli'
 		comment = 'The CLI viewer instance'
 	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
 }
 
 dependencies {
