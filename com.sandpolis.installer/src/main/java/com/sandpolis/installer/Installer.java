@@ -146,14 +146,14 @@ final class Installer {
 	};
 
 	private InstallExtension VIEWER_DESKTOP_LINUX = () -> {
-		Path bin = InstallUtil.installLinuxBinaries(executable, coordinate);
+		Path bin = InstallUtil.installLinuxLaunchScripts(executable, coordinate);
 		Path icon = InstallUtil.installIcon(executable, "/image/icon@4x.png",
 				executable.getParent().resolveSibling("Sandpolis.png"));
 		InstallUtil.installLinuxDesktopEntry(bin, icon, coordinate, "Sandpolis Viewer");
 	};
 
 	private InstallExtension VIEWER_DESKTOP_WINDOWS = () -> {
-		Path bin = InstallUtil.installWindowsBinaries(executable, coordinate);
+		Path bin = InstallUtil.installWindowsLaunchScripts(executable, coordinate);
 		Path icon = InstallUtil.installIcon(executable, "/image/icon.ico",
 				executable.getParent().resolveSibling("Sandpolis.ico"));
 		InstallUtil.installWindowsStartMenuEntry(bin, icon, "Sandpolis Viewer");

@@ -19,38 +19,36 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class CloudUtil {
+	
+	private static final Logger log = LoggerFactory.getLogger(CloudUtil.class);
 
-	public static final class ListenResult {
-
-		public final int status;
-
-		public final String config;
-
-		private ListenResult(int status) {
-			this.status = status;
-			this.config = null;
-		}
-
-		private ListenResult(String config) {
-			this.status = 200;
-			this.config = config;
-		}
-	}
-
-	public static ListenResult listen(String token) throws IOException, InterruptedException {
+	public static Optional<String> listen(String token) throws IOException, InterruptedException {
 		HttpClient client = HttpClient.newHttpClient();
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(URI.create("https://api.sandpolis.com/v1/cloud/client/listen")).timeout(Duration.ofSeconds(30))
-				.POST(BodyPublishers.ofString("{token: \"" + token + "\"}")).build();
+				.POST(BodyPublishers.ofString("{\"token\": \"" + token + "\"}")).build();
+		log.debug("Request token: {}", token);
 
 		HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
 		if (response.statusCode() != 200) {
-			return new ListenResult(response.statusCode());
+			return Optional.empty();
 		}
 
-		return new ListenResult(response.body());
+		if (response.body().contains("\"success\":true")) {
+			Matcher match = Pattern.compile("\"config\":\"(.*)\"").matcher(response.body());
+			if (match.find())
+				return Optional.of(match.group(1));
+		}
+		
+		return Optional.empty();
 	}
 
 	private CloudUtil() {

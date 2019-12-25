@@ -12,11 +12,12 @@
 package com.sandpolis.installer.scene.main;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.util.RandUtil;
 import com.sandpolis.installer.JavafxInstaller;
@@ -40,6 +41,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
 public class MainController {
+
+	private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
 	@FXML
 	private CheckBox chk_server;
@@ -97,32 +100,33 @@ public class MainController {
 	};
 
 	private ChangeListener<Boolean> refreshClient = (ObservableValue<? extends Boolean> p, Boolean o, Boolean n) -> {
-		if (!o && n) {
+		if (client_config != null) {
+			setQrMessage("Association successful");
+		} else if (!o && n) {
 			qrTask = service.submit(() -> {
 				do {
-					String token = RandUtil.nextAlphabetic(32).toUpperCase();
+					String token = RandUtil.nextAlphabetic(2).toUpperCase();
 					Node node = QrUtil.buildQr(token, qr_box.widthProperty(), qr_box.heightProperty(), Color.BLACK);
 					Platform.runLater(() -> {
 						qr_box.getChildren().setAll(node);
 					});
 					try {
-						var result = CloudUtil.listen(token);
-						if (result.status != 200) {
-							setQrMessage("An error occurred");
-							return;
-						}
-
-						client_config = result.config;
+						CloudUtil.listen(token).ifPresent(config -> {
+							client_config = config;
+						});
 					} catch (IOException e) {
 						setQrMessage("An error occurred");
+						log.error("Cloud request failed", e);
 						return;
 					} catch (InterruptedException e) {
 						return;
 					}
 				} while (!Thread.currentThread().isInterrupted() && client_config == null);
 
-				setQrMessage("Association successful");
 				qrTask = null;
+
+				setQrMessage("Association successful");
+				refreshScene.changed(p, o, n);
 			});
 		} else if (o && !n) {
 			if (qrTask != null) {
