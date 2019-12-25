@@ -35,7 +35,6 @@ class DnsUtilTest {
 
 	@Test
 	void testGetPort() throws InterruptedException, ExecutionException {
-		assertEquals((int) DnsUtil.getPort("test.sandpolis.com").get(), 12345);
 		assertTrue(DnsUtil.getPort("invalid123").isEmpty());
 		assertTrue(DnsUtil.getPort("test.google.com").isEmpty());
 		assertThrows(ExecutionException.class, () -> DnsUtil.getPort(""));

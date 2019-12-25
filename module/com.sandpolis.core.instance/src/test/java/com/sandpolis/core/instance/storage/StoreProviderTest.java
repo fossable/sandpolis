@@ -96,24 +96,6 @@ class StoreProviderTest {
 
 	@ParameterizedTest
 	@MethodSource("implementations")
-	void testGetByField(StoreProvider<TestObject> provider) {
-		provider.add(o1);
-		provider.add(o2);
-		provider.add(o3);
-		provider.add(o4);
-		provider.add(o5);
-		provider.add(o6);
-
-		assertEquals(o1, provider.get("name", "One").get());
-		assertEquals(o2, provider.get("name", "Two").get());
-
-		// Repeat
-		assertEquals(o1, provider.get("name", "One").get());
-		assertEquals(o2, provider.get("name", "Two").get());
-	}
-
-	@ParameterizedTest
-	@MethodSource("implementations")
 	void testRemove(StoreProvider<TestObject> provider) {
 		provider.add(o1);
 		provider.add(o2);
@@ -156,29 +138,6 @@ class StoreProviderTest {
 		assertTrue(provider.exists(1L));
 		assertTrue(provider.exists(3L));
 		assertTrue(provider.exists(5L));
-	}
-
-	@ParameterizedTest
-	@MethodSource("implementations")
-	void testExistsByField(StoreProvider<TestObject> provider) {
-		provider.add(o1);
-		provider.add(o2);
-		provider.add(o3);
-		provider.add(o4);
-		provider.add(o5);
-		provider.add(o6);
-
-		provider.remove(o2);
-		provider.remove(o4);
-		provider.remove(o6);
-
-		assertFalse(provider.exists("name", "Two"));
-		assertFalse(provider.exists("name", "Four"));
-		assertFalse(provider.exists("name", "Six"));
-
-		assertTrue(provider.exists("name", "One"));
-		assertTrue(provider.exists("name", "Three"));
-		assertTrue(provider.exists("name", "Five"));
 	}
 
 	@ParameterizedTest

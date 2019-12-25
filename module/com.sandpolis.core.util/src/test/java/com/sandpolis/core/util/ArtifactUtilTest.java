@@ -51,7 +51,6 @@ class ArtifactUtilTest {
 		assertThrows(NullPointerException.class, () -> fromCoordinate(null));
 		assertThrows(IllegalArgumentException.class, () -> fromCoordinate(""));
 		assertThrows(IllegalArgumentException.class, () -> fromCoordinate(":"));
-		assertThrows(IllegalArgumentException.class, () -> fromCoordinate("test.jar"));
 	}
 
 	@Test

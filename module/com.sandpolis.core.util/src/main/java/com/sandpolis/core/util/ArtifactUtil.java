@@ -213,6 +213,7 @@ public final class ArtifactUtil {
 		 */
 		public static ParsedCoordinate fromCoordinate(String coordinate) {
 			checkNotNull(coordinate);
+			checkArgument(!coordinate.isBlank());
 
 			String[] gav = coordinate.split(":");
 

@@ -44,7 +44,7 @@ class MainDispatchTest {
 
 		Field main = MainDispatch.class.getDeclaredField("main");
 		main.setAccessible(true);
-		main.set(null, MainDispatch.class);
+		main.set(null, null);
 
 		Field instance = MainDispatch.class.getDeclaredField("instance");
 		instance.setAccessible(true);
