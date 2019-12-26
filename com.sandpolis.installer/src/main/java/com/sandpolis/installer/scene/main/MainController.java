@@ -11,6 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.installer.scene.main;
 
+import static com.sandpolis.installer.InstallComponent.CLIENT_MEGA;
+import static com.sandpolis.installer.InstallComponent.SERVER_VANILLA;
+import static com.sandpolis.installer.InstallComponent.VIEWER_CLI;
+import static com.sandpolis.installer.InstallComponent.VIEWER_JFX;
+
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,8 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.util.RandUtil;
-import com.sandpolis.installer.JavafxInstaller;
 import com.sandpolis.installer.Main;
+import com.sandpolis.installer.task.GuiInstallTask;
 import com.sandpolis.installer.util.CloudUtil;
 import com.sandpolis.installer.util.QrUtil;
 
@@ -179,22 +184,22 @@ public class MainController {
 		Main.PATH.evaluate().ifPresent(base -> {
 			// Add installer tasks to the queue
 			if (chk_viewer_jfx.isSelected()) {
-				install(pane_viewer_jfx, JavafxInstaller.newViewerJfxInstaller(base.resolve("viewer-jfx")));
+				install(pane_viewer_jfx, new GuiInstallTask(base.resolve("viewer-jfx"), VIEWER_JFX));
 			} else {
 				pane_viewer_jfx.setCollapsible(false);
 			}
 			if (chk_viewer_cli.isSelected()) {
-				install(pane_viewer_cli, JavafxInstaller.newViewerCliInstaller(base.resolve("viewer-cli")));
+				install(pane_viewer_cli, new GuiInstallTask(base.resolve("viewer-cli"), VIEWER_CLI));
 			} else {
 				pane_viewer_cli.setCollapsible(false);
 			}
 			if (chk_server.isSelected()) {
-				install(pane_server, JavafxInstaller.newServerInstaller(base.resolve("server")));
+				install(pane_server, new GuiInstallTask(base.resolve("server"), SERVER_VANILLA));
 			} else {
 				pane_server.setCollapsible(false);
 			}
 			if (chk_client.isSelected()) {
-				install(pane_client, JavafxInstaller.newClientInstaller(base.resolve("client"), client_config));
+				install(pane_client, new GuiInstallTask(base.resolve("client"), CLIENT_MEGA, client_config));
 			} else {
 				pane_client.setCollapsible(false);
 			}
@@ -214,7 +219,7 @@ public class MainController {
 		});
 	}
 
-	private void install(TitledPane section, JavafxInstaller installer) {
+	private void install(TitledPane section, GuiInstallTask installer) {
 
 		ProgressIndicator progress = new ProgressIndicator(0.0);
 		installer.setOnScheduled(event -> {

@@ -9,49 +9,44 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.installer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package com.sandpolis.installer.task;
 
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sandpolis.installer.InstallComponent;
+import com.sandpolis.installer.platform.Installer;
+
 /**
  * @author cilki
  * @since 5.1.2
  */
-public class CliInstaller implements Callable<Void> {
+public class CliInstallTask implements Callable<Void> {
 
-	private static final Logger log = LoggerFactory.getLogger(CliInstaller.class);
+	private static final Logger log = LoggerFactory.getLogger(CliInstallTask.class);
 
 	private Installer installer;
 
-	protected CliInstaller(Installer installer) {
+	private CliInstallTask(Installer installer) {
 		this.installer = Objects.requireNonNull(installer);
-		this.installer.status = log::debug;
+		this.installer.setStatusOutput(log::debug);
 	}
 
-	public static CliInstaller newServerInstaller(Path destination) {
-		Installer installer = new Installer(destination, "com.sandpolis:sandpolis-server-vanilla:");
-		return new CliInstaller(installer);
+	public CliInstallTask(Path destination, InstallComponent component) {
+		this(Installer.newPlatformInstaller(destination, component));
 	}
 
-	public static CliInstaller newViewerJfxInstaller(Path destination) {
-		Installer installer = new Installer(destination, "com.sandpolis:sandpolis-viewer-jfx:");
-		return new CliInstaller(installer);
-	}
+	public CliInstallTask(Path destination, InstallComponent component, String config) {
+		this(Installer.newPlatformInstaller(destination, component));
 
-	public static CliInstaller newViewerCliInstaller(Path destination) {
-		Installer installer = new Installer(destination, "com.sandpolis:sandpolis-viewer-cli:");
-		return new CliInstaller(installer);
-	}
+		if (component != InstallComponent.CLIENT_MEGA)
+			throw new IllegalArgumentException();
 
-	public static CliInstaller newClientInstaller(Path destination, String config) {
-		Installer installer = new Installer(destination, "com.sandpolis:sandpolis-client-mega:");
-		installer.config = config;
-		return new CliInstaller(installer);
+		this.installer.setConfig(config);
 	}
 
 	@Override

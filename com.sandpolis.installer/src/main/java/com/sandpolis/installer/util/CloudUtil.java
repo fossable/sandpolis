@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class CloudUtil {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(CloudUtil.class);
 
 	public static Optional<String> listen(String token) throws IOException, InterruptedException {
@@ -47,7 +47,7 @@ public final class CloudUtil {
 			if (match.find())
 				return Optional.of(match.group(1));
 		}
-		
+
 		return Optional.empty();
 	}
 

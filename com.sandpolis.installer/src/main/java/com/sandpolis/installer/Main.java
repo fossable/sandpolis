@@ -11,7 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.installer;
 
-import com.sandpolis.installer.util.InstallUtil.InstallPath;
+import com.sandpolis.installer.task.CliInstallTask;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -102,13 +103,13 @@ public final class Main {
 			for (String component : COMPONENTS.split(",")) {
 				switch (component) {
 				case "server":
-					CliInstaller.newServerInstaller(path).call();
+					new CliInstallTask(path, InstallComponent.SERVER_VANILLA).call();
 					break;
 				case "viewer-jfx":
-					CliInstaller.newViewerJfxInstaller(path).call();
+					new CliInstallTask(path, InstallComponent.VIEWER_JFX).call();
 					break;
 				case "viewer-cli":
-					CliInstaller.newViewerCliInstaller(path).call();
+					new CliInstallTask(path, InstallComponent.VIEWER_CLI).call();
 					break;
 				}
 			}
