@@ -125,7 +125,7 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 
 	private func failed() {
 		let alert = UIAlertController(title: "Scanning not supported", message: "Your device does not support QR code scanning.", preferredStyle: .alert)
-		alert.addAction(UIAlertAction(title: "OK", style: .default))
+		alert.addAction(UIAlertAction(title: "OK", style: .cancel))
 		present(alert, animated: true)
 		captureSession = nil
 	}
@@ -134,13 +134,22 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 		progress.startAnimating()
 
 		CloudUtil.addCloudClient(server: server, token: token) { json, error in
-			if let json = json {
-				// TODO create auth group
-				self.dismiss(animated: true)
-			} else {
-				if !self.captureSession.isRunning {
-					self.captureSession.startRunning()
+			DispatchQueue.main.async {
+				if let json = json {
+					// TODO create auth group
+					if let success = json.value(forKey: "success") as? Bool, success {
+						self.dismiss(animated: true)
+						return
+					}
+				} else {
+					if !self.captureSession.isRunning {
+						self.captureSession.startRunning()
+					}
 				}
+				
+				let alert = UIAlertController(title: "Failed", message: "Failed to associate client. Please try again.", preferredStyle: .alert)
+				alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+				self.present(alert, animated: true)
 			}
 		}
 	}

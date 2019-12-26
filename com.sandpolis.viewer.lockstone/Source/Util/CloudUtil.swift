@@ -48,14 +48,14 @@ class CloudUtil {
 	}
 
 	static func addCloudClient(server: SandpolisServer, token: String, _ completion: @escaping(NSDictionary?, Error?) -> Void) {
-		Auth.auth().currentUser?.getIDToken { token, error in
+		Auth.auth().currentUser?.getIDToken { authToken, error in
 			guard error == nil else {
 				completion(nil, error)
 				return
 			}
 
 			var request = URLRequest(url: URL(string: "https://api.sandpolis.com/v1/cloud/client/add")!)
-			request.addValue("Bearer " + token!, forHTTPHeaderField: "Authorization")
+			request.addValue("Bearer " + authToken!, forHTTPHeaderField: "Authorization")
 			request.httpMethod = "POST"
 			request.httpBody = try? JSONSerialization.data(withJSONObject: [
 				"token": token,
