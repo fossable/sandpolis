@@ -110,7 +110,7 @@ public class MainController {
 		} else if (!o && n) {
 			qrTask = service.submit(() -> {
 				do {
-					String token = RandUtil.nextAlphabetic(2).toUpperCase();
+					String token = RandUtil.nextAlphabetic(32).toUpperCase();
 					Node node = QrUtil.buildQr(token, qr_box.widthProperty(), qr_box.heightProperty(), Color.BLACK);
 					Platform.runLater(() -> {
 						qr_box.getChildren().setAll(node);

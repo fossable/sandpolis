@@ -37,7 +37,7 @@ public abstract class Installer {
 	/**
 	 * The installation directory.
 	 */
-	protected final Path destination;
+	private final Path destination;
 
 	/**
 	 * The component that will be installed.
@@ -135,17 +135,19 @@ public abstract class Installer {
 		// Run installation extensions
 		if (component == InstallComponent.SERVER_VANILLA) {
 			Path launch = installLaunchExecutable();
-			installAutostart();
-			execute(launch);
+			if (!installAutostart(launch, "sandpolis-server")) {
+				exec(launch);
+			}
 		} else if (component == InstallComponent.VIEWER_JFX) {
 			Path launch = installLaunchExecutable();
 			Path icon = installIcon();
 			installDesktopEntry(launch, icon, "Sandpolis Viewer");
 		} else if (component == InstallComponent.CLIENT_MEGA) {
-			Path launch = installLaunchExecutable();
 			installClientConfig();
-			installAutostart();
-			execute(launch);
+			Path launch = installLaunchExecutable();
+			if (!installAutostart(launch, "sandpolis-client")) {
+				exec(launch);
+			}
 		}
 
 		completed = true;
@@ -178,7 +180,7 @@ public abstract class Installer {
 	 */
 	protected abstract Path installIcon() throws Exception;
 
-	protected abstract void installAutostart() throws Exception;
+	protected abstract boolean installAutostart(Path launch, String name) throws Exception;
 
 	/**
 	 * Inject the client configuration into the client executable.
@@ -195,9 +197,19 @@ public abstract class Installer {
 	 * Execute the installed instance.
 	 * 
 	 * @param launch The launch executable
+	 * @return A new process
 	 * @throws Exception
 	 */
-	protected abstract void execute(Path launch) throws Exception;
+	protected abstract Process exec(Path launch) throws Exception;
+
+	/**
+	 * Execute a command with elevated privileges if possible.
+	 * 
+	 * @param cmd The command to execute
+	 * @return A new process
+	 * @throws Exception
+	 */
+	protected abstract Process execElevated(String cmd) throws Exception;
 
 	public void setStatusOutput(Consumer<String> status) {
 		this.status = status;

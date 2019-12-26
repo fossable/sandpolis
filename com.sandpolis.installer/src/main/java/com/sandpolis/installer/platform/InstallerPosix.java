@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +47,34 @@ public class InstallerPosix extends Installer {
 	}
 
 	@Override
-	protected void installAutostart() throws Exception {
-		Runtime.getRuntime().exec("systemctl enable sandpolisd.service").waitFor();
-		Runtime.getRuntime().exec("systemctl start sandpolisd.service").waitFor();
+	protected boolean installAutostart(Path launch, String name) throws Exception {
+		var process = InstallUtil.exec("systemctl --version");
+		if (!process.waitFor(1000, TimeUnit.MILLISECONDS) || process.exitValue() != 0) {
+			return false;
+		}
+
+		Path service = Files.createTempFile(null, null);
+		Files.writeString(service, String.format(
+				"[Unit]\n" + "After=network.target\n\n" + "[Service]\n" + "Type=simple\n" + "Restart=always\n"
+						+ "RestartSec=1\n" + "ExecStart=%s\n\n" + "[Install]\n" + "WantedBy=multi-user.target\n",
+				launch));
+
+		process = execElevated("mv " + service + " /usr/lib/systemd/system/" + name + ".service");
+		if (!process.waitFor(1000, TimeUnit.MILLISECONDS) || process.exitValue() != 0) {
+			return false;
+		}
+
+		process = execElevated("systemctl enable " + name + ".service");
+		if (!process.waitFor(1000, TimeUnit.MILLISECONDS) || process.exitValue() != 0) {
+			return false;
+		}
+
+		process = execElevated("systemctl start " + name + ".service");
+		if (!process.waitFor(1000, TimeUnit.MILLISECONDS) || process.exitValue() != 0) {
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override
@@ -59,7 +85,7 @@ public class InstallerPosix extends Installer {
 			destination = destination.resolve(component.fileBase);
 
 			Files.writeString(destination,
-					String.format("#!/bin/sh\nexec /usr/bin/java --module-path \"%s\" -m com.%s/com.%s.Main \"%%@\"\n",
+					String.format("#!/bin/sh\nexec /usr/bin/java --module-path \"%s\" -m %s/%s.Main \"%%@\"\n",
 							executable.getParent(), component.id, component.id));
 			Files.setPosixFilePermissions(destination, Set.of(OWNER_READ, OWNER_WRITE, OWNER_EXECUTE, GROUP_READ,
 					GROUP_EXECUTE, OTHERS_READ, OTHERS_EXECUTE));
@@ -91,8 +117,24 @@ public class InstallerPosix extends Installer {
 	}
 
 	@Override
-	protected void execute(Path launch) throws Exception {
-		// TODO Auto-generated method stub
+	protected Process exec(Path launch) throws Exception {
+		log.debug("Executing launch executable: {}", launch);
+		return Runtime.getRuntime().exec(launch.toString());
+	}
 
+	@Override
+	protected Process execElevated(String cmd) throws Exception {
+		// Check if we're already root
+		if (System.getProperty("user.name").equals("root"))
+			return InstallUtil.exec(cmd);
+
+		// Check for sudo executable
+		var process = InstallUtil.exec("sudo --version");
+		if (!process.waitFor(1000, TimeUnit.MILLISECONDS) || process.exitValue() != 0) {
+			// Sudo not found; just try to execute anyway
+			return InstallUtil.exec(cmd);
+		}
+
+		return InstallUtil.exec("sudo " + cmd);
 	}
 }

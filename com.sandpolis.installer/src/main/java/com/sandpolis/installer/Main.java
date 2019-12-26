@@ -73,12 +73,6 @@ public final class Main {
 			"/usr/local/sbin", "/usr/local/bin", PATH);
 
 	/**
-	 * The service install path.
-	 */
-	public static final InstallPath EXT_LINUX_SERVICE = InstallPath.of(System.getProperty("ext.linux.service"),
-			"/usr/lib/systemd/system");
-
-	/**
 	 * The start menu install path.
 	 */
 	public static final InstallPath EXT_WINDOWS_START = InstallPath.of(System.getProperty("ext.windows.start"),

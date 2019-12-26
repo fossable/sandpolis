@@ -105,6 +105,18 @@ public final class InstallUtil {
 		return output;
 	}
 
+	/**
+	 * Execute a system command.
+	 * 
+	 * @param cmd The command to execute
+	 * @return A new process
+	 * @throws IOException
+	 */
+	public static Process exec(String cmd) throws IOException {
+		log.debug("Executing: {}", cmd);
+		return Runtime.getRuntime().exec(cmd);
+	}
+
 	private InstallUtil() {
 	}
 }

@@ -82,14 +82,20 @@ public class InstallerWindows extends Installer {
 	}
 
 	@Override
-	protected void installAutostart() throws Exception {
+	protected boolean installAutostart(Path launch, String name) throws Exception {
 		// TODO Auto-generated method stub
-
+		return false;
 	}
 
 	@Override
-	protected void execute(Path launch) throws Exception {
-		// TODO Auto-generated method stub
+	protected Process exec(Path launch) throws Exception {
+		log.debug("Executing launch executable: {}", launch);
+		return Runtime.getRuntime().exec(new String[] { "start", launch.toString() });
+	}
 
+	@Override
+	protected Process execElevated(String cmd) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
