@@ -54,7 +54,7 @@ dependencies {
 	api project(':module:com.sandpolis.core.viewer')
 
 	// https://github.com/google/guava
-	api 'com.google.guava:guava:28.1-jre'
+	api 'com.google.guava:guava:28.2-jre'
 
 	// https://github.com/sirolf2009/fxgraph
 	api 'com.sirolf2009:fxgraph:0.0.3'
