@@ -11,20 +11,38 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.jfx.view.login;
 
+import java.util.List;
+
 import com.sandpolis.core.instance.event.Event;
+import com.sandpolis.core.instance.event.ParameterizedEvent;
+import com.sandpolis.core.proto.net.MsgPlugin.PluginDescriptor;
 
 public final class Events {
 
 	/**
-	 * Begin the login attempt.
+	 * Indicates that a login attempt has started.
 	 */
-	public static class BeginLoginEvent extends Event {
+	public static final class LoginStartedEvent extends Event {
 	}
 
 	/**
-	 * Begin the server connection attempt.
+	 * Indicates that a login attempt has ended.
 	 */
-	public static class BeginServerConnectEvent extends Event {
+	public static final class LoginEndedEvent extends ParameterizedEvent<String> {
 	}
 
+	/**
+	 * Indicates that a connection attempt has started.
+	 */
+	public static final class ConnectStartedEvent extends Event {
+	}
+
+	/**
+	 * Indicates that a connection attempt has ended.
+	 */
+	public static final class ConnectEndedEvent extends ParameterizedEvent<String> {
+	}
+
+	public static final class PluginListEvent extends ParameterizedEvent<List<PluginDescriptor>> {
+	}
 }

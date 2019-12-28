@@ -102,7 +102,7 @@ public final class Viewer {
 			config.defaults.put("ui.theme", "Crimson");
 
 			config.defaults.put("ui.view.login.width", 535);
-			config.defaults.put("ui.view.login.height", 380);
+			config.defaults.put("ui.view.login.height", 415);
 			config.defaults.put("ui.view.main.width", 770);
 			config.defaults.put("ui.view.main.height", 345);
 			config.defaults.put("ui.view.about.width", 660);

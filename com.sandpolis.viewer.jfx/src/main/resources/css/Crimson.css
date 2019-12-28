@@ -125,3 +125,20 @@
 	-fx-svg: "/image/common/github-line.svg";
 	-fx-padding: 1 2 1 2;
 }
+
+/*********/
+/* LOGIN */
+/*********/
+.login-info_field {
+    -fx-font-size: 11px;
+}
+.login-info_field-red {
+    -fx-text-fill: red;
+}
+.login-info_field-green {
+    -fx-text-fill: green;
+}
+.login-status {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}

@@ -11,8 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.jfx.view.login.phase;
 
+import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
+import com.sandpolis.viewer.jfx.view.login.Events.ConnectEndedEvent;
+import com.sandpolis.viewer.jfx.view.login.Events.ConnectStartedEvent;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
@@ -23,21 +26,6 @@ public class ServerPhaseController extends AbstractController {
 	private TextField address;
 	@FXML
 	private TextField port;
-
-	@FXML
-	private void initialize() {
-
-		// Set address filter
-		address.textProperty().addListener((p, o, n) -> {
-			// TODO filter invalid characters
-		});
-
-		// Set port filter
-		port.textProperty().addListener((p, o, n) -> {
-			if (!ValidationUtil.port(n) && !n.isEmpty())
-				port.setText(o);
-		});
-	}
 
 	/**
 	 * Get the current address value.
@@ -55,6 +43,33 @@ public class ServerPhaseController extends AbstractController {
 	 */
 	public int getPort() {
 		return Integer.parseInt(port.getText());
+	}
+
+	@FXML
+	private void initialize() {
+
+		// Set address filter
+		address.textProperty().addListener((p, o, n) -> {
+			// TODO filter invalid characters
+		});
+
+		// Set port filter
+		port.textProperty().addListener((p, o, n) -> {
+			if (!ValidationUtil.port(n) && !n.isEmpty())
+				port.setText(o);
+		});
+	}
+
+	@Subscribe
+	void onEvent(ConnectStartedEvent event) {
+		address.setDisable(true);
+		port.setDisable(true);
+	}
+
+	@Subscribe
+	void onEvent(ConnectEndedEvent event) {
+		address.setDisable(false);
+		port.setDisable(false);
 	}
 
 }

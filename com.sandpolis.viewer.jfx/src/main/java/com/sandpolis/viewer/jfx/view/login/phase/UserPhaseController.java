@@ -21,6 +21,8 @@ import com.sandpolis.core.proto.net.MsgServer.RS_ServerBanner;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.core.viewer.cmd.ServerCmd;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
+import com.sandpolis.viewer.jfx.view.login.Events.LoginEndedEvent;
+import com.sandpolis.viewer.jfx.view.login.Events.LoginStartedEvent;
 import com.sandpolis.viewer.jfx.view.login.LoginController.LoginPhase;
 
 import javafx.animation.KeyFrame;
@@ -33,6 +35,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TitledPane;
 import javafx.scene.control.Tooltip;
 import javafx.util.Duration;
 
@@ -44,39 +47,77 @@ public class UserPhaseController extends AbstractController {
 	private static final int PING_PERIOD = 1500;
 
 	@FXML
-	private Label server_ip;
-	@FXML
-	private Label server_certificate;
-	@FXML
-	private Label server_banner;
-	@FXML
-	private Label server_version;
-	@FXML
-	private Label server_ping;
+	private PasswordField password;
 	@FXML
 	private ProgressIndicator ping_indicator;
 	@FXML
-	private TextField username;
+	private Label server_certificate;
 	@FXML
-	private PasswordField password;
+	private TitledPane server_info;
+	@FXML
+	private Label server_ip;
+	@FXML
+	private Label server_ping;
+	@FXML
+	private Label server_uuid;
+	@FXML
+	private Label server_version;
+	@FXML
+	private TextField username;
 
 	private Task<Void> pinger;
 
+	/**
+	 * Scale the ping approximation so it's easier for the user to distinguish
+	 * between small pings and large pings.
+	 *
+	 * @param ping The last ping value
+	 * @return A duration representative of the given ping value
+	 */
+	private Duration calculatePingVisual(long ping) {
+		return Duration.millis(Math.min(PING_PERIOD, 4 * ping + 80));
+	}
+
+	/**
+	 * Get the current password.
+	 *
+	 * @return The password
+	 */
+	public String getPassword() {
+		return password.getText();
+	}
+
+	/**
+	 * Get the current username.
+	 *
+	 * @return The username
+	 */
+	public String getUsername() {
+		return username.getText();
+	}
+
 	@Subscribe
-	public void setBannerInfo(RS_ServerBanner rs) {
+	void phaseChanged(LoginPhase phase) {
+		switch (phase) {
+		case USER_INPUT:
+			break;
+		default:
+			if (pinger != null)
+				pinger.cancel();
+		}
+	}
+
+	@Subscribe
+	void setBannerInfo(RS_ServerBanner rs) {
 
 		// Set static info
-		server_banner.setText(rs.getBanner());
+		if (!rs.getBanner().isBlank())
+			server_info.setText(rs.getBanner());
 		server_version.setText(rs.getVersion());
 	}
 
 	@Subscribe
-	public void setSockInfo(Sock sock) {
-		server_ip.setText(sock.getRemoteIP());
-	}
-
-	@Subscribe
-	public void setCertificate(Sock sock) {
+	void setCertificateInfo(Sock sock) {
 
 		try {
 			X509Certificate certificate = sock.getRemoteCertificate();
@@ -87,21 +128,27 @@ public class UserPhaseController extends AbstractController {
 			// Set validity
 			if (CertUtil.checkValidity(certificate)) {
 				server_certificate.setText("Valid certificate");
-				// TODO colorize
+				server_certificate.getStyleClass().add("login-info_field-green");
 			} else {
 				server_certificate.setText("Expired certificate!");
-				// TODO colorize
+				server_certificate.getStyleClass().add("login-info_field-red");
 			}
 
 		} catch (SSLPeerUnverifiedException e) {
 			server_certificate.setText("Invalid certificate!");
-			// TODO colorize
+			server_certificate.getStyleClass().add("login-info_field-red");
 		}
 
 	}
 
 	@Subscribe
-	public void startPinger(Sock sock) {
+	void setSockInfo(Sock sock) {
+		server_ip.setText(sock.getRemoteIP());
+		server_uuid.setText(sock.getRemoteUuid());
+	}
+
+	@Subscribe
+	void startPinger(Sock sock) {
 		if (pinger != null)
 			pinger.cancel();
 
@@ -130,42 +177,14 @@ public class UserPhaseController extends AbstractController {
 	}
 
 	@Subscribe
-	public void phaseChanged(LoginPhase phase) {
-		switch (phase) {
-		case USER_INPUT:
-			break;
-		default:
-			if (pinger != null)
-				pinger.cancel();
-		}
+	void onEvent(LoginStartedEvent event) {
+		username.setDisable(true);
+		password.setDisable(true);
 	}
 
-	/**
-	 * Get the current username.
-	 *
-	 * @return The username
-	 */
-	public String getUsername() {
-		return username.getText();
-	}
-
-	/**
-	 * Get the current password.
-	 *
-	 * @return The password
-	 */
-	public String getPassword() {
-		return password.getText();
-	}
-
-	/**
-	 * Scale the ping approximation so it's easier for the user to distinguish
-	 * between small pings and large pings.
-	 *
-	 * @param ping The last ping value
-	 * @return A duration representative of the given ping value
-	 */
-	private Duration calculatePingVisual(long ping) {
-		return Duration.millis(Math.min(PING_PERIOD, 4 * ping + 80));
+	@Subscribe
+	void onEvent(LoginEndedEvent event) {
+		username.setDisable(false);
+		password.setDisable(false);
 	}
 }
