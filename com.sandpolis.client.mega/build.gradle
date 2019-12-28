@@ -44,7 +44,7 @@ dependencies {
 	api project(':module:com.sandpolis.core.util')
 
 	// https://github.com/google/guava
-	api 'com.google.guava:guava:28.1-jre'
+	api 'com.google.guava:guava:28.2-jre'
 
 	// https://github.com/netty/netty
 	api 'io.netty:netty-common:4.1.44.Final'
