@@ -11,12 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.jfx.view.login.phase;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.proto.net.MsgPlugin.PluginDescriptor;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
-import com.sandpolis.viewer.jfx.view.login.Events.PluginListEvent;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -75,8 +74,7 @@ public class PluginPhaseController extends AbstractController {
 		});
 	}
 
-	@Subscribe
-	void onEvent(PluginListEvent event) {
-		plugins.getItems().setAll(event.get().stream().map(PluginProperty::new).collect(Collectors.toList()));
+	public void setPlugins(List<PluginDescriptor> newPlugins) {
+		plugins.getItems().setAll(newPlugins.stream().map(PluginProperty::new).collect(Collectors.toList()));
 	}
 }

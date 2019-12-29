@@ -63,10 +63,10 @@ dependencies {
 	api 'commons-validator:commons-validator:1.6'
 
 	// https://github.com/netty/netty
-	api 'io.netty:netty-common:4.1.44.Final'
-	api 'io.netty:netty-codec:4.1.44.Final'
-	api 'io.netty:netty-transport:4.1.44.Final'
-	api 'io.netty:netty-handler:4.1.44.Final'
+	api 'io.netty:netty-common:4.1.43.Final'
+	api 'io.netty:netty-codec:4.1.43.Final'
+	api 'io.netty:netty-transport:4.1.43.Final'
+	api 'io.netty:netty-handler:4.1.43.Final'
 
 	// https://github.com/javaee/jpa-spec
 	api 'javax.persistence:javax.persistence-api:2.2'

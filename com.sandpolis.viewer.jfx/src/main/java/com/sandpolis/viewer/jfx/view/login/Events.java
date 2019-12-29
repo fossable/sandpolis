@@ -11,11 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.jfx.view.login;
 
-import java.util.List;
-
 import com.sandpolis.core.instance.event.Event;
 import com.sandpolis.core.instance.event.ParameterizedEvent;
-import com.sandpolis.core.proto.net.MsgPlugin.PluginDescriptor;
 
 public final class Events {
 
@@ -41,8 +38,5 @@ public final class Events {
 	 * Indicates that a connection attempt has ended.
 	 */
 	public static final class ConnectEndedEvent extends ParameterizedEvent<String> {
-	}
-
-	public static final class PluginListEvent extends ParameterizedEvent<List<PluginDescriptor>> {
 	}
 }

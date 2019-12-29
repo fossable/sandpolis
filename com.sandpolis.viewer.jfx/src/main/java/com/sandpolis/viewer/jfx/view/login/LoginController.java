@@ -35,7 +35,6 @@ import com.sandpolis.viewer.jfx.view.login.Events.ConnectEndedEvent;
 import com.sandpolis.viewer.jfx.view.login.Events.ConnectStartedEvent;
 import com.sandpolis.viewer.jfx.view.login.Events.LoginEndedEvent;
 import com.sandpolis.viewer.jfx.view.login.Events.LoginStartedEvent;
-import com.sandpolis.viewer.jfx.view.login.Events.PluginListEvent;
 import com.sandpolis.viewer.jfx.view.login.phase.PluginPhaseController;
 import com.sandpolis.viewer.jfx.view.login.phase.ServerPhaseController;
 import com.sandpolis.viewer.jfx.view.login.phase.UserPhaseController;
@@ -153,8 +152,10 @@ public class LoginController extends FxController {
 									return PluginStore.get(descriptor.getId()).isEmpty();
 								}).collect(Collectors.toList());
 
+								post(LoginEndedEvent::new);
+
 								if (!newPlugins.isEmpty()) {
-									post(PluginListEvent::new, newPlugins);
+									pluginPhaseController.setPlugins(newPlugins);
 									phase.set(LoginPhase.PLUGIN_PHASE);
 								} else {
 									phase.set(LoginPhase.COMPLETE);
@@ -163,6 +164,7 @@ public class LoginController extends FxController {
 							});
 						} else {
 							setStatus("Login attempt failed");
+							post(LoginEndedEvent::new);
 						}
 					});
 			break;
@@ -185,32 +187,39 @@ public class LoginController extends FxController {
 			if (o != n) {
 				bus.post(n);
 
-				switch (n) {
-				case SERVER_INPUT:
-					setStatus("");
-					btn_back.setText("Exit");
-					btn_continue.setText("Connect");
-					carousel.moveBackward();
-					resetBannerImage();
-					break;
-				case USER_INPUT:
-					setStatus("");
-					btn_back.setText("Back");
-					btn_continue.setText("Login");
-					carousel.moveForward();
-					break;
-				case PLUGIN_PHASE:
-					status.setText("The server requests that additional plugins be installed");
-					btn_back.setText("Back");
-					btn_back.setDisable(true);
-					btn_continue.setText("Continue");
-					carousel.moveForward();
-					break;
-				case COMPLETE:
-					break;
-				default:
-					throw new RuntimeException("Unexpected phase: " + n);
-				}
+				Platform.runLater(() -> {
+					switch (n) {
+					case SERVER_INPUT:
+						setStatus("");
+						btn_back.setText("Exit");
+						btn_back.setDisable(false);
+						btn_continue.setText("Connect");
+						btn_continue.setDisable(false);
+						carousel.moveBackward();
+						resetBannerImage();
+						break;
+					case USER_INPUT:
+						setStatus("");
+						btn_back.setText("Back");
+						btn_back.setDisable(false);
+						btn_continue.setText("Login");
+						btn_continue.setDisable(false);
+						carousel.moveForward();
+						break;
+					case PLUGIN_PHASE:
+						status.setText("The server requests that additional plugins be installed");
+						btn_back.setText("Back");
+						btn_back.setDisable(true);
+						btn_continue.setText("Continue");
+						btn_continue.setDisable(false);
+						carousel.moveForward();
+						break;
+					case COMPLETE:
+						break;
+					default:
+						throw new RuntimeException("Unexpected phase: " + n);
+					}
+				});
 			}
 		});
 	}

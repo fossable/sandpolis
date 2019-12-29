@@ -40,12 +40,12 @@ dependencies {
 	implementation 'com.google.guava:guava:28.2-jre'
 
 	// https://github.com/netty/netty
-	implementation 'io.netty:netty-common:4.1.44.Final'
-	implementation 'io.netty:netty-codec:4.1.44.Final'
-	implementation 'io.netty:netty-codec-dns:4.1.44.Final'
-	implementation 'io.netty:netty-transport:4.1.44.Final'
-	implementation 'io.netty:netty-handler:4.1.44.Final'
-	implementation 'io.netty:netty-resolver-dns:4.1.44.Final'
+	implementation 'io.netty:netty-common:4.1.43.Final'
+	implementation 'io.netty:netty-codec:4.1.43.Final'
+	implementation 'io.netty:netty-codec-dns:4.1.43.Final'
+	implementation 'io.netty:netty-transport:4.1.43.Final'
+	implementation 'io.netty:netty-handler:4.1.43.Final'
+	implementation 'io.netty:netty-resolver-dns:4.1.43.Final'
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.30'
