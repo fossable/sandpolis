@@ -32,11 +32,29 @@ import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
  */
 public abstract class StoreBase<E extends StoreConfig> {
 
-	private Logger log;
+	/**
+	 * A superclass for all store configurations.
+	 */
+	public abstract static class StoreConfig {
 
-	protected StoreBase(Logger log) {
-		this.log = log;
+		/**
+		 * Indicates that the store's data should not survive the closing of the store.
+		 */
+		public void ephemeral() {
+			throw new UnsupportedOperationException("Store does not support ephemeral providers");
+		}
+
+		/**
+		 * Indicates that the store's data should be persisted to the given database.
+		 *
+		 * @param database The database handle
+		 */
+		public void persistent(Database database) {
+			throw new UnsupportedOperationException("Store does not support persistent providers");
+		}
 	}
+
+	private Logger log;
 
 	/**
 	 * A bus that is used to deliver events to the users of the store.
@@ -45,22 +63,63 @@ public abstract class StoreBase<E extends StoreConfig> {
 		log.error("Exception occurred in event handler", exception);
 	});
 
-	/**
-	 * Add the given subscriber from the store bus.
-	 *
-	 * @param object The subscriber to add
-	 */
-	public final void register(Object object) {
-		bus.register(object);
+	protected StoreBase(Logger log) {
+		this.log = log;
 	}
 
 	/**
-	 * Remove the given subscriber from the store bus.
+	 * Uninitialize and release the resources in the store.
 	 *
-	 * @param object The subscriber to remove
+	 * @throws Exception
 	 */
-	public final void unregister(Object object) {
-		bus.unregister(object);
+	public void close() throws Exception {
+	}
+
+	/**
+	 * Initialize the store.
+	 *
+	 * @param configurator The configuration block
+	 * @return {@code this}
+	 */
+	public StoreBase<E> init(Consumer<E> configurator) {
+		return this;
+	}
+
+	/**
+	 * Broadcast the given event to the store's bus. This method blocks until every
+	 * event handler completes.
+	 *
+	 * @param constructor The event constructor
+	 */
+	public final void post(Supplier<? extends Event> constructor) {
+		Event event = constructor.get();
+
+		log.debug("Event fired: " + event);
+		bus.post(event);
+	}
+
+	/**
+	 * Broadcast the given event to the store's bus. This method blocks until every
+	 * event handler completes.
+	 *
+	 * @param <P>         The event parameter's type
+	 * @param constructor The event constructor
+	 * @param parameter   The event parameter
+	 */
+	public final <P> void post(Supplier<? extends ParameterizedEvent<P>> constructor, P parameter) {
+		ParameterizedEvent<P> event = constructor.get();
+
+		try {
+			// Set the parameter with reflection
+			Field field = event.getClass().getSuperclass().getDeclaredField("object");
+			field.setAccessible(true);
+			field.set(event, parameter);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		log.debug("Event fired: " + event);
+		bus.post(event);
 	}
 
 	/**
@@ -88,79 +147,20 @@ public abstract class StoreBase<E extends StoreConfig> {
 	}
 
 	/**
-	 * Broadcast the given event to the store's bus. This method blocks until every
-	 * event handler completes.
+	 * Add the given subscriber from the store bus.
 	 *
-	 * @param constructor The event constructor
+	 * @param object The subscriber to add
 	 */
-	public final void post(Supplier<? extends Event> constructor) {
-		Event event = constructor.get();
-
-		log.debug("Event fired: " + event);// TODO toString
-		bus.post(event);
+	public final void register(Object object) {
+		bus.register(object);
 	}
 
 	/**
-	 * Broadcast the given event to the store's bus. This method blocks until every
-	 * event handler completes.
+	 * Remove the given subscriber from the store bus.
 	 *
-	 * @param <P>         The event parameter's type
-	 * @param constructor The event constructor
-	 * @param parameter   The event parameter
+	 * @param object The subscriber to remove
 	 */
-	public final <P> void post(Supplier<? extends ParameterizedEvent<P>> constructor, P parameter) {
-		ParameterizedEvent<P> event = constructor.get();
-
-		try {
-			// Set the parameter with reflection
-			Field field = event.getClass().getSuperclass().getDeclaredField("object");
-			field.setAccessible(true);
-			field.set(event, parameter);
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
-
-		log.debug("Event fired: " + event);// TODO toString
-		bus.post(event);
-	}
-
-	/**
-	 * Uninitialize and release the resources in the store.
-	 *
-	 * @throws Exception
-	 */
-	public void close() throws Exception {
-	}
-
-	/**
-	 * Initialize the store.
-	 *
-	 * @param configurator The configuration block
-	 * @return {@code this}
-	 */
-	public StoreBase<E> init(Consumer<E> configurator) {
-		return this;
-	}
-
-	/**
-	 * A superclass for all store configurations.
-	 */
-	public abstract static class StoreConfig {
-
-		/**
-		 * Indicates that the store's data should not survive the closing of the store.
-		 */
-		public void ephemeral() {
-			throw new UnsupportedOperationException("Store does not support ephemeral providers");
-		}
-
-		/**
-		 * Indicates that the store's data should be persisted to the given database.
-		 *
-		 * @param database The database handle
-		 */
-		public void persistent(Database database) {
-			throw new UnsupportedOperationException("Store does not support persistent providers");
-		}
+	public final void unregister(Object object) {
+		bus.unregister(object);
 	}
 }

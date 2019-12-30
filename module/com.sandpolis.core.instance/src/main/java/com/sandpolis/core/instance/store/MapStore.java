@@ -27,8 +27,22 @@ public abstract class MapStore<K, V, E extends StoreConfig> extends StoreBase<E>
 		super(log);
 	}
 
-	public Stream<V> stream() {
-		return provider.stream();
+	public void add(V item) {
+		provider.add(item);
+	}
+
+	@Override
+	public void close() throws Exception {
+		provider = null;
+	}
+
+	/**
+	 * Determine how many elements the store contains.
+	 * 
+	 * @return The number of elements in the store
+	 */
+	public long count() {
+		return provider.count();
 	}
 
 	public Optional<V> get(K key) {
@@ -46,12 +60,7 @@ public abstract class MapStore<K, V, E extends StoreConfig> extends StoreBase<E>
 		provider.remove(value);
 	}
 
-	public void add(V item) {
-		provider.add(item);
-	}
-
-	@Override
-	public void close() throws Exception {
-		provider = null;
+	public Stream<V> stream() {
+		return provider.stream();
 	}
 }
