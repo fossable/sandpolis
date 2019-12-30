@@ -16,6 +16,7 @@ import java.security.cert.X509Certificate;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
 import com.google.common.eventbus.Subscribe;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.MsgServer.RS_ServerBanner;
 import com.sandpolis.core.util.CertUtil;
@@ -96,6 +97,26 @@ public class UserPhaseController extends AbstractController {
 		return username.getText();
 	}
 
+	@FXML
+	private void initialize() {
+		if (Core.SO_BUILD.getDevelopment()) {
+			username.setText("admin");
+			password.setText("password");
+		}
+	}
+
+	@Subscribe
+	void onEvent(LoginEndedEvent event) {
+		username.setDisable(false);
+		password.setDisable(false);
+	}
+
+	@Subscribe
+	void onEvent(LoginStartedEvent event) {
+		username.setDisable(true);
+		password.setDisable(true);
+	}
+
 	@Subscribe
 	void phaseChanged(LoginPhase phase) {
 		switch (phase) {
@@ -174,17 +195,5 @@ public class UserPhaseController extends AbstractController {
 		};
 		server_ping.textProperty().bind(pinger.messageProperty());
 		new Thread(pinger).start();
-	}
-
-	@Subscribe
-	void onEvent(LoginStartedEvent event) {
-		username.setDisable(true);
-		password.setDisable(true);
-	}
-
-	@Subscribe
-	void onEvent(LoginEndedEvent event) {
-		username.setDisable(false);
-		password.setDisable(false);
 	}
 }

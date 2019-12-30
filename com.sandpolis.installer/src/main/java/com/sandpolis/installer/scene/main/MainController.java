@@ -11,11 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.installer.scene.main;
 
-import static com.sandpolis.installer.InstallComponent.CLIENT_MEGA;
-import static com.sandpolis.installer.InstallComponent.SERVER_VANILLA;
-import static com.sandpolis.installer.InstallComponent.VIEWER_CLI;
-import static com.sandpolis.installer.InstallComponent.VIEWER_JFX;
-
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,7 +33,9 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -51,37 +48,30 @@ public class MainController {
 
 	@FXML
 	private CheckBox chk_server;
-
 	@FXML
 	private CheckBox chk_viewer_jfx;
-
 	@FXML
 	private CheckBox chk_viewer_cli;
-
 	@FXML
 	private CheckBox chk_client;
-
 	@FXML
 	private TitledPane pane_server;
-
 	@FXML
 	private TitledPane pane_viewer_jfx;
-
 	@FXML
 	private TitledPane pane_viewer_cli;
-
 	@FXML
 	private TitledPane pane_client;
-
 	@FXML
 	private Button btn_install;
-
 	@FXML
 	private ImageView banner;
-
+	@FXML
+	private TextField username;
+	@FXML
+	private PasswordField password;
 	@FXML
 	private VBox qr_box;
-
 	@FXML
 	private Label status;
 
@@ -170,6 +160,17 @@ public class MainController {
 	@FXML
 	private void install() {
 
+		// Validate user input
+		if (chk_server.isSelected()) {
+			if (username.getText().isBlank() || password.getText().isEmpty()) {
+				status.setText("Invalid username or password");
+				return;
+			}
+
+			username.setDisable(true);
+			password.setDisable(true);
+		}
+
 		chk_server.selectedProperty().removeListener(refreshScene);
 		chk_viewer_jfx.selectedProperty().removeListener(refreshScene);
 		chk_viewer_cli.selectedProperty().removeListener(refreshScene);
@@ -184,22 +185,23 @@ public class MainController {
 		Main.PATH.evaluate().ifPresent(base -> {
 			// Add installer tasks to the queue
 			if (chk_viewer_jfx.isSelected()) {
-				install(pane_viewer_jfx, new GuiInstallTask(base.resolve("viewer-jfx"), VIEWER_JFX));
+				install(pane_viewer_jfx, GuiInstallTask.newViewerJfxTask(base.resolve("viewer-jfx")));
 			} else {
 				pane_viewer_jfx.setCollapsible(false);
 			}
 			if (chk_viewer_cli.isSelected()) {
-				install(pane_viewer_cli, new GuiInstallTask(base.resolve("viewer-cli"), VIEWER_CLI));
+				install(pane_viewer_cli, GuiInstallTask.newViewerCliTask(base.resolve("viewer-cli")));
 			} else {
 				pane_viewer_cli.setCollapsible(false);
 			}
 			if (chk_server.isSelected()) {
-				install(pane_server, new GuiInstallTask(base.resolve("server"), SERVER_VANILLA));
+				install(pane_server,
+						GuiInstallTask.newServerTask(base.resolve("server"), username.getText(), password.getText()));
 			} else {
 				pane_server.setCollapsible(false);
 			}
 			if (chk_client.isSelected()) {
-				install(pane_client, new GuiInstallTask(base.resolve("client"), CLIENT_MEGA, client_config));
+				install(pane_client, GuiInstallTask.newClientTask(base.resolve("client"), client_config));
 			} else {
 				pane_client.setCollapsible(false);
 			}

@@ -54,8 +54,8 @@
 			<children>
 				<Label text="Username" GridPane.halignment="CENTER" />
 				<Label text="Password" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
-				<TextField fx:id="username" styleClass="login-field" text="admin" GridPane.rowIndex="1" />
-				<PasswordField fx:id="password" styleClass="login-field" text="password" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+				<TextField fx:id="username" styleClass="login-field" GridPane.rowIndex="1" />
+				<PasswordField fx:id="password" styleClass="login-field" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 			</children>
 		</GridPane>
 	</TitledPane>

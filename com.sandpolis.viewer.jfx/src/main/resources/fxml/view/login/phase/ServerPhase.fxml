@@ -21,7 +21,7 @@
 			<children>
 				<Label text="Address" />
 				<Label text="Port" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
-				<TextField fx:id="address" styleClass="login-field" text="127.0.0.1" GridPane.rowIndex="1" />
+				<TextField fx:id="address" styleClass="login-field" GridPane.rowIndex="1" />
 				<TextField fx:id="port" alignment="CENTER" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="58.0" styleClass="login-field" text="8768" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 			</children>
 		</GridPane>

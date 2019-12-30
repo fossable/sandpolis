@@ -28,13 +28,17 @@
 	</bottom>
 	<center>
 		<VBox prefHeight="200.0" prefWidth="100.0" spacing="4.0" BorderPane.alignment="CENTER">
-			<TitledPane fx:id="pane_viewer_jfx" text="Install Viewer GUI">
+			<TitledPane fx:id="pane_viewer_jfx" text="Install Viewer Desktop Application">
 				<graphic>
-					<CheckBox fx:id="chk_viewer_jfx" mnemonicParsing="false" />
+               <HBox>
+                  <children>
+      					<CheckBox fx:id="chk_viewer_jfx" mnemonicParsing="false" />
+                  </children>
+               </HBox>
 				</graphic>
 				<BorderPane>
 					<center>
-						<Label text="The Sandpolis GUI is a rich desktop application that allows you to connect to servers and manage clients." wrapText="true" BorderPane.alignment="BOTTOM_LEFT">
+						<Label text="The Sandpolis GUI is a rich desktop application that allows you to connect to servers and manage clients." wrapText="true" BorderPane.alignment="CENTER_LEFT">
 							<font>
 								<Font size="11.0" />
 							</font>
@@ -42,13 +46,13 @@
 					</center>
 				</BorderPane>
 			</TitledPane>
-			<TitledPane fx:id="pane_viewer_cli" text="Install Viewer CLI">
+			<TitledPane fx:id="pane_viewer_cli" text="Install Viewer Terminal Application">
 				<graphic>
 					<CheckBox fx:id="chk_viewer_cli" mnemonicParsing="false" />
 				</graphic>
 				<BorderPane>
 					<center>
-						<Label text="The Sandpolis CLI is a minimalist text interface that can do almost everything the GUI can do." wrapText="true" BorderPane.alignment="CENTER_LEFT">
+						<Label text="The Sandpolis CLI is a minimalist text interface similar to the desktop application." wrapText="true" BorderPane.alignment="CENTER_LEFT">
 							<font>
 								<Font size="11.0" />
 							</font>
@@ -62,22 +66,23 @@
 				</graphic>
 				<BorderPane>
 					<top>
-						<Label text="The Sandpolis server accepts connections from clients and viewers. If you're setting up a Sandpolis network of your own, this is what you need to install. If you're using a cloud service, there's no need to install the server." wrapText="true" BorderPane.alignment="CENTER">
+						<Label text="The Sandpolis server accepts connections from clients and viewers." wrapText="true" BorderPane.alignment="CENTER">
 							<font>
 								<Font size="11.0" />
 							</font>
 						</Label>
 					</top>
-					<bottom>
-						<Label text="Default user -&gt; admin:password" BorderPane.alignment="CENTER">
-							<font>
-								<Font size="11.0" />
-							</font>
-							<BorderPane.margin>
-								<Insets top="8.0" />
-							</BorderPane.margin>
-						</Label>
-					</bottom>
+               <center>
+                  <HBox spacing="12.0" BorderPane.alignment="CENTER">
+                     <children>
+                        <TextField fx:id="username" promptText="Admin Username" />
+                        <PasswordField fx:id="password" promptText="Admin Password" />
+                     </children>
+                     <BorderPane.margin>
+                        <Insets top="8.0" />
+                     </BorderPane.margin>
+                  </HBox>
+               </center>
 				</BorderPane>
 			</TitledPane>
 			<TitledPane fx:id="pane_client" text="Install Client">

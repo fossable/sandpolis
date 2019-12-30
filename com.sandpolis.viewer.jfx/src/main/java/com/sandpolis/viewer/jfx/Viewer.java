@@ -136,12 +136,12 @@ public final class Viewer {
 
 	@ShutdownTask
 	public static final Task shutdown = new Task((task) -> {
-		ThreadStore.close();
 		NetworkStore.close();
 		ConnectionStore.close();
 		PrefStore.close();
 		PluginStore.close();
 		ProfileStore.close();
+		ThreadStore.close();
 
 		return task.success();
 	});

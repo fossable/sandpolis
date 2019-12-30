@@ -12,6 +12,7 @@
 package com.sandpolis.viewer.jfx.view.login.phase;
 
 import com.google.common.eventbus.Subscribe;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.viewer.jfx.common.controller.AbstractController;
 import com.sandpolis.viewer.jfx.view.login.Events.ConnectEndedEvent;
@@ -58,6 +59,10 @@ public class ServerPhaseController extends AbstractController {
 			if (!ValidationUtil.port(n) && !n.isEmpty())
 				port.setText(o);
 		});
+
+		if (Core.SO_BUILD.getDevelopment()) {
+			address.setText("127.0.0.1");
+		}
 	}
 
 	@Subscribe
