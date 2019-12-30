@@ -11,6 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.installer.task;
 
+import static com.sandpolis.installer.InstallComponent.CLIENT_MEGA;
+import static com.sandpolis.installer.InstallComponent.SERVER_VANILLA;
+import static com.sandpolis.installer.InstallComponent.VIEWER_CLI;
+import static com.sandpolis.installer.InstallComponent.VIEWER_JFX;
+
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -18,7 +23,6 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.installer.InstallComponent;
 import com.sandpolis.installer.platform.Installer;
 
 /**
@@ -36,17 +40,27 @@ public class CliInstallTask implements Callable<Void> {
 		this.installer.setStatusOutput(log::debug);
 	}
 
-	public CliInstallTask(Path destination, InstallComponent component) {
-		this(Installer.newPlatformInstaller(destination, component));
+	public static CliInstallTask newServerTask(Path destination, String username, String password) {
+		var task = new CliInstallTask(Installer.newPlatformInstaller(destination, SERVER_VANILLA));
+		task.installer.setUsername(username);
+		task.installer.setPassword(password);
+
+		return task;
 	}
 
-	public CliInstallTask(Path destination, InstallComponent component, String config) {
-		this(Installer.newPlatformInstaller(destination, component));
+	public static CliInstallTask newClientTask(Path destination, String config) {
+		var task = new CliInstallTask(Installer.newPlatformInstaller(destination, CLIENT_MEGA));
+		task.installer.setConfig(config);
 
-		if (component != InstallComponent.CLIENT_MEGA)
-			throw new IllegalArgumentException();
+		return task;
+	}
 
-		this.installer.setConfig(config);
+	public static CliInstallTask newViewerJfxTask(Path destination) {
+		return new CliInstallTask(Installer.newPlatformInstaller(destination, VIEWER_JFX));
+	}
+
+	public static CliInstallTask newViewerCliTask(Path destination) {
+		return new CliInstallTask(Installer.newPlatformInstaller(destination, VIEWER_CLI));
 	}
 
 	@Override

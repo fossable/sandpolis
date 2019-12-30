@@ -32,7 +32,7 @@ import com.sandpolis.installer.InstallComponent;
 import com.sandpolis.installer.Main;
 import com.sandpolis.installer.util.InstallUtil;
 
-public class InstallerPosix extends Installer {
+public abstract class InstallerPosix extends Installer {
 
 	private static final Logger log = LoggerFactory.getLogger(InstallerPosix.class);
 
@@ -41,59 +41,25 @@ public class InstallerPosix extends Installer {
 	}
 
 	@Override
-	protected Path installIcon() throws Exception {
-		return InstallUtil.installIcon(executable, "/image/icon@4x.png",
-				executable.getParent().resolveSibling("Sandpolis.png"));
+	protected Process exec(Path launch) throws Exception {
+		log.debug("Executing launch executable: {}", launch);
+		return Runtime.getRuntime().exec(launch.toString());
 	}
 
 	@Override
-	protected boolean installAutostart(Path launch, String name) throws Exception {
-		var process = InstallUtil.exec("systemctl --version");
+	protected Process execElevated(String cmd) throws Exception {
+		// Check if we're already root
+		if (System.getProperty("user.name").equals("root"))
+			return InstallUtil.exec(cmd);
+
+		// Check for sudo executable
+		var process = InstallUtil.exec("sudo --version");
 		if (!process.waitFor(1000, TimeUnit.MILLISECONDS) || process.exitValue() != 0) {
-			return false;
+			// Sudo not found; just try to execute anyway
+			return InstallUtil.exec(cmd);
 		}
 
-		Path service = Files.createTempFile(null, null);
-		Files.writeString(service, String.format(
-				"[Unit]\n" + "After=network.target\n\n" + "[Service]\n" + "Type=simple\n" + "Restart=always\n"
-						+ "RestartSec=1\n" + "ExecStart=%s\n\n" + "[Install]\n" + "WantedBy=multi-user.target\n",
-				launch));
-
-		process = execElevated("mv " + service + " /usr/lib/systemd/system/" + name + ".service");
-		if (!process.waitFor(1000, TimeUnit.MILLISECONDS) || process.exitValue() != 0) {
-			return false;
-		}
-
-		process = execElevated("systemctl enable " + name + ".service");
-		if (!process.waitFor(1000, TimeUnit.MILLISECONDS) || process.exitValue() != 0) {
-			return false;
-		}
-
-		process = execElevated("systemctl start " + name + ".service");
-		if (!process.waitFor(1000, TimeUnit.MILLISECONDS) || process.exitValue() != 0) {
-			return false;
-		}
-
-		return true;
-	}
-
-	@Override
-	protected Path installLaunchExecutable() throws Exception {
-		for (Path destination : Main.EXT_LINUX_BIN.evaluateWritable()) {
-			if (!Files.exists(destination))
-				continue;
-			destination = destination.resolve(component.fileBase);
-
-			Files.writeString(destination,
-					String.format("#!/bin/sh\nexec /usr/bin/java --module-path \"%s\" -m %s/%s.Main \"%%@\"\n",
-							executable.getParent(), component.id, component.id));
-			Files.setPosixFilePermissions(destination, Set.of(OWNER_READ, OWNER_WRITE, OWNER_EXECUTE, GROUP_READ,
-					GROUP_EXECUTE, OTHERS_READ, OTHERS_EXECUTE));
-			log.debug("Installed binaries to: {}", destination);
-			return destination;
-		}
-
-		throw new RuntimeException();
+		return InstallUtil.exec("sudo " + cmd);
 	}
 
 	@Override
@@ -117,24 +83,28 @@ public class InstallerPosix extends Installer {
 	}
 
 	@Override
-	protected Process exec(Path launch) throws Exception {
-		log.debug("Executing launch executable: {}", launch);
-		return Runtime.getRuntime().exec(launch.toString());
+	protected Path installIcon() throws Exception {
+		return InstallUtil.installIcon(executable, "/image/icon@4x.png",
+				executable.getParent().resolveSibling("Sandpolis.png"));
 	}
 
 	@Override
-	protected Process execElevated(String cmd) throws Exception {
-		// Check if we're already root
-		if (System.getProperty("user.name").equals("root"))
-			return InstallUtil.exec(cmd);
+	protected Path installLaunchExecutable() throws Exception {
+		Path dest = destination.resolve(component.fileBase);
 
-		// Check for sudo executable
-		var process = InstallUtil.exec("sudo --version");
-		if (!process.waitFor(1000, TimeUnit.MILLISECONDS) || process.exitValue() != 0) {
-			// Sudo not found; just try to execute anyway
-			return InstallUtil.exec(cmd);
+		Files.writeString(dest,
+				String.format("#!/bin/sh\nexec /usr/bin/java --module-path \"%s\" -m %s/%s.Main \"%%@\"\n",
+						executable.getParent(), component.id, component.id));
+		Files.setPosixFilePermissions(dest,
+				Set.of(OWNER_READ, OWNER_WRITE, OWNER_EXECUTE, GROUP_READ, GROUP_EXECUTE, OTHERS_READ, OTHERS_EXECUTE));
+		log.debug("Installed binaries to: {}", dest);
+
+		for (Path destination : Main.EXT_LINUX_PATH.evaluateWritable()) {
+			if (!Files.exists(destination))
+				continue;
+			Files.createSymbolicLink(destination.resolve(component.fileBase), dest);
+			break;
 		}
-
-		return InstallUtil.exec("sudo " + cmd);
+		return dest;
 	}
 }

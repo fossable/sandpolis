@@ -32,29 +32,27 @@ public class InstallerWindows extends Installer {
 	}
 
 	@Override
-	protected Path installLaunchExecutable() throws Exception {
-		for (Path destination : Main.EXT_WINDOWS_BIN.evaluateWritable()) {
-			if (!Files.exists(destination))
-				continue;
-			destination = destination.resolve(component.fileBase + ".bat");
-
-			Files.writeString(destination, String.format("@echo off%nstart javaw --module-path \"%s\" -m %s/%s.Main",
-					executable.getParent(), component.id, component.id));
-			log.debug("Installed binaries to: {}", destination);
-			return destination;
-		}
-
-		throw new RuntimeException();
+	protected Process exec(Path launch) throws Exception {
+		log.debug("Executing launch executable: {}", launch);
+		return Runtime.getRuntime().exec(new String[] { "start", launch.toString() });
 	}
 
 	@Override
-	protected Path installIcon() throws Exception {
-		return InstallUtil.installIcon(executable, "/image/icon.ico",
-				executable.getParent().resolveSibling("Sandpolis.ico"));
+	protected Process execElevated(String cmd) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected boolean installAutostart(Path launch, String name) throws Exception {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	@Override
 	protected Path installDesktopEntry(Path launch, Path icon, String name) throws Exception {
+		installStartEntry(launch, icon, name);
+
 		for (Path destination : Main.EXT_WINDOWS_DESKTOP.evaluateWritable()) {
 			if (!Files.exists(destination))
 				continue;
@@ -69,6 +67,29 @@ public class InstallerWindows extends Installer {
 		throw new RuntimeException();
 	}
 
+	@Override
+	protected Path installIcon() throws Exception {
+		return InstallUtil.installIcon(executable, "/image/icon.ico",
+				executable.getParent().resolveSibling("Sandpolis.ico"));
+	}
+
+	@Override
+	protected Path installLaunchExecutable() throws Exception {
+		Path dest = destination.resolve(component.fileBase + ".bat");
+
+		Files.writeString(dest, String.format("@echo off%nstart javaw --module-path \"%s\" -m %s/%s.Main",
+				executable.getParent(), component.id, component.id));
+		log.debug("Installed binaries to: {}", dest);
+
+		for (Path destination : Main.EXT_WINDOWS_PATH.evaluateWritable()) {
+			if (!Files.exists(destination))
+				continue;
+			Files.createSymbolicLink(destination.resolve(component.fileBase), dest);
+			break;
+		}
+		return dest;
+	}
+
 	protected void installStartEntry(Path launch, Path icon, String name) throws Exception {
 		for (Path destination : Main.EXT_WINDOWS_START.evaluateWritable()) {
 			if (!Files.exists(destination))
@@ -79,23 +100,5 @@ public class InstallerWindows extends Installer {
 					.saveTo(destination.toString());
 			log.debug("Installed start menu entry to: {}", destination);
 		}
-	}
-
-	@Override
-	protected boolean installAutostart(Path launch, String name) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	protected Process exec(Path launch) throws Exception {
-		log.debug("Executing launch executable: {}", launch);
-		return Runtime.getRuntime().exec(new String[] { "start", launch.toString() });
-	}
-
-	@Override
-	protected Process execElevated(String cmd) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

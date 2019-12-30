@@ -67,10 +67,9 @@ public final class Main {
 			"/usr/share/applications", System.getProperty("user.home") + "/.local/share/applications");
 
 	/**
-	 * The launch script install path.
+	 * The standard PATH on Linux.
 	 */
-	public static final InstallPath EXT_LINUX_BIN = InstallPath.of(System.getProperty("ext.linux.bin"), "/usr/bin",
-			"/usr/local/sbin", "/usr/local/bin", PATH);
+	public static final InstallPath EXT_LINUX_PATH = InstallPath.of("/usr/bin", "/usr/local/sbin", "/usr/local/bin");
 
 	/**
 	 * The start menu install path.
@@ -86,9 +85,9 @@ public final class Main {
 			System.getProperty("user.home") + "/Desktop");
 
 	/**
-	 * The launch script install path.
+	 * The standard PATH on Windows.
 	 */
-	public static final InstallPath EXT_WINDOWS_BIN = InstallPath.of(PATH);
+	public static final InstallPath EXT_WINDOWS_PATH = InstallPath.of();
 
 	public static void main(String[] args) throws Exception {
 
@@ -97,13 +96,13 @@ public final class Main {
 			for (String component : COMPONENTS.split(",")) {
 				switch (component) {
 				case "server":
-					new CliInstallTask(path, InstallComponent.SERVER_VANILLA).call();
+					CliInstallTask.newServerTask(path, "admin", "password").call();
 					break;
 				case "viewer-jfx":
-					new CliInstallTask(path, InstallComponent.VIEWER_JFX).call();
+					CliInstallTask.newViewerJfxTask(path).call();
 					break;
 				case "viewer-cli":
-					new CliInstallTask(path, InstallComponent.VIEWER_CLI).call();
+					CliInstallTask.newViewerCliTask(path).call();
 					break;
 				}
 			}

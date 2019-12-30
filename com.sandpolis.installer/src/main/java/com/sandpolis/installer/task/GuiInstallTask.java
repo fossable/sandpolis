@@ -11,10 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.installer.task;
 
+import static com.sandpolis.installer.InstallComponent.CLIENT_MEGA;
+import static com.sandpolis.installer.InstallComponent.SERVER_VANILLA;
+import static com.sandpolis.installer.InstallComponent.VIEWER_CLI;
+import static com.sandpolis.installer.InstallComponent.VIEWER_JFX;
+
 import java.nio.file.Path;
 import java.util.Objects;
 
-import com.sandpolis.installer.InstallComponent;
 import com.sandpolis.installer.platform.Installer;
 
 import javafx.concurrent.Task;
@@ -35,17 +39,27 @@ public class GuiInstallTask extends Task<Void> {
 		updateProgress(0, 1);
 	}
 
-	public GuiInstallTask(Path destination, InstallComponent component) {
-		this(Installer.newPlatformInstaller(destination, component));
+	public static GuiInstallTask newServerTask(Path destination, String username, String password) {
+		var task = new GuiInstallTask(Installer.newPlatformInstaller(destination, SERVER_VANILLA));
+		task.installer.setUsername(username);
+		task.installer.setPassword(password);
+
+		return task;
 	}
 
-	public GuiInstallTask(Path destination, InstallComponent component, String config) {
-		this(Installer.newPlatformInstaller(destination, component));
+	public static GuiInstallTask newClientTask(Path destination, String config) {
+		var task = new GuiInstallTask(Installer.newPlatformInstaller(destination, CLIENT_MEGA));
+		task.installer.setConfig(config);
 
-		if (component != InstallComponent.CLIENT_MEGA)
-			throw new IllegalArgumentException();
+		return task;
+	}
 
-		this.installer.setConfig(config);
+	public static GuiInstallTask newViewerJfxTask(Path destination) {
+		return new GuiInstallTask(Installer.newPlatformInstaller(destination, VIEWER_JFX));
+	}
+
+	public static GuiInstallTask newViewerCliTask(Path destination) {
+		return new GuiInstallTask(Installer.newPlatformInstaller(destination, VIEWER_CLI));
 	}
 
 	@Override

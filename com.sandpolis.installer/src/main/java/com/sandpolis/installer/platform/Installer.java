@@ -34,10 +34,21 @@ import com.sandpolis.installer.util.InstallUtil;
 
 public abstract class Installer {
 
+	public static Installer newPlatformInstaller(Path destination, InstallComponent component) {
+		if (Main.IS_WINDOWS)
+			return new InstallerWindows(destination, component);
+		if (Main.IS_LINUX)
+			return new InstallerLinux(destination, component);
+		if (Main.IS_MAC)
+			return new InstallerMac(destination, component);
+
+		throw new RuntimeException("No installer found for platform");
+	}
+
 	/**
-	 * The installation directory.
+	 * Whether the installation completed successfully.
 	 */
-	private final Path destination;
+	private boolean completed;
 
 	/**
 	 * The component that will be installed.
@@ -45,19 +56,31 @@ public abstract class Installer {
 	protected final InstallComponent component;
 
 	/**
+	 * The client configuration in Base64 (if the installer component is a client).
+	 */
+	private String config;
+
+	/**
+	 * The installation directory.
+	 */
+	protected final Path destination;
+
+	/**
 	 * The installation artifact.
 	 */
 	protected Path executable;
 
 	/**
-	 * The client configuration in Base64 (if the installer component is a client).
+	 * The server password.
 	 */
-	protected String config;
+	private String password;
 
 	/**
-	 * Whether the installation completed successfully.
+	 * Called with progress updates.
 	 */
-	private boolean completed;
+	private BiConsumer<Long, Long> progress = (s, t) -> {
+		// NOP by default
+	};
 
 	/**
 	 * Called with status updates.
@@ -67,26 +90,93 @@ public abstract class Installer {
 	};
 
 	/**
-	 * Called with progress updates.
+	 * The server username.
 	 */
-	private BiConsumer<Long, Long> progress = (s, t) -> {
-		// NOP by default
-	};
-
-	public static Installer newPlatformInstaller(Path destination, InstallComponent component) {
-		if (Main.IS_WINDOWS)
-			return new InstallerWindows(destination, component);
-		if (Main.IS_LINUX)
-			return new InstallerPosix(destination, component);
-		if (Main.IS_MAC)
-			return new InstallerPosix(destination, component);
-
-		throw new RuntimeException("No installer found for platform");
-	}
+	private String username;
 
 	protected Installer(Path destination, InstallComponent component) {
 		this.destination = Objects.requireNonNull(destination);
 		this.component = Objects.requireNonNull(component);
+	}
+
+	/**
+	 * Execute the installed instance.
+	 * 
+	 * @param launch The launch executable
+	 * @return A new process
+	 * @throws Exception
+	 */
+	protected abstract Process exec(Path launch) throws Exception;
+
+	/**
+	 * Execute a command with elevated privileges if possible.
+	 * 
+	 * @param cmd The command to execute
+	 * @return A new process
+	 * @throws Exception
+	 */
+	protected abstract Process execElevated(String cmd) throws Exception;
+
+	protected abstract boolean installAutostart(Path launch, String name) throws Exception;
+
+	/**
+	 * Inject the client configuration into the client executable.
+	 * 
+	 * @throws Exception
+	 */
+	protected void installClientConfig() throws Exception {
+		try (FileSystem zip = FileSystems.newFileSystem(executable, (ClassLoader) null)) {
+			try (var out = Files.newOutputStream(zip.getPath("/soi/client.bin"))) {
+				new ByteArrayInputStream(Base64.getDecoder().decode(config)).transferTo(out);
+			}
+		}
+	}
+
+	/**
+	 * Install a desktop entry.
+	 * 
+	 * @param launch The path to the launch executable
+	 * @param icon   The icon path
+	 * @param name   The entry name
+	 * @return The desktop entry path
+	 * @throws Exception
+	 */
+	protected abstract Path installDesktopEntry(Path launch, Path icon, String name) throws Exception;
+
+	/**
+	 * Install a program icon.
+	 * 
+	 * @return The icon path
+	 * @throws Exception
+	 */
+	protected abstract Path installIcon() throws Exception;
+
+	/**
+	 * Install an executable that launches the instance.
+	 * 
+	 * @return The launch executable path
+	 * @throws Exception
+	 */
+	protected abstract Path installLaunchExecutable() throws Exception;
+
+	/**
+	 * Drop the admin credentials in a plaintext file in the database directory.
+	 * This isn't much of a security risk because the credentials will be moved to a
+	 * database in the same directory.
+	 * 
+	 * @throws Exception
+	 */
+	protected void installServerCredentials() throws Exception {
+		Path dest = destination.resolve("db");
+
+		if (!Files.exists(dest))
+			Files.createDirectories(dest);
+
+		Files.writeString(dest.resolve("install.txt"), String.format("%s%n%s%n", username, password));
+	}
+
+	public boolean isCompleted() {
+		return completed;
 	}
 
 	public void run() throws Exception {
@@ -135,6 +225,7 @@ public abstract class Installer {
 		// Run installation extensions
 		if (component == InstallComponent.SERVER_VANILLA) {
 			Path launch = installLaunchExecutable();
+			installServerCredentials();
 			if (!installAutostart(launch, "sandpolis-server")) {
 				exec(launch);
 			}
@@ -153,77 +244,23 @@ public abstract class Installer {
 		completed = true;
 	}
 
-	/**
-	 * Install an executable that launches the instance.
-	 * 
-	 * @return The launch executable path
-	 * @throws Exception
-	 */
-	protected abstract Path installLaunchExecutable() throws Exception;
-
-	/**
-	 * Install a desktop entry.
-	 * 
-	 * @param launch The path to the launch executable
-	 * @param icon   The icon path
-	 * @param name   The entry name
-	 * @return The desktop entry path
-	 * @throws Exception
-	 */
-	protected abstract Path installDesktopEntry(Path launch, Path icon, String name) throws Exception;
-
-	/**
-	 * Install a program icon.
-	 * 
-	 * @return The icon path
-	 * @throws Exception
-	 */
-	protected abstract Path installIcon() throws Exception;
-
-	protected abstract boolean installAutostart(Path launch, String name) throws Exception;
-
-	/**
-	 * Inject the client configuration into the client executable.
-	 */
-	protected void installClientConfig() throws Exception {
-		try (FileSystem zip = FileSystems.newFileSystem(executable, (ClassLoader) null)) {
-			try (var out = Files.newOutputStream(zip.getPath("/soi/client.bin"))) {
-				new ByteArrayInputStream(Base64.getDecoder().decode(config)).transferTo(out);
-			}
-		}
+	public void setConfig(String config) {
+		this.config = config;
 	}
 
-	/**
-	 * Execute the installed instance.
-	 * 
-	 * @param launch The launch executable
-	 * @return A new process
-	 * @throws Exception
-	 */
-	protected abstract Process exec(Path launch) throws Exception;
-
-	/**
-	 * Execute a command with elevated privileges if possible.
-	 * 
-	 * @param cmd The command to execute
-	 * @return A new process
-	 * @throws Exception
-	 */
-	protected abstract Process execElevated(String cmd) throws Exception;
-
-	public void setStatusOutput(Consumer<String> status) {
-		this.status = status;
+	public void setPassword(String password) {
+		this.password = password;
 	}
 
 	public void setProgressOutput(BiConsumer<Long, Long> progress) {
 		this.progress = progress;
 	}
 
-	public boolean isCompleted() {
-		return completed;
+	public void setStatusOutput(Consumer<String> status) {
+		this.status = status;
 	}
 
-	public void setConfig(String config) {
-		this.config = config;
+	public void setUsername(String username) {
+		this.username = username;
 	}
 }
