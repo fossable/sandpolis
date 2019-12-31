@@ -25,6 +25,7 @@ import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.instance.store.plugin.PluginStore;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.command.CommandFuture;
+import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.proto.net.MsgPlugin.RQ_ArtifactDownload;
 import com.sandpolis.core.proto.net.MsgPlugin.RQ_PluginList;
 import com.sandpolis.core.proto.net.MsgPlugin.RS_ArtifactDownload;
@@ -127,6 +128,15 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 		});
 
 		return session;
+	}
+
+	/**
+	 * List all installed plugins.
+	 *
+	 * @return A future that will receive the outcome of this action
+	 */
+	public ResponseFuture<RS_PluginList> enumerate() {
+		return request(RQ_PluginList.newBuilder());
 	}
 
 	/**

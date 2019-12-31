@@ -57,7 +57,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 * The target sock which will be used to send and receive messages. Defaults to
 	 * the default server.
 	 */
-	protected Sock sock = ConnectionStore.get(cvid).get();
+	protected Sock sock = ConnectionStore.get(cvid).orElse(null);
 
 	/**
 	 * Explicitly set a thread pool for the completion listeners.

@@ -28,11 +28,13 @@ import static com.sandpolis.server.vanilla.store.server.ServerStore.ServerStore;
 import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-import com.sandpolis.server.vanilla.store.location.LocationStore;
 import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +65,8 @@ import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.core.proto.pojo.Group.GroupConfig;
 import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.User.UserConfig;
+import com.sandpolis.core.proto.util.Auth.PasswordContainer;
+import com.sandpolis.core.proto.util.Generator.AuthenticationConfig;
 import com.sandpolis.core.proto.util.Generator.ExecutionConfig;
 import com.sandpolis.core.proto.util.Generator.FeatureSet;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
@@ -83,6 +87,7 @@ import com.sandpolis.server.vanilla.auth.PasswordMechanism;
 import com.sandpolis.server.vanilla.gen.MegaGen;
 import com.sandpolis.server.vanilla.store.group.Group;
 import com.sandpolis.server.vanilla.store.listener.Listener;
+import com.sandpolis.server.vanilla.store.location.LocationStore;
 import com.sandpolis.server.vanilla.store.trust.TrustAnchor;
 import com.sandpolis.server.vanilla.store.user.User;
 
@@ -113,6 +118,7 @@ public final class Server {
 		register(Server.loadServerStores);
 		register(Server.loadPlugins);
 		register(Server.installDebugClient);
+		register(Server.installAdminUser);
 		register(Server.loadListeners);
 
 		register(Server.shutdown);
@@ -162,6 +168,38 @@ public final class Server {
 	@InitializationTask(name = "Generate instance CVID", fatal = true)
 	public static final Task generateCvid = new Task((task) -> {
 		Core.setCvid(CvidUtil.cvid(Instance.SERVER));
+		return task.success();
+	});
+
+	/**
+	 * 
+	 */
+	@InitializationTask(name = "Install administrator user", fatal = true)
+	public static final Task installAdminUser = new Task((task) -> {
+		Path install = Environment.DB.path().resolve("install.txt");
+		if (!Files.exists(install))
+			return task.skipped();
+
+		try {
+			var lines = Files.readAllLines(install);
+			if (lines.size() != 2)
+				return task.failure("File format error");
+
+			if (UserStore.count() != 0) {
+				return task.failure("UserStore not empty");
+			}
+			UserStore.add(UserConfig.newBuilder().setUsername(lines.get(0)).setPassword(lines.get(1)));
+			ListenerStore.add(ListenerConfig.newBuilder().setId(1).setPort(8768).setAddress("0.0.0.0")
+					.setOwner(lines.get(0)).setName("Default Listener").setEnabled(true).build());
+		} finally {
+			try {
+				Files.delete(install);
+			} catch (IOException e) {
+				log.error("Failed to delete install credentials!");
+				return task.failure(e);
+			}
+		}
+
 		return task.success();
 	});
 
@@ -273,7 +311,6 @@ public final class Server {
 
 	@ShutdownTask
 	public static final Task shutdown = new Task((task) -> {
-		ThreadStore.close();
 		NetworkStore.close();
 		ConnectionStore.close();
 		PrefStore.close();
@@ -284,6 +321,7 @@ public final class Server {
 		ProfileStore.close();
 		TrustStore.close();
 		PluginStore.close();
+		ThreadStore.close();
 
 		return task.success();
 	});
@@ -327,7 +365,8 @@ public final class Server {
 
 		// Create group
 		if (GroupStore.get("1").isEmpty())
-			GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin").build());
+			GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin")
+					.addPasswordMechanism(PasswordContainer.newBuilder().setPassword("12345")).build());
 
 		// Generate client
 		MegaGen generator = MegaGen
@@ -337,6 +376,8 @@ public final class Server {
 								.addPlugin("com.sandpolis.plugin.sysinfo").addPlugin("com.sandpolis.plugin.shell"))
 								.setExecution(ExecutionConfig.newBuilder().putInstallPath(OsType.LINUX_VALUE,
 										"/home/cilki/.sandpolis"))
+								.setAuthentication(AuthenticationConfig.newBuilder()
+										.setPassword(PasswordContainer.newBuilder().setPassword("12345")))
 								.setNetwork(NetworkConfig.newBuilder().setLoopConfig(
 										LoopConfig.newBuilder().setTimeout(5000).setCooldown(5000).addTarget(
 												NetworkTarget.newBuilder().setAddress("10.0.1.128").setPort(8768)))))

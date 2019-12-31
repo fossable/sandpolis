@@ -168,11 +168,22 @@ public final class Client {
 					break;
 				}
 
+				future.addHandler((Outcome rs) -> {
+					if (!rs.getResult()) {
+						// Close the connection
+						ConnectionStore.get(event.get()).ifPresent(sock -> {
+							sock.close();
+						});
+					}
+				});
+
 				if (Config.getBoolean("plugin.enabled") && !SO_CONFIG.getMemory()) {
 					future.addHandler((Outcome rs) -> {
-						// Synchronize plugins
-						PluginCmd.async().sync().sync();
-						PluginStore.loadPlugins();
+						if (rs.getResult()) {
+							// Synchronize plugins
+							PluginCmd.async().sync().sync();
+							PluginStore.loadPlugins();
+						}
 					});
 				}
 			}

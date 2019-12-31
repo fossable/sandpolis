@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-module com.sandpolis.viewer.cli {
+open module com.sandpolis.viewer.cli {
 	exports com.sandpolis.viewer.cli.component;
 	exports com.sandpolis.viewer.cli.view.about;
 	exports com.sandpolis.viewer.cli.view.control;

@@ -62,6 +62,9 @@ public final class AuthExe extends Exelet {
 		List<Group> groups = GroupStore.getUnauthGroups();
 		if (groups.size() == 0) {
 			log.debug("Refusing free authentication attempt because there are no unauth groups");
+			context.defer(() -> {
+				context.connector.close();
+			});
 			return failure(outcome, UNKNOWN_GROUP);
 		}
 
@@ -80,6 +83,9 @@ public final class AuthExe extends Exelet {
 		List<Group> groups = GroupStore.getByPassword(rq.getPassword());
 		if (groups.size() == 0) {
 			log.debug("Refusing password authentication attempt because the password did not match any group");
+			context.defer(() -> {
+				context.connector.close();
+			});
 			return failure(outcome, UNKNOWN_GROUP);
 		}
 
@@ -99,12 +105,18 @@ public final class AuthExe extends Exelet {
 		Group group = GroupStore.get(rq.getGroupId()).orElse(null);
 		if (group == null) {
 			log.debug("Refusing key authentication attempt due to unknown group ID: {}", rq.getGroupId());
+			context.defer(() -> {
+				context.connector.close();
+			});
 			return failure(outcome, UNKNOWN_GROUP);
 		}
 
 		KeyMechanism mech = group.getKeyMechanism(rq.getMechId());
 		if (mech == null) {
 			log.debug("Refusing key authentication attempt due to unknown mechanism ID: {}", rq.getMechId());
+			context.defer(() -> {
+				context.connector.close();
+			});
 			return failure(outcome, INVALID_KEY);
 		}
 
@@ -119,6 +131,9 @@ public final class AuthExe extends Exelet {
 			return success(outcome);
 		} else {
 			log.debug("Refusing key authentication attempt due to failed challenge");
+			context.defer(() -> {
+				context.connector.close();
+			});
 			return failure(outcome, FAILURE_KEY_CHALLENGE);
 		}
 	}
