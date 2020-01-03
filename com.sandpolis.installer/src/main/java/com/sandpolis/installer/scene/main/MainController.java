@@ -51,7 +51,7 @@ public class MainController {
 	@FXML
 	private CheckBox chk_viewer_jfx;
 	@FXML
-	private CheckBox chk_viewer_cli;
+	private CheckBox chk_viewer_ascetic;
 	@FXML
 	private CheckBox chk_client;
 	@FXML
@@ -59,7 +59,7 @@ public class MainController {
 	@FXML
 	private TitledPane pane_viewer_jfx;
 	@FXML
-	private TitledPane pane_viewer_cli;
+	private TitledPane pane_viewer_ascetic;
 	@FXML
 	private TitledPane pane_client;
 	@FXML
@@ -90,7 +90,7 @@ public class MainController {
 
 	private ChangeListener<Boolean> refreshScene = (ObservableValue<? extends Boolean> p, Boolean o, Boolean n) -> {
 		// Ensure at least one box is checked
-		btn_install.setDisable((!chk_server.isSelected() && !chk_viewer_jfx.isSelected() && !chk_viewer_cli.isSelected()
+		btn_install.setDisable((!chk_server.isSelected() && !chk_viewer_jfx.isSelected() && !chk_viewer_ascetic.isSelected()
 				&& !chk_client.isSelected()) || qrTask != null);
 	};
 
@@ -138,12 +138,12 @@ public class MainController {
 
 		chk_server.selectedProperty().addListener(refreshScene);
 		chk_viewer_jfx.selectedProperty().addListener(refreshScene);
-		chk_viewer_cli.selectedProperty().addListener(refreshScene);
+		chk_viewer_ascetic.selectedProperty().addListener(refreshScene);
 		chk_client.selectedProperty().addListener(refreshClient);
 
 		pane_server.expandedProperty().bindBidirectional(chk_server.selectedProperty());
 		pane_viewer_jfx.expandedProperty().bindBidirectional(chk_viewer_jfx.selectedProperty());
-		pane_viewer_cli.expandedProperty().bindBidirectional(chk_viewer_cli.selectedProperty());
+		pane_viewer_ascetic.expandedProperty().bindBidirectional(chk_viewer_ascetic.selectedProperty());
 		pane_client.expandedProperty().bindBidirectional(chk_client.selectedProperty());
 
 		banner.setImage(new Image(MainController.class.getResourceAsStream("/image/logo.png")));
@@ -173,12 +173,12 @@ public class MainController {
 
 		chk_server.selectedProperty().removeListener(refreshScene);
 		chk_viewer_jfx.selectedProperty().removeListener(refreshScene);
-		chk_viewer_cli.selectedProperty().removeListener(refreshScene);
+		chk_viewer_ascetic.selectedProperty().removeListener(refreshScene);
 		chk_client.selectedProperty().removeListener(refreshClient);
 
 		chk_server.setDisable(true);
 		chk_viewer_jfx.setDisable(true);
-		chk_viewer_cli.setDisable(true);
+		chk_viewer_ascetic.setDisable(true);
 		chk_client.setDisable(true);
 		btn_install.setDisable(true);
 
@@ -189,10 +189,10 @@ public class MainController {
 			} else {
 				pane_viewer_jfx.setCollapsible(false);
 			}
-			if (chk_viewer_cli.isSelected()) {
-				install(pane_viewer_cli, GuiInstallTask.newViewerCliTask(base.resolve("viewer-cli")));
+			if (chk_viewer_ascetic.isSelected()) {
+				install(pane_viewer_ascetic, GuiInstallTask.newViewerCliTask(base.resolve("viewer-cli")));
 			} else {
-				pane_viewer_cli.setCollapsible(false);
+				pane_viewer_ascetic.setCollapsible(false);
 			}
 			if (chk_server.isSelected()) {
 				install(pane_server,

@@ -9,18 +9,25 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.viewer.cli.view.main.hosts;
+package com.sandpolis.viewer.ascetic;
 
-import com.googlecode.lanterna.gui2.table.Table;
+import com.sandpolis.core.instance.MainDispatch;
+import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 
-public class HostList extends Table<String> {
-	public HostList() {
-		super("Hostname", "IP Address");
-		init();
+/**
+ * This stub is the entry point for CLI Viewer instances. Control is given to
+ * {@link MainDispatch} for initialization.
+ *
+ * @author cilki
+ * @since 5.0.0
+ */
+public final class Main {
+	private Main() {
 	}
 
-	private void init() {
-
+	public static void main(String[] args) {
+		MainDispatch.dispatch(Viewer.class, args, Instance.VIEWER, InstanceFlavor.ASCETIC);
 	}
 
 }

@@ -21,7 +21,7 @@ plugins {
 
 eclipse {
 	project {
-		name = 'com.sandpolis.viewer.cli'
+		name = 'com.sandpolis.viewer.ascetic'
 		comment = 'The CLI viewer instance'
 	}
 	classpath.file {
@@ -62,7 +62,7 @@ dependencies {
 jar {
 	manifest {
 		attributes(
-			'Main-Class': 'com.sandpolis.viewer.cli.Main',
+			'Main-Class': 'com.sandpolis.viewer.ascetic.Main',
 			'Class-Path': configurations.runtimeClasspath.collect { 'lib/' + it.getName() }.join(' ')
 		)
 	}
@@ -74,6 +74,6 @@ deploy {
 		'-Dlogging.net.traffic.decoded=false',
 		'-Dnet.connection.tls=true',
 		'-Dplugin.enabled=true',
-		'-m com.sandpolis.viewer.cli/com.sandpolis.viewer.cli.Main'
+		'-m com.sandpolis.viewer.ascetic/com.sandpolis.viewer.ascetic.Main'
 	]
 }

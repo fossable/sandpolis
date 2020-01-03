@@ -9,18 +9,37 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.viewer.cli.view.control;
+package com.sandpolis.viewer.ascetic.component;
 
-import com.googlecode.lanterna.gui2.BasicWindow;
+import com.googlecode.lanterna.gui2.ActionListBox;
+import com.googlecode.lanterna.input.KeyStroke;
 
-public class ControlWindow extends BasicWindow {
+public class SideMenu extends ActionListBox {
+	private SideMenuPanel parent;
 
-	public ControlWindow() {
-		init();
+	public SideMenu(SideMenuPanel parent) {
+		this.parent = parent;
 	}
 
-	private void init() {
-
+	@Override
+	public Result handleKeyStroke(KeyStroke key) {
+		switch (key.getKeyType()) {
+		case ArrowDown:
+			parent.down();
+			break;
+		case ArrowUp:
+			parent.up();
+			break;
+		case Enter:
+			return Result.HANDLED;
+		case PageDown:
+			break;
+		case PageUp:
+			break;
+		default:
+			break;
+		}
+		return super.handleKeyStroke(key);
 	}
 
 }

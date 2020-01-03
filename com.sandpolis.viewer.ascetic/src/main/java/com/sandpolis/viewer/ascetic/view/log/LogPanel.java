@@ -9,29 +9,45 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.viewer.cli.view.log;
+package com.sandpolis.viewer.ascetic.view.log;
+
+import java.util.Collections;
 
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.TextBox;
+import com.googlecode.lanterna.gui2.Window;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.classic.Logger;
 
-public class LogPanelAppender extends AppenderBase<ILoggingEvent> {
+public class LogPanel extends BasicWindow {
 
-	private TextBox textbox;
+	private LogPanelAppender appender;
+	private TextBox log;
 
-	public LogPanelAppender(TextBox textbox) {
-		this.textbox = textbox;
+	public LogPanel() {
+		init();
 
-		setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+		appender = new LogPanelAppender(log);
+
+		// Redirect logging
+		Logger logger = (Logger) LoggerFactory.getLogger("com.sandpolis");
+		logger.addAppender(appender);
+
 	}
 
-	@Override
-	protected void append(ILoggingEvent eventObject) {
-		textbox.addLine(eventObject.getFormattedMessage());
+	private void init() {
+		setHints(Collections.singleton(Window.Hint.FIXED_SIZE));
+		setSize(new TerminalSize(100, 10));
+
+		log = new TextBox().setReadOnly(true);
+		setComponent(log);
+	}
+
+	public LogPanelAppender getAppender() {
+		return appender;
 	}
 
 }

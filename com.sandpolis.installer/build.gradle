@@ -79,7 +79,7 @@ dependencies {
 	// Installation targets
 	installTargets project(':com.sandpolis.server.vanilla')
 	installTargets project(':com.sandpolis.viewer.jfx')
-	installTargets project(':com.sandpolis.viewer.cli')
+	installTargets project(':com.sandpolis.viewer.ascetic')
 	installTargets project(':com.sandpolis.client.mega')
 
 	// JavaFX runtimes

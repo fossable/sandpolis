@@ -9,15 +9,15 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-open module com.sandpolis.viewer.cli {
-	exports com.sandpolis.viewer.cli.component;
-	exports com.sandpolis.viewer.cli.view.about;
-	exports com.sandpolis.viewer.cli.view.control;
-	exports com.sandpolis.viewer.cli.view.log;
-	exports com.sandpolis.viewer.cli.view.login;
-	exports com.sandpolis.viewer.cli.view.main.hosts;
-	exports com.sandpolis.viewer.cli.view.main;
-	exports com.sandpolis.viewer.cli;
+open module com.sandpolis.viewer.ascetic {
+	exports com.sandpolis.viewer.ascetic.component;
+	exports com.sandpolis.viewer.ascetic.view.about;
+	exports com.sandpolis.viewer.ascetic.view.control;
+	exports com.sandpolis.viewer.ascetic.view.log;
+	exports com.sandpolis.viewer.ascetic.view.login;
+	exports com.sandpolis.viewer.ascetic.view.main.hosts;
+	exports com.sandpolis.viewer.ascetic.view.main;
+	exports com.sandpolis.viewer.ascetic;
 
 	requires transitive com.sandpolis.core.instance;
 	requires transitive com.sandpolis.core.ipc;

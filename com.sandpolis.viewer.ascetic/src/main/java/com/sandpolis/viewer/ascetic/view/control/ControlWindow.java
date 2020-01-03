@@ -9,25 +9,18 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.viewer.cli;
+package com.sandpolis.viewer.ascetic.view.control;
 
-import com.sandpolis.core.instance.MainDispatch;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.googlecode.lanterna.gui2.BasicWindow;
 
-/**
- * This stub is the entry point for CLI Viewer instances. Control is given to
- * {@link MainDispatch} for initialization.
- *
- * @author cilki
- * @since 5.0.0
- */
-public final class Main {
-	private Main() {
+public class ControlWindow extends BasicWindow {
+
+	public ControlWindow() {
+		init();
 	}
 
-	public static void main(String[] args) {
-		MainDispatch.dispatch(Viewer.class, args, Instance.VIEWER, InstanceFlavor.ASCETIC);
+	private void init() {
+
 	}
 
 }

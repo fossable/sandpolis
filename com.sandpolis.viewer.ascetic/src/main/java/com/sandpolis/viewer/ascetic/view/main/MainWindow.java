@@ -9,45 +9,36 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.viewer.cli.view.log;
+package com.sandpolis.viewer.ascetic.view.main;
 
 import java.util.Collections;
 
-import org.slf4j.LoggerFactory;
-
-import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BasicWindow;
-import com.googlecode.lanterna.gui2.TextBox;
+import com.googlecode.lanterna.gui2.BorderLayout;
+import com.googlecode.lanterna.gui2.GridLayout;
+import com.googlecode.lanterna.gui2.Label;
+import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
+import com.sandpolis.viewer.ascetic.component.SideMenuPanel;
+import com.sandpolis.viewer.ascetic.view.about.AboutPanel;
 
-import ch.qos.logback.classic.Logger;
-
-public class LogPanel extends BasicWindow {
-
-	private LogPanelAppender appender;
-	private TextBox log;
-
-	public LogPanel() {
+public class MainWindow extends BasicWindow {
+	public MainWindow() {
 		init();
-
-		appender = new LogPanelAppender(log);
-
-		// Redirect logging
-		Logger logger = (Logger) LoggerFactory.getLogger("com.sandpolis");
-		logger.addAppender(appender);
-
 	}
 
 	private void init() {
-		setHints(Collections.singleton(Window.Hint.FIXED_SIZE));
-		setSize(new TerminalSize(100, 10));
+		setHints(Collections.singleton(Window.Hint.EXPANDED));
+		setTitle("Sandpolis");
 
-		log = new TextBox().setReadOnly(true);
-		setComponent(log);
+		SideMenuPanel main = new SideMenuPanel();
+		main.add("Hosts", new Panel(new BorderLayout()).addComponent(new Label("Not implemented yet...")));
+		main.add("Users", new Panel(new GridLayout(1)).addComponent(new Label("Not implemented yet...")));
+		main.add("Listeners", new Panel(new GridLayout(1)).addComponent(new Label("Not implemented yet...")));
+		main.add("Settings", new Panel(new GridLayout(1)).addComponent(new Label("Not implemented yet...")));
+		main.add("About", new AboutPanel());
+
+		setComponent(main);
+
 	}
-
-	public LogPanelAppender getAppender() {
-		return appender;
-	}
-
 }

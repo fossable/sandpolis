@@ -9,37 +9,29 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.viewer.cli.component;
+package com.sandpolis.viewer.ascetic.view.log;
 
-import com.googlecode.lanterna.gui2.ActionListBox;
-import com.googlecode.lanterna.input.KeyStroke;
+import org.slf4j.LoggerFactory;
 
-public class SideMenu extends ActionListBox {
-	private SideMenuPanel parent;
+import com.googlecode.lanterna.gui2.TextBox;
 
-	public SideMenu(SideMenuPanel parent) {
-		this.parent = parent;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.AppenderBase;
+
+public class LogPanelAppender extends AppenderBase<ILoggingEvent> {
+
+	private TextBox textbox;
+
+	public LogPanelAppender(TextBox textbox) {
+		this.textbox = textbox;
+
+		setContext((LoggerContext) LoggerFactory.getILoggerFactory());
 	}
 
 	@Override
-	public Result handleKeyStroke(KeyStroke key) {
-		switch (key.getKeyType()) {
-		case ArrowDown:
-			parent.down();
-			break;
-		case ArrowUp:
-			parent.up();
-			break;
-		case Enter:
-			return Result.HANDLED;
-		case PageDown:
-			break;
-		case PageUp:
-			break;
-		default:
-			break;
-		}
-		return super.handleKeyStroke(key);
+	protected void append(ILoggingEvent eventObject) {
+		textbox.addLine(eventObject.getFormattedMessage());
 	}
 
 }

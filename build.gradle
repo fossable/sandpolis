@@ -140,7 +140,7 @@ def publishProjects = [
 	'com.sandpolis.plugin.shell',
 	'com.sandpolis.plugin.sysinfo',
 	'com.sandpolis.server.vanilla',
-	'com.sandpolis.viewer.cli',
+	'com.sandpolis.viewer.ascetic',
 	'com.sandpolis.viewer.jfx'
 ]
 

@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.viewer.cli.component;
+package com.sandpolis.viewer.ascetic.component;
 
 import java.util.ArrayList;
 import java.util.List;

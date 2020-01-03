@@ -46,13 +46,13 @@
 					</center>
 				</BorderPane>
 			</TitledPane>
-			<TitledPane fx:id="pane_viewer_cli" text="Install Viewer Terminal Application">
+			<TitledPane fx:id="pane_viewer_ascetic" text="Install Viewer Terminal Application">
 				<graphic>
-					<CheckBox fx:id="chk_viewer_cli" mnemonicParsing="false" />
+					<CheckBox fx:id="chk_viewer_ascetic" mnemonicParsing="false" />
 				</graphic>
 				<BorderPane>
 					<center>
-						<Label text="The Sandpolis CLI is a minimalist text interface similar to the desktop application." wrapText="true" BorderPane.alignment="CENTER_LEFT">
+						<Label text="The Sandpolis Terminal Viewer is a minimalist text interface similar to the desktop application." wrapText="true" BorderPane.alignment="CENTER_LEFT">
 							<font>
 								<Font size="11.0" />
 							</font>

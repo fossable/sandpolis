@@ -26,7 +26,7 @@ include 'com.sandpolis.client.mega'
 include 'com.sandpolis.client.micro'
 include 'com.sandpolis.installer'
 include 'com.sandpolis.server.vanilla'
-include 'com.sandpolis.viewer.cli'
+include 'com.sandpolis.viewer.ascetic'
 include 'com.sandpolis.viewer.jfx'
 
 if (LOCKSTONE.toBoolean())
