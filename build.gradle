@@ -141,7 +141,7 @@ def publishProjects = [
 	'com.sandpolis.plugin.sysinfo',
 	'com.sandpolis.server.vanilla',
 	'com.sandpolis.viewer.ascetic',
-	'com.sandpolis.viewer.jfx'
+	'com.sandpolis.viewer.lifegem'
 ]
 
 // Apply publishing configuration

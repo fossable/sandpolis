@@ -14,7 +14,7 @@ package com.sandpolis.installer.task;
 import static com.sandpolis.installer.InstallComponent.CLIENT_MEGA;
 import static com.sandpolis.installer.InstallComponent.SERVER_VANILLA;
 import static com.sandpolis.installer.InstallComponent.VIEWER_ASCETIC;
-import static com.sandpolis.installer.InstallComponent.VIEWER_JFX;
+import static com.sandpolis.installer.InstallComponent.VIEWER_LIFEGEM;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -54,11 +54,11 @@ public class GuiInstallTask extends Task<Void> {
 		return task;
 	}
 
-	public static GuiInstallTask newViewerJfxTask(Path destination) {
-		return new GuiInstallTask(Installer.newPlatformInstaller(destination, VIEWER_JFX));
+	public static GuiInstallTask newViewerLifegemTask(Path destination) {
+		return new GuiInstallTask(Installer.newPlatformInstaller(destination, VIEWER_LIFEGEM));
 	}
 
-	public static GuiInstallTask newViewerCliTask(Path destination) {
+	public static GuiInstallTask newViewerAsceticTask(Path destination) {
 		return new GuiInstallTask(Installer.newPlatformInstaller(destination, VIEWER_ASCETIC));
 	}
 

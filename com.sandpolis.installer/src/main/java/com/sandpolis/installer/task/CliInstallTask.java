@@ -14,7 +14,7 @@ package com.sandpolis.installer.task;
 import static com.sandpolis.installer.InstallComponent.CLIENT_MEGA;
 import static com.sandpolis.installer.InstallComponent.SERVER_VANILLA;
 import static com.sandpolis.installer.InstallComponent.VIEWER_ASCETIC;
-import static com.sandpolis.installer.InstallComponent.VIEWER_JFX;
+import static com.sandpolis.installer.InstallComponent.VIEWER_LIFEGEM;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -55,11 +55,11 @@ public class CliInstallTask implements Callable<Void> {
 		return task;
 	}
 
-	public static CliInstallTask newViewerJfxTask(Path destination) {
-		return new CliInstallTask(Installer.newPlatformInstaller(destination, VIEWER_JFX));
+	public static CliInstallTask newViewerLifegemTask(Path destination) {
+		return new CliInstallTask(Installer.newPlatformInstaller(destination, VIEWER_LIFEGEM));
 	}
 
-	public static CliInstallTask newViewerCliTask(Path destination) {
+	public static CliInstallTask newViewerAsceticTask(Path destination) {
 		return new CliInstallTask(Installer.newPlatformInstaller(destination, VIEWER_ASCETIC));
 	}
 

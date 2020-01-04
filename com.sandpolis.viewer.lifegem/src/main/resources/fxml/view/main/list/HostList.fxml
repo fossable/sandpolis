@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane xmlns="http://javafx.com/javafx/9"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.lifegem.view.main.list.HostListController">
+	<center>
+		<TableView fx:id="table" BorderPane.alignment="CENTER" />
+	</center>
+</BorderPane>

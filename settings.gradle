@@ -27,7 +27,7 @@ include 'com.sandpolis.client.micro'
 include 'com.sandpolis.installer'
 include 'com.sandpolis.server.vanilla'
 include 'com.sandpolis.viewer.ascetic'
-include 'com.sandpolis.viewer.jfx'
+include 'com.sandpolis.viewer.lifegem'
 
 if (LOCKSTONE.toBoolean())
 	include 'com.sandpolis.viewer.lockstone'
@@ -55,7 +55,7 @@ include 'module:com.sandpolis.core.viewer'
 // Core plugins
 include 'plugin:com.sandpolis.plugin.desktop'
 include 'plugin:com.sandpolis.plugin.desktop:client:mega'
-include 'plugin:com.sandpolis.plugin.desktop:viewer:jfx'
+include 'plugin:com.sandpolis.plugin.desktop:viewer:lifegem'
 include 'plugin:com.sandpolis.plugin.shell'
 include 'plugin:com.sandpolis.plugin.shell:client:mega'
 include 'plugin:com.sandpolis.plugin.sysinfo'

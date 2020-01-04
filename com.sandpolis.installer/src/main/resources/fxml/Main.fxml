@@ -28,11 +28,11 @@
 	</bottom>
 	<center>
 		<VBox prefHeight="200.0" prefWidth="100.0" spacing="4.0" BorderPane.alignment="CENTER">
-			<TitledPane fx:id="pane_viewer_jfx" text="Install Viewer Desktop Application">
+			<TitledPane fx:id="pane_viewer_lifegem" text="Install Viewer Desktop Application">
 				<graphic>
                <HBox>
                   <children>
-      					<CheckBox fx:id="chk_viewer_jfx" mnemonicParsing="false" />
+      					<CheckBox fx:id="chk_viewer_lifegem" mnemonicParsing="false" />
                   </children>
                </HBox>
 				</graphic>

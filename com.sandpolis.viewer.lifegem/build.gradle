@@ -1,0 +1,95 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+
+plugins {
+	id 'eclipse'
+	id 'java-library'
+
+	id 'com.sandpolis.gradle.soi'
+	id 'com.sandpolis.gradle.deploy'
+	id 'org.openjfx.javafxplugin' version '0.0.8'
+	id 'org.javamodularity.moduleplugin' version '1.5.0'
+}
+
+javafx {
+	modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+	version = "13.0.1"
+}
+
+eclipse {
+	project {
+		name = 'com.sandpolis.viewer.lifegem'
+		comment = 'The JavaFX viewer instance'
+	}
+	classpath.file {
+		whenMerged {
+			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
+}
+
+dependencies {
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+	testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
+	testImplementation 'org.testfx:testfx-junit5:4.0.16-alpha'
+	testImplementation 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
+	testImplementation 'org.awaitility:awaitility:4.0.1'
+
+	api project(':module:com.sandpolis.core.instance')
+	api project(':module:com.sandpolis.core.ipc')
+	api project(':module:com.sandpolis.core.net')
+	api project(':module:com.sandpolis.core.profile')
+	api project(':module:com.sandpolis.core.proto')
+	api project(':module:com.sandpolis.core.soi')
+	api project(':module:com.sandpolis.core.util')
+	api project(':module:com.sandpolis.core.viewer')
+
+	// https://github.com/google/guava
+	api 'com.google.guava:guava:28.2-jre'
+
+	// https://github.com/sirolf2009/fxgraph
+	api 'com.sirolf2009:fxgraph:0.0.3'
+
+	// https://commons.apache.org/proper/commons-validator
+	api 'commons-validator:commons-validator:1.6'
+
+	// https://github.com/netty/netty
+	api 'io.netty:netty-common:4.1.43.Final'
+	api 'io.netty:netty-codec:4.1.43.Final'
+	api 'io.netty:netty-transport:4.1.43.Final'
+	api 'io.netty:netty-handler:4.1.43.Final'
+
+	// https://github.com/javaee/jpa-spec
+	api 'javax.persistence:javax.persistence-api:2.2'
+
+	// https://github.com/qos-ch/slf4j
+	api 'org.slf4j:slf4j-api:1.7.30'
+}
+
+jar {
+	manifest {
+		attributes(
+			'Main-Class': 'com.sandpolis.viewer.lifegem.Main',
+			'Class-Path': configurations.runtimeClasspath.collect { 'lib/' + it.getName() }.join(' ')
+		)
+	}
+}
+
+deploy {
+	jvmArgs = [
+		'-Dlogging.net.traffic.raw=false',
+		'-Dlogging.net.traffic.decoded=false',
+		'-Dnet.connection.tls=true',
+		'-Dplugin.enabled=true',
+		'-m com.sandpolis.viewer.lifegem/com.sandpolis.viewer.lifegem.Main'
+	]
+}

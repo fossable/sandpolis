@@ -98,11 +98,11 @@ public final class Main {
 				case "server":
 					CliInstallTask.newServerTask(path, "admin", "password").call();
 					break;
-				case "viewer-jfx":
-					CliInstallTask.newViewerJfxTask(path).call();
+				case "viewer-gui":
+					CliInstallTask.newViewerLifegemTask(path).call();
 					break;
 				case "viewer-cli":
-					CliInstallTask.newViewerCliTask(path).call();
+					CliInstallTask.newViewerAsceticTask(path).call();
 					break;
 				}
 			}

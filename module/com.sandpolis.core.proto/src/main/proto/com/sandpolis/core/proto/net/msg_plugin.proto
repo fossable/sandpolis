@@ -30,8 +30,8 @@ message PluginDescriptor {
     bool enabled = 7;
     int32 component_size_mega = 8;
     int32 component_size_micro = 9;
-    int32 component_size_jfx = 10;
-    int32 component_size_cli = 11;
+    int32 component_size_lifegem = 10;
+    int32 component_size_ascetic = 11;
 }
 
 /**

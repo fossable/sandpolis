@@ -25,9 +25,9 @@ public enum InstallComponent {
 	SERVER_VANILLA("com.sandpolis:sandpolis-server-vanilla:"),
 
 	/**
-	 * com.sandpolis.viewer.jfx
+	 * com.sandpolis.viewer.lifegem
 	 */
-	VIEWER_JFX("com.sandpolis:sandpolis-viewer-jfx:"),
+	VIEWER_LIFEGEM("com.sandpolis:sandpolis-viewer-lifegem:"),
 
 	/**
 	 * com.sandpolis.viewer.ascetic

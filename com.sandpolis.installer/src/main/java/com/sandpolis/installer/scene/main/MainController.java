@@ -49,7 +49,7 @@ public class MainController {
 	@FXML
 	private CheckBox chk_server;
 	@FXML
-	private CheckBox chk_viewer_jfx;
+	private CheckBox chk_viewer_lifegem;
 	@FXML
 	private CheckBox chk_viewer_ascetic;
 	@FXML
@@ -57,7 +57,7 @@ public class MainController {
 	@FXML
 	private TitledPane pane_server;
 	@FXML
-	private TitledPane pane_viewer_jfx;
+	private TitledPane pane_viewer_lifegem;
 	@FXML
 	private TitledPane pane_viewer_ascetic;
 	@FXML
@@ -90,7 +90,7 @@ public class MainController {
 
 	private ChangeListener<Boolean> refreshScene = (ObservableValue<? extends Boolean> p, Boolean o, Boolean n) -> {
 		// Ensure at least one box is checked
-		btn_install.setDisable((!chk_server.isSelected() && !chk_viewer_jfx.isSelected()
+		btn_install.setDisable((!chk_server.isSelected() && !chk_viewer_lifegem.isSelected()
 				&& !chk_viewer_ascetic.isSelected() && !chk_client.isSelected()) || qrTask != null);
 	};
 
@@ -137,12 +137,12 @@ public class MainController {
 	private void initialize() {
 
 		chk_server.selectedProperty().addListener(refreshScene);
-		chk_viewer_jfx.selectedProperty().addListener(refreshScene);
+		chk_viewer_lifegem.selectedProperty().addListener(refreshScene);
 		chk_viewer_ascetic.selectedProperty().addListener(refreshScene);
 		chk_client.selectedProperty().addListener(refreshClient);
 
 		pane_server.expandedProperty().bindBidirectional(chk_server.selectedProperty());
-		pane_viewer_jfx.expandedProperty().bindBidirectional(chk_viewer_jfx.selectedProperty());
+		pane_viewer_lifegem.expandedProperty().bindBidirectional(chk_viewer_lifegem.selectedProperty());
 		pane_viewer_ascetic.expandedProperty().bindBidirectional(chk_viewer_ascetic.selectedProperty());
 		pane_client.expandedProperty().bindBidirectional(chk_client.selectedProperty());
 
@@ -172,25 +172,25 @@ public class MainController {
 		}
 
 		chk_server.selectedProperty().removeListener(refreshScene);
-		chk_viewer_jfx.selectedProperty().removeListener(refreshScene);
+		chk_viewer_lifegem.selectedProperty().removeListener(refreshScene);
 		chk_viewer_ascetic.selectedProperty().removeListener(refreshScene);
 		chk_client.selectedProperty().removeListener(refreshClient);
 
 		chk_server.setDisable(true);
-		chk_viewer_jfx.setDisable(true);
+		chk_viewer_lifegem.setDisable(true);
 		chk_viewer_ascetic.setDisable(true);
 		chk_client.setDisable(true);
 		btn_install.setDisable(true);
 
 		Main.PATH.evaluate().ifPresent(base -> {
 			// Add installer tasks to the queue
-			if (chk_viewer_jfx.isSelected()) {
-				install(pane_viewer_jfx, GuiInstallTask.newViewerJfxTask(base.resolve("viewer-jfx")));
+			if (chk_viewer_lifegem.isSelected()) {
+				install(pane_viewer_lifegem, GuiInstallTask.newViewerLifegemTask(base.resolve("viewer-gui")));
 			} else {
-				pane_viewer_jfx.setCollapsible(false);
+				pane_viewer_lifegem.setCollapsible(false);
 			}
 			if (chk_viewer_ascetic.isSelected()) {
-				install(pane_viewer_ascetic, GuiInstallTask.newViewerCliTask(base.resolve("viewer-cli")));
+				install(pane_viewer_ascetic, GuiInstallTask.newViewerAsceticTask(base.resolve("viewer-cli")));
 			} else {
 				pane_viewer_ascetic.setCollapsible(false);
 			}

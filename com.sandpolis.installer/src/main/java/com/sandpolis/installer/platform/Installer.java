@@ -229,7 +229,7 @@ public abstract class Installer {
 			if (!installAutostart(launch, "sandpolis-server")) {
 				exec(launch);
 			}
-		} else if (component == InstallComponent.VIEWER_JFX) {
+		} else if (component == InstallComponent.VIEWER_LIFEGEM) {
 			Path launch = installLaunchExecutable();
 			Path icon = installIcon();
 			installDesktopEntry(launch, icon, "Sandpolis Viewer");

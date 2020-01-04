@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+
+<?import com.sandpolis.viewer.lifegem.common.button.SvgButton?>
+<?import com.sandpolis.viewer.lifegem.common.label.SvgLabel?>
+
+<TitledPane maxHeight="-Infinity" maxWidth="-Infinity"
+	minHeight="-Infinity" minWidth="-Infinity" collapsible="false"
+	styleClass="main_menu-header" xmlns="http://javafx.com/javafx/9"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.lifegem.view.main.menu.AboutController">
+	<graphic>
+		<SvgLabel alignment="CENTER"
+			styleClass="main-menu-header_graphic"
+			id="main-menu-about-header" text="About" />
+	</graphic>
+	<content>
+		<VBox alignment="CENTER" styleClass="main-menu-panel">
+			<children>
+				<VBox styleClass="main-menu-subpanel">
+					<children>
+						<SvgButton mnemonicParsing="false"
+							onAction="#open_about" styleClass="main-menu-button"
+							id="main-menu-about-btn_about" text="About" />
+						<SvgButton mnemonicParsing="false"
+							styleClass="main-menu-button" id="main-menu-about-btn_logs"
+							text="Logs" />
+					</children>
+				</VBox>
+			</children>
+		</VBox>
+	</content>
+</TitledPane>

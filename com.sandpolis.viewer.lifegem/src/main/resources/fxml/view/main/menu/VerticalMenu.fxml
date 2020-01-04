@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+
+<?import com.sandpolis.viewer.lifegem.common.button.SvgButton?>
+
+<ToolBar focusTraversable="false" orientation="VERTICAL"
+	xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.lifegem.view.main.menu.VerticalMenuController">
+	<items>
+		<SvgButton fx:id="btn_interface"
+			id="main-menu-btn_interface" styleClass="main-menu-category_button"
+			mnemonicParsing="false" onAction="#btn_interface">
+			<tooltip>
+				<Tooltip styleClass="main-menu-tooltip"
+					text="Interface settings" />
+			</tooltip>
+		</SvgButton>
+		<SvgButton fx:id="btn_management"
+			id="main-menu-btn_management" styleClass="main-menu-category_button"
+			mnemonicParsing="false" onAction="#btn_management">
+			<tooltip>
+				<Tooltip styleClass="main-menu-tooltip" text="Management" />
+			</tooltip>
+		</SvgButton>
+		<SvgButton fx:id="btn_generator"
+			id="main-menu-btn_generator" styleClass="main-menu-category_button"
+			mnemonicParsing="false" onAction="#btn_generator">
+			<tooltip>
+				<Tooltip styleClass="main-menu-tooltip" text="Generator" />
+			</tooltip>
+		</SvgButton>
+		<SvgButton fx:id="btn_configuration"
+			id="main-menu-btn_configuration"
+			styleClass="main-menu-category_button" mnemonicParsing="false"
+			onAction="#btn_configuration">
+			<tooltip>
+				<Tooltip styleClass="main-menu-tooltip" text="Configuration" />
+			</tooltip>
+		</SvgButton>
+		<SvgButton fx:id="btn_about" id="main-menu-btn_about"
+			styleClass="main-menu-category_button" mnemonicParsing="false"
+			onAction="#btn_about">
+			<tooltip>
+				<Tooltip styleClass="main-menu-tooltip"
+					text="About Sandpolis" />
+			</tooltip>
+		</SvgButton>
+	</items>
+</ToolBar>
