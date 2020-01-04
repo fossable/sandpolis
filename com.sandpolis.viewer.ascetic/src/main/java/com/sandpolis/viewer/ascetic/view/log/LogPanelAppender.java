@@ -11,27 +11,40 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.ascetic.view.log;
 
-import org.slf4j.LoggerFactory;
-
 import com.googlecode.lanterna.gui2.TextBox;
 
-import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.core.encoder.Encoder;
 
 public class LogPanelAppender extends AppenderBase<ILoggingEvent> {
 
+	public static LogPanelAppender instance;
+
 	private TextBox textbox;
 
-	public LogPanelAppender(TextBox textbox) {
-		this.textbox = textbox;
+	private Encoder<ILoggingEvent> encoder;
 
-		setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+	public LogPanelAppender() {
+		if (instance != null)
+			throw new IllegalStateException();
+
+		instance = this;
+	}
+
+	public void setOutput(TextBox textbox) {
+		this.textbox = textbox;
+	}
+
+	public void setEncoder(Encoder<ILoggingEvent> encoder) {
+		this.encoder = encoder;
 	}
 
 	@Override
 	protected void append(ILoggingEvent eventObject) {
-		textbox.addLine(eventObject.getFormattedMessage());
+		if (textbox != null) {
+			textbox.addLine(new String(encoder.encode(eventObject)));
+		}
 	}
 
 }

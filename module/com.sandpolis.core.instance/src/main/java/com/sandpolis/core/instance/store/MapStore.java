@@ -38,7 +38,7 @@ public abstract class MapStore<K, V, E extends StoreConfig> extends StoreBase<E>
 
 	/**
 	 * Determine how many elements the store contains.
-	 * 
+	 *
 	 * @return The number of elements in the store
 	 */
 	public long count() {

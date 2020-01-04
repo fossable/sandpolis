@@ -30,4 +30,8 @@ open module com.sandpolis.viewer.ascetic {
 	requires transitive logback.classic;
 	requires transitive logback.core;
 	requires transitive org.slf4j;
+	requires io.netty.transport;
+	requires io.netty.common;
+
+	provides ch.qos.logback.classic.spi.Configurator with com.sandpolis.viewer.ascetic.logging.LoggingConfigurator;
 }

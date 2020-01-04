@@ -107,7 +107,7 @@ public final class InstallUtil {
 
 	/**
 	 * Execute a system command.
-	 * 
+	 *
 	 * @param cmd The command to execute
 	 * @return A new process
 	 * @throws IOException

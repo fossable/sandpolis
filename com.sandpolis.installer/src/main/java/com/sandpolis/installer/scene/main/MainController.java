@@ -90,8 +90,8 @@ public class MainController {
 
 	private ChangeListener<Boolean> refreshScene = (ObservableValue<? extends Boolean> p, Boolean o, Boolean n) -> {
 		// Ensure at least one box is checked
-		btn_install.setDisable((!chk_server.isSelected() && !chk_viewer_jfx.isSelected() && !chk_viewer_ascetic.isSelected()
-				&& !chk_client.isSelected()) || qrTask != null);
+		btn_install.setDisable((!chk_server.isSelected() && !chk_viewer_jfx.isSelected()
+				&& !chk_viewer_ascetic.isSelected() && !chk_client.isSelected()) || qrTask != null);
 	};
 
 	private ChangeListener<Boolean> refreshClient = (ObservableValue<? extends Boolean> p, Boolean o, Boolean n) -> {

@@ -172,7 +172,7 @@ public final class Server {
 	});
 
 	/**
-	 * 
+	 *
 	 */
 	@InitializationTask(name = "Install administrator user", fatal = true)
 	public static final Task installAdminUser = new Task((task) -> {

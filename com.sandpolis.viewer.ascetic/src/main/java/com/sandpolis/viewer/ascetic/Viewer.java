@@ -13,21 +13,31 @@ package com.sandpolis.viewer.ascetic;
 
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
-import com.sandpolis.core.instance.*;
+import java.io.IOException;
+import java.util.concurrent.Executors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.lanterna.gui2.AsynchronousTextGUIThread;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
-import com.googlecode.lanterna.gui2.SeparateTextGUIThread;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import com.sandpolis.core.instance.BasicTasks;
+import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.ipc.task.IPCTask;
-import com.sandpolis.viewer.ascetic.view.main.MainWindow;
+import com.sandpolis.viewer.ascetic.view.log.LogPanel;
+import com.sandpolis.viewer.ascetic.view.login.LoginWindow;
+
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 
 /**
  * @author cilki
@@ -45,6 +55,7 @@ public final class Viewer {
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
 		register(Viewer.loadEnvironment);
+		register(Viewer.loadStores);
 		register(Viewer.loadUserInterface);
 	}
 
@@ -61,20 +72,45 @@ public final class Viewer {
 	});
 
 	/**
+	 * Load static stores.
+	 */
+	@InitializationTask(name = "Load static stores", fatal = true)
+	private static final Task loadStores = new Task((task) -> {
+
+		ThreadStore.init(config -> {
+			config.ephemeral();
+			config.defaults.put("net.exelet", new NioEventLoopGroup(2));
+			config.defaults.put("net.connection.outgoing", new NioEventLoopGroup(2));
+			config.defaults.put("net.message.incoming", new UnorderedThreadPoolEventExecutor(2));
+			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
+		});
+
+		PluginStore.init(config -> {
+			config.ephemeral();
+		});
+
+		return task.success();
+	});
+
+	/**
 	 * Load and show the user interface.
 	 */
 	@InitializationTask(name = "Load user interface")
 	private static final Task loadUserInterface = new Task((task) -> {
-		Screen screen = new DefaultTerminalFactory().setForceTextTerminal(true).createScreen();
-		screen.startScreen();
 
-		WindowBasedTextGUI textGUI = new MultiWindowTextGUI(new SeparateTextGUIThread.Factory(), screen);
-		((AsynchronousTextGUIThread) textGUI.getGUIThread()).start();
+		new Thread(() -> {
+			try {
+				Screen screen = new DefaultTerminalFactory().setForceTextTerminal(true).createScreen();
+				WindowBasedTextGUI textGUI = new MultiWindowTextGUI(screen);
+				screen.startScreen();
 
-		// textGUI.addWindow(new LogPanel());
-		MainWindow window = new MainWindow();
-		textGUI.addWindow(window);
-		textGUI.updateScreen();
+				textGUI.addWindow(new LogPanel());
+				textGUI.addWindowAndWait(new LoginWindow());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}).start();
 
 		return task.success();
 	});

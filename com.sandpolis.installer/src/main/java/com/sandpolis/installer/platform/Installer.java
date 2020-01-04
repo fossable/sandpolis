@@ -101,7 +101,7 @@ public abstract class Installer {
 
 	/**
 	 * Execute the installed instance.
-	 * 
+	 *
 	 * @param launch The launch executable
 	 * @return A new process
 	 * @throws Exception
@@ -110,7 +110,7 @@ public abstract class Installer {
 
 	/**
 	 * Execute a command with elevated privileges if possible.
-	 * 
+	 *
 	 * @param cmd The command to execute
 	 * @return A new process
 	 * @throws Exception
@@ -121,7 +121,7 @@ public abstract class Installer {
 
 	/**
 	 * Inject the client configuration into the client executable.
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	protected void installClientConfig() throws Exception {
@@ -134,7 +134,7 @@ public abstract class Installer {
 
 	/**
 	 * Install a desktop entry.
-	 * 
+	 *
 	 * @param launch The path to the launch executable
 	 * @param icon   The icon path
 	 * @param name   The entry name
@@ -145,7 +145,7 @@ public abstract class Installer {
 
 	/**
 	 * Install a program icon.
-	 * 
+	 *
 	 * @return The icon path
 	 * @throws Exception
 	 */
@@ -153,7 +153,7 @@ public abstract class Installer {
 
 	/**
 	 * Install an executable that launches the instance.
-	 * 
+	 *
 	 * @return The launch executable path
 	 * @throws Exception
 	 */
@@ -163,7 +163,7 @@ public abstract class Installer {
 	 * Drop the admin credentials in a plaintext file in the database directory.
 	 * This isn't much of a security risk because the credentials will be moved to a
 	 * database in the same directory.
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	protected void installServerCredentials() throws Exception {

@@ -13,8 +13,12 @@ package com.sandpolis.viewer.ascetic.view.login;
 
 import static com.googlecode.lanterna.gui2.GridLayout.Alignment.BEGINNING;
 import static com.googlecode.lanterna.gui2.GridLayout.Alignment.CENTER;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 
 import java.util.Collections;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BasicWindow;
@@ -29,26 +33,33 @@ import com.googlecode.lanterna.gui2.LayoutData;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
 import com.googlecode.lanterna.gui2.Window;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
+import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.net.future.SockFuture;
+import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
+import com.sandpolis.viewer.ascetic.Viewer;
 
 public class LoginWindow extends BasicWindow {
 
+	public static final Logger log = LoggerFactory.getLogger(Viewer.class);
+
 	private TextBox fld_username;
 	private TextBox fld_password;
-
-	static {
-		MessageDialog badCert = new MessageDialogBuilder().setTitle("Certificate verification failed")
-				.setText("Verification of the server's certificate failed. Do you want to continue connecting?")
-				.build();
-	}
+	private TextBox fld_address;
+	private TextBox fld_port;
 
 	public LoginWindow() {
 		super("Login");
 		init();
+
+		if (Core.SO_BUILD.getDevelopment()) {
+			fld_username.setText("admin");
+			fld_password.setText("password");
+			fld_address.setText("127.0.0.1");
+			fld_port.setText("8768");
+		}
 	}
 
 	private void init() {
@@ -66,11 +77,11 @@ public class LoginWindow extends BasicWindow {
 			Label lbl_port = new Label("Port").setLayoutData(labelData);
 			server.addComponent(lbl_port);
 
-			TextBox fld_address = new TextBox().setPreferredSize(new TerminalSize(30, 1));
+			fld_address = new TextBox().setPreferredSize(new TerminalSize(30, 1));
 			fld_address.setLayoutData(GridLayout.createLayoutData(BEGINNING, BEGINNING, true, false, 1, 1));
 			server.addComponent(fld_address);
 
-			TextBox fld_port = new TextBox().setPreferredSize(new TerminalSize(6, 1))
+			fld_port = new TextBox().setPreferredSize(new TerminalSize(6, 1))
 					.setInputFilter((Interactable e, KeyStroke b) -> {
 						if (b.getKeyType() == KeyType.Character) {
 							return Character.isDigit(b.getCharacter()) && ((TextBox) e).getText().length() < 5;
@@ -113,16 +124,23 @@ public class LoginWindow extends BasicWindow {
 			Button btn_login = new Button("Login", () -> {
 				fld_username.setEnabled(false);
 				fld_password.setEnabled(false);
-				try {
 
-					LoginCmd.async().login(fld_username.getText(), fld_password.getText()).get();
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} finally {
-					fld_username.setEnabled(true);
-					fld_password.setEnabled(true);
-				}
+				String address = fld_address.getText();
+				int port = Integer.parseInt(fld_port.getText());
+				String username = fld_username.getText();
+				String password = fld_password.getText();
+
+				ConnectionStore.connect(address, port, false).addListener((SockFuture sockFuture) -> {
+					if (sockFuture.isSuccess()) {
+						LoginCmd.async().target(sockFuture.get()).login(username, password)
+								.addHandler((Outcome outcome) -> {
+									// TODO
+								});
+					}
+				});
+
+				fld_username.setEnabled(true);
+				fld_password.setEnabled(true);
 			});
 			buttons.addComponent(btn_login, BorderLayout.Location.RIGHT);
 
