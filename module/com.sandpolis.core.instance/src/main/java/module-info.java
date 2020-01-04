@@ -12,6 +12,7 @@
 open module com.sandpolis.core.instance {
 	exports com.sandpolis.core.instance.event;
 	exports com.sandpolis.core.instance.idle;
+	exports com.sandpolis.core.instance.logging;
 	exports com.sandpolis.core.instance.plugin;
 	exports com.sandpolis.core.instance.storage.database.converter;
 	exports com.sandpolis.core.instance.storage.database;
@@ -32,6 +33,11 @@ open module com.sandpolis.core.instance {
 	requires java.persistence;
 	requires java.prefs;
 	requires org.slf4j;
+	requires logback.classic;
+	requires logback.core;
 
 	uses com.sandpolis.core.instance.plugin.SandpolisPlugin;
+
+	provides ch.qos.logback.classic.spi.Configurator
+			with com.sandpolis.core.instance.logging.InstanceLoggingConfigurator;
 }
