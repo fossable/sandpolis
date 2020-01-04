@@ -42,8 +42,6 @@ import com.sandpolis.core.proto.util.Result.Outcome;
  */
 public final class MainDispatch {
 
-	public static final Logger log = LoggerFactory.getLogger(MainDispatch.class);
-
 	/**
 	 * A configurable list of tasks that initialize the instance.
 	 */
@@ -131,7 +129,10 @@ public final class MainDispatch {
 		MainDispatch.instance = Objects.requireNonNull(instance);
 		MainDispatch.flavor = Objects.requireNonNull(flavor);
 
-		long timestamp = System.currentTimeMillis();
+		final long timestamp = System.currentTimeMillis();
+
+		// The logger must be initialized after setting the main class
+		final Logger log = LoggerFactory.getLogger(MainDispatch.class);
 
 		// Pass main arguments to the Config class
 		Config.setArguments(args);
@@ -177,7 +178,7 @@ public final class MainDispatch {
 
 				if (!task.outcome.isSkipped() && !outcome.getOutcome().getResult() && task.initMetadata.fatal()) {
 					log.error("A fatal error has occurred in task: {}", task.initMetadata.name());
-					logTaskSummary();
+					logTaskSummary(log);
 					System.exit(1);
 				}
 			}
@@ -185,11 +186,11 @@ public final class MainDispatch {
 
 		// Print task summary if any task failed
 		if (tasks.stream().filter(t -> !t.outcome.getOutcome().getResult()).count() != 0)
-			logTaskSummary();
+			logTaskSummary(log);
 
 		// Print task summary if required
 		else if (!Config.has("logging.startup.summary") || !Config.getBoolean("logging.startup.summary"))
-			logTaskSummary();
+			logTaskSummary(log);
 
 		// Launch idle loop
 		if (idle != null)
@@ -204,7 +205,7 @@ public final class MainDispatch {
 	/**
 	 * Build a summary for {@link #tasks} and write to log.
 	 */
-	private static void logTaskSummary() {
+	private static void logTaskSummary(Logger log) {
 		if (tasks.isEmpty()) {
 			log.warn("Skipping task summary: no tasks were registered");
 			return;
