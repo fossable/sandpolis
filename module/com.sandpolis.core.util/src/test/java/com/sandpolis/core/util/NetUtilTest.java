@@ -13,10 +13,13 @@ package com.sandpolis.core.util;
 
 import static com.sandpolis.core.util.NetUtil.checkPort;
 import static com.sandpolis.core.util.NetUtil.download;
+import static com.sandpolis.core.util.NetUtil.serviceName;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -65,6 +68,15 @@ class NetUtilTest {
 		}
 
 		assertFalse(checkPort("127.0.0.1", 8923));
+	}
+
+	@Test
+	@DisplayName("Check well-known service names")
+	void serviceName_1() {
+		assumeTrue(System.getProperty("os.name").toLowerCase().contains("linux"));
+
+		assertEquals("ssh", serviceName(22).get());
+		assertEquals("sandpolis", serviceName(8768).get());
 	}
 
 }

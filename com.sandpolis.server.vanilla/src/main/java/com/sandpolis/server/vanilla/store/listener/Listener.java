@@ -35,6 +35,7 @@ import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
 import com.sandpolis.core.proto.pojo.Listener.ListenerStats;
 import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
 import com.sandpolis.core.proto.util.Result.ErrorCode;
+import com.sandpolis.core.util.NetUtil;
 import com.sandpolis.server.vanilla.net.init.ServerChannelInitializer;
 import com.sandpolis.server.vanilla.store.user.User;
 
@@ -171,7 +172,11 @@ public class Listener implements ProtoType<ProtoListener> {
 		if (isListening())
 			throw new IllegalStateException();
 
-		log.debug("Starting listener on port: {}", port);
+		NetUtil.serviceName(port).ifPresentOrElse(name -> {
+			log.debug("Starting listener on port: {} ({})", port, name);
+		}, () -> {
+			log.debug("Starting listener on port: {}", port);
+		});
 
 		parentLoopGroup = Transport.INSTANCE.getEventLoopGroup();
 		childLoopGroup = Transport.INSTANCE.getEventLoopGroup();
