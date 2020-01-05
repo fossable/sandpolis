@@ -177,7 +177,6 @@ public final class MainDispatch {
 				}
 
 				if (!task.outcome.isSkipped() && !outcome.getOutcome().getResult() && task.initMetadata.fatal()) {
-					log.error("A fatal error has occurred in task: {}", task.initMetadata.name());
 					logTaskSummary(log);
 					System.exit(1);
 				}
@@ -217,6 +216,7 @@ public final class MainDispatch {
 
 		for (Task task : tasks) {
 			if (task.outcome == null) {
+				// The task did not run
 				log.info(String.format(descFormat + "      ( ---- ms)", task.initMetadata.name()));
 				continue;
 			}
@@ -240,8 +240,24 @@ public final class MainDispatch {
 				log.info(line);
 			} else {
 				log.error(line);
-				if (!outcome.getException().isEmpty())
-					log.error(outcome.getException());
+			}
+		}
+
+		// Log any failure messages/exceptions
+		for (Task task : tasks) {
+			if (task.outcome != null && !task.outcome.isSkipped()) {
+				Outcome outcome = task.outcome.getOutcome();
+
+				if (!outcome.getResult()) {
+					if (!outcome.getException().isEmpty())
+						log.error("An exception occurred in task \"{}\":\n{}", task.initMetadata.name(),
+								outcome.getException());
+					else if (!outcome.getComment().isEmpty())
+						log.error("An error occurred in task \"{}\": {}", task.initMetadata.name(),
+								outcome.getComment());
+					else
+						log.error("An unknown error occurred in task \"{}\"", task.initMetadata.name());
+				}
 			}
 		}
 	}
