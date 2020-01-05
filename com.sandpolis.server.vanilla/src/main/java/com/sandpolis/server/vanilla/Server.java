@@ -128,7 +128,7 @@ public final class Server {
 	 * Load the Server instance's configuration.
 	 */
 	@InitializationTask(name = "Load server configuration", fatal = true)
-	public static final Task loadConfiguration = new Task((task) -> {
+	public static final Task loadConfiguration = new Task(outcome -> {
 		Config.register("server.db.provider", "hibernate");
 		Config.register("server.db.url");
 		Config.register("server.db.username");
@@ -144,14 +144,14 @@ public final class Server {
 		Config.register("path.db");
 		Config.register("path.gen");
 
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Check the runtime environment for fatal errors.
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
-	public static final Task loadEnvironment = new Task((task) -> {
+	public static final Task loadEnvironment = new Task(outcome -> {
 
 		Environment.LIB.set(Config.get("path.lib")).requireReadable();
 		Environment.DB.set(Config.get("path.db")).requireWritable();
@@ -159,55 +159,60 @@ public final class Server {
 		Environment.LOG.set(Config.get("path.log")).requireWritable();
 		Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
 		Environment.TMP.set(Config.get("path.tmp")).requireWritable();
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Set a new CVID.
 	 */
 	@InitializationTask(name = "Generate instance CVID", fatal = true)
-	public static final Task generateCvid = new Task((task) -> {
+	public static final Task generateCvid = new Task(outcome -> {
 		Core.setCvid(CvidUtil.cvid(Instance.SERVER));
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
-	 *
+	 * Install the administrator user from a credentials file located in the
+	 * database directory.
 	 */
 	@InitializationTask(name = "Install administrator user", fatal = true)
-	public static final Task installAdminUser = new Task((task) -> {
+	public static final Task installAdminUser = new Task(outcome -> {
 		Path install = Environment.DB.path().resolve("install.txt");
 		if (!Files.exists(install))
-			return task.skipped();
+			return outcome.skipped();
 
 		try {
 			var lines = Files.readAllLines(install);
 			if (lines.size() != 2)
-				return task.failure("File format error");
+				return outcome.failure("File format error");
 
 			if (UserStore.count() != 0) {
-				return task.failure("UserStore not empty");
+				return outcome.failure("UserStore not empty");
 			}
-			UserStore.add(UserConfig.newBuilder().setUsername(lines.get(0)).setPassword(lines.get(1)));
+
+			String username = lines.get(0);
+			String password = lines.get(1);
+
+			UserStore.add(UserConfig.newBuilder().setUsername(username).setPassword(password));
 			ListenerStore.add(ListenerConfig.newBuilder().setId(1).setPort(8768).setAddress("0.0.0.0")
-					.setOwner(lines.get(0)).setName("Default Listener").setEnabled(true).build());
+					.setOwner(username).setName("Default Listener").setEnabled(true).build());
 		} finally {
 			try {
 				Files.delete(install);
 			} catch (IOException e) {
 				log.error("Failed to delete install credentials!");
-				return task.failure(e);
+				return outcome.failure(e);
 			}
 		}
 
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Load static stores.
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
-	public static final Task loadServerStores = new Task((task) -> {
+	public static final Task loadServerStores = new Task(outcome -> {
 
 		ThreadStore.init(config -> {
 			config.ephemeral();
@@ -306,11 +311,11 @@ public final class Server {
 			config.cacheExpiration = Duration.ofDays(10);
 		});
 
-		return task.success();
+		return outcome.success();
 	});
 
 	@ShutdownTask
-	public static final Task shutdown = new Task((task) -> {
+	public static final Task shutdown = new Task(outcome -> {
 		NetworkStore.close();
 		ConnectionStore.close();
 		PrefStore.close();
@@ -323,36 +328,35 @@ public final class Server {
 		PluginStore.close();
 		ThreadStore.close();
 
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Load socket listeners.
 	 */
 	@InitializationTask(name = "Load socket listeners")
-	public static final Task loadListeners = new Task((task) -> {
-		// TODO debug listener
+	public static final Task loadListeners = new Task(outcome -> {
 		ListenerStore.start();
 
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Load plugins.
 	 */
 	@InitializationTask(name = "Load server plugins", condition = "plugin.enabled")
-	public static final Task loadPlugins = new Task((task) -> {
+	public static final Task loadPlugins = new Task(outcome -> {
 		PluginStore.scanPluginDirectory();
 		PluginStore.loadPlugins();
 
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Install a debug client on the local machine.
 	 */
 	@InitializationTask(name = "Install debug client", development = true, condition = "server.debug_client")
-	public static final Task installDebugClient = new Task((task) -> {
+	public static final Task installDebugClient = new Task(outcome -> {
 
 		// Create user and listener
 		if (UserStore.get("admin").isEmpty())
@@ -388,9 +392,9 @@ public final class Server {
 			// Execute
 			Runtime.getRuntime()
 					.exec(new String[] { "java", "-jar", Environment.GEN.path().resolve("0.jar").toString() });
-			return task.success();
+			return outcome.success();
 		} else {
-			return task.failure(generator.getReport().getComment());
+			return outcome.failure(generator.getReport().getComment());
 		}
 	});
 

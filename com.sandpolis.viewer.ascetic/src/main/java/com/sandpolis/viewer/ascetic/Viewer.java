@@ -63,19 +63,19 @@ public final class Viewer {
 	 * Load the runtime environment.
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
-	private static final Task loadEnvironment = new Task((task) -> {
+	private static final Task loadEnvironment = new Task(outcome -> {
 
 		Environment.LIB.requireReadable();
 		Environment.LOG.set(Config.get("path.log")).requireWritable();
 		Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Load static stores.
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
-	private static final Task loadStores = new Task((task) -> {
+	private static final Task loadStores = new Task(outcome -> {
 
 		ThreadStore.init(config -> {
 			config.ephemeral();
@@ -89,14 +89,14 @@ public final class Viewer {
 			config.ephemeral();
 		});
 
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Load and show the user interface.
 	 */
 	@InitializationTask(name = "Load user interface")
-	private static final Task loadUserInterface = new Task((task) -> {
+	private static final Task loadUserInterface = new Task(outcome -> {
 
 		new Thread(() -> {
 			try {
@@ -112,7 +112,7 @@ public final class Viewer {
 			}
 		}).start();
 
-		return task.success();
+		return outcome.success();
 	});
 
 	private Viewer() {

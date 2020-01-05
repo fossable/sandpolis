@@ -67,19 +67,19 @@ public final class Viewer {
 	 * Load the runtime environment.
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
-	private static final Task loadEnvironment = new Task((task) -> {
+	private static final Task loadEnvironment = new Task(outcome -> {
 
 		Environment.LIB.requireReadable();
 		Environment.LOG.set(Config.get("path.log")).requireWritable();
 		Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Load static stores.
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
-	private static final Task loadStores = new Task((task) -> {
+	private static final Task loadStores = new Task(outcome -> {
 
 		ThreadStore.init(config -> {
 			config.ephemeral();
@@ -131,11 +131,11 @@ public final class Viewer {
 			config.ephemeral();
 		});
 
-		return task.success();
+		return outcome.success();
 	});
 
 	@ShutdownTask
-	public static final Task shutdown = new Task((task) -> {
+	public static final Task shutdown = new Task(outcome -> {
 		NetworkStore.close();
 		ConnectionStore.close();
 		PrefStore.close();
@@ -143,7 +143,7 @@ public final class Viewer {
 		ProfileStore.close();
 		ThreadStore.close();
 
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
@@ -152,11 +152,11 @@ public final class Viewer {
 	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load viewer plugins", condition = "plugin.enabled")
-	private static final Task loadPlugins = new Task((task) -> {
+	private static final Task loadPlugins = new Task(outcome -> {
 		PluginStore.scanPluginDirectory();
 		PluginStore.loadPlugins();
 
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
@@ -165,10 +165,10 @@ public final class Viewer {
 	 * @return The task's outcome
 	 */
 	@InitializationTask(name = "Load user interface")
-	private static final Task loadUserInterface = new Task((task) -> {
+	private static final Task loadUserInterface = new Task(outcome -> {
 		new Thread(() -> Application.launch(UI.class)).start();
 
-		return task.success();
+		return outcome.success();
 	});
 
 	/**

@@ -93,7 +93,7 @@ public final class Client {
 	 * Load the runtime environment.
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
-	public static final Task loadEnvironment = new Task((task) -> {
+	public static final Task loadEnvironment = new Task(outcome -> {
 
 		if (SO_CONFIG.getMemory()) {
 			Environment.LIB.set(null);
@@ -107,14 +107,14 @@ public final class Client {
 			Environment.LOG.set(Config.get("path.log")).requireWritable();
 			Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
 		}
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Load static stores.
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
-	public static final Task loadStores = new Task((task) -> {
+	public static final Task loadStores = new Task(outcome -> {
 
 		ThreadStore.init(config -> {
 			config.ephemeral();
@@ -189,30 +189,30 @@ public final class Client {
 			}
 		});
 
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Load plugins.
 	 */
 	@InitializationTask(name = "Load client plugins", condition = "plugin.enabled")
-	public static final Task loadPlugins = new Task((task) -> {
+	public static final Task loadPlugins = new Task(outcome -> {
 		PluginStore.scanPluginDirectory();
 		PluginStore.loadPlugins();
 
-		return task.success();
+		return outcome.success();
 	});
 
 	/**
 	 * Begin the connection routine.
 	 */
 	@InitializationTask(name = "Begin the connection routine", fatal = true)
-	public static final Task beginConnectionRoutine = new Task((task) -> {
+	public static final Task beginConnectionRoutine = new Task(outcome -> {
 		// Temporary
 		ClientChannelInitializer.setExelets(new Class[] { ClientExe.class });
 
 		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig());
-		return task.success();
+		return outcome.success();
 	});
 
 	private Client() {
