@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.sandpolis.core.proto.net.MsgPlugin.PluginDescriptor;
+import com.sandpolis.core.viewer.cmd.PluginCmd;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 
 import javafx.beans.property.BooleanProperty;
@@ -33,7 +34,11 @@ public class PluginPhaseController extends AbstractController {
 		private final StringProperty name = new SimpleStringProperty(this, "name");
 		private final StringProperty trust = new SimpleStringProperty(this, "trust");
 
+		private final PluginDescriptor descriptor;
+
 		public PluginProperty(PluginDescriptor descriptor) {
+			this.descriptor = descriptor;
+
 			name.set(descriptor.getName());
 			description.set(descriptor.getDescription());
 			trust.set(descriptor.getTrustAuthority());
@@ -67,9 +72,11 @@ public class PluginPhaseController extends AbstractController {
 	}
 
 	public void install() {
+		plugins.setDisable(true);
+
 		plugins.getItems().forEach(plugin -> {
 			if (plugin.install.get()) {
-				// TODO PluginCmd
+				PluginCmd.async().install(plugin.descriptor.getCoordinate());
 			}
 		});
 	}

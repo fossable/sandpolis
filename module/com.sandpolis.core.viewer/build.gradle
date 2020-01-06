@@ -35,6 +35,7 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.ipc')
 	implementation project(':module:com.sandpolis.core.net')
 	implementation project(':module:com.sandpolis.core.proto')
+	implementation project(':module:com.sandpolis.core.soi')
 	implementation project(':module:com.sandpolis.core.stream')
 	implementation project(':module:com.sandpolis.core.util')
 

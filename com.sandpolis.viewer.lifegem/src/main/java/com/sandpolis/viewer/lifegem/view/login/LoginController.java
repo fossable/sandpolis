@@ -146,7 +146,7 @@ public class LoginController extends FxController {
 					.login(userPhaseController.getUsername(), userPhaseController.getPassword())
 					.addHandler((Outcome rs) -> {
 						if (rs.getResult()) {
-							PluginCmd.async().enumerate().addHandler((RS_PluginList rs2) -> {
+							PluginCmd.async().pool("ui.fx_thread").enumerate().addHandler((RS_PluginList rs2) -> {
 
 								var newPlugins = rs2.getPluginList().stream().filter(descriptor -> {
 									return PluginStore.get(descriptor.getId()).isEmpty();

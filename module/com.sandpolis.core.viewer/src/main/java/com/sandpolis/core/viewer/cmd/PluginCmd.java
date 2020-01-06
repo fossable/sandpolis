@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.mega.cmd;
+package com.sandpolis.core.viewer.cmd;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
@@ -43,38 +43,12 @@ import com.sandpolis.core.util.NetUtil;
 public final class PluginCmd extends Cmdlet<PluginCmd> {
 
 	/**
-	 * Initiate plugin synchronization. Any plugins that are missing from the
-	 * {@link PluginStore} will be downloaded and installed (but not loaded).
-	 *
-	 * @return The command future
-	 */
-	public CommandFuture sync() {
-		var session = begin();
-
-		session.request(RQ_PluginList.newBuilder(), (RS_PluginList rs) -> {
-			rs.getPluginList().stream().filter(descriptor -> {
-				Optional<Plugin> plugin = PluginStore.get(descriptor.getId());
-				if (plugin.isEmpty())
-					return true;
-
-				// Check versions
-				return !plugin.get().getVersion().equals(descriptor.getVersion());
-			}).forEach(descriptor -> {
-				if (PluginStore.get(descriptor.getId()).isEmpty())
-					session.sub(install(descriptor.getCoordinate()));
-			});
-		});
-
-		return session;
-	}
-
-	/**
 	 * Download a plugin to the plugin directory.
 	 *
 	 * @param gav The plugin coordinate
 	 * @return The command future
 	 */
-	// Duplicated in com.sandpolis.core.viewer.cmd.PluginCmd
+	// Duplicated in com.sandpolis.client.mega.cmd.PluginCmd
 	public CommandFuture install(String gav) {
 		checkNotNull(gav);
 		var session = begin();
@@ -91,7 +65,7 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 	 *
 	 * @return The command future
 	 */
-	// Duplicated in com.sandpolis.core.viewer.cmd.PluginCmd
+	// Duplicated in com.sandpolis.client.mega.cmd.PluginCmd
 	public CommandFuture installDependency(String gav) {
 		checkNotNull(gav);
 		var session = begin();
@@ -130,6 +104,15 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 		});
 
 		return session;
+	}
+
+	/**
+	 * List all installed plugins.
+	 *
+	 * @return A future that will receive the outcome of this action
+	 */
+	public ResponseFuture<RS_PluginList> enumerate() {
+		return request(RQ_PluginList.newBuilder());
 	}
 
 	/**
