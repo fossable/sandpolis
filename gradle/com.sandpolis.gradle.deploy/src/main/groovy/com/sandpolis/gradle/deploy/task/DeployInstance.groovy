@@ -21,7 +21,7 @@ class DeployInstance extends RemoteTask {
 		project_deploy.ssh.run {
 			session(rhost) {
 				// Kill the process
-				execute 'pkill -9 -f "java -jar ' + directory + '"', ignoreError: true
+				execute 'pkill -9 -f "java --module-path ' + directory + '/lib"', ignoreError: true
 
 				// Reset working directory
 				remove directory
@@ -51,7 +51,7 @@ class DeployInstance extends RemoteTask {
 		project_deploy.ssh.run {
 			session(rhost) {
 				// Kill the process
-				execute "wmic path win32_process where \"CommandLine Like '%${project_deploy.name}.jar%'\" call terminate", ignoreError: true
+				execute "wmic path win32_process where \"CommandLine Like '%java --module-path " + directory + "/lib%'\" call terminate", ignoreError: true
 
 				// Reset working directory
 				remove directory
