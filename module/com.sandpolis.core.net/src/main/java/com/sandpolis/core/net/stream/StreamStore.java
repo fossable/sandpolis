@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.stream.store;
+package com.sandpolis.core.net.stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
@@ -27,7 +27,7 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
-import com.sandpolis.core.stream.store.StreamStore.StreamStoreConfig;
+import com.sandpolis.core.net.stream.StreamStore.StreamStoreConfig;
 
 /**
  * The {@link StreamStore} contains four "banks" of stream endpoints that each

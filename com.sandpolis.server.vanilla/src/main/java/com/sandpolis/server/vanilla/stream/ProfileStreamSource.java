@@ -17,17 +17,14 @@ import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
+import com.sandpolis.core.net.stream.StreamSource;
 import com.sandpolis.core.profile.AK_CLIENT;
 import com.sandpolis.core.profile.AK_INSTANCE;
 import com.sandpolis.core.profile.store.Events.ProfileOnlineEvent;
 import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.core.proto.net.MsgStream.EV_ProfileStream;
 import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.stream.store.StreamSource;
-import com.sandpolis.server.vanilla.store.location.AbstractGeolocationService;
 import com.sandpolis.server.vanilla.store.location.LocationStore;
-
-import java.io.IOException;
 
 /**
  * Represents the origin of a profile stream. This source can be safely stopped
@@ -49,7 +46,6 @@ public class ProfileStreamSource extends StreamSource<EV_ProfileStream> {
 		ProfileStore.register(this);
 		ConnectionStore.register(this);
 
-		// TODO temporary
 		// Send existing profiles
 		ProfileStore.stream().filter(profile -> profile.getInstance() == Instance.CLIENT)
 				.forEach(this::onProfileOnline);

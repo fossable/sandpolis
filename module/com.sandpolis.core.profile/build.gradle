@@ -42,8 +42,8 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
 
 	implementation project(':module:com.sandpolis.core.instance')
+	implementation project(':module:com.sandpolis.core.net')
 	implementation project(':module:com.sandpolis.core.proto')
-	implementation project(':module:com.sandpolis.core.stream')
 	implementation project(':module:com.sandpolis.core.util')
 
 	// https://github.com/google/guava

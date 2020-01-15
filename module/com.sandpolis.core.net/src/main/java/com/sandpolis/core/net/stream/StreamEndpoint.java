@@ -9,23 +9,15 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.stream;
+package com.sandpolis.core.net.stream;
 
-import com.sandpolis.core.util.IDUtil;
+public interface StreamEndpoint {
 
-/**
- * @author cilki
- * @since 5.0.2
- */
-public class Stream {
+	/**
+	 * Get the StreamID of the stream that this endpoint is a member of.
+	 *
+	 * @return The endpoint's stream ID
+	 */
+	public int getStreamID();
 
-	private int streamID;
-
-	public Stream() {
-		streamID = IDUtil.stream();
-	}
-
-	public int getStreamID() {
-		return streamID;
-	}
 }

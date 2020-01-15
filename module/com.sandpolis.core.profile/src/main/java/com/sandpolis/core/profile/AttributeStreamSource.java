@@ -18,9 +18,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import com.sandpolis.core.net.stream.StreamSource;
 import com.sandpolis.core.profile.attribute.key.AttributeKey;
 import com.sandpolis.core.proto.net.MsgAttribute.EV_AttributeStream;
-import com.sandpolis.core.stream.store.StreamSource;
 
 public class AttributeStreamSource extends StreamSource<EV_AttributeStream> {
 

@@ -17,7 +17,6 @@ module com.sandpolis.core.viewer {
 	requires com.sandpolis.core.ipc;
 	requires com.sandpolis.core.net;
 	requires com.sandpolis.core.proto;
-	requires com.sandpolis.core.stream;
 	requires com.sandpolis.core.util;
 	requires com.google.common;
 	requires com.sandpolis.core.soi;

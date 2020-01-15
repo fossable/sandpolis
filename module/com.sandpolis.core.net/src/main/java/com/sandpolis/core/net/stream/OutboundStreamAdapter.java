@@ -9,10 +9,10 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.stream.store;
+package com.sandpolis.core.net.stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
+import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
@@ -27,20 +27,11 @@ import com.sandpolis.core.proto.net.Message.MSG;
 
 public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscriber<E>, StreamEndpoint {
 
+	private int cvid;
 	private int id;
+	private Function<E, Any> pluginPacker;
 	private Sock sock;
 	private Subscription subscription;
-	private Function<E, Any> pluginPacker;
-	private int cvid;
-
-	@Override
-	public int getStreamID() {
-		return id;
-	}
-
-	public Sock getSock() {
-		return sock;
-	}
 
 	public OutboundStreamAdapter(int streamID, Sock sock) {
 		this.id = streamID;
@@ -54,10 +45,18 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 		this.cvid = cvid;
 	}
 
+	public Sock getSock() {
+		return sock;
+	}
+
 	@Override
-	public void onSubscribe(Subscription subscription) {
-		this.subscription = subscription;
-		this.subscription.request(Long.MAX_VALUE);
+	public int getStreamID() {
+		return id;
+	}
+
+	@Override
+	public void onComplete() {
+		StreamStore.stop(id);
 	}
 
 	@Override
@@ -67,15 +66,16 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 	}
 
 	@Override
-	public void onComplete() {
-		StreamStore.stop(id);
-	}
-
-	@Override
 	public void onNext(E item) {
 		if (pluginPacker == null)
 			sock.send(ProtoUtil.setPayload(MSG.newBuilder().setId(id), item));
 		else
 			sock.send(MSG.newBuilder().setTo(cvid).setFrom(Core.cvid()).setId(id).setPlugin(pluginPacker.apply(item)));
+	}
+
+	@Override
+	public void onSubscribe(Subscription subscription) {
+		this.subscription = subscription;
+		this.subscription.request(Long.MAX_VALUE);
 	}
 }

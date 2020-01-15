@@ -14,7 +14,7 @@ package com.sandpolis.plugin.desktop.client.mega.exe;
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
-import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
+import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -29,7 +29,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.stream.store.OutboundStreamAdapter;
+import com.sandpolis.core.net.stream.OutboundStreamAdapter;
 import com.sandpolis.plugin.desktop.client.mega.JavaDesktopSource;
 import com.sandpolis.plugin.desktop.net.MessageDesktop.DesktopMSG;
 import com.sandpolis.plugin.desktop.net.MsgDesktop.RQ_Screenshot;

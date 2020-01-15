@@ -14,7 +14,7 @@ package com.sandpolis.plugin.shell.client.mega.exe;
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
-import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
+import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import java.io.InputStreamReader;
 
@@ -25,8 +25,8 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.stream.store.InboundStreamAdapter;
-import com.sandpolis.core.stream.store.OutboundStreamAdapter;
+import com.sandpolis.core.net.stream.InboundStreamAdapter;
+import com.sandpolis.core.net.stream.OutboundStreamAdapter;
 import com.sandpolis.plugin.shell.client.mega.Shells;
 import com.sandpolis.plugin.shell.client.mega.stream.ShellStreamSink;
 import com.sandpolis.plugin.shell.client.mega.stream.ShellStreamSource;

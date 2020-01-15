@@ -9,15 +9,34 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-open module com.sandpolis.core.stream {
-	exports com.sandpolis.core.stream.store;
-	exports com.sandpolis.core.stream;
+package com.sandpolis.core.net.stream;
 
-	requires com.google.common;
-	requires com.google.protobuf;
-	requires com.sandpolis.core.instance;
-	requires com.sandpolis.core.net;
-	requires com.sandpolis.core.proto;
-	requires com.sandpolis.core.util;
-	requires org.slf4j;
+import java.util.concurrent.SubmissionPublisher;
+
+import com.google.protobuf.MessageOrBuilder;
+
+/**
+ * @author cilki
+ * @since 5.0.2
+ */
+public abstract class StreamSource<E extends MessageOrBuilder> extends SubmissionPublisher<E>
+		implements StreamEndpoint {
+
+	private int id;
+
+	@Override
+	public int getStreamID() {
+		return id;
+	}
+
+	/**
+	 * Begin the flow of events from the source.
+	 */
+	public abstract void start();
+
+	/**
+	 * Immediately halt the flow of events from the source.
+	 */
+	public abstract void stop();
+
 }

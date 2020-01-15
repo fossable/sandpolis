@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import com.google.protobuf.ByteString;
-import com.sandpolis.core.stream.store.StreamSource;
+import com.sandpolis.core.net.stream.StreamSource;
 import com.sandpolis.plugin.desktop.net.MsgRd.DirtyBlock;
 import com.sandpolis.plugin.desktop.net.MsgRd.EV_DesktopStream;
 import com.sandpolis.plugin.desktop.net.MsgRd.RQ_DesktopStream.ColorMode;

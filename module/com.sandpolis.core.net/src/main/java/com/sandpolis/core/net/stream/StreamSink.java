@@ -9,10 +9,11 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.stream.store;
+package com.sandpolis.core.net.stream;
 
-import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
+import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
@@ -20,28 +21,31 @@ import java.util.function.Consumer;
 
 public abstract class StreamSink<E> implements Subscriber<E>, StreamEndpoint {
 
-	private int id;
 	private List<Consumer<E>> handlers;
+	private int id;
 	private Subscription subscription;
 
-	@Override
-	public int getStreamID() {
-		return id;
+	public StreamSink() {
+		this.handlers = new ArrayList<>();
 	}
 
 	public void addHandler(Consumer<E> handler) {
 		handlers.add(handler);
 	}
 
-	@Override
-	public void onSubscribe(Subscription subscription) {
-		this.subscription = subscription;
-		this.subscription.request(Long.MAX_VALUE);
+	public void close() {
+		subscription.cancel();
+		subscription = null;
 	}
 
 	@Override
-	public void onNext(E item) {
-		handlers.forEach(handler -> handler.accept(item));
+	public int getStreamID() {
+		return id;
+	}
+
+	@Override
+	public void onComplete() {
+		StreamStore.stop(id);
 	}
 
 	@Override
@@ -51,12 +55,13 @@ public abstract class StreamSink<E> implements Subscriber<E>, StreamEndpoint {
 	}
 
 	@Override
-	public void onComplete() {
-		StreamStore.stop(id);
+	public void onNext(E item) {
+		handlers.forEach(handler -> handler.accept(item));
 	}
 
-	public void close() {
-		subscription.cancel();
-		subscription = null;
+	@Override
+	public void onSubscribe(Subscription subscription) {
+		this.subscription = subscription;
+		this.subscription.request(Long.MAX_VALUE);
 	}
 }

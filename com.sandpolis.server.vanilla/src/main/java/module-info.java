@@ -35,7 +35,6 @@ open module com.sandpolis.server.vanilla {
 	requires com.sandpolis.core.proto;
 	requires com.sandpolis.core.soi;
 	requires com.sandpolis.core.storage.hibernate;
-	requires com.sandpolis.core.stream;
 	requires com.sandpolis.core.util;
 	requires io.netty.buffer;
 	requires io.netty.codec;

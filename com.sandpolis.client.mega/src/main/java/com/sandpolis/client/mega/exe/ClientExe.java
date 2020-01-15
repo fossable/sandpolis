@@ -13,7 +13,7 @@ package com.sandpolis.client.mega.exe;
 
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
-import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
+import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import java.net.InetAddress;
 
@@ -25,6 +25,7 @@ import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.net.stream.OutboundStreamAdapter;
 import com.sandpolis.core.profile.AttributeStreamSource;
 import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.proto.net.MsgAttribute.EV_AttributeStream;
@@ -33,7 +34,6 @@ import com.sandpolis.core.proto.net.MsgAttribute.RQ_AttributeStream;
 import com.sandpolis.core.proto.net.MsgAttribute.RS_AttributeQuery;
 import com.sandpolis.core.proto.net.MsgClient.RQ_ClientMetadata;
 import com.sandpolis.core.proto.net.MsgClient.RS_ClientMetadata;
-import com.sandpolis.core.stream.store.OutboundStreamAdapter;
 
 public final class ClientExe extends Exelet {
 
