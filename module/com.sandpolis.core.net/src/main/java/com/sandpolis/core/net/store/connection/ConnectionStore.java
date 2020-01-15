@@ -46,6 +46,11 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 
 	public static final Logger log = LoggerFactory.getLogger(ConnectionStore.class);
 
+	/**
+	 * The store's default channel initializer.
+	 */
+	private ClientChannelInitializer initializer;
+
 	public ConnectionStore() {
 		super(log);
 	}
@@ -73,9 +78,7 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 	 * @return The future of the action
 	 */
 	public SockFuture connect(String address, int port, boolean strictCerts) {
-		return connect(new Bootstrap().remoteAddress(address, port)
-				// TODO use static pipeline initializer defined somewhere
-				.handler(new ClientChannelInitializer(strictCerts)));
+		return connect(new Bootstrap().remoteAddress(address, port).handler(initializer));
 	}
 
 	/**
@@ -88,9 +91,7 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 	public ConnectionLoop connect(LoopConfig config) {
 		Objects.requireNonNull(config);
 
-		Bootstrap bootstrap = new Bootstrap()
-				// TODO use static pipeline initializer defined somewhere
-				.handler(new ClientChannelInitializer(config.getStrictCerts()));
+		Bootstrap bootstrap = new Bootstrap().handler(initializer);
 		configureDefaults(bootstrap);
 
 		ConnectionLoop loop = new ConnectionLoop(config, bootstrap);
@@ -124,11 +125,14 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 		configurator.accept(config);
 
 		register(this);
+		initializer = config.initializer;
 
 		return (ConnectionStore) super.init(null);
 	}
 
 	public final class ConnectionStoreConfig extends StoreConfig {
+
+		public ClientChannelInitializer initializer = new ClientChannelInitializer();
 
 		@Override
 		public void ephemeral() {

@@ -11,6 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.handler.exelet;
 
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
@@ -26,6 +28,7 @@ import com.sandpolis.core.net.command.Exelet.Auth;
 import com.sandpolis.core.net.command.Exelet.Handler;
 import com.sandpolis.core.net.command.Exelet.Permission;
 import com.sandpolis.core.net.command.Exelet.Unauth;
+import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.proto.net.Message.MSG;
 
@@ -58,6 +61,13 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 		this.pluginVectors = new HashMap<>();
 		this.coreVector = new DispatchVector(sock);
 		this.exelets = new HashMap<>();
+
+		// Register plugin exelets
+		PluginStore.getLoadedPlugins().forEach(plugin -> {
+			plugin.getExtensions(ExeletProvider.class).forEach(provider -> {
+				register(plugin.getId(), provider.getMessageType(), provider.getExelets());
+			});
+		});
 	}
 
 	public ExeletHandler(Sock sock, Class<? extends Exelet>[] e) {

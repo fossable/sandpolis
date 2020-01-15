@@ -13,10 +13,10 @@ package com.sandpolis.client.mega.cmd;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
-import com.sandpolis.core.net.init.AbstractChannelInitializer;
 import com.sandpolis.core.proto.net.MsgAuth.RQ_KeyAuth;
 import com.sandpolis.core.proto.net.MsgAuth.RQ_NoAuth;
 import com.sandpolis.core.proto.net.MsgAuth.RQ_PasswordAuth;
@@ -66,7 +66,7 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 		checkNotNull(key);
 
 		Sand5Handler sand5 = Sand5Handler.newResponseHandler(key);
-		sock.engage(AbstractChannelInitializer.SAND5, sand5);
+		sock.engage(HandlerKey.SAND5, sand5);
 
 		sand5.challengeFuture().addListener(future -> {
 			if (future.isSuccess())

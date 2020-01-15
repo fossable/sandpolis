@@ -28,10 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
-import com.sandpolis.core.net.init.AbstractChannelInitializer;
 import com.sandpolis.core.profile.AK_CLIENT;
 import com.sandpolis.core.profile.AK_INSTANCE;
 import com.sandpolis.core.profile.store.Events.ProfileOnlineEvent;
@@ -121,7 +121,7 @@ public final class AuthExe extends Exelet {
 		}
 
 		Sand5Handler sand5 = Sand5Handler.newRequestHandler(mech.getServer());
-		context.connector.engage(AbstractChannelInitializer.SAND5, sand5);
+		context.connector.engage(HandlerKey.SAND5, sand5);
 
 		if (sand5.challengeFuture().get()) {
 			context.defer(() -> {

@@ -15,14 +15,15 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.net.InetSocketAddress;
 import java.security.cert.X509Certificate;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.net.ssl.SSLPeerUnverifiedException;
 
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.future.MessageFuture;
-import com.sandpolis.core.net.init.AbstractChannelInitializer;
 import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.proto.util.Platform.Instance;
@@ -31,7 +32,6 @@ import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.embedded.EmbeddedChannel;
-import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.handler.traffic.TrafficCounter;
 import io.netty.util.concurrent.EventExecutorGroup;
@@ -145,11 +145,9 @@ public interface Sock {
 	public default X509Certificate getRemoteCertificate() throws SSLPeerUnverifiedException {
 		checkState(isConnected());
 
-		SslHandler ssl = getHandler(AbstractChannelInitializer.SSL);
-		if (ssl == null)
-			throw new SSLPeerUnverifiedException("SSL is disabled");
-
-		return (X509Certificate) ssl.engine().getSession().getPeerCertificates()[0];
+		return (X509Certificate) getHandler(HandlerKey.TLS)
+				.orElseThrow(() -> new SSLPeerUnverifiedException("SSL is disabled")).engine().getSession()
+				.getPeerCertificates()[0];
 	}
 
 	/**
@@ -160,7 +158,7 @@ public interface Sock {
 	 * @return A {@link MessageFuture}
 	 */
 	public default MessageFuture read(int id) {
-		return getHandler(AbstractChannelInitializer.RESPONSE).putResponseFuture(id, new MessageFuture());
+		return getHandler(HandlerKey.RESPONSE).get().putResponseFuture(id, new MessageFuture());
 	}
 
 	/**
@@ -173,7 +171,7 @@ public interface Sock {
 	 * @return A {@link MessageFuture}
 	 */
 	public default MessageFuture read(int id, long timeout, TimeUnit unit) {
-		return getHandler(AbstractChannelInitializer.RESPONSE).putResponseFuture(id, new MessageFuture(timeout, unit));
+		return getHandler(HandlerKey.RESPONSE).get().putResponseFuture(id, new MessageFuture(timeout, unit));
 	}
 
 	/**
@@ -278,7 +276,7 @@ public interface Sock {
 	 * @return The associated {@link ChannelTrafficShapingHandler}
 	 */
 	public default ChannelTrafficShapingHandler getTrafficLimiter() {
-		return getHandler(AbstractChannelInitializer.TRAFFIC);
+		return getHandler(HandlerKey.TRAFFIC).get();
 	}
 
 	/**
@@ -296,7 +294,7 @@ public interface Sock {
 		checkState(isConnected());
 		checkState(!isAuthenticated());
 
-		getHandler(AbstractChannelInitializer.EXELET).authenticate();
+		getHandler(HandlerKey.EXELET).get().authenticate();
 		channel().attr(ChannelConstant.AUTH_STATE).set(true);
 	}
 
@@ -304,20 +302,30 @@ public interface Sock {
 		checkState(isConnected());
 		checkState(isAuthenticated());
 
-		getHandler(AbstractChannelInitializer.EXELET).deauthenticate();
+		getHandler(HandlerKey.EXELET).get().deauthenticate();
 		channel().attr(ChannelConstant.AUTH_STATE).set(false);
 	}
 
+	public default <E extends ChannelHandler> Optional<E> getHandler(HandlerKey<E> key) {
+		return getHandlers(key).findFirst();
+	}
+
 	@SuppressWarnings("unchecked")
-	public default <E extends ChannelHandler> E getHandler(HandlerKey<E> key) {
-		return (E) channel().pipeline().get(key.toString());
+	public default <E extends ChannelHandler> Stream<E> getHandlers(HandlerKey<E> key) {
+		return (Stream<E>) channel().pipeline().names().stream()
+				.filter(name -> key.base.equals(name.substring(0, name.indexOf('#')))).map(channel().pipeline()::get);
 	}
 
 	public default <E extends ChannelHandler> void engage(HandlerKey<E> type, E handler) {
-		channel().pipeline().get(AbstractChannelInitializer.class).engage(channel().pipeline(), type, handler);
+		channel().pipeline().addBefore(HandlerKey.MANAGEMENT.base + "#0", type.next(channel().pipeline()), handler);
 	}
 
 	public default <E extends ChannelHandler> void engage(HandlerKey<E> type, E handler, EventExecutorGroup group) {
-		channel().pipeline().get(AbstractChannelInitializer.class).engage(channel().pipeline(), type, handler, group);
+		channel().pipeline().addBefore(group, HandlerKey.MANAGEMENT.base + "#0", type.next(channel().pipeline()),
+				handler);
+	}
+
+	public default void disengage(ChannelHandler handler) {
+		channel().pipeline().remove(handler);
 	}
 }

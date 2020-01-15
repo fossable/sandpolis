@@ -22,8 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.store.plugin.Events.PluginLoadedEvent;
 import com.sandpolis.core.net.ChannelConstant;
-import com.sandpolis.core.net.handler.exelet.ExeletHandler;
-import com.sandpolis.core.net.init.AbstractChannelInitializer;
+import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
@@ -65,19 +64,17 @@ public abstract class AbstractSock implements Sock {
 		this.channel = Objects.requireNonNull(channel);
 		this.handshakeFuture = channel.eventLoop().newPromise();
 
-		channel.attr(ChannelConstant.SOCK).set(this);
 		channel.attr(ChannelConstant.AUTH_STATE).set(false);
 		channel.attr(ChannelConstant.CERTIFICATE_STATE).set(false);
 	}
 
 	@Subscribe
 	private void onPluginLoaded(PluginLoadedEvent event) {
-		ExeletHandler handler = getHandler(AbstractChannelInitializer.EXELET);
-		if (handler != null) {
+		getHandler(HandlerKey.EXELET).ifPresent(handler -> {
 			event.get().getExtensions(ExeletProvider.class).forEach(provider -> {
 				handler.register(event.get().getId(), provider.getMessageType(), provider.getExelets());
 			});
-		}
+		});
 	}
 
 	public void onActivityChanged(boolean activity) {

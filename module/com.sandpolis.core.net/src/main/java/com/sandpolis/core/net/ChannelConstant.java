@@ -26,15 +26,18 @@ import io.netty.util.AttributeKey;
  * @since 5.0.0
  */
 public final class ChannelConstant {
-	private ChannelConstant() {
-	}
+
+	public static final AttributeKey<Boolean> AUTH_STATE = AttributeKey.valueOf("state.auth");
 
 	/**
 	 * The remote host's SSL certificate status.
 	 */
 	public static final AttributeKey<Boolean> CERTIFICATE_STATE = AttributeKey.valueOf("state.certificate");
 
-	public static final AttributeKey<Boolean> AUTH_STATE = AttributeKey.valueOf("state.auth");
+	/**
+	 * The remote host's CVID.
+	 */
+	public static final AttributeKey<Integer> CVID = AttributeKey.valueOf("cvid");
 
 	/**
 	 * The remote host's instance type.
@@ -52,13 +55,10 @@ public final class ChannelConstant {
 	public static final AttributeKey<Boolean> STRICT_CERTS = AttributeKey.valueOf("strictcerts");
 
 	/**
-	 * The remote host's CVID.
-	 */
-	public static final AttributeKey<Integer> CVID = AttributeKey.valueOf("cvid");
-
-	/**
 	 * The remote host's UUID.
 	 */
 	public static final AttributeKey<String> UUID = AttributeKey.valueOf("uuid");
 
+	private ChannelConstant() {
+	}
 }

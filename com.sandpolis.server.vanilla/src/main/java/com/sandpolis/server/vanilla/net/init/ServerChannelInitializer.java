@@ -11,8 +11,19 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.net.init;
 
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.HandlerKey.CVID;
+import static com.sandpolis.core.net.HandlerKey.EXELET;
+import static com.sandpolis.core.net.HandlerKey.FRAME_DECODER;
+import static com.sandpolis.core.net.HandlerKey.FRAME_ENCODER;
+import static com.sandpolis.core.net.HandlerKey.LOG_DECODED;
+import static com.sandpolis.core.net.HandlerKey.LOG_RAW;
+import static com.sandpolis.core.net.HandlerKey.MANAGEMENT;
+import static com.sandpolis.core.net.HandlerKey.PROTO_DECODER;
+import static com.sandpolis.core.net.HandlerKey.PROTO_ENCODER;
+import static com.sandpolis.core.net.HandlerKey.RESPONSE;
+import static com.sandpolis.core.net.HandlerKey.TLS;
+import static com.sandpolis.core.net.HandlerKey.TRAFFIC;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,12 +32,12 @@ import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.cvid.CvidResponseHandler;
 import com.sandpolis.core.net.handler.exelet.ExeletHandler;
-import com.sandpolis.core.net.init.AbstractChannelInitializer;
-import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.sock.ServerSock;
+import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.server.vanilla.exe.AuthExe;
 import com.sandpolis.server.vanilla.exe.GenExe;
@@ -40,11 +51,16 @@ import com.sandpolis.server.vanilla.exe.UserExe;
 import com.sandpolis.server.vanilla.net.handler.ProxyHandler;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.protobuf.ProtobufDecoder;
+import io.netty.handler.codec.protobuf.ProtobufEncoder;
+import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
+import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 
 /**
  * This {@link ChannelInitializer} configures a {@link ChannelPipeline} for use
@@ -53,13 +69,17 @@ import io.netty.handler.ssl.SslContextBuilder;
  * @author cilki
  * @since 5.0.0
  */
-public class ServerChannelInitializer extends AbstractChannelInitializer {
+public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 
 	private static final Logger log = LoggerFactory.getLogger(ServerChannelInitializer.class);
 
-	private static final CvidResponseHandler HANDLER_CVID = new CvidResponseHandler();
+	public static final HandlerKey<ProxyHandler> PROXY = new HandlerKey<>("ProxyHandler");
 
-	public static final HandlerKey<ChannelHandler> PROXY = new HandlerKey<>("ProxyHandler");
+	private static final CvidResponseHandler HANDLER_CVID = new CvidResponseHandler();
+	private static final ManagementHandler HANDLER_MANAGEMENT = new ManagementHandler();
+	private static final ProtobufDecoder HANDLER_PROTO_DECODER = new ProtobufDecoder(MSG.getDefaultInstance());
+	private static final ProtobufEncoder HANDLER_PROTO_ENCODER = new ProtobufEncoder();
+	private static final ProtobufVarint32LengthFieldPrepender HANDLER_PROTO_FRAME_ENCODER = new ProtobufVarint32LengthFieldPrepender();
 
 	/**
 	 * All server {@link Exelet} classes.
@@ -94,8 +114,6 @@ public class ServerChannelInitializer extends AbstractChannelInitializer {
 	 * @param cvid The server CVID
 	 */
 	public ServerChannelInitializer(int cvid) {
-		super(TRAFFIC, SSL, LOG_RAW, FRAME_DECODER, PROXY, PROTO_DECODER, FRAME_ENCODER, PROTO_ENCODER, LOG_DECODED,
-				CVID, RESPONSE, EXELET, MANAGEMENT);
 		this.cvid = cvid;
 	}
 
@@ -119,30 +137,35 @@ public class ServerChannelInitializer extends AbstractChannelInitializer {
 
 	@Override
 	protected void initChannel(Channel ch) throws Exception {
-		super.initChannel(ch);
-		new ServerSock(ch);
-
+		ch.attr(ChannelConstant.SOCK).set(new ServerSock(ch));
 		ChannelPipeline p = ch.pipeline();
 
-		if (Config.getBoolean("net.connection.tls"))
-			engage(p, SSL, getSslContext().newHandler(ch.alloc()));
+		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.getInteger("traffic.interval")));
 
-		// Add proxy handler
-		engage(p, PROXY, new ProxyHandler(cvid));
+		if (Config.getBoolean("net.connection.tls"))
+			p.addLast(TLS.next(p), getSslContext().newHandler(ch.alloc()));
+
+		if (Config.getBoolean("logging.net.traffic.raw"))
+			p.addLast(LOG_RAW.next(p), new LoggingHandler(ServerSock.class));
+
+		p.addLast(FRAME_DECODER.next(p), new ProtobufVarint32FrameDecoder());
+		p.addLast(PROXY.next(p), new ProxyHandler(cvid));
+		p.addLast(PROTO_DECODER.next(p), HANDLER_PROTO_DECODER);
+		p.addLast(FRAME_ENCODER.next(p), HANDLER_PROTO_FRAME_ENCODER);
+		p.addLast(PROTO_ENCODER.next(p), HANDLER_PROTO_ENCODER);
+
+		if (Config.getBoolean("logging.net.traffic.raw"))
+			p.addLast(LOG_DECODED.next(p), new LoggingHandler(ServerSock.class));
 
 		// Add CVID handler
-		engage(p, CVID, HANDLER_CVID);
+		p.addLast(CVID.next(p), HANDLER_CVID);
 
-		engage(p, RESPONSE, new ResponseHandler(), ThreadStore.get("net.exelet"));
+		p.addLast(ThreadStore.get("net.exelet"), RESPONSE.next(p), new ResponseHandler());
 
-		var exeletHandler = new ExeletHandler(ch.attr(ChannelConstant.SOCK).get(), exelets);
-		engage(p, EXELET, exeletHandler, ThreadStore.get("net.exelet"));
+		p.addLast(ThreadStore.get("net.exelet"), EXELET.next(p),
+				new ExeletHandler(ch.attr(ChannelConstant.SOCK).get(), exelets));
 
-		PluginStore.getLoadedPlugins().forEach(plugin -> {
-			plugin.getExtensions(ExeletProvider.class).forEach(provider -> {
-				exeletHandler.register(plugin.getId(), provider.getMessageType(), provider.getExelets());
-			});
-		});
+		p.addLast(MANAGEMENT.next(p), HANDLER_MANAGEMENT);
 	}
 
 	private static final SslContextBuilder defaultContext = SslContextBuilder.forServer(CertUtil.getDefaultKey(),

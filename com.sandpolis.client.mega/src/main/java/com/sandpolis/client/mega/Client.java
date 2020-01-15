@@ -17,7 +17,7 @@ import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
-import static com.sandpolis.core.stream.store.StreamStore.StreamStore;
+import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
@@ -136,6 +136,7 @@ public final class Client {
 
 		ConnectionStore.init(config -> {
 			config.ephemeral();
+			config.initializer = new ClientChannelInitializer(new Class[] { ClientExe.class });
 		});
 
 		NetworkStore.init(config -> {
@@ -208,10 +209,8 @@ public final class Client {
 	 */
 	@InitializationTask(name = "Begin the connection routine", fatal = true)
 	public static final Task beginConnectionRoutine = new Task(outcome -> {
-		// Temporary
-		ClientChannelInitializer.setExelets(new Class[] { ClientExe.class });
-
 		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig());
+
 		return outcome.success();
 	});
 

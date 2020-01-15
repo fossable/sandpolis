@@ -11,15 +11,38 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.init;
 
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.HandlerKey.FRAME_DECODER;
+import static com.sandpolis.core.net.HandlerKey.FRAME_ENCODER;
+import static com.sandpolis.core.net.HandlerKey.LOG_DECODED;
+import static com.sandpolis.core.net.HandlerKey.LOG_RAW;
+import static com.sandpolis.core.net.HandlerKey.MANAGEMENT;
+import static com.sandpolis.core.net.HandlerKey.PROTO_DECODER;
+import static com.sandpolis.core.net.HandlerKey.PROTO_ENCODER;
+import static com.sandpolis.core.net.HandlerKey.RESPONSE;
+import static com.sandpolis.core.net.HandlerKey.TRAFFIC;
+
+import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
+import com.sandpolis.core.net.handler.ManagementHandler;
+import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.peer.HolePunchHandler;
 import com.sandpolis.core.net.handler.peer.PeerEncryptionDecoder;
 import com.sandpolis.core.net.handler.peer.PeerEncryptionEncoder;
 import com.sandpolis.core.net.sock.PeerSock;
+import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.DatagramChannel;
+import io.netty.handler.codec.protobuf.ProtobufDecoder;
+import io.netty.handler.codec.protobuf.ProtobufEncoder;
+import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
+import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
+import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 
 /**
  * This {@link AbstractChannelInitializer} configures a {@link Channel} for
@@ -30,31 +53,43 @@ import io.netty.channel.socket.DatagramChannel;
  * @author cilki
  * @since 5.0.0
  */
-public class PeerChannelInitializer extends AbstractChannelInitializer {
+public class PeerChannelInitializer extends ChannelInitializer<Channel> {
 
-	public static final HandlerKey<PeerEncryptionEncoder> ENCRYPTION_ENCODER = new HandlerKey<>(
-			"PeerEncryptionEncoder");
-	public static final HandlerKey<PeerEncryptionDecoder> ENCRYPTION_DECODER = new HandlerKey<>(
-			"PeerEncryptionDecoder");
-	public static final HandlerKey<HolePunchHandler> HOLEPUNCHER = new HandlerKey<>("HolePunchHandler");
+	public static final HandlerKey<HolePunchHandler> HOLEPUNCH = new HandlerKey<>("HolePunchHandler");
+	public static final HandlerKey<PeerEncryptionEncoder> ENCRYPTION_ENCODER = new HandlerKey<>("EncryptionEncoder");
+	public static final HandlerKey<PeerEncryptionDecoder> ENCRYPTION_DECODER = new HandlerKey<>("EncryptionDecoder");
 
-	public PeerChannelInitializer() {
-		super(HOLEPUNCHER, TRAFFIC, ENCRYPTION_ENCODER, ENCRYPTION_DECODER, FRAME_DECODER, PROTO_DECODER, FRAME_ENCODER,
-				PROTO_ENCODER, LOG_DECODED, RESPONSE, MANAGEMENT);
-	}
+	private static final ManagementHandler HANDLER_MANAGEMENT = new ManagementHandler();
+	private static final ProtobufDecoder HANDLER_PROTO_DECODER = new ProtobufDecoder(MSG.getDefaultInstance());
+	private static final ProtobufEncoder HANDLER_PROTO_ENCODER = new ProtobufEncoder();
+	private static final ProtobufVarint32LengthFieldPrepender HANDLER_PROTO_FRAME_ENCODER = new ProtobufVarint32LengthFieldPrepender();
 
 	@Override
 	protected void initChannel(Channel ch) throws Exception {
-		super.initChannel(ch);
-		new PeerSock(ch);
-
+		ch.attr(ChannelConstant.SOCK).set(new PeerSock(ch));
 		ChannelPipeline p = ch.pipeline();
 
-		engage(p, ENCRYPTION_ENCODER, new PeerEncryptionEncoder());
-		engage(p, ENCRYPTION_DECODER, new PeerEncryptionDecoder());
-
 		if (ch instanceof DatagramChannel)
-			engage(p, HOLEPUNCHER, new HolePunchHandler());
-	}
+			p.addLast(HOLEPUNCH.next(p), new HolePunchHandler());
 
+		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.getInteger("traffic.interval")));
+
+		p.addLast(ENCRYPTION_ENCODER.next(p), new PeerEncryptionEncoder());
+		p.addLast(ENCRYPTION_DECODER.next(p), new PeerEncryptionDecoder());
+
+		if (Config.getBoolean("logging.net.traffic.raw"))
+			p.addLast(LOG_RAW.next(p), new LoggingHandler(PeerSock.class));
+
+		p.addLast(FRAME_DECODER.next(p), new ProtobufVarint32FrameDecoder());
+		p.addLast(PROTO_DECODER.next(p), HANDLER_PROTO_DECODER);
+		p.addLast(FRAME_ENCODER.next(p), HANDLER_PROTO_FRAME_ENCODER);
+		p.addLast(PROTO_ENCODER.next(p), HANDLER_PROTO_ENCODER);
+
+		if (Config.getBoolean("logging.net.traffic.raw"))
+			p.addLast(LOG_DECODED.next(p), new LoggingHandler(PeerSock.class));
+
+		p.addLast(ThreadStore.get("net.exelet"), RESPONSE.next(p), new ResponseHandler());
+
+		p.addLast(MANAGEMENT.next(p), HANDLER_MANAGEMENT);
+	}
 }
