@@ -53,7 +53,7 @@ dependencies {
 	// https://github.com/netty/netty
 	api 'io.netty:netty-common:4.1.45.Final'
 	api 'io.netty:netty-codec:4.1.43.Final'
-	api 'io.netty:netty-transport:4.1.43.Final'
+	api 'io.netty:netty-transport:4.1.45.Final'
 	api 'io.netty:netty-handler:4.1.43.Final'
 
 	// https://github.com/qos-ch/slf4j
