@@ -12,15 +12,12 @@
 package com.sandpolis.viewer.ascetic.view.main.hosts;
 
 import com.googlecode.lanterna.gui2.table.Table;
+import com.sandpolis.core.profile.cmd.ProfileCmd;
 
 public class HostList extends Table<String> {
 	public HostList() {
-		super("Hostname", "IP Address");
-		init();
+		super("UUID", "Hostname", "IP Address", "Platform");
+
+		ProfileCmd.async().openProfileStream();
 	}
-
-	private void init() {
-
-	}
-
 }

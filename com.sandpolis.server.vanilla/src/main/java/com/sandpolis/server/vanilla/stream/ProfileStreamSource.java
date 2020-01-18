@@ -63,7 +63,6 @@ public class ProfileStreamSource extends StreamSource<EV_ProfileStream> {
 		});
 
 		ev.setHostname(profile.get(AK_CLIENT.HOSTNAME));
-		ev.setInstallDirectory(profile.get(AK_CLIENT.INSTALL_DIRECTORY));
 		ev.setPlatform(profile.get(AK_INSTANCE.OS));
 
 		submit(ev.build());

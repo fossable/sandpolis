@@ -45,10 +45,10 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 
 /**
- * This {@link AbstractChannelInitializer} configures a {@link Channel} for
- * peer-to-peer connections. Typically this initializer will be used with
- * datagram channels. The {@link Channel} will automatically perform a NAT
- * traversal prior to activation if required.
+ * This {@link ChannelInitializer} configures a {@link Channel} for peer-to-peer
+ * connections. Typically this initializer will be used with datagram channels.
+ * The {@link Channel} will automatically perform a NAT traversal prior to
+ * activation if required.
  *
  * @author cilki
  * @since 5.0.0

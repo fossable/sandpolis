@@ -44,6 +44,5 @@ message EV_ProfileStream {
     bool online = 4;
     string ip = 5;
     string hostname = 6;
-    string install_directory = 7;
     util.Location location = 8;
 }

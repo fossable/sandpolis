@@ -15,16 +15,21 @@ import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
+import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
+import static com.sandpolis.viewer.ascetic.store.window.WindowStore.WindowStore;
 
-import java.io.IOException;
 import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.lanterna.gui2.AsynchronousTextGUIThread;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
+import com.googlecode.lanterna.gui2.SeparateTextGUIThread;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.googlecode.lanterna.screen.Screen;
+import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
@@ -85,7 +90,23 @@ public final class Viewer {
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
+		NetworkStore.init(config -> {
+			config.ephemeral();
+		});
+
+		ConnectionStore.init(config -> {
+			config.ephemeral();
+		});
+
 		PluginStore.init(config -> {
+			config.ephemeral();
+		});
+
+		WindowStore.init(config -> {
+			config.ephemeral();
+		});
+
+		StreamStore.init(config -> {
 			config.ephemeral();
 		});
 
@@ -98,19 +119,14 @@ public final class Viewer {
 	@InitializationTask(name = "Load user interface")
 	private static final Task loadUserInterface = new Task(outcome -> {
 
-		new Thread(() -> {
-			try {
-				Screen screen = new DefaultTerminalFactory().setForceTextTerminal(true).createScreen();
-				WindowBasedTextGUI textGUI = new MultiWindowTextGUI(screen);
-				screen.startScreen();
+		TerminalScreen screen = new DefaultTerminalFactory().setForceTextTerminal(true).createScreen();
+		WindowBasedTextGUI textGUI = new MultiWindowTextGUI(new SeparateTextGUIThread.Factory(), screen);
+		((AsynchronousTextGUIThread) textGUI.getGUIThread()).start();
+		screen.startScreen();
+		WindowStore.gui = textGUI;
 
-				textGUI.addWindow(new LogPanel());
-				textGUI.addWindowAndWait(new LoginWindow());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}).start();
+		WindowStore.add(new LogPanel());
+		WindowStore.add(new LoginWindow());
 
 		return outcome.success();
 	});

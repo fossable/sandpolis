@@ -43,7 +43,8 @@ public class LogPanelAppender extends AppenderBase<ILoggingEvent> {
 	@Override
 	protected void append(ILoggingEvent eventObject) {
 		if (textbox != null) {
-			textbox.addLine(new String(encoder.encode(eventObject)));
+			for (String line : new String(encoder.encode(eventObject)).split("\n"))
+				textbox.addLine(line);
 		}
 	}
 

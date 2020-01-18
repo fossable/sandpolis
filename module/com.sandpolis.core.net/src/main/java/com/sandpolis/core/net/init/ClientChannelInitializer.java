@@ -49,8 +49,8 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 
 /**
- * This {@link AbstractChannelInitializer} configures a {@link Channel} for
- * connections to the server.
+ * This {@link ChannelInitializer} configures a {@link Channel} for connections
+ * to the server.
  *
  * @author cilki
  * @since 5.0.0
