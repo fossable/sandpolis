@@ -13,7 +13,7 @@
 }
 
 #qr_box {
-	-fx-border-color: black;
+	-fx-border-color: gray;
     -fx-border-width: 4; 
     -fx-border-insets: -8;
     -fx-border-radius: 4;

@@ -65,6 +65,8 @@ public class MainController {
 	@FXML
 	private Button btn_install;
 	@FXML
+	private Button btn_uninstall;
+	@FXML
 	private ImageView banner;
 	@FXML
 	private TextField username;
@@ -155,6 +157,11 @@ public class MainController {
 			label.setWrapText(true);
 			qr_box.getChildren().setAll(label);
 		});
+	}
+
+	@FXML
+	private void uninstall() {
+		// TODO
 	}
 
 	@FXML
