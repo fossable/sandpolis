@@ -11,21 +11,22 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.gen;
 
+import static com.google.common.io.Files.getNameWithoutExtension;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-import com.sandpolis.core.instance.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
+import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.proto.util.Generator.GenConfig;
 import com.sandpolis.core.proto.util.Generator.GenReport;
-
-import static com.google.common.io.Files.getNameWithoutExtension;
+import com.sandpolis.core.util.TextUtil;
 
 /**
  * The parent class of all output generators.
@@ -117,12 +118,15 @@ public abstract class Generator implements Runnable {
 			result = generate();
 			computeMetadata();
 
-			// Write to archive
+			// Find latest number
 			int seq = Files.list(Environment.GEN.path()).mapToInt(path -> {
 				return Integer.parseInt(getNameWithoutExtension(path.getFileName().toString()));
 			}).sorted().findFirst().orElse(-1) + 1;
 
-			Files.write(Environment.GEN.path().resolve(String.format("%d%s", seq, archiveExtension)), result);
+			// Write to archive directory
+			Path archive = Environment.GEN.path().resolve(String.format("%d%s", seq, archiveExtension));
+			log.debug("Writing archive: {} ({})", archive, TextUtil.formatByteCount(result.length));
+			Files.write(archive, result);
 		} catch (Exception e) {
 			log.error("Generation failed", e);
 			report.setResult(false);

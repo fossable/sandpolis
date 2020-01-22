@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance;
 
-import com.sandpolis.core.util.AsciiUtil;
+import com.sandpolis.core.util.TextUtil;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -163,7 +163,7 @@ public enum Environment {
 	 * @param name The instance name
 	 */
 	public static void printEnvironment(Logger log, String name) {
-		log.info("Launching {} ({})", AsciiUtil.toRainbow(name), Core.SO_BUILD.getVersion());
+		log.info("Launching {} ({})", TextUtil.rainbowText(name), Core.SO_BUILD.getVersion());
 		log.debug("Build Environment:");
 		log.debug("  Timestamp: {}", new Date(Core.SO_BUILD.getTime()));
 		log.debug("   Platform: {}", Core.SO_BUILD.getPlatform());

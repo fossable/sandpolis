@@ -21,7 +21,7 @@ import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.util.AsciiUtil;
+import com.sandpolis.core.util.TextUtil;
 
 public class AboutPanel extends Panel {
 
@@ -32,7 +32,7 @@ public class AboutPanel extends Panel {
 
 	private void init() {
 
-		Label art = new Label(AsciiUtil.getSandpolisArt());
+		Label art = new Label(TextUtil.getSandpolisArt());
 		addComponent(art, GridLayout.createLayoutData(CENTER, BEGINNING, true, false, 2, 1));
 
 		Label lbl_version = new Label("Sandpolis Version").addStyle(BOLD);

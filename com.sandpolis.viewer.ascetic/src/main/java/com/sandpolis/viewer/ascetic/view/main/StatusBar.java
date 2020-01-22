@@ -11,11 +11,14 @@ import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
+import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.util.TextUtil;
 
 public class StatusBar extends Panel {
 
 	private Label lbl_clients;
 	private Label lbl_listeners;
+	private Label lbl_generator;
 	private Label lbl_about;
 
 	private Label lbl_upload;
@@ -25,6 +28,7 @@ public class StatusBar extends Panel {
 
 	public StatusBar() {
 		super(new BorderLayout());
+		setFillColorOverride(TextColor.ANSI.GREEN);
 
 		{
 			Panel controls = new Panel(new LinearLayout(Direction.HORIZONTAL));
@@ -35,7 +39,10 @@ public class StatusBar extends Panel {
 			lbl_listeners = new Label("[F2] Listeners");
 			controls.addComponent(lbl_listeners);
 
-			lbl_about = new Label("[F3] About");
+			lbl_generator = new Label("[F3] Generator");
+			controls.addComponent(lbl_generator);
+
+			lbl_about = new Label("[F4] About");
 			controls.addComponent(lbl_about);
 
 			addComponent(controls, BorderLayout.Location.CENTER);
@@ -53,14 +60,16 @@ public class StatusBar extends Panel {
 		}
 
 		ConnectionStore.stream().findAny().ifPresent(sock -> {
-			var counter = sock.getTrafficInfo();
 			updater = new Thread(() -> {
+				var counter = sock.getTrafficInfo();
+				int timeout = Config.getInteger("traffic.interval");
+
 				while (!Thread.currentThread().isInterrupted()) {
 
-					lbl_upload.setText("[UP: " + counter.lastWriteThroughput() + " b/s]");
-					lbl_download.setText("[DN: " + counter.lastReadThroughput() + " b/s]");
+					lbl_upload.setText("[UP: " + TextUtil.formatByteCount(counter.lastWriteThroughput()) + "/s]");
+					lbl_download.setText("[DN: " + TextUtil.formatByteCount(counter.lastReadThroughput()) + "/s]");
 					try {
-						Thread.sleep(4000);
+						Thread.sleep(timeout);
 					} catch (InterruptedException e) {
 						return;
 					}
@@ -73,7 +82,7 @@ public class StatusBar extends Panel {
 	}
 
 	public void setSelected(int index) {
-		var panels = List.of(lbl_clients, lbl_listeners, lbl_about);
+		var panels = List.of(lbl_clients, lbl_listeners, lbl_generator, lbl_about);
 		panels.forEach(lbl -> {
 			lbl.setBackgroundColor(null).removeStyle(BOLD);
 		});
