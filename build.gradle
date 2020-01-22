@@ -32,6 +32,9 @@ spotless {
 	java {
 		target '**/*.java'
 
+		// Exclude generated attribute-key sources
+		targetExclude '**/AK_*.java'
+
 		eclipse().configFile('gradle/resources/EclipseConventions.xml')
 		trimTrailingWhitespace()
 		endWithNewline()
