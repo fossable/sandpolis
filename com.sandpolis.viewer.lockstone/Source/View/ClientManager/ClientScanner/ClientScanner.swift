@@ -146,7 +146,7 @@ class ClientScanner: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 						self.captureSession.startRunning()
 					}
 				}
-				
+
 				let alert = UIAlertController(title: "Failed", message: "Failed to associate client. Please try again.", preferredStyle: .alert)
 				alert.addAction(UIAlertAction(title: "OK", style: .cancel))
 				self.present(alert, animated: true)

@@ -34,7 +34,7 @@ public final class TextUtil {
 
 	/**
 	 * Format the given byte count with base 2 unit prefixes.
-	 * 
+	 *
 	 * @param bytes The byte count
 	 * @return A formatted String
 	 */
@@ -54,7 +54,7 @@ public final class TextUtil {
 
 	/**
 	 * Format the given byte count with base 10 unit prefixes.
-	 * 
+	 *
 	 * @param bytes The byte count
 	 * @return A formatted String
 	 */

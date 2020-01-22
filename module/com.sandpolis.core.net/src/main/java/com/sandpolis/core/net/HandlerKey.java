@@ -53,7 +53,7 @@ public final class HandlerKey<E extends ChannelHandler> {
 
 	/**
 	 * Return the next unused handler name for the given pipeline.
-	 * 
+	 *
 	 * @param pipeline The target pipeline
 	 * @return The handler's name in the target pipeline
 	 */

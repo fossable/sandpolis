@@ -162,7 +162,7 @@ public final class NetUtil {
 
 	/**
 	 * Resolve an IANA service name.
-	 * 
+	 *
 	 * @param port A TCP port number
 	 * @return The service name registered to the given port number
 	 */
