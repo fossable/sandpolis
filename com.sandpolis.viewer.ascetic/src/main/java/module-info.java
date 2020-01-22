@@ -27,13 +27,14 @@ open module com.sandpolis.viewer.ascetic {
 	requires transitive com.sandpolis.core.soi;
 	requires transitive com.sandpolis.core.util;
 	requires transitive com.sandpolis.core.viewer;
-	requires transitive lanterna;
+	requires transitive com.googlecode.lanterna;
 	requires transitive logback.classic;
 	requires transitive logback.core;
 	requires transitive org.slf4j;
 	requires io.netty.transport;
 	requires io.netty.common;
 	requires io.netty.handler;
+	requires com.google.protobuf;
 
 	provides ch.qos.logback.classic.spi.Configurator with com.sandpolis.viewer.ascetic.logging.LoggingConfigurator;
 }

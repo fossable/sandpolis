@@ -48,7 +48,7 @@ dependencies {
 	api 'ch.qos.logback:logback-classic:1.2.3'
 
 	// https://github.com/mabe02/lanterna
-	api 'com.googlecode.lanterna:lanterna:3.0.2'
+	api 'com.googlecode.lanterna:lanterna:3.1.0-alpha1'
 
 	// https://github.com/netty/netty
 	api 'io.netty:netty-common:4.1.45.Final'

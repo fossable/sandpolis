@@ -42,6 +42,7 @@ import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
 import com.sandpolis.viewer.ascetic.Viewer;
+import com.sandpolis.viewer.ascetic.renderer.CustomButtonRenderer;
 import com.sandpolis.viewer.ascetic.view.main.MainWindow;
 
 public class LoginWindow extends BasicWindow {
@@ -131,6 +132,7 @@ public class LoginWindow extends BasicWindow {
 				close();
 				System.exit(0);
 			});
+			btn_exit.setRenderer(new CustomButtonRenderer());
 			buttons.addComponent(btn_exit, BorderLayout.Location.LEFT);
 			buttons.addComponent(new EmptySpace(new TerminalSize(23, 0)), BorderLayout.Location.CENTER);
 
@@ -167,9 +169,11 @@ public class LoginWindow extends BasicWindow {
 					}
 				});
 			});
+			btn_login.setRenderer(new CustomButtonRenderer());
 			buttons.addComponent(btn_login, BorderLayout.Location.RIGHT);
 
-			content.addComponent(buttons.withBorder(Borders.singleLineBevel()));
+			content.addComponent(new EmptySpace(new TerminalSize(0, 1)));
+			content.addComponent(buttons);
 		}
 
 		setComponent(content);

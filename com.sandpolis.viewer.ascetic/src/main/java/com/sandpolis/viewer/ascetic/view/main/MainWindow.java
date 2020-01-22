@@ -11,6 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.ascetic.view.main;
 
+import static com.sandpolis.viewer.ascetic.store.window.WindowStore.WindowStore;
+
 import java.util.Collections;
 
 import com.googlecode.lanterna.gui2.BasicWindow;
@@ -19,39 +21,41 @@ import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.sandpolis.viewer.ascetic.view.about.AboutPanel;
+import com.sandpolis.viewer.ascetic.view.generator.GeneratorPanel;
+import com.sandpolis.viewer.ascetic.view.generator.GeneratorWindow;
 import com.sandpolis.viewer.ascetic.view.main.hosts.HostList;
 import com.sandpolis.viewer.ascetic.view.main.listeners.ListenerList;
 
 public class MainWindow extends BasicWindow {
 
-	private HostList clients;
-	private ListenerList listeners;
-	private AboutPanel about;
-
+	private Panel content;
 	private StatusBar status;
 
-	private Panel content;
+	private HostList clients;
+	private ListenerList listeners;
+	private GeneratorPanel generator;
+	private AboutPanel about;
 
 	public MainWindow() {
 		setHints(Collections.singleton(Window.Hint.EXPANDED));
 
 		clients = new HostList();
 		listeners = new ListenerList();
+		generator = new GeneratorPanel();
 		about = new AboutPanel();
 
-		status = new StatusBar();
-
+		Panel root = new Panel(new BorderLayout());
 		{
 			content = new Panel(new BorderLayout());
 			content.addComponent(clients, BorderLayout.Location.CENTER);
+			root.addComponent(content, BorderLayout.Location.CENTER);
 		}
 
 		{
-			Panel root = new Panel(new BorderLayout());
-			root.addComponent(content, BorderLayout.Location.CENTER);
+			status = new StatusBar();
 			root.addComponent(status, BorderLayout.Location.BOTTOM);
-			setComponent(root);
 		}
+		setComponent(root);
 	}
 
 	@Override
@@ -69,8 +73,15 @@ public class MainWindow extends BasicWindow {
 			break;
 		case F3:
 			content.removeAllComponents();
-			content.addComponent(about, BorderLayout.Location.CENTER);
+			content.addComponent(generator, BorderLayout.Location.CENTER);
 			status.setSelected(2);
+			WindowStore.add(new GeneratorWindow());
+			break;
+		case F4:
+			content.removeAllComponents();
+			content.addComponent(about, BorderLayout.Location.CENTER);
+			status.setSelected(3);
+
 			break;
 		default:
 			return super.handleInput(key);
