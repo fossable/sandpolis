@@ -9,33 +9,21 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+#ifndef RESOURCE_H
+#define RESOURCE_H
 
-plugins {
-	id 'eclipse'
-	id 'cpp-application'
-//	id 'com.google.protobuf' version '0.8.10'
-//	id 'java' // Required by protobuf
-}
+#include <streambuf>
 
-eclipse {
-	project {
-		name = 'com.sandpolis.client.micro'
-		comment = 'The micro-client instance'
-	}
-}
+// A helper class that converts a string to an istream.
+struct ResourceBuffer: std::streambuf, public std::istream {
 
-/*protobuf {
-	protoc {
-		artifact = 'com.google.protobuf:protoc:3.11.2'
+	explicit ResourceBuffer(char *begin, size_t length) {
+		// Configure the std::streambuf aspect
+		this->setg(begin, begin, begin + length);
+
+		// Configure the std::istream aspect
+		this->rdbuf(this);
 	}
-	generateProtoTasks {
-		all().each { task ->
-			task.builtins {
-				cpp {
-					option 'lite'
-				}
-				remove java
-			}
-		}
-	}
-}*/
+};
+
+#endif

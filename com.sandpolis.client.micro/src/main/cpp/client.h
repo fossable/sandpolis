@@ -9,33 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+#ifndef CLIENT_H
+#define CLIENT_H
 
-plugins {
-	id 'eclipse'
-	id 'cpp-application'
-//	id 'com.google.protobuf' version '0.8.10'
-//	id 'java' // Required by protobuf
-}
-
-eclipse {
-	project {
-		name = 'com.sandpolis.client.micro'
-		comment = 'The micro-client instance'
-	}
-}
-
-/*protobuf {
-	protoc {
-		artifact = 'com.google.protobuf:protoc:3.11.2'
-	}
-	generateProtoTasks {
-		all().each { task ->
-			task.builtins {
-				cpp {
-					option 'lite'
-				}
-				remove java
-			}
-		}
-	}
-}*/
+#endif
