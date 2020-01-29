@@ -24,3 +24,4 @@ com.sandpolis.client.mega.demo
 
 # Generated directories
 **/gen/main/java
+**/gen/main/cpp

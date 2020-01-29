@@ -13,8 +13,6 @@
 plugins {
 	id 'eclipse'
 	id 'cpp-application'
-//	id 'com.google.protobuf' version '0.8.10'
-//	id 'java' // Required by protobuf
 }
 
 eclipse {
@@ -24,18 +22,27 @@ eclipse {
 	}
 }
 
-/*protobuf {
-	protoc {
-		artifact = 'com.google.protobuf:protoc:3.11.2'
+application {
+	privateHeaders {
+		from project.file("src/main/headers")
+		from project.file("../module/com.sandpolis.core.proto/gen/main/cpp")
+		from project.file("../module/com.sandpolis.core.soi/gen/main/cpp")
 	}
-	generateProtoTasks {
-		all().each { task ->
-			task.builtins {
-				cpp {
-					option 'lite'
-				}
-				remove java
-			}
-		}
+	source {
+		from project.file("src/main/cpp")
+		from project.file("../module/com.sandpolis.core.proto/gen/main/cpp")
+		from project.file("../module/com.sandpolis.core.soi/gen/main/cpp")
 	}
-}*/
+}
+
+tasks.withType(LinkExecutable).configureEach {
+	lib {
+		file("/usr/local/lib/libprotobuf.a")
+	}
+}
+
+tasks.withType(CppCompile).configureEach {
+	dependsOn project(":module:com.sandpolis.core.proto").tasks.getByName("assemble")
+	dependsOn project(":module:com.sandpolis.core.soi").tasks.getByName("assemble")
+	compilerArgs = ['-pthread']
+}

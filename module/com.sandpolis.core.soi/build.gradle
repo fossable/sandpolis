@@ -62,4 +62,18 @@ protobuf {
 	clean {
 		delete generatedFilesBaseDir
 	}
+	generateProtoTasks {
+		all().each { task ->
+			task.builtins {
+				cpp {
+					option 'lite'
+				}
+			}
+		}
+	}
+}
+
+// Ignore javadoc errors in generated protobuf sources
+javadoc {
+	failOnError = false
 }

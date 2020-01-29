@@ -13,6 +13,7 @@
 #define UUID_H
 
 #include <random>
+#include <string>
 
 // Generate a new random UUID.
 std::string generate_uuid() {
