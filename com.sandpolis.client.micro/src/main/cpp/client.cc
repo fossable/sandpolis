@@ -16,10 +16,10 @@
 #include <string>
 #include <thread>
 
-#include "sock.h"
-#include "util/net.h"
-#include "util/resources.h"
-#include "util/uuid.h"
+#include "sock.hh"
+#include "util/net.hh"
+#include "util/resources.hh"
+#include "util/uuid.hh"
 
 #include "com/sandpolis/core/proto/util/generator.pb.h"
 #include "com/sandpolis/core/soi/build.pb.h"
@@ -29,22 +29,28 @@ int main(int argc, char **argv) {
 	util::MicroConfig config;
 
 	// Load build metadata from resource file
-	if (!so_build.ParseFromArray(soi_build, soi_build_len)) {
+	if (!so_build.ParseFromArray(resource_body(soi_build),
+			resource_length(soi_build))) {
 		std::cout << "Failed to read embedded metadata!" << std::endl;
 		return 1;
 	}
 
 	// Load client configuration from resource file
-	if (!config.ParseFromArray(soi_client, soi_client_len)) {
+	if (!config.ParseFromArray(resource_body(soi_client),
+			resource_length(soi_client))) {
 		std::cout << "Failed to read embedded configuration!" << std::endl;
 		return 1;
 	}
 
-	printf("Launching Sandpolis Micro Client (%s)\n", so_build.version());
-	printf("Build Environment:");
-	printf("   Platform: %s\n", so_build.platform());
-	printf("     Gradle: %s\n", so_build.gradle_version());
-	printf("       Java: %s\n", so_build.java_version());
+	std::cout << "Launching Sandpolis Micro Client (" << so_build.version()
+			<< ")" << std::endl;
+	std::cout << "Build Environment:" << std::endl;
+	std::cout << "   Platform: " << so_build.platform() << std::endl;
+	std::cout << "     Gradle: " << so_build.gradle_version() << std::endl;
+	std::cout << "       Java: " << so_build.java_version() << std::endl;
+
+	// Load UUID
+	std::string uuid = generate_uuid();
 
 	// Begin connection routine
 	long iteration = 0;
@@ -53,11 +59,17 @@ int main(int argc, char **argv) {
 			|| loop_config.iteration_limit() == 0) {
 
 		for (int i = 0; i < loop_config.target_size(); ++i) {
+			std::cout << "Attempting connection: "
+					<< loop_config.target(i).address() << std::endl;
 			int sfd = OpenConnection(loop_config.target(i).address(),
 					loop_config.target(i).port());
 			if (sfd > 0) {
-				Sock sock(sfd);
-				// TODO enter sock event loop
+				Sock sock(uuid, sfd);
+
+				if (sock.CvidHandshake()) {
+					// TODO enter sock event loop
+					return 0;
+				}
 
 				iteration = 0;
 				break;

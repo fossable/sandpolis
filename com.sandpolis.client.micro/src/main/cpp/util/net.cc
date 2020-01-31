@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-#include "util/net.h"
+#include "util/net.hh"
 
 int OpenConnection(const std::string _hostname, const int _port) {
 	const char *hostname = _hostname.c_str();

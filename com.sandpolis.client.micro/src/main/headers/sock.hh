@@ -23,7 +23,13 @@
 class Sock {
 
 	// The socket file descriptor
-	const int sock;
+	const int sockfd;
+
+	// This endpoint's UUID
+	const std::string uuid;
+
+	// This endpoint's CVID
+	int cvid;
 
 	// The remote endpoint's CVID
 	int remote_cvid;
@@ -31,55 +37,28 @@ class Sock {
 	// The remote endpoint's UUID
 	std::string remote_uuid;
 
-	// Write a protobuf varint to the given buffer.
-	void writeVarint32(char *buffer, int value) {
-		for (int i = 0; i < MAX_VARINT_WIDTH; ++i) {
-			if ((value & ~0x7f) == 0) {
-				buffer[i] = value;
-				return;
-			} else {
-				buffer[i] = ((value & 0x7f) | 0x80) & 0xff;
-				value = ((unsigned int) value) >> 7;
-			}
-		}
-	}
+	// Write a protobuf varint32 to the given buffer.
+	void WriteVarint32(char *buffer, int value);
 
-	// Determines the number of bytes that the value would occupy when encoded as a
+	// Read a protobuf varint32 from the given buffer.
+	int ReadVarint32(char *buffer);
+
+	// Determine the number of bytes that the value would occupy when encoded as a
 	// protobuf varint32.
-	int computeVarint32Width(int value) {
-		if ((value & (0xffffffff << 7)) == 0)
-			return 1;
-		if ((value & (0xffffffff << 14)) == 0)
-			return 2;
-		if ((value & (0xffffffff << 21)) == 0)
-			return 3;
-		if ((value & (0xffffffff << 28)) == 0)
-			return 4;
+	int ComputeVarint32Width(int value);
 
-		return MAX_VARINT_WIDTH;
+public:
+	Sock(std::string u, int sfd) : uuid(u), sockfd(sfd) {
 	}
 
 	// Perform a CVID handshake with the remote host.
-	int cvid_handshake() {
+	bool CvidHandshake();
 
-		// Send a cvid request containing instance information
-		net::RQ_Cvid rq;
-		rq.set_instance(util::Instance::CLIENT);
-		rq.set_instance_flavor(util::InstanceFlavor::MICRO);
-		//rq.set_uuid(uuid);
+	// Serialize and send the given message to the remote host.
+	bool Send(const net::MSG &msg);
 
-		//send(sock, &rq);
-		net::RS_Cvid rs;
-		remote_cvid = rs.server_cvid();
-		remote_uuid = rs.server_uuid();
-	}
-
-public:
-	Sock(int sfd) : sock(sfd) {
-		cvid_handshake();
-	}
-
-	bool Send(net::MSG &msg);
+	// Receive and parse a message from the remote host.
+	bool Recv(net::MSG &msg);
 };
 
 #endif

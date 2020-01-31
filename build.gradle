@@ -85,7 +85,7 @@ spotless {
 		licenseHeaderFile file('gradle/resources/header_swift.txt'), "import"
 	}
 	cpp {
-		target '**/*.c++', '**/*.h'
+		target '**/*.cc', '**/*.hh'
 
 		eclipse()
 		endWithNewline()
