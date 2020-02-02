@@ -70,4 +70,9 @@ class DeployInstance extends RemoteTask {
 			}
 		}
 	}
+
+	void darwin(directory) {
+		// TODO
+		linux(directory)
+	}
 }

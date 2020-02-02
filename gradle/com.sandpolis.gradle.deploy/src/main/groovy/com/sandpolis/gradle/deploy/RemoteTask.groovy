@@ -48,15 +48,27 @@ class RemoteTask extends DefaultTask {
 		def platform
 		def directory
 
-		// Figure out OS type first
+		// Estimate the OS type
 		project_deploy.ssh.run {
 			session(rhost) {
 				try {
-					execute 'whoami'
+					execute('uname -s') { uname ->
+						if (uname.startsWith("Linux")) {
+							platform = "linux"
+							directory = "/home/" + rhost.user + "/.deploy/" + project_deploy.name
+						} else if (uname.startsWith("Darwin")) {
+							platform = "darwin"
+							directory = "/Users/" + rhost.user + "/.deploy/" + project_deploy.name
+						} else if (uname.startsWith("CYGWIN")) {
+							platform = "windows"
+							directory = "C:\\Users\\" + rhost.user + "\\.deploy\\"+ project_deploy.name
+						} else {
+							throw new RuntimeException("Unknown OS: " + uname)
+						}
+					}
 
-					platform = "linux"
-					directory = "/home/" + rhost.user + "/.deploy/" + project_deploy.name
 				} catch (BadExitStatusException e) {
+					// Most likely Windows without Cygwin
 					platform = "windows"
 					directory = "C:\\Users\\" + rhost.user + "\\.deploy\\"+ project_deploy.name
 				}
