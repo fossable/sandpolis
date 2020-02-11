@@ -43,7 +43,7 @@ sourceSets {
 
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
-	testImplementation 'org.zeroturnaround:zt-zip:1.13'
+	testImplementation 'org.zeroturnaround:zt-zip:1.14'
 
 	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':module:com.sandpolis.core.net')
