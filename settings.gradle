@@ -23,22 +23,22 @@ include 'com.sandpolis.charcoal'
 include 'com.sandpolis.client.installer:jar'
 include 'com.sandpolis.client.installer:py'
 include 'com.sandpolis.client.mega'
-include 'com.sandpolis.client.micro'
 include 'com.sandpolis.installer'
 include 'com.sandpolis.server.vanilla'
 include 'com.sandpolis.viewer.ascetic'
 include 'com.sandpolis.viewer.lifegem'
 
-if (LOCKSTONE.toBoolean())
-	include 'com.sandpolis.viewer.lockstone'
-
 // Optional Instances
-if (INSTANCE_DEMO_SERVER.toBoolean())
+if (System.properties.get('instances.viewer-lockstone', 'false').toBoolean())
+	include 'com.sandpolis.viewer.lockstone'
+if (System.properties.get('instances.server-demo', 'false').toBoolean())
 	include 'com.sandpolis.server.demo'
-if (INSTANCE_DEMO_CLIENT.toBoolean())
-	include 'com.sandpolis.client.mega.demo'
-if (INSTANCE_CLOUD.toBoolean())
+if (System.properties.get('instances.server-cloud', 'false').toBoolean())
 	include 'com.sandpolis.server.cloud'
+if (System.properties.get('instances.client-demo', 'false').toBoolean())
+	include 'com.sandpolis.client.mega.demo'
+if (System.properties.get('instances.client-micro', 'false').toBoolean())
+	include 'com.sandpolis.client.micro'
 
 // Dependency Projects
 include 'module:com.sandpolis.core.instance'

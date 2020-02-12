@@ -56,10 +56,10 @@ public class SoiBuildTask extends DefaultTask {
 		so.setTime(System.currentTimeMillis());
 
 		// Application version
-		so.setVersion((String) getProject().findProperty("SANDPOLIS_VERSION"));
+		so.setVersion(System.getProperty("versions.sandpolis"));
 
 		// Build mode
-		String mode = (String) getProject().findProperty("DEVELOPMENT");
+		String mode = System.getProperty("development_mode");
 		so.setDevelopment(mode == null || mode.equalsIgnoreCase("true"));
 
 		// Build platform

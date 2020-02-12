@@ -168,8 +168,8 @@ launch4j {
 	companyName = 'Subterranean Security'
 	productName = 'Sandpolis Installer'
 	windowTitle = 'Sandpolis Installer'
-	version = "0.${SANDPOLIS_VERSION}"
-	textVersion = "0.${SANDPOLIS_VERSION}"
+	version = "0.${project.version}"
+	textVersion = "0.${project.version}"
 	jar = jarOnlineWin.archiveFile
 	copyConfigurable = jarOnlineWin
 	icon = "${projectDir}/sandpolis.ico"
@@ -177,7 +177,7 @@ launch4j {
 tasks.createExe.dependsOn(jarOnlineWin)
 
 githubRelease {
-	token = GITHUB_TOKEN
+	token = System.properties['publishing.github.token']
 	owner = 'Subterranean-Security'
 	repo = 'Sandpolis'
 	draft = true

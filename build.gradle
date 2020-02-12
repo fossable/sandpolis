@@ -109,7 +109,7 @@ allprojects {
 
 // Apply metadata configuration
 allprojects {
-	version = SANDPOLIS_VERSION
+	version = System.properties['versions.sandpolis']
 }
 
 subprojects {
@@ -159,7 +159,7 @@ configure(subprojects.findAll {publishProjects.contains(it.name)}) {
 	apply plugin: 'signing'
 
 	group = 'com.sandpolis'
-	archivesBaseName = it.name.replace("com.", "").replaceAll("\\.", "-")
+	archivesBaseName = it.name.substring(4).replaceAll("\\.", "-")
 
 	afterEvaluate { sub ->
 		java {
@@ -204,8 +204,8 @@ configure(subprojects.findAll {publishProjects.contains(it.name)}) {
 				maven {
 					url = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
 					credentials {
-						username PUBLISH_USER
-						password PUBLISH_PASS
+						username System.properties['publishing.sonatype.username']
+						password System.properties['publishing.sonatype.password']
 					}
 				}
 			}
