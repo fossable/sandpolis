@@ -14,7 +14,7 @@ package com.sandpolis.server.vanilla.store.location;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.proto.util.LocationOuterClass;
+import com.sandpolis.core.proto.util.LocationOuterClass.Location;
 import com.sandpolis.core.util.ValidationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,7 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(LocationStore.class);
 
-	private Cache<String, LocationOuterClass.Location> cache;
+	private Cache<String, Location> cache;
 
 	private AbstractGeolocationService service;
 
@@ -36,7 +36,7 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 		super(log);
 	}
 
-	public Future<LocationOuterClass.Location> queryAsync(String ip) {
+	public Future<Location> queryAsync(String ip) {
 		// Private IPs should not be resolved
 		if (ValidationUtil.privateIP(ip)) {
 			return CompletableFuture.completedFuture(null);
@@ -59,9 +59,12 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 		});
 	}
 
-	public LocationOuterClass.Location query(String ip, long timeout) {
+	public Location query(String ip, long timeout) {
 		try {
 			return queryAsync(ip).get(timeout, TimeUnit.MILLISECONDS);
+		} catch (TimeoutException e) {
+			log.error("Failed to query location service: timed out");
+			return null;
 		} catch (Exception e) {
 			log.error("Failed to query location service", e);
 			return null;
