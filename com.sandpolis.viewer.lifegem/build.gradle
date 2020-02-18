@@ -15,8 +15,8 @@ plugins {
 	id 'java-library'
 
 	id 'com.sandpolis.gradle.soi'
-	id 'com.sandpolis.gradle.deploy'
 	id 'org.openjfx.javafxplugin' version '0.0.8'
+	id 'com.bmuschko.docker-remote-api' version '6.1.3'
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
@@ -75,21 +75,12 @@ dependencies {
 	api 'org.slf4j:slf4j-api:1.7.30'
 }
 
-jar {
-	manifest {
-		attributes(
-			'Main-Class': 'com.sandpolis.viewer.lifegem.Main',
-			'Class-Path': configurations.runtimeClasspath.collect { 'lib/' + it.getName() }.join(' ')
-		)
-	}
+task assembleDependencies(type: Copy, dependsOn: jar) {
+	from configurations.runtimeClasspath, jar
+	into "$buildDir/docker/lib"
 }
 
-deploy {
-	jvmArgs = [
-		'-Dlogging.net.traffic.raw=false',
-		'-Dlogging.net.traffic.decoded=false',
-		'-Dnet.connection.tls=true',
-		'-Dplugin.enabled=true',
-		'-m com.sandpolis.viewer.lifegem/com.sandpolis.viewer.lifegem.Main'
-	]
+task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: assembleDependencies) {
+	inputDir = file('.')
+	images = ["sandpolis/viewer/lifegem:${project.version}"]
 }

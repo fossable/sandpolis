@@ -16,7 +16,6 @@ rootProject.name = 'Sandpolis'
 includeBuild 'gradle/com.sandpolis.gradle.codegen'
 includeBuild 'gradle/com.sandpolis.gradle.plugin'
 includeBuild 'gradle/com.sandpolis.gradle.soi'
-includeBuild 'gradle/com.sandpolis.gradle.deploy'
 
 // Instance Projects
 include 'com.sandpolis.charcoal'

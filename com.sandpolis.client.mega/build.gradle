@@ -15,7 +15,7 @@ plugins {
 	id 'java-library'
 
 	id 'com.sandpolis.gradle.soi'
-	id 'com.sandpolis.gradle.deploy'
+	id 'com.bmuschko.docker-remote-api' version '6.1.3'
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
@@ -57,10 +57,12 @@ dependencies {
 	api 'org.slf4j:slf4j-api:1.7.30'
 }
 
-jar {
-	manifest {
-		attributes(
-			'Main-Class': 'com.sandpolis.client.mega.Main',
-		)
-	}
+task assembleDependencies(type: Copy, dependsOn: jar) {
+	from configurations.runtimeClasspath, jar
+	into "$buildDir/docker/lib"
+}
+
+task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: assembleDependencies) {
+	inputDir = file('.')
+	images = ["sandpolis/client/mega:${project.version}"]
 }

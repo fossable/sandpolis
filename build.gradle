@@ -19,7 +19,6 @@ buildscript {
 	dependencies {
 		classpath ':com.sandpolis.gradle.plugin:'
 		classpath ':com.sandpolis.gradle.soi:'
-		classpath ':com.sandpolis.gradle.deploy:'
 		classpath ':com.sandpolis.gradle.codegen:'
 	}
 }
