@@ -15,7 +15,7 @@ plugins {
 	id 'java-library'
 
 	id 'org.openjfx.javafxplugin' version '0.0.8'
-	id "com.github.breadmoirai.github-release" version "2.2.9"
+	id "com.github.breadmoirai.github-release" version "2.2.11"
 	id 'edu.sc.seis.launch4j' version '2.4.6'
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
