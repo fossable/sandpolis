@@ -44,7 +44,7 @@ dependencies {
 	implementation 'io.netty:netty-codec:4.1.45.Final'
 	implementation 'io.netty:netty-codec-dns:4.1.45.Final'
 	implementation 'io.netty:netty-transport:4.1.45.Final'
-	implementation 'io.netty:netty-handler:4.1.45.Final'
+	implementation 'io.netty:netty-handler:4.1.46.Final'
 	implementation 'io.netty:netty-resolver-dns:4.1.45.Final'
 
 	// https://github.com/qos-ch/slf4j
