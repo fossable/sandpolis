@@ -52,7 +52,7 @@ dependencies {
 	api project(':plugin:com.sandpolis.plugin.filesys')
 
 	// https://github.com/FasterXML/jackson-databind
-	api 'com.fasterxml.jackson.core:jackson-databind:2.10.1'
+	api 'com.fasterxml.jackson.core:jackson-databind:2.10.3'
 
 	// https://github.com/google/guava
 	api 'com.google.guava:guava:28.2-jre'
