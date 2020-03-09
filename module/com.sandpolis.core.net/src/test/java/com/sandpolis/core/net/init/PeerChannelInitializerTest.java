@@ -38,9 +38,6 @@ class PeerChannelInitializerTest {
 
 	@BeforeAll
 	static void configure() {
-		Config.register("logging.net.traffic.raw", false);
-		Config.register("logging.net.traffic.decoded", false);
-		Config.register("traffic.interval", 4000);
 
 		ThreadStore.init(config -> {
 			config.ephemeral();

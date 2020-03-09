@@ -7,4 +7,4 @@ COPY build/docker/lib/ /app
 
 EXPOSE 8768
 
-ENTRYPOINT ["java", "-Dpath.lib=/app/libs", "-Dpath.gen=/tmp", "-Dserver.debug_client=false", "-Dnet.ipc.mutex=false", "-Dlogging.net.traffic.raw=false", "-Dlogging.net.traffic.decoded=false", "-Dnet.connection.tls=true", "-Dplugin.enabled=true", "--module-path", "/app", "-m", "com.sandpolis.server.vanilla/com.sandpolis.server.vanilla.Main"]
+ENTRYPOINT ["java", "-Dsandpolis.path.lib=/app/libs", "-Dsandpolis.path.gen=/tmp", "-Dsandpolis.debug.generate_client=false", "-Dsandpolis.ipc.mutex=false", "-Dsandpolis.net.logging.raw=false", "-Dlsandpolis.net.logging.decoded=false", "-Dsandpolis.net.connection.tls=true", "-Dsandpolis.plugins.enabled=true", "--module-path", "/app", "-m", "com.sandpolis.server.vanilla/com.sandpolis.server.vanilla.Main"]

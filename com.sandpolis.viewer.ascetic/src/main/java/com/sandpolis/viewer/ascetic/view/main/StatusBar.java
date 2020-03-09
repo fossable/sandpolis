@@ -73,7 +73,7 @@ public class StatusBar extends Panel {
 		ConnectionStore.stream().findAny().ifPresent(sock -> {
 			updater = new Thread(() -> {
 				var counter = sock.getTrafficInfo();
-				int timeout = Config.getInteger("traffic.interval");
+				int timeout = Config.TRAFFIC_INTERVAL.value().get();
 
 				while (!Thread.currentThread().isInterrupted()) {
 

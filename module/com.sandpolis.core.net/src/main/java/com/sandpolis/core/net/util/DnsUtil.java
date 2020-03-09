@@ -82,7 +82,7 @@ public final class DnsUtil {
 
 	/**
 	 * Resolve a DNS A record.
-	 * 
+	 *
 	 * @param server The DNS name
 	 * @return A future that will be notified with a host address
 	 */

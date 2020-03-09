@@ -79,9 +79,9 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 		ch.attr(ChannelConstant.SOCK).set(new ClientSock(ch));
 		ChannelPipeline p = ch.pipeline();
 
-		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.getInteger("traffic.interval")));
+		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.TRAFFIC_INTERVAL.value().orElse(5000)));
 
-		if (Config.getBoolean("net.connection.tls")) {
+		if (Config.TLS_ENABLED.value().orElse(true)) {
 			var ssl = SslContextBuilder.forClient();
 
 			if (false) // TODO strict certs
@@ -92,7 +92,7 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 			p.addLast(TLS.next(p), ssl.build().newHandler(ch.alloc()));
 		}
 
-		if (Config.getBoolean("logging.net.traffic.raw"))
+		if (Config.TRAFFIC_RAW.value().orElse(false))
 			p.addLast(LOG_RAW.next(p), new LoggingHandler(ClientSock.class));
 
 		p.addLast(FRAME_DECODER.next(p), new ProtobufVarint32FrameDecoder());
@@ -100,7 +100,7 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 		p.addLast(FRAME_ENCODER.next(p), HANDLER_PROTO_FRAME_ENCODER);
 		p.addLast(PROTO_ENCODER.next(p), HANDLER_PROTO_ENCODER);
 
-		if (Config.getBoolean("logging.net.traffic.raw"))
+		if (Config.TRAFFIC_DECODED.value().orElse(false))
 			p.addLast(LOG_DECODED.next(p), new LoggingHandler(ClientSock.class));
 
 		p.addLast(CVID.next(p), HANDLER_CVID);

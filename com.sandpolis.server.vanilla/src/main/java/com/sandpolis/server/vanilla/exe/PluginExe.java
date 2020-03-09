@@ -121,7 +121,7 @@ public final class PluginExe extends Exelet {
 	@Auth
 	@Handler(tag = MSG.RQ_PLUGIN_LIST_FIELD_NUMBER)
 	public static MessageOrBuilder rq_plugin_list(RQ_PluginList rq) {
-		if (!Config.getBoolean("plugin.enabled"))
+		if (!Config.PLUGIN_ENABLED.value().orElse(true))
 			return failure(begin());
 
 		return RS_PluginList.newBuilder().addAllPlugin(() -> PluginStore.getPluginDescriptors().iterator());
@@ -131,7 +131,7 @@ public final class PluginExe extends Exelet {
 	@Handler(tag = MSG.RQ_PLUGIN_INSTALL_FIELD_NUMBER)
 	public static MessageOrBuilder rq_plugin_install(RQ_PluginInstall rq) throws Exception {
 		var outcome = begin();
-		if (!Config.getBoolean("plugin.enabled"))
+		if (!Config.PLUGIN_ENABLED.value().orElse(true))
 			return failure(outcome);
 
 		Path binary = Files.createTempFile("", ".jar");

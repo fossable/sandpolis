@@ -134,9 +134,6 @@ public final class MainDispatch {
 		// The logger must be initialized after setting the main class
 		final Logger log = LoggerFactory.getLogger(MainDispatch.class);
 
-		// Pass main arguments to the Config class
-		Config.setArguments(args);
-
 		// Setup exception handler
 		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
 			log.error("An unexpected exception has occurred", throwable);
@@ -167,19 +164,15 @@ public final class MainDispatch {
 
 			TaskOutcome outcome = new TaskOutcome(task.initMetadata.name());
 
-			if (!task.initMetadata.condition().isEmpty() && !Config.getBoolean(task.initMetadata.condition())) {
-				task.outcome = outcome.skipped();
-			} else {
-				try {
-					task.outcome = task.execute(outcome);
-				} catch (Exception e) {
-					task.outcome = outcome.failure(e);
-				}
+			try {
+				task.outcome = task.execute(outcome);
+			} catch (Exception e) {
+				task.outcome = outcome.failure(e);
+			}
 
-				if (!task.outcome.isSkipped() && !outcome.getOutcome().getResult() && task.initMetadata.fatal()) {
-					logTaskSummary(log);
-					System.exit(1);
-				}
+			if (!task.outcome.isSkipped() && !outcome.getOutcome().getResult() && task.initMetadata.fatal()) {
+				logTaskSummary(log);
+				System.exit(1);
 			}
 		}
 
@@ -188,7 +181,7 @@ public final class MainDispatch {
 			logTaskSummary(log);
 
 		// Print task summary if required
-		else if (!Config.has("logging.startup.summary") || !Config.getBoolean("logging.startup.summary"))
+		else if (Config.STARTUP_SUMMARY.value().orElse(true))
 			logTaskSummary(log);
 
 		// Launch idle loop
@@ -346,11 +339,6 @@ public final class MainDispatch {
 		 * The name of the task.
 		 */
 		public String name();
-
-		/**
-		 * The condition under which the task will execute.
-		 */
-		public String condition() default "";
 
 		/**
 		 * Indicates that the application should exit if the task fails.

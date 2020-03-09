@@ -43,8 +43,6 @@ class SockFutureTest {
 
 	@BeforeAll
 	static void configure() {
-		Config.register("logging.net.traffic.raw", false);
-		Config.register("logging.net.traffic.decoded", false);
 		ThreadStore.init(config -> {
 			config.ephemeral();
 			config.defaults.put("net.exelet", new NioEventLoopGroup().next());

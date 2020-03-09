@@ -44,8 +44,6 @@ class IPCStoreTest {
 			config.defaults.put("net.ipc.listener", Executors.newCachedThreadPool());
 			config.defaults.put("net.ipc.receptor", Executors.newCachedThreadPool());
 		});
-
-		Config.register("net.ipc.timeout", 1000);
 	}
 
 	@Test

@@ -244,10 +244,9 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 */
 	public MessageFuture route(MSG.Builder message, String timeoutClass) {
 		int hop = findHop(message);
-		if (!Config.has(timeoutClass))
-			timeoutClass = "net.message.default_timeout";
+		// TODO use timeout class
 
-		MessageFuture mf = receive(hop, message.getId(), Config.getInteger(timeoutClass), TimeUnit.MILLISECONDS);
+		MessageFuture mf = receive(hop, message.getId(), Config.MESSAGE_TIMEOUT.value().get(), TimeUnit.MILLISECONDS);
 		ConnectionStore.get(hop).get().send(message);
 		return mf;
 	}

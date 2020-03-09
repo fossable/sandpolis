@@ -72,12 +72,12 @@ public class PeerChannelInitializer extends ChannelInitializer<Channel> {
 		if (ch instanceof DatagramChannel)
 			p.addLast(HOLEPUNCH.next(p), new HolePunchHandler());
 
-		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.getInteger("traffic.interval")));
+		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.TRAFFIC_INTERVAL.value().orElse(5000)));
 
 		p.addLast(ENCRYPTION_ENCODER.next(p), new PeerEncryptionEncoder());
 		p.addLast(ENCRYPTION_DECODER.next(p), new PeerEncryptionDecoder());
 
-		if (Config.getBoolean("logging.net.traffic.raw"))
+		if (Config.TRAFFIC_RAW.value().orElse(false))
 			p.addLast(LOG_RAW.next(p), new LoggingHandler(PeerSock.class));
 
 		p.addLast(FRAME_DECODER.next(p), new ProtobufVarint32FrameDecoder());
@@ -85,7 +85,7 @@ public class PeerChannelInitializer extends ChannelInitializer<Channel> {
 		p.addLast(FRAME_ENCODER.next(p), HANDLER_PROTO_FRAME_ENCODER);
 		p.addLast(PROTO_ENCODER.next(p), HANDLER_PROTO_ENCODER);
 
-		if (Config.getBoolean("logging.net.traffic.raw"))
+		if (Config.TRAFFIC_DECODED.value().orElse(false))
 			p.addLast(LOG_DECODED.next(p), new LoggingHandler(PeerSock.class));
 
 		p.addLast(ThreadStore.get("net.exelet"), RESPONSE.next(p), new ResponseHandler());

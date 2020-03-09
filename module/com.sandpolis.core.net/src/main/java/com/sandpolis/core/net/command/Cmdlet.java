@@ -46,7 +46,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	/**
 	 * The response timeout in milliseconds.
 	 */
-	private long timeout = Config.getInteger("net.message.default_timeout");
+	private long timeout = Config.MESSAGE_TIMEOUT.value().get();
 
 	/**
 	 * The target CVID. Defaults to the default server CVID.
@@ -78,8 +78,8 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 * @return {@code this}
 	 */
 	public E timeout(String timeout) {
-		this.timeout = Config.getInteger(checkNotNull(timeout));
-		return (E) this;
+		throw new UnsupportedOperationException();
+		// return (E) this;
 	}
 
 	/**

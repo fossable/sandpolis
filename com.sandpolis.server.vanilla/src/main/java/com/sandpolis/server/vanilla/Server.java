@@ -24,6 +24,7 @@ import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
+import static com.sandpolis.server.vanilla.store.location.LocationStore.LocationStore;
 import static com.sandpolis.server.vanilla.store.server.ServerStore.ServerStore;
 import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
@@ -39,7 +40,6 @@ import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
@@ -108,7 +108,6 @@ public final class Server {
 	public static void main(String[] args) {
 		printEnvironment(log, "Sandpolis Server");
 
-		register(BasicTasks.loadConfiguration);
 		register(Server.loadConfiguration);
 		register(IPCTask.load);
 		register(IPCTask.checkLock);
@@ -129,20 +128,20 @@ public final class Server {
 	 */
 	@InitializationTask(name = "Load server configuration", fatal = true)
 	public static final Task loadConfiguration = new Task(outcome -> {
-		Config.register("server.db.provider", "hibernate");
-		Config.register("server.db.url");
-		Config.register("server.db.username");
-		Config.register("server.db.password");
+		Config.DB_PROVIDER.register("hibernate");
+		Config.DB_URL.register();
+		Config.DB_USERNAME.register();
+		Config.DB_PASSWORD.register();
 
-		Config.register("server.debug_client", true);
+		Config.DEBUG_CLIENT.register(true);
 
-		Config.register("server.banner.text", "Welcome to a Sandpolis Server");
-		Config.register("server.banner.image");
+		Config.BANNER_TEXT.register("Welcome to a Sandpolis Server");
+		Config.BANNER_IMAGE.register();
 
-		Config.register("server.geolocation.service", "ip-api.com");
+		Config.GEOLOCATION_SERVICE.register("ip-api.com");
 
-		Config.register("path.db");
-		Config.register("path.gen");
+		Config.PATH_DB.register();
+		Config.PATH_GEN.register();
 
 		return outcome.success();
 	});
@@ -153,12 +152,12 @@ public final class Server {
 	@InitializationTask(name = "Load runtime environment", fatal = true)
 	public static final Task loadEnvironment = new Task(outcome -> {
 
-		Environment.LIB.set(Config.get("path.lib")).requireReadable();
-		Environment.DB.set(Config.get("path.db")).requireWritable();
-		Environment.GEN.set(Config.get("path.gen")).requireWritable();
-		Environment.LOG.set(Config.get("path.log")).requireWritable();
-		Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
-		Environment.TMP.set(Config.get("path.tmp")).requireWritable();
+		Environment.LIB.set(Config.PATH_LIB.value().orElse(null)).requireReadable();
+		Environment.DB.set(Config.PATH_DB.value().orElse(null)).requireWritable();
+		Environment.GEN.set(Config.PATH_GEN.value().orElse(null)).requireWritable();
+		Environment.LOG.set(Config.PATH_LOG.value().orElse(null)).requireWritable();
+		Environment.PLUGIN.set(Config.PATH_PLUGIN.value().orElse(null)).requireWritable();
+		Environment.TMP.set(Config.PATH_TMP.value().orElse(null)).requireWritable();
 		return outcome.success();
 	});
 
@@ -305,9 +304,9 @@ public final class Server {
 		ServerStore.init(config -> {
 		});
 
-		LocationStore.LocationStore.init(config -> {
-			config.service = Config.get("server.geolocation.service");
-			config.key = Config.get("server.geolocation.key");
+		LocationStore.init(config -> {
+			config.service = Config.GEOLOCATION_SERVICE.value().orElse(null);
+			config.key = Config.GEOLOCATION_SERVICE_KEY.value().orElse(null);
 			config.cacheExpiration = Duration.ofDays(10);
 		});
 
@@ -344,8 +343,11 @@ public final class Server {
 	/**
 	 * Load plugins.
 	 */
-	@InitializationTask(name = "Load server plugins", condition = "plugin.enabled")
+	@InitializationTask(name = "Load server plugins")
 	public static final Task loadPlugins = new Task(outcome -> {
+		if (!Config.PLUGIN_ENABLED.value().orElse(true))
+			return outcome.skipped();
+
 		PluginStore.scanPluginDirectory();
 		PluginStore.loadPlugins();
 
@@ -355,8 +357,10 @@ public final class Server {
 	/**
 	 * Install a debug client on the local machine.
 	 */
-	@InitializationTask(name = "Install debug client", development = true, condition = "server.debug_client")
+	@InitializationTask(name = "Install debug client", development = true)
 	public static final Task installDebugClient = new Task(outcome -> {
+		if (!Config.DEBUG_CLIENT.value().orElse(false))
+			return outcome.skipped();
 
 		// Create user and listener
 		if (UserStore.get("admin").isEmpty())

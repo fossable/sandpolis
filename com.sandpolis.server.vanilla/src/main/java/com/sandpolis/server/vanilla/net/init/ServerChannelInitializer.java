@@ -140,12 +140,12 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 		ch.attr(ChannelConstant.SOCK).set(new ServerSock(ch));
 		ChannelPipeline p = ch.pipeline();
 
-		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.getInteger("traffic.interval")));
+		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.TRAFFIC_INTERVAL.value().orElse(5000)));
 
-		if (Config.getBoolean("net.connection.tls"))
+		if (Config.TLS_ENABLED.value().orElse(true))
 			p.addLast(TLS.next(p), getSslContext().newHandler(ch.alloc()));
 
-		if (Config.getBoolean("logging.net.traffic.raw"))
+		if (Config.TRAFFIC_RAW.value().orElse(false))
 			p.addLast(LOG_RAW.next(p), new LoggingHandler(ServerSock.class));
 
 		p.addLast(FRAME_DECODER.next(p), new ProtobufVarint32FrameDecoder());
@@ -154,7 +154,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 		p.addLast(FRAME_ENCODER.next(p), HANDLER_PROTO_FRAME_ENCODER);
 		p.addLast(PROTO_ENCODER.next(p), HANDLER_PROTO_ENCODER);
 
-		if (Config.getBoolean("logging.net.traffic.raw"))
+		if (Config.TRAFFIC_DECODED.value().orElse(false))
 			p.addLast(LOG_DECODED.next(p), new LoggingHandler(ServerSock.class));
 
 		// Add CVID handler
@@ -172,7 +172,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 			CertUtil.getDefaultCert());
 
 	public SslContext getSslContext() throws Exception {
-		if (sslCtx == null && Config.getBoolean("net.connection.tls")) {
+		if (sslCtx == null && Config.TLS_ENABLED.value().orElse(true)) {
 			if (cert != null && key != null) {
 				sslCtx = SslContextBuilder.forServer(CertUtil.parseKey(key), CertUtil.parseCert(cert)).build();
 

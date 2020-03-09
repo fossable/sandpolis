@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Date;
 
-import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.viewer.lifegem.Viewer.UI;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
@@ -99,8 +98,8 @@ public class AboutController extends AbstractController {
 		java_uptime.referenceProperty().set(ManagementFactory.getRuntimeMXBean().getStartTime());
 
 		// Load configuration data
-		for (var entry : Config.entries())
-			configuration.getItems().add(new ConfigProperty(entry.getKey(), entry.getValue().toString()));
+		for (var entry : System.getProperties().entrySet())
+			configuration.getItems().add(new ConfigProperty(entry.getKey().toString(), entry.getValue().toString()));
 
 		if (Platform.isSupported(ConditionalFeature.SCENE3D)) {
 

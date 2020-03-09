@@ -8,4 +8,4 @@ WORKDIR /app
 # Install application
 COPY build/docker/lib/ /app
 
-ENTRYPOINT ["java", "-Dlogging.net.traffic.raw=false", "-Dlogging.net.traffic.decoded=false", "-Dnet.connection.tls=true", "-Dplugin.enabled=true", "-Dnet.ipc.mutex=false", "--module-path", "/app", "-m", "com.sandpolis.viewer.lifegem/com.sandpolis.viewer.lifegem.Main"]
+ENTRYPOINT ["java", "-Dsandpolis.path.lib=/app/libs", "-Dsandpolis.path.gen=/tmp", "-Dsandpolis.ipc.mutex=false", "-Dsandpolis.net.logging.raw=false", "-Dlsandpolis.net.logging.decoded=false", "-Dsandpolis.net.connection.tls=true", "-Dsandpolis.plugins.enabled=true", "--module-path", "/app", "-m", "com.sandpolis.viewer.lifegem/com.sandpolis.viewer.lifegem.Main"]

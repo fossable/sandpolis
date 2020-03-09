@@ -31,7 +31,6 @@ import com.googlecode.lanterna.gui2.SeparateTextGUIThread;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
-import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
@@ -55,7 +54,6 @@ public final class Viewer {
 	public static void main(String[] args) {
 		printEnvironment(log, "Sandpolis Viewer");
 
-		register(BasicTasks.loadConfiguration);
 		register(IPCTask.load);
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
@@ -70,9 +68,9 @@ public final class Viewer {
 	@InitializationTask(name = "Load runtime environment", fatal = true)
 	private static final Task loadEnvironment = new Task(outcome -> {
 
-		Environment.LIB.requireReadable();
-		Environment.LOG.set(Config.get("path.log")).requireWritable();
-		Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
+		Environment.LIB.set(Config.PATH_LIB.value().orElse(null)).requireReadable();
+		Environment.LOG.set(Config.PATH_LOG.value().orElse(null)).requireWritable();
+		Environment.PLUGIN.set(Config.PATH_PLUGIN.value().orElse(null)).requireWritable();
 		return outcome.success();
 	});
 

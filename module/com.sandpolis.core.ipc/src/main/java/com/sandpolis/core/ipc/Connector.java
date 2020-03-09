@@ -51,7 +51,7 @@ public class Connector implements Closeable {
 
 	public Connector(int port) throws IOException {
 		socket = new Socket();
-		socket.connect(new InetSocketAddress("127.0.0.1", port), Config.getInteger("net.ipc.timeout"));
+		socket.connect(new InetSocketAddress("127.0.0.1", port), Config.IPC_TIMEOUT.value().orElse(5000));
 
 		if (socket.isConnected()) {
 			in = socket.getInputStream();

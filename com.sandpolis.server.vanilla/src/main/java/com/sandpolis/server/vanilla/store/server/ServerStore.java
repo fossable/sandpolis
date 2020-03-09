@@ -65,20 +65,19 @@ public final class ServerStore extends StoreBase<ServerStoreConfig> {
 			log.debug("Reloading server banner");
 
 		var b = RS_ServerBanner.newBuilder().setVersion(Core.SO_BUILD.getVersion())
-				.setBanner(Config.get("server.banner.text"));
+				.setBanner(Config.BANNER_TEXT.value().orElse("Sandpolis Server"));
 
-		String imagePath = Config.get("server.banner.image");
-		if (imagePath != null) {
-			try (var in = new FileInputStream(imagePath)) {
+		Config.BANNER_IMAGE.value().ifPresentOrElse(path -> {
+			try (var in = new FileInputStream(path)) {
 				b.setBannerImage(ByteString.readFrom(in));
 			} catch (IOException e) {
 				log.error("Failed to read banner image", e);
 			}
-		} else {
+		}, () -> {
 			byte[] image = PrefStore.getBytes("banner.image.bytes");
 			if (image != null)
 				b.setBannerImage(ByteString.copyFrom(image));
-		}
+		});
 
 		// Validate image format
 		try (var in = new ByteArrayInputStream(b.getBannerImage().toByteArray())) {

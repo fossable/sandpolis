@@ -11,12 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +22,6 @@ import org.slf4j.LoggerFactory;
  * following sources in order from highest to lowest precedence:
  *
  * <ul>
- * <li>Main Arguments</li>
  * <li>System Properties</li>
  * <li>Environment Variables</li>
  * </ul>
@@ -42,169 +37,297 @@ public final class Config {
 
 	public static final Logger log = LoggerFactory.getLogger(Config.class);
 
-	/**
-	 * The global configuration.
-	 */
-	private static final Map<String, Object> config = new HashMap<>();
+	public static class ConfigProperty<T> {
 
-	/**
-	 * Arguments passed to the program's main.
-	 */
-	private static String[] args = new String[] {};
+		/**
+		 * Whether the property has been "evaluated".
+		 */
+		private boolean evaluated;
 
-	/**
-	 * Set the main argument list.
-	 *
-	 * @param args The main arguments to use for configuration
-	 */
-	public static void setArguments(String[] args) {
-		Config.args = Objects.requireNonNull(args);
-	}
+		/**
+		 * The property's name.
+		 */
+		private final String property;
 
-	/**
-	 * Check that the configuration contains a property.
-	 *
-	 * @param property The property to check
-	 * @return Whether the property exists in the configuration
-	 */
-	public static boolean has(String property) {
-		return config.containsKey(property);
-	}
+		/**
+		 * The property's data type.
+		 */
+		private final Class<T> type;
 
-	/**
-	 * Get the value of a String property.
-	 *
-	 * @param property The property to request
-	 * @return The property value
-	 */
-	public static String get(String property) {
-		return (String) config.get(property);
-	}
+		/**
+		 * The property's data value.
+		 */
+		private T value;
 
-	/**
-	 * Get the value of a Boolean property.
-	 *
-	 * @param property The property to request
-	 * @return The property value
-	 */
-	public static boolean getBoolean(String property) {
-		return (boolean) config.get(property);
-	}
+		public ConfigProperty(Class<T> type, String property) {
+			this.type = Objects.requireNonNull(type);
+			this.property = Objects.requireNonNull(property);
+		}
 
-	/**
-	 * Get the value of an Integer property.
-	 *
-	 * @param property The property to request
-	 * @return The property value
-	 */
-	public static int getInteger(String property) {
-		return (int) config.get(property);
-	}
+		/**
+		 * Get whether the property was defined by the runtime environment.
+		 *
+		 * @return Whether the property has a non-null value
+		 */
+		public boolean defined() {
+			evaluate();
+			return value != null;
+		}
 
-	/**
-	 * Insist that the runtime environment provide the given property of the given
-	 * type. If the property is missing, an exception will be thrown.
-	 *
-	 * @param property The property name
-	 * @param type     The property type
-	 */
-	public static void require(String property, Class<?> type) {
-		Objects.requireNonNull(property);
-		Objects.requireNonNull(type);
-		if (config.containsKey(property))
-			log.warn("Overwriting property registration: " + property);
+		/**
+		 * Attempt to pull a value for the property from the runtime environment. System
+		 * properties have highest priority and then environment variables come next.
+		 */
+		@SuppressWarnings("unchecked")
+		private void evaluate() {
+			if (evaluated)
+				return;
+			evaluated = true;
 
-		String value = getValue(property);
-		if (value == null)
-			throw new RuntimeException("Missing required property: " + property);
+			// First priority: system properties
+			String value = System.getProperty(property);
+			if (value == null) {
+				// Second priority: environment variables
+				value = System.getenv().get(property.toUpperCase().replace('.', '_'));
+				if (value == null)
+					return;
+			}
 
-		if (type == String.class)
-			config.put(property, value);
-		else if (type == Boolean.class)
-			config.put(property, Boolean.parseBoolean(value));
-		else if (type == Integer.class)
-			config.put(property, Integer.parseInt(value));
-		else
-			throw new IllegalArgumentException("Unsupported type: " + type.getName());
-	}
+			try {
+				if (type == String.class) {
+					this.value = (T) (String) value;
+				} else if (type == Integer.class) {
+					this.value = (T) (Integer) Integer.parseInt(value);
+				} else if (type == Boolean.class) {
+					this.value = (T) (Boolean) Boolean.parseBoolean(value);
+				}
+			} catch (Exception e) {
+				log.error("Failed to parse property: {}", property);
+			}
+		}
 
-	/**
-	 * Suggest that the given property may be supplied by the runtime environment.
-	 * If the property is missing, the given default will be used. A default of
-	 * {@code null} implies the property's type should be {@link String}.
-	 *
-	 * @param property The property name
-	 * @param def      The default value
-	 */
-	public static void register(String property, Object def) {
-		Objects.requireNonNull(property);
-		if (config.containsKey(property))
-			log.warn("Overwriting property registration: " + property);
+		/**
+		 * Get the name of this property.
+		 *
+		 * @return The property name
+		 */
+		public String property() {
+			return property;
+		}
 
-		String value = getValue(property);
-		if (value == null) {
-			// Set default if not null
-			if (def != null)
-				config.put(property, def);
-		} else {
-			// Use default to predict type of value
-			if (def instanceof Boolean)
-				config.put(property, Boolean.parseBoolean(value));
-			else if (def instanceof Integer)
-				config.put(property, Integer.parseInt(value));
-			else
-				config.put(property, value);
+		/**
+		 * Suggest that the runtime environment provide a value for this property. If no
+		 * value is found, the property will remain be "undefined".
+		 */
+		public void register() {
+			evaluate();
+		}
+
+		/**
+		 * Suggest that the runtime environment provide a value for this property. If no
+		 * value is found, the given default will be used.
+		 *
+		 * @param _default A default property value
+		 */
+		public void register(T _default) {
+			evaluate();
+			if (value == null)
+				value = _default;
+		}
+
+		/**
+		 * Insist that the runtime environment provide a value for this property. If no
+		 * value is found, an exception will be thrown.
+		 */
+		public void require() {
+			evaluate();
+			if (!defined())
+				throw new RuntimeException("Required property not defined: " + property);
+		}
+
+		/**
+		 * Get the value of this property.
+		 *
+		 * @return The property value
+		 */
+		public Optional<T> value() {
+			evaluate();
+			return Optional.ofNullable(value);
 		}
 	}
 
 	/**
-	 * Suggest that the given {@link String} property may be supplied by the runtime
-	 * environment.
-	 *
-	 * @param property The property name
+	 * Whether a server banner will be sent to prospective connections.
+	 * <p>
+	 * <b> Compatible instances: server</b>
 	 */
-	public static void register(String property) {
-		register(property, null);
-	}
+	public static final ConfigProperty<Boolean> BANNER_ENABLED = new ConfigProperty<>(Boolean.class,
+			"sandpolis.banner");
 
 	/**
-	 * Get the store's configuration.
-	 *
-	 * @return The configuration data
+	 * A path to an image to use in the server banner.
+	 * <p>
+	 * <b> Compatible instances: server</b>
 	 */
-	public static Set<Entry<String, Object>> entries() {
-		return config.entrySet();
-	}
+	public static final ConfigProperty<String> BANNER_IMAGE = new ConfigProperty<>(String.class,
+			"sandpolis.banner.image");
 
 	/**
-	 * Print the current configuration to the debug logger.
+	 * A greeting message to use in the server banner.
+	 * <p>
+	 * <b> Compatible instances: server</b>
 	 */
-	public static void print() {
-		log.debug("PRINTING CONFIGURATION:\n{}", config.entrySet().stream()
-				.map(entry -> entry.getKey() + ": " + entry.getValue()).collect(Collectors.joining("\n")));
-	}
+	public static final ConfigProperty<String> BANNER_TEXT = new ConfigProperty<>(String.class,
+			"sandpolis.banner.text");
 
 	/**
-	 * Query the runtime environment for the given property.
-	 *
-	 * @param property The property name
-	 * @return The property value
+	 * The database user password.
+	 * <p>
+	 * <b> Compatible instances: server</b>
 	 */
-	private static String getValue(String property) {
-		Objects.requireNonNull(property);
+	public static final ConfigProperty<String> DB_PASSWORD = new ConfigProperty<>(String.class,
+			"sandpolis.database.password");
 
-		// Query main argument
-		for (String argument : args)
-			if (argument.startsWith(property + "="))
-				return argument.substring(argument.indexOf('=') + 1);
+	/**
+	 * The database provider name.
+	 * <p>
+	 * <b> Compatible instances: server</b>
+	 */
+	public static final ConfigProperty<String> DB_PROVIDER = new ConfigProperty<>(String.class,
+			"sandpolis.database.provider");
 
-		// Query system property
-		if (System.getProperties().containsKey(property))
-			return System.getProperty(property);
+	/**
+	 * The database URL.
+	 * <p>
+	 * <b> Compatible instances: server</b>
+	 */
+	public static final ConfigProperty<String> DB_URL = new ConfigProperty<>(String.class, "sandpolis.database.url");
 
-		// Query environment variable
-		return System.getenv().get(property.toUpperCase().replace('.', '_'));
-	}
+	/**
+	 * The database user username.
+	 * <p>
+	 * <b> Compatible instances: server</b>
+	 */
+	public static final ConfigProperty<String> DB_USERNAME = new ConfigProperty<>(String.class,
+			"sandpolis.database.username");
+
+	/**
+	 * Whether a debug client will be generated on startup.
+	 * <p>
+	 * <b> Compatible instances: server</b>
+	 */
+	public static final ConfigProperty<Boolean> DEBUG_CLIENT = new ConfigProperty<>(Boolean.class,
+			"sandpolis.debug.generate_client");
+
+	/**
+	 * The service to use for geolocation requests.
+	 * <p>
+	 * <b> Compatible instances: server</b>
+	 */
+	public static final ConfigProperty<String> GEOLOCATION_SERVICE = new ConfigProperty<>(String.class,
+			"sandpolis.geolocation.service");
+
+	/**
+	 * The geolocation API key.
+	 * <p>
+	 * <b> Compatible instances: server</b>
+	 */
+	public static final ConfigProperty<String> GEOLOCATION_SERVICE_KEY = new ConfigProperty<>(String.class,
+			"sandpolis.geolocation.service_key");
+
+	/**
+	 * Whether process mutexes will be checked and enforced.
+	 */
+	public static final ConfigProperty<Boolean> IPC_MUTEX = new ConfigProperty<>(Boolean.class, "sandpolis.ipc.mutex");
+
+	/**
+	 * The default message timeout in milliseconds.
+	 */
+	public static final ConfigProperty<Integer> IPC_TIMEOUT = new ConfigProperty<>(Integer.class,
+			"sandpolis.ipc.timeout");
+
+	/**
+	 * The default message timeout in milliseconds.
+	 */
+	public static final ConfigProperty<Integer> MESSAGE_TIMEOUT = new ConfigProperty<>(Integer.class,
+			"sandpolis.net.message_timeout");
+
+	/**
+	 * The maximum number of outgoing connection attempts.
+	 */
+	public static final ConfigProperty<Integer> OUTGOING_CONCURRENCY = new ConfigProperty<>(Integer.class,
+			"sandpolis.net.connection.max_outgoing");
+
+	/**
+	 * The database directory.
+	 * <p>
+	 * <b> Compatible instances: server</b>
+	 */
+	public static final ConfigProperty<String> PATH_DB = new ConfigProperty<>(String.class, "sandpolis.path.db");
+
+	/**
+	 * The generator output directory.
+	 * <p>
+	 * <b> Compatible instances: server</b>
+	 */
+	public static final ConfigProperty<String> PATH_GEN = new ConfigProperty<>(String.class, "sandpolis.path.gen");
+
+	/**
+	 * The library directory.
+	 */
+	public static final ConfigProperty<String> PATH_LIB = new ConfigProperty<>(String.class, "sandpolis.path.lib");
+
+	/**
+	 * The log output directory.
+	 */
+	public static final ConfigProperty<String> PATH_LOG = new ConfigProperty<>(String.class, "sandpolis.path.log");
+
+	/**
+	 * The plugin directory.
+	 */
+	public static final ConfigProperty<String> PATH_PLUGIN = new ConfigProperty<>(String.class,
+			"sandpolis.path.plugin");
+
+	/**
+	 * The temporary directory.
+	 */
+	public static final ConfigProperty<String> PATH_TMP = new ConfigProperty<>(String.class, "sandpolis.path.tmp");
+
+	/**
+	 * Whether plugins will be loaded.
+	 */
+	public static final ConfigProperty<Boolean> PLUGIN_ENABLED = new ConfigProperty<>(Boolean.class,
+			"sandpolis.plugins.enabled");
+
+	/**
+	 * Whether the startup summary will be logged.
+	 */
+	public static final ConfigProperty<Boolean> STARTUP_SUMMARY = new ConfigProperty<>(Boolean.class,
+			"sandpolis.startup.logging.summary");
+
+	/**
+	 * Whether TLS will be used for network connections.
+	 */
+	public static final ConfigProperty<Boolean> TLS_ENABLED = new ConfigProperty<>(Boolean.class,
+			"sandpolis.net.connection.tls");
+
+	/**
+	 * Whether decoded network traffic will be logged.
+	 */
+	public static final ConfigProperty<Boolean> TRAFFIC_DECODED = new ConfigProperty<>(Boolean.class,
+			"sandpolis.net.logging.decoded");
+
+	/**
+	 * The traffic statistics interval.
+	 */
+	public static final ConfigProperty<Integer> TRAFFIC_INTERVAL = new ConfigProperty<>(Integer.class,
+			"sandpolis.net.connection.stat_interval");
+
+	/**
+	 * Whether raw network traffic will be logged.
+	 */
+	public static final ConfigProperty<Boolean> TRAFFIC_RAW = new ConfigProperty<>(Boolean.class,
+			"sandpolis.net.logging.raw");
 
 	private Config() {
 	}

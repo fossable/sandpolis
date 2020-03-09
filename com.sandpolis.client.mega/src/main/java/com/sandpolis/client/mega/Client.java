@@ -29,7 +29,6 @@ import com.google.common.eventbus.Subscribe;
 import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.cmd.PluginCmd;
 import com.sandpolis.client.mega.exe.ClientExe;
-import com.sandpolis.core.instance.BasicTasks;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
@@ -79,7 +78,6 @@ public final class Client {
 	public static void main(String[] args) {
 		printEnvironment(log, "Sandpolis Client");
 
-		register(BasicTasks.loadConfiguration);
 		register(IPCTask.load);
 		register(IPCTask.checkLock);
 		register(IPCTask.setLock);
@@ -96,6 +94,7 @@ public final class Client {
 	public static final Task loadEnvironment = new Task(outcome -> {
 
 		if (SO_CONFIG.getMemory()) {
+			// TODO actually remove paths
 			Environment.LIB.set(null);
 			Environment.LOG.set(null);
 			Environment.PLUGIN.set(null);
@@ -103,9 +102,9 @@ public final class Client {
 			Environment.GEN.set(null);
 			Environment.TMP.set(null);
 		} else {
-			Environment.LIB.set(Config.get("path.lib")).requireReadable();
-			Environment.LOG.set(Config.get("path.log")).requireWritable();
-			Environment.PLUGIN.set(Config.get("path.plugin")).requireWritable();
+			Environment.LIB.set(Config.PATH_LIB.value().orElse(null)).requireReadable();
+			Environment.LOG.set(Config.PATH_LOG.value().orElse(null)).requireWritable();
+			Environment.PLUGIN.set(Config.PATH_PLUGIN.value().orElse(null)).requireWritable();
 		}
 		return outcome.success();
 	});
@@ -178,7 +177,7 @@ public final class Client {
 					}
 				});
 
-				if (Config.getBoolean("plugin.enabled") && !SO_CONFIG.getMemory()) {
+				if (Config.PLUGIN_ENABLED.value().orElse(true) && !SO_CONFIG.getMemory()) {
 					future.addHandler((Outcome rs) -> {
 						if (rs.getResult()) {
 							// Synchronize plugins
@@ -196,8 +195,11 @@ public final class Client {
 	/**
 	 * Load plugins.
 	 */
-	@InitializationTask(name = "Load client plugins", condition = "plugin.enabled")
+	@InitializationTask(name = "Load client plugins")
 	public static final Task loadPlugins = new Task(outcome -> {
+		if (!Config.PLUGIN_ENABLED.value().orElse(true))
+			return outcome.skipped();
+
 		PluginStore.scanPluginDirectory();
 		PluginStore.loadPlugins();
 
