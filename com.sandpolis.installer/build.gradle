@@ -67,7 +67,7 @@ dependencies {
 	api 'com.google.guava:guava:28.2-jre'
 
 	// https://github.com/nayuki/QR-Code-generator
-	api 'io.nayuki:qrcodegen:1.5.0'
+	api 'io.nayuki:qrcodegen:1.6.0'
 
 	// https://github.com/qos-ch/slf4j
 	api 'org.slf4j:slf4j-api:1.7.30'
