@@ -15,7 +15,7 @@ plugins {
 	id 'java-library'
 
 	id 'com.sandpolis.gradle.soi'
-	id 'com.bmuschko.docker-remote-api' version '6.1.3'
+	id 'com.bmuschko.docker-remote-api' version '6.2.0'
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
