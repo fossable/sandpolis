@@ -144,6 +144,7 @@ def publishProjects = [
 	'com.sandpolis.core.util',
 	'com.sandpolis.core.viewer',
 	'com.sandpolis.plugin.desktop',
+	'com.sandpolis.plugin.device',
 	'com.sandpolis.plugin.filesys',
 	'com.sandpolis.plugin.shell',
 	'com.sandpolis.plugin.sysinfo',
