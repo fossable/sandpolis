@@ -22,7 +22,7 @@ plugins {
 
 javafx {
 	modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
-	version = "13.0.1"
+	version = "14"
 }
 
 eclipse {
