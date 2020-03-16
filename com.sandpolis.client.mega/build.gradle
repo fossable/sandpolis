@@ -32,7 +32,7 @@ eclipse {
 }
 
 dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.6.0'
 
 	api project(':module:com.sandpolis.core.instance')
 	api project(':module:com.sandpolis.core.ipc')
