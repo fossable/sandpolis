@@ -9,36 +9,28 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+package com.sandpolis.plugin.device;
 
-plugins {
-	id 'eclipse'
-	id 'java-library'
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-	id 'org.javamodularity.moduleplugin'
-}
+import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
+import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 
-apply plugin: 'com.sandpolis.gradle.soi'
+public class DeviceStore extends MapStore<String, Device, StoreConfig> {
 
-eclipse {
-	project {
-		name = 'com.sandpolis.plugin.device:client:mega'
-		comment = "The device plugin's Mega client component"
+	private static final Logger log = LoggerFactory.getLogger(DeviceStore.class);
+
+	public DeviceStore() {
+		super(log);
 	}
-	classpath.file {
-		whenMerged {
-			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+
+	public final class DeviceStoreConfig extends StoreConfig {
+
+		@Override
+		public void ephemeral() {
+			provider = new MemoryMapStoreProvider<>(Device.class, Device::getId);
 		}
 	}
-}
-
-dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
-
-	implementation project(':module:com.sandpolis.core.instance')
-	implementation project(':module:com.sandpolis.core.net')
-	implementation project(':module:com.sandpolis.core.proto')
-	implementation project(':plugin:com.sandpolis.plugin.device')
-
-	// http://www.snmp4j.org
-	implementation 'org.snmp4j:snmp4j:3.4.0'
 }

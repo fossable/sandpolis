@@ -9,36 +9,8 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+package com.sandpolis.plugin.device.client.mega.snmp.library;
 
-plugins {
-	id 'eclipse'
-	id 'java-library'
+public class QTS {
 
-	id 'org.javamodularity.moduleplugin'
-}
-
-apply plugin: 'com.sandpolis.gradle.soi'
-
-eclipse {
-	project {
-		name = 'com.sandpolis.plugin.device:client:mega'
-		comment = "The device plugin's Mega client component"
-	}
-	classpath.file {
-		whenMerged {
-			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
-		}
-	}
-}
-
-dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
-
-	implementation project(':module:com.sandpolis.core.instance')
-	implementation project(':module:com.sandpolis.core.net')
-	implementation project(':module:com.sandpolis.core.proto')
-	implementation project(':plugin:com.sandpolis.plugin.device')
-
-	// http://www.snmp4j.org
-	implementation 'org.snmp4j:snmp4j:3.4.0'
 }

@@ -9,36 +9,24 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+package com.sandpolis.plugin.device.client.mega.snmp.library.mib;
 
-plugins {
-	id 'eclipse'
-	id 'java-library'
+import java.util.function.Function;
 
-	id 'org.javamodularity.moduleplugin'
-}
+import org.snmp4j.smi.Variable;
 
-apply plugin: 'com.sandpolis.gradle.soi'
+public interface SNMPv2_MIB {
 
-eclipse {
-	project {
-		name = 'com.sandpolis.plugin.device:client:mega'
-		comment = "The device plugin's Mega client component"
+	public @interface SNMP {
+		String value();
 	}
-	classpath.file {
-		whenMerged {
-			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
-		}
-	}
-}
 
-dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+	@SNMP("1.3.6.1.2.1.1.1.0")
+	Function<Variable, String> sysDescr = Variable::toString;
 
-	implementation project(':module:com.sandpolis.core.instance')
-	implementation project(':module:com.sandpolis.core.net')
-	implementation project(':module:com.sandpolis.core.proto')
-	implementation project(':plugin:com.sandpolis.plugin.device')
+	@SNMP("1.3.6.1.2.1.1.3.0")
+	Function<Variable, Integer> sysUpTime = result -> {
+		return result.toInt() * 100;
+	};
 
-	// http://www.snmp4j.org
-	implementation 'org.snmp4j:snmp4j:3.4.0'
 }
