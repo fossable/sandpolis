@@ -11,27 +11,136 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.upgrade.client.mega;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 
+import com.sandpolis.plugin.upgrade.client.mega.library.Apt;
+import com.sandpolis.plugin.upgrade.client.mega.library.Pacman;
+import com.sandpolis.plugin.upgrade.client.mega.library.Yum;
 import com.sandpolis.plugin.upgrade.net.MsgUpgrade.Package;
 
 /**
- * A package manager installs "packages" from a remote repository onto the local
- * system.
+ * A package manager performs operations such as:
+ * <ul>
+ * <li>Downloading packages from a remote repository</li>
+ * <li>Installing packages onto the local system</li>
+ * <li>Removing packages from the local system</li>
+ * </ul>
  *
  * @author cilki
- *
+ * @since 6.2.0
  */
 public abstract class PackageManager {
 
-	public boolean detect() {
-		return getVersion().isPresent();
+	/**
+	 * A global (thread-safe) handle on the system's package manager or {@code null}
+	 * if no compatible manager was found.
+	 */
+	public static final PackageManager INSTANCE = detectManager();
+
+	private static PackageManager detectManager() {
+		PackageManager pm;
+
+		if ((pm = new Pacman()).getManagerCompatibility())
+			return pm;
+		if ((pm = new Apt()).getManagerCompatibility())
+			return pm;
+		if ((pm = new Yum()).getManagerCompatibility())
+			return pm;
+
+		return null;
 	}
 
-	public abstract Optional<String> getVersion();
+	/**
+	 * Determine the package manager's compatibility.
+	 * 
+	 * @return Whether the package manager is compatible with this system
+	 */
+	public boolean getManagerCompatibility() {
+		try {
+			return !getManagerVersion().isEmpty() && Files.exists(getManagerLocation());
+		} catch (Exception e) {
+			return false;
+		}
+	}
 
-	public abstract Optional<List<Package>> getInstalledPackages();
+	/**
+	 * Get the location of the package manager's binary on the filesystem.
+	 * 
+	 * @return The package manager's file path
+	 * @throws Exception
+	 */
+	public abstract Path getManagerLocation() throws Exception;
 
-	public abstract Optional<List<Package>> getOutdatedPackages();
+	/**
+	 * Get the package manager's version string.
+	 * 
+	 * @return The local version
+	 * @throws Exception
+	 */
+	public abstract String getManagerVersion() throws Exception;
+
+	/**
+	 * Remove old packages from the local package cache.
+	 * 
+	 * @throws Exception
+	 */
+	public abstract void clean() throws Exception;
+
+	/**
+	 * Get all currently installed packages.
+	 * 
+	 * @return All locally installed packages
+	 * @throws Exception
+	 */
+	public abstract List<Package> getInstalled() throws Exception;
+
+	/**
+	 * Gather advanced metadata for the given package.
+	 * 
+	 * @param name The package name
+	 * @return The package metadata
+	 * @throws Exception
+	 */
+	public abstract Package getMetadata(String name) throws Exception;
+
+	/**
+	 * Get all packages that are currently outdated.
+	 * 
+	 * @return All packages that have a newer version available
+	 * @throws Exception
+	 */
+	public abstract List<Package> getOutdated() throws Exception;
+
+	/**
+	 * Install the given packages onto the local system.
+	 * 
+	 * @param packages The packages to install
+	 * @throws Exception
+	 */
+	public abstract void install(List<String> packages) throws Exception;
+
+	/**
+	 * Synchronize the local package database with all remote repositories.
+	 * 
+	 * @throws Exception
+	 */
+	public abstract void refresh() throws Exception;
+
+	/**
+	 * Remove the given packages from the local system.
+	 * 
+	 * @param packages The packages to uninstall
+	 * @throws Exception
+	 */
+	public abstract void remove(List<String> packages) throws Exception;
+
+	/**
+	 * Upgrade the given packages to the latest available version.
+	 * 
+	 * @param packages The packages to upgrade
+	 * @throws Exception
+	 */
+	public abstract void upgrade(List<String> packages) throws Exception;
 }
