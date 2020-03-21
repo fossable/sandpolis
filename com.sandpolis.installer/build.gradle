@@ -16,7 +16,6 @@ plugins {
 
 	id 'org.openjfx.javafxplugin' version '0.0.8'
 	id "com.github.breadmoirai.github-release" version "2.2.9"
-	id 'edu.sc.seis.launch4j' version '2.4.6'
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
@@ -160,22 +159,6 @@ artifacts {
 	archives jarOnlineMac
 }
 
-launch4j {
-	outfile = "SandpolisInstaller-win-${project.version}.exe"
-	mainClassName = 'com.sandpolis.installer.Main'
-	headerType = 'gui'
-	stayAlive = 'true'
-	companyName = 'Subterranean Security'
-	productName = 'Sandpolis Installer'
-	windowTitle = 'Sandpolis Installer'
-	version = "0.${project.version}"
-	textVersion = "0.${project.version}"
-	jar = jarOnlineWin.archiveFile
-	copyConfigurable = jarOnlineWin
-	icon = "${projectDir}/sandpolis.ico"
-}
-tasks.createExe.dependsOn(jarOnlineWin)
-
 githubRelease {
 	token = System.properties['publishing.github.token']
 	owner = 'Subterranean-Security'
@@ -183,12 +166,9 @@ githubRelease {
 	draft = true
 	prerelease = true
 	releaseAssets = {[
-		// TODO Classpath isn't handled properly with launch4j
-		// project.file("build/launch4j/${launch4j.outfile}"),
 		jarOnlineWin.archiveFile,
 		jarOnlineLin.archiveFile,
 		jarOnlineMac.archiveFile,
 	]}
 }
 tasks.githubRelease.dependsOn(assemble)
-//tasks.githubRelease.dependsOn(createExe)
