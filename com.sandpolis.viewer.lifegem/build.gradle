@@ -75,12 +75,12 @@ dependencies {
 	api 'org.slf4j:slf4j-api:1.7.30'
 }
 
-task assembleDependencies(type: Copy, dependsOn: jar) {
+task dockerSyncBuildContext(type: Sync, dependsOn: jar) {
 	from configurations.runtimeClasspath, jar
-	into "$buildDir/docker/lib"
+	into "${buildDir}/docker/lib"
 }
 
-task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: assembleDependencies) {
+task dockerBuildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: dockerSyncBuildContext) {
 	inputDir = file('.')
 	images = ["sandpolis/viewer/lifegem:${project.version}"]
 }

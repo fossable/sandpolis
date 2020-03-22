@@ -1,8 +1,18 @@
-FROM adoptopenjdk:13-hotspot
+FROM adoptopenjdk:14-hotspot
 
+# Set application root directory
 WORKDIR /app
 
-# Install application
-COPY build/docker/lib/ /app
+# Setup environment
+ENV SANDPOLIS_IPC_MUTEX             = "false"
+ENV SANDPOLIS_NET_CONNECTION_TLS    = "true"
+ENV SANDPOLIS_NET_LOGGING_DECODED   = "false"
+ENV SANDPOLIS_NET_LOGGING_RAW       = "false"
+ENV SANDPOLIS_PATH_LIB              = "/app/lib"
+ENV SANDPOLIS_PATH_PLUGIN           = "/app/plugin"
+ENV SANDPOLIS_PLUGINS_ENABLED       = "true"
 
-ENTRYPOINT ["java", "-Dsandpolis.path.lib=/app/libs", "-Dsandpolis.path.gen=/tmp", "-Dsandpolis.ipc.mutex=false", "-Dsandpolis.net.logging.raw=false", "-Dlsandpolis.net.logging.decoded=false", "-Dsandpolis.net.connection.tls=true", "-Dsandpolis.plugins.enabled=true", "--module-path", "/app", "-m", "com.sandpolis.viewer.ascetic/com.sandpolis.viewer.ascetic.Main"]
+# Install application
+COPY build/docker/lib/ /app/lib
+
+ENTRYPOINT ["java", "--module-path", "/app/lib", "-m", "com.sandpolis.viewer.ascetic/com.sandpolis.viewer.ascetic.Main"]
