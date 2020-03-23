@@ -17,7 +17,6 @@ import java.util.List;
 
 import com.sandpolis.plugin.upgrade.client.mega.library.Apt;
 import com.sandpolis.plugin.upgrade.client.mega.library.Pacman;
-import com.sandpolis.plugin.upgrade.client.mega.library.Yum;
 import com.sandpolis.plugin.upgrade.net.MsgUpgrade.Package;
 
 /**
@@ -46,15 +45,13 @@ public abstract class PackageManager {
 			return pm;
 		if ((pm = new Apt()).getManagerCompatibility())
 			return pm;
-		if ((pm = new Yum()).getManagerCompatibility())
-			return pm;
 
 		return null;
 	}
 
 	/**
 	 * Determine the package manager's compatibility.
-	 * 
+	 *
 	 * @return Whether the package manager is compatible with this system
 	 */
 	public boolean getManagerCompatibility() {
@@ -67,7 +64,7 @@ public abstract class PackageManager {
 
 	/**
 	 * Get the location of the package manager's binary on the filesystem.
-	 * 
+	 *
 	 * @return The package manager's file path
 	 * @throws Exception
 	 */
@@ -75,7 +72,7 @@ public abstract class PackageManager {
 
 	/**
 	 * Get the package manager's version string.
-	 * 
+	 *
 	 * @return The local version
 	 * @throws Exception
 	 */
@@ -83,14 +80,14 @@ public abstract class PackageManager {
 
 	/**
 	 * Remove old packages from the local package cache.
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	public abstract void clean() throws Exception;
 
 	/**
 	 * Get all currently installed packages.
-	 * 
+	 *
 	 * @return All locally installed packages
 	 * @throws Exception
 	 */
@@ -98,7 +95,7 @@ public abstract class PackageManager {
 
 	/**
 	 * Gather advanced metadata for the given package.
-	 * 
+	 *
 	 * @param name The package name
 	 * @return The package metadata
 	 * @throws Exception
@@ -107,7 +104,7 @@ public abstract class PackageManager {
 
 	/**
 	 * Get all packages that are currently outdated.
-	 * 
+	 *
 	 * @return All packages that have a newer version available
 	 * @throws Exception
 	 */
@@ -115,7 +112,7 @@ public abstract class PackageManager {
 
 	/**
 	 * Install the given packages onto the local system.
-	 * 
+	 *
 	 * @param packages The packages to install
 	 * @throws Exception
 	 */
@@ -123,14 +120,14 @@ public abstract class PackageManager {
 
 	/**
 	 * Synchronize the local package database with all remote repositories.
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	public abstract void refresh() throws Exception;
 
 	/**
 	 * Remove the given packages from the local system.
-	 * 
+	 *
 	 * @param packages The packages to uninstall
 	 * @throws Exception
 	 */
@@ -138,7 +135,7 @@ public abstract class PackageManager {
 
 	/**
 	 * Upgrade the given packages to the latest available version.
-	 * 
+	 *
 	 * @param packages The packages to upgrade
 	 * @throws Exception
 	 */

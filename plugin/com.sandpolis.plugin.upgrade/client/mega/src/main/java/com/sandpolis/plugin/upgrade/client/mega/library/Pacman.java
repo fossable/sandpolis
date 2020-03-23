@@ -11,10 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.upgrade.client.mega.library;
 
-import java.util.ArrayList;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -22,12 +23,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.util.SystemUtil;
+import com.sandpolis.core.util.TextUtil;
 import com.sandpolis.plugin.upgrade.client.mega.PackageManager;
 import com.sandpolis.plugin.upgrade.net.MsgUpgrade.Package;
 
 /**
  * Integration with Arch Linux's Pacman package management utility.
- * 
+ *
  * @author cilki
  *
  */
@@ -36,57 +38,118 @@ public class Pacman extends PackageManager {
 	private static final Logger log = LoggerFactory.getLogger(Pacman.class);
 
 	@Override
-	public Optional<String> getVersion() {
-		return SystemUtil.exec(1000, TimeUnit.MILLISECONDS, "pacman", "-V").map(output -> {
-			return Pattern.compile("Pacman v(.*) -").matcher(output).group(1);
-		});
+	public String getManagerVersion() throws Exception {
+		final var versionRegex = Pattern.compile("Pacman v(.*) -");
+
+		return SystemUtil.exec("pacman", "-V").lines()
+				// Pull version out of the output
+				.map(versionRegex::matcher).filter(Matcher::matches).findFirst().get().group(1);
 	}
 
 	@Override
-	public Optional<List<Package>> getInstalledPackages() {
-
-		return SystemUtil.exec(1000, TimeUnit.MILLISECONDS, "pacman", "-Q").map(output -> {
-			List<Package> packages = new ArrayList<>();
-			for (String pkg : output.split("\n")) {
-				String[] l = pkg.split(" ");
-				packages.add(Package.newBuilder().setName(l[0]).setVersion(l[1]).build());
-			}
-			return packages;
-		});
+	public Path getManagerLocation() throws Exception {
+		return Paths.get(SystemUtil.exec("which", "pacman").string());
 	}
 
 	@Override
-	public Optional<List<Package>> getOutdatedPackages() {
+	public void clean() throws Exception {
+		log.debug("Cleaning package cache");
 
-		return SystemUtil.exec(1000, TimeUnit.MILLISECONDS, "pacman", "-Suq", "--print-format", "\"%n %v %s %l %r\"")
-				.map(output -> {
-					List<Package> packages = new ArrayList<>();
-					for (String pkg : output.split("\n")) {
-						String[] l = pkg.split(" ");
-						packages.add(Package.newBuilder().setName(l[0]).setVersion(l[1]).setSize(Long.parseLong(l[2]))
-								.setRemoteLocation(l[3]).setRepository(l[4]).build());
+		SystemUtil.execp("pacman", "-Sc", "--noconfirm").complete(80);
+	}
+
+	@Override
+	public List<Package> getInstalled() throws Exception {
+		log.debug("Querying for local packages");
+
+		return SystemUtil.exec("pacman", "-Q").lines()
+				// Each line is a package
+				.map(line -> line.split("\\s+"))
+				// Protect against invalid lines
+				.filter(pkg -> pkg.length == 2)
+				// Build new Package object
+				.map(pkg -> Package.newBuilder().setName(pkg[0]).setVersion(pkg[1]).build())
+				// Collect into list
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public Package getMetadata(String name) throws Exception {
+		Package.Builder p = Package.newBuilder().setName(name);
+
+		SystemUtil.exec("pacman", "-Ql", name).lines()
+				// Each line is a file or directory
+				.map(line -> line.split("\\s+"))
+				// Protect against any invalid lines
+				.filter(pkg -> pkg.length == 2).filter(pkg -> pkg[0].equals(name))
+				// Append file
+				.forEach(pkg -> p.addFile(pkg[1]));
+
+		SystemUtil.exec("pacman", "-Qi", name).lines()
+				// Each line is a property
+				.map(line -> line.split(":"))
+				// Protect against invalid lines
+				.filter(a -> a.length == 2)
+				// Gather metadata
+				.forEach(a -> {
+					switch (a[0].trim()) {
+					case "Description" -> p.setDescription(a[1]);
+					case "Architecture" -> p.setArchitecture(a[1]);
+					case "URL" -> p.setUpstreamUrl(a[1]);
+					case "Licenses" -> Arrays.stream(a[1].split("\\s+")).forEach(p::addLicense);
+					case "Depends On" -> Arrays.stream(a[1].split("\\s+")).forEach(p::addDependency);
+					case "Installed Size" -> p.setLocalSize(TextUtil.unformatByteCount(a[1]));
+					case "Install Reason" -> p.setExplicit("Explicitly installed".equals(a[1]));
 					}
-					return packages;
 				});
+
+		return p.build();
 	}
 
-	public Optional<Package> getPackageFiles(String name) {
+	@Override
+	public List<Package> getOutdated() throws Exception {
+		log.debug("Querying for outdated packages");
 
-		return SystemUtil.exec(1000, TimeUnit.MILLISECONDS, "pacman", "-Ql", name).map(output -> {
-			Package.Builder pkg = Package.newBuilder().setName(name);
-			for (String file : output.split("\n")) {
-				pkg.addFile(file.split(" ")[1]);
-			}
-			return pkg.build();
-		});
+		return SystemUtil.exec("pacman", "-Suq", "--print-format", "%n %v %s %l %r").lines()
+				// Each line is a package
+				.map(line -> line.split("\\s+"))
+				// Protect against invalid lines
+				.filter(pkg -> pkg.length == 5)
+				// Build new Package object
+				.map(pkg -> Package.newBuilder().setName(pkg[0]).setVersion(pkg[1])
+						.setRemoteSize(Long.parseLong(pkg[2])).setRemoteLocation(pkg[3]).setRepository(pkg[4]).build())
+				// Collect into list
+				.collect(Collectors.toList());
 	}
 
-	public void upgradePackages(List<Package> packages) {
-		SystemUtil.execp("pacman", "-S", "--noconfirm",
-				packages.stream().map(Package::getName).collect(Collectors.joining(" ")));
+	@Override
+	public void install(List<String> packages) throws Exception {
+		log.debug("Installing {} packages", packages.size());
+
+		SystemUtil.execp("pacman", "-S", "--noconfirm", packages.stream().collect(Collectors.joining(" ")))
+				.complete(600);
 	}
 
-	public void refreshPackages() {
-		SystemUtil.execp("pacman", "-Sy");
+	@Override
+	public void refresh() throws Exception {
+		log.debug("Refreshing package database");
+
+		SystemUtil.execp("pacman", "-Sy").complete(80);
+	}
+
+	@Override
+	public void remove(List<String> packages) throws Exception {
+		log.debug("Removing {} packages", packages.size());
+
+		SystemUtil.execp("pacman", "-R", "--noconfirm", packages.stream().collect(Collectors.joining(" ")))
+				.complete(600);
+	}
+
+	@Override
+	public void upgrade(List<String> packages) throws Exception {
+		log.debug("Upgrading {} packages", packages.size());
+
+		SystemUtil.execp("pacman", "-S", "--noconfirm", packages.stream().collect(Collectors.joining(" ")))
+				.complete(600);
 	}
 }
