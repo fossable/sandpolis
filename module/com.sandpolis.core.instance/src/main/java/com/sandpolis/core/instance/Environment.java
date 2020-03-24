@@ -11,15 +11,16 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance;
 
-import com.sandpolis.core.util.TextUtil;
-import org.slf4j.Logger;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.ProtectionDomain;
 import java.util.Date;
+
+import org.slf4j.Logger;
+
+import com.sandpolis.core.util.TextUtil;
 
 /**
  * This class contains important information about the runtime file hierarchy.

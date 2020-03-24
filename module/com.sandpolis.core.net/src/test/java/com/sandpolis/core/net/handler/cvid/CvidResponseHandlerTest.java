@@ -24,12 +24,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.net.MsgCvid.RS_Cvid;
 import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgCvid.RQ_Cvid;
-import com.sandpolis.core.proto.net.MsgCvid.RS_Cvid;
-import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.instance.Platform.Instance;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;

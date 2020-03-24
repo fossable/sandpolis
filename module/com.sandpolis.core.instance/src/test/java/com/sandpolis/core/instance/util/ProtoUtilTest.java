@@ -15,10 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgLogin.RQ_Login;
-import com.sandpolis.core.proto.net.MsgServer.RS_ServerBanner;
-import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgLogin.RQ_Login;
+import com.sandpolis.core.net.MsgServer.RS_ServerBanner;
+import com.sandpolis.core.net.util.ProtoUtil;
+import com.sandpolis.core.instance.Result.Outcome;
 
 class ProtoUtilTest {
 

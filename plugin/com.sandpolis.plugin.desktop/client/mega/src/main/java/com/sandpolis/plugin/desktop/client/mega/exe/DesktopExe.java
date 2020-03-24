@@ -30,12 +30,12 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.stream.OutboundStreamAdapter;
+import com.sandpolis.plugin.desktop.MessageDesktop.DesktopMSG;
+import com.sandpolis.plugin.desktop.MsgDesktop.RQ_Screenshot;
+import com.sandpolis.plugin.desktop.MsgDesktop.RS_Screenshot;
+import com.sandpolis.plugin.desktop.MsgRd.EV_DesktopStream;
+import com.sandpolis.plugin.desktop.MsgRd.RQ_DesktopStream;
 import com.sandpolis.plugin.desktop.client.mega.JavaDesktopSource;
-import com.sandpolis.plugin.desktop.net.MessageDesktop.DesktopMSG;
-import com.sandpolis.plugin.desktop.net.MsgDesktop.RQ_Screenshot;
-import com.sandpolis.plugin.desktop.net.MsgDesktop.RS_Screenshot;
-import com.sandpolis.plugin.desktop.net.MsgRd.EV_DesktopStream;
-import com.sandpolis.plugin.desktop.net.MsgRd.RQ_DesktopStream;
 
 public final class DesktopExe extends Exelet {
 

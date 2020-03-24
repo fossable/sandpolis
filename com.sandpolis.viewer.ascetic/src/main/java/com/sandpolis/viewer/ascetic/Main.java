@@ -12,8 +12,8 @@
 package com.sandpolis.viewer.ascetic;
 
 import com.sandpolis.core.instance.MainDispatch;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 /**
  * This stub is the entry point for CLI Viewer instances. Control is given to

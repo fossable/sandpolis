@@ -20,13 +20,13 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
 
+import com.sandpolis.core.instance.Group.GroupConfig;
+import com.sandpolis.core.instance.Group.ProtoGroup;
+import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.net.MsgGroup.RQ_AddGroup;
+import com.sandpolis.core.net.MsgGroup.RQ_RemoveGroup;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.MsgGroup.RQ_AddGroup;
-import com.sandpolis.core.proto.net.MsgGroup.RQ_RemoveGroup;
-import com.sandpolis.core.proto.pojo.Group.GroupConfig;
-import com.sandpolis.core.proto.pojo.Group.ProtoGroup;
-import com.sandpolis.core.proto.util.Result.Outcome;
 
 /**
  * Contains group commands.

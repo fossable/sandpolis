@@ -22,11 +22,11 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Transient;
 
 import com.sandpolis.core.instance.ProtoType;
+import com.sandpolis.core.instance.Result.ErrorCode;
+import com.sandpolis.core.instance.User.ProtoUser;
+import com.sandpolis.core.instance.User.UserConfig;
+import com.sandpolis.core.instance.User.UserStats;
 import com.sandpolis.core.instance.util.ConfigUtil;
-import com.sandpolis.core.proto.pojo.User.ProtoUser;
-import com.sandpolis.core.proto.pojo.User.UserConfig;
-import com.sandpolis.core.proto.pojo.User.UserStats;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.server.vanilla.store.group.Group;
 
 /**

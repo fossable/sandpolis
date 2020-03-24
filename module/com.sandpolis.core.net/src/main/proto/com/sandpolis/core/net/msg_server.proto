@@ -1,0 +1,40 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package core.net;
+
+option java_package = "com.sandpolis.core.net";
+option optimize_for = CODE_SIZE;
+
+/**
+ * Request for the server's banner
+ */
+message RQ_ServerBanner {}
+
+/**
+ * A response containing the server's banner
+ */
+message RS_ServerBanner {
+
+    // Maintenance mode indicates that only superusers will be allowed to login
+    bool maintenance = 1;
+
+    // The 3-field version of the server
+    string version = 2;
+
+    // A string to display on the login screen
+    string banner = 3;
+
+    // An image to display on the login screen
+    bytes banner_image = 4;
+}

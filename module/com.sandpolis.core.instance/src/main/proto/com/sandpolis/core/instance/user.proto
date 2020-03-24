@@ -1,0 +1,55 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto2";
+
+package core.instance;
+
+option java_package = "com.sandpolis.core.instance";
+option optimize_for = CODE_SIZE;
+
+/**
+ * The configuration of a User.
+ */
+message UserConfig {
+
+    // The primary ID
+    optional int64 id = 1;
+
+    // The username
+    optional string username = 2;
+
+    // The password
+    optional string password = 3;
+
+    // The email address
+    optional string email = 4;
+
+    // The expiration timestamp
+    optional int64 expiration = 5;
+}
+
+/**
+ * User statistics.
+ */
+message UserStats {
+
+    // The creation timestamp
+    optional int64 ctime = 1;
+}
+
+/**
+ * A User container.
+ */
+message ProtoUser {
+    optional UserConfig config = 1;
+    optional UserStats stats = 2;
+}

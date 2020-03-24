@@ -18,15 +18,15 @@ import static com.sandpolis.core.instance.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.instance.Result.ErrorCode;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgGroup.RQ_AddGroup;
+import com.sandpolis.core.net.MsgGroup.RQ_GroupDelta;
+import com.sandpolis.core.net.MsgGroup.RQ_ListGroups;
+import com.sandpolis.core.net.MsgGroup.RQ_RemoveGroup;
+import com.sandpolis.core.net.MsgGroup.RS_ListGroups;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgGroup.RQ_AddGroup;
-import com.sandpolis.core.proto.net.MsgGroup.RQ_GroupDelta;
-import com.sandpolis.core.proto.net.MsgGroup.RQ_ListGroups;
-import com.sandpolis.core.proto.net.MsgGroup.RQ_RemoveGroup;
-import com.sandpolis.core.proto.net.MsgGroup.RS_ListGroups;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.server.vanilla.store.group.Group;
 
 /**

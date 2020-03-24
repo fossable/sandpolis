@@ -15,7 +15,7 @@ import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import java.util.concurrent.TimeUnit;
 
-import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.net.Message.MSG;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;

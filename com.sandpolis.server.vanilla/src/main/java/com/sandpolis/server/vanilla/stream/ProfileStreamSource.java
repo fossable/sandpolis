@@ -15,6 +15,7 @@ import static com.sandpolis.core.net.store.connection.ConnectionStore.Connection
 import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 
 import com.google.common.eventbus.Subscribe;
+import com.sandpolis.core.net.MsgStream.EV_ProfileStream;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
 import com.sandpolis.core.net.stream.StreamSource;
@@ -22,8 +23,7 @@ import com.sandpolis.core.profile.AK_CLIENT;
 import com.sandpolis.core.profile.AK_INSTANCE;
 import com.sandpolis.core.profile.store.Events.ProfileOnlineEvent;
 import com.sandpolis.core.profile.store.Profile;
-import com.sandpolis.core.proto.net.MsgStream.EV_ProfileStream;
-import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.Instance;
 import com.sandpolis.server.vanilla.store.location.LocationStore;
 
 /**

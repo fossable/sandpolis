@@ -10,9 +10,8 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 module com.sandpolis.plugin.shell {
-	exports com.sandpolis.plugin.shell.net;
+	exports com.sandpolis.plugin.shell;
 
 	requires com.google.protobuf;
 	requires com.sandpolis.core.instance;
-	requires com.sandpolis.core.proto;
 }

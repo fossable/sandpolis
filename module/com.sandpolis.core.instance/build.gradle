@@ -13,6 +13,7 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
+	id 'com.google.protobuf' version '0.8.11'
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
@@ -28,14 +29,25 @@ eclipse {
 	}
 }
 
+sourceSets {
+	main {
+		java {
+			srcDirs 'src/main/proto'
+			srcDirs 'gen/main/java'
+		}
+	}
+}
+
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
 	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.5.2'
 	testImplementation 'net.jodah:concurrentunit:0.4.6'
 
-	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':module:com.sandpolis.core.soi')
 	implementation project(':module:com.sandpolis.core.util')
+
+	// https://github.com/protocolbuffers/protobuf
+	implementation 'com.google.protobuf:protobuf-java:3.11.4'
 
 	// https://github.com/qos-ch/logback
 	implementation 'ch.qos.logback:logback-core:1.2.3'
@@ -52,4 +64,30 @@ dependencies {
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.30'
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.11.4'
+	}
+
+	generatedFilesBaseDir = "$projectDir/gen/"
+
+	clean {
+		delete generatedFilesBaseDir
+	}
+	generateProtoTasks {
+		all().each { task ->
+			task.builtins {
+				cpp {
+					option 'lite'
+				}
+			}
+		}
+	}
+}
+
+// Ignore javadoc errors in generated protobuf sources
+javadoc {
+	failOnError = false
 }

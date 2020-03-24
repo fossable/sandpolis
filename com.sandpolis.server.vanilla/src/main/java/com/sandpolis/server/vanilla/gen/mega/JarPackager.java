@@ -16,17 +16,14 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import com.github.cilki.zipset.ZipSet;
 import com.github.cilki.zipset.ZipSet.EntryPath;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.Generator.GenConfig;
 import com.sandpolis.core.util.ArtifactUtil;
 import com.sandpolis.server.vanilla.gen.MegaGen;
-
-import com.sandpolis.core.proto.util.Platform.OsType;
-import com.sandpolis.core.proto.util.Generator.GenConfig;
 
 /**
  * This generator produces a runnable jar file.

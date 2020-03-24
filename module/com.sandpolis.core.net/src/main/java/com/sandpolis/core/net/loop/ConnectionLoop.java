@@ -11,22 +11,24 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.loop;
 
-import com.sandpolis.core.net.ChannelConstant;
-import com.sandpolis.core.net.future.SockFuture;
-import com.sandpolis.core.proto.util.Generator.LoopConfig;
-import com.sandpolis.core.proto.util.Generator.NetworkTarget;
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelOption;
-import io.netty.util.concurrent.EventExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sandpolis.core.instance.Generator.LoopConfig;
+import com.sandpolis.core.instance.Generator.NetworkTarget;
+import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.future.SockFuture;
+
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelOption;
+import io.netty.util.concurrent.EventExecutor;
 
 /**
  * A {@link ConnectionLoop} makes repeated connection attempts to a list of

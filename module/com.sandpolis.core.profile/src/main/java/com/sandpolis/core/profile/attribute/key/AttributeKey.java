@@ -21,7 +21,7 @@ import com.sandpolis.core.profile.attribute.Attribute.IntegerAttribute;
 import com.sandpolis.core.profile.attribute.Attribute.LongAttribute;
 import com.sandpolis.core.profile.attribute.Attribute.OsTypeAttribute;
 import com.sandpolis.core.profile.attribute.Attribute.StringAttribute;
-import com.sandpolis.core.proto.util.Platform.OsType;
+import com.sandpolis.core.util.Platform.OsType;
 
 /**
  * An {@link AttributeKey} corresponds to an {@link Attribute} in an attribute

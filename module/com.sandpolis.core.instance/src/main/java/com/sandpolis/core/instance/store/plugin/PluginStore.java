@@ -25,23 +25,23 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import com.sandpolis.core.util.JarUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
 import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.Plugin.PluginDescriptor;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.instance.store.plugin.Events.PluginLoadedEvent;
 import com.sandpolis.core.instance.store.plugin.PluginStore.PluginStoreConfig;
-import com.sandpolis.core.proto.net.MsgPlugin.PluginDescriptor;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.CertUtil;
+import com.sandpolis.core.util.JarUtil;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 /**
  * The {@link PluginStore} manages plugins.<br>

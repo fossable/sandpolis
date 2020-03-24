@@ -22,18 +22,18 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.util.PlatformUtil;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgAttribute.EV_AttributeStream;
+import com.sandpolis.core.net.MsgAttribute.RQ_AttributeQuery;
+import com.sandpolis.core.net.MsgAttribute.RQ_AttributeStream;
+import com.sandpolis.core.net.MsgAttribute.RS_AttributeQuery;
+import com.sandpolis.core.net.MsgClient.RQ_ClientMetadata;
+import com.sandpolis.core.net.MsgClient.RS_ClientMetadata;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.stream.OutboundStreamAdapter;
 import com.sandpolis.core.profile.AttributeStreamSource;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgAttribute.EV_AttributeStream;
-import com.sandpolis.core.proto.net.MsgAttribute.RQ_AttributeQuery;
-import com.sandpolis.core.proto.net.MsgAttribute.RQ_AttributeStream;
-import com.sandpolis.core.proto.net.MsgAttribute.RS_AttributeQuery;
-import com.sandpolis.core.proto.net.MsgClient.RQ_ClientMetadata;
-import com.sandpolis.core.proto.net.MsgClient.RS_ClientMetadata;
+import com.sandpolis.core.util.SystemUtil;
 
 public final class ClientExe extends Exelet {
 
@@ -48,7 +48,7 @@ public final class ClientExe extends Exelet {
 				// Network hostname
 				.setHostname(InetAddress.getLocalHost().getHostName())
 				// OS Family
-				.setOs(PlatformUtil.OS_TYPE)
+				.setOs(SystemUtil.OS_TYPE)
 				// Base directory location
 				.setInstallDirectory(Environment.JAR.path().getParent().toString());
 	}

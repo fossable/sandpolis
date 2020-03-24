@@ -14,9 +14,9 @@ package com.sandpolis.core.net.handler.exelet;
 import java.util.Objects;
 
 import com.google.protobuf.Message;
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.Message.MSG;
 
 /**
  * An object that can optionally be passed to {@link Exelet} handlers and

@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.instance.Platform.Instance;
+import com.sandpolis.core.instance.Platform.InstanceFlavor;
 
 class MainDispatchTest {
 

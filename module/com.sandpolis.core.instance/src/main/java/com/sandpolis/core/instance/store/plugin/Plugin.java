@@ -12,7 +12,8 @@
 package com.sandpolis.core.instance.store.plugin;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.nio.file.Files.*;
+import static java.nio.file.Files.createDirectories;
+import static java.nio.file.Files.exists;
 
 import java.io.IOException;
 import java.net.URL;
@@ -39,12 +40,11 @@ import com.google.common.io.MoreFiles;
 import com.google.common.io.Resources;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.Plugin.PluginDescriptor;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
-import com.sandpolis.core.instance.util.InstanceUtil;
-import com.sandpolis.core.proto.net.MsgPlugin.PluginDescriptor;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.JarUtil;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 /**
  * Represents a Sandpolis plugin installed in the {@code PLUGIN} directory.

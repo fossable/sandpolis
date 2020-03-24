@@ -27,13 +27,13 @@ import static com.sandpolis.core.net.HandlerKey.TRAFFIC;
 
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.cvid.CvidRequestHandler;
 import com.sandpolis.core.net.handler.exelet.ExeletHandler;
 import com.sandpolis.core.net.sock.ClientSock;
-import com.sandpolis.core.proto.net.Message.MSG;
 import com.sandpolis.core.util.CertUtil;
 
 import io.netty.channel.Channel;

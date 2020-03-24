@@ -23,10 +23,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgGenerator.RQ_Generate;
+import com.sandpolis.core.net.MsgGenerator.RS_Generate;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgGenerator.RQ_Generate;
-import com.sandpolis.core.proto.net.MsgGenerator.RS_Generate;
 import com.sandpolis.server.vanilla.gen.Generator;
 import com.sandpolis.server.vanilla.gen.MegaGen;
 

@@ -11,25 +11,9 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.gen;
 
-import com.github.cilki.zipset.ZipSet;
-import com.github.cilki.zipset.ZipSet.EntryPath;
-import com.google.common.base.Charsets;
-import com.google.common.io.CharStreams;
-import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.store.plugin.Plugin;
-import com.sandpolis.core.proto.util.Generator.FeatureSet;
-import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
-import com.sandpolis.core.proto.util.Platform.OsType;
-import com.sandpolis.core.soi.SoiUtil;
-import com.sandpolis.core.util.ArtifactUtil;
-import com.sandpolis.server.vanilla.gen.mega.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
@@ -38,8 +22,32 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
-import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.cilki.zipset.ZipSet;
+import com.github.cilki.zipset.ZipSet.EntryPath;
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
+import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.Generator.FeatureSet;
+import com.sandpolis.core.instance.Generator.GenConfig;
+import com.sandpolis.core.instance.store.plugin.Plugin;
+import com.sandpolis.core.soi.SoiUtil;
+import com.sandpolis.core.util.ArtifactUtil;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.Platform.OsType;
+import com.sandpolis.server.vanilla.gen.mega.BatPackager;
+import com.sandpolis.server.vanilla.gen.mega.ElfPackager;
+import com.sandpolis.server.vanilla.gen.mega.ExePackager;
+import com.sandpolis.server.vanilla.gen.mega.JarPackager;
+import com.sandpolis.server.vanilla.gen.mega.PyPackager;
+import com.sandpolis.server.vanilla.gen.mega.QrPackager;
+import com.sandpolis.server.vanilla.gen.mega.RbPackager;
+import com.sandpolis.server.vanilla.gen.mega.ShPackager;
+import com.sandpolis.server.vanilla.gen.mega.UrlPackager;
 
 /**
  * This generator builds a {@code com.sandpolis.client.mega} client.

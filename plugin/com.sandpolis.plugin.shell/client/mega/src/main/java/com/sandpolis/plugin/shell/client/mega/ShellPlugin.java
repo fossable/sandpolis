@@ -15,8 +15,8 @@ import com.google.protobuf.Message;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.plugin.ExeletProvider;
+import com.sandpolis.plugin.shell.MessageShell.ShellMSG;
 import com.sandpolis.plugin.shell.client.mega.exe.ShellExe;
-import com.sandpolis.plugin.shell.net.MessageShell.ShellMSG;
 
 public final class ShellPlugin extends SandpolisPlugin implements ExeletProvider {
 

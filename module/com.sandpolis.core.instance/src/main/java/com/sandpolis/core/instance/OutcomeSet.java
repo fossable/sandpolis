@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.instance.Result.Outcome;
 
 /**
  * A {@link Set} of {@link Outcome}s representing the overall result of some

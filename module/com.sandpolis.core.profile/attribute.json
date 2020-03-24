@@ -20,7 +20,7 @@
         },
         {
           "name": "os",
-          "type": "com.sandpolis.core.proto.util.Platform.OsType",
+          "type": "com.sandpolis.core.util.Platform.OsType",
           "description": "The instance OS type"
         }
       ]

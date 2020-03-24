@@ -13,6 +13,7 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
+	id 'com.google.protobuf' version '0.8.11'
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
@@ -28,13 +29,24 @@ eclipse {
 	}
 }
 
+sourceSets {
+	main {
+		java {
+			srcDirs 'src/main/proto'
+			srcDirs 'gen/main/java'
+		}
+	}
+}
+
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
 	testImplementation 'org.awaitility:awaitility:4.0.1'
 
 	implementation project(':module:com.sandpolis.core.instance')
-	implementation project(':module:com.sandpolis.core.proto')
 	implementation project(':module:com.sandpolis.core.util')
+
+	// https://github.com/protocolbuffers/protobuf
+	implementation 'com.google.protobuf:protobuf-java:3.11.4'
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:28.2-jre'
@@ -63,4 +75,30 @@ configurations {
 }
 artifacts {
 	tests testJar
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.11.4'
+	}
+
+	generatedFilesBaseDir = "$projectDir/gen/"
+
+	clean {
+		delete generatedFilesBaseDir
+	}
+	generateProtoTasks {
+		all().each { task ->
+			task.builtins {
+				cpp {
+					option 'lite'
+				}
+			}
+		}
+	}
+}
+
+// Ignore javadoc errors in generated protobuf sources
+javadoc {
+	failOnError = false
 }

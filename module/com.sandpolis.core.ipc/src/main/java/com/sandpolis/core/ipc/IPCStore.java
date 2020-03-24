@@ -30,14 +30,13 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.ipc.IPCStore.IPCStoreConfig;
 import com.sandpolis.core.ipc.Message.MSG;
 import com.sandpolis.core.ipc.Message.MSG.PayloadCase;
 import com.sandpolis.core.ipc.Metadata.RS_Metadata;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 /**
  * This store manages interprocess connections.

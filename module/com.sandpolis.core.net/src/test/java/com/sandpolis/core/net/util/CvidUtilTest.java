@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.instance.Platform.Instance;
+import com.sandpolis.core.instance.Platform.InstanceFlavor;
 
 class CvidUtilTest {
 

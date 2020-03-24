@@ -1,0 +1,60 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package core.net;
+
+import "com/sandpolis/core/instance/group.proto";
+
+option java_package = "com.sandpolis.core.net";
+option optimize_for = CODE_SIZE;
+
+/**
+ * Request: Create a new group on the server
+ */
+message RQ_AddGroup {
+
+    // The group configuration
+    core.instance.GroupConfig config = 1;
+}
+
+/**
+ * Request: Delete a group on the server
+ */
+message RQ_RemoveGroup {
+
+    // The ID of the group to remove
+    string id = 1;
+}
+
+/**
+ * Request: A list of groups visible to the user
+ */
+message RQ_ListGroups {}
+
+/**
+ * Response: A list of groups visible to the user
+ */
+message RS_ListGroups {
+    repeated core.instance.ProtoGroup group = 1;
+}
+
+/**
+ * Request: Change the configuration of a group
+ */
+message RQ_GroupDelta {
+
+    // The ID of the group to modify
+    string id = 1;
+
+    core.instance.ProtoGroup delta = 2;
+}

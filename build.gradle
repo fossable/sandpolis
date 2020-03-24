@@ -131,14 +131,13 @@ subprojects {
 	}
 }
 
-// A list of projects that will be published to the release repository
+// All modules that will be published to the release repository
 def publishProjects = [
 	'com.sandpolis.client.mega',
 	'com.sandpolis.core.instance',
 	'com.sandpolis.core.ipc',
 	'com.sandpolis.core.net',
 	'com.sandpolis.core.profile',
-	'com.sandpolis.core.proto',
 	'com.sandpolis.core.soi',
 	'com.sandpolis.core.storage.hibernate',
 	'com.sandpolis.core.util',
@@ -148,6 +147,7 @@ def publishProjects = [
 	'com.sandpolis.plugin.filesys',
 	'com.sandpolis.plugin.shell',
 	'com.sandpolis.plugin.sysinfo',
+	'com.sandpolis.plugin.upgrade',
 	'com.sandpolis.server.vanilla',
 	'com.sandpolis.viewer.ascetic',
 	'com.sandpolis.viewer.lifegem'

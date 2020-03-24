@@ -29,17 +29,17 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
+import com.sandpolis.core.instance.Attribute.ProtoProfile;
 import com.sandpolis.core.instance.ProtoType;
+import com.sandpolis.core.instance.Result.ErrorCode;
 import com.sandpolis.core.instance.storage.database.converter.InstanceConverter;
 import com.sandpolis.core.instance.storage.database.converter.InstanceFlavorConverter;
 import com.sandpolis.core.profile.AK_INSTANCE;
 import com.sandpolis.core.profile.attribute.Attribute;
 import com.sandpolis.core.profile.attribute.Document;
 import com.sandpolis.core.profile.attribute.key.AttributeKey;
-import com.sandpolis.core.proto.pojo.Attribute.ProtoProfile;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 /**
  * A {@link Profile} is a generic container that stores data for an instance.

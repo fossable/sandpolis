@@ -12,7 +12,7 @@
 package com.sandpolis.server.vanilla.gen.mega;
 
 import com.google.common.io.BaseEncoding;
-import com.sandpolis.core.proto.util.Generator.GenConfig;
+import com.sandpolis.core.instance.Generator.GenConfig;
 import com.sandpolis.server.vanilla.gen.MegaGen;
 
 /**

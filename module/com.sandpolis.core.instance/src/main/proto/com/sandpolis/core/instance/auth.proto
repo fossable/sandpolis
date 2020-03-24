@@ -1,0 +1,56 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package core.instance;
+
+option java_package = "com.sandpolis.core.instance";
+option optimize_for = CODE_SIZE;
+
+/**
+ * A password mechanism container.
+ */
+message PasswordContainer {
+
+    // The mechanism ID
+    int64 id = 1;
+
+    // The associated password
+    string password = 2;
+}
+
+/**
+ * A key mechanism container.
+ */
+message KeyContainer {
+
+    /**
+      * A completely generic KeyPair container.
+      */
+    message KeyPair {
+
+        // The private key
+        bytes signer = 1;
+
+        // The public key
+        bytes verifier = 2;
+    }
+
+    // The mechanism ID
+    int64 id = 1;
+
+    // The server's reciprocal keypair
+    KeyPair server = 2;
+
+    // The client's reciprocal keypair
+    KeyPair client = 3;
+}

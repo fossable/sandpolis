@@ -18,18 +18,15 @@ import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordina
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.Optional;
 
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.store.plugin.Plugin;
-import com.sandpolis.core.instance.store.plugin.PluginStore;
+import com.sandpolis.core.net.MsgPlugin.RQ_ArtifactDownload;
+import com.sandpolis.core.net.MsgPlugin.RQ_PluginList;
+import com.sandpolis.core.net.MsgPlugin.RS_ArtifactDownload;
+import com.sandpolis.core.net.MsgPlugin.RS_PluginList;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.command.CommandFuture;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.MsgPlugin.RQ_ArtifactDownload;
-import com.sandpolis.core.proto.net.MsgPlugin.RQ_PluginList;
-import com.sandpolis.core.proto.net.MsgPlugin.RS_ArtifactDownload;
-import com.sandpolis.core.proto.net.MsgPlugin.RS_PluginList;
 import com.sandpolis.core.soi.SoiUtil;
 import com.sandpolis.core.util.ArtifactUtil;
 import com.sandpolis.core.util.NetUtil;

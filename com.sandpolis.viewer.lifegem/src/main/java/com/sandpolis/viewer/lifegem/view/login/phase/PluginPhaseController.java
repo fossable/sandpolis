@@ -14,7 +14,7 @@ package com.sandpolis.viewer.lifegem.view.login.phase;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.sandpolis.core.proto.net.MsgPlugin.PluginDescriptor;
+import com.sandpolis.core.instance.Plugin.PluginDescriptor;
 import com.sandpolis.core.viewer.cmd.PluginCmd;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 

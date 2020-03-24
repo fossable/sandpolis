@@ -13,7 +13,7 @@ package com.sandpolis.core.net;
 
 import com.sandpolis.core.net.sock.AbstractSock;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.Instance;
 
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;

@@ -18,12 +18,12 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.net.MsgCvid.RS_Cvid;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.CvidChangedEvent;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgCvid.RQ_Cvid;
-import com.sandpolis.core.proto.net.MsgCvid.RS_Cvid;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;

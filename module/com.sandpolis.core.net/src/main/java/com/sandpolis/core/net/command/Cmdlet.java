@@ -21,9 +21,9 @@ import java.util.concurrent.TimeUnit;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.instance.util.ProtoUtil;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.util.ProtoUtil;
 
 import io.netty.util.concurrent.EventExecutor;
 

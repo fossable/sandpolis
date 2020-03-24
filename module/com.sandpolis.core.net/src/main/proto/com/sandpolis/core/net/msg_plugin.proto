@@ -1,0 +1,77 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package core.net;
+
+import "com/sandpolis/core/instance/plugin.proto";
+
+option java_package = "com.sandpolis.core.net";
+option optimize_for = CODE_SIZE;
+
+/**
+ * A request for the instance's plugin list.
+ */
+message RQ_PluginList {
+}
+
+/**
+ * A response to a plugin list request.
+ */
+message RS_PluginList {
+    repeated core.instance.PluginDescriptor plugin = 1;
+}
+
+/**
+ * A request to download an artifact.
+ */
+message RQ_ArtifactDownload {
+
+    // The coordinates of the artifact to download
+    string coordinates = 1;
+
+    // Whether it's acceptable to receive the external location of the artifact only
+    bool location = 2;
+}
+
+/**
+ * The download response bearing the artifact binary or the artifact's address.
+ */
+message RS_ArtifactDownload {
+    oneof source {
+        // The artifact binary
+        bytes binary = 1;
+
+        // The artifact's HTTP location
+        string url = 2;
+
+        // The artifact's maven central coordinates
+        string coordinates = 3;
+    }
+}
+
+/**
+ * A request to install a server plugin.
+ */
+message RQ_PluginInstall {
+
+    oneof source {
+        // The plugin binary
+        bytes plugin_binary = 1;
+
+        // The plugin's HTTP location
+        string plugin_url = 2;
+
+        // The plugin's maven central coordinates
+        string plugin_coordinates = 3;
+    }
+}

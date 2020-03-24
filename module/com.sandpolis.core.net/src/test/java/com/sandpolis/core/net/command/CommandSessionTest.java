@@ -29,11 +29,11 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.UnitSock;
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.instance.Result.Outcome;
 
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;

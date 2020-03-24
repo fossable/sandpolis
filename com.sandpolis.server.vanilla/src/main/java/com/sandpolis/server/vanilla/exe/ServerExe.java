@@ -17,11 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgPing.RQ_Ping;
+import com.sandpolis.core.net.MsgPing.RS_Ping;
+import com.sandpolis.core.net.MsgServer.RQ_ServerBanner;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgPing.RQ_Ping;
-import com.sandpolis.core.proto.net.MsgPing.RS_Ping;
-import com.sandpolis.core.proto.net.MsgServer.RQ_ServerBanner;
 
 /**
  * Message handlers for server requests.

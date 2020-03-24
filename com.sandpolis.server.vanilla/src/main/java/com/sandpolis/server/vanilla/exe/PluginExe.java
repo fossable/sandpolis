@@ -31,21 +31,21 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgPlugin.RQ_ArtifactDownload;
+import com.sandpolis.core.net.MsgPlugin.RQ_PluginInstall;
+import com.sandpolis.core.net.MsgPlugin.RQ_PluginList;
+import com.sandpolis.core.net.MsgPlugin.RS_ArtifactDownload;
+import com.sandpolis.core.net.MsgPlugin.RS_PluginList;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgPlugin.RQ_ArtifactDownload;
-import com.sandpolis.core.proto.net.MsgPlugin.RQ_PluginInstall;
-import com.sandpolis.core.proto.net.MsgPlugin.RQ_PluginList;
-import com.sandpolis.core.proto.net.MsgPlugin.RS_ArtifactDownload;
-import com.sandpolis.core.proto.net.MsgPlugin.RS_PluginList;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
-import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.ArtifactUtil;
 import com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.core.util.JarUtil;
 import com.sandpolis.core.util.NetUtil;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 /**
  * Message handlers for plugin requests.

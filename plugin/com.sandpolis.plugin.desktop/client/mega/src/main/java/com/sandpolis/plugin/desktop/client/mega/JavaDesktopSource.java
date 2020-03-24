@@ -23,9 +23,9 @@ import java.util.Arrays;
 
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.net.stream.StreamSource;
-import com.sandpolis.plugin.desktop.net.MsgRd.DirtyBlock;
-import com.sandpolis.plugin.desktop.net.MsgRd.EV_DesktopStream;
-import com.sandpolis.plugin.desktop.net.MsgRd.RQ_DesktopStream.ColorMode;
+import com.sandpolis.plugin.desktop.MsgRd.DirtyBlock;
+import com.sandpolis.plugin.desktop.MsgRd.EV_DesktopStream;
+import com.sandpolis.plugin.desktop.MsgRd.RQ_DesktopStream.ColorMode;
 
 public class JavaDesktopSource extends StreamSource<EV_DesktopStream> {
 

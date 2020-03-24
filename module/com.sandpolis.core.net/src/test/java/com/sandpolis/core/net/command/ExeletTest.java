@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.UnitSock;
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.command.Exelet.Handler;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.channel.embedded.EmbeddedChannel;
 

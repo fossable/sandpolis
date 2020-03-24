@@ -17,9 +17,9 @@ open module com.sandpolis.core.profile {
 	exports com.sandpolis.core.profile;
 
 	requires com.google.common;
+	requires com.google.protobuf;
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.net;
-	requires com.sandpolis.core.proto;
 	requires com.sandpolis.core.util;
 	requires java.persistence;
 	requires org.slf4j;

@@ -15,12 +15,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgPing.RQ_Ping;
+import com.sandpolis.core.net.MsgServer.RQ_ServerBanner;
+import com.sandpolis.core.net.MsgServer.RS_ServerBanner;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgPing.RQ_Ping;
-import com.sandpolis.core.proto.net.MsgServer.RQ_ServerBanner;
-import com.sandpolis.core.proto.net.MsgServer.RS_ServerBanner;
 
 /**
  * Contains server commands.

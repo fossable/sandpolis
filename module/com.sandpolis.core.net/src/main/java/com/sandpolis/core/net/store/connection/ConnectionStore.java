@@ -16,10 +16,11 @@ import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import com.google.common.eventbus.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.Subscribe;
+import com.sandpolis.core.instance.Generator.LoopConfig;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
@@ -30,7 +31,6 @@ import com.sandpolis.core.net.loop.ConnectionLoop;
 import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStoreConfig;
 import com.sandpolis.core.net.store.network.NetworkStore;
-import com.sandpolis.core.proto.util.Generator.LoopConfig;
 
 import io.netty.bootstrap.Bootstrap;
 

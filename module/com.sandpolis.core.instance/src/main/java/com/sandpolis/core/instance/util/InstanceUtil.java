@@ -11,17 +11,17 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.util;
 
-import static com.sandpolis.core.proto.util.Platform.InstanceFlavor.ASCETIC;
-import static com.sandpolis.core.proto.util.Platform.InstanceFlavor.LIFEGEM;
-import static com.sandpolis.core.proto.util.Platform.InstanceFlavor.LOCKSTONE;
-import static com.sandpolis.core.proto.util.Platform.InstanceFlavor.MEGA;
-import static com.sandpolis.core.proto.util.Platform.InstanceFlavor.SOAPSTONE;
-import static com.sandpolis.core.proto.util.Platform.InstanceFlavor.VANILLA;
+import static com.sandpolis.core.util.Platform.InstanceFlavor.ASCETIC;
+import static com.sandpolis.core.util.Platform.InstanceFlavor.LIFEGEM;
+import static com.sandpolis.core.util.Platform.InstanceFlavor.LOCKSTONE;
+import static com.sandpolis.core.util.Platform.InstanceFlavor.MEGA;
+import static com.sandpolis.core.util.Platform.InstanceFlavor.SOAPSTONE;
+import static com.sandpolis.core.util.Platform.InstanceFlavor.VANILLA;
 
 import java.util.function.BiConsumer;
 
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 public class InstanceUtil {
 

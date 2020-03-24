@@ -11,15 +11,15 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.util;
 
-import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_ADDRESS;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_CERTIFICATE;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_EMAIL;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_GROUPNAME;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_ID;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_KEY;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_PORT;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_USERNAME;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.OK;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_ADDRESS;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_CERTIFICATE;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_EMAIL;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_GROUPNAME;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_ID;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_KEY;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_PORT;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_USERNAME;
+import static com.sandpolis.core.instance.Result.ErrorCode.OK;
 import static com.sandpolis.core.util.ValidationUtil.email;
 import static com.sandpolis.core.util.ValidationUtil.group;
 import static com.sandpolis.core.util.ValidationUtil.ipv4;
@@ -29,10 +29,10 @@ import static com.sandpolis.core.util.ValidationUtil.username;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 
-import com.sandpolis.core.proto.pojo.Group.GroupConfig;
-import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
-import com.sandpolis.core.proto.pojo.User.UserConfig;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
+import com.sandpolis.core.instance.Group.GroupConfig;
+import com.sandpolis.core.instance.Listener.ListenerConfig;
+import com.sandpolis.core.instance.Result.ErrorCode;
+import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.util.CertUtil;
 
 /**

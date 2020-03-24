@@ -20,9 +20,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.net.MsgPing.RQ_Ping;
+import com.sandpolis.core.net.MsgPing.RS_Ping;
 import com.sandpolis.core.net.command.ExeletTest;
-import com.sandpolis.core.proto.net.MsgPing.RQ_Ping;
-import com.sandpolis.core.proto.net.MsgPing.RS_Ping;
 
 class ServerExeTest extends ExeletTest {
 

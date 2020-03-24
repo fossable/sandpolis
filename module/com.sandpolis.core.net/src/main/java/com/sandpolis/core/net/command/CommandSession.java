@@ -25,11 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.util.ProtoUtil;
+import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.net.util.ProtoUtil;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;
@@ -82,7 +82,9 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 		super(executor);
 		checkArgument(cvid != null || sock != null);
 
-		outcome = ProtoUtil.begin();
+		// TODO replace
+		// outcome = ProtoUtil.begin();
+		outcome = Outcome.newBuilder().setTime(System.currentTimeMillis());
 		components = new LinkedList<>();
 
 		if (cvid == null)
@@ -153,7 +155,9 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	 */
 	private void tryComplete() {
 		if (!isDone() && components.stream().allMatch(future -> future.isDone()))
-			setSuccess(ProtoUtil.success(outcome));
+			// TODO replace
+			// setSuccess(ProtoUtil.success(outcome));
+			setSuccess(outcome.setResult(true).setTime(System.currentTimeMillis() - outcome.getTime()).build());
 	}
 
 	/**

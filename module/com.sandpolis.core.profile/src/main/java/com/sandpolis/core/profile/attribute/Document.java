@@ -24,10 +24,10 @@ import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
+import com.sandpolis.core.instance.Attribute.ProtoDocument;
 import com.sandpolis.core.instance.ProtoType;
+import com.sandpolis.core.instance.Result.ErrorCode;
 import com.sandpolis.core.profile.attribute.key.AttributeKey;
-import com.sandpolis.core.proto.pojo.Attribute.ProtoDocument;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
 
 /**
  * An attribute document is primarily a set of {@link Attribute}s, but can also

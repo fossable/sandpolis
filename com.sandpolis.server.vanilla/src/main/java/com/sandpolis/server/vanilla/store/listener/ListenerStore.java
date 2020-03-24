@@ -22,14 +22,14 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.Listener.ListenerConfig;
+import com.sandpolis.core.instance.Listener.ProtoListener;
+import com.sandpolis.core.instance.Result.ErrorCode;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.util.ConfigUtil;
-import com.sandpolis.core.proto.net.MsgListener.RQ_ChangeListener.ListenerState;
-import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
-import com.sandpolis.core.proto.pojo.Listener.ProtoListener;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
+import com.sandpolis.core.net.MsgListener.RQ_ChangeListener.ListenerState;
 import com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStoreConfig;
 
 /**

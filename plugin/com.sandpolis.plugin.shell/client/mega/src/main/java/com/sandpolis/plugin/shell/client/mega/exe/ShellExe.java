@@ -22,24 +22,24 @@ import com.google.common.io.CharStreams;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.util.PlatformUtil;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.stream.InboundStreamAdapter;
 import com.sandpolis.core.net.stream.OutboundStreamAdapter;
+import com.sandpolis.core.util.SystemUtil;
+import com.sandpolis.plugin.shell.MessageShell.ShellMSG;
+import com.sandpolis.plugin.shell.MsgPower.RQ_PowerChange;
+import com.sandpolis.plugin.shell.MsgShell.EV_ShellStream;
+import com.sandpolis.plugin.shell.MsgShell.RQ_Execute;
+import com.sandpolis.plugin.shell.MsgShell.RQ_ListShells;
+import com.sandpolis.plugin.shell.MsgShell.RQ_ShellStream;
+import com.sandpolis.plugin.shell.MsgShell.RS_Execute;
+import com.sandpolis.plugin.shell.MsgShell.RS_ListShells;
+import com.sandpolis.plugin.shell.MsgShell.RS_ListShells.ShellListing;
+import com.sandpolis.plugin.shell.MsgShell.Shell;
 import com.sandpolis.plugin.shell.client.mega.Shells;
 import com.sandpolis.plugin.shell.client.mega.stream.ShellStreamSink;
 import com.sandpolis.plugin.shell.client.mega.stream.ShellStreamSource;
-import com.sandpolis.plugin.shell.net.MessageShell.ShellMSG;
-import com.sandpolis.plugin.shell.net.MsgPower.RQ_PowerChange;
-import com.sandpolis.plugin.shell.net.MsgShell.EV_ShellStream;
-import com.sandpolis.plugin.shell.net.MsgShell.RQ_Execute;
-import com.sandpolis.plugin.shell.net.MsgShell.RQ_ListShells;
-import com.sandpolis.plugin.shell.net.MsgShell.RQ_ShellStream;
-import com.sandpolis.plugin.shell.net.MsgShell.RS_Execute;
-import com.sandpolis.plugin.shell.net.MsgShell.RS_ListShells;
-import com.sandpolis.plugin.shell.net.MsgShell.RS_ListShells.ShellListing;
-import com.sandpolis.plugin.shell.net.MsgShell.Shell;
 
 public final class ShellExe extends Exelet {
 
@@ -98,7 +98,7 @@ public final class ShellExe extends Exelet {
 	public static void rq_power_change(RQ_PowerChange rq) throws Exception {
 		// TODO check permissions
 		// TODO avoid switches
-		switch (PlatformUtil.OS_TYPE) {
+		switch (SystemUtil.OS_TYPE) {
 		case LINUX:
 			switch (rq.getChange()) {
 			case POWEROFF:

@@ -16,14 +16,14 @@ import java.nio.file.Paths;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.util.PlatformUtil;
+import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.util.SystemUtil;
 import com.sandpolis.plugin.filesys.FsHandle;
-import com.sandpolis.plugin.filesys.net.MessageFilesys.FilesysMSG;
-import com.sandpolis.plugin.filesys.net.MsgFilesys.RQ_FileDelete;
-import com.sandpolis.plugin.filesys.net.MsgFilesys.RQ_FileListing;
-import com.sandpolis.plugin.filesys.net.MsgFilesys.RS_FileListing;
+import com.sandpolis.plugin.filesys.MessageFilesys.FilesysMSG;
+import com.sandpolis.plugin.filesys.MsgFilesys.RQ_FileDelete;
+import com.sandpolis.plugin.filesys.MsgFilesys.RQ_FileListing;
+import com.sandpolis.plugin.filesys.MsgFilesys.RS_FileListing;
 
 public final class FilesysExe extends Exelet {
 
@@ -31,7 +31,7 @@ public final class FilesysExe extends Exelet {
 	@Handler(tag = FilesysMSG.RQ_FILE_LISTING_FIELD_NUMBER)
 	public static MessageOrBuilder rq_file_listing(RQ_FileListing rq) throws Exception {
 		String path;
-		switch (PlatformUtil.OS_TYPE) {
+		switch (SystemUtil.OS_TYPE) {
 		case WINDOWS:
 			path = rq.getPath().startsWith("/") ? rq.getPath().substring(1) : rq.getPath();
 			if (path.equals("C:"))
@@ -49,7 +49,7 @@ public final class FilesysExe extends Exelet {
 	@Auth
 	@Handler(tag = FilesysMSG.RQ_FILE_DELETE_FIELD_NUMBER)
 	public static MessageOrBuilder rq_file_delete(RQ_FileDelete rq) throws Exception {
-		switch (PlatformUtil.OS_TYPE) {
+		switch (SystemUtil.OS_TYPE) {
 		case WINDOWS:
 			for (var path : rq.getTargetList()) {
 				MoreFiles.deleteRecursively(Paths.get(path.startsWith("/") ? path.substring(1) : path),

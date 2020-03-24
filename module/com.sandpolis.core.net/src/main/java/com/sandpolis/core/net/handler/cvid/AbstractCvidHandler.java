@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.handler.cvid;
 
-import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.net.Message.MSG;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.SimpleChannelInboundHandler;

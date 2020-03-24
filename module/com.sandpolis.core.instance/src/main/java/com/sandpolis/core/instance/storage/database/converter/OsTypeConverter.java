@@ -14,7 +14,7 @@ package com.sandpolis.core.instance.storage.database.converter;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
-import com.sandpolis.core.proto.util.Platform.OsType;
+import com.sandpolis.core.util.Platform.OsType;
 
 /**
  * This converter replaces {@link OsType}s with their numeric identifier.

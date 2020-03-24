@@ -1,0 +1,85 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package plugin.shell;
+
+option java_package = "com.sandpolis.plugin.shell";
+
+enum Shell {
+    // Microsoft PowerShell
+    PWSH = 0;
+
+    // Microsoft CMD.EXE
+    CMD = 1;
+
+    // Bourne Again Shell
+    BASH = 2;
+
+    // The Z Shell
+    ZSH = 3;
+}
+
+message RQ_Execute {
+    Shell type = 1;
+    string command = 2;
+}
+
+message RS_Execute {
+    int32 exitCode = 1;
+    string result = 2;
+}
+
+message RQ_ListShells {
+}
+
+message RS_ListShells {
+    message ShellListing {
+        Shell type = 1;
+        string location = 2;
+        string version = 3;
+    }
+
+    repeated ShellListing listing = 1;
+}
+
+message RQ_ShellStream {
+
+    // The desired stream ID
+    int32 id = 1;
+
+    // The stream type
+    Shell type = 2;
+
+    // TODO request permissions
+    // Permission permission = 3;
+
+    map<string, string> environment = 4;
+
+    // The number of rows to request
+    int32 rows = 5;
+
+    // The number of columns to request
+    int32 cols = 6;
+}
+
+message EV_ShellStream {
+
+    // The I/O data
+    bytes data = 1;
+
+    // Update the number of rows
+    int32 rows = 2;
+
+    // Update the number of columns
+    int32 cols = 3;
+}

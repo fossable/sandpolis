@@ -21,11 +21,11 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.UnitSock;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.net.MsgLogin.RQ_Login;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletHandler;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgCvid.RQ_Cvid;
-import com.sandpolis.core.proto.net.MsgLogin.RQ_Login;
 
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.channel.nio.NioEventLoopGroup;

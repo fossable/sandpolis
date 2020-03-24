@@ -19,7 +19,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.util.RandUtil;
 
 import io.netty.bootstrap.Bootstrap;

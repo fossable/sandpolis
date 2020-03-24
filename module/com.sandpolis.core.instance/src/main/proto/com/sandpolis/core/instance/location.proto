@@ -1,0 +1,77 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package core.instance;
+
+option java_package = "com.sandpolis.core.instance";
+option optimize_for = CODE_SIZE;
+
+message Location {
+
+    // AS name
+    string as = 1;
+
+    // AS number
+    int32 as_code = 2;
+
+    // City name
+    string city = 3;
+
+    // Continent name
+    string continent = 4;
+
+    // Two-letter continent code
+    string continent_code = 5;
+
+    // Country name
+    string country = 6;
+
+    // Two-letter country code (ISO 3166-1 alpha-2)
+    string country_code = 7;
+
+    // National currency
+    string currency = 8;
+
+    // City district
+    string district = 9;
+
+    // ISP name
+    string isp = 10;
+
+    // Latitude
+    double latitude = 11;
+
+    // Longitude
+    double longitude = 12;
+
+    // Metro code
+    int32 metro_code = 13;
+
+    // Cellular connection
+    bool mobile = 14;
+
+    // Organization name
+    string organization = 15;
+
+    // Zip code
+    int32 postal_code = 16;
+
+    // Region/state
+    string region = 17;
+
+    // Region/state short code (FIPS or ISO)
+    string region_code = 18;
+
+    // Timezone
+    string timezone = 19;
+}

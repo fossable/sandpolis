@@ -11,12 +11,12 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.instance.Result.ErrorCode.ACCESS_DENIED;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_USERNAME;
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
 import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.ACCESS_DENIED;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_USERNAME;
 import static com.sandpolis.core.util.CryptoUtil.SHA256;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
@@ -24,13 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgLogin.RQ_Login;
+import com.sandpolis.core.net.MsgLogin.RQ_Logout;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.profile.AK_VIEWER;
 import com.sandpolis.core.profile.store.Profile;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgLogin.RQ_Login;
-import com.sandpolis.core.proto.net.MsgLogin.RQ_Logout;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.user.User;

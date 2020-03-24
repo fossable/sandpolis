@@ -18,4 +18,5 @@ open module com.sandpolis.core.util {
 	requires java.xml;
 	requires org.fusesource.jansi;
 	requires org.slf4j;
+	requires com.google.protobuf;
 }

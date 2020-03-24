@@ -11,10 +11,10 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.charcoal;
 
+import static com.sandpolis.core.instance.Environment.printEnvironment;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.sandpolis.core.instance.Environment.printEnvironment;
 
 /**
  * The entry point for Charcoal instances.

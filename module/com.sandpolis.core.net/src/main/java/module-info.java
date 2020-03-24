@@ -31,7 +31,6 @@ open module com.sandpolis.core.net {
 	requires com.google.common;
 	requires com.google.protobuf;
 	requires com.sandpolis.core.instance;
-	requires com.sandpolis.core.proto;
 	requires com.sandpolis.core.util;
 	requires io.netty.buffer;
 	requires io.netty.codec.dns;

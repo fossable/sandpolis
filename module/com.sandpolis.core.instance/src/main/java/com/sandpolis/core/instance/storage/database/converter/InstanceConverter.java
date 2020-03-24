@@ -14,7 +14,7 @@ package com.sandpolis.core.instance.storage.database.converter;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
-import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.Instance;
 
 /**
  * This converter replaces {@link Instance}s with their numeric identifier.

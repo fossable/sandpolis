@@ -23,11 +23,11 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;

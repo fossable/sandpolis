@@ -31,8 +31,8 @@ import com.googlecode.lanterna.gui2.TextBox;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
-import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
-import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.instance.Listener.ListenerConfig;
+import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.viewer.cmd.ListenerCmd;
 
 public class AddListenerWindow extends BasicWindow {

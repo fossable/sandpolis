@@ -11,8 +11,8 @@
 //=========================================================S A N D P O L I S==//
 module com.sandpolis.plugin.device {
 	exports com.sandpolis.plugin.device;
-	exports com.sandpolis.plugin.device.net;
 
 	requires com.sandpolis.core.instance;
 	requires org.slf4j;
+	requires com.google.protobuf;
 }

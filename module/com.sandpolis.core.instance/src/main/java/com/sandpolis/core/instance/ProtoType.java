@@ -12,7 +12,7 @@
 package com.sandpolis.core.instance;
 
 import com.google.protobuf.Message;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
+import com.sandpolis.core.instance.Result.ErrorCode;
 
 /**
  * Indicates that a POJO class has a corresponding protobuf type. The standard

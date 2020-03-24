@@ -29,6 +29,12 @@ import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta;
+import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.LinkAdded;
+import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.LinkRemoved;
+import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.NodeAdded;
+import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.NodeRemoved;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.store.connection.ConnectionStore;
 import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockEstablishedEvent;
@@ -38,13 +44,7 @@ import com.sandpolis.core.net.store.network.NetworkStoreEvents.CvidChangedEvent;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerEstablishedEvent;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerLostEvent;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta;
-import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.LinkAdded;
-import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.LinkRemoved;
-import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.NodeAdded;
-import com.sandpolis.core.proto.net.MsgNetwork.EV_NetworkDelta.NodeRemoved;
-import com.sandpolis.core.proto.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.Instance;
 
 /**
  * A static store for managing network connections, which may or may not be

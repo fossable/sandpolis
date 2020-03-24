@@ -25,8 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.core.proto.util.Generator.MicroConfig;
+import com.sandpolis.core.instance.Generator.GenConfig;
+import com.sandpolis.core.instance.Generator.MicroConfig;
 import com.sandpolis.core.soi.Build.SO_Build;
 
 /**

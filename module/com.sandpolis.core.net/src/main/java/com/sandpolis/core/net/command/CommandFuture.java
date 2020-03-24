@@ -12,7 +12,7 @@
 package com.sandpolis.core.net.command;
 
 import com.google.protobuf.Message;
-import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.instance.Result.Outcome;
 
 import io.netty.util.concurrent.Future;
 

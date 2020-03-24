@@ -11,11 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.store.location;
 
+import java.util.Set;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableBiMap;
-import com.sandpolis.core.proto.util.LocationOuterClass.Location;
-
-import java.util.Set;
+import com.sandpolis.core.instance.LocationOuterClass.Location;
 
 public class KeyCdn extends AbstractGeolocationService {
 

@@ -25,13 +25,13 @@ import static com.sandpolis.core.net.HandlerKey.TRAFFIC;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.peer.HolePunchHandler;
 import com.sandpolis.core.net.handler.peer.PeerEncryptionDecoder;
 import com.sandpolis.core.net.handler.peer.PeerEncryptionEncoder;
 import com.sandpolis.core.net.sock.PeerSock;
-import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;

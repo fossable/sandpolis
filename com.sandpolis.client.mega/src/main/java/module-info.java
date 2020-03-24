@@ -20,7 +20,6 @@ open module com.sandpolis.client.mega {
 	requires transitive com.sandpolis.core.ipc;
 	requires transitive com.sandpolis.core.net;
 	requires transitive com.sandpolis.core.profile;
-	requires transitive com.sandpolis.core.proto;
 	requires transitive com.sandpolis.core.soi;
 	requires transitive com.sandpolis.core.util;
 	requires transitive io.netty.common;

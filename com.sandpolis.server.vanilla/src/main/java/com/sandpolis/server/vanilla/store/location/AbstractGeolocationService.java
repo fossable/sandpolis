@@ -11,11 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.store.location;
 
-import com.google.common.collect.ImmutableBiMap;
-import com.sandpolis.core.proto.util.LocationOuterClass.Location;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -24,6 +19,12 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableBiMap;
+import com.sandpolis.core.instance.LocationOuterClass.Location;
 
 /**
  * A geolocation service resolves a set of location attributes for an IP

@@ -29,8 +29,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.ipc.Listener;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.instance.Platform.Instance;
+import com.sandpolis.core.instance.Platform.InstanceFlavor;
 import com.sandpolis.core.util.NetUtil;
 
 class ListenerTest {

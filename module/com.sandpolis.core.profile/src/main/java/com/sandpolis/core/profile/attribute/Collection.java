@@ -24,9 +24,9 @@ import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
+import com.sandpolis.core.instance.Attribute.ProtoCollection;
 import com.sandpolis.core.instance.ProtoType;
-import com.sandpolis.core.proto.pojo.Attribute.ProtoCollection;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
+import com.sandpolis.core.instance.Result.ErrorCode;
 
 /**
  * An attribute collection is simply a set of {@link Document}s. They can

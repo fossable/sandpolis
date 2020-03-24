@@ -15,8 +15,8 @@ import com.google.protobuf.Message;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.plugin.ExeletProvider;
+import com.sandpolis.plugin.filesys.MessageFilesys.FilesysMSG;
 import com.sandpolis.plugin.filesys.client.mega.exe.FilesysExe;
-import com.sandpolis.plugin.filesys.net.MessageFilesys.FilesysMSG;
 
 public final class FilesysPlugin extends SandpolisPlugin implements ExeletProvider {
 

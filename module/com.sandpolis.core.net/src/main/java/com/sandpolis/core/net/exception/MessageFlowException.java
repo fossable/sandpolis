@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.exception;
 
-import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.net.Message.MSG;
 
 /**
  * Thrown when the message flow is disrupted. This exception occurs when: <br>

@@ -20,11 +20,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.eventbus.Subscribe;
+import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.net.MsgPlugin.RS_PluginList;
+import com.sandpolis.core.net.MsgServer.RS_ServerBanner;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.MsgPlugin.RS_PluginList;
-import com.sandpolis.core.proto.net.MsgServer.RS_ServerBanner;
-import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
 import com.sandpolis.core.viewer.cmd.PluginCmd;
 import com.sandpolis.core.viewer.cmd.ServerCmd;

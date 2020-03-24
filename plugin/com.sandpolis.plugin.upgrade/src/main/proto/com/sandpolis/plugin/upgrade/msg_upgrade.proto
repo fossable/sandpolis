@@ -1,0 +1,112 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package plugin.upgrade;
+
+option java_package = "com.sandpolis.plugin.upgrade";
+
+// Represents a generic software package
+message Package {
+
+    // The name/identifier
+    string name = 1;
+
+    // The package's version
+    string version = 2;
+
+    // A textual description of the package
+    string description = 3;
+
+    // The package's latest remote version
+    string latest_version = 4;
+
+    // The package's architecture type
+    string architecture = 5;
+
+    // The package's size in bytes in package form
+    int64 remote_size = 6;
+
+    // The package's size in bytes when installed
+    int64 local_size = 7;
+
+    // The package's homepage
+    string upstream_url = 8;
+
+    // The package's remote repository location
+    string remote_location = 9;
+
+    // The package's remote repository name
+    string repository = 10;
+
+    // The package's file listing
+    repeated string file = 11;
+
+    // Whether the package was explicitly installed
+    bool explicit = 12;
+
+    // The licenses under which the packages is distributed
+    repeated string license = 13;
+
+    // A list of packages that this packages requires
+    repeated string dependency = 14;
+
+    // A list of packages that require this package
+    repeated string usage = 15;
+
+    // When the package was last built
+    int64 build_timestamp = 16;
+
+    // When the package was last installed
+    int64 install_timestamp = 17;
+}
+
+message RS_Packages {
+    repeated Package package = 1;
+}
+
+message RQ_ManagerMetadata {
+}
+
+message RS_ManagerMetadata {
+
+    // The version of the package manager
+    string version = 1;
+
+    // The filesystem path of the package manager
+    string location = 2;
+}
+
+message RQ_InstalledPackages {
+}
+
+message RQ_OutdatedPackages {
+}
+
+message RQ_PackageMetadata {
+    string name = 1;
+}
+
+message RQ_UpgradePackages {
+    repeated string package = 1;
+}
+
+message RQ_InstallPackages {
+    repeated string package = 1;
+}
+
+message RQ_RemovePackages {
+    repeated string package = 1;
+}
+
+message RQ_RefreshPackages {
+}

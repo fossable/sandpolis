@@ -11,14 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.gen.mega;
 
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.CharStreams;
-import com.sandpolis.core.proto.util.Generator.GenConfig;
+import com.sandpolis.core.instance.Generator.GenConfig;
 import com.sandpolis.server.vanilla.gen.MegaGen;
 
 /**

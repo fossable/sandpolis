@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.util.SystemUtil;
 import com.sandpolis.core.util.TextUtil;
+import com.sandpolis.plugin.upgrade.MsgUpgrade.Package;
 import com.sandpolis.plugin.upgrade.client.mega.PackageManager;
-import com.sandpolis.plugin.upgrade.net.MsgUpgrade.Package;
 
 /**
  * Integration with Arch Linux's Pacman package management utility.

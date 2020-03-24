@@ -11,14 +11,10 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.profile.cmd;
 
+import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.net.MsgStream.RQ_ProfileStream;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.stream.InboundStreamAdapter;
-import com.sandpolis.core.net.stream.StreamSink;
-import com.sandpolis.core.net.stream.StreamStore;
-import com.sandpolis.core.proto.net.MsgStream.EV_ProfileStream;
-import com.sandpolis.core.proto.net.MsgStream.RQ_ProfileStream;
-import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.IDUtil;
 
 /**

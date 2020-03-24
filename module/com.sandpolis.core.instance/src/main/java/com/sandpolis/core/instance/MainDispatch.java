@@ -26,11 +26,11 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.instance.idle.IdleLoop;
 import com.sandpolis.core.instance.util.ProtoUtil;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
-import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 /**
  * {@link MainDispatch} allows the instance's main method to configure

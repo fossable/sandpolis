@@ -11,14 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.exe;
 
+import static com.sandpolis.core.instance.Result.ErrorCode.FAILURE_KEY_CHALLENGE;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_KEY;
+import static com.sandpolis.core.instance.Result.ErrorCode.UNKNOWN_GROUP;
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
-import static com.sandpolis.core.instance.util.ProtoUtil.rq;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
+import static com.sandpolis.core.net.util.ProtoUtil.rq;
 import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.FAILURE_KEY_CHALLENGE;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.INVALID_KEY;
-import static com.sandpolis.core.proto.util.Result.ErrorCode.UNKNOWN_GROUP;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 
 import java.util.List;
@@ -29,6 +29,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.HandlerKey;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgAuth.RQ_KeyAuth;
+import com.sandpolis.core.net.MsgAuth.RQ_NoAuth;
+import com.sandpolis.core.net.MsgAuth.RQ_PasswordAuth;
+import com.sandpolis.core.net.MsgClient.RQ_ClientMetadata;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
@@ -36,11 +41,6 @@ import com.sandpolis.core.profile.AK_CLIENT;
 import com.sandpolis.core.profile.AK_INSTANCE;
 import com.sandpolis.core.profile.store.Events.ProfileOnlineEvent;
 import com.sandpolis.core.profile.store.Profile;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgAuth.RQ_KeyAuth;
-import com.sandpolis.core.proto.net.MsgAuth.RQ_NoAuth;
-import com.sandpolis.core.proto.net.MsgAuth.RQ_PasswordAuth;
-import com.sandpolis.core.proto.net.MsgClient.RQ_ClientMetadata;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.store.group.Group;
 

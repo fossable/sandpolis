@@ -1,0 +1,76 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto2";
+
+package core.instance;
+
+option java_package = "com.sandpolis.core.instance";
+option optimize_for = CODE_SIZE;
+
+/**
+ * Listener configuration.
+ */
+message ListenerConfig {
+
+    // The listener ID
+    optional int64 id = 1;
+
+    // An optional name for the listener
+    optional string name = 2;
+
+    // The listening port
+    optional int32 port = 3;
+
+    // The bind address
+    optional string address = 4;
+
+    // The username of the user that owns the listener
+    optional string owner = 5;
+
+    // Indicates whether automatic port forwarding with UPnP will be attempted
+    optional bool upnp = 6;
+
+    // Indicates whether client instances can be accepted by the listener
+    optional bool client_acceptor = 7;
+
+    // Indicates whether viewer instances can be accepted by the listener
+    optional bool viewer_acceptor = 8;
+
+    // Indicates whether the listener can be started
+    optional bool enabled = 9;
+
+    // Certificate
+    optional bytes cert = 10;
+
+    // Private key for the certificate
+    optional bytes key = 11;
+}
+
+/**
+ * Listener statistics.
+ */
+message ListenerStats {
+
+    // The listener's start timestamp
+    optional int64 listen_timestamp = 1;
+
+    // The number of currently active connections spawned from the listener
+    optional int32 active_connections = 2;
+}
+
+/**
+ * A Listener container.
+ */
+message ProtoListener {
+    optional ListenerConfig config = 1;
+    optional ListenerStats stats = 2;
+}

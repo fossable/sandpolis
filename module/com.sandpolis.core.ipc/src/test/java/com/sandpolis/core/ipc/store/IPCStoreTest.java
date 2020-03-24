@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.ipc.Connector;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.instance.Platform.Instance;
+import com.sandpolis.core.instance.Platform.InstanceFlavor;
 
 class IPCStoreTest {
 

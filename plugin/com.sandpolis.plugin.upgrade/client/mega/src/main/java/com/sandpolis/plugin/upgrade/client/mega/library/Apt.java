@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.sandpolis.core.util.SystemUtil;
+import com.sandpolis.plugin.upgrade.MsgUpgrade.Package;
 import com.sandpolis.plugin.upgrade.client.mega.PackageManager;
-import com.sandpolis.plugin.upgrade.net.MsgUpgrade.Package;
 
 /**
  * Integration with Debian's Advanced Package Tool (APT).

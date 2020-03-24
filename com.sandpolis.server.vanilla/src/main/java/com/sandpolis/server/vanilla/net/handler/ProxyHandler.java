@@ -15,10 +15,10 @@ import static com.sandpolis.core.net.store.connection.ConnectionStore.Connection
 
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgNetwork.EV_EndpointClosed;
 import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.net.sock.AbstractSock;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgNetwork.EV_EndpointClosed;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;

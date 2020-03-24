@@ -13,14 +13,14 @@ package com.sandpolis.client.mega.cmd;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.net.HandlerKey;
+import com.sandpolis.core.net.MsgAuth.RQ_KeyAuth;
+import com.sandpolis.core.net.MsgAuth.RQ_NoAuth;
+import com.sandpolis.core.net.MsgAuth.RQ_PasswordAuth;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
-import com.sandpolis.core.proto.net.MsgAuth.RQ_KeyAuth;
-import com.sandpolis.core.proto.net.MsgAuth.RQ_NoAuth;
-import com.sandpolis.core.proto.net.MsgAuth.RQ_PasswordAuth;
-import com.sandpolis.core.proto.util.Result.Outcome;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
 /**

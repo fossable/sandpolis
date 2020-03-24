@@ -16,13 +16,13 @@ import static com.sandpolis.core.instance.util.ProtoUtil.success;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgStream.EV_ProfileStream;
+import com.sandpolis.core.net.MsgStream.RQ_ProfileStream;
+import com.sandpolis.core.net.MsgStream.RQ_StreamStop;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.stream.OutboundStreamAdapter;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.MsgStream.EV_ProfileStream;
-import com.sandpolis.core.proto.net.MsgStream.RQ_ProfileStream;
-import com.sandpolis.core.proto.net.MsgStream.RQ_StreamStop;
 import com.sandpolis.server.vanilla.stream.ProfileStreamSource;
 
 /**

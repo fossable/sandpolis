@@ -20,11 +20,11 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 
+import com.sandpolis.core.instance.Attribute.ProtoAttribute;
 import com.sandpolis.core.instance.ProtoType;
+import com.sandpolis.core.instance.Result.ErrorCode;
 import com.sandpolis.core.instance.storage.database.converter.OsTypeConverter;
-import com.sandpolis.core.proto.pojo.Attribute.ProtoAttribute;
-import com.sandpolis.core.proto.util.Platform.OsType;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
+import com.sandpolis.core.util.Platform.OsType;
 
 /**
  * An {@link Attribute} contains a datum of one of the following types:

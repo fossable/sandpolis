@@ -18,8 +18,8 @@ import java.util.function.Function;
 
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.HandlerKey;
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;

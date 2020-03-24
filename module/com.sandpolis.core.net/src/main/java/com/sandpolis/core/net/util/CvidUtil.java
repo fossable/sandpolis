@@ -13,8 +13,8 @@ package com.sandpolis.core.net.util;
 
 import java.util.Objects;
 
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.RandUtil;
 
 /**

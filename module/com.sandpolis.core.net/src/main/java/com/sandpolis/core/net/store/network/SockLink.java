@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.store.network;
 
-import com.sandpolis.core.proto.net.MsgNetwork.LinkType;
+import com.sandpolis.core.net.MsgNetwork.LinkType;
 
 /**
  * This class contains information about a link between two arbitrary instances.

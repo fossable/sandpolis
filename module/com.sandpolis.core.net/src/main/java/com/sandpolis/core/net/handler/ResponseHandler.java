@@ -14,8 +14,8 @@ package com.sandpolis.core.net.handler;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.future.MessageFuture;
-import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

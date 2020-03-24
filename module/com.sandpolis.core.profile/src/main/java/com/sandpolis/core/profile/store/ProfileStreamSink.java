@@ -11,8 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.profile.store;
 
+import com.sandpolis.core.net.MsgStream.EV_ProfileStream;
 import com.sandpolis.core.net.stream.StreamSink;
-import com.sandpolis.core.proto.net.MsgStream.EV_ProfileStream;
 
 public class ProfileStreamSink extends StreamSink<EV_ProfileStream> {
 

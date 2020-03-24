@@ -36,8 +36,11 @@ dependencies {
 
 	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':module:com.sandpolis.core.net')
-	implementation project(':module:com.sandpolis.core.proto')
+	implementation project(':module:com.sandpolis.core.util')
 	implementation project(':plugin:com.sandpolis.plugin.filesys')
+
+	// https://github.com/protocolbuffers/protobuf
+	implementation 'com.google.protobuf:protobuf-java:3.11.4'
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:28.2-jre'

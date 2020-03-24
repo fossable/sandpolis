@@ -21,9 +21,9 @@ import java.util.function.Function;
 import com.google.protobuf.Any;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.util.ProtoUtil;
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.Message.MSG;
+import com.sandpolis.core.net.util.ProtoUtil;
 
 public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscriber<E>, StreamEndpoint {
 

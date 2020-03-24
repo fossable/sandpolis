@@ -11,11 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
+import com.sandpolis.core.instance.Generator.GenConfig;
+import com.sandpolis.core.net.MsgGenerator.RQ_Generate;
+import com.sandpolis.core.net.MsgGenerator.RS_Generate;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.MsgGenerator.RQ_Generate;
-import com.sandpolis.core.proto.net.MsgGenerator.RS_Generate;
-import com.sandpolis.core.proto.util.Generator.GenConfig;
 
 /**
  * Contains generator commands.

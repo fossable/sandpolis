@@ -15,8 +15,8 @@ import com.google.protobuf.Message;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.plugin.ExeletProvider;
+import com.sandpolis.plugin.desktop.MessageDesktop.DesktopMSG;
 import com.sandpolis.plugin.desktop.client.mega.exe.DesktopExe;
-import com.sandpolis.plugin.desktop.net.MessageDesktop.DesktopMSG;
 
 public final class DesktopPlugin extends SandpolisPlugin implements ExeletProvider {
 

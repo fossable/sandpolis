@@ -1,0 +1,35 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package plugin.shell;
+
+import "com/sandpolis/plugin/shell/msg_shell.proto";
+import "com/sandpolis/plugin/shell/msg_power.proto";
+
+option java_package = "com.sandpolis.plugin.shell";
+
+message ShellMSG {
+    oneof payload {
+
+        // msg_shell
+        RQ_Execute                      rq_execute                      =    1;
+        RS_Execute                      rs_execute                      = 1001;
+        RQ_ListShells                   rq_list_shells                  =    2;
+        RS_ListShells                   rs_list_shells                  = 1002;
+        RQ_ShellStream                  rq_shell_stream                 =    3;
+        EV_ShellStream                  ev_shell_stream                 =    4;
+
+        // msg_power
+        RQ_PowerChange                  rq_power_change                 =    5;
+    }
+}

@@ -12,8 +12,8 @@
 package com.sandpolis.server.vanilla;
 
 import com.sandpolis.core.instance.MainDispatch;
-import com.sandpolis.core.proto.util.Platform.Instance;
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 /**
  * This stub is the entry point for Server instances. Control is given to

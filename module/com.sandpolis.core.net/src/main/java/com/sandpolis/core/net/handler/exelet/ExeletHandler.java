@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
+import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.command.Exelet.Auth;
 import com.sandpolis.core.net.command.Exelet.Handler;
@@ -30,7 +31,6 @@ import com.sandpolis.core.net.command.Exelet.Permission;
 import com.sandpolis.core.net.command.Exelet.Unauth;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.proto.net.Message.MSG;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

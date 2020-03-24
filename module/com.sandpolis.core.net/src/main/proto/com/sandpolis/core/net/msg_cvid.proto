@@ -1,0 +1,47 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package core.net;
+
+import "com/sandpolis/core/util/platform.proto";
+
+option java_package = "com.sandpolis.core.net";
+option optimize_for = CODE_SIZE;
+
+/**
+ * A CVID request which must occur before authentication.
+ */
+message RQ_Cvid {
+    // The UUID of the requesting instance
+    string uuid = 1;
+
+    // The instance type of the requesting instance
+    core.util.Instance instance = 2;
+
+    // The instance flavor of the requesting instance
+    core.util.InstanceFlavor instance_flavor = 3;
+}
+
+/**
+ * The response to a CVID request.
+ */
+message RS_Cvid {
+    // A CVID for the requesting instance
+    int32 cvid 	= 1;
+
+    // The CVID of the server
+    int32 server_cvid = 2;
+
+    // The UUID of the server
+    string server_uuid = 3;
+}

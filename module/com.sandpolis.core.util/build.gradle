@@ -13,6 +13,7 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
+	id 'com.google.protobuf' version '0.8.11'
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
@@ -24,6 +25,15 @@ eclipse {
 	classpath.file {
 		whenMerged {
 			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
+		}
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs 'src/main/proto'
+			srcDirs 'gen/main/java'
 		}
 	}
 }
@@ -43,4 +53,33 @@ dependencies {
 
 	// https://github.com/qos-ch/slf4j
 	implementation 'org.slf4j:slf4j-api:1.7.30'
+
+	// https://github.com/protocolbuffers/protobuf
+	implementation 'com.google.protobuf:protobuf-java:3.11.4'
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.11.4'
+	}
+
+	generatedFilesBaseDir = "$projectDir/gen/"
+
+	clean {
+		delete generatedFilesBaseDir
+	}
+	generateProtoTasks {
+		all().each { task ->
+			task.builtins {
+				cpp {
+					option 'lite'
+				}
+			}
+		}
+	}
+}
+
+// Ignore javadoc errors in generated protobuf sources
+javadoc {
+	failOnError = false
 }

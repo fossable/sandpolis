@@ -11,14 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
+import com.sandpolis.core.instance.Listener.ListenerConfig;
+import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.net.MsgListener.RQ_AddListener;
+import com.sandpolis.core.net.MsgListener.RQ_ChangeListener;
+import com.sandpolis.core.net.MsgListener.RQ_ChangeListener.ListenerState;
+import com.sandpolis.core.net.MsgListener.RQ_RemoveListener;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.proto.net.MsgListener.RQ_AddListener;
-import com.sandpolis.core.proto.net.MsgListener.RQ_ChangeListener;
-import com.sandpolis.core.proto.net.MsgListener.RQ_ChangeListener.ListenerState;
-import com.sandpolis.core.proto.net.MsgListener.RQ_RemoveListener;
-import com.sandpolis.core.proto.pojo.Listener.ListenerConfig;
-import com.sandpolis.core.proto.util.Result.Outcome;
 
 /**
  * Contains listener commands.

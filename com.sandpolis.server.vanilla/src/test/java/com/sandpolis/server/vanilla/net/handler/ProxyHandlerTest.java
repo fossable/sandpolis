@@ -21,9 +21,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.Message.MSG.PayloadCase;
 import com.sandpolis.core.net.exception.InvalidMessageException;
-import com.sandpolis.core.proto.net.Message.MSG;
-import com.sandpolis.core.proto.net.Message.MSG.PayloadCase;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.embedded.EmbeddedChannel;

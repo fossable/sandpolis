@@ -23,10 +23,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.net.MsgLogin.RQ_Login;
 import com.sandpolis.core.net.command.ExeletTest;
-import com.sandpolis.core.proto.net.MsgLogin.RQ_Login;
-import com.sandpolis.core.proto.pojo.User.UserConfig;
-import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.instance.User.UserConfig;
+import com.sandpolis.core.instance.Result.Outcome;
 
 class LoginExeTest extends ExeletTest {
 

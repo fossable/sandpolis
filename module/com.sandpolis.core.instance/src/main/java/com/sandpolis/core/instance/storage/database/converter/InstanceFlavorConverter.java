@@ -14,7 +14,7 @@ package com.sandpolis.core.instance.storage.database.converter;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
-import com.sandpolis.core.proto.util.Platform.InstanceFlavor;
+import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 /**
  * This converter replaces {@link InstanceFlavor}s with their numeric

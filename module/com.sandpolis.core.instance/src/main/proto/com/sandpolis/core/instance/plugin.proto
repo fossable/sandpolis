@@ -1,0 +1,35 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package core.instance;
+
+option java_package = "com.sandpolis.core.instance";
+option optimize_for = CODE_SIZE;
+
+/**
+ * Plugin metadata.
+ */
+message PluginDescriptor {
+    string id = 1;
+    string coordinate = 12;
+    string name = 2;
+    string version = 3;
+    string description = 4;
+    string trust_authority = 5;
+    bytes icon = 6;
+    bool enabled = 7;
+    int32 component_size_mega = 8;
+    int32 component_size_micro = 9;
+    int32 component_size_lifegem = 10;
+    int32 component_size_ascetic = 11;
+}

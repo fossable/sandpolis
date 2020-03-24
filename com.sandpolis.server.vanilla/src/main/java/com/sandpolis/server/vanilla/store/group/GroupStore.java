@@ -22,13 +22,13 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.Group.GroupConfig;
+import com.sandpolis.core.instance.Group.ProtoGroup;
+import com.sandpolis.core.instance.Result.ErrorCode;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.util.ConfigUtil;
-import com.sandpolis.core.proto.pojo.Group.GroupConfig;
-import com.sandpolis.core.proto.pojo.Group.ProtoGroup;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.server.vanilla.store.group.GroupStore.GroupStoreConfig;
 import com.sandpolis.server.vanilla.store.user.User;
 

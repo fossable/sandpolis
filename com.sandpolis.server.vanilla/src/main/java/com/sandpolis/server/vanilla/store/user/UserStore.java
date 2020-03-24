@@ -22,14 +22,14 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.Result.ErrorCode;
+import com.sandpolis.core.instance.User.ProtoUser;
+import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.instance.util.ConfigUtil;
-import com.sandpolis.core.proto.pojo.User.ProtoUser;
-import com.sandpolis.core.proto.pojo.User.UserConfig;
-import com.sandpolis.core.proto.util.Result.ErrorCode;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.server.vanilla.store.user.UserStore.UserStoreConfig;
 

@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.proto.util.Result.Outcome;
+import com.sandpolis.core.instance.Result.Outcome;
 
 public class OutcomeSetTest {
 

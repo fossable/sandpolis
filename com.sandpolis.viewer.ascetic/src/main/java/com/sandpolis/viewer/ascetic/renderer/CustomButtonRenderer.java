@@ -17,8 +17,8 @@ import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TerminalTextUtils;
 import com.googlecode.lanterna.graphics.ThemeDefinition;
 import com.googlecode.lanterna.gui2.Button;
-import com.googlecode.lanterna.gui2.TextGUIGraphics;
 import com.googlecode.lanterna.gui2.Button.ButtonRenderer;
+import com.googlecode.lanterna.gui2.TextGUIGraphics;
 
 public class CustomButtonRenderer implements ButtonRenderer {
 	@Override

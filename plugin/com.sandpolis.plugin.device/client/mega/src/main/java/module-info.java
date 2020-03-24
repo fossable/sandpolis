@@ -17,5 +17,4 @@ module com.sandpolis.plugin.device.client.mega {
 	requires com.sandpolis.core.net;
 	requires com.google.protobuf;
 	requires com.sandpolis.plugin.device;
-	requires com.sandpolis.core.proto;
 }

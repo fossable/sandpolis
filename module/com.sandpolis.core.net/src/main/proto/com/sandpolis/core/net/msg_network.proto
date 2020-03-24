@@ -1,0 +1,105 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package core.net;
+
+option java_package = "com.sandpolis.core.net";
+option optimize_for = CODE_SIZE;
+
+/**
+ * The type of SockLink.
+ */
+enum LinkType {
+    CONTROL_TCP = 0;
+    TRANSPORT_TCP = 1;
+    TRANSPORT_UDP = 2;
+}
+
+/**
+ * Request the server for a new direct connection.
+ */
+message RQ_DirectConnection {
+
+    // The requested node
+    int32 cvid = 1;
+
+    // The type of connection
+    LinkType type = 2;
+
+    // An optional listener port. If specified, the requested node will attempt
+    // a connection on this port. Otherwise, the server will coordinate the connection.
+    int32 port = 3;
+}
+
+/**
+ * Server response to a connection request.
+ */
+message RS_DirectConnection {
+
+    // The connection request
+    RQ_Connection request = 1;
+}
+
+/**
+ * Request the instance to establish a new connection.
+ */
+message RQ_Connection {
+
+    // The host
+    string host = 1;
+
+    // The port
+    int32 port = 2;
+
+    // The link type
+    LinkType type = 3;
+}
+
+/**
+ * Indicates that a connection has been lost.
+ */
+message EV_EndpointClosed {
+
+    // The node that has lost connection
+    int32 cvid = 1;
+}
+
+/**
+ * Indicates that the network has been updated.
+ */
+message EV_NetworkDelta {
+    message NodeAdded {
+        int32 cvid = 1;
+        int32 parent = 2;
+    }
+    repeated NodeAdded node_added = 1;
+
+    message NodeRemoved {
+        int32 cvid = 1;
+    }
+    repeated NodeRemoved node_removed = 2;
+
+    message LinkAdded {
+        int32 cvid1 = 1;
+        int32 cvid2 = 2;
+        LinkType link = 3;
+    }
+    repeated LinkAdded link_added = 3;
+
+    message LinkRemoved {
+        int32 cvid1 = 1;
+        int32 cvid2 = 2;
+    }
+    repeated LinkRemoved link_removed = 4;
+
+}

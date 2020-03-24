@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.proto.util.Generator.GenConfig;
-import com.sandpolis.core.proto.util.Generator.GenReport;
+import com.sandpolis.core.instance.Generator.GenConfig;
+import com.sandpolis.core.instance.Generator.GenReport;
 import com.sandpolis.core.util.TextUtil;
 
 /**

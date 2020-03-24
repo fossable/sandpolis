@@ -1,0 +1,40 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package core.net;
+
+import "com/sandpolis/core/instance/attribute.proto";
+
+option java_package = "com.sandpolis.core.net";
+option optimize_for = CODE_SIZE;
+
+message RQ_AttributeQuery {
+    repeated string path = 1;
+}
+
+message RS_AttributeQuery {
+    core.instance.ProtoProfile result = 1;
+}
+
+message RQ_AttributeStream {
+
+    // The desired stream ID
+    int32 id = 1;
+
+    repeated string path = 2;
+    int32 update_period = 3;
+}
+
+message EV_AttributeStream {
+    core.instance.ProtoProfile update = 1;
+}
