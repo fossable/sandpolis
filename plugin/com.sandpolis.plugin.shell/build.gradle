@@ -42,7 +42,7 @@ sourceSets {
 }
 
 dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.3.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
 
 	implementation project(':module:com.sandpolis.core.instance')
 
