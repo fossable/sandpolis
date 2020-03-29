@@ -31,6 +31,9 @@
 							text="Network" />
 						<SvgButton mnemonicParsing="false"
 							styleClass="main-menu-button" id="btn_main_users" text="Users" />
+						<SvgButton mnemonicParsing="false"
+							onAction="#open_add_client" styleClass="main-menu-button"
+							id="btn_main_add_client" text="Add Client" />
 					</children>
 				</VBox>
 			</children>

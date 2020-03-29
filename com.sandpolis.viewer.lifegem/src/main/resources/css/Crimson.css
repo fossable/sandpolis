@@ -2,11 +2,11 @@
 /* GENERAL */
 /***********/
 .progress-indicator .percentage {
-    -fx-fill:null;
+	-fx-fill: null;
 }
 
-.progress-indicator  {
-    -fx-padding: 0 0 -16 0;
+.progress-indicator {
+	-fx-padding: 0 0 -16 0;
 }
 
 /*************/
@@ -15,12 +15,15 @@
 #generator-btn_add_server {
 	-fx-svg: "/image/common/server-line.svg";
 }
+
 #generator-btn_add_plugin {
 	-fx-svg: "/image/common/terminal-window-line.svg";
 }
+
 #generator-btn_add_group {
 	-fx-svg: "/image/common/terminal-window-line.svg";
 }
+
 #generator-btn_generate {
 	-fx-svg: "/image/common/terminal-window-line.svg";
 }
@@ -29,7 +32,9 @@
 /* MAIN MENU */
 /*************/
 .main-menu-tooltip {
+	
 }
+
 .main-menu-button {
 	-fx-pref-width: 118px;
 	-fx-pref-height: 20px;
@@ -37,17 +42,23 @@
 	-fx-font-size: 10px;
 	-fx-alignment: center-left;
 }
+
 .main-menu-header {
+	
 }
+
 .main-menu-header_graphic {
 	-fx-pref-width: 118px;
 }
+
 .main-menu-panel {
 	-fx-spacing: 8px;
 }
+
 .main-menu-subpanel {
 	-fx-spacing: 3px;
 }
+
 .main-menu-category_button {
 	-fx-padding: 1 1 1 1;
 }
@@ -55,60 +66,79 @@
 #main-menu-btn_interface {
 	-fx-svg: "/image/common/terminal-window-line.svg";
 }
+
 #main-menu-interface-header {
 	-fx-svg: "/image/common/terminal-window-line.svg";
 }
+
 #main-menu-interface-btn_list {
 	-fx-svg: "/image/common/list-check-2.svg";
 }
+
 #main-menu-interface-btn_graph {
 	-fx-svg: "/image/common/git-commit-line.svg";
 }
+
 #main-menu-interface-btn_timeline {
 	-fx-svg: "/image/common/timeline-line.svg";
 }
+
 #main-menu-interface-btn_console {
 	-fx-svg: "/image/common/terminal-box-line.svg";
 }
+
 #main-menu-interface-btn_background {
 	-fx-svg: "/image/common/git-commit-line.svg";
 }
+
 #main-menu-interface-btn_exit {
 	-fx-svg: "/image/common/logout-box-line.svg";
 }
+
 #main-menu-btn_management {
 	-fx-svg: "/image/common/briefcase-line.svg";
 }
+
 #main-menu-management-header {
 	-fx-svg: "/image/common/briefcase-line.svg";
 }
+
 #main-menu-btn_generator {
 	-fx-svg: "/image/common/settings-line.svg";
 }
+
 #main-menu-generator-header {
 	-fx-svg: "/image/common/settings-line.svg";
 }
+
 #main-menu-generator-btn_mega {
 	-fx-svg: "/image/common/settings-line.svg";
 }
+
 #main-menu-generator-btn_micro {
 	-fx-svg: "/image/common/settings-line.svg";
 }
+
 #main-menu-btn_configuration {
 	-fx-svg: "/image/common/settings-5-line.svg";
 }
+
 #main-menu-configuration-header {
 	-fx-svg: "/image/common/settings-5-line.svg";
 }
+
 #main-menu-btn_about {
 	-fx-svg: "/image/common/question-line.svg";
 }
+
 #main-menu-about-header {
 	-fx-svg: "/image/common/question-line.svg";
 }
+
 #main-menu-about-btn_about {
 	-fx-svg: "/image/common/question-line.svg";
 }
+
 #main-menu-about-btn_logs {
 	-fx-svg: "/image/common/file-list-line.svg";
 }
@@ -119,8 +149,11 @@
 #about-logo_background {
 	-fx-background-color: #333333;
 }
+
 #about-btn_website {
+	
 }
+
 #about-btn_github {
 	-fx-svg: "/image/common/github-line.svg";
 	-fx-padding: 1 2 1 2;
@@ -130,18 +163,22 @@
 /* LOGIN */
 /*********/
 .login-info_field {
-    -fx-font-size: 11px;
+	-fx-font-size: 11px;
 }
+
 .login-info_field-red {
-    -fx-text-fill: red;
+	-fx-text-fill: red;
 }
+
 .login-info_field-green {
-    -fx-text-fill: green;
+	-fx-text-fill: green;
 }
+
 .login-status {
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
+	-fx-font-size: 11px;
+	-fx-font-weight: bold;
 }
+
 .login-field {
 	-fx-font-size: 12px;
 }

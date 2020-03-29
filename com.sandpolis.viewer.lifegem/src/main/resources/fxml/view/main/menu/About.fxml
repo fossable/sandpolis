@@ -16,8 +16,8 @@
 	fx:controller="com.sandpolis.viewer.lifegem.view.main.menu.AboutController">
 	<graphic>
 		<SvgLabel alignment="CENTER"
-			styleClass="main-menu-header_graphic"
-			id="main-menu-about-header" text="About" />
+			styleClass="main-menu-header_graphic" id="main-menu-about-header"
+			text="About" />
 	</graphic>
 	<content>
 		<VBox alignment="CENTER" styleClass="main-menu-panel">

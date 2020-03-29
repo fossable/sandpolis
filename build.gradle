@@ -28,6 +28,13 @@ plugins {
 }
 
 spotless {
+	cpp {
+		target '**/*.cc', '**/*.hh'
+
+		eclipse()
+		endWithNewline()
+		indentWithTabs()
+	}
 	java {
 		target '**/*.java'
 
@@ -83,12 +90,15 @@ spotless {
 
 		licenseHeaderFile file('gradle/resources/header_swift.txt'), "import"
 	}
-	cpp {
-		target '**/*.cc', '**/*.hh'
+	format 'fxml', {
+		target '**/*.fxml'
 
-		eclipse()
-		endWithNewline()
-		indentWithTabs()
+		eclipseWtp('xml')
+	}
+	format 'css', {
+		target '**/*.css'
+
+		eclipseWtp('css')
 	}
 }
 

@@ -12,10 +12,13 @@
 	<center>
 		<ExtendPane fx:id="extend">
 			<main>
-				<CarouselPane fx:id="carousel" direction="down"	duration="1000">
+				<CarouselPane fx:id="carousel" direction="down"
+					duration="1000">
 					<children>
-						<fx:include fx:id="hostList" source="list/HostList.fxml" userData="list" />
-						<fx:include fx:id="hostGraph" source="graph/HostGraph.fxml" userData="graph" />
+						<fx:include fx:id="hostList"
+							source="list/HostList.fxml" userData="list" />
+						<fx:include fx:id="hostGraph"
+							source="graph/HostGraph.fxml" userData="graph" />
 					</children>
 				</CarouselPane>
 			</main>
