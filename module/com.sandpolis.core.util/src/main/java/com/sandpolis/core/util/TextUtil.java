@@ -14,6 +14,8 @@ package com.sandpolis.core.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.fusesource.jansi.Ansi.ansi;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -27,6 +29,12 @@ import org.fusesource.jansi.Ansi.Color;
  * @since 5.0.0
  */
 public final class TextUtil {
+
+	/**
+	 * The default units (in descending order) in which to format durations.
+	 */
+	private static final ChronoUnit[] DEFAULT_DURATION_UNITS = new ChronoUnit[] { ChronoUnit.DAYS, ChronoUnit.HOURS,
+			ChronoUnit.MINUTES, ChronoUnit.SECONDS };
 
 	/**
 	 * Colors available to {@link #rainbowText(String)}.
@@ -122,6 +130,67 @@ public final class TextUtil {
 		case "eb" -> 1000000000000000000L;
 		default -> throw new IllegalArgumentException("Unknown unit: " + c[1]);
 		});
+	}
+
+	/**
+	 * Format the given time duration in English according to the given units.
+	 * 
+	 * @param value The duration to format
+	 * @param units The units
+	 * @return A formatted string
+	 */
+	public static String formatDuration(Duration value, ChronoUnit... units) {
+		if (units.length == 0) {
+			// Default units
+			units = DEFAULT_DURATION_UNITS;
+		} else {
+			// Sort input units
+			Arrays.sort(units, (u1, u2) -> u2.compareTo(u1));
+		}
+
+		// Shortcut for nil duration
+		if (value.isZero()) {
+			return "0 " + units[units.length - 1];
+		}
+
+		var buffer = new StringBuffer();
+
+		// Compute the number of times each unit fits into the value
+		long[] u = new long[units.length];
+		for (int i = 0; i < units.length; i++) {
+			if (value.compareTo(units[i].getDuration()) >= 0) {
+				u[i] = value.dividedBy(units[i].getDuration());
+				value = value.minus(units[i].getDuration().multipliedBy(u[i]));
+			}
+		}
+
+		// Assemble the output text
+		for (int i = 0; i < units.length; i++) {
+
+			// Append value and unit if greater than 0
+			if (u[i] == 1) {
+				buffer.append(u[i]);
+				buffer.append(' ');
+				// TODO singular unit
+				buffer.append(units[i]);
+			} else if (u[i] > 1) {
+				buffer.append(u[i]);
+				buffer.append(' ');
+				buffer.append(units[i]);
+			} else {
+				continue;
+			}
+
+			// Append a comma if there's more to come
+			for (int j = i + 1; j < units.length; j++) {
+				if (u[j] > 0) {
+					buffer.append(", ");
+					break;
+				}
+			}
+		}
+
+		return buffer.toString();
 	}
 
 	/**
