@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<?import com.sandpolis.viewer.lifegem.common.pane.ExtendPane?>
+
+<ExtendPane fx:id="pane_extend"
+	xmlns="http://javafx.com/javafx/11.0.1"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.lifegem.view.add_client.AddClientController">
+	<main>
+		<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity"
+			minHeight="-Infinity" minWidth="-Infinity">
+			<children>
+				<Label alignment="TOP_LEFT" layoutX="14.0" layoutY="14.0"
+					prefHeight="69.0" prefWidth="568.0" text="Add a new client."
+					AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="12.0"
+					AnchorPane.topAnchor="8.0" />
+				<ChoiceBox fx:id="chb_type" layoutX="14.0" layoutY="106.0"
+					prefHeight="26.0" prefWidth="240.0" />
+			</children>
+		</AnchorPane>
+	</main>
+</ExtendPane>

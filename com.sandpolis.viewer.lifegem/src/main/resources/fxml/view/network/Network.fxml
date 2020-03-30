@@ -15,7 +15,8 @@
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity"
 	minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
 	prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1"
-	xmlns:fx="http://javafx.com/fxml/1">
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.viewer.lifegem.view.network.NetworkController">
 	<top>
 		<GridPane prefHeight="60.0" BorderPane.alignment="CENTER">
 			<columnConstraints>
