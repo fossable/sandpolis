@@ -37,7 +37,7 @@ public final class Config {
 
 	public static final Logger log = LoggerFactory.getLogger(Config.class);
 
-	public static class ConfigProperty<T> {
+	public static final class ConfigProperty<T> {
 
 		/**
 		 * Whether the property has been "evaluated".
@@ -59,7 +59,7 @@ public final class Config {
 		 */
 		private T value;
 
-		public ConfigProperty(Class<T> type, String property) {
+		private ConfigProperty(Class<T> type, String property) {
 			this.type = Objects.requireNonNull(type);
 			this.property = Objects.requireNonNull(property);
 		}
@@ -89,8 +89,14 @@ public final class Config {
 			if (value == null) {
 				// Second priority: environment variables
 				value = System.getenv().get(property.toUpperCase().replace('.', '_'));
-				if (value == null)
+				if (value == null) {
+					log.trace("Failed to load property: {}", property);
 					return;
+				} else {
+					log.trace("Loaded environment variable: {} = {}", property.toUpperCase().replace('.', '_'), value);
+				}
+			} else {
+				log.trace("Loaded system property: {} = {}", property, value);
 			}
 
 			try {
