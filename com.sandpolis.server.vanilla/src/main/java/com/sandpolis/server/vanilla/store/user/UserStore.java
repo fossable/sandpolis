@@ -24,12 +24,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Result.ErrorCode;
 import com.sandpolis.core.instance.User.ProtoUser;
-import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
-import com.sandpolis.core.instance.util.ConfigUtil;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.server.vanilla.store.user.UserStore.UserStoreConfig;
 
@@ -70,7 +68,7 @@ public final class UserStore extends MapStore<String, User, UserStoreConfig> {
 	 *
 	 * @param config The user configuration
 	 */
-	public void add(UserConfig.Builder config) {
+	public void add(ProtoUser.Builder config) {
 		add(config.build());
 	}
 
@@ -79,9 +77,9 @@ public final class UserStore extends MapStore<String, User, UserStoreConfig> {
 	 *
 	 * @param config The user configuration
 	 */
-	public void add(UserConfig config) {
+	public void add(ProtoUser config) {
 		Objects.requireNonNull(config);
-		checkArgument(ConfigUtil.valid(config) == ErrorCode.OK, "Invalid configuration");
+		checkArgument(User.valid(config) == ErrorCode.OK, "Invalid configuration");
 
 		// Create the user
 		User user = new User(config);
@@ -103,7 +101,8 @@ public final class UserStore extends MapStore<String, User, UserStoreConfig> {
 		if (user == null)
 			return ErrorCode.UNKNOWN_USER;
 
-		return user.merge(delta);
+		user.merge(delta);
+		return ErrorCode.OK;
 	}
 
 	@Override
@@ -118,7 +117,7 @@ public final class UserStore extends MapStore<String, User, UserStoreConfig> {
 
 	public final class UserStoreConfig extends StoreConfig {
 
-		public final List<UserConfig> defaults = new ArrayList<>();
+		public final List<ProtoUser> defaults = new ArrayList<>();
 
 		@Override
 		public void ephemeral() {

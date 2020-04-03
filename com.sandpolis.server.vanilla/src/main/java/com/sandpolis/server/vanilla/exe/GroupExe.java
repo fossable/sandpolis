@@ -65,14 +65,14 @@ public final class GroupExe extends Exelet {
 		var rs = RS_ListGroups.newBuilder();
 
 		// TODO get correct user
-		GroupStore.getMembership(null).stream().map(group -> group.extract()).forEach(rs::addGroup);
+		GroupStore.getMembership(null).stream().map(Group::serialize).forEach(rs::addGroup);
 		return rs;
 	}
 
 	@Auth
 	@Handler(tag = MSG.RQ_GROUP_DELTA_FIELD_NUMBER)
 	public static MessageOrBuilder rq_group_delta(ExeletContext context, RQ_GroupDelta rq) {
-		if (!checkOwnership(context, rq.getDelta().getConfig().getId()))
+		if (!checkOwnership(context, rq.getDelta().getId()))
 			return failure(ErrorCode.ACCESS_DENIED);
 		var outcome = begin();
 

@@ -22,7 +22,7 @@ option optimize_for = CODE_SIZE;
  * Request to create a new listener.
  */
 message RQ_AddListener {
-    core.instance.ListenerConfig config = 1;
+    core.instance.ProtoListener config = 1;
 }
 
 /**

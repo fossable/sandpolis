@@ -11,7 +11,19 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.store.listener;
 
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_ADDRESS;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_CERTIFICATE;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_KEY;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_PORT;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_USERNAME;
+import static com.sandpolis.core.instance.Result.ErrorCode.OK;
+import static com.sandpolis.core.util.ValidationUtil.ipv4;
+import static com.sandpolis.core.util.ValidationUtil.port;
+import static com.sandpolis.core.util.ValidationUtil.username;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
+
+import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -28,13 +40,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.Listener.ListenerConfig;
-import com.sandpolis.core.instance.Listener.ListenerStats;
 import com.sandpolis.core.instance.Listener.ProtoListener;
 import com.sandpolis.core.instance.ProtoType;
 import com.sandpolis.core.instance.Result.ErrorCode;
-import com.sandpolis.core.instance.util.ConfigUtil;
 import com.sandpolis.core.net.Transport;
+import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.core.util.NetUtil;
 import com.sandpolis.server.vanilla.net.init.ServerChannelInitializer;
 import com.sandpolis.server.vanilla.store.user.User;
@@ -158,11 +168,11 @@ public class Listener implements ProtoType<ProtoListener> {
 	 *
 	 * @param config The configuration which should be prevalidated and complete
 	 */
-	public Listener(ListenerConfig config) {
-		if (merge(ProtoListener.newBuilder().setConfig(config).build()) != ErrorCode.OK)
+	public Listener(ProtoListener config) {
+		if (Listener.valid(config) != ErrorCode.OK)
 			throw new IllegalArgumentException();
 
-		this.id = config.getId();
+		merge(config);
 	}
 
 	/**
@@ -315,49 +325,101 @@ public class Listener implements ProtoType<ProtoListener> {
 	}
 
 	@Override
-	public ErrorCode merge(ProtoListener delta) {
-		ErrorCode validity = ConfigUtil.valid(delta.getConfig());
-		if (validity != ErrorCode.OK)
-			return validity;
+	public void merge(ProtoListener config) {
 
-		if (delta.hasConfig()) {
-			ListenerConfig config = delta.getConfig();
-
-			if (config.hasName())
-				setName(config.getName());
-			if (config.hasPort())
-				setPort(config.getPort());
-			if (config.hasAddress())
-				setAddress(config.getAddress());
-			if (config.hasOwner())
-				setOwner(UserStore.get(config.getOwner()).get());
-			if (config.hasUpnp())
-				setUpnp(config.getUpnp());
-			if (config.hasClientAcceptor())
-				setClientAcceptor(config.getClientAcceptor());
-			if (config.hasViewerAcceptor())
-				setViewerAcceptor(config.getViewerAcceptor());
-			if (config.hasEnabled())
-				setEnabled(config.getEnabled());
-			if (config.hasCert())
-				setCertificate(config.getCert().toByteArray());
-			if (config.hasKey())
-				setPrivateKey(config.getKey().toByteArray());
-		}
-
-		return ErrorCode.OK;
+		if (config.hasId())
+			this.id = config.getId();
+		if (config.hasName())
+			setName(config.getName());
+		if (config.hasPort())
+			setPort(config.getPort());
+		if (config.hasAddress())
+			setAddress(config.getAddress());
+		if (config.hasOwner())
+			setOwner(UserStore.get(config.getOwner()).get());
+		if (config.hasUpnp())
+			setUpnp(config.getUpnp());
+		if (config.hasClientAcceptor())
+			setClientAcceptor(config.getClientAcceptor());
+		if (config.hasViewerAcceptor())
+			setViewerAcceptor(config.getViewerAcceptor());
+		if (config.hasEnabled())
+			setEnabled(config.getEnabled());
+		if (config.hasCert())
+			setCertificate(config.getCert().toByteArray());
+		if (config.hasKey())
+			setPrivateKey(config.getKey().toByteArray());
 	}
 
 	@Override
-	public ProtoListener extract() {
-		ListenerConfig.Builder config = ListenerConfig.newBuilder().setId(getId()).setName(getName())
+	public ProtoListener serialize() {
+		ProtoListener.Builder config = ProtoListener.newBuilder().setId(getId()).setName(getName())
 				.setOwner(getOwner().getUsername()).setEnabled(isEnabled()).setPort(getPort()).setAddress(getAddress())
 				.setUpnp(isUpnp()).setClientAcceptor(isClientAcceptor()).setViewerAcceptor(isViewerAcceptor());
 		if (getCertificate() != null && getPrivateKey() != null)
 			config.setCert(ByteString.copyFrom(getCertificate())).setKey(ByteString.copyFrom(getPrivateKey()));
 
-		ListenerStats.Builder stats = ListenerStats.newBuilder();
-
-		return ProtoListener.newBuilder().setConfig(config).setStats(stats).build();
+		return config.build();
 	}
+
+	/**
+	 * Validate a {@link ProtoListener}. A {@link ProtoType} is valid if all present
+	 * fields pass value restrictions.
+	 *
+	 * @param config The candidate configuration
+	 * @return An error code or {@link ErrorCode#OK}
+	 */
+	public static ErrorCode valid(ProtoListener config) {
+		if (config == null)
+			throw new IllegalArgumentException();
+
+		if (config.hasOwner() && !username(config.getOwner()))
+			return INVALID_USERNAME;
+		if (config.hasPort() && !port(config.getPort()))
+			return INVALID_PORT;
+		if (config.hasAddress() && !ipv4(config.getAddress()))
+			return INVALID_ADDRESS;
+		if (!config.hasCert() && config.hasKey())
+			return INVALID_CERTIFICATE;
+		if (config.hasCert() && !config.hasKey())
+			return INVALID_KEY;
+		if (config.hasCert() && config.hasKey()) {
+			// Check certificate and key formats
+			try {
+				CertUtil.parseCert(config.getCert().toByteArray());
+			} catch (CertificateException e) {
+				return INVALID_CERTIFICATE;
+			}
+
+			try {
+				CertUtil.parseKey(config.getKey().toByteArray());
+			} catch (InvalidKeySpecException e) {
+				return INVALID_KEY;
+			}
+		}
+
+		return OK;
+	}
+
+	/**
+	 * Check a {@link ProtoListener} for completeness. A {@link ProtoType} is
+	 * complete if all required fields are present.
+	 *
+	 * @param config The candidate configuration
+	 * @return An error code or {@link ErrorCode#OK}
+	 */
+	public static ErrorCode complete(ProtoListener config) {
+		if (config == null)
+			throw new IllegalArgumentException();
+
+		if (!config.hasPort())
+			return INVALID_PORT;
+		if (!config.hasAddress())
+			return INVALID_ADDRESS;
+		if (!config.hasOwner())
+			return INVALID_USERNAME;
+
+		return OK;
+	}
+
 }

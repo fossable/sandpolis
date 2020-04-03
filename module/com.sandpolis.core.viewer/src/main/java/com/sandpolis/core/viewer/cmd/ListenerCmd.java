@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
-import com.sandpolis.core.instance.Listener.ListenerConfig;
+import com.sandpolis.core.instance.Listener.ProtoListener;
 import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.net.MsgListener.RQ_AddListener;
 import com.sandpolis.core.net.MsgListener.RQ_ChangeListener;
@@ -31,11 +31,11 @@ public final class ListenerCmd extends Cmdlet<ListenerCmd> {
 	/**
 	 * Add a new listener on the server.
 	 *
-	 * @param conf The listener configuration
+	 * @param config The listener configuration
 	 * @return A future that will receive the outcome of this action
 	 */
-	public ResponseFuture<Outcome> addListener(ListenerConfig conf) {
-		return request(RQ_AddListener.newBuilder().setConfig(conf));
+	public ResponseFuture<Outcome> addListener(ProtoListener config) {
+		return request(RQ_AddListener.newBuilder().setConfig(config));
 
 	}
 

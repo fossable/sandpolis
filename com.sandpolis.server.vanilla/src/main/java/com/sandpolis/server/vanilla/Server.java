@@ -54,13 +54,13 @@ import com.sandpolis.core.instance.Generator.NetworkConfig;
 import com.sandpolis.core.instance.Generator.NetworkTarget;
 import com.sandpolis.core.instance.Generator.OutputFormat;
 import com.sandpolis.core.instance.Generator.OutputPayload;
-import com.sandpolis.core.instance.Group.GroupConfig;
-import com.sandpolis.core.instance.Listener.ListenerConfig;
+import com.sandpolis.core.instance.Group.ProtoGroup;
+import com.sandpolis.core.instance.Listener.ProtoListener;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.User.UserConfig;
+import com.sandpolis.core.instance.User.ProtoUser;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.ipc.task.IPCTask;
@@ -144,6 +144,8 @@ public final class Server {
 
 		Config.MESSAGE_TIMEOUT.register(1000);
 
+		Config.PLUGIN_ENABLED.register(true);
+
 		return outcome.success();
 	});
 
@@ -193,9 +195,9 @@ public final class Server {
 			String username = lines.get(0);
 			String password = lines.get(1);
 
-			UserStore.add(UserConfig.newBuilder().setUsername(username).setPassword(password));
-			ListenerStore.add(ListenerConfig.newBuilder().setId(1).setPort(8768).setAddress("0.0.0.0")
-					.setOwner(username).setName("Default Listener").setEnabled(true).build());
+			UserStore.add(ProtoUser.newBuilder().setUsername(username).setPassword(password));
+			ListenerStore.add(ProtoListener.newBuilder().setId(1).setPort(8768).setAddress("0.0.0.0").setOwner(username)
+					.setName("Default Listener").setEnabled(true).build());
 		} finally {
 			try {
 				Files.delete(install);
@@ -365,16 +367,16 @@ public final class Server {
 
 		// Create user and listener
 		if (UserStore.get("admin").isEmpty())
-			UserStore.add(UserConfig.newBuilder().setUsername("admin").setPassword(CryptoUtil.hash(SHA256, "password"))
+			UserStore.add(ProtoUser.newBuilder().setUsername("admin").setPassword(CryptoUtil.hash(SHA256, "password"))
 					.build());
 
 		if (ListenerStore.get(1L).isEmpty())
-			ListenerStore.add(ListenerConfig.newBuilder().setId(1).setPort(8768).setAddress("0.0.0.0").setOwner("admin")
+			ListenerStore.add(ProtoListener.newBuilder().setId(1).setPort(8768).setAddress("0.0.0.0").setOwner("admin")
 					.setName("test").setEnabled(true).build());
 
 		// Create group
 		if (GroupStore.get("1").isEmpty())
-			GroupStore.add(GroupConfig.newBuilder().setId("1").setName("test group").setOwner("admin")
+			GroupStore.add(ProtoGroup.newBuilder().setId("1").setName("test group").setOwner("admin")
 					.addPasswordMechanism(PasswordContainer.newBuilder().setPassword("12345")).build());
 
 		// Generate client

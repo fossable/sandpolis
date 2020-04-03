@@ -11,6 +11,12 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.store.user;
 
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_EMAIL;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_USERNAME;
+import static com.sandpolis.core.instance.Result.ErrorCode.OK;
+import static com.sandpolis.core.util.ValidationUtil.email;
+import static com.sandpolis.core.util.ValidationUtil.username;
+
 import java.util.List;
 
 import javax.persistence.Column;
@@ -24,9 +30,6 @@ import javax.persistence.Transient;
 import com.sandpolis.core.instance.ProtoType;
 import com.sandpolis.core.instance.Result.ErrorCode;
 import com.sandpolis.core.instance.User.ProtoUser;
-import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.User.UserStats;
-import com.sandpolis.core.instance.util.ConfigUtil;
 import com.sandpolis.server.vanilla.store.group.Group;
 
 /**
@@ -94,11 +97,11 @@ public class User implements ProtoType<ProtoUser> {
 	 *
 	 * @param config The configuration which should be prevalidated and complete
 	 */
-	public User(UserConfig config) {
-		if (merge(ProtoUser.newBuilder().setConfig(config).build()) != ErrorCode.OK)
+	public User(ProtoUser config) {
+		if (User.valid(config) != ErrorCode.OK)
 			throw new IllegalArgumentException();
 
-		this.id = config.getId();
+		merge(config);
 	}
 
 	public long getId() {
@@ -160,38 +163,60 @@ public class User implements ProtoType<ProtoUser> {
 	}
 
 	@Override
-	public ErrorCode merge(ProtoUser delta) {
-		ErrorCode validity = ConfigUtil.valid(delta.getConfig());
-		if (validity != ErrorCode.OK)
-			return validity;
+	public void merge(ProtoUser config) {
 
-		if (delta.hasConfig()) {
-			UserConfig config = delta.getConfig();
+		if (config.hasId())
+			this.id = config.getId();
+		if (config.hasUsername())
+			setUsername(config.getUsername());
+		if (config.hasEmail())
+			setEmail(config.getEmail());
+		if (config.hasExpiration())
+			setExpiration(config.getExpiration());
+		if (config.hasCtime())
+			setCreation(config.getCtime());
 
-			if (config.hasUsername())
-				setUsername(config.getUsername());
-			if (config.hasEmail())
-				setEmail(config.getEmail());
-			if (config.hasExpiration())
-				setExpiration(config.getExpiration());
-		}
-
-		if (delta.hasStats()) {
-			UserStats stats = delta.getStats();
-
-			if (stats.hasCtime())
-				setCreation(stats.getCtime());
-		}
-
-		return ErrorCode.OK;
 	}
 
 	@Override
-	public ProtoUser extract() {
-		UserConfig.Builder config = UserConfig.newBuilder().setUsername(username).setEmail(email)
-				.setExpiration(expiration);
-		UserStats.Builder stats = UserStats.newBuilder().setCtime(creation);
+	public ProtoUser serialize() {
+		return ProtoUser.newBuilder().setUsername(username).setEmail(email).setExpiration(expiration).setCtime(creation)
+				.build();
+	}
 
-		return ProtoUser.newBuilder().setConfig(config).setStats(stats).build();
+	/**
+	 * Validate a {@link ProtoUser}. A {@link ProtoType} is valid if all present
+	 * fields pass value restrictions.
+	 *
+	 * @param config The candidate configuration
+	 * @return An error code or {@link ErrorCode#OK}
+	 */
+	public static ErrorCode valid(ProtoUser config) {
+		if (config == null)
+			throw new IllegalArgumentException();
+
+		if (config.hasUsername() && !username(config.getUsername()))
+			return INVALID_USERNAME;
+		if (config.hasEmail() && !email(config.getEmail()))
+			return INVALID_EMAIL;
+
+		return OK;
+	}
+
+	/**
+	 * Check a {@link ProtoUser} for completeness. A {@link ProtoType} is complete
+	 * if all required fields are present.
+	 *
+	 * @param config The candidate configuration
+	 * @return An error code or {@link ErrorCode#OK}
+	 */
+	public static ErrorCode complete(ProtoUser config) {
+		if (config == null)
+			throw new IllegalArgumentException();
+
+		if (!config.hasUsername())
+			return INVALID_USERNAME;
+
+		return OK;
 	}
 }

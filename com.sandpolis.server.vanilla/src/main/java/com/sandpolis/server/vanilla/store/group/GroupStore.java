@@ -22,13 +22,12 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Group.GroupConfig;
 import com.sandpolis.core.instance.Group.ProtoGroup;
 import com.sandpolis.core.instance.Result.ErrorCode;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
-import com.sandpolis.core.instance.util.ConfigUtil;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.server.vanilla.store.group.GroupStore.GroupStoreConfig;
 import com.sandpolis.server.vanilla.store.user.User;
 
@@ -51,7 +50,7 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 	 *
 	 * @param config The group configuration
 	 */
-	public void add(GroupConfig.Builder config) {
+	public void add(ProtoGroup.Builder config) {
 		add(config.build());
 	}
 
@@ -60,10 +59,10 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 	 *
 	 * @param config The group configuration
 	 */
-	public void add(GroupConfig config) {
+	public void add(ProtoGroup config) {
 		Objects.requireNonNull(config);
-		checkArgument(ConfigUtil.valid(config) == ErrorCode.OK, "Invalid configuration");
-		checkArgument(ConfigUtil.complete(config) == ErrorCode.OK, "Incomplete configuration");
+		checkArgument(Group.valid(config) == ErrorCode.OK, "Invalid configuration");
+		checkArgument(Group.complete(config) == ErrorCode.OK, "Incomplete configuration");
 
 		add(new Group(config));
 	}
@@ -125,7 +124,8 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 		if (group == null)
 			return ErrorCode.UNKNOWN_GROUP;
 
-		return group.merge(delta);
+		group.merge(delta);
+		return ErrorCode.OK;
 	}
 
 	@Override
@@ -140,7 +140,7 @@ public final class GroupStore extends MapStore<String, Group, GroupStoreConfig> 
 
 	public final class GroupStoreConfig extends StoreConfig {
 
-		public final List<GroupConfig> defaults = new ArrayList<>();
+		public final List<ProtoGroup> defaults = new ArrayList<>();
 
 		@Override
 		public void ephemeral() {

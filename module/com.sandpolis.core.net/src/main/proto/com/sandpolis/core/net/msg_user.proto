@@ -22,7 +22,7 @@ option optimize_for = CODE_SIZE;
  * Request to add a new user.
  */
 message RQ_AddUser {
-    core.instance.UserConfig config = 1;
+    core.instance.ProtoUser config = 1;
 }
 
 /**

@@ -20,7 +20,6 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
 
-import com.sandpolis.core.instance.Group.GroupConfig;
 import com.sandpolis.core.instance.Group.ProtoGroup;
 import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.net.MsgGroup.RQ_AddGroup;
@@ -37,7 +36,7 @@ import com.sandpolis.core.net.future.ResponseFuture;
 public final class GroupCmd extends Cmdlet<GroupCmd> {
 
 	public ResponseFuture<Outcome> create(String name) {
-		return request(RQ_AddGroup.newBuilder().setConfig(GroupConfig.newBuilder().setName(name)));
+		return request(RQ_AddGroup.newBuilder().setConfig(ProtoGroup.newBuilder().setName(name)));
 	}
 
 	public ResponseFuture<Outcome> remove(String id) {

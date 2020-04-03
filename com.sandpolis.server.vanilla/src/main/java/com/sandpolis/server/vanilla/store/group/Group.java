@@ -11,11 +11,16 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.store.group;
 
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_GROUPNAME;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_ID;
+import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_USERNAME;
+import static com.sandpolis.core.instance.Result.ErrorCode.OK;
+import static com.sandpolis.core.util.ValidationUtil.group;
+import static com.sandpolis.core.util.ValidationUtil.username;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -35,12 +40,9 @@ import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.Auth.KeyContainer;
 import com.sandpolis.core.instance.Auth.KeyContainer.KeyPair;
 import com.sandpolis.core.instance.Auth.PasswordContainer;
-import com.sandpolis.core.instance.Group.GroupConfig;
-import com.sandpolis.core.instance.Group.GroupStats;
 import com.sandpolis.core.instance.Group.ProtoGroup;
 import com.sandpolis.core.instance.ProtoType;
 import com.sandpolis.core.instance.Result.ErrorCode;
-import com.sandpolis.core.instance.util.ConfigUtil;
 import com.sandpolis.server.vanilla.auth.AuthenticationMechanism;
 import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.auth.PasswordMechanism;
@@ -126,13 +128,14 @@ public class Group implements ProtoType<ProtoGroup> {
 	 *
 	 * @param config The configuration which should be prevalidated and complete
 	 */
-	public Group(GroupConfig config) {
-		this.id = Objects.requireNonNull(config.getId());
+	public Group(ProtoGroup config) {
+		if (Group.valid(config) != ErrorCode.OK)
+			throw new IllegalArgumentException();
+
 		this.passwords = new HashSet<>();
 		this.keys = new HashSet<>();
 
-		if (merge(ProtoGroup.newBuilder().setConfig(config).build()) != ErrorCode.OK)
-			throw new IllegalArgumentException();
+		merge(config);
 	}
 
 	public String getGroupId() {
@@ -206,38 +209,28 @@ public class Group implements ProtoType<ProtoGroup> {
 	}
 
 	@Override
-	public ErrorCode merge(ProtoGroup delta) {
-		ErrorCode validity = ConfigUtil.valid(delta.getConfig());
-		if (validity != ErrorCode.OK)
-			return validity;
+	public void merge(ProtoGroup config) {
 
-		if (delta.hasConfig()) {
-			GroupConfig config = delta.getConfig();
-
-			if (config.hasName())
-				setName(config.getName());
-			if (config.hasOwner())
-				setOwner(UserStore.get(config.getOwner()).get());
-			for (PasswordContainer password : config.getPasswordMechanismList()) {
-				addPasswordMechanism(new PasswordMechanism(this, password.getPassword()));
-			}
+		if (config.hasId())
+			this.id = config.getId();
+		if (config.hasName())
+			setName(config.getName());
+		if (config.hasOwner())
+			setOwner(UserStore.get(config.getOwner()).get());
+		for (PasswordContainer password : config.getPasswordMechanismList()) {
+			addPasswordMechanism(new PasswordMechanism(this, password.getPassword()));
 		}
 
-		if (delta.hasStats()) {
-			GroupStats stats = delta.getStats();
-
-			if (stats.hasCtime())
-				setCtime(stats.getCtime());
-			if (stats.hasMtime())
-				setMtime(stats.getMtime());
-		}
-
-		return ErrorCode.OK;
+		if (config.hasCtime())
+			setCtime(config.getCtime());
+		if (config.hasMtime())
+			setMtime(config.getMtime());
 	}
 
 	@Override
-	public ProtoGroup extract() {
-		GroupConfig.Builder config = GroupConfig.newBuilder().setId(id).setName(name).setOwner(owner.getUsername());
+	public ProtoGroup serialize() {
+		ProtoGroup.Builder config = ProtoGroup.newBuilder().setId(id).setName(name).setOwner(owner.getUsername())
+				.setCtime(ctime).setMtime(mtime);
 
 		for (User member : members) {
 			config.addMember(member.getUsername());
@@ -254,8 +247,48 @@ public class Group implements ProtoType<ProtoGroup> {
 					.setVerifier(ByteString.copyFrom(keyMech.getServer().getVerifier()));
 			config.addKeyMechanism(KeyContainer.newBuilder().setClient(client).setServer(server));
 		}
-		GroupStats.Builder stats = GroupStats.newBuilder().setCtime(ctime).setMtime(mtime);
-		return ProtoGroup.newBuilder().setConfig(config).setStats(stats).build();
+
+		return config.build();
 	}
 
+	/**
+	 * Validate a {@link ProtoGroup}. A {@link ProtoType} is valid if all present
+	 * fields pass value restrictions.
+	 *
+	 * @param config The candidate configuration
+	 * @return An error code or {@link ErrorCode#OK}
+	 */
+	public static ErrorCode valid(ProtoGroup config) {
+		if (config == null)
+			throw new IllegalArgumentException();
+
+		if (config.hasName() && !group(config.getName()))
+			return INVALID_GROUPNAME;
+		if (config.hasOwner() && !username(config.getOwner()))
+			return INVALID_USERNAME;
+		for (String member : config.getMemberList())
+			if (!username(member))
+				return INVALID_USERNAME;
+
+		return OK;
+	}
+
+	/**
+	 * Check a {@link ProtoGroup} for completeness. A {@link ProtoType} is complete
+	 * if all required fields are present.
+	 *
+	 * @param config The candidate configuration
+	 * @return An error code or {@link ErrorCode#OK}
+	 */
+	public static ErrorCode complete(ProtoGroup config) {
+		if (config == null)
+			throw new IllegalArgumentException();
+
+		if (!config.hasId())
+			return INVALID_ID;
+		if (!config.hasOwner())
+			return INVALID_USERNAME;
+
+		return OK;
+	}
 }

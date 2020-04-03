@@ -22,13 +22,12 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Listener.ListenerConfig;
 import com.sandpolis.core.instance.Listener.ProtoListener;
 import com.sandpolis.core.instance.Result.ErrorCode;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
-import com.sandpolis.core.instance.util.ConfigUtil;
+import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 import com.sandpolis.core.net.MsgListener.RQ_ChangeListener.ListenerState;
 import com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStoreConfig;
 
@@ -93,7 +92,7 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 	 *
 	 * @param config The listener configuration
 	 */
-	public void add(ListenerConfig.Builder config) {
+	public void add(ProtoListener.Builder config) {
 		add(config.build());
 	}
 
@@ -102,10 +101,10 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 	 *
 	 * @param config The listener configuration
 	 */
-	public void add(ListenerConfig config) {
+	public void add(ProtoListener config) {
 		Objects.requireNonNull(config);
-		checkArgument(ConfigUtil.valid(config) == ErrorCode.OK, "Invalid configuration");
-		checkArgument(ConfigUtil.complete(config) == ErrorCode.OK, "Incomplete configuration");
+		checkArgument(Listener.valid(config) == ErrorCode.OK, "Invalid configuration");
+		checkArgument(Listener.complete(config) == ErrorCode.OK, "Incomplete configuration");
 
 		add(new Listener(config));
 	}
@@ -137,7 +136,8 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 		if (listener.isListening())
 			return ErrorCode.INVALID_LISTENER_STATE;
 
-		return listener.merge(delta);
+		listener.merge(delta);
+		return ErrorCode.OK;
 	}
 
 	/**
@@ -174,7 +174,7 @@ public final class ListenerStore extends MapStore<Long, Listener, ListenerStoreC
 
 	public final class ListenerStoreConfig extends StoreConfig {
 
-		public final List<ListenerConfig> defaults = new ArrayList<>();
+		public final List<ProtoListener> defaults = new ArrayList<>();
 
 		@Override
 		public void ephemeral() {

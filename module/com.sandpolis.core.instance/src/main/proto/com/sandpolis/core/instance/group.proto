@@ -19,45 +19,31 @@ option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
 
 /**
- * The configuration of a Group.
+ * The Group container.
  */
-message GroupConfig {
+message ProtoGroup {
 
     // The primary ID
-    optional string id = 1;
+    optional string id = 101;
 
     // The user-friendly name
-    optional string name = 2;
+    optional string name = 102;
 
     // The username of the user that owns this group
-    optional string owner = 3;
+    optional string owner = 103;
 
     // The usernames of all group members
-    repeated string member = 4;
+    repeated string member = 104;
 
     // The password mechanisms that belong to the group
-    repeated PasswordContainer password_mechanism = 5;
+    repeated PasswordContainer password_mechanism = 105;
 
     // The key mechanisms that belong to the group
-    repeated KeyContainer key_mechanism = 6;
-}
-
-/**
- * Group statistics.
- */
-message GroupStats {
+    repeated KeyContainer key_mechanism = 106;
 
     // The creation timestamp
     optional int64 ctime = 1;
 
     // The modification timestamp
     optional int64 mtime = 2;
-}
-
-/**
- * A Group container.
- */
-message ProtoGroup {
-    optional GroupConfig config = 1;
-    optional GroupStats stats = 2;
 }

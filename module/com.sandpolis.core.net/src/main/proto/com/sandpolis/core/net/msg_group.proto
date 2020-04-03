@@ -24,7 +24,7 @@ option optimize_for = CODE_SIZE;
 message RQ_AddGroup {
 
     // The group configuration
-    core.instance.GroupConfig config = 1;
+    core.instance.ProtoGroup config = 1;
 }
 
 /**
