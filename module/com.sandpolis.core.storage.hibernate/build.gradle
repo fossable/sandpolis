@@ -45,7 +45,7 @@ dependencies {
 	implementation 'org.slf4j:slf4j-api:1.7.30'
 
 	// https://github.com/hibernate/hibernate-orm
-	implementation 'org.hibernate:hibernate-core:5.4.13.Final'
+	implementation 'org.hibernate:hibernate-core:5.4.14.Final'
 	implementation 'org.hibernate:hibernate-c3p0:5.4.0.Final'
 	implementation 'javax.xml.bind:jaxb-api:2.3.0'
 }
