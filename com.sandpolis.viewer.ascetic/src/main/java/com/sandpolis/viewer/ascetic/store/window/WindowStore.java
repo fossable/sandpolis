@@ -20,7 +20,7 @@ import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.viewer.ascetic.store.window.WindowStore.WindowStoreConfig;
 
 public final class WindowStore extends MapStore<String, Window, WindowStoreConfig> {

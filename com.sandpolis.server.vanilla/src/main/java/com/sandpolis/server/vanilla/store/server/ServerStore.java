@@ -27,7 +27,7 @@ import com.google.protobuf.ByteString;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.net.MsgServer.RS_ServerBanner;
 import com.sandpolis.server.vanilla.store.server.ServerStore.ServerStoreConfig;
 

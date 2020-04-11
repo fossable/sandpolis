@@ -11,12 +11,26 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.store;
 
-import org.slf4j.Logger;
+import com.sandpolis.core.instance.storage.database.Database;
 
-public abstract class ListStore<V, E extends StoreConfig> extends StoreBase<E> {
+/**
+ * A base for all store configurations.
+ */
+public abstract class StoreConfig {
 
-	protected ListStore(Logger log) {
-		super(log);
+	/**
+	 * Indicate that the store's data should not survive the closing of the store.
+	 */
+	public void ephemeral() {
+		throw new UnsupportedOperationException(this.getClass().getName() + " does not support ephemeral providers");
 	}
 
+	/**
+	 * Indicate that the store's data should be persisted to the given database.
+	 *
+	 * @param database The database handle
+	 */
+	public void persistent(Database database) {
+		throw new UnsupportedOperationException(this.getClass().getName() + " does not support persistent providers");
+	}
 }

@@ -28,7 +28,7 @@ import com.google.common.graph.NetworkBuilder;
 import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta;
 import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.LinkAdded;

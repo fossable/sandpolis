@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.pref.PrefStore.PrefStoreConfig;
 import com.sandpolis.core.util.Platform.Instance;
 import com.sandpolis.core.util.Platform.InstanceFlavor;

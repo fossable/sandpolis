@@ -25,6 +25,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.sandpolis.core.instance.LocationOuterClass.Location;
 import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.location.LocationStore.LocationStoreConfig;
 
@@ -100,7 +101,7 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 		return (LocationStore) super.init(null);
 	}
 
-	public final class LocationStoreConfig extends StoreBase.StoreConfig {
+	public final class LocationStoreConfig extends StoreConfig {
 		public String service;
 		public String key;
 		public Duration cacheExpiration;

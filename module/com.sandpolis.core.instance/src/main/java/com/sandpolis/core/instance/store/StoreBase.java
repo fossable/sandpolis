@@ -23,36 +23,12 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.SubscriberExceptionContext;
 import com.sandpolis.core.instance.event.Event;
 import com.sandpolis.core.instance.event.ParameterizedEvent;
-import com.sandpolis.core.instance.storage.database.Database;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 
 /**
  * A Store is designed to provide extremely convenient access to a collection of
  * objects.
  */
 public abstract class StoreBase<E extends StoreConfig> {
-
-	/**
-	 * A superclass for all store configurations.
-	 */
-	public abstract static class StoreConfig {
-
-		/**
-		 * Indicates that the store's data should not survive the closing of the store.
-		 */
-		public void ephemeral() {
-			throw new UnsupportedOperationException("Store does not support ephemeral providers");
-		}
-
-		/**
-		 * Indicates that the store's data should be persisted to the given database.
-		 *
-		 * @param database The database handle
-		 */
-		public void persistent(Database database) {
-			throw new UnsupportedOperationException("Store does not support persistent providers");
-		}
-	}
 
 	private Logger log;
 

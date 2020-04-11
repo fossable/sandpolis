@@ -17,7 +17,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 
 import com.sandpolis.core.instance.storage.StoreProvider;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
 
 public abstract class MapStore<K, V, E extends StoreConfig> extends StoreBase<E> {
 

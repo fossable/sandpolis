@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.StoreBase;
+import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.pref.PrefStore;
 import com.sandpolis.core.ipc.IPCStore.IPCStoreConfig;
 import com.sandpolis.core.ipc.Message.MSG;

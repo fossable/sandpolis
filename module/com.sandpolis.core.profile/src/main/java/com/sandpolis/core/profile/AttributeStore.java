@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.profile.AttributeStore.AttributeStoreConfig;
 import com.sandpolis.core.profile.AttributeStore.DocumentKey;
 import com.sandpolis.core.profile.attribute.key.AttributeKey;

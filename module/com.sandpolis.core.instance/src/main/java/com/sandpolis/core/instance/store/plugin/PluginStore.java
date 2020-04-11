@@ -31,11 +31,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.Plugin.PluginDescriptor;
 import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
-import com.sandpolis.core.instance.store.StoreBase.StoreConfig;
+import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.plugin.Events.PluginLoadedEvent;
 import com.sandpolis.core.instance.store.plugin.PluginStore.PluginStoreConfig;
 import com.sandpolis.core.util.CertUtil;
@@ -74,15 +73,6 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	 * The default certificate verifier which allows all plugins.
 	 */
 	private static Function<X509Certificate, Boolean> verifier = c -> true;
-
-	/**
-	 * Get the plugins in descriptor form.
-	 *
-	 * @return A new plugin descriptor stream
-	 */
-	public Stream<PluginDescriptor> getPluginDescriptors() {
-		return provider.stream().map(plugin -> plugin.toDescriptor());
-	}
 
 	/**
 	 * Get a component of a plugin archive.
