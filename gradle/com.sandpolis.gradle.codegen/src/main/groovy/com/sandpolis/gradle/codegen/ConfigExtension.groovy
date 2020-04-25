@@ -9,3 +9,12 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+package com.sandpolis.gradle.codegen
+
+class ConfigExtension {
+
+	/**
+	 * The type of document bindings to generate. Values are: javafx, core.
+	 */
+	String documentBindings
+}

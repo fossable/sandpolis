@@ -11,7 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.gradle.codegen
 
-import com.sandpolis.gradle.codegen.AttributeGenerator
+import com.sandpolis.gradle.codegen.document.CoreDocumentBindingsGenerator
+import com.sandpolis.gradle.codegen.document.JavaFxDocumentBindingsGenerator
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -21,18 +22,39 @@ import org.gradle.api.Project
  *
  * @author cilki
  */
-public class CodeGen implements Plugin<Project> {
+class CodeGen implements Plugin<Project> {
 
 	void apply(Project project) {
 
-		// Look for attribute descriptor
-		if (project.file("attribute.json").exists()) {
-			project.tasks.getByName('compileJava').dependsOn(project.task("generateAttributes", type: AttributeGenerator))
-		}
+		// Register the config extension
+		def configuration = project.extensions.create('codegen', ConfigExtension)
 
-		// Setup protobuf compilation
-		if (project.file("src/main/proto").exists()) {
-			// TODO
+		project.afterEvaluate {
+
+			// Generate document bindings if configured
+			if (configuration.documentBindings != null) {
+
+				// Look for the document specification
+				if (!project.file("attribute.json").exists())
+					throw new RuntimeException("Specification not found")
+
+				// Create the task
+				switch (configuration.documentBindings) {
+				case "javafx":
+					project.tasks.getByName('compileJava').dependsOn(project.task("generateJavaFxBindings", type: JavaFxDocumentBindingsGenerator))
+					break
+				case "core":
+					project.tasks.getByName('compileJava').dependsOn(project.task("generateCoreBindings", type: CoreDocumentBindingsGenerator))
+					break
+				default:
+					throw new RuntimeException("Specification not found")
+				}
+			}
+
+			// Setup automatic protobuf compilation
+			if (project.file("src/main/proto").exists()) {
+				// TODO
+			}
 		}
 	}
 }

@@ -17,6 +17,8 @@ plugins {
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
+apply plugin: 'com.sandpolis.gradle.codegen'
+
 eclipse {
 	project {
 		name = 'com.sandpolis.core.instance'
@@ -91,4 +93,8 @@ protobuf {
 // Ignore javadoc errors in generated protobuf sources
 javadoc {
 	failOnError = false
+}
+
+codegen {
+	documentBindings = 'core'
 }
