@@ -1,0 +1,1125 @@
+{
+  "name": "Sandpolis",
+  "tag": 1,
+  "documents": [
+    {
+      "name": "Instance",
+      "tag": 1,
+      "documents": [
+        {
+          "name": "Server",
+          "tag": 1
+        },
+        {
+          "name": "Viewer",
+          "tag": 2
+        },
+        {
+          "name": "Client",
+          "tag": 3
+        }
+      ],
+      "collections": [
+        {
+          "name": "Connection",
+          "tag": 4,
+          "attributes": [
+            {
+              "name": "remote_port",
+              "tag": 1,
+              "type": "Integer"
+            },
+            {
+              "name": "local_port",
+              "tag": 2,
+              "type": "Integer"
+            },
+            {
+              "name": "remote_address",
+              "tag": 3,
+              "type": "String"
+            },
+            {
+              "name": "local_address",
+              "tag": 4,
+              "type": "String"
+            },
+            {
+              "name": "upload_total",
+              "tag": 5,
+              "type": "Long"
+            },
+            {
+              "name": "download_total",
+              "tag": 6,
+              "type": "Long"
+            }
+          ]
+        },
+        {
+          "name": "Listener",
+          "tag": 5,
+          "attributes": [
+            {
+              "name": "name",
+              "tag": 1,
+              "type": "String",
+              "description": "The listener's user-friendly name"
+            },
+            {
+              "name": "enabled",
+              "tag": 2,
+              "type": "Boolean",
+              "description": "Whether the listener is enabled"
+            },
+            {
+              "name": "active",
+              "tag": 3,
+              "type": "Boolean",
+              "description": "Whether the listener is currently bound to the port and listening"
+            },
+            {
+              "name": "port",
+              "tag": 4,
+              "type": "Integer",
+              "description": "The listener's local listening port"
+            },
+            {
+              "name": "address",
+              "tag": 5,
+              "type": "String",
+              "description": "The listener's local bind address"
+            },
+            {
+              "name": "certificate",
+              "tag": 6,
+              "type": "java.lang.Byte[]",
+              "description": "A certificate that the listener will present to incoming connections"
+            },
+            {
+              "name": "private_key",
+              "tag": 7,
+              "type": "java.lang.Byte[]",
+              "description": "The private key corresponding to the certificate"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Plugin",
+      "tag": 2,
+      "documents": [
+        {
+          "name": "Sysinfo",
+          "tag": 1,
+          "collections": [
+            {
+              "name": "Nic",
+              "tag": 1,
+              "documents": [
+                {
+                  "name": "Windows",
+                  "tag": 1,
+                  "attributes": [
+                    {
+                      "name": "luid",
+                      "tag": 1,
+                      "type": "Long",
+                      "description": "The interface's locally unique identifier"
+                    },
+                    {
+                      "name": "guid",
+                      "tag": 2,
+                      "type": "String",
+                      "description": "The interface's globally unique identifier"
+                    },
+                    {
+                      "name": "paused",
+                      "tag": 3,
+                      "type": "Boolean",
+                      "description": "Whether the interface is in a paused state"
+                    },
+                    {
+                      "name": "low_power",
+                      "tag": 4,
+                      "type": "Boolean",
+                      "description": "Whether the interface is in a low-power state"
+                    }
+                  ]
+                }
+              ],
+              "attributes": [
+                {
+                  "name": "name",
+                  "tag": 1,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The interface's name"
+                },
+                {
+                  "name": "description",
+                  "tag": 2,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The interface's description"
+                },
+                {
+                  "name": "mtu",
+                  "tag": 3,
+                  "type": "Integer",
+                  "description": "The maximum transmission unit"
+                },
+                {
+                  "name": "mac",
+                  "tag": 4,
+                  "type": "String",
+                  "description": null
+                },
+                {
+                  "name": "virtual",
+                  "tag": 5,
+                  "type": "Boolean",
+                  "description": null
+                },
+                {
+                  "name": "ipv4",
+                  "tag": 6,
+                  "type": "List<String>",
+                  "description": "The interface's IPv4 addresses"
+                },
+                {
+                  "name": "ipv6",
+                  "tag": 7,
+                  "type": "List<String>",
+                  "description": "The interface's IPv6 addresses"
+                },
+                {
+                  "name": "broadcast",
+                  "tag": 8,
+                  "type": "String",
+                  "description": null
+                },
+                {
+                  "name": "netmask",
+                  "tag": 9,
+                  "type": "String",
+                  "description": "The interface's subnet mask"
+                },
+                {
+                  "name": "read_bytes",
+                  "tag": 10,
+                  "type": "Long",
+                  "description": "The number of bytes read from the interface"
+                },
+                {
+                  "name": "write_bytes",
+                  "tag": 11,
+                  "type": "Long",
+                  "description": "The number of bytes written to the interface"
+                },
+                {
+                  "name": "read_packets",
+                  "tag": 12,
+                  "type": "Long",
+                  "description": "The number of packets read from the interface"
+                },
+                {
+                  "name": "write_packets",
+                  "tag": 13,
+                  "type": "Long",
+                  "description": "The number of packets written to the interface"
+                },
+                {
+                  "name": "read_errors",
+                  "tag": 14,
+                  "type": "Long",
+                  "description": "The number of read errors"
+                },
+                {
+                  "name": "write_errors",
+                  "tag": 15,
+                  "type": "Long",
+                  "description": "The number of write errors"
+                },
+                {
+                  "name": "read_drops",
+                  "tag": 16,
+                  "type": "Long",
+                  "description": "The number of read drops"
+                },
+                {
+                  "name": "write_drops",
+                  "tag": 17,
+                  "type": "Long",
+                  "description": "The number of write drops"
+                },
+                {
+                  "name": "write_collisions",
+                  "tag": 18,
+                  "type": "Long",
+                  "description": "The number of write collisions"
+                },
+                {
+                  "name": "link_speed",
+                  "tag": 19,
+                  "type": "Long",
+                  "description": "The interface's maximum speed in bytes"
+                },
+                {
+                  "name": "default_gateway",
+                  "tag": 20,
+                  "type": "Boolean",
+                  "description": null
+                },
+                {
+                  "name": "flag_up",
+                  "tag": 21,
+                  "type": "Boolean",
+                  "description": null
+                },
+                {
+                  "name": "flag_running",
+                  "tag": 22,
+                  "type": "Boolean",
+                  "description": null
+                },
+                {
+                  "name": "flag_loopback",
+                  "tag": 23,
+                  "type": "Boolean",
+                  "description": null
+                },
+                {
+                  "name": "flag_multicast",
+                  "tag": 24,
+                  "type": "Boolean",
+                  "description": null
+                }
+              ]
+            },
+            {
+              "name": "Disk",
+              "tag": 2,
+              "collections": [
+                {
+                  "name": "Partition",
+                  "tag": 1,
+                  "attributes": [
+                    {
+                      "name": "identification",
+                      "tag": 1,
+                      "type": "String",
+                      "constant": true,
+                      "description": null
+                    },
+                    {
+                      "name": "name",
+                      "tag": 2,
+                      "type": "String",
+                      "constant": true,
+                      "description": null
+                    },
+                    {
+                      "name": "description",
+                      "tag": 3,
+                      "type": "String",
+                      "description": null
+                    },
+                    {
+                      "name": "uuid",
+                      "tag": 4,
+                      "type": "String",
+                      "description": "The partition's UUID"
+                    },
+                    {
+                      "name": "size",
+                      "tag": 5,
+                      "type": "Long",
+                      "description": "The partition's total size in bytes"
+                    },
+                    {
+                      "name": "major",
+                      "tag": 6,
+                      "type": "Integer",
+                      "description": null
+                    },
+                    {
+                      "name": "minor",
+                      "tag": 7,
+                      "type": "Integer",
+                      "description": null
+                    },
+                    {
+                      "name": "mount",
+                      "tag": 8,
+                      "type": "String",
+                      "description": "The partition's mount point"
+                    }
+                  ]
+                }
+              ],
+              "attributes": [
+                {
+                  "name": "name",
+                  "tag": 1,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "model",
+                  "tag": 2,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "serial",
+                  "tag": 3,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "size",
+                  "tag": 4,
+                  "type": "Long",
+                  "description": "The disk's total size in bytes"
+                },
+                {
+                  "name": "reads",
+                  "tag": 5,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "read_bytes",
+                  "tag": 6,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "writes",
+                  "tag": 7,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "write_bytes",
+                  "tag": 8,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "queue_length",
+                  "tag": 9,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "transfer_time",
+                  "tag": 10,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "model_family",
+                  "tag": 11,
+                  "type": "String",
+                  "description": null
+                },
+                {
+                  "name": "firmware_version",
+                  "tag": 12,
+                  "type": "String",
+                  "description": null
+                },
+                {
+                  "name": "rotation_rate",
+                  "tag": 13,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "read_error_rate",
+                  "tag": 14,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "spin_up_time",
+                  "tag": 15,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "start_stop_cycles",
+                  "tag": 16,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "reallocated_sectors",
+                  "tag": 17,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "seek_error_rate",
+                  "tag": 18,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "power_on_time",
+                  "tag": 19,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "spin_retries",
+                  "tag": 20,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "calibration_retries",
+                  "tag": 21,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "power_cycles",
+                  "tag": 22,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "poweroff_retracts",
+                  "tag": 23,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "load_cycles",
+                  "tag": 24,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "temperature",
+                  "tag": 25,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "reallocated_events",
+                  "tag": 26,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "current_pending_sector",
+                  "tag": 27,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "offline_uncorrectable",
+                  "tag": 28,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "crc_errors",
+                  "tag": 29,
+                  "type": "Long",
+                  "description": null
+                },
+                {
+                  "name": "multizone_error_rate",
+                  "tag": 30,
+                  "type": "Long",
+                  "description": null
+                }
+              ]
+            },
+            {
+              "name": "Cpu",
+              "tag": 3,
+              "collections": [
+                {
+                  "name": "CpuThread",
+                  "tag": 1,
+                  "attributes": [
+                    {
+                      "name": "id",
+                      "tag": 1,
+                      "type": "Integer",
+                      "constant": true,
+                      "description": "The thread's ID"
+                    }
+                  ]
+                },
+                {
+                  "name": "CpuCore",
+                  "tag": 2,
+                  "attributes": [
+                    {
+                      "name": "usage",
+                      "tag": 1,
+                      "type": "Double",
+                      "description": "The core's usage between 0.0 and 1.0"
+                    },
+                    {
+                      "name": "temperature",
+                      "tag": 2,
+                      "type": "Double",
+                      "description": "The core's temperature in Celsius"
+                    }
+                  ]
+                }
+              ],
+              "attributes": [
+                {
+                  "name": "model",
+                  "tag": 1,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "vendor",
+                  "tag": 2,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "frequency_spec",
+                  "tag": 3,
+                  "type": "Integer",
+                  "description": "The specified frequency in Hertz"
+                },
+                {
+                  "name": "l1_cache",
+                  "tag": 4,
+                  "type": "Integer",
+                  "description": "The size of the L1 cache in bytes"
+                },
+                {
+                  "name": "l2_cache",
+                  "tag": 5,
+                  "type": "Integer",
+                  "description": "The size of the L2 cache in bytes"
+                },
+                {
+                  "name": "l3_cache",
+                  "tag": 6,
+                  "type": "Integer",
+                  "description": "The size of the L3 cache in bytes"
+                },
+                {
+                  "name": "l4_cache",
+                  "tag": 7,
+                  "type": "Integer",
+                  "description": "The size of the L4 cache in bytes"
+                }
+              ]
+            },
+            {
+              "name": "Sensor",
+              "tag": 4,
+              "attributes": [
+                {
+                  "name": "fan_speed",
+                  "tag": 1,
+                  "type": "Integer",
+                  "description": null
+                },
+                {
+                  "name": "temperature",
+                  "tag": 2,
+                  "type": "Double",
+                  "description": null
+                },
+                {
+                  "name": "voltage",
+                  "tag": 3,
+                  "type": "Double",
+                  "description": null
+                }
+              ]
+            },
+            {
+              "name": "SoundCard",
+              "tag": 5,
+              "attributes": [
+                {
+                  "name": "driver_version",
+                  "tag": 1,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "name",
+                  "tag": 2,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "codec",
+                  "tag": 3,
+                  "type": "String",
+                  "description": null
+                }
+              ]
+            },
+            {
+              "name": "Display",
+              "tag": 6,
+              "attributes": [
+                {
+                  "name": "name",
+                  "tag": 1,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The display's name"
+                },
+                {
+                  "name": "edid",
+                  "tag": 2,
+                  "type": "String",
+                  "description": null
+                },
+                {
+                  "name": "resolution",
+                  "tag": 3,
+                  "type": "String",
+                  "description": "The display's resolution"
+                },
+                {
+                  "name": "size",
+                  "tag": 4,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The display's physical size in pixels"
+                },
+                {
+                  "name": "refresh_frequency",
+                  "tag": 5,
+                  "type": "Integer",
+                  "description": "Refresh frequency in Hertz"
+                },
+                {
+                  "name": "bit_depth",
+                  "tag": 6,
+                  "type": "Integer",
+                  "description": null
+                }
+              ]
+            },
+            {
+              "name": "UsbDevice",
+              "tag": 7,
+              "attributes": [
+                {
+                  "name": "name",
+                  "tag": 1,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "vendor",
+                  "tag": 2,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "vendor_id",
+                  "tag": 3,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "product_id",
+                  "tag": 4,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "serial_number",
+                  "tag": 5,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "children",
+                  "tag": 6,
+                  "type": "List<UsbDevice>",
+                  "description": null
+                }
+              ]
+            }
+          ],
+          "documents": [
+            {
+              "name": "Network",
+              "tag": 8,
+              "attributes": [
+                {
+                  "name": "hostname",
+                  "tag": 1,
+                  "type": "String",
+                  "description": "The host's hostname"
+                },
+                {
+                  "name": "fqdn",
+                  "tag": 2,
+                  "type": "String",
+                  "description": "The host's fully-qualified domain name"
+                },
+                {
+                  "name": "dns",
+                  "tag": 3,
+                  "type": "List<String>",
+                  "description": "The host's DNS servers"
+                }
+              ]
+            },
+            {
+              "name": "Power",
+              "tag": 9,
+              "attributes": [
+                {
+                  "name": "name",
+                  "tag": 1,
+                  "type": "String",
+                  "description": null
+                },
+                {
+                  "name": "remaining_capacity",
+                  "tag": 2,
+                  "type": "Double",
+                  "description": null
+                },
+                {
+                  "name": "remaining_time",
+                  "tag": 3,
+                  "type": "Double",
+                  "description": null
+                }
+              ]
+            },
+            {
+              "name": "Firmware",
+              "tag": 10,
+              "attributes": [
+                {
+                  "name": "name",
+                  "tag": 1,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "manufacturer",
+                  "tag": 2,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The BIOS manufacturer title"
+                },
+                {
+                  "name": "description",
+                  "tag": 3,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The BIOS description"
+                },
+                {
+                  "name": "version",
+                  "tag": 4,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The BIOS version number"
+                },
+                {
+                  "name": "revision",
+                  "tag": 5,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The BIOS revision number"
+                },
+                {
+                  "name": "release_date",
+                  "tag": 6,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The BIOS release date"
+                },
+                {
+                  "name": "uefi",
+                  "tag": 7,
+                  "type": "Boolean",
+                  "constant": true,
+                  "description": "Whether the BIOS supports UEFI mode"
+                }
+              ]
+            },
+            {
+              "name": "Mainboard",
+              "tag": 11,
+              "attributes": [
+                {
+                  "name": "model",
+                  "tag": 1,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "manufacturer",
+                  "tag": 2,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "version",
+                  "tag": 3,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                },
+                {
+                  "name": "serial_number",
+                  "tag": 4,
+                  "type": "String",
+                  "constant": true,
+                  "description": null
+                }
+              ]
+            },
+            {
+              "name": "OperatingSystem",
+              "tag": 12,
+              "collections": [
+                {
+                  "name": "User",
+                  "tag": 1,
+                  "attributes": [
+                    {
+                      "name": "id",
+                      "tag": 1,
+                      "type": "String",
+                      "constant": true,
+                      "description": null
+                    },
+                    {
+                      "name": "username",
+                      "tag": 2,
+                      "type": "String",
+                      "description": "The user's username"
+                    },
+                    {
+                      "name": "home",
+                      "tag": 3,
+                      "type": "String",
+                      "description": "The user's home directory path"
+                    }
+                  ]
+                },
+                {
+                  "name": "Process",
+                  "tag": 2,
+                  "attributes": [
+                    {
+                      "name": "name",
+                      "tag": 1,
+                      "type": "String",
+                      "constant": true,
+                      "description": null
+                    },
+                    {
+                      "name": "path",
+                      "tag": 2,
+                      "type": "String",
+                      "description": null
+                    },
+                    {
+                      "name": "command",
+                      "tag": 3,
+                      "type": "String",
+                      "description": null
+                    },
+                    {
+                      "name": "working_directory",
+                      "tag": 4,
+                      "type": "String",
+                      "description": null
+                    },
+                    {
+                      "name": "user",
+                      "tag": 5,
+                      "type": "String",
+                      "description": null
+                    },
+                    {
+                      "name": "user_id",
+                      "tag": 6,
+                      "type": "String",
+                      "description": null
+                    },
+                    {
+                      "name": "group",
+                      "tag": 7,
+                      "type": "String",
+                      "description": null
+                    },
+                    {
+                      "name": "group_id",
+                      "tag": 8,
+                      "type": "String",
+                      "description": null
+                    },
+                    {
+                      "name": "state",
+                      "tag": 9,
+                      "type": "String",
+                      "description": null
+                    },
+                    {
+                      "name": "pid",
+                      "tag": 10,
+                      "type": "Integer",
+                      "constant": true,
+                      "description": "The process's process ID"
+                    },
+                    {
+                      "name": "parent_pid",
+                      "tag": 11,
+                      "type": "Integer",
+                      "description": null
+                    },
+                    {
+                      "name": "thread_count",
+                      "tag": 12,
+                      "type": "Integer",
+                      "description": null
+                    },
+                    {
+                      "name": "priority",
+                      "tag": 13,
+                      "type": "Integer",
+                      "description": null
+                    },
+                    {
+                      "name": "virtual_size",
+                      "tag": 14,
+                      "type": "Long",
+                      "description": null
+                    },
+                    {
+                      "name": "resident_set_size",
+                      "tag": 15,
+                      "type": "Long",
+                      "description": "The resident memory size in bytes"
+                    },
+                    {
+                      "name": "kernel_time",
+                      "tag": 16,
+                      "type": "Long",
+                      "description": "The number of milliseconds the process has executed in kernel mode"
+                    },
+                    {
+                      "name": "user_time",
+                      "tag": 17,
+                      "type": "Long",
+                      "description": "The number of milliseconds the process has executed in user mode"
+                    },
+                    {
+                      "name": "start_time",
+                      "tag": 18,
+                      "type": "Long",
+                      "description": "The epoch timestamp of the process start time"
+                    },
+                    {
+                      "name": "bytes_read",
+                      "tag": 19,
+                      "type": "Long",
+                      "description": "The number of bytes the process has read from disk"
+                    },
+                    {
+                      "name": "bytes_written",
+                      "tag": 20,
+                      "type": "Long",
+                      "description": "The number of bytes the process has written to disk"
+                    },
+                    {
+                      "name": "handle_count",
+                      "tag": 21,
+                      "type": "Long",
+                      "description": "The number of file handles that the process owns"
+                    }
+                  ]
+                }
+              ],
+              "attributes": [
+                {
+                  "name": "family",
+                  "tag": 1,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The operating system's family"
+                },
+                {
+                  "name": "manufacturer",
+                  "tag": 2,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The operating system's manufacturer"
+                },
+                {
+                  "name": "bitness",
+                  "tag": 3,
+                  "type": "Integer",
+                  "constant": true,
+                  "description": "The operating system's register width in bits"
+                },
+                {
+                  "name": "version",
+                  "tag": 4,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The operating system's primary version"
+                },
+                {
+                  "name": "codename",
+                  "tag": 5,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The operating system's code name"
+                },
+                {
+                  "name": "build_number",
+                  "tag": 6,
+                  "type": "String",
+                  "constant": true,
+                  "description": "The operating system's build number"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
