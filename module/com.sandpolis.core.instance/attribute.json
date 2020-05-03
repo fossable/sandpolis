@@ -1,6 +1,23 @@
 {
-  "name": "Sandpolis",
+  "name": "Profile",
   "tag": 1,
+  "attributes": [
+    {
+      "name": "instance_type",
+      "tag": 20,
+      "type": "com.sandpolis.core.util.Platform.Instance"
+    },
+    {
+      "name": "instance_flavor",
+      "tag": 21,
+      "type": "com.sandpolis.core.util.Platform.InstanceFlavor"
+    },
+    {
+      "name": "uuid",
+      "tag": 22,
+      "type": "String"
+    }
+  ],
   "documents": [
     {
       "name": "Instance",
@@ -8,15 +25,80 @@
       "documents": [
         {
           "name": "Server",
-          "tag": 1
+          "tag": 1,
+          "collections": [
+            {
+              "name": "TrustAnchor",
+              "tag": 1,
+              "attributes": [
+                {
+                  "name": "name",
+                  "tag": 1,
+                  "type": "String"
+                },
+                {
+                  "name": "certificate",
+                  "tag": 2,
+                  "type": "java.security.cert.X509Certificate"
+                }
+              ]
+            },
+            {
+              "name": "Database",
+              "tag": 2,
+              "attributes": [
+                {
+                  "name": "url",
+                  "tag": 1,
+                  "type": "String"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "Viewer",
-          "tag": 2
+          "tag": 2,
+          "attributes": [
+            {
+              "name": "username",
+              "tag": 1,
+              "type": "String",
+              "constant": true,
+              "description": "The viewer's username"
+            },
+            {
+              "name": "ip",
+              "tag": 2,
+              "type": "String",
+              "description": "The viewer's login IP address"
+            }
+          ]
         },
         {
           "name": "Client",
-          "tag": 3
+          "tag": 3,
+          "attributes": [
+            {
+              "name": "hostname",
+              "tag": 1,
+              "type": "String",
+              "constant": true,
+              "description": "The client's network hostname"
+            },
+            {
+              "name": "os",
+              "tag": 2,
+              "type": "com.sandpolis.core.util.Platform.OsType",
+              "description": "The client's operating system type"
+            },
+            {
+              "name": "location",
+              "tag": 3,
+              "type": "String",
+              "description": "The client's base directory"
+            }
+          ]
         }
       ],
       "collections": [
@@ -103,6 +185,135 @@
               "description": "The private key corresponding to the certificate"
             }
           ]
+        },
+        {
+          "name": "User",
+          "tag": 6,
+          "attributes": [
+            {
+              "name": "username",
+              "tag": 1,
+              "type": "String",
+              "description": "The user's unchangable username"
+            },
+            {
+              "name": "email",
+              "tag": 2,
+              "type": "String",
+              "description": "The user's email address"
+            },
+            {
+              "name": "hash",
+              "tag": 3,
+              "type": "String",
+              "description": "The user's password hash"
+            },
+            {
+              "name": "expiration",
+              "tag": 4,
+              "type": "java.util.Date",
+              "description": "The user's expiration timestamp"
+            }
+          ]
+        },
+        {
+          "name": "Group",
+          "tag": 7,
+          "attributes": [
+            {
+              "name": "name",
+              "tag": 1,
+              "type": "String"
+            }
+          ]
+        },
+        {
+          "name": "Plugin",
+          "tag": 8,
+          "attributes": [
+            {
+              "name": "package_id",
+              "tag": 1,
+              "type": "String",
+              "description": "The plugin's package ID"
+            },
+            {
+              "name": "name",
+              "tag": 1,
+              "type": "String",
+              "description": "The plugin's user-friendly name"
+            },
+            {
+              "name": "description",
+              "tag": 2,
+              "type": "String",
+              "description": "The plugin's user-friendly description"
+            },
+            {
+              "name": "coordinate",
+              "tag": 3,
+              "type": "String",
+              "description": "The plugin's Maven central coordinates in G:A:V format"
+            },
+            {
+              "name": "enabled",
+              "tag": 4,
+              "type": "Boolean",
+              "description": "Whether the plugin can be loaded"
+            },
+            {
+              "name": "hash",
+              "tag": 5,
+              "type": "java.lang.Byte[]",
+              "description": "The plugin artifact's hash"
+            },
+            {
+              "name": "certificate",
+              "tag": 6,
+              "type": "String",
+              "description": "The plugin's certificate"
+            },
+            {
+              "name": "loaded",
+              "tag": 7,
+              "type": "Boolean",
+              "description": "Whether the plugin is currently loaded"
+            }
+          ]
+        },
+        {
+          "name": "ReciprocalKeyPair",
+          "tag": 9,
+          "attributes": [
+            {
+              "name": "signer",
+              "tag": 1,
+              "type": "java.lang.Byte[]",
+              "description": "A key responsible for signing data"
+            },
+            {
+              "name": "verifier",
+              "tag": 2,
+              "type": "java.lang.Byte[]",
+              "description": "A key responsible for verifying signed data"
+            }
+          ]
+        },
+        {
+          "name": "PasswordAuthMechanism",
+          "tag": 10,
+          "attributes": [
+            {
+              "name": "password",
+              "tag": 1,
+              "type": "String",
+              "description": "The mechanism password"
+            }
+          ]
+        },
+        {
+          "name": "KeyAuthMechanism",
+          "tag": 2
         }
       ]
     },
@@ -185,13 +396,13 @@
                 {
                   "name": "ipv4",
                   "tag": 6,
-                  "type": "List<String>",
+                  "type": "java.util.List<String>",
                   "description": "The interface's IPv4 addresses"
                 },
                 {
                   "name": "ipv6",
                   "tag": 7,
-                  "type": "List<String>",
+                  "type": "java.util.List<String>",
                   "description": "The interface's IPv6 addresses"
                 },
                 {
@@ -554,7 +765,7 @@
                   "tag": 1,
                   "attributes": [
                     {
-                      "name": "id",
+                      "name": "tid",
                       "tag": 1,
                       "type": "Integer",
                       "constant": true,
@@ -764,7 +975,7 @@
                 {
                   "name": "children",
                   "tag": 6,
-                  "type": "List<UsbDevice>",
+                  "type": "java.util.List<UsbDevice>",
                   "description": null
                 }
               ]
@@ -790,7 +1001,7 @@
                 {
                   "name": "dns",
                   "tag": 3,
-                  "type": "List<String>",
+                  "type": "java.util.List<String>",
                   "description": "The host's DNS servers"
                 }
               ]
@@ -917,7 +1128,7 @@
                   "tag": 1,
                   "attributes": [
                     {
-                      "name": "id",
+                      "name": "uid",
                       "tag": 1,
                       "type": "String",
                       "constant": true,

@@ -30,16 +30,13 @@ class CoreDocumentBindingsGenerator extends DocumentBindingsGenerator {
 	void processCollection(parent, collection) {
 		def collectionClass = TypeSpec.classBuilder(collection.name)
 			.addModifiers(PUBLIC, STATIC)
-
-		// Add document field
-		def field = FieldSpec.builder(DOCUMENT_TYPE, "document", PRIVATE)
-		collectionClass.addField(field.build())
+			.superclass(ClassName.bestGuess("com.sandpolis.core.instance.data.DocumentBinding"))
 
 		// Add constructor
 		def constructor = MethodSpec.constructorBuilder()
 			.addModifiers(PUBLIC)
 			.addParameter(DOCUMENT_TYPE, "document")
-			.addStatement("this.document = document")
+			.addStatement("super(document)")
 		collectionClass.addMethod(constructor.build())
 
 		if (collection.collections != null) {
@@ -58,6 +55,7 @@ class CoreDocumentBindingsGenerator extends DocumentBindingsGenerator {
 			}
 		}
 
+		// Add tag method
 		def constants = ""
 		if (collection.attributes != null) {
 			for (def subattribute : collection.attributes) {
@@ -69,12 +67,19 @@ class CoreDocumentBindingsGenerator extends DocumentBindingsGenerator {
 			}
 		}
 
-		// Add tag method
 		def tag = MethodSpec.methodBuilder("tag")
-			.addModifiers(PUBLIC)
+			.addAnnotation(Override.class)
+			.addModifiers(PUBLIC, FINAL)
 			.returns(int.class)
 			.addStatement("return \$T.murmur3_32().newHasher()\$L.hash().asInt()", ClassName.bestGuess("com.google.common.hash.Hashing"), constants)
 		collectionClass.addMethod(tag.build())
+
+		// Add ID getter
+		def id = MethodSpec.methodBuilder("getId")
+			.addModifiers(PUBLIC)
+			.returns(String.class)
+			.addStatement("return document.getId()")
+		collectionClass.addMethod(id.build())
 
 		parent.addType(collectionClass.build())
 	}
@@ -85,10 +90,15 @@ class CoreDocumentBindingsGenerator extends DocumentBindingsGenerator {
 		if (attribute.type.endsWith("[]")) {
 			type = ArrayTypeName.of(ClassName.bestGuess(attribute.type.replace("[]", "")).unbox())
 		} else {
-			type = ClassName.bestGuess(attribute.type)
+			def components = attribute.type.split("<|>")
+			if (components.length == 2) {
+				type = ParameterizedTypeName.get(ClassName.bestGuess(components[0]), ClassName.bestGuess(components[1]))
+			} else {
+				type = ClassName.bestGuess(attribute.type)
+			}
 		}
 
-		def attributeType = ParameterizedTypeName.get(ClassName.bestGuess("com.sandpolis.core.instance.attribute2.Attribute"), type)
+		def attributeType = ParameterizedTypeName.get(ClassName.bestGuess("com.sandpolis.core.instance.data.Attribute"), type)
 
 		// Add the attribute's getter method
 		def getter = MethodSpec.methodBuilder(camel((attribute.type != "Boolean" ? "get_" : "is_") + attribute.name))
@@ -110,17 +120,29 @@ class CoreDocumentBindingsGenerator extends DocumentBindingsGenerator {
 
 		def documentClass = TypeSpec.classBuilder(document.name)
 			.addModifiers(PUBLIC, STATIC)
-
-		// Add document field
-		def field = FieldSpec.builder(DOCUMENT_TYPE, "document", PRIVATE)
-		documentClass.addField(field.build())
+			.superclass(ClassName.bestGuess("com.sandpolis.core.instance.data.DocumentBinding"))
 
 		// Add constructor
 		def constructor = MethodSpec.constructorBuilder()
 			.addModifiers(PUBLIC)
 			.addParameter(DOCUMENT_TYPE, "document")
-			.addStatement("this.document = document")
+			.addStatement("super(document)")
 		documentClass.addMethod(constructor.build())
+
+		// Add ID getter
+		def id = MethodSpec.methodBuilder("getId")
+			.addModifiers(PUBLIC)
+			.returns(String.class)
+			.addStatement("return document.getId()")
+		documentClass.addMethod(id.build())
+
+		// Add tag method
+		def tag = MethodSpec.methodBuilder("tag")
+			.addAnnotation(Override.class)
+			.addModifiers(PUBLIC, FINAL)
+			.returns(int.class)
+			.addStatement("return ${document.tag}")
+		documentClass.addMethod(tag.build())
 
 		if (document.collections != null) {
 			for (def subcollection : document.collections) {
@@ -139,5 +161,12 @@ class CoreDocumentBindingsGenerator extends DocumentBindingsGenerator {
 		}
 
 		parent.addType(documentClass.build())
+
+		// Add document method
+		def documentMethod = MethodSpec.methodBuilder(document.name.toLowerCase())
+			.addModifiers(PUBLIC)
+			.returns(ClassName.bestGuess(document.name))
+			.addStatement("return new ${document.name}(document.document(${document.tag}))")
+		parent.addMethod(documentMethod.build())
 	}
 }

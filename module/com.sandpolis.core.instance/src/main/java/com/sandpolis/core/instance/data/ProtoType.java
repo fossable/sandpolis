@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance;
+package com.sandpolis.core.instance.data;
 
 import com.google.protobuf.Message;
 

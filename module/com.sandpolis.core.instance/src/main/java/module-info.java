@@ -10,11 +10,11 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.core.instance {
+	exports com.sandpolis.core.instance.data;
 	exports com.sandpolis.core.instance.event;
 	exports com.sandpolis.core.instance.idle;
 	exports com.sandpolis.core.instance.logging;
 	exports com.sandpolis.core.instance.plugin;
-	exports com.sandpolis.core.instance.storage.database.converter;
 	exports com.sandpolis.core.instance.storage.database;
 	exports com.sandpolis.core.instance.storage;
 	exports com.sandpolis.core.instance.store.database;

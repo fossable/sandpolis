@@ -9,30 +9,27 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.storage.database.converter;
-
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-
-import com.sandpolis.core.util.Platform.Instance;
+package com.sandpolis.core.instance.data;
 
 /**
- * This converter replaces {@link Instance}s with their numeric identifier.
+ * This class is a lightweight wrapper for {@link Document}s that provides
+ * important context to consumers of this API.
  *
  * @author cilki
- * @since 5.0.0
+ * @since 6.2.0
  */
-@Converter
-public class InstanceConverter implements AttributeConverter<Instance, Integer> {
+public abstract class DocumentBinding {
 
-	@Override
-	public Integer convertToDatabaseColumn(Instance instance) {
-		return instance.getNumber();
+	protected Document document;
+
+	protected DocumentBinding(Document document) {
+		this.document = document;
 	}
 
-	@Override
-	public Instance convertToEntityAttribute(Integer dbData) {
-		return Instance.forNumber(dbData);
-	}
-
+	/**
+	 * Compute an identifier representative of the identity of the document.
+	 *
+	 * @return The document tag
+	 */
+	public abstract int tag();
 }

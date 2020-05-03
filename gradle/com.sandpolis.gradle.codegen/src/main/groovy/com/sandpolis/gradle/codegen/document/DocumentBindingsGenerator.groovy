@@ -31,7 +31,7 @@ import org.gradle.api.tasks.TaskAction
  */
 abstract class DocumentBindingsGenerator extends DefaultTask {
 
-	final DOCUMENT_TYPE = ClassName.bestGuess("com.sandpolis.core.instance.attribute.Document")
+	final DOCUMENT_TYPE = ClassName.bestGuess("com.sandpolis.core.instance.data.Document")
 
 	@TaskAction
 	void action () {
@@ -44,7 +44,7 @@ abstract class DocumentBindingsGenerator extends DefaultTask {
 
 		// Create the root class
 		def root = TypeSpec.classBuilder("DocumentBindings")
-			.addModifiers(PUBLIC)
+			.addModifiers(PUBLIC, FINAL)
 
 		// Generate the bindings
 		processCollection(root, tree)
