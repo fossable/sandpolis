@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableBiMap;
-import com.sandpolis.core.instance.LocationOuterClass.Location;
+import com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Client.IpLocation;
 
 /**
  * A geolocation service resolves a set of location attributes for an IP
@@ -61,23 +61,23 @@ public abstract class AbstractGeolocationService {
 	 * Build a geolocation query for the given IP address and location attributes.
 	 *
 	 * @param ip     The IP address
-	 * @param fields The desired attributes from {@link Location}
+	 * @param fields The desired attributes from {@link IpLocation}
 	 * @return The query
 	 */
 	protected abstract String buildQuery(String ip, Set<Integer> fields);
 
 	/**
-	 * Convert the query result into a {@link Location} object.
+	 * Convert the query result into a {@link IpLocation} object.
 	 *
 	 * @param result The query result
 	 * @return The location
 	 * @throws Exception
 	 */
-	protected abstract Location parseLocation(String result) throws Exception;
+	protected abstract IpLocation parseLocation(String result) throws Exception;
 
 	private HttpClient client = HttpClient.newHttpClient();
 
-	public CompletableFuture<Location> query(String ip, Set<Integer> fields) {
+	public CompletableFuture<IpLocation> query(String ip, Set<Integer> fields) {
 		var url = URI.create(buildQuery(ip, fields));
 		log.debug("Query URL: {}", url);
 

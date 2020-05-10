@@ -25,7 +25,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Generator for attribute definition files.
+ * Generator for document bindings.
  *
  * @author cilki
  */

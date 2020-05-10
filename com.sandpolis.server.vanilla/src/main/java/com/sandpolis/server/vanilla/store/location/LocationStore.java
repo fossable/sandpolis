@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.sandpolis.core.instance.LocationOuterClass.Location;
+import com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Client.IpLocation;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.util.ValidationUtil;
@@ -33,7 +33,7 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(LocationStore.class);
 
-	private Cache<String, Location> cache;
+	private Cache<String, IpLocation> cache;
 
 	private AbstractGeolocationService service;
 
@@ -41,7 +41,7 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 		super(log);
 	}
 
-	public Future<Location> queryAsync(String ip) {
+	public Future<IpLocation> queryAsync(String ip) {
 		// Private IPs should not be resolved
 		if (ValidationUtil.privateIP(ip)) {
 			return CompletableFuture.completedFuture(null);
@@ -64,7 +64,7 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 		});
 	}
 
-	public Location query(String ip, long timeout) {
+	public IpLocation query(String ip, long timeout) {
 		try {
 			return queryAsync(ip).get(timeout, TimeUnit.MILLISECONDS);
 		} catch (TimeoutException e) {

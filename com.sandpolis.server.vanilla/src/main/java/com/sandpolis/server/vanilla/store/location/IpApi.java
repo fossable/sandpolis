@@ -15,22 +15,32 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Client.IpLocation.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableBiMap;
-import com.sandpolis.core.instance.LocationOuterClass.Location;
+import com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Client.IpLocation;
 
 public class IpApi extends AbstractGeolocationService {
 
 	private static final ImmutableBiMap<Integer, String> attrMap = new ImmutableBiMap.Builder<Integer, String>()
-			.put(Location.AS_FIELD_NUMBER, "as").put(Location.CITY_FIELD_NUMBER, "city")
-			.put(Location.CONTINENT_FIELD_NUMBER, "continent")
-			.put(Location.CONTINENT_CODE_FIELD_NUMBER, "continentCode").put(Location.COUNTRY_FIELD_NUMBER, "country")
-			.put(Location.COUNTRY_CODE_FIELD_NUMBER, "countryCode").put(Location.CURRENCY_FIELD_NUMBER, "currency")
-			.put(Location.DISTRICT_FIELD_NUMBER, "district").put(Location.ISP_FIELD_NUMBER, "isp")
-			.put(Location.LATITUDE_FIELD_NUMBER, "lat").put(Location.LONGITUDE_FIELD_NUMBER, "lon")
-			.put(Location.ORGANIZATION_FIELD_NUMBER, "org").put(Location.POSTAL_CODE_FIELD_NUMBER, "zip")
-			.put(Location.REGION_FIELD_NUMBER, "regionName").put(Location.REGION_CODE_FIELD_NUMBER, "region")
-			.put(Location.TIMEZONE_FIELD_NUMBER, "timezone").build();
+			.put(AS_CODE, "as")//
+			.put(CITY, "city")//
+			.put(CONTINENT, "continent")//
+			.put(CONTINENT_CODE, "continentCode")//
+			.put(COUNTRY, "country")//
+			.put(COUNTRY_CODE, "countryCode")//
+			.put(CURRENCY, "currency")//
+			.put(DISTRICT, "district")//
+			.put(ISP, "isp")//
+			.put(LATITUDE, "lat")//
+			.put(LONGITUDE, "lon")//
+			.put(ORGANIZATION, "org")//
+			.put(POSTAL_CODE, "zip")//
+			.put(REGION, "regionName")//
+			.put(REGION_CODE, "region")//
+			.put(TIMEZONE, "timezone")//
+			.build();
 
 	private String key;
 
@@ -50,31 +60,61 @@ public class IpApi extends AbstractGeolocationService {
 	}
 
 	@Override
-	protected Location parseLocation(String result) throws Exception {
-		var location = Location.newBuilder();
+	protected IpLocation parseLocation(String result) throws Exception {
+		IpLocation location = new IpLocation(null);
 		new ObjectMapper().readTree(result).fields().forEachRemaining(entry -> {
-			var field = Location.getDescriptor().findFieldByNumber(attrMap.inverse().get(entry.getKey()));
-			switch (field.getNumber()) {
-			case Location.LATITUDE_FIELD_NUMBER:
-			case Location.LONGITUDE_FIELD_NUMBER:
-				// Set double value
-				location.setField(field, entry.getValue().asDouble());
+			switch (attrMap.inverse().get(entry.getKey())) {
+			case AS_CODE:
+				location.asCode().set(entry.getValue().asInt());
 				break;
-			case Location.POSTAL_CODE_FIELD_NUMBER:
-				// Set int value
-				location.setField(field, entry.getValue().asInt());
+			case CITY:
+				location.city().set(entry.getValue().asText());
 				break;
-			case Location.MOBILE_FIELD_NUMBER:
-				// Set boolean value
-				location.setField(field, entry.getValue().asBoolean());
+			case CONTINENT:
+				location.continent().set(entry.getValue().asText());
 				break;
-			default:
-				// Set string value
-				location.setField(field, entry.getValue().asText());
+			case CONTINENT_CODE:
+				location.continentCode().set(entry.getValue().asText());
+				break;
+			case COUNTRY:
+				location.country().set(entry.getValue().asText());
+				break;
+			case COUNTRY_CODE:
+				location.countryCode().set(entry.getValue().asText());
+				break;
+			case CURRENCY:
+				location.currency().set(entry.getValue().asText());
+				break;
+			case DISTRICT:
+				location.district().set(entry.getValue().asText());
+				break;
+			case ISP:
+				location.isp().set(entry.getValue().asText());
+				break;
+			case LATITUDE:
+				location.latitude().set(entry.getValue().asDouble());
+				break;
+			case LONGITUDE:
+				location.longitude().set(entry.getValue().asDouble());
+				break;
+			case ORGANIZATION:
+				location.organization().set(entry.getValue().asText());
+				break;
+			case POSTAL_CODE:
+				location.postalCode().set(entry.getValue().asText());
+				break;
+			case REGION:
+				location.region().set(entry.getValue().asText());
+				break;
+			case REGION_CODE:
+				location.regionCode().set(entry.getValue().asText());
+				break;
+			case TIMEZONE:
+				location.timezone().set(entry.getValue().asText());
 				break;
 			}
 		});
 
-		return location.build();
+		return location;
 	}
 }

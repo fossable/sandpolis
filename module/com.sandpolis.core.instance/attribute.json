@@ -1,23 +1,6 @@
 {
   "name": "Profile",
   "tag": 1,
-  "attributes": [
-    {
-      "name": "instance_type",
-      "tag": 20,
-      "type": "com.sandpolis.core.util.Platform.Instance"
-    },
-    {
-      "name": "instance_flavor",
-      "tag": 21,
-      "type": "com.sandpolis.core.util.Platform.InstanceFlavor"
-    },
-    {
-      "name": "uuid",
-      "tag": 22,
-      "type": "String"
-    }
-  ],
   "documents": [
     {
       "name": "Instance",
@@ -34,7 +17,7 @@
                 {
                   "name": "name",
                   "tag": 1,
-                  "type": "String"
+                  "type": "java.lang.String"
                 },
                 {
                   "name": "certificate",
@@ -50,7 +33,132 @@
                 {
                   "name": "url",
                   "tag": 1,
-                  "type": "String"
+                  "type": "java.lang.String"
+                }
+              ]
+            },
+            {
+              "name": "User",
+              "tag": 6,
+              "attributes": [
+                {
+                  "name": "username",
+                  "tag": 1,
+                  "type": "java.lang.String",
+                  "description": "The user's unchangable username"
+                },
+                {
+                  "name": "email",
+                  "tag": 2,
+                  "type": "java.lang.String",
+                  "description": "The user's email address"
+                },
+                {
+                  "name": "hash",
+                  "tag": 3,
+                  "type": "java.lang.String",
+                  "description": "The user's password hash"
+                },
+                {
+                  "name": "expiration",
+                  "tag": 4,
+                  "type": "java.util.Date",
+                  "description": "The user's expiration timestamp"
+                }
+              ]
+            },
+            {
+              "name": "Listener",
+              "tag": 5,
+              "attributes": [
+                {
+                  "name": "name",
+                  "tag": 1,
+                  "type": "java.lang.String",
+                  "description": "The listener's user-friendly name"
+                },
+                {
+                  "name": "enabled",
+                  "tag": 2,
+                  "type": "java.lang.Boolean",
+                  "description": "Whether the listener is enabled"
+                },
+                {
+                  "name": "active",
+                  "tag": 3,
+                  "type": "java.lang.Boolean",
+                  "description": "Whether the listener is currently bound to the port and listening"
+                },
+                {
+                  "name": "port",
+                  "tag": 4,
+                  "type": "java.lang.Integer",
+                  "description": "The listener's local listening port"
+                },
+                {
+                  "name": "address",
+                  "tag": 5,
+                  "type": "java.lang.String",
+                  "description": "The listener's local bind address"
+                },
+                {
+                  "name": "certificate",
+                  "tag": 6,
+                  "type": "java.lang.Byte[]",
+                  "description": "A certificate that the listener will present to incoming connections"
+                },
+                {
+                  "name": "private_key",
+                  "tag": 7,
+                  "type": "java.lang.Byte[]",
+                  "description": "The private key corresponding to the certificate"
+                }
+              ]
+            },
+            {
+              "name": "Group",
+              "tag": 7,
+              "attributes": [
+                {
+                  "name": "name",
+                  "tag": 1,
+                  "type": "java.lang.String"
+                }
+              ],
+              "collections": [
+                {
+                  "name": "ReciprocalKeyPair",
+                  "tag": 9,
+                  "attributes": [
+                    {
+                      "name": "signer",
+                      "tag": 1,
+                      "type": "java.lang.Byte[]",
+                      "description": "A key responsible for signing data"
+                    },
+                    {
+                      "name": "verifier",
+                      "tag": 2,
+                      "type": "java.lang.Byte[]",
+                      "description": "A key responsible for verifying signed data"
+                    }
+                  ]
+                },
+                {
+                  "name": "PasswordAuthMechanism",
+                  "tag": 10,
+                  "attributes": [
+                    {
+                      "name": "password",
+                      "tag": 1,
+                      "type": "java.lang.String",
+                      "description": "The mechanism password"
+                    }
+                  ]
+                },
+                {
+                  "name": "KeyAuthMechanism",
+                  "tag": 2
                 }
               ]
             }
@@ -63,14 +171,14 @@
             {
               "name": "username",
               "tag": 1,
-              "type": "String",
-              "constant": true,
+              "type": "java.lang.String",
+              "identity": true,
               "description": "The viewer's username"
             },
             {
               "name": "ip",
               "tag": 2,
-              "type": "String",
+              "type": "java.lang.String",
               "description": "The viewer's login IP address"
             }
           ]
@@ -82,8 +190,8 @@
             {
               "name": "hostname",
               "tag": 1,
-              "type": "String",
-              "constant": true,
+              "type": "java.lang.String",
+              "identity": true,
               "description": "The client's network hostname"
             },
             {
@@ -95,8 +203,124 @@
             {
               "name": "location",
               "tag": 3,
-              "type": "String",
+              "type": "java.lang.String",
               "description": "The client's base directory"
+            }
+          ],
+          "documents": [
+            {
+              "name": "IpLocation",
+              "tag": 4,
+              "attributes": [
+                {
+                  "name": "as_name",
+                  "tag": 1,
+                  "type": "java.lang.String",
+                  "description": "The AS name"
+                },
+                {
+                  "name": "as_code",
+                  "tag": 2,
+                  "type": "java.lang.Integer",
+                  "description": "The numerical AS code"
+                },
+                {
+                  "name": "city",
+                  "tag": 3,
+                  "type": "java.lang.String",
+                  "description": "The city name"
+                },
+                {
+                  "name": "continent",
+                  "tag": 4,
+                  "type": "java.lang.String",
+                  "description": "The continent name"
+                },
+                {
+                  "name": "continent_code",
+                  "tag": 5,
+                  "type": "java.lang.String",
+                  "description": "The ISO continent code"
+                },
+                {
+                  "name": "country",
+                  "tag": 6,
+                  "type": "java.lang.String",
+                  "description": "The country name"
+                },
+                {
+                  "name": "country_code",
+                  "tag": 7,
+                  "type": "java.lang.String",
+                  "description": "Two-letter country code (ISO 3166-1 alpha-2)"
+                },
+                {
+                  "name": "currency",
+                  "tag": 8,
+                  "type": "java.lang.String",
+                  "description": "The currency name"
+                },
+                {
+                  "name": "district",
+                  "tag": 9,
+                  "type": "java.lang.String",
+                  "description": "The city district name"
+                },
+                {
+                  "name": "isp",
+                  "tag": 10,
+                  "type": "java.lang.String",
+                  "description": "The Internet Service Provider name"
+                },
+                {
+                  "name": "latitude",
+                  "tag": 11,
+                  "type": "java.lang.Double",
+                  "description": "The approximate latitude in degrees"
+                },
+                {
+                  "name": "longitude",
+                  "tag": 12,
+                  "type": "java.lang.Double",
+                  "description": "The approximate longitude in degrees"
+                },
+                {
+                  "name": "metro_code",
+                  "tag": 13,
+                  "type": "java.lang.Integer",
+                  "description": "The metro code"
+                },
+                {
+                  "name": "organization",
+                  "tag": 14,
+                  "type": "java.lang.String",
+                  "description": "The organization name"
+                },
+                {
+                  "name": "postal_code",
+                  "tag": 15,
+                  "type": "java.lang.String",
+                  "description": "The zip code"
+                },
+                {
+                  "name": "region",
+                  "tag": 16,
+                  "type": "java.lang.String",
+                  "description": "The region name"
+                },
+                {
+                  "name": "region_code",
+                  "tag": 17,
+                  "type": "java.lang.String",
+                  "description": "The region short code (FIPS or ISO)"
+                },
+                {
+                  "name": "timezone",
+                  "tag": 18,
+                  "type": "java.lang.String",
+                  "description": "The timezone name"
+                }
+              ]
             }
           ]
         }
@@ -109,121 +333,32 @@
             {
               "name": "remote_port",
               "tag": 1,
-              "type": "Integer"
+              "type": "java.lang.Integer"
             },
             {
               "name": "local_port",
               "tag": 2,
-              "type": "Integer"
+              "type": "java.lang.Integer"
             },
             {
               "name": "remote_address",
               "tag": 3,
-              "type": "String"
+              "type": "java.lang.String"
             },
             {
               "name": "local_address",
               "tag": 4,
-              "type": "String"
+              "type": "java.lang.String"
             },
             {
               "name": "upload_total",
               "tag": 5,
-              "type": "Long"
+              "type": "java.lang.Long"
             },
             {
               "name": "download_total",
               "tag": 6,
-              "type": "Long"
-            }
-          ]
-        },
-        {
-          "name": "Listener",
-          "tag": 5,
-          "attributes": [
-            {
-              "name": "name",
-              "tag": 1,
-              "type": "String",
-              "description": "The listener's user-friendly name"
-            },
-            {
-              "name": "enabled",
-              "tag": 2,
-              "type": "Boolean",
-              "description": "Whether the listener is enabled"
-            },
-            {
-              "name": "active",
-              "tag": 3,
-              "type": "Boolean",
-              "description": "Whether the listener is currently bound to the port and listening"
-            },
-            {
-              "name": "port",
-              "tag": 4,
-              "type": "Integer",
-              "description": "The listener's local listening port"
-            },
-            {
-              "name": "address",
-              "tag": 5,
-              "type": "String",
-              "description": "The listener's local bind address"
-            },
-            {
-              "name": "certificate",
-              "tag": 6,
-              "type": "java.lang.Byte[]",
-              "description": "A certificate that the listener will present to incoming connections"
-            },
-            {
-              "name": "private_key",
-              "tag": 7,
-              "type": "java.lang.Byte[]",
-              "description": "The private key corresponding to the certificate"
-            }
-          ]
-        },
-        {
-          "name": "User",
-          "tag": 6,
-          "attributes": [
-            {
-              "name": "username",
-              "tag": 1,
-              "type": "String",
-              "description": "The user's unchangable username"
-            },
-            {
-              "name": "email",
-              "tag": 2,
-              "type": "String",
-              "description": "The user's email address"
-            },
-            {
-              "name": "hash",
-              "tag": 3,
-              "type": "String",
-              "description": "The user's password hash"
-            },
-            {
-              "name": "expiration",
-              "tag": 4,
-              "type": "java.util.Date",
-              "description": "The user's expiration timestamp"
-            }
-          ]
-        },
-        {
-          "name": "Group",
-          "tag": 7,
-          "attributes": [
-            {
-              "name": "name",
-              "tag": 1,
-              "type": "String"
+              "type": "java.lang.Long"
             }
           ]
         },
@@ -234,31 +369,31 @@
             {
               "name": "package_id",
               "tag": 1,
-              "type": "String",
+              "type": "java.lang.String",
               "description": "The plugin's package ID"
             },
             {
               "name": "name",
               "tag": 1,
-              "type": "String",
+              "type": "java.lang.String",
               "description": "The plugin's user-friendly name"
             },
             {
               "name": "description",
               "tag": 2,
-              "type": "String",
+              "type": "java.lang.String",
               "description": "The plugin's user-friendly description"
             },
             {
               "name": "coordinate",
               "tag": 3,
-              "type": "String",
+              "type": "java.lang.String",
               "description": "The plugin's Maven central coordinates in G:A:V format"
             },
             {
               "name": "enabled",
               "tag": 4,
-              "type": "Boolean",
+              "type": "java.lang.Boolean",
               "description": "Whether the plugin can be loaded"
             },
             {
@@ -270,50 +405,16 @@
             {
               "name": "certificate",
               "tag": 6,
-              "type": "String",
+              "type": "java.lang.String",
               "description": "The plugin's certificate"
             },
             {
               "name": "loaded",
               "tag": 7,
-              "type": "Boolean",
+              "type": "java.lang.Boolean",
               "description": "Whether the plugin is currently loaded"
             }
           ]
-        },
-        {
-          "name": "ReciprocalKeyPair",
-          "tag": 9,
-          "attributes": [
-            {
-              "name": "signer",
-              "tag": 1,
-              "type": "java.lang.Byte[]",
-              "description": "A key responsible for signing data"
-            },
-            {
-              "name": "verifier",
-              "tag": 2,
-              "type": "java.lang.Byte[]",
-              "description": "A key responsible for verifying signed data"
-            }
-          ]
-        },
-        {
-          "name": "PasswordAuthMechanism",
-          "tag": 10,
-          "attributes": [
-            {
-              "name": "password",
-              "tag": 1,
-              "type": "String",
-              "description": "The mechanism password"
-            }
-          ]
-        },
-        {
-          "name": "KeyAuthMechanism",
-          "tag": 2
         }
       ]
     },
@@ -336,25 +437,25 @@
                     {
                       "name": "luid",
                       "tag": 1,
-                      "type": "Long",
+                      "type": "java.lang.Long",
                       "description": "The interface's locally unique identifier"
                     },
                     {
                       "name": "guid",
                       "tag": 2,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": "The interface's globally unique identifier"
                     },
                     {
                       "name": "paused",
                       "tag": 3,
-                      "type": "Boolean",
+                      "type": "java.lang.Boolean",
                       "description": "Whether the interface is in a paused state"
                     },
                     {
                       "name": "low_power",
                       "tag": 4,
-                      "type": "Boolean",
+                      "type": "java.lang.Boolean",
                       "description": "Whether the interface is in a low-power state"
                     }
                   ]
@@ -364,147 +465,146 @@
                 {
                   "name": "name",
                   "tag": 1,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The interface's name"
                 },
                 {
                   "name": "description",
                   "tag": 2,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
                   "description": "The interface's description"
                 },
                 {
                   "name": "mtu",
                   "tag": 3,
-                  "type": "Integer",
+                  "type": "java.lang.Integer",
                   "description": "The maximum transmission unit"
                 },
                 {
                   "name": "mac",
                   "tag": 4,
-                  "type": "String",
+                  "type": "java.lang.String",
                   "description": null
                 },
                 {
                   "name": "virtual",
                   "tag": 5,
-                  "type": "Boolean",
+                  "type": "java.lang.Boolean",
                   "description": null
                 },
                 {
                   "name": "ipv4",
                   "tag": 6,
-                  "type": "java.util.List<String>",
+                  "type": "java.util.List<java.lang.String>",
                   "description": "The interface's IPv4 addresses"
                 },
                 {
                   "name": "ipv6",
                   "tag": 7,
-                  "type": "java.util.List<String>",
+                  "type": "java.util.List<java.lang.String>",
                   "description": "The interface's IPv6 addresses"
                 },
                 {
                   "name": "broadcast",
                   "tag": 8,
-                  "type": "String",
+                  "type": "java.lang.String",
                   "description": null
                 },
                 {
                   "name": "netmask",
                   "tag": 9,
-                  "type": "String",
+                  "type": "java.lang.String",
                   "description": "The interface's subnet mask"
                 },
                 {
                   "name": "read_bytes",
                   "tag": 10,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": "The number of bytes read from the interface"
                 },
                 {
                   "name": "write_bytes",
                   "tag": 11,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": "The number of bytes written to the interface"
                 },
                 {
                   "name": "read_packets",
                   "tag": 12,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": "The number of packets read from the interface"
                 },
                 {
                   "name": "write_packets",
                   "tag": 13,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": "The number of packets written to the interface"
                 },
                 {
                   "name": "read_errors",
                   "tag": 14,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": "The number of read errors"
                 },
                 {
                   "name": "write_errors",
                   "tag": 15,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": "The number of write errors"
                 },
                 {
                   "name": "read_drops",
                   "tag": 16,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": "The number of read drops"
                 },
                 {
                   "name": "write_drops",
                   "tag": 17,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": "The number of write drops"
                 },
                 {
                   "name": "write_collisions",
                   "tag": 18,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": "The number of write collisions"
                 },
                 {
                   "name": "link_speed",
                   "tag": 19,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": "The interface's maximum speed in bytes"
                 },
                 {
                   "name": "default_gateway",
                   "tag": 20,
-                  "type": "Boolean",
+                  "type": "java.lang.Boolean",
                   "description": null
                 },
                 {
                   "name": "flag_up",
                   "tag": 21,
-                  "type": "Boolean",
+                  "type": "java.lang.Boolean",
                   "description": null
                 },
                 {
                   "name": "flag_running",
                   "tag": 22,
-                  "type": "Boolean",
+                  "type": "java.lang.Boolean",
                   "description": null
                 },
                 {
                   "name": "flag_loopback",
                   "tag": 23,
-                  "type": "Boolean",
+                  "type": "java.lang.Boolean",
                   "description": null
                 },
                 {
                   "name": "flag_multicast",
                   "tag": 24,
-                  "type": "Boolean",
+                  "type": "java.lang.Boolean",
                   "description": null
                 }
               ]
@@ -520,52 +620,162 @@
                     {
                       "name": "identification",
                       "tag": 1,
-                      "type": "String",
-                      "constant": true,
+                      "type": "java.lang.String",
+                      "identity": true,
                       "description": null
                     },
                     {
                       "name": "name",
                       "tag": 2,
-                      "type": "String",
-                      "constant": true,
+                      "type": "java.lang.String",
+                      "identity": true,
                       "description": null
                     },
                     {
                       "name": "description",
                       "tag": 3,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": null
                     },
                     {
                       "name": "uuid",
                       "tag": 4,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": "The partition's UUID"
                     },
                     {
                       "name": "size",
                       "tag": 5,
-                      "type": "Long",
+                      "type": "java.lang.Long",
                       "description": "The partition's total size in bytes"
                     },
                     {
                       "name": "major",
                       "tag": 6,
-                      "type": "Integer",
+                      "type": "java.lang.Integer",
                       "description": null
                     },
                     {
                       "name": "minor",
                       "tag": 7,
-                      "type": "Integer",
+                      "type": "java.lang.Integer",
                       "description": null
                     },
                     {
                       "name": "mount",
                       "tag": 8,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": "The partition's mount point"
+                    }
+                  ]
+                }
+              ],
+              "documents": [
+                {
+                  "name": "Smart",
+                  "tag": 2,
+                  "attributes": [
+                    {
+                      "name": "rotation_rate",
+                      "tag": 13,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "spin_up_time",
+                      "tag": 15,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "start_stop_cycles",
+                      "tag": 16,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "reallocated_sectors",
+                      "tag": 17,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "seek_error_rate",
+                      "tag": 18,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "power_on_time",
+                      "tag": 19,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "spin_retries",
+                      "tag": 20,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "calibration_retries",
+                      "tag": 21,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "power_cycles",
+                      "tag": 22,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "poweroff_retracts",
+                      "tag": 23,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "load_cycles",
+                      "tag": 24,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "temperature",
+                      "tag": 25,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "reallocated_events",
+                      "tag": 26,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "current_pending_sector",
+                      "tag": 27,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "offline_uncorrectable",
+                      "tag": 28,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "crc_errors",
+                      "tag": 29,
+                      "type": "java.lang.Long",
+                      "description": null
+                    },
+                    {
+                      "name": "multizone_error_rate",
+                      "tag": 30,
+                      "type": "java.lang.Long",
+                      "description": null
                     }
                   ]
                 }
@@ -574,184 +784,82 @@
                 {
                   "name": "name",
                   "tag": 1,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "model",
                   "tag": 2,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "serial",
                   "tag": 3,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "size",
                   "tag": 4,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": "The disk's total size in bytes"
                 },
                 {
                   "name": "reads",
                   "tag": 5,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": null
                 },
                 {
                   "name": "read_bytes",
                   "tag": 6,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": null
                 },
                 {
                   "name": "writes",
                   "tag": 7,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": null
                 },
                 {
                   "name": "write_bytes",
                   "tag": 8,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": null
                 },
                 {
                   "name": "queue_length",
                   "tag": 9,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": null
                 },
                 {
                   "name": "transfer_time",
                   "tag": 10,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": null
                 },
                 {
                   "name": "model_family",
                   "tag": 11,
-                  "type": "String",
+                  "type": "java.lang.String",
                   "description": null
                 },
                 {
                   "name": "firmware_version",
                   "tag": 12,
-                  "type": "String",
-                  "description": null
-                },
-                {
-                  "name": "rotation_rate",
-                  "tag": 13,
-                  "type": "Long",
+                  "type": "java.lang.String",
                   "description": null
                 },
                 {
                   "name": "read_error_rate",
                   "tag": 14,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "spin_up_time",
-                  "tag": 15,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "start_stop_cycles",
-                  "tag": 16,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "reallocated_sectors",
-                  "tag": 17,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "seek_error_rate",
-                  "tag": 18,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "power_on_time",
-                  "tag": 19,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "spin_retries",
-                  "tag": 20,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "calibration_retries",
-                  "tag": 21,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "power_cycles",
-                  "tag": 22,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "poweroff_retracts",
-                  "tag": 23,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "load_cycles",
-                  "tag": 24,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "temperature",
-                  "tag": 25,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "reallocated_events",
-                  "tag": 26,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "current_pending_sector",
-                  "tag": 27,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "offline_uncorrectable",
-                  "tag": 28,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "crc_errors",
-                  "tag": 29,
-                  "type": "Long",
-                  "description": null
-                },
-                {
-                  "name": "multizone_error_rate",
-                  "tag": 30,
-                  "type": "Long",
+                  "type": "java.lang.Long",
                   "description": null
                 }
               ]
@@ -767,8 +875,8 @@
                     {
                       "name": "tid",
                       "tag": 1,
-                      "type": "Integer",
-                      "constant": true,
+                      "type": "java.lang.Integer",
+                      "identity": true,
                       "description": "The thread's ID"
                     }
                   ]
@@ -780,13 +888,13 @@
                     {
                       "name": "usage",
                       "tag": 1,
-                      "type": "Double",
+                      "type": "java.lang.Double",
                       "description": "The core's usage between 0.0 and 1.0"
                     },
                     {
                       "name": "temperature",
                       "tag": 2,
-                      "type": "Double",
+                      "type": "java.lang.Double",
                       "description": "The core's temperature in Celsius"
                     }
                   ]
@@ -796,45 +904,45 @@
                 {
                   "name": "model",
                   "tag": 1,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "vendor",
                   "tag": 2,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "frequency_spec",
                   "tag": 3,
-                  "type": "Integer",
+                  "type": "java.lang.Integer",
                   "description": "The specified frequency in Hertz"
                 },
                 {
                   "name": "l1_cache",
                   "tag": 4,
-                  "type": "Integer",
+                  "type": "java.lang.Integer",
                   "description": "The size of the L1 cache in bytes"
                 },
                 {
                   "name": "l2_cache",
                   "tag": 5,
-                  "type": "Integer",
+                  "type": "java.lang.Integer",
                   "description": "The size of the L2 cache in bytes"
                 },
                 {
                   "name": "l3_cache",
                   "tag": 6,
-                  "type": "Integer",
+                  "type": "java.lang.Integer",
                   "description": "The size of the L3 cache in bytes"
                 },
                 {
                   "name": "l4_cache",
                   "tag": 7,
-                  "type": "Integer",
+                  "type": "java.lang.Integer",
                   "description": "The size of the L4 cache in bytes"
                 }
               ]
@@ -846,19 +954,19 @@
                 {
                   "name": "fan_speed",
                   "tag": 1,
-                  "type": "Integer",
+                  "type": "java.lang.Integer",
                   "description": null
                 },
                 {
                   "name": "temperature",
                   "tag": 2,
-                  "type": "Double",
+                  "type": "java.lang.Double",
                   "description": null
                 },
                 {
                   "name": "voltage",
                   "tag": 3,
-                  "type": "Double",
+                  "type": "java.lang.Double",
                   "description": null
                 }
               ]
@@ -870,21 +978,21 @@
                 {
                   "name": "driver_version",
                   "tag": 1,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "name",
                   "tag": 2,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "codec",
                   "tag": 3,
-                  "type": "String",
+                  "type": "java.lang.String",
                   "description": null
                 }
               ]
@@ -896,39 +1004,39 @@
                 {
                   "name": "name",
                   "tag": 1,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The display's name"
                 },
                 {
                   "name": "edid",
                   "tag": 2,
-                  "type": "String",
+                  "type": "java.lang.String",
                   "description": null
                 },
                 {
                   "name": "resolution",
                   "tag": 3,
-                  "type": "String",
+                  "type": "java.lang.String",
                   "description": "The display's resolution"
                 },
                 {
                   "name": "size",
                   "tag": 4,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The display's physical size in pixels"
                 },
                 {
                   "name": "refresh_frequency",
                   "tag": 5,
-                  "type": "Integer",
+                  "type": "java.lang.Integer",
                   "description": "Refresh frequency in Hertz"
                 },
                 {
                   "name": "bit_depth",
                   "tag": 6,
-                  "type": "Integer",
+                  "type": "java.lang.Integer",
                   "description": null
                 }
               ]
@@ -940,36 +1048,36 @@
                 {
                   "name": "name",
                   "tag": 1,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "vendor",
                   "tag": 2,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "vendor_id",
                   "tag": 3,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "product_id",
                   "tag": 4,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "serial_number",
                   "tag": 5,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
@@ -989,19 +1097,19 @@
                 {
                   "name": "hostname",
                   "tag": 1,
-                  "type": "String",
+                  "type": "java.lang.String",
                   "description": "The host's hostname"
                 },
                 {
                   "name": "fqdn",
                   "tag": 2,
-                  "type": "String",
+                  "type": "java.lang.String",
                   "description": "The host's fully-qualified domain name"
                 },
                 {
                   "name": "dns",
                   "tag": 3,
-                  "type": "java.util.List<String>",
+                  "type": "java.util.List<java.lang.String>",
                   "description": "The host's DNS servers"
                 }
               ]
@@ -1013,19 +1121,19 @@
                 {
                   "name": "name",
                   "tag": 1,
-                  "type": "String",
+                  "type": "java.lang.String",
                   "description": null
                 },
                 {
                   "name": "remaining_capacity",
                   "tag": 2,
-                  "type": "Double",
+                  "type": "java.lang.Double",
                   "description": null
                 },
                 {
                   "name": "remaining_time",
                   "tag": 3,
-                  "type": "Double",
+                  "type": "java.lang.Double",
                   "description": null
                 }
               ]
@@ -1037,50 +1145,50 @@
                 {
                   "name": "name",
                   "tag": 1,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "manufacturer",
                   "tag": 2,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The BIOS manufacturer title"
                 },
                 {
                   "name": "description",
                   "tag": 3,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The BIOS description"
                 },
                 {
                   "name": "version",
                   "tag": 4,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The BIOS version number"
                 },
                 {
                   "name": "revision",
                   "tag": 5,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The BIOS revision number"
                 },
                 {
                   "name": "release_date",
                   "tag": 6,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The BIOS release date"
                 },
                 {
                   "name": "uefi",
                   "tag": 7,
-                  "type": "Boolean",
-                  "constant": true,
+                  "type": "java.lang.Boolean",
+                  "identity": true,
                   "description": "Whether the BIOS supports UEFI mode"
                 }
               ]
@@ -1092,29 +1200,29 @@
                 {
                   "name": "model",
                   "tag": 1,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "manufacturer",
                   "tag": 2,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "version",
                   "tag": 3,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 },
                 {
                   "name": "serial_number",
                   "tag": 4,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": null
                 }
               ]
@@ -1130,20 +1238,20 @@
                     {
                       "name": "uid",
                       "tag": 1,
-                      "type": "String",
-                      "constant": true,
+                      "type": "java.lang.String",
+                      "identity": true,
                       "description": null
                     },
                     {
                       "name": "username",
                       "tag": 2,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": "The user's username"
                     },
                     {
                       "name": "home",
                       "tag": 3,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": "The user's home directory path"
                     }
                   ]
@@ -1155,129 +1263,129 @@
                     {
                       "name": "name",
                       "tag": 1,
-                      "type": "String",
-                      "constant": true,
+                      "type": "java.lang.String",
+                      "identity": true,
                       "description": null
                     },
                     {
                       "name": "path",
                       "tag": 2,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": null
                     },
                     {
                       "name": "command",
                       "tag": 3,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": null
                     },
                     {
                       "name": "working_directory",
                       "tag": 4,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": null
                     },
                     {
                       "name": "user",
                       "tag": 5,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": null
                     },
                     {
                       "name": "user_id",
                       "tag": 6,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": null
                     },
                     {
                       "name": "group",
                       "tag": 7,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": null
                     },
                     {
                       "name": "group_id",
                       "tag": 8,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": null
                     },
                     {
                       "name": "state",
                       "tag": 9,
-                      "type": "String",
+                      "type": "java.lang.String",
                       "description": null
                     },
                     {
                       "name": "pid",
                       "tag": 10,
-                      "type": "Integer",
-                      "constant": true,
+                      "type": "java.lang.Integer",
+                      "identity": true,
                       "description": "The process's process ID"
                     },
                     {
                       "name": "parent_pid",
                       "tag": 11,
-                      "type": "Integer",
+                      "type": "java.lang.Integer",
                       "description": null
                     },
                     {
                       "name": "thread_count",
                       "tag": 12,
-                      "type": "Integer",
+                      "type": "java.lang.Integer",
                       "description": null
                     },
                     {
                       "name": "priority",
                       "tag": 13,
-                      "type": "Integer",
+                      "type": "java.lang.Integer",
                       "description": null
                     },
                     {
                       "name": "virtual_size",
                       "tag": 14,
-                      "type": "Long",
+                      "type": "java.lang.Long",
                       "description": null
                     },
                     {
                       "name": "resident_set_size",
                       "tag": 15,
-                      "type": "Long",
+                      "type": "java.lang.Long",
                       "description": "The resident memory size in bytes"
                     },
                     {
                       "name": "kernel_time",
                       "tag": 16,
-                      "type": "Long",
+                      "type": "java.lang.Long",
                       "description": "The number of milliseconds the process has executed in kernel mode"
                     },
                     {
                       "name": "user_time",
                       "tag": 17,
-                      "type": "Long",
+                      "type": "java.lang.Long",
                       "description": "The number of milliseconds the process has executed in user mode"
                     },
                     {
                       "name": "start_time",
                       "tag": 18,
-                      "type": "Long",
+                      "type": "java.lang.Long",
                       "description": "The epoch timestamp of the process start time"
                     },
                     {
                       "name": "bytes_read",
                       "tag": 19,
-                      "type": "Long",
+                      "type": "java.lang.Long",
                       "description": "The number of bytes the process has read from disk"
                     },
                     {
                       "name": "bytes_written",
                       "tag": 20,
-                      "type": "Long",
+                      "type": "java.lang.Long",
                       "description": "The number of bytes the process has written to disk"
                     },
                     {
                       "name": "handle_count",
                       "tag": 21,
-                      "type": "Long",
+                      "type": "java.lang.Long",
                       "description": "The number of file handles that the process owns"
                     }
                   ]
@@ -1287,43 +1395,43 @@
                 {
                   "name": "family",
                   "tag": 1,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The operating system's family"
                 },
                 {
                   "name": "manufacturer",
                   "tag": 2,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The operating system's manufacturer"
                 },
                 {
                   "name": "bitness",
                   "tag": 3,
-                  "type": "Integer",
-                  "constant": true,
+                  "type": "java.lang.Integer",
+                  "identity": true,
                   "description": "The operating system's register width in bits"
                 },
                 {
                   "name": "version",
                   "tag": 4,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The operating system's primary version"
                 },
                 {
                   "name": "codename",
                   "tag": 5,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The operating system's code name"
                 },
                 {
                   "name": "build_number",
                   "tag": 6,
-                  "type": "String",
-                  "constant": true,
+                  "type": "java.lang.String",
+                  "identity": true,
                   "description": "The operating system's build number"
                 }
               ]
@@ -1331,6 +1439,28 @@
           ]
         }
       ]
+    }
+  ],
+  "attributes": [
+    {
+      "name": "instance_type",
+      "tag": 20,
+      "type": "com.sandpolis.core.util.Platform.Instance"
+    },
+    {
+      "name": "instance_flavor",
+      "tag": 21,
+      "type": "com.sandpolis.core.util.Platform.InstanceFlavor"
+    },
+    {
+      "name": "uuid",
+      "tag": 22,
+      "type": "java.lang.String"
+    },
+    {
+      "name": "cvid",
+      "tag": 23,
+      "type": "java.lang.Integer"
     }
   ]
 }
