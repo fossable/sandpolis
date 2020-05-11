@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.gradle.codegen
 
+import com.sandpolis.gradle.codegen.attribute.AttributeImplementationGenerator
 import com.sandpolis.gradle.codegen.document.CoreDocumentBindingsGenerator
 import com.sandpolis.gradle.codegen.document.JavaFxDocumentBindingsGenerator
 
@@ -34,8 +35,10 @@ class CodeGen implements Plugin<Project> {
 			// Generate document bindings if configured
 			if (configuration.documentBindings != null) {
 
-				// Look for the document specification
-				if (!project.file("attribute.json").exists())
+				// Find the specification file
+				if (configuration.attributeSpec == null)
+					throw new RuntimeException("Specification not defined")
+				if (!configuration.attributeSpec.exists())
 					throw new RuntimeException("Specification not found")
 
 				// Create the task
@@ -49,6 +52,18 @@ class CodeGen implements Plugin<Project> {
 				default:
 					throw new RuntimeException("Specification not found")
 				}
+			}
+
+			// Generate attribute implementations if configured
+			if (configuration.attributeImplementations == true) {
+
+				// Find the specification file
+				if (configuration.attributeSpec == null)
+					throw new RuntimeException("Specification not defined")
+				if (!configuration.attributeSpec.exists())
+					throw new RuntimeException("Specification not found")
+
+				project.tasks.getByName('compileJava').dependsOn(project.task("generateAttributeImplementations", type: AttributeImplementationGenerator))
 			}
 
 			// Setup automatic protobuf compilation

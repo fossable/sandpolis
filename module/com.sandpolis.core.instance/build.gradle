@@ -96,5 +96,7 @@ javadoc {
 }
 
 codegen {
+	attributeSpec = file('attribute.json')
 	documentBindings = 'core'
+	attributeImplementations = true
 }

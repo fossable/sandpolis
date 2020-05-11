@@ -96,5 +96,6 @@ task dockerBuildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildIm
 }
 
 codegen {
+	attributeSpec = project(':module:com.sandpolis.core.instance').file('attribute.json')
 	documentBindings = 'javafx'
 }

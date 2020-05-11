@@ -56,22 +56,32 @@ class CoreDocumentBindingsGenerator extends DocumentBindingsGenerator {
 		}
 
 		// Add tag method
-		def constants = ""
+		def identity = ""
 		if (collection.attributes != null) {
-			for (def subattribute : collection.attributes) {
-				if (subattribute.constant == true) {
-					if (subattribute.type == "String") {
-						constants += ".putBytes(${camel(subattribute.name)}().get().getBytes())"
+			for (def subattribute : collection.attributes.sort{it.tag}) {
+				if (subattribute.identity == true) {
+					switch (subattribute.type) {
+					case "java.lang.String":
+						identity += ".putBytes(${camel(subattribute.name)}().get().getBytes())"
+						break
+					case "java.lang.Byte[]":
+						identity += ".putBytes(${camel(subattribute.name)}().get())"
+						break
 					}
 				}
 			}
+		}
+
+		// If there are no explicit identity attributes, use the database ID
+		if (identity.isEmpty()) {
+			identity = ".putBytes(getId().getBytes())"
 		}
 
 		def tag = MethodSpec.methodBuilder("tag")
 			.addAnnotation(Override.class)
 			.addModifiers(PUBLIC, FINAL)
 			.returns(int.class)
-			.addStatement("return \$T.murmur3_32().newHasher()\$L.hash().asInt()", ClassName.bestGuess("com.google.common.hash.Hashing"), constants)
+			.addStatement("return \$T.murmur3_32().newHasher()\$L.hash().asInt()", ClassName.bestGuess("com.google.common.hash.Hashing"), identity)
 		collectionClass.addMethod(tag.build())
 
 		// Add ID getter
@@ -101,7 +111,7 @@ class CoreDocumentBindingsGenerator extends DocumentBindingsGenerator {
 		def attributeType = ParameterizedTypeName.get(ClassName.bestGuess("com.sandpolis.core.instance.data.Attribute"), type)
 
 		// Add the attribute's getter method
-		def getter = MethodSpec.methodBuilder(camel((attribute.type != "Boolean" ? "get_" : "is_") + attribute.name))
+		def getter = MethodSpec.methodBuilder(camel((attribute.type != "java.lang.Boolean" ? "get_" : "is_") + attribute.name))
 			.addModifiers(PUBLIC)
 			.returns(type)
 			.addStatement("return ${camel(attribute.name)}().get()")
@@ -114,6 +124,10 @@ class CoreDocumentBindingsGenerator extends DocumentBindingsGenerator {
 			.addStatement("return document.attribute(${attribute.tag})")
 		parent.addMethod(property.build())
 
+		// Add the attribute's static tag field
+		def tagField = FieldSpec.builder(int.class, "${attribute.name.toUpperCase()}", PUBLIC, STATIC, FINAL)
+			.initializer("${attribute.tag}")
+		parent.addField(tagField.build())
 	}
 
 	void processDocument(parent, document) {

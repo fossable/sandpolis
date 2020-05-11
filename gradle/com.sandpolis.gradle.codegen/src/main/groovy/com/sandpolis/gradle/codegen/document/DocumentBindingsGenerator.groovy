@@ -34,10 +34,10 @@ abstract class DocumentBindingsGenerator extends DefaultTask {
 	final DOCUMENT_TYPE = ClassName.bestGuess("com.sandpolis.core.instance.data.Document")
 
 	@TaskAction
-	void action () {
+	void action() {
 
 		// Load the schema
-		def tree = new JsonSlurper().parse(project.file("attribute.json"), 'UTF-8')
+		def tree = new JsonSlurper().parse(project.extensions.getByName('codegen').attributeSpec, 'UTF-8')
 
 		// Check tree preconditions
 		validateCollection(tree)

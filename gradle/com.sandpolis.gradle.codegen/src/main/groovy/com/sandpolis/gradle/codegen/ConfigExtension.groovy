@@ -11,10 +11,26 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.gradle.codegen
 
+import java.io.File
+
+/**
+ * This extension can be used in subproject build scripts to configure the code
+ * generator.
+ */
 class ConfigExtension {
+
+	/**
+	 * The attribute specification file.
+	 */
+	File attributeSpec
 
 	/**
 	 * The type of document bindings to generate. Values are: javafx, core.
 	 */
 	String documentBindings
+
+	/**
+	 * Whether to generate attribute implementations
+	 */
+	Boolean attributeImplementations
 }
