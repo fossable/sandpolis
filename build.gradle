@@ -38,8 +38,8 @@ spotless {
 	java {
 		target '**/*.java'
 
-		// Exclude generated attribute-key sources
-		targetExclude '**/AK_*.java'
+		// Exclude generated sources
+		targetExclude '**/gen/main/java/**'
 
 		eclipse().configFile('gradle/resources/EclipseConventions.xml')
 		trimTrailingWhitespace()
@@ -99,6 +99,14 @@ spotless {
 		target '**/*.css'
 
 		eclipseWtp('css')
+	}
+	format 'json', {
+		target '**/*.json'
+
+		// Exclude iOS projects
+		targetExclude '**/com.sandpolis.viewer.lockstone/**'
+
+		eclipseWtp('json')
 	}
 }
 
