@@ -21,8 +21,7 @@ open module com.sandpolis.core.net {
 	exports com.sandpolis.core.net.init;
 	exports com.sandpolis.core.net.loop;
 	exports com.sandpolis.core.net.plugin;
-	exports com.sandpolis.core.net.sock;
-	exports com.sandpolis.core.net.store.connection;
+	exports com.sandpolis.core.net.connection;
 	exports com.sandpolis.core.net.store.network;
 	exports com.sandpolis.core.net.stream;
 	exports com.sandpolis.core.net.util;

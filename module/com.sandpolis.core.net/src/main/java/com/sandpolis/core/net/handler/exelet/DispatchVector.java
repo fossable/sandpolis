@@ -30,7 +30,7 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.command.Exelet.Handler;
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.util.ProtoUtil;
 
 /**
@@ -50,7 +50,7 @@ public class DispatchVector {
 	 */
 	private static final int TAG_LIMIT = 256;
 
-	private final Sock sock;
+	private final Connection sock;
 
 	protected Consumer<MSG>[] vector;
 
@@ -58,7 +58,7 @@ public class DispatchVector {
 	 * Build a non-plugin {@link DispatchVector}.
 	 */
 	@SuppressWarnings("unchecked")
-	public DispatchVector(Sock sock) {
+	public DispatchVector(Connection sock) {
 		this.sock = Objects.requireNonNull(sock);
 		this.vector = new Consumer[0];
 	}

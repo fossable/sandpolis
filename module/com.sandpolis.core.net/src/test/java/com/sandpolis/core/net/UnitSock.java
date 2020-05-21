@@ -11,15 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net;
 
-import com.sandpolis.core.net.sock.AbstractSock;
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
 
 import io.netty.channel.Channel;
 
 /**
- * A {@link Sock} used for unit testing only.
+ * A {@link Connection} used for unit testing only.
  */
-public class UnitSock extends AbstractSock {
+public class UnitSock extends Connection {
 
 	private boolean connected = true;
 	private boolean authenticated = false;
@@ -48,8 +47,4 @@ public class UnitSock extends AbstractSock {
 		authenticated = false;
 	}
 
-	@Override
-	public String getRemoteIP() {
-		return "127.0.0.1";
-	}
 }

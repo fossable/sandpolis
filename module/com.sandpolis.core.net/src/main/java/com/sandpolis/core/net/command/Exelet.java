@@ -16,10 +16,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
 
 /**
- * An {@link Exelet} handles incoming messages from a {@link Sock}.
+ * An {@link Exelet} handles incoming messages from a {@link Connection}.
  *
  * @author cilki
  * @since 5.0.0

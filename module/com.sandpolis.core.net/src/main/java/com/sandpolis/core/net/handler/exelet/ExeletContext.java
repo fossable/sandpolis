@@ -16,7 +16,7 @@ import java.util.Objects;
 import com.google.protobuf.Message;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
 
 /**
  * An object that can optionally be passed to {@link Exelet} handlers and
@@ -27,7 +27,7 @@ import com.sandpolis.core.net.sock.Sock;
  */
 public final class ExeletContext {
 
-	public final Sock connector;
+	public final Connection connector;
 
 	public final MSG request;
 
@@ -35,7 +35,7 @@ public final class ExeletContext {
 
 	Runnable deferAction;
 
-	public ExeletContext(Sock connector, MSG request) {
+	public ExeletContext(Connection connector, MSG request) {
 		this.connector = Objects.requireNonNull(connector);
 		this.request = Objects.requireNonNull(request);
 	}

@@ -9,13 +9,13 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.sock;
+package com.sandpolis.core.net.connection;
 
 import io.netty.channel.Channel;
 
-public class PeerSock extends AbstractSock {
+public class PeerConnection extends Connection {
 
-	public PeerSock(Channel channel) {
+	public PeerConnection(Channel channel) {
 		super(channel);
 	}
 

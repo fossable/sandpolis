@@ -33,11 +33,11 @@ import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.connection.ServerConnection;
 import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.cvid.CvidResponseHandler;
 import com.sandpolis.core.net.handler.exelet.ExeletHandler;
-import com.sandpolis.core.net.sock.ServerSock;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.server.vanilla.exe.AuthExe;
 import com.sandpolis.server.vanilla.exe.GenExe;
@@ -137,7 +137,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 
 	@Override
 	protected void initChannel(Channel ch) throws Exception {
-		ch.attr(ChannelConstant.SOCK).set(new ServerSock(ch));
+		ch.attr(ChannelConstant.SOCK).set(new ServerConnection(ch));
 		ChannelPipeline p = ch.pipeline();
 
 		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.TRAFFIC_INTERVAL.value().orElse(5000)));
@@ -146,7 +146,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 			p.addLast(TLS.next(p), getSslContext().newHandler(ch.alloc()));
 
 		if (Config.TRAFFIC_RAW.value().orElse(false))
-			p.addLast(LOG_RAW.next(p), new LoggingHandler(ServerSock.class));
+			p.addLast(LOG_RAW.next(p), new LoggingHandler(ServerConnection.class));
 
 		p.addLast(FRAME_DECODER.next(p), new ProtobufVarint32FrameDecoder());
 		p.addLast(PROXY.next(p), new ProxyHandler(cvid));
@@ -155,7 +155,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 		p.addLast(PROTO_ENCODER.next(p), HANDLER_PROTO_ENCODER);
 
 		if (Config.TRAFFIC_DECODED.value().orElse(false))
-			p.addLast(LOG_DECODED.next(p), new LoggingHandler(ServerSock.class));
+			p.addLast(LOG_DECODED.next(p), new LoggingHandler(ServerConnection.class));
 
 		// Add CVID handler
 		p.addLast(CVID.next(p), HANDLER_CVID);

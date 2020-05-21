@@ -11,16 +11,15 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net;
 
-import com.sandpolis.core.net.sock.AbstractSock;
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.util.Platform.Instance;
 
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 
 /**
- * {@link AttributeKey} constants that are useful to {@link Sock} and other
- * classes that use {@link Channel}s.
+ * {@link AttributeKey} constants that are useful to {@link Connection} and
+ * other classes that use {@link Channel}s.
  *
  * @author cilki
  * @since 5.0.0
@@ -45,9 +44,9 @@ public final class ChannelConstant {
 	public static final AttributeKey<Instance> INSTANCE = AttributeKey.valueOf("instance");
 
 	/**
-	 * The {@link Sock} associated with the {@link Channel}.
+	 * The {@link Connection} associated with the {@link Channel}.
 	 */
-	public static final AttributeKey<AbstractSock> SOCK = AttributeKey.valueOf("sock");
+	public static final AttributeKey<Connection> SOCK = AttributeKey.valueOf("sock");
 
 	/**
 	 * Indicates whether an invalid SSL certificate will be allowed.

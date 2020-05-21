@@ -29,8 +29,8 @@ import com.sandpolis.core.net.command.Exelet.Auth;
 import com.sandpolis.core.net.command.Exelet.Handler;
 import com.sandpolis.core.net.command.Exelet.Permission;
 import com.sandpolis.core.net.command.Exelet.Unauth;
+import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.plugin.ExeletProvider;
-import com.sandpolis.core.net.sock.Sock;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -48,7 +48,7 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 
 	private static final Map<Class<? extends Exelet>, Map<Method, MethodHandle>> cache = new HashMap<>();
 
-	private final Sock sock;
+	private final Connection sock;
 
 	private final DispatchVector coreVector;
 
@@ -56,7 +56,7 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 
 	private final Map<Class<? extends Exelet>, String> exelets;
 
-	public ExeletHandler(Sock sock) {
+	public ExeletHandler(Connection sock) {
 		this.sock = sock;
 		this.pluginVectors = new HashMap<>();
 		this.coreVector = new DispatchVector(sock);
@@ -70,7 +70,7 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 		});
 	}
 
-	public ExeletHandler(Sock sock, Class<? extends Exelet>[] e) {
+	public ExeletHandler(Connection sock, Class<? extends Exelet>[] e) {
 		this(sock);
 		register(e);
 	}

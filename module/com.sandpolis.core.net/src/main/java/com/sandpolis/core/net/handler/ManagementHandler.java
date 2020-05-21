@@ -15,8 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
-import com.sandpolis.core.net.sock.Sock;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -25,8 +25,8 @@ import io.netty.handler.ssl.SslHandshakeCompletionEvent;
 import io.netty.util.ReferenceCountUtil;
 
 /**
- * A channel-safe handler that performs logistical functions for a {@link Sock}.
- * Messages and events are consumed by this handler.<br>
+ * A channel-safe handler that performs logistical functions for a
+ * {@link Connection}. Messages and events are consumed by this handler.<br>
  * <br>
  * Note: This handler should always be last in the pipeline.
  *

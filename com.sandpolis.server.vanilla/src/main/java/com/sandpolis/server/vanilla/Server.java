@@ -17,11 +17,10 @@ import static com.sandpolis.core.instance.store.database.DatabaseStore.DatabaseS
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
-import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
-import static com.sandpolis.core.util.CryptoUtil.SHA256;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
 import static com.sandpolis.server.vanilla.store.location.LocationStore.LocationStore;
@@ -29,9 +28,6 @@ import static com.sandpolis.server.vanilla.store.server.ServerStore.ServerStore;
 import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -54,41 +50,21 @@ import com.sandpolis.core.instance.Generator.NetworkConfig;
 import com.sandpolis.core.instance.Generator.NetworkTarget;
 import com.sandpolis.core.instance.Generator.OutputFormat;
 import com.sandpolis.core.instance.Generator.OutputPayload;
-import com.sandpolis.core.instance.Group.ProtoGroup;
-import com.sandpolis.core.instance.Listener.ProtoListener;
+import com.sandpolis.core.instance.Group.GroupConfig;
+import com.sandpolis.core.instance.Listener.ListenerConfig;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.User.ProtoUser;
+import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.instance.storage.database.Database;
-import com.sandpolis.core.instance.store.plugin.Plugin;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.profile.attribute.Attribute;
-import com.sandpolis.core.profile.attribute.Attribute.BooleanAttribute;
-import com.sandpolis.core.profile.attribute.Attribute.ByteAttribute;
-import com.sandpolis.core.profile.attribute.Attribute.DoubleAttribute;
-import com.sandpolis.core.profile.attribute.Attribute.IntegerAttribute;
-import com.sandpolis.core.profile.attribute.Attribute.LongAttribute;
-import com.sandpolis.core.profile.attribute.Attribute.OsTypeAttribute;
-import com.sandpolis.core.profile.attribute.Attribute.StringAttribute;
-import com.sandpolis.core.profile.attribute.Collection;
-import com.sandpolis.core.profile.attribute.Document;
-import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.core.storage.hibernate.HibernateConnection;
-import com.sandpolis.core.util.CryptoUtil;
-import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 import com.sandpolis.core.util.Platform.Instance;
 import com.sandpolis.core.util.Platform.InstanceFlavor;
 import com.sandpolis.core.util.Platform.OsType;
-import com.sandpolis.server.vanilla.auth.KeyMechanism;
-import com.sandpolis.server.vanilla.auth.PasswordMechanism;
 import com.sandpolis.server.vanilla.gen.MegaGen;
-import com.sandpolis.server.vanilla.store.group.Group;
-import com.sandpolis.server.vanilla.store.listener.Listener;
-import com.sandpolis.server.vanilla.store.trust.TrustAnchor;
-import com.sandpolis.server.vanilla.store.user.User;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
@@ -116,7 +92,6 @@ public final class Server {
 		register(Server.loadServerStores);
 		register(Server.loadPlugins);
 		register(Server.installDebugClient);
-		register(Server.installAdminUser);
 		register(Server.loadListeners);
 
 		register(Server.shutdown);
@@ -170,43 +145,6 @@ public final class Server {
 	@InitializationTask(name = "Generate instance CVID", fatal = true)
 	public static final Task generateCvid = new Task(outcome -> {
 		Core.setCvid(CvidUtil.cvid(Instance.SERVER));
-		return outcome.success();
-	});
-
-	/**
-	 * Install the administrator user from a credentials file located in the
-	 * database directory.
-	 */
-	@InitializationTask(name = "Install administrator user", fatal = true)
-	public static final Task installAdminUser = new Task(outcome -> {
-		Path install = Environment.DB.path().resolve("install.txt");
-		if (!Files.exists(install))
-			return outcome.skipped();
-
-		try {
-			var lines = Files.readAllLines(install);
-			if (lines.size() != 2)
-				return outcome.failure("File format error");
-
-			if (UserStore.count() != 0) {
-				return outcome.failure("UserStore not empty");
-			}
-
-			String username = lines.get(0);
-			String password = lines.get(1);
-
-			UserStore.add(ProtoUser.newBuilder().setUsername(username).setPassword(password));
-			ListenerStore.add(ProtoListener.newBuilder().setId(1).setPort(8768).setAddress("0.0.0.0").setOwner(username)
-					.setName("Default Listener").setEnabled(true).build());
-		} finally {
-			try {
-				Files.delete(install);
-			} catch (IOException e) {
-				log.error("Failed to delete install credentials!");
-				return outcome.failure(e);
-			}
-		}
-
 		return outcome.success();
 	});
 
@@ -268,11 +206,14 @@ public final class Server {
 					.setProperty("hibernate.globally_quoted_identifiers", "true")
 					.setProperty("hibernate.hbm2ddl.auto", "update");
 
-			List.of(Database.class, Listener.class, Group.class, User.class, Profile.class, Document.class,
-					Collection.class, Attribute.class, StringAttribute.class, IntegerAttribute.class,
-					LongAttribute.class, BooleanAttribute.class, DoubleAttribute.class, ByteAttribute.class,
-					OsTypeAttribute.class, Plugin.class, TrustAnchor.class, ReciprocalKeyPair.class, KeyMechanism.class,
-					PasswordMechanism.class).forEach(conf::addAnnotatedClass);
+			List.of(com.sandpolis.core.instance.data.Document.class, com.sandpolis.core.instance.data.Collection.class,
+					com.sandpolis.core.instance.data.Attribute.class,
+					com.sandpolis.core.instance.data.StringAttribute.class,
+					com.sandpolis.core.instance.data.IntegerAttribute.class,
+					com.sandpolis.core.instance.data.LongAttribute.class,
+					com.sandpolis.core.instance.data.BooleanAttribute.class,
+					com.sandpolis.core.instance.data.DoubleAttribute.class,
+					com.sandpolis.core.instance.data.OsTypeAttribute.class).forEach(conf::addAnnotatedClass);
 
 			config.main = new Database(url, new HibernateConnection(conf.buildSessionFactory()));
 			config.ephemeral();
@@ -366,17 +307,16 @@ public final class Server {
 			return outcome.skipped();
 
 		// Create user and listener
-		if (UserStore.get("admin").isEmpty())
-			UserStore.add(ProtoUser.newBuilder().setUsername("admin").setPassword(CryptoUtil.hash(SHA256, "password"))
-					.build());
+		if (UserStore.getByUsername("admin").isEmpty())
+			UserStore.add(UserConfig.newBuilder().setUsername("admin").setPassword("password").build());
 
-		if (ListenerStore.get(1L).isEmpty())
-			ListenerStore.add(ProtoListener.newBuilder().setId(1).setPort(8768).setAddress("0.0.0.0").setOwner("admin")
+		if (ListenerStore.getByPort(8768).isEmpty())
+			ListenerStore.add(ListenerConfig.newBuilder().setPort(8768).setAddress("0.0.0.0").setOwner("admin")
 					.setName("test").setEnabled(true).build());
 
 		// Create group
-		if (GroupStore.get("1").isEmpty())
-			GroupStore.add(ProtoGroup.newBuilder().setId("1").setName("test group").setOwner("admin")
+		if (GroupStore.getByName("test group").isEmpty())
+			GroupStore.add(GroupConfig.newBuilder().setName("test group").setOwner("admin")
 					.addPasswordMechanism(PasswordContainer.newBuilder().setPassword("12345")).build());
 
 		// Generate client

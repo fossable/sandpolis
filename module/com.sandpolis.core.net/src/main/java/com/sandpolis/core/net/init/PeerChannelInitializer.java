@@ -26,12 +26,12 @@ import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.connection.PeerConnection;
 import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.peer.HolePunchHandler;
 import com.sandpolis.core.net.handler.peer.PeerEncryptionDecoder;
 import com.sandpolis.core.net.handler.peer.PeerEncryptionEncoder;
-import com.sandpolis.core.net.sock.PeerSock;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -66,7 +66,7 @@ public class PeerChannelInitializer extends ChannelInitializer<Channel> {
 
 	@Override
 	protected void initChannel(Channel ch) throws Exception {
-		ch.attr(ChannelConstant.SOCK).set(new PeerSock(ch));
+		ch.attr(ChannelConstant.SOCK).set(new PeerConnection(ch));
 		ChannelPipeline p = ch.pipeline();
 
 		if (ch instanceof DatagramChannel)
@@ -78,7 +78,7 @@ public class PeerChannelInitializer extends ChannelInitializer<Channel> {
 		p.addLast(ENCRYPTION_DECODER.next(p), new PeerEncryptionDecoder());
 
 		if (Config.TRAFFIC_RAW.value().orElse(false))
-			p.addLast(LOG_RAW.next(p), new LoggingHandler(PeerSock.class));
+			p.addLast(LOG_RAW.next(p), new LoggingHandler(PeerConnection.class));
 
 		p.addLast(FRAME_DECODER.next(p), new ProtobufVarint32FrameDecoder());
 		p.addLast(PROTO_DECODER.next(p), HANDLER_PROTO_DECODER);
@@ -86,7 +86,7 @@ public class PeerChannelInitializer extends ChannelInitializer<Channel> {
 		p.addLast(PROTO_ENCODER.next(p), HANDLER_PROTO_ENCODER);
 
 		if (Config.TRAFFIC_DECODED.value().orElse(false))
-			p.addLast(LOG_DECODED.next(p), new LoggingHandler(PeerSock.class));
+			p.addLast(LOG_DECODED.next(p), new LoggingHandler(PeerConnection.class));
 
 		p.addLast(ThreadStore.get("net.exelet"), RESPONSE.next(p), new ResponseHandler());
 

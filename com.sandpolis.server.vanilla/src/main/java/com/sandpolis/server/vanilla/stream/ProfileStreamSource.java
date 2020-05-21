@@ -11,20 +11,17 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.stream;
 
-import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.net.MsgStream.EV_ProfileStream;
-import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
+import com.sandpolis.core.net.connection.Connection;
+import com.sandpolis.core.net.connection.ConnectionStoreEvents.SockLostEvent;
 import com.sandpolis.core.net.stream.StreamSource;
-import com.sandpolis.core.profile.AK_CLIENT;
-import com.sandpolis.core.profile.AK_INSTANCE;
 import com.sandpolis.core.profile.store.Events.ProfileOnlineEvent;
 import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.core.util.Platform.Instance;
-import com.sandpolis.server.vanilla.store.location.LocationStore;
 
 /**
  * Represents the origin of a profile stream. This source can be safely stopped
@@ -47,7 +44,7 @@ public class ProfileStreamSource extends StreamSource<EV_ProfileStream> {
 		ConnectionStore.register(this);
 
 		// Send existing profiles
-		ProfileStore.stream().filter(profile -> profile.getInstance() == Instance.CLIENT)
+		ProfileStore.stream().filter(profile -> profile.getInstanceType() == Instance.CLIENT)
 				.forEach(this::onProfileOnline);
 	}
 
@@ -55,15 +52,11 @@ public class ProfileStreamSource extends StreamSource<EV_ProfileStream> {
 		var ev = EV_ProfileStream.newBuilder().setCvid(profile.getCvid()).setUuid(profile.getUuid());
 
 		ConnectionStore.get(profile.getCvid()).ifPresent(sock -> {
-			ev.setIp(sock.getRemoteIP()).setOnline(true);
-
-			var location = LocationStore.LocationStore.query(ev.getIp(), 1000);
-			if (location != null)
-				ev.setLocation(location);
+			ev.setIp(sock.getRemoteAddress()).setOnline(true);
 		});
 
-		ev.setHostname(profile.get(AK_CLIENT.HOSTNAME));
-		ev.setPlatform(profile.get(AK_INSTANCE.OS));
+		ev.setHostname(profile.instance().client().getHostname());
+		ev.setPlatform(profile.instance().client().getOs());
 
 		submit(ev.build());
 	}
@@ -75,7 +68,7 @@ public class ProfileStreamSource extends StreamSource<EV_ProfileStream> {
 
 	@Subscribe
 	private void onSockLost(SockLostEvent event) {
-		Sock sock = event.get();
+		Connection sock = event.get();
 		submit(EV_ProfileStream.newBuilder().setCvid(sock.getRemoteCvid()).setUuid(sock.getRemoteUuid())
 				.setOnline(false).build());
 	}

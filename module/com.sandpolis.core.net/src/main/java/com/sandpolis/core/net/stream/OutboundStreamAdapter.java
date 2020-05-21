@@ -22,7 +22,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.util.ProtoUtil;
 
 public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscriber<E>, StreamEndpoint {
@@ -30,22 +30,22 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 	private int cvid;
 	private int id;
 	private Function<E, Any> pluginPacker;
-	private Sock sock;
+	private Connection sock;
 	private Subscription subscription;
 
-	public OutboundStreamAdapter(int streamID, Sock sock) {
+	public OutboundStreamAdapter(int streamID, Connection sock) {
 		this.id = streamID;
 		this.sock = checkNotNull(sock);
 	}
 
-	public OutboundStreamAdapter(int streamID, Sock sock, int cvid, Function<E, Any> packer) {
+	public OutboundStreamAdapter(int streamID, Connection sock, int cvid, Function<E, Any> packer) {
 		this.id = streamID;
 		this.sock = checkNotNull(sock);
 		this.pluginPacker = packer;
 		this.cvid = cvid;
 	}
 
-	public Sock getSock() {
+	public Connection getSock() {
 		return sock;
 	}
 

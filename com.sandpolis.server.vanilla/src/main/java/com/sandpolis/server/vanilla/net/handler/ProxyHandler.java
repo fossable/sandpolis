@@ -11,14 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.net.handler;
 
-import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.MsgNetwork.EV_EndpointClosed;
+import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.exception.InvalidMessageException;
-import com.sandpolis.core.net.sock.AbstractSock;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -87,7 +87,7 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 					msg.retain();
 
 					// Skip to the middle of the pipeline
-					((AbstractSock) sock.get()).getHandler(HandlerKey.FRAME_ENCODER).get().shortcut(msg);
+					((Connection) sock.get()).getHandler(HandlerKey.FRAME_ENCODER).get().shortcut(msg);
 				} else {
 					ctx.channel().writeAndFlush(
 							MSG.newBuilder().setEvEndpointClosed(EV_EndpointClosed.newBuilder().setCvid(to)).build());

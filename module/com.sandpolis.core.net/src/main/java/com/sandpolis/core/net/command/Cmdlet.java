@@ -13,7 +13,7 @@ package com.sandpolis.core.net.command;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
-import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 
 import java.util.concurrent.TimeUnit;
@@ -21,8 +21,8 @@ import java.util.concurrent.TimeUnit;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.net.util.ProtoUtil;
 
 import io.netty.util.concurrent.EventExecutor;
@@ -57,7 +57,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 * The target sock which will be used to send and receive messages. Defaults to
 	 * the default server.
 	 */
-	protected Sock sock = ConnectionStore.get(cvid).orElse(null);
+	protected Connection sock = ConnectionStore.get(cvid).orElse(null);
 
 	/**
 	 * Explicitly set a thread pool for the completion listeners.
@@ -96,12 +96,12 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	}
 
 	/**
-	 * Explicitly set the remote endpoint by {@link Sock}.
+	 * Explicitly set the remote endpoint by {@link Connection}.
 	 *
 	 * @param sock The target sock
 	 * @return {@code this}
 	 */
-	public E target(Sock sock) {
+	public E target(Connection sock) {
 		this.sock = checkNotNull(sock);
 		this.cvid = sock.getRemoteCvid();
 		return (E) this;
@@ -126,7 +126,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 * @param sock The target sock
 	 * @return {@code this}
 	 */
-	public E target(int cvid, Sock sock) {
+	public E target(int cvid, Connection sock) {
 		this.cvid = cvid;
 		this.sock = checkNotNull(sock);
 		return (E) this;

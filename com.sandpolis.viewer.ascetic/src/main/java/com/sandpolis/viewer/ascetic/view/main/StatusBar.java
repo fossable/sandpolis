@@ -12,7 +12,7 @@
 package com.sandpolis.viewer.ascetic.view.main;
 
 import static com.googlecode.lanterna.SGR.BOLD;
-import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
 import java.util.List;
 
@@ -72,13 +72,12 @@ public class StatusBar extends Panel {
 
 		ConnectionStore.stream().findAny().ifPresent(sock -> {
 			updater = new Thread(() -> {
-				var counter = sock.getTrafficInfo();
 				int timeout = Config.TRAFFIC_INTERVAL.value().get();
 
 				while (!Thread.currentThread().isInterrupted()) {
 
-					lbl_upload.setText("[UP: " + TextUtil.formatByteCount(counter.lastWriteThroughput()) + "/s]");
-					lbl_download.setText("[DN: " + TextUtil.formatByteCount(counter.lastReadThroughput()) + "/s]");
+					lbl_upload.setText("[UP: " + TextUtil.formatByteCount(sock.getWriteThroughput()) + "/s]");
+					lbl_download.setText("[DN: " + TextUtil.formatByteCount(sock.getReadThroughput()) + "/s]");
 					try {
 						Thread.sleep(timeout);
 					} catch (InterruptedException e) {

@@ -9,14 +9,18 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.sock;
+package com.sandpolis.core.net.connection;
 
-import io.netty.channel.Channel;
+import com.sandpolis.core.instance.event.ParameterizedEvent;
 
-public class ClientSock extends AbstractSock {
+public final class ConnectionStoreEvents {
 
-	public ClientSock(Channel channel) {
-		super(channel);
+	public static final class SockLostEvent extends ParameterizedEvent<Connection> {
 	}
 
+	public static final class SockEstablishedEvent extends ParameterizedEvent<Connection> {
+	}
+
+	private ConnectionStoreEvents() {
+	}
 }

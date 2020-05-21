@@ -12,7 +12,7 @@
 package com.sandpolis.core.net.stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,7 @@ import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
+import com.sandpolis.core.net.connection.ConnectionStoreEvents.SockLostEvent;
 import com.sandpolis.core.net.stream.StreamStore.StreamStoreConfig;
 
 /**

@@ -14,7 +14,7 @@ package com.sandpolis.core.net.command;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
-import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -27,8 +27,8 @@ import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.sock.Sock;
 import com.sandpolis.core.net.util.ProtoUtil;
 
 import io.netty.util.concurrent.DefaultPromise;
@@ -58,10 +58,10 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	private Integer cvid;
 
 	/**
-	 * A {@link Sock} that leads to the remote endpoint. If there's only one hop,
-	 * the CVID of {@link #gateway} will be equal to {@link #cvid}.
+	 * A {@link Connection} that leads to the remote endpoint. If there's only one
+	 * hop, the CVID of {@link #gateway} will be equal to {@link #cvid}.
 	 */
-	private Sock gateway;
+	private Connection gateway;
 
 	/**
 	 * The in-progress outcome of the command.
@@ -78,7 +78,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	 */
 	private long timeout;
 
-	public CommandSession(EventExecutor executor, Integer cvid, Sock sock, long timeout) {
+	public CommandSession(EventExecutor executor, Integer cvid, Connection sock, long timeout) {
 		super(executor);
 		checkArgument(cvid != null || sock != null);
 

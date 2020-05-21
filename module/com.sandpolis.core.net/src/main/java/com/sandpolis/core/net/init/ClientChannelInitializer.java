@@ -29,11 +29,11 @@ import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.connection.ClientConnection;
 import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.cvid.CvidRequestHandler;
 import com.sandpolis.core.net.handler.exelet.ExeletHandler;
-import com.sandpolis.core.net.sock.ClientSock;
 import com.sandpolis.core.util.CertUtil;
 
 import io.netty.channel.Channel;
@@ -76,7 +76,7 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 
 	@Override
 	protected void initChannel(Channel ch) throws Exception {
-		ch.attr(ChannelConstant.SOCK).set(new ClientSock(ch));
+		ch.attr(ChannelConstant.SOCK).set(new ClientConnection(ch));
 		ChannelPipeline p = ch.pipeline();
 
 		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.TRAFFIC_INTERVAL.value().orElse(5000)));
@@ -93,7 +93,7 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 		}
 
 		if (Config.TRAFFIC_RAW.value().orElse(false))
-			p.addLast(LOG_RAW.next(p), new LoggingHandler(ClientSock.class));
+			p.addLast(LOG_RAW.next(p), new LoggingHandler(ClientConnection.class));
 
 		p.addLast(FRAME_DECODER.next(p), new ProtobufVarint32FrameDecoder());
 		p.addLast(PROTO_DECODER.next(p), HANDLER_PROTO_DECODER);
@@ -101,7 +101,7 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 		p.addLast(PROTO_ENCODER.next(p), HANDLER_PROTO_ENCODER);
 
 		if (Config.TRAFFIC_DECODED.value().orElse(false))
-			p.addLast(LOG_DECODED.next(p), new LoggingHandler(ClientSock.class));
+			p.addLast(LOG_DECODED.next(p), new LoggingHandler(ClientConnection.class));
 
 		p.addLast(CVID.next(p), HANDLER_CVID);
 

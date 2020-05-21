@@ -21,7 +21,7 @@ import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.util.ProtoUtil;
 
 public class PluginDispatchVector extends DispatchVector {
@@ -37,7 +37,7 @@ public class PluginDispatchVector extends DispatchVector {
 	 * @param pluginId The plugin ID
 	 * @param msgCls   The plugin message class
 	 */
-	public PluginDispatchVector(Sock sock, String pluginId, Class<? extends Message> msgCls) {
+	public PluginDispatchVector(Connection sock, String pluginId, Class<? extends Message> msgCls) {
 		super(sock);
 		this.pluginId = Objects.requireNonNull(pluginId);
 		this.messageType = Objects.requireNonNull(msgCls);

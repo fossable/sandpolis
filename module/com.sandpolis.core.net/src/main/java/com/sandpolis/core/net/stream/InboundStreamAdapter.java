@@ -19,7 +19,7 @@ import java.util.function.Function;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
@@ -29,9 +29,9 @@ public class InboundStreamAdapter<E extends MessageOrBuilder> extends Submission
 
 	private Function<MSG, E> converter;
 	private int id;
-	private Sock sock;
+	private Connection sock;
 
-	public InboundStreamAdapter(int streamID, Sock sock, Function<MSG, E> converter) {
+	public InboundStreamAdapter(int streamID, Connection sock, Function<MSG, E> converter) {
 		this.id = streamID;
 		this.sock = checkNotNull(sock);
 		this.converter = converter;
@@ -39,7 +39,7 @@ public class InboundStreamAdapter<E extends MessageOrBuilder> extends Submission
 		sock.engage(HandlerKey.STREAM, this);
 	}
 
-	public Sock getSock() {
+	public Connection getSock() {
 		return sock;
 	}
 

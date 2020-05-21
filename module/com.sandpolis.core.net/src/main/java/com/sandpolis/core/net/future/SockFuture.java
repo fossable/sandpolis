@@ -12,7 +12,7 @@
 package com.sandpolis.core.net.future;
 
 import com.sandpolis.core.net.ChannelConstant;
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.DefaultPromise;
@@ -20,12 +20,12 @@ import io.netty.util.concurrent.EventExecutor;
 
 /**
  * A {@link SockFuture} is a wrapper for {@link ChannelFuture} which provides an
- * easy way to obtain a configured {@link Sock}.
+ * easy way to obtain a configured {@link Connection}.
  *
  * @author cilki
  * @since 5.0.0
  */
-public class SockFuture extends DefaultPromise<Sock> {
+public class SockFuture extends DefaultPromise<Connection> {
 
 	/**
 	 * Construct a new {@link SockFuture} that is not waiting on a
@@ -38,8 +38,8 @@ public class SockFuture extends DefaultPromise<Sock> {
 	}
 
 	/**
-	 * Construct a new {@link SockFuture} which will create a new {@link Sock} once
-	 * the given connection is established.
+	 * Construct a new {@link SockFuture} which will create a new
+	 * {@link Connection} once the given connection is established.
 	 *
 	 * @param connect A connection future
 	 */
@@ -48,8 +48,8 @@ public class SockFuture extends DefaultPromise<Sock> {
 	}
 
 	/**
-	 * Construct a new {@link SockFuture} which will create a new {@link Sock} once
-	 * the given connection is established.
+	 * Construct a new {@link SockFuture} which will create a new
+	 * {@link Connection} once the given connection is established.
 	 *
 	 * @param executor A custom executor
 	 * @param connect  A connection future

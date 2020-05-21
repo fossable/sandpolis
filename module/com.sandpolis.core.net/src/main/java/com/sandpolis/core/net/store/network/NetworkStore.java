@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.store.network;
 
-import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -35,10 +35,10 @@ import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.LinkAdded;
 import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.LinkRemoved;
 import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.NodeAdded;
 import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.NodeRemoved;
+import com.sandpolis.core.net.connection.ConnectionStore;
+import com.sandpolis.core.net.connection.ConnectionStoreEvents.SockEstablishedEvent;
+import com.sandpolis.core.net.connection.ConnectionStoreEvents.SockLostEvent;
 import com.sandpolis.core.net.future.MessageFuture;
-import com.sandpolis.core.net.store.connection.ConnectionStore;
-import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockEstablishedEvent;
-import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
 import com.sandpolis.core.net.store.network.NetworkStore.NetworkStoreConfig;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.CvidChangedEvent;
 import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerEstablishedEvent;

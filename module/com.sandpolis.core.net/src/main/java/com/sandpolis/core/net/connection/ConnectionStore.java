@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.store.connection;
+package com.sandpolis.core.net.connection;
 
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
@@ -25,24 +25,22 @@ import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.net.Protocol;
+import com.sandpolis.core.net.connection.ConnectionStore.ConnectionStoreConfig;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ClientChannelInitializer;
 import com.sandpolis.core.net.loop.ConnectionLoop;
-import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStoreConfig;
 import com.sandpolis.core.net.store.network.NetworkStore;
 
 import io.netty.bootstrap.Bootstrap;
 
 /**
- * A static store for managing direct connections and connection attempt
- * threads.
+ * A store for managing direct connections in the network.
  *
  * @author cilki
  * @see NetworkStore
  * @since 5.0.0
  */
-public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionStoreConfig> {
+public final class ConnectionStore extends MapStore<Connection, ConnectionStoreConfig> {
 
 	public static final Logger log = LoggerFactory.getLogger(ConnectionStore.class);
 
@@ -56,8 +54,8 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 	}
 
 	/**
-	 * Establish a connection. The resulting {@link Sock} will be added to the store
-	 * automatically.
+	 * Establish a connection. The resulting {@link Connection} will be added to the
+	 * store automatically.
 	 *
 	 * @param bootstrap The connection bootstrap
 	 * @return A {@link SockFuture} which will complete after the connection is
@@ -136,7 +134,7 @@ public final class ConnectionStore extends MapStore<Integer, Sock, ConnectionSto
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Sock.class, Sock::getRemoteCvid);
+			provider = new MemoryMapStoreProvider<>(Connection.class);
 		}
 	}
 
