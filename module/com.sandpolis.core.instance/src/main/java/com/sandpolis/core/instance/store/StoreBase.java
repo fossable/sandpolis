@@ -13,8 +13,8 @@ package com.sandpolis.core.instance.store;
 
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
 
-import java.lang.reflect.Field;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -25,8 +25,16 @@ import com.sandpolis.core.instance.event.Event;
 import com.sandpolis.core.instance.event.ParameterizedEvent;
 
 /**
- * A Store is designed to provide extremely convenient access to a collection of
- * objects.
+ * <p>
+ * At a high level, a Store provides an interface to operations on an entity (or
+ * on a collection of entities) from a convenient application context.
+ * 
+ * <p>
+ * This root class defines a highly general structure applicable to all Stores
+ * and handles operations like lifecycle management and event propegation.
+ * 
+ * @see MapStore
+ * @see ListStore
  */
 public abstract class StoreBase<E extends StoreConfig> {
 
@@ -36,7 +44,7 @@ public abstract class StoreBase<E extends StoreConfig> {
 	 * A bus that is used to deliver events to the users of the store.
 	 */
 	private final EventBus bus = new EventBus((Throwable exception, SubscriberExceptionContext context) -> {
-		log.error("Exception occurred in event handler", exception);
+		log.error("Store event handler exception", exception);
 	});
 
 	protected StoreBase(Logger log) {
@@ -44,7 +52,8 @@ public abstract class StoreBase<E extends StoreConfig> {
 	}
 
 	/**
-	 * Uninitialize and release the resources in the store.
+	 * Uninitialize and release the resources in the store. By default, this method
+	 * does nothing.
 	 *
 	 * @throws Exception
 	 */
@@ -52,7 +61,7 @@ public abstract class StoreBase<E extends StoreConfig> {
 	}
 
 	/**
-	 * Initialize the store.
+	 * Initialize the store. By default, this method does nothing.
 	 *
 	 * @param configurator The configuration block
 	 * @return {@code this}
@@ -70,7 +79,9 @@ public abstract class StoreBase<E extends StoreConfig> {
 	public final void post(Supplier<? extends Event> constructor) {
 		Event event = constructor.get();
 
-		log.debug("Event fired: " + event);
+		if (log.isDebugEnabled())
+			log.debug("Event fired: {}", event);
+
 		bus.post(event);
 	}
 
@@ -82,19 +93,12 @@ public abstract class StoreBase<E extends StoreConfig> {
 	 * @param constructor The event constructor
 	 * @param parameter   The event parameter
 	 */
-	public final <P> void post(Supplier<? extends ParameterizedEvent<P>> constructor, P parameter) {
-		ParameterizedEvent<P> event = constructor.get();
+	public final <P> void post(Function<P, ? extends ParameterizedEvent<P>> constructor, P parameter) {
+		ParameterizedEvent<P> event = constructor.apply(parameter);
 
-		try {
-			// Set the parameter with reflection
-			Field field = event.getClass().getSuperclass().getDeclaredField("object");
-			field.setAccessible(true);
-			field.set(event, parameter);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		if (log.isDebugEnabled())
+			log.debug("Event fired: {}", event);
 
-		log.debug("Event fired: " + event);
 		bus.post(event);
 	}
 
@@ -116,7 +120,7 @@ public abstract class StoreBase<E extends StoreConfig> {
 	 * @param constructor The event constructor
 	 * @param parameter   The event parameter
 	 */
-	public final <P> void postAsync(Supplier<? extends ParameterizedEvent<P>> constructor, P parameter) {
+	public final <P> void postAsync(Function<P, ? extends ParameterizedEvent<P>> constructor, P parameter) {
 		ThreadStore.get("store.event_bus").submit(() -> {
 			post(constructor, parameter);
 		});

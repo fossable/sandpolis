@@ -15,8 +15,8 @@ import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.util.ValidationUtil;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
-import com.sandpolis.viewer.lifegem.view.login.Events.ConnectEndedEvent;
-import com.sandpolis.viewer.lifegem.view.login.Events.ConnectStartedEvent;
+import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectEndedEvent;
+import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectStartedEvent;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;

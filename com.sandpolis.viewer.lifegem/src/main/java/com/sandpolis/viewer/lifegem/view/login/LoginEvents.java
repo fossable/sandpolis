@@ -14,7 +14,7 @@ package com.sandpolis.viewer.lifegem.view.login;
 import com.sandpolis.core.instance.event.Event;
 import com.sandpolis.core.instance.event.ParameterizedEvent;
 
-public final class Events {
+public final class LoginEvents {
 
 	/**
 	 * Indicates that a login attempt has started.
@@ -26,6 +26,13 @@ public final class Events {
 	 * Indicates that a login attempt has ended.
 	 */
 	public static final class LoginEndedEvent extends ParameterizedEvent<String> {
+		public LoginEndedEvent(String parameter) {
+			super(parameter);
+		}
+
+		public LoginEndedEvent() {
+			super(null);
+		}
 	}
 
 	/**
@@ -38,5 +45,12 @@ public final class Events {
 	 * Indicates that a connection attempt has ended.
 	 */
 	public static final class ConnectEndedEvent extends ParameterizedEvent<String> {
+		public ConnectEndedEvent(String parameter) {
+			super(parameter);
+		}
+
+		public ConnectEndedEvent() {
+			super(null);
+		}
 	}
 }

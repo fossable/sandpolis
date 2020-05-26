@@ -9,18 +9,27 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.profile.store;
+package com.sandpolis.core.instance.store.plugin;
 
 import com.sandpolis.core.instance.event.ParameterizedEvent;
 
-public final class Events {
+public final class PluginEvents {
 
-	public static final class ProfileOnlineEvent extends ParameterizedEvent<Profile> {
+	/**
+	 * Indicates that a plugin was just loaded successfully.
+	 */
+	public static final class PluginLoadedEvent extends ParameterizedEvent<Plugin> {
+		public PluginLoadedEvent(Plugin parameter) {
+			super(parameter);
+		}
 	}
 
-	public static final class ProfileOfflineEvent extends ParameterizedEvent<Profile> {
+	public static final class PluginUnloadedEvent extends ParameterizedEvent<Plugin> {
+		public PluginUnloadedEvent(Plugin parameter) {
+			super(parameter);
+		}
 	}
 
-	private Events() {
+	private PluginEvents() {
 	}
 }

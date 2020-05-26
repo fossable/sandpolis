@@ -25,6 +25,8 @@ import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.net.Protocol;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.connection.ConnectionStore.ConnectionStoreConfig;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ClientChannelInitializer;
@@ -108,12 +110,12 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 	}
 
 	@Subscribe
-	private void onSockEstablished(ConnectionStoreEvents.SockEstablishedEvent event) {
+	private void onSockEstablished(SockEstablishedEvent event) {
 		add(event.get());
 	}
 
 	@Subscribe
-	private void onSockLost(ConnectionStoreEvents.SockLostEvent event) {
+	private void onSockLost(SockLostEvent event) {
 		remove(event.get().getRemoteCvid());
 	}
 

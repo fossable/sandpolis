@@ -21,7 +21,7 @@ import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.MsgCvid.RQ_Cvid;
 import com.sandpolis.core.net.MsgCvid.RS_Cvid;
-import com.sandpolis.core.net.store.network.NetworkStoreEvents.CvidChangedEvent;
+import com.sandpolis.core.net.store.network.NetworkEvents.CvidChangedEvent;
 import com.sandpolis.core.util.Platform.Instance;
 import com.sandpolis.core.util.Platform.InstanceFlavor;
 

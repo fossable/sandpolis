@@ -34,6 +34,10 @@ public final class Events {
 				this.cooldown = cooldown;
 			}
 		}
+
+		public AddServerEvent(AddServerEvent.Container parameter) {
+			super(parameter);
+		}
 	}
 
 	/**
@@ -43,6 +47,10 @@ public final class Events {
 		public static final class Container {
 
 		}
+
+		public AddPluginEvent(AddPluginEvent.Container parameter) {
+			super(parameter);
+		}
 	}
 
 	/**
@@ -51,6 +59,10 @@ public final class Events {
 	public static class AddGroupEvent extends ParameterizedEvent<AddGroupEvent.Container> {
 		public static final class Container {
 
+		}
+
+		public AddGroupEvent(AddGroupEvent.Container parameter) {
+			super(parameter);
 		}
 	}
 
@@ -64,18 +76,27 @@ public final class Events {
 	 * Indicates that a generation attempt has completed.
 	 */
 	public static class GenerationCompletedEvent extends ParameterizedEvent<RS_Generate> {
+		public GenerationCompletedEvent(RS_Generate parameter) {
+			super(parameter);
+		}
 	}
 
 	/**
-	 * Indicates that the output location has been changed.
+	 * Indicates that the output location has changed.
 	 */
 	public static class OutputLocationChangedEvent extends ParameterizedEvent<String> {
+		public OutputLocationChangedEvent(String parameter) {
+			super(parameter);
+		}
 	}
 
 	/**
-	 * Indicates that the output format has been changed.
+	 * Indicates that the output format has changed.
 	 */
 	public static class OutputFormatChangedEvent extends ParameterizedEvent<String> {
+		public OutputFormatChangedEvent(String parameter) {
+			super(parameter);
+		}
 	}
 
 }

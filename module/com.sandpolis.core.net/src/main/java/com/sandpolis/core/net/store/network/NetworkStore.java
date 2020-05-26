@@ -36,13 +36,13 @@ import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.LinkRemoved;
 import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.NodeAdded;
 import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.NodeRemoved;
 import com.sandpolis.core.net.connection.ConnectionStore;
-import com.sandpolis.core.net.connection.ConnectionStoreEvents.SockEstablishedEvent;
-import com.sandpolis.core.net.connection.ConnectionStoreEvents.SockLostEvent;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.store.network.NetworkStore.NetworkStoreConfig;
-import com.sandpolis.core.net.store.network.NetworkStoreEvents.CvidChangedEvent;
-import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerEstablishedEvent;
-import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerLostEvent;
+import com.sandpolis.core.net.store.network.NetworkEvents.CvidChangedEvent;
+import com.sandpolis.core.net.store.network.NetworkEvents.ServerEstablishedEvent;
+import com.sandpolis.core.net.store.network.NetworkEvents.ServerLostEvent;
 import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.util.Platform.Instance;
 

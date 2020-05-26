@@ -9,18 +9,30 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.connection;
+package com.sandpolis.core.net.store.network;
 
 import com.sandpolis.core.instance.event.ParameterizedEvent;
 
-public final class ConnectionStoreEvents {
+public final class NetworkEvents {
 
-	public static final class SockLostEvent extends ParameterizedEvent<Connection> {
+	public static final class ServerLostEvent extends ParameterizedEvent<Integer> {
+		public ServerLostEvent(Integer cvid) {
+			super(cvid);
+		}
 	}
 
-	public static final class SockEstablishedEvent extends ParameterizedEvent<Connection> {
+	public static final class ServerEstablishedEvent extends ParameterizedEvent<Integer> {
+		public ServerEstablishedEvent(Integer cvid) {
+			super(cvid);
+		}
 	}
 
-	private ConnectionStoreEvents() {
+	public static final class CvidChangedEvent extends ParameterizedEvent<Integer> {
+		public CvidChangedEvent(Integer cvid) {
+			super(cvid);
+		}
+	}
+
+	private NetworkEvents() {
 	}
 }

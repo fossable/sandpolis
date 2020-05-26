@@ -29,12 +29,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.DocumentBindings;
-import com.sandpolis.core.instance.store.plugin.Events.PluginLoadedEvent;
+import com.sandpolis.core.instance.store.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.connection.ConnectionStoreEvents.SockEstablishedEvent;
-import com.sandpolis.core.net.connection.ConnectionStoreEvents.SockLostEvent;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.util.CvidUtil;

@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.main.graph;
 
-import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 
@@ -21,8 +21,8 @@ import org.slf4j.LoggerFactory;
 import com.fxgraph.graph.Graph;
 import com.fxgraph.graph.Model;
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockEstablishedEvent;
-import com.sandpolis.core.net.store.connection.ConnectionStoreEvents.SockLostEvent;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 
 import javafx.application.Platform;

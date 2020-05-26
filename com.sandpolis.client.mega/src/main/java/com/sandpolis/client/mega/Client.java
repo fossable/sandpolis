@@ -40,8 +40,8 @@ import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.net.init.ClientChannelInitializer;
-import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerEstablishedEvent;
-import com.sandpolis.core.net.store.network.NetworkStoreEvents.ServerLostEvent;
+import com.sandpolis.core.net.store.network.NetworkEvents.ServerEstablishedEvent;
+import com.sandpolis.core.net.store.network.NetworkEvents.ServerLostEvent;
 import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
 import io.netty.channel.nio.NioEventLoopGroup;

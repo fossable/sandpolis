@@ -15,7 +15,6 @@ import java.util.List;
 
 import com.sandpolis.core.instance.event.Event;
 import com.sandpolis.core.instance.event.ParameterizedEvent;
-import com.sandpolis.core.profile.attribute.key.AttributeKey;
 import com.sandpolis.core.profile.store.Profile;
 
 import javafx.scene.layout.Region;
@@ -32,6 +31,9 @@ public final class Events {
 	 * Open the main menu with the given {@link Region}.
 	 */
 	public static class MenuOpenEvent extends ParameterizedEvent<Region> {
+		public MenuOpenEvent(Region parameter) {
+			super(parameter);
+		}
 	}
 
 	/**
@@ -44,30 +46,45 @@ public final class Events {
 	 * Open the host detail.
 	 */
 	public static class HostDetailOpenEvent extends ParameterizedEvent<Profile> {
+		public HostDetailOpenEvent(Profile parameter) {
+			super(parameter);
+		}
 	}
 
 	/**
 	 * Change the headers in the host list.
 	 */
-	public static class HostListHeaderChangeEvent extends ParameterizedEvent<List<AttributeKey<?>>> {
+	public static class HostListHeaderChangeEvent extends ParameterizedEvent<List<?>> {
+		public HostListHeaderChangeEvent(List<?> parameter) {
+			super(parameter);
+		}
 	}
 
 	/**
 	 * Open the auxiliary detail.
 	 */
 	public static class AuxDetailOpenEvent extends ParameterizedEvent<String> {
+		public AuxDetailOpenEvent(String parameter) {
+			super(parameter);
+		}
 	}
 
 	/**
 	 * Close the auxiliary detail.
 	 */
 	public static class AuxDetailCloseEvent extends ParameterizedEvent<String> {
+		public AuxDetailCloseEvent(String parameter) {
+			super(parameter);
+		}
 	}
 
 	/**
 	 * Change the primary view.
 	 */
 	public static class ViewChangeEvent extends ParameterizedEvent<String> {
+		public ViewChangeEvent(String parameter) {
+			super(parameter);
+		}
 	}
 
 }

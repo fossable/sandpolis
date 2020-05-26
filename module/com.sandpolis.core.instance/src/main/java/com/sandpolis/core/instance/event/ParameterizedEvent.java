@@ -19,10 +19,11 @@ package com.sandpolis.core.instance.event;
  */
 public abstract class ParameterizedEvent<E> extends Event {
 
-	/**
-	 * The parameter which will be modified reflectively.
-	 */
-	private E object;
+	private E parameter;
+
+	protected ParameterizedEvent(E parameter) {
+		this.parameter = parameter;
+	}
 
 	/**
 	 * Get the event's parameter.
@@ -30,11 +31,11 @@ public abstract class ParameterizedEvent<E> extends Event {
 	 * @return The event parameter
 	 */
 	public E get() {
-		return object;
+		return parameter;
 	}
 
 	@Override
 	public String toString() {
-		return super.toString() + "(" + object + ")";
+		return super.toString() + "(" + parameter + ")";
 	}
 }

@@ -11,11 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.common.controller;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.google.common.eventbus.EventBus;
@@ -51,8 +51,9 @@ public abstract class AbstractController {
 			if (this.children == null)
 				this.children = new ArrayList<>();
 			Arrays.stream(children).forEach(this.children::add);
-		} else
+		} else {
 			Arrays.stream(children).forEach(bus::register);
+		}
 	}
 
 	/**
@@ -90,31 +91,19 @@ public abstract class AbstractController {
 	/**
 	 * Post the given {@link Event} to the {@link EventBus}.
 	 *
-	 * @param c The event constructor
+	 * @param constructor The event constructor
 	 */
-	protected void post(Supplier<? extends Event> c) {
-		bus.post(c.get());
+	protected void post(Supplier<? extends Event> constructor) {
+		bus.post(constructor.get());
 	}
 
 	/**
 	 * Post the given {@link ParameterizedEvent} to the {@link EventBus}.
 	 *
-	 * @param c         The event constructor
-	 * @param parameter The event parameter
+	 * @param constructor The event constructor
+	 * @param parameter   The event parameter
 	 */
-	protected <E> void post(Supplier<? extends ParameterizedEvent<E>> c, E parameter) {
-		ParameterizedEvent<E> event = c.get();
-
-		try {
-			// Set the parameter with reflection
-			Field field = event.getClass().getSuperclass().getDeclaredField("object");
-			field.setAccessible(true);
-			field.set(event, parameter);
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
-
-		bus.post(event);
+	protected <P> void post(Function<P, ? extends ParameterizedEvent<P>> constructor, P parameter) {
+		bus.post(constructor.apply(parameter));
 	}
-
 }
