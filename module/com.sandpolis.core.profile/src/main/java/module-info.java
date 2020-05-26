@@ -10,8 +10,6 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.core.profile {
-	exports com.sandpolis.core.profile.attribute.key;
-	exports com.sandpolis.core.profile.attribute;
 	exports com.sandpolis.core.profile.cmd;
 	exports com.sandpolis.core.profile.store;
 	exports com.sandpolis.core.profile;

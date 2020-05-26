@@ -17,6 +17,8 @@ plugins {
 	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
+apply plugin: 'com.sandpolis.gradle.codegen'
+
 sourceSets {
 	main {
 		java {
@@ -71,4 +73,9 @@ protobuf {
 	clean {
 		delete generatedFilesBaseDir
 	}
+}
+
+codegen {
+	attributeSpec = file('attribute.json')
+	documentBindings = 'core'
 }

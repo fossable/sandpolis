@@ -1,0 +1,11 @@
+{
+	"name": "Device",
+	"tag": 1,
+	"attributes": [
+		{
+			"name": "url",
+			"tag": 1,
+			"type": "java.lang.String"
+		}
+	]
+}
