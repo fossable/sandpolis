@@ -16,7 +16,7 @@ plugins {
 
 	id 'org.openjfx.javafxplugin' version '0.0.8'
 	id "com.github.breadmoirai.github-release" version "2.2.9"
-	id 'org.javamodularity.moduleplugin' version '1.5.0'
+	id 'org.javamodularity.moduleplugin' version '1.7.0'
 }
 
 javafx {
