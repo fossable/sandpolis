@@ -15,6 +15,9 @@ ENV SANDPOLIS_PATH_LIB              "/app/lib"
 ENV SANDPOLIS_PATH_PLUGIN           "/app/plugin"
 ENV SANDPOLIS_PLUGINS_ENABLED       "true"
 
+# Enable JVM debugging
+#ENV JAVA_TOOL_OPTIONS "-agentlib:jdwp=transport=dt_socket,address=0.0.0.0:7000,server=y,suspend=y"
+
 # Install application
 COPY build/docker/lib/ /app/lib
 
