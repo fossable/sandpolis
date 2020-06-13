@@ -13,18 +13,12 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
-	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
 eclipse {
 	project {
 		name = 'com.sandpolis.core.viewer'
 		comment = 'The viewer library module'
-	}
-	classpath.file {
-		whenMerged {
-			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
-		}
 	}
 }
 

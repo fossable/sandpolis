@@ -17,7 +17,6 @@ plugins {
 	id 'com.sandpolis.gradle.soi'
 	id 'org.openjfx.javafxplugin' version '0.0.8'
 	id 'com.bmuschko.docker-remote-api' version '6.3.0'
-	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
 apply plugin: 'com.sandpolis.gradle.codegen'
@@ -31,11 +30,6 @@ eclipse {
 	project {
 		name = 'com.sandpolis.viewer.lifegem'
 		comment = 'The JavaFX viewer instance'
-	}
-	classpath.file {
-		whenMerged {
-			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
-		}
 	}
 }
 

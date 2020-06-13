@@ -32,8 +32,8 @@ open module com.sandpolis.core.instance {
 	requires java.persistence;
 	requires java.prefs;
 	requires org.slf4j;
-	requires logback.classic;
-	requires logback.core;
+	requires ch.qos.logback.classic;
+	requires ch.qos.logback.core;
 
 	uses com.sandpolis.core.instance.plugin.SandpolisPlugin;
 

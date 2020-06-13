@@ -14,7 +14,6 @@ plugins {
 	id 'eclipse'
 	id 'java-library'
 	id 'com.google.protobuf' version '0.8.11'
-	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
 apply plugin: 'com.sandpolis.gradle.codegen'
@@ -23,11 +22,6 @@ eclipse {
 	project {
 		name = 'com.sandpolis.core.instance'
 		comment = 'The instance library module'
-	}
-	classpath.file {
-		whenMerged {
-			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
-		}
 	}
 }
 
@@ -53,8 +47,8 @@ dependencies {
 	implementation 'com.google.protobuf:protobuf-java:3.11.4'
 
 	// https://github.com/qos-ch/logback
-	implementation 'ch.qos.logback:logback-core:1.2.3'
-	implementation 'ch.qos.logback:logback-classic:1.2.3'
+	implementation 'ch.qos.logback:logback-core:1.3.0-alpha5'
+	implementation 'ch.qos.logback:logback-classic:1.3.0-alpha5'
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:28.2-jre'

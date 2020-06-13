@@ -17,18 +17,12 @@ plugins {
 	id 'com.sandpolis.gradle.soi'
 	id 'com.sandpolis.gradle.plugin'
 	id 'com.google.protobuf' version '0.8.11'
-	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
 eclipse {
 	project {
 		name = 'com.sandpolis.plugin.shell'
 		comment = 'The shell plugin'
-	}
-	classpath.file {
-		whenMerged {
-			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
-		}
 	}
 }
 

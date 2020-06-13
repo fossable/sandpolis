@@ -13,8 +13,6 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
-
-	id 'org.javamodularity.moduleplugin'
 }
 
 apply plugin: 'com.sandpolis.gradle.soi'
@@ -23,11 +21,6 @@ eclipse {
 	project {
 		name = 'com.sandpolis.plugin.desktop:client:mega'
 		comment = "The desktop plugin's Mega client component"
-	}
-	classpath.file {
-		whenMerged {
-			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
-		}
 	}
 }
 

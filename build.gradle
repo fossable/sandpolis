@@ -122,6 +122,12 @@ allprojects {
 			mavenCentral()
 		}
 	}
+
+	plugins.withType(JavaPlugin).configureEach {
+        java {
+            modularity.inferModulePath = true
+        }
+    }
 }
 
 // Apply metadata configuration

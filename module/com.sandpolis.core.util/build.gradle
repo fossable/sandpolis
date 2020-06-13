@@ -14,18 +14,12 @@ plugins {
 	id 'eclipse'
 	id 'java-library'
 	id 'com.google.protobuf' version '0.8.11'
-	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
 eclipse {
 	project {
 		name = 'com.sandpolis.core.util'
 		comment = 'The common utilities library module'
-	}
-	classpath.file {
-		whenMerged {
-			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
-		}
 	}
 }
 
@@ -41,8 +35,6 @@ sourceSets {
 dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
-
-	implementation 'commons-validator:commons-validator:1.6'
 
 	// https://github.com/google/guava
 	implementation 'com.google.guava:guava:28.2-jre'

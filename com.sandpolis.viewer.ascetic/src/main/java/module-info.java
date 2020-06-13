@@ -27,8 +27,8 @@ open module com.sandpolis.viewer.ascetic {
 	requires transitive com.sandpolis.core.util;
 	requires transitive com.sandpolis.core.viewer;
 	requires transitive com.googlecode.lanterna;
-	requires transitive logback.classic;
-	requires transitive logback.core;
+	requires transitive ch.qos.logback.classic;
+	requires transitive ch.qos.logback.core;
 	requires transitive org.slf4j;
 	requires io.netty.transport;
 	requires io.netty.common;

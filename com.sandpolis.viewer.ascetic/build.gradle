@@ -16,18 +16,12 @@ plugins {
 
 	id 'com.sandpolis.gradle.soi'
 	id 'com.bmuschko.docker-remote-api' version '6.3.0'
-	id 'org.javamodularity.moduleplugin' version '1.5.0'
 }
 
 eclipse {
 	project {
 		name = 'com.sandpolis.viewer.ascetic'
 		comment = 'The CLI viewer instance'
-	}
-	classpath.file {
-		whenMerged {
-			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
-		}
 	}
 }
 
@@ -44,8 +38,8 @@ dependencies {
 	api project(':module:com.sandpolis.core.viewer')
 
 	// https://github.com/qos-ch/logback
-	api 'ch.qos.logback:logback-core:1.2.3'
-	api 'ch.qos.logback:logback-classic:1.2.3'
+	api 'ch.qos.logback:logback-core:1.3.0-alpha5'
+	api 'ch.qos.logback:logback-classic:1.3.0-alpha5'
 
 	// https://github.com/mabe02/lanterna
 	api 'com.googlecode.lanterna:lanterna:3.1.0-alpha1'

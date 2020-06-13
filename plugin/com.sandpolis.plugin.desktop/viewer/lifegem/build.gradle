@@ -15,18 +15,12 @@ plugins {
 	id 'java-library'
 
 	id 'com.sandpolis.gradle.soi'
-	id 'org.javamodularity.moduleplugin'
 }
 
 eclipse {
 	project {
 		name = 'com.sandpolis.plugin.desktop:viewer:lifegem'
 		comment = "The desktop plugin's JavaFX component"
-	}
-	classpath.file {
-		whenMerged {
-			entries.findAll { it.kind == 'src' || it.kind == 'lib' }.each { it.entryAttributes['module'] = 'true' }
-		}
 	}
 }
 
