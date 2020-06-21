@@ -13,7 +13,7 @@ package com.sandpolis.viewer.ascetic.view.login;
 
 import static com.googlecode.lanterna.gui2.GridLayout.Alignment.BEGINNING;
 import static com.googlecode.lanterna.gui2.GridLayout.Alignment.CENTER;
-import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.viewer.ascetic.store.window.WindowStore.WindowStore;
 
 import java.util.Collections;

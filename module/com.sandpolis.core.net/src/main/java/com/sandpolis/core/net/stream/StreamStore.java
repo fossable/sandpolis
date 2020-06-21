@@ -26,7 +26,7 @@ import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.net.connection.ConnectionStoreEvents.SockLostEvent;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.stream.StreamStore.StreamStoreConfig;
 
 /**

@@ -18,12 +18,12 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.net.MsgServer.RS_ServerBanner;
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.core.viewer.cmd.ServerCmd;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
-import com.sandpolis.viewer.lifegem.view.login.Events.LoginEndedEvent;
-import com.sandpolis.viewer.lifegem.view.login.Events.LoginStartedEvent;
+import com.sandpolis.viewer.lifegem.view.login.LoginEvents.LoginEndedEvent;
+import com.sandpolis.viewer.lifegem.view.login.LoginEvents.LoginStartedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginController.LoginPhase;
 
 import javafx.animation.KeyFrame;
@@ -138,7 +138,7 @@ public class UserPhaseController extends AbstractController {
 	}
 
 	@Subscribe
-	void setCertificateInfo(Sock sock) {
+	void setCertificateInfo(Connection sock) {
 
 		try {
 			X509Certificate certificate = sock.getRemoteCertificate();
@@ -163,13 +163,13 @@ public class UserPhaseController extends AbstractController {
 	}
 
 	@Subscribe
-	void setSockInfo(Sock sock) {
-		server_ip.setText(sock.getRemoteIP());
+	void setSockInfo(Connection sock) {
+		server_ip.setText(sock.getRemoteAddress());
 		server_uuid.setText(sock.getRemoteUuid());
 	}
 
 	@Subscribe
-	void startPinger(Sock sock) {
+	void startPinger(Connection sock) {
 		if (pinger != null)
 			pinger.cancel();
 

@@ -18,7 +18,7 @@ import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 
-public class DeviceStore extends MapStore<String, Device, StoreConfig> {
+public class DeviceStore extends MapStore<Device, StoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(DeviceStore.class);
 
@@ -30,7 +30,7 @@ public class DeviceStore extends MapStore<String, Device, StoreConfig> {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Device.class, Device::getId);
+			provider = new MemoryMapStoreProvider<>(Device.class);
 		}
 	}
 }

@@ -41,7 +41,7 @@ import javafx.stage.Stage;
  * @author cilki
  * @since 5.0.0
  */
-public final class StageStore extends MapStore<String, Stage, StageStoreConfig> {
+public final class StageStore extends MapStore<Stage, StageStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(StageStore.class);
 
@@ -231,7 +231,7 @@ public final class StageStore extends MapStore<String, Stage, StageStoreConfig> 
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Stage.class, Stage::getTitle);
+			provider = new MemoryMapStoreProvider<>(Stage.class);
 		}
 	}
 

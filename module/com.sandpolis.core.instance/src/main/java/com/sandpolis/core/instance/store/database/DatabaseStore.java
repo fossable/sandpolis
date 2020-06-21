@@ -28,7 +28,7 @@ import com.sandpolis.core.instance.store.database.DatabaseStore.DatabaseStoreCon
  * @author cilki
  * @since 5.0.0
  */
-public final class DatabaseStore extends MapStore<String, Database, DatabaseStoreConfig> {
+public final class DatabaseStore extends MapStore<Database, DatabaseStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(DatabaseStore.class);
 
@@ -70,7 +70,7 @@ public final class DatabaseStore extends MapStore<String, Database, DatabaseStor
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Database.class, Database::getUrl);
+			provider = new MemoryMapStoreProvider<>(Database.class);
 			DatabaseStore.this.main = main;
 		}
 

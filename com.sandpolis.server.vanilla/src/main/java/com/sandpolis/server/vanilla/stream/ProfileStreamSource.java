@@ -17,9 +17,9 @@ import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.net.MsgStream.EV_ProfileStream;
 import com.sandpolis.core.net.connection.Connection;
-import com.sandpolis.core.net.connection.ConnectionStoreEvents.SockLostEvent;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.stream.StreamSource;
-import com.sandpolis.core.profile.store.Events.ProfileOnlineEvent;
+import com.sandpolis.core.profile.store.ProfileEvents.ProfileOnlineEvent;
 import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.core.util.Platform.Instance;
 

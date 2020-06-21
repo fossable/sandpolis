@@ -14,7 +14,6 @@ syntax = "proto3";
 package core.net;
 
 import "com/sandpolis/core/util/platform.proto";
-import "com/sandpolis/core/instance/location.proto";
 
 option java_package = "com.sandpolis.core.net";
 option optimize_for = CODE_SIZE;
@@ -44,5 +43,4 @@ message EV_ProfileStream {
     bool online = 4;
     string ip = 5;
     string hostname = 6;
-    core.instance.Location location = 8;
 }
