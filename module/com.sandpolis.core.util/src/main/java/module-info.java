@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.core.util {
 	exports com.sandpolis.core.util;
+	exports org.apache.commons.validator.routines;
 
 	requires com.google.common;
 	requires java.persistence;
