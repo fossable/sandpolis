@@ -16,9 +16,11 @@ import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.complete;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
+import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.instance.Result.ErrorCode;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.MsgUser.RQ_AddUser;
 import com.sandpolis.core.net.MsgUser.RQ_RemoveUser;
@@ -36,35 +38,22 @@ import com.sandpolis.server.vanilla.store.user.User;
 public final class UserExe extends Exelet {
 
 	@Auth
-	@Permission(permission = 0/* server.user.create */)
-	@Handler(tag = MSG.RQ_ADD_USER_FIELD_NUMBER)
-	public static MessageOrBuilder rq_add_user(RQ_AddUser rq) {
-		var outcome = begin();
-
-		UserStore.add(rq.getConfig());
-		return success(outcome);
-	}
-
-	@Auth
-	@Handler(tag = MSG.RQ_REMOVE_USER_FIELD_NUMBER)
-	public static MessageOrBuilder rq_remove_user(ExeletContext context, RQ_RemoveUser rq) {
+	@Handler(tag = MSG.RQ_USER_OPERATION_FIELD_NUMBER)
+	public static MessageOrBuilder rq_user_operation(ExeletContext context, RQ_UserOperation rq) {
 		if (!checkOwnership(context, rq.getId()))
-			return failure(ACCESS_DENIED);
+			return failure(ErrorCode.ACCESS_DENIED);
 		var outcome = begin();
 
-		// TODO
-		// UserStore.remove(rq.getId());
+		switch (rq.getOperation()) {
+		case USER_CREATE:
+			UserStore.add(rq.getConfig());
+			break;
+		case USER_DELETE:
+			UserStore.remove(rq.getId());
+			break;
+		}
+
 		return success(outcome);
-	}
-
-	@Auth
-	@Handler(tag = MSG.RQ_USER_DELTA_FIELD_NUMBER)
-	public static MessageOrBuilder rq_user_delta(ExeletContext context, RQ_UserDelta rq) {
-		if (!checkOwnership(context, rq.getDelta().getConfig().getId()))
-			return failure(ACCESS_DENIED);
-		var outcome = begin();
-
-		return complete(outcome, UserStore.delta(rq.getId(), rq.getDelta()));
 	}
 
 	private static boolean checkOwnership(ExeletContext context, long userId) {

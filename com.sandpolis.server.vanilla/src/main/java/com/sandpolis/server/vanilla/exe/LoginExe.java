@@ -29,7 +29,6 @@ import com.sandpolis.core.net.MsgLogin.RQ_Login;
 import com.sandpolis.core.net.MsgLogin.RQ_Logout;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.profile.AK_VIEWER;
 import com.sandpolis.core.profile.store.Profile;
 import com.sandpolis.core.util.CryptoUtil;
 import com.sandpolis.core.util.ValidationUtil;
@@ -48,14 +47,14 @@ public final class LoginExe extends Exelet {
 	@Auth
 	@Handler(tag = MSG.RQ_LOGOUT_FIELD_NUMBER)
 	public static void rq_logout(ExeletContext context, RQ_Logout rq) {
-		log.debug("Processing logout request from: {}", context.connector.getRemoteIP());
+		log.debug("Processing logout request from: {}", context.connector.getRemoteAddress());
 		context.connector.close();
 	}
 
 	@Unauth
 	@Handler(tag = MSG.RQ_LOGIN_FIELD_NUMBER)
 	public static MessageOrBuilder rq_login(ExeletContext context, RQ_Login rq) {
-		log.debug("Processing login request from: {}", context.connector.getRemoteIP());
+		log.debug("Processing login request from: {}", context.connector.getRemoteAddress());
 		var outcome = begin();
 
 		// Validate username
@@ -65,14 +64,14 @@ public final class LoginExe extends Exelet {
 			return failure(outcome, INVALID_USERNAME);
 		}
 
-		User user = UserStore.get(username).orElse(null);
+		User user = UserStore.getByUsername(username).orElse(null);
 		if (user == null) {
 			log.debug("The user ({}) does not exist", username);
 			return failure(outcome, ACCESS_DENIED);
 		}
 
 		// Check expiration
-		if (UserStore.isExpired(user)) {
+		if (user.isExpired()) {
 			log.debug("The user ({}) is expired", username);
 			return failure(outcome, ACCESS_DENIED);
 		}
@@ -94,12 +93,11 @@ public final class LoginExe extends Exelet {
 			// Build new profile
 			profile = new Profile(context.connector.getRemoteUuid(), context.connector.getRemoteInstance(),
 					context.connector.getRemoteInstanceFlavor());
-			profile.set(AK_VIEWER.USERNAME, username);
+			profile.instance().viewer().username().set(username);
 			ProfileStore.add(profile);
 		}
 
-		profile.set(AK_VIEWER.LOGIN_IP, context.connector.getRemoteIP());
-		profile.set(AK_VIEWER.LOGIN_TIME, System.currentTimeMillis());
+		profile.instance().viewer().ip().set(context.connector.getRemoteAddress());
 
 		return success(outcome);
 	}

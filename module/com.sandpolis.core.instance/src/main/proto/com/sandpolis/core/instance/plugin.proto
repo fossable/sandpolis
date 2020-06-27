@@ -16,20 +16,17 @@ package core.instance;
 option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
 
-/**
- * Plugin metadata.
- */
-message PluginDescriptor {
+message PluginConfig {
     string id = 1;
-    string coordinate = 12;
-    string name = 2;
-    string version = 3;
-    string description = 4;
-    string trust_authority = 5;
-    bytes icon = 6;
-    bool enabled = 7;
-    int32 component_size_mega = 8;
-    int32 component_size_micro = 9;
-    int32 component_size_lifegem = 10;
-    int32 component_size_ascetic = 11;
+    
+    oneof source {
+        // The plugin binary
+        bytes plugin_binary = 2;
+
+        // The plugin's HTTP location
+        string plugin_url = 3;
+
+        // The plugin's maven central coordinates
+        string plugin_coordinates = 4;
+    }
 }

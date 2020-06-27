@@ -22,16 +22,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Transient;
 
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
@@ -39,8 +33,8 @@ import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.Resources;
 import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.DocumentBindings;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.Plugin.PluginDescriptor;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.util.JarUtil;
 import com.sandpolis.core.util.Platform.Instance;
@@ -52,82 +46,26 @@ import com.sandpolis.core.util.Platform.InstanceFlavor;
  * @author cilki
  * @since 5.0.0
  */
-@Entity
-public final class Plugin {
+public class Plugin extends DocumentBindings.Profile.Instance.Plugin {
 
-	@Id
-	@Column
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private int db_id;
-
-	/**
-	 * The plugin's package identifier.
-	 */
-	@Column(nullable = false, unique = true)
-	private String id;
-
-	/**
-	 * The plugin's Maven central coordinates in G:A:V format.
-	 */
-	@Column(nullable = false, unique = true)
-	private String coordinate;
-
-	/**
-	 * The plugin's user-friendly name.
-	 */
-	@Column(nullable = false)
-	private String name;
-
-	/**
-	 * The plugin's user-friendly description.
-	 */
-	@Column(nullable = true)
-	private String description;
-
-	/**
-	 * Whether the plugin can be loaded.
-	 */
-	@Column(nullable = false)
-	private boolean enabled;
-
-	/**
-	 * The plugin artifact's hash.
-	 */
-	@Column(nullable = false)
-	private byte[] hash;
-
-	/**
-	 * The plugin's certificate.
-	 */
-	@Column(nullable = false, length = 2048)
-	private String certificate;
-
-	/**
-	 * A classloader for the plugin.
-	 */
-	@Transient
 	private ClassLoader classloader;
 
-	/**
-	 * The plugin handle if available.
-	 */
-	@Transient
 	private SandpolisPlugin handle;
 
-	/**
-	 * Whether the plugin is currently loaded.
-	 */
-	@Transient
-	private boolean loaded;
+	public Plugin() {
+		super(null);
+	}
 
-	public Plugin(Path path, boolean enabled) throws IOException {
+	public void install(Path path, boolean enabled) throws IOException {
+		if (hash().isPresent())
+			throw new IllegalStateException();
 
 		var manifest = JarUtil.getManifest(path.toFile());
-		id = manifest.getValue("Plugin-Id");
-		coordinate = manifest.getValue("Plugin-Coordinate");
-		name = manifest.getValue("Plugin-Name");
-		description = manifest.getValue("Description");
-		certificate = manifest.getValue("Plugin-Cert");
+		packageId().set(manifest.getValue("Plugin-Id"));
+		coordinates().set(manifest.getValue("Plugin-Coordinate"));
+		name().set(manifest.getValue("Plugin-Name"));
+		description().set(manifest.getValue("Description"));
+		certificate().set(manifest.getValue("Plugin-Cert"));
 
 		// Install core
 		Path core = getComponent(null, null);
@@ -151,83 +89,43 @@ public final class Plugin {
 			}
 		}
 
-		this.enabled = enabled;
-		this.hash = hash();
-	}
-
-	Plugin() {
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	public byte[] getHash() {
-		return hash;
-	}
-
-	public String getCertificate() {
-		return certificate;
-	}
-
-	public boolean isLoaded() {
-		return loaded;
+		enabled().set(enabled);
+		hash().set(computeHash());
 	}
 
 	public String getVersion() {
-		String[] gav = coordinate.split(":");
+		String[] gav = getCoordinates().split(":");
 		if (gav.length == 3)
 			return gav[2];
 		return null;
-	}
-
-	public String getCoordinate() {
-		return coordinate;
 	}
 
 	public ClassLoader getClassloader() {
 		return classloader;
 	}
 
-	/**
-	 * Build a {@link PluginDescriptor} from the object.
-	 *
-	 * @return A new {@link PluginDescriptor}
-	 */
-	public PluginDescriptor toDescriptor() {
-		var plugin = PluginDescriptor.newBuilder().setId(getId()).setCoordinate(coordinate).setName(getName())
-				.setEnabled(isEnabled());
-
-		if (description != null)
-			plugin.setDescription(getDescription());
-		return plugin.build();
-	}
-
 	public <E> Stream<E> getExtensions(Class<E> extension) {
-		if (handle != null && extension.isAssignableFrom(handle.getClass()))
-			return Stream.of((E) handle);
-		else
-			return Stream.empty();
+		return (handle != null && extension.isAssignableFrom(handle.getClass())) ? Stream.of((E) handle)
+				: Stream.empty();
 	}
 
+	/**
+	 * Recompute the plugin hash and compare it to the saved hash.
+	 * 
+	 * @return Whether the current hash matches the saved hash
+	 * @throws IOException
+	 */
 	public boolean checkHash() throws IOException {
-		return Arrays.equals(hash(), hash);
+		return Arrays.equals(computeHash(), getHash());
 	}
 
+	/**
+	 * Load an installed plugin.
+	 * 
+	 * @throws IOException
+	 */
 	void load() throws IOException {
-		checkState(!loaded);
+		checkState(!isLoaded());
 
 		Path component = getComponent(Core.INSTANCE, Core.FLAVOR);
 
@@ -243,28 +141,29 @@ public final class Plugin {
 		handle = ServiceLoader.load(SandpolisPlugin.class, classloader).stream().filter(prov -> {
 			// Restrict to services in the plugin component
 			return prov.type().getName()
-					.startsWith(String.format("%s.%s.%s", id, Core.INSTANCE.toString().toLowerCase(),
+					.startsWith(String.format("%s.%s.%s", getPackageId(), Core.INSTANCE.toString().toLowerCase(),
 							Core.FLAVOR.toString().toLowerCase()));
 		}).map(ServiceLoader.Provider::get).findFirst().orElse(null);
 
 		if (handle != null)
 			handle.loaded();
-		loaded = true;
+
+		loaded().set(true);
 	}
 
 	void unload() {
-		checkState(loaded);
+		checkState(isLoaded());
 
 		if (handle != null)
 			handle.unloaded();
 
-		loaded = false;
+		loaded().set(false);
 	}
 
 	/**
-	 * Search for all plugin components in the {@code PLUGIN} directory.
+	 * Search for all plugin components in the plugin directory.
 	 *
-	 * @return The component paths
+	 * @return The component paths in a deterministic order
 	 */
 	public Stream<Path> components() {
 		List<Path> components = new ArrayList<>();
@@ -278,23 +177,42 @@ public final class Plugin {
 		return components.stream();
 	}
 
+	/**
+	 * Get a path to the filesystem artifact identified by the given instance type.
+	 * 
+	 * @param instance The instance type
+	 * @param flavor   The instance subtype
+	 * @return The artifact path
+	 */
 	public Path getComponent(Instance instance, InstanceFlavor flavor) {
 		if (instance == null && flavor == null) {
-			return Environment.PLUGIN.path().resolve(getId()).resolve(getVersion()).resolve("core.jar");
+			return Environment.PLUGIN.path().resolve(getPackageId()).resolve(getVersion()).resolve("core.jar");
 		} else {
-			return Environment.PLUGIN.path().resolve(getId()).resolve(getVersion())
+			Objects.requireNonNull(instance);
+			Objects.requireNonNull(flavor);
+
+			return Environment.PLUGIN.path().resolve(getPackageId()).resolve(getVersion())
 					.resolve(instance.toString().toLowerCase()).resolve(flavor.toString().toLowerCase() + ".jar");
 		}
 	}
 
 	/**
-	 * Produce a hash unique to this plugin and version.
+	 * Calculate a hash unique to this plugin and version.
+	 * 
+	 * <p>
+	 * Internally, this hash is composed of the plugin's coordinates and installed
+	 * filesystem artifacts.
 	 *
 	 * @return The plugin hash
 	 * @throws IOException If the plugin's filesystem artifacts could not be read
 	 */
-	private byte[] hash() throws IOException {
-		return ByteSource.concat(components().map(MoreFiles::asByteSource).collect(Collectors.toList()))
+	private byte[] computeHash() throws IOException {
+		return ByteSource.concat(
+				// Get coordinates
+				ByteSource.wrap(coordinates().get().getBytes()),
+				// Get component artifacts
+				ByteSource.concat(components().map(MoreFiles::asByteSource).collect(Collectors.toList())))
+				// Perform hash function
 				.hash(Hashing.sha256()).asBytes();
 	}
 

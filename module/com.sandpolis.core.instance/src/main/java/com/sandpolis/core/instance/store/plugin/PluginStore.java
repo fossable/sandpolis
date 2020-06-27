@@ -21,6 +21,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -35,7 +36,7 @@ import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.storage.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.plugin.Events.PluginLoadedEvent;
+import com.sandpolis.core.instance.store.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.store.plugin.PluginStore.PluginStoreConfig;
 import com.sandpolis.core.util.CertUtil;
 import com.sandpolis.core.util.JarUtil;
@@ -61,7 +62,7 @@ import com.sandpolis.core.util.Platform.InstanceFlavor;
  * @author cilki
  * @since 5.0.0
  */
-public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfig> {
+public final class PluginStore extends MapStore<Plugin, PluginStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(PluginStore.class);
 
@@ -73,6 +74,10 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	 * The default certificate verifier which allows all plugins.
 	 */
 	private static Function<X509Certificate, Boolean> verifier = c -> true;
+
+	public Optional<Plugin> getByPackageId(String packageId) {
+		return stream().filter(plugin -> plugin.getPackageId().equals(packageId)).findAny();
+	}
 
 	/**
 	 * Get a component of a plugin archive.
@@ -157,7 +162,9 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 				// Enabled plugins only
 				.filter(Plugin::isEnabled)
 				// Skip loaded plugins
-				.filter(plugin -> !plugin.isLoaded()).forEach(PluginStore::loadPlugin);
+				.filter(plugin -> !plugin.isLoaded())
+				// Load each plugin
+				.forEach(PluginStore::loadPlugin);
 	}
 
 	/**
@@ -168,10 +175,9 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	public synchronized void installPlugin(Path path) {
 		log.debug("Installing plugin: {}", path.toString());
 
-		// TODO check state
-
 		try {
-			Plugin plugin = new Plugin(path, true);
+			Plugin plugin = new Plugin();
+			plugin.install(path, true);
 			provider.add(plugin);
 		} catch (IOException e) {
 			log.error("Failed to install plugin", e);
@@ -184,7 +190,8 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 	 * @param plugin The plugin to load
 	 */
 	private void loadPlugin(Plugin plugin) {
-		// TODO check state
+		if (plugin.isLoaded())
+			throw new IllegalStateException();
 
 		// Verify hash
 		try {
@@ -237,12 +244,12 @@ public final class PluginStore extends MapStore<String, Plugin, PluginStoreConfi
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Plugin.class, Plugin::getId);
+			provider = new MemoryMapStoreProvider<>(Plugin.class);
 		}
 
 		@Override
 		public void persistent(Database database) {
-			provider = database.getConnection().provider(Plugin.class, "id");
+			provider = database.getConnection().provider(Plugin.class);
 		}
 	}
 

@@ -65,7 +65,7 @@ public final class PluginExe extends Exelet {
 		ParsedCoordinate coordinate = fromCoordinate(rq.getCoordinates());
 		log.debug("Received artifact request: " + coordinate.coordinate);
 
-		PluginStore.get(coordinate.artifactId).ifPresentOrElse(plugin -> {
+		PluginStore.getByPackageId(coordinate.artifactId).ifPresentOrElse(plugin -> {
 			if (!PluginStore.findComponentTypes(plugin).contains(context.connector.getRemoteInstanceFlavor()))
 				context.reply(Outcome.newBuilder().setResult(false));// TODO message
 			else if (rq.getLocation()) {
@@ -116,15 +116,6 @@ public final class PluginExe extends Exelet {
 				context.reply(Outcome.newBuilder().setResult(false));// TODO message
 			}
 		});
-	}
-
-	@Auth
-	@Handler(tag = MSG.RQ_PLUGIN_LIST_FIELD_NUMBER)
-	public static MessageOrBuilder rq_plugin_list(RQ_PluginList rq) {
-		if (!Config.PLUGIN_ENABLED.value().orElse(true))
-			return failure(begin());
-
-		return RS_PluginList.newBuilder().addAllPlugin(() -> PluginStore.getPluginDescriptors().iterator());
 	}
 
 	@Auth

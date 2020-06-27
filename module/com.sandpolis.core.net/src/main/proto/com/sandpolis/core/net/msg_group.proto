@@ -18,43 +18,14 @@ import "com/sandpolis/core/instance/group.proto";
 option java_package = "com.sandpolis.core.net";
 option optimize_for = CODE_SIZE;
 
-/**
- * Request: Create a new group on the server
- */
-message RQ_AddGroup {
+// Request: Attempt a group operation.
+message RQ_GroupOperation {
+    enum GroupOperation {
+        GROUP_CREATE = 0;
+        GROUP_DELETE = 1;
+        GROUP_UPDATE = 2;
+    }
+    GroupOperation operation = 1;
 
-    // The group configuration
-    core.instance.ProtoGroup config = 1;
-}
-
-/**
- * Request: Delete a group on the server
- */
-message RQ_RemoveGroup {
-
-    // The ID of the group to remove
-    string id = 1;
-}
-
-/**
- * Request: A list of groups visible to the user
- */
-message RQ_ListGroups {}
-
-/**
- * Response: A list of groups visible to the user
- */
-message RS_ListGroups {
-    repeated core.instance.ProtoGroup group = 1;
-}
-
-/**
- * Request: Change the configuration of a group
- */
-message RQ_GroupDelta {
-
-    // The ID of the group to modify
-    string id = 1;
-
-    core.instance.ProtoGroup delta = 2;
+    repeated core.instance.GroupConfig group_config = 2;
 }

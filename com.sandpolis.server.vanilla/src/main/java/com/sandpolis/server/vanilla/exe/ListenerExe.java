@@ -16,9 +16,11 @@ import static com.sandpolis.core.instance.util.ProtoUtil.begin;
 import static com.sandpolis.core.instance.util.ProtoUtil.complete;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
+import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.instance.Result.ErrorCode;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.MsgListener.RQ_AddListener;
 import com.sandpolis.core.net.MsgListener.RQ_ChangeListener;
@@ -37,44 +39,22 @@ import com.sandpolis.server.vanilla.store.listener.Listener;
 public final class ListenerExe extends Exelet {
 
 	@Auth
-	@Permission(permission = 0/* server.listener.create */)
-	@Handler(tag = MSG.RQ_ADD_LISTENER_FIELD_NUMBER)
-	public static MessageOrBuilder rq_add_listener(RQ_AddListener rq) {
+	@Handler(tag = MSG.RQ_LISTENER_OPERATION_FIELD_NUMBER)
+	public static MessageOrBuilder rq_listener_operation(ExeletContext context, RQ_ListenerOperation rq) {
+		if (!checkOwnership(context, rq.getId()))
+			return failure(ErrorCode.ACCESS_DENIED);
 		var outcome = begin();
 
-		ListenerStore.add(rq.getConfig());
+		switch (rq.getOperation()) {
+		case LISTENER_CREATE:
+			ListenerStore.add(rq.getConfig());
+			break;
+		case LISTENER_DELETE:
+			ListenerStore.remove(rq.getId());
+			break;
+		}
+
 		return success(outcome);
-	}
-
-	@Auth
-	@Handler(tag = MSG.RQ_REMOVE_LISTENER_FIELD_NUMBER)
-	public static MessageOrBuilder rq_remove_listener(ExeletContext context, RQ_RemoveListener rq) {
-		if (!checkOwnership(context, rq.getId()))
-			return failure(ACCESS_DENIED);
-		var outcome = begin();
-
-		ListenerStore.remove(rq.getId());
-		return success(outcome);
-	}
-
-	@Auth
-	@Handler(tag = MSG.RQ_LISTENER_DELTA_FIELD_NUMBER)
-	public static MessageOrBuilder rq_listener_delta(ExeletContext context, RQ_ListenerDelta rq) {
-		if (!checkOwnership(context, rq.getId()))
-			return failure(ACCESS_DENIED);
-		var outcome = begin();
-
-		return complete(outcome, ListenerStore.delta(rq.getId(), rq.getDelta()));
-	}
-
-	@Auth
-	@Handler(tag = MSG.RQ_CHANGE_LISTENER_FIELD_NUMBER)
-	public static MessageOrBuilder rq_change_listener(ExeletContext context, RQ_ChangeListener rq) {
-		if (!checkOwnership(context, rq.getId()))
-			return failure(ACCESS_DENIED);
-		var outcome = begin();
-
-		return complete(outcome, ListenerStore.change(rq.getId(), rq.getState()));
 	}
 
 	private static boolean checkOwnership(ExeletContext context, long listenerId) {

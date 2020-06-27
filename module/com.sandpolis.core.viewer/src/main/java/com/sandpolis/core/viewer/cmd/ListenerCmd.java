@@ -13,10 +13,8 @@ package com.sandpolis.core.viewer.cmd;
 
 import com.sandpolis.core.instance.Listener.ListenerConfig;
 import com.sandpolis.core.instance.Result.Outcome;
-import com.sandpolis.core.net.MsgListener.RQ_AddListener;
-import com.sandpolis.core.net.MsgListener.RQ_ChangeListener;
-import com.sandpolis.core.net.MsgListener.RQ_ChangeListener.ListenerState;
-import com.sandpolis.core.net.MsgListener.RQ_RemoveListener;
+import com.sandpolis.core.net.MsgListener.RQ_ListenerOperation;
+import com.sandpolis.core.net.MsgListener.RQ_ListenerOperation.ListenerOperation;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
 
@@ -35,7 +33,8 @@ public final class ListenerCmd extends Cmdlet<ListenerCmd> {
 	 * @return A future that will receive the outcome of this action
 	 */
 	public ResponseFuture<Outcome> addListener(ListenerConfig config) {
-		return request(RQ_AddListener.newBuilder().setConfig(config));
+		return request(RQ_ListenerOperation.newBuilder().setOperation(ListenerOperation.LISTENER_CREATE)
+				.addListenerConfig(config));
 
 	}
 
@@ -46,20 +45,8 @@ public final class ListenerCmd extends Cmdlet<ListenerCmd> {
 	 * @return A future that will receive the outcome of this action
 	 */
 	public ResponseFuture<Outcome> removeListener(int id) {
-		return request(RQ_RemoveListener.newBuilder().setId(id));
-
-	}
-
-	/**
-	 * Change the state of a listener on the server.
-	 *
-	 * @param id    The listener
-	 * @param state The new state
-	 * @return A future that will receive the outcome of this action
-	 */
-	public ResponseFuture<Outcome> changeListenerState(ListenerState state, long id) {
-		return request(RQ_ChangeListener.newBuilder().setId(id).setState(state));
-
+		return request(RQ_ListenerOperation.newBuilder().setOperation(ListenerOperation.LISTENER_DELETE)
+				.addListenerConfig(ListenerConfig.newBuilder().setId(id)));
 	}
 
 	/**

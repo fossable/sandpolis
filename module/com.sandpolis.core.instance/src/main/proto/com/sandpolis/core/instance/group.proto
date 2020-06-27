@@ -18,10 +18,8 @@ import "com/sandpolis/core/instance/auth.proto";
 option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
 
-/**
- * The Group container.
- */
-message ProtoGroup {
+// The configuration for a group.
+message GroupConfig {
 
     // The primary ID
     optional string id = 101;
@@ -40,10 +38,4 @@ message ProtoGroup {
 
     // The key mechanisms that belong to the group
     repeated KeyContainer key_mechanism = 106;
-
-    // The creation timestamp
-    optional int64 ctime = 1;
-
-    // The modification timestamp
-    optional int64 mtime = 2;
 }

@@ -18,17 +18,16 @@ import "com/sandpolis/core/instance/plugin.proto";
 option java_package = "com.sandpolis.core.net";
 option optimize_for = CODE_SIZE;
 
-/**
- * A request for the instance's plugin list.
- */
-message RQ_PluginList {
-}
+// Request: Attempt a plugin operation.
+message RQ_PluginOperation {
+    enum PluginOperation {
+        PLUGIN_CREATE = 0;
+        PLUGIN_DELETE = 1;
+        PLUGIN_UPDATE = 2;
+    }
+    PluginOperation operation = 1;
 
-/**
- * A response to a plugin list request.
- */
-message RS_PluginList {
-    repeated core.instance.PluginDescriptor plugin = 1;
+    repeated core.instance.PluginConfig plugin_config = 2;
 }
 
 /**

@@ -85,17 +85,10 @@ message MSG {
         RS_Generate                     rs_generate                     = 1013;
 
         // msg_group
-        RQ_AddGroup                     rq_add_group                    =   14;
-        RQ_RemoveGroup                  rq_remove_group                 =   15;
-        RQ_ListGroups                   rq_list_groups                  =   16;
-        RS_ListGroups                   rs_list_groups                  = 1016;
-        RQ_GroupDelta                   rq_group_delta                  =   17;
+        RQ_GroupOperation               rq_group_operation              =   14;
 
         // msg_listener
-        RQ_AddListener                  rq_add_listener                 =   18;
-        RQ_RemoveListener               rq_remove_listener              =   19;
-        RQ_ListenerDelta                rq_listener_delta               =   20;
-        RQ_ChangeListener               rq_change_listener              =   21;
+        RQ_ListenerOperation            rq_listener_operation           =   18;
 
         // msg_login
         RQ_Login                        rq_login                        =   22;
@@ -116,8 +109,7 @@ message MSG {
         RQ_ArtifactDownload             rq_artifact_download            =   28;
         RS_ArtifactDownload             rs_artifact_download            = 1028;
         RQ_PluginInstall                rq_plugin_install               =   29;
-        RQ_PluginList                   rq_plugin_list                  =   30;
-        RS_PluginList                   rs_plugin_list                  = 1030;
+        RQ_PluginOperation              rq_plugin_operation             =   30;
 
         // msg_server
         RQ_ServerBanner                 rq_server_banner                =   31;
@@ -129,9 +121,7 @@ message MSG {
         EV_ProfileStream                ev_profile_stream               =   40;
 
         // msg_user
-        RQ_AddUser                      rq_add_user                     =   34;
-        RQ_RemoveUser                   rq_remove_user                  =   35;
-        RQ_UserDelta                    rq_user_delta                   =   36;
+        RQ_UserOperation                rq_user_operation               =   34;
 
         // msg_client
         RQ_ClientMetadata               rq_client_metadata              =   37;

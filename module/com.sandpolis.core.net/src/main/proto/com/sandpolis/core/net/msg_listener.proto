@@ -18,49 +18,14 @@ import "com/sandpolis/core/instance/listener.proto";
 option java_package = "com.sandpolis.core.net";
 option optimize_for = CODE_SIZE;
 
-/**
- * Request to create a new listener.
- */
-message RQ_AddListener {
-    core.instance.ProtoListener config = 1;
-}
-
-/**
- * Request to remove a listener.
- */
-message RQ_RemoveListener {
-
-    // The ID of the listener to remove
-    int64 id = 1;
-}
-
-/**
- * Request to change a listener's config or stats.
- */
-message RQ_ListenerDelta {
-
-    // The ID of the listener to modify
-    int64 id = 1;
-
-    core.instance.ProtoListener delta = 2;
-}
-
-/**
- * Request to change a listener's state
- */
-message RQ_ChangeListener {
-    enum ListenerState {
-
-        // A listener that is bound to a port and is accepting connections
-        LISTENING = 0;
-
-        // A listener that is unbound and not accepting connections
-        INACTIVE = 1;
+// Request: Attempt a listener operation.
+message RQ_ListenerOperation {
+    enum ListenerOperation {
+        LISTENER_CREATE = 0;
+        LISTENER_DELETE = 1;
+        LISTENER_UPDATE = 2;
     }
+    ListenerOperation operation = 1;
 
-    // The ID of the listener to modify
-    int64 id = 1;
-
-    // The new state
-    ListenerState state = 2;
+    repeated core.instance.ListenerConfig listener_config = 2;
 }

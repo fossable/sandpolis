@@ -18,29 +18,14 @@ import "com/sandpolis/core/instance/user.proto";
 option java_package = "com.sandpolis.core.net";
 option optimize_for = CODE_SIZE;
 
-/**
- * Request to add a new user.
- */
-message RQ_AddUser {
-    core.instance.ProtoUser config = 1;
-}
+// Request: Attempt a user operation.
+message RQ_UserOperation {
+    enum UserOperation {
+        USER_CREATE = 0;
+        USER_DELETE = 1;
+        USER_UPDATE = 2;
+    }
+    UserOperation operation = 1;
 
-/**
- * Request to remove a user.
- */
-message RQ_RemoveUser {
-
-    // The ID of the user to remove
-    int64 id = 1;
-}
-
-/**
- * Request to change a user's config or stats.
- */
-message RQ_UserDelta {
-
-    // The ID of the user to modify
-    int64 id = 1;
-
-    core.instance.ProtoUser delta = 2;
+    repeated core.instance.UserConfig user_config = 2;
 }

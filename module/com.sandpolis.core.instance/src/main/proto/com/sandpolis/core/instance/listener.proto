@@ -16,13 +16,11 @@ package core.instance;
 option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
 
-/**
- * The Listener container.
- */
-message ProtoListener {
+// The configuration for a listener
+message ListenerConfig {
 
     // The listener ID
-    optional int64 id = 101;
+    optional int32 id = 101;
 
     // An optional name for the listener
     optional string name = 102;
@@ -36,9 +34,6 @@ message ProtoListener {
     // The username of the user that owns the listener
     optional string owner = 105;
 
-    // Indicates whether automatic port forwarding with UPnP will be attempted
-    optional bool upnp = 106;
-
     // Indicates whether client instances can be accepted by the listener
     optional bool client_acceptor = 107;
 
@@ -48,15 +43,12 @@ message ProtoListener {
     // Indicates whether the listener can be started
     optional bool enabled = 109;
 
+    // Indicates whether the listener should bind to the network interface
+    optional bool bind = 112;
+
     // Certificate
     optional bytes cert = 110;
 
     // Private key for the certificate
     optional bytes key = 111;
-
-    // The listener's start timestamp
-    optional int64 listen_timestamp = 1;
-
-    // The number of currently active connections spawned from the listener
-    optional int32 active_connections = 2;
 }

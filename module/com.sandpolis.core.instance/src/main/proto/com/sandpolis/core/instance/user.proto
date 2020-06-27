@@ -16,13 +16,11 @@ package core.instance;
 option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
 
-/**
- * The User container.
- */
-message ProtoUser {
+// The configuration for a user
+message UserConfig {
 
-    // The primary ID
-    optional int64 id = 100;
+	// The user ID
+	optional int32 id = 101;
 
     // The username
     optional string username = 102;
@@ -35,7 +33,4 @@ message ProtoUser {
 
     // The expiration timestamp
     optional int64 expiration = 105;
-
-    // The creation timestamp
-    optional int64 ctime = 1;
 }

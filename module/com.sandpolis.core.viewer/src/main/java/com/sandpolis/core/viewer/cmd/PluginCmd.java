@@ -21,12 +21,9 @@ import java.nio.file.Path;
 
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.net.MsgPlugin.RQ_ArtifactDownload;
-import com.sandpolis.core.net.MsgPlugin.RQ_PluginList;
 import com.sandpolis.core.net.MsgPlugin.RS_ArtifactDownload;
-import com.sandpolis.core.net.MsgPlugin.RS_PluginList;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.command.CommandFuture;
-import com.sandpolis.core.net.future.ResponseFuture;
 import com.sandpolis.core.soi.SoiUtil;
 import com.sandpolis.core.util.ArtifactUtil;
 import com.sandpolis.core.util.NetUtil;
@@ -101,15 +98,6 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 		});
 
 		return session;
-	}
-
-	/**
-	 * List all installed plugins.
-	 *
-	 * @return A future that will receive the outcome of this action
-	 */
-	public ResponseFuture<RS_PluginList> enumerate() {
-		return request(RQ_PluginList.newBuilder());
 	}
 
 	/**

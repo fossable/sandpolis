@@ -20,10 +20,10 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
 
-import com.sandpolis.core.instance.Group.ProtoGroup;
+import com.sandpolis.core.instance.Group.GroupConfig;
 import com.sandpolis.core.instance.Result.Outcome;
-import com.sandpolis.core.net.MsgGroup.RQ_AddGroup;
-import com.sandpolis.core.net.MsgGroup.RQ_RemoveGroup;
+import com.sandpolis.core.net.MsgGroup.RQ_GroupOperation;
+import com.sandpolis.core.net.MsgGroup.RQ_GroupOperation.GroupOperation;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.net.future.ResponseFuture;
 
@@ -36,11 +36,13 @@ import com.sandpolis.core.net.future.ResponseFuture;
 public final class GroupCmd extends Cmdlet<GroupCmd> {
 
 	public ResponseFuture<Outcome> create(String name) {
-		return request(RQ_AddGroup.newBuilder().setConfig(ProtoGroup.newBuilder().setName(name)));
+		return request(RQ_GroupOperation.newBuilder().setOperation(GroupOperation.GROUP_CREATE)
+				.addGroupConfig(GroupConfig.newBuilder().setName(name)));
 	}
 
 	public ResponseFuture<Outcome> remove(String id) {
-		return request(RQ_RemoveGroup.newBuilder().setId(id));
+		return request(RQ_GroupOperation.newBuilder().setOperation(GroupOperation.GROUP_DELETE)
+				.addGroupConfig(GroupConfig.newBuilder().setId(id)));
 	}
 
 	public static ResponseFuture<Outcome> exportToFile(File group, String groupId, String password) throws Exception {
@@ -62,7 +64,7 @@ public final class GroupCmd extends Cmdlet<GroupCmd> {
 		cipher.init(Cipher.DECRYPT_MODE, keyGen.generateKey());
 
 		try (InputStream in = new CipherInputStream(new FileInputStream(group), cipher)) {
-			ProtoGroup container = ProtoGroup.parseDelimitedFrom(in);
+			GroupConfig container = GroupConfig.parseDelimitedFrom(in);
 		}
 
 		// TODO

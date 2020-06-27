@@ -12,7 +12,6 @@
 package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.instance.util.ProtoUtil.begin;
-import static com.sandpolis.core.instance.util.ProtoUtil.complete;
 import static com.sandpolis.core.instance.util.ProtoUtil.failure;
 import static com.sandpolis.core.instance.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
@@ -27,7 +26,6 @@ import com.sandpolis.core.net.MsgGroup.RQ_RemoveGroup;
 import com.sandpolis.core.net.MsgGroup.RS_ListGroups;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.server.vanilla.store.group.Group;
 
 /**
  * Group message handlers.
@@ -38,45 +36,22 @@ import com.sandpolis.server.vanilla.store.group.Group;
 public final class GroupExe extends Exelet {
 
 	@Auth
-	@Permission(permission = 0/* server.group.create */)
-	@Handler(tag = MSG.RQ_ADD_GROUP_FIELD_NUMBER)
-	public static MessageOrBuilder rq_add_group(RQ_AddGroup rq) {
-		var outcome = begin();
-
-		GroupStore.add(rq.getConfig());
-		return success(outcome);
-	}
-
-	@Auth
-	@Handler(tag = MSG.RQ_REMOVE_GROUP_FIELD_NUMBER)
-	public static MessageOrBuilder rq_remove_group(ExeletContext context, RQ_RemoveGroup rq) {
+	@Handler(tag = MSG.RQ_GROUP_OPERATION_FIELD_NUMBER)
+	public static MessageOrBuilder rq_group_operation(ExeletContext context, RQ_GroupOperation rq) {
 		if (!checkOwnership(context, rq.getId()))
 			return failure(ErrorCode.ACCESS_DENIED);
 		var outcome = begin();
 
-		GroupStore.remove(rq.getId());
+		switch (rq.getOperation()) {
+		case GROUP_CREATE:
+			GroupStore.add(rq.getConfig());
+			break;
+		case GROUP_DELETE:
+			GroupStore.remove(rq.getId());
+			break;
+		}
+
 		return success(outcome);
-	}
-
-	@Auth
-	@Permission(permission = 0/* server.group.view */)
-	@Handler(tag = MSG.RQ_LIST_GROUPS_FIELD_NUMBER)
-	public static MessageOrBuilder rq_list_groups(RQ_ListGroups rq) {
-		var rs = RS_ListGroups.newBuilder();
-
-		// TODO get correct user
-		GroupStore.getMembership(null).stream().map(Group::serialize).forEach(rs::addGroup);
-		return rs;
-	}
-
-	@Auth
-	@Handler(tag = MSG.RQ_GROUP_DELTA_FIELD_NUMBER)
-	public static MessageOrBuilder rq_group_delta(ExeletContext context, RQ_GroupDelta rq) {
-		if (!checkOwnership(context, rq.getDelta().getId()))
-			return failure(ErrorCode.ACCESS_DENIED);
-		var outcome = begin();
-
-		return complete(outcome, GroupStore.delta(rq.getId(), rq.getDelta()));
 	}
 
 	private static boolean checkOwnership(ExeletContext context, String groupId) {
