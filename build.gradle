@@ -198,11 +198,16 @@ configure(subprojects.findAll {publishProjects.contains(it.name)}) {
 					artifactId = sub.archivesBaseName
 					version = sub.version
 
-					from sub.components.java
+					if (it.name.startsWith('com.sandpolis.plugin')) {
+						artifact pluginArchive
+					} else {
+						from sub.components.java
+					}
+
 					pom {
 						name = sub.name
 						description = sub.eclipse.project.comment
-						url = 'https://github.com/Subterranean-Security/Sandpolis'
+						url = 'https://github.com/sandpolis/sandpolis'
 						licenses {
 							license {
 								name = 'Mozilla Public License, Version 2.0'
@@ -217,9 +222,9 @@ configure(subprojects.findAll {publishProjects.contains(it.name)}) {
 							}
 						}
 						scm {
-							url = 'https://github.com/Subterranean-Security/Sandpolis'
-							connection = 'scm:git:git://github.com/Subterranean-Security/Sandpolis.git'
-							developerConnection = 'scm:git:ssh://git@github.com/Subterranean-Security/Sandpolis.git'
+							url = 'https://github.com/sandpolis/sandpolis'
+							connection = 'scm:git:git://github.com/sandpolis/sandpolis.git'
+							developerConnection = 'scm:git:ssh://git@github.com/sandpolis/sandpolis.git'
 						}
 					}
 				}

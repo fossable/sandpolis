@@ -39,12 +39,6 @@ dependencies {
 	api project(':module:com.sandpolis.core.storage.hibernate')
 	api project(':module:com.sandpolis.core.util')
 
-	// Core plugins
-	api project(':plugin:com.sandpolis.plugin.desktop')
-	api project(':plugin:com.sandpolis.plugin.shell')
-	api project(':plugin:com.sandpolis.plugin.sysinfo')
-	api project(':plugin:com.sandpolis.plugin.filesys')
-
 	// https://github.com/FasterXML/jackson-databind
 	api 'com.fasterxml.jackson.core:jackson-databind:2.10.1'
 

@@ -22,9 +22,19 @@ eclipse {
 	}
 }
 
-repositories {
-	mavenCentral()
+allprojects {
+
+	repositories {
+		mavenCentral()
+	}
+
+	plugins.withType(JavaPlugin).configureEach {
+        java {
+            modularity.inferModulePath = true
+        }
+    }
 }
+
 dependencies {
 	implementation gradleApi()
 

@@ -30,7 +30,7 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':module:com.sandpolis.core.net')
 	implementation project(':module:com.sandpolis.core.util')
-	implementation project(':plugin:com.sandpolis.plugin.shell')
+	compileOnly project(':plugin:com.sandpolis.plugin.shell')
 
 	// https://github.com/protocolbuffers/protobuf
 	implementation 'com.google.protobuf:protobuf-java:3.11.4'

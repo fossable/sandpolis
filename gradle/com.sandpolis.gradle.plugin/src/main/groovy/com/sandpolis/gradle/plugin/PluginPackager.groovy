@@ -28,38 +28,38 @@ public class PluginPackager implements Plugin<Project> {
 		def cert = root.file(root.name + ".cert").text.replaceAll("\\R", "").replace("-----BEGIN CERTIFICATE-----", "").replace("-----END CERTIFICATE-----", "")
 		def extension = root.extensions.create('sandpolis_plugin', ConfigExtension)
 
-		// Create jar task
+		// Create a jar task for the plugin archive
 		def pluginArchive = root.tasks.create('pluginArchive', Jar.class)
-		pluginArchive.from(root.sourceSets.main.output)
-		pluginArchive.archiveBaseName = 'core'
-		pluginArchive.archiveVersion = ''
 
-		root.tasks.getByName('jar').dependsOn(pluginArchive)
+		// Rename the original jar task
+		root.tasks.getByName('jar').archiveBaseName = 'core'
+		root.tasks.getByName('jar').archiveVersion = ''
+		pluginArchive.dependsOn(root.tasks.getByName('jar'))
 
+		// Add components to the plugin archive
 		root.subprojects {
 			afterEvaluate {
 				if (tasks.findByPath('jar') != null) {
+
 					// Clear version identifier
 					tasks.getByName('jar').archiveVersion = ''
 
 					// Setup task dependency
-					root.tasks.getByName('jar').dependsOn(tasks.getByName('jar'))
+					pluginArchive.dependsOn(tasks.getByName('jar'))
 
-					// Add artifact to root project's jar task
-					root.tasks.getByName('jar').from(tasks.getByName('jar').archivePath, {into parent.name})
+					// Add artifact to the plugin archive
+					pluginArchive.from(tasks.getByName('jar').archivePath, { into parent.name })
 				}
 			}
 		}
 
 		root.afterEvaluate {
 
-			root.tasks.getByName('jar').from(root.tasks.getByName('pluginArchive').archivePath)
-			root.tasks.getByName('jar').exclude {
-				!it.path.endsWith('.jar')
-			}
+			// Add core component
+			pluginArchive.from(root.tasks.getByName('jar').archivePath)
 
-			// Setup manifest
-			root.tasks.getByName('jar').manifest {
+			// Setup plugin manifest
+			pluginArchive.manifest {
 				attributes(
 					'Plugin-Id': extension.id,
 					'Plugin-Coordinate': extension.coordinate + ':' + root.version,
