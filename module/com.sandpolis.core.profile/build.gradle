@@ -44,7 +44,7 @@ dependencies {
 	implementation 'com.google.protobuf:protobuf-java:3.11.4'
 
 	// https://github.com/google/guava
-	implementation 'com.google.guava:guava:28.2-jre'
+	implementation 'com.google.guava:guava:29.0-jre'
 
 	implementation 'javax.persistence:javax.persistence-api:2.2'
 
