@@ -19,8 +19,8 @@ import java.util.LinkedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.sand5.ReciprocalKeyPair;
 import com.sandpolis.core.util.CryptoUtil;
-import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -124,12 +124,12 @@ public class Sand5Handler extends SimpleChannelInboundHandler<ByteBuf> {
 		case VERIFY_LOCAL:
 			byte[] nonce = new byte[msg.readableBytes()];
 			msg.readBytes(nonce);
-			ctx.writeAndFlush(Unpooled.wrappedBuffer(CryptoUtil.SAND5.sign(key, nonce)));
+			ctx.writeAndFlush(Unpooled.wrappedBuffer(key.sign(nonce)));
 			break;
 		case VERIFY_REMOTE:
 			byte[] signed = new byte[msg.readableBytes()];
 			msg.readBytes(signed);
-			remoteVerified = CryptoUtil.SAND5.check(key, challenge, signed);
+			remoteVerified = key.check(challenge, signed);
 			break;
 		default:
 			throw new IllegalStateException();

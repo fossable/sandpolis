@@ -20,14 +20,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.security.KeyPair;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.io.BaseEncoding;
-import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
 class CryptoUtilTest {
 
@@ -78,21 +76,4 @@ class CryptoUtilTest {
 
 		assertTrue(CryptoUtil.PBKDF2.check("goodpass", CryptoUtil.PBKDF2.hash("goodpass")));
 	}
-
-	@Test
-	@DisplayName("Check SAND5 verification")
-	void sand5_1() {
-		KeyPair pair1 = CryptoUtil.SAND5.generate();
-		KeyPair pair2 = CryptoUtil.SAND5.generate();
-		byte[] nonce = CryptoUtil.SAND5.getNonce();
-
-		ReciprocalKeyPair server = new ReciprocalKeyPair(pair1.getPrivate().getEncoded(),
-				pair2.getPublic().getEncoded());
-		ReciprocalKeyPair client = new ReciprocalKeyPair(pair2.getPrivate().getEncoded(),
-				pair1.getPublic().getEncoded());
-
-		byte[] signature = CryptoUtil.SAND5.sign(server, nonce);
-		assertTrue(CryptoUtil.SAND5.check(client, nonce, signature));
-	}
-
 }

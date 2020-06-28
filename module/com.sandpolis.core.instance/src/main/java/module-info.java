@@ -15,6 +15,7 @@ open module com.sandpolis.core.instance {
 	exports com.sandpolis.core.instance.idle;
 	exports com.sandpolis.core.instance.logging;
 	exports com.sandpolis.core.instance.plugin;
+	exports com.sandpolis.core.instance.sand5;
 	exports com.sandpolis.core.instance.storage.database;
 	exports com.sandpolis.core.instance.storage;
 	exports com.sandpolis.core.instance.store.database;
