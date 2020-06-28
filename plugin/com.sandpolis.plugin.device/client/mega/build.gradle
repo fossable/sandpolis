@@ -32,9 +32,6 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.net')
 	compileOnly project(':plugin:com.sandpolis.plugin.device')
 
-	// https://github.com/protocolbuffers/protobuf
-	implementation 'com.google.protobuf:protobuf-java:3.11.4'
-
 	// http://www.snmp4j.org
 	implementation 'org.snmp4j:snmp4j:3.4.0'
 }

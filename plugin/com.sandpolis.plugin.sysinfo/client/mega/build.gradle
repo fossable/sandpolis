@@ -30,11 +30,7 @@ dependencies {
 
 	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':module:com.sandpolis.core.net')
-	implementation project(':module:com.sandpolis.core.profile')
 	compileOnly project(':plugin:com.sandpolis.plugin.sysinfo')
-
-	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.30'
 
 	// https://github.com/oshi/oshi
 	implementation 'com.github.oshi:oshi-core:4.0.0'

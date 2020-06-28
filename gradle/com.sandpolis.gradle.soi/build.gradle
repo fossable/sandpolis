@@ -39,6 +39,4 @@ dependencies {
 	implementation gradleApi()
 
 	implementation project(':module:com.sandpolis.core.soi')
-
-	implementation 'com.google.guava:guava:28.1-jre'
 }

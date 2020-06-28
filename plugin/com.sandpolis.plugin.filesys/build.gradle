@@ -43,15 +43,6 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':module:com.sandpolis.core.net')
 	implementation project(':module:com.sandpolis.core.util')
-
-	// https://github.com/protocolbuffers/protobuf
-	implementation 'com.google.protobuf:protobuf-java:3.11.4'
-
-	// https://github.com/google/guava
-	implementation 'com.google.guava:guava:29.0-jre'
-
-	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.30'
 }
 
 sandpolis_plugin {

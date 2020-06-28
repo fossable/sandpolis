@@ -37,18 +37,22 @@ dependencies {
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
 
 	// https://github.com/google/guava
-	implementation 'com.google.guava:guava:29.0-jre'
-
-	implementation 'javax.persistence:javax.persistence-api:2.2'
+	api ('com.google.guava:guava:29.0-jre') {
+		exclude group: 'com.google.code.findbugs', module: 'jsr305'
+		exclude group: 'com.google.guava', module: 'listenablefuture'
+		exclude group: 'org.checkerframework', module: 'checker-qual'
+		exclude group: 'com.google.errorprone', module: 'error_prone_annotations'
+		exclude group: 'com.google.j2objc', module: 'j2objc-annotations'
+	}
 
 	// https://github.com/fusesource/jansi
 	implementation 'org.fusesource.jansi:jansi:1.18'
 
-	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.30'
-
 	// https://github.com/protocolbuffers/protobuf
-	implementation 'com.google.protobuf:protobuf-java:3.11.4'
+	api 'com.google.protobuf:protobuf-java:3.11.4'
+
+	// https://github.com/qos-ch/slf4j
+	api 'org.slf4j:slf4j-api:1.7.30'
 }
 
 protobuf {

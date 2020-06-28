@@ -42,12 +42,6 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.instance')
 	implementation project(':module:com.sandpolis.core.net')
 
-	// https://github.com/protocolbuffers/protobuf
-	implementation 'com.google.protobuf:protobuf-java:3.11.4'
-
-	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.30'
-
 	// https://github.com/javaee/jpa-spec
 	implementation 'javax.persistence:javax.persistence-api:2.2'
 }

@@ -18,5 +18,6 @@ module com.sandpolis.core.viewer {
 	requires com.sandpolis.core.net;
 	requires com.sandpolis.core.util;
 	requires com.google.common;
+	requires com.google.protobuf;
 	requires com.sandpolis.core.soi;
 }

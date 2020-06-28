@@ -14,7 +14,6 @@ open module com.sandpolis.core.util {
 	exports org.apache.commons.validator.routines;
 
 	requires com.google.common;
-	requires java.persistence;
 	requires java.xml;
 	requires org.fusesource.jansi;
 	requires org.slf4j;

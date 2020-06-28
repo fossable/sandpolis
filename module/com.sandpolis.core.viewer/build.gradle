@@ -32,15 +32,9 @@ dependencies {
 	implementation project(':module:com.sandpolis.core.soi')
 	implementation project(':module:com.sandpolis.core.util')
 
-	// https://github.com/google/guava
-	implementation 'com.google.guava:guava:29.0-jre'
-
 	// https://github.com/netty/netty
 	implementation 'io.netty:netty-common:4.1.48.Final'
 	implementation 'io.netty:netty-codec:4.1.48.Final'
 	implementation 'io.netty:netty-transport:4.1.48.Final'
 	implementation 'io.netty:netty-handler:4.1.48.Final'
-
-	// https://github.com/qos-ch/slf4j
-	implementation 'org.slf4j:slf4j-api:1.7.30'
 }

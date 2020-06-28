@@ -43,9 +43,7 @@ if (System.properties.get('instances.client-micro', 'false').toBoolean())
 include 'module:com.sandpolis.core.instance'
 include 'module:com.sandpolis.core.ipc'
 include 'module:com.sandpolis.core.net'
-include 'module:com.sandpolis.core.profile'
 include 'module:com.sandpolis.core.soi'
-include 'module:com.sandpolis.core.storage.hibernate'
 include 'module:com.sandpolis.core.util'
 include 'module:com.sandpolis.core.viewer'
 
