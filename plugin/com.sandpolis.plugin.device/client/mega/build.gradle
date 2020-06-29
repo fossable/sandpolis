@@ -33,5 +33,5 @@ dependencies {
 	compileOnly project(':plugin:com.sandpolis.plugin.device')
 
 	// http://www.snmp4j.org
-	implementation 'org.snmp4j:snmp4j:3.4.0'
+	implementation 'org.snmp4j:snmp4j:3.4.2'
 }
