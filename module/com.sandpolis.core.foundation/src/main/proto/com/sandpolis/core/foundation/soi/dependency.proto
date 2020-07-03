@@ -1,0 +1,63 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package core.foundation.soi;
+
+option java_package = "com.sandpolis.core.foundation.soi";
+
+/**
+ * The SO_DependencyMatrix object contains exhaustive dependency information about
+ * each instance.
+ */
+message SO_DependencyMatrix {
+
+    message Artifact {
+
+        // The artifact's repository coordinates if applicable.
+        string coordinates = 1;
+
+        // The size of the artifact in bytes.
+        int64 size = 2;
+
+        /**
+         * An internal component of the artifact which is specific to a platform
+         * and system architecture.
+         */
+        message NativeComponent {
+
+            // The component's compatible platform.
+            //util.OsType platform = 1;
+            string platform = 1;
+
+            // The component's compatible system architecture.
+            //util.Architecture architecture = 2;
+            string architecture = 2;
+
+            // The component's internal path.
+            string path = 3;
+
+            // The component's size in bytes
+            int64 size = 4;
+        }
+
+        // The artifact's internal native components.
+        repeated NativeComponent native_component = 4;
+
+        // A list of artifact IDs that this artifact directly depends on.
+        repeated int32 dependency = 5;
+    }
+
+    // A list of every artifact where the artifact ID is its position in the list.
+    repeated Artifact artifact = 1;
+
+}
