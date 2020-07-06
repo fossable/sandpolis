@@ -15,8 +15,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Objects;
 
-import com.sandpolis.core.instance.DocumentBindings.Profile;
 import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.DocumentBindings.Profile;
 
 public class ReciprocalKeyPair extends Profile.Instance.Server.ReciprocalKeyPair {
 

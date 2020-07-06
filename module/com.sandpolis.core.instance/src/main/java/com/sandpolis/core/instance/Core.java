@@ -16,10 +16,11 @@ import static java.util.UUID.randomUUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.soi.Build.SO_Build;
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
-import com.sandpolis.core.util.Platform.Instance;
-import com.sandpolis.core.util.Platform.InstanceFlavor;
+import com.sandpolis.core.foundation.soi.Build.SO_Build;
+import com.sandpolis.core.foundation.soi.Dependency.SO_DependencyMatrix;
+import com.sandpolis.core.foundation.Platform;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 
 /**
  * Contains common fields useful to every instance type.
@@ -34,7 +35,7 @@ public final class Core {
 	/**
 	 * The instance type.
 	 */
-	public static final Instance INSTANCE;
+	public static final InstanceType INSTANCE;
 
 	/**
 	 * The instance subtype.
@@ -94,7 +95,7 @@ public final class Core {
 		} else {
 			log.warn("Applying unit test configuration");
 
-			INSTANCE = Instance.CHARCOAL;
+			INSTANCE = InstanceType.CHARCOAL;
 			FLAVOR = InstanceFlavor.NONE;
 			SO_BUILD = null;
 			SO_MATRIX = null;

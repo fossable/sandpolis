@@ -9,28 +9,32 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store;
-
-import com.sandpolis.core.instance.database.Database;
+package com.sandpolis.core.instance.data;
 
 /**
- * A base for all store configurations.
+ * This class is a lightweight wrapper for {@link Document}s that provides
+ * important context to consumers of this API.
+ *
+ * @author cilki
+ * @since 6.2.0
  */
-public abstract class StoreConfig {
+public abstract class StateObject {
 
-	/**
-	 * Indicate that the store's data should not survive the closing of the store.
-	 */
-	public void ephemeral() {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support ephemeral providers");
+	public Document document;
+
+	protected StateObject(Document document) {
+		this.document = document;
+	}
+
+	public Object test(String oid) {
+
+		return null;
 	}
 
 	/**
-	 * Indicate that the store's data should be persisted to the given database.
+	 * Compute an identifier representative of the identity of the document.
 	 *
-	 * @param database The database handle
+	 * @return The document tag
 	 */
-	public void persistent(Database database) {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support persistent providers");
-	}
+	public abstract int tag();
 }

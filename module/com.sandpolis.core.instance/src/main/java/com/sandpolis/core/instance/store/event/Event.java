@@ -9,28 +9,19 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store;
+package com.sandpolis.core.instance.store.event;
 
-import com.sandpolis.core.instance.database.Database;
+import com.google.common.eventbus.EventBus;
 
 /**
- * A base for all store configurations.
+ * An event for use with an {@link EventBus}.
+ *
+ * @author cilki
+ * @since 5.0.0
  */
-public abstract class StoreConfig {
-
-	/**
-	 * Indicate that the store's data should not survive the closing of the store.
-	 */
-	public void ephemeral() {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support ephemeral providers");
-	}
-
-	/**
-	 * Indicate that the store's data should be persisted to the given database.
-	 *
-	 * @param database The database handle
-	 */
-	public void persistent(Database database) {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support persistent providers");
+public abstract class Event {
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
 	}
 }

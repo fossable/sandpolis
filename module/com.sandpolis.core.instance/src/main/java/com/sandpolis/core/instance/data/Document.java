@@ -13,6 +13,7 @@ package com.sandpolis.core.instance.data;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -20,6 +21,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+
+import com.sandpolis.core.instance.Attribute.ProtoDocument;
 
 /**
  * A document is a group of attributes associated with the entity that the
@@ -29,7 +32,7 @@ import javax.persistence.OneToMany;
  * @since 5.1.1
  */
 @Entity
-public class Document {
+public class Document implements ProtoType<ProtoDocument> {
 
 	@Id
 	@GeneratedValue(generator = "uuid")
@@ -68,7 +71,17 @@ public class Document {
 	public <E> Attribute<E> attribute(int tag) {
 		Attribute<?> attribute = attributes.get(tag);
 		if (attribute == null) {
-			attribute = null;
+			attribute = null;// TODO
+			attributes.put(tag, attribute);
+		}
+		return (Attribute<E>) attribute;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <E> Attribute<E> attribute(int tag, Supplier<Attribute<E>> factory) {
+		Attribute<?> attribute = attributes.get(tag);
+		if (attribute == null) {
+			attribute = factory.get();
 			attributes.put(tag, attribute);
 		}
 		return (Attribute<E>) attribute;
@@ -94,5 +107,33 @@ public class Document {
 
 	public String getId() {
 		return db_id;
+	}
+
+	@Override
+	public void merge(ProtoDocument delta) throws Exception {
+		for (var entry : delta.getDocumentMap().entrySet()) {
+			document(entry.getKey()).merge(entry.getValue());
+		}
+		for (var entry : delta.getCollectionMap().entrySet()) {
+			collection(entry.getKey()).merge(entry.getValue());
+		}
+		for (var entry : delta.getAttributeMap().entrySet()) {
+			attribute(entry.getKey()).merge(entry.getValue());
+		}
+	}
+
+	@Override
+	public ProtoDocument serialize() {
+		var serial = ProtoDocument.newBuilder();
+		documents.forEach((tag, document) -> {
+			serial.putDocument(tag, document.serialize());
+		});
+		collections.forEach((tag, collection) -> {
+			serial.putCollection(tag, collection.serialize());
+		});
+		attributes.forEach((tag, attribute) -> {
+			serial.putAttribute(tag, attribute.serialize());
+		});
+		return serial.build();
 	}
 }

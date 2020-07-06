@@ -20,7 +20,7 @@ import java.util.Date;
 
 import org.slf4j.Logger;
 
-import com.sandpolis.core.util.TextUtil;
+import com.sandpolis.core.foundation.util.TextUtil;
 
 /**
  * This class contains important information about the runtime file hierarchy.

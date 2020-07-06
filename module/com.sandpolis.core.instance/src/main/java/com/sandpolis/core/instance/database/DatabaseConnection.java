@@ -9,28 +9,31 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store;
+package com.sandpolis.core.instance.database;
 
-import com.sandpolis.core.instance.database.Database;
+import com.sandpolis.core.instance.store.StoreProvider;
 
 /**
- * A base for all store configurations.
+ * Represents the connection to a {@link Database}.
+ *
+ * @author cilki
+ * @since 5.0.0
  */
-public abstract class StoreConfig {
+public abstract class DatabaseConnection implements AutoCloseable {
 
 	/**
-	 * Indicate that the store's data should not survive the closing of the store.
-	 */
-	public void ephemeral() {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support ephemeral providers");
-	}
-
-	/**
-	 * Indicate that the store's data should be persisted to the given database.
+	 * Indicated whether the connection is currently open.
 	 *
-	 * @param database The database handle
+	 * @return The connection status
 	 */
-	public void persistent(Database database) {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support persistent providers");
-	}
+	public abstract boolean isOpen();
+
+	/**
+	 * Obtain a new {@link StoreProvider} for this database.
+	 *
+	 * @param cls The class type that the provider will manage
+	 * @return A new provider for the given class
+	 */
+	public abstract <E> StoreProvider<E> provider(Class<E> cls);
+
 }

@@ -19,7 +19,7 @@ import java.util.Base64;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
-import com.sandpolis.core.util.CertUtil;
+import com.sandpolis.core.foundation.util.CertUtil;
 
 /**
  * This class contains a set of database converters for use in JPA entities.
@@ -30,48 +30,6 @@ import com.sandpolis.core.util.CertUtil;
 public final class Converters {
 
 	private Converters() {
-	}
-
-	@Converter
-	public static class Instance
-			implements AttributeConverter<com.sandpolis.core.util.Platform.Instance, java.lang.Integer> {
-		@Override
-		public java.lang.Integer convertToDatabaseColumn(com.sandpolis.core.util.Platform.Instance attribute) {
-			return attribute.getNumber();
-		}
-
-		@Override
-		public com.sandpolis.core.util.Platform.Instance convertToEntityAttribute(java.lang.Integer dbData) {
-			return com.sandpolis.core.util.Platform.Instance.forNumber(dbData);
-		}
-	}
-
-	@Converter
-	public static class InstanceFlavor
-			implements AttributeConverter<com.sandpolis.core.util.Platform.InstanceFlavor, java.lang.Integer> {
-		@Override
-		public java.lang.Integer convertToDatabaseColumn(com.sandpolis.core.util.Platform.InstanceFlavor attribute) {
-			return attribute.getNumber();
-		}
-
-		@Override
-		public com.sandpolis.core.util.Platform.InstanceFlavor convertToEntityAttribute(java.lang.Integer dbData) {
-			return com.sandpolis.core.util.Platform.InstanceFlavor.forNumber(dbData);
-		}
-	}
-
-	@Converter
-	public static class OsType
-			implements AttributeConverter<com.sandpolis.core.util.Platform.OsType, java.lang.Integer> {
-		@Override
-		public java.lang.Integer convertToDatabaseColumn(com.sandpolis.core.util.Platform.OsType attribute) {
-			return attribute.getNumber();
-		}
-
-		@Override
-		public com.sandpolis.core.util.Platform.OsType convertToEntityAttribute(java.lang.Integer dbData) {
-			return com.sandpolis.core.util.Platform.OsType.forNumber(dbData);
-		}
 	}
 
 	@Converter

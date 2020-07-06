@@ -11,21 +11,21 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.util;
 
-import static com.sandpolis.core.util.Platform.InstanceFlavor.ASCETIC;
-import static com.sandpolis.core.util.Platform.InstanceFlavor.LIFEGEM;
-import static com.sandpolis.core.util.Platform.InstanceFlavor.LOCKSTONE;
-import static com.sandpolis.core.util.Platform.InstanceFlavor.MEGA;
-import static com.sandpolis.core.util.Platform.InstanceFlavor.SOAPSTONE;
-import static com.sandpolis.core.util.Platform.InstanceFlavor.VANILLA;
+import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.ASCETIC;
+import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.LIFEGEM;
+import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.LOCKSTONE;
+import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.MEGA;
+import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.SOAPSTONE;
+import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.VANILLA;
 
 import java.util.function.BiConsumer;
 
-import com.sandpolis.core.util.Platform.Instance;
-import com.sandpolis.core.util.Platform.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 
 public class InstanceUtil {
 
-	public static InstanceFlavor[] getFlavors(Instance instance) {
+	public static InstanceFlavor[] getFlavors(InstanceType instance) {
 		switch (instance) {
 		case CHARCOAL:
 			return new InstanceFlavor[] {};
@@ -42,9 +42,9 @@ public class InstanceUtil {
 		}
 	}
 
-	public static void iterate(BiConsumer<Instance, InstanceFlavor> consumer) {
-		for (var instance : Instance.values()) {
-			if (instance != Instance.UNRECOGNIZED) {
+	public static void iterate(BiConsumer<InstanceType, InstanceFlavor> consumer) {
+		for (var instance : InstanceType.values()) {
+			if (instance != InstanceType.UNRECOGNIZED) {
 				for (var flavor : getFlavors(instance)) {
 					consumer.accept(instance, flavor);
 				}

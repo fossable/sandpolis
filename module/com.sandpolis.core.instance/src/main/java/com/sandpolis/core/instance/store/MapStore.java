@@ -16,11 +16,13 @@ import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
-import com.sandpolis.core.instance.storage.StoreProvider;
+import com.sandpolis.core.instance.data.Document;
 
-public abstract class MapStore<K, V, E extends StoreConfig> extends StoreBase<E> {
+public abstract class MapStore<V, E extends StoreConfig> extends StoreBase<E> {
 
 	protected StoreProvider<V> provider;
+
+	protected Document document;
 
 	protected MapStore(Logger log) {
 		super(log);
@@ -44,12 +46,12 @@ public abstract class MapStore<K, V, E extends StoreConfig> extends StoreBase<E>
 		return provider.count();
 	}
 
-	public Optional<V> get(K key) {
-		return provider.get(key);
+	public Optional<V> get(int tag) {
+		return provider.get(tag);
 	}
 
-	public Optional<V> remove(K key) {
-		var item = get(key);
+	public Optional<V> remove(int tag) {
+		var item = get(tag);
 		if (item.isPresent())
 			removeValue(item.get());
 		return item;

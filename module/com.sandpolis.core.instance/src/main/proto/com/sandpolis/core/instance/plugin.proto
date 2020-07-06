@@ -17,7 +17,9 @@ option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
 
 message PluginConfig {
-    string id = 1;
+    string package_id = 1;
+
+    string version = 5;
     
     oneof source {
         // The plugin binary

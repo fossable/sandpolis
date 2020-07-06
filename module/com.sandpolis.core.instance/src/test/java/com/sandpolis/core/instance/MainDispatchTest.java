@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.Platform.Instance;
-import com.sandpolis.core.instance.Platform.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 
 class MainDispatchTest {
 
@@ -71,7 +71,7 @@ class MainDispatchTest {
 	@Test
 	@DisplayName("Dispatch a class that registers nothing")
 	void dispatch_1() {
-		MainDispatch.dispatch(EmptyTest.class, new String[] {}, Instance.CHARCOAL, InstanceFlavor.NONE);
+		MainDispatch.dispatch(EmptyTest.class, new String[] {}, InstanceType.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 	/**
@@ -92,7 +92,7 @@ class MainDispatchTest {
 	@Test
 	@DisplayName("Dispatch a class that is successful")
 	void dispatch_2() {
-		MainDispatch.dispatch(SuccessTest.class, new String[] { "37434" }, Instance.CHARCOAL, InstanceFlavor.NONE);
+		MainDispatch.dispatch(SuccessTest.class, new String[] { "37434" }, InstanceType.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 	/**
@@ -113,7 +113,7 @@ class MainDispatchTest {
 	@Test
 	@DisplayName("Dispatch a class that encounters a non-fatal error")
 	void dispatch_3() {
-		MainDispatch.dispatch(NonfatalTest.class, new String[] { "37434" }, Instance.CHARCOAL, InstanceFlavor.NONE);
+		MainDispatch.dispatch(NonfatalTest.class, new String[] { "37434" }, InstanceType.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 }

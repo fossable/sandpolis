@@ -9,28 +9,27 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store;
+package com.sandpolis.core.instance.plugin;
 
-import com.sandpolis.core.instance.database.Database;
+import com.sandpolis.core.instance.store.event.ParameterizedEvent;
 
-/**
- * A base for all store configurations.
- */
-public abstract class StoreConfig {
+public final class PluginEvents {
 
 	/**
-	 * Indicate that the store's data should not survive the closing of the store.
+	 * Indicates that a plugin was just loaded successfully.
 	 */
-	public void ephemeral() {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support ephemeral providers");
+	public static final class PluginLoadedEvent extends ParameterizedEvent<Plugin> {
+		public PluginLoadedEvent(Plugin parameter) {
+			super(parameter);
+		}
 	}
 
-	/**
-	 * Indicate that the store's data should be persisted to the given database.
-	 *
-	 * @param database The database handle
-	 */
-	public void persistent(Database database) {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support persistent providers");
+	public static final class PluginUnloadedEvent extends ParameterizedEvent<Plugin> {
+		public PluginUnloadedEvent(Plugin parameter) {
+			super(parameter);
+		}
+	}
+
+	private PluginEvents() {
 	}
 }

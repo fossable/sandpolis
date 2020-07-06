@@ -26,11 +26,12 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Result.Outcome;
-import com.sandpolis.core.instance.idle.IdleLoop;
-import com.sandpolis.core.instance.util.ProtoUtil;
-import com.sandpolis.core.util.Platform.Instance;
-import com.sandpolis.core.util.Platform.InstanceFlavor;
+import com.sandpolis.core.foundation.idle.IdleLoop;
+import com.sandpolis.core.foundation.util.ProtoUtil;
+import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.foundation.Result.Outcome;
 
 /**
  * {@link MainDispatch} allows the instance's main method to configure
@@ -65,7 +66,7 @@ public final class MainDispatch {
 	/**
 	 * The instance's {@link Instance} type.
 	 */
-	private static Instance instance;
+	private static InstanceType instance;
 
 	/**
 	 * The instance's {@link InstanceFlavor} type.
@@ -88,7 +89,7 @@ public final class MainDispatch {
 	 * @return The dispatched {@link Instance} or {@code null} if {@link #dispatch}
 	 *         has not been called
 	 */
-	public static Instance getInstance() {
+	public static InstanceType getInstance() {
 		return instance;
 	}
 
@@ -121,7 +122,7 @@ public final class MainDispatch {
 	 * @param instance The instance's {@link Instance}
 	 * @param flavor   The instance's {@link InstanceFlavor}
 	 */
-	public static void dispatch(Class<?> main, String[] args, Instance instance, InstanceFlavor flavor) {
+	public static void dispatch(Class<?> main, String[] args, InstanceType instance, InstanceFlavor flavor) {
 		if (MainDispatch.main != null)
 			throw new IllegalStateException("Dispatch cannot be called more than once");
 

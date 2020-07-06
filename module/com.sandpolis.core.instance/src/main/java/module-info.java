@@ -11,33 +11,24 @@
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.core.instance {
 	exports com.sandpolis.core.instance.data;
-	exports com.sandpolis.core.instance.event;
-	exports com.sandpolis.core.instance.idle;
-	exports com.sandpolis.core.instance.logging;
+	exports com.sandpolis.core.instance.database;
+	exports com.sandpolis.core.instance.net;
 	exports com.sandpolis.core.instance.plugin;
-	exports com.sandpolis.core.instance.sand5;
-	exports com.sandpolis.core.instance.storage.database;
-	exports com.sandpolis.core.instance.storage;
-	exports com.sandpolis.core.instance.store.database;
-	exports com.sandpolis.core.instance.store.plugin;
-	exports com.sandpolis.core.instance.store.pref;
-	exports com.sandpolis.core.instance.store.thread;
+	exports com.sandpolis.core.instance.pref;
+	exports com.sandpolis.core.instance.profile;
+	exports com.sandpolis.core.instance.profile.cmd;
 	exports com.sandpolis.core.instance.store;
+	exports com.sandpolis.core.instance.store.event;
+	exports com.sandpolis.core.instance.thread;
 	exports com.sandpolis.core.instance.util;
 	exports com.sandpolis.core.instance;
 
 	requires com.google.common;
 	requires com.google.protobuf;
-	requires com.sandpolis.core.soi;
-	requires com.sandpolis.core.util;
 	requires java.persistence;
-	requires java.prefs;
 	requires org.slf4j;
-	requires ch.qos.logback.classic;
-	requires ch.qos.logback.core;
-
+	requires com.sandpolis.core.foundation;
+	requires java.prefs;
+	
 	uses com.sandpolis.core.instance.plugin.SandpolisPlugin;
-
-	provides ch.qos.logback.classic.spi.Configurator
-			with com.sandpolis.core.instance.logging.InstanceLoggingConfigurator;
 }

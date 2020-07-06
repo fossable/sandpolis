@@ -9,28 +9,23 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store;
+package com.sandpolis.core.instance.profile.store;
 
-import com.sandpolis.core.instance.database.Database;
+import com.sandpolis.core.instance.DocumentBindings;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 
 /**
- * A base for all store configurations.
+ * A {@link Profile} is a generic container that stores data for an instance.
+ * Most of the data are stored in a tree structure similar to a document store.
+ *
+ * @author cilki
+ * @since 4.0.0
  */
-public abstract class StoreConfig {
+public class Profile extends DocumentBindings.Profile {
 
-	/**
-	 * Indicate that the store's data should not survive the closing of the store.
-	 */
-	public void ephemeral() {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support ephemeral providers");
+	public Profile(String uuid, InstanceType instance, InstanceFlavor flavor) {
+		super(null);
 	}
 
-	/**
-	 * Indicate that the store's data should be persisted to the given database.
-	 *
-	 * @param database The database handle
-	 */
-	public void persistent(Database database) {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support persistent providers");
-	}
 }

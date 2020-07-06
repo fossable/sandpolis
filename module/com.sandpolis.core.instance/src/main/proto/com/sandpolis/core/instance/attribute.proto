@@ -13,7 +13,7 @@ syntax = "proto2";
 
 package core.instance;
 
-import "com/sandpolis/core/util/platform.proto";
+import "com/sandpolis/core/foundation/platform.proto";
 
 option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
@@ -22,6 +22,7 @@ message ProtoAttribute {
     optional int64 timestamp = 1;
 
     oneof value {
+        // Standard types
         string  string   = 2;
         int32   integer  = 3;
         int64   long     = 4;
@@ -30,29 +31,16 @@ message ProtoAttribute {
         bytes   bytes    = 7;
 
         // Additional types
-        core.util.OsType os_type = 8;
+        core.foundation.OsType os_type = 8;
     }
 }
 
 message ProtoDocument {
-    required string id = 1;
-
-    repeated ProtoDocument document = 2;
-    repeated ProtoCollection collection = 3;
-    repeated ProtoAttribute attribute = 4;
+    map<int32, ProtoAttribute> attribute = 1;
+    map<int32, ProtoDocument> document = 2;
+    map<int32, ProtoCollection> collection = 3;
 }
 
 message ProtoCollection {
-    required string id = 1;
-
-    repeated ProtoDocument document = 2;
-}
-
-message ProtoProfile {
-    optional core.util.Instance instance = 1;
-    optional core.util.InstanceFlavor flavor = 2;
-    optional int32 cvid = 3;
-    optional string uuid = 4;
-
-    repeated ProtoDocument root = 6;
+    map<int32, ProtoDocument> document = 2;
 }

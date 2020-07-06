@@ -14,7 +14,7 @@ syntax = "proto3";
 package core.instance;
 
 import "com/sandpolis/core/instance/auth.proto";
-import "com/sandpolis/core/util/platform.proto";
+import "com/sandpolis/core/foundation/platform.proto";
 
 option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
@@ -37,7 +37,7 @@ message NetworkTarget {
 message FeatureSet {
 
     // Supported operating systems
-    repeated core.util.OsType supported_os = 1;
+    repeated core.foundation.OsType supported_os = 1;
 
     // Supported system architectures
     repeated string supported_arch = 2;

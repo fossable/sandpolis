@@ -14,6 +14,7 @@ package com.sandpolis.core.instance.data;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -21,6 +22,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+
+import com.sandpolis.core.instance.Attribute.ProtoCollection;
 
 /**
  * A collection is an unordered set of {@link Document}s. Every document has an
@@ -30,7 +33,7 @@ import javax.persistence.OneToMany;
  * @since 5.1.1
  */
 @Entity
-public class Collection implements java.util.Collection<Document> {
+public class Collection implements java.util.Collection<Document>, ProtoType<ProtoCollection> {
 
 	@Id
 	@GeneratedValue(generator = "uuid")
@@ -47,6 +50,14 @@ public class Collection implements java.util.Collection<Document> {
 
 	protected Collection() {
 		// JPA CONSTRUCTOR
+	}
+
+	public Document get(int key) {
+		return documents.get(key);
+	}
+
+	public Stream<Document> stream() {
+		return documents.values().stream();
 	}
 
 	@Override
@@ -114,6 +125,18 @@ public class Collection implements java.util.Collection<Document> {
 	@Override
 	public void clear() {
 		documents.clear();
+	}
+
+	@Override
+	public void merge(ProtoCollection delta) throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public ProtoCollection serialize() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -14,6 +14,14 @@ package com.sandpolis.core.instance.data;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.Transient;
 
 import com.sandpolis.core.instance.Attribute.ProtoAttribute;
 
@@ -24,35 +32,45 @@ import com.sandpolis.core.instance.Attribute.ProtoAttribute;
  * @author cilki
  * @since 6.2.0
  */
-public interface Attribute<T> extends ProtoType<ProtoAttribute> {
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public abstract class Attribute<T> implements ProtoType<ProtoAttribute> {
+
+	@Id
+	@GeneratedValue(generator = "uuid")
+//	@GenericGenerator(name = "uuid", strategy = "uuid2")
+	private String db_id;
+
+	@Transient
+	private Supplier<T> supplier;
 
 	/**
 	 * Set the current value of the attribute.
 	 *
 	 * @param value The new value to replace the current value or {@code null}
 	 */
-	void set(T value);
+	public abstract void set(T value);
 
 	/**
 	 * Get the current value of the attribute.
 	 *
 	 * @return The current value or {@code null}
 	 */
-	T get();
+	public abstract T get();
 
 	/**
 	 * Get the timestamp associated with the current value.
 	 *
 	 * @return The current timestamp or {@code null}
 	 */
-	Date timestamp();
+	public abstract Date timestamp();
 
 	/**
 	 * Perform the given operation if the attribute has a current value.
 	 *
 	 * @param fn A function to receive the current value if it exists
 	 */
-	default void ifPresent(Consumer<T> fn) {
+	public void ifPresent(Consumer<T> fn) {
 		var value = get();
 		if (value != null)
 			fn.accept(value);
@@ -63,8 +81,12 @@ public interface Attribute<T> extends ProtoType<ProtoAttribute> {
 	 *
 	 * @return Whether the attribute's value is {@code null}
 	 */
-	default boolean isPresent() {
+	public boolean isPresent() {
 		return get() != null;
+	}
+
+	public void bind(Supplier<T> supplier) {
+		this.supplier = supplier;
 	}
 
 	/**
@@ -74,21 +96,21 @@ public interface Attribute<T> extends ProtoType<ProtoAttribute> {
 	 * @author cilki
 	 * @since 6.2.0
 	 */
-	public static interface TrackedAttribute<T> extends Attribute<T>, List<T> {
+	public static abstract class TrackedAttribute<T> extends Attribute<T> implements List<T> {
 
 		@Override
-		default void set(T value) {
+		public void set(T value) {
 			add(value);
 		}
 
 		@Override
-		default T get() {
+		public T get() {
 			return get(0);
 		}
 
 		/**
 		 * Clear the history of the attribute.
 		 */
-		void clearHistory();
+		public abstract void clearHistory();
 	}
 }

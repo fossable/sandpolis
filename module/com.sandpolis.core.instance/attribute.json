@@ -116,6 +116,36 @@
               ]
             },
             {
+              "name": "ReciprocalKeyPair",
+              "tag": 99,
+              "attributes": [
+                {
+                  "name": "signer",
+                  "tag": 1,
+                  "type": "java.lang.Byte[]",
+                  "description": "A key responsible for signing data"
+                },
+                {
+                  "name": "verifier",
+                  "tag": 2,
+                  "type": "java.lang.Byte[]",
+                  "description": "A key responsible for verifying signed data"
+                }
+              ]
+            },
+            {
+              "name": "AuthMechanism",
+              "tag": 98,
+              "attributes": [
+                {
+                  "name": "password",
+                  "tag": 1,
+                  "type": "java.lang.String",
+                  "description": "The mechanism password"
+                }
+              ]
+            },
+            {
               "name": "Group",
               "tag": 7,
               "attributes": [
@@ -123,42 +153,6 @@
                   "name": "name",
                   "tag": 1,
                   "type": "java.lang.String"
-                }
-              ],
-              "collections": [
-                {
-                  "name": "ReciprocalKeyPair",
-                  "tag": 9,
-                  "attributes": [
-                    {
-                      "name": "signer",
-                      "tag": 1,
-                      "type": "java.lang.Byte[]",
-                      "description": "A key responsible for signing data"
-                    },
-                    {
-                      "name": "verifier",
-                      "tag": 2,
-                      "type": "java.lang.Byte[]",
-                      "description": "A key responsible for verifying signed data"
-                    }
-                  ]
-                },
-                {
-                  "name": "PasswordAuthMechanism",
-                  "tag": 10,
-                  "attributes": [
-                    {
-                      "name": "password",
-                      "tag": 1,
-                      "type": "java.lang.String",
-                      "description": "The mechanism password"
-                    }
-                  ]
-                },
-                {
-                  "name": "KeyAuthMechanism",
-                  "tag": 2
                 }
               ]
             }
@@ -197,7 +191,7 @@
             {
               "name": "os",
               "tag": 2,
-              "type": "com.sandpolis.core.util.Platform.OsType",
+              "type": "com.sandpolis.core.foundation.Platform.OsType",
               "description": "The client's operating system type"
             },
             {
@@ -373,22 +367,22 @@
             {
               "name": "remote_instance",
               "tag": 9,
-              "type": "com.sandpolis.core.util.Platform.Instance"
+              "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
             },
             {
               "name": "local_instance",
               "tag": 10,
-              "type": "com.sandpolis.core.util.Platform.Instance"
+              "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
             },
             {
               "name": "remote_instance_flavor",
               "tag": 11,
-              "type": "com.sandpolis.core.util.Platform.InstanceFlavor"
+              "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
             },
             {
               "name": "local_instance_flavor",
               "tag": 12,
-              "type": "com.sandpolis.core.util.Platform.InstanceFlavor"
+              "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
             },
             {
               "name": "upload_total",
@@ -460,7 +454,7 @@
               "description": "The plugin's user-friendly description"
             },
             {
-              "name": "coordinate",
+              "name": "coordinates",
               "tag": 3,
               "type": "java.lang.String",
               "description": "The plugin's Maven central coordinates in G:A:V format"
@@ -503,12 +497,12 @@
     {
       "name": "instance_type",
       "tag": 20,
-      "type": "com.sandpolis.core.util.Platform.Instance"
+      "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
     },
     {
       "name": "instance_flavor",
       "tag": 21,
-      "type": "com.sandpolis.core.util.Platform.InstanceFlavor"
+      "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
     },
     {
       "name": "uuid",

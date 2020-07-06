@@ -9,28 +9,34 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store;
-
-import com.sandpolis.core.instance.database.Database;
+package com.sandpolis.core.instance.profile.cmd;
 
 /**
- * A base for all store configurations.
+ * Contains profile commands.
+ *
+ * @author cilki
+ * @since 6.1.0
  */
-public abstract class StoreConfig {
+public final class ProfileCmd {// extends Cmdlet<ProfileCmd> {
+
+//	public ResponseFuture<Outcome> openProfileStream() {
+//		int id = IDUtil.stream();
+//
+//		// StreamStore.StreamStore.add(new InboundStreamAdapter<>(id, sock, msg ->
+//		// msg.getEvProfileStream()), null);
+//		return request(RQ_ProfileStream.newBuilder().setId(id));
+//	}
 
 	/**
-	 * Indicate that the store's data should not survive the closing of the store.
+	 * Prepare for an asynchronous command.
+	 *
+	 * @return A configurable object from which all asynchronous (nonstatic)
+	 *         commands in {@link ProfileCmd} can be invoked
 	 */
-	public void ephemeral() {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support ephemeral providers");
+	public static ProfileCmd async() {
+		return new ProfileCmd();
 	}
 
-	/**
-	 * Indicate that the store's data should be persisted to the given database.
-	 *
-	 * @param database The database handle
-	 */
-	public void persistent(Database database) {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support persistent providers");
+	private ProfileCmd() {
 	}
 }
