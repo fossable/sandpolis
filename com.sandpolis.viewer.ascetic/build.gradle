@@ -15,7 +15,7 @@ plugins {
 	id 'java-library'
 
 	id 'com.sandpolis.gradle.soi'
-	id 'com.bmuschko.docker-remote-api' version '6.3.0'
+	id 'com.bmuschko.docker-remote-api' version '6.5.0'
 }
 
 eclipse {
