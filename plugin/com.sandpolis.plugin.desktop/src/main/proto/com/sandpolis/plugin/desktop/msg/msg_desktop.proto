@@ -11,17 +11,13 @@
 //=========================================================S A N D P O L I S==//
 syntax = "proto3";
 
-package plugin.device;
+package plugin.desktop.msg;
 
-option java_package = "com.sandpolis.plugin.device";
+option java_package = "com.sandpolis.plugin.desktop.msg";
 
-message RQ_RegisterDevice {
+message RQ_Screenshot {
+}
 
-    oneof target {
-        string ip_address = 1;
-        string mac_address = 2;
-    }
-
-    // The uuid of the gateway instance
-    string gateway = 3;
+message RS_Screenshot {
+    bytes data = 1;
 }

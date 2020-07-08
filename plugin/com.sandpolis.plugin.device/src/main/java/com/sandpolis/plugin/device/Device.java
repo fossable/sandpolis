@@ -11,7 +11,13 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.device;
 
-public abstract class Device {
+import com.sandpolis.core.instance.data.Document;
+
+public abstract class Device extends DocumentBindings.Device {
+
+	public Device(Document document) {
+		super(document);
+	}
 
 	private String id;
 

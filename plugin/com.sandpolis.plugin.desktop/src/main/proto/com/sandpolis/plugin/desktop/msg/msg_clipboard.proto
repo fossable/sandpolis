@@ -11,13 +11,24 @@
 //=========================================================S A N D P O L I S==//
 syntax = "proto3";
 
-package plugin.desktop;
+package plugin.desktop.msg;
 
-option java_package = "com.sandpolis.plugin.desktop";
+option java_package = "com.sandpolis.plugin.desktop.msg";
+option optimize_for = CODE_SIZE;
 
-message RQ_Screenshot {
+message RQ_ClipboardGet {
+
 }
 
-message RS_Screenshot {
-    bytes data = 1;
+message RQ_ClipboardPut {
+
+}
+
+message RQ_ClipboardStream {
+
+    // The desired stream ID
+    int32 id = 1;
+}
+
+message EV_ClipboardStream {
 }

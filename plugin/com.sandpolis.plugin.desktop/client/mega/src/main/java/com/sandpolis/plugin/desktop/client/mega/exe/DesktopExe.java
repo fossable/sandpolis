@@ -11,9 +11,9 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.desktop.client.mega.exe;
 
-import static com.sandpolis.core.instance.util.ProtoUtil.begin;
-import static com.sandpolis.core.instance.util.ProtoUtil.failure;
-import static com.sandpolis.core.instance.util.ProtoUtil.success;
+import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
+import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
+import static com.sandpolis.core.foundation.util.ProtoUtil.success;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import java.awt.Rectangle;
