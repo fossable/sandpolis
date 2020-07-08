@@ -9,25 +9,32 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+syntax = "proto3";
 
-plugins {
-	id 'eclipse'
-	id 'java-library'
-}
+package core.sv.msg;
 
-eclipse {
-	project {
-		name = 'com.sandpolis.core.viewer'
-		comment = 'The viewer library module'
-	}
-}
+option java_package = "com.sandpolis.core.sv.msg";
+option optimize_for = CODE_SIZE;
 
-dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
+/**
+ * Request for the server's banner
+ */
+message RQ_ServerBanner {}
 
-	api project(':module:com.sandpolis.core.cv')
-	api project(':module:com.sandpolis.core.instance')
-	api project(':module:com.sandpolis.core.net')
-	api project(':module:com.sandpolis.core.sv')
+/**
+ * A response containing the server's banner
+ */
+message RS_ServerBanner {
+
+    // Maintenance mode indicates that only superusers will be allowed to login
+    bool maintenance = 1;
+
+    // The 3-field version of the server
+    string version = 2;
+
+    // A string to display on the login screen
+    string banner = 3;
+
+    // An image to display on the login screen
+    bytes banner_image = 4;
 }

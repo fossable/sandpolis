@@ -9,25 +9,29 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+syntax = "proto3";
 
-plugins {
-	id 'eclipse'
-	id 'java-library'
+package core.cs.msg;
+
+import "com/sandpolis/core/foundation/platform.proto";
+
+option java_package = "com.sandpolis.core.cs.msg";
+option optimize_for = CODE_SIZE;
+
+/**
+ * Request metadata from a client.
+ */
+message RQ_ClientMetadata {
 }
 
-eclipse {
-	project {
-		name = 'com.sandpolis.core.viewer'
-		comment = 'The viewer library module'
-	}
-}
+message RS_ClientMetadata {
 
-dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
+    // The client's network hostname
+    string hostname = 1;
 
-	api project(':module:com.sandpolis.core.cv')
-	api project(':module:com.sandpolis.core.instance')
-	api project(':module:com.sandpolis.core.net')
-	api project(':module:com.sandpolis.core.sv')
+    // The client install directory
+    string install_directory = 2;
+
+    // The OS family
+    core.foundation.OsType os = 3;
 }

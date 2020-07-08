@@ -158,11 +158,15 @@ subprojects {
 // All modules that will be published to the release repository
 def publishProjects = [
 	'com.sandpolis.client.mega',
+	'com.sandpolis.core.client',
+	'com.sandpolis.core.cs',
+	'com.sandpolis.core.cv',
+	'com.sandpolis.core.foundation',
 	'com.sandpolis.core.instance',
 	'com.sandpolis.core.ipc',
 	'com.sandpolis.core.net',
-	'com.sandpolis.core.soi',
-	'com.sandpolis.core.util',
+	'com.sandpolis.core.server',
+	'com.sandpolis.core.sv',
 	'com.sandpolis.core.viewer',
 	'com.sandpolis.plugin.desktop',
 	'com.sandpolis.plugin.device',

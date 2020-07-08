@@ -5,5 +5,5 @@
 
 rootProject.name = 'com.sandpolis.gradle.soi'
 
-include 'module:com.sandpolis.core.soi'
-project(':module:com.sandpolis.core.soi').projectDir = file('../../module/com.sandpolis.core.soi')
+include 'module:com.sandpolis.core.foundation'
+project(':module:com.sandpolis.core.foundation').projectDir = file('../../module/com.sandpolis.core.foundation')

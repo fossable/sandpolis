@@ -9,25 +9,23 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+syntax = "proto3";
 
-plugins {
-	id 'eclipse'
-	id 'java-library'
-}
+package core.sv.msg;
 
-eclipse {
-	project {
-		name = 'com.sandpolis.core.viewer'
-		comment = 'The viewer library module'
-	}
-}
+import "com/sandpolis/core/instance/listener.proto";
 
-dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
+option java_package = "com.sandpolis.core.sv.msg";
+option optimize_for = CODE_SIZE;
 
-	api project(':module:com.sandpolis.core.cv')
-	api project(':module:com.sandpolis.core.instance')
-	api project(':module:com.sandpolis.core.net')
-	api project(':module:com.sandpolis.core.sv')
+// Request: Attempt a listener operation.
+message RQ_ListenerOperation {
+    enum ListenerOperation {
+        LISTENER_CREATE = 0;
+        LISTENER_DELETE = 1;
+        LISTENER_UPDATE = 2;
+    }
+    ListenerOperation operation = 1;
+
+    repeated core.instance.ListenerConfig listener_config = 2;
 }
