@@ -11,19 +11,20 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.handler.cvid;
 
-import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
+import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgCvid.RQ_Cvid;
-import com.sandpolis.core.net.MsgCvid.RS_Cvid;
-import com.sandpolis.core.net.store.network.NetworkEvents.CvidChangedEvent;
-import com.sandpolis.core.util.Platform.Instance;
-import com.sandpolis.core.util.Platform.InstanceFlavor;
+import com.sandpolis.core.net.msg.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.net.msg.MsgCvid.RS_Cvid;
+import com.sandpolis.core.net.network.NetworkEvents.CvidChangedEvent;
+import com.sandpolis.core.net.util.MsgUtil;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -48,7 +49,7 @@ public class CvidRequestHandler extends AbstractCvidHandler {
 		// Autoremove the handler
 		ch.pipeline().remove(this);
 
-		RS_Cvid rs = msg.getRsCvid();
+		RS_Cvid rs = msg.getPayload().unpack(RS_Cvid.class);
 		if (rs != null && !rs.getServerUuid().isEmpty()) {
 
 			Core.setCvid(rs.getCvid());
@@ -78,10 +79,9 @@ public class CvidRequestHandler extends AbstractCvidHandler {
 	 * @param flavor   The instance flavor
 	 * @param uuid     The instance's UUID
 	 */
-	void handshake(Channel channel, Instance instance, InstanceFlavor flavor, String uuid) {
+	void handshake(Channel channel, InstanceType instance, InstanceFlavor flavor, String uuid) {
 		log.debug("Initiating CVID handshake");
-		channel.writeAndFlush(MSG.newBuilder()
-				.setRqCvid(RQ_Cvid.newBuilder().setInstance(instance).setInstanceFlavor(flavor).setUuid(uuid)).build());
+		channel.writeAndFlush(MsgUtil
+				.rq(RQ_Cvid.newBuilder().setInstance(instance).setInstanceFlavor(flavor).setUuid(uuid)).build());
 	}
-
 }

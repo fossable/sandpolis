@@ -12,7 +12,7 @@
 package com.sandpolis.core.net.connection;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
 import java.net.InetSocketAddress;
@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.DocumentBindings;
-import com.sandpolis.core.instance.store.plugin.PluginEvents.PluginLoadedEvent;
+import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;
@@ -269,7 +269,7 @@ public abstract class Connection extends DocumentBindings.Profile.Instance.Conne
 	private void onPluginLoaded(PluginLoadedEvent event) {
 		getHandler(HandlerKey.EXELET).ifPresent(handler -> {
 			event.get().getExtensions(ExeletProvider.class).forEach(provider -> {
-				handler.register(event.get().getId(), provider.getMessageType(), provider.getExelets());
+				handler.register(provider.getExelets());
 			});
 		});
 	}

@@ -23,13 +23,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgCvid.RQ_Cvid;
-import com.sandpolis.core.net.MsgCvid.RS_Cvid;
 import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
+import com.sandpolis.core.net.msg.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.net.msg.MsgCvid.RS_Cvid;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.instance.Platform.Instance;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -61,7 +61,7 @@ class CvidResponseHandlerTest {
 	@DisplayName("Receive an invalid response")
 	void testReceiveIncorrect() {
 		server.writeInbound(MSG.newBuilder()
-				.setRqCvid(RQ_Cvid.newBuilder().setInstance(Instance.SERVER).setUuid("testuuid2")).build());
+				.setRqCvid(RQ_Cvid.newBuilder().setInstance(InstanceType.SERVER).setUuid("testuuid2")).build());
 
 		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
 		assertFalse(event.isSuccess());
@@ -72,19 +72,19 @@ class CvidResponseHandlerTest {
 	@DisplayName("Receive a valid response")
 	void testReceiveCorrect() {
 		server.writeInbound(MSG.newBuilder()
-				.setRqCvid(RQ_Cvid.newBuilder().setInstance(Instance.CLIENT).setUuid("testuuid2")).build());
+				.setRqCvid(RQ_Cvid.newBuilder().setInstance(InstanceType.CLIENT).setUuid("testuuid2")).build());
 
 		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
 		assertTrue(event.isSuccess());
 
-		assertEquals(Instance.CLIENT, CvidUtil.extractInstance(server.attr(ChannelConstant.CVID).get()));
+		assertEquals(InstanceType.CLIENT, CvidUtil.extractInstance(server.attr(ChannelConstant.CVID).get()));
 		assertEquals("testuuid2", server.attr(ChannelConstant.UUID).get());
 		assertNull(server.pipeline().get(CvidResponseHandler.class), "Handler autoremove failed");
 
 		MSG msg = server.readOutbound();
 		RS_Cvid rs = msg.getRsCvid();
 
-		assertEquals(Instance.CLIENT, CvidUtil.extractInstance(rs.getCvid()));
+		assertEquals(InstanceType.CLIENT, CvidUtil.extractInstance(rs.getCvid()));
 		assertFalse(rs.getServerUuid().isEmpty());
 
 	}

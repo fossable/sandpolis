@@ -15,13 +15,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgCvid.RQ_Cvid;
-import com.sandpolis.core.net.MsgCvid.RS_Cvid;
+import com.sandpolis.core.net.msg.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.net.msg.MsgCvid.RS_Cvid;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.util.Platform.Instance;
-import com.sandpolis.core.util.Platform.InstanceFlavor;
+import com.sandpolis.core.net.util.MsgUtil;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -46,21 +47,22 @@ public class CvidResponseHandler extends AbstractCvidHandler {
 		// Autoremove the handler
 		ch.pipeline().remove(this);
 
-		RQ_Cvid rq = msg.getRqCvid();
-		if (rq == null || rq.getUuid().isEmpty() || rq.getInstance() == Instance.UNRECOGNIZED
-				|| rq.getInstance() == Instance.SERVER || rq.getInstanceFlavor() == InstanceFlavor.UNRECOGNIZED) {
+		RQ_Cvid rq = msg.getPayload().unpack(RQ_Cvid.class);
+		if (rq == null || rq.getUuid().isEmpty() || rq.getInstance() == InstanceType.UNRECOGNIZED
+				|| rq.getInstance() == InstanceType.SERVER || rq.getInstanceFlavor() == InstanceFlavor.UNRECOGNIZED) {
 			log.debug("Received invalid CVID request on channel: {}", ch.id());
 			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent());
 		} else {
-			RS_Cvid.Builder rs = RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.UUID)
-					.setCvid(CvidUtil.cvid(rq.getInstance(), rq.getInstanceFlavor()));
+			int cvid = CvidUtil.cvid(rq.getInstance(), rq.getInstanceFlavor());
 
-			ch.writeAndFlush(MSG.newBuilder().setRsCvid(rs).build());
+			ch.writeAndFlush(MsgUtil
+					.rs(msg, RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.UUID).setCvid(cvid))
+					.build());
 
 			ch.attr(ChannelConstant.INSTANCE).set(rq.getInstance());
-			ch.attr(ChannelConstant.CVID).set(rs.getCvid());
+			ch.attr(ChannelConstant.CVID).set(cvid);
 			ch.attr(ChannelConstant.UUID).set(rq.getUuid());
-			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent(rs.getCvid()));
+			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent(cvid));
 		}
 	}
 }

@@ -9,42 +9,20 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net;
+package com.sandpolis.core.net.network;
 
-import com.sandpolis.core.net.connection.Connection;
+import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 
-import io.netty.channel.Channel;
+import org.junit.jupiter.api.BeforeEach;
 
-/**
- * A {@link Connection} used for unit testing only.
- */
-public class UnitSock extends Connection {
+class NetworkStoreTest {
 
-	private boolean connected = true;
-	private boolean authenticated = false;
-
-	public UnitSock(Channel channel) {
-		super(channel);
+	@BeforeEach
+	void setup() {
+		NetworkStore.init(config -> {
+			config.ephemeral();
+			config.preferredServer = 100;
+			config.cvid = 123;
+		});
 	}
-
-	@Override
-	public boolean isConnected() {
-		return connected;
-	}
-
-	@Override
-	public boolean isAuthenticated() {
-		return authenticated;
-	}
-
-	@Override
-	public void authenticate() {
-		authenticated = true;
-	}
-
-	@Override
-	public void deauthenticate() {
-		authenticated = false;
-	}
-
 }

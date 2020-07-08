@@ -11,82 +11,44 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.handler.exelet;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.Descriptors.FieldDescriptor;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
-import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.command.Exelet.Handler;
 import com.sandpolis.core.net.connection.Connection;
-import com.sandpolis.core.net.util.ProtoUtil;
+import com.sandpolis.core.net.util.MsgUtil;
 
 /**
- * Distributes messages to their appropriate handlers. Each plugin get a
- * specialized {@link PluginDispatchVector} capable of handling plugin messages.
+ * This class distributes messages to their appropriate handlers.
  *
  * @author cilki
  * @since 5.1.0
  */
-public class DispatchVector {
+public final class DispatchMap {
 
-	private static final Logger log = LoggerFactory.getLogger(DispatchVector.class);
+	private static final Logger log = LoggerFactory.getLogger(DispatchMap.class);
 
-	/**
-	 * The maximum handler tag. This is here to avoid wasting a lot of memory if a
-	 * message is misconfigured.
-	 */
-	private static final int TAG_LIMIT = 256;
+	private static final Map<String, MethodHandle> methodHandleCache = Collections.synchronizedMap(new HashMap<>());
 
 	private final Connection sock;
 
-	protected Consumer<MSG>[] vector;
+	protected final Map<String, Consumer<MSG>> handlers;
 
-	/**
-	 * Build a non-plugin {@link DispatchVector}.
-	 */
-	@SuppressWarnings("unchecked")
-	public DispatchVector(Connection sock) {
+	public DispatchMap(Connection sock) {
 		this.sock = Objects.requireNonNull(sock);
-		this.vector = new Consumer[0];
-	}
-
-	/**
-	 * Obtain the payload from a container message.
-	 *
-	 * @param msg The container message
-	 * @return The message's payload
-	 * @throws InvalidProtocolBufferException
-	 */
-	protected Message unwrapPayload(MSG msg) throws InvalidProtocolBufferException {
-		return ProtoUtil.getPayload(msg);
-	}
-
-	protected MSG wrapPayload(MSG msg, MessageOrBuilder payload) {
-		// Build the payload if not already built
-		if (payload instanceof Builder)
-			payload = ((Builder) payload).build();
-
-		// Handle special case for Outcome
-		if (payload instanceof Outcome)
-			return ProtoUtil.rs(msg).setRsOutcome((Outcome) payload).build();
-
-		FieldDescriptor field = MSG.getDescriptor()
-				.findFieldByName(ProtoUtil.convertMessageClassToFieldName(payload.getClass()));
-
-		return ProtoUtil.rs(msg).setField(field, payload).build();
+		this.handlers = new HashMap<>();
 	}
 
 	/**
@@ -94,20 +56,13 @@ public class DispatchVector {
 	 *
 	 * @param msg The incoming message
 	 * @return Whether the message was handled
-	 * @throws Exception
 	 */
-	public boolean accept(MSG msg) throws Exception {
-		return dispatch(msg, msg.getPayloadCase().getNumber());
-	}
-
-	protected boolean dispatch(MSG msg, int tag) {
-		if (vector.length > tag) {
-			var handler = vector[tag];
-			if (handler != null) {
-				// Execute the message with the handler
-				handler.accept(msg);
-				return true;
-			}
+	public boolean accept(MSG msg) {
+		var handler = handlers.get(msg.getPayload().getTypeUrl());
+		if (handler != null) {
+			// Execute the message with the handler
+			handler.accept(msg);
+			return true;
 		}
 
 		return false;
@@ -118,8 +73,8 @@ public class DispatchVector {
 	 *
 	 * @param handler The handler to remove
 	 */
-	public synchronized void disengage(Handler handler) {
-		vector[handler.tag()] = null;
+	public synchronized void disengage(Method handler) {
+		handlers.remove(MsgUtil.getTypeUrl(handler));
 	}
 
 	/**
@@ -127,45 +82,46 @@ public class DispatchVector {
 	 * method.
 	 *
 	 * @param method The message handler
-	 * @param handle The method handle
 	 */
-	public synchronized void engage(Method method, MethodHandle handle) throws Exception {
-		var handler = method.getAnnotation(Handler.class);
-		if (handler == null)
-			throw new RuntimeException("Missing required @Handler annotation on: " + method.getName());
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public synchronized void engage(Method method) throws Exception {
+		String typeUrl = MsgUtil.getTypeUrl(method);
+		if (!methodHandleCache.containsKey(typeUrl)) {
+			methodHandleCache.put(typeUrl, MethodHandles.publicLookup().unreflect(method));
+		}
 
-		ensureSize(handler);
+		MethodHandle handle = methodHandleCache.get(typeUrl);
 
 		// TYPE 2
 		if (method.getReturnType() == MessageOrBuilder.class && method.getParameterCount() == 1
 				&& Message.class.isAssignableFrom(method.getParameterTypes()[0])) {
 
-			vector[handler.tag()] = msg -> {
+			handlers.put(typeUrl, msg -> {
 				try {
-					var test = unwrapPayload(msg);
-					MessageOrBuilder rs = (MessageOrBuilder) handle.invoke(test);
+					MessageOrBuilder rs = (MessageOrBuilder) handle
+							.invoke(msg.getPayload().unpack((Class) method.getParameterTypes()[0]));
+
 					if (rs != null)
-						sock.send(wrapPayload(msg, rs));
+						sock.send(MsgUtil.rs(msg, rs));
 				} catch (Throwable e) {
 					log.error("Failed to handle message", e);
 					// TODO error outcome
 				}
-
-			};
+			});
 		}
 
 		// TYPE 1
 		else if (method.getReturnType() == void.class && method.getParameterCount() == 1
 				&& Message.class.isAssignableFrom(method.getParameterTypes()[0])) {
 
-			vector[handler.tag()] = msg -> {
+			handlers.put(typeUrl, msg -> {
 				try {
-					handle.invoke(unwrapPayload(msg));
+					handle.invoke(msg.getPayload().unpack((Class) method.getParameterTypes()[0]));
 				} catch (Throwable e) {
 					log.error("Failed to handle message", e);
 					// No error response because this handler doesn't send a response normally
 				}
-			};
+			});
 		}
 
 		// TYPE 3
@@ -173,17 +129,17 @@ public class DispatchVector {
 				&& method.getParameterTypes()[0] == ExeletContext.class
 				&& Message.class.isAssignableFrom(method.getParameterTypes()[1])) {
 
-			vector[handler.tag()] = msg -> {
+			handlers.put(typeUrl, msg -> {
 				ExeletContext context = new ExeletContext(sock, msg);
 				try {
-					handle.invoke(context, unwrapPayload(msg));
+					handle.invoke(context, msg.getPayload().unpack((Class) method.getParameterTypes()[1]));
 				} catch (Throwable e) {
 					log.error("Failed to handle message", e);
 					// TODO error outcome
 				}
 
 				if (context.reply != null)
-					sock.send(wrapPayload(msg, context.reply));
+					sock.send(MsgUtil.rs(msg, context.reply));
 				if (context.deferAction != null) {
 					try {
 						context.deferAction.run();
@@ -191,7 +147,7 @@ public class DispatchVector {
 						log.error("Failed to run deferred action", e);
 					}
 				}
-			};
+			});
 		}
 
 		// TYPE 4
@@ -199,12 +155,13 @@ public class DispatchVector {
 				&& method.getParameterTypes()[0] == ExeletContext.class
 				&& Message.class.isAssignableFrom(method.getParameterTypes()[1])) {
 
-			vector[handler.tag()] = msg -> {
+			handlers.put(typeUrl, msg -> {
 				ExeletContext context = new ExeletContext(sock, msg);
 				try {
-					MessageOrBuilder rs = (MessageOrBuilder) handle.invoke(context, unwrapPayload(msg));
+					MessageOrBuilder rs = (MessageOrBuilder) handle.invoke(context,
+							msg.getPayload().unpack((Class) method.getParameterTypes()[1]));
 					if (rs != null)
-						sock.send(wrapPayload(msg, rs));
+						sock.send(MsgUtil.rs(msg, rs));
 				} catch (Throwable e) {
 					log.error("Failed to handle message", e);
 					// TODO error outcome
@@ -217,25 +174,11 @@ public class DispatchVector {
 						log.error("Failed to run deferred action", e);
 					}
 				}
-			};
+			});
 		}
 
 		// Unknown format
 		else
 			throw new RuntimeException("Unknown handler format for method: " + method.getName());
-	}
-
-	/**
-	 * Ensure that the internal vector is large enough to contain the given handler.
-	 * If not, expand the vector.
-	 *
-	 * @param handler The handler descriptor
-	 */
-	private synchronized void ensureSize(Handler handler) {
-		checkArgument(handler.tag() < TAG_LIMIT, "Handler tag too large");
-		checkArgument(handler.tag() > 0, "Negative handler tag");
-
-		if (handler.tag() >= vector.length)
-			vector = Arrays.copyOf(vector, handler.tag() + 1);
 	}
 }

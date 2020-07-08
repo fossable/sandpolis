@@ -12,7 +12,7 @@
 package com.sandpolis.core.net.loop;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;

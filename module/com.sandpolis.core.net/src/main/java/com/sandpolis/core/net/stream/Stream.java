@@ -11,11 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.stream;
 
-import com.sandpolis.core.util.IDUtil;
+import com.sandpolis.core.foundation.util.IDUtil;
 
 /**
+ * A {@link Stream} is an ephemeral flow of events between two endpoints in the
+ * network.
+ *
  * @author cilki
- * @since 5.0.2
+ * @since 2.0.0
  */
 public class Stream {
 

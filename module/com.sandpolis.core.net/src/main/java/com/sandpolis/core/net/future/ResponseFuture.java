@@ -11,14 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.future;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 
 import java.util.concurrent.ExecutionException;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.net.command.CommandFuture.MessageHandler;
 import com.sandpolis.core.net.exception.InvalidMessageException;
-import com.sandpolis.core.net.util.ProtoUtil;
+import com.sandpolis.core.net.util.MsgUtil;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;
@@ -69,7 +69,7 @@ public class ResponseFuture<E extends Message> extends DefaultPromise<Message> {
 				return;
 			}
 
-			var message = (Message) ProtoUtil.getPayload(messageFuture.get());
+			var message = (Message) MsgUtil.getPayload(messageFuture.get());
 
 			if (message == null) {
 				setFailure(new InvalidMessageException("Empty response"));

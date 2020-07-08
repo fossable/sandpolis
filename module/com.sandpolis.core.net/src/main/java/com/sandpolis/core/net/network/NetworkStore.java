@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.store.network;
+package com.sandpolis.core.net.network;
 
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
@@ -25,26 +25,21 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
 import com.google.common.graph.NetworkBuilder;
-import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta;
-import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.LinkAdded;
-import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.LinkRemoved;
-import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.NodeAdded;
-import com.sandpolis.core.net.MsgNetwork.EV_NetworkDelta.NodeRemoved;
-import com.sandpolis.core.net.connection.ConnectionStore;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
+import com.sandpolis.core.net.connection.ConnectionStore;
 import com.sandpolis.core.net.future.MessageFuture;
-import com.sandpolis.core.net.store.network.NetworkStore.NetworkStoreConfig;
-import com.sandpolis.core.net.store.network.NetworkEvents.CvidChangedEvent;
-import com.sandpolis.core.net.store.network.NetworkEvents.ServerEstablishedEvent;
-import com.sandpolis.core.net.store.network.NetworkEvents.ServerLostEvent;
+import com.sandpolis.core.net.network.NetworkEvents.CvidChangedEvent;
+import com.sandpolis.core.net.network.NetworkEvents.ServerEstablishedEvent;
+import com.sandpolis.core.net.network.NetworkEvents.ServerLostEvent;
+import com.sandpolis.core.net.network.NetworkStore.NetworkStoreConfig;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.util.Platform.Instance;
 
 /**
  * A static store for managing network connections, which may or may not be
@@ -83,7 +78,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 				.collect(Collectors.toUnmodifiableList()).forEach(network::removeNode);
 
 		// See if that was the last connection to a server
-		if (event.get().getRemoteInstance() == Instance.SERVER) {
+		if (event.get().getRemoteInstance() == InstanceType.SERVER) {
 			// TODO
 			post(ServerLostEvent::new, event.get().getRemoteCvid());
 		}
@@ -95,7 +90,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 		// TODO add edge
 
 		// See if that was the first connection to a server
-		if (event.get().getRemoteInstance() == Instance.SERVER) {
+		if (event.get().getRemoteInstance() == InstanceType.SERVER) {
 			// TODO
 			post(ServerEstablishedEvent::new, event.get().getRemoteCvid());
 		}
@@ -127,7 +122,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	public synchronized int getPreferredServer() {
 		if (!network.nodes().contains(preferredServer))
 			// Choose a server at random
-			preferredServer = network.nodes().stream().filter(cvid -> CvidUtil.extractInstance(cvid) == Instance.SERVER)
+			preferredServer = network.nodes().stream().filter(cvid -> CvidUtil.extractInstance(cvid) == InstanceType.SERVER)
 					.findAny().orElse(0);
 
 		return preferredServer;
@@ -140,17 +135,17 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 *
 	 * @param delta The delta event that describes the change
 	 */
-	public synchronized void updateNetwork(EV_NetworkDelta delta) {
-		for (NodeAdded na : delta.getNodeAddedList())
-			network.addNode(na.getCvid());
-		for (NodeRemoved nr : delta.getNodeRemovedList())
-			network.removeNode(nr.getCvid());
-
-		for (LinkAdded la : delta.getLinkAddedList())
-			network.addEdge(la.getCvid1(), la.getCvid2(), new SockLink(la.getLink()));
-		for (LinkRemoved lr : delta.getLinkRemovedList())
-			network.removeEdge(network.edgeConnectingOrNull(lr.getCvid1(), lr.getCvid2()));
-	}
+//	public synchronized void updateNetwork(EV_NetworkDelta delta) {
+//		for (NodeAdded na : delta.getNodeAddedList())
+//			network.addNode(na.getCvid());
+//		for (NodeRemoved nr : delta.getNodeRemovedList())
+//			network.removeNode(nr.getCvid());
+//
+//		for (LinkAdded la : delta.getLinkAddedList())
+//			network.addEdge(la.getCvid1(), la.getCvid2(), new SockLink(la.getLink()));
+//		for (LinkRemoved lr : delta.getLinkRemovedList())
+//			network.removeEdge(network.edgeConnectingOrNull(lr.getCvid1(), lr.getCvid2()));
+//	}
 
 	/**
 	 * Get the CVIDs of every node directly connected to the given CVID.

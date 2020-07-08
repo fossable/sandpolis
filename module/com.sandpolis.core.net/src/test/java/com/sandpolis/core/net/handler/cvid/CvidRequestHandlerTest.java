@@ -23,14 +23,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgCvid.RQ_Cvid;
-import com.sandpolis.core.net.MsgCvid.RS_Cvid;
 import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
+import com.sandpolis.core.net.msg.MsgCvid.RQ_Cvid;
+import com.sandpolis.core.net.msg.MsgCvid.RS_Cvid;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.instance.Platform.Instance;
-import com.sandpolis.core.instance.Platform.InstanceFlavor;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -61,13 +61,13 @@ class CvidRequestHandlerTest {
 	@Test
 	@DisplayName("Initiate a CVID handshake")
 	void testInitiate() {
-		HANDLER.handshake(client, Instance.CLIENT, InstanceFlavor.MEGA, "testuuid");
+		HANDLER.handshake(client, InstanceType.CLIENT, InstanceFlavor.MEGA, "testuuid");
 
 		MSG msg = client.readOutbound();
 		RQ_Cvid rq = msg.getRqCvid();
 
 		assertTrue(rq != null);
-		assertEquals(Instance.CLIENT, rq.getInstance());
+		assertEquals(InstanceType.CLIENT, rq.getInstance());
 		assertEquals(InstanceFlavor.MEGA, rq.getInstanceFlavor());
 		assertEquals("testuuid", rq.getUuid());
 	}
@@ -85,7 +85,7 @@ class CvidRequestHandlerTest {
 	@Test
 	@DisplayName("Receive a valid response")
 	void testReceiveCorrect() {
-		client.writeInbound(MSG.newBuilder().setRsCvid(RS_Cvid.newBuilder().setCvid(CvidUtil.cvid(Instance.CLIENT))
+		client.writeInbound(MSG.newBuilder().setRsCvid(RS_Cvid.newBuilder().setCvid(CvidUtil.cvid(InstanceType.CLIENT))
 				.setServerCvid(123).setServerUuid("testuuid")).build());
 
 		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);

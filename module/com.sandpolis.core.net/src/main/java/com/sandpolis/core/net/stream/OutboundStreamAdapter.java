@@ -20,10 +20,8 @@ import java.util.function.Function;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.connection.Connection;
-import com.sandpolis.core.net.util.ProtoUtil;
+import com.sandpolis.core.net.util.MsgUtil;
 
 public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscriber<E>, StreamEndpoint {
 
@@ -67,10 +65,7 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 
 	@Override
 	public void onNext(E item) {
-		if (pluginPacker == null)
-			sock.send(ProtoUtil.setPayload(MSG.newBuilder().setId(id), item));
-		else
-			sock.send(MSG.newBuilder().setTo(cvid).setFrom(Core.cvid()).setId(id).setPlugin(pluginPacker.apply(item)));
+		sock.send(MsgUtil.ev(id, item));
 	}
 
 	@Override

@@ -11,28 +11,17 @@
 //=========================================================S A N D P O L I S==//
 syntax = "proto3";
 
-package core.net;
+package core.net.msg;
 
-import "com/sandpolis/core/instance/generator.proto";
-
-option java_package = "com.sandpolis.core.net";
+option java_package = "com.sandpolis.core.net.msg";
 option optimize_for = CODE_SIZE;
 
 /**
- * Request the server to generate an output.
+ * Request: Stop a Stream
+ * Response: rs_outcome
  */
-message RQ_Generate {
-    // The configuration for the generator
-    core.instance.GenConfig config = 1;
-}
+message RQ_StreamStop {
 
-/**
- * Respond to a generation request.
- */
-message RS_Generate {
-    // A report from the generator
-    core.instance.GenReport report = 1;
-
-    // The output of the generator
-    bytes output = 2;
+    // The stream ID of the stream to stop
+    int32 id = 1;
 }

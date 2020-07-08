@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.init;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.HandlerKey.FRAME_DECODER;
 import static com.sandpolis.core.net.HandlerKey.FRAME_ENCODER;
 import static com.sandpolis.core.net.HandlerKey.LOG_DECODED;
@@ -22,7 +22,7 @@ import static com.sandpolis.core.net.HandlerKey.PROTO_ENCODER;
 import static com.sandpolis.core.net.HandlerKey.RESPONSE;
 import static com.sandpolis.core.net.HandlerKey.TRAFFIC;
 
-import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;

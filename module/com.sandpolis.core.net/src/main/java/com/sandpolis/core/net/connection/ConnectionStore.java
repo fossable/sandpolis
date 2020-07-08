@@ -11,9 +11,10 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.connection;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -21,8 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Generator.LoopConfig;
-import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.net.Protocol;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
@@ -31,7 +32,7 @@ import com.sandpolis.core.net.connection.ConnectionStore.ConnectionStoreConfig;
 import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ClientChannelInitializer;
 import com.sandpolis.core.net.loop.ConnectionLoop;
-import com.sandpolis.core.net.store.network.NetworkStore;
+import com.sandpolis.core.net.network.NetworkStore;
 
 import io.netty.bootstrap.Bootstrap;
 
@@ -53,6 +54,10 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 
 	public ConnectionStore() {
 		super(log);
+	}
+
+	public Optional<Connection> getByCvid(int cvid) {
+		return null;
 	}
 
 	/**

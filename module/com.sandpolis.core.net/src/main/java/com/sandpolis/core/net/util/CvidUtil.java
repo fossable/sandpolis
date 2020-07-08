@@ -13,9 +13,9 @@ package com.sandpolis.core.net.util;
 
 import java.util.Objects;
 
-import com.sandpolis.core.util.Platform.Instance;
-import com.sandpolis.core.util.Platform.InstanceFlavor;
-import com.sandpolis.core.util.RandUtil;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.foundation.util.RandUtil;
 
 /**
  * A CVID is a positive 32-bit ID that uniquely identifies an instance on a
@@ -56,9 +56,9 @@ public final class CvidUtil {
 	 * @param cvid A CVID
 	 * @return The cvid's instance
 	 */
-	public static Instance extractInstance(int cvid) {
+	public static InstanceType extractInstance(int cvid) {
 		int iid = cvid & ((1 << IID_SPACE) - 1);
-		return Instance.forNumber(iid);
+		return InstanceType.forNumber(iid);
 	}
 
 	/**
@@ -78,7 +78,7 @@ public final class CvidUtil {
 	 * @param instance The new CVID's instance type
 	 * @return A new CVID
 	 */
-	public static int cvid(Instance instance) {
+	public static int cvid(InstanceType instance) {
 		return cvid(instance, InstanceFlavor.NONE);
 	}
 
@@ -94,10 +94,10 @@ public final class CvidUtil {
 	 * @param flavor   The new CVID's instance flavor
 	 * @return A new CVID
 	 */
-	public static int cvid(Instance instance, InstanceFlavor flavor) {
+	public static int cvid(InstanceType instance, InstanceFlavor flavor) {
 		Objects.requireNonNull(instance);
 		Objects.requireNonNull(flavor);
-		if (instance == Instance.UNRECOGNIZED)
+		if (instance == InstanceType.UNRECOGNIZED)
 			throw new IllegalArgumentException("Unrecognized instance type");
 		if (flavor == InstanceFlavor.UNRECOGNIZED)
 			throw new IllegalArgumentException("Unrecognized instance flavor");

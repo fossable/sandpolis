@@ -11,18 +11,20 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.handler.exelet;
 
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.Message;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.command.Exelet.Auth;
@@ -31,6 +33,7 @@ import com.sandpolis.core.net.command.Exelet.Permission;
 import com.sandpolis.core.net.command.Exelet.Unauth;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.plugin.ExeletProvider;
+import com.sandpolis.core.net.util.MsgUtil;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -46,26 +49,21 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 
 	private static final Logger log = LoggerFactory.getLogger(ExeletHandler.class);
 
-	private static final Map<Class<? extends Exelet>, Map<Method, MethodHandle>> cache = new HashMap<>();
-
 	private final Connection sock;
 
-	private final DispatchVector coreVector;
+	private final Map<String, DispatchMap> dispatchers;
 
-	private final Map<String, PluginDispatchVector> pluginVectors;
-
-	private final Map<Class<? extends Exelet>, String> exelets;
+	private final List<Class<? extends Exelet>> exelets;
 
 	public ExeletHandler(Connection sock) {
 		this.sock = sock;
-		this.pluginVectors = new HashMap<>();
-		this.coreVector = new DispatchVector(sock);
-		this.exelets = new HashMap<>();
+		this.dispatchers = new HashMap<>();
+		this.exelets = new ArrayList<>();
 
 		// Register plugin exelets
 		PluginStore.getLoadedPlugins().forEach(plugin -> {
 			plugin.getExtensions(ExeletProvider.class).forEach(provider -> {
-				register(plugin.getId(), provider.getMessageType(), provider.getExelets());
+				register(provider.getExelets());
 			});
 		});
 	}
@@ -78,53 +76,33 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, MSG msg) throws Exception {
 
-		switch (msg.getPayloadCase()) {
-		case PLUGIN:
-			var pluginVector = pluginVectors.get(msg.getPlugin().getTypeUrl().split("/")[0]);
-			if (pluginVector != null && pluginVector.accept(msg))
-				return;
-			break;
-		default:
-			if (coreVector.accept(msg))
-				return;
-			break;
+		var dispatcher = dispatchers.get(msg.getPayload().getTypeUrl().split("/")[0]);
+		if (dispatcher != null) {
+			dispatcher.accept(msg);
+			return;
 		}
 
-		// There's no valid handler
+		// There's no valid dispatcher
 		ctx.fireChannelRead(msg);
 	}
 
-	public void register(@SuppressWarnings("unchecked") Class<? extends Exelet>... classes) {
-		register("", MSG.class, classes);
-	}
-
-	public synchronized void register(String pluginId, Class<? extends Message> messageType,
-			@SuppressWarnings("unchecked") Class<? extends Exelet>... classes) {
+	public synchronized void register(@SuppressWarnings("unchecked") Class<? extends Exelet>... classes) {
 		try {
 			for (var _class : classes) {
-				exelets.put(_class, pluginId);
+				exelets.add(_class);
 
-				if (!pluginId.isEmpty()) {
-					pluginVectors.put(exelets.get(_class), new PluginDispatchVector(sock, pluginId, messageType));
-				}
+				for (Method m : _class.getMethods()) {
+					if (m.getAnnotation(Handler.class) != null) {
+						if (m.isAnnotationPresent(Unauth.class)
+								|| (m.isAnnotationPresent(Auth.class) && sock.isAuthenticated())) {
 
-				var methods = cache.get(_class);
-				if (methods == null) {
-					methods = new HashMap<>();
-					for (Method m : _class.getMethods()) {
-						if (m.getAnnotation(Handler.class) != null) {
-							methods.put(m, MethodHandles.publicLookup().unreflect(m));
+							DispatchMap dv = dispatchers.get(MsgUtil.getModuleId(m));
+							if (dv == null) {
+								dv = new DispatchMap(sock);
+								dispatchers.put(MsgUtil.getModuleId(m), dv);
+							}
+							dv.engage(m);
 						}
-					}
-
-					cache.put(_class, methods);
-				}
-
-				for (Method m : methods.keySet()) {
-					if (m.isAnnotationPresent(Unauth.class)) {
-						engage(_class, m);
-					} else if (m.isAnnotationPresent(Auth.class) && sock.isAuthenticated()) {
-						engage(_class, m);
 					}
 				}
 			}
@@ -137,7 +115,7 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 		for (var _class : classes) {
 			for (Method m : _class.getMethods()) {
 				if (m.isAnnotationPresent(Handler.class)) {
-					disengage(_class, m);
+					dispatchers.get(MsgUtil.getModuleId(m)).disengage(m);
 				}
 			}
 		}
@@ -145,7 +123,7 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 
 	public synchronized void authenticate() {
 		try {
-			for (Class<? extends Exelet> _class : exelets.keySet()) {
+			for (Class<? extends Exelet> _class : exelets) {
 				for (Method m : _class.getMethods()) {
 					if (m.isAnnotationPresent(Auth.class)) {
 						boolean passed = true;
@@ -155,8 +133,10 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 							// TODO
 						}
 
-						if (passed)
-							engage(_class, m);
+						if (passed) {
+							dispatchers.get(MsgUtil.getModuleId(m)).engage(m);
+						}
+
 					}
 				}
 			}
@@ -166,44 +146,12 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 	}
 
 	public synchronized void deauthenticate() {
-		for (Class<? extends Exelet> _class : exelets.keySet()) {
+		for (Class<? extends Exelet> _class : exelets) {
 			for (Method m : _class.getMethods()) {
 				if (m.isAnnotationPresent(Auth.class)) {
-					disengage(_class, m);
+					MsgUtil.getModuleId(m);
 				}
 			}
-		}
-	}
-
-	private void engage(Class<? extends Exelet> exelet, Method method) throws Exception {
-		if (exelets.get(exelet).isEmpty()) {
-			log.trace("Engaging core handler: {}", method.getName());
-			coreVector.engage(method, cache.get(exelet).get(method));
-
-		} else {
-			log.trace("Engaging plugin handler: {}", method.getName());
-			pluginVectors.get(exelets.get(exelet)).engage(method, cache.get(exelet).get(method));
-		}
-	}
-
-	/**
-	 * Immediately remove the handler corresponding to the given plugin and exelet
-	 * method.
-	 *
-	 * @param method The handler method
-	 */
-	private void disengage(Class<? extends Exelet> exelet, Method method) {
-		var handler = method.getAnnotation(Handler.class);
-		if (handler == null)
-			// This shouldn't happen unless engage is wrong
-			throw new RuntimeException("Missing required @Handler annotation on: " + method.getName());
-
-		if (exelets.get(exelet).isEmpty()) {
-			log.trace("Disengaging core handler: {}", method.getName());
-			coreVector.disengage(handler);
-		} else {
-			log.trace("Disengaging plugin handler: {}", method.getName());
-			pluginVectors.get(exelets.get(exelet)).disengage(handler);
 		}
 	}
 }

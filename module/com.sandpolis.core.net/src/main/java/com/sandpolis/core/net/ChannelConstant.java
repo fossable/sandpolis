@@ -12,7 +12,7 @@
 package com.sandpolis.core.net;
 
 import com.sandpolis.core.net.connection.Connection;
-import com.sandpolis.core.util.Platform.Instance;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
@@ -41,7 +41,7 @@ public final class ChannelConstant {
 	/**
 	 * The remote host's instance type.
 	 */
-	public static final AttributeKey<Instance> INSTANCE = AttributeKey.valueOf("instance");
+	public static final AttributeKey<InstanceType> INSTANCE = AttributeKey.valueOf("instance");
 
 	/**
 	 * The {@link Connection} associated with the {@link Channel}.

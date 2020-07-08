@@ -11,14 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.util;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 
 import java.net.InetAddress;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
-import com.sandpolis.core.util.ValidationUtil;
+import com.sandpolis.core.foundation.util.ValidationUtil;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.nio.NioDatagramChannel;

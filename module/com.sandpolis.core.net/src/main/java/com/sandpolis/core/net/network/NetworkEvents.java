@@ -9,32 +9,30 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-syntax = "proto3";
+package com.sandpolis.core.net.network;
 
-package core.net;
+import com.sandpolis.core.instance.store.event.ParameterizedEvent;
 
-import "com/sandpolis/core/instance/attribute.proto";
+public final class NetworkEvents {
 
-option java_package = "com.sandpolis.core.net";
-option optimize_for = CODE_SIZE;
+	public static final class ServerLostEvent extends ParameterizedEvent<Integer> {
+		public ServerLostEvent(Integer cvid) {
+			super(cvid);
+		}
+	}
 
-message RQ_AttributeQuery {
-    repeated string path = 1;
-}
+	public static final class ServerEstablishedEvent extends ParameterizedEvent<Integer> {
+		public ServerEstablishedEvent(Integer cvid) {
+			super(cvid);
+		}
+	}
 
-message RS_AttributeQuery {
-    core.instance.ProtoProfile result = 1;
-}
+	public static final class CvidChangedEvent extends ParameterizedEvent<Integer> {
+		public CvidChangedEvent(Integer cvid) {
+			super(cvid);
+		}
+	}
 
-message RQ_AttributeStream {
-
-    // The desired stream ID
-    int32 id = 1;
-
-    repeated string path = 2;
-    int32 update_period = 3;
-}
-
-message EV_AttributeStream {
-    core.instance.ProtoProfile update = 1;
+	private NetworkEvents() {
+	}
 }

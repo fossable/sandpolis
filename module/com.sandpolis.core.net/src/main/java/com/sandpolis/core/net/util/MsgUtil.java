@@ -11,15 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.util;
 
-import com.google.common.base.CaseFormat;
-import com.google.common.base.Preconditions;
-import com.google.protobuf.Descriptors.FieldDescriptor;
+import java.lang.reflect.Method;
+
+import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.foundation.util.IDUtil;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.util.IDUtil;
 
 /**
  * Utilities for simplifying common operations related to protocol buffers.
@@ -28,7 +27,25 @@ import com.sandpolis.core.util.IDUtil;
  * @author cilki
  * @since 5.0.0
  */
-public final class ProtoUtil {
+public final class MsgUtil {
+
+	public static MSG.Builder msg() {
+		return MSG.newBuilder();
+	}
+
+	public static MSG.Builder msg(MessageOrBuilder payload) {
+		return setPayload(msg(), payload);
+	}
+
+	private static MSG.Builder setPayload(MSG.Builder msg, MessageOrBuilder payload) {
+		if (payload instanceof Builder) {
+			return msg.setPayload(Any.pack(((Builder) payload).build(), getModuleId(payload)));
+		} else if (payload instanceof Message) {
+			return msg.setPayload(Any.pack((Message) payload, getModuleId(payload)));
+		} else {
+			throw new AssertionError();
+		}
+	}
 
 	/**
 	 * Create a new empty request message.
@@ -64,6 +81,10 @@ public final class ProtoUtil {
 		return rs;
 	}
 
+	public static MSG.Builder ev(int id) {
+		return MSG.newBuilder().setId(id);
+	}
+
 	/**
 	 * Create a new request message.
 	 *
@@ -85,57 +106,47 @@ public final class ProtoUtil {
 		return setPayload(rs(msg), payload);
 	}
 
-	/**
-	 * Set the payload of the given message.
-	 *
-	 * @param msg     The message to receive the payload
-	 * @param payload The payload to insert
-	 * @return {@code msg}
-	 */
-	public static MSG.Builder setPayload(MSG.Builder msg, MessageOrBuilder payload) {
-
-		// Build the payload if not already built
-		if (payload instanceof Builder)
-			payload = ((Builder) payload).build();
-
-		// Handle special case for Outcome
-		if (payload instanceof Outcome)
-			return msg.setRsOutcome((Outcome) payload);
-
-		FieldDescriptor field = MSG.getDescriptor().findFieldByName(convertMessageClassToFieldName(payload.getClass()));
-
-		return msg.setField(field, payload);
+	public static MSG.Builder ev(int id, MessageOrBuilder payload) {
+		return setPayload(ev(id), payload);
 	}
 
-	/**
-	 * Get the payload from the given message.
-	 *
-	 * @param msg The message
-	 * @return The message's payload or {@code null} if empty
-	 */
-	public static Message getPayload(Message msg) {
-		FieldDescriptor oneof = msg.getOneofFieldDescriptor(msg.getDescriptorForType().getOneofs().get(0));
-		if (oneof == null)
-			return null;
-
-		return (Message) msg.getField(oneof);
+	public static String getModuleId(MessageOrBuilder message) {
+		return getModuleId(message.getClass());
 	}
 
-	/**
-	 * Convert a message class name (RQ_ExampleMessage) to its message field name
-	 * (rq_example_message).
-	 *
-	 * @param payload The payload class
-	 * @return The field name
-	 */
-	public static String convertMessageClassToFieldName(Class<?> payload) {
-		String field = payload.getSimpleName();
-		Preconditions.checkArgument(field.charAt(2) == '_');
-
-		return field.substring(0, field.indexOf('_') + 1).toLowerCase()
-				+ CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, field.substring(field.indexOf('_') + 1));
+	public static String getModuleId(Class<?> messageType) {
+		return messageType.getPackageName().replaceAll("\\.msg$", "");
 	}
 
-	private ProtoUtil() {
+	public static String getModuleId(Method method) {
+		for (var param : method.getParameterTypes()) {
+			if (Message.class.isAssignableFrom(param)) {
+				return getModuleId(param);
+			}
+		}
+
+		throw new RuntimeException();
+	}
+
+	public static String getTypeUrl(Class<?> messageType) {
+		var components = messageType.getPackageName().split("\\.");
+		if (components.length < 3)
+			throw new IllegalArgumentException();
+
+		return String.format("%s/%s.%s.%s", getModuleId(messageType), components[components.length - 3],
+				components[components.length - 2], components[components.length - 1]);
+	}
+
+	public static String getTypeUrl(Method method) {
+		for (var param : method.getParameterTypes()) {
+			if (Message.class.isAssignableFrom(param)) {
+				return getTypeUrl(param);
+			}
+		}
+
+		throw new RuntimeException();
+	}
+
+	private MsgUtil() {
 	}
 }

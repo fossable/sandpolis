@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.future;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -28,7 +28,7 @@ import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.MsgCvid.RQ_Cvid;
 import com.sandpolis.core.net.MsgCvid.RS_Cvid;
 import com.sandpolis.core.net.exception.InvalidMessageException;
-import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.foundation.Result.Outcome;
 
 import io.netty.util.concurrent.GlobalEventExecutor;
 

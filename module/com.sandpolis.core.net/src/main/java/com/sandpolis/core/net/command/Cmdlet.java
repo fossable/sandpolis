@@ -12,18 +12,18 @@
 package com.sandpolis.core.net.command;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
-import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
+import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 
 import java.util.concurrent.TimeUnit;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.util.ProtoUtil;
+import com.sandpolis.core.net.util.MsgUtil;
 
 import io.netty.util.concurrent.EventExecutor;
 
@@ -57,7 +57,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 * The target sock which will be used to send and receive messages. Defaults to
 	 * the default server.
 	 */
-	protected Connection sock = ConnectionStore.get(cvid).orElse(null);
+	protected Connection sock = ConnectionStore.getByCvid(cvid).orElse(null);
 
 	/**
 	 * Explicitly set a thread pool for the completion listeners.
@@ -115,7 +115,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 */
 	public E target(int cvid) {
 		this.cvid = cvid;
-		this.sock = ConnectionStore.get(cvid).get();
+		this.sock = ConnectionStore.getByCvid(cvid).get();
 		return (E) this;
 	}
 
@@ -150,8 +150,8 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	protected <R extends Message> ResponseFuture<R> request(MessageOrBuilder payload) {
 		checkNotNull(payload);
 
-		return new ResponseFuture<>(pool, sock.request(ProtoUtil.setPayload(ProtoUtil.rq().setTo(cvid), payload),
-				timeout, TimeUnit.MILLISECONDS));
+		return new ResponseFuture<>(pool,
+				sock.request(MsgUtil.rq(payload).setTo(cvid), timeout, TimeUnit.MILLISECONDS));
 	}
 
 }

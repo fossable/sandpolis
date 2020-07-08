@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.connection;
 
-import com.sandpolis.core.instance.event.ParameterizedEvent;
+import com.sandpolis.core.instance.store.event.ParameterizedEvent;
 
 public final class ConnectionEvents {
 

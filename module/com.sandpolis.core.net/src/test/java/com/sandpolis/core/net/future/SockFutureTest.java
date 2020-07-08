@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.future;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -23,10 +23,9 @@ import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.UnitSock;
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -100,7 +99,7 @@ class SockFutureTest {
 		assertTrue(sf.isSuccess());
 		assertNull(sf.cause());
 
-		Sock sock = sf.get();
+		Connection sock = sf.get();
 		sf.sync();
 
 		assertTrue(client.isDone());

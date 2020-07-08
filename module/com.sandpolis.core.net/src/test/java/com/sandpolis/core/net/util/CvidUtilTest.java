@@ -20,16 +20,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.Platform.Instance;
-import com.sandpolis.core.instance.Platform.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 
 class CvidUtilTest {
 
 	@Test
 	@DisplayName("Check for Instance ID overflows")
 	void iid_1() {
-		for (Instance instance : Instance.values())
-			if (instance != Instance.UNRECOGNIZED)
+		for (InstanceType instance : InstanceType.values())
+			if (instance != InstanceType.UNRECOGNIZED)
 				assertTrue(instance.getNumber() <= (1 << CvidUtil.IID_SPACE) - 1,
 						"Maximum ID exceeded: " + instance.getNumber());
 	}
@@ -46,9 +46,9 @@ class CvidUtilTest {
 	@Test
 	@DisplayName("Check a few random CVIDs for validity")
 	void cvid_1() {
-		for (Instance instance : Instance.values()) {
+		for (InstanceType instance : InstanceType.values()) {
 			for (InstanceFlavor flavor : InstanceFlavor.values()) {
-				if (instance == Instance.UNRECOGNIZED || flavor == InstanceFlavor.UNRECOGNIZED)
+				if (instance == InstanceType.UNRECOGNIZED || flavor == InstanceFlavor.UNRECOGNIZED)
 					continue;
 
 				for (int i = 0; i < 1000; i++) {

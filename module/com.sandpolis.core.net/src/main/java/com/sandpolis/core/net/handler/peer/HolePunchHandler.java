@@ -13,7 +13,7 @@ package com.sandpolis.core.net.handler.peer;
 
 import java.net.ProtocolException;
 
-import com.sandpolis.core.util.RandUtil;
+import com.sandpolis.core.foundation.util.RandUtil;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

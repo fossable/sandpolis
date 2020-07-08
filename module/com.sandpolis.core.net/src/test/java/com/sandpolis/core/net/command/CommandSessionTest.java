@@ -11,13 +11,12 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.command;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -27,22 +26,21 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.foundation.Result.Outcome;
+import com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Connection;
 import com.sandpolis.core.net.ChannelConstant;
-import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.init.AbstractChannelInitializer;
-import com.sandpolis.core.net.sock.Sock;
-import com.sandpolis.core.instance.Result.Outcome;
 
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 
-@Disabled
 class CommandSessionTest {
 
 	private EmbeddedChannel channel;
-	private Sock sock;
+	private Connection sock;
 
 	@BeforeAll
 	private static void init() {

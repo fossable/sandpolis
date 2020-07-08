@@ -22,15 +22,16 @@ open module com.sandpolis.core.net {
 	exports com.sandpolis.core.net.loop;
 	exports com.sandpolis.core.net.plugin;
 	exports com.sandpolis.core.net.connection;
-	exports com.sandpolis.core.net.store.network;
+	exports com.sandpolis.core.net.network;
 	exports com.sandpolis.core.net.stream;
 	exports com.sandpolis.core.net.util;
 	exports com.sandpolis.core.net;
+	exports com.sandpolis.core.net.msg;
 
 	requires com.google.common;
 	requires com.google.protobuf;
+	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.core.instance;
-	requires com.sandpolis.core.util;
 	requires io.netty.buffer;
 	requires io.netty.codec.dns;
 	requires io.netty.codec;

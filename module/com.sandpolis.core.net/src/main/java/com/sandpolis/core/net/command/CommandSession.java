@@ -13,7 +13,7 @@ package com.sandpolis.core.net.command;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
 import java.util.LinkedList;
@@ -25,11 +25,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Result.Outcome;
-import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.util.ProtoUtil;
+import com.sandpolis.core.net.util.MsgUtil;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;
@@ -91,7 +90,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 			cvid = sock.getRemoteCvid();
 		else if (sock == null)
 			// TODO get sock from NetworkStore
-			sock = ConnectionStore.get(cvid).get();
+			sock = ConnectionStore.getByCvid(cvid).get();
 
 		this.cvid = checkNotNull(cvid);
 		this.gateway = checkNotNull(sock);
@@ -242,7 +241,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	public void send(MessageOrBuilder payload) {
 		checkNotNull(payload);
 
-		gateway.send(ProtoUtil.setPayload(MSG.newBuilder().setTo(cvid), payload));
+		gateway.send(MsgUtil.msg(payload).setTo(cvid));
 	}
 
 	/**
@@ -253,7 +252,7 @@ public class CommandSession extends DefaultPromise<Outcome> implements CommandFu
 	 * @param handlers The response handlers
 	 */
 	public void request(MessageOrBuilder payload, MessageHandler<?>... handlers) {
-		var rq = ProtoUtil.setPayload(ProtoUtil.rq().setTo(cvid), payload);
+		var rq = MsgUtil.rq(payload).setTo(cvid);
 
 		var future = new ResponseFuture<>(ThreadStore.get("net.message.incoming"),
 				gateway.request(rq, timeout, TimeUnit.MILLISECONDS));
