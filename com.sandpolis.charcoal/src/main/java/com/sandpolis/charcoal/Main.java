@@ -12,8 +12,8 @@
 package com.sandpolis.charcoal;
 
 import com.sandpolis.core.instance.MainDispatch;
-import com.sandpolis.core.util.Platform.Instance;
-import com.sandpolis.core.util.Platform.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 
 /**
  * This stub is the entry point for Charcoal instances. Control is given to
@@ -27,7 +27,7 @@ public final class Main {
 	}
 
 	public static void main(String[] args) {
-		MainDispatch.dispatch(Charcoal.class, args, Instance.CHARCOAL, InstanceFlavor.NONE);
+		MainDispatch.dispatch(Charcoal.class, args, InstanceType.CHARCOAL, InstanceFlavor.NONE);
 	}
 
 }
