@@ -19,7 +19,7 @@ import java.util.concurrent.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.util.RandUtil;
+import com.sandpolis.core.foundation.util.RandUtil;
 import com.sandpolis.installer.Main;
 import com.sandpolis.installer.task.GuiInstallTask;
 import com.sandpolis.installer.util.CloudUtil;

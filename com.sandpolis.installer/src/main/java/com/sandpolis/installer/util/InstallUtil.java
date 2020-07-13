@@ -21,9 +21,9 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
-import com.sandpolis.core.util.JarUtil;
+import com.sandpolis.core.foundation.soi.Dependency.SO_DependencyMatrix;
+import com.sandpolis.core.foundation.soi.Dependency.SO_DependencyMatrix.Artifact;
+import com.sandpolis.core.foundation.util.JarUtil;
 import com.sandpolis.installer.Main;
 
 /**

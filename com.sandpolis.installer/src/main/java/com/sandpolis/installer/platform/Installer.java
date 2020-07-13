@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.installer.platform;
 
-import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.core.foundation.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -25,8 +25,8 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import com.sandpolis.core.soi.SoiUtil;
-import com.sandpolis.core.util.ArtifactUtil;
+import com.sandpolis.core.foundation.soi.SoiUtil;
+import com.sandpolis.core.foundation.util.ArtifactUtil;
 import com.sandpolis.installer.InstallComponent;
 import com.sandpolis.installer.Main;
 import com.sandpolis.installer.task.GuiInstallTask;

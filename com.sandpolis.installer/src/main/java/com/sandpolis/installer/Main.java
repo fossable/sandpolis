@@ -25,7 +25,7 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 
 /**
- * This stub is the entry point for Installer instances.
+ * This class is the entry point for Installer instances.
  *
  * @author cilki
  * @since 5.0.0
@@ -140,6 +140,9 @@ public final class Main {
 			closeSplash();
 		}
 
+		/**
+		 * Close an AWT splash screen if one exists.
+		 */
 		private void closeSplash() {
 			try {
 				var splash = Class.forName("java.awt.SplashScreen").getMethod("getSplashScreen").invoke(null);
