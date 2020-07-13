@@ -10,7 +10,6 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.server.vanilla {
-	exports com.sandpolis.server.vanilla.auth;
 	exports com.sandpolis.server.vanilla.exe;
 	exports com.sandpolis.server.vanilla.gen.mega;
 	exports com.sandpolis.server.vanilla.gen;
@@ -31,8 +30,7 @@ open module com.sandpolis.server.vanilla {
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.ipc;
 	requires com.sandpolis.core.net;
-	requires com.sandpolis.core.soi;
-	requires com.sandpolis.core.util;
+	requires com.sandpolis.core.foundation;
 	requires io.netty.buffer;
 	requires io.netty.codec;
 	requires io.netty.common;

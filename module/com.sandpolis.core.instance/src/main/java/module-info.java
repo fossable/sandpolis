@@ -12,11 +12,10 @@
 open module com.sandpolis.core.instance {
 	exports com.sandpolis.core.instance.data;
 	exports com.sandpolis.core.instance.database;
-	exports com.sandpolis.core.instance.net;
+	exports com.sandpolis.core.instance.msg;
 	exports com.sandpolis.core.instance.plugin;
 	exports com.sandpolis.core.instance.pref;
 	exports com.sandpolis.core.instance.profile;
-	exports com.sandpolis.core.instance.profile.cmd;
 	exports com.sandpolis.core.instance.store;
 	exports com.sandpolis.core.instance.store.event;
 	exports com.sandpolis.core.instance.thread;

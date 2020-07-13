@@ -12,7 +12,7 @@
 open module com.sandpolis.core.net {
 	exports com.sandpolis.core.net.command;
 	exports com.sandpolis.core.net.exception;
-	exports com.sandpolis.core.net.future;
+	exports com.sandpolis.core.net.connection;
 	exports com.sandpolis.core.net.handler.cvid;
 	exports com.sandpolis.core.net.handler.exelet;
 	exports com.sandpolis.core.net.handler.peer;
@@ -21,7 +21,7 @@ open module com.sandpolis.core.net {
 	exports com.sandpolis.core.net.init;
 	exports com.sandpolis.core.net.loop;
 	exports com.sandpolis.core.net.plugin;
-	exports com.sandpolis.core.net.connection;
+	exports com.sandpolis.core.net.message;
 	exports com.sandpolis.core.net.network;
 	exports com.sandpolis.core.net.stream;
 	exports com.sandpolis.core.net.util;

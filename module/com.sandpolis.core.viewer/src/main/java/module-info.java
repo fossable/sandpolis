@@ -14,10 +14,10 @@ module com.sandpolis.core.viewer {
 	exports com.sandpolis.core.viewer.stream;
 
 	requires com.sandpolis.core.instance;
+	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.core.ipc;
 	requires com.sandpolis.core.net;
-	requires com.sandpolis.core.util;
+	requires com.sandpolis.core.sv;
 	requires com.google.common;
 	requires com.google.protobuf;
-	requires com.sandpolis.core.soi;
 }

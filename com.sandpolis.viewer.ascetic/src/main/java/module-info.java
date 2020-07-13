@@ -22,8 +22,6 @@ open module com.sandpolis.viewer.ascetic {
 	requires transitive com.sandpolis.core.instance;
 	requires transitive com.sandpolis.core.ipc;
 	requires transitive com.sandpolis.core.net;
-	requires transitive com.sandpolis.core.soi;
-	requires transitive com.sandpolis.core.util;
 	requires transitive com.sandpolis.core.viewer;
 	requires transitive com.googlecode.lanterna;
 	requires transitive ch.qos.logback.classic;

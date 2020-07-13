@@ -12,8 +12,8 @@
 package com.sandpolis.client.mega;
 
 import com.sandpolis.core.instance.MainDispatch;
-import com.sandpolis.core.util.Platform.Instance;
-import com.sandpolis.core.util.Platform.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 
 /**
  * This stub is the entry point for Client instances. Control is given to
@@ -27,7 +27,7 @@ public final class Main {
 	}
 
 	public static void main(String[] args) {
-		MainDispatch.dispatch(Client.class, args, Instance.CLIENT, InstanceFlavor.MEGA);
+		MainDispatch.dispatch(Client.class, args, InstanceType.CLIENT, InstanceFlavor.MEGA);
 	}
 
 }
