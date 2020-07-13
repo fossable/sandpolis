@@ -19,7 +19,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
+import com.sandpolis.core.foundation.soi.Dependency.SO_DependencyMatrix;
 
 /**
  * This task parses the multiproject and outputs a soi binary containing

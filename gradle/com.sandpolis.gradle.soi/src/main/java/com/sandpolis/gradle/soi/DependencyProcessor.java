@@ -21,8 +21,8 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix;
-import com.sandpolis.core.soi.Dependency.SO_DependencyMatrix.Artifact;
+import com.sandpolis.core.foundation.soi.Dependency.SO_DependencyMatrix;
+import com.sandpolis.core.foundation.soi.Dependency.SO_DependencyMatrix.Artifact;
 
 /**
  * This class accepts Gradle dependencies incrementally and produces a

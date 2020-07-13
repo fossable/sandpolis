@@ -30,7 +30,7 @@ class CoreDocumentBindingsGenerator extends DocumentBindingsGenerator {
 	void processCollection(parent, collection) {
 		def collectionClass = TypeSpec.classBuilder(collection.name)
 			.addModifiers(PUBLIC, STATIC)
-			.superclass(ClassName.bestGuess("com.sandpolis.core.instance.data.DocumentBinding"))
+			.superclass(ClassName.bestGuess("com.sandpolis.core.instance.data.StateObject"))
 
 		// Add constructor
 		def constructor = MethodSpec.constructorBuilder()
@@ -134,7 +134,7 @@ class CoreDocumentBindingsGenerator extends DocumentBindingsGenerator {
 
 		def documentClass = TypeSpec.classBuilder(document.name)
 			.addModifiers(PUBLIC, STATIC)
-			.superclass(ClassName.bestGuess("com.sandpolis.core.instance.data.DocumentBinding"))
+			.superclass(ClassName.bestGuess("com.sandpolis.core.instance.data.StateObject"))
 
 		// Add constructor
 		def constructor = MethodSpec.constructorBuilder()

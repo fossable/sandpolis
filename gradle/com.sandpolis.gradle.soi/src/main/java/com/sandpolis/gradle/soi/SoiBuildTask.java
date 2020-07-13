@@ -21,7 +21,7 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.specs.Spec;
 
-import com.sandpolis.core.soi.Build.SO_Build;
+import com.sandpolis.core.foundation.soi.Build.SO_Build;
 
 /**
  * This task outputs a soi binary (called build.bin) containing build metadata.

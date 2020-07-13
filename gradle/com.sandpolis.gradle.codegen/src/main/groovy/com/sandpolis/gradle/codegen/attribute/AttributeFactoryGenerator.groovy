@@ -9,34 +9,26 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+package com.sandpolis.gradle.codegen.attribute
 
-plugins {
-	id 'eclipse'
-	id 'java-gradle-plugin'
-}
+import static javax.lang.model.element.Modifier.*
 
-eclipse {
-	project {
-		name = 'com.sandpolis.gradle.soi'
-		comment = 'A plugin that injects static objects into instance modules'
-	}
-}
+import com.squareup.javapoet.AnnotationSpec
+import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.FieldSpec
+import com.squareup.javapoet.JavaFile
+import com.squareup.javapoet.MethodSpec
+import com.squareup.javapoet.ParameterizedTypeName
+import com.squareup.javapoet.TypeSpec
 
-allprojects {
+import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.TaskAction
 
-	repositories {
-		mavenCentral()
-	}
+/**
+ * Generator for attribute implementations.
+ *
+ * @author cilki
+ */
+class AttributeFactoryGenerator extends DefaultTask {
 
-	plugins.withType(JavaPlugin).configureEach {
-        java {
-            modularity.inferModulePath = true
-        }
-    }
-}
-
-dependencies {
-	implementation gradleApi()
-
-	implementation project(':module:com.sandpolis.core.foundation')
 }
