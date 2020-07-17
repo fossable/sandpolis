@@ -11,14 +11,15 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
+import java.util.concurrent.CompletionStage;
+
 import com.sandpolis.core.instance.Generator.GenConfig;
-import com.sandpolis.core.net.MsgGenerator.RQ_Generate;
-import com.sandpolis.core.net.MsgGenerator.RS_Generate;
 import com.sandpolis.core.net.command.Cmdlet;
-import com.sandpolis.core.net.future.ResponseFuture;
+import com.sandpolis.core.sv.msg.MsgGenerator.RQ_Generate;
+import com.sandpolis.core.sv.msg.MsgGenerator.RS_Generate;
 
 /**
- * Contains generator commands.
+ * An API for interacting with generators on the server.
  *
  * @author cilki
  * @since 5.0.0
@@ -29,10 +30,10 @@ public final class GenCmd extends Cmdlet<GenCmd> {
 	 * Generate a payload from the given configuration.
 	 *
 	 * @param config The generation configuration
-	 * @return A future that will receive the outcome of this action
+	 * @return An asynchronous {@link CompletionStage}
 	 */
-	public ResponseFuture<RS_Generate> generate(GenConfig config) {
-		return request(RQ_Generate.newBuilder().setConfig(config));
+	public CompletionStage<RS_Generate> generate(GenConfig config) {
+		return request(RS_Generate.class, RQ_Generate.newBuilder().setConfig(config));
 	}
 
 	/**

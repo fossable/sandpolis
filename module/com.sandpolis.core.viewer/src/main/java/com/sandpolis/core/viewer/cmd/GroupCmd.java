@@ -11,41 +11,48 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
+import static com.sandpolis.core.sv.msg.MsgGroup.RQ_GroupOperation.GroupOperation.GROUP_CREATE;
+import static com.sandpolis.core.sv.msg.MsgGroup.RQ_GroupOperation.GroupOperation.GROUP_DELETE;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.SecureRandom;
+import java.util.concurrent.CompletionStage;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
 
+import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.instance.Group.GroupConfig;
-import com.sandpolis.core.instance.Result.Outcome;
-import com.sandpolis.core.net.MsgGroup.RQ_GroupOperation;
-import com.sandpolis.core.net.MsgGroup.RQ_GroupOperation.GroupOperation;
 import com.sandpolis.core.net.command.Cmdlet;
-import com.sandpolis.core.net.future.ResponseFuture;
+import com.sandpolis.core.sv.msg.MsgGroup.RQ_GroupOperation;
 
 /**
- * Contains group commands.
+ * An API for interacting with authentication groups on the server.
  *
  * @author cilki
  * @since 5.0.0
  */
 public final class GroupCmd extends Cmdlet<GroupCmd> {
 
-	public ResponseFuture<Outcome> create(String name) {
-		return request(RQ_GroupOperation.newBuilder().setOperation(GroupOperation.GROUP_CREATE)
-				.addGroupConfig(GroupConfig.newBuilder().setName(name)));
+	/**
+	 * Create a new group.
+	 * 
+	 * @param name The group name
+	 * @return An asynchronous {@link CompletionStage}
+	 */
+	public CompletionStage<Outcome> create(GroupConfig config) {
+		return request(Outcome.class, RQ_GroupOperation.newBuilder().setOperation(GROUP_CREATE).addGroupConfig(config));
 	}
 
-	public ResponseFuture<Outcome> remove(String id) {
-		return request(RQ_GroupOperation.newBuilder().setOperation(GroupOperation.GROUP_DELETE)
+	public CompletionStage<Outcome> remove(String id) {
+		return request(Outcome.class, RQ_GroupOperation.newBuilder().setOperation(GROUP_DELETE)
 				.addGroupConfig(GroupConfig.newBuilder().setId(id)));
 	}
 
-	public static ResponseFuture<Outcome> exportToFile(File group, String groupId, String password) throws Exception {
+	public CompletionStage<Outcome> exportToFile(File group, String groupId, String password) throws Exception {
 		KeyGenerator keyGen = KeyGenerator.getInstance("AES");
 		keyGen.init(new SecureRandom(password.getBytes()));
 
@@ -56,7 +63,7 @@ public final class GroupCmd extends Cmdlet<GroupCmd> {
 		return null;
 	}
 
-	public static ResponseFuture<Outcome> importFromFile(File group, String password) throws Exception {
+	public CompletionStage<Outcome> importFromFile(File group, String password) throws Exception {
 		KeyGenerator keyGen = KeyGenerator.getInstance("AES");
 		keyGen.init(new SecureRandom(password.getBytes()));
 

@@ -11,15 +11,18 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
+import static com.sandpolis.core.sv.msg.MsgListener.RQ_ListenerOperation.ListenerOperation.LISTENER_CREATE;
+import static com.sandpolis.core.sv.msg.MsgListener.RQ_ListenerOperation.ListenerOperation.LISTENER_DELETE;
+
+import java.util.concurrent.CompletionStage;
+
+import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.instance.Listener.ListenerConfig;
-import com.sandpolis.core.instance.Result.Outcome;
-import com.sandpolis.core.net.MsgListener.RQ_ListenerOperation;
-import com.sandpolis.core.net.MsgListener.RQ_ListenerOperation.ListenerOperation;
 import com.sandpolis.core.net.command.Cmdlet;
-import com.sandpolis.core.net.future.ResponseFuture;
+import com.sandpolis.core.sv.msg.MsgListener.RQ_ListenerOperation;
 
 /**
- * Contains listener commands.
+ * An API for interacting with listeners on the server.
  *
  * @author cilki
  * @since 4.0.0
@@ -30,22 +33,21 @@ public final class ListenerCmd extends Cmdlet<ListenerCmd> {
 	 * Add a new listener on the server.
 	 *
 	 * @param config The listener configuration
-	 * @return A future that will receive the outcome of this action
+	 * @return An asynchronous {@link CompletionStage}
 	 */
-	public ResponseFuture<Outcome> addListener(ListenerConfig config) {
-		return request(RQ_ListenerOperation.newBuilder().setOperation(ListenerOperation.LISTENER_CREATE)
-				.addListenerConfig(config));
-
+	public CompletionStage<Outcome> create(ListenerConfig config) {
+		return request(Outcome.class,
+				RQ_ListenerOperation.newBuilder().setOperation(LISTENER_CREATE).addListenerConfig(config));
 	}
 
 	/**
 	 * Stop and remove a listener on the server.
 	 *
 	 * @param id The listener ID
-	 * @return A future that will receive the outcome of this action
+	 * @return An asynchronous {@link CompletionStage}
 	 */
-	public ResponseFuture<Outcome> removeListener(int id) {
-		return request(RQ_ListenerOperation.newBuilder().setOperation(ListenerOperation.LISTENER_DELETE)
+	public CompletionStage<Outcome> remove(int id) {
+		return request(Outcome.class, RQ_ListenerOperation.newBuilder().setOperation(LISTENER_DELETE)
 				.addListenerConfig(ListenerConfig.newBuilder().setId(id)));
 	}
 

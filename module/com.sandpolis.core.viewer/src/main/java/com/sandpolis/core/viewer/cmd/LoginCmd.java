@@ -11,18 +11,18 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
-import static com.sandpolis.core.util.CryptoUtil.SHA256;
+import static com.sandpolis.core.foundation.util.CryptoUtil.SHA256;
 
 import java.util.Objects;
+import java.util.concurrent.CompletionStage;
 
-import com.sandpolis.core.instance.Result.Outcome;
-import com.sandpolis.core.net.MsgLogin.RQ_Login;
+import com.sandpolis.core.foundation.Result.Outcome;
+import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.net.command.Cmdlet;
-import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.util.CryptoUtil;
+import com.sandpolis.core.sv.msg.MsgLogin.RQ_Login;
 
 /**
- * Contains login commands.
+ * An API for logging into and out of the server.
  *
  * @author cilki
  * @since 4.0.0
@@ -34,13 +34,14 @@ public final class LoginCmd extends Cmdlet<LoginCmd> {
 	 *
 	 * @param user The user's username
 	 * @param pass The user's plaintext password
-	 * @return A response future
+	 * @return An asynchronous {@link CompletionStage}
 	 */
-	public ResponseFuture<Outcome> login(String user, String pass) {
+	public CompletionStage<Outcome> login(String user, String pass) {
 		Objects.requireNonNull(user);
 		Objects.requireNonNull(pass);
 
-		return request(RQ_Login.newBuilder().setUsername(user).setPassword(CryptoUtil.hash(SHA256, pass)));
+		return request(Outcome.class,
+				RQ_Login.newBuilder().setUsername(user).setPassword(CryptoUtil.hash(SHA256, pass)));
 	}
 
 	/**

@@ -11,16 +11,16 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgPing.RQ_Ping;
-import com.sandpolis.core.net.MsgServer.RQ_ServerBanner;
-import com.sandpolis.core.net.MsgServer.RS_ServerBanner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
+import com.sandpolis.core.instance.msg.MsgPing.RQ_Ping;
+import com.sandpolis.core.instance.msg.MsgPing.RS_Ping;
 import com.sandpolis.core.net.command.Cmdlet;
-import com.sandpolis.core.net.future.ResponseFuture;
+import com.sandpolis.core.sv.msg.MsgServer.RQ_ServerBanner;
+import com.sandpolis.core.sv.msg.MsgServer.RS_ServerBanner;
 
 /**
  * Contains server commands.
@@ -30,28 +30,28 @@ import com.sandpolis.core.net.future.ResponseFuture;
  */
 public final class ServerCmd extends Cmdlet<ServerCmd> {
 
-	public ResponseFuture<RS_ServerBanner> getServerBanner() {
-		return request(RQ_ServerBanner.newBuilder());
+	/**
+	 * @return An asynchronous {@link CompletionStage}
+	 */
+	public CompletionStage<RS_ServerBanner> getBanner() {
+		return request(RS_ServerBanner.class, RQ_ServerBanner.newBuilder());
 	}
 
 	/**
-	 * Estimate the link latency by measuring how long it takes to receive a
-	 * message.
+	 * Perform an application-level ping to estimate the link latency in
+	 * milliseconds.
 	 *
-	 * @return The approximate time for a message to travel to the remote host in
-	 *         milliseconds
-	 * @throws InterruptedException
-	 * @throws ExecutionException
-	 * @throws TimeoutException
+	 * @return An asynchronous {@link CompletionStage}
 	 */
-	// TODO not async
-	public long ping() throws InterruptedException, ExecutionException, TimeoutException {
-		long t1 = System.nanoTime();
-		sock.request(MSG.newBuilder().setRqPing(RQ_Ping.newBuilder())).get(2000, TimeUnit.MILLISECONDS);
-		long t2 = System.nanoTime();
+	public CompletionStage<Long> ping() {
+		return CompletableFuture.supplyAsync(() -> {
+			long t1 = System.nanoTime();
+			request(RS_Ping.class, RQ_Ping.newBuilder()).toCompletableFuture().join();
+			long t2 = System.nanoTime();
 
-		// To get from 1e9 to (1e3)/2, multiply by (1e-6)/2 = 1/2000000
-		return (t2 - t1) / 2000000;
+			// To get from 1e9 to (1e3)/2, multiply by (1e-6)/2 = 1/2000000
+			return (t2 - t1) / 2000000;
+		}).orTimeout(2000, MILLISECONDS);
 	}
 
 	/**

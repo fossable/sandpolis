@@ -11,33 +11,28 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
-import com.sandpolis.core.instance.Result.Outcome;
-import com.sandpolis.core.net.MsgStream.RQ_ProfileStream;
-import com.sandpolis.core.net.MsgStream.RQ_StreamStop;
+import java.util.concurrent.CompletionStage;
+
+import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.net.command.Cmdlet;
-import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.util.IDUtil;
+import com.sandpolis.core.net.msg.MsgStream.RQ_StreamStop;
 
 /**
- * Stream commands.
+ * An API for interacting with streams on the server.
  *
  * @author cilki
  * @since 5.0.2
  */
 public class StreamCmd extends Cmdlet<StreamCmd> {
 
-	public ResponseFuture<Outcome> startProfileStream() {
-		return request(RQ_ProfileStream.newBuilder().setId(IDUtil.stream()));
-	}
-
 	/**
-	 * Stop the given stream.
+	 * Stop a given stream.
 	 *
 	 * @param streamID The ID of the stream to stop
-	 * @return A response future
+	 * @return An asynchronous {@link CompletionStage}
 	 */
-	public ResponseFuture<Outcome> stop(int streamID) {
-		return request(RQ_StreamStop.newBuilder().setId(streamID));
+	public CompletionStage<Outcome> stop(int streamID) {
+		return request(Outcome.class, RQ_StreamStop.newBuilder().setId(streamID));
 	}
 
 	/**
