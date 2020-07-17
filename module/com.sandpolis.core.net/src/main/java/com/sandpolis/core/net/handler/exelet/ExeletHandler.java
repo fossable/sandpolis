@@ -13,11 +13,8 @@ package com.sandpolis.core.net.handler.exelet;
 
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +24,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.command.Exelet.Auth;
 import com.sandpolis.core.net.command.Exelet.Handler;
 import com.sandpolis.core.net.command.Exelet.Permission;
-import com.sandpolis.core.net.command.Exelet.Unauth;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.util.MsgUtil;
@@ -92,9 +87,9 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 				exelets.add(_class);
 
 				for (Method m : _class.getMethods()) {
-					if (m.getAnnotation(Handler.class) != null) {
-						if (m.isAnnotationPresent(Unauth.class)
-								|| (m.isAnnotationPresent(Auth.class) && sock.isAuthenticated())) {
+					var handler = m.getAnnotation(Handler.class);
+					if (handler != null) {
+						if (!handler.auth() || (handler.auth() && sock.isAuthenticated())) {
 
 							DispatchMap dv = dispatchers.get(MsgUtil.getModuleId(m));
 							if (dv == null) {
@@ -125,7 +120,8 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 		try {
 			for (Class<? extends Exelet> _class : exelets) {
 				for (Method m : _class.getMethods()) {
-					if (m.isAnnotationPresent(Auth.class)) {
+					var handler = m.getAnnotation(Handler.class);
+					if (handler != null && handler.auth()) {
 						boolean passed = true;
 
 						// Check permissions
@@ -148,7 +144,8 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 	public synchronized void deauthenticate() {
 		for (Class<? extends Exelet> _class : exelets) {
 			for (Method m : _class.getMethods()) {
-				if (m.isAnnotationPresent(Auth.class)) {
+				var handler = m.getAnnotation(Handler.class);
+				if (handler != null && handler.auth()) {
 					MsgUtil.getModuleId(m);
 				}
 			}

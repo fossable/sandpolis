@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.instance.Generator.LoopConfig;
 import com.sandpolis.core.instance.Generator.NetworkTarget;
 import com.sandpolis.core.net.ChannelConstant;
-import com.sandpolis.core.net.future.SockFuture;
+import com.sandpolis.core.net.connection.ConnectionFuture;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelOption;
@@ -54,10 +54,10 @@ public final class ConnectionLoop implements Runnable {
 	private final Bootstrap bootstrap;
 
 	/**
-	 * The {@link SockFuture} that will be notified by a successful connection
+	 * The {@link ConnectionFuture} that will be notified by a successful connection
 	 * attempt or when the maximum iteration count is reached.
 	 */
-	private final SockFuture future;
+	private final ConnectionFuture future;
 
 	/**
 	 * The exponential function that calculates the connection cooldown.
@@ -113,7 +113,7 @@ public final class ConnectionLoop implements Runnable {
 		bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getTimeout());
 
 		// Build a SockFuture without a ChannelFuture
-		this.future = new SockFuture((EventExecutor) ThreadStore.get("net.connection.loop"));
+		this.future = new ConnectionFuture((EventExecutor) ThreadStore.get("net.connection.loop"));
 
 		// Setup cooldown supplier
 		if (config.getCooldownConstant() == 0 || config.getCooldownLimit() <= config.getCooldown()) {
@@ -135,7 +135,7 @@ public final class ConnectionLoop implements Runnable {
 
 				for (NetworkTarget n : config.getTargetList()) {
 
-					SockFuture connect = new SockFuture(bootstrap.remoteAddress(n.getAddress(), n.getPort()).connect());
+					ConnectionFuture connect = new ConnectionFuture(bootstrap.remoteAddress(n.getAddress(), n.getPort()).connect());
 					try {
 						connect.sync();
 					} catch (Exception e) {
@@ -163,9 +163,9 @@ public final class ConnectionLoop implements Runnable {
 	/**
 	 * Start the {@link ConnectionLoop}.
 	 *
-	 * @return A {@link SockFuture}
+	 * @return A {@link ConnectionFuture}
 	 */
-	public SockFuture start() {
+	public ConnectionFuture start() {
 		return start((ExecutorService) ThreadStore.get("net.connection.loop"));
 	}
 
@@ -173,19 +173,19 @@ public final class ConnectionLoop implements Runnable {
 	 * Start the {@link ConnectionLoop}.
 	 *
 	 * @param executor The executor service
-	 * @return A {@link SockFuture}
+	 * @return A {@link ConnectionFuture}
 	 */
-	public SockFuture start(ExecutorService executor) {
+	public ConnectionFuture start(ExecutorService executor) {
 		executor.execute(this);
 		return future;
 	}
 
 	/**
-	 * Get the loop's {@link SockFuture}.
+	 * Get the loop's {@link ConnectionFuture}.
 	 *
 	 * @return The connection future
 	 */
-	public SockFuture future() {
+	public ConnectionFuture future() {
 		return future;
 	}
 

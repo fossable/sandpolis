@@ -37,35 +37,11 @@ public abstract class Exelet {
 	public static @interface Handler {
 
 		/**
-		 * The message tag of the message that is handled.
+		 * Whether the handler will be available to authenticated connections only.
 		 *
-		 * @return The message tag
+		 * @return The handler auth level
 		 */
-		public int tag();
-	}
-
-	/**
-	 * When applied to an {@link Exelet} method, the method will be executable on
-	 * authenticated connections only.
-	 *
-	 * @author cilki
-	 * @since 5.0.0
-	 */
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.METHOD)
-	public static @interface Auth {
-	}
-
-	/**
-	 * When applied to an {@link Exelet} method, the method will be executable on
-	 * unauthenticated connections only.
-	 *
-	 * @author cilki
-	 * @since 5.0.0
-	 */
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.METHOD)
-	public static @interface Unauth {
+		public boolean auth();
 	}
 
 	/**

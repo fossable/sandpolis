@@ -12,20 +12,14 @@
 package com.sandpolis.core.net.command;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletionStage;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.net.connection.Connection;
-import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.core.net.util.MsgUtil;
-
-import io.netty.util.concurrent.EventExecutor;
 
 /**
  * A {@link Cmdlet} contains commands that can be run against a CVID.
@@ -39,16 +33,6 @@ import io.netty.util.concurrent.EventExecutor;
 public abstract class Cmdlet<E extends Cmdlet<E>> {
 
 	/**
-	 * The {@link EventExecutor} that will be used to execute completion listeners.
-	 */
-	private EventExecutor pool = ThreadStore.get("net.message.incoming");
-
-	/**
-	 * The response timeout in milliseconds.
-	 */
-	private long timeout = Config.MESSAGE_TIMEOUT.value().get();
-
-	/**
 	 * The target CVID. Defaults to the default server CVID.
 	 */
 	private Integer cvid = NetworkStore.getPreferredServer();
@@ -57,43 +41,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 * The target sock which will be used to send and receive messages. Defaults to
 	 * the default server.
 	 */
-	protected Connection sock = ConnectionStore.getByCvid(cvid).orElse(null);
-
-	/**
-	 * Explicitly set a thread pool for the completion listeners.
-	 *
-	 * @param pool The pool class
-	 * @return {@code this}
-	 */
-	public E pool(String pool) {
-		this.pool = ThreadStore.get(checkNotNull(pool));
-		return (E) this;
-	}
-
-	/**
-	 * Set a session timeout for all {@link CommandSession}s spawned from this
-	 * {@link Cmdlet}.
-	 *
-	 * @param timeout The timeout class
-	 * @return {@code this}
-	 */
-	public E timeout(String timeout) {
-		throw new UnsupportedOperationException();
-		// return (E) this;
-	}
-
-	/**
-	 * Set a session timeout for all {@link CommandSession}s spawned from this
-	 * {@link Cmdlet}.
-	 *
-	 * @param timeout The timeout
-	 * @param unit    The time unit
-	 * @return {@code this}
-	 */
-	public E timeout(long timeout, TimeUnit unit) {
-		this.timeout = unit.convert(timeout, TimeUnit.MILLISECONDS);
-		return (E) this;
-	}
+	protected Connection target = ConnectionStore.getByCvid(cvid).orElse(null);
 
 	/**
 	 * Explicitly set the remote endpoint by {@link Connection}.
@@ -102,7 +50,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 * @return {@code this}
 	 */
 	public E target(Connection sock) {
-		this.sock = checkNotNull(sock);
+		this.target = checkNotNull(sock);
 		this.cvid = sock.getRemoteCvid();
 		return (E) this;
 	}
@@ -115,7 +63,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 */
 	public E target(int cvid) {
 		this.cvid = cvid;
-		this.sock = ConnectionStore.getByCvid(cvid).get();
+		this.target = ConnectionStore.getByCvid(cvid).get();
 		return (E) this;
 	}
 
@@ -128,30 +76,19 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 */
 	public E target(int cvid, Connection sock) {
 		this.cvid = cvid;
-		this.sock = checkNotNull(sock);
+		this.target = checkNotNull(sock);
 		return (E) this;
 	}
 
 	/**
-	 * Start a new command session.
-	 *
-	 * @return A new {@link CommandSession}
+	 * Alias for {@code target.request(responseType, payload)}.
+	 * 
+	 * @param <T>          The expected response type
+	 * @param responseType The expected response type
+	 * @param payload      The request payload
+	 * @return An asynchronous {@link CompletionStage}
 	 */
-	protected CommandSession begin() {
-		return new CommandSession(pool, cvid, sock, timeout);
+	protected <T extends Message> CompletionStage<T> request(Class<T> responseType, MessageOrBuilder payload) {
+		return target.request(responseType, payload);
 	}
-
-	/**
-	 * Send the given request according to the current configuration.
-	 *
-	 * @param payload The message payload
-	 * @return A new response future
-	 */
-	protected <R extends Message> ResponseFuture<R> request(MessageOrBuilder payload) {
-		checkNotNull(payload);
-
-		return new ResponseFuture<>(pool,
-				sock.request(MsgUtil.rq(payload).setTo(cvid), timeout, TimeUnit.MILLISECONDS));
-	}
-
 }

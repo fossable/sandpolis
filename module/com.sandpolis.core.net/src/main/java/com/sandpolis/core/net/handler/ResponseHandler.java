@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.future.MessageFuture;
+import com.sandpolis.core.net.message.MessageFuture;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

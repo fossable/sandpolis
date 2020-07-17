@@ -19,6 +19,7 @@ import java.net.InetSocketAddress;
 import java.security.cert.X509Certificate;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -28,16 +29,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.DocumentBindings;
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.instance.DocumentBindings.Profile;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
-import com.sandpolis.core.net.future.MessageFuture;
+import com.sandpolis.core.net.message.MessageFuture;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.util.CvidUtil;
+import com.sandpolis.core.net.util.MsgUtil;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -55,7 +59,7 @@ import io.netty.util.concurrent.Promise;
  * @author cilki
  * @since 5.0.0
  */
-public abstract class Connection extends DocumentBindings.Profile.Instance.Connection {
+public abstract class Connection extends Profile.Instance.Connection {
 
 	private static final Logger log = LoggerFactory.getLogger(Connection.class);
 
@@ -327,17 +331,16 @@ public abstract class Connection extends DocumentBindings.Profile.Instance.Conne
 	}
 
 	/**
-	 * Send a {@link MSG} with the intention of receiving a reply. The ID field will
-	 * be populated if empty.
-	 *
-	 * @param message The {@link MSG} to send
-	 * @return A {@link MessageFuture} which will be notified when the response is
-	 *         received
+	 * Send a {@link MSG} with the intention of receiving a reply.
+	 * 
+	 * @param <E>          The expected response type
+	 * @param responseType The expected response type
+	 * @param payload      The request payload
+	 * @return An asynchronous {@link CompletionStage}
 	 */
-	public MessageFuture request(MSG.Builder message) {
-		if (message.getId() == 0)
-			message.setId(0);// TODO GET FROM ID UTIL!
-		return request(message.build());
+	public <E extends Message> CompletionStage<E> request(Class<E> responseType, MessageOrBuilder payload) {
+		return request(MsgUtil.rq(payload).setTo(getRemoteCvid()).setFrom(getLocalCvid()).build())
+				.toCompletionStage(responseType);
 	}
 
 	/**

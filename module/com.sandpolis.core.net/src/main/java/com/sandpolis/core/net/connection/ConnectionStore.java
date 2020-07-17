@@ -29,7 +29,6 @@ import com.sandpolis.core.net.Protocol;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.connection.ConnectionStore.ConnectionStoreConfig;
-import com.sandpolis.core.net.future.SockFuture;
 import com.sandpolis.core.net.init.ClientChannelInitializer;
 import com.sandpolis.core.net.loop.ConnectionLoop;
 import com.sandpolis.core.net.network.NetworkStore;
@@ -65,13 +64,13 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 	 * store automatically.
 	 *
 	 * @param bootstrap The connection bootstrap
-	 * @return A {@link SockFuture} which will complete after the connection is
+	 * @return A {@link ConnectionFuture} which will complete after the connection is
 	 *         established
 	 */
-	public SockFuture connect(Bootstrap bootstrap) {
+	public ConnectionFuture connect(Bootstrap bootstrap) {
 		configureDefaults(bootstrap);
 
-		return new SockFuture(bootstrap.connect());
+		return new ConnectionFuture(bootstrap.connect());
 	}
 
 	/**
@@ -82,7 +81,7 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 	 * @param strictCerts Whether strict certificate checking is enabled
 	 * @return The future of the action
 	 */
-	public SockFuture connect(String address, int port, boolean strictCerts) {
+	public ConnectionFuture connect(String address, int port, boolean strictCerts) {
 		return connect(new Bootstrap().remoteAddress(address, port).handler(initializer));
 	}
 

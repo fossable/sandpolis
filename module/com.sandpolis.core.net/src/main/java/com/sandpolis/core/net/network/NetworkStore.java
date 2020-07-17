@@ -33,8 +33,8 @@ import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
+import com.sandpolis.core.net.message.MessageFuture;
 import com.sandpolis.core.net.connection.ConnectionStore;
-import com.sandpolis.core.net.future.MessageFuture;
 import com.sandpolis.core.net.network.NetworkEvents.CvidChangedEvent;
 import com.sandpolis.core.net.network.NetworkEvents.ServerEstablishedEvent;
 import com.sandpolis.core.net.network.NetworkEvents.ServerLostEvent;
@@ -61,7 +61,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * The undirected graph which describes the visible connections between nodes on
 	 * the network.
 	 */
-	private MutableNetwork<Integer, SockLink> network;
+	private MutableNetwork<Integer, LogicalConnection> network;
 
 	/**
 	 * The CVID of the preferred server on the network.
@@ -106,7 +106,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 *
 	 * @return The underlying network graph of the store
 	 */
-	public Network<Integer, SockLink> getNetwork() {
+	public Network<Integer, LogicalConnection> getNetwork() {
 		return network;
 	}
 
@@ -163,7 +163,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param cvid The CVID
 	 * @return A set of all links involving the CVID
 	 */
-	public synchronized Set<SockLink> getDirectLinks(int cvid) {
+	public synchronized Set<LogicalConnection> getDirectLinks(int cvid) {
 		return network.incidentEdges(cvid);
 	}
 
@@ -174,7 +174,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	 * @param cvid2 The second CVID
 	 * @return A set of all links between the two CVIDs
 	 */
-	public synchronized Set<SockLink> getDirectLinks(int cvid1, int cvid2) {
+	public synchronized Set<LogicalConnection> getDirectLinks(int cvid1, int cvid2) {
 		return network.edgesConnecting(cvid1, cvid2);
 	}
 

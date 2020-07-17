@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.future;
+package com.sandpolis.core.net.connection;
 
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.connection.Connection;
+import com.sandpolis.core.net.connection.ConnectionFuture;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -38,7 +39,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.concurrent.Promise;
 
-class SockFutureTest {
+class ConnectionFutureTest {
 
 	@BeforeAll
 	static void configure() {
@@ -92,7 +93,7 @@ class SockFutureTest {
 		client.channel().attr(ChannelConstant.SOCK).set(s);
 		((Promise<Void>) s.getHandshakeFuture()).setSuccess(null);
 
-		SockFuture sf = new SockFuture(client);
+		ConnectionFuture sf = new ConnectionFuture(client);
 		sf.sync();
 
 		assertTrue(sf.isDone());
