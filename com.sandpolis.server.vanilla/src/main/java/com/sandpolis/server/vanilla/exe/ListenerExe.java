@@ -11,23 +11,16 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.instance.Result.ErrorCode.ACCESS_DENIED;
-import static com.sandpolis.core.instance.util.ProtoUtil.begin;
-import static com.sandpolis.core.instance.util.ProtoUtil.complete;
-import static com.sandpolis.core.instance.util.ProtoUtil.failure;
-import static com.sandpolis.core.instance.util.ProtoUtil.success;
-import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
+import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
+import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
+import static com.sandpolis.core.foundation.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Result.ErrorCode;
-import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgListener.RQ_AddListener;
-import com.sandpolis.core.net.MsgListener.RQ_ChangeListener;
-import com.sandpolis.core.net.MsgListener.RQ_ListenerDelta;
-import com.sandpolis.core.net.MsgListener.RQ_RemoveListener;
+import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.sv.msg.MsgListener.RQ_ListenerOperation;
 import com.sandpolis.server.vanilla.store.listener.Listener;
 
 /**
@@ -38,8 +31,7 @@ import com.sandpolis.server.vanilla.store.listener.Listener;
  */
 public final class ListenerExe extends Exelet {
 
-	@Auth
-	@Handler(tag = MSG.RQ_LISTENER_OPERATION_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_listener_operation(ExeletContext context, RQ_ListenerOperation rq) {
 		if (!checkOwnership(context, rq.getId()))
 			return failure(ErrorCode.ACCESS_DENIED);

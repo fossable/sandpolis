@@ -11,27 +11,26 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.instance.Result.ErrorCode.ACCESS_DENIED;
-import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_USERNAME;
-import static com.sandpolis.core.instance.util.ProtoUtil.begin;
-import static com.sandpolis.core.instance.util.ProtoUtil.failure;
-import static com.sandpolis.core.instance.util.ProtoUtil.success;
-import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
-import static com.sandpolis.core.util.CryptoUtil.SHA256;
+import static com.sandpolis.core.foundation.Result.ErrorCode.ACCESS_DENIED;
+import static com.sandpolis.core.foundation.Result.ErrorCode.INVALID_USERNAME;
+import static com.sandpolis.core.foundation.util.CryptoUtil.SHA256;
+import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
+import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
+import static com.sandpolis.core.foundation.util.ProtoUtil.success;
+import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgLogin.RQ_Login;
-import com.sandpolis.core.net.MsgLogin.RQ_Logout;
+import com.sandpolis.core.foundation.util.CryptoUtil;
+import com.sandpolis.core.foundation.util.ValidationUtil;
+import com.sandpolis.core.instance.profile.Profile;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.profile.store.Profile;
-import com.sandpolis.core.util.CryptoUtil;
-import com.sandpolis.core.util.ValidationUtil;
+import com.sandpolis.core.sv.msg.MsgLogin.RQ_Login;
+import com.sandpolis.core.sv.msg.MsgLogin.RQ_Logout;
 import com.sandpolis.server.vanilla.store.user.User;
 
 /**
@@ -44,15 +43,13 @@ public final class LoginExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(LoginExe.class);
 
-	@Auth
-	@Handler(tag = MSG.RQ_LOGOUT_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static void rq_logout(ExeletContext context, RQ_Logout rq) {
 		log.debug("Processing logout request from: {}", context.connector.getRemoteAddress());
 		context.connector.close();
 	}
 
-	@Unauth
-	@Handler(tag = MSG.RQ_LOGIN_FIELD_NUMBER)
+	@Handler(auth = false)
 	public static MessageOrBuilder rq_login(ExeletContext context, RQ_Login rq) {
 		log.debug("Processing login request from: {}", context.connector.getRemoteAddress());
 		var outcome = begin();

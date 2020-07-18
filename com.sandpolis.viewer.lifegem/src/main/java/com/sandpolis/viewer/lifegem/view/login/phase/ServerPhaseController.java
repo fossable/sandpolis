@@ -13,7 +13,7 @@ package com.sandpolis.viewer.lifegem.view.login.phase;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.util.ValidationUtil;
+import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectEndedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectStartedEvent;

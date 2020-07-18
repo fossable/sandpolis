@@ -21,8 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Listener.ListenerConfig;
-import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.store.MemoryMapStoreProvider;
+import com.sandpolis.core.instance.database.Database;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStoreConfig;

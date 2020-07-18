@@ -11,10 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.desktop.cmd;
 
+import java.util.concurrent.CompletionStage;
+
 import com.sandpolis.core.net.command.Cmdlet;
-import com.sandpolis.core.net.future.ResponseFuture;
-import com.sandpolis.plugin.desktop.MsgDesktop.RQ_Screenshot;
-import com.sandpolis.plugin.desktop.MsgDesktop.RS_Screenshot;
+import com.sandpolis.plugin.desktop.msg.MsgDesktop.RQ_Screenshot;
+import com.sandpolis.plugin.desktop.msg.MsgDesktop.RS_Screenshot;
 
 /**
  * Contains desktop commands.
@@ -29,8 +30,8 @@ public final class DesktopCmd extends Cmdlet<DesktopCmd> {
 	 *
 	 * @return A response future
 	 */
-	public ResponseFuture<RS_Screenshot> screenshot() {
-		return request(RQ_Screenshot.newBuilder());
+	public CompletionStage<RS_Screenshot> screenshot() {
+		return request(RS_Screenshot.class, RQ_Screenshot.newBuilder());
 	}
 
 	/**

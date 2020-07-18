@@ -22,7 +22,7 @@ import com.github.cilki.zipset.ZipSet.EntryPath;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Generator.GenConfig;
-import com.sandpolis.core.util.ArtifactUtil;
+import com.sandpolis.core.foundation.util.ArtifactUtil;
 import com.sandpolis.server.vanilla.gen.MegaGen;
 
 /**

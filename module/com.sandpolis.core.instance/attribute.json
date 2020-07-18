@@ -321,6 +321,10 @@
       ],
       "collections": [
         {
+          "name": "LogicalConnection",
+          "tag": 19
+        },
+        {
           "name": "Connection",
           "tag": 4,
           "attributes": [

@@ -38,8 +38,7 @@ import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.Result.Outcome;
-import com.sandpolis.core.net.future.SockFuture;
+import com.sandpolis.core.net.connection.ConnectionFuture;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
 import com.sandpolis.viewer.ascetic.Viewer;
 import com.sandpolis.viewer.ascetic.renderer.CustomButtonRenderer;
@@ -146,21 +145,20 @@ public class LoginWindow extends BasicWindow {
 				String password = fld_password.getText();
 
 				setStatus("Establishing connection...", TextColor.ANSI.BLACK);
-				ConnectionStore.connect(address, port, false).addListener((SockFuture sockFuture) -> {
+				ConnectionStore.connect(address, port, false).addListener((ConnectionFuture sockFuture) -> {
 					if (sockFuture.isSuccess()) {
 						setStatus("Logging in...", TextColor.ANSI.BLACK);
-						LoginCmd.async().target(sockFuture.get()).login(username, password)
-								.addHandler((Outcome outcome) -> {
-									if (outcome.getResult()) {
-										WindowStore.clear();
-										WindowStore.add(new MainWindow());
-									} else {
-										fld_username.setEnabled(true);
-										fld_password.setEnabled(true);
+						LoginCmd.async().target(sockFuture.get()).login(username, password).thenAccept(rs -> {
+							if (rs.getResult()) {
+								WindowStore.clear();
+								WindowStore.add(new MainWindow());
+							} else {
+								fld_username.setEnabled(true);
+								fld_password.setEnabled(true);
 
-										setStatus("Login attempt failed!", TextColor.ANSI.RED);
-									}
-								});
+								setStatus("Login attempt failed!", TextColor.ANSI.RED);
+							}
+						});
 					} else {
 						fld_username.setEnabled(true);
 						fld_password.setEnabled(true);

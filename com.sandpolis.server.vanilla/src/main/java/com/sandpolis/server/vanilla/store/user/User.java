@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.store.user;
 
-import static com.sandpolis.core.util.CryptoUtil.SHA256;
+import static com.sandpolis.core.foundation.util.CryptoUtil.SHA256;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ import javax.persistence.ManyToMany;
 import com.sandpolis.core.instance.DocumentBindings.Profile;
 import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.instance.data.Document;
-import com.sandpolis.core.util.CryptoUtil;
+import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.server.vanilla.store.group.Group;
 
 /**

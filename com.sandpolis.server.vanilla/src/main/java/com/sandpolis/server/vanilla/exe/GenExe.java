@@ -11,9 +11,9 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
-import static com.sandpolis.core.instance.util.ProtoUtil.begin;
-import static com.sandpolis.core.instance.util.ProtoUtil.failure;
+import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
+import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -23,9 +23,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgGenerator.RQ_Generate;
-import com.sandpolis.core.net.MsgGenerator.RS_Generate;
+import com.sandpolis.core.sv.msg.MsgGenerator.RQ_Generate;
+import com.sandpolis.core.sv.msg.MsgGenerator.RS_Generate;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.server.vanilla.gen.Generator;
 import com.sandpolis.server.vanilla.gen.MegaGen;
@@ -40,8 +39,7 @@ public final class GenExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(GenExe.class);
 
-	@Auth
-	@Handler(tag = MSG.RQ_GENERATE_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_generate(RQ_Generate rq) throws Exception {
 		ExecutorService pool = ThreadStore.get("server.generator");
 

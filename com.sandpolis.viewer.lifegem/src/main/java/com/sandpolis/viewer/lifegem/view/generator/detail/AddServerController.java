@@ -11,13 +11,13 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.generator.detail;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 
 import java.util.concurrent.ExecutorService;
 
 import com.sandpolis.core.net.util.DnsUtil;
-import com.sandpolis.core.util.NetUtil;
-import com.sandpolis.core.util.ValidationUtil;
+import com.sandpolis.core.foundation.util.NetUtil;
+import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 import com.sandpolis.viewer.lifegem.view.generator.Events.AddServerEvent;
 import com.sandpolis.viewer.lifegem.view.generator.Events.DetailCloseEvent;

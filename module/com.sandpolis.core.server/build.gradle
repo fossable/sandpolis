@@ -40,6 +40,7 @@ dependencies {
 
 	api project(':module:com.sandpolis.core.cs')
 	api project(':module:com.sandpolis.core.instance')
+	api project(':module:com.sandpolis.core.net')
 	api project(':module:com.sandpolis.core.sv')
 }
 

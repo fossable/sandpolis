@@ -20,4 +20,5 @@ open module com.sandpolis.client.mega {
 	requires io.netty.transport;
 	requires org.slf4j;
 	requires com.sandpolis.core.cs;
+	requires com.sandpolis.core.cv;
 }

@@ -30,7 +30,6 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
 
-	implementation project(':com.sandpolis.client.mega')
 	implementation project(':module:com.sandpolis.core.ipc')
 	implementation project(':module:com.sandpolis.core.server')
 

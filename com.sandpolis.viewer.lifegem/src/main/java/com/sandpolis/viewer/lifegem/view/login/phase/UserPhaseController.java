@@ -17,9 +17,9 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.net.MsgServer.RS_ServerBanner;
+import com.sandpolis.core.sv.msg.MsgServer.RS_ServerBanner;
 import com.sandpolis.core.net.connection.Connection;
-import com.sandpolis.core.util.CertUtil;
+import com.sandpolis.core.foundation.util.CertUtil;
 import com.sandpolis.core.viewer.cmd.ServerCmd;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.LoginEndedEvent;

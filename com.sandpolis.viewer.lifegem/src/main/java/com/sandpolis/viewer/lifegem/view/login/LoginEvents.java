@@ -11,8 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.login;
 
-import com.sandpolis.core.instance.event.Event;
-import com.sandpolis.core.instance.event.ParameterizedEvent;
+import com.sandpolis.core.instance.store.event.Event;
+import com.sandpolis.core.instance.store.event.ParameterizedEvent;
 
 public final class LoginEvents {
 

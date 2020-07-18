@@ -11,11 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
-import static com.sandpolis.core.instance.util.ProtoUtil.begin;
-import static com.sandpolis.core.instance.util.ProtoUtil.failure;
-import static com.sandpolis.core.instance.util.ProtoUtil.success;
-import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.core.foundation.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
+import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
+import static com.sandpolis.core.foundation.util.ProtoUtil.success;
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
 
 import java.io.IOException;
@@ -29,23 +29,20 @@ import org.slf4j.LoggerFactory;
 import com.google.common.io.ByteSource;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.foundation.Result.Outcome;
+import com.sandpolis.core.foundation.util.ArtifactUtil;
+import com.sandpolis.core.foundation.util.ArtifactUtil.ParsedCoordinate;
+import com.sandpolis.core.foundation.util.CertUtil;
+import com.sandpolis.core.foundation.util.JarUtil;
+import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.Result.Outcome;
-import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgPlugin.RQ_ArtifactDownload;
-import com.sandpolis.core.net.MsgPlugin.RQ_PluginInstall;
-import com.sandpolis.core.net.MsgPlugin.RQ_PluginList;
-import com.sandpolis.core.net.MsgPlugin.RS_ArtifactDownload;
-import com.sandpolis.core.net.MsgPlugin.RS_PluginList;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.msg.MsgPlugin.RQ_ArtifactDownload;
+import com.sandpolis.core.instance.msg.MsgPlugin.RQ_PluginInstall;
+import com.sandpolis.core.instance.msg.MsgPlugin.RS_ArtifactDownload;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.util.ArtifactUtil;
-import com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate;
-import com.sandpolis.core.util.CertUtil;
-import com.sandpolis.core.util.JarUtil;
-import com.sandpolis.core.util.NetUtil;
-import com.sandpolis.core.util.Platform.InstanceFlavor;
 
 /**
  * Message handlers for plugin requests.
@@ -57,8 +54,7 @@ public final class PluginExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(PluginExe.class);
 
-	@Auth
-	@Handler(tag = MSG.RQ_ARTIFACT_DOWNLOAD_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static void rq_artifact_download(ExeletContext context, RQ_ArtifactDownload rq) {
 		var rs = RS_ArtifactDownload.newBuilder();
 
@@ -118,8 +114,7 @@ public final class PluginExe extends Exelet {
 		});
 	}
 
-	@Auth
-	@Handler(tag = MSG.RQ_PLUGIN_INSTALL_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_plugin_install(RQ_PluginInstall rq) throws Exception {
 		var outcome = begin();
 		if (!Config.PLUGIN_ENABLED.value().orElse(true))

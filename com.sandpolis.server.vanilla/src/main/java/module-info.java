@@ -31,6 +31,8 @@ open module com.sandpolis.server.vanilla {
 	requires com.sandpolis.core.ipc;
 	requires com.sandpolis.core.net;
 	requires com.sandpolis.core.foundation;
+	requires com.sandpolis.core.cs;
+	requires com.sandpolis.core.sv;
 	requires io.netty.buffer;
 	requires io.netty.codec;
 	requires io.netty.common;

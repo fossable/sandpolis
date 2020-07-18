@@ -11,8 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.gen;
 
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
-import static com.sandpolis.core.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.foundation.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -33,12 +33,12 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Generator.FeatureSet;
 import com.sandpolis.core.instance.Generator.GenConfig;
-import com.sandpolis.core.instance.store.plugin.Plugin;
-import com.sandpolis.core.soi.SoiUtil;
-import com.sandpolis.core.util.ArtifactUtil;
-import com.sandpolis.core.util.Platform.Instance;
-import com.sandpolis.core.util.Platform.InstanceFlavor;
-import com.sandpolis.core.util.Platform.OsType;
+import com.sandpolis.core.instance.plugin.Plugin;
+import com.sandpolis.core.foundation.soi.SoiUtil;
+import com.sandpolis.core.foundation.util.ArtifactUtil;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.foundation.Platform.OsType;
 import com.sandpolis.server.vanilla.gen.mega.BatPackager;
 import com.sandpolis.server.vanilla.gen.mega.ElfPackager;
 import com.sandpolis.server.vanilla.gen.mega.ExePackager;
@@ -107,14 +107,14 @@ public abstract class MegaGen extends Generator {
 			case OsType.AIX_VALUE:
 				cfg.put("path.aix", entry.getValue());
 				break;
-			case OsType.FREEBSD_VALUE:
-				cfg.put("path.freebsd", entry.getValue());
+			case OsType.BSD_VALUE:
+				cfg.put("path.bsd", entry.getValue());
 				break;
 			case OsType.LINUX_VALUE:
 				cfg.put("path.linux", entry.getValue());
 				break;
-			case OsType.MACOS_VALUE:
-				cfg.put("path.mac", entry.getValue());
+			case OsType.DARWIN_VALUE:
+				cfg.put("path.darwin", entry.getValue());
 				break;
 			case OsType.SOLARIS_VALUE:
 				cfg.put("path.solaris", entry.getValue());
@@ -198,7 +198,7 @@ public abstract class MegaGen extends Generator {
 				});
 
 				// Add mega component
-				Path mega = plugin.getComponent(Instance.CLIENT, InstanceFlavor.MEGA);
+				Path mega = plugin.getComponent(InstanceType.CLIENT, InstanceFlavor.MEGA);
 				pluginArchive.add("client/mega.jar", mega);
 				SoiUtil.getMatrix(mega).getAllDependencies().forEach(dep -> {
 					output.add("lib/" + fromCoordinate(dep.getCoordinates()).filename,

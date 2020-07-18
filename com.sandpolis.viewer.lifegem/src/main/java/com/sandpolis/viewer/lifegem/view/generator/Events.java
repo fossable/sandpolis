@@ -11,9 +11,9 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.generator;
 
-import com.sandpolis.core.instance.event.Event;
-import com.sandpolis.core.instance.event.ParameterizedEvent;
-import com.sandpolis.core.net.MsgGenerator.RS_Generate;
+import com.sandpolis.core.instance.store.event.Event;
+import com.sandpolis.core.instance.store.event.ParameterizedEvent;
+import com.sandpolis.core.sv.msg.MsgGenerator.RS_Generate;
 
 public final class Events {
 

@@ -11,22 +11,16 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.instance.Result.ErrorCode.ACCESS_DENIED;
-import static com.sandpolis.core.instance.util.ProtoUtil.begin;
-import static com.sandpolis.core.instance.util.ProtoUtil.complete;
-import static com.sandpolis.core.instance.util.ProtoUtil.failure;
-import static com.sandpolis.core.instance.util.ProtoUtil.success;
-import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
+import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
+import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
+import static com.sandpolis.core.foundation.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Result.ErrorCode;
-import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgUser.RQ_AddUser;
-import com.sandpolis.core.net.MsgUser.RQ_RemoveUser;
-import com.sandpolis.core.net.MsgUser.RQ_UserDelta;
+import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.sv.msg.MsgUser.RQ_UserOperation;
 import com.sandpolis.server.vanilla.store.user.User;
 
 /**
@@ -37,8 +31,7 @@ import com.sandpolis.server.vanilla.store.user.User;
  */
 public final class UserExe extends Exelet {
 
-	@Auth
-	@Handler(tag = MSG.RQ_USER_OPERATION_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_user_operation(ExeletContext context, RQ_UserOperation rq) {
 		if (!checkOwnership(context, rq.getId()))
 			return failure(ErrorCode.ACCESS_DENIED);

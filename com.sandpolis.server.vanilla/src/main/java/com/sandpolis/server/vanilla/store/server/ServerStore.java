@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.store.server;
 
-import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -24,11 +24,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
-import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.net.MsgServer.RS_ServerBanner;
+import com.sandpolis.core.sv.msg.MsgServer.RS_ServerBanner;
 import com.sandpolis.server.vanilla.store.server.ServerStore.ServerStoreConfig;
 
 /**

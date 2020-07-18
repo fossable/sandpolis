@@ -11,37 +11,36 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.instance.Result.ErrorCode.FAILURE_KEY_CHALLENGE;
-import static com.sandpolis.core.instance.Result.ErrorCode.INVALID_KEY;
-import static com.sandpolis.core.instance.Result.ErrorCode.UNKNOWN_GROUP;
-import static com.sandpolis.core.instance.util.ProtoUtil.begin;
-import static com.sandpolis.core.instance.util.ProtoUtil.failure;
-import static com.sandpolis.core.instance.util.ProtoUtil.success;
-import static com.sandpolis.core.net.util.ProtoUtil.rq;
-import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
+import static com.sandpolis.core.foundation.Result.ErrorCode.FAILURE_KEY_CHALLENGE;
+import static com.sandpolis.core.foundation.Result.ErrorCode.INVALID_KEY;
+import static com.sandpolis.core.foundation.Result.ErrorCode.UNKNOWN_GROUP;
+import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
+import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
+import static com.sandpolis.core.foundation.util.ProtoUtil.success;
+import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.net.util.MsgUtil.rq;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.cs.msg.MsgAuth.RQ_KeyAuth;
+import com.sandpolis.core.cs.msg.MsgAuth.RQ_NoAuth;
+import com.sandpolis.core.cs.msg.MsgAuth.RQ_PasswordAuth;
+import com.sandpolis.core.cs.msg.MsgClient.RQ_ClientMetadata;
+import com.sandpolis.core.cs.msg.MsgClient.RS_ClientMetadata;
+import com.sandpolis.core.instance.profile.Profile;
+import com.sandpolis.core.instance.profile.ProfileEvents.ProfileOnlineEvent;
+import com.sandpolis.core.instance.profile.ProfileStore;
 import com.sandpolis.core.net.HandlerKey;
-import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgAuth.RQ_KeyAuth;
-import com.sandpolis.core.net.MsgAuth.RQ_NoAuth;
-import com.sandpolis.core.net.MsgAuth.RQ_PasswordAuth;
-import com.sandpolis.core.net.MsgClient.RQ_ClientMetadata;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
-import com.sandpolis.core.profile.AK_CLIENT;
-import com.sandpolis.core.profile.AK_INSTANCE;
-import com.sandpolis.core.profile.store.Events.ProfileOnlineEvent;
-import com.sandpolis.core.profile.store.Profile;
-import com.sandpolis.server.vanilla.auth.KeyMechanism;
 import com.sandpolis.server.vanilla.store.group.Group;
 
 /**
@@ -54,12 +53,11 @@ public final class AuthExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(AuthExe.class);
 
-	@Unauth
-	@Handler(tag = MSG.RQ_NO_AUTH_FIELD_NUMBER)
+	@Handler(auth = false)
 	public static MessageOrBuilder rq_no_auth(ExeletContext context, RQ_NoAuth rq) {
 		var outcome = begin();
 
-		List<Group> groups = GroupStore.getUnauthGroups();
+		var groups = GroupStore.getUnauthGroups().collect(Collectors.toList());
 		if (groups.size() == 0) {
 			log.debug("Refusing free authentication attempt because there are no unauth groups");
 			context.defer(() -> {
@@ -75,12 +73,11 @@ public final class AuthExe extends Exelet {
 		return success(outcome);
 	}
 
-	@Unauth
-	@Handler(tag = MSG.RQ_PASSWORD_AUTH_FIELD_NUMBER)
+	@Handler(auth = false)
 	public static MessageOrBuilder rq_password_auth(ExeletContext context, RQ_PasswordAuth rq) {
 		var outcome = begin();
 
-		List<Group> groups = GroupStore.getByPassword(rq.getPassword());
+		var groups = GroupStore.getByPassword(rq.getPassword()).collect(Collectors.toList());
 		if (groups.size() == 0) {
 			log.debug("Refusing password authentication attempt because the password did not match any group");
 			context.defer(() -> {
@@ -96,13 +93,12 @@ public final class AuthExe extends Exelet {
 		return success(outcome);
 	}
 
-	@Unauth
-	@Handler(tag = MSG.RQ_KEY_AUTH_FIELD_NUMBER)
+	@Handler(auth = false)
 	public static MessageOrBuilder rq_key_auth(ExeletContext context, RQ_KeyAuth rq)
 			throws InterruptedException, ExecutionException {
 		var outcome = begin();
 
-		Group group = GroupStore.get(rq.getGroupId()).orElse(null);
+		var group = GroupStore.getByName(rq.getGroupId()).orElse(null);
 		if (group == null) {
 			log.debug("Refusing key authentication attempt due to unknown group ID: {}", rq.getGroupId());
 			context.defer(() -> {
@@ -111,7 +107,7 @@ public final class AuthExe extends Exelet {
 			return failure(outcome, UNKNOWN_GROUP);
 		}
 
-		KeyMechanism mech = group.getKeyMechanism(rq.getMechId());
+		KeyMechanism mech = null;// group.getKeyMechanism(rq.getMechId());
 		if (mech == null) {
 			log.debug("Refusing key authentication attempt due to unknown mechanism ID: {}", rq.getMechId());
 			context.defer(() -> {
@@ -143,7 +139,7 @@ public final class AuthExe extends Exelet {
 		// Connection is now authenticated
 		context.connector.authenticate();
 
-		ProfileStore.get(context.connector.getRemoteUuid()).ifPresentOrElse(profile -> {
+		ProfileStore.getByUuid(context.connector.getRemoteUuid()).ifPresentOrElse(profile -> {
 			groups.forEach(group -> {
 				// TODO add client to group
 			});
@@ -151,26 +147,22 @@ public final class AuthExe extends Exelet {
 			ProfileStore.post(ProfileOnlineEvent::new, profile);
 		}, () -> {
 			// Metadata query
-			var future = context.connector.request(rq().setRqClientMetadata(RQ_ClientMetadata.newBuilder()));
-			future.addListener(f -> {
-				if (future.isSuccess()) {
-					var rs = future.get().getRsClientMetadata();
-					var profile = new Profile(context.connector.getRemoteUuid(), context.connector.getRemoteInstance(),
-							context.connector.getRemoteInstanceFlavor());
-					profile.setCvid(context.connector.getRemoteCvid());
+			context.connector.request(RS_ClientMetadata.class, RQ_ClientMetadata.newBuilder()).thenAccept(rs -> {
+				var profile = new Profile(context.connector.getRemoteUuid(), context.connector.getRemoteInstance(),
+						context.connector.getRemoteInstanceFlavor());
+				profile.cvid().set(context.connector.getRemoteCvid());
 
-					// Set attributes
-					profile.set(AK_CLIENT.HOSTNAME, rs.getHostname());
-					profile.set(AK_CLIENT.INSTALL_DIRECTORY, rs.getInstallDirectory());
-					profile.set(AK_INSTANCE.OS, rs.getOs());
+				// Set attributes
+				profile.instance().client().hostname().set(rs.getHostname());
+				profile.instance().client().location().set(rs.getInstallDirectory());
+				profile.instance().client().os().set(rs.getOs());
 
-					groups.forEach(group -> {
-						// TODO add client to group
-					});
+				groups.forEach(group -> {
+					// TODO add client to group
+				});
 
-					ProfileStore.add(profile);
-					ProfileStore.post(ProfileOnlineEvent::new, profile);
-				}
+				ProfileStore.add(profile);
+				ProfileStore.post(ProfileOnlineEvent::new, profile);
 			});
 		});
 	}

@@ -21,7 +21,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Optional;
 
-import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.ipc.Message.MSG;
 import com.sandpolis.core.ipc.Metadata.RQ_Metadata;
 import com.sandpolis.core.ipc.Metadata.RS_Metadata;

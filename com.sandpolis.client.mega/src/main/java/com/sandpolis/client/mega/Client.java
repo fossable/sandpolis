@@ -13,36 +13,37 @@ package com.sandpolis.client.mega;
 
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
-import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
+import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import java.io.IOException;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
 import com.sandpolis.client.mega.cmd.AuthCmd;
-import com.sandpolis.client.mega.cmd.PluginCmd;
 import com.sandpolis.client.mega.exe.ClientExe;
+import com.sandpolis.core.cv.cmd.PluginCmd;
+import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.instance.Auth.KeyContainer;
-import com.sandpolis.core.instance.Config;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Generator.MegaConfig;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.Result.Outcome;
 import com.sandpolis.core.ipc.task.IPCTask;
-import com.sandpolis.core.net.future.ResponseFuture;
+import com.sandpolis.core.net.handler.sand5.ReciprocalKeyPair;
 import com.sandpolis.core.net.init.ClientChannelInitializer;
-import com.sandpolis.core.net.store.network.NetworkEvents.ServerEstablishedEvent;
-import com.sandpolis.core.net.store.network.NetworkEvents.ServerLostEvent;
-import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
+import com.sandpolis.core.net.network.NetworkEvents.ServerEstablishedEvent;
+import com.sandpolis.core.net.network.NetworkEvents.ServerLostEvent;
+
+import com.google.common.eventbus.Subscribe;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
@@ -150,13 +151,16 @@ public final class Client {
 
 			@Subscribe
 			private void onSrvEstablished(ServerEstablishedEvent event) {
-				ResponseFuture<Outcome> future;
+				CompletionStage<Outcome> future;
 				var auth = SO_CONFIG.getAuthentication();
 
 				switch (auth.getAuthOneofCase()) {
 				case KEY:
 					KeyContainer mech = auth.getKey();
-					ReciprocalKeyPair key = new ReciprocalKeyPair(mech.getClient().getVerifier().toByteArray(),
+					ReciprocalKeyPair key = new ReciprocalKeyPair(null,
+							//
+							mech.getClient().getVerifier().toByteArray(),
+							//
 							mech.getClient().getSigner().toByteArray());
 					future = AuthCmd.async().target(event.get()).key(auth.getGroupName(), mech.getId(), key);
 					break;
@@ -168,21 +172,21 @@ public final class Client {
 					break;
 				}
 
-				future.addHandler((Outcome rs) -> {
+				future = future.thenApply(rs -> {
 					if (!rs.getResult()) {
 						// Close the connection
 						ConnectionStore.get(event.get()).ifPresent(sock -> {
 							sock.close();
 						});
 					}
+					return rs;
 				});
 
 				if (Config.PLUGIN_ENABLED.value().orElse(true) && !SO_CONFIG.getMemory()) {
-					future.addHandler((Outcome rs) -> {
+					future.thenAccept(rs -> {
 						if (rs.getResult()) {
 							// Synchronize plugins
-							PluginCmd.async().sync().sync();
-							PluginStore.loadPlugins();
+							PluginCmd.async().synchronize().thenRun(PluginStore::loadPlugins);
 						}
 					});
 				}

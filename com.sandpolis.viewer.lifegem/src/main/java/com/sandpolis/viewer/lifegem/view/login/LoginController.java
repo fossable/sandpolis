@@ -11,30 +11,23 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.login;
 
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
-import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
-import static com.sandpolis.core.net.store.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.viewer.lifegem.store.stage.StageStore.StageStore;
 
 import java.util.Objects;
-import java.util.stream.Collectors;
 
-import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.Result.Outcome;
-import com.sandpolis.core.net.MsgPlugin.RS_PluginList;
-import com.sandpolis.core.net.MsgServer.RS_ServerBanner;
-import com.sandpolis.core.net.future.SockFuture;
-import com.sandpolis.core.net.sock.Sock;
+import com.sandpolis.core.net.connection.Connection;
+import com.sandpolis.core.net.connection.ConnectionFuture;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
-import com.sandpolis.core.viewer.cmd.PluginCmd;
 import com.sandpolis.core.viewer.cmd.ServerCmd;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.common.controller.FxController;
 import com.sandpolis.viewer.lifegem.common.pane.CarouselPane;
-import com.sandpolis.viewer.lifegem.view.login.Events.ConnectEndedEvent;
-import com.sandpolis.viewer.lifegem.view.login.Events.ConnectStartedEvent;
-import com.sandpolis.viewer.lifegem.view.login.Events.LoginEndedEvent;
-import com.sandpolis.viewer.lifegem.view.login.Events.LoginStartedEvent;
+import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectEndedEvent;
+import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectStartedEvent;
+import com.sandpolis.viewer.lifegem.view.login.LoginEvents.LoginEndedEvent;
+import com.sandpolis.viewer.lifegem.view.login.LoginEvents.LoginStartedEvent;
 import com.sandpolis.viewer.lifegem.view.login.phase.PluginPhaseController;
 import com.sandpolis.viewer.lifegem.view.login.phase.ServerPhaseController;
 import com.sandpolis.viewer.lifegem.view.login.phase.UserPhaseController;
@@ -71,7 +64,7 @@ public class LoginController extends FxController {
 	/**
 	 * The connection to the server.
 	 */
-	private Sock connection;
+	private Connection connection;
 	/**
 	 * The current login phase.
 	 */
@@ -115,24 +108,26 @@ public class LoginController extends FxController {
 			post(ConnectStartedEvent::new);
 			setStatus("Connecting to " + serverPhaseController.getAddress());
 			ConnectionStore.connect(serverPhaseController.getAddress(), serverPhaseController.getPort(), false)
-					.addListener((SockFuture sockFuture) -> {
+					.addListener((ConnectionFuture sockFuture) -> {
 						if (sockFuture.isSuccess()) {
 							connection = sockFuture.get();
 							// TODO check sock state
 							setStatus("Downloading server metadata");
-							ServerCmd.async().target(connection).pool("ui.fx_thread").getServerBanner()
-									.addHandler((RS_ServerBanner rs) -> {
-										if (!rs.getBannerImage().isEmpty())
-											setBannerImage(new Image(rs.getBannerImage().newInput()));
+							ServerCmd.async().target(connection).getBanner().whenComplete((rs, exception) -> {
+								if (exception != null) {
+									setStatus("Connection attempt failed");
+									post(ConnectEndedEvent::new);
+									return;
+								}
 
-										bus.post(connection);
-										bus.post(rs);
-										phase.set(LoginPhase.USER_INPUT);
-										post(ConnectEndedEvent::new);
-									}).addHandler((Outcome rs) -> {
-										post(ConnectEndedEvent::new);
-										setStatus("Connection attempt failed");
-									});
+								if (!rs.getBannerImage().isEmpty())
+									setBannerImage(new Image(rs.getBannerImage().newInput()));
+
+								bus.post(connection);
+								bus.post(rs);
+								phase.set(LoginPhase.USER_INPUT);
+								post(ConnectEndedEvent::new);
+							});
 						} else {
 							setStatus("Connection attempt failed");
 							post(ConnectEndedEvent::new);
@@ -142,26 +137,32 @@ public class LoginController extends FxController {
 		case USER_INPUT:
 			post(LoginStartedEvent::new);
 			setStatus("Logging in");
-			LoginCmd.async().target(connection).pool("ui.fx_thread")
+			LoginCmd.async().target(connection)
 					.login(userPhaseController.getUsername(), userPhaseController.getPassword())
-					.addHandler((Outcome rs) -> {
+					.whenComplete((rs, exception) -> {
+						if (exception != null) {
+							setStatus("Login attempt failed");
+							post(LoginEndedEvent::new);
+							return;
+						}
+
 						if (rs.getResult()) {
-							PluginCmd.async().pool("ui.fx_thread").enumerate().addHandler((RS_PluginList rs2) -> {
-
-								var newPlugins = rs2.getPluginList().stream().filter(descriptor -> {
-									return PluginStore.get(descriptor.getId()).isEmpty();
-								}).collect(Collectors.toList());
-
-								post(LoginEndedEvent::new);
-
-								if (!newPlugins.isEmpty()) {
-									pluginPhaseController.setPlugins(newPlugins);
-									phase.set(LoginPhase.PLUGIN_PHASE);
-								} else {
-									phase.set(LoginPhase.COMPLETE);
-									launchApplication();
-								}
-							});
+//							PluginCmd.async().enumerate().addHandler((RS_PluginList rs2) -> {
+//
+//								var newPlugins = rs2.getPluginList().stream().filter(descriptor -> {
+//									return PluginStore.get(descriptor.getId()).isEmpty();
+//								}).collect(Collectors.toList());
+//
+//								post(LoginEndedEvent::new);
+//
+//								if (!newPlugins.isEmpty()) {
+//									pluginPhaseController.setPlugins(newPlugins);
+//									phase.set(LoginPhase.PLUGIN_PHASE);
+//								} else {
+//									phase.set(LoginPhase.COMPLETE);
+//									launchApplication();
+//								}
+//							});
 						} else {
 							setStatus("Login attempt failed");
 							post(LoginEndedEvent::new);

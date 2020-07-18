@@ -13,14 +13,14 @@ package com.sandpolis.server.vanilla;
 
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
-import static com.sandpolis.core.instance.store.database.DatabaseStore.DatabaseStore;
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
-import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.database.DatabaseStore.DatabaseStore;
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
-import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
+import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
-import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
+import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
 import static com.sandpolis.server.vanilla.store.location.LocationStore.LocationStore;
@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Auth.PasswordContainer;
-import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Generator.AuthenticationConfig;
@@ -57,13 +57,13 @@ import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.instance.database.Database;
 import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.storage.hibernate.HibernateConnection;
-import com.sandpolis.core.util.Platform.Instance;
-import com.sandpolis.core.util.Platform.InstanceFlavor;
-import com.sandpolis.core.util.Platform.OsType;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.foundation.Platform.OsType;
 import com.sandpolis.server.vanilla.gen.MegaGen;
 
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -144,7 +144,7 @@ public final class Server {
 	 */
 	@InitializationTask(name = "Generate instance CVID", fatal = true)
 	public static final Task generateCvid = new Task(outcome -> {
-		Core.setCvid(CvidUtil.cvid(Instance.SERVER));
+		Core.setCvid(CvidUtil.cvid(InstanceType.SERVER));
 		return outcome.success();
 	});
 
@@ -179,7 +179,7 @@ public final class Server {
 		});
 
 		PrefStore.init(config -> {
-			config.instance = Instance.SERVER;
+			config.instance = InstanceType.SERVER;
 			config.flavor = InstanceFlavor.VANILLA;
 		});
 

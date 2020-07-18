@@ -11,17 +11,18 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.client.mega.cmd;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
-import com.sandpolis.core.instance.Result.Outcome;
+import java.util.concurrent.CompletionStage;
+
+import com.sandpolis.core.cs.msg.MsgAuth.RQ_KeyAuth;
+import com.sandpolis.core.cs.msg.MsgAuth.RQ_NoAuth;
+import com.sandpolis.core.cs.msg.MsgAuth.RQ_PasswordAuth;
+import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.net.HandlerKey;
-import com.sandpolis.core.net.MsgAuth.RQ_KeyAuth;
-import com.sandpolis.core.net.MsgAuth.RQ_NoAuth;
-import com.sandpolis.core.net.MsgAuth.RQ_PasswordAuth;
 import com.sandpolis.core.net.command.Cmdlet;
-import com.sandpolis.core.net.future.ResponseFuture;
+import com.sandpolis.core.net.handler.sand5.ReciprocalKeyPair;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
-import com.sandpolis.core.util.CryptoUtil.SAND5.ReciprocalKeyPair;
 
 /**
  * Contains authentication commands for client instances.
@@ -34,23 +35,31 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	/**
 	 * Attempt to authenticate without providing any form of identification.
 	 *
-	 * @return A response future
+	 * @return An asynchronous {@link CompletionStage}
 	 */
-	public ResponseFuture<Outcome> none() {
-		sock.authenticate();// TODO do after successful response
-		return request(RQ_NoAuth.newBuilder());
+	public CompletionStage<Outcome> none() {
+
+		return request(Outcome.class, RQ_NoAuth.newBuilder()).thenApply(rs -> {
+			if (rs.getResult()) {
+				target.authenticate();
+			}
+			return rs;
+		});
 	}
 
 	/**
 	 * Attempt to authenticate with a password.
 	 *
-	 * @return A response future
+	 * @return An asynchronous {@link CompletionStage}
 	 */
-	public ResponseFuture<Outcome> password(String password) {
-		checkNotNull(password);
+	public CompletionStage<Outcome> password(String password) {
 
-		sock.authenticate();// TODO do after successful response
-		return request(RQ_PasswordAuth.newBuilder().setPassword(password));
+		return request(Outcome.class, RQ_PasswordAuth.newBuilder().setPassword(password)).thenApply(rs -> {
+			if (rs.getResult()) {
+				target.authenticate();
+			}
+			return rs;
+		});
 	}
 
 	/**
@@ -59,21 +68,21 @@ public final class AuthCmd extends Cmdlet<AuthCmd> {
 	 * @param group The group ID
 	 * @param mech  The key mechanism ID
 	 * @param key   The client keypair
-	 * @return A response future
+	 * @return An asynchronous {@link CompletionStage}
 	 */
-	public ResponseFuture<Outcome> key(String group, long mech, ReciprocalKeyPair key) {
-		checkNotNull(group);
-		checkNotNull(key);
+	public CompletionStage<Outcome> key(String group, long mech, ReciprocalKeyPair key) {
+		requireNonNull(group);
+		requireNonNull(key);
 
 		Sand5Handler sand5 = Sand5Handler.newResponseHandler(key);
-		sock.engage(HandlerKey.SAND5, sand5);
+		target.engage(HandlerKey.SAND5, sand5);
 
 		sand5.challengeFuture().addListener(future -> {
 			if (future.isSuccess())
-				sock.authenticate();
+				target.authenticate();
 		});
 
-		return request(RQ_KeyAuth.newBuilder().setGroupId(group).setMechId(mech));
+		return request(Outcome.class, RQ_KeyAuth.newBuilder().setGroupId(group).setMechId(mech));
 	}
 
 	/**

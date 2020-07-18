@@ -26,7 +26,7 @@ import com.google.common.io.ByteSource;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Generator.GenConfig;
 import com.sandpolis.core.instance.Generator.GenReport;
-import com.sandpolis.core.util.TextUtil;
+import com.sandpolis.core.foundation.util.TextUtil;
 
 /**
  * The parent class of all output generators.

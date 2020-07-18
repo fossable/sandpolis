@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Generator.GenConfig;
 import com.sandpolis.core.instance.Generator.MicroConfig;
-import com.sandpolis.core.soi.Build.SO_Build;
+import com.sandpolis.core.foundation.soi.Build.SO_Build;
 
 /**
  * Generates a <b>com.sandpolis.client.micro</b> stub.

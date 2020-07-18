@@ -26,7 +26,7 @@ import com.google.common.cache.CacheBuilder;
 import com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Client.IpLocation;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.util.ValidationUtil;
+import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.location.LocationStore.LocationStoreConfig;
 
 public class LocationStore extends StoreBase<LocationStoreConfig> {

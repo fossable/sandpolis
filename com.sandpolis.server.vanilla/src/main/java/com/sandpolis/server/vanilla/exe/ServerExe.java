@@ -17,11 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgPing.RQ_Ping;
-import com.sandpolis.core.net.MsgPing.RS_Ping;
-import com.sandpolis.core.net.MsgServer.RQ_ServerBanner;
+import com.sandpolis.core.instance.msg.MsgPing.RQ_Ping;
+import com.sandpolis.core.instance.msg.MsgPing.RS_Ping;
 import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.sv.msg.MsgServer.RQ_ServerBanner;
 
 /**
  * Message handlers for server requests.
@@ -33,14 +32,12 @@ public final class ServerExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(ServerExe.class);
 
-	@Unauth
-	@Handler(tag = MSG.RQ_SERVER_BANNER_FIELD_NUMBER)
+	@Handler(auth = false)
 	public static MessageOrBuilder rq_server_banner(RQ_ServerBanner rq) {
 		return ServerStore.getBanner();
 	}
 
-	@Unauth
-	@Handler(tag = MSG.RQ_PING_FIELD_NUMBER)
+	@Handler(auth = false)
 	public static MessageOrBuilder rq_ping(RQ_Ping rq) {
 		return RS_Ping.newBuilder();
 	}

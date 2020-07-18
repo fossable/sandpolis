@@ -11,21 +11,17 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.instance.util.ProtoUtil.begin;
-import static com.sandpolis.core.instance.util.ProtoUtil.failure;
-import static com.sandpolis.core.instance.util.ProtoUtil.success;
+import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
+import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
+import static com.sandpolis.core.foundation.util.ProtoUtil.success;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Result.ErrorCode;
-import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgGroup.RQ_AddGroup;
-import com.sandpolis.core.net.MsgGroup.RQ_GroupDelta;
-import com.sandpolis.core.net.MsgGroup.RQ_ListGroups;
-import com.sandpolis.core.net.MsgGroup.RQ_RemoveGroup;
-import com.sandpolis.core.net.MsgGroup.RS_ListGroups;
+import com.sandpolis.core.foundation.Result.ErrorCode;
+import com.sandpolis.core.instance.Group;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.sv.msg.MsgGroup.RQ_GroupOperation;
 
 /**
  * Group message handlers.
@@ -35,8 +31,7 @@ import com.sandpolis.core.net.handler.exelet.ExeletContext;
  */
 public final class GroupExe extends Exelet {
 
-	@Auth
-	@Handler(tag = MSG.RQ_GROUP_OPERATION_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_group_operation(ExeletContext context, RQ_GroupOperation rq) {
 		if (!checkOwnership(context, rq.getId()))
 			return failure(ErrorCode.ACCESS_DENIED);

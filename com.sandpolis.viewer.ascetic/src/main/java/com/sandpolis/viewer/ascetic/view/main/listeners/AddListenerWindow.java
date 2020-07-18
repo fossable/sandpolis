@@ -31,8 +31,7 @@ import com.googlecode.lanterna.gui2.TextBox;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
-import com.sandpolis.core.instance.Listener.ProtoListener;
-import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.instance.Listener.ListenerConfig;
 import com.sandpolis.core.viewer.cmd.ListenerCmd;
 
 public class AddListenerWindow extends BasicWindow {
@@ -89,9 +88,9 @@ public class AddListenerWindow extends BasicWindow {
 				String name = fld_name.getText();
 				int port = Integer.parseInt(fld_port.getText());
 
-				ListenerCmd.async().addListener(ProtoListener.newBuilder().setName(name).setPort(port).setOwner("admin")
-						.setAddress("0.0.0.0").setEnabled(true).build()).addHandler((Outcome outcome) -> {
-							if (outcome.getResult()) {
+				ListenerCmd.async().create(ListenerConfig.newBuilder().setName(name).setPort(port).setOwner("admin")
+						.setAddress("0.0.0.0").setEnabled(true).build()).thenAccept(rs -> {
+							if (rs.getResult()) {
 								WindowStore.removeValue(this);
 							} else {
 								setStatus("Add failed", TextColor.ANSI.BLACK);

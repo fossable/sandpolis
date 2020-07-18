@@ -19,7 +19,7 @@ import com.sandpolis.core.instance.DocumentBindings.Profile;
 import com.sandpolis.core.instance.Listener.ListenerConfig;
 import com.sandpolis.core.instance.data.Document;
 import com.sandpolis.core.net.Transport;
-import com.sandpolis.core.util.NetUtil;
+import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.server.vanilla.net.init.ServerChannelInitializer;
 
 import io.netty.bootstrap.ServerBootstrap;

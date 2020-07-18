@@ -16,6 +16,7 @@ import static com.googlecode.lanterna.gui2.GridLayout.Alignment.CENTER;
 import static com.sandpolis.viewer.ascetic.store.window.WindowStore.WindowStore;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -47,7 +48,6 @@ import com.sandpolis.core.instance.Generator.NetworkConfig;
 import com.sandpolis.core.instance.Generator.NetworkTarget;
 import com.sandpolis.core.instance.Generator.OutputFormat;
 import com.sandpolis.core.instance.Generator.OutputPayload;
-import com.sandpolis.core.net.MsgGenerator.RS_Generate;
 import com.sandpolis.core.viewer.cmd.GenCmd;
 import com.sandpolis.viewer.ascetic.Viewer;
 import com.sandpolis.viewer.ascetic.renderer.CustomButtonRenderer;
@@ -162,7 +162,7 @@ public class GeneratorWindow extends BasicWindow {
 														.setPort(Integer.parseInt(fld_port.getText()))))));
 
 				setStatus("Generating...", TextColor.ANSI.BLACK);
-				GenCmd.async().generate(config.build()).addHandler((RS_Generate rs) -> {
+				GenCmd.async().generate(config.build()).thenAccept(rs -> {
 					fld_address.setEnabled(false);
 					fld_path.setEnabled(false);
 					fld_port.setEnabled(false);
@@ -170,7 +170,12 @@ public class GeneratorWindow extends BasicWindow {
 					btn_choose.setEnabled(false);
 
 					if (rs.getReport().getResult()) {
-						Files.write(Paths.get(fld_path.getText()), rs.getOutput().toByteArray());
+						try {
+							Files.write(Paths.get(fld_path.getText()), rs.getOutput().toByteArray());
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						close();
 					}
 				});
