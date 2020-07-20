@@ -11,8 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.store;
 
-import com.sandpolis.core.instance.database.Database;
-
 /**
  * A base for all store configurations.
  */
@@ -28,9 +26,9 @@ public abstract class StoreConfig {
 	/**
 	 * Indicate that the store's data should be persisted to the given database.
 	 *
-	 * @param database The database handle
+	 * @param factory The factory object that will produce a {@link StoreProvider}
 	 */
-	public void persistent(Database database) {
+	public void persistent(StoreProviderFactory factory) {
 		throw new UnsupportedOperationException(this.getClass().getName() + " does not support persistent providers");
 	}
 }

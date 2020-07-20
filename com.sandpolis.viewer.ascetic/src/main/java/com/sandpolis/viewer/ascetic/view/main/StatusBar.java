@@ -22,8 +22,8 @@ import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
-import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.util.TextUtil;
+import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.foundation.util.TextUtil;
 
 public class StatusBar extends Panel {
 

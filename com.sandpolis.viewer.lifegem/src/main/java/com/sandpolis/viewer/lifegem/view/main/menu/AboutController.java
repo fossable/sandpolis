@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.main.menu;
 
-import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.viewer.lifegem.store.stage.StageStore.StageStore;
 
 import java.io.IOException;

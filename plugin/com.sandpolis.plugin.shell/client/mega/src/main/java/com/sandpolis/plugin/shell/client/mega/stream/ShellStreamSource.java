@@ -17,7 +17,7 @@ import java.io.IOException;
 
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.net.stream.StreamSource;
-import com.sandpolis.plugin.shell.MsgShell.EV_ShellStream;
+import com.sandpolis.plugin.shell.msg.MsgShell.EV_ShellStream;
 
 public class ShellStreamSource extends StreamSource<EV_ShellStream> {
 

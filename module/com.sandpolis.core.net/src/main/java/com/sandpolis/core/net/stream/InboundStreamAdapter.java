@@ -14,9 +14,8 @@ package com.sandpolis.core.net.stream;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.SubmissionPublisher;
-import java.util.function.Function;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.Message;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.connection.Connection;
@@ -24,17 +23,17 @@ import com.sandpolis.core.net.connection.Connection;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
 
-public class InboundStreamAdapter<E extends MessageOrBuilder> extends SubmissionPublisher<E>
+public class InboundStreamAdapter<E extends Message> extends SubmissionPublisher<E>
 		implements StreamEndpoint, ChannelInboundHandler {
 
-	private Function<MSG, E> converter;
 	private int id;
 	private Connection sock;
+	private Class<E> eventType;
 
-	public InboundStreamAdapter(int streamID, Connection sock, Function<MSG, E> converter) {
+	public InboundStreamAdapter(int streamID, Connection sock, Class<E> eventType) {
 		this.id = streamID;
 		this.sock = checkNotNull(sock);
-		this.converter = converter;
+		this.eventType = eventType;
 
 		sock.engage(HandlerKey.STREAM, this);
 	}
@@ -97,7 +96,7 @@ public class InboundStreamAdapter<E extends MessageOrBuilder> extends Submission
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		MSG m = (MSG) msg;
 		if (m.getId() == id) {
-			submit(converter.apply(m));
+			submit(m.getPayload().unpack(eventType));
 		} else {
 			ctx.fireChannelRead(msg);
 		}

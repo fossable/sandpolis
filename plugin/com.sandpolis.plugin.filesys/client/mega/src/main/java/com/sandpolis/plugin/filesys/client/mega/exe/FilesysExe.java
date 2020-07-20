@@ -16,19 +16,17 @@ import java.nio.file.Paths;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.util.SystemUtil;
+import com.sandpolis.core.foundation.util.SystemUtil;
 import com.sandpolis.plugin.filesys.FsHandle;
-import com.sandpolis.plugin.filesys.MessageFilesys.FilesysMSG;
-import com.sandpolis.plugin.filesys.MsgFilesys.RQ_FileDelete;
-import com.sandpolis.plugin.filesys.MsgFilesys.RQ_FileListing;
-import com.sandpolis.plugin.filesys.MsgFilesys.RS_FileListing;
+import com.sandpolis.plugin.filesys.msg.MsgFilesys.RQ_FileDelete;
+import com.sandpolis.plugin.filesys.msg.MsgFilesys.RQ_FileListing;
+import com.sandpolis.plugin.filesys.msg.MsgFilesys.RS_FileListing;
 
 public final class FilesysExe extends Exelet {
 
-	@Auth
-	@Handler(tag = FilesysMSG.RQ_FILE_LISTING_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_file_listing(RQ_FileListing rq) throws Exception {
 		String path;
 		switch (SystemUtil.OS_TYPE) {
@@ -46,8 +44,7 @@ public final class FilesysExe extends Exelet {
 		}
 	}
 
-	@Auth
-	@Handler(tag = FilesysMSG.RQ_FILE_DELETE_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_file_delete(RQ_FileDelete rq) throws Exception {
 		switch (SystemUtil.OS_TYPE) {
 		case WINDOWS:

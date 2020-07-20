@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 module com.sandpolis.plugin.device {
 	exports com.sandpolis.plugin.device;
+	exports com.sandpolis.plugin.device.msg;
 
 	requires com.sandpolis.core.instance;
 	requires org.slf4j;

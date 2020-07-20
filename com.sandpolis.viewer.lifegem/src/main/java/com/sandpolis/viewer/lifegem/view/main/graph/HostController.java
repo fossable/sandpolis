@@ -13,7 +13,7 @@ package com.sandpolis.viewer.lifegem.view.main.graph;
 
 import java.util.Objects;
 
-import com.sandpolis.core.profile.store.Profile;
+import com.sandpolis.core.instance.profile.Profile;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 
 import javafx.beans.property.BooleanProperty;

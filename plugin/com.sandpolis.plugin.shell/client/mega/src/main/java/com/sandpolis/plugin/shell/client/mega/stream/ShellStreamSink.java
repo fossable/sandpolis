@@ -16,7 +16,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.io.IOException;
 
 import com.sandpolis.core.net.stream.StreamSink;
-import com.sandpolis.plugin.shell.MsgShell.EV_ShellStream;
+import com.sandpolis.plugin.shell.msg.MsgShell.EV_ShellStream;
 
 public class ShellStreamSink extends StreamSink<EV_ShellStream> {
 

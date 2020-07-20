@@ -10,7 +10,7 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 module com.sandpolis.plugin.upgrade {
-	exports com.sandpolis.plugin.upgrade;
+	exports com.sandpolis.plugin.upgrade.msg;
 
 	requires com.google.protobuf;
 }

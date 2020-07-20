@@ -11,11 +11,9 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.filesys.client.mega;
 
-import com.google.protobuf.Message;
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.plugin.ExeletProvider;
-import com.sandpolis.plugin.filesys.MessageFilesys.FilesysMSG;
 import com.sandpolis.plugin.filesys.client.mega.exe.FilesysExe;
 
 public final class FilesysPlugin extends SandpolisPlugin implements ExeletProvider {
@@ -24,10 +22,5 @@ public final class FilesysPlugin extends SandpolisPlugin implements ExeletProvid
 	@SuppressWarnings("unchecked")
 	public Class<? extends Exelet>[] getExelets() {
 		return new Class[] { FilesysExe.class };
-	}
-
-	@Override
-	public Class<? extends Message> getMessageType() {
-		return FilesysMSG.class;
 	}
 }

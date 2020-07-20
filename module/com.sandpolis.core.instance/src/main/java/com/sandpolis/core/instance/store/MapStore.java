@@ -16,13 +16,9 @@ import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
-import com.sandpolis.core.instance.data.Document;
-
 public abstract class MapStore<V, E extends StoreConfig> extends StoreBase<E> {
 
 	protected StoreProvider<V> provider;
-
-	protected Document document;
 
 	protected MapStore(Logger log) {
 		super(log);

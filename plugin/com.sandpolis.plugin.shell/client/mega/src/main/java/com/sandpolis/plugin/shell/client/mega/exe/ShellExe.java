@@ -26,25 +26,23 @@ import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.stream.InboundStreamAdapter;
 import com.sandpolis.core.net.stream.OutboundStreamAdapter;
-import com.sandpolis.core.util.SystemUtil;
-import com.sandpolis.plugin.shell.MessageShell.ShellMSG;
-import com.sandpolis.plugin.shell.MsgPower.RQ_PowerChange;
-import com.sandpolis.plugin.shell.MsgShell.EV_ShellStream;
-import com.sandpolis.plugin.shell.MsgShell.RQ_Execute;
-import com.sandpolis.plugin.shell.MsgShell.RQ_ListShells;
-import com.sandpolis.plugin.shell.MsgShell.RQ_ShellStream;
-import com.sandpolis.plugin.shell.MsgShell.RS_Execute;
-import com.sandpolis.plugin.shell.MsgShell.RS_ListShells;
-import com.sandpolis.plugin.shell.MsgShell.RS_ListShells.ShellListing;
-import com.sandpolis.plugin.shell.MsgShell.Shell;
+import com.sandpolis.core.foundation.util.SystemUtil;
+import com.sandpolis.plugin.shell.msg.MsgPower.RQ_PowerChange;
+import com.sandpolis.plugin.shell.msg.MsgShell.EV_ShellStream;
+import com.sandpolis.plugin.shell.msg.MsgShell.RQ_Execute;
+import com.sandpolis.plugin.shell.msg.MsgShell.RQ_ListShells;
+import com.sandpolis.plugin.shell.msg.MsgShell.RQ_ShellStream;
+import com.sandpolis.plugin.shell.msg.MsgShell.RS_Execute;
+import com.sandpolis.plugin.shell.msg.MsgShell.RS_ListShells;
+import com.sandpolis.plugin.shell.msg.MsgShell.RS_ListShells.ShellListing;
+import com.sandpolis.plugin.shell.msg.MsgShell.Shell;
 import com.sandpolis.plugin.shell.client.mega.Shells;
 import com.sandpolis.plugin.shell.client.mega.stream.ShellStreamSink;
 import com.sandpolis.plugin.shell.client.mega.stream.ShellStreamSource;
 
 public final class ShellExe extends Exelet {
 
-	@Auth
-	@Handler(tag = ShellMSG.RQ_EXECUTE_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_execute(RQ_Execute rq) throws Exception {
 
 		String[] command;
@@ -72,8 +70,7 @@ public final class ShellExe extends Exelet {
 		}
 	}
 
-	@Auth
-	@Handler(tag = ShellMSG.RQ_LIST_SHELLS_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_list_shells(RQ_ListShells rq) throws Exception {
 		var rs = RS_ListShells.newBuilder();
 
@@ -93,8 +90,7 @@ public final class ShellExe extends Exelet {
 		return rs;
 	}
 
-	@Auth
-	@Handler(tag = ShellMSG.RQ_POWER_CHANGE_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static void rq_power_change(RQ_PowerChange rq) throws Exception {
 		// TODO check permissions
 		// TODO avoid switches
@@ -111,7 +107,7 @@ public final class ShellExe extends Exelet {
 				break;
 			}
 			break;
-		case MACOS:
+		case DARWIN:
 			switch (rq.getChange()) {
 			case POWEROFF:
 				Runtime.getRuntime().exec("sudo shutdown -h now").waitFor();
@@ -142,8 +138,7 @@ public final class ShellExe extends Exelet {
 		System.exit(0);
 	}
 
-	@Auth
-	@Handler(tag = ShellMSG.RQ_SHELL_STREAM_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_shell_stream(ExeletContext context, RQ_ShellStream rq) throws Exception {
 		var outcome = begin();
 
@@ -197,19 +192,9 @@ public final class ShellExe extends Exelet {
 		var source = new ShellStreamSource(process);
 		var sink = new ShellStreamSink(process);
 
-		var inbound = new InboundStreamAdapter<EV_ShellStream>(rq.getId(), context.connector, ev -> {
-			try {
-				return ev.getPlugin().unpack(ShellMSG.class).getEvShellStream();
-			} catch (InvalidProtocolBufferException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return null;
-			}
-		});
+		var inbound = new InboundStreamAdapter<EV_ShellStream>(rq.getId(), context.connector, EV_ShellStream.class);
 		var outbound = new OutboundStreamAdapter<EV_ShellStream>(rq.getId(), context.connector,
-				context.request.getFrom(), ev -> {
-					return Any.pack(ShellMSG.newBuilder().setEvShellStream(ev).build(), "com.sandpolis.plugin.shell");
-				});
+				context.request.getFrom());
 
 		StreamStore.add(inbound, sink);
 		StreamStore.add(source, outbound);
@@ -218,8 +203,7 @@ public final class ShellExe extends Exelet {
 		return success(outcome);
 	}
 
-	@Auth
-	@Handler(tag = ShellMSG.EV_SHELL_STREAM_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static void ev_shell_stream(ExeletContext context, EV_ShellStream ev) {
 		StreamStore.streamData(context.request.getId(), ev);
 	}

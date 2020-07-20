@@ -24,23 +24,20 @@ import java.io.ByteArrayOutputStream;
 
 import javax.imageio.ImageIO;
 
-import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.handler.exelet.ExeletContext;
 import com.sandpolis.core.net.stream.OutboundStreamAdapter;
-import com.sandpolis.plugin.desktop.MessageDesktop.DesktopMSG;
-import com.sandpolis.plugin.desktop.MsgDesktop.RQ_Screenshot;
-import com.sandpolis.plugin.desktop.MsgDesktop.RS_Screenshot;
-import com.sandpolis.plugin.desktop.MsgRd.EV_DesktopStream;
-import com.sandpolis.plugin.desktop.MsgRd.RQ_DesktopStream;
 import com.sandpolis.plugin.desktop.client.mega.JavaDesktopSource;
+import com.sandpolis.plugin.desktop.msg.MsgDesktop.RQ_Screenshot;
+import com.sandpolis.plugin.desktop.msg.MsgDesktop.RS_Screenshot;
+import com.sandpolis.plugin.desktop.msg.MsgRd.EV_DesktopStream;
+import com.sandpolis.plugin.desktop.msg.MsgRd.RQ_DesktopStream;
 
 public final class DesktopExe extends Exelet {
 
-	@Auth
-	@Handler(tag = DesktopMSG.RQ_SCREENSHOT_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_screenshot(RQ_Screenshot rq) {
 		var outcome = begin();
 
@@ -55,8 +52,7 @@ public final class DesktopExe extends Exelet {
 		}
 	}
 
-	@Auth
-	@Handler(tag = DesktopMSG.RQ_DESKTOP_STREAM_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_desktop_stream(ExeletContext context, RQ_DesktopStream rq) {
 		var outcome = begin();
 		// TODO use correct stream ID
@@ -65,10 +61,7 @@ public final class DesktopExe extends Exelet {
 		context.defer(() -> {
 			var source = new JavaDesktopSource();
 			var outbound = new OutboundStreamAdapter<EV_DesktopStream>(rq.getId(), context.connector,
-					context.request.getFrom(), ev -> {
-						return Any.pack(DesktopMSG.newBuilder().setEvDesktopStream(ev).build(),
-								"com.sandpolis.plugin.desktop");
-					});
+					context.request.getFrom());
 			StreamStore.add(source, outbound);
 			source.start();
 		});
@@ -76,8 +69,7 @@ public final class DesktopExe extends Exelet {
 		return success(outcome);
 	}
 
-	@Auth
-	@Handler(tag = DesktopMSG.EV_DESKTOP_STREAM_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static void ev_desktop_stream(ExeletContext context, EV_DesktopStream ev) {
 		StreamStore.streamData(context.request.getId(), ev);
 	}

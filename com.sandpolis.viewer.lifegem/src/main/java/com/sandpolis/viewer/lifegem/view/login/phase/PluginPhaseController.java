@@ -14,8 +14,8 @@ package com.sandpolis.viewer.lifegem.view.login.phase;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.sandpolis.core.instance.Plugin.PluginDescriptor;
-import com.sandpolis.core.viewer.cmd.PluginCmd;
+import com.sandpolis.core.cv.cmd.PluginCmd;
+import com.sandpolis.core.instance.Plugin.PluginConfig;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 
 import javafx.beans.property.BooleanProperty;
@@ -34,14 +34,11 @@ public class PluginPhaseController extends AbstractController {
 		private final StringProperty name = new SimpleStringProperty(this, "name");
 		private final StringProperty trust = new SimpleStringProperty(this, "trust");
 
-		private final PluginDescriptor descriptor;
+		private final String coordinate;
 
-		public PluginProperty(PluginDescriptor descriptor) {
-			this.descriptor = descriptor;
+		public PluginProperty(PluginConfig config) {
 
-			name.set(descriptor.getName());
-			description.set(descriptor.getDescription());
-			trust.set(descriptor.getTrustAuthority());
+			coordinate = "";
 			install.set(false);
 		}
 
@@ -76,12 +73,12 @@ public class PluginPhaseController extends AbstractController {
 
 		plugins.getItems().forEach(plugin -> {
 			if (plugin.install.get()) {
-				PluginCmd.async().install(plugin.descriptor.getCoordinate());
+				PluginCmd.async().install(plugin.coordinate);
 			}
 		});
 	}
 
-	public void setPlugins(List<PluginDescriptor> newPlugins) {
+	public void setPlugins(List<PluginConfig> newPlugins) {
 		plugins.getItems().setAll(newPlugins.stream().map(PluginProperty::new).collect(Collectors.toList()));
 	}
 }

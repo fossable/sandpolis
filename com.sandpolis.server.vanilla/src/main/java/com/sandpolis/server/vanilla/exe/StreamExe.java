@@ -11,19 +11,13 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.exe;
 
-import static com.sandpolis.core.instance.util.ProtoUtil.begin;
-import static com.sandpolis.core.instance.util.ProtoUtil.success;
+import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
+import static com.sandpolis.core.foundation.util.ProtoUtil.success;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.MsgStream.EV_ProfileStream;
-import com.sandpolis.core.net.MsgStream.RQ_ProfileStream;
-import com.sandpolis.core.net.MsgStream.RQ_StreamStop;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.handler.exelet.ExeletContext;
-import com.sandpolis.core.net.stream.OutboundStreamAdapter;
-import com.sandpolis.server.vanilla.stream.ProfileStreamSource;
+import com.sandpolis.core.net.msg.MsgStream.RQ_StreamStop;
 
 /**
  * Stream message handlers.
@@ -33,24 +27,20 @@ import com.sandpolis.server.vanilla.stream.ProfileStreamSource;
  */
 public final class StreamExe extends Exelet {
 
-	@Auth
-	@Handler(tag = MSG.RQ_PROFILE_STREAM_FIELD_NUMBER)
-	public static MessageOrBuilder rq_profile_stream(ExeletContext context, RQ_ProfileStream rq) {
-		var outcome = begin();
-		// TODO use correct stream ID
-		// Stream stream = new Stream();
+//	@Handler(auth = true)
+//	public static MessageOrBuilder rq_profile_stream(ExeletContext context, RQ_ProfileStream rq) {
+//		var outcome = begin();
+//
+//		context.defer(() -> {
+//			ProfileStreamSource source = new ProfileStreamSource();// TODO get from store
+//			StreamStore.add(source, new OutboundStreamAdapter<EV_ProfileStream>(rq.getId(), context.connector));
+//			source.start();
+//		});
+//
+//		return success(outcome);
+//	}
 
-		context.defer(() -> {
-			ProfileStreamSource source = new ProfileStreamSource();// TODO get from store
-			StreamStore.add(source, new OutboundStreamAdapter<EV_ProfileStream>(rq.getId(), context.connector));
-			source.start();
-		});
-
-		return success(outcome);
-	}
-
-	@Auth
-	@Handler(tag = MSG.RQ_STREAM_STOP_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_stream_stop(RQ_StreamStop rq) {
 		var outcome = begin();
 

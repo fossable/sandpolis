@@ -31,17 +31,17 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
-import com.sandpolis.core.instance.database.Database;
+import com.sandpolis.core.foundation.util.CertUtil;
+import com.sandpolis.core.foundation.util.JarUtil;
+import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginStore.PluginStoreConfig;
-import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.foundation.util.CertUtil;
-import com.sandpolis.core.foundation.util.JarUtil;
-import com.sandpolis.core.instance.Metatypes.InstanceType;
-import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.store.StoreProviderFactory;
 
 /**
  * The {@link PluginStore} manages plugins.<br>
@@ -176,7 +176,7 @@ public final class PluginStore extends MapStore<Plugin, PluginStoreConfig> {
 		log.debug("Installing plugin: {}", path.toString());
 
 		try {
-			Plugin plugin = new Plugin();
+			Plugin plugin = new Plugin(null);
 			plugin.install(path, true);
 			provider.add(plugin);
 		} catch (IOException e) {
@@ -248,8 +248,8 @@ public final class PluginStore extends MapStore<Plugin, PluginStoreConfig> {
 		}
 
 		@Override
-		public void persistent(Database database) {
-			provider = database.getConnection().provider(Plugin.class);
+		public void persistent(StoreProviderFactory factory) {
+			provider = factory.supply(Plugin.class, Plugin::new);
 		}
 	}
 

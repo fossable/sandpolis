@@ -17,6 +17,7 @@ import static com.sandpolis.viewer.lifegem.store.stage.StageStore.StageStore;
 
 import java.util.Objects;
 
+import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.connection.ConnectionFuture;
 import com.sandpolis.core.viewer.cmd.LoginCmd;

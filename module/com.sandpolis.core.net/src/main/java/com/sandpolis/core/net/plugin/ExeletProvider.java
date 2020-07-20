@@ -11,7 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.plugin;
 
-import com.google.protobuf.Message;
 import com.sandpolis.core.net.command.Exelet;
 
 /**
@@ -26,6 +25,4 @@ public interface ExeletProvider {
 	 * @return A list of Exelet classes
 	 */
 	public Class<? extends Exelet>[] getExelets();
-
-	public Class<? extends Message> getMessageType();
 }

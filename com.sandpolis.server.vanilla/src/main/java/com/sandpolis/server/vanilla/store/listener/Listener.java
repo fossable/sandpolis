@@ -14,12 +14,13 @@ package com.sandpolis.server.vanilla.store.listener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.DocumentBindings.Profile;
 import com.sandpolis.core.instance.Listener.ListenerConfig;
+import com.sandpolis.core.instance.data.Collection;
 import com.sandpolis.core.instance.data.Document;
 import com.sandpolis.core.net.Transport;
-import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.server.vanilla.net.init.ServerChannelInitializer;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -59,10 +60,14 @@ public class Listener extends Profile.Instance.Server.Listener {
 	 *
 	 * @param config The configuration which should be prevalidated and complete
 	 */
-	public Listener(Document document, ListenerConfig config) {
-		super(document);
+	public Listener(Collection parent, ListenerConfig config) {
+		super(new Document(parent));
 
 		port().set(config.getPort());
+	}
+
+	public Listener(Document document) {
+		super(document);
 	}
 
 	/**

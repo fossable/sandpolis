@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.Message;
-import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
@@ -92,8 +91,7 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 	 */
 	private List<OutboundStreamAdapter> outbound;
 
-	public synchronized <E extends MessageOrBuilder> void add(InboundStreamAdapter<E> in,
-			OutboundStreamAdapter<E> out) {
+	public synchronized <E extends Message> void add(InboundStreamAdapter<E> in, OutboundStreamAdapter<E> out) {
 		checkArgument(!in.isSubscribed(out));
 		in.subscribe(out);
 
@@ -101,7 +99,7 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 		this.outbound.add(out);
 	}
 
-	public synchronized <E extends MessageOrBuilder> void add(InboundStreamAdapter<E> in, StreamSink<E> sink) {
+	public synchronized <E extends Message> void add(InboundStreamAdapter<E> in, StreamSink<E> sink) {
 		checkArgument(!in.isSubscribed(sink));
 		in.subscribe(sink);
 
@@ -109,7 +107,7 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 		this.sink.add(sink);
 	}
 
-	public synchronized <E extends MessageOrBuilder> void add(StreamSource<E> source, OutboundStreamAdapter<E> out) {
+	public synchronized <E extends Message> void add(StreamSource<E> source, OutboundStreamAdapter<E> out) {
 		checkArgument(!source.isSubscribed(out));
 		source.subscribe(out);
 
@@ -117,7 +115,7 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 		this.outbound.add(out);
 	}
 
-	public synchronized <E extends MessageOrBuilder> void add(StreamSource<E> source, StreamSink<E> sink) {
+	public synchronized <E extends Message> void add(StreamSource<E> source, StreamSink<E> sink) {
 		checkArgument(!source.isSubscribed(sink));
 		source.subscribe(sink);
 

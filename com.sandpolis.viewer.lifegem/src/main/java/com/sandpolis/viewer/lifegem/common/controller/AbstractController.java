@@ -19,8 +19,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.google.common.eventbus.EventBus;
-import com.sandpolis.core.instance.event.Event;
-import com.sandpolis.core.instance.event.ParameterizedEvent;
+import com.sandpolis.core.instance.store.event.Event;
+import com.sandpolis.core.instance.store.event.ParameterizedEvent;
 
 /**
  * A superclass for controllers that need access to an {@link EventBus}.

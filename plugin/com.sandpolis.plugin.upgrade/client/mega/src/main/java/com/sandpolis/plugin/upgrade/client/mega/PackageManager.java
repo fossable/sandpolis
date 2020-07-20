@@ -15,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.sandpolis.plugin.upgrade.MsgUpgrade.Package;
+import com.sandpolis.plugin.upgrade.msg.MsgUpgrade.Package;
 import com.sandpolis.plugin.upgrade.client.mega.library.Apt;
 import com.sandpolis.plugin.upgrade.client.mega.library.Pacman;
 

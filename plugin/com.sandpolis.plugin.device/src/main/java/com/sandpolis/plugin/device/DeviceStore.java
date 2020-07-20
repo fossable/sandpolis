@@ -14,7 +14,7 @@ package com.sandpolis.plugin.device;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
+import com.sandpolis.core.instance.store.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 

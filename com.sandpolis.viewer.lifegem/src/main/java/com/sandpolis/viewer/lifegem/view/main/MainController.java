@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.profile.store.Profile;
+import com.sandpolis.core.instance.profile.Profile;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 import com.sandpolis.viewer.lifegem.common.pane.CarouselPane;
 import com.sandpolis.viewer.lifegem.common.pane.ExtendPane;

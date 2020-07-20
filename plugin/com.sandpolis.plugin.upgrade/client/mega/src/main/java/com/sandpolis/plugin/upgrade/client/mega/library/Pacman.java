@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.util.SystemUtil;
-import com.sandpolis.core.util.TextUtil;
-import com.sandpolis.plugin.upgrade.MsgUpgrade.Package;
+import com.sandpolis.core.foundation.util.SystemUtil;
+import com.sandpolis.core.foundation.util.TextUtil;
+import com.sandpolis.plugin.upgrade.msg.MsgUpgrade.Package;
 import com.sandpolis.plugin.upgrade.client.mega.PackageManager;
 
 /**

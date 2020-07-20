@@ -12,16 +12,14 @@
 package com.sandpolis.plugin.upgrade.client.mega;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.plugin.upgrade.MessageUpgrade.UpgradeMSG;
-import com.sandpolis.plugin.upgrade.MsgUpgrade.RQ_ManagerMetadata;
-import com.sandpolis.plugin.upgrade.MsgUpgrade.RS_ManagerMetadata;
+import com.sandpolis.plugin.upgrade.msg.MsgUpgrade.RQ_ManagerMetadata;
+import com.sandpolis.plugin.upgrade.msg.MsgUpgrade.RS_ManagerMetadata;
 
 public final class UpgradeExe extends Exelet {
 
-	@Auth
-	@Handler(tag = UpgradeMSG.RQ_MANAGER_METADATA_FIELD_NUMBER)
+	@Handler(auth = true)
 	public static MessageOrBuilder rq_manager_metadata(RQ_ManagerMetadata rq) throws Exception {
 		if (PackageManager.INSTANCE == null)
 			return Outcome.newBuilder().setResult(false);

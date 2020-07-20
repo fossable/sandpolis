@@ -16,7 +16,7 @@ module com.sandpolis.plugin.upgrade.client.mega {
 	requires com.google.protobuf;
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.net;
-	requires com.sandpolis.core.util;
+	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.plugin.upgrade;
 	requires org.slf4j;
 }

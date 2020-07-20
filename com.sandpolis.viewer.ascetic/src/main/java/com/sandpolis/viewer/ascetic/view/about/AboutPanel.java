@@ -20,8 +20,8 @@ import java.util.Date;
 import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
+import com.sandpolis.core.foundation.util.TextUtil;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.util.TextUtil;
 
 public class AboutPanel extends Panel {
 

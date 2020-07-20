@@ -19,7 +19,7 @@ module com.sandpolis.plugin.shell.client.mega {
 	requires com.google.protobuf;
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.net;
-	requires com.sandpolis.core.util;
+	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.plugin.shell;
 
 	provides com.sandpolis.core.instance.plugin.SandpolisPlugin with com.sandpolis.plugin.shell.client.mega.ShellPlugin;

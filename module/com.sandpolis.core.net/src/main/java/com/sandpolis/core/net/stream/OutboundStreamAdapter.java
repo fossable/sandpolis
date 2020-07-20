@@ -16,9 +16,7 @@ import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
-import java.util.function.Function;
 
-import com.google.protobuf.Any;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.util.MsgUtil;
@@ -27,7 +25,6 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 
 	private int cvid;
 	private int id;
-	private Function<E, Any> pluginPacker;
 	private Connection sock;
 	private Subscription subscription;
 
@@ -36,10 +33,9 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 		this.sock = checkNotNull(sock);
 	}
 
-	public OutboundStreamAdapter(int streamID, Connection sock, int cvid, Function<E, Any> packer) {
+	public OutboundStreamAdapter(int streamID, Connection sock, int cvid) {
 		this.id = streamID;
 		this.sock = checkNotNull(sock);
-		this.pluginPacker = packer;
 		this.cvid = cvid;
 	}
 

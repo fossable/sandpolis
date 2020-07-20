@@ -11,9 +11,15 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.device.snmp;
 
+import com.sandpolis.core.instance.data.Document;
 import com.sandpolis.plugin.device.Device;
 
 public class SNMPv2cDevice extends Device {
+
+	public SNMPv2cDevice(Document document) {
+		super(document);
+		// TODO Auto-generated constructor stub
+	}
 
 	private String community;
 }

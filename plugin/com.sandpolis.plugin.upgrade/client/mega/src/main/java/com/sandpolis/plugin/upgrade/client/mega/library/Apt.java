@@ -15,8 +15,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.sandpolis.core.util.SystemUtil;
-import com.sandpolis.plugin.upgrade.MsgUpgrade.Package;
+import com.sandpolis.core.foundation.util.SystemUtil;
+import com.sandpolis.plugin.upgrade.msg.MsgUpgrade.Package;
 import com.sandpolis.plugin.upgrade.client.mega.PackageManager;
 
 /**

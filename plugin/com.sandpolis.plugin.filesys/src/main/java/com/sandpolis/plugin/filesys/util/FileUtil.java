@@ -23,7 +23,7 @@ import javax.swing.Icon;
 import javax.swing.filechooser.FileSystemView;
 
 import com.google.protobuf.ByteString;
-import com.sandpolis.plugin.filesys.MsgFilesys.RS_FileInfo;
+import com.sandpolis.plugin.filesys.msg.MsgFilesys.RS_FileInfo;
 
 public final class FileUtil {
 

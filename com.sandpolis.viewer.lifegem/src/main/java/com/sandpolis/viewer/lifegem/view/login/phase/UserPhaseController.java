@@ -178,15 +178,16 @@ public class UserPhaseController extends AbstractController {
 			@Override
 			protected Void call() throws Exception {
 				while (!isCancelled()) {
-					long ping = ServerCmd.async().target(sock).ping();// TODO not async
-					updateMessage(ping + " ms");
+					ServerCmd.async().target(sock).ping().thenAccept(ping -> {
+						updateMessage(ping + " ms");
 
-					Platform.runLater(() -> {
-						ping_indicator.setProgress(0);
+						Platform.runLater(() -> {
+							ping_indicator.setProgress(0);
 
-						// Trigger animation
-						new Timeline(new KeyFrame(calculatePingVisual(ping),
-								new KeyValue(ping_indicator.progressProperty(), 0.999999999))).play();
+							// Trigger animation
+							new Timeline(new KeyFrame(calculatePingVisual(ping),
+									new KeyValue(ping_indicator.progressProperty(), 0.999999999))).play();
+						});
 					});
 					Thread.sleep(PING_PERIOD);
 				}

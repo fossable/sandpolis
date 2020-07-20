@@ -32,12 +32,13 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.Resources;
+import com.sandpolis.core.foundation.util.JarUtil;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.DocumentBindings;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.foundation.util.JarUtil;
-import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.data.Document;
 
 /**
  * Represents a Sandpolis plugin installed in the {@code PLUGIN} directory.
@@ -51,8 +52,8 @@ public class Plugin extends DocumentBindings.Profile.Instance.Plugin {
 
 	private SandpolisPlugin handle;
 
-	public Plugin() {
-		super(null);
+	public Plugin(Document document) {
+		super(document);
 	}
 
 	public void install(Path path, boolean enabled) throws IOException {

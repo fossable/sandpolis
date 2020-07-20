@@ -274,11 +274,16 @@ public class GeneratorController extends FxController {
 		extend.raise(progress, ExtendSide.BOTTOM, 500, 150);
 
 		// Execute
-		GenCmd.async().pool("ui.fx_thread").generate(config).addHandler((RS_Generate rs) -> {
+		GenCmd.async().generate(config).thenAccept(rs -> {
 			post(GenerationCompletedEvent::new, rs);
 
 			// TODO worker thread
-			Files.write(getOutput(), rs.getOutput().toByteArray());
+			try {
+				Files.write(getOutput(), rs.getOutput().toByteArray());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		});
 	}
 

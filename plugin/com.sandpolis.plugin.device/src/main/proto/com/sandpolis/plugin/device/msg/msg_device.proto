@@ -11,9 +11,9 @@
 //=========================================================S A N D P O L I S==//
 syntax = "proto3";
 
-package plugin.device.net;
+package plugin.device.msg;
 
-option java_package = "com.sandpolis.plugin.device.net";
+option java_package = "com.sandpolis.plugin.device.msg";
 
 message RQ_RegisterDevice {
 

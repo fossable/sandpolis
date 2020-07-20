@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.ascetic.logging;
 
-import com.sandpolis.core.instance.logging.InstanceLoggingConfigurator;
+import com.sandpolis.core.foundation.logging.DefaultLogbackConfigurator;
 import com.sandpolis.viewer.ascetic.view.log.LogPanelAppender;
 
 import ch.qos.logback.classic.Logger;
@@ -20,7 +20,7 @@ import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 
-public class LoggingConfigurator extends InstanceLoggingConfigurator {
+public class LoggingConfigurator extends DefaultLogbackConfigurator {
 
 	@Override
 	public void configure(LoggerContext lc) {
@@ -45,6 +45,8 @@ public class LoggingConfigurator extends InstanceLoggingConfigurator {
 		Logger root = lc.getLogger(Logger.ROOT_LOGGER_NAME);
 		root.addAppender(appender);
 
-		setLevels(lc);
+		LEVELS.entrySet().forEach(entry -> {
+			lc.getLogger(entry.getKey()).setLevel(entry.getValue());
+		});
 	}
 }
