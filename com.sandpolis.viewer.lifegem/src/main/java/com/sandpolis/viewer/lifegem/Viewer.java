@@ -13,12 +13,12 @@ package com.sandpolis.viewer.lifegem;
 
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
-import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
-import static com.sandpolis.core.net.store.network.NetworkStore.NetworkStore;
-import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
+import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
+import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.viewer.lifegem.store.stage.StageStore.StageStore;
 
 import java.util.concurrent.Executors;
@@ -26,14 +26,13 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.viewer.lifegem.common.FxEventExecutor;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 
@@ -54,9 +53,6 @@ public final class Viewer {
 	public static void main(String[] args) {
 		printEnvironment(log, "Sandpolis Viewer");
 
-		register(IPCTask.load);
-		register(IPCTask.checkLock);
-		register(IPCTask.setLock);
 		register(Viewer.loadEnvironment);
 		register(Viewer.loadStores);
 		register(Viewer.loadPlugins);
@@ -70,6 +66,9 @@ public final class Viewer {
 	 */
 	@InitializationTask(name = "Load runtime environment", fatal = true)
 	private static final Task loadEnvironment = new Task(outcome -> {
+
+		// TODO move
+		Config.MESSAGE_TIMEOUT.register(1000);
 
 		Environment.LIB.set(Config.PATH_LIB.value().orElse(null)).requireReadable();
 		Environment.LOG.set(Config.PATH_LOG.value().orElse(null)).requireWritable();

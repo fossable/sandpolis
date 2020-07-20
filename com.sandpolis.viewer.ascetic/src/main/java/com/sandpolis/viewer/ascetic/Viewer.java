@@ -13,8 +13,8 @@ package com.sandpolis.viewer.ascetic;
 
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
-import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
@@ -31,12 +31,11 @@ import com.googlecode.lanterna.gui2.SeparateTextGUIThread;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
-import com.sandpolis.core.instance.Config;
+import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.viewer.ascetic.view.log.LogPanel;
 import com.sandpolis.viewer.ascetic.view.login.LoginWindow;
 
@@ -54,9 +53,6 @@ public final class Viewer {
 	public static void main(String[] args) {
 		printEnvironment(log, "Sandpolis Viewer");
 
-		register(IPCTask.load);
-		register(IPCTask.checkLock);
-		register(IPCTask.setLock);
 		register(Viewer.loadEnvironment);
 		register(Viewer.loadStores);
 		register(Viewer.loadUserInterface);

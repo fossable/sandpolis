@@ -16,7 +16,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.TimeUnit;
 
-import com.sandpolis.core.util.TextUtil;
+import com.sandpolis.core.foundation.util.TextUtil;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;

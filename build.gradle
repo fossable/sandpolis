@@ -163,7 +163,6 @@ def publishProjects = [
 	'com.sandpolis.core.cv',
 	'com.sandpolis.core.foundation',
 	'com.sandpolis.core.instance',
-	'com.sandpolis.core.ipc',
 	'com.sandpolis.core.net',
 	'com.sandpolis.core.server',
 	'com.sandpolis.core.sv',

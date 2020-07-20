@@ -37,7 +37,6 @@ import com.sandpolis.core.instance.Generator.MegaConfig;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.ipc.task.IPCTask;
 import com.sandpolis.core.net.handler.sand5.ReciprocalKeyPair;
 import com.sandpolis.core.net.init.ClientChannelInitializer;
 import com.sandpolis.core.net.network.NetworkEvents.ServerEstablishedEvent;
@@ -79,9 +78,6 @@ public final class Client {
 	public static void main(String[] args) {
 		printEnvironment(log, "Sandpolis Client");
 
-		register(IPCTask.load);
-		register(IPCTask.checkLock);
-		register(IPCTask.setLock);
 		register(Client.loadEnvironment);
 		register(Client.loadStores);
 		register(Client.loadPlugins);

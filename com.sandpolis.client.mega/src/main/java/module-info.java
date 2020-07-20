@@ -13,7 +13,6 @@ open module com.sandpolis.client.mega {
 	requires com.google.common;
 	requires com.google.protobuf;
 	requires com.sandpolis.core.instance;
-	requires com.sandpolis.core.ipc;
 	requires com.sandpolis.core.net;
 	requires com.sandpolis.core.foundation;
 	requires io.netty.common;

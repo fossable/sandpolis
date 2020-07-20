@@ -49,7 +49,6 @@ dependencies {
 	testImplementation 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
 	testImplementation 'org.awaitility:awaitility:4.0.1'
 
-	implementation project(':module:com.sandpolis.core.ipc')
 	implementation project(':module:com.sandpolis.core.viewer')
 
 	// https://github.com/sirolf2009/fxgraph
