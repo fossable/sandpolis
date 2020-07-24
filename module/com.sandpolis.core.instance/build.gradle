@@ -72,7 +72,6 @@ javadoc {
 }
 
 codegen {
-	attributeSpec = file('attribute.json')
-	documentBindings = 'core'
-	attributeImplementations = true
+	profileTreeSpec = file('profile.json')
+	profileTreeType = 'core'
 }

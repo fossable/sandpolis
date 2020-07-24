@@ -409,27 +409,27 @@
               "type": "java.lang.Boolean"
             },
             {
-              "name": "certificateValid",
+              "name": "certificate_valid",
               "tag": 17,
               "type": "java.lang.Boolean"
             },
             {
-              "name": "cumulativeReadBytes",
+              "name": "cumulative_read_bytes",
               "tag": 18,
               "type": "java.lang.Long"
             },
             {
-              "name": "cumulativeWriteBytes",
+              "name": "cumulative_write_bytes",
               "tag": 19,
               "type": "java.lang.Long"
             },
             {
-              "name": "readThroughput",
+              "name": "read_throughput",
               "tag": 20,
               "type": "java.lang.Long"
             },
             {
-              "name": "writeThroughput",
+              "name": "write_throughput",
               "tag": 21,
               "type": "java.lang.Long"
             }

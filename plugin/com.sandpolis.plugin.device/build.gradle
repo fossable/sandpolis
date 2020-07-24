@@ -68,6 +68,6 @@ protobuf {
 }
 
 codegen {
-	attributeSpec = file('attribute.json')
-	documentBindings = 'core'
+	profileTreeSpec = file('profile.json')
+	profileTreeType = 'core'
 }

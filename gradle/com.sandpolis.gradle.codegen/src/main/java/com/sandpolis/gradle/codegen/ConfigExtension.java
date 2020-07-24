@@ -9,28 +9,23 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.gradle.codegen
+package com.sandpolis.gradle.codegen;
 
-import java.io.File
+import java.io.File;
 
 /**
- * This extension can be used in subproject build scripts to configure the code
+ * This extension is used in module build scripts to configure the code
  * generator.
  */
-class ConfigExtension {
+public class ConfigExtension {
 
 	/**
-	 * The attribute specification file.
+	 * The profile tree specification JSON file.
 	 */
-	File attributeSpec
+	public File profileTreeSpec;
 
 	/**
-	 * The type of document bindings to generate. Values are: javafx, core.
+	 * The type of profile tree to generate. Values are: javafx, core.
 	 */
-	String documentBindings
-
-	/**
-	 * Whether to generate attribute implementations
-	 */
-	Boolean attributeImplementations
+	public String profileTreeType;
 }

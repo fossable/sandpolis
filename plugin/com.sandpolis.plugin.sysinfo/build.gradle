@@ -16,7 +16,9 @@ plugins {
 	id 'com.google.protobuf' version '0.8.11'
 }
 
+apply plugin: 'com.sandpolis.gradle.plugin'
 apply plugin: 'com.sandpolis.gradle.codegen'
+apply plugin: 'com.sandpolis.gradle.soi'
 
 sourceSets {
 	main {
@@ -42,10 +44,6 @@ dependencies {
 	api project(':module:com.sandpolis.core.net')
 }
 
-apply plugin: 'com.sandpolis.gradle.plugin'
-apply plugin: 'com.sandpolis.gradle.codegen'
-apply plugin: 'com.sandpolis.gradle.soi'
-
 sandpolis_plugin {
 	id = 'com.sandpolis.plugin.sysinfo'
 	coordinate = 'com.sandpolis:sandpolis-plugin-sysinfo'
@@ -66,6 +64,6 @@ protobuf {
 }
 
 codegen {
-	attributeSpec = file('attribute.json')
-	documentBindings = 'core'
+	profileTreeSpec = file('profile.json')
+	profileTreeType = 'core'
 }
