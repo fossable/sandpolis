@@ -18,12 +18,12 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreConfig;
+import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.viewer.ascetic.store.window.WindowStore.WindowStoreConfig;
 
-public final class WindowStore extends MapStore<String, Window, WindowStoreConfig> {
+public final class WindowStore extends MapStore<Window, WindowStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(WindowStore.class);
 
@@ -51,18 +51,18 @@ public final class WindowStore extends MapStore<String, Window, WindowStoreConfi
 	}
 
 	@Override
-	public WindowStore init(Consumer<WindowStoreConfig> configurator) {
+	public void init(Consumer<WindowStoreConfig> configurator) {
 		var config = new WindowStoreConfig();
 		configurator.accept(config);
 
-		return (WindowStore) super.init(null);
+		provider.initialize();
 	}
 
 	public final class WindowStoreConfig extends StoreConfig {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Window.class, Window::toString);
+			provider = new MemoryMapStoreProvider<>(Window.class, Window::hashCode);
 		}
 	}
 

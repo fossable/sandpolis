@@ -11,13 +11,13 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
-import static com.sandpolis.core.foundation.util.CryptoUtil.SHA256;
+import static com.google.common.hash.Hashing.sha512;
 
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
+import com.google.common.base.Charsets;
 import com.sandpolis.core.foundation.Result.Outcome;
-import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.net.command.Cmdlet;
 import com.sandpolis.core.sv.msg.MsgLogin.RQ_Login;
 
@@ -40,8 +40,9 @@ public final class LoginCmd extends Cmdlet<LoginCmd> {
 		Objects.requireNonNull(user);
 		Objects.requireNonNull(pass);
 
-		return request(Outcome.class,
-				RQ_Login.newBuilder().setUsername(user).setPassword(CryptoUtil.hash(SHA256, pass)));
+		return request(Outcome.class, RQ_Login.newBuilder().setUsername(user)
+				// Compute a preliminary hash before PBKDF2 is applied server-side
+				.setPassword(sha512().hashString(pass, Charsets.UTF_8).toString()));
 	}
 
 	/**

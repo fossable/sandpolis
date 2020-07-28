@@ -54,9 +54,6 @@ dependencies {
 	// https://github.com/sirolf2009/fxgraph
 	implementation 'com.sirolf2009:fxgraph:0.0.3'
 
-	// https://commons.apache.org/proper/commons-validator
-	implementation 'commons-validator:commons-validator:1.6'
-
 	// https://github.com/netty/netty
 	implementation 'io.netty:netty-common:4.1.48.Final'
 	implementation 'io.netty:netty-codec:4.1.48.Final'

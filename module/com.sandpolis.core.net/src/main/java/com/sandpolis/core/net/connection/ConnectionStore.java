@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Generator.LoopConfig;
 import com.sandpolis.core.instance.store.MapStore;
-import com.sandpolis.core.instance.store.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.StoreConfig;
+import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.net.Protocol;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
@@ -56,7 +56,7 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 	}
 
 	public Optional<Connection> getByCvid(int cvid) {
-		return null;
+		return stream().filter(connection -> connection.getRemoteCvid() == cvid).findFirst();
 	}
 
 	/**
@@ -64,8 +64,8 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 	 * store automatically.
 	 *
 	 * @param bootstrap The connection bootstrap
-	 * @return A {@link ConnectionFuture} which will complete after the connection is
-	 *         established
+	 * @return A {@link ConnectionFuture} which will complete after the connection
+	 *         is established
 	 */
 	public ConnectionFuture connect(Bootstrap bootstrap) {
 		configureDefaults(bootstrap);
@@ -124,14 +124,14 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 	}
 
 	@Override
-	public ConnectionStore init(Consumer<ConnectionStoreConfig> configurator) {
+	public void init(Consumer<ConnectionStoreConfig> configurator) {
 		var config = new ConnectionStoreConfig();
 		configurator.accept(config);
 
 		register(this);
 		initializer = config.initializer;
 
-		return (ConnectionStore) super.init(null);
+		provider.initialize();
 	}
 
 	public final class ConnectionStoreConfig extends StoreConfig {
@@ -140,7 +140,7 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Connection.class);
+			provider = new MemoryMapStoreProvider<>(Connection.class, Connection::tag);
 		}
 	}
 

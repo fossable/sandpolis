@@ -13,14 +13,13 @@ package com.sandpolis.server.vanilla;
 
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
-import static com.sandpolis.core.instance.database.DatabaseStore.DatabaseStore;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
-import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
 import static com.sandpolis.server.vanilla.store.location.LocationStore.LocationStore;
@@ -36,8 +35,9 @@ import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Auth.PasswordContainer;
 import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.foundation.Platform.OsType;
+import com.sandpolis.core.instance.Auth.PasswordContainer;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Generator.AuthenticationConfig;
@@ -56,15 +56,12 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.database.Database;
-import com.sandpolis.core.ipc.task.IPCTask;
-import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.core.storage.hibernate.HibernateConnection;
-import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
-import com.sandpolis.core.foundation.Platform.OsType;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.User.UserConfig;
+import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.server.vanilla.gen.MegaGen;
+import com.sandpolis.server.vanilla.hibernate.HibernateStoreProviderFactory;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
@@ -84,13 +81,11 @@ public final class Server {
 		printEnvironment(log, "Sandpolis Server");
 
 		register(Server.loadConfiguration);
-		register(IPCTask.load);
-		register(IPCTask.checkLock);
-		register(IPCTask.setLock);
 		register(Server.loadEnvironment);
 		register(Server.generateCvid);
 		register(Server.loadServerStores);
 		register(Server.loadPlugins);
+		register(Server.firstTimeSetup);
 		register(Server.installDebugClient);
 		register(Server.loadListeners);
 
@@ -154,6 +149,41 @@ public final class Server {
 	@InitializationTask(name = "Load static stores", fatal = true)
 	public static final Task loadServerStores = new Task(outcome -> {
 
+		Configuration conf = new Configuration()
+				//
+				.setProperty("hibernate.ogm.datastore.create_database", "true");
+
+		switch (Config.STORAGE_PROVIDER.value().orElse("mongodb")) {
+		case "mongodb":
+			conf
+					//
+					.setProperty("hibernate.ogm.datastore.provider", "mongodb")
+					//
+					.setProperty("hibernate.ogm.datastore.database",
+							Config.MONGODB_DATABASE.value().orElse("Sandpolis"))
+					//
+					.setProperty("hibernate.ogm.datastore.host", Config.MONGODB_HOST.value().orElse("127.0.0.1"))
+					.setProperty("hibernate.ogm.datastore.username", Config.MONGODB_USER.value().orElse(""))
+					.setProperty("hibernate.ogm.datastore.password", Config.MONGODB_PASSWORD.value().orElse(""));
+			break;
+		case "infinispan_embedded":
+			break;
+		}
+
+		List.of(com.sandpolis.core.instance.data.Document.class, com.sandpolis.core.instance.data.Collection.class,
+				com.sandpolis.core.instance.data.Attribute.class,
+				com.sandpolis.core.instance.data.StringAttribute.class,
+				com.sandpolis.core.instance.data.IntegerAttribute.class,
+				com.sandpolis.core.instance.data.LongAttribute.class,
+				com.sandpolis.core.instance.data.BooleanAttribute.class,
+				com.sandpolis.core.instance.data.DoubleAttribute.class,
+				com.sandpolis.core.instance.data.OsTypeAttribute.class,
+				com.sandpolis.server.vanilla.hibernate.HibernateStoreProvider.class,
+				com.sandpolis.server.vanilla.hibernate.HibernateStoreProviderMetadata.class)
+				.forEach(conf::addAnnotatedClass);
+
+		var providerFactory = new HibernateStoreProviderFactory(conf);
+
 		ThreadStore.init(config -> {
 			config.ephemeral();
 			config.defaults.put("net.exelet", new NioEventLoopGroup(2));
@@ -183,65 +213,28 @@ public final class Server {
 			config.flavor = InstanceFlavor.VANILLA;
 		});
 
-		DatabaseStore.init(config -> {
-
-			// Build connection URL
-			String url = String.format("jdbc:h2:%s", Environment.DB.path().resolve("server.db").toUri());
-
-			Configuration conf = new Configuration()
-					// Set the H2 database driver
-					.setProperty("hibernate.connection.driver_class", "org.h2.Driver")
-
-					// Set the H2 dialect
-					.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
-
-					// Set the credentials
-					.setProperty("hibernate.connection.username", "").setProperty("hibernate.connection.password", "")
-
-					// Set the database URL
-					.setProperty("hibernate.connection.url", url)
-
-					// Set additional options
-					.setProperty("hibernate.connection.shutdown", "true")
-					.setProperty("hibernate.globally_quoted_identifiers", "true")
-					.setProperty("hibernate.hbm2ddl.auto", "update");
-
-			List.of(com.sandpolis.core.instance.data.Document.class, com.sandpolis.core.instance.data.Collection.class,
-					com.sandpolis.core.instance.data.Attribute.class,
-					com.sandpolis.core.instance.data.StringAttribute.class,
-					com.sandpolis.core.instance.data.IntegerAttribute.class,
-					com.sandpolis.core.instance.data.LongAttribute.class,
-					com.sandpolis.core.instance.data.BooleanAttribute.class,
-					com.sandpolis.core.instance.data.DoubleAttribute.class,
-					com.sandpolis.core.instance.data.OsTypeAttribute.class).forEach(conf::addAnnotatedClass);
-
-			config.main = new Database(url, new HibernateConnection(conf.buildSessionFactory()));
-			config.ephemeral();
-		});
-
 		UserStore.init(config -> {
-			config.persistent(DatabaseStore.main());
+			config.persistent(providerFactory);
 		});
 
 		ListenerStore.init(config -> {
-			config.persistent(DatabaseStore.main());
+			config.persistent(providerFactory);
 		});
 
 		GroupStore.init(config -> {
-			config.persistent(DatabaseStore.main());
+			config.persistent(providerFactory);
 		});
 
 		ProfileStore.init(config -> {
-			// config.persistent(DatabaseStore.main());
-			config.ephemeral();
+			config.persistent(providerFactory);
 		});
 
 		TrustStore.init(config -> {
-			config.persistent(DatabaseStore.main());
+			config.persistent(providerFactory);
 		});
 
 		PluginStore.init(config -> {
-			config.persistent(DatabaseStore.main());
+			config.persistent(providerFactory);
 			config.verifier = TrustStore::verifyPluginCertificate;
 		});
 
@@ -262,7 +255,6 @@ public final class Server {
 		NetworkStore.close();
 		ConnectionStore.close();
 		PrefStore.close();
-		DatabaseStore.close();
 		UserStore.close();
 		ListenerStore.close();
 		GroupStore.close();
@@ -298,6 +290,36 @@ public final class Server {
 		return outcome.success();
 	});
 
+	@InitializationTask(name = "First time initialization")
+	public static final Task firstTimeSetup = new Task(outcome -> {
+		boolean skipped = true;
+
+		// Setup default users
+		if (UserStore.getMetadata().getInitCount() == 1) {
+			UserStore.add(UserConfig.newBuilder().setUsername("admin").setPassword("password").build());
+			skipped = false;
+		}
+
+		// Setup default listeners
+		if (ListenerStore.getMetadata().getInitCount() == 1) {
+			ListenerStore.add(ListenerConfig.newBuilder().setPort(8768).setAddress("0.0.0.0").setOwner("admin")
+					.setName("Default Listener").setEnabled(true).build());
+			skipped = false;
+		}
+
+		// Setup default groups
+		if (GroupStore.getMetadata().getInitCount() == 1) {
+			GroupStore.add(GroupConfig.newBuilder().setName("Default Authentication Group").setOwner("admin")
+					.addPasswordMechanism(PasswordContainer.newBuilder().setPassword("12345")).build());
+			skipped = false;
+		}
+
+		if (skipped)
+			return outcome.skipped();
+
+		return outcome.success();
+	});
+
 	/**
 	 * Install a debug client on the local machine.
 	 */
@@ -305,19 +327,6 @@ public final class Server {
 	public static final Task installDebugClient = new Task(outcome -> {
 		if (!Config.DEBUG_CLIENT.value().orElse(false))
 			return outcome.skipped();
-
-		// Create user and listener
-		if (UserStore.getByUsername("admin").isEmpty())
-			UserStore.add(UserConfig.newBuilder().setUsername("admin").setPassword("password").build());
-
-		if (ListenerStore.getByPort(8768).isEmpty())
-			ListenerStore.add(ListenerConfig.newBuilder().setPort(8768).setAddress("0.0.0.0").setOwner("admin")
-					.setName("test").setEnabled(true).build());
-
-		// Create group
-		if (GroupStore.getByName("test group").isEmpty())
-			GroupStore.add(GroupConfig.newBuilder().setName("test group").setOwner("admin")
-					.addPasswordMechanism(PasswordContainer.newBuilder().setPassword("12345")).build());
 
 		// Generate client
 		MegaGen generator = MegaGen
@@ -329,14 +338,17 @@ public final class Server {
 										"/home/cilki/.sandpolis"))
 								.setAuthentication(AuthenticationConfig.newBuilder()
 										.setPassword(PasswordContainer.newBuilder().setPassword("12345")))
-								.setNetwork(NetworkConfig.newBuilder().setLoopConfig(
-										LoopConfig.newBuilder().setTimeout(5000).setCooldown(5000).addTarget(
-												NetworkTarget.newBuilder().setAddress("10.0.1.128").setPort(8768)))))
+								.setNetwork(
+										NetworkConfig.newBuilder()
+												.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000)
+														.setCooldown(5000)
+														.addTarget(NetworkTarget.newBuilder()
+																.setAddress("host.docker.internal").setPort(8768)))))
 						.build());
 		generator.run();
 
 		if (generator.getReport().getResult()) {
-			// Execute
+			// Execute locally
 			Runtime.getRuntime()
 					.exec(new String[] { "java", "-jar", Environment.GEN.path().resolve("0.jar").toString() });
 			return outcome.success();

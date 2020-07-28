@@ -96,7 +96,7 @@ public class AttributeImplementationGenerator extends DefaultTask {
 						type));
 
 		// Add value field
-		var valueField = FieldSpec.builder(type, "value", PRIVATE);
+		var valueField = FieldSpec.builder(type.isBoxedPrimitive() ? type.unbox() : type, "value", PRIVATE);
 
 		if (convertableTypes.contains(attributeType)) {
 			valueField
@@ -117,7 +117,7 @@ public class AttributeImplementationGenerator extends DefaultTask {
 				.addModifiers(PUBLIC) //
 				.addAnnotation(Override.class) //
 				.returns(type) //
-				.addStatement("return value");
+				.addCode("if (supplier != null) return supplier.get();\nreturn value;");
 		attributeClass.addMethod(getMethod.build());
 
 		// Add set method

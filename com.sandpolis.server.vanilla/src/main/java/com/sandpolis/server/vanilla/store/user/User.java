@@ -11,16 +11,17 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.store.user;
 
-import static com.sandpolis.core.foundation.util.CryptoUtil.SHA256;
-
 import java.util.List;
 
 import javax.persistence.ManyToMany;
 
+import com.google.common.base.Charsets;
+import com.google.common.hash.Hashing;
+import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.instance.DocumentBindings.Profile;
 import com.sandpolis.core.instance.User.UserConfig;
+import com.sandpolis.core.instance.data.Collection;
 import com.sandpolis.core.instance.data.Document;
-import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.server.vanilla.store.group.Group;
 
 /**
@@ -41,7 +42,11 @@ public class User extends Profile.Instance.Server.User {
 	 * @return Whether the given user is currently expired
 	 */
 	public boolean isExpired() {
-		return getExpiration().getTime() > 0 && getExpiration().getTime() < System.currentTimeMillis();
+		var expiration = getExpiration();
+		if (expiration == null)
+			return false;
+
+		return expiration.getTime() > 0 && expiration.getTime() < System.currentTimeMillis();
 	}
 
 	public User(Document parent) {
@@ -53,10 +58,13 @@ public class User extends Profile.Instance.Server.User {
 	 *
 	 * @param config The configuration which should be prevalidated and complete
 	 */
-	public User(Document parent, UserConfig config) {
-		super(parent);
+	public User(Collection parent, UserConfig config) {
+		super(new Document(parent));
 
-		hash().set(CryptoUtil.PBKDF2.hash(CryptoUtil.hash(SHA256, config.getPassword())));
+		hash().set(CryptoUtil.PBKDF2.hash(
+				// Compute a preliminary hash before PBKDF2 is applied
+				Hashing.sha512().hashString(config.getPassword(), Charsets.UTF_8).toString()));
+		username().set(config.getUsername());
 	}
 
 }

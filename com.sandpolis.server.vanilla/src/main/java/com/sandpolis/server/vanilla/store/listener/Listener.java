@@ -63,7 +63,10 @@ public class Listener extends Profile.Instance.Server.Listener {
 	public Listener(Collection parent, ListenerConfig config) {
 		super(new Document(parent));
 
+		address().set(config.getAddress());
 		port().set(config.getPort());
+		name().set(config.getName());
+		enabled().set(config.getEnabled());
 	}
 
 	public Listener(Document document) {

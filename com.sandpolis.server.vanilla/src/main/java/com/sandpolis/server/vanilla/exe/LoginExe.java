@@ -13,7 +13,6 @@ package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.foundation.Result.ErrorCode.ACCESS_DENIED;
 import static com.sandpolis.core.foundation.Result.ErrorCode.INVALID_USERNAME;
-import static com.sandpolis.core.foundation.util.CryptoUtil.SHA256;
 import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
 import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
 import static com.sandpolis.core.foundation.util.ProtoUtil.success;
@@ -74,7 +73,7 @@ public final class LoginExe extends Exelet {
 		}
 
 		// Check password
-		if (!CryptoUtil.PBKDF2.check(CryptoUtil.hash(SHA256, rq.getPassword()), user.getHash())) {
+		if (!CryptoUtil.PBKDF2.check(rq.getPassword(), user.getHash())) {
 			log.debug("Authentication failed", username);
 			return failure(outcome, ACCESS_DENIED);
 		}

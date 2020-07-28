@@ -117,7 +117,7 @@ public class StandardProfileTreeGenerator extends ProfileTreeGenerator {
 				.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL,
 						(attribute.type.equals("java.lang.Boolean") ? "is_" : "get_") + attribute.name)) //
 				.addModifiers(PUBLIC) //
-				.returns(type) //
+				.returns(type.isBoxedPrimitive() ? type.unbox() : type) //
 				.addStatement("return $L().get()", LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name));
 		parent.addMethod(getter.build());
 

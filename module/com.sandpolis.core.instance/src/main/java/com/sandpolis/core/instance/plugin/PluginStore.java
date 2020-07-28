@@ -39,9 +39,9 @@ import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginStore.PluginStoreConfig;
 import com.sandpolis.core.instance.store.MapStore;
-import com.sandpolis.core.instance.store.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.StoreProviderFactory;
+import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
+import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 
 /**
  * The {@link PluginStore} manages plugins.<br>
@@ -231,11 +231,11 @@ public final class PluginStore extends MapStore<Plugin, PluginStoreConfig> {
 	}
 
 	@Override
-	public PluginStore init(Consumer<PluginStoreConfig> configurator) {
+	public void init(Consumer<PluginStoreConfig> configurator) {
 		var config = new PluginStoreConfig();
 		configurator.accept(config);
 
-		return (PluginStore) super.init(null);
+		provider.initialize();
 	}
 
 	public final class PluginStoreConfig extends StoreConfig {
@@ -244,7 +244,7 @@ public final class PluginStore extends MapStore<Plugin, PluginStoreConfig> {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Plugin.class);
+			provider = new MemoryMapStoreProvider<>(Plugin.class, Plugin::tag);
 		}
 
 		@Override

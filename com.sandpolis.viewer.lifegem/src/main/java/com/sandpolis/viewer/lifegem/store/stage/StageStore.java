@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.store.stage;
 
-import static com.sandpolis.core.instance.store.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -22,9 +22,9 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreConfig;
+import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.store.stage.StageStore.StageStoreConfig;
 
@@ -220,18 +220,18 @@ public final class StageStore extends MapStore<Stage, StageStoreConfig> {
 	}
 
 	@Override
-	public StageStore init(Consumer<StageStoreConfig> configurator) {
+	public void init(Consumer<StageStoreConfig> configurator) {
 		var config = new StageStoreConfig();
 		configurator.accept(config);
 
-		return (StageStore) super.init(null);
+		provider.initialize();
 	}
 
 	public final class StageStoreConfig extends StoreConfig {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Stage.class);
+			provider = new MemoryMapStoreProvider<>(Stage.class, Stage::hashCode);
 		}
 	}
 

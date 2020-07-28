@@ -28,11 +28,11 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.storage.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.storage.database.Database;
+import com.sandpolis.core.foundation.util.CertUtil;
 import com.sandpolis.core.instance.store.MapStore;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.util.CertUtil;
+import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
+import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 import com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStoreConfig;
 
 /**
@@ -42,7 +42,7 @@ import com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStoreConfig;
  * @author cilki
  * @since 5.0.0
  */
-public final class TrustStore extends MapStore<String, TrustAnchor, TrustStoreConfig> {
+public final class TrustStore extends MapStore<TrustAnchor, TrustStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(TrustStore.class);
 
@@ -82,28 +82,28 @@ public final class TrustStore extends MapStore<String, TrustAnchor, TrustStoreCo
 	}
 
 	@Override
-	public TrustStore init(Consumer<TrustStoreConfig> configurator) {
+	public void init(Consumer<TrustStoreConfig> configurator) {
 		var config = new TrustStoreConfig();
 		configurator.accept(config);
 
+		provider.initialize();
+
 		// Install root CA if required
-		if (get("PLUGIN CA").isEmpty()) {
+		if (getMetadata().getInitCount() == 1) {
 			add(new TrustAnchor("PLUGIN CA", CertUtil.getPluginRoot()));
 		}
-
-		return (TrustStore) super.init(null);
 	}
 
 	public final class TrustStoreConfig extends StoreConfig {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(TrustAnchor.class, TrustAnchor::getName);
+			provider = new MemoryMapStoreProvider<>(TrustAnchor.class, TrustAnchor::tag);
 		}
 
 		@Override
-		public void persistent(Database database) {
-			provider = database.getConnection().provider(TrustAnchor.class, "name");
+		public void persistent(StoreProviderFactory factory) {
+			provider = factory.supply(TrustAnchor.class, TrustAnchor::new);
 		}
 
 	}
