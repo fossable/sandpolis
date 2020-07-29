@@ -16,7 +16,7 @@ import static com.sandpolis.core.foundation.util.ProtoUtil.success;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.msg.MsgStream.RQ_StreamStop;
 
 /**

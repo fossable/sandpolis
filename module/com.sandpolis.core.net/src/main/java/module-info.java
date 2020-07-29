@@ -10,11 +10,10 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.core.net {
-	exports com.sandpolis.core.net.command;
+	exports com.sandpolis.core.net.exelet;
 	exports com.sandpolis.core.net.exception;
 	exports com.sandpolis.core.net.connection;
 	exports com.sandpolis.core.net.handler.cvid;
-	exports com.sandpolis.core.net.handler.exelet;
 	exports com.sandpolis.core.net.handler.peer;
 	exports com.sandpolis.core.net.handler.sand5;
 	exports com.sandpolis.core.net.handler;

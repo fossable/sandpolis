@@ -21,7 +21,7 @@ import com.sandpolis.core.cs.msg.MsgClient.RQ_ClientMetadata;
 import com.sandpolis.core.cs.msg.MsgClient.RS_ClientMetadata;
 import com.sandpolis.core.foundation.util.SystemUtil;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.exelet.Exelet;
 
 public final class ClientExe extends Exelet {
 

@@ -28,12 +28,12 @@ import static com.sandpolis.core.net.HandlerKey.TRAFFIC;
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.connection.ClientConnection;
+import com.sandpolis.core.net.exelet.Exelet;
+import com.sandpolis.core.net.exelet.ExeletHandler;
 import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.cvid.CvidRequestHandler;
-import com.sandpolis.core.net.handler.exelet.ExeletHandler;
 import com.sandpolis.core.foundation.util.CertUtil;
 
 import io.netty.channel.Channel;
@@ -82,7 +82,7 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.TRAFFIC_INTERVAL.value().orElse(5000)));
 
 		if (Config.TLS_ENABLED.value().orElse(true)) {
-			var ssl = SslContextBuilder.forClient();
+			var ssl = SslContextBuilder.forClient().protocols("TLSv1.3");
 
 			if (false) // TODO strict certs
 				ssl.trustManager(CertUtil.getServerRoot());

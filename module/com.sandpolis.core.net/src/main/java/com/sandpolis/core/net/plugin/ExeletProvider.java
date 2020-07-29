@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.plugin;
 
-import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.exelet.Exelet;
 
 /**
  * @author cilki

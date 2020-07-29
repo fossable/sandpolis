@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.msg.MsgPing.RQ_Ping;
 import com.sandpolis.core.instance.msg.MsgPing.RS_Ping;
-import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.sv.msg.MsgServer.RQ_ServerBanner;
 
 /**

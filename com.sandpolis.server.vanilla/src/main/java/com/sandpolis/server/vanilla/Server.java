@@ -18,6 +18,7 @@ import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.exelet.ExeletStore.ExeletStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
@@ -60,6 +61,15 @@ import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.net.util.CvidUtil;
+import com.sandpolis.server.vanilla.exe.AuthExe;
+import com.sandpolis.server.vanilla.exe.GenExe;
+import com.sandpolis.server.vanilla.exe.GroupExe;
+import com.sandpolis.server.vanilla.exe.ListenerExe;
+import com.sandpolis.server.vanilla.exe.LoginExe;
+import com.sandpolis.server.vanilla.exe.PluginExe;
+import com.sandpolis.server.vanilla.exe.ServerExe;
+import com.sandpolis.server.vanilla.exe.StreamExe;
+import com.sandpolis.server.vanilla.exe.UserExe;
 import com.sandpolis.server.vanilla.gen.MegaGen;
 import com.sandpolis.server.vanilla.hibernate.HibernateStoreProviderFactory;
 
@@ -202,6 +212,11 @@ public final class Server {
 
 		ConnectionStore.init(config -> {
 			config.ephemeral();
+		});
+
+		ExeletStore.init(config -> {
+			config.exelets = List.of(AuthExe.class, GenExe.class, GroupExe.class, ListenerExe.class, LoginExe.class,
+					ServerExe.class, UserExe.class, PluginExe.class, StreamExe.class);
 		});
 
 		StreamStore.init(config -> {

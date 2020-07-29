@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.MsgPing.RQ_Ping;
 import com.sandpolis.core.net.MsgPing.RS_Ping;
-import com.sandpolis.core.net.command.ExeletTest;
+import com.sandpolis.core.net.exelet.ExeletTest;
 
 class ServerExeTest extends ExeletTest {
 

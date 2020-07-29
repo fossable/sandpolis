@@ -24,7 +24,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.MsgLogin.RQ_Login;
-import com.sandpolis.core.net.command.ExeletTest;
+import com.sandpolis.core.net.exelet.ExeletTest;
 import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.instance.Result.Outcome;
 

@@ -12,7 +12,7 @@
 package com.sandpolis.plugin.device.client.mega.exe;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.plugin.device.msg.MsgDevice.RQ_RegisterDevice;
 
 public final class DeviceExe extends Exelet {

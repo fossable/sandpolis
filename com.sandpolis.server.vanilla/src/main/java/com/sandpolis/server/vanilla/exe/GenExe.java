@@ -13,6 +13,7 @@ package com.sandpolis.server.vanilla.exe;
 
 import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
 import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
+import static com.sandpolis.core.instance.Metatypes.InstanceType.VIEWER;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 
 import java.util.concurrent.ExecutorService;
@@ -23,9 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.sv.msg.MsgGenerator.RQ_Generate;
 import com.sandpolis.core.sv.msg.MsgGenerator.RS_Generate;
-import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.server.vanilla.gen.Generator;
 import com.sandpolis.server.vanilla.gen.MegaGen;
 
@@ -39,7 +40,7 @@ public final class GenExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(GenExe.class);
 
-	@Handler(auth = true)
+	@Handler(auth = true, instances = VIEWER)
 	public static MessageOrBuilder rq_generate(RQ_Generate rq) throws Exception {
 		ExecutorService pool = ThreadStore.get("server.generator");
 

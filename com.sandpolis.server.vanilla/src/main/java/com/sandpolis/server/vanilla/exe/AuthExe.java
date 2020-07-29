@@ -17,8 +17,8 @@ import static com.sandpolis.core.foundation.Result.ErrorCode.UNKNOWN_GROUP;
 import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
 import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
 import static com.sandpolis.core.foundation.util.ProtoUtil.success;
+import static com.sandpolis.core.instance.Metatypes.InstanceType.CLIENT;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
-import static com.sandpolis.core.net.util.MsgUtil.rq;
 import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
 
 import java.util.List;
@@ -34,12 +34,12 @@ import com.sandpolis.core.cs.msg.MsgAuth.RQ_NoAuth;
 import com.sandpolis.core.cs.msg.MsgAuth.RQ_PasswordAuth;
 import com.sandpolis.core.cs.msg.MsgClient.RQ_ClientMetadata;
 import com.sandpolis.core.cs.msg.MsgClient.RS_ClientMetadata;
+import com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Server.AuthMechanism;
 import com.sandpolis.core.instance.profile.Profile;
 import com.sandpolis.core.instance.profile.ProfileEvents.ProfileOnlineEvent;
-import com.sandpolis.core.instance.profile.ProfileStore;
 import com.sandpolis.core.net.HandlerKey;
-import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.net.exelet.Exelet;
+import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
 import com.sandpolis.server.vanilla.store.group.Group;
 
@@ -53,7 +53,7 @@ public final class AuthExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(AuthExe.class);
 
-	@Handler(auth = false)
+	@Handler(auth = false, instances = CLIENT)
 	public static MessageOrBuilder rq_no_auth(ExeletContext context, RQ_NoAuth rq) {
 		var outcome = begin();
 
@@ -73,7 +73,7 @@ public final class AuthExe extends Exelet {
 		return success(outcome);
 	}
 
-	@Handler(auth = false)
+	@Handler(auth = false, instances = CLIENT)
 	public static MessageOrBuilder rq_password_auth(ExeletContext context, RQ_PasswordAuth rq) {
 		var outcome = begin();
 
@@ -93,7 +93,7 @@ public final class AuthExe extends Exelet {
 		return success(outcome);
 	}
 
-	@Handler(auth = false)
+	@Handler(auth = false, instances = CLIENT)
 	public static MessageOrBuilder rq_key_auth(ExeletContext context, RQ_KeyAuth rq)
 			throws InterruptedException, ExecutionException {
 		var outcome = begin();
@@ -107,7 +107,7 @@ public final class AuthExe extends Exelet {
 			return failure(outcome, UNKNOWN_GROUP);
 		}
 
-		KeyMechanism mech = null;// group.getKeyMechanism(rq.getMechId());
+		AuthMechanism mech = null;// group.getKeyMechanism(rq.getMechId());
 		if (mech == null) {
 			log.debug("Refusing key authentication attempt due to unknown mechanism ID: {}", rq.getMechId());
 			context.defer(() -> {
@@ -116,7 +116,7 @@ public final class AuthExe extends Exelet {
 			return failure(outcome, INVALID_KEY);
 		}
 
-		Sand5Handler sand5 = Sand5Handler.newRequestHandler(mech.getServer());
+		Sand5Handler sand5 = Sand5Handler.newRequestHandler(null);
 		context.connector.engage(HandlerKey.SAND5, sand5);
 
 		if (sand5.challengeFuture().get()) {

@@ -41,8 +41,8 @@ import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.msg.MsgPlugin.RQ_ArtifactDownload;
 import com.sandpolis.core.instance.msg.MsgPlugin.RQ_PluginInstall;
 import com.sandpolis.core.instance.msg.MsgPlugin.RS_ArtifactDownload;
-import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.net.exelet.Exelet;
+import com.sandpolis.core.net.exelet.ExeletContext;
 
 /**
  * Message handlers for plugin requests.

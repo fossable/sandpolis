@@ -12,7 +12,7 @@
 package com.sandpolis.plugin.filesys.client.mega;
 
 import com.sandpolis.core.instance.plugin.SandpolisPlugin;
-import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.plugin.filesys.client.mega.exe.FilesysExe;
 

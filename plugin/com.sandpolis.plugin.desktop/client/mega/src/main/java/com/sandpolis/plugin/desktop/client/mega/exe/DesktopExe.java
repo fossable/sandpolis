@@ -26,8 +26,8 @@ import javax.imageio.ImageIO;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.net.exelet.Exelet;
+import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.net.stream.OutboundStreamAdapter;
 import com.sandpolis.plugin.desktop.client.mega.JavaDesktopSource;
 import com.sandpolis.plugin.desktop.msg.MsgDesktop.RQ_Screenshot;

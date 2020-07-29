@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.command;
+package com.sandpolis.core.net.exelet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -19,8 +19,9 @@ import java.util.stream.Collectors;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.command.Exelet.Handler;
-import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.net.exelet.Exelet;
+import com.sandpolis.core.net.exelet.ExeletContext;
+import com.sandpolis.core.net.exelet.Exelet.Handler;
 
 import io.netty.channel.embedded.EmbeddedChannel;
 

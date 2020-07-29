@@ -9,13 +9,12 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.handler.exelet;
+package com.sandpolis.core.net.exelet;
 
 import java.util.Objects;
 
 import com.google.protobuf.Message;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.connection.Connection;
 
 /**

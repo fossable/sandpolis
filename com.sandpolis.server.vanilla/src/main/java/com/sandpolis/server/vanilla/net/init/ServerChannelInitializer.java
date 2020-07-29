@@ -29,25 +29,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.foundation.util.CertUtil;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.command.Exelet;
 import com.sandpolis.core.net.connection.ServerConnection;
+import com.sandpolis.core.net.exelet.ExeletHandler;
 import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.cvid.CvidResponseHandler;
-import com.sandpolis.core.net.handler.exelet.ExeletHandler;
-import com.sandpolis.core.foundation.util.CertUtil;
-import com.sandpolis.server.vanilla.exe.AuthExe;
-import com.sandpolis.server.vanilla.exe.GenExe;
-import com.sandpolis.server.vanilla.exe.GroupExe;
-import com.sandpolis.server.vanilla.exe.ListenerExe;
-import com.sandpolis.server.vanilla.exe.LoginExe;
-import com.sandpolis.server.vanilla.exe.PluginExe;
-import com.sandpolis.server.vanilla.exe.ServerExe;
-import com.sandpolis.server.vanilla.exe.StreamExe;
-import com.sandpolis.server.vanilla.exe.UserExe;
 import com.sandpolis.server.vanilla.net.handler.ProxyHandler;
 
 import io.netty.channel.Channel;
@@ -80,13 +70,6 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 	private static final ProtobufDecoder HANDLER_PROTO_DECODER = new ProtobufDecoder(MSG.getDefaultInstance());
 	private static final ProtobufEncoder HANDLER_PROTO_ENCODER = new ProtobufEncoder();
 	private static final ProtobufVarint32LengthFieldPrepender HANDLER_PROTO_FRAME_ENCODER = new ProtobufVarint32LengthFieldPrepender();
-
-	/**
-	 * All server {@link Exelet} classes.
-	 */
-	@SuppressWarnings("unchecked")
-	private static final Class<? extends Exelet>[] exelets = new Class[] { AuthExe.class, GenExe.class, GroupExe.class,
-			ListenerExe.class, LoginExe.class, ServerExe.class, UserExe.class, PluginExe.class, StreamExe.class };
 
 	/**
 	 * The certificate in PEM format.
@@ -163,18 +146,19 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 		p.addLast(ThreadStore.get("net.exelet"), RESPONSE.next(p), new ResponseHandler());
 
 		p.addLast(ThreadStore.get("net.exelet"), EXELET.next(p),
-				new ExeletHandler(ch.attr(ChannelConstant.SOCK).get(), exelets));
+				new ExeletHandler(ch.attr(ChannelConstant.SOCK).get()));
 
 		p.addLast(MANAGEMENT.next(p), HANDLER_MANAGEMENT);
 	}
 
-	private static final SslContextBuilder defaultContext = SslContextBuilder.forServer(CertUtil.getDefaultKey(),
-			CertUtil.getDefaultCert());
+	private static final SslContextBuilder defaultContext = SslContextBuilder
+			.forServer(CertUtil.getDefaultKey(), CertUtil.getDefaultCert()).protocols("TLSv1.3");
 
 	public SslContext getSslContext() throws Exception {
 		if (sslCtx == null && Config.TLS_ENABLED.value().orElse(true)) {
 			if (cert != null && key != null) {
-				sslCtx = SslContextBuilder.forServer(CertUtil.parseKey(key), CertUtil.parseCert(cert)).build();
+				sslCtx = SslContextBuilder.forServer(CertUtil.parseKey(key), CertUtil.parseCert(cert))
+						.protocols("TLSv1.3").build();
 
 				// No point in keeping these around anymore
 				cert = null;

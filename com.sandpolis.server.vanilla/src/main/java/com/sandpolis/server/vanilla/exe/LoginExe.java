@@ -16,6 +16,7 @@ import static com.sandpolis.core.foundation.Result.ErrorCode.INVALID_USERNAME;
 import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
 import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
 import static com.sandpolis.core.foundation.util.ProtoUtil.success;
+import static com.sandpolis.core.instance.Metatypes.InstanceType.VIEWER;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
@@ -26,8 +27,8 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.core.instance.profile.Profile;
-import com.sandpolis.core.net.command.Exelet;
-import com.sandpolis.core.net.handler.exelet.ExeletContext;
+import com.sandpolis.core.net.exelet.Exelet;
+import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.sv.msg.MsgLogin.RQ_Login;
 import com.sandpolis.core.sv.msg.MsgLogin.RQ_Logout;
 import com.sandpolis.server.vanilla.store.user.User;
@@ -42,13 +43,13 @@ public final class LoginExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(LoginExe.class);
 
-	@Handler(auth = true)
+	@Handler(auth = true, instances = VIEWER)
 	public static void rq_logout(ExeletContext context, RQ_Logout rq) {
 		log.debug("Processing logout request from: {}", context.connector.getRemoteAddress());
 		context.connector.close();
 	}
 
-	@Handler(auth = false)
+	@Handler(auth = false, instances = VIEWER)
 	public static MessageOrBuilder rq_login(ExeletContext context, RQ_Login rq) {
 		log.debug("Processing login request from: {}", context.connector.getRemoteAddress());
 		var outcome = begin();

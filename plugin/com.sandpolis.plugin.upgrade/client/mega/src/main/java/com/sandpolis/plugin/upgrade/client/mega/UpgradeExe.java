@@ -13,7 +13,7 @@ package com.sandpolis.plugin.upgrade.client.mega;
 
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.foundation.Result.Outcome;
-import com.sandpolis.core.net.command.Exelet;
+import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.plugin.upgrade.msg.MsgUpgrade.RQ_ManagerMetadata;
 import com.sandpolis.plugin.upgrade.msg.MsgUpgrade.RS_ManagerMetadata;
 
