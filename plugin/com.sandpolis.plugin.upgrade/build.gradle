@@ -55,7 +55,7 @@ sandpolis_plugin {
 
 protobuf {
 	protoc {
-		artifact = 'com.google.protobuf:protoc:3.11.4'
+		artifact = 'com.google.protobuf:protoc:3.12.4'
 	}
 
 	generatedFilesBaseDir = "$projectDir/gen/"
