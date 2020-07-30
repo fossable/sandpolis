@@ -26,15 +26,15 @@ import static com.sandpolis.core.net.HandlerKey.TLS;
 import static com.sandpolis.core.net.HandlerKey.TRAFFIC;
 
 import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.foundation.util.CertUtil;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.connection.ClientConnection;
-import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletHandler;
 import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.cvid.CvidRequestHandler;
-import com.sandpolis.core.foundation.util.CertUtil;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -62,17 +62,6 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 	private static final ProtobufDecoder HANDLER_PROTO_DECODER = new ProtobufDecoder(MSG.getDefaultInstance());
 	private static final ProtobufEncoder HANDLER_PROTO_ENCODER = new ProtobufEncoder();
 	private static final ProtobufVarint32LengthFieldPrepender HANDLER_PROTO_FRAME_ENCODER = new ProtobufVarint32LengthFieldPrepender();
-
-	@SuppressWarnings("unchecked")
-	private final Class<? extends Exelet>[] exelets;
-
-	public ClientChannelInitializer() {
-		this(new Class[] {});
-	}
-
-	public ClientChannelInitializer(Class<? extends Exelet>[] exelets) {
-		this.exelets = exelets;
-	}
 
 	@Override
 	protected void initChannel(Channel ch) throws Exception {
@@ -108,7 +97,7 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 		p.addLast(ThreadStore.get("net.exelet"), RESPONSE.next(p), new ResponseHandler());
 
 		p.addLast(ThreadStore.get("net.exelet"), EXELET.next(p),
-				new ExeletHandler(ch.attr(ChannelConstant.SOCK).get(), exelets));
+				new ExeletHandler(ch.attr(ChannelConstant.SOCK).get(), InstanceType.SERVER));
 
 		p.addLast(MANAGEMENT.next(p), HANDLER_MANAGEMENT);
 	}

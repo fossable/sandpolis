@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.foundation.util.ValidationUtil;
-import com.sandpolis.core.instance.profile.Profile;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.sv.msg.MsgLogin.RQ_Login;
@@ -85,16 +84,17 @@ public final class LoginExe extends Exelet {
 		context.connector.authenticate();
 
 		// Update login metadata
-		Profile profile = ProfileStore.getViewer(username).orElse(null);
-		if (profile == null) {
-			// Build new profile
-			profile = new Profile(context.connector.getRemoteUuid(), context.connector.getRemoteInstance(),
-					context.connector.getRemoteInstanceFlavor());
-			profile.instance().viewer().username().set(username);
-			ProfileStore.add(profile);
-		}
-
-		profile.instance().viewer().ip().set(context.connector.getRemoteAddress());
+		ProfileStore.getViewer(username).ifPresentOrElse(profile -> {
+			profile.instance().viewer().ip().set(context.connector.getRemoteAddress());
+		}, () -> {
+			ProfileStore.create(profile -> {
+				profile.uuid().set(context.connector.getRemoteUuid());
+				profile.instanceType().set(context.connector.getRemoteInstance());
+				profile.instanceFlavor().set(context.connector.getRemoteInstanceFlavor());
+				profile.instance().viewer().username().set(username);
+				profile.instance().viewer().ip().set(context.connector.getRemoteAddress());
+			});
+		});
 
 		return success(outcome);
 	}

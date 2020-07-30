@@ -13,7 +13,7 @@ package com.sandpolis.plugin.desktop.cmd;
 
 import java.util.concurrent.CompletionStage;
 
-import com.sandpolis.core.net.command.Cmdlet;
+import com.sandpolis.core.net.cmdlet.Cmdlet;
 import com.sandpolis.plugin.desktop.msg.MsgDesktop.RQ_Screenshot;
 import com.sandpolis.plugin.desktop.msg.MsgDesktop.RS_Screenshot;
 

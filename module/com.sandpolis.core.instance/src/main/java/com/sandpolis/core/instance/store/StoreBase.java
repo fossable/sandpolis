@@ -33,8 +33,7 @@ import com.sandpolis.core.instance.store.event.ParameterizedEvent;
  * This root class defines a highly general structure applicable to all Stores
  * and handles operations like lifecycle management and event propegation.
  * 
- * @see MapStore
- * @see ListStore
+ * @see CollectionStore
  */
 public abstract class StoreBase<E extends StoreConfig> {
 
@@ -61,14 +60,11 @@ public abstract class StoreBase<E extends StoreConfig> {
 	}
 
 	/**
-	 * Initialize the store. By default, this method does nothing.
+	 * Initialize the store.
 	 *
 	 * @param configurator The configuration block
-	 * @return {@code this}
 	 */
-	public StoreBase<E> init(Consumer<E> configurator) {
-		return this;
-	}
+	public abstract void init(Consumer<E> configurator);
 
 	/**
 	 * Broadcast the given event to the store's bus. This method blocks until every
@@ -143,4 +139,11 @@ public abstract class StoreBase<E extends StoreConfig> {
 	public final void unregister(Object object) {
 		bus.unregister(object);
 	}
+
+	/**
+	 * Get the Store's metadata.
+	 * 
+	 * @return The store metadata object
+	 */
+	public abstract StoreMetadata getMetadata();
 }

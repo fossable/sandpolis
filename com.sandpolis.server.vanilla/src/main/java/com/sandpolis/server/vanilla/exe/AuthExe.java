@@ -35,7 +35,6 @@ import com.sandpolis.core.cs.msg.MsgAuth.RQ_PasswordAuth;
 import com.sandpolis.core.cs.msg.MsgClient.RQ_ClientMetadata;
 import com.sandpolis.core.cs.msg.MsgClient.RS_ClientMetadata;
 import com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Server.AuthMechanism;
-import com.sandpolis.core.instance.profile.Profile;
 import com.sandpolis.core.instance.profile.ProfileEvents.ProfileOnlineEvent;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.exelet.Exelet;
@@ -148,21 +147,20 @@ public final class AuthExe extends Exelet {
 		}, () -> {
 			// Metadata query
 			context.connector.request(RS_ClientMetadata.class, RQ_ClientMetadata.newBuilder()).thenAccept(rs -> {
-				var profile = new Profile(context.connector.getRemoteUuid(), context.connector.getRemoteInstance(),
-						context.connector.getRemoteInstanceFlavor());
-				profile.cvid().set(context.connector.getRemoteCvid());
-
-				// Set attributes
-				profile.instance().client().hostname().set(rs.getHostname());
-				profile.instance().client().location().set(rs.getInstallDirectory());
-				profile.instance().client().os().set(rs.getOs());
+				var clientProfile = ProfileStore.create(profile -> {
+					profile.uuid().set(context.connector.getRemoteUuid());
+					profile.instanceType().set(context.connector.getRemoteInstance());
+					profile.instanceFlavor().set(context.connector.getRemoteInstanceFlavor());
+					profile.instance().client().hostname().set(rs.getHostname());
+					profile.instance().client().location().set(rs.getInstallDirectory());
+					profile.instance().client().os().set(rs.getOs());
+				});
 
 				groups.forEach(group -> {
 					// TODO add client to group
 				});
 
-				ProfileStore.add(profile);
-				ProfileStore.post(ProfileOnlineEvent::new, profile);
+				ProfileStore.post(ProfileOnlineEvent::new, clientProfile);
 			});
 		});
 	}

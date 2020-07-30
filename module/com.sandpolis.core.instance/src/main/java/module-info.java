@@ -17,6 +17,7 @@ open module com.sandpolis.core.instance {
 	exports com.sandpolis.core.instance.profile;
 	exports com.sandpolis.core.instance.store;
 	exports com.sandpolis.core.instance.store.event;
+	exports com.sandpolis.core.instance.store.provider;
 	exports com.sandpolis.core.instance.thread;
 	exports com.sandpolis.core.instance.util;
 	exports com.sandpolis.core.instance;
@@ -27,6 +28,6 @@ open module com.sandpolis.core.instance {
 	requires org.slf4j;
 	requires com.sandpolis.core.foundation;
 	requires java.prefs;
-	
+
 	uses com.sandpolis.core.instance.plugin.SandpolisPlugin;
 }

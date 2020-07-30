@@ -9,14 +9,22 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store;
+package com.sandpolis.core.instance.profile;
 
-import org.slf4j.Logger;
+import com.sandpolis.core.instance.DocumentBindings;
+import com.sandpolis.core.instance.data.Document;
 
-public abstract class ListStore<V, E extends StoreConfig> extends StoreBase<E> {
+/**
+ * A {@link Profile} is a generic container that stores data for an instance.
+ * Most of the data are stored in a tree structure similar to a document store.
+ *
+ * @author cilki
+ * @since 4.0.0
+ */
+public class Profile extends DocumentBindings.Profile {
 
-	protected ListStore(Logger log) {
-		super(log);
+	Profile(Document parent) {
+		super(parent);
 	}
 
 }

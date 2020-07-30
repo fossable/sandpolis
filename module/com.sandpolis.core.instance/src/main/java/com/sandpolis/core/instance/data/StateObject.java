@@ -20,15 +20,15 @@ package com.sandpolis.core.instance.data;
  */
 public abstract class StateObject {
 
-	public Document document;
+	protected Document document;
 
 	protected StateObject(Document document) {
 		this.document = document;
 	}
 
-	public Object test(String oid) {
-
-		return null;
+	
+	public Document getDocument() {
+		return document;
 	}
 
 	/**

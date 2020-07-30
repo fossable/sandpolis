@@ -20,26 +20,23 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Charsets;
+import com.google.common.hash.Hashing;
+import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.store.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.database.Database;
-import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.StoreConfig;
+import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
+import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 import com.sandpolis.server.vanilla.store.user.UserStore.UserStoreConfig;
 
-public final class UserStore extends MapStore<User, UserStoreConfig> {
+public final class UserStore extends CollectionStore<User, UserStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(UserStore.class);
 
-	/**
-	 * Create a new user from the given configuration and add it to the store.
-	 *
-	 * @param config The user configuration
-	 */
-	public void add(UserConfig config) {
-		Objects.requireNonNull(config);
-
-		add(new User(document, config));
+	public UserStore() {
+		super(log);
 	}
 
 	public Optional<User> getByUsername(String username) {
@@ -47,13 +44,38 @@ public final class UserStore extends MapStore<User, UserStoreConfig> {
 	}
 
 	@Override
-	public UserStore init(Consumer<UserStoreConfig> configurator) {
+	public void init(Consumer<UserStoreConfig> configurator) {
 		var config = new UserStoreConfig();
 		configurator.accept(config);
 
-		config.defaults.forEach(this::add);
+		config.defaults.forEach(this::create);
 
-		return (UserStore) super.init(null);
+		provider.initialize();
+	}
+
+	@Override
+	public User create(Consumer<User> configurator) {
+		var user = new User(new Document(provider.getCollection()));
+		configurator.accept(user);
+		provider.add(user);
+		return user;
+	}
+
+	/**
+	 * Create a new user from the given configuration.
+	 *
+	 * @param config The user configuration
+	 */
+	public User create(UserConfig config) {
+		Objects.requireNonNull(config);
+
+		return create(user -> {
+			user.username().set(config.getUsername());
+			user.hash().set(CryptoUtil.PBKDF2.hash(
+					// Compute a preliminary hash before PBKDF2 is applied
+					Hashing.sha512().hashString(config.getPassword(), Charsets.UTF_8).toString()));
+			// ...
+		});
 	}
 
 	public final class UserStoreConfig extends StoreConfig {
@@ -62,17 +84,13 @@ public final class UserStore extends MapStore<User, UserStoreConfig> {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(User.class);
+			provider = new MemoryMapStoreProvider<>(User.class, User::tag);
 		}
 
 		@Override
-		public void persistent(Database database) {
-			provider = database.getConnection().provider(User.class);
+		public void persistent(StoreProviderFactory factory) {
+			provider = factory.supply(User.class, User::new);
 		}
-	}
-
-	public UserStore() {
-		super(log);
 	}
 
 	/**

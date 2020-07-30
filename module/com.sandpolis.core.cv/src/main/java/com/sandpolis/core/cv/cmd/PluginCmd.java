@@ -35,7 +35,7 @@ import com.sandpolis.core.instance.msg.MsgPlugin.RS_ArtifactDownload;
 import com.sandpolis.core.instance.msg.MsgPlugin.RS_PluginSync;
 import com.sandpolis.core.instance.plugin.Plugin;
 import com.sandpolis.core.instance.plugin.PluginStore;
-import com.sandpolis.core.net.command.Cmdlet;
+import com.sandpolis.core.net.cmdlet.Cmdlet;
 
 /**
  * Contains plugin commands.

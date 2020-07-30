@@ -3,6 +3,7 @@ package com.sandpolis.core.net.exelet;
 import static com.sandpolis.core.instance.Metatypes.InstanceType.CLIENT;
 import static com.sandpolis.core.instance.Metatypes.InstanceType.SERVER;
 import static com.sandpolis.core.instance.Metatypes.InstanceType.VIEWER;
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,11 +28,11 @@ public class ExeletStore extends StoreBase<ExeletStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ExeletStore.class);
 
-	private Map<String, ExeletMethod> viewer;
+	Map<String, ExeletMethod> viewer;
 
-	private Map<String, ExeletMethod> server;
+	Map<String, ExeletMethod> server;
 
-	private Map<String, ExeletMethod> client;
+	Map<String, ExeletMethod> client;
 
 	public ExeletStore() {
 		super(log);
@@ -90,6 +91,7 @@ public class ExeletStore extends StoreBase<ExeletStoreConfig> {
 		client = new HashMap<>();
 
 		config.exelets.forEach(this::register);
+		PluginStore.register(this);
 	}
 
 	@Override

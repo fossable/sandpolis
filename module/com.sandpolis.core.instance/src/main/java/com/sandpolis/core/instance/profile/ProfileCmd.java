@@ -9,24 +9,34 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.profile.store;
+package com.sandpolis.core.instance.profile;
 
-import com.sandpolis.core.instance.store.event.ParameterizedEvent;
+/**
+ * Contains profile commands.
+ *
+ * @author cilki
+ * @since 6.1.0
+ */
+public final class ProfileCmd {// extends Cmdlet<ProfileCmd> {
 
-public final class ProfileEvents {
+//	public ResponseFuture<Outcome> openProfileStream() {
+//		int id = IDUtil.stream();
+//
+//		// StreamStore.StreamStore.add(new InboundStreamAdapter<>(id, sock, msg ->
+//		// msg.getEvProfileStream()), null);
+//		return request(RQ_ProfileStream.newBuilder().setId(id));
+//	}
 
-	public static final class ProfileOnlineEvent extends ParameterizedEvent<Profile> {
-		public ProfileOnlineEvent(Profile profile) {
-			super(profile);
-		}
+	/**
+	 * Prepare for an asynchronous command.
+	 *
+	 * @return A configurable object from which all asynchronous (nonstatic)
+	 *         commands in {@link ProfileCmd} can be invoked
+	 */
+	public static ProfileCmd async() {
+		return new ProfileCmd();
 	}
 
-	public static final class ProfileOfflineEvent extends ParameterizedEvent<Profile> {
-		public ProfileOfflineEvent(Profile profile) {
-			super(profile);
-		}
-	}
-
-	private ProfileEvents() {
+	private ProfileCmd() {
 	}
 }

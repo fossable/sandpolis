@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.filesys.cmd;
 
-import com.sandpolis.core.net.command.Cmdlet;
+import com.sandpolis.core.net.cmdlet.Cmdlet;
 
 /**
  * Contains filesystem commands.

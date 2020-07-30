@@ -11,17 +11,16 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.exelet;
 
-import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.net.exelet.ExeletStore.ExeletStore;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.connection.Connection;
-import com.sandpolis.core.net.plugin.ExeletProvider;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -41,16 +40,24 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 
 	private final Map<String, ExeletMethod> handlers;
 
-	public ExeletHandler(Connection sock) {
+	public ExeletHandler(Connection sock, InstanceType instance) {
 		this.sock = sock;
-		this.handlers = new HashMap<>();
 
-		// Register plugin exelets
-		PluginStore.getLoadedPlugins().forEach(plugin -> {
-			plugin.getExtensions(ExeletProvider.class).forEach(provider -> {
-				register(provider.getExelets());
-			});
-		});
+		// Get handlers according to connection type
+		switch (instance) {
+		case CLIENT:
+			handlers = ExeletStore.client;
+			break;
+		case SERVER:
+			handlers = ExeletStore.server;
+			break;
+		case VIEWER:
+			handlers = ExeletStore.viewer;
+			break;
+		default:
+			throw new RuntimeException(
+					"Cannot create ExeletHandler with remote instance: " + sock.getRemoteInstance().toString());
+		}
 	}
 
 	@Override

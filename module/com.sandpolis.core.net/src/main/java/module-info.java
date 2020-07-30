@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.core.net {
 	exports com.sandpolis.core.net.exelet;
+	exports com.sandpolis.core.net.cmdlet;
 	exports com.sandpolis.core.net.exception;
 	exports com.sandpolis.core.net.connection;
 	exports com.sandpolis.core.net.handler.cvid;

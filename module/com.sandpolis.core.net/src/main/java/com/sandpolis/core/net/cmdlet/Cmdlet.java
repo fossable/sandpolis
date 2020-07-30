@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.command;
+package com.sandpolis.core.net.cmdlet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
@@ -20,6 +20,7 @@ import java.util.concurrent.CompletionStage;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.connection.Connection;
+import com.sandpolis.core.net.exelet.Exelet;
 
 /**
  * A {@link Cmdlet} contains commands that can be run against a CVID.

@@ -12,17 +12,17 @@
 package com.sandpolis.core.instance.data;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
+import com.sandpolis.core.foundation.util.RandUtil;
 import com.sandpolis.core.instance.Attribute.ProtoCollection;
 
 /**
@@ -33,11 +33,9 @@ import com.sandpolis.core.instance.Attribute.ProtoCollection;
  * @since 5.1.1
  */
 @Entity
-public class Collection implements java.util.Collection<Document>, ProtoType<ProtoCollection> {
+public class Collection implements ProtoType<ProtoCollection> {
 
 	@Id
-	@GeneratedValue(generator = "uuid")
-//	@GenericGenerator(name = "uuid", strategy = "uuid2")
 	private String db_id;
 
 	@MapKeyColumn
@@ -45,6 +43,7 @@ public class Collection implements java.util.Collection<Document>, ProtoType<Pro
 	private Map<Integer, Document> documents;
 
 	public Collection(Document parent) {
+		this.db_id = UUID.randomUUID().toString();
 		this.documents = new HashMap<>();
 	}
 
@@ -60,69 +59,26 @@ public class Collection implements java.util.Collection<Document>, ProtoType<Pro
 		return documents.values().stream();
 	}
 
-	@Override
 	public int size() {
 		return documents.size();
 	}
 
-	@Override
 	public boolean isEmpty() {
 		return documents.isEmpty();
 	}
 
-	@Override
-	public boolean contains(Object o) {
-		return documents.containsValue(o);
+	public boolean contains(Document document) {
+		return documents.containsValue(document);
 	}
 
-	@Override
-	public Iterator<Document> iterator() {
-		return documents.values().iterator();
+	public void add(int tag, Document e) {
+		documents.put(tag, e);
 	}
 
-	@Override
-	public Object[] toArray() {
-		return documents.values().toArray();
+	public boolean remove(Document document) {
+		return documents.values().remove(document);
 	}
 
-	@Override
-	public <T> T[] toArray(T[] a) {
-		return documents.values().toArray(a);
-	}
-
-	@Override
-	public boolean add(Document e) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean remove(Object o) {
-		return documents.values().remove(o);
-	}
-
-	@Override
-	public boolean containsAll(java.util.Collection<?> c) {
-		return documents.values().containsAll(c);
-	}
-
-	@Override
-	public boolean addAll(java.util.Collection<? extends Document> c) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean removeAll(java.util.Collection<?> c) {
-		return documents.values().removeAll(c);
-	}
-
-	@Override
-	public boolean retainAll(java.util.Collection<?> c) {
-		return documents.values().retainAll(c);
-	}
-
-	@Override
 	public void clear() {
 		documents.clear();
 	}

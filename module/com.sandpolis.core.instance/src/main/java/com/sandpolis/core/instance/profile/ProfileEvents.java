@@ -9,55 +9,24 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store;
+package com.sandpolis.core.instance.profile;
 
-import java.util.Optional;
-import java.util.stream.Stream;
+import com.sandpolis.core.instance.store.event.ParameterizedEvent;
 
-import org.slf4j.Logger;
+public final class ProfileEvents {
 
-public abstract class MapStore<V, E extends StoreConfig> extends StoreBase<E> {
-
-	protected StoreProvider<V> provider;
-
-	protected MapStore(Logger log) {
-		super(log);
+	public static final class ProfileOnlineEvent extends ParameterizedEvent<Profile> {
+		public ProfileOnlineEvent(Profile profile) {
+			super(profile);
+		}
 	}
 
-	public void add(V item) {
-		provider.add(item);
+	public static final class ProfileOfflineEvent extends ParameterizedEvent<Profile> {
+		public ProfileOfflineEvent(Profile profile) {
+			super(profile);
+		}
 	}
 
-	@Override
-	public void close() throws Exception {
-		provider = null;
-	}
-
-	/**
-	 * Determine how many elements the store contains.
-	 *
-	 * @return The number of elements in the store
-	 */
-	public long count() {
-		return provider.count();
-	}
-
-	public Optional<V> get(int tag) {
-		return provider.get(tag);
-	}
-
-	public Optional<V> remove(int tag) {
-		var item = get(tag);
-		if (item.isPresent())
-			removeValue(item.get());
-		return item;
-	}
-
-	public void removeValue(V value) {
-		provider.remove(value);
-	}
-
-	public Stream<V> stream() {
-		return provider.stream();
+	private ProfileEvents() {
 	}
 }

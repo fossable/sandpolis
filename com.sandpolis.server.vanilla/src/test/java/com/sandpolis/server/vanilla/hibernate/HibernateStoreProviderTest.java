@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store;
+package com.sandpolis.server.vanilla.hibernate;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,33 +17,39 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.sandpolis.core.instance.data.StateObject;
-import com.sandpolis.core.instance.store.provider.MemoryListStoreProvider;
-import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.store.provider.StoreProvider;
+import com.sandpolis.core.instance.storage.StoreProvider;
 
 import net.jodah.concurrentunit.Waiter;
 
-class StoreProviderTest {
+class HibernateStoreProviderTest {
 
-	static class TestObject extends StateObject {
+	@Entity
+	static class TestObject {
 
 		@Id
+		@Column
 		private long id;
 
+		@Column
 		private String name;
 
+		public TestObject() {
+		}
+
 		public TestObject(long id, String name) {
-			super(null);
 			this.id = id;
 			this.name = name;
 		}
@@ -57,14 +63,15 @@ class StoreProviderTest {
 		}
 
 		@Override
-		public String toString() {
-			return id + ": " + name;
+		public boolean equals(Object obj) {
+			if (obj instanceof TestObject) {
+				TestObject o = (TestObject) obj;
+				return o.id == this.id && o.name.equals(this.name);
+			}
+
+			return false;
 		}
 
-		@Override
-		public int tag() {
-			return 0;
-		}
 	}
 
 	private TestObject o1 = new TestObject(1L, "One");
@@ -76,7 +83,7 @@ class StoreProviderTest {
 
 	@ParameterizedTest
 	@MethodSource("implementations")
-	void testAdd(StoreProvider<TestObject> provider) {
+	void testAdd(HibernateStoreProvider<TestObject> provider) {
 		provider.add(o1);
 		provider.add(o2);
 		provider.add(o3);
@@ -87,7 +94,7 @@ class StoreProviderTest {
 
 	@ParameterizedTest
 	@MethodSource("implementations")
-	void testGetId(StoreProvider<TestObject> provider) {
+	void testGetId(HibernateStoreProvider<TestObject> provider) {
 		provider.add(o1);
 		provider.add(o2);
 		provider.add(o3);
@@ -107,7 +114,25 @@ class StoreProviderTest {
 
 	@ParameterizedTest
 	@MethodSource("implementations")
-	void testRemove(StoreProvider<TestObject> provider) {
+	void testGetByField(HibernateStoreProvider<TestObject> provider) {
+		provider.add(o1);
+		provider.add(o2);
+		provider.add(o3);
+		provider.add(o4);
+		provider.add(o5);
+		provider.add(o6);
+
+		assertEquals(o1, provider.get("name", "One").get());
+		assertEquals(o2, provider.get("name", "Two").get());
+
+		// Repeat
+		assertEquals(o1, provider.get("name", "One").get());
+		assertEquals(o2, provider.get("name", "Two").get());
+	}
+
+	@ParameterizedTest
+	@MethodSource("implementations")
+	void testRemove(HibernateStoreProvider<TestObject> provider) {
 		provider.add(o1);
 		provider.add(o2);
 		provider.add(o3);
@@ -130,7 +155,7 @@ class StoreProviderTest {
 
 	@ParameterizedTest
 	@MethodSource("implementations")
-	void testExistsById(StoreProvider<TestObject> provider) {
+	void testExistsById(HibernateStoreProvider<TestObject> provider) {
 		provider.add(o1);
 		provider.add(o2);
 		provider.add(o3);
@@ -153,7 +178,30 @@ class StoreProviderTest {
 
 	@ParameterizedTest
 	@MethodSource("implementations")
-	void testCount(StoreProvider<TestObject> provider) {
+	void testExistsByField(HibernateStoreProvider<TestObject> provider) {
+		provider.add(o1);
+		provider.add(o2);
+		provider.add(o3);
+		provider.add(o4);
+		provider.add(o5);
+		provider.add(o6);
+
+		provider.remove(o2);
+		provider.remove(o4);
+		provider.remove(o6);
+
+		assertFalse(provider.exists("name", "Two"));
+		assertFalse(provider.exists("name", "Four"));
+		assertFalse(provider.exists("name", "Six"));
+
+		assertTrue(provider.exists("name", "One"));
+		assertTrue(provider.exists("name", "Three"));
+		assertTrue(provider.exists("name", "Five"));
+	}
+
+	@ParameterizedTest
+	@MethodSource("implementations")
+	void testCount(HibernateStoreProvider<TestObject> provider) {
 		assertEquals(0, provider.count());
 		provider.add(o1);
 		assertEquals(1, provider.count());
@@ -173,7 +221,7 @@ class StoreProviderTest {
 
 	@ParameterizedTest
 	@MethodSource("implementations")
-	void testStream(StoreProvider<TestObject> provider) {
+	void testStream(HibernateStoreProvider<TestObject> provider) {
 		provider.add(o1);
 		provider.add(o2);
 		provider.add(o4);
@@ -240,9 +288,28 @@ class StoreProviderTest {
 		waiter.await(30000, 18);
 	}
 
-	static Stream<StoreProvider<TestObject>> implementations() {
-		return Stream.of(new MemoryListStoreProvider<Long, TestObject>(TestObject.class),
-				new MemoryMapStoreProvider<Long, TestObject>(TestObject.class));
+	static Stream<StoreProvider<TestObject>> implementations() throws Exception {
+		Configuration conf = new Configuration()
+				// Set the H2 database driver
+				.setProperty("hibernate.connection.driver_class", "org.h2.Driver")
+
+				// Set the H2 dialect
+				.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
+
+				// Set the credentials
+				.setProperty("hibernate.connection.username", "").setProperty("hibernate.connection.password", "")
+
+				// Set the database URL
+				.setProperty("hibernate.connection.url", "jdbc:h2:mem:junit")
+
+				// Set additional options
+				.setProperty("hibernate.connection.shutdown", "true")
+				.setProperty("hibernate.globally_quoted_identifiers", "true")
+				.setProperty("hibernate.hbm2ddl.auto", "create");
+
+		List.of(TestObject.class).forEach(conf::addAnnotatedClass);
+
+		return Stream.of(new HibernateConnection(conf.buildSessionFactory()).provider(TestObject.class, "id"));
 	}
 
 }

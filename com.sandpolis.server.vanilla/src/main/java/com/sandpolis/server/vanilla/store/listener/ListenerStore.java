@@ -21,10 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Listener.ListenerConfig;
-import com.sandpolis.core.instance.store.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.database.Database;
-import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.StoreConfig;
+import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
+import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 import com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStoreConfig;
 
 /**
@@ -33,20 +34,15 @@ import com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStoreCo
  * @author cilki
  * @since 1.0.0
  */
-public final class ListenerStore extends MapStore<Listener, ListenerStoreConfig> {
+public final class ListenerStore extends CollectionStore<Listener, ListenerStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ListenerStore.class);
-
-	public void add(ListenerConfig config) {
-		Objects.requireNonNull(config);
-
-		add(new Listener(document, config));
-	}
 
 	/**
 	 * Start all enabled, unstarted listeners in the store.
 	 */
 	public void start() {
+
 		stream().filter(listener -> !listener.isActive() && listener.isEnabled()).forEach(listener -> {
 			log.info("Starting listener on port: {}", listener.getPort());
 
@@ -70,13 +66,32 @@ public final class ListenerStore extends MapStore<Listener, ListenerStoreConfig>
 	}
 
 	@Override
-	public ListenerStore init(Consumer<ListenerStoreConfig> configurator) {
+	public void init(Consumer<ListenerStoreConfig> configurator) {
 		var config = new ListenerStoreConfig();
 		configurator.accept(config);
 
-		config.defaults.forEach(this::add);
+		config.defaults.forEach(this::create);
 
-		return (ListenerStore) super.init(null);
+		provider.initialize();
+	}
+
+	@Override
+	public Listener create(Consumer<Listener> configurator) {
+		var listener = new Listener(new Document(provider.getCollection()));
+		configurator.accept(listener);
+		provider.add(listener);
+		return listener;
+	}
+
+	public Listener create(ListenerConfig config) {
+		Objects.requireNonNull(config);
+
+		return create(listener -> {
+			listener.address().set(config.getAddress());
+			listener.port().set(config.getPort());
+			listener.name().set(config.getName());
+			listener.enabled().set(config.getEnabled());
+		});
 	}
 
 	public final class ListenerStoreConfig extends StoreConfig {
@@ -85,12 +100,12 @@ public final class ListenerStore extends MapStore<Listener, ListenerStoreConfig>
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Listener.class);
+			provider = new MemoryMapStoreProvider<>(Listener.class, Listener::tag);
 		}
 
 		@Override
-		public void persistent(Database database) {
-			provider = database.getConnection().provider(Listener.class);
+		public void persistent(StoreProviderFactory factory) {
+			provider = factory.supply(Listener.class, Listener::new);
 		}
 	}
 

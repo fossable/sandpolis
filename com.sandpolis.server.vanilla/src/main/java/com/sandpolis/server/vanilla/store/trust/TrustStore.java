@@ -29,7 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.util.CertUtil;
-import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
@@ -42,7 +43,7 @@ import com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStoreConfig;
  * @author cilki
  * @since 5.0.0
  */
-public final class TrustStore extends MapStore<TrustAnchor, TrustStoreConfig> {
+public final class TrustStore extends CollectionStore<TrustAnchor, TrustStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(TrustStore.class);
 
@@ -90,8 +91,19 @@ public final class TrustStore extends MapStore<TrustAnchor, TrustStoreConfig> {
 
 		// Install root CA if required
 		if (getMetadata().getInitCount() == 1) {
-			add(new TrustAnchor("PLUGIN CA", CertUtil.getPluginRoot()));
+			create(anchor -> {
+				anchor.name().set("PLUGIN CA");
+				anchor.certificate().set(CertUtil.getPluginRoot());
+			});
 		}
+	}
+
+	@Override
+	public TrustAnchor create(Consumer<TrustAnchor> configurator) {
+		var anchor = new TrustAnchor(new Document(provider.getCollection()));
+		configurator.accept(anchor);
+		provider.add(anchor);
+		return anchor;
 	}
 
 	public final class TrustStoreConfig extends StoreConfig {

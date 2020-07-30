@@ -311,20 +311,20 @@ public final class Server {
 
 		// Setup default users
 		if (UserStore.getMetadata().getInitCount() == 1) {
-			UserStore.add(UserConfig.newBuilder().setUsername("admin").setPassword("password").build());
+			UserStore.create(UserConfig.newBuilder().setUsername("admin").setPassword("password").build());
 			skipped = false;
 		}
 
 		// Setup default listeners
 		if (ListenerStore.getMetadata().getInitCount() == 1) {
-			ListenerStore.add(ListenerConfig.newBuilder().setPort(8768).setAddress("0.0.0.0").setOwner("admin")
+			ListenerStore.create(ListenerConfig.newBuilder().setPort(8768).setAddress("0.0.0.0").setOwner("admin")
 					.setName("Default Listener").setEnabled(true).build());
 			skipped = false;
 		}
 
 		// Setup default groups
 		if (GroupStore.getMetadata().getInitCount() == 1) {
-			GroupStore.add(GroupConfig.newBuilder().setName("Default Authentication Group").setOwner("admin")
+			GroupStore.create(GroupConfig.newBuilder().setName("Default Authentication Group").setOwner("admin")
 					.addPasswordMechanism(PasswordContainer.newBuilder().setPassword("12345")).build());
 			skipped = false;
 		}

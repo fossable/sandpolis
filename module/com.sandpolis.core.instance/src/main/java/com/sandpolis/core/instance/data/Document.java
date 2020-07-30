@@ -13,11 +13,11 @@ package com.sandpolis.core.instance.data;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
@@ -35,8 +35,6 @@ import com.sandpolis.core.instance.Attribute.ProtoDocument;
 public class Document implements ProtoType<ProtoDocument> {
 
 	@Id
-	@GeneratedValue(generator = "uuid")
-//	@GenericGenerator(name = "uuid", strategy = "uuid2")
 	private String db_id;
 
 	@MapKeyColumn
@@ -52,12 +50,14 @@ public class Document implements ProtoType<ProtoDocument> {
 	private Map<Integer, Attribute<?>> attributes;
 
 	public Document(Document parent) {
+		db_id = UUID.randomUUID().toString();
 		documents = new HashMap<>();
 		collections = new HashMap<>();
 		attributes = new HashMap<>();
 	}
 
 	public Document(Collection parent) {
+		db_id = UUID.randomUUID().toString();
 		documents = new HashMap<>();
 		collections = new HashMap<>();
 		attributes = new HashMap<>();

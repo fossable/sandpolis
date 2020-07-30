@@ -14,7 +14,7 @@ package com.sandpolis.core.viewer.cmd;
 import java.util.concurrent.CompletionStage;
 
 import com.sandpolis.core.foundation.Result.Outcome;
-import com.sandpolis.core.net.command.Cmdlet;
+import com.sandpolis.core.net.cmdlet.Cmdlet;
 import com.sandpolis.core.net.msg.MsgStream.RQ_StreamStop;
 
 /**

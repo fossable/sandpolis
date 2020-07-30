@@ -9,12 +9,14 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store;
+package com.sandpolis.core.instance.store.provider;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.sandpolis.core.instance.store.StoreMetadata;
 
 /**
  * A {@link StoreProvider} manages the artifacts of a Store. The
@@ -86,25 +88,10 @@ public interface StoreProvider<E> {
 	 * @return The number of elements in the store
 	 */
 	default public long count() {
-		try (Stream<E> stream = unsafeStream()) {
-			return stream.count();
-		}
+		return enumerate().size();
 	}
 
-	/**
-	 * Get a {@link Stream} over all the elements in the store. <b>The stream MUST
-	 * be properly closed, otherwise the store will become permanently
-	 * immutable</b>. Always use the following idiom:
-	 *
-	 * <pre>
-	 * try (Stream stream = provider.unsafeStream()) {
-	 * 	...
-	 * }
-	 * </pre>
-	 *
-	 * @return A new {@link Stream} over the elements in the store
-	 */
-	public Stream<E> unsafeStream();
+	public Collection<E> enumerate();
 
 	/**
 	 * The streams produced by this method are eagerly loaded. For performance
@@ -114,12 +101,18 @@ public interface StoreProvider<E> {
 	 * @return A new {@link Stream} over the elements in the store
 	 */
 	default public Stream<E> stream() {
-		try (var stream = unsafeStream()) {
-			return stream.collect(Collectors.toList()).stream();
-		}
+		return enumerate().stream();
 	}
 
-	// TODO JPQL stream for better filtering and ordering performance
-	// public Stream<E> stream(String query);
+	public Collection<E> enumerate(String query, Object... params);
 
+	default public Stream<E> stream(String query, Object... params) {
+		return enumerate(query, params).stream();
+	}
+
+	public void initialize();
+
+	public StoreMetadata getMetadata();
+	
+	public com.sandpolis.core.instance.data.Collection getCollection();
 }

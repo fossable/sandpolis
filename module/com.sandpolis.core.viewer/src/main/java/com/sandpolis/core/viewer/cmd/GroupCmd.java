@@ -26,7 +26,7 @@ import javax.crypto.KeyGenerator;
 
 import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.instance.Group.GroupConfig;
-import com.sandpolis.core.net.command.Cmdlet;
+import com.sandpolis.core.net.cmdlet.Cmdlet;
 import com.sandpolis.core.sv.msg.MsgGroup.RQ_GroupOperation;
 
 /**

@@ -11,6 +11,9 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.store;
 
+import com.sandpolis.core.instance.store.provider.StoreProvider;
+import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
+
 /**
  * A base for all store configurations.
  */

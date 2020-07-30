@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.DocumentBindings.Profile;
-import com.sandpolis.core.instance.Listener.ListenerConfig;
-import com.sandpolis.core.instance.data.Collection;
 import com.sandpolis.core.instance.data.Document;
 import com.sandpolis.core.net.Transport;
 import com.sandpolis.server.vanilla.net.init.ServerChannelInitializer;
@@ -55,21 +53,7 @@ public class Listener extends Profile.Instance.Server.Listener {
 	 */
 	private EventLoopGroup childLoopGroup;
 
-	/**
-	 * Construct a new {@link Listener} from a configuration.
-	 *
-	 * @param config The configuration which should be prevalidated and complete
-	 */
-	public Listener(Collection parent, ListenerConfig config) {
-		super(new Document(parent));
-
-		address().set(config.getAddress());
-		port().set(config.getPort());
-		name().set(config.getName());
-		enabled().set(config.getEnabled());
-	}
-
-	public Listener(Document document) {
+	Listener(Document document) {
 		super(document);
 	}
 

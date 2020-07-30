@@ -20,7 +20,7 @@ import com.sandpolis.core.cs.msg.MsgAuth.RQ_NoAuth;
 import com.sandpolis.core.cs.msg.MsgAuth.RQ_PasswordAuth;
 import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.net.HandlerKey;
-import com.sandpolis.core.net.command.Cmdlet;
+import com.sandpolis.core.net.cmdlet.Cmdlet;
 import com.sandpolis.core.net.handler.sand5.ReciprocalKeyPair;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
 

@@ -16,16 +16,19 @@ import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.exelet.ExeletStore.ExeletStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.Subscribe;
 import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.exe.ClientExe;
 import com.sandpolis.core.cv.cmd.PluginCmd;
@@ -38,11 +41,8 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.net.handler.sand5.ReciprocalKeyPair;
-import com.sandpolis.core.net.init.ClientChannelInitializer;
 import com.sandpolis.core.net.network.NetworkEvents.ServerEstablishedEvent;
 import com.sandpolis.core.net.network.NetworkEvents.ServerLostEvent;
-
-import com.google.common.eventbus.Subscribe;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
@@ -130,9 +130,13 @@ public final class Client {
 			config.ephemeral();
 		});
 
+		ExeletStore.init(config -> {
+			config.exelets = List.of(ClientExe.class);
+			config.ephemeral();
+		});
+
 		ConnectionStore.init(config -> {
 			config.ephemeral();
-			config.initializer = new ClientChannelInitializer(new Class[] { ClientExe.class });
 		});
 
 		NetworkStore.init(config -> {

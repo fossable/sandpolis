@@ -36,9 +36,10 @@ import com.sandpolis.core.foundation.util.JarUtil;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.data.Document;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginStore.PluginStoreConfig;
-import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
@@ -62,7 +63,7 @@ import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
  * @author cilki
  * @since 5.0.0
  */
-public final class PluginStore extends MapStore<Plugin, PluginStoreConfig> {
+public final class PluginStore extends CollectionStore<Plugin, PluginStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(PluginStore.class);
 
@@ -236,6 +237,14 @@ public final class PluginStore extends MapStore<Plugin, PluginStoreConfig> {
 		configurator.accept(config);
 
 		provider.initialize();
+	}
+
+	@Override
+	public Plugin create(Consumer<Plugin> configurator) {
+		var plugin = new Plugin(new Document(provider.getCollection()));
+		configurator.accept(plugin);
+		provider.add(plugin);
+		return plugin;
 	}
 
 	public final class PluginStoreConfig extends StoreConfig {
