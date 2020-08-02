@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.handler.cvid;
+package com.sandpolis.core.net.cvid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +62,7 @@ public class CvidResponseHandler extends AbstractCvidHandler {
 			ch.attr(ChannelConstant.INSTANCE).set(rq.getInstance());
 			ch.attr(ChannelConstant.CVID).set(cvid);
 			ch.attr(ChannelConstant.UUID).set(rq.getUuid());
-			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent(cvid));
+			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent(Core.cvid(), cvid));
 		}
 	}
 }

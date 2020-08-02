@@ -64,6 +64,12 @@
                   "tag": 4,
                   "type": "java.util.Date",
                   "description": "The user's expiration timestamp"
+                },
+                {
+                  "name": "totp_secret",
+                  "tag": 5,
+                  "type": "java.lang.Byte[]",
+                  "description": "The user's TOTP secret"
                 }
               ]
             },

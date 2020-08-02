@@ -14,8 +14,7 @@ package com.sandpolis.viewer.lifegem.common.controller;
 import java.util.Objects;
 
 import com.google.common.eventbus.Subscribe;
-
-import javafx.stage.Stage;
+import com.sandpolis.viewer.lifegem.stage.SandpolisStage;
 
 /**
  * A controller that contains convenience fields.
@@ -25,13 +24,10 @@ import javafx.stage.Stage;
  */
 public abstract class FxController extends AbstractController {
 
-	/**
-	 * The parent stage.
-	 */
-	protected Stage stage;
+	protected SandpolisStage stage;
 
 	@Subscribe
-	public void setStage(Stage stage) {
+	public void setStage(SandpolisStage stage) {
 		if (this.stage != null)
 			throw new IllegalStateException();
 

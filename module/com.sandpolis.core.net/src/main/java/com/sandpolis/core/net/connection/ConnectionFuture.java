@@ -18,8 +18,8 @@ import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;
 
 /**
- * A {@link ConnectionFuture} is a wrapper for {@link ChannelFuture} which provides an
- * easy way to obtain a configured {@link Connection}.
+ * A {@link ConnectionFuture} provides an easy way to asynchronously obtain a
+ * configured {@link Connection}.
  *
  * @author cilki
  * @since 5.0.0
@@ -27,8 +27,7 @@ import io.netty.util.concurrent.EventExecutor;
 public class ConnectionFuture extends DefaultPromise<Connection> {
 
 	/**
-	 * Construct a new {@link ConnectionFuture} that is not waiting on a
-	 * {@link ChannelFuture} directly.
+	 * Construct a new {@link ConnectionFuture} that must be completed externally.
 	 *
 	 * @param executor A custom executor
 	 */
@@ -37,7 +36,7 @@ public class ConnectionFuture extends DefaultPromise<Connection> {
 	}
 
 	/**
-	 * Construct a new {@link ConnectionFuture} which will create a new
+	 * Construct a new {@link ConnectionFuture} which will provide a new
 	 * {@link Connection} once the given connection is established.
 	 *
 	 * @param connect A connection future
@@ -47,7 +46,7 @@ public class ConnectionFuture extends DefaultPromise<Connection> {
 	}
 
 	/**
-	 * Construct a new {@link ConnectionFuture} which will create a new
+	 * Construct a new {@link ConnectionFuture} which will provide a new
 	 * {@link Connection} once the given connection is established.
 	 *
 	 * @param executor A custom executor
@@ -62,11 +61,11 @@ public class ConnectionFuture extends DefaultPromise<Connection> {
 				return;
 			}
 
-			future.channel().attr(ChannelConstant.SOCK).get().getHandshakeFuture().addListener(cvidFuture -> {
-				if (cvidFuture.isSuccess()) {
+			future.channel().attr(ChannelConstant.HANDSHAKE_FUTURE).get().addListener(handshakeFuture -> {
+				if (handshakeFuture.isSuccess()) {
 					ConnectionFuture.this.setSuccess(future.channel().attr(ChannelConstant.SOCK).get());
 				} else {
-					ConnectionFuture.this.setFailure(cvidFuture.cause());
+					ConnectionFuture.this.setFailure(handshakeFuture.cause());
 				}
 			});
 		});

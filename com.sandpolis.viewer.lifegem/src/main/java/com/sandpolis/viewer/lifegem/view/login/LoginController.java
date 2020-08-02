@@ -13,7 +13,7 @@ package com.sandpolis.viewer.lifegem.view.login;
 
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
-import static com.sandpolis.viewer.lifegem.store.stage.StageStore.StageStore;
+import static com.sandpolis.viewer.lifegem.stage.StageStore.StageStore;
 
 import java.util.Objects;
 
@@ -231,9 +231,12 @@ public class LoginController extends FxController {
 	 */
 	private void launchApplication() {
 		StageStore.close(stage);
-		StageStore.newStage().root("/fxml/view/main/Main.fxml")
-				.size(PrefStore.getInt("ui.view.main.width"), PrefStore.getInt("ui.view.main.height"))
-				.title(FxUtil.translate("stage.main.title")).show();
+		StageStore.create(stage -> {
+			stage.setRoot("/fxml/view/main/Main.fxml");
+			stage.setWidth(PrefStore.getInt("ui.view.main.width"));
+			stage.setHeight(PrefStore.getInt("ui.view.main.height"));
+			stage.setTitle(FxUtil.translate("stage.main.title"));
+		});
 	}
 
 	@Subscribe

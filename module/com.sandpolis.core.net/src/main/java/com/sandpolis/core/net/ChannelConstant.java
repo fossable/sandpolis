@@ -11,11 +11,12 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net;
 
-import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.net.connection.Connection;
 
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
+import io.netty.util.concurrent.Promise;
 
 /**
  * {@link AttributeKey} constants that are useful to {@link Connection} and
@@ -37,6 +38,11 @@ public final class ChannelConstant {
 	 * The remote host's CVID.
 	 */
 	public static final AttributeKey<Integer> CVID = AttributeKey.valueOf("cvid");
+
+	/**
+	 * A future that is notified when the handshake completes.
+	 */
+	public static final AttributeKey<Promise<Void>> HANDSHAKE_FUTURE = AttributeKey.valueOf("handshake_future");
 
 	/**
 	 * The remote host's instance type.

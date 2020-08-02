@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.loop;
+package com.sandpolis.core.net.connection;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.instance.Generator.LoopConfig;
 import com.sandpolis.core.instance.Generator.NetworkTarget;
 import com.sandpolis.core.net.ChannelConstant;
-import com.sandpolis.core.net.connection.ConnectionFuture;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelOption;

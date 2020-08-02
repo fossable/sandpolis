@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.common.tray;
 
-import static com.sandpolis.viewer.lifegem.store.stage.StageStore.StageStore;
+import static com.sandpolis.viewer.lifegem.stage.StageStore.StageStore;
 
 import java.awt.AWTException;
 import java.awt.MenuItem;

@@ -18,9 +18,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.connection.Connection;
+import com.sandpolis.core.net.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
+import com.sandpolis.core.net.util.CvidUtil;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -38,26 +39,36 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 
 	private final Connection sock;
 
-	private final Map<String, ExeletMethod> handlers;
+	private Map<String, ExeletMethod> handlers;
 
-	public ExeletHandler(Connection sock, InstanceType instance) {
+	public ExeletHandler(Connection sock) {
 		this.sock = sock;
+	}
 
-		// Get handlers according to connection type
-		switch (instance) {
-		case CLIENT:
-			handlers = ExeletStore.client;
-			break;
-		case SERVER:
-			handlers = ExeletStore.server;
-			break;
-		case VIEWER:
-			handlers = ExeletStore.viewer;
-			break;
-		default:
-			throw new RuntimeException(
-					"Cannot create ExeletHandler with remote instance: " + sock.getRemoteInstance().toString());
+	@Override
+	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+		if (evt instanceof CvidHandshakeCompletionEvent) {
+			CvidHandshakeCompletionEvent event = (CvidHandshakeCompletionEvent) evt;
+
+			if (event.success) {
+				switch (CvidUtil.extractInstance(event.remote)) {
+				case CLIENT:
+					handlers = ExeletStore.client;
+					break;
+				case SERVER:
+					handlers = ExeletStore.server;
+					break;
+				case VIEWER:
+					handlers = ExeletStore.viewer;
+					break;
+				default:
+					throw new RuntimeException(
+							"Cannot create ExeletHandler with remote instance: " + sock.getRemoteInstance().toString());
+				}
+			}
 		}
+
+		ctx.fireUserEventTriggered(evt);
 	}
 
 	@Override

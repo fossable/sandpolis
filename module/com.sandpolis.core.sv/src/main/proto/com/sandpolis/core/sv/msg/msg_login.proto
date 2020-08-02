@@ -28,7 +28,7 @@ message RQ_Login {
     string password = 2;
 
     // Time-based One-Time Password token
-    string totp = 3;
+    int32 totp = 3;
 }
 
 /**

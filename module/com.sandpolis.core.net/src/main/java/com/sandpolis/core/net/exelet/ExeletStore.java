@@ -54,9 +54,9 @@ public class ExeletStore extends StoreBase<ExeletStoreConfig> {
 				if (instances.contains(VIEWER))
 					viewer.put(exeletMethod.url, exeletMethod);
 				if (instances.contains(SERVER))
-					viewer.put(exeletMethod.url, exeletMethod);
+					server.put(exeletMethod.url, exeletMethod);
 				if (instances.contains(CLIENT))
-					viewer.put(exeletMethod.url, exeletMethod);
+					client.put(exeletMethod.url, exeletMethod);
 			}
 		}
 	}

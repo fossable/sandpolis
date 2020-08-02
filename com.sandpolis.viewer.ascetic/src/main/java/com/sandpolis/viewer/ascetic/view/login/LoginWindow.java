@@ -46,7 +46,7 @@ import com.sandpolis.viewer.ascetic.view.main.MainWindow;
 
 public class LoginWindow extends BasicWindow {
 
-	public static final Logger log = LoggerFactory.getLogger(Viewer.class);
+	private static final Logger log = LoggerFactory.getLogger(Viewer.class);
 
 	private TextBox fld_username;
 	private TextBox fld_password;
@@ -151,7 +151,8 @@ public class LoginWindow extends BasicWindow {
 						LoginCmd.async().target(sockFuture.get()).login(username, password).thenAccept(rs -> {
 							if (rs.getResult()) {
 								WindowStore.clear();
-								WindowStore.add(new MainWindow());
+								WindowStore.create(window -> {
+								}, MainWindow::new);
 							} else {
 								fld_username.setEnabled(true);
 								fld_password.setEnabled(true);

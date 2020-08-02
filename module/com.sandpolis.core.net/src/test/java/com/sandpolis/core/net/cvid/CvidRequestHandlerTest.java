@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.handler.cvid;
+package com.sandpolis.core.net.cvid;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,7 +27,8 @@ import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
+import com.sandpolis.core.net.cvid.CvidRequestHandler;
+import com.sandpolis.core.net.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
 import com.sandpolis.core.net.msg.MsgCvid.RQ_Cvid;
 import com.sandpolis.core.net.msg.MsgCvid.RS_Cvid;
 import com.sandpolis.core.net.util.CvidUtil;

@@ -24,17 +24,17 @@ import static com.sandpolis.core.net.HandlerKey.PROTO_ENCODER;
 import static com.sandpolis.core.net.HandlerKey.RESPONSE;
 import static com.sandpolis.core.net.HandlerKey.TLS;
 import static com.sandpolis.core.net.HandlerKey.TRAFFIC;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.foundation.util.CertUtil;
-import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.connection.ClientConnection;
+import com.sandpolis.core.net.connection.Connection;
+import com.sandpolis.core.net.cvid.CvidRequestHandler;
 import com.sandpolis.core.net.exelet.ExeletHandler;
 import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
-import com.sandpolis.core.net.handler.cvid.CvidRequestHandler;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -65,7 +65,9 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 
 	@Override
 	protected void initChannel(Channel ch) throws Exception {
-		ch.attr(ChannelConstant.SOCK).set(new ClientConnection(ch));
+		var connection = ConnectionStore.create(ch);
+		ch.attr(ChannelConstant.HANDSHAKE_FUTURE).set(ch.eventLoop().newPromise());
+
 		ChannelPipeline p = ch.pipeline();
 
 		p.addLast(TRAFFIC.next(p), new ChannelTrafficShapingHandler(Config.TRAFFIC_INTERVAL.value().orElse(5000)));
@@ -82,7 +84,7 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 		}
 
 		if (Config.TRAFFIC_RAW.value().orElse(false))
-			p.addLast(LOG_RAW.next(p), new LoggingHandler(ClientConnection.class));
+			p.addLast(LOG_RAW.next(p), new LoggingHandler(Connection.class));
 
 		p.addLast(FRAME_DECODER.next(p), new ProtobufVarint32FrameDecoder());
 		p.addLast(PROTO_DECODER.next(p), HANDLER_PROTO_DECODER);
@@ -90,14 +92,13 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 		p.addLast(PROTO_ENCODER.next(p), HANDLER_PROTO_ENCODER);
 
 		if (Config.TRAFFIC_DECODED.value().orElse(false))
-			p.addLast(LOG_DECODED.next(p), new LoggingHandler(ClientConnection.class));
+			p.addLast(LOG_DECODED.next(p), new LoggingHandler(Connection.class));
 
 		p.addLast(CVID.next(p), HANDLER_CVID);
 
 		p.addLast(ThreadStore.get("net.exelet"), RESPONSE.next(p), new ResponseHandler());
 
-		p.addLast(ThreadStore.get("net.exelet"), EXELET.next(p),
-				new ExeletHandler(ch.attr(ChannelConstant.SOCK).get(), InstanceType.SERVER));
+		p.addLast(ThreadStore.get("net.exelet"), EXELET.next(p), new ExeletHandler(connection));
 
 		p.addLast(MANAGEMENT.next(p), HANDLER_MANAGEMENT);
 	}

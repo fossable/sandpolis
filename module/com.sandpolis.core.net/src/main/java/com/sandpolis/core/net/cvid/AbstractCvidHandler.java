@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.handler.cvid;
+package com.sandpolis.core.net.cvid;
 
 import com.sandpolis.core.net.Message.MSG;
 
@@ -25,25 +25,31 @@ public abstract class AbstractCvidHandler extends SimpleChannelInboundHandler<MS
 	 */
 	public static final class CvidHandshakeCompletionEvent {
 
-		private final boolean success;
-		private final int cvid;
+		/**
+		 * Whether the handshake was successful.
+		 */
+		public final boolean success;
 
-		public CvidHandshakeCompletionEvent(int cvid) {
+		/**
+		 * The local CVID if the handshake was successful.
+		 */
+		public final int local;
+
+		/**
+		 * The remote CVID if the handshake was successful.
+		 */
+		public final int remote;
+
+		public CvidHandshakeCompletionEvent(int local, int remote) {
 			this.success = true;
-			this.cvid = cvid;
+			this.local = local;
+			this.remote = remote;
 		}
 
 		public CvidHandshakeCompletionEvent() {
 			this.success = false;
-			this.cvid = 0;
-		}
-
-		public boolean isSuccess() {
-			return success;
-		}
-
-		public int getCvid() {
-			return cvid;
+			this.local = 0;
+			this.remote = 0;
 		}
 	}
 }

@@ -60,6 +60,7 @@ import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.User.UserConfig;
+import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.server.vanilla.exe.AuthExe;
 import com.sandpolis.server.vanilla.exe.GenExe;
@@ -163,6 +164,22 @@ public final class Server {
 				//
 				.setProperty("hibernate.ogm.datastore.create_database", "true");
 
+		List.of(com.sandpolis.core.instance.data.Document.class, com.sandpolis.core.instance.data.Collection.class,
+				com.sandpolis.core.instance.data.Attribute.class,
+				com.sandpolis.core.instance.data.StringAttribute.class,
+				com.sandpolis.core.instance.data.IntegerAttribute.class,
+				com.sandpolis.core.instance.data.LongAttribute.class,
+				com.sandpolis.core.instance.data.BooleanAttribute.class,
+				com.sandpolis.core.instance.data.DoubleAttribute.class,
+				com.sandpolis.core.instance.data.OsTypeAttribute.class,
+				com.sandpolis.core.instance.data.X509CertificateAttribute.class,
+				com.sandpolis.core.instance.data.InstanceFlavorAttribute.class,
+				com.sandpolis.core.instance.data.InstanceTypeAttribute.class,
+				com.sandpolis.server.vanilla.hibernate.HibernateStoreProvider.class,
+				com.sandpolis.server.vanilla.hibernate.HibernateStoreProviderMetadata.class)
+				.forEach(conf::addAnnotatedClass);
+
+		StoreProviderFactory providerFactory;
 		switch (Config.STORAGE_PROVIDER.value().orElse("mongodb")) {
 		case "mongodb":
 			conf
@@ -175,24 +192,18 @@ public final class Server {
 					.setProperty("hibernate.ogm.datastore.host", Config.MONGODB_HOST.value().orElse("127.0.0.1"))
 					.setProperty("hibernate.ogm.datastore.username", Config.MONGODB_USER.value().orElse(""))
 					.setProperty("hibernate.ogm.datastore.password", Config.MONGODB_PASSWORD.value().orElse(""));
+			providerFactory = new HibernateStoreProviderFactory(conf);
 			break;
 		case "infinispan_embedded":
+			providerFactory = null;
+			break;
+		case "ephemeral":
+			providerFactory = null;
+			break;
+		default:
+			providerFactory = null;
 			break;
 		}
-
-		List.of(com.sandpolis.core.instance.data.Document.class, com.sandpolis.core.instance.data.Collection.class,
-				com.sandpolis.core.instance.data.Attribute.class,
-				com.sandpolis.core.instance.data.StringAttribute.class,
-				com.sandpolis.core.instance.data.IntegerAttribute.class,
-				com.sandpolis.core.instance.data.LongAttribute.class,
-				com.sandpolis.core.instance.data.BooleanAttribute.class,
-				com.sandpolis.core.instance.data.DoubleAttribute.class,
-				com.sandpolis.core.instance.data.OsTypeAttribute.class,
-				com.sandpolis.server.vanilla.hibernate.HibernateStoreProvider.class,
-				com.sandpolis.server.vanilla.hibernate.HibernateStoreProviderMetadata.class)
-				.forEach(conf::addAnnotatedClass);
-
-		var providerFactory = new HibernateStoreProviderFactory(conf);
 
 		ThreadStore.init(config -> {
 			config.ephemeral();
@@ -229,28 +240,46 @@ public final class Server {
 		});
 
 		UserStore.init(config -> {
-			config.persistent(providerFactory);
+			if (providerFactory != null)
+				config.persistent(providerFactory);
+			else
+				config.ephemeral();
 		});
 
 		ListenerStore.init(config -> {
-			config.persistent(providerFactory);
+			if (providerFactory != null)
+				config.persistent(providerFactory);
+			else
+				config.ephemeral();
 		});
 
 		GroupStore.init(config -> {
-			config.persistent(providerFactory);
+			if (providerFactory != null)
+				config.persistent(providerFactory);
+			else
+				config.ephemeral();
 		});
 
 		ProfileStore.init(config -> {
-			config.persistent(providerFactory);
+			if (providerFactory != null)
+				config.persistent(providerFactory);
+			else
+				config.ephemeral();
 		});
 
 		TrustStore.init(config -> {
-			config.persistent(providerFactory);
+			if (providerFactory != null)
+				config.persistent(providerFactory);
+			else
+				config.ephemeral();
 		});
 
 		PluginStore.init(config -> {
-			config.persistent(providerFactory);
 			config.verifier = TrustStore::verifyPluginCertificate;
+			if (providerFactory != null)
+				config.persistent(providerFactory);
+			else
+				config.ephemeral();
 		});
 
 		ServerStore.init(config -> {

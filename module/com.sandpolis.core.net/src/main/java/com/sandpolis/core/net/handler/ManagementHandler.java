@@ -11,12 +11,16 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.handler;
 
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.connection.Connection;
-import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
+import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
+import com.sandpolis.core.net.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -40,12 +44,13 @@ public class ManagementHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		ctx.channel().attr(ChannelConstant.SOCK).get().onActivityChanged(true);
 	}
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		ctx.channel().attr(ChannelConstant.SOCK).get().onActivityChanged(false);
+		var connection = ctx.channel().attr(ChannelConstant.SOCK).get();
+		ConnectionStore.removeValue(connection);
+		ConnectionStore.postAsync(SockLostEvent::new, connection);
 		ctx.close();
 	}
 
@@ -68,7 +73,13 @@ public class ManagementHandler extends ChannelInboundHandlerAdapter {
 			} else if (evt instanceof CvidHandshakeCompletionEvent) {
 				CvidHandshakeCompletionEvent event = (CvidHandshakeCompletionEvent) evt;
 
-				ctx.channel().attr(ChannelConstant.SOCK).get().onCvidCompleted(event.isSuccess());
+				if (event.success) {
+					ctx.channel().attr(ChannelConstant.HANDSHAKE_FUTURE).get().setSuccess(null);
+					ConnectionStore.postAsync(SockEstablishedEvent::new,
+							ctx.channel().attr(ChannelConstant.SOCK).get());
+				} else {
+					ctx.channel().attr(ChannelConstant.HANDSHAKE_FUTURE).get().setFailure(null);
+				}
 			}
 		} finally {
 			ReferenceCountUtil.release(evt);

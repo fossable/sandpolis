@@ -18,8 +18,8 @@ import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
+import static com.sandpolis.viewer.lifegem.stage.StageStore.StageStore;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
-import static com.sandpolis.viewer.lifegem.store.stage.StageStore.StageStore;
 
 import java.util.concurrent.Executors;
 
@@ -200,9 +200,14 @@ public final class Viewer {
 
 		@Override
 		public void start(Stage stage) throws Exception {
-			StageStore.newStage().stage(stage).root("/fxml/view/login/Login.fxml")
-					.size(PrefStore.getInt("ui.view.login.width"), PrefStore.getInt("ui.view.login.height"))
-					.resizable(false).title(FxUtil.translate("stage.login.title")).show();
+			// Ignore the primary stage and create a new one
+			StageStore.create(s -> {
+				s.setRoot("/fxml/view/login/Login.fxml");
+				s.setWidth(PrefStore.getInt("ui.view.login.width"));
+				s.setHeight(PrefStore.getInt("ui.view.login.height"));
+				s.setResizable(false);
+				s.setTitle(FxUtil.translate("stage.login.title"));
+			});
 		}
 	}
 

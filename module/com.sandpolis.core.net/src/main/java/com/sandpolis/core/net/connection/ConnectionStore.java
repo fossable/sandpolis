@@ -22,18 +22,18 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Generator.LoopConfig;
-import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.net.Protocol;
-import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.connection.ConnectionStore.ConnectionStoreConfig;
 import com.sandpolis.core.net.init.ClientChannelInitializer;
-import com.sandpolis.core.net.loop.ConnectionLoop;
 import com.sandpolis.core.net.network.NetworkStore;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
 
 /**
  * A store for managing direct connections in the network.
@@ -42,14 +42,9 @@ import io.netty.bootstrap.Bootstrap;
  * @see NetworkStore
  * @since 5.0.0
  */
-public final class ConnectionStore extends MapStore<Connection, ConnectionStoreConfig> {
+public final class ConnectionStore extends CollectionStore<Connection, ConnectionStoreConfig> {
 
 	public static final Logger log = LoggerFactory.getLogger(ConnectionStore.class);
-
-	/**
-	 * The store's default channel initializer.
-	 */
-	private ClientChannelInitializer initializer;
 
 	public ConnectionStore() {
 		super(log);
@@ -82,7 +77,7 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 	 * @return The future of the action
 	 */
 	public ConnectionFuture connect(String address, int port, boolean strictCerts) {
-		return connect(new Bootstrap().remoteAddress(address, port).handler(initializer));
+		return connect(new Bootstrap().remoteAddress(address, port).handler(new ClientChannelInitializer()));
 	}
 
 	/**
@@ -95,7 +90,7 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 	public ConnectionLoop connect(LoopConfig config) {
 		Objects.requireNonNull(config);
 
-		Bootstrap bootstrap = new Bootstrap().handler(initializer);
+		Bootstrap bootstrap = new Bootstrap().handler(new ClientChannelInitializer());
 		configureDefaults(bootstrap);
 
 		ConnectionLoop loop = new ConnectionLoop(config, bootstrap);
@@ -114,11 +109,6 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 	}
 
 	@Subscribe
-	private void onSockEstablished(SockEstablishedEvent event) {
-		add(event.get());
-	}
-
-	@Subscribe
 	private void onSockLost(SockLostEvent event) {
 		remove(event.get().getRemoteCvid());
 	}
@@ -129,9 +119,22 @@ public final class ConnectionStore extends MapStore<Connection, ConnectionStoreC
 		configurator.accept(config);
 
 		register(this);
-		initializer = config.initializer;
 
 		provider.initialize();
+	}
+
+	@Override
+	public Connection create(Consumer<Connection> configurator) {
+		var connection = new Connection(new Document(provider.getCollection()));
+		configurator.accept(connection);
+		provider.add(connection);
+		return connection;
+	}
+
+	public Connection create(Channel channel) {
+		return create(connection -> {
+			connection.setChannel(channel);
+		});
 	}
 
 	public final class ConnectionStoreConfig extends StoreConfig {

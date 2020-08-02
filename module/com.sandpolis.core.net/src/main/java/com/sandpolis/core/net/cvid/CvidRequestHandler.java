@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.handler.cvid;
+package com.sandpolis.core.net.cvid;
 
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 
@@ -57,7 +57,7 @@ public class CvidRequestHandler extends AbstractCvidHandler {
 			ch.attr(ChannelConstant.CVID).set(rs.getServerCvid());
 			ch.attr(ChannelConstant.UUID).set(rs.getServerUuid());
 
-			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent(rs.getCvid()));
+			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent(rs.getCvid(), rs.getServerCvid()));
 			log.debug("CVID handshake succeeded ({})", rs.getCvid());
 		} else {
 			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent());
@@ -81,7 +81,7 @@ public class CvidRequestHandler extends AbstractCvidHandler {
 	 */
 	void handshake(Channel channel, InstanceType instance, InstanceFlavor flavor, String uuid) {
 		log.debug("Initiating CVID handshake");
-		channel.writeAndFlush(MsgUtil
-				.rq(RQ_Cvid.newBuilder().setInstance(instance).setInstanceFlavor(flavor).setUuid(uuid)).build());
+		channel.writeAndFlush(
+				MsgUtil.rq(RQ_Cvid.newBuilder().setInstance(instance).setInstanceFlavor(flavor).setUuid(uuid)).build());
 	}
 }

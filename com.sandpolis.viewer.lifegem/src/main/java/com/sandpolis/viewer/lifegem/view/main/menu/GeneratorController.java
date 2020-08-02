@@ -14,7 +14,7 @@ package com.sandpolis.viewer.lifegem.view.main.menu;
 import static com.sandpolis.core.instance.Generator.OutputPayload.OUTPUT_MEGA;
 import static com.sandpolis.core.instance.Generator.OutputPayload.OUTPUT_MICRO;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
-import static com.sandpolis.viewer.lifegem.store.stage.StageStore.StageStore;
+import static com.sandpolis.viewer.lifegem.stage.StageStore.StageStore;
 
 import java.io.IOException;
 
@@ -32,15 +32,23 @@ public class GeneratorController extends AbstractController {
 
 	@FXML
 	private void open_mega() throws IOException {
-		StageStore.newStage().root("/fxml/view/generator/Generator.fxml", OUTPUT_MEGA)
-				.size(PrefStore.getInt("ui.view.generator.width"), PrefStore.getInt("ui.view.generator.height"))
-				.title(FxUtil.translate("stage.generator.title")).show();
+
+		StageStore.create(stage -> {
+			stage.setRoot("/fxml/view/generator/Generator.fxml", OUTPUT_MEGA);
+			stage.setWidth(PrefStore.getInt("ui.view.generator.width"));
+			stage.setHeight(PrefStore.getInt("ui.view.generator.height"));
+			stage.setTitle(FxUtil.translate("stage.generator.title"));
+		});
 	}
 
 	@FXML
 	private void open_micro() throws IOException {
-		StageStore.newStage().root("/fxml/view/generator/Generator.fxml", OUTPUT_MICRO)
-				.size(PrefStore.getInt("ui.view.generator.width"), PrefStore.getInt("ui.view.generator.height"))
-				.title(FxUtil.translate("stage.generator.title")).show();
+
+		StageStore.create(stage -> {
+			stage.setRoot("/fxml/view/generator/Generator.fxml", OUTPUT_MICRO);
+			stage.setWidth(PrefStore.getInt("ui.view.generator.width"));
+			stage.setHeight(PrefStore.getInt("ui.view.generator.height"));
+			stage.setTitle(FxUtil.translate("stage.generator.title"));
+		});
 	}
 }

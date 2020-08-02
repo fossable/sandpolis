@@ -20,9 +20,17 @@ import static com.sandpolis.core.instance.Metatypes.InstanceType.VIEWER;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+
+import javax.crypto.spec.SecretKeySpec;
+import javax.security.auth.DestroyFailedException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.eatthepath.otp.TimeBasedOneTimePasswordGenerator;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.foundation.util.ValidationUtil;
@@ -41,6 +49,16 @@ import com.sandpolis.server.vanilla.store.user.User;
 public final class LoginExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(LoginExe.class);
+
+	private static final TimeBasedOneTimePasswordGenerator TOTP;
+
+	static {
+		try {
+			TOTP = new TimeBasedOneTimePasswordGenerator();
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	@Handler(auth = true, instances = VIEWER)
 	public static void rq_logout(ExeletContext context, RQ_Logout rq) {
@@ -72,9 +90,30 @@ public final class LoginExe extends Exelet {
 			return failure(outcome, ACCESS_DENIED);
 		}
 
+		// Check OTP if required
+		if (user.totpSecret().isPresent()) {
+			var key = new SecretKeySpec(user.getTotpSecret(), TOTP.getAlgorithm());
+			try {
+				if (rq.getTotp() != TOTP.generateOneTimePassword(key, Instant.now())) {
+					log.debug("OTP validation failed", username);
+					return failure(outcome, ACCESS_DENIED);
+				}
+			} catch (InvalidKeyException e) {
+				log.error("Invalid TOTP secret", e);
+				return failure(outcome, ACCESS_DENIED);
+			} finally {
+				try {
+					key.destroy();
+				} catch (DestroyFailedException e) {
+					log.error("Failed to destroy TOTP secret", e);
+					return failure(outcome, ACCESS_DENIED);
+				}
+			}
+		}
+
 		// Check password
 		if (!CryptoUtil.PBKDF2.check(rq.getPassword(), user.getHash())) {
-			log.debug("Authentication failed", username);
+			log.debug("Password validation failed", username);
 			return failure(outcome, ACCESS_DENIED);
 		}
 

@@ -11,11 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net;
 
+import com.sandpolis.core.net.cvid.AbstractCvidHandler;
 import com.sandpolis.core.net.exelet.ExeletHandler;
 import com.sandpolis.core.net.handler.ManagementHandler;
 import com.sandpolis.core.net.handler.ResponseHandler;
 import com.sandpolis.core.net.handler.ShortcutFrameEncoder;
-import com.sandpolis.core.net.handler.cvid.AbstractCvidHandler;
 import com.sandpolis.core.net.handler.sand5.Sand5Handler;
 import com.sandpolis.core.net.stream.InboundStreamAdapter;
 
