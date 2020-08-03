@@ -1,528 +1,430 @@
-{
-  "name": "Profile",
-  "tag": 1,
-  "documents": [
-    {
-      "name": "Instance",
-      "tag": 1,
-      "documents": [
-        {
-          "name": "Server",
-          "tag": 1,
-          "collections": [
-            {
-              "name": "TrustAnchor",
-              "tag": 1,
-              "attributes": [
-                {
-                  "name": "name",
-                  "tag": 1,
-                  "type": "java.lang.String"
-                },
-                {
-                  "name": "certificate",
-                  "tag": 2,
-                  "type": "java.security.cert.X509Certificate"
-                }
-              ]
-            },
-            {
-              "name": "Database",
-              "tag": 2,
-              "attributes": [
-                {
-                  "name": "url",
-                  "tag": 1,
-                  "type": "java.lang.String"
-                }
-              ]
-            },
-            {
-              "name": "User",
-              "tag": 6,
-              "attributes": [
-                {
-                  "name": "username",
-                  "tag": 1,
-                  "type": "java.lang.String",
-                  "description": "The user's unchangable username"
-                },
-                {
-                  "name": "email",
-                  "tag": 2,
-                  "type": "java.lang.String",
-                  "description": "The user's email address"
-                },
-                {
-                  "name": "hash",
-                  "tag": 3,
-                  "type": "java.lang.String",
-                  "description": "The user's password hash"
-                },
-                {
-                  "name": "expiration",
-                  "tag": 4,
-                  "type": "java.util.Date",
-                  "description": "The user's expiration timestamp"
-                },
-                {
-                  "name": "totp_secret",
-                  "tag": 5,
-                  "type": "java.lang.Byte[]",
-                  "description": "The user's TOTP secret"
-                }
-              ]
-            },
-            {
-              "name": "Listener",
-              "tag": 5,
-              "attributes": [
-                {
-                  "name": "name",
-                  "tag": 1,
-                  "type": "java.lang.String",
-                  "description": "The listener's user-friendly name"
-                },
-                {
-                  "name": "enabled",
-                  "tag": 2,
-                  "type": "java.lang.Boolean",
-                  "description": "Whether the listener is enabled"
-                },
-                {
-                  "name": "active",
-                  "tag": 3,
-                  "type": "java.lang.Boolean",
-                  "description": "Whether the listener is currently bound to the port and listening"
-                },
-                {
-                  "name": "port",
-                  "tag": 4,
-                  "type": "java.lang.Integer",
-                  "description": "The listener's local listening port"
-                },
-                {
-                  "name": "address",
-                  "tag": 5,
-                  "type": "java.lang.String",
-                  "description": "The listener's local bind address"
-                },
-                {
-                  "name": "certificate",
-                  "tag": 6,
-                  "type": "java.lang.Byte[]",
-                  "description": "A certificate that the listener will present to incoming connections"
-                },
-                {
-                  "name": "private_key",
-                  "tag": 7,
-                  "type": "java.lang.Byte[]",
-                  "description": "The private key corresponding to the certificate"
-                }
-              ]
-            },
-            {
-              "name": "ReciprocalKeyPair",
-              "tag": 99,
-              "attributes": [
-                {
-                  "name": "signer",
-                  "tag": 1,
-                  "type": "java.lang.Byte[]",
-                  "description": "A key responsible for signing data"
-                },
-                {
-                  "name": "verifier",
-                  "tag": 2,
-                  "type": "java.lang.Byte[]",
-                  "description": "A key responsible for verifying signed data"
-                }
-              ]
-            },
-            {
-              "name": "AuthMechanism",
-              "tag": 98,
-              "attributes": [
-                {
-                  "name": "password",
-                  "tag": 1,
-                  "type": "java.lang.String",
-                  "description": "The mechanism password"
-                }
-              ]
-            },
-            {
-              "name": "Group",
-              "tag": 7,
-              "attributes": [
-                {
-                  "name": "name",
-                  "tag": 1,
-                  "type": "java.lang.String"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Viewer",
-          "tag": 2,
-          "attributes": [
-            {
-              "name": "username",
-              "tag": 1,
-              "type": "java.lang.String",
-              "identity": true,
-              "description": "The viewer's username"
-            },
-            {
-              "name": "ip",
-              "tag": 2,
-              "type": "java.lang.String",
-              "description": "The viewer's login IP address"
-            }
-          ]
-        },
-        {
-          "name": "Client",
-          "tag": 3,
-          "attributes": [
-            {
-              "name": "hostname",
-              "tag": 1,
-              "type": "java.lang.String",
-              "identity": true,
-              "description": "The client's network hostname"
-            },
-            {
-              "name": "os",
-              "tag": 2,
-              "type": "com.sandpolis.core.foundation.Platform.OsType",
-              "description": "The client's operating system type"
-            },
-            {
-              "name": "location",
-              "tag": 3,
-              "type": "java.lang.String",
-              "description": "The client's base directory"
-            }
-          ],
-          "documents": [
-            {
-              "name": "IpLocation",
-              "tag": 4,
-              "attributes": [
-                {
-                  "name": "as_name",
-                  "tag": 1,
-                  "type": "java.lang.String",
-                  "description": "The AS name"
-                },
-                {
-                  "name": "as_code",
-                  "tag": 2,
-                  "type": "java.lang.Integer",
-                  "description": "The numerical AS code"
-                },
-                {
-                  "name": "city",
-                  "tag": 3,
-                  "type": "java.lang.String",
-                  "description": "The city name"
-                },
-                {
-                  "name": "continent",
-                  "tag": 4,
-                  "type": "java.lang.String",
-                  "description": "The continent name"
-                },
-                {
-                  "name": "continent_code",
-                  "tag": 5,
-                  "type": "java.lang.String",
-                  "description": "The ISO continent code"
-                },
-                {
-                  "name": "country",
-                  "tag": 6,
-                  "type": "java.lang.String",
-                  "description": "The country name"
-                },
-                {
-                  "name": "country_code",
-                  "tag": 7,
-                  "type": "java.lang.String",
-                  "description": "Two-letter country code (ISO 3166-1 alpha-2)"
-                },
-                {
-                  "name": "currency",
-                  "tag": 8,
-                  "type": "java.lang.String",
-                  "description": "The currency name"
-                },
-                {
-                  "name": "district",
-                  "tag": 9,
-                  "type": "java.lang.String",
-                  "description": "The city district name"
-                },
-                {
-                  "name": "isp",
-                  "tag": 10,
-                  "type": "java.lang.String",
-                  "description": "The Internet Service Provider name"
-                },
-                {
-                  "name": "latitude",
-                  "tag": 11,
-                  "type": "java.lang.Double",
-                  "description": "The approximate latitude in degrees"
-                },
-                {
-                  "name": "longitude",
-                  "tag": 12,
-                  "type": "java.lang.Double",
-                  "description": "The approximate longitude in degrees"
-                },
-                {
-                  "name": "metro_code",
-                  "tag": 13,
-                  "type": "java.lang.Integer",
-                  "description": "The metro code"
-                },
-                {
-                  "name": "organization",
-                  "tag": 14,
-                  "type": "java.lang.String",
-                  "description": "The organization name"
-                },
-                {
-                  "name": "postal_code",
-                  "tag": 15,
-                  "type": "java.lang.String",
-                  "description": "The zip code"
-                },
-                {
-                  "name": "region",
-                  "tag": 16,
-                  "type": "java.lang.String",
-                  "description": "The region name"
-                },
-                {
-                  "name": "region_code",
-                  "tag": 17,
-                  "type": "java.lang.String",
-                  "description": "The region short code (FIPS or ISO)"
-                },
-                {
-                  "name": "timezone",
-                  "tag": 18,
-                  "type": "java.lang.String",
-                  "description": "The timezone name"
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "collections": [
-        {
-          "name": "LogicalConnection",
-          "tag": 19
-        },
-        {
-          "name": "Connection",
-          "tag": 4,
-          "attributes": [
-            {
-              "name": "remote_port",
-              "tag": 1,
-              "type": "java.lang.Integer"
-            },
-            {
-              "name": "local_port",
-              "tag": 2,
-              "type": "java.lang.Integer"
-            },
-            {
-              "name": "remote_address",
-              "tag": 3,
-              "type": "java.lang.String"
-            },
-            {
-              "name": "local_address",
-              "tag": 4,
-              "type": "java.lang.String"
-            },
-            {
-              "name": "remote_cvid",
-              "tag": 5,
-              "type": "java.lang.Integer"
-            },
-            {
-              "name": "local_cvid",
-              "tag": 6,
-              "type": "java.lang.Integer"
-            },
-            {
-              "name": "remote_uuid",
-              "tag": 7,
-              "type": "java.lang.String"
-            },
-            {
-              "name": "local_uuid",
-              "tag": 8,
-              "type": "java.lang.String"
-            },
-            {
-              "name": "remote_instance",
-              "tag": 9,
-              "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
-            },
-            {
-              "name": "local_instance",
-              "tag": 10,
-              "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
-            },
-            {
-              "name": "remote_instance_flavor",
-              "tag": 11,
-              "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
-            },
-            {
-              "name": "local_instance_flavor",
-              "tag": 12,
-              "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
-            },
-            {
-              "name": "upload_total",
-              "tag": 13,
-              "type": "java.lang.Long"
-            },
-            {
-              "name": "download_total",
-              "tag": 14,
-              "type": "java.lang.Long"
-            },
-            {
-              "name": "connected",
-              "tag": 15,
-              "type": "java.lang.Boolean"
-            },
-            {
-              "name": "authenticated",
-              "tag": 16,
-              "type": "java.lang.Boolean"
-            },
-            {
-              "name": "certificate_valid",
-              "tag": 17,
-              "type": "java.lang.Boolean"
-            },
-            {
-              "name": "cumulative_read_bytes",
-              "tag": 18,
-              "type": "java.lang.Long"
-            },
-            {
-              "name": "cumulative_write_bytes",
-              "tag": 19,
-              "type": "java.lang.Long"
-            },
-            {
-              "name": "read_throughput",
-              "tag": 20,
-              "type": "java.lang.Long"
-            },
-            {
-              "name": "write_throughput",
-              "tag": 21,
-              "type": "java.lang.Long"
-            }
-          ]
-        },
-        {
-          "name": "Plugin",
-          "tag": 8,
-          "attributes": [
-            {
-              "name": "package_id",
-              "tag": 1,
-              "type": "java.lang.String",
-              "description": "The plugin's package ID"
-            },
-            {
-              "name": "name",
-              "tag": 1,
-              "type": "java.lang.String",
-              "description": "The plugin's user-friendly name"
-            },
-            {
-              "name": "description",
-              "tag": 2,
-              "type": "java.lang.String",
-              "description": "The plugin's user-friendly description"
-            },
-            {
-              "name": "coordinates",
-              "tag": 3,
-              "type": "java.lang.String",
-              "description": "The plugin's Maven central coordinates in G:A:V format"
-            },
-            {
-              "name": "enabled",
-              "tag": 4,
-              "type": "java.lang.Boolean",
-              "description": "Whether the plugin can be loaded"
-            },
-            {
-              "name": "hash",
-              "tag": 5,
-              "type": "java.lang.Byte[]",
-              "description": "The plugin artifact's hash"
-            },
-            {
-              "name": "certificate",
-              "tag": 6,
-              "type": "java.lang.String",
-              "description": "The plugin's certificate"
-            },
-            {
-              "name": "loaded",
-              "tag": 7,
-              "type": "java.lang.Boolean",
-              "description": "Whether the plugin is currently loaded"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Plugin",
-      "tag": 2,
-      "documents": []
+[
+  {
+    "name": "Profile.LogicalConnection"
+  },
+  {
+    "name": "Profile.Connection",
+    "attributes": {
+      "1": {
+        "name": "remote_port",
+        "type": "java.lang.Integer"
+      },
+      "2": {
+        "name": "local_port",
+        "type": "java.lang.Integer"
+      },
+      "3": {
+        "name": "remote_address",
+        "type": "java.lang.String"
+      },
+      "4": {
+        "name": "local_address",
+        "type": "java.lang.String"
+      },
+      "5": {
+        "name": "remote_cvid",
+        "type": "java.lang.Integer"
+      },
+      "6": {
+        "name": "local_cvid",
+        "type": "java.lang.Integer"
+      },
+      "7": {
+        "name": "remote_uuid",
+        "type": "java.lang.String"
+      },
+      "8": {
+        "name": "local_uuid",
+        "type": "java.lang.String"
+      },
+      "9": {
+        "name": "remote_instance",
+        "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
+      },
+      "10": {
+        "name": "local_instance",
+        "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
+      },
+      "11": {
+        "name": "remote_instance_flavor",
+        "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
+      },
+      "12": {
+        "name": "local_instance_flavor",
+        "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
+      },
+      "13": {
+        "name": "upload_total",
+        "type": "java.lang.Long"
+      },
+      "14": {
+        "name": "download_total",
+        "type": "java.lang.Long"
+      },
+      "15": {
+        "name": "connected",
+        "type": "java.lang.Boolean"
+      },
+      "16": {
+        "name": "authenticated",
+        "type": "java.lang.Boolean"
+      },
+      "17": {
+        "name": "certificate_valid",
+        "type": "java.lang.Boolean"
+      },
+      "18": {
+        "name": "cumulative_read_bytes",
+        "type": "java.lang.Long"
+      },
+      "19": {
+        "name": "cumulative_write_bytes",
+        "type": "java.lang.Long"
+      },
+      "20": {
+        "name": "read_throughput",
+        "type": "java.lang.Long"
+      },
+      "21": {
+        "name": "write_throughput",
+        "type": "java.lang.Long"
+      }
     }
-  ],
-  "attributes": [
-    {
-      "name": "instance_type",
-      "tag": 20,
-      "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
-    },
-    {
-      "name": "instance_flavor",
-      "tag": 21,
-      "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
-    },
-    {
-      "name": "uuid",
-      "tag": 22,
-      "type": "java.lang.String"
-    },
-    {
-      "name": "cvid",
-      "tag": 23,
-      "type": "java.lang.Integer"
+  },
+  {
+    "name": "Profile.Plugin",
+    "attributes": {
+      "1": {
+        "name": "package_id",
+        "type": "java.lang.String",
+        "description": "The plugin's package ID"
+      },
+      "2": {
+        "name": "name",
+        "type": "java.lang.String",
+        "description": "The plugin's user-friendly name"
+      },
+      "3": {
+        "name": "description",
+        "type": "java.lang.String",
+        "description": "The plugin's user-friendly description"
+      },
+      "4": {
+        "name": "coordinates",
+        "type": "java.lang.String",
+        "description": "The plugin's Maven central coordinates in G:A:V format"
+      },
+      "5": {
+        "name": "enabled",
+        "type": "java.lang.Boolean",
+        "description": "Whether the plugin can be loaded"
+      },
+      "6": {
+        "name": "hash",
+        "type": "java.lang.Byte[]",
+        "description": "The plugin artifact's hash"
+      },
+      "7": {
+        "name": "certificate",
+        "type": "java.lang.String",
+        "description": "The plugin's certificate"
+      },
+      "8": {
+        "name": "loaded",
+        "type": "java.lang.Boolean",
+        "description": "Whether the plugin is currently loaded"
+      }
     }
-  ]
-}
+  },
+  {
+    "name": "Profile.Viewer",
+    "attributes": {
+      "1": {
+        "name": "username",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The viewer's username"
+      },
+      "2": {
+        "name": "ip",
+        "type": "java.lang.String",
+        "description": "The viewer's login IP address"
+      }
+    }
+  },
+  {
+    "name": "Profile.Client.IpLocation",
+    "attributes": {
+      "1": {
+        "name": "as_name",
+        "type": "java.lang.String",
+        "description": "The AS name"
+      },
+      "2": {
+        "name": "as_code",
+        "type": "java.lang.Integer",
+        "description": "The numerical AS code"
+      },
+      "3": {
+        "name": "city",
+        "type": "java.lang.String",
+        "description": "The city name"
+      },
+      "4": {
+        "name": "continent",
+        "type": "java.lang.String",
+        "description": "The continent name"
+      },
+      "5": {
+        "name": "continent_code",
+        "type": "java.lang.String",
+        "description": "The ISO continent code"
+      },
+      "6": {
+        "name": "country",
+        "type": "java.lang.String",
+        "description": "The country name"
+      },
+      "7": {
+        "name": "country_code",
+        "type": "java.lang.String",
+        "description": "Two-letter country code (ISO 3166-1 alpha-2)"
+      },
+      "8": {
+        "name": "currency",
+        "type": "java.lang.String",
+        "description": "The currency name"
+      },
+      "9": {
+        "name": "district",
+        "type": "java.lang.String",
+        "description": "The city district name"
+      },
+      "10": {
+        "name": "isp",
+        "type": "java.lang.String",
+        "description": "The Internet Service Provider name"
+      },
+      "11": {
+        "name": "latitude",
+        "type": "java.lang.Double",
+        "description": "The approximate latitude in degrees"
+      },
+      "12": {
+        "name": "longitude",
+        "type": "java.lang.Double",
+        "description": "The approximate longitude in degrees"
+      },
+      "13": {
+        "name": "metro_code",
+        "type": "java.lang.Integer",
+        "description": "The metro code"
+      },
+      "14": {
+        "name": "organization",
+        "type": "java.lang.String",
+        "description": "The organization name"
+      },
+      "15": {
+        "name": "postal_code",
+        "type": "java.lang.String",
+        "description": "The zip code"
+      },
+      "16": {
+        "name": "region",
+        "type": "java.lang.String",
+        "description": "The region name"
+      },
+      "17": {
+        "name": "region_code",
+        "type": "java.lang.String",
+        "description": "The region short code (FIPS or ISO)"
+      },
+      "18": {
+        "name": "timezone",
+        "type": "java.lang.String",
+        "description": "The timezone name"
+      }
+    }
+  },
+  {
+    "name": "Profile.Client",
+    "attributes": {
+      "1": {
+        "name": "hostname",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The client's network hostname"
+      },
+      "2": {
+        "name": "os",
+        "type": "com.sandpolis.core.foundation.Platform.OsType",
+        "description": "The client's operating system type"
+      },
+      "3": {
+        "name": "location",
+        "type": "java.lang.String",
+        "description": "The client's base directory"
+      }
+    },
+    "documents": {
+      "1": "Profile.Client.IpLocation"
+    }
+  },
+  {
+    "name": "Profile.Server.TrustAnchor",
+    "attributes": {
+      "1": {
+        "name": "name",
+        "type": "java.lang.String"
+      },
+      "2": {
+        "name": "certificate",
+        "type": "java.security.cert.X509Certificate"
+      }
+    }
+  },
+  {
+    "name": "Profile.Server.User",
+    "attributes": {
+      "1": {
+        "name": "username",
+        "type": "java.lang.String",
+        "description": "The user's unchangable username"
+      },
+      "2": {
+        "name": "email",
+        "type": "java.lang.String",
+        "description": "The user's email address"
+      },
+      "3": {
+        "name": "hash",
+        "type": "java.lang.String",
+        "description": "The user's password hash"
+      },
+      "4": {
+        "name": "expiration",
+        "type": "java.util.Date",
+        "description": "The user's expiration timestamp"
+      },
+      "5": {
+        "name": "totp_secret",
+        "type": "java.lang.Byte[]",
+        "description": "The user's TOTP secret"
+      }
+    }
+  },
+  {
+    "name": "Profile.Server.Listener",
+    "attributes": {
+      "1": {
+        "name": "name",
+        "type": "java.lang.String",
+        "description": "The listener's user-friendly name"
+      },
+      "2": {
+        "name": "enabled",
+        "type": "java.lang.Boolean",
+        "description": "Whether the listener is enabled"
+      },
+      "3": {
+        "name": "active",
+        "type": "java.lang.Boolean",
+        "description": "Whether the listener is currently bound to the port and listening"
+      },
+      "4": {
+        "name": "port",
+        "type": "java.lang.Integer",
+        "description": "The listener's local listening port"
+      },
+      "5": {
+        "name": "address",
+        "type": "java.lang.String",
+        "description": "The listener's local bind address"
+      },
+      "6": {
+        "name": "certificate",
+        "type": "java.lang.Byte[]",
+        "description": "A certificate that the listener will present to incoming connections"
+      },
+      "7": {
+        "name": "private_key",
+        "type": "java.lang.Byte[]",
+        "description": "The private key corresponding to the certificate"
+      }
+    }
+  },
+  {
+    "name": "Profile.Server.ReciprocalKeyPair",
+    "attributes": {
+      "1": {
+        "name": "signer",
+        "type": "java.lang.Byte[]",
+        "description": "A key responsible for signing data"
+      },
+      "2": {
+        "name": "verifier",
+        "type": "java.lang.Byte[]",
+        "description": "A key responsible for verifying signed data"
+      }
+    }
+  },
+  {
+    "name": "Profile.Server.AuthMechanism",
+    "attributes": {
+      "1": {
+        "name": "password",
+        "type": "java.lang.String",
+        "description": "The mechanism password"
+      }
+    }
+  },
+  {
+    "name": "Profile.Server.Group",
+    "attributes": {
+      "1": {
+        "name": "name",
+        "type": "java.lang.String"
+      }
+    }
+  },
+  {
+    "name": "Profile.Server",
+    "collections": {
+      "1": "Profile.Server.User",
+      "2": "Profile.Server.Listener",
+      "3": "Profile.Server.Group",
+      "4": "Profile.Server.TrustAnchor"
+    }
+  },
+  {
+    "name": "Profile",
+    "documents": {
+      "1": "Profile.Server",
+      "2": "Profile.Viewer",
+      "3": "Profile.Client"
+    },
+    "collections": {
+      "4": "Profile.Plugin",
+      "5": "Profile.Connection"
+    },
+    "attributes": {
+      "20": {
+        "name": "instance_type",
+        "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
+      },
+      "21": {
+        "name": "instance_flavor",
+        "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
+      },
+      "22": {
+        "name": "uuid",
+        "type": "java.lang.String"
+      },
+      "23": {
+        "name": "cvid",
+        "type": "java.lang.Integer"
+      }
+    }
+  }
+]

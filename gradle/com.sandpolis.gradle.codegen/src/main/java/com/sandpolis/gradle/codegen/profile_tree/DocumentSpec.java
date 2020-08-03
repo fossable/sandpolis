@@ -1,16 +1,14 @@
 package com.sandpolis.gradle.codegen.profile_tree;
 
-import java.util.List;
+import java.util.TreeMap;
 
 public class DocumentSpec {
 
 	public String name;
-	
-	public int tag;
 
-	public List<AttributeSpec> attributes;
+	public TreeMap<Integer, String> documents;
 
-	public List<CollectionSpec> collections;
+	public TreeMap<Integer, String> collections;
 
-	public List<DocumentSpec> documents;
+	public TreeMap<Integer, AttributeSpec> attributes;
 }

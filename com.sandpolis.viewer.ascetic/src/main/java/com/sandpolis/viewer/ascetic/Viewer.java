@@ -119,8 +119,8 @@ public final class Viewer {
 		screen.startScreen();
 		WindowStore.gui = textGUI;
 
-		WindowStore.add(new LogPanel());
-		WindowStore.add(new LoginWindow());
+		WindowStore.create(window -> {
+		}, LoginWindow::new);
 
 		return outcome.success();
 	});

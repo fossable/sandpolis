@@ -12,18 +12,19 @@
 package com.sandpolis.viewer.ascetic.store.window;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.viewer.ascetic.store.window.WindowStore.WindowStoreConfig;
 
-public final class WindowStore extends MapStore<Window, WindowStoreConfig> {
+public final class WindowStore extends CollectionStore<Window, WindowStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(WindowStore.class);
 
@@ -39,12 +40,6 @@ public final class WindowStore extends MapStore<Window, WindowStoreConfig> {
 	}
 
 	@Override
-	public void add(Window item) {
-		gui.addWindow(item);
-		super.add(item);
-	}
-
-	@Override
 	public void removeValue(Window value) {
 		stream().filter(window -> window == value).forEach(gui::removeWindow);
 		super.removeValue(value);
@@ -56,6 +51,19 @@ public final class WindowStore extends MapStore<Window, WindowStoreConfig> {
 		configurator.accept(config);
 
 		provider.initialize();
+	}
+
+	@Override
+	public Window create(Consumer<Window> configurator) {
+		throw new UnsupportedOperationException();
+	}
+
+	public <E extends Window> E create(Consumer<E> configurator, Supplier<E> constructor) {
+		var window = constructor.get();
+		configurator.accept(window);
+		provider.add(window);
+		gui.addWindow(window);
+		return window;
 	}
 
 	public final class WindowStoreConfig extends StoreConfig {

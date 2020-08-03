@@ -1,1016 +1,874 @@
-{
-  "name": "Sysinfo",
-  "tag": 1,
-  "collections": [
-    {
-      "name": "Nic",
-      "tag": 1,
-      "documents": [
-        {
-          "name": "Windows",
-          "tag": 1,
-          "attributes": [
-            {
-              "name": "luid",
-              "tag": 1,
-              "type": "java.lang.Long",
-              "description": "The interface's locally unique identifier"
-            },
-            {
-              "name": "guid",
-              "tag": 2,
-              "type": "java.lang.String",
-              "description": "The interface's globally unique identifier"
-            },
-            {
-              "name": "paused",
-              "tag": 3,
-              "type": "java.lang.Boolean",
-              "description": "Whether the interface is in a paused state"
-            },
-            {
-              "name": "low_power",
-              "tag": 4,
-              "type": "java.lang.Boolean",
-              "description": "Whether the interface is in a low-power state"
-            }
-          ]
-        }
-      ],
-      "attributes": [
-        {
-          "name": "name",
-          "tag": 1,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The interface's name"
-        },
-        {
-          "name": "description",
-          "tag": 2,
-          "type": "java.lang.String",
-          "description": "The interface's description"
-        },
-        {
-          "name": "mtu",
-          "tag": 3,
-          "type": "java.lang.Integer",
-          "description": "The maximum transmission unit"
-        },
-        {
-          "name": "mac",
-          "tag": 4,
-          "type": "java.lang.String",
-          "description": null
-        },
-        {
-          "name": "virtual",
-          "tag": 5,
-          "type": "java.lang.Boolean",
-          "description": null
-        },
-        {
-          "name": "ipv4",
-          "tag": 6,
-          "type": "java.util.List<java.lang.String>",
-          "description": "The interface's IPv4 addresses"
-        },
-        {
-          "name": "ipv6",
-          "tag": 7,
-          "type": "java.util.List<java.lang.String>",
-          "description": "The interface's IPv6 addresses"
-        },
-        {
-          "name": "broadcast",
-          "tag": 8,
-          "type": "java.lang.String",
-          "description": null
-        },
-        {
-          "name": "netmask",
-          "tag": 9,
-          "type": "java.lang.String",
-          "description": "The interface's subnet mask"
-        },
-        {
-          "name": "read_bytes",
-          "tag": 10,
-          "type": "java.lang.Long",
-          "description": "The number of bytes read from the interface"
-        },
-        {
-          "name": "write_bytes",
-          "tag": 11,
-          "type": "java.lang.Long",
-          "description": "The number of bytes written to the interface"
-        },
-        {
-          "name": "read_packets",
-          "tag": 12,
-          "type": "java.lang.Long",
-          "description": "The number of packets read from the interface"
-        },
-        {
-          "name": "write_packets",
-          "tag": 13,
-          "type": "java.lang.Long",
-          "description": "The number of packets written to the interface"
-        },
-        {
-          "name": "read_errors",
-          "tag": 14,
-          "type": "java.lang.Long",
-          "description": "The number of read errors"
-        },
-        {
-          "name": "write_errors",
-          "tag": 15,
-          "type": "java.lang.Long",
-          "description": "The number of write errors"
-        },
-        {
-          "name": "read_drops",
-          "tag": 16,
-          "type": "java.lang.Long",
-          "description": "The number of read drops"
-        },
-        {
-          "name": "write_drops",
-          "tag": 17,
-          "type": "java.lang.Long",
-          "description": "The number of write drops"
-        },
-        {
-          "name": "write_collisions",
-          "tag": 18,
-          "type": "java.lang.Long",
-          "description": "The number of write collisions"
-        },
-        {
-          "name": "link_speed",
-          "tag": 19,
-          "type": "java.lang.Long",
-          "description": "The interface's maximum speed in bytes"
-        },
-        {
-          "name": "default_gateway",
-          "tag": 20,
-          "type": "java.lang.Boolean",
-          "description": null
-        },
-        {
-          "name": "flag_up",
-          "tag": 21,
-          "type": "java.lang.Boolean",
-          "description": null
-        },
-        {
-          "name": "flag_running",
-          "tag": 22,
-          "type": "java.lang.Boolean",
-          "description": null
-        },
-        {
-          "name": "flag_loopback",
-          "tag": 23,
-          "type": "java.lang.Boolean",
-          "description": null
-        },
-        {
-          "name": "flag_multicast",
-          "tag": 24,
-          "type": "java.lang.Boolean",
-          "description": null
-        }
-      ]
-    },
-    {
-      "name": "Disk",
-      "tag": 2,
-      "collections": [
-        {
-          "name": "Partition",
-          "tag": 1,
-          "attributes": [
-            {
-              "name": "identification",
-              "tag": 1,
-              "type": "java.lang.String",
-              "identity": true,
-              "description": null
-            },
-            {
-              "name": "name",
-              "tag": 2,
-              "type": "java.lang.String",
-              "identity": true,
-              "description": null
-            },
-            {
-              "name": "description",
-              "tag": 3,
-              "type": "java.lang.String",
-              "description": null
-            },
-            {
-              "name": "uuid",
-              "tag": 4,
-              "type": "java.lang.String",
-              "description": "The partition's UUID"
-            },
-            {
-              "name": "size",
-              "tag": 5,
-              "type": "java.lang.Long",
-              "description": "The partition's total size in bytes"
-            },
-            {
-              "name": "major",
-              "tag": 6,
-              "type": "java.lang.Integer",
-              "description": null
-            },
-            {
-              "name": "minor",
-              "tag": 7,
-              "type": "java.lang.Integer",
-              "description": null
-            },
-            {
-              "name": "mount",
-              "tag": 8,
-              "type": "java.lang.String",
-              "description": "The partition's mount point"
-            }
-          ]
-        }
-      ],
-      "documents": [
-        {
-          "name": "Smart",
-          "tag": 2,
-          "attributes": [
-            {
-              "name": "rotation_rate",
-              "tag": 13,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "spin_up_time",
-              "tag": 15,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "start_stop_cycles",
-              "tag": 16,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "reallocated_sectors",
-              "tag": 17,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "seek_error_rate",
-              "tag": 18,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "power_on_time",
-              "tag": 19,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "spin_retries",
-              "tag": 20,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "calibration_retries",
-              "tag": 21,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "power_cycles",
-              "tag": 22,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "poweroff_retracts",
-              "tag": 23,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "load_cycles",
-              "tag": 24,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "temperature",
-              "tag": 25,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "reallocated_events",
-              "tag": 26,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "current_pending_sector",
-              "tag": 27,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "offline_uncorrectable",
-              "tag": 28,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "crc_errors",
-              "tag": 29,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "multizone_error_rate",
-              "tag": 30,
-              "type": "java.lang.Long",
-              "description": null
-            }
-          ]
-        }
-      ],
-      "attributes": [
-        {
-          "name": "name",
-          "tag": 1,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "model",
-          "tag": 2,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "serial",
-          "tag": 3,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "size",
-          "tag": 4,
-          "type": "java.lang.Long",
-          "description": "The disk's total size in bytes"
-        },
-        {
-          "name": "reads",
-          "tag": 5,
-          "type": "java.lang.Long",
-          "description": null
-        },
-        {
-          "name": "read_bytes",
-          "tag": 6,
-          "type": "java.lang.Long",
-          "description": null
-        },
-        {
-          "name": "writes",
-          "tag": 7,
-          "type": "java.lang.Long",
-          "description": null
-        },
-        {
-          "name": "write_bytes",
-          "tag": 8,
-          "type": "java.lang.Long",
-          "description": null
-        },
-        {
-          "name": "queue_length",
-          "tag": 9,
-          "type": "java.lang.Long",
-          "description": null
-        },
-        {
-          "name": "transfer_time",
-          "tag": 10,
-          "type": "java.lang.Long",
-          "description": null
-        },
-        {
-          "name": "model_family",
-          "tag": 11,
-          "type": "java.lang.String",
-          "description": null
-        },
-        {
-          "name": "firmware_version",
-          "tag": 12,
-          "type": "java.lang.String",
-          "description": null
-        },
-        {
-          "name": "read_error_rate",
-          "tag": 14,
-          "type": "java.lang.Long",
-          "description": null
-        }
-      ]
-    },
-    {
-      "name": "Cpu",
-      "tag": 3,
-      "collections": [
-        {
-          "name": "CpuThread",
-          "tag": 1,
-          "attributes": [
-            {
-              "name": "tid",
-              "tag": 1,
-              "type": "java.lang.Integer",
-              "identity": true,
-              "description": "The thread's ID"
-            }
-          ]
-        },
-        {
-          "name": "CpuCore",
-          "tag": 2,
-          "attributes": [
-            {
-              "name": "usage",
-              "tag": 1,
-              "type": "java.lang.Double",
-              "description": "The core's usage between 0.0 and 1.0"
-            },
-            {
-              "name": "temperature",
-              "tag": 2,
-              "type": "java.lang.Double",
-              "description": "The core's temperature in Celsius"
-            }
-          ]
-        }
-      ],
-      "attributes": [
-        {
-          "name": "model",
-          "tag": 1,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "vendor",
-          "tag": 2,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "frequency_spec",
-          "tag": 3,
-          "type": "java.lang.Integer",
-          "description": "The specified frequency in Hertz"
-        },
-        {
-          "name": "l1_cache",
-          "tag": 4,
-          "type": "java.lang.Integer",
-          "description": "The size of the L1 cache in bytes"
-        },
-        {
-          "name": "l2_cache",
-          "tag": 5,
-          "type": "java.lang.Integer",
-          "description": "The size of the L2 cache in bytes"
-        },
-        {
-          "name": "l3_cache",
-          "tag": 6,
-          "type": "java.lang.Integer",
-          "description": "The size of the L3 cache in bytes"
-        },
-        {
-          "name": "l4_cache",
-          "tag": 7,
-          "type": "java.lang.Integer",
-          "description": "The size of the L4 cache in bytes"
-        }
-      ]
-    },
-    {
-      "name": "Sensor",
-      "tag": 4,
-      "attributes": [
-        {
-          "name": "fan_speed",
-          "tag": 1,
-          "type": "java.lang.Integer",
-          "description": null
-        },
-        {
-          "name": "temperature",
-          "tag": 2,
-          "type": "java.lang.Double",
-          "description": null
-        },
-        {
-          "name": "voltage",
-          "tag": 3,
-          "type": "java.lang.Double",
-          "description": null
-        }
-      ]
-    },
-    {
-      "name": "SoundCard",
-      "tag": 5,
-      "attributes": [
-        {
-          "name": "driver_version",
-          "tag": 1,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "name",
-          "tag": 2,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "codec",
-          "tag": 3,
-          "type": "java.lang.String",
-          "description": null
-        }
-      ]
-    },
-    {
-      "name": "Display",
-      "tag": 6,
-      "attributes": [
-        {
-          "name": "name",
-          "tag": 1,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The display's name"
-        },
-        {
-          "name": "edid",
-          "tag": 2,
-          "type": "java.lang.String",
-          "description": null
-        },
-        {
-          "name": "resolution",
-          "tag": 3,
-          "type": "java.lang.String",
-          "description": "The display's resolution"
-        },
-        {
-          "name": "size",
-          "tag": 4,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The display's physical size in pixels"
-        },
-        {
-          "name": "refresh_frequency",
-          "tag": 5,
-          "type": "java.lang.Integer",
-          "description": "Refresh frequency in Hertz"
-        },
-        {
-          "name": "bit_depth",
-          "tag": 6,
-          "type": "java.lang.Integer",
-          "description": null
-        }
-      ]
-    },
-    {
-      "name": "UsbDevice",
-      "tag": 7,
-      "attributes": [
-        {
-          "name": "name",
-          "tag": 1,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "vendor",
-          "tag": 2,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "vendor_id",
-          "tag": 3,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "product_id",
-          "tag": 4,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "serial_number",
-          "tag": 5,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "children",
-          "tag": 6,
-          "type": "java.util.List<UsbDevice>",
-          "description": null
-        }
-      ]
+[
+  {
+    "name": "Plugin.Nic.Windows",
+    "attributes": {
+      "1": {
+        "name": "luid",
+        "type": "java.lang.Long",
+        "description": "The interface's locally unique identifier"
+      },
+      "2": {
+        "name": "guid",
+        "type": "java.lang.String",
+        "description": "The interface's globally unique identifier"
+      },
+      "3": {
+        "name": "paused",
+        "type": "java.lang.Boolean",
+        "description": "Whether the interface is in a paused state"
+      },
+      "4": {
+        "name": "low_power",
+        "type": "java.lang.Boolean",
+        "description": "Whether the interface is in a low-power state"
+      }
     }
-  ],
-  "documents": [
-    {
-      "name": "Network",
-      "tag": 8,
-      "attributes": [
-        {
-          "name": "hostname",
-          "tag": 1,
-          "type": "java.lang.String",
-          "description": "The host's hostname"
-        },
-        {
-          "name": "fqdn",
-          "tag": 2,
-          "type": "java.lang.String",
-          "description": "The host's fully-qualified domain name"
-        },
-        {
-          "name": "dns",
-          "tag": 3,
-          "type": "java.util.List<java.lang.String>",
-          "description": "The host's DNS servers"
-        }
-      ]
-    },
-    {
-      "name": "Power",
-      "tag": 9,
-      "attributes": [
-        {
-          "name": "name",
-          "tag": 1,
-          "type": "java.lang.String",
-          "description": null
-        },
-        {
-          "name": "remaining_capacity",
-          "tag": 2,
-          "type": "java.lang.Double",
-          "description": null
-        },
-        {
-          "name": "remaining_time",
-          "tag": 3,
-          "type": "java.lang.Double",
-          "description": null
-        }
-      ]
-    },
-    {
-      "name": "Firmware",
-      "tag": 10,
-      "attributes": [
-        {
-          "name": "name",
-          "tag": 1,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "manufacturer",
-          "tag": 2,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The BIOS manufacturer title"
-        },
-        {
-          "name": "description",
-          "tag": 3,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The BIOS description"
-        },
-        {
-          "name": "version",
-          "tag": 4,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The BIOS version number"
-        },
-        {
-          "name": "revision",
-          "tag": 5,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The BIOS revision number"
-        },
-        {
-          "name": "release_date",
-          "tag": 6,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The BIOS release date"
-        },
-        {
-          "name": "uefi",
-          "tag": 7,
-          "type": "java.lang.Boolean",
-          "identity": true,
-          "description": "Whether the BIOS supports UEFI mode"
-        }
-      ]
-    },
-    {
-      "name": "Mainboard",
-      "tag": 11,
-      "attributes": [
-        {
-          "name": "model",
-          "tag": 1,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "manufacturer",
-          "tag": 2,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "version",
-          "tag": 3,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        },
-        {
-          "name": "serial_number",
-          "tag": 4,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": null
-        }
-      ]
-    },
-    {
-      "name": "OperatingSystem",
-      "tag": 12,
-      "collections": [
-        {
-          "name": "User",
-          "tag": 1,
-          "attributes": [
-            {
-              "name": "uid",
-              "tag": 1,
-              "type": "java.lang.String",
-              "identity": true,
-              "description": null
-            },
-            {
-              "name": "username",
-              "tag": 2,
-              "type": "java.lang.String",
-              "description": "The user's username"
-            },
-            {
-              "name": "home",
-              "tag": 3,
-              "type": "java.lang.String",
-              "description": "The user's home directory path"
-            }
-          ]
-        },
-        {
-          "name": "Process",
-          "tag": 2,
-          "attributes": [
-            {
-              "name": "name",
-              "tag": 1,
-              "type": "java.lang.String",
-              "identity": true,
-              "description": null
-            },
-            {
-              "name": "path",
-              "tag": 2,
-              "type": "java.lang.String",
-              "description": null
-            },
-            {
-              "name": "command",
-              "tag": 3,
-              "type": "java.lang.String",
-              "description": null
-            },
-            {
-              "name": "working_directory",
-              "tag": 4,
-              "type": "java.lang.String",
-              "description": null
-            },
-            {
-              "name": "user",
-              "tag": 5,
-              "type": "java.lang.String",
-              "description": null
-            },
-            {
-              "name": "user_id",
-              "tag": 6,
-              "type": "java.lang.String",
-              "description": null
-            },
-            {
-              "name": "group",
-              "tag": 7,
-              "type": "java.lang.String",
-              "description": null
-            },
-            {
-              "name": "group_id",
-              "tag": 8,
-              "type": "java.lang.String",
-              "description": null
-            },
-            {
-              "name": "state",
-              "tag": 9,
-              "type": "java.lang.String",
-              "description": null
-            },
-            {
-              "name": "pid",
-              "tag": 10,
-              "type": "java.lang.Integer",
-              "identity": true,
-              "description": "The process's process ID"
-            },
-            {
-              "name": "parent_pid",
-              "tag": 11,
-              "type": "java.lang.Integer",
-              "description": null
-            },
-            {
-              "name": "thread_count",
-              "tag": 12,
-              "type": "java.lang.Integer",
-              "description": null
-            },
-            {
-              "name": "priority",
-              "tag": 13,
-              "type": "java.lang.Integer",
-              "description": null
-            },
-            {
-              "name": "virtual_size",
-              "tag": 14,
-              "type": "java.lang.Long",
-              "description": null
-            },
-            {
-              "name": "resident_set_size",
-              "tag": 15,
-              "type": "java.lang.Long",
-              "description": "The resident memory size in bytes"
-            },
-            {
-              "name": "kernel_time",
-              "tag": 16,
-              "type": "java.lang.Long",
-              "description": "The number of milliseconds the process has executed in kernel mode"
-            },
-            {
-              "name": "user_time",
-              "tag": 17,
-              "type": "java.lang.Long",
-              "description": "The number of milliseconds the process has executed in user mode"
-            },
-            {
-              "name": "start_time",
-              "tag": 18,
-              "type": "java.lang.Long",
-              "description": "The epoch timestamp of the process start time"
-            },
-            {
-              "name": "bytes_read",
-              "tag": 19,
-              "type": "java.lang.Long",
-              "description": "The number of bytes the process has read from disk"
-            },
-            {
-              "name": "bytes_written",
-              "tag": 20,
-              "type": "java.lang.Long",
-              "description": "The number of bytes the process has written to disk"
-            },
-            {
-              "name": "handle_count",
-              "tag": 21,
-              "type": "java.lang.Long",
-              "description": "The number of file handles that the process owns"
-            }
-          ]
-        }
-      ],
-      "attributes": [
-        {
-          "name": "family",
-          "tag": 1,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The operating system's family"
-        },
-        {
-          "name": "manufacturer",
-          "tag": 2,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The operating system's manufacturer"
-        },
-        {
-          "name": "bitness",
-          "tag": 3,
-          "type": "java.lang.Integer",
-          "identity": true,
-          "description": "The operating system's register width in bits"
-        },
-        {
-          "name": "version",
-          "tag": 4,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The operating system's primary version"
-        },
-        {
-          "name": "codename",
-          "tag": 5,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The operating system's code name"
-        },
-        {
-          "name": "build_number",
-          "tag": 6,
-          "type": "java.lang.String",
-          "identity": true,
-          "description": "The operating system's build number"
-        }
-      ]
+  },
+  {
+    "name": "Plugin.Disk.Partition",
+    "attributes": {
+      "1": {
+        "name": "identification",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "2": {
+        "name": "name",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "3": {
+        "name": "description",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "4": {
+        "name": "uuid",
+        "type": "java.lang.String",
+        "description": "The partition's UUID"
+      },
+      "5": {
+        "name": "size",
+        "type": "java.lang.Long",
+        "description": "The partition's total size in bytes"
+      },
+      "6": {
+        "name": "major",
+        "type": "java.lang.Integer",
+        "description": null
+      },
+      "7": {
+        "name": "minor",
+        "type": "java.lang.Integer",
+        "description": null
+      },
+      "8": {
+        "name": "mount",
+        "type": "java.lang.String",
+        "description": "The partition's mount point"
+      }
     }
-  ]
-}
+  },
+  {
+    "name": "Plugin.Disk.SMART",
+    "attributes": {
+      "13": {
+        "name": "rotation_rate",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "15": {
+        "name": "spin_up_time",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "16": {
+        "name": "start_stop_cycles",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "17": {
+        "name": "reallocated_sectors",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "18": {
+        "name": "seek_error_rate",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "19": {
+        "name": "power_on_time",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "20": {
+        "name": "spin_retries",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "21": {
+        "name": "calibration_retries",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "22": {
+        "name": "power_cycles",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "23": {
+        "name": "poweroff_retracts",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "24": {
+        "name": "load_cycles",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "25": {
+        "name": "temperature",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "26": {
+        "name": "reallocated_events",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "27": {
+        "name": "current_pending_sector",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "28": {
+        "name": "offline_uncorrectable",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "29": {
+        "name": "crc_errors",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "30": {
+        "name": "multizone_error_rate",
+        "type": "java.lang.Long",
+        "description": null
+      }
+    }
+  },
+  {
+    "name": "Plugin.Cpu.Thread",
+    "attributes": {
+      "1": {
+        "name": "tid",
+        "type": "java.lang.Integer",
+        "identity": true,
+        "description": "The thread's ID"
+      }
+    }
+  },
+  {
+    "name": "Plugin.Cpu.Core",
+    "attributes": {
+      "1": {
+        "name": "usage",
+        "type": "java.lang.Double",
+        "description": "The core's usage between 0.0 and 1.0"
+      },
+      "2": {
+        "name": "temperature",
+        "type": "java.lang.Double",
+        "description": "The core's temperature in Celsius"
+      }
+    }
+  },
+  {
+    "name": "Plugin.Nic",
+    "documents": {
+      "25": "Plugin.Nic.Windows"
+    },
+    "attributes": {
+      "1": {
+        "name": "name",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The interface's name"
+      },
+      "2": {
+        "name": "description",
+        "type": "java.lang.String",
+        "description": "The interface's description"
+      },
+      "3": {
+        "name": "mtu",
+        "type": "java.lang.Integer",
+        "description": "The maximum transmission unit"
+      },
+      "4": {
+        "name": "mac",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "5": {
+        "name": "virtual",
+        "type": "java.lang.Boolean",
+        "description": null
+      },
+      "6": {
+        "name": "ipv4",
+        "type": "java.util.List<java.lang.String>",
+        "description": "The interface's IPv4 addresses"
+      },
+      "7": {
+        "name": "ipv6",
+        "type": "java.util.List<java.lang.String>",
+        "description": "The interface's IPv6 addresses"
+      },
+      "8": {
+        "name": "broadcast",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "9": {
+        "name": "netmask",
+        "type": "java.lang.String",
+        "description": "The interface's subnet mask"
+      },
+      "10": {
+        "name": "read_bytes",
+        "type": "java.lang.Long",
+        "description": "The number of bytes read from the interface"
+      },
+      "11": {
+        "name": "write_bytes",
+        "type": "java.lang.Long",
+        "description": "The number of bytes written to the interface"
+      },
+      "12": {
+        "name": "read_packets",
+        "type": "java.lang.Long",
+        "description": "The number of packets read from the interface"
+      },
+      "13": {
+        "name": "write_packets",
+        "type": "java.lang.Long",
+        "description": "The number of packets written to the interface"
+      },
+      "14": {
+        "name": "read_errors",
+        "type": "java.lang.Long",
+        "description": "The number of read errors"
+      },
+      "15": {
+        "name": "write_errors",
+        "type": "java.lang.Long",
+        "description": "The number of write errors"
+      },
+      "16": {
+        "name": "read_drops",
+        "type": "java.lang.Long",
+        "description": "The number of read drops"
+      },
+      "17": {
+        "name": "write_drops",
+        "type": "java.lang.Long",
+        "description": "The number of write drops"
+      },
+      "18": {
+        "name": "write_collisions",
+        "type": "java.lang.Long",
+        "description": "The number of write collisions"
+      },
+      "19": {
+        "name": "link_speed",
+        "type": "java.lang.Long",
+        "description": "The interface's maximum speed in bytes"
+      },
+      "20": {
+        "name": "default_gateway",
+        "type": "java.lang.Boolean",
+        "description": null
+      },
+      "21": {
+        "name": "flag_up",
+        "type": "java.lang.Boolean",
+        "description": null
+      },
+      "22": {
+        "name": "flag_running",
+        "type": "java.lang.Boolean",
+        "description": null
+      },
+      "23": {
+        "name": "flag_loopback",
+        "type": "java.lang.Boolean",
+        "description": null
+      },
+      "24": {
+        "name": "flag_multicast",
+        "type": "java.lang.Boolean",
+        "description": null
+      }
+    }
+  },
+  {
+    "name": "Plugin.Disk",
+    "collections": {
+      "14": "Plugin.Disk.Partition"
+    },
+    "documents": {
+      "15": "Plugin.Disk.SMART"
+    },
+    "attributes": {
+      "1": {
+        "name": "name",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "2": {
+        "name": "model",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "3": {
+        "name": "serial",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "4": {
+        "name": "size",
+        "type": "java.lang.Long",
+        "description": "The disk's total size in bytes"
+      },
+      "5": {
+        "name": "reads",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "6": {
+        "name": "read_bytes",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "7": {
+        "name": "writes",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "8": {
+        "name": "write_bytes",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "9": {
+        "name": "queue_length",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "10": {
+        "name": "transfer_time",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "11": {
+        "name": "model_family",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "12": {
+        "name": "firmware_version",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "13": {
+        "name": "read_error_rate",
+        "type": "java.lang.Long",
+        "description": null
+      }
+    }
+  },
+  {
+    "name": "Plugin.Cpu",
+    "collections": {
+      "8": "Plugin.Cpu.Thread",
+      "9": "Plugin.Cpu.Core"
+    },
+    "attributes": {
+      "1": {
+        "name": "model",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "2": {
+        "name": "vendor",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "3": {
+        "name": "frequency_spec",
+        "type": "java.lang.Integer",
+        "description": "The specified frequency in Hertz"
+      },
+      "4": {
+        "name": "l1_cache",
+        "type": "java.lang.Integer",
+        "description": "The size of the L1 cache in bytes"
+      },
+      "5": {
+        "name": "l2_cache",
+        "type": "java.lang.Integer",
+        "description": "The size of the L2 cache in bytes"
+      },
+      "6": {
+        "name": "l3_cache",
+        "type": "java.lang.Integer",
+        "description": "The size of the L3 cache in bytes"
+      },
+      "7": {
+        "name": "l4_cache",
+        "type": "java.lang.Integer",
+        "description": "The size of the L4 cache in bytes"
+      }
+    }
+  },
+  {
+    "name": "Plugin.Sensor",
+    "attributes": {
+      "1": {
+        "name": "fan_speed",
+        "type": "java.lang.Integer",
+        "description": null
+      },
+      "2": {
+        "name": "temperature",
+        "type": "java.lang.Double",
+        "description": null
+      },
+      "3": {
+        "name": "voltage",
+        "type": "java.lang.Double",
+        "description": null
+      }
+    }
+  },
+  {
+    "name": "Plugin.SoundCard",
+    "attributes": {
+      "1": {
+        "name": "driver_version",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "2": {
+        "name": "name",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "3": {
+        "name": "codec",
+        "type": "java.lang.String",
+        "description": null
+      }
+    }
+  },
+  {
+    "name": "Plugin.Display",
+    "attributes": {
+      "1": {
+        "name": "name",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The display's name"
+      },
+      "2": {
+        "name": "edid",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "3": {
+        "name": "resolution",
+        "type": "java.lang.String",
+        "description": "The display's resolution"
+      },
+      "4": {
+        "name": "size",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The display's physical size in pixels"
+      },
+      "5": {
+        "name": "refresh_frequency",
+        "type": "java.lang.Integer",
+        "description": "Refresh frequency in Hertz"
+      },
+      "6": {
+        "name": "bit_depth",
+        "type": "java.lang.Integer",
+        "description": null
+      }
+    }
+  },
+  {
+    "name": "Plugin.UsbDevice",
+    "attributes": {
+      "1": {
+        "name": "name",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "2": {
+        "name": "vendor",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "3": {
+        "name": "vendor_id",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "4": {
+        "name": "product_id",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "5": {
+        "name": "serial_number",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "6": {
+        "name": "children",
+        "type": "java.util.List<UsbDevice>",
+        "description": null
+      }
+    }
+  },
+  {
+    "name": "Plugin.Network",
+    "attributes": {
+      "1": {
+        "name": "hostname",
+        "type": "java.lang.String",
+        "description": "The host's hostname"
+      },
+      "2": {
+        "name": "fqdn",
+        "type": "java.lang.String",
+        "description": "The host's fully-qualified domain name"
+      },
+      "3": {
+        "name": "dns",
+        "type": "java.util.List<java.lang.String>",
+        "description": "The host's DNS servers"
+      }
+    }
+  },
+  {
+    "name": "Plugin.Power",
+    "attributes": {
+      "1": {
+        "name": "name",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "2": {
+        "name": "remaining_capacity",
+        "type": "java.lang.Double",
+        "description": null
+      },
+      "3": {
+        "name": "remaining_time",
+        "type": "java.lang.Double",
+        "description": null
+      }
+    }
+  },
+  {
+    "name": "Plugin.Firmware",
+    "attributes": {
+      "1": {
+        "name": "name",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "2": {
+        "name": "manufacturer",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The BIOS manufacturer title"
+      },
+      "3": {
+        "name": "description",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The BIOS description"
+      },
+      "4": {
+        "name": "version",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The BIOS version number"
+      },
+      "5": {
+        "name": "revision",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The BIOS revision number"
+      },
+      "6": {
+        "name": "release_date",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The BIOS release date"
+      },
+      "7": {
+        "name": "uefi",
+        "type": "java.lang.Boolean",
+        "identity": true,
+        "description": "Whether the BIOS supports UEFI mode"
+      }
+    }
+  },
+  {
+    "name": "Plugin.Mainboard",
+    "attributes": {
+      "1": {
+        "name": "model",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "2": {
+        "name": "manufacturer",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "3": {
+        "name": "version",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "4": {
+        "name": "serial_number",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      }
+    }
+  },
+  {
+    "name": "Plugin.OperatingSystem.User",
+    "attributes": {
+      "1": {
+        "name": "uid",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "2": {
+        "name": "username",
+        "type": "java.lang.String",
+        "description": "The user's username"
+      },
+      "3": {
+        "name": "home",
+        "type": "java.lang.String",
+        "description": "The user's home directory path"
+      }
+    }
+  },
+  {
+    "name": "Plugin.OperatingSystem.Process",
+    "attributes": {
+      "1": {
+        "name": "name",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": null
+      },
+      "2": {
+        "name": "path",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "3": {
+        "name": "command",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "4": {
+        "name": "working_directory",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "5": {
+        "name": "user",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "6": {
+        "name": "user_id",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "7": {
+        "name": "group",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "8": {
+        "name": "group_id",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "9": {
+        "name": "state",
+        "type": "java.lang.String",
+        "description": null
+      },
+      "10": {
+        "name": "pid",
+        "type": "java.lang.Integer",
+        "identity": true,
+        "description": "The process's process ID"
+      },
+      "11": {
+        "name": "parent_pid",
+        "type": "java.lang.Integer",
+        "description": null
+      },
+      "12": {
+        "name": "thread_count",
+        "type": "java.lang.Integer",
+        "description": null
+      },
+      "13": {
+        "name": "priority",
+        "type": "java.lang.Integer",
+        "description": null
+      },
+      "14": {
+        "name": "virtual_size",
+        "type": "java.lang.Long",
+        "description": null
+      },
+      "15": {
+        "name": "resident_set_size",
+        "type": "java.lang.Long",
+        "description": "The resident memory size in bytes"
+      },
+      "16": {
+        "name": "kernel_time",
+        "type": "java.lang.Long",
+        "description": "The number of milliseconds the process has executed in kernel mode"
+      },
+      "17": {
+        "name": "user_time",
+        "type": "java.lang.Long",
+        "description": "The number of milliseconds the process has executed in user mode"
+      },
+      "18": {
+        "name": "start_time",
+        "type": "java.lang.Long",
+        "description": "The epoch timestamp of the process start time"
+      },
+      "19": {
+        "name": "bytes_read",
+        "type": "java.lang.Long",
+        "description": "The number of bytes the process has read from disk"
+      },
+      "20": {
+        "name": "bytes_written",
+        "type": "java.lang.Long",
+        "description": "The number of bytes the process has written to disk"
+      },
+      "21": {
+        "name": "handle_count",
+        "type": "java.lang.Long",
+        "description": "The number of file handles that the process owns"
+      }
+    }
+  },
+  {
+    "name": "Plugin.OperatingSystem",
+    "collections": {
+      "1": "Plugin.OperatingSystem.Process",
+      "2": "Plugin.OperatingSystem.User"
+    },
+    "attributes": {
+      "3": {
+        "name": "family",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The operating system's family"
+      },
+      "4": {
+        "name": "manufacturer",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The operating system's manufacturer"
+      },
+      "5": {
+        "name": "bitness",
+        "type": "java.lang.Integer",
+        "identity": true,
+        "description": "The operating system's register width in bits"
+      },
+      "6": {
+        "name": "version",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The operating system's primary version"
+      },
+      "7": {
+        "name": "codename",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The operating system's code name"
+      },
+      "8": {
+        "name": "build_number",
+        "type": "java.lang.String",
+        "identity": true,
+        "description": "The operating system's build number"
+      }
+    }
+  },
+  {
+    "name": "Plugin",
+    "collections": {
+      "6": "Plugin.UsbDevice",
+      "7": "Plugin.Display",
+      "8": "Plugin.SoundCard",
+      "9": "Plugin.Sensor",
+      "10": "Plugin.Cpu"
+    },
+    "documents": {
+      "1": "Plugin.OperatingSystem",
+      "2": "Plugin.Mainboard",
+      "3": "Plugin.Firmware",
+      "4": "Plugin.Power",
+      "5": "Plugin.Network"
+    }
+  }
+]

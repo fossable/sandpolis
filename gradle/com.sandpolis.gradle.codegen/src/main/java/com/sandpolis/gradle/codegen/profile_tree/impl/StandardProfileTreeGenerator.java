@@ -17,10 +17,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
-import java.util.Comparator;
-
 import com.sandpolis.gradle.codegen.profile_tree.AttributeSpec;
-import com.sandpolis.gradle.codegen.profile_tree.CollectionSpec;
 import com.sandpolis.gradle.codegen.profile_tree.DocumentSpec;
 import com.sandpolis.gradle.codegen.profile_tree.ProfileTreeGenerator;
 import com.squareup.javapoet.ClassName;
@@ -35,76 +32,8 @@ import com.squareup.javapoet.TypeSpec;
  */
 public class StandardProfileTreeGenerator extends ProfileTreeGenerator {
 
-	public void processCollection(TypeSpec.Builder parent, CollectionSpec collection) {
-		var collectionClass = TypeSpec.classBuilder(collection.name) //
-				.addModifiers(PUBLIC, STATIC) //
-				.superclass(ClassName.get("com.sandpolis.core.instance.data", "StateObject"));
-
-		// Add constructor
-		var constructor = MethodSpec.constructorBuilder() //
-				.addModifiers(PUBLIC) //
-				.addParameter(DOCUMENT_TYPE, "document") //
-				.addStatement("super(document)");
-		collectionClass.addMethod(constructor.build());
-
-		if (collection.collections != null) {
-			for (var subcollection : collection.collections) {
-				processCollection(collectionClass, subcollection);
-			}
-		}
-		if (collection.documents != null) {
-			for (var subdocument : collection.documents) {
-				processDocument(collectionClass, subdocument);
-			}
-		}
-		if (collection.attributes != null) {
-			for (var subattribute : collection.attributes) {
-				processAttribute(collectionClass, subattribute);
-			}
-		}
-
-		// Add tag method
-		var identity = "";
-		if (collection.attributes != null) {
-			collection.attributes.sort(Comparator.comparingInt(AttributeSpec::tag));
-			for (var subattribute : collection.attributes) {
-				if (subattribute.identity) {
-					switch (subattribute.type) {
-					case "java.lang.String":
-						identity += ".putBytes(${camel(subattribute.name)}().get().getBytes())";
-						break;
-					case "java.lang.Byte[]":
-						identity += ".putBytes(${camel(subattribute.name)}().get())";
-						break;
-					}
-				}
-			}
-		}
-
-		// If there are no explicit identity attributes, use the database ID
-		if (identity.isEmpty()) {
-			identity = ".putBytes(getId().getBytes())";
-		}
-
-		var tag = MethodSpec.methodBuilder("tag") //
-				.addAnnotation(Override.class) //
-				.addModifiers(PUBLIC, FINAL) //
-				.returns(int.class) //
-				.addStatement("return $T.murmur3_32().newHasher()$L.hash().asInt()",
-						ClassName.get("com.google.common.hash", "Hashing"), identity);
-		collectionClass.addMethod(tag.build());
-
-		// Add ID getter
-		var id = MethodSpec.methodBuilder("getId") //
-				.addModifiers(PUBLIC) //
-				.returns(String.class) //
-				.addStatement("return document.getId()");
-		collectionClass.addMethod(id.build());
-
-		parent.addType(collectionClass.build());
-	}
-
-	public void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute) {
+	@Override
+	public void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute, String oid) {
 
 		TypeName type = Utils.toType(attribute.type);
 		ClassName attrImplType = Utils.toAttributeType(attribute.type);
@@ -125,66 +54,195 @@ public class StandardProfileTreeGenerator extends ProfileTreeGenerator {
 		var property = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name)) //
 				.addModifiers(PUBLIC) //
 				.returns(attributeType) //
-				.addStatement("return document.attribute($L, $T::new)", attribute.tag, attrImplType);
+				.addStatement("return document.attribute($L, $T::new)", oid.replaceAll(".*\\.", ""), attrImplType);
 		parent.addMethod(property.build());
 
-		// Add the attribute's static tag field
-		var tagField = FieldSpec.builder(int.class, attribute.name.toUpperCase(), PUBLIC, STATIC, FINAL)
-				.initializer("$L", attribute.tag);
-		parent.addField(tagField.build());
+		// Add the attribute's static oid field
+		var oidField = FieldSpec.builder(String.class, attribute.name.toUpperCase(), PUBLIC, STATIC, FINAL)
+				.initializer("\"$L\"", oid);
+		parent.addField(oidField.build());
 	}
 
-	public void processDocument(TypeSpec.Builder parent, DocumentSpec document) {
-
-		var documentClass = TypeSpec.classBuilder(document.name) //
+	@Override
+	public void processCollection(TypeSpec.Builder parent, DocumentSpec document, String oid) {
+		var documentClass = TypeSpec.classBuilder(document.name.replaceAll(".*\\.", "")) //
 				.addModifiers(PUBLIC, STATIC) //
 				.superclass(ClassName.get("com.sandpolis.core.instance.data", "StateObject"));
 
 		// Add constructor
-		var constructor = MethodSpec.constructorBuilder() //
-				.addModifiers(PUBLIC) //
-				.addParameter(DOCUMENT_TYPE, "document") //
-				.addStatement("super(document)");
-		documentClass.addMethod(constructor.build());
-
-		// Add ID getter
-		var id = MethodSpec.methodBuilder("getId") //
-				.addModifiers(PUBLIC) //
-				.returns(String.class) //
-				.addStatement("return document.getId()");
-		documentClass.addMethod(id.build());
+		documentClass.addMethod(newDocumentConstructor().build());
 
 		// Add tag method
-		var tag = MethodSpec.methodBuilder("tag") //
-				.addAnnotation(Override.class) //
-				.addModifiers(PUBLIC, FINAL) //
-				.returns(int.class) //
-				.addStatement("return $L", document.tag);
-		documentClass.addMethod(tag.build());
+		documentClass.addMethod(newCollectionTagMethod(document).build());
 
-		if (document.collections != null) {
-			for (var subcollection : document.collections) {
-				processCollection(documentClass, subcollection);
-			}
-		}
-		if (document.documents != null) {
-			for (var subdocument : document.documents) {
-				processDocument(documentClass, subdocument);
-			}
-		}
-		if (document.attributes != null) {
-			for (var subattribute : document.attributes) {
-				processAttribute(documentClass, subattribute);
-			}
-		}
+		// Add ID getter
+		documentClass.addMethod(newDocumentIdMethod().build());
+
+		// Process subdocuments and attributes
+		processChildren(documentClass, document, oid + ".0");
+
+		parent.addType(documentClass.build());
+	}
+
+	@Override
+	public void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
+
+		var documentClass = TypeSpec.classBuilder(document.name.replaceAll(".*\\.", "")) //
+				.addModifiers(PUBLIC, STATIC) //
+				.superclass(ClassName.get("com.sandpolis.core.instance.data", "StateObject"));
+
+		// Add constructor
+		documentClass.addMethod(newDocumentConstructor().build());
+
+		// Add ID getter
+		documentClass.addMethod(newDocumentIdMethod().build());
+
+		// Add tag method
+		documentClass.addMethod(newDocumentTagMethod(oid).build());
+
+		// Process subdocuments and attributes
+		processChildren(documentClass, document, oid);
 
 		parent.addType(documentClass.build());
 
 		// Add document method
-		var documentMethod = MethodSpec.methodBuilder(document.name.toLowerCase()) //
+		if (!document.name.equals("Profile")) {
+			parent.addMethod(newDocumentMethod(document, oid).build());
+		}
+	}
+
+	private MethodSpec.Builder newCollectionTagMethod(DocumentSpec document) {
+		String identityString = "";
+		if (document.attributes != null) {
+			for (var attribute : document.attributes.values()) {
+				if (attribute.identity) {
+					switch (attribute.type) {
+					case "java.lang.String":
+						identityString += ".putBytes(" + LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name)
+								+ "().get().getBytes())";
+						break;
+					case "java.lang.Byte[]":
+						identityString += ".putBytes(" + LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name) + "().get())";
+						break;
+					}
+				}
+			}
+		}
+
+		// If there were no explicit identity attributes, use the ID field
+		if (identityString.isEmpty()) {
+			identityString = ".putBytes(getId().getBytes())";
+		}
+
+		return MethodSpec.methodBuilder("tag") //
+				.addAnnotation(Override.class) //
+				.addModifiers(PUBLIC, FINAL) //
+				.returns(int.class) //
+				.addStatement("return $T.murmur3_32().newHasher()$L.hash().asInt()",
+						ClassName.get("com.google.common.hash", "Hashing"), identityString);
+	}
+
+	/**
+	 * Generate a constructor of the form:
+	 * 
+	 * <pre>
+	 * <code>
+	 * public Example(Document document) {
+	 *     super(document);
+	 * }
+	 * </code>
+	 * </pre>
+	 * 
+	 * @return A generated method
+	 */
+	private MethodSpec.Builder newDocumentConstructor() {
+		return MethodSpec.constructorBuilder() //
 				.addModifiers(PUBLIC) //
-				.returns(ClassName.bestGuess(document.name)) //
-				.addStatement("return new $L(document.document($L))", document.name, document.tag);
-		parent.addMethod(documentMethod.build());
+				.addParameter(DOCUMENT_TYPE, "document") //
+				.addStatement("super(document)");
+	}
+
+	/**
+	 * Generate a method of the form:
+	 * 
+	 * <pre>
+	 * <code>
+	 * public Example example() {
+	 *     return new Example(document.document(4));
+	 * }
+	 * </code>
+	 * </pre>
+	 * 
+	 * @return A generated method
+	 */
+	private MethodSpec.Builder newDocumentMethod(DocumentSpec document, String oid) {
+		String shortName = document.name.replaceAll(".*\\.", "");
+
+		return MethodSpec.methodBuilder(shortName.toLowerCase()) //
+				.addModifiers(PUBLIC) //
+				.returns(ClassName.bestGuess(shortName)) //
+				.addStatement("return new $L(document.document($L))", shortName, oid.replaceAll(".*\\.", ""));
+	}
+
+	/**
+	 * Generate a method called {@code tag} of the form:
+	 * 
+	 * <pre>
+	 * <code>
+	 * public final int tag() {
+	 *     return 4;
+	 * }
+	 * </code>
+	 * </pre>
+	 * 
+	 * @return A generated method
+	 */
+	private MethodSpec.Builder newDocumentTagMethod(String oid) {
+		return MethodSpec.methodBuilder("tag") //
+				.addAnnotation(Override.class) //
+				.addModifiers(PUBLIC, FINAL) //
+				.returns(int.class) //
+				.addStatement("return $L", oid.replaceAll(".*\\.", ""));
+	}
+
+	/**
+	 * Generate a method called {@code getId} of the form:
+	 * 
+	 * <pre>
+	 * <code>
+	 * public String getId() {
+	 *     return document.getId();
+	 * }
+	 * </code>
+	 * </pre>
+	 * 
+	 * @return A generated method
+	 */
+	private MethodSpec.Builder newDocumentIdMethod() {
+		return MethodSpec.methodBuilder("getId") //
+				.addModifiers(PUBLIC) //
+				.returns(String.class) //
+				.addStatement("return document.getId()");
+	}
+
+	private void processChildren(TypeSpec.Builder documentClass, DocumentSpec document, String oid) {
+		if (document.collections != null) {
+			for (var entry : document.collections.entrySet()) {
+				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
+				processCollection(documentClass, subdocument, oid + "." + entry.getKey());
+			}
+		}
+		if (document.documents != null) {
+			for (var entry : document.documents.entrySet()) {
+				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
+				processDocument(documentClass, subdocument, oid + "." + entry.getKey());
+
+			}
+		}
+		if (document.attributes != null) {
+			for (var entry : document.attributes.entrySet()) {
+				processAttribute(documentClass, entry.getValue(), oid + "." + entry.getKey());
+			}
+		}
 	}
 }

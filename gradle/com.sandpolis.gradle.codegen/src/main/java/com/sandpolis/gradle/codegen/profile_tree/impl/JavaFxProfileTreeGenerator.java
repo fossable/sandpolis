@@ -19,13 +19,11 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
 import com.sandpolis.gradle.codegen.profile_tree.AttributeSpec;
-import com.sandpolis.gradle.codegen.profile_tree.CollectionSpec;
 import com.sandpolis.gradle.codegen.profile_tree.DocumentSpec;
 import com.sandpolis.gradle.codegen.profile_tree.ProfileTreeGenerator;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
@@ -34,11 +32,8 @@ import com.squareup.javapoet.TypeSpec;
  */
 public class JavaFxProfileTreeGenerator extends ProfileTreeGenerator {
 
-	public void processCollection(TypeSpec.Builder parent, CollectionSpec collection) {
-//		processDocument(parent, collection);
-	}
-
-	public void processAttribute(TypeSpec.Builder parentClass, AttributeSpec attribute) {
+	@Override
+	public void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute, String oid) {
 		if (!attribute.type.startsWith("java.lang"))
 			return;
 
@@ -49,34 +44,42 @@ public class JavaFxProfileTreeGenerator extends ProfileTreeGenerator {
 		// Add property field
 		var propertyField = FieldSpec.builder(propertyType, attribute.name, PRIVATE).initializer("new $T()",
 				ClassName.get("javafx.beans.property", "Simple" + toJavaFxProperty(attribute.type)));
-		parentClass.addField(propertyField.build());
+		parent.addField(propertyField.build());
 
 		// Add property getter
 		var propertyGetter = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name + "_property")) //
 				.addModifiers(PUBLIC) //
 				.returns(propertyType) //
 				.addStatement("return $L", attribute.name);
-		parentClass.addMethod(propertyGetter.build());
+		parent.addMethod(propertyGetter.build());
 	}
 
-	public void processDocument(TypeSpec.Builder parent, DocumentSpec document) {
+	@Override
+	public void processCollection(TypeSpec.Builder parent, DocumentSpec document, String oid) {
+		// TODO Auto-generated method stub
 
-		var documentClass = TypeSpec.classBuilder("Fx" + document.name) //
+	}
+
+	@Override
+	public void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
+		var documentClass = TypeSpec.classBuilder("Fx" + document.name.replaceAll(".*\\.", "")) //
 				.addModifiers(PUBLIC, STATIC);
 
 		if (document.collections != null) {
-			for (var subcollection : document.collections) {
-				processCollection(documentClass, subcollection);
+			for (var entry : document.collections.entrySet()) {
+				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
+				processCollection(documentClass, subdocument, oid + "." + entry.getKey());
 			}
 		}
 		if (document.documents != null) {
-			for (var subdocument : document.documents) {
-				processDocument(documentClass, subdocument);
+			for (var entry : document.documents.entrySet()) {
+				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
+				processDocument(documentClass, subdocument, oid + "." + entry.getKey());
 			}
 		}
 		if (document.attributes != null) {
-			for (var subattribute : document.attributes) {
-				processAttribute(documentClass, subattribute);
+			for (var entry : document.attributes.entrySet()) {
+				processAttribute(documentClass, entry.getValue(), oid + "." + entry.getKey());
 			}
 		}
 

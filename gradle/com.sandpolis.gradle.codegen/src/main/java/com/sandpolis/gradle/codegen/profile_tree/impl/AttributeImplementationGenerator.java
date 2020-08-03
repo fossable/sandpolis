@@ -27,6 +27,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 /**
@@ -60,8 +61,8 @@ public class AttributeImplementationGenerator extends DefaultTask {
 
 		entityTypes.stream().forEach(type -> {
 			try {
-				generateAttribute(type);
-				generateListAttribute(type);
+				generateAttributeImpl(type);
+				generateListAttributeImpl(type);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -69,7 +70,7 @@ public class AttributeImplementationGenerator extends DefaultTask {
 
 		arrayTypes.stream().forEach(type -> {
 			try {
-				generateAttribute(type);
+				generateAttributeImpl(type);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -78,81 +79,41 @@ public class AttributeImplementationGenerator extends DefaultTask {
 		convertableTypes.stream().forEach(type -> {
 			try {
 				generateConverter(type);
-				generateAttribute(type);
-				generateListAttribute(type);
+				generateAttributeImpl(type);
+				generateListAttributeImpl(type);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		});
 	}
 
-	public void generateAttribute(String attributeType) throws IOException {
+	public void generateAttributeImpl(String attributeType) throws IOException {
 		var type = Utils.toType(attributeType);
 
 		var attributeClass = TypeSpec
 				.classBuilder(ClassName.bestGuess(attributeType).simpleName().replace("[]", "Array") + "Attribute")
-				.addModifiers(PUBLIC).addAnnotation(ClassName.get("javax.persistence", "Entity"))
+				.addModifiers(PUBLIC) //
+				.addAnnotation(ClassName.get("javax.persistence", "Entity")) //
 				.superclass(ParameterizedTypeName.get(ClassName.get("com.sandpolis.core.instance.data", "Attribute"),
 						type));
 
 		// Add value field
-		var valueField = FieldSpec.builder(type.isBoxedPrimitive() ? type.unbox() : type, "value", PRIVATE);
-
-		if (convertableTypes.contains(attributeType)) {
-			valueField
-					.addAnnotation(
-							AnnotationSpec.builder(ClassName.get("javax.persistence", "Convert"))
-									.addMember("converter", "$T.class",
-											ClassName.get("com.sandpolis.core.instance.data",
-													ClassName.bestGuess(attributeType).simpleName() + "Converter"))
-									.build());
-		}
-		if (arrayTypes.contains(attributeType)) {
-			valueField.addAnnotation(ClassName.get("javax.persistence", "Lob"));
-		}
-		attributeClass.addField(valueField.build());
+		attributeClass.addField(newValueField(attributeType, type).build());
 
 		// Add get method
-		var getMethod = MethodSpec.methodBuilder("get") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.returns(type) //
-				.addCode("if (supplier != null) return supplier.get();\nreturn value;");
-		attributeClass.addMethod(getMethod.build());
+		attributeClass.addMethod(newGetMethod(type).build());
 
 		// Add set method
-		var setMethod = MethodSpec.methodBuilder("set") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.addParameter(type, "value") //
-				.addStatement("this.value = value");
-		attributeClass.addMethod(setMethod.build());
+		attributeClass.addMethod(newSetMethod(type).build());
 
 		// Add timestamp method
-		var timestampMethod = MethodSpec.methodBuilder("timestamp") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.returns(java.util.Date.class) //
-				.addStatement("return null");
-		attributeClass.addMethod(timestampMethod.build());
+		attributeClass.addMethod(newTimestampMethod().build());
 
 		// Add serialize method
-		var serializeMethod = MethodSpec.methodBuilder("serialize") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.returns(ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute")) //
-				.addStatement("return $T.newBuilder().build()",
-						ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute"));
-		attributeClass.addMethod(serializeMethod.build());
+		attributeClass.addMethod(newSerializeMethod(type).build());
 
 		// Add merge method
-		var mergeMethod = MethodSpec.methodBuilder("merge") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.addException(Exception.class) //
-				.addParameter(ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute"), "delta") //
-				.addStatement("set(null)");
-		attributeClass.addMethod(mergeMethod.build());
+		attributeClass.addMethod(newMergeMethod(type).build());
 
 		// Output the class
 		JavaFile.builder(getProject().getName() + ".data", attributeClass.build())
@@ -160,78 +121,143 @@ public class AttributeImplementationGenerator extends DefaultTask {
 				.skipJavaLangImports(true).build().writeTo(getProject().file("gen/main/java"));
 	}
 
-	public void generateListAttribute(String attributeType) throws IOException {
+	public void generateListAttributeImpl(String attributeType) throws IOException {
 		var type = Utils.toType(attributeType);
 
 		// Alter the type to be a list
 		var listType = ParameterizedTypeName.get(ClassName.get("java.util", "List"), type);
 
 		var attributeListClass = TypeSpec
-				.classBuilder(ClassName.bestGuess(attributeType).simpleName() + "ListAttribute").addModifiers(PUBLIC)
-				.addAnnotation(ClassName.get("javax.persistence", "Entity")).superclass(ParameterizedTypeName
-						.get(ClassName.get("com.sandpolis.core.instance.data", "Attribute"), listType));
+				.classBuilder(ClassName.bestGuess(attributeType).simpleName() + "ListAttribute") //
+				.addModifiers(PUBLIC).addAnnotation(ClassName.get("javax.persistence", "Entity")) //
+				.superclass(ParameterizedTypeName.get(ClassName.get("com.sandpolis.core.instance.data", "Attribute"),
+						listType));
 
 		// Add value field
-		var valueField = FieldSpec.builder(listType, "value", PRIVATE);
-		valueField.addAnnotation(ClassName.get("javax.persistence", "ElementCollection"));
-
-		if (convertableTypes.contains(attributeType)) {
-			valueField
-					.addAnnotation(
-							AnnotationSpec.builder(ClassName.get("javax.persistence", "Convert"))
-									.addMember("converter", "$T.class",
-											ClassName.get("com.sandpolis.core.instance.data",
-													ClassName.bestGuess(attributeType).simpleName() + "Converter"))
-									.build());
-		}
-		attributeListClass.addField(valueField.build());
+		attributeListClass.addField(newValueField(attributeType, listType).build());
 
 		// Add get method
-		var getMethod = MethodSpec.methodBuilder("get") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.returns(listType) //
-				.addStatement("return value");
-		attributeListClass.addMethod(getMethod.build());
+		attributeListClass.addMethod(newListGetMethod(listType).build());
 
 		// Add set method
-		var setMethod = MethodSpec.methodBuilder("set") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.addParameter(listType, "value") //
-				.addStatement("this.value = value");
-		attributeListClass.addMethod(setMethod.build());
+		attributeListClass.addMethod(newListSetMethod(listType).build());
 
 		// Add timestamp method
-		var timestampMethod = MethodSpec.methodBuilder("timestamp") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.returns(java.util.Date.class) //
-				.addStatement("return null");
-		attributeListClass.addMethod(timestampMethod.build());
+		attributeListClass.addMethod(newTimestampMethod().build());
 
 		// Add serialize method
-		var serializeMethod = MethodSpec.methodBuilder("serialize") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.returns(ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute")) //
-				.addStatement("return $T.newBuilder().build()",
-						ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute"));
-		attributeListClass.addMethod(serializeMethod.build());
+		attributeListClass.addMethod(newListSerializeMethod().build());
 
 		// Add merge method
-		var mergeMethod = MethodSpec.methodBuilder("merge") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.addException(Exception.class) //
-				.addParameter(ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute"), "delta") //
-				.addStatement("set(null)");
-		attributeListClass.addMethod(mergeMethod.build());
+		attributeListClass.addMethod(newListMergeMethod().build());
 
 		// Output the class
 		JavaFile.builder(getProject().getName() + ".data", attributeListClass.build())
 				.addFileComment("This source file was automatically generated by the Sandpolis codegen plugin.")
 				.skipJavaLangImports(true).build().writeTo(getProject().file("gen/main/java"));
+	}
+
+	private FieldSpec.Builder newValueField(String attributeType, TypeName type) {
+		var converterType = ClassName.get("com.sandpolis.core.instance.data",
+				ClassName.bestGuess(attributeType).simpleName() + "Converter");
+		var valueField = FieldSpec.builder(type, "value", PRIVATE);
+
+		// Add converter annotation if applicable
+		if (convertableTypes.contains(attributeType)) {
+			valueField.addAnnotation(AnnotationSpec.builder(ClassName.get("javax.persistence", "Convert"))
+					.addMember("converter", "$T.class", converterType).build());
+		}
+
+		// Add JPA annotation for array attributes
+		if (arrayTypes.contains(attributeType)) {
+			valueField.addAnnotation(ClassName.get("javax.persistence", "Lob"));
+		}
+
+		// Add JPA annotation for list attributes
+		if (type instanceof ParameterizedTypeName) {
+			valueField.addAnnotation(ClassName.get("javax.persistence", "ElementCollection"));
+		}
+
+		return valueField;
+	}
+
+	private MethodSpec.Builder newTimestampMethod() {
+		return MethodSpec.methodBuilder("timestamp") //
+				.addModifiers(PUBLIC) //
+				.addAnnotation(Override.class) //
+				.returns(java.util.Date.class) //
+				.addStatement("return null");
+	}
+
+	private MethodSpec.Builder newGetMethod(TypeName type) {
+		return MethodSpec.methodBuilder("get") //
+				.addModifiers(PUBLIC) //
+				.addAnnotation(Override.class) //
+				.returns(type) //
+				.addStatement("if (supplier != null) return supplier.get()") //
+				.addStatement("return value");
+	}
+
+	private MethodSpec.Builder newSetMethod(TypeName type) {
+		return MethodSpec.methodBuilder("set") //
+				.addModifiers(PUBLIC) //
+				.addAnnotation(Override.class) //
+				.addParameter(type, "value") //
+				.addStatement("this.value = value");
+	}
+
+	private MethodSpec.Builder newListGetMethod(TypeName listType) {
+		return MethodSpec.methodBuilder("get") //
+				.addModifiers(PUBLIC) //
+				.addAnnotation(Override.class) //
+				.returns(listType) //
+				.addStatement("return value");
+	}
+
+	private MethodSpec.Builder newListSetMethod(TypeName listType) {
+		return MethodSpec.methodBuilder("set") //
+				.addModifiers(PUBLIC) //
+				.addAnnotation(Override.class) //
+				.addParameter(listType, "value") //
+				.addStatement("this.value = value");
+	}
+
+	private MethodSpec.Builder newSerializeMethod(TypeName type) {
+		return MethodSpec.methodBuilder("serialize") //
+				.addModifiers(PUBLIC) //
+				.addAnnotation(Override.class) //
+				.returns(ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute")) //
+				.addStatement("if (value == null) return null") //
+				.addStatement("return $T.newBuilder().set$L(value).build()",
+						ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute"),
+						type.toString().replaceAll(".*\\.", ""));
+	}
+
+	private MethodSpec.Builder newListSerializeMethod() {
+		return MethodSpec.methodBuilder("serialize") //
+				.addModifiers(PUBLIC) //
+				.addAnnotation(Override.class) //
+				.returns(ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute")) //
+				.addStatement("return $T.newBuilder().build()",
+						ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute"));
+	}
+
+	private MethodSpec.Builder newMergeMethod(TypeName type) {
+		return MethodSpec.methodBuilder("merge") //
+				.addModifiers(PUBLIC) //
+				.addAnnotation(Override.class) //
+				.addException(Exception.class) //
+				.addParameter(ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute"), "delta") //
+				.addStatement("set(delta.get$L())", type.toString().replaceAll(".*\\.", ""));
+	}
+
+	private MethodSpec.Builder newListMergeMethod() {
+		return MethodSpec.methodBuilder("merge") //
+				.addModifiers(PUBLIC) //
+				.addAnnotation(Override.class) //
+				.addException(Exception.class) //
+				.addParameter(ClassName.get("com.sandpolis.core.instance", "Attribute", "ProtoAttribute"), "delta") //
+				.addStatement("set(null)");
 	}
 
 	public void generateConverter(String attributeType) throws IOException {

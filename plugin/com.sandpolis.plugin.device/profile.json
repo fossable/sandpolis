@@ -1,11 +1,64 @@
-{
-	"name": "Device",
-	"tag": 1,
-	"attributes": [
-		{
-			"name": "url",
-			"tag": 1,
-			"type": "java.lang.String"
+[
+	{
+		"name": "Plugin.Device.Http",
+		"attributes": {
+			"1": {
+				"name": "username",
+				"type": "java.lang.String"
+			}
 		}
-	]
-}
+	},
+	{
+		"name": "Plugin.Device.Snmpv2c",
+		"attributes": {
+			"1": {
+				"name": "community",
+				"type": "java.lang.String"
+			}
+		}
+	},
+	{
+		"name": "Plugin.Device.Snmpv3",
+		"attributes": {
+			"1": {
+				"name": "security_level",
+				"type": "java.lang.String"
+			},
+			"2": {
+				"name": "security_name",
+				"type": "java.lang.String"
+			},
+			"3": {
+				"name": "auth_protocol",
+				"type": "java.lang.String"
+			},
+			"4": {
+				"name": "auth_secret",
+				"type": "java.lang.String"
+			},
+			"5": {
+				"name": "priv_protocol",
+				"type": "java.lang.String"
+			},
+			"6": {
+				"name": "priv_secret",
+				"type": "java.lang.String"
+			}
+
+		}
+	},
+	{
+		"name": "Plugin.Device",
+		"documents": {
+			"1": "Plugin.Device.Http",
+			"2": "Plugin.Device.Snmpv2c",
+			"3": "Plugin.Device.Snmpv3"
+		}
+	},
+	{
+		"name": "Plugin",
+		"documents": {
+			"1": "Plugin.Device"
+		}
+	}
+]

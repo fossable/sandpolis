@@ -11,7 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.foundation.util;
 
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -20,6 +19,7 @@ import java.util.Arrays;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 
 /**
@@ -30,86 +30,6 @@ import com.google.common.io.BaseEncoding;
  */
 public final class CryptoUtil {
 	private CryptoUtil() {
-	}
-
-	/**
-	 * The insecure MD5 algorithm which should be rarely used.
-	 */
-	public static final MessageDigest MD5;
-
-	/**
-	 * The weak SHA1 algorithm which shoud be rarely used.
-	 */
-	public static final MessageDigest SHA1;
-
-	/**
-	 * The SHA256 algorithm.
-	 */
-	public static final MessageDigest SHA256;
-
-	static {
-		try {
-			MD5 = MessageDigest.getInstance("MD5");
-			SHA1 = MessageDigest.getInstance("SHA-1");
-			SHA256 = MessageDigest.getInstance("SHA-256");
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
-	 * Compute a hash of the inputs. Parameter order changes the result of the hash!
-	 *
-	 * @param digest The hash algorithm
-	 * @param input  The hash inputs
-	 * @return The hash as a lowercase hexadecimal String
-	 */
-	public static String hash(MessageDigest digest, char[]... input) {
-		synchronized (digest) {
-			digest.reset();
-			for (char[] array : input)
-				for (char c : array) {
-					// Digest each byte of each char
-					digest.update((byte) (c & 0xFF00));
-					digest.update((byte) (c & 0xFF));
-				}
-
-			return BaseEncoding.base16().lowerCase().encode(digest.digest());
-		}
-	}
-
-	/**
-	 * Compute a hash of the inputs. Parameter order changes the result of the hash!
-	 *
-	 * @param digest The hash algorithm
-	 * @param input  The hash inputs
-	 * @return The unencoded hash
-	 */
-	public static byte[] hash(MessageDigest digest, byte[]... input) {
-		synchronized (digest) {
-			digest.reset();
-			for (byte[] b : input)
-				digest.update(b);
-
-			return digest.digest();
-		}
-	}
-
-	/**
-	 * Compute a hash of the inputs. Parameter order changes the result of the hash!
-	 *
-	 * @param digest The hash algorithm
-	 * @param input  The hash inputs
-	 * @return The hash as a lowercase hexadecimal String
-	 */
-	public static String hash(MessageDigest digest, String... input) {
-
-		// Convert Strings to bytes
-		byte[][] in = new byte[input.length][];
-		for (int i = 0; i < in.length; i++)
-			in[i] = input[i].getBytes();
-
-		return BaseEncoding.base16().lowerCase().encode(hash(digest, in));
 	}
 
 	/**
@@ -142,7 +62,8 @@ public final class CryptoUtil {
 	 * @return The signed nonce in base64
 	 */
 	public static String sign(byte[] nonce, byte[] key) {
-		return BaseEncoding.base64().encode(hash(SHA256, nonce, key));
+		return BaseEncoding.base64()
+				.encode(Hashing.sha256().newHasher().putBytes(nonce).putBytes(key).hash().asBytes());
 	}
 
 	/**
