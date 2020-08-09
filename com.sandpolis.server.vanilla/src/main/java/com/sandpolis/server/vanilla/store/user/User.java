@@ -15,7 +15,7 @@ import java.util.List;
 
 import javax.persistence.ManyToMany;
 
-import com.sandpolis.core.instance.DocumentBindings.Profile;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtUser;
 import com.sandpolis.core.instance.data.Document;
 import com.sandpolis.server.vanilla.store.group.Group;
 
@@ -25,7 +25,7 @@ import com.sandpolis.server.vanilla.store.group.Group;
  * @author cilki
  * @since 5.0.0
  */
-public class User extends Profile.Instance.Server.User {
+public class User extends VirtUser {
 
 	@ManyToMany(mappedBy = "members")
 	private List<Group> groups;

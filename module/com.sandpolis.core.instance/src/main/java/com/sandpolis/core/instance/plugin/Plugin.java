@@ -34,10 +34,10 @@ import com.google.common.io.MoreFiles;
 import com.google.common.io.Resources;
 import com.sandpolis.core.foundation.util.JarUtil;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.DocumentBindings.Profile;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtPlugin;
 import com.sandpolis.core.instance.data.Document;
 
 /**
@@ -46,7 +46,7 @@ import com.sandpolis.core.instance.data.Document;
  * @author cilki
  * @since 5.0.0
  */
-public class Plugin extends Profile.Instance.Plugin {
+public class Plugin extends VirtPlugin {
 
 	private ClassLoader classloader;
 

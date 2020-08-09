@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.DocumentBindings.Profile;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtListener;
 import com.sandpolis.core.instance.data.Document;
 import com.sandpolis.core.net.Transport;
 import com.sandpolis.server.vanilla.net.init.ServerChannelInitializer;
@@ -33,7 +33,7 @@ import io.netty.channel.ServerChannel;
  * @author cilki
  * @since 1.0.0
  */
-public class Listener extends Profile.Instance.Server.Listener {
+public class Listener extends VirtListener {
 
 	public static final Logger log = LoggerFactory.getLogger(Listener.class);
 

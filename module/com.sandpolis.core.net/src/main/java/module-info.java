@@ -14,12 +14,11 @@ open module com.sandpolis.core.net {
 	exports com.sandpolis.core.net.cmdlet;
 	exports com.sandpolis.core.net.exception;
 	exports com.sandpolis.core.net.connection;
-	exports com.sandpolis.core.net.handler.cvid;
+	exports com.sandpolis.core.net.cvid;
 	exports com.sandpolis.core.net.handler.peer;
 	exports com.sandpolis.core.net.handler.sand5;
 	exports com.sandpolis.core.net.handler;
 	exports com.sandpolis.core.net.init;
-	exports com.sandpolis.core.net.loop;
 	exports com.sandpolis.core.net.plugin;
 	exports com.sandpolis.core.net.message;
 	exports com.sandpolis.core.net.network;

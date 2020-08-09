@@ -62,8 +62,3 @@ protobuf {
 		delete generatedFilesBaseDir
 	}
 }
-
-codegen {
-	profileTreeSpec = file('profile.json')
-	profileTreeType = 'core'
-}

@@ -17,7 +17,7 @@ open module com.sandpolis.viewer.lifegem {
 	exports com.sandpolis.viewer.lifegem.common.pane;
 	exports com.sandpolis.viewer.lifegem.common.tray;
 	exports com.sandpolis.viewer.lifegem.common;
-	exports com.sandpolis.viewer.lifegem.store.stage;
+	exports com.sandpolis.viewer.lifegem.stage;
 	exports com.sandpolis.viewer.lifegem.view.about;
 	exports com.sandpolis.viewer.lifegem.view.generator.config_tree;
 	exports com.sandpolis.viewer.lifegem.view.generator.detail;
