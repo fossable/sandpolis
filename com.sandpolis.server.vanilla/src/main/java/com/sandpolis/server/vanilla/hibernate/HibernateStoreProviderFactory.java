@@ -7,8 +7,8 @@ import javax.persistence.EntityManagerFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.spi.ServiceException;
 
-import com.sandpolis.core.instance.data.Document;
-import com.sandpolis.core.instance.data.StateObject;
+import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.StateObject;
 import com.sandpolis.core.instance.store.provider.StoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 

@@ -2,8 +2,8 @@ package com.sandpolis.core.instance.store.provider;
 
 import java.util.function.Function;
 
-import com.sandpolis.core.instance.data.Document;
-import com.sandpolis.core.instance.data.StateObject;
+import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.StateObject;
 
 public interface StoreProviderFactory {
 

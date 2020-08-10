@@ -13,7 +13,6 @@ package com.sandpolis.server.vanilla.store.group;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -22,10 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Group.GroupConfig;
-import com.sandpolis.core.instance.store.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.database.Database;
-import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.StoreConfig;
+import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
+import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 import com.sandpolis.server.vanilla.store.group.GroupStore.GroupStoreConfig;
 import com.sandpolis.server.vanilla.store.user.User;
 
@@ -35,23 +35,12 @@ import com.sandpolis.server.vanilla.store.user.User;
  * @author cilki
  * @since 5.0.0
  */
-public final class GroupStore extends MapStore<Group, GroupStoreConfig> {
+public final class GroupStore extends CollectionStore<Group, GroupStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(GroupStore.class);
 
 	public GroupStore() {
 		super(log);
-	}
-
-	/**
-	 * Create a new group from the given configuration and add it to the store.
-	 *
-	 * @param config The group configuration
-	 */
-	public void add(GroupConfig config) {
-		Objects.requireNonNull(config);
-
-		add(new Group(document, config));
 	}
 
 	/**
@@ -89,13 +78,33 @@ public final class GroupStore extends MapStore<Group, GroupStoreConfig> {
 	}
 
 	@Override
-	public GroupStore init(Consumer<GroupStoreConfig> configurator) {
+	public void init(Consumer<GroupStoreConfig> configurator) {
 		var config = new GroupStoreConfig();
 		configurator.accept(config);
 
-		config.defaults.forEach(this::add);
+		config.defaults.forEach(this::create);
 
-		return (GroupStore) super.init(null);
+		provider.initialize();
+	}
+
+	@Override
+	public Group create(Consumer<Group> configurator) {
+		var group = new Group(new Document(provider.getCollection()));
+		configurator.accept(group);
+		provider.add(group);
+		return group;
+	}
+
+	/**
+	 * Create a new group from the given configuration.
+	 *
+	 * @param config The group configuration
+	 */
+	public Group create(GroupConfig config) {
+		return create(group -> {
+			group.name().set(config.getName());
+			// ...
+		});
 	}
 
 	public final class GroupStoreConfig extends StoreConfig {
@@ -104,12 +113,12 @@ public final class GroupStore extends MapStore<Group, GroupStoreConfig> {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<String, Group>(Group.class);
+			provider = new MemoryMapStoreProvider<>(Group.class, Group::tag);
 		}
 
 		@Override
-		public void persistent(Database database) {
-			provider = database.getConnection().provider(Group.class);
+		public void persistent(StoreProviderFactory factory) {
+			provider = factory.supply(Group.class, Group::new);
 		}
 	}
 

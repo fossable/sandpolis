@@ -38,7 +38,7 @@ import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtPlugin;
-import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.state.Document;
 
 /**
  * Represents a Sandpolis plugin installed in the {@code PLUGIN} directory.

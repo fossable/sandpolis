@@ -26,7 +26,7 @@ import javax.persistence.Id;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.sandpolis.core.instance.data.StateObject;
+import com.sandpolis.core.instance.state.StateObject;
 import com.sandpolis.core.instance.store.provider.MemoryListStoreProvider;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProvider;

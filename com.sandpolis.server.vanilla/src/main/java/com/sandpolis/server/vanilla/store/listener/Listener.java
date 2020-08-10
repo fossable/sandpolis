@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtListener;
-import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.net.Transport;
 import com.sandpolis.server.vanilla.net.init.ServerChannelInitializer;
 

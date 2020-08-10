@@ -16,11 +16,12 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.store.MapStore;
+import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 
-public class DeviceStore extends MapStore<Device, StoreConfig> {
+public class DeviceStore extends CollectionStore<Device, StoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(DeviceStore.class);
 
@@ -36,6 +37,14 @@ public class DeviceStore extends MapStore<Device, StoreConfig> {
 		provider.initialize();
 	}
 
+	@Override
+	public Device create(Consumer<Device> configurator) {
+		var device = new Device(new Document(provider.getCollection()));
+		configurator.accept(device);
+		return device;
+		return null;
+	}
+
 	public final class DeviceStoreConfig extends StoreConfig {
 
 		@Override
@@ -43,4 +52,6 @@ public class DeviceStore extends MapStore<Device, StoreConfig> {
 			provider = new MemoryMapStoreProvider<>(Device.class, Device::tag);
 		}
 	}
+
+	public static final DeviceStore DeviceStore = new DeviceStore();
 }

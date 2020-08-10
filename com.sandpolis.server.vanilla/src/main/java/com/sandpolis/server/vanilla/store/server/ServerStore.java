@@ -28,6 +28,7 @@ import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
+import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.sv.msg.MsgServer.RS_ServerBanner;
 import com.sandpolis.server.vanilla.store.server.ServerStore.ServerStoreConfig;
 
@@ -58,7 +59,7 @@ public final class ServerStore extends StoreBase<ServerStoreConfig> {
 	}
 
 	@Override
-	public ServerStore init(Consumer<ServerStoreConfig> configurator) {
+	public void init(Consumer<ServerStoreConfig> configurator) {
 		var config = new ServerStoreConfig();
 		configurator.accept(config);
 
@@ -89,12 +90,16 @@ public final class ServerStore extends StoreBase<ServerStoreConfig> {
 		}
 
 		banner = b.build();
-
-		return (ServerStore) super.init(null);
 	}
 
 	public final class ServerStoreConfig extends StoreConfig {
 	}
 
 	public static final ServerStore ServerStore = new ServerStore();
+
+	@Override
+	public StoreMetadata getMetadata() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.gradle.codegen.profile_tree;
+package com.sandpolis.gradle.codegen.state;
 
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -34,11 +34,15 @@ import com.squareup.javapoet.TypeSpec;
  *
  * @author cilki
  */
-public abstract class ProfileTreeGenerator extends DefaultTask {
+public abstract class STGenerator extends DefaultTask {
 
-	protected static final ClassName DOCUMENT_TYPE = ClassName.bestGuess("com.sandpolis.core.instance.data.Document");
+	public static final ClassName DOCUMENT_TYPE = ClassName.bestGuess("com.sandpolis.core.instance.data.Document");
 
-	protected static final String PLUGIN_OID = "1.1";
+	public static final String PLUGIN_OID = "1.1";
+
+	public static final String DOCUMENT_PREFIX = "Virt";
+
+	public static final String DATA_PACKAGE = "com.sandpolis.core.instance.data";
 
 	protected List<DocumentSpec> flatTree;
 
@@ -47,7 +51,7 @@ public abstract class ProfileTreeGenerator extends DefaultTask {
 
 		// Load the schema
 		flatTree = new ObjectMapper().readValue(
-				((ConfigExtension) getProject().getExtensions().getByName("codegen")).profileTreeSpec,
+				((ConfigExtension) getProject().getExtensions().getByName("codegen")).stateTree,
 				new TypeReference<List<DocumentSpec>>() {
 				});
 
@@ -55,7 +59,7 @@ public abstract class ProfileTreeGenerator extends DefaultTask {
 		flatTree.forEach(this::validateDocument);
 
 		// Create the root class
-		TypeSpec.Builder root = TypeSpec.classBuilder("ProfileTree").addModifiers(PUBLIC, FINAL);
+		TypeSpec.Builder root = TypeSpec.classBuilder("StateTree").addModifiers(PUBLIC, FINAL);
 
 		// Find root document
 		flatTree.stream().filter(document -> document.name.equals("Profile")).findAny().ifPresent(document -> {

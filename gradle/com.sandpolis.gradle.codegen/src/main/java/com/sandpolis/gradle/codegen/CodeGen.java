@@ -11,12 +11,12 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.gradle.codegen;
 
-import com.sandpolis.gradle.codegen.profile_tree.impl.AttributeImplementationGenerator;
-import com.sandpolis.gradle.codegen.profile_tree.impl.StandardProfileTreeGenerator;
-import com.sandpolis.gradle.codegen.profile_tree.impl.JavaFxProfileTreeGenerator;
-
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+
+import com.sandpolis.gradle.codegen.state.impl.AttributeValueGenerator;
+import com.sandpolis.gradle.codegen.state.impl.JavaFxSTGenerator;
+import com.sandpolis.gradle.codegen.state.impl.CoreSTGenerator;
 
 /**
  * This plugin adds code generation tasks to the build.
@@ -32,34 +32,32 @@ public class CodeGen implements Plugin<Project> {
 
 		project.afterEvaluate(p -> {
 
-			// Generate document bindings if configured
-			if (configuration.profileTreeType != null) {
+			if (configuration.stateTree == null && project.file("state.json").exists()) {
+				configuration.stateTree = project.file("state.json");
+			}
 
-				// Find the specification file
-				if (configuration.profileTreeSpec == null)
-					throw new RuntimeException("Specification not defined");
-				if (!configuration.profileTreeSpec.exists())
+			// Generate state tree if configured
+			if (configuration.stateTree != null) {
+
+				if (!configuration.stateTree.exists())
 					throw new RuntimeException("Specification not found");
 
-				// Create the task
-				switch (configuration.profileTreeType) {
-				case "javafx":
-					project.getTasks().getByName("compileJava").dependsOn(
-							project.getTasks().create("generateProfileTree", JavaFxProfileTreeGenerator.class));
-					break;
-				case "core":
-					project.getTasks().getByName("compileJava").dependsOn(
-							project.getTasks().create("generateProfileTree", StandardProfileTreeGenerator.class));
-					break;
-				default:
-					throw new RuntimeException("Specification not found");
+				// Create the generation tasks
+				if (configuration.javaFxStateTree) {
+					project.getTasks().getByName("compileJava")
+							.dependsOn(project.getTasks().create("generateJavaFxStateTree", JavaFxSTGenerator.class));
+				}
+				if (configuration.coreStateTree) {
+					project.getTasks().getByName("compileJava")
+							.dependsOn(project.getTasks().create("generateCoreStateTree", CoreSTGenerator.class));
+
 				}
 			}
 
 			// Generate attribute implementations
 			if (project.getName().equals("com.sandpolis.core.instance")) {
-				project.getTasks().getByName("compileJava").dependsOn(project.getTasks()
-						.create("generateAttributeImplementations", AttributeImplementationGenerator.class));
+				project.getTasks().getByName("compileJava").dependsOn(
+						project.getTasks().create("generateStateTreeAttributeValues", AttributeValueGenerator.class));
 			}
 
 			// Setup automatic protobuf compilation

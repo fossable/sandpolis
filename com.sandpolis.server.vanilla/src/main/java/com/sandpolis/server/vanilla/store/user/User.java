@@ -16,7 +16,7 @@ import java.util.List;
 import javax.persistence.ManyToMany;
 
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtUser;
-import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.server.vanilla.store.group.Group;
 
 /**

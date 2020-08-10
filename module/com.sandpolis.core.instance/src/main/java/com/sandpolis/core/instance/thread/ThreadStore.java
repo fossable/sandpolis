@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
+import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.instance.thread.ThreadStore.ThreadStoreConfig;
 
 /**
@@ -61,13 +62,11 @@ public final class ThreadStore extends StoreBase<ThreadStoreConfig> {
 	}
 
 	@Override
-	public ThreadStore init(Consumer<ThreadStoreConfig> configurator) {
+	public void init(Consumer<ThreadStoreConfig> configurator) {
 		var config = new ThreadStoreConfig();
 		configurator.accept(config);
 
 		provider.putAll(config.defaults);
-
-		return (ThreadStore) super.init(null);
 	}
 
 	public final class ThreadStoreConfig extends StoreConfig {
@@ -82,4 +81,10 @@ public final class ThreadStore extends StoreBase<ThreadStoreConfig> {
 	}
 
 	public static final ThreadStore ThreadStore = new ThreadStore();
+
+	@Override
+	public StoreMetadata getMetadata() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

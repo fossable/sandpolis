@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.data;
+package com.sandpolis.core.instance.state;
 
 /**
  * This class is a lightweight wrapper for {@link Document}s that provides

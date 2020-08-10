@@ -13,12 +13,10 @@ package com.sandpolis.core.instance.store;
 
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
-import com.sandpolis.core.instance.data.Document;
 import com.sandpolis.core.instance.store.provider.StoreProvider;
 
 public abstract class CollectionStore<V, E extends StoreConfig> extends StoreBase<E> {

@@ -9,47 +9,38 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.gradle.codegen.profile_tree.impl;
+package com.sandpolis.gradle.codegen.state.impl;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
-import static com.sandpolis.gradle.codegen.profile_tree.impl.Utils.toJavaFxProperty;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
-import com.sandpolis.gradle.codegen.profile_tree.AttributeSpec;
-import com.sandpolis.gradle.codegen.profile_tree.DocumentSpec;
-import com.sandpolis.gradle.codegen.profile_tree.ProfileTreeGenerator;
-import com.squareup.javapoet.ClassName;
+import com.sandpolis.gradle.codegen.state.AttributeSpec;
+import com.sandpolis.gradle.codegen.state.DocumentSpec;
+import com.sandpolis.gradle.codegen.state.STGenerator;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 /**
  * Generator for JavaFX document bindings.
  */
-public class JavaFxProfileTreeGenerator extends ProfileTreeGenerator {
+public class JavaFxSTGenerator extends STGenerator {
 
 	@Override
 	public void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute, String oid) {
-		if (!attribute.type.startsWith("java.lang"))
-			return;
-
-		TypeName type = Utils.toType(attribute.type);
-
-		var propertyType = ClassName.get("javafx.beans.property", toJavaFxProperty(attribute.type));
 
 		// Add property field
-		var propertyField = FieldSpec.builder(propertyType, attribute.name, PRIVATE).initializer("new $T()",
-				ClassName.get("javafx.beans.property", "Simple" + toJavaFxProperty(attribute.type)));
+		var propertyField = FieldSpec.builder(attribute.getJavaFxPropertyType(), attribute.name, PRIVATE)
+				.initializer("new $T()", attribute.getJavaFxSimplePropertyType());
 		parent.addField(propertyField.build());
 
 		// Add property getter
 		var propertyGetter = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name + "_property")) //
 				.addModifiers(PUBLIC) //
-				.returns(propertyType) //
+				.returns(attribute.getJavaFxPropertyType()) //
 				.addStatement("return $L", attribute.name);
 		parent.addMethod(propertyGetter.build());
 	}

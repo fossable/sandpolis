@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.gradle.codegen.profile_tree.impl;
+package com.sandpolis.gradle.codegen.state.impl;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
@@ -17,9 +17,9 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
-import com.sandpolis.gradle.codegen.profile_tree.AttributeSpec;
-import com.sandpolis.gradle.codegen.profile_tree.DocumentSpec;
-import com.sandpolis.gradle.codegen.profile_tree.ProfileTreeGenerator;
+import com.sandpolis.gradle.codegen.state.AttributeSpec;
+import com.sandpolis.gradle.codegen.state.DocumentSpec;
+import com.sandpolis.gradle.codegen.state.STGenerator;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -30,44 +30,36 @@ import com.squareup.javapoet.TypeSpec;
 /**
  * Generator for basic document bindings.
  */
-public class StandardProfileTreeGenerator extends ProfileTreeGenerator {
+public class CoreSTGenerator extends STGenerator {
 
 	@Override
 	public void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute, String oid) {
-
-		TypeName type = Utils.toType(attribute.type);
-		ClassName attrImplType = Utils.toAttributeType(attribute.type);
-
-		var attributeType = ParameterizedTypeName.get(ClassName.get("com.sandpolis.core.instance.data", "Attribute"),
-				type);
 
 		// Add the attribute's getter method
 		var getter = MethodSpec
 				.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL,
 						(attribute.type.equals("java.lang.Boolean") ? "is_" : "get_") + attribute.name)) //
 				.addModifiers(PUBLIC) //
-				.returns(type.isBoxedPrimitive() ? type.unbox() : type) //
+				.returns(attribute.getAttributeType()) //
 				.addStatement("return $L().get()", LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name));
 		parent.addMethod(getter.build());
 
 		// Add the attribute's property method
 		var property = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name)) //
 				.addModifiers(PUBLIC) //
-				.returns(attributeType) //
-				.addStatement("return document.attribute($L, $T::new)", oid.replaceAll(".*\\.", ""), attrImplType);
+				.returns(attribute.getAttributeObjectType()) //
+				.addStatement("return document.attribute($L)", oid.replaceAll(".*\\.", ""));
 		parent.addMethod(property.build());
 
-		// Add the attribute's static oid field
-		var oidField = FieldSpec.builder(String.class, attribute.name.toUpperCase(), PUBLIC, STATIC, FINAL)
-				.initializer("\"$L\"", oid);
-		parent.addField(oidField.build());
+		// Add the attribute's OID field
+		parent.addField(newAttributeOidField(attribute, oid).build());
 	}
 
 	@Override
 	public void processCollection(TypeSpec.Builder parent, DocumentSpec document, String oid) {
-		var documentClass = TypeSpec.classBuilder(document.name.replaceAll(".*\\.", "")) //
+		var documentClass = TypeSpec.classBuilder(DOCUMENT_PREFIX + document.name.replaceAll(".*\\.", "")) //
 				.addModifiers(PUBLIC, STATIC) //
-				.superclass(ClassName.get("com.sandpolis.core.instance.data", "StateObject"));
+				.superclass(ClassName.get(DATA_PACKAGE, "StateObject"));
 
 		// Add constructor
 		documentClass.addMethod(newDocumentConstructor().build());
@@ -78,6 +70,9 @@ public class StandardProfileTreeGenerator extends ProfileTreeGenerator {
 		// Add ID getter
 		documentClass.addMethod(newDocumentIdMethod().build());
 
+		// Add OID field
+		documentClass.addField(newCollectionOidField(ClassName.bestGuess(documentClass.build().name), oid).build());
+
 		// Process subdocuments and attributes
 		processChildren(documentClass, document, oid + ".0");
 
@@ -87,9 +82,11 @@ public class StandardProfileTreeGenerator extends ProfileTreeGenerator {
 	@Override
 	public void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
 
-		var documentClass = TypeSpec.classBuilder(document.name.replaceAll(".*\\.", "")) //
+		var documentName = DOCUMENT_PREFIX + document.name.replaceAll(".*\\.", "");
+
+		var documentClass = TypeSpec.classBuilder(documentName) //
 				.addModifiers(PUBLIC, STATIC) //
-				.superclass(ClassName.get("com.sandpolis.core.instance.data", "StateObject"));
+				.superclass(ClassName.get(DATA_PACKAGE, "StateObject"));
 
 		// Add constructor
 		documentClass.addMethod(newDocumentConstructor().build());
@@ -100,6 +97,9 @@ public class StandardProfileTreeGenerator extends ProfileTreeGenerator {
 		// Add tag method
 		documentClass.addMethod(newDocumentTagMethod(oid).build());
 
+		// Add OID field
+		documentClass.addField(newDocumentOidField(ClassName.bestGuess(documentClass.build().name), oid).build());
+
 		// Process subdocuments and attributes
 		processChildren(documentClass, document, oid);
 
@@ -109,6 +109,27 @@ public class StandardProfileTreeGenerator extends ProfileTreeGenerator {
 		if (!document.name.equals("Profile")) {
 			parent.addMethod(newDocumentMethod(document, oid).build());
 		}
+	}
+
+	private FieldSpec.Builder newAttributeOidField(AttributeSpec attribute, String oid) {
+		return FieldSpec
+				.builder(ParameterizedTypeName.get(ClassName.get(DATA_PACKAGE + ".oid", "AttributeOid"),
+						attribute.getAttributeType()), attribute.name.toUpperCase(), PUBLIC, STATIC, FINAL)
+				.initializer("new AttributeOid<>(\"$L\")", oid);
+	}
+
+	private FieldSpec.Builder newDocumentOidField(TypeName documentType, String oid) {
+		return FieldSpec
+				.builder(ParameterizedTypeName.get(ClassName.get(DATA_PACKAGE + ".oid", "DocumentOid"), documentType),
+						"DOCUMENT", PUBLIC, STATIC, FINAL)
+				.initializer("new DocumentOid<>(\"$L\")", oid);
+	}
+
+	private FieldSpec.Builder newCollectionOidField(TypeName documentType, String oid) {
+		return FieldSpec
+				.builder(ParameterizedTypeName.get(ClassName.get(DATA_PACKAGE + ".oid", "CollectionOid"), documentType),
+						"COLLECTION", PUBLIC, STATIC, FINAL)
+				.initializer("new CollectionOid<>(\"$L\")", oid);
 	}
 
 	private MethodSpec.Builder newCollectionTagMethod(DocumentSpec document) {
@@ -180,8 +201,8 @@ public class StandardProfileTreeGenerator extends ProfileTreeGenerator {
 
 		return MethodSpec.methodBuilder(shortName.toLowerCase()) //
 				.addModifiers(PUBLIC) //
-				.returns(ClassName.bestGuess(shortName)) //
-				.addStatement("return new $L(document.document($L))", shortName, oid.replaceAll(".*\\.", ""));
+				.returns(ClassName.bestGuess("Virt" + shortName)) //
+				.addStatement("return new Virt$L(document.document($L))", shortName, oid.replaceAll(".*\\.", ""));
 	}
 
 	/**

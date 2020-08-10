@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.DocumentBindings.Profile;
-import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;

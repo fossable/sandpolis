@@ -18,8 +18,8 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.data.Document;
 import com.sandpolis.core.instance.profile.ProfileStore.ProfileStoreConfig;
+import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryListStoreProvider;
@@ -51,8 +51,7 @@ public final class ProfileStore extends CollectionStore<Profile, ProfileStoreCon
 	 * @return The requested {@link Profile}
 	 */
 	public Optional<Profile> getViewer(String username) {
-		return provider.stream().filter(profile -> username.equals(profile.instance().viewer().getUsername()))
-				.findFirst();
+		return provider.stream().filter(profile -> username.equals(profile.viewer().getUsername())).findFirst();
 	}
 
 	public Profile local() {

@@ -133,8 +133,8 @@ public final class MsgUtil {
 		if (components.length < 3)
 			throw new IllegalArgumentException();
 
-		return String.format("%s/%s.%s.%s", getModuleId(messageType), components[components.length - 3],
-				components[components.length - 2], components[components.length - 1]);
+		return String.format("%s/%s.%s.%s.%s", getModuleId(messageType), components[components.length - 3],
+				components[components.length - 2], components[components.length - 1], messageType.getSimpleName());
 	}
 
 	public static String getTypeUrl(Method method) {

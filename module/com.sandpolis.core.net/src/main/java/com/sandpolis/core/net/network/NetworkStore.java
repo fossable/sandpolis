@@ -30,6 +30,7 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
+import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
@@ -122,8 +123,8 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	public synchronized int getPreferredServer() {
 		if (!network.nodes().contains(preferredServer))
 			// Choose a server at random
-			preferredServer = network.nodes().stream().filter(cvid -> CvidUtil.extractInstance(cvid) == InstanceType.SERVER)
-					.findAny().orElse(0);
+			preferredServer = network.nodes().stream()
+					.filter(cvid -> CvidUtil.extractInstance(cvid) == InstanceType.SERVER).findAny().orElse(0);
 
 		return preferredServer;
 	}
@@ -287,7 +288,7 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	}
 
 	@Override
-	public NetworkStore init(Consumer<NetworkStoreConfig> configurator) {
+	public void init(Consumer<NetworkStoreConfig> configurator) {
 		var config = new NetworkStoreConfig();
 		configurator.accept(config);
 
@@ -298,8 +299,6 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 
 		ConnectionStore.register(this);
 		post(CvidChangedEvent::new, config.cvid);
-
-		return (NetworkStore) super.init(null);
 	}
 
 	public final class NetworkStoreConfig extends StoreConfig {
@@ -315,4 +314,10 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	}
 
 	public static final NetworkStore NetworkStore = new NetworkStore();
+
+	@Override
+	public StoreMetadata getMetadata() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

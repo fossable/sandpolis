@@ -11,8 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.profile;
 
-import com.sandpolis.core.instance.DocumentBindings;
-import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.StateTree.VirtProfile;
+import com.sandpolis.core.instance.state.Document;
 
 /**
  * A {@link Profile} is a generic container that stores data for an instance.
@@ -21,7 +21,7 @@ import com.sandpolis.core.instance.data.Document;
  * @author cilki
  * @since 4.0.0
  */
-public class Profile extends DocumentBindings.Profile {
+public class Profile extends VirtProfile {
 
 	Profile(Document parent) {
 		super(parent);

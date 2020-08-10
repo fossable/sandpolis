@@ -11,11 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.store.provider;
 
-import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import com.sandpolis.core.instance.state.Collection;
 import com.sandpolis.core.instance.store.StoreMetadata;
 
 /**
@@ -91,7 +91,7 @@ public interface StoreProvider<E> {
 		return enumerate().size();
 	}
 
-	public Collection<E> enumerate();
+	public java.util.Collection<E> enumerate();
 
 	/**
 	 * The streams produced by this method are eagerly loaded. For performance
@@ -104,7 +104,7 @@ public interface StoreProvider<E> {
 		return enumerate().stream();
 	}
 
-	public Collection<E> enumerate(String query, Object... params);
+	public java.util.Collection<E> enumerate(String query, Object... params);
 
 	default public Stream<E> stream(String query, Object... params) {
 		return enumerate(query, params).stream();
@@ -113,6 +113,6 @@ public interface StoreProvider<E> {
 	public void initialize();
 
 	public StoreMetadata getMetadata();
-	
-	public com.sandpolis.core.instance.data.Collection getCollection();
+
+	public Collection getCollection();
 }

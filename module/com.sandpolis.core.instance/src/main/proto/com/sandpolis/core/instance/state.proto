@@ -9,38 +9,62 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-syntax = "proto2";
+syntax = "proto3";
 
 package core.instance;
 
 import "com/sandpolis/core/foundation/platform.proto";
+import "com/sandpolis/core/instance/metatypes.proto";
 
 option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
 
+message ProtoAttributeValue {
+	int64 timestamp = 1;
+
+    repeated string  string   = 2;
+    repeated int32   integer  = 3;
+    repeated int64   long     = 4;
+    repeated bool    boolean  = 5;
+    repeated double  double   = 6;
+    repeated bytes   bytes    = 7;
+
+    repeated core.foundation.OsType os_type = 8;
+    repeated core.instance.InstanceType instance_type = 9;
+    repeated core.instance.InstanceFlavor instance_flavor = 10;
+}
+
 message ProtoAttribute {
-    optional int64 timestamp = 1;
-
-    oneof value {
-        // Standard types
-        string  string   = 2;
-        int32   integer  = 3;
-        int64   long     = 4;
-        bool    boolean  = 5;
-        double  double   = 6;
-        bytes   bytes    = 7;
-
-        // Additional types
-        core.foundation.OsType os_type = 8;
-    }
+    repeated ProtoAttributeValue values = 1;
 }
 
 message ProtoDocument {
-    map<int32, ProtoAttribute> attribute = 1;
-    map<int32, ProtoDocument> document = 2;
-    map<int32, ProtoCollection> collection = 3;
+	bool partial = 1;
+
+    map<int32, ProtoAttribute> attribute = 2;
+    map<int32, ProtoDocument> document = 3;
+    map<int32, ProtoCollection> collection = 4;
 }
 
 message ProtoCollection {
+	bool partial = 1;
+
     map<int32, ProtoDocument> document = 2;
+}
+
+message RQ_STSnapshot {
+	string base_oid = 1;
+	repeated string whitelist_oid = 2;
+}
+
+message RS_STSnapshot {
+	oneof snapshot {
+		ProtoDocument document = 1;
+		ProtoCollection collection = 2;
+	}
+}
+
+message RQ_STSync {
+	string base_oid = 1;
+	repeated string whitelist_oid = 2;
 }

@@ -9,20 +9,14 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.data;
+package com.sandpolis.core.instance.state;
 
 import com.google.protobuf.Message;
 
 /**
- * Indicates that a POJO class has a corresponding protobuf type. The standard
- * name for the protobuf type is {@code "Proto<Implementing Class name>"}.<br>
- * <br>
- * An implementation of this interface must implement a method that converts the
- * object to the protobuf type ({@link #serialize()}) and a method that merges
- * the protobuf type into the object ({@link #merge(Message)}).
+ * Indicates that a POJO has a corresponding protobuf representation.
  *
- * @param <E> The corresponding protobuf type
- * @author cilki
+ * @param <E> The protobuf representation of the object
  * @since 5.0.0
  */
 public interface ProtoType<E extends Message> {
@@ -33,15 +27,16 @@ public interface ProtoType<E extends Message> {
 	 * <br>
 	 * Implementations should have no side effects if the input was invalid.
 	 *
-	 * @param delta The changes
+	 * @param snapshot The changes
 	 */
-	public void merge(E delta) throws Exception;
+	public void merge(E snapshot);
 
 	/**
 	 * Convert the object's entire state to a new protocol buffer.
 	 *
 	 * @return A new protobuf fully representing the object
 	 */
-	public E serialize();
+	public E snapshot();
 
+	public E snapshot(Oid<?>... oids);
 }

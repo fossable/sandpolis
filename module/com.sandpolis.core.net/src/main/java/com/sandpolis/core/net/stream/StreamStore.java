@@ -25,6 +25,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.Message;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
+import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.stream.StreamStore.StreamStoreConfig;
 
@@ -70,6 +71,8 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 	public StreamStore() {
 		super(log);
 	}
+
+	private StreamStoreMetadata metadata = new StreamStoreMetadata();
 
 	/**
 	 * The SOURCE bank.
@@ -145,7 +148,7 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 		});
 		outbound.removeIf(adapter -> {
 			if (adapter.getStreamID() == id) {
-//				adapter.close();
+				adapter.close();
 				return true;
 			}
 			return false;
@@ -179,7 +182,7 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 		});
 		outbound.removeIf(adapter -> {
 			if (adapter.getSock().equals(event.get())) {
-//				adapter.close();
+				adapter.close();
 				return true;
 			}
 			return false;
@@ -189,13 +192,25 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 	}
 
 	@Override
-	public StreamStore init(Consumer<StreamStoreConfig> configurator) {
+	public StreamStoreMetadata getMetadata() {
+		return metadata;
+	}
+
+	@Override
+	public void init(Consumer<StreamStoreConfig> configurator) {
 		var config = new StreamStoreConfig();
 		configurator.accept(config);
 
 		ConnectionStore.register(this);
+	}
 
-		return (StreamStore) super.init(null);
+	public final class StreamStoreMetadata implements StoreMetadata {
+
+		@Override
+		public int getInitCount() {
+			return 1;
+		}
+
 	}
 
 	public final class StreamStoreConfig extends StoreConfig {

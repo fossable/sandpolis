@@ -23,9 +23,9 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
-import com.sandpolis.core.instance.data.Collection;
-import com.sandpolis.core.instance.data.Document;
-import com.sandpolis.core.instance.data.StateObject;
+import com.sandpolis.core.instance.state.Collection;
+import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.StateObject;
 import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.instance.store.provider.StoreProvider;
 

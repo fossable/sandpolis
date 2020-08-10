@@ -14,18 +14,22 @@ package com.sandpolis.gradle.codegen;
 import java.io.File;
 
 /**
- * This extension is used in module build scripts to configure the code
- * generator.
+ * This extension is used in build scripts to configure the code generator.
  */
 public class ConfigExtension {
 
 	/**
-	 * The profile tree specification JSON file.
+	 * The state tree specification JSON file for the instance.
 	 */
-	public File profileTreeSpec;
+	public File stateTree;
 
 	/**
-	 * The type of profile tree to generate. Values are: javafx, core.
+	 * Whether a JavaFX-specific state tree will be generated.
 	 */
-	public String profileTreeType;
+	public boolean javaFxStateTree = false;
+
+	/**
+	 * Whether the core state tree will be generated.
+	 */
+	public boolean coreStateTree = true;
 }

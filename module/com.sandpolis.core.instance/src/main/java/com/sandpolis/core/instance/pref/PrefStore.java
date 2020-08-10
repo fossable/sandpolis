@@ -27,6 +27,7 @@ import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.pref.PrefStore.PrefStoreConfig;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
+import com.sandpolis.core.instance.store.StoreMetadata;
 
 /**
  * This store provides access to a unique {@link Preferences} object for
@@ -196,16 +197,18 @@ public final class PrefStore extends StoreBase<PrefStoreConfig> {
 
 	@Override
 	public void close() throws BackingStoreException {
-		log.debug("Closing preference node: " + provider.absolutePath());
-		try {
-			provider.flush();
-		} finally {
-			provider = null;
+		if (provider != null) {
+			log.debug("Closing preference node: " + provider.absolutePath());
+			try {
+				provider.flush();
+			} finally {
+				provider = null;
+			}
 		}
 	}
 
 	@Override
-	public PrefStore init(Consumer<PrefStoreConfig> configurator) {
+	public void init(Consumer<PrefStoreConfig> configurator) {
 		var config = new PrefStoreConfig();
 		configurator.accept(config);
 
@@ -224,8 +227,6 @@ public final class PrefStore extends StoreBase<PrefStoreConfig> {
 		} catch (BackingStoreException e) {
 			throw new RuntimeException(e);
 		}
-
-		return (PrefStore) super.init(null);
 	}
 
 	public final class PrefStoreConfig extends StoreConfig {
@@ -237,4 +238,10 @@ public final class PrefStore extends StoreBase<PrefStoreConfig> {
 	}
 
 	public static final PrefStore PrefStore = new PrefStore();
+
+	@Override
+	public StoreMetadata getMetadata() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -19,14 +19,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 
-import com.sandpolis.core.instance.DocumentBindings.Profile;
-import com.sandpolis.core.instance.Group.GroupConfig;
-import com.sandpolis.core.instance.data.Document;
-import com.sandpolis.server.vanilla.auth.AuthenticationMechanism;
-import com.sandpolis.server.vanilla.auth.KeyMechanism;
-import com.sandpolis.server.vanilla.auth.PasswordMechanism;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtGroup;
+import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.server.vanilla.store.user.User;
 
 /**
@@ -34,15 +29,15 @@ import com.sandpolis.server.vanilla.store.user.User;
  * collection of clients. A group has one owner, who has complete control over
  * the group, and any number of members.<br>
  * <br>
- * Clients are always added to a group via an {@link AuthenticationMechanism}.
- * For example, if a group has a {@link PasswordMechanism} installed, clients
+ * Clients are always added to a group via an {@code AuthenticationMechanism}.
+ * For example, if a group has a {@code PasswordMechanism} installed, clients
  * can supply the correct password during the authentication phase to be added
  * to the group.
  *
  * @author cilki
  * @since 5.0.0
  */
-public class Group extends Profile.Instance.Server.Group {
+public class Group extends VirtGroup {
 
 	/**
 	 * The group's owner.
@@ -70,13 +65,7 @@ public class Group extends Profile.Instance.Server.Group {
 	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private Set<KeyMechanism> keys;
 
-	/**
-	 * Construct a new {@link Group} from a configuration.
-	 *
-	 * @param config The configuration which should be prevalidated and complete
-	 */
-	public Group(Document parent, GroupConfig config) {
+	Group(Document parent) {
 		super(parent);
 	}
-
 }

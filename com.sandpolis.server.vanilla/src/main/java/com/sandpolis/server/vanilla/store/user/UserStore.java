@@ -24,7 +24,7 @@ import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
