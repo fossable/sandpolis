@@ -19,12 +19,14 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
+import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.viewer.ascetic.store.window.WindowStore.WindowStoreConfig;
 
-public final class WindowStore extends CollectionStore<Window, WindowStoreConfig> {
+public final class WindowStore extends CollectionStore<Window> implements ConfigurableStore<WindowStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(WindowStore.class);
 
@@ -53,15 +55,8 @@ public final class WindowStore extends CollectionStore<Window, WindowStoreConfig
 		provider.initialize();
 	}
 
-	@Override
-	public Window create(Consumer<Window> configurator) {
-		throw new UnsupportedOperationException();
-	}
-
-	public <E extends Window> E create(Consumer<E> configurator, Supplier<E> constructor) {
-		var window = constructor.get();
-		configurator.accept(window);
-		provider.add(window);
+	public <E extends Window> E create(Supplier<E> constructor, Consumer<E> configurator) {
+		var window = add(constructor.get(), configurator);
 		gui.addWindow(window);
 		return window;
 	}
@@ -70,7 +65,7 @@ public final class WindowStore extends CollectionStore<Window, WindowStoreConfig
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Window.class, Window::hashCode);
+			provider = new MemoryMapStoreProvider<>(Window.class, Window::hashCode, null);
 		}
 	}
 

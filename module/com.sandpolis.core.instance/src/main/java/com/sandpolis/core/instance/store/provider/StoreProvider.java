@@ -15,24 +15,24 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import com.sandpolis.core.instance.state.Collection;
+import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.StoreMetadata;
 
 /**
- * A {@link StoreProvider} manages the artifacts of a Store. The
- * {@code StoreProvider} "provides" basic storage of objects via a list-like
- * interface to remove the burden of object management in the {@code Store}
- * itself.<br>
- * <br>
+ * A {@link StoreProvider} manages the artifacts of a {@link CollectionStore}.
+ * It "provides" ephemeral and persistent storage of objects via a
+ * collection-like API.
  *
+ * <p>
  * An additional benefit of offloading this duty to a provider class is that
- * Stores that rely on a database can be easily unit tested by using a
- * memory-only implementation such as {@link MemoryListStoreProvider}.<br>
- * <br>
- * Note: default implementations should be overridden if more efficient
- * implementations exist.
+ * stores that rely on a database can be easily unit tested by using a
+ * memory-only implementation such as {@link MemoryListStoreProvider}.
+ * 
+ * <p>
+ * Note: default implementations should be overridden if more efficient ones
+ * exist.
  *
- * @author cilki
  * @since 5.0.0
  */
 public interface StoreProvider<E> {
@@ -54,7 +54,7 @@ public interface StoreProvider<E> {
 	public Optional<E> get(Object id);
 
 	/**
-	 * Remove an element from the store's backing storage.
+	 * Remove an element from the store's backing storage by value.
 	 *
 	 * @param e The element to remove
 	 */
@@ -73,7 +73,7 @@ public interface StoreProvider<E> {
 	public void clear();
 
 	/**
-	 * Indicates whether an element exists in the store.
+	 * Indicate whether an element exists in the store.
 	 *
 	 * @param id The primary key of the element
 	 * @return Whether the requested object exists in the store
@@ -91,20 +91,26 @@ public interface StoreProvider<E> {
 		return enumerate().size();
 	}
 
+	/**
+	 * Build a new {@link java.util.Collection} with all elements in the store.
+	 * 
+	 * @return A new {@link java.util.Collection}
+	 */
 	public java.util.Collection<E> enumerate();
 
+	public java.util.Collection<E> enumerate(String query, Object... params);
+
 	/**
+	 * Build a new {@link Stream} over all elements in the store.
+	 * <p>
 	 * The streams produced by this method are eagerly loaded. For performance
-	 * improvements when filtering, use #stream(String) which delegates
-	 * responsibility to the database itself.
+	 * improvements when filtering, use {@link #stream(String, Object...)}.
 	 *
-	 * @return A new {@link Stream} over the elements in the store
+	 * @return A new {@link Stream}
 	 */
 	default public Stream<E> stream() {
 		return enumerate().stream();
 	}
-
-	public java.util.Collection<E> enumerate(String query, Object... params);
 
 	default public Stream<E> stream(String query, Object... params) {
 		return enumerate(query, params).stream();
@@ -114,5 +120,5 @@ public interface StoreProvider<E> {
 
 	public StoreMetadata getMetadata();
 
-	public Collection getCollection();
+	public Oid<?> getOid();
 }

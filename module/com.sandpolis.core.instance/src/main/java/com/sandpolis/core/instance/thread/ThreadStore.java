@@ -20,19 +20,18 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.instance.thread.ThreadStore.ThreadStoreConfig;
 
 /**
- * The {@link ThreadStore} manages all of the application's
- * {@link ExecutorService} objects.
+ * {@link ThreadStore} manages all of the application's {@link ExecutorService}
+ * objects.
  *
- * @author cilki
  * @since 5.0.0
  */
-public final class ThreadStore extends StoreBase<ThreadStoreConfig> {
+public final class ThreadStore extends StoreBase implements ConfigurableStore<ThreadStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ThreadStore.class);
 
@@ -81,10 +80,4 @@ public final class ThreadStore extends StoreBase<ThreadStoreConfig> {
 	}
 
 	public static final ThreadStore ThreadStore = new ThreadStore();
-
-	@Override
-	public StoreMetadata getMetadata() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

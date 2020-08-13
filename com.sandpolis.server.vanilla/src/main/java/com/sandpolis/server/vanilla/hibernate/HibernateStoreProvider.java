@@ -25,19 +25,28 @@ import javax.persistence.Transient;
 
 import com.sandpolis.core.instance.state.Collection;
 import com.sandpolis.core.instance.state.Document;
-import com.sandpolis.core.instance.state.StateObject;
+import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.state.VirtObject;
 import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.instance.store.provider.StoreProvider;
 
 /**
- * A persistent {@link StoreProvider} that is backed by a Hibernate connection.
+ * {@link HibernateStoreProvider} is a persistent {@link StoreProvider} backed
+ * by a Hibernate connection. It is responsible for exactly one
+ * {@link Collection}.
+ * 
+ * <p>
+ * This object is persisted along with its data.
  *
- * @author cilki
  * @since 5.0.0
  */
 @Entity
-public class HibernateStoreProvider<E extends StateObject> implements StoreProvider<E> {
+public class HibernateStoreProvider<E extends VirtObject> implements StoreProvider<E> {
 
+	/**
+	 * The identifier is the fully qualified class name of the object that the
+	 * provider manages.
+	 */
 	@Id
 	private String id;
 
@@ -56,10 +65,10 @@ public class HibernateStoreProvider<E extends StateObject> implements StoreProvi
 	@Transient
 	Class<E> type;
 
-	public HibernateStoreProvider(Class<E> type) {
+	public HibernateStoreProvider(Class<E> type, Oid<?> oid) {
 		this.type = type;
 		this.id = type.getName();
-		this.collection = new Collection(null);
+		this.collection = new Collection(oid);
 		this.metadata = new HibernateStoreProviderMetadata();
 	}
 
@@ -68,9 +77,17 @@ public class HibernateStoreProvider<E extends StateObject> implements StoreProvi
 	}
 
 	@Override
+	public void initialize() {
+		em.getTransaction().begin();
+		metadata.initCount++;
+		em.flush();
+		em.getTransaction().commit();
+	}
+
+	@Override
 	public synchronized void add(E e) {
 		em.getTransaction().begin();
-		collection.add(e.tag(), e.getDocument());
+		collection.add(e.tag(), e.document);
 		em.flush();
 		em.getTransaction().commit();
 	}
@@ -92,7 +109,7 @@ public class HibernateStoreProvider<E extends StateObject> implements StoreProvi
 	@Override
 	public synchronized void remove(E e) {
 		em.getTransaction().begin();
-		collection.remove(e.getDocument());
+		collection.remove(e.document);
 		em.flush();
 		em.getTransaction().commit();
 	}
@@ -114,8 +131,8 @@ public class HibernateStoreProvider<E extends StateObject> implements StoreProvi
 	}
 
 	@Override
-	public Collection getCollection() {
-		return collection;
+	public Oid<?> getOid() {
+		return collection.getOid();
 	}
 
 	@Override
@@ -131,14 +148,6 @@ public class HibernateStoreProvider<E extends StateObject> implements StoreProvi
 		}
 
 		return q.getResultList();
-	}
-
-	@Override
-	public void initialize() {
-		em.getTransaction().begin();
-		metadata.initCount++;
-		em.flush();
-		em.getTransaction().commit();
 	}
 
 	@Override

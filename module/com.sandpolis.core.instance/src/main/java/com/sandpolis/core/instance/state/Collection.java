@@ -35,7 +35,7 @@ import com.sandpolis.core.instance.State.ProtoCollection;
  * @since 5.1.1
  */
 @Entity
-public class Collection implements ProtoType<ProtoCollection> {
+public class Collection extends StateObject<ProtoCollection> {
 
 	@Id
 	private String db_id;
@@ -49,6 +49,7 @@ public class Collection implements ProtoType<ProtoCollection> {
 	private Map<Integer, Document> documents;
 
 	public Collection(Oid<?> oid) {
+		this.oid = oid;
 		this.db_id = UUID.randomUUID().toString();
 		this.documents = new HashMap<>();
 	}
@@ -60,6 +61,10 @@ public class Collection implements ProtoType<ProtoCollection> {
 
 	protected Collection() {
 		// JPA CONSTRUCTOR
+	}
+
+	public Oid<?> getOid() {
+		return oid;
 	}
 
 	public Document get(int key) {
@@ -116,24 +121,22 @@ public class Collection implements ProtoType<ProtoCollection> {
 	}
 
 	@Override
-	public ProtoCollection snapshot() {
-		var snapshot = ProtoCollection.newBuilder().setPartial(false);
-		documents.forEach((tag, document) -> {
-			snapshot.putDocument(tag, document.snapshot());
-		});
-		return snapshot.build();
-	}
-
-	@Override
 	public ProtoCollection snapshot(Oid<?>... oids) {
-		var snapshot = ProtoCollection.newBuilder().setPartial(true);
-		for (var head : Arrays.stream(oids).mapToInt(Oid::head).distinct().toArray()) {
-			var children = Arrays.stream(oids).filter(oid -> oid.head() != head).map(Oid::tail).toArray(Oid[]::new);
+		if (oids.length == 0) {
+			var snapshot = ProtoCollection.newBuilder().setPartial(false);
+			documents.forEach((tag, document) -> {
+				snapshot.putDocument(tag, document.snapshot());
+			});
+			return snapshot.build();
+		} else {
+			var snapshot = ProtoCollection.newBuilder().setPartial(true);
+			for (var head : Arrays.stream(oids).mapToInt(Oid::head).distinct().toArray()) {
+				var children = Arrays.stream(oids).filter(oid -> oid.head() != head).map(Oid::tail).toArray(Oid[]::new);
 
-			snapshot.putDocument(head, documents.get(head).snapshot(children));
+				snapshot.putDocument(head, documents.get(head).snapshot(children));
+			}
+
+			return snapshot.build();
 		}
-
-		return snapshot.build();
 	}
-
 }

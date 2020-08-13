@@ -11,32 +11,32 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state;
 
-import com.google.protobuf.Message;
-
 /**
- * Indicates that a POJO has a corresponding protobuf representation.
+ * A {@link VirtObject} is a member of the virtual state tree.
  *
- * @param <E> The protobuf representation of the object
- * @since 5.0.0
+ * @since 6.2.0
  */
-public interface ProtoType<E extends Message> {
+public abstract class VirtObject {
+
+	public final Document document;
+
+	protected VirtObject(Document document) {
+		this.document = document;
+	}
 
 	/**
-	 * Incorperate the given protobuf into the object. Any field restrictions are
-	 * ignored.<br>
-	 * <br>
-	 * Implementations should have no side effects if the input was invalid.
+	 * Compute an identifier representative of the identity of the document.
 	 *
-	 * @param snapshot The changes
+	 * @return The document tag
 	 */
-	public void merge(E snapshot);
+	public abstract int tag();
 
 	/**
-	 * Convert the object's entire state to a new protocol buffer.
-	 *
-	 * @return A new protobuf fully representing the object
+	 * Determine whether the object has a valid identity.
+	 * 
+	 * @return Whether all "identity" attributes are defined
 	 */
-	public E snapshot();
-
-	public E snapshot(Oid<?>... oids);
+	public boolean checkIdentity() {
+		return true;
+	}
 }

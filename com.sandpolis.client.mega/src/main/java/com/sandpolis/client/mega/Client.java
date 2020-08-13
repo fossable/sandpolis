@@ -175,7 +175,7 @@ public final class Client {
 				future = future.thenApply(rs -> {
 					if (!rs.getResult()) {
 						// Close the connection
-						ConnectionStore.get(event.get()).ifPresent(sock -> {
+						ConnectionStore.getByCvid(event.get()).ifPresent(sock -> {
 							sock.close();
 						});
 					}

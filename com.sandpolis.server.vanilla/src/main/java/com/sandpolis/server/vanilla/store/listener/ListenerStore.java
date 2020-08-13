@@ -21,8 +21,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Listener.ListenerConfig;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtListener;
 import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
@@ -31,10 +33,9 @@ import com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStoreCo
 /**
  * The {@link ListenerStore} manages network listeners.
  *
- * @author cilki
  * @since 1.0.0
  */
-public final class ListenerStore extends CollectionStore<Listener, ListenerStoreConfig> {
+public final class ListenerStore extends CollectionStore<Listener> implements ConfigurableStore<ListenerStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ListenerStore.class);
 
@@ -75,12 +76,8 @@ public final class ListenerStore extends CollectionStore<Listener, ListenerStore
 		provider.initialize();
 	}
 
-	@Override
 	public Listener create(Consumer<Listener> configurator) {
-		var listener = new Listener(new Document(provider.getCollection()));
-		configurator.accept(listener);
-		provider.add(listener);
-		return listener;
+		return add(new Listener(new Document(null)), configurator);
 	}
 
 	public Listener create(ListenerConfig config) {
@@ -100,12 +97,12 @@ public final class ListenerStore extends CollectionStore<Listener, ListenerStore
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Listener.class, Listener::tag);
+			provider = new MemoryMapStoreProvider<>(Listener.class, Listener::tag, VirtListener.COLLECTION);
 		}
 
 		@Override
 		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(Listener.class, Listener::new);
+			provider = factory.supply(Listener.class, Listener::new, VirtListener.COLLECTION);
 		}
 	}
 

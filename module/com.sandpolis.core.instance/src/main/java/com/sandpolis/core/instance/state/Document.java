@@ -35,7 +35,7 @@ import com.sandpolis.core.instance.State.ProtoDocument;
  * @since 5.1.1
  */
 @Entity
-public class Document implements ProtoType<ProtoDocument> {
+public class Document extends StateObject<ProtoDocument> {
 
 	@Id
 	private String db_id;
@@ -57,6 +57,7 @@ public class Document implements ProtoType<ProtoDocument> {
 	private Map<Integer, Attribute<?>> attributes;
 
 	public Document(Oid<?> oid) {
+		this.oid = oid;
 		db_id = UUID.randomUUID().toString();
 		documents = new HashMap<>();
 		collections = new HashMap<>();
@@ -70,6 +71,14 @@ public class Document implements ProtoType<ProtoDocument> {
 
 	protected Document() {
 		// JPA CONSTRUCTOR
+	}
+
+	public Oid<?> getOid() {
+		return oid;
+	}
+
+	public void setOid(Oid<?> oid) {
+		this.oid = oid;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -125,34 +134,33 @@ public class Document implements ProtoType<ProtoDocument> {
 	}
 
 	@Override
-	public ProtoDocument snapshot() {
-		var snapshot = ProtoDocument.newBuilder().setPartial(false);
-		documents.forEach((tag, document) -> {
-			snapshot.putDocument(tag, document.snapshot());
-		});
-		collections.forEach((tag, collection) -> {
-			snapshot.putCollection(tag, collection.snapshot());
-		});
-		attributes.forEach((tag, attribute) -> {
-			snapshot.putAttribute(tag, attribute.snapshot());
-		});
-		return snapshot.build();
-	}
-
-	@Override
 	public ProtoDocument snapshot(Oid<?>... oids) {
-		var snapshot = ProtoDocument.newBuilder().setPartial(true);
-		for (var head : Arrays.stream(oids).mapToInt(Oid::head).distinct().toArray()) {
-			var children = Arrays.stream(oids).filter(oid -> oid.head() != head).map(Oid::tail).toArray(Oid[]::new);
+		if (oids.length == 0) {
+			var snapshot = ProtoDocument.newBuilder().setPartial(false);
+			documents.forEach((tag, document) -> {
+				snapshot.putDocument(tag, document.snapshot());
+			});
+			collections.forEach((tag, collection) -> {
+				snapshot.putCollection(tag, collection.snapshot());
+			});
+			attributes.forEach((tag, attribute) -> {
+				snapshot.putAttribute(tag, attribute.snapshot());
+			});
+			return snapshot.build();
+		} else {
+			var snapshot = ProtoDocument.newBuilder().setPartial(true);
+			for (var head : Arrays.stream(oids).mapToInt(Oid::head).distinct().toArray()) {
+				var children = Arrays.stream(oids).filter(oid -> oid.head() != head).map(Oid::tail).toArray(Oid[]::new);
 
-			if (documents.containsKey(head))
-				snapshot.putDocument(head, documents.get(head).snapshot(children));
-			if (collections.containsKey(head))
-				snapshot.putCollection(head, collections.get(head).snapshot(children));
-			if (attributes.containsKey(head))
-				snapshot.putAttribute(head, attributes.get(head).snapshot());
+				if (documents.containsKey(head))
+					snapshot.putDocument(head, documents.get(head).snapshot(children));
+				if (collections.containsKey(head))
+					snapshot.putCollection(head, collections.get(head).snapshot(children));
+				if (attributes.containsKey(head))
+					snapshot.putAttribute(head, attributes.get(head).snapshot());
+			}
+
+			return snapshot.build();
 		}
-
-		return snapshot.build();
 	}
 }

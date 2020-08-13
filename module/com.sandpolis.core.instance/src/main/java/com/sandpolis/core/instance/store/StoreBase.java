@@ -13,7 +13,6 @@ package com.sandpolis.core.instance.store;
 
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -31,11 +30,11 @@ import com.sandpolis.core.instance.store.event.ParameterizedEvent;
  * 
  * <p>
  * This root class defines a highly general structure applicable to all Stores
- * and handles operations like lifecycle management and event propegation.
+ * and handles operations like lifecycle management and event propagation.
  * 
  * @see CollectionStore
  */
-public abstract class StoreBase<E extends StoreConfig> {
+public abstract class StoreBase {
 
 	private Logger log;
 
@@ -58,13 +57,6 @@ public abstract class StoreBase<E extends StoreConfig> {
 	 */
 	public void close() throws Exception {
 	}
-
-	/**
-	 * Initialize the store.
-	 *
-	 * @param configurator The configuration block
-	 */
-	public abstract void init(Consumer<E> configurator);
 
 	/**
 	 * Broadcast the given event to the store's bus. This method blocks until every
@@ -128,6 +120,11 @@ public abstract class StoreBase<E extends StoreConfig> {
 	 * @param object The subscriber to add
 	 */
 	public final void register(Object object) {
+		try {
+			bus.unregister(object);
+		} catch (IllegalArgumentException e) {
+			assert true;
+		}
 		bus.register(object);
 	}
 
@@ -139,11 +136,4 @@ public abstract class StoreBase<E extends StoreConfig> {
 	public final void unregister(Object object) {
 		bus.unregister(object);
 	}
-
-	/**
-	 * Get the Store's metadata.
-	 * 
-	 * @return The store metadata object
-	 */
-	public abstract StoreMetadata getMetadata();
 }

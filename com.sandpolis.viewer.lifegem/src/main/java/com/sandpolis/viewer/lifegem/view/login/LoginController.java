@@ -11,20 +11,26 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.login;
 
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.viewer.lifegem.stage.StageStore.StageStore;
 
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.google.common.eventbus.Subscribe;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtPlugin;
+import com.sandpolis.core.instance.plugin.PluginStore;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.connection.ConnectionFuture;
+import com.sandpolis.core.net.state.StateTreeCmd;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
 import com.sandpolis.core.viewer.cmd.ServerCmd;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.common.controller.FxController;
 import com.sandpolis.viewer.lifegem.common.pane.CarouselPane;
+import com.sandpolis.viewer.lifegem.view.login.LoginController.LoginPhase;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectEndedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectStartedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.LoginEndedEvent;
@@ -148,22 +154,23 @@ public class LoginController extends FxController {
 						}
 
 						if (rs.getResult()) {
-//							PluginCmd.async().enumerate().addHandler((RS_PluginList rs2) -> {
-//
-//								var newPlugins = rs2.getPluginList().stream().filter(descriptor -> {
-//									return PluginStore.get(descriptor.getId()).isEmpty();
-//								}).collect(Collectors.toList());
-//
-//								post(LoginEndedEvent::new);
-//
-//								if (!newPlugins.isEmpty()) {
-//									pluginPhaseController.setPlugins(newPlugins);
-//									phase.set(LoginPhase.PLUGIN_PHASE);
-//								} else {
-//									phase.set(LoginPhase.COMPLETE);
-//									launchApplication();
-//								}
-//							});
+							StateTreeCmd.async()
+									.snapshot(VirtPlugin.COLLECTION, VirtPlugin::new, VirtPlugin.PACKAGE_ID)
+									.whenComplete((snapshot, ex) -> {
+										var plugins = snapshot.values().stream().filter(plugin -> {
+											return PluginStore.getByPackageId(plugin.getPackageId()).isEmpty();
+										}).collect(Collectors.toList());
+
+										post(LoginEndedEvent::new);
+
+										if (!plugins.isEmpty()) {
+											pluginPhaseController.setPlugins(plugins);
+											phase.set(LoginPhase.PLUGIN_PHASE);
+										} else {
+											phase.set(LoginPhase.COMPLETE);
+											launchApplication();
+										}
+									});
 						} else {
 							setStatus("Login attempt failed");
 							post(LoginEndedEvent::new);

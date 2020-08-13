@@ -18,8 +18,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import com.sandpolis.core.instance.state.Collection;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.Oid;
 import com.sandpolis.core.instance.store.StoreMetadata;
 
 /**
@@ -32,19 +31,24 @@ import com.sandpolis.core.instance.store.StoreMetadata;
  */
 public class MemoryListStoreProvider<K, E> implements StoreProvider<E> {
 
-	private final Collection collection = new Collection((Document) null);
+	private final Oid<?> oid;
 
 	private final List<E> container;
 
 	private final Function<E, Object> idFunction;
 
-	public MemoryListStoreProvider(Class<E> cls, Function<E, Object> idFunction) {
-		this(cls, idFunction, new ArrayList<>());
+	public MemoryListStoreProvider(Class<E> cls, Oid<?> oid) {
+		this(cls, Object::hashCode, oid);
 	}
 
-	public MemoryListStoreProvider(Class<E> cls, Function<E, Object> idFunction, List<E> list) {
+	public MemoryListStoreProvider(Class<E> cls, Function<E, Object> idFunction, Oid<?> oid) {
+		this(cls, idFunction, oid, new ArrayList<>());
+	}
+
+	public MemoryListStoreProvider(Class<E> cls, Function<E, Object> idFunction, Oid<?> oid, List<E> list) {
 		this.container = Objects.requireNonNull(list);
 		this.idFunction = Objects.requireNonNull(idFunction);
+		this.oid = Objects.requireNonNull(oid);
 	}
 
 	@Override
@@ -101,8 +105,8 @@ public class MemoryListStoreProvider<K, E> implements StoreProvider<E> {
 	}
 
 	@Override
-	public Collection getCollection() {
-		return collection;
+	public Oid<?> getOid() {
+		return oid;
 	}
 
 }

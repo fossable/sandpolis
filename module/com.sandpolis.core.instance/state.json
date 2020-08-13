@@ -304,7 +304,7 @@
       },
       "4": {
         "name": "expiration",
-        "type": "java.util.Date",
+        "type": "java.lang.Long",
         "description": "The user's expiration timestamp"
       },
       "5": {

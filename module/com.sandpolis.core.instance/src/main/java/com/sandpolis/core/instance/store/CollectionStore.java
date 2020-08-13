@@ -17,9 +17,10 @@ import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
+import com.sandpolis.core.instance.state.VirtObject;
 import com.sandpolis.core.instance.store.provider.StoreProvider;
 
-public abstract class CollectionStore<V, E extends StoreConfig> extends StoreBase<E> {
+public abstract class CollectionStore<V> extends StoreBase implements MetadataStore<StoreMetadata> {
 
 	protected StoreProvider<V> provider;
 
@@ -27,7 +28,22 @@ public abstract class CollectionStore<V, E extends StoreConfig> extends StoreBas
 		super(log);
 	}
 
-	public abstract V create(Consumer<V> configurator);
+	protected V add(V object, Consumer<V> configurator) {
+		configurator.accept(object);
+		if (object instanceof VirtObject) {
+			var virtObject = (VirtObject) object;
+			if (!virtObject.checkIdentity()) {
+				throw new IllegalArgumentException("Cannot add object with undefined identity attributes");
+			}
+
+			// Attach OID
+			if (provider.getOid() != null)
+				virtObject.document.setOid(provider.getOid().child(virtObject.tag()));
+		}
+
+		provider.add(object);
+		return object;
+	}
 
 	@Override
 	public void close() throws Exception {

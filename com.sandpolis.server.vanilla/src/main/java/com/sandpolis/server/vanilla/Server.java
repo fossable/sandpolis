@@ -164,17 +164,17 @@ public final class Server {
 				//
 				.setProperty("hibernate.ogm.datastore.create_database", "true");
 
-		List.of(com.sandpolis.core.instance.data.Document.class, com.sandpolis.core.instance.data.Collection.class,
-				com.sandpolis.core.instance.data.Attribute.class,
-				com.sandpolis.core.instance.data.StringAttribute.class,
-				com.sandpolis.core.instance.data.IntegerAttribute.class,
-				com.sandpolis.core.instance.data.LongAttribute.class,
-				com.sandpolis.core.instance.data.BooleanAttribute.class,
-				com.sandpolis.core.instance.data.DoubleAttribute.class,
-				com.sandpolis.core.instance.data.OsTypeAttribute.class,
-				com.sandpolis.core.instance.data.X509CertificateAttribute.class,
-				com.sandpolis.core.instance.data.InstanceFlavorAttribute.class,
-				com.sandpolis.core.instance.data.InstanceTypeAttribute.class,
+		List.of(com.sandpolis.core.instance.state.Document.class, com.sandpolis.core.instance.state.Collection.class,
+				com.sandpolis.core.instance.state.Attribute.class,
+				com.sandpolis.core.instance.state.StringAttributeValue.class,
+				com.sandpolis.core.instance.state.IntegerAttributeValue.class,
+				com.sandpolis.core.instance.state.LongAttributeValue.class,
+				com.sandpolis.core.instance.state.BooleanAttributeValue.class,
+				com.sandpolis.core.instance.state.DoubleAttributeValue.class,
+				com.sandpolis.core.instance.state.OsTypeAttributeValue.class,
+				com.sandpolis.core.instance.state.X509CertificateAttributeValue.class,
+				com.sandpolis.core.instance.state.InstanceFlavorAttributeValue.class,
+				com.sandpolis.core.instance.state.InstanceTypeAttributeValue.class,
 				com.sandpolis.server.vanilla.hibernate.HibernateStoreProvider.class,
 				com.sandpolis.server.vanilla.hibernate.HibernateStoreProviderMetadata.class)
 				.forEach(conf::addAnnotatedClass);

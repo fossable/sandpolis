@@ -22,8 +22,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Generator.LoopConfig;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtConnection;
 import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.net.Protocol;
@@ -36,13 +38,14 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 
 /**
- * A store for managing direct connections in the network.
+ * {@link ConnectionStore} manages connections between the local instance and a
+ * remote instance.
  *
- * @author cilki
  * @see NetworkStore
  * @since 5.0.0
  */
-public final class ConnectionStore extends CollectionStore<Connection, ConnectionStoreConfig> {
+public final class ConnectionStore extends CollectionStore<Connection>
+		implements ConfigurableStore<ConnectionStoreConfig> {
 
 	public static final Logger log = LoggerFactory.getLogger(ConnectionStore.class);
 
@@ -123,12 +126,8 @@ public final class ConnectionStore extends CollectionStore<Connection, Connectio
 		provider.initialize();
 	}
 
-	@Override
 	public Connection create(Consumer<Connection> configurator) {
-		var connection = new Connection(new Document(provider.getCollection()));
-		configurator.accept(connection);
-		provider.add(connection);
-		return connection;
+		return add(new Connection(new Document(null)), configurator);
 	}
 
 	public Connection create(Channel channel) {
@@ -143,7 +142,7 @@ public final class ConnectionStore extends CollectionStore<Connection, Connectio
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Connection.class, Connection::tag);
+			provider = new MemoryMapStoreProvider<>(Connection.class, Connection::tag, VirtConnection.COLLECTION);
 		}
 	}
 

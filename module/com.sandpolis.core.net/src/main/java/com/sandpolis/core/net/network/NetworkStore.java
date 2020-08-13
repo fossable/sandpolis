@@ -28,6 +28,7 @@ import com.google.common.graph.NetworkBuilder;
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.StoreMetadata;
@@ -43,14 +44,17 @@ import com.sandpolis.core.net.network.NetworkStore.NetworkStoreConfig;
 import com.sandpolis.core.net.util.CvidUtil;
 
 /**
- * A static store for managing network connections, which may or may not be
- * directly connected and therefore present in the {@link ConnectionStore}.
+ * {@link NetworkStore} manages "logical" connections between any two instances
+ * in the network.
+ * 
+ * <p>
+ * Internally, this class uses a graph to represent connections and is therefore
+ * compatible with standard graph algorithms.
  *
- * @author cilki
  * @see ConnectionStore
  * @since 5.0.0
  */
-public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
+public final class NetworkStore extends StoreBase implements ConfigurableStore<NetworkStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(NetworkStore.class);
 
@@ -314,10 +318,4 @@ public final class NetworkStore extends StoreBase<NetworkStoreConfig> {
 	}
 
 	public static final NetworkStore NetworkStore = new NetworkStore();
-
-	@Override
-	public StoreMetadata getMetadata() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

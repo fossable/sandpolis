@@ -21,8 +21,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Group.GroupConfig;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtGroup;
 import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
@@ -30,12 +32,11 @@ import com.sandpolis.server.vanilla.store.group.GroupStore.GroupStoreConfig;
 import com.sandpolis.server.vanilla.store.user.User;
 
 /**
- * The {@link GroupStore} manages groups and authentication mechanisms.
+ * {@link GroupStore} manages authentication groups.
  *
- * @author cilki
  * @since 5.0.0
  */
-public final class GroupStore extends CollectionStore<Group, GroupStoreConfig> {
+public final class GroupStore extends CollectionStore<Group> implements ConfigurableStore<GroupStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(GroupStore.class);
 
@@ -87,12 +88,8 @@ public final class GroupStore extends CollectionStore<Group, GroupStoreConfig> {
 		provider.initialize();
 	}
 
-	@Override
 	public Group create(Consumer<Group> configurator) {
-		var group = new Group(new Document(provider.getCollection()));
-		configurator.accept(group);
-		provider.add(group);
-		return group;
+		return add(new Group(new Document(null)), configurator);
 	}
 
 	/**
@@ -113,12 +110,12 @@ public final class GroupStore extends CollectionStore<Group, GroupStoreConfig> {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Group.class, Group::tag);
+			provider = new MemoryMapStoreProvider<>(Group.class, Group::tag, VirtGroup.COLLECTION);
 		}
 
 		@Override
 		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(Group.class, Group::new);
+			provider = factory.supply(Group.class, Group::new, VirtGroup.COLLECTION);
 		}
 	}
 

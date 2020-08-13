@@ -86,6 +86,19 @@ public class Oid<T> implements Comparable<Oid<?>> {
 		return Arrays.compare(this.value, o.value);
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Oid) {
+			return Arrays.equals(value, ((Oid<?>) obj).value);
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return value.hashCode();
+	}
+
 	/**
 	 * An {@link Oid} that corresponds to an {@link Attribute}.
 	 *
@@ -104,7 +117,7 @@ public class Oid<T> implements Comparable<Oid<?>> {
 	 *
 	 * @param <T> The type of the corresponding collection
 	 */
-	public static class CollectionOid<T extends StateObject> extends Oid<T> {
+	public static class CollectionOid<T extends VirtObject> extends Oid<T> {
 
 		public CollectionOid(String oid) {
 			super(oid);
@@ -117,7 +130,7 @@ public class Oid<T> implements Comparable<Oid<?>> {
 	 *
 	 * @param <T> The type of the corresponding document
 	 */
-	public static class DocumentOid<T extends StateObject> extends Oid<T> {
+	public static class DocumentOid<T extends VirtObject> extends Oid<T> {
 
 		public DocumentOid(String oid) {
 			super(oid);

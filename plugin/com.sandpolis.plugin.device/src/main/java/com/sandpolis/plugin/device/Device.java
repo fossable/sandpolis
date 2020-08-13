@@ -11,9 +11,9 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.device;
 
-import com.sandpolis.core.instance.data.Document;
+import com.sandpolis.core.instance.state.Document;
 
-public abstract class Device extends DocumentBindings.Device {
+public class Device extends StateTree.Device {
 
 	public Device(Document document) {
 		super(document);

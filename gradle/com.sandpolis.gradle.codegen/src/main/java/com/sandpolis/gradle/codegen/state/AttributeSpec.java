@@ -1,6 +1,6 @@
 package com.sandpolis.gradle.codegen.state;
 
-import static com.sandpolis.gradle.codegen.state.STGenerator.DATA_PACKAGE;
+import static com.sandpolis.gradle.codegen.state.STGenerator.ST_PACKAGE;
 
 import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.ClassName;
@@ -31,22 +31,29 @@ public class AttributeSpec {
 	public boolean identity;
 
 	public TypeName getJavaFxPropertyType() {
+		if (!type.startsWith("java.lang.")) {
+			return ClassName.get("com.sandpolis.viewer.lifegem", simpleName() + "Property");
+		}
 
 		if (type.endsWith("[]")) {
 			// TODO
-			return ClassName.get("javafx.beans.property", type.replace("[]", "") + "Property");
+			return ClassName.get("javafx.beans.property", simpleName().replace("[]", "") + "Property");
 		}
 
-		return ClassName.get("javafx.beans.property", type + "Property");
+		return ClassName.get("javafx.beans.property", simpleName() + "Property");
 	}
 
 	public TypeName getJavaFxSimplePropertyType() {
-		if (type.endsWith("[]")) {
-			// TODO
-			return ClassName.get("javafx.beans.property", "Simple" + type.replace("[]", "") + "Property");
+		if (!type.startsWith("java.lang.")) {
+			return getJavaFxPropertyType();
 		}
 
-		return ClassName.get("javafx.beans.property", "Simple" + type + "Property");
+		if (type.endsWith("[]")) {
+			// TODO
+			return ClassName.get("javafx.beans.property", "Simple" + simpleName().replace("[]", "") + "Property");
+		}
+
+		return ClassName.get("javafx.beans.property", "Simple" + simpleName() + "Property");
 	}
 
 	public TypeName getAttributeType() {
@@ -68,8 +75,12 @@ public class AttributeSpec {
 		}
 	}
 
+	public String simpleName() {
+		return type.replaceAll(".*\\.", "");
+	}
+
 	public TypeName getAttributeObjectType() {
-		return ParameterizedTypeName.get(ClassName.get(DATA_PACKAGE, "Attribute"), getAttributeType());
+		return ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "Attribute"), getAttributeType());
 	}
 
 	public ClassName getImplementationType() {
@@ -77,11 +88,10 @@ public class AttributeSpec {
 		var components = type.split("<|>");
 		if (components.length == 2) {
 			// TODO
-			return ClassName.get("com.sandpolis.core.instance.data",
-					type.replaceAll(".*\\.", "").replace("[]", "Array") + "Attribute");
+			return ClassName.get("com.sandpolis.core.instance.data", simpleName().replace("[]", "Array") + "Attribute");
 		} else {
 			return ClassName.get("com.sandpolis.core.instance.data",
-					type.replaceAll(".*\\.", "").replace("[]", "Array") + "Attribute");
+					simpleName().replaceAll(".*\\.", "").replace("[]", "Array") + "Attribute");
 		}
 	}
 }

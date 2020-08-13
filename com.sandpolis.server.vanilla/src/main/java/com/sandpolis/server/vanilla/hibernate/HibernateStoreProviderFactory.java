@@ -8,7 +8,8 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.service.spi.ServiceException;
 
 import com.sandpolis.core.instance.state.Document;
-import com.sandpolis.core.instance.state.StateObject;
+import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.state.VirtObject;
 import com.sandpolis.core.instance.store.provider.StoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 
@@ -21,22 +22,23 @@ public class HibernateStoreProviderFactory implements StoreProviderFactory {
 	}
 
 	@Override
-	public <E extends StateObject> StoreProvider<E> supply(Class<E> type, Function<Document, E> constructor) {
+	public <E extends VirtObject> StoreProvider<E> supply(Class<E> type, Function<Document, E> constructor,
+			Oid<?> oid) {
 		var em = emf.createEntityManager();
-		var provider = em.find(HibernateStoreProvider.class, type.getName());
+		@SuppressWarnings("unchecked")
+		HibernateStoreProvider<E> provider = em.find(HibernateStoreProvider.class, type.getName());
 		if (provider == null) {
-			provider = new HibernateStoreProvider<E>(type);
-			try {
-				em.getTransaction().begin();
-				em.persist(provider);
-				em.flush();
-				em.getTransaction().commit();
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
+			provider = new HibernateStoreProvider<E>(type, oid);
+
+			// Save the provider
+			em.getTransaction().begin();
+			em.persist(provider);
+			em.flush();
+			em.getTransaction().commit();
 		}
 
 		provider.em = em;
+		provider.type = type;
 		provider.constructor = constructor;
 
 		return provider;

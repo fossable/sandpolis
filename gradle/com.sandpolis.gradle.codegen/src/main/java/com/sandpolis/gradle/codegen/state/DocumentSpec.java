@@ -5,9 +5,14 @@ import java.util.TreeMap;
 public class DocumentSpec {
 
 	/**
-	 * The full document name.
+	 * The fully qualified document name.
 	 */
 	public String name;
+
+	/**
+	 * The OID of the parent document.
+	 */
+	public String parent;
 
 	/**
 	 * The document's sub-documents sorted by tag.

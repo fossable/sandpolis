@@ -22,7 +22,6 @@ import com.sandpolis.server.vanilla.store.group.Group;
 /**
  * Represents a user account on the server.
  *
- * @author cilki
  * @since 5.0.0
  */
 public class User extends VirtUser {
@@ -45,7 +44,7 @@ public class User extends VirtUser {
 		if (expiration == null)
 			return false;
 
-		return expiration.getTime() > 0 && expiration.getTime() < System.currentTimeMillis();
+		return expiration > 0 && expiration < System.currentTimeMillis();
 	}
 
 }

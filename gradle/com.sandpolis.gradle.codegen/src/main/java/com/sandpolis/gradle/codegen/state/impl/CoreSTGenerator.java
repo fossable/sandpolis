@@ -17,6 +17,8 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
+import javax.lang.model.element.Modifier;
+
 import com.sandpolis.gradle.codegen.state.AttributeSpec;
 import com.sandpolis.gradle.codegen.state.DocumentSpec;
 import com.sandpolis.gradle.codegen.state.STGenerator;
@@ -24,12 +26,8 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
-/**
- * Generator for basic document bindings.
- */
 public class CoreSTGenerator extends STGenerator {
 
 	@Override
@@ -51,27 +49,85 @@ public class CoreSTGenerator extends STGenerator {
 				.addStatement("return document.attribute($L)", oid.replaceAll(".*\\.", ""));
 		parent.addMethod(property.build());
 
-		// Add the attribute's OID field
-		parent.addField(newAttributeOidField(attribute, oid).build());
+		{
+			// Add the attribute's OID field
+			var field = FieldSpec
+					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "Oid", "AttributeOid"),
+							attribute.getAttributeType()), attribute.name.toUpperCase(), PUBLIC, STATIC, FINAL)
+					.initializer("new Oid.AttributeOid<>(\"$L\")", oid);
+
+			parent.addField(field.build());
+		}
 	}
 
 	@Override
 	public void processCollection(TypeSpec.Builder parent, DocumentSpec document, String oid) {
-		var documentClass = TypeSpec.classBuilder(DOCUMENT_PREFIX + document.name.replaceAll(".*\\.", "")) //
+		var documentClass = TypeSpec.classBuilder(ST_PREFIX + document.name.replaceAll(".*\\.", "")) //
 				.addModifiers(PUBLIC, STATIC) //
-				.superclass(ClassName.get(DATA_PACKAGE, "StateObject"));
+				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
 
-		// Add constructor
-		documentClass.addMethod(newDocumentConstructor().build());
+		{
+			// Add constructor
+			var method = MethodSpec.constructorBuilder() //
+					.addModifiers(PUBLIC) //
+					.addParameter(ClassName.get(ST_PACKAGE, "Document"), "document") //
+					.addStatement("super(document)");
+			documentClass.addMethod(method.build());
+		}
 
-		// Add tag method
-		documentClass.addMethod(newCollectionTagMethod(document).build());
+		{
+			// Add tag method
+			String identityString = "";
+			if (document.attributes != null) {
+				for (var attribute : document.attributes.values()) {
+					if (attribute.identity) {
+						switch (attribute.type) {
+						case "java.lang.String":
+							identityString += ".putBytes(" + LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name)
+									+ "().get().getBytes())";
+							break;
+						case "java.lang.Byte[]":
+							identityString += ".putBytes(" + LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name)
+									+ "().get())";
+							break;
+						}
+					}
+				}
+			}
 
-		// Add ID getter
-		documentClass.addMethod(newDocumentIdMethod().build());
+			// If there were no explicit identity attributes, use the ID field
+			if (identityString.isEmpty()) {
+				identityString = ".putBytes(getId().getBytes())";
+			}
 
-		// Add OID field
-		documentClass.addField(newCollectionOidField(ClassName.bestGuess(documentClass.build().name), oid).build());
+			var method = MethodSpec.methodBuilder("tag") //
+					.addAnnotation(Override.class) //
+					.addModifiers(PUBLIC, FINAL) //
+					.returns(int.class) //
+					.addStatement("return $T.murmur3_32().newHasher()$L.hash().asInt()",
+							ClassName.get("com.google.common.hash", "Hashing"), identityString);
+			documentClass.addMethod(method.build());
+		}
+
+		{
+			// Add ID getter
+			var method = MethodSpec.methodBuilder("getId") //
+					.addModifiers(PUBLIC) //
+					.returns(String.class) //
+					.addStatement("return document.getId()");
+			documentClass.addMethod(method.build());
+		}
+
+		{
+			// Add OID field
+			var documentType = ClassName.bestGuess(documentClass.build().name);
+			var field = FieldSpec
+					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "Oid", "CollectionOid"), documentType),
+							"COLLECTION", PUBLIC, STATIC, FINAL) //
+					.initializer("new Oid.CollectionOid<>(\"$L\")", oid);
+
+			documentClass.addField(field.build());
+		}
 
 		// Process subdocuments and attributes
 		processChildren(documentClass, document, oid + ".0");
@@ -82,168 +138,66 @@ public class CoreSTGenerator extends STGenerator {
 	@Override
 	public void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
 
-		var documentName = DOCUMENT_PREFIX + document.name.replaceAll(".*\\.", "");
+		var documentName = ST_PREFIX + document.name.replaceAll(".*\\.", "");
 
 		var documentClass = TypeSpec.classBuilder(documentName) //
 				.addModifiers(PUBLIC, STATIC) //
-				.superclass(ClassName.get(DATA_PACKAGE, "StateObject"));
+				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
 
-		// Add constructor
-		documentClass.addMethod(newDocumentConstructor().build());
+		{
+			// Add constructor
+			var method = MethodSpec.constructorBuilder() //
+					.addModifiers(PUBLIC) //
+					.addParameter(ClassName.get(ST_PACKAGE, "Document"), "document") //
+					.addStatement("super(document)");
+			documentClass.addMethod(method.build());
+		}
 
-		// Add ID getter
-		documentClass.addMethod(newDocumentIdMethod().build());
+		{
+			// Add ID getter
+			var method = MethodSpec.methodBuilder("getId") //
+					.addModifiers(PUBLIC) //
+					.returns(String.class) //
+					.addStatement("return document.getId()");
+			documentClass.addMethod(method.build());
+		}
 
-		// Add tag method
-		documentClass.addMethod(newDocumentTagMethod(oid).build());
+		{
+			// Add tag method
+			var method = MethodSpec.methodBuilder("tag") //
+					.addAnnotation(Override.class) //
+					.addModifiers(PUBLIC, FINAL) //
+					.returns(int.class) //
+					.addStatement("return $L", oid.replaceAll(".*\\.", ""));
+			documentClass.addMethod(method.build());
+		}
 
-		// Add OID field
-		documentClass.addField(newDocumentOidField(ClassName.bestGuess(documentClass.build().name), oid).build());
+		{
+			// Add OID field
+			var documentType = ClassName.bestGuess(documentClass.build().name);
+			var field = FieldSpec
+					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "Oid", "DocumentOid"), documentType),
+							"DOCUMENT", PUBLIC, STATIC, FINAL) //
+					.initializer("new Oid.DocumentOid<>(\"$L\")", oid);
+
+			documentClass.addField(field.build());
+		}
 
 		// Process subdocuments and attributes
 		processChildren(documentClass, document, oid);
 
 		parent.addType(documentClass.build());
 
-		// Add document method
-		if (!document.name.equals("Profile")) {
-			parent.addMethod(newDocumentMethod(document, oid).build());
+		{
+			// Add document method
+			var method = MethodSpec.methodBuilder(document.shortName().toLowerCase()) //
+					.addModifiers(PUBLIC) //
+					.returns(ClassName.bestGuess("Virt" + document.shortName())) //
+					.addStatement("return new Virt$L(document.document($L))", document.shortName(),
+							oid.replaceAll(".*\\.", ""));
+
+			parent.addMethod(method.build());
 		}
-	}
-
-	private FieldSpec.Builder newAttributeOidField(AttributeSpec attribute, String oid) {
-		return FieldSpec
-				.builder(ParameterizedTypeName.get(ClassName.get(DATA_PACKAGE + ".oid", "AttributeOid"),
-						attribute.getAttributeType()), attribute.name.toUpperCase(), PUBLIC, STATIC, FINAL)
-				.initializer("new AttributeOid<>(\"$L\")", oid);
-	}
-
-	private FieldSpec.Builder newDocumentOidField(TypeName documentType, String oid) {
-		return FieldSpec
-				.builder(ParameterizedTypeName.get(ClassName.get(DATA_PACKAGE + ".oid", "DocumentOid"), documentType),
-						"DOCUMENT", PUBLIC, STATIC, FINAL)
-				.initializer("new DocumentOid<>(\"$L\")", oid);
-	}
-
-	private FieldSpec.Builder newCollectionOidField(TypeName documentType, String oid) {
-		return FieldSpec
-				.builder(ParameterizedTypeName.get(ClassName.get(DATA_PACKAGE + ".oid", "CollectionOid"), documentType),
-						"COLLECTION", PUBLIC, STATIC, FINAL)
-				.initializer("new CollectionOid<>(\"$L\")", oid);
-	}
-
-	private MethodSpec.Builder newCollectionTagMethod(DocumentSpec document) {
-		String identityString = "";
-		if (document.attributes != null) {
-			for (var attribute : document.attributes.values()) {
-				if (attribute.identity) {
-					switch (attribute.type) {
-					case "java.lang.String":
-						identityString += ".putBytes(" + LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name)
-								+ "().get().getBytes())";
-						break;
-					case "java.lang.Byte[]":
-						identityString += ".putBytes(" + LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name) + "().get())";
-						break;
-					}
-				}
-			}
-		}
-
-		// If there were no explicit identity attributes, use the ID field
-		if (identityString.isEmpty()) {
-			identityString = ".putBytes(getId().getBytes())";
-		}
-
-		return MethodSpec.methodBuilder("tag") //
-				.addAnnotation(Override.class) //
-				.addModifiers(PUBLIC, FINAL) //
-				.returns(int.class) //
-				.addStatement("return $T.murmur3_32().newHasher()$L.hash().asInt()",
-						ClassName.get("com.google.common.hash", "Hashing"), identityString);
-	}
-
-	/**
-	 * Generate a constructor of the form:
-	 * 
-	 * <pre>
-	 * <code>
-	 * public Example(Document document) {
-	 *     super(document);
-	 * }
-	 * </code>
-	 * </pre>
-	 * 
-	 * @return A generated method
-	 */
-	private MethodSpec.Builder newDocumentConstructor() {
-		return MethodSpec.constructorBuilder() //
-				.addModifiers(PUBLIC) //
-				.addParameter(DOCUMENT_TYPE, "document") //
-				.addStatement("super(document)");
-	}
-
-	/**
-	 * Generate a method of the form:
-	 * 
-	 * <pre>
-	 * <code>
-	 * public Example example() {
-	 *     return new Example(document.document(4));
-	 * }
-	 * </code>
-	 * </pre>
-	 * 
-	 * @return A generated method
-	 */
-	private MethodSpec.Builder newDocumentMethod(DocumentSpec document, String oid) {
-		String shortName = document.name.replaceAll(".*\\.", "");
-
-		return MethodSpec.methodBuilder(shortName.toLowerCase()) //
-				.addModifiers(PUBLIC) //
-				.returns(ClassName.bestGuess("Virt" + shortName)) //
-				.addStatement("return new Virt$L(document.document($L))", shortName, oid.replaceAll(".*\\.", ""));
-	}
-
-	/**
-	 * Generate a method called {@code tag} of the form:
-	 * 
-	 * <pre>
-	 * <code>
-	 * public final int tag() {
-	 *     return 4;
-	 * }
-	 * </code>
-	 * </pre>
-	 * 
-	 * @return A generated method
-	 */
-	private MethodSpec.Builder newDocumentTagMethod(String oid) {
-		return MethodSpec.methodBuilder("tag") //
-				.addAnnotation(Override.class) //
-				.addModifiers(PUBLIC, FINAL) //
-				.returns(int.class) //
-				.addStatement("return $L", oid.replaceAll(".*\\.", ""));
-	}
-
-	/**
-	 * Generate a method called {@code getId} of the form:
-	 * 
-	 * <pre>
-	 * <code>
-	 * public String getId() {
-	 *     return document.getId();
-	 * }
-	 * </code>
-	 * </pre>
-	 * 
-	 * @return A generated method
-	 */
-	private MethodSpec.Builder newDocumentIdMethod() {
-		return MethodSpec.methodBuilder("getId") //
-				.addModifiers(PUBLIC) //
-				.returns(String.class) //
-				.addStatement("return document.getId()");
 	}
 
 	private void processChildren(TypeSpec.Builder documentClass, DocumentSpec document, String oid) {

@@ -1,5 +1,8 @@
 package com.sandpolis.core.instance.store;
 
+/**
+ * {@link StoreMetadata} contains information about the store itself.
+ */
 public interface StoreMetadata {
 
 	/**
@@ -8,5 +11,4 @@ public interface StoreMetadata {
 	 * @return The initialization count
 	 */
 	public int getInitCount();
-
 }

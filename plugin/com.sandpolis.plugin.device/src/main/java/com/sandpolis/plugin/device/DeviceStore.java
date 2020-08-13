@@ -18,10 +18,12 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
+import com.sandpolis.plugin.device.DeviceStore.DeviceStoreConfig;
 
-public class DeviceStore extends CollectionStore<Device, StoreConfig> {
+public class DeviceStore extends CollectionStore<Device> implements ConfigurableStore<DeviceStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(DeviceStore.class);
 
@@ -30,26 +32,22 @@ public class DeviceStore extends CollectionStore<Device, StoreConfig> {
 	}
 
 	@Override
-	public void init(Consumer<StoreConfig> configurator) {
+	public void init(Consumer<DeviceStoreConfig> configurator) {
 		var config = new DeviceStoreConfig();
 		configurator.accept(config);
 
 		provider.initialize();
 	}
 
-	@Override
 	public Device create(Consumer<Device> configurator) {
-		var device = new Device(new Document(provider.getCollection()));
-		configurator.accept(device);
-		return device;
-		return null;
+		return add(new Device(new Document(null)), configurator);
 	}
 
 	public final class DeviceStoreConfig extends StoreConfig {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Device.class, Device::tag);
+			provider = new MemoryMapStoreProvider<>(Device.class, Device::tag, VirtDevice.COLLECTION);
 		}
 	}
 

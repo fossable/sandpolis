@@ -25,7 +25,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.hash.Hashing;
 import com.sandpolis.gradle.codegen.ConfigExtension;
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 
@@ -36,13 +35,9 @@ import com.squareup.javapoet.TypeSpec;
  */
 public abstract class STGenerator extends DefaultTask {
 
-	public static final ClassName DOCUMENT_TYPE = ClassName.bestGuess("com.sandpolis.core.instance.data.Document");
+	public static final String ST_PREFIX = "Virt";
 
-	public static final String PLUGIN_OID = "1.1";
-
-	public static final String DOCUMENT_PREFIX = "Virt";
-
-	public static final String DATA_PACKAGE = "com.sandpolis.core.instance.data";
+	public static final String ST_PACKAGE = "com.sandpolis.core.instance.state";
 
 	protected List<DocumentSpec> flatTree;
 
@@ -66,9 +61,12 @@ public abstract class STGenerator extends DefaultTask {
 			processDocument(root, document, "1");
 		});
 		flatTree.stream().filter(document -> document.name.equals("Plugin")).findAny().ifPresent(document -> {
+			if (document.parent == null || document.parent.isEmpty() || document.parent.contains(".0.")) {
+				throw new RuntimeException("Invalid parent OID");
+			}
 			processDocument(root, document,
 					// Calculate plugin tag
-					PLUGIN_OID + "." + Hashing.murmur3_32().hashBytes(getProject().getName().getBytes()).asInt());
+					document.parent + "." + Hashing.murmur3_32().hashBytes(getProject().getName().getBytes()).asInt());
 		});
 
 		JavaFile.builder(getProject().getName(), root.build())
@@ -125,17 +123,17 @@ public abstract class STGenerator extends DefaultTask {
 	}
 
 	/**
-	 * Emit the given attribute into the given parent type.
+	 * Generate the given attribute from the specification.
 	 */
 	public abstract void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute, String oid);
 
 	/**
-	 * Emit the given collection.
+	 * Generate the given collection from the specification.
 	 */
 	public abstract void processCollection(TypeSpec.Builder parent, DocumentSpec document, String oid);
 
 	/**
-	 * Emit the given document.
+	 * Generate the given document from the specification.
 	 */
 	public abstract void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid);
 }

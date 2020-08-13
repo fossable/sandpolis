@@ -15,7 +15,7 @@ import com.sandpolis.core.instance.store.provider.StoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 
 /**
- * A base for all store configurations.
+ * {@link StoreConfig} is a base type for store configurations.
  */
 public abstract class StoreConfig {
 
@@ -23,15 +23,16 @@ public abstract class StoreConfig {
 	 * Indicate that the store's data should not survive the closing of the store.
 	 */
 	public void ephemeral() {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support ephemeral providers");
+		throw new UnsupportedOperationException(getClass().getName() + " does not support ephemeral providers");
 	}
 
 	/**
-	 * Indicate that the store's data should be persisted to the given database.
+	 * Indicate that the store's data should be persisted with a provider obtained
+	 * from the given factory.
 	 *
-	 * @param factory The factory object that will produce a {@link StoreProvider}
+	 * @param factory The provider factory that will produce a {@link StoreProvider}
 	 */
 	public void persistent(StoreProviderFactory factory) {
-		throw new UnsupportedOperationException(this.getClass().getName() + " does not support persistent providers");
+		throw new UnsupportedOperationException(getClass().getName() + " does not support persistent providers");
 	}
 }

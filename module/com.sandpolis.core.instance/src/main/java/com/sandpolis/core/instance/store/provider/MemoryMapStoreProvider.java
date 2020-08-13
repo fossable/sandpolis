@@ -18,19 +18,18 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import com.sandpolis.core.instance.state.Collection;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.Oid;
 import com.sandpolis.core.instance.store.StoreMetadata;
 
 /**
- * An ephemeral {@link StoreProvider} that is backed by a {@link Map}.
+ * {@link MemoryMapStoreProvider} is an ephemeral {@link StoreProvider} that is
+ * backed by a {@link HashMap} by default.
  *
- * @author cilki
  * @since 5.0.0
  */
 public class MemoryMapStoreProvider<K, E> implements StoreProvider<E> {
 
-	private final Collection collection = new Collection((Document) null);
+	private final Oid<?> oid;
 
 	private final Map<Object, E> container;
 
@@ -38,13 +37,18 @@ public class MemoryMapStoreProvider<K, E> implements StoreProvider<E> {
 
 	private final Metadata metadata = new Metadata();
 
-	public MemoryMapStoreProvider(Class<E> cls, Function<E, Object> idFunction) {
-		this(cls, idFunction, new HashMap<>());
+	public MemoryMapStoreProvider(Class<E> cls, Oid<?> oid) {
+		this(cls, Object::hashCode, oid);
 	}
 
-	public MemoryMapStoreProvider(Class<E> cls, Function<E, Object> idFunction, Map<Object, E> map) {
+	public MemoryMapStoreProvider(Class<E> cls, Function<E, Object> idFunction, Oid<?> oid) {
+		this(cls, idFunction, oid, new HashMap<>());
+	}
+
+	public MemoryMapStoreProvider(Class<E> cls, Function<E, Object> idFunction, Oid<?> oid, Map<Object, E> map) {
 		this.container = Objects.requireNonNull(map);
 		this.idFunction = Objects.requireNonNull(idFunction);
+		this.oid = oid;
 	}
 
 	@Override
@@ -90,13 +94,12 @@ public class MemoryMapStoreProvider<K, E> implements StoreProvider<E> {
 
 	@Override
 	public void initialize() {
-		// TODO Auto-generated method stub
-
+		assert true;
 	}
 
 	@Override
-	public Collection getCollection() {
-		return collection;
+	public Oid<?> getOid() {
+		return oid;
 	}
 
 	private class Metadata implements StoreMetadata {

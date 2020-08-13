@@ -29,8 +29,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.util.CertUtil;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtTrustAnchor;
 import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
@@ -43,7 +45,7 @@ import com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStoreConfig;
  * @author cilki
  * @since 5.0.0
  */
-public final class TrustStore extends CollectionStore<TrustAnchor, TrustStoreConfig> {
+public final class TrustStore extends CollectionStore<TrustAnchor> implements ConfigurableStore<TrustStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(TrustStore.class);
 
@@ -98,24 +100,20 @@ public final class TrustStore extends CollectionStore<TrustAnchor, TrustStoreCon
 		}
 	}
 
-	@Override
 	public TrustAnchor create(Consumer<TrustAnchor> configurator) {
-		var anchor = new TrustAnchor(new Document(provider.getCollection()));
-		configurator.accept(anchor);
-		provider.add(anchor);
-		return anchor;
+		return add(new TrustAnchor(new Document(null)), configurator);
 	}
 
 	public final class TrustStoreConfig extends StoreConfig {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(TrustAnchor.class, TrustAnchor::tag);
+			provider = new MemoryMapStoreProvider<>(TrustAnchor.class, TrustAnchor::tag, VirtTrustAnchor.COLLECTION);
 		}
 
 		@Override
 		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(TrustAnchor.class, TrustAnchor::new);
+			provider = factory.supply(TrustAnchor.class, TrustAnchor::new, VirtTrustAnchor.COLLECTION);
 		}
 
 	}

@@ -18,19 +18,23 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.StateTree.VirtProfile;
 import com.sandpolis.core.instance.profile.ProfileStore.ProfileStoreConfig;
 import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryListStoreProvider;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 
 /**
- * @author cilki
+ * {@link ProfileStore} manages profiles that can represent any type of
+ * instance.
+ * 
  * @since 4.0.0
  */
-public final class ProfileStore extends CollectionStore<Profile, ProfileStoreConfig> {
+public final class ProfileStore extends CollectionStore<Profile> implements ConfigurableStore<ProfileStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ProfileStore.class);
 
@@ -80,29 +84,25 @@ public final class ProfileStore extends CollectionStore<Profile, ProfileStoreCon
 		provider.initialize();
 	}
 
-	@Override
 	public Profile create(Consumer<Profile> configurator) {
-		var profile = new Profile(new Document(provider.getCollection()));
-		configurator.accept(profile);
-		provider.add(profile);
-		return profile;
+		return add(new Profile(new Document(null)), configurator);
 	}
 
 	public final class ProfileStoreConfig extends StoreConfig {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Profile.class, Profile::tag);
+			provider = new MemoryMapStoreProvider<>(Profile.class, Profile::tag, VirtProfile.DOCUMENT);
 		}
 
 		public void ephemeral(List<Profile> list) {
 			container = list;
-			provider = new MemoryListStoreProvider<>(Profile.class, Profile::tag, list);
+			provider = new MemoryListStoreProvider<>(Profile.class, Profile::tag, VirtProfile.DOCUMENT, list);
 		}
 
 		@Override
 		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(Profile.class, Profile::new);
+			provider = factory.supply(Profile.class, Profile::new, VirtProfile.DOCUMENT);
 		}
 	}
 

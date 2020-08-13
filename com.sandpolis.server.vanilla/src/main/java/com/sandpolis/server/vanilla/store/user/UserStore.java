@@ -23,15 +23,17 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.sandpolis.core.foundation.util.CryptoUtil;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtUser;
 import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 import com.sandpolis.server.vanilla.store.user.UserStore.UserStoreConfig;
 
-public final class UserStore extends CollectionStore<User, UserStoreConfig> {
+public final class UserStore extends CollectionStore<User> implements ConfigurableStore<UserStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(UserStore.class);
 
@@ -53,12 +55,8 @@ public final class UserStore extends CollectionStore<User, UserStoreConfig> {
 		provider.initialize();
 	}
 
-	@Override
 	public User create(Consumer<User> configurator) {
-		var user = new User(new Document(provider.getCollection()));
-		configurator.accept(user);
-		provider.add(user);
-		return user;
+		return add(new User(new Document(null)), configurator);
 	}
 
 	/**
@@ -71,10 +69,11 @@ public final class UserStore extends CollectionStore<User, UserStoreConfig> {
 
 		return create(user -> {
 			user.username().set(config.getUsername());
+			user.email().set(config.getEmail());
+			user.expiration().set(config.getExpiration());
 			user.hash().set(CryptoUtil.PBKDF2.hash(
 					// Compute a preliminary hash before PBKDF2 is applied
 					Hashing.sha512().hashString(config.getPassword(), Charsets.UTF_8).toString()));
-			// ...
 		});
 	}
 
@@ -84,12 +83,12 @@ public final class UserStore extends CollectionStore<User, UserStoreConfig> {
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(User.class, User::tag);
+			provider = new MemoryMapStoreProvider<>(User.class, User::tag, VirtUser.COLLECTION);
 		}
 
 		@Override
 		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(User.class, User::new);
+			provider = factory.supply(User.class, User::new, VirtUser.COLLECTION);
 		}
 	}
 

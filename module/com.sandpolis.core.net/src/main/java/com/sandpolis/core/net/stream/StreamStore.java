@@ -23,11 +23,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.Message;
+import com.sandpolis.core.instance.store.ConfigurableStore;
+import com.sandpolis.core.instance.store.MetadataStore;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.stream.StreamStore.StreamStoreConfig;
+import com.sandpolis.core.net.stream.StreamStore.StreamStoreMetadata;
 
 /**
  * The {@link StreamStore} contains four "banks" of stream endpoints that each
@@ -60,11 +63,10 @@ import com.sandpolis.core.net.stream.StreamStore.StreamStoreConfig;
  * [ ]    [ ]    [ ]    [ ]
  * </pre>
  *
- * @author cilki
  * @since 5.0.2
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
-public final class StreamStore extends StoreBase<StreamStoreConfig> {
+public final class StreamStore extends StoreBase
+		implements ConfigurableStore<StreamStoreConfig>, MetadataStore<StreamStoreMetadata> {
 
 	private static final Logger log = LoggerFactory.getLogger(StreamStore.class);
 
@@ -72,7 +74,7 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 		super(log);
 	}
 
-	private StreamStoreMetadata metadata = new StreamStoreMetadata();
+	private final StreamStoreMetadata metadata = new StreamStoreMetadata();
 
 	/**
 	 * The SOURCE bank.
@@ -211,6 +213,21 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 			return 1;
 		}
 
+		public int sourceSize() {
+			return source.size();
+		}
+
+		public int sinkSize() {
+			return sink.size();
+		}
+
+		public int inboundSize() {
+			return inbound.size();
+		}
+
+		public int outboundSize() {
+			return outbound.size();
+		}
 	}
 
 	public final class StreamStoreConfig extends StoreConfig {
@@ -224,5 +241,8 @@ public final class StreamStore extends StoreBase<StreamStoreConfig> {
 		}
 	}
 
+	/**
+	 * The global context {@link StreamStore}.
+	 */
 	public static final StreamStore StreamStore = new StreamStore();
 }

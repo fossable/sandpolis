@@ -2,21 +2,9 @@ package com.sandpolis.core.instance.state;
 
 import java.util.List;
 
-import com.sandpolis.core.instance.State.ProtoAttributeValue;
-import com.sandpolis.core.instance.data.BooleanAttributeValue;
-import com.sandpolis.core.instance.data.BooleanListAttributeValue;
-import com.sandpolis.core.instance.data.InstanceFlavorAttributeValue;
-import com.sandpolis.core.instance.data.InstanceFlavorListAttributeValue;
-import com.sandpolis.core.instance.data.InstanceTypeAttributeValue;
-import com.sandpolis.core.instance.data.InstanceTypeListAttributeValue;
-import com.sandpolis.core.instance.data.IntegerAttributeValue;
-import com.sandpolis.core.instance.data.IntegerListAttributeValue;
-import com.sandpolis.core.instance.data.LongAttributeValue;
-import com.sandpolis.core.instance.data.LongListAttributeValue;
-import com.sandpolis.core.instance.data.StringAttributeValue;
-import com.sandpolis.core.instance.data.StringListAttributeValue;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.State.ProtoAttributeValue;
 
 /**
  * A wrapper for an {@link Attribute}'s value. All implementations are

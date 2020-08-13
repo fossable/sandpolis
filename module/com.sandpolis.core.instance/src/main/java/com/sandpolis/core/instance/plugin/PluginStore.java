@@ -36,10 +36,12 @@ import com.sandpolis.core.foundation.util.JarUtil;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtPlugin;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginStore.PluginStoreConfig;
 import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
@@ -63,7 +65,7 @@ import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
  * @author cilki
  * @since 5.0.0
  */
-public final class PluginStore extends CollectionStore<Plugin, PluginStoreConfig> {
+public final class PluginStore extends CollectionStore<Plugin> implements ConfigurableStore<PluginStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(PluginStore.class);
 
@@ -239,12 +241,8 @@ public final class PluginStore extends CollectionStore<Plugin, PluginStoreConfig
 		provider.initialize();
 	}
 
-	@Override
 	public Plugin create(Consumer<Plugin> configurator) {
-		var plugin = new Plugin(new Document(provider.getCollection()));
-		configurator.accept(plugin);
-		provider.add(plugin);
-		return plugin;
+		return add(new Plugin(new Document(null)), configurator);
 	}
 
 	public final class PluginStoreConfig extends StoreConfig {
@@ -253,12 +251,12 @@ public final class PluginStore extends CollectionStore<Plugin, PluginStoreConfig
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Plugin.class, Plugin::tag);
+			provider = new MemoryMapStoreProvider<>(Plugin.class, Plugin::tag, VirtPlugin.COLLECTION);
 		}
 
 		@Override
 		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(Plugin.class, Plugin::new);
+			provider = factory.supply(Plugin.class, Plugin::new, VirtPlugin.COLLECTION);
 		}
 	}
 

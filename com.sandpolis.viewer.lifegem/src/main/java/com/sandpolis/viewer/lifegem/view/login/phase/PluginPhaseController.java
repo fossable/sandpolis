@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import com.sandpolis.core.cv.cmd.PluginCmd;
 import com.sandpolis.core.instance.Plugin.PluginConfig;
+import com.sandpolis.viewer.lifegem.StateTree.FxProfile.FxPlugin;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 
 import javafx.beans.property.BooleanProperty;
@@ -28,7 +29,7 @@ import javafx.scene.control.cell.CheckBoxTableCell;
 
 public class PluginPhaseController extends AbstractController {
 
-	public static class PluginProperty {
+	public static class PluginProperty extends FxPlugin {
 		private final StringProperty description = new SimpleStringProperty(this, "description");
 		private final BooleanProperty install = new SimpleBooleanProperty(this, "install");
 		private final StringProperty name = new SimpleStringProperty(this, "name");

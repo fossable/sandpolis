@@ -22,12 +22,12 @@ import java.util.prefs.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.pref.PrefStore.PrefStoreConfig;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.StoreMetadata;
 
 /**
  * This store provides access to a unique {@link Preferences} object for
@@ -36,7 +36,7 @@ import com.sandpolis.core.instance.store.StoreMetadata;
  * @author cilki
  * @since 5.0.0
  */
-public final class PrefStore extends StoreBase<PrefStoreConfig> {
+public final class PrefStore extends StoreBase implements ConfigurableStore<PrefStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(PrefStore.class);
 
@@ -238,10 +238,4 @@ public final class PrefStore extends StoreBase<PrefStoreConfig> {
 	}
 
 	public static final PrefStore PrefStore = new PrefStore();
-
-	@Override
-	public StoreMetadata getMetadata() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

@@ -23,11 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.state.StateEventStore.StateEventStoreConfig;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.StoreMetadata;
 
-public final class StateEventStore extends StoreBase<StateEventStoreConfig> {
+public final class StateEventStore extends StoreBase implements ConfigurableStore<StateEventStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(StateEventStore.class);
 
@@ -87,13 +87,6 @@ public final class StateEventStore extends StoreBase<StateEventStoreConfig> {
 		listeners.add(listener);
 	}
 
-	public final class StateEventStoreConfig extends StoreConfig {
-		public int queueSize;
-		public int concurrency;
-	}
-
-	public static final StateEventStore StateEventStore = new StateEventStore();
-
 	@Override
 	public void init(Consumer<StateEventStoreConfig> configurator) {
 		var config = new StateEventStoreConfig();
@@ -112,9 +105,10 @@ public final class StateEventStore extends StoreBase<StateEventStoreConfig> {
 		service.shutdown();
 	}
 
-	@Override
-	public StoreMetadata getMetadata() {
-		// TODO Auto-generated method stub
-		return null;
+	public final class StateEventStoreConfig extends StoreConfig {
+		public int queueSize;
+		public int concurrency;
 	}
+
+	public static final StateEventStore StateEventStore = new StateEventStore();
 }

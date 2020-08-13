@@ -38,7 +38,7 @@ import com.sandpolis.core.instance.State.ProtoAttribute;
  * @since 6.2.0
  */
 @Entity
-public class Attribute<T> implements ProtoType<ProtoAttribute> {
+public class Attribute<T> extends StateObject<ProtoAttribute> {
 
 	@Embeddable
 	public enum RetentionPolicy {
@@ -258,12 +258,11 @@ public class Attribute<T> implements ProtoType<ProtoAttribute> {
 	}
 
 	@Override
-	public ProtoAttribute snapshot(Oid<?>... oids) {
-		throw new UnsupportedOperationException();
-	}
+	public synchronized ProtoAttribute snapshot(Oid<?>... oids) {
+		if (oids.length != 0) {
+			throw new UnsupportedOperationException("Partial snapshots are not allowed on attributes");
+		}
 
-	@Override
-	public synchronized ProtoAttribute snapshot() {
 		if (!isPresent())
 			return ProtoAttribute.getDefaultInstance();
 

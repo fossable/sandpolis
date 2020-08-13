@@ -11,18 +11,19 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.main.list;
 
-import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
+import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.profile.AK_INSTANCE;
-import com.sandpolis.core.profile.attribute.key.AttributeKey;
-import com.sandpolis.core.profile.store.Profile;
+import com.sandpolis.core.instance.StateTree.VirtProfile;
+import com.sandpolis.core.instance.profile.Profile;
+import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.viewer.lifegem.StateTree.FxProfile;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 import com.sandpolis.viewer.lifegem.view.main.Events.HostDetailCloseEvent;
 import com.sandpolis.viewer.lifegem.view.main.Events.HostDetailOpenEvent;
@@ -37,13 +38,10 @@ public class HostListController extends AbstractController {
 
 	private static final Logger log = LoggerFactory.getLogger(HostListController.class);
 
-	/**
-	 * Default list header types.
-	 */
-	private static final List<AttributeKey<?>> defaultHeaders = List.of(AK_INSTANCE.UUID, AK_INSTANCE.VERSION);
-
 	@FXML
-	private TableView<Profile> table;
+	private TableView<FxProfile> table;
+
+	private static final List<Oid<?>> DEFAULT_HEADERS = List.of(VirtProfile.UUID);
 
 	@FXML
 	public void initialize() {
@@ -60,7 +58,7 @@ public class HostListController extends AbstractController {
 		table.setItems((ObservableList<Profile>) ProfileStore.getContainer());
 
 		// Set default headers
-		addColumns(defaultHeaders.stream());
+		addColumns(DEFAULT_HEADERS);
 	}
 
 	/**
@@ -74,20 +72,21 @@ public class HostListController extends AbstractController {
 		List<AttributeColumn> columns = (List) table.getColumns();
 
 		// Remove current columns that are not in the new set
-		columns.removeIf(column -> !event.get().contains(column.getKey()));
+		columns.removeIf(column -> !event.get().contains(column.getOid()));
 
 		// Add new columns that are not in the current set
 		addColumns(event.get().stream()
-				.filter(header -> !columns.stream().anyMatch(column -> header.equals(column.getKey()))));
+				.filter(header -> !columns.stream().anyMatch(column -> header.equals(column.getOid())))
+				.collect(Collectors.toList()));
 	}
 
 	/**
 	 * Add columns to the host table.
 	 *
-	 * @param headers A {@link Stream} of headers to add
+	 * @param headers The headers to add
 	 */
-	private void addColumns(Stream<AttributeKey<?>> headers) {
-		headers.map(AttributeColumn::new).forEach(table.getColumns()::add);
+	private void addColumns(List<Oid<?>> headers) {
+		headers.stream().map(AttributeColumn::new).forEach(table.getColumns()::add);
 	}
 
 }
