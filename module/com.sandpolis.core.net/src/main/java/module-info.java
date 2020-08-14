@@ -25,6 +25,7 @@ open module com.sandpolis.core.net {
 	exports com.sandpolis.core.net.stream;
 	exports com.sandpolis.core.net.util;
 	exports com.sandpolis.core.net;
+	exports com.sandpolis.core.net.state;
 	exports com.sandpolis.core.net.msg;
 
 	requires com.google.common;

@@ -11,6 +11,10 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state;
 
+import java.util.Objects;
+
+import com.sandpolis.core.instance.state.Oid.AttributeOid;
+
 /**
  * A {@link VirtObject} is a member of the virtual state tree.
  *
@@ -38,5 +42,12 @@ public abstract class VirtObject {
 	 */
 	public boolean checkIdentity() {
 		return true;
+	}
+
+	public <T> Attribute<T> get(AttributeOid<T> oid) {
+		if (Objects.requireNonNull(oid).isChildOf(document.getOid()))
+			throw new IllegalArgumentException();
+
+		return document.attribute(oid.last());
 	}
 }

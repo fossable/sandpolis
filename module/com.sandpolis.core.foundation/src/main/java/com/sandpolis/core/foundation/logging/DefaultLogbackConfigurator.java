@@ -12,13 +12,10 @@
 package com.sandpolis.core.foundation.logging;
 
 import static ch.qos.logback.classic.Level.DEBUG;
-import static ch.qos.logback.classic.Level.INFO;
 import static ch.qos.logback.classic.Level.OFF;
 import static ch.qos.logback.classic.Level.WARN;
 
 import java.util.Map;
-
-import com.sandpolis.core.foundation.Core;
 
 import ch.qos.logback.classic.BasicConfigurator;
 import ch.qos.logback.classic.Level;
@@ -31,7 +28,7 @@ import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 
 public class DefaultLogbackConfigurator extends BasicConfigurator {
 
-	private static final Map<String, Level> LEVELS = Map.of(
+	protected static final Map<String, Level> LEVELS = Map.of(
 			// io.netty
 			"io.netty", WARN,
 			// java.util.prefs
@@ -41,7 +38,7 @@ public class DefaultLogbackConfigurator extends BasicConfigurator {
 			// com.mchange
 			"com.mchange", OFF,
 			// com.sandpolis
-			"com.sandpolis", Core.SO_BUILD.getDevelopment() ? DEBUG : INFO);
+			"com.sandpolis", DEBUG);
 
 	/**
 	 * The format string for plain output.

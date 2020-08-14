@@ -17,18 +17,20 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableBiMap;
-import com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Client.IpLocation;
+import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation;
+import com.sandpolis.core.instance.state.Oid;
 
 /**
- * A geolocation service resolves a set of location attributes for an IP
- * address. The service may use HTTP, HTTPS, or a local file for resolution.
+ * An {@link AbstractGeolocationService} resolves a set of location attributes
+ * for an IP address. The service may use HTTP, HTTPS, or a local file for
+ * resolution.
  *
  * @since 5.1.1
  */
@@ -36,24 +38,30 @@ public abstract class AbstractGeolocationService {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractGeolocationService.class);
 
-	/**
-	 * Maps tag numbers from {@link Location} to field names specific to the
-	 * particular service.
-	 */
-	public final ImmutableBiMap<Integer, String> attrMap;
+	private HttpClient client;
 
 	/**
 	 * The application protocol which may be 'http', 'https', or 'file'.
 	 */
 	protected final String protocol;
 
-	private int timeout = 5;
+	/**
+	 * The request timeout.
+	 */
+	private Duration timeout = Duration.ofSeconds(Config.GEOLOCATION_TIMEOUT.value().orElse(5));
 
-	protected AbstractGeolocationService(ImmutableBiMap<Integer, String> attrMap, String protocol) {
-		this.attrMap = Objects.requireNonNull(attrMap);
-		this.protocol = Objects.requireNonNull(protocol);
-		if (protocol.equals("http")) {
+	protected AbstractGeolocationService(String protocol) {
+		this.protocol = Objects.requireNonNull(protocol).toLowerCase();
+		switch (this.protocol) {
+		case "http":
 			log.info("Using an insecure geolocation service");
+		case "https":
+			client = HttpClient.newHttpClient();
+			break;
+		case "file":
+			break;
+		default:
+			throw new IllegalArgumentException("Unknown protocol");
 		}
 	}
 
@@ -61,34 +69,32 @@ public abstract class AbstractGeolocationService {
 	 * Build a geolocation query for the given IP address and location attributes.
 	 *
 	 * @param ip     The IP address
-	 * @param fields The desired attributes from {@link IpLocation}
+	 * @param fields The desired attributes from {@link VirtIpLocation}
 	 * @return The query
 	 */
-	protected abstract String buildQuery(String ip, Set<Integer> fields);
+	protected abstract String buildQuery(String ip, Oid<?>... fields);
 
 	/**
-	 * Convert the query result into a {@link IpLocation} object.
+	 * Convert the query result into a {@link VirtIpLocation} object.
 	 *
 	 * @param result The query result
 	 * @return The location
 	 * @throws Exception
 	 */
-	protected abstract IpLocation parseLocation(String result) throws Exception;
+	protected abstract VirtIpLocation parseLocation(String result) throws Exception;
 
-	private HttpClient client = HttpClient.newHttpClient();
-
-	public CompletableFuture<IpLocation> query(String ip, Set<Integer> fields) {
+	public CompletableFuture<VirtIpLocation> query(String ip, Oid<?>... fields) {
 		var url = URI.create(buildQuery(ip, fields));
 		log.debug("Query URL: {}", url);
 
-		HttpRequest request = HttpRequest.newBuilder().uri(url).timeout(Duration.ofSeconds(timeout)).GET().build();
+		HttpRequest request = HttpRequest.newBuilder().uri(url).timeout(timeout).GET().build();
 
 		return client.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenApplyAsync(rs -> {
 			try {
 				return parseLocation(rs.body());
 			} catch (Exception e) {
 				log.debug("Query failed", e);
-				return null;
+				throw new CompletionException(e);
 			}
 		});
 	}

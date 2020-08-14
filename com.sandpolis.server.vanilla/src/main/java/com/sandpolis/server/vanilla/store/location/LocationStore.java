@@ -23,17 +23,19 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Client.IpLocation;
+import com.sandpolis.core.foundation.util.ValidationUtil;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation;
+import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.server.vanilla.store.location.LocationStore.LocationStoreConfig;
 
-public class LocationStore extends StoreBase<LocationStoreConfig> {
+public class LocationStore extends StoreBase implements ConfigurableStore<LocationStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(LocationStore.class);
 
-	private Cache<String, IpLocation> cache;
+	private Cache<String, VirtIpLocation> cache;
 
 	private AbstractGeolocationService service;
 
@@ -41,7 +43,7 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 		super(log);
 	}
 
-	public Future<IpLocation> queryAsync(String ip) {
+	public Future<VirtIpLocation> queryAsync(String ip, Oid<?>... fields) {
 		// Private IPs should not be resolved
 		if (ValidationUtil.privateIP(ip)) {
 			return CompletableFuture.completedFuture(null);
@@ -54,7 +56,7 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 				return CompletableFuture.completedFuture(location);
 		}
 
-		return service.query(ip, service.attrMap.keySet()).thenApply(location -> {
+		return service.query(ip, fields).thenApply(location -> {
 			if (location != null) {
 				synchronized (cache) {
 					cache.put(ip, location);
@@ -64,7 +66,7 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 		});
 	}
 
-	public IpLocation query(String ip, long timeout) {
+	public VirtIpLocation query(String ip, long timeout) {
 		try {
 			return queryAsync(ip).get(timeout, TimeUnit.MILLISECONDS);
 		} catch (TimeoutException e) {
@@ -77,7 +79,7 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 	}
 
 	@Override
-	public LocationStore init(Consumer<LocationStoreConfig> configurator) {
+	public void init(Consumer<LocationStoreConfig> configurator) {
 		var config = new LocationStore.LocationStoreConfig();
 		configurator.accept(config);
 
@@ -97,13 +99,23 @@ public class LocationStore extends StoreBase<LocationStoreConfig> {
 			service = new KeyCdn();
 			break;
 		}
-
-		return (LocationStore) super.init(null);
 	}
 
 	public final class LocationStoreConfig extends StoreConfig {
+
+		/**
+		 * The location service.
+		 */
 		public String service;
+
+		/**
+		 * The service API key.
+		 */
 		public String key;
+
+		/**
+		 * The amount of time location queries are cached.
+		 */
 		public Duration cacheExpiration;
 	}
 

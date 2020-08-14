@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance;
+package com.sandpolis.core.foundation;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -30,12 +30,11 @@ import org.slf4j.LoggerFactory;
  * rather than dots. Therefore the equivalent environment variable for
  * "install.path" is "INSTALL_PATH".
  *
- * @author cilki
  * @since 5.0.0
  */
 public final class Config {
 
-	public static final Logger log = LoggerFactory.getLogger(Config.class);
+	private static final Logger log = LoggerFactory.getLogger(Config.class);
 
 	public static final class ConfigProperty<T> {
 
@@ -242,15 +241,17 @@ public final class Config {
 			"sandpolis.geolocation.service_key");
 
 	/**
-	 * Whether process mutexes will be checked and enforced.
+	 * The geolocation request timeout.
+	 * <p>
+	 * <b> Compatible instances: server</b>
 	 */
-	public static final ConfigProperty<Boolean> IPC_MUTEX = new ConfigProperty<>(Boolean.class, "sandpolis.ipc.mutex");
+	public static final ConfigProperty<Integer> GEOLOCATION_TIMEOUT = new ConfigProperty<>(Integer.class,
+			"sandpolis.geolocation.timeout");
 
 	/**
-	 * The default message timeout in milliseconds.
+	 * Whether process mutexes will be checked and enforced.
 	 */
-	public static final ConfigProperty<Integer> IPC_TIMEOUT = new ConfigProperty<>(Integer.class,
-			"sandpolis.ipc.timeout");
+	public static final ConfigProperty<Boolean> MUTEX = new ConfigProperty<>(Boolean.class, "sandpolis.mutex");
 
 	/**
 	 * The default message timeout in milliseconds.
@@ -334,6 +335,37 @@ public final class Config {
 	 */
 	public static final ConfigProperty<Boolean> TRAFFIC_RAW = new ConfigProperty<>(Boolean.class,
 			"sandpolis.net.logging.raw");
+
+	/**
+	 * The storage provider which may be: mongodb, infinispan_embedded, or
+	 * ephemeral.
+	 */
+	public static final ConfigProperty<String> STORAGE_PROVIDER = new ConfigProperty<>(String.class,
+			"sandpolis.storage.provider");
+
+	/**
+	 * The MongoDB endpoint address and port.
+	 */
+	public static final ConfigProperty<String> MONGODB_HOST = new ConfigProperty<>(String.class,
+			"sandpolis.storage.mongodb.host");
+
+	/**
+	 * The MongoDB database name.
+	 */
+	public static final ConfigProperty<String> MONGODB_DATABASE = new ConfigProperty<>(String.class,
+			"sandpolis.storage.mongodb.database");
+
+	/**
+	 * The MongoDB database username.
+	 */
+	public static final ConfigProperty<String> MONGODB_USER = new ConfigProperty<>(String.class,
+			"sandpolis.storage.mongodb.user");
+
+	/**
+	 * The MongoDB database password.
+	 */
+	public static final ConfigProperty<String> MONGODB_PASSWORD = new ConfigProperty<>(String.class,
+			"sandpolis.storage.mongodb.password");
 
 	private Config() {
 	}

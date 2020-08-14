@@ -14,85 +14,60 @@ package com.sandpolis.viewer.lifegem.view.main.list;
 import java.util.Objects;
 import java.util.function.Function;
 
-import com.sandpolis.core.profile.attribute.Attribute;
-import com.sandpolis.core.profile.attribute.key.AttributeKey;
-import com.sandpolis.core.profile.store.Profile;
+import com.sandpolis.core.instance.state.Attribute;
+import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.viewer.lifegem.StateTree.FxProfile;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
-import javafx.scene.image.Image;
 
 /**
  * A {@link TableColumn} that takes its value from an {@link Attribute}.
  *
- * @author cilki
  * @since 5.0.0
  */
-public class AttributeColumn extends TableColumn<Profile, Label> {
+public class AttributeColumn extends TableColumn<FxProfile, Label> {
 
-	/**
-	 * The {@link AttributeKey} associated with this {@link AttributeColumn}.
-	 */
-	private AttributeKey<?> key;
+	private final Oid<?> oid;
 
-	/**
-	 * Get the associated {@link AttributeColumn}.
-	 *
-	 * @return The {@link AttributeKey} associated with this {@link AttributeColumn}
-	 */
-	public AttributeKey<?> getKey() {
-		return key;
-	}
+	public AttributeColumn(Oid<?> oid) {
+		this.oid = Objects.requireNonNull(oid);
 
-	public AttributeColumn(AttributeKey<?> key) {
-		this.key = Objects.requireNonNull(key);
+		// Set header text
+		if (FxUtil.getResources().containsKey(oid.toString()))
+			setText(FxUtil.getResources().getObject(oid.toString()).toString());
 
-		// Read and cache header text
-		if (key.getObject("name") == null)
-			if (FxUtil.getResources().containsKey("ak." + key.getPath()))
-				key.putObject("name", FxUtil.getResources().getObject("ak." + key.getPath()));
-		setText(key.getObject("name"));
+		// Set header image
+		// TODO
 
-		// Read and cache header image
-		if (key.getObject("icon") == null)
-			if (FxUtil.getResources().containsKey("ak." + key.getPath() + ".icon"))
-				key.putObject("icon",
-						new Image((String) FxUtil.getResources().getObject("ak." + key.getPath() + ".icon")));
-		setGraphic(key.getObject("icon"));
-
-		// Functions that control how attributes are mapped into Strings and Nodes
-		Function<Attribute<?>, Node> iconConverter = key.containsObject("iconConverter")
-				? key.getObject("iconConverter")
-				: a -> null;
-		Function<Attribute<?>, String> textConverter = key.containsObject("textConverter")
-				? key.getObject("textConverter")
-				: a -> a.get() == null ? null : a.get().toString();
+		// TODO get actual converters
+		Function<Attribute<?>, Node> iconConverter = a -> null;
+		Function<Attribute<?>, String> textConverter = a -> a.get() == null ? null : a.get().toString();
 
 		setCellValueFactory(p -> {
 			ObjectProperty<Label> label = new SimpleObjectProperty<>(new Label());
-//			Attribute<?> attribute = (ObservableAttribute<?>) p.getValue().getAttribute(key);
-//
-//			if (attribute instanceof ObservableAttribute) {
-//				// Bind the graphic property to the attribute via the converter function
-//				label.get().graphicProperty().bind(Bindings.createObjectBinding(() -> {
-//					return iconConverter.apply(attribute);
-//				}, (ObservableAttribute<?>) attribute));
-//
-//				// Bind the text property to the attribute via the converter function
-//				label.get().textProperty().bind(Bindings.createObjectBinding(() -> {
-//					return textConverter.apply(attribute);
-//				}, (ObservableAttribute<?>) attribute));
-//			} else {
-//				// Unchanging value attribute
-//				label.get().setText(textConverter.apply(attribute));
-//				label.get().setGraphic(iconConverter.apply(attribute));
-//			}
+			Attribute<?> attribute = null;// (Attribute<?>) p.getValue().test(oid);
+
+			// Bind the graphic property to the attribute via the converter function
+			label.get().graphicProperty().bind(Bindings.createObjectBinding(() -> {
+				return iconConverter.apply(attribute);
+			}, (ObservableAttribute<?>) attribute));
+
+			// Bind the text property to the attribute via the converter function
+			label.get().textProperty().bind(Bindings.createObjectBinding(() -> {
+				return textConverter.apply(attribute);
+			}, (ObservableAttribute<?>) attribute));
 
 			return label;
 		});
+	}
+
+	public Oid<?> getOid() {
+		return oid;
 	}
 }

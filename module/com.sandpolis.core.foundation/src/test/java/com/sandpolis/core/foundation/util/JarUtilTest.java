@@ -31,14 +31,14 @@ class JarUtilTest {
 	@Test
 	@DisplayName("Get a manifest value that exists")
 	void getManifestValue_1() throws IOException {
-		assertEquals("93834", getManifestValue(new File("src/test/resources/test1.jar"), "test-attribute").get());
+		assertEquals("93834", getManifestValue(new File("src/test/resources/small_program.jar"), "test-attribute").get());
 	}
 
 	@Test
 	@DisplayName("Get a manifest value that does not exist")
 	void getManifestValue_2() throws IOException {
-		assertTrue(getManifestValue(new File("src/test/resources/test1.jar"), "nonexist-attribute").isEmpty());
-		assertTrue(getManifestValue(new File("src/test/resources/test1.jar"), "").isEmpty());
+		assertTrue(getManifestValue(new File("src/test/resources/small_program.jar"), "nonexist-attribute").isEmpty());
+		assertTrue(getManifestValue(new File("src/test/resources/small_program.jar"), "").isEmpty());
 	}
 
 	@Test
@@ -58,16 +58,16 @@ class JarUtilTest {
 	@Test
 	@DisplayName("Get size of jar resources")
 	void getResourceSize_1() throws IOException {
-		assertEquals(88, getResourceSize(new File("src/test/resources/test1.jar"), "/META-INF/MANIFEST.MF"));
-		assertEquals(88, getResourceSize(new File("src/test/resources/test1.jar"), "META-INF/MANIFEST.MF"));
+		assertEquals(88, getResourceSize(new File("src/test/resources/small_program.jar"), "/META-INF/MANIFEST.MF"));
+		assertEquals(88, getResourceSize(new File("src/test/resources/small_program.jar"), "META-INF/MANIFEST.MF"));
 	}
 
 	@Test
 	@DisplayName("Try to get the size of nonexistent resources")
 	void getResourceSize_2() {
 		assertThrows(IOException.class,
-				() -> getResourceSize(new File("src/test/resources/test1.jar"), "META-INF/MANIFEST.MF2"));
-		assertThrows(IOException.class, () -> getResourceSize(new File("src/test/resources/test1.jar"), ""));
+				() -> getResourceSize(new File("src/test/resources/small_program.jar"), "META-INF/MANIFEST.MF2"));
+		assertThrows(IOException.class, () -> getResourceSize(new File("src/test/resources/small_program.jar"), ""));
 	}
 
 	@Test
@@ -81,23 +81,23 @@ class JarUtilTest {
 	@DisplayName("Try to get the size of resources from an invalid file type")
 	void getResourceSize_4() {
 		assertThrows(IOException.class,
-				() -> getResourceSize(new File("src/test/resources/test1.txt"), "META-INF/MANIFEST.MF"));
+				() -> getResourceSize(new File("src/test/resources/small_file.txt"), "META-INF/MANIFEST.MF"));
 		assertThrows(IOException.class, () -> getResourceSize(new File("src/test/resources"), "META-INF/MANIFEST.MF"));
 	}
 
 	@Test
 	@DisplayName("Check for resources in a jar file")
 	void resourceExists_1() throws IOException {
-		assertTrue(resourceExists(Paths.get("src/test/resources/test1.jar"), "/META-INF/MANIFEST.MF"));
-		assertTrue(resourceExists(Paths.get("src/test/resources/test1.jar"), "META-INF/MANIFEST.MF"));
-		assertFalse(resourceExists(Paths.get("src/test/resources/test1.jar"), "META-INF/MANIFEST.MF2"));
+		assertTrue(resourceExists(Paths.get("src/test/resources/small_program.jar"), "/META-INF/MANIFEST.MF"));
+		assertTrue(resourceExists(Paths.get("src/test/resources/small_program.jar"), "META-INF/MANIFEST.MF"));
+		assertFalse(resourceExists(Paths.get("src/test/resources/small_program.jar"), "META-INF/MANIFEST.MF2"));
 	}
 
 	@Test
 	@DisplayName("Try to check for resources in a text file")
 	void resourceExists_2() {
 		assertThrows(IOException.class,
-				() -> resourceExists(Paths.get("src/test/resources/test1.txt"), "META-INF/MANIFEST.MF"));
+				() -> resourceExists(Paths.get("src/test/resources/small_file.txt"), "META-INF/MANIFEST.MF"));
 	}
 
 }

@@ -12,11 +12,9 @@
 package com.sandpolis.core.foundation.util;
 
 import static com.sandpolis.core.foundation.Platform.OsType.AIX;
-import static com.sandpolis.core.foundation.Platform.OsType.ANDROID;
-import static com.sandpolis.core.foundation.Platform.OsType.FREEBSD;
 import static com.sandpolis.core.foundation.Platform.OsType.LINUX;
-import static com.sandpolis.core.foundation.Platform.OsType.MACOS;
-import static com.sandpolis.core.foundation.Platform.OsType.OPENBSD;
+import static com.sandpolis.core.foundation.Platform.OsType.DARWIN;
+import static com.sandpolis.core.foundation.Platform.OsType.BSD;
 import static com.sandpolis.core.foundation.Platform.OsType.SOLARIS;
 import static com.sandpolis.core.foundation.Platform.OsType.UNRECOGNIZED;
 import static com.sandpolis.core.foundation.Platform.OsType.WINDOWS;
@@ -52,22 +50,16 @@ public final class SystemUtil {
 			return WINDOWS;
 
 		if (name.startsWith("linux"))
-			if ("dalvik".equalsIgnoreCase(System.getProperty("java.vm.name")))
-				return ANDROID;
-			else
-				return LINUX;
+			return LINUX;
 
 		if (name.startsWith("mac") || name.startsWith("darwin"))
-			return MACOS;
+			return DARWIN;
 
 		if (name.startsWith("solaris") || name.startsWith("sunos"))
 			return SOLARIS;
 
-		if (name.startsWith("freebsd"))
-			return FREEBSD;
-
-		if (name.startsWith("openbsd"))
-			return OPENBSD;
+		if (name.startsWith("freebsd") || name.startsWith("openbsd"))
+			return BSD;
 
 		if (name.startsWith("aix"))
 			return AIX;

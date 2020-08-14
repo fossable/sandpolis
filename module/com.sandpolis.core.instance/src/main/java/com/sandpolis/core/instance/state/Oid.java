@@ -26,12 +26,8 @@ public class Oid<T> implements Comparable<Oid<?>> {
 		this.value = value;
 	}
 
-	public boolean isChild(Oid<?> oid) {
-		for (int i = Math.min(this.value.length, oid.value.length) - 1; i >= 0; i--) {
-			if (this.value[i] != oid.value[i])
-				return false;
-		}
-		return true;
+	public boolean isChildOf(Oid<?> oid) {
+		return Arrays.mismatch(this.value, oid.value) == this.value.length - 1;
 	}
 
 	public Oid<?> child(int tag) {
@@ -47,6 +43,15 @@ public class Oid<T> implements Comparable<Oid<?>> {
 	 */
 	public int head() {
 		return value[0];
+	}
+
+	/**
+	 * Get the last component of the OID.
+	 * 
+	 * @return The OID's last component
+	 */
+	public int last() {
+		return value[value.length - 1];
 	}
 
 	public Oid<?> head(int length) {

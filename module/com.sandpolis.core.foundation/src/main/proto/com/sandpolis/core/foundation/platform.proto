@@ -16,78 +16,27 @@ package core.foundation;
 option java_package = "com.sandpolis.core.foundation";
 option optimize_for = CODE_SIZE;
 
-/**
- * An enumeration of all Sandpolis instance types.
- */
-enum Instance {
-
-    // An application connected to the Sandpolis network for debugging purposes
-    CHARCOAL = 0;
-
-    // An application that coordinates communication between clients and viewers
-    SERVER = 1;
-
-    // An application that runs continuously on hosts in the Sandpolis network
-    CLIENT = 2;
-
-    // An application used for managing clients and servers
-    VIEWER = 3;
-
-    // An application responsible for installing and updating other instances
-    INSTALLER = 4;
-}
-
-/**
- * An enumeration of all official instance subtypes.
- */
-enum InstanceFlavor {
-
-    // Only valid for charcoal and installer instances types
-    NONE = 0;
-
-    // The official Java-based server instance
-    VANILLA = 1;
-
-    // The official cross-platform client instance
-    MEGA = 2;
-
-    // The official native client instance
-    MICRO = 3;
-
-    // The official terminal viewer instance
-    ASCETIC = 4;
-
-    // The official desktop viewer instance
-    LIFEGEM = 5;
-
-    // The official Android viewer instance
-    SOAPSTONE = 6;
-
-    // The official iOS viewer instance
-    LOCKSTONE = 7;
-}
-
-/**
- * An enumeration of major OS families.
- */
+// An enumeration of major OS families.
 enum OsType {
+
+	// An OS that could not be identified
     UNKNOWN = 0;
 
+	// An OS based on the Linux kernel
     LINUX = 1;
 
+	// A Windows NT OS
     WINDOWS = 2;
 
-    MACOS = 3;
+	// A BSD-derived OS based on the XNU kernel
+    DARWIN = 3;
 
-    IOS = 4;
+	// An OS based on the BSD kernel
+    BSD = 6;
 
-    ANDROID = 5;
-
-    FREEBSD = 6;
-
-    OPENBSD = 7;
-
+	// Solaris
     SOLARIS = 8;
 
+	// Advanced Interactive eXecutive
     AIX = 9;
 }

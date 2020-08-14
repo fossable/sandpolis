@@ -50,6 +50,10 @@ public final class ProtoUtil {
 		return begin().setAction(action);
 	}
 
+	public static Outcome success() {
+		return Outcome.newBuilder().setResult(true).build();
+	}
+
 	/**
 	 * Complete an action with a successful result.
 	 *
@@ -70,6 +74,10 @@ public final class ProtoUtil {
 	public static Outcome success(Outcome.Builder outcome, String comment) {
 		return outcome.setResult(true).setTime(System.currentTimeMillis() - outcome.getTime()).setComment(comment)
 				.build();
+	}
+	
+	public static Outcome failure() {
+		return Outcome.newBuilder().setResult(true).build();
 	}
 
 	/**

@@ -11,88 +11,112 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.server.vanilla.store.location;
 
-import java.util.Set;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.AS_CODE;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.CITY;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.CONTINENT;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.CONTINENT_CODE;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.COUNTRY;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.COUNTRY_CODE;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.ISP;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.LATITUDE;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.LONGITUDE;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.METRO_CODE;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.POSTAL_CODE;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.REGION;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.REGION_CODE;
+import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.TIMEZONE;
 
-import static com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Client.IpLocation.*;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableBiMap;
-import com.sandpolis.core.instance.DocumentBindings.Profile.Instance.Client.IpLocation;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation;
+import com.sandpolis.core.instance.state.Oid;
 
-public class KeyCdn extends AbstractGeolocationService {
+/**
+ * This {@link AbstractGeolocationService} implementation interacts with
+ * <a href="https://tools.keycdn.com/geo">https://tools.keycdn.com/geo</a>.
+ */
+public final class KeyCdn extends AbstractGeolocationService {
 
-	private static final ImmutableBiMap<Integer, String> attrMap = new ImmutableBiMap.Builder<Integer, String>()
-			.put(AS_CODE, "asn")//
-			.put(CITY, "city")//
-			.put(CONTINENT, "continent_name")//
-			.put(CONTINENT_CODE, "continent_code")//
-			.put(COUNTRY, "country_name")//
-			.put(COUNTRY_CODE, "country_code")//
-			.put(ISP, "isp")//
-			.put(LATITUDE, "latitude")//
-			.put(LONGITUDE, "lonitude")//
-			.put(METRO_CODE, "metro_code")//
-			.put(POSTAL_CODE, "postal_code")//
-			.put(REGION, "region_name")//
-			.put(REGION_CODE, "region_code")//
-			.put(TIMEZONE, "timezone")//
+	/**
+	 * The fields provided by the location service associated with {@link Oid}s.
+	 */
+	private static final ImmutableBiMap<Oid<?>, String> JSON_FIELDS = new ImmutableBiMap.Builder<Oid<?>, String>()
+			.put(AS_CODE, "asn") //
+			.put(CITY, "city") //
+			.put(CONTINENT, "continent_name") //
+			.put(CONTINENT_CODE, "continent_code") //
+			.put(COUNTRY, "country_name") //
+			.put(COUNTRY_CODE, "country_code") //
+			.put(ISP, "isp") //
+			.put(LATITUDE, "latitude") //
+			.put(LONGITUDE, "lonitude") //
+			.put(METRO_CODE, "metro_code") //
+			.put(POSTAL_CODE, "postal_code") //
+			.put(REGION, "region_name") //
+			.put(REGION_CODE, "region_code") //
+			.put(TIMEZONE, "timezone") //
 			.build();
 
 	public KeyCdn() {
-		super(attrMap, "https");
+		super("https");
 	}
 
 	@Override
-	protected String buildQuery(String ip, Set<Integer> fields) {
+	protected String buildQuery(String ip, Oid<?>... fields) {
+		// TODO request fields
+		Arrays.stream(fields).filter(JSON_FIELDS::containsKey);
 		return String.format("%s://tools.keycdn.com/geo.json?host=%s", protocol, ip);
 	}
 
 	@Override
-	protected IpLocation parseLocation(String result) throws Exception {
-		IpLocation location = new IpLocation(null);
+	protected VirtIpLocation parseLocation(String result) throws Exception {
+		VirtIpLocation location = new VirtIpLocation(null);
 		new ObjectMapper().readTree(result).path("data").path("geo").forEach(node -> {
 			node.fields().forEachRemaining(entry -> {
-				switch (attrMap.inverse().get(entry.getKey())) {
-				case AS_CODE:
+				switch (entry.getKey()) {
+				case "asn":
 					location.asCode().set(entry.getValue().asInt());
 					break;
-				case CITY:
+				case "city":
 					location.city().set(entry.getValue().asText());
 					break;
-				case CONTINENT:
+				case "continent_name":
 					location.continent().set(entry.getValue().asText());
 					break;
-				case CONTINENT_CODE:
+				case "continent_code":
 					location.continentCode().set(entry.getValue().asText());
 					break;
-				case COUNTRY:
+				case "country_name":
 					location.country().set(entry.getValue().asText());
 					break;
-				case COUNTRY_CODE:
+				case "country_code":
 					location.countryCode().set(entry.getValue().asText());
 					break;
-				case ISP:
+				case "isp":
 					location.isp().set(entry.getValue().asText());
 					break;
-				case LATITUDE:
+				case "latitude":
 					location.latitude().set(entry.getValue().asDouble());
 					break;
-				case LONGITUDE:
+				case "longitude":
 					location.longitude().set(entry.getValue().asDouble());
 					break;
-				case METRO_CODE:
+				case "metro_code":
 					location.metroCode().set(entry.getValue().asInt());
 					break;
-				case POSTAL_CODE:
+				case "postal_code":
 					location.postalCode().set(entry.getValue().asText());
 					break;
-				case REGION:
+				case "region_name":
 					location.region().set(entry.getValue().asText());
 					break;
-				case REGION_CODE:
+				case "region_code":
 					location.regionCode().set(entry.getValue().asText());
 					break;
-				case TIMEZONE:
+				case "timezone":
 					location.timezone().set(entry.getValue().asText());
 					break;
 				}

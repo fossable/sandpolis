@@ -84,7 +84,7 @@ class FsHandleTest {
 	@DisplayName("Check that the handle lists directory contents")
 	void list_1(@TempDir Path temp) throws IOException {
 		Files.createDirectory(temp.resolve("test1"));
-		Files.createFile(temp.resolve("test1.txt"));
+		Files.createFile(temp.resolve("small_file.txt"));
 
 		try (FsHandle fs = new FsHandle(temp.toString())) {
 
@@ -93,7 +93,7 @@ class FsHandleTest {
 			}));
 
 			assertTrue(fs.list().stream().anyMatch(listlet -> {
-				return "test1.txt".equals(listlet.getName()) && listlet.getDirectory() == false;
+				return "small_file.txt".equals(listlet.getName()) && listlet.getDirectory() == false;
 			}));
 
 			assertEquals(2, fs.list().size());

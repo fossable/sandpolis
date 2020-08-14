@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.MsgGroup.RQ_AddGroup;
 import com.sandpolis.core.net.MsgGroup.RQ_RemoveGroup;
-import com.sandpolis.core.net.command.ExeletTest;
+import com.sandpolis.core.net.exelet.ExeletTest;
 import com.sandpolis.core.instance.Group.GroupConfig;
 import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.instance.Result.Outcome;
