@@ -1,19 +1,16 @@
 # Uncomment the next line to define a global platform for your project
-platform :ios, '11'
+platform :ios, '13'
 
 target 'Sandpolis' do
   # Comment the next line if you don't want to use dynamic frameworks
   use_frameworks!
-
-  # Provides SHA256 hashing for passwords
-  pod 'CryptoSwift', '1.0.0'
   
   # Provides syntax highlighting for macro editor
   pod 'Highlightr', '2.1.0'
   
   # Provides integration with Firebase
-  pod 'Firebase/Firestore', '6.7.0'
-  pod 'Firebase/Auth', '6.7.0'
+  pod 'Firebase/Firestore', '6.30.0'
+  pod 'Firebase/Auth', '6.30.0'
 
   # Provides keychain wrapper
   pod 'SwiftKeychainWrapper', '3.4.0'

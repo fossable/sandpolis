@@ -9,12 +9,14 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+import CryptoKit
 import NIO
 import NIOProtobuf
 import NIOSSL
-import CryptoSwift
 import SwiftProtobuf
 import SwiftEventBus
+import Foundation
+import UIKit
 import os
 
 /// Represents a connection to a Sandpolis server
@@ -25,9 +27,9 @@ public class SandpolisConnection {
 		if let ca = NSDataAsset(name: "cert/ca"), let server = NSDataAsset(name: "cert/int_server") {
 			return .certificates([
 				// The root CA certificate
-				try! NIOSSLCertificate(bytes: ca.data.bytes, format: .pem),
+				try! NIOSSLCertificate(bytes: [UInt8](ca.data), format: .pem),
 				// The server intermediate certificate
-				try! NIOSSLCertificate(bytes: server.data.bytes, format: .pem)
+				try! NIOSSLCertificate(bytes: [UInt8](server.data), format: .pem)
 			])
 		}
 
@@ -163,7 +165,7 @@ public class SandpolisConnection {
 		var rq = Net_MSG.with {
 			$0.rqLogin = Net_RQ_Login.with {
 				$0.username = username
-				$0.password = password.bytes.sha256().toHexString()
+				$0.password = SHA256.hash(data: password.data(using: .utf8)!).map { String(format: "%02hhx", $0) }.joined()
 			}
 		}
 
