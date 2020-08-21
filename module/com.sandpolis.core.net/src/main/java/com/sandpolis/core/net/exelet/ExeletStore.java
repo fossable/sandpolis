@@ -17,14 +17,14 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginUnloadedEvent;
+import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.net.exelet.ExeletStore.ExeletStoreConfig;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.util.MsgUtil;
 
-public class ExeletStore extends StoreBase<ExeletStoreConfig> {
+public class ExeletStore extends StoreBase implements ConfigurableStore<ExeletStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ExeletStore.class);
 
@@ -92,12 +92,6 @@ public class ExeletStore extends StoreBase<ExeletStoreConfig> {
 
 		config.exelets.forEach(this::register);
 		PluginStore.register(this);
-	}
-
-	@Override
-	public StoreMetadata getMetadata() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public final class ExeletStoreConfig extends StoreConfig {

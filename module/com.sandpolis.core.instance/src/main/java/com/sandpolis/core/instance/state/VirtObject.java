@@ -13,6 +13,7 @@ package com.sandpolis.core.instance.state;
 
 import java.util.Objects;
 
+import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.instance.state.Oid.AttributeOid;
 
 /**
@@ -35,19 +36,30 @@ public abstract class VirtObject {
 	 */
 	public abstract int tag();
 
-	/**
-	 * Determine whether the object has a valid identity.
-	 * 
-	 * @return Whether all "identity" attributes are defined
-	 */
-	public boolean checkIdentity() {
-		return true;
-	}
-
 	public <T> Attribute<T> get(AttributeOid<T> oid) {
 		if (Objects.requireNonNull(oid).isChildOf(document.getOid()))
 			throw new IllegalArgumentException();
 
 		return document.attribute(oid.last());
+	}
+
+	/**
+	 * A {@link VirtObject} is valid if all present attributes pass value
+	 * restrictions.
+	 *
+	 * @return An error code or {@link ErrorCode#OK}
+	 */
+	public ErrorCode valid() {
+		return ErrorCode.OK;
+	}
+
+	/**
+	 * A {@link VirtObject} is complete if all required fields are present.
+	 *
+	 * @param config The candidate configuration
+	 * @return An error code or {@link ErrorCode#OK}
+	 */
+	public ErrorCode complete() {
+		return ErrorCode.OK;
 	}
 }
