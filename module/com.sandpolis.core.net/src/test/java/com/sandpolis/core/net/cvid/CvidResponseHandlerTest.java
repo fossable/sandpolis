@@ -24,8 +24,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.Metatypes.InstanceType;
-import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.cvid.CvidResponseHandler;
 import com.sandpolis.core.net.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
 import com.sandpolis.core.net.msg.MsgCvid.RQ_Cvid;

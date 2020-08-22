@@ -75,8 +75,8 @@ public class MainWindow extends BasicWindow {
 			content.removeAllComponents();
 			content.addComponent(generator, BorderLayout.Location.CENTER);
 			status.setSelected(2);
-			WindowStore.create(window -> {
-			}, GeneratorWindow::new);
+			WindowStore.create(GeneratorWindow::new, window -> {
+			});
 			break;
 		case F4:
 			content.removeAllComponents();

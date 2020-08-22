@@ -16,7 +16,7 @@ import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;

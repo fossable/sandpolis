@@ -23,8 +23,8 @@ import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.UnitSock;
+import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.connection.ConnectionFuture;
 

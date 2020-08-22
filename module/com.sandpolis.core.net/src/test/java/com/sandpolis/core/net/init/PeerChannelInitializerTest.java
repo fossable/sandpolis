@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.foundation.util.RandUtil;
 import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.channel.peer.PeerChannelInitializer;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;

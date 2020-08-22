@@ -145,14 +145,14 @@ public class LoginWindow extends BasicWindow {
 				String password = fld_password.getText();
 
 				setStatus("Establishing connection...", TextColor.ANSI.BLACK);
-				ConnectionStore.connect(address, port, false).addListener((ConnectionFuture sockFuture) -> {
+				ConnectionStore.connect(address, port).addListener((ConnectionFuture sockFuture) -> {
 					if (sockFuture.isSuccess()) {
 						setStatus("Logging in...", TextColor.ANSI.BLACK);
 						LoginCmd.async().target(sockFuture.get()).login(username, password).thenAccept(rs -> {
 							if (rs.getResult()) {
 								WindowStore.clear();
-								WindowStore.create(window -> {
-								}, MainWindow::new);
+								WindowStore.create(MainWindow::new, window -> {
+								});
 							} else {
 								fld_username.setEnabled(true);
 								fld_password.setEnabled(true);

@@ -28,10 +28,10 @@ import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
-import com.sandpolis.core.net.Protocol;
+import com.sandpolis.core.net.channel.ChannelConfig;
+import com.sandpolis.core.net.channel.client.ClientChannelInitializer;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.connection.ConnectionStore.ConnectionStoreConfig;
-import com.sandpolis.core.net.init.ClientChannelInitializer;
 import com.sandpolis.core.net.network.NetworkStore;
 
 import io.netty.bootstrap.Bootstrap;
@@ -66,9 +66,22 @@ public final class ConnectionStore extends CollectionStore<Connection>
 	 *         is established
 	 */
 	public ConnectionFuture connect(Bootstrap bootstrap) {
-		configureDefaults(bootstrap);
+		if (bootstrap.config().group() == null)
+			bootstrap.group(ThreadStore.get("net.connection.outgoing"));
 
 		return new ConnectionFuture(bootstrap.connect());
+	}
+
+	/**
+	 * Make a single client-server connection attempt to the given remote socket.
+	 *
+	 * @param address The IP address or DNS name
+	 * @param port    The port number
+	 * @return The future of the action
+	 */
+	public ConnectionFuture connect(String address, int port) {
+		return connect(address, port, config -> {
+		});
 	}
 
 	/**
@@ -79,8 +92,9 @@ public final class ConnectionStore extends CollectionStore<Connection>
 	 * @param strictCerts Whether strict certificate checking is enabled
 	 * @return The future of the action
 	 */
-	public ConnectionFuture connect(String address, int port, boolean strictCerts) {
-		return connect(new Bootstrap().remoteAddress(address, port).handler(new ClientChannelInitializer()));
+	public ConnectionFuture connect(String address, int port, Consumer<ChannelConfig> configurator) {
+		return connect(
+				new Bootstrap().remoteAddress(address, port).handler(new ClientChannelInitializer(configurator)));
 	}
 
 	/**
@@ -93,22 +107,16 @@ public final class ConnectionStore extends CollectionStore<Connection>
 	public ConnectionLoop connect(LoopConfig config) {
 		Objects.requireNonNull(config);
 
-		Bootstrap bootstrap = new Bootstrap().handler(new ClientChannelInitializer());
-		configureDefaults(bootstrap);
+		Bootstrap bootstrap = new Bootstrap().handler(new ClientChannelInitializer(builder -> {
+		}));
+
+		if (bootstrap.config().group() == null)
+			bootstrap.group(ThreadStore.get("net.connection.outgoing"));
 
 		ConnectionLoop loop = new ConnectionLoop(config, bootstrap);
 		loop.start();
 
 		return loop;
-	}
-
-	private void configureDefaults(Bootstrap bootstrap) {
-		Objects.requireNonNull(bootstrap);
-
-		if (bootstrap.config().group() == null)
-			bootstrap.group(ThreadStore.get("net.connection.outgoing"));
-		if (bootstrap.config().channelFactory() == null)
-			bootstrap.channel(Protocol.TCP.getChannel());
 	}
 
 	@Subscribe
@@ -137,8 +145,6 @@ public final class ConnectionStore extends CollectionStore<Connection>
 	}
 
 	public final class ConnectionStoreConfig extends StoreConfig {
-
-		public ClientChannelInitializer initializer = new ClientChannelInitializer();
 
 		@Override
 		public void ephemeral() {

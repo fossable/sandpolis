@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Generator.LoopConfig;
 import com.sandpolis.core.instance.Generator.NetworkTarget;
-import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.channel.ChannelConstant;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelOption;

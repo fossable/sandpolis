@@ -16,9 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import com.sandpolis.core.net.ChannelConstant;
 import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.net.exelet.Exelet.Handler;

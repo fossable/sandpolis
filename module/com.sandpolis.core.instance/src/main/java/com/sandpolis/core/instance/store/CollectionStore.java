@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
+import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.instance.state.VirtObject;
 import com.sandpolis.core.instance.store.provider.StoreProvider;
 
@@ -32,7 +33,7 @@ public abstract class CollectionStore<V> extends StoreBase implements MetadataSt
 		configurator.accept(object);
 		if (object instanceof VirtObject) {
 			var virtObject = (VirtObject) object;
-			if (!virtObject.checkIdentity()) {
+			if (virtObject.complete() != ErrorCode.OK) {
 				throw new IllegalArgumentException("Cannot add object with undefined identity attributes");
 			}
 

@@ -16,8 +16,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.concurrent.SubmissionPublisher;
 
 import com.google.protobuf.Message;
-import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.channel.HandlerKey;
 import com.sandpolis.core.net.connection.Connection;
 
 import io.netty.channel.ChannelHandlerContext;

@@ -17,11 +17,9 @@ import static com.sandpolis.core.foundation.Result.ErrorCode.INVALID_KEY;
 import static com.sandpolis.core.foundation.Result.ErrorCode.INVALID_PORT;
 import static com.sandpolis.core.foundation.Result.ErrorCode.OK;
 import static com.sandpolis.core.foundation.util.ValidationUtil.ipv4;
-import static com.sandpolis.core.foundation.util.ValidationUtil.port;
 
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +31,8 @@ import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtListener;
 import com.sandpolis.core.instance.state.Document;
-import com.sandpolis.core.instance.state.StateObject;
 import com.sandpolis.core.net.util.ChannelUtil;
-import com.sandpolis.core.server.net.init.ServerChannelInitializer;
+import com.sandpolis.core.server.channel.ServerChannelInitializer;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -99,13 +96,9 @@ public class Listener extends VirtListener {
 
 		b.childHandler(new ServerChannelInitializer(config -> {
 			config.cvid = Core.cvid();
-			try {
-				config.tls = SslContextBuilder
-						.forServer(CertUtil.parseKey(getPrivateKey()), CertUtil.parseCert(getCertificate()))
-						.protocols("TLSv1.3");
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
+
+			if (certificate().isPresent() && privateKey().isPresent())
+				config.serverTlsWithCert(getCertificate(), getPrivateKey());
 		}));
 
 		try {

@@ -28,11 +28,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.DocumentBindings.Profile;
+import com.sandpolis.core.instance.StateTree.VirtProfile.VirtConnection;
 import com.sandpolis.core.instance.state.Document;
-import com.sandpolis.core.net.ChannelConstant;
-import com.sandpolis.core.net.HandlerKey;
 import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.channel.ChannelConstant;
+import com.sandpolis.core.net.channel.HandlerKey;
 import com.sandpolis.core.net.message.MessageFuture;
 import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.net.util.MsgUtil;
@@ -52,7 +52,7 @@ import io.netty.util.concurrent.Future;
  * @author cilki
  * @since 5.0.0
  */
-public class Connection extends Profile.Instance.Connection {
+public class Connection extends VirtConnection {
 
 	private static final Logger log = LoggerFactory.getLogger(Connection.class);
 

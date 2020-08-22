@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.connection;
 
-import com.sandpolis.core.net.ChannelConstant;
+import com.sandpolis.core.net.channel.ChannelConstant;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.DefaultPromise;

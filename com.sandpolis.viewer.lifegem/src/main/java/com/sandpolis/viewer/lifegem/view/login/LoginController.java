@@ -114,7 +114,7 @@ public class LoginController extends FxController {
 		case SERVER_INPUT:
 			post(ConnectStartedEvent::new);
 			setStatus("Connecting to " + serverPhaseController.getAddress());
-			ConnectionStore.connect(serverPhaseController.getAddress(), serverPhaseController.getPort(), false)
+			ConnectionStore.connect(serverPhaseController.getAddress(), serverPhaseController.getPort())
 					.addListener((ConnectionFuture sockFuture) -> {
 						if (sockFuture.isSuccess()) {
 							connection = sockFuture.get();
@@ -154,8 +154,7 @@ public class LoginController extends FxController {
 						}
 
 						if (rs.getResult()) {
-							StateTreeCmd.async()
-									.snapshot(VirtPlugin.COLLECTION, VirtPlugin::new, VirtPlugin.PACKAGE_ID)
+							StateTreeCmd.async().snapshot(VirtPlugin.COLLECTION, VirtPlugin::new, VirtPlugin.PACKAGE_ID)
 									.whenComplete((snapshot, ex) -> {
 										var plugins = snapshot.values().stream().filter(plugin -> {
 											return PluginStore.getByPackageId(plugin.getPackageId()).isEmpty();

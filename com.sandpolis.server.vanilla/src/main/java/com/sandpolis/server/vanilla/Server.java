@@ -21,12 +21,12 @@ import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.exelet.ExeletStore.ExeletStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
-import static com.sandpolis.server.vanilla.store.group.GroupStore.GroupStore;
-import static com.sandpolis.server.vanilla.store.listener.ListenerStore.ListenerStore;
-import static com.sandpolis.server.vanilla.store.location.LocationStore.LocationStore;
-import static com.sandpolis.server.vanilla.store.server.ServerStore.ServerStore;
-import static com.sandpolis.server.vanilla.store.trust.TrustStore.TrustStore;
-import static com.sandpolis.server.vanilla.store.user.UserStore.UserStore;
+import static com.sandpolis.core.server.banner.BannerStore.ServerStore;
+import static com.sandpolis.core.server.group.GroupStore.GroupStore;
+import static com.sandpolis.core.server.listener.ListenerStore.ListenerStore;
+import static com.sandpolis.core.server.location.LocationStore.LocationStore;
+import static com.sandpolis.core.server.trust.TrustStore.TrustStore;
+import static com.sandpolis.core.server.user.UserStore.UserStore;
 
 import java.time.Duration;
 import java.util.List;
@@ -62,17 +62,17 @@ import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 import com.sandpolis.core.net.util.CvidUtil;
-import com.sandpolis.server.vanilla.exe.AuthExe;
-import com.sandpolis.server.vanilla.exe.GenExe;
-import com.sandpolis.server.vanilla.exe.GroupExe;
-import com.sandpolis.server.vanilla.exe.ListenerExe;
-import com.sandpolis.server.vanilla.exe.LoginExe;
-import com.sandpolis.server.vanilla.exe.PluginExe;
-import com.sandpolis.server.vanilla.exe.ServerExe;
-import com.sandpolis.server.vanilla.exe.StreamExe;
-import com.sandpolis.server.vanilla.exe.UserExe;
-import com.sandpolis.server.vanilla.gen.MegaGen;
-import com.sandpolis.server.vanilla.hibernate.HibernateStoreProviderFactory;
+import com.sandpolis.core.server.auth.AuthExe;
+import com.sandpolis.core.server.auth.LoginExe;
+import com.sandpolis.core.server.banner.BannerExe;
+import com.sandpolis.core.server.generator.GeneratorExe;
+import com.sandpolis.core.server.generator.MegaGen;
+import com.sandpolis.core.server.group.GroupExe;
+import com.sandpolis.core.server.hibernate.HibernateStoreProviderFactory;
+import com.sandpolis.core.server.listener.ListenerExe;
+import com.sandpolis.core.server.plugin.PluginExe;
+import com.sandpolis.core.server.stream.StreamExe;
+import com.sandpolis.core.server.user.UserExe;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
@@ -175,8 +175,8 @@ public final class Server {
 				com.sandpolis.core.instance.state.X509CertificateAttributeValue.class,
 				com.sandpolis.core.instance.state.InstanceFlavorAttributeValue.class,
 				com.sandpolis.core.instance.state.InstanceTypeAttributeValue.class,
-				com.sandpolis.server.vanilla.hibernate.HibernateStoreProvider.class,
-				com.sandpolis.server.vanilla.hibernate.HibernateStoreProviderMetadata.class)
+				com.sandpolis.core.server.hibernate.HibernateStoreProvider.class,
+				com.sandpolis.core.server.hibernate.HibernateStoreProviderMetadata.class)
 				.forEach(conf::addAnnotatedClass);
 
 		StoreProviderFactory providerFactory;
@@ -226,8 +226,8 @@ public final class Server {
 		});
 
 		ExeletStore.init(config -> {
-			config.exelets = List.of(AuthExe.class, GenExe.class, GroupExe.class, ListenerExe.class, LoginExe.class,
-					ServerExe.class, UserExe.class, PluginExe.class, StreamExe.class);
+			config.exelets = List.of(AuthExe.class, GeneratorExe.class, GroupExe.class, ListenerExe.class,
+					LoginExe.class, BannerExe.class, UserExe.class, PluginExe.class, StreamExe.class);
 		});
 
 		StreamStore.init(config -> {
@@ -280,9 +280,6 @@ public final class Server {
 				config.persistent(providerFactory);
 			else
 				config.ephemeral();
-		});
-
-		ServerStore.init(config -> {
 		});
 
 		LocationStore.init(config -> {

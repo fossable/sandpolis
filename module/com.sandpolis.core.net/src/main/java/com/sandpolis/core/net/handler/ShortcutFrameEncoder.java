@@ -17,7 +17,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
 
 /**
- * A Protobuf frame encoder that also accepts messages from other pipelines.
+ * {@link ShortcutFrameEncoder} is a protobuf frame encoder that also accepts
+ * messages from other pipelines.
  */
 public class ShortcutFrameEncoder extends ProtobufVarint32LengthFieldPrepender {
 
@@ -31,7 +32,7 @@ public class ShortcutFrameEncoder extends ProtobufVarint32LengthFieldPrepender {
 
 	public void shortcut(ByteBuf msg) throws Exception {
 		if (context == null)
-			throw new IllegalStateException();
+			throw new IllegalStateException("The handler has not been added to a pipeline");
 
 		try {
 			ByteBuf out = Unpooled.buffer(msg.readableBytes() + computeRawVarint32Size(msg.readableBytes()));
