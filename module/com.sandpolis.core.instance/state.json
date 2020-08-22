@@ -355,24 +355,14 @@
     }
   },
   {
-    "name": "Profile.Server.ReciprocalKeyPair",
-    "attributes": {
-      "1": {
-        "name": "signer",
-        "type": "java.lang.Byte[]",
-        "description": "A key responsible for signing data"
-      },
-      "2": {
-        "name": "verifier",
-        "type": "java.lang.Byte[]",
-        "description": "A key responsible for verifying signed data"
-      }
-    }
-  },
-  {
     "name": "Profile.Server.AuthMechanism",
     "attributes": {
       "1": {
+        "name": "mech_id",
+        "type": "java.lang.String",
+        "description": "The mechanism identifier"
+      },
+      "2": {
         "name": "password",
         "type": "java.lang.String",
         "description": "The mechanism password"
@@ -386,6 +376,22 @@
         "name": "name",
         "type": "java.lang.String"
       }
+    },
+    "relations": {
+      "2": {
+        "name": "owner",
+        "type": "Profile.Server.User"
+      },
+      "3": {
+        "name": "members",
+        "type": "Profile.Server.User",
+        "collection": true
+      },
+      "4": {
+        "name": "auth_mechanisms",
+        "type": "Profile.Server.AuthMechanism",
+        "collection": true
+      }
     }
   },
   {
@@ -394,7 +400,8 @@
       "1": "Profile.Server.User",
       "2": "Profile.Server.Listener",
       "3": "Profile.Server.Group",
-      "4": "Profile.Server.TrustAnchor"
+      "4": "Profile.Server.TrustAnchor",
+      "6": "Profile.Server.AuthMechanism"
     }
   },
   {
@@ -406,7 +413,8 @@
     },
     "collections": {
       "4": "Profile.Plugin",
-      "5": "Profile.Connection"
+      "5": "Profile.Connection",
+      "6": "Profile.LogicalConnection"
     },
     "attributes": {
       "20": {

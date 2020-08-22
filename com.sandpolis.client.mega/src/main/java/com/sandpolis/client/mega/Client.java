@@ -34,13 +34,11 @@ import com.sandpolis.client.mega.exe.ClientExe;
 import com.sandpolis.core.cv.cmd.PluginCmd;
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.foundation.Result.Outcome;
-import com.sandpolis.core.instance.Auth.KeyContainer;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Generator.MegaConfig;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.net.handler.sand5.ReciprocalKeyPair;
 import com.sandpolis.core.net.network.NetworkEvents.ServerEstablishedEvent;
 import com.sandpolis.core.net.network.NetworkEvents.ServerLostEvent;
 
@@ -155,15 +153,6 @@ public final class Client {
 				var auth = SO_CONFIG.getAuthentication();
 
 				switch (auth.getAuthOneofCase()) {
-				case KEY:
-					KeyContainer mech = auth.getKey();
-					ReciprocalKeyPair key = new ReciprocalKeyPair(null,
-							//
-							mech.getClient().getVerifier().toByteArray(),
-							//
-							mech.getClient().getSigner().toByteArray());
-					future = AuthCmd.async().target(event.get()).key(auth.getGroupName(), mech.getId(), key);
-					break;
 				case PASSWORD:
 					future = AuthCmd.async().target(event.get()).password(auth.getPassword().getPassword());
 					break;
