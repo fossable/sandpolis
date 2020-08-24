@@ -17,10 +17,9 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
-import javax.lang.model.element.Modifier;
-
 import com.sandpolis.gradle.codegen.state.AttributeSpec;
 import com.sandpolis.gradle.codegen.state.DocumentSpec;
+import com.sandpolis.gradle.codegen.state.RelationSpec;
 import com.sandpolis.gradle.codegen.state.STGenerator;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -31,23 +30,63 @@ import com.squareup.javapoet.TypeSpec;
 public class CoreSTGenerator extends STGenerator {
 
 	@Override
+	public void processRelation(TypeSpec.Builder parent, RelationSpec relation, String oid) {
+		if (relation.collection) {
+			{
+				// Add the getter method
+				var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "get_" + relation.name)) //
+						.addModifiers(PUBLIC) //
+						.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STRelation"),
+								ClassName.bestGuess(STGenerator.ST_PREFIX + relation.simpleName()))) //
+						.addStatement("return document.collection($L).collectionList($L::new)",
+								oid.replaceAll(".*\\.", ""), STGenerator.ST_PREFIX + relation.simpleName());
+				parent.addMethod(method.build());
+			}
+
+		} else {
+			{
+				// Add the getter method
+				var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "get_" + relation.name)) //
+						.addModifiers(PUBLIC) //
+						.returns(ClassName.bestGuess(STGenerator.ST_PREFIX + relation.simpleName())) //
+						.addStatement("return new $L(document.document($L))",
+								STGenerator.ST_PREFIX + relation.simpleName(), oid.replaceAll(".*\\.", ""));
+				parent.addMethod(method.build());
+			}
+
+			{
+				// Add the setter method
+				var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "set_" + relation.name)) //
+						.addModifiers(PUBLIC) //
+						.addParameter(ClassName.bestGuess(STGenerator.ST_PREFIX + relation.simpleName()), "v") //
+						.addStatement("document.setDocument($L, v.document)", oid.replaceAll(".*\\.", ""));
+				parent.addMethod(method.build());
+			}
+		}
+	}
+
+	@Override
 	public void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute, String oid) {
 
-		// Add the attribute's getter method
-		var getter = MethodSpec
-				.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL,
-						(attribute.type.equals("java.lang.Boolean") ? "is_" : "get_") + attribute.name)) //
-				.addModifiers(PUBLIC) //
-				.returns(attribute.getAttributeType()) //
-				.addStatement("return $L().get()", LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name));
-		parent.addMethod(getter.build());
+		{
+			// Add the attribute's getter method
+			var method = MethodSpec
+					.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL,
+							(attribute.type.equals("java.lang.Boolean") ? "is_" : "get_") + attribute.name)) //
+					.addModifiers(PUBLIC) //
+					.returns(attribute.getAttributeType()) //
+					.addStatement("return $L().get()", LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name));
+			parent.addMethod(method.build());
+		}
 
-		// Add the attribute's property method
-		var property = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name)) //
-				.addModifiers(PUBLIC) //
-				.returns(attribute.getAttributeObjectType()) //
-				.addStatement("return document.attribute($L)", oid.replaceAll(".*\\.", ""));
-		parent.addMethod(property.build());
+		{
+			// Add the attribute's property method
+			var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name)) //
+					.addModifiers(PUBLIC) //
+					.returns(attribute.getAttributeObjectType()) //
+					.addStatement("return document.attribute($L)", oid.replaceAll(".*\\.", ""));
+			parent.addMethod(method.build());
+		}
 
 		{
 			// Add the attribute's OID field
@@ -70,7 +109,7 @@ public class CoreSTGenerator extends STGenerator {
 			// Add constructor
 			var method = MethodSpec.constructorBuilder() //
 					.addModifiers(PUBLIC) //
-					.addParameter(ClassName.get(ST_PACKAGE, "Document"), "document") //
+					.addParameter(ClassName.get(ST_PACKAGE, "STDocument"), "document") //
 					.addStatement("super(document)");
 			documentClass.addMethod(method.build());
 		}
@@ -148,7 +187,7 @@ public class CoreSTGenerator extends STGenerator {
 			// Add constructor
 			var method = MethodSpec.constructorBuilder() //
 					.addModifiers(PUBLIC) //
-					.addParameter(ClassName.get(ST_PACKAGE, "Document"), "document") //
+					.addParameter(ClassName.get(ST_PACKAGE, "STDocument"), "document") //
 					.addStatement("super(document)");
 			documentClass.addMethod(method.build());
 		}
@@ -196,7 +235,8 @@ public class CoreSTGenerator extends STGenerator {
 					.addStatement("return new Virt$L(document.document($L))", document.shortName(),
 							oid.replaceAll(".*\\.", ""));
 
-			parent.addMethod(method.build());
+			if (parent.build().superclass.toString().contains("VirtObject"))
+				parent.addMethod(method.build());
 		}
 	}
 
@@ -211,12 +251,16 @@ public class CoreSTGenerator extends STGenerator {
 			for (var entry : document.documents.entrySet()) {
 				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
 				processDocument(documentClass, subdocument, oid + "." + entry.getKey());
-
 			}
 		}
 		if (document.attributes != null) {
 			for (var entry : document.attributes.entrySet()) {
 				processAttribute(documentClass, entry.getValue(), oid + "." + entry.getKey());
+			}
+		}
+		if (document.relations != null) {
+			for (var entry : document.relations.entrySet()) {
+				processRelation(documentClass, entry.getValue(), oid + "." + entry.getKey());
 			}
 		}
 	}

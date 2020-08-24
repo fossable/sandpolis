@@ -7,8 +7,8 @@ import javax.persistence.EntityManagerFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.spi.ServiceException;
 
-import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtObject;
 import com.sandpolis.core.instance.store.provider.StoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
@@ -22,7 +22,7 @@ public class HibernateStoreProviderFactory implements StoreProviderFactory {
 	}
 
 	@Override
-	public <E extends VirtObject> StoreProvider<E> supply(Class<E> type, Function<Document, E> constructor,
+	public <E extends VirtObject> StoreProvider<E> supply(Class<E> type, Function<STDocument, E> constructor,
 			Oid<?> oid) {
 		var em = emf.createEntityManager();
 		@SuppressWarnings("unchecked")

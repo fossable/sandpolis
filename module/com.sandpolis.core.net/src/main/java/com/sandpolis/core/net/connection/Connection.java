@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtConnection;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.channel.HandlerKey;
@@ -45,11 +45,10 @@ import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.Future;
 
 /**
- * This class manages a logical network "connection" between any two arbitrary
- * endpoints. If one out of the pair of hosts is the local instance, this class
- * provides send/receive capabilities.
+ * {@link Connection} manages a logical network "connection" between any two
+ * arbitrary endpoints. If one out of the pair of hosts is the local instance,
+ * this class provides send/receive capabilities.
  *
- * @author cilki
  * @since 5.0.0
  */
 public class Connection extends VirtConnection {
@@ -61,7 +60,7 @@ public class Connection extends VirtConnection {
 	 */
 	private Channel channel;
 
-	Connection(Document document) {
+	Connection(STDocument document) {
 		super(document);
 	}
 
@@ -78,23 +77,24 @@ public class Connection extends VirtConnection {
 		channel.attr(ChannelConstant.AUTH_STATE).set(false);
 		channel.attr(ChannelConstant.CERTIFICATE_STATE).set(false);
 
-		certificateValid().bind(() -> channel().attr(ChannelConstant.CERTIFICATE_STATE).get());
-		authenticated().bind(() -> channel().attr(ChannelConstant.AUTH_STATE).get());
-		connected().bind(() -> channel().attr(ChannelConstant.HANDSHAKE_FUTURE).get().isDone() && channel().isActive());
-		cumulativeReadBytes().bind(() -> getTrafficHandler().trafficCounter().cumulativeReadBytes());
-		cumulativeWriteBytes().bind(() -> getTrafficHandler().trafficCounter().cumulativeWrittenBytes());
-		readThroughput().bind(() -> getTrafficHandler().trafficCounter().lastReadThroughput());
-		writeThroughput().bind(() -> getTrafficHandler().trafficCounter().lastWriteThroughput());
+		certificateValid().source(() -> channel().attr(ChannelConstant.CERTIFICATE_STATE).get());
+		authenticated().source(() -> channel().attr(ChannelConstant.AUTH_STATE).get());
+		connected()
+				.source(() -> channel().attr(ChannelConstant.HANDSHAKE_FUTURE).get().isDone() && channel().isActive());
+		cumulativeReadBytes().source(() -> getTrafficHandler().trafficCounter().cumulativeReadBytes());
+		cumulativeWriteBytes().source(() -> getTrafficHandler().trafficCounter().cumulativeWrittenBytes());
+		readThroughput().source(() -> getTrafficHandler().trafficCounter().lastReadThroughput());
+		writeThroughput().source(() -> getTrafficHandler().trafficCounter().lastWriteThroughput());
 
 		if (this.channel instanceof EmbeddedChannel) {
-			remoteAddress().bind(() -> {
+			remoteAddress().source(() -> {
 				if (!isConnected())
 					return null;
 
 				return channel().remoteAddress().toString();
 			});
 		} else {
-			remoteAddress().bind(() -> {
+			remoteAddress().source(() -> {
 				if (!isConnected())
 					return null;
 
@@ -102,42 +102,42 @@ public class Connection extends VirtConnection {
 			});
 		}
 
-		remoteCvid().bind(() -> {
+		remoteCvid().source(() -> {
 			if (!isConnected())
 				return null;
 
 			return channel().attr(ChannelConstant.CVID).get();
 		});
 
-		remoteUuid().bind(() -> {
+		remoteUuid().source(() -> {
 			if (!isConnected())
 				return null;
 
 			return channel().attr(ChannelConstant.UUID).get();
 		});
 
-		remotePort().bind(() -> {
+		remotePort().source(() -> {
 			if (!isConnected())
 				return null;
 
 			return ((InetSocketAddress) channel().remoteAddress()).getPort();
 		});
 
-		localPort().bind(() -> {
+		localPort().source(() -> {
 			if (!isConnected())
 				return null;
 
 			return ((InetSocketAddress) channel().localAddress()).getPort();
 		});
 
-		remoteInstance().bind(() -> {
+		remoteInstance().source(() -> {
 			if (!isConnected())
 				return null;
 
 			return CvidUtil.extractInstance(getRemoteCvid());
 		});
 
-		remoteInstanceFlavor().bind(() -> {
+		remoteInstanceFlavor().source(() -> {
 			if (!isConnected())
 				return null;
 

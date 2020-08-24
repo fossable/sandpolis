@@ -15,9 +15,8 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 import com.sandpolis.gradle.codegen.state.impl.AttributeValueGenerator;
-import com.sandpolis.gradle.codegen.state.impl.JavaFxSTGenerator;
 import com.sandpolis.gradle.codegen.state.impl.CoreSTGenerator;
-import com.sandpolis.gradle.codegen.state.impl.JavaFxPropertyGenerator;
+import com.sandpolis.gradle.codegen.state.impl.JavaFxSTGenerator;
 
 /**
  * This Gradle plugin adds code generation tasks to the build.
@@ -53,16 +52,10 @@ public class CodeGen implements Plugin<Project> {
 				}
 			}
 
-			// Generate attribute implementations
-			if (project.getName().equals("com.sandpolis.core.instance")) {
-				project.getTasks().getByName("compileJava").dependsOn(
-						project.getTasks().create("generateStateTreeAttributeValues", AttributeValueGenerator.class));
-			}
-
-			// Generate property implementations
-			if (project.getName().equals("com.sandpolis.viewer.lifegem")) {
-				project.getTasks().getByName("compileJava").dependsOn(
-						project.getTasks().create("generateStateTreeProperties", JavaFxPropertyGenerator.class));
+			// Generate server attribute value implementations
+			if (project.getName().equals("com.sandpolis.core.server")) {
+				project.getTasks().getByName("compileJava").dependsOn(project.getTasks()
+						.create("generateAttributeValueImplementations", AttributeValueGenerator.class));
 			}
 
 			// Setup automatic protobuf compilation

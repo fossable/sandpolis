@@ -11,7 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.gradle.codegen.state.impl;
 
-import static com.sandpolis.gradle.codegen.state.STGenerator.ST_PACKAGE;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -34,9 +33,12 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 /**
- * Generator for attribute value implementations.
+ * {@link AttributeValueGenerator} generates attribute value implementations for
+ * the server module.
  */
 public class AttributeValueGenerator extends DefaultTask {
+
+	private static final String ST_PACKAGE = "com.sandpolis.core.server.state";
 
 	/**
 	 * Types that are integral Hibernate entities.
@@ -108,7 +110,7 @@ public class AttributeValueGenerator extends DefaultTask {
 				.classBuilder(type.componentType.box().toString().replaceAll(".*\\.", "") + "ArrayAttributeValue") //
 				.addModifiers(PUBLIC) //
 				.addAnnotation(ClassName.get("javax.persistence", "Embeddable")) //
-				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "AttributeValue"), type));
+				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), type));
 
 		{
 			// Add value field
@@ -142,7 +144,7 @@ public class AttributeValueGenerator extends DefaultTask {
 			var method = MethodSpec.methodBuilder("clone") //
 					.addModifiers(PUBLIC) //
 					.addAnnotation(Override.class) //
-					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "AttributeValue"), type)) //
+					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), type)) //
 					.addStatement("return new $L()",
 							type.componentType.box().toString().replaceAll(".*\\.", "") + "ArrayAttributeValue");
 			av.addMethod(method.build());
@@ -190,7 +192,7 @@ public class AttributeValueGenerator extends DefaultTask {
 				.classBuilder(type.simpleName() + "AttributeValue") //
 				.addModifiers(PUBLIC) //
 				.addAnnotation(ClassName.get("javax.persistence", "Embeddable")) //
-				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "AttributeValue"), type));
+				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), type));
 
 		// Add value field
 		av.addField(newValueField(type).build());
@@ -221,7 +223,7 @@ public class AttributeValueGenerator extends DefaultTask {
 			var method = MethodSpec.methodBuilder("clone") //
 					.addModifiers(PUBLIC) //
 					.addAnnotation(Override.class) //
-					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "AttributeValue"), type)) //
+					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), type)) //
 					.addStatement("return new $L()", type.simpleName() + "AttributeValue");
 			av.addMethod(method.build());
 		}
@@ -281,8 +283,7 @@ public class AttributeValueGenerator extends DefaultTask {
 		var av = TypeSpec //
 				.classBuilder(type.simpleName() + "ListAttributeValue") //
 				.addModifiers(PUBLIC).addAnnotation(ClassName.get("javax.persistence", "Embeddable")) //
-				.superclass(ParameterizedTypeName
-						.get(ClassName.get("com.sandpolis.core.instance.state", "AttributeValue"), listType));
+				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), listType));
 
 		// Add value field
 		av.addField(newValueField(listType).build());
@@ -313,7 +314,7 @@ public class AttributeValueGenerator extends DefaultTask {
 			var method = MethodSpec.methodBuilder("clone") //
 					.addModifiers(PUBLIC) //
 					.addAnnotation(Override.class) //
-					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "AttributeValue"), listType)) //
+					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), listType)) //
 					.addStatement("return new $L()", type.simpleName() + "ListAttributeValue");
 			av.addMethod(method.build());
 		}
@@ -332,11 +333,16 @@ public class AttributeValueGenerator extends DefaultTask {
 			case "com.sandpolis.core.instance.Metatypes.InstanceFlavor":
 				method.addStatement("return null");
 				break;
+			case "java.security.cert.X509Certificate":
+				method.addStatement("var proto = State.ProtoAttributeValue.newBuilder()");
+				method.addStatement(
+						"value.stream().map(X509CertificateConverter.INSTANCE::convertToDatabaseColumn).map($T::copyFrom).forEach(proto::addBytes)",
+						ClassName.get("com.google.protobuf", "ByteString"));
+				method.addStatement("return proto");
+				break;
 			default:
 				method.addStatement("return State.ProtoAttributeValue.newBuilder().addAll$L(value)", type.simpleName());
-
 			}
-
 			av.addMethod(method.build());
 		}
 
@@ -345,8 +351,18 @@ public class AttributeValueGenerator extends DefaultTask {
 			var method = MethodSpec.methodBuilder("setProto") //
 					.addModifiers(PUBLIC) //
 					.addAnnotation(Override.class) //
-					.addParameter(ClassName.get("com.sandpolis.core.instance", "State", "ProtoAttributeValue"), "v") //
-					.addStatement("value = v.get$LList()", type.simpleName());
+					.addParameter(ClassName.get("com.sandpolis.core.instance", "State", "ProtoAttributeValue"), "v");
+
+			switch (type.toString()) {
+			case "java.security.cert.X509Certificate":
+				method.addStatement(
+						"value = v.getBytesList().stream().map($T::toByteArray).map(X509CertificateConverter.INSTANCE::convertToEntityAttribute).collect($T.toList());",
+						ClassName.get("com.google.protobuf", "ByteString"),
+						ClassName.get("java.util.stream", "Collectors"));
+				break;
+			default:
+				method.addStatement("value = v.get$LList()", type.simpleName());
+			}
 			av.addMethod(method.build());
 		}
 

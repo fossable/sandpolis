@@ -1,91 +1,88 @@
 [
   {
-    "name": "Profile.LogicalConnection"
-  },
-  {
     "name": "Profile.Connection",
     "attributes": {
-      "1": {
+      "11": {
         "name": "remote_port",
         "type": "java.lang.Integer"
       },
-      "2": {
+      "21": {
         "name": "local_port",
         "type": "java.lang.Integer"
       },
-      "3": {
+      "31": {
         "name": "remote_address",
         "type": "java.lang.String"
       },
-      "4": {
+      "41": {
         "name": "local_address",
         "type": "java.lang.String"
       },
-      "5": {
+      "51": {
         "name": "remote_cvid",
         "type": "java.lang.Integer"
       },
-      "6": {
+      "61": {
         "name": "local_cvid",
         "type": "java.lang.Integer"
       },
-      "7": {
+      "71": {
         "name": "remote_uuid",
         "type": "java.lang.String"
       },
-      "8": {
+      "81": {
         "name": "local_uuid",
         "type": "java.lang.String"
       },
-      "9": {
+      "91": {
         "name": "remote_instance",
         "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
       },
-      "10": {
+      "101": {
         "name": "local_instance",
         "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
       },
-      "11": {
+      "111": {
         "name": "remote_instance_flavor",
         "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
       },
-      "12": {
+      "121": {
         "name": "local_instance_flavor",
         "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
       },
-      "13": {
+      "131": {
         "name": "upload_total",
         "type": "java.lang.Long"
       },
-      "14": {
+      "141": {
         "name": "download_total",
         "type": "java.lang.Long"
       },
-      "15": {
+      "151": {
         "name": "connected",
         "type": "java.lang.Boolean"
       },
-      "16": {
+      "161": {
         "name": "authenticated",
         "type": "java.lang.Boolean"
       },
-      "17": {
+      "171": {
         "name": "certificate_valid",
         "type": "java.lang.Boolean"
       },
-      "18": {
+      "181": {
         "name": "cumulative_read_bytes",
         "type": "java.lang.Long"
       },
-      "19": {
+      "191": {
         "name": "cumulative_write_bytes",
         "type": "java.lang.Long"
       },
-      "20": {
+      "201": {
         "name": "read_throughput",
         "type": "java.lang.Long"
       },
-      "21": {
+      "211": {
         "name": "write_throughput",
         "type": "java.lang.Long"
       }
@@ -94,42 +91,42 @@
   {
     "name": "Profile.Plugin",
     "attributes": {
-      "1": {
+      "11": {
         "name": "package_id",
         "type": "java.lang.String",
         "description": "The plugin's package ID"
       },
-      "2": {
+      "21": {
         "name": "name",
         "type": "java.lang.String",
         "description": "The plugin's user-friendly name"
       },
-      "3": {
+      "31": {
         "name": "description",
         "type": "java.lang.String",
         "description": "The plugin's user-friendly description"
       },
-      "4": {
+      "41": {
         "name": "coordinates",
         "type": "java.lang.String",
         "description": "The plugin's Maven central coordinates in G:A:V format"
       },
-      "5": {
+      "51": {
         "name": "enabled",
         "type": "java.lang.Boolean",
         "description": "Whether the plugin can be loaded"
       },
-      "6": {
+      "61": {
         "name": "hash",
         "type": "java.lang.Byte[]",
         "description": "The plugin artifact's hash"
       },
-      "7": {
+      "71": {
         "name": "certificate",
         "type": "java.lang.String",
         "description": "The plugin's certificate"
       },
-      "8": {
+      "81": {
         "name": "loaded",
         "type": "java.lang.Boolean",
         "description": "Whether the plugin is currently loaded"
@@ -139,13 +136,13 @@
   {
     "name": "Profile.Viewer",
     "attributes": {
-      "1": {
+      "11": {
         "name": "username",
         "type": "java.lang.String",
         "identity": true,
         "description": "The viewer's username"
       },
-      "2": {
+      "21": {
         "name": "ip",
         "type": "java.lang.String",
         "description": "The viewer's login IP address"
@@ -155,92 +152,92 @@
   {
     "name": "Profile.Client.IpLocation",
     "attributes": {
-      "1": {
+      "11": {
         "name": "as_name",
         "type": "java.lang.String",
         "description": "The AS name"
       },
-      "2": {
+      "21": {
         "name": "as_code",
         "type": "java.lang.Integer",
         "description": "The numerical AS code"
       },
-      "3": {
+      "31": {
         "name": "city",
         "type": "java.lang.String",
         "description": "The city name"
       },
-      "4": {
+      "41": {
         "name": "continent",
         "type": "java.lang.String",
         "description": "The continent name"
       },
-      "5": {
+      "51": {
         "name": "continent_code",
         "type": "java.lang.String",
         "description": "The ISO continent code"
       },
-      "6": {
+      "61": {
         "name": "country",
         "type": "java.lang.String",
         "description": "The country name"
       },
-      "7": {
+      "71": {
         "name": "country_code",
         "type": "java.lang.String",
         "description": "Two-letter country code (ISO 3166-1 alpha-2)"
       },
-      "8": {
+      "81": {
         "name": "currency",
         "type": "java.lang.String",
         "description": "The currency name"
       },
-      "9": {
+      "91": {
         "name": "district",
         "type": "java.lang.String",
         "description": "The city district name"
       },
-      "10": {
+      "101": {
         "name": "isp",
         "type": "java.lang.String",
         "description": "The Internet Service Provider name"
       },
-      "11": {
+      "111": {
         "name": "latitude",
         "type": "java.lang.Double",
         "description": "The approximate latitude in degrees"
       },
-      "12": {
+      "121": {
         "name": "longitude",
         "type": "java.lang.Double",
         "description": "The approximate longitude in degrees"
       },
-      "13": {
+      "131": {
         "name": "metro_code",
         "type": "java.lang.Integer",
         "description": "The metro code"
       },
-      "14": {
+      "141": {
         "name": "organization",
         "type": "java.lang.String",
         "description": "The organization name"
       },
-      "15": {
+      "151": {
         "name": "postal_code",
         "type": "java.lang.String",
         "description": "The zip code"
       },
-      "16": {
+      "161": {
         "name": "region",
         "type": "java.lang.String",
         "description": "The region name"
       },
-      "17": {
+      "171": {
         "name": "region_code",
         "type": "java.lang.String",
         "description": "The region short code (FIPS or ISO)"
       },
-      "18": {
+      "181": {
         "name": "timezone",
         "type": "java.lang.String",
         "description": "The timezone name"
@@ -250,35 +247,35 @@
   {
     "name": "Profile.Client",
     "attributes": {
-      "1": {
+      "11": {
         "name": "hostname",
         "type": "java.lang.String",
         "identity": true,
         "description": "The client's network hostname"
       },
-      "2": {
+      "21": {
         "name": "os",
         "type": "com.sandpolis.core.foundation.Platform.OsType",
         "description": "The client's operating system type"
       },
-      "3": {
+      "31": {
         "name": "location",
         "type": "java.lang.String",
         "description": "The client's base directory"
       }
     },
     "documents": {
-      "1": "Profile.Client.IpLocation"
+      "12": "Profile.Client.IpLocation"
     }
   },
   {
     "name": "Profile.Server.TrustAnchor",
     "attributes": {
-      "1": {
+      "11": {
         "name": "name",
         "type": "java.lang.String"
       },
-      "2": {
+      "21": {
         "name": "certificate",
         "type": "java.security.cert.X509Certificate"
       }
@@ -287,27 +284,27 @@
   {
     "name": "Profile.Server.User",
     "attributes": {
-      "1": {
+      "11": {
         "name": "username",
         "type": "java.lang.String",
         "description": "The user's unchangable username"
       },
-      "2": {
+      "21": {
         "name": "email",
         "type": "java.lang.String",
         "description": "The user's email address"
       },
-      "3": {
+      "31": {
         "name": "hash",
         "type": "java.lang.String",
         "description": "The user's password hash"
       },
-      "4": {
+      "41": {
         "name": "expiration",
         "type": "java.lang.Long",
         "description": "The user's expiration timestamp"
       },
-      "5": {
+      "51": {
         "name": "totp_secret",
         "type": "java.lang.Byte[]",
         "description": "The user's TOTP secret"
@@ -317,37 +314,37 @@
   {
     "name": "Profile.Server.Listener",
     "attributes": {
-      "1": {
+      "11": {
         "name": "name",
         "type": "java.lang.String",
         "description": "The listener's user-friendly name"
       },
-      "2": {
+      "21": {
         "name": "enabled",
         "type": "java.lang.Boolean",
         "description": "Whether the listener is enabled"
       },
-      "3": {
+      "31": {
         "name": "active",
         "type": "java.lang.Boolean",
         "description": "Whether the listener is currently bound to the port and listening"
       },
-      "4": {
+      "41": {
         "name": "port",
         "type": "java.lang.Integer",
         "description": "The listener's local listening port"
       },
-      "5": {
+      "51": {
         "name": "address",
         "type": "java.lang.String",
         "description": "The listener's local bind address"
       },
-      "6": {
+      "61": {
         "name": "certificate",
         "type": "java.lang.Byte[]",
         "description": "A certificate that the listener will present to incoming connections"
       },
-      "7": {
+      "71": {
         "name": "private_key",
         "type": "java.lang.Byte[]",
         "description": "The private key corresponding to the certificate"
@@ -357,12 +354,12 @@
   {
     "name": "Profile.Server.AuthMechanism",
     "attributes": {
-      "1": {
+      "11": {
         "name": "mech_id",
         "type": "java.lang.String",
         "description": "The mechanism identifier"
       },
-      "2": {
+      "21": {
         "name": "password",
         "type": "java.lang.String",
         "description": "The mechanism password"
@@ -372,22 +369,22 @@
   {
     "name": "Profile.Server.Group",
     "attributes": {
-      "1": {
+      "11": {
         "name": "name",
         "type": "java.lang.String"
       }
     },
     "relations": {
-      "2": {
+      "24": {
         "name": "owner",
         "type": "Profile.Server.User"
       },
-      "3": {
+      "34": {
         "name": "members",
         "type": "Profile.Server.User",
         "collection": true
       },
-      "4": {
+      "44": {
         "name": "auth_mechanisms",
         "type": "Profile.Server.AuthMechanism",
         "collection": true
@@ -397,27 +394,26 @@
   {
     "name": "Profile.Server",
     "collections": {
-      "1": "Profile.Server.User",
-      "2": "Profile.Server.Listener",
-      "3": "Profile.Server.Group",
-      "4": "Profile.Server.TrustAnchor",
-      "6": "Profile.Server.AuthMechanism"
+      "13": "Profile.Server.User",
+      "23": "Profile.Server.Listener",
+      "33": "Profile.Server.Group",
+      "43": "Profile.Server.TrustAnchor",
+      "63": "Profile.Server.AuthMechanism"
     }
   },
   {
     "name": "Profile",
     "documents": {
-      "1": "Profile.Server",
-      "2": "Profile.Viewer",
-      "3": "Profile.Client"
+      "12": "Profile.Server",
+      "22": "Profile.Viewer",
+      "32": "Profile.Client"
     },
     "collections": {
-      "4": "Profile.Plugin",
-      "5": "Profile.Connection",
-      "6": "Profile.LogicalConnection"
+      "13": "Profile.Plugin",
+      "23": "Profile.Connection"
     },
     "attributes": {
-      "20": {
+      "11": {
         "name": "instance_type",
         "type": "com.sandpolis.core.instance.Metatypes.InstanceType"
       },
@@ -425,11 +421,11 @@
         "name": "instance_flavor",
         "type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
       },
-      "22": {
+      "31": {
         "name": "uuid",
         "type": "java.lang.String"
       },
-      "23": {
+      "41": {
         "name": "cvid",
         "type": "java.lang.Integer"
       }

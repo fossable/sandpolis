@@ -1,11 +1,11 @@
 package com.sandpolis.core.server.trust;
 
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtTrustAnchor;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.STDocument;
 
 public class TrustAnchor extends VirtTrustAnchor {
 
-	TrustAnchor(Document parent) {
+	TrustAnchor(STDocument parent) {
 		super(parent);
 	}
 

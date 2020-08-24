@@ -11,7 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.profile;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -20,11 +19,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.StateTree.VirtProfile;
 import com.sandpolis.core.instance.profile.ProfileStore.ProfileStoreConfig;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.STStore;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.provider.MemoryListStoreProvider;
 import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 
@@ -38,14 +36,8 @@ public final class ProfileStore extends CollectionStore<Profile> implements Conf
 
 	private static final Logger log = LoggerFactory.getLogger(ProfileStore.class);
 
-	private Object container;
-
 	public ProfileStore() {
 		super(log);
-	}
-
-	public <E> E getContainer() {
-		return (E) container;
 	}
 
 	/**
@@ -85,7 +77,7 @@ public final class ProfileStore extends CollectionStore<Profile> implements Conf
 	}
 
 	public Profile create(Consumer<Profile> configurator) {
-		return add(new Profile(new Document(null)), configurator);
+		return add(new Profile(STStore.newRootDocument()), configurator);
 	}
 
 	public final class ProfileStoreConfig extends StoreConfig {
@@ -93,11 +85,6 @@ public final class ProfileStore extends CollectionStore<Profile> implements Conf
 		@Override
 		public void ephemeral() {
 			provider = new MemoryMapStoreProvider<>(Profile.class, Profile::tag, VirtProfile.DOCUMENT);
-		}
-
-		public void ephemeral(List<Profile> list) {
-			container = list;
-			provider = new MemoryListStoreProvider<>(Profile.class, Profile::tag, VirtProfile.DOCUMENT, list);
 		}
 
 		@Override

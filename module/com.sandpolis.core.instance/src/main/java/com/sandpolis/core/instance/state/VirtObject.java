@@ -23,9 +23,9 @@ import com.sandpolis.core.instance.state.Oid.AttributeOid;
  */
 public abstract class VirtObject {
 
-	public final Document document;
+	public final STDocument document;
 
-	protected VirtObject(Document document) {
+	protected VirtObject(STDocument document) {
 		this.document = document;
 	}
 
@@ -36,7 +36,7 @@ public abstract class VirtObject {
 	 */
 	public abstract int tag();
 
-	public <T> Attribute<T> get(AttributeOid<T> oid) {
+	public <T> STAttribute<T> get(AttributeOid<T> oid) {
 		if (Objects.requireNonNull(oid).isChildOf(document.getOid()))
 			throw new IllegalArgumentException();
 

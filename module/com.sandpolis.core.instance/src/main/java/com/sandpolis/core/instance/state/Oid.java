@@ -105,7 +105,7 @@ public class Oid<T> implements Comparable<Oid<?>> {
 	}
 
 	/**
-	 * An {@link Oid} that corresponds to an {@link Attribute}.
+	 * An {@link Oid} that corresponds to an {@link STAttribute}.
 	 *
 	 * @param <T> The type of the corresponding attribute's value
 	 */
@@ -118,7 +118,7 @@ public class Oid<T> implements Comparable<Oid<?>> {
 	}
 
 	/**
-	 * An {@link Oid} that corresponds to a {@link Collection}.
+	 * An {@link Oid} that corresponds to a {@link STCollection}.
 	 *
 	 * @param <T> The type of the corresponding collection
 	 */
@@ -131,7 +131,7 @@ public class Oid<T> implements Comparable<Oid<?>> {
 	}
 
 	/**
-	 * An {@link Oid} that corresponds to a {@link Document}.
+	 * An {@link Oid} that corresponds to a {@link STDocument}.
 	 *
 	 * @param <T> The type of the corresponding document
 	 */

@@ -14,16 +14,18 @@ package com.sandpolis.gradle.codegen.state.impl;
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
 import com.sandpolis.gradle.codegen.state.AttributeSpec;
 import com.sandpolis.gradle.codegen.state.DocumentSpec;
+import com.sandpolis.gradle.codegen.state.RelationSpec;
 import com.sandpolis.gradle.codegen.state.STGenerator;
-import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.TypeSpec.Builder;
 
 /**
  * Generator for JavaFX document bindings.
@@ -34,19 +36,13 @@ public class JavaFxSTGenerator extends STGenerator {
 	public void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute, String oid) {
 
 		{
-			// Add property field
-			var field = FieldSpec.builder(attribute.getJavaFxPropertyType(), attribute.name, PRIVATE, FINAL)
-					.initializer("new $T(this, \"$L\")", attribute.getJavaFxSimplePropertyType(),
-							attribute.name.toLowerCase());
-			parent.addField(field.build());
-		}
-
-		{
 			// Add property getter
+			var type = ParameterizedTypeName.get(ClassName.get("javafx.beans.value", "ObservableValue"),
+					attribute.getAttributeType());
 			var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name + "_property")) //
 					.addModifiers(PUBLIC) //
-					.returns(attribute.getJavaFxPropertyType()) //
-					.addStatement("return $L", attribute.name);
+					.returns(type) //
+					.addStatement("return ($T) document.attribute($L)", type, oid.replaceAll(".*\\.", ""));
 			parent.addMethod(method.build());
 		}
 	}
@@ -59,7 +55,27 @@ public class JavaFxSTGenerator extends STGenerator {
 	@Override
 	public void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
 		var documentClass = TypeSpec.classBuilder("Fx" + document.name.replaceAll(".*\\.", "")) //
-				.addModifiers(PUBLIC, STATIC);
+				.addModifiers(PUBLIC, STATIC) //
+				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
+
+		{
+			// Add constructor
+			var method = MethodSpec.constructorBuilder() //
+					.addModifiers(PUBLIC) //
+					.addParameter(ClassName.get(ST_PACKAGE, "STDocument"), "document") //
+					.addStatement("super(document)");
+			documentClass.addMethod(method.build());
+		}
+
+		{
+			// Add tag method
+			var method = MethodSpec.methodBuilder("tag") //
+					.addAnnotation(Override.class) //
+					.addModifiers(PUBLIC, FINAL) //
+					.returns(int.class) //
+					.addStatement("return $L", oid.replaceAll(".*\\.", ""));
+			documentClass.addMethod(method.build());
+		}
 
 		if (document.collections != null) {
 			for (var entry : document.collections.entrySet()) {
@@ -80,5 +96,11 @@ public class JavaFxSTGenerator extends STGenerator {
 		}
 
 		parent.addType(documentClass.build());
+	}
+
+	@Override
+	public void processRelation(Builder parent, RelationSpec relation, String oid) {
+		// TODO Auto-generated method stub
+
 	}
 }

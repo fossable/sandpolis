@@ -29,6 +29,11 @@ public class DocumentSpec {
 	 */
 	public TreeMap<Integer, AttributeSpec> attributes;
 
+	/**
+	 * The document's relations sorted by tag.
+	 */
+	public TreeMap<Integer, RelationSpec> relations;
+
 	public String shortName() {
 		return name.replaceAll(".*\\.", "");
 	}

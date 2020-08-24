@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Generator.LoopConfig;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtConnection;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.STStore;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
@@ -135,7 +135,7 @@ public final class ConnectionStore extends CollectionStore<Connection>
 	}
 
 	public Connection create(Consumer<Connection> configurator) {
-		return add(new Connection(new Document(null)), configurator);
+		return add(new Connection(STStore.newRootDocument()), configurator);
 	}
 
 	public Connection create(Channel channel) {

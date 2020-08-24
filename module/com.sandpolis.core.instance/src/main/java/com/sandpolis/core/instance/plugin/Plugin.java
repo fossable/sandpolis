@@ -38,12 +38,11 @@ import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtPlugin;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.STDocument;
 
 /**
  * Represents a Sandpolis plugin installed in the {@code PLUGIN} directory.
  *
- * @author cilki
  * @since 5.0.0
  */
 public class Plugin extends VirtPlugin {
@@ -52,7 +51,7 @@ public class Plugin extends VirtPlugin {
 
 	private SandpolisPlugin handle;
 
-	Plugin(Document document) {
+	Plugin(STDocument document) {
 		super(document);
 	}
 

@@ -9,13 +9,12 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.state;
+package com.sandpolis.core.server.state;
 
 import static com.sandpolis.core.instance.state.StateEventStore.StateEventStore;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import javax.persistence.Column;
@@ -28,17 +27,19 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 
 import com.sandpolis.core.instance.State.ProtoAttribute;
+import com.sandpolis.core.instance.state.STAttribute;
+import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.state.OidConverter;
 
 /**
- * An {@link Attribute} is a container for data of a specific type and meaning.
- * It can
+ * An {@link ServerAttribute} is a container for data of a specific type and
+ * meaning. It can
  *
  * @param <T> The attribute's value type
- * @author cilki
  * @since 6.2.0
  */
 @Entity
-public class Attribute<T> extends StateObject<ProtoAttribute> {
+public class ServerAttribute<T> implements STAttribute<T> {
 
 	@Embeddable
 	public enum RetentionPolicy {
@@ -92,7 +93,7 @@ public class Attribute<T> extends StateObject<ProtoAttribute> {
 	 * The current value of the attribute.
 	 */
 	@Embedded
-	private AttributeValue<T> current;
+	private ServerAttributeValue<T> current;
 
 	/**
 	 * Historical timestamps parallel to {@link #values}.
@@ -104,19 +105,19 @@ public class Attribute<T> extends StateObject<ProtoAttribute> {
 	 * Historical values parallel to {@link #timestamps}.
 	 */
 	@ElementCollection
-	private List<AttributeValue<T>> values;
+	private List<ServerAttributeValue<T>> values;
 
 	/**
 	 * An optional supplier that overrides the current value.
 	 */
 	@Transient
-	private Supplier<T> supplier;
+	private Supplier<T> source;
 
-	public Attribute(Oid<T> oid) {
+	public ServerAttribute(Oid<T> oid) {
 		this.oid = oid;
 	}
 
-	protected Attribute() {
+	protected ServerAttribute() {
 		// JPA Constructor
 	}
 
@@ -125,6 +126,7 @@ public class Attribute<T> extends StateObject<ProtoAttribute> {
 	 *
 	 * @param value The new value to replace the current value or {@code null}
 	 */
+	@Override
 	public synchronized void set(T value) {
 
 		// Save the old value temporarily
@@ -146,7 +148,7 @@ public class Attribute<T> extends StateObject<ProtoAttribute> {
 
 		// If the current value has not been set, create it (by inefficient means)
 		if (current == null) {
-			current = AttributeValue.newAttributeValue(value);
+			current = ServerAttributeValue.newAttributeValue(value);
 		}
 
 		// If retention is not enabled, then overwrite the old value
@@ -204,9 +206,10 @@ public class Attribute<T> extends StateObject<ProtoAttribute> {
 	 *
 	 * @return The current value or {@code null}
 	 */
+	@Override
 	public synchronized T get() {
-		if (supplier != null)
-			return supplier.get();
+		if (source != null)
+			return source.get();
 		if (current == null)
 			return null;
 
@@ -222,28 +225,9 @@ public class Attribute<T> extends StateObject<ProtoAttribute> {
 		return currentTimestamp;
 	}
 
-	/**
-	 * Perform the given operation if the attribute has a current value.
-	 *
-	 * @param fn A function to receive the current value if it exists
-	 */
-	public void ifPresent(Consumer<T> fn) {
-		var value = get();
-		if (value != null)
-			fn.accept(value);
-	}
-
-	/**
-	 * Get whether the attribute has a current value.
-	 *
-	 * @return Whether the attribute's value is {@code null}
-	 */
-	public boolean isPresent() {
-		return get() != null;
-	}
-
-	public void bind(Supplier<T> supplier) {
-		this.supplier = supplier;
+	@Override
+	public void source(Supplier<T> source) {
+		this.source = source;
 	}
 
 	public void setRetention(RetentionPolicy retention) {
@@ -271,7 +255,7 @@ public class Attribute<T> extends StateObject<ProtoAttribute> {
 
 		var proto = ProtoAttribute.newBuilder();
 
-		if (supplier != null) {
+		if (source != null) {
 			// TODO
 		} else {
 			proto.addValues(current.getProto().setTimestamp(currentTimestamp));

@@ -30,32 +30,6 @@ public class AttributeSpec {
 	 */
 	public boolean identity;
 
-	public TypeName getJavaFxPropertyType() {
-		if (!type.startsWith("java.lang.")) {
-			return ClassName.get("com.sandpolis.viewer.lifegem", simpleName() + "Property");
-		}
-
-		if (type.endsWith("[]")) {
-			// TODO
-			return ClassName.get("javafx.beans.property", simpleName().replace("[]", "") + "Property");
-		}
-
-		return ClassName.get("javafx.beans.property", simpleName() + "Property");
-	}
-
-	public TypeName getJavaFxSimplePropertyType() {
-		if (!type.startsWith("java.lang.")) {
-			return getJavaFxPropertyType();
-		}
-
-		if (type.endsWith("[]")) {
-			// TODO
-			return ClassName.get("javafx.beans.property", "Simple" + simpleName().replace("[]", "") + "Property");
-		}
-
-		return ClassName.get("javafx.beans.property", "Simple" + simpleName() + "Property");
-	}
-
 	public TypeName getAttributeType() {
 
 		if (type.endsWith("[]")) {
@@ -80,18 +54,6 @@ public class AttributeSpec {
 	}
 
 	public TypeName getAttributeObjectType() {
-		return ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "Attribute"), getAttributeType());
-	}
-
-	public ClassName getImplementationType() {
-
-		var components = type.split("<|>");
-		if (components.length == 2) {
-			// TODO
-			return ClassName.get("com.sandpolis.core.instance.data", simpleName().replace("[]", "Array") + "Attribute");
-		} else {
-			return ClassName.get("com.sandpolis.core.instance.data",
-					simpleName().replaceAll(".*\\.", "").replace("[]", "Array") + "Attribute");
-		}
+		return ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STAttribute"), getAttributeType());
 	}
 }

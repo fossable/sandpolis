@@ -11,20 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.device;
 
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.plugin.device.StateTree.VirtPlugin.VirtDevice;
 
-public class Device extends StateTree.Device {
+public class Device extends VirtDevice {
 
-	public Device(Document document) {
+	Device(STDocument document) {
 		super(document);
 	}
-
-	private String id;
-
-	/**
-	 * The UUID of the instance considered to be the device's "handler".
-	 */
-	private String handler;
 
 	public String getId() {
 		return "";

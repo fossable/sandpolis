@@ -9,12 +9,13 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.state;
+package com.sandpolis.core.server.state;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
@@ -26,16 +27,16 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
+import com.sandpolis.core.instance.state.EphemeralRelation;
+import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.state.OidConverter;
+import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.STRelation;
+import com.sandpolis.core.instance.state.VirtObject;
 
-/**
- * A collection is an unordered set of {@link Document}s. Every document has an
- * associated non-zero "tag" which is a function of the document's identity.
- *
- * @author cilki
- * @since 5.1.1
- */
 @Entity
-public class Collection extends StateObject<ProtoCollection> {
+public class ServerCollection implements STCollection {
 
 	@Id
 	private String db_id;
@@ -46,20 +47,20 @@ public class Collection extends StateObject<ProtoCollection> {
 
 	@MapKeyColumn
 	@OneToMany(cascade = CascadeType.ALL)
-	private Map<Integer, Document> documents;
+	private Map<Integer, ServerDocument> documents;
 
-	public Collection(Oid<?> oid) {
+	public ServerCollection(Oid<?> oid) {
 		this.oid = oid;
 		this.db_id = UUID.randomUUID().toString();
 		this.documents = new HashMap<>();
 	}
 
-	public Collection(Oid<?> oid, ProtoCollection collection) {
+	public ServerCollection(Oid<?> oid, ProtoCollection collection) {
 		this(oid);
 		merge(collection);
 	}
 
-	protected Collection() {
+	protected ServerCollection() {
 		// JPA CONSTRUCTOR
 	}
 
@@ -67,12 +68,17 @@ public class Collection extends StateObject<ProtoCollection> {
 		return oid;
 	}
 
-	public Document get(int key) {
+	public ServerDocument get(int key) {
 		return documents.get(key);
 	}
 
-	public Stream<Document> stream() {
+	public Stream<ServerDocument> stream() {
 		return documents.values().stream();
+	}
+
+	@Override
+	public <T extends VirtObject> STRelation<T> collectionList(Function<STDocument, T> constructor) {
+		return new EphemeralRelation<>(constructor);
 	}
 
 	public int size() {
@@ -83,15 +89,15 @@ public class Collection extends StateObject<ProtoCollection> {
 		return documents.isEmpty();
 	}
 
-	public boolean contains(Document document) {
+	public boolean contains(STDocument document) {
 		return documents.containsValue(document);
 	}
 
-	public void add(int tag, Document e) {
+	public void add(int tag, ServerDocument e) {
 		documents.put(tag, e);
 	}
 
-	public boolean remove(Document document) {
+	public boolean remove(STDocument document) {
 		return documents.values().remove(document);
 	}
 
@@ -99,10 +105,10 @@ public class Collection extends StateObject<ProtoCollection> {
 		documents.clear();
 	}
 
-	public Document document(int tag) {
-		Document document = documents.get(tag);
+	public ServerDocument document(int tag) {
+		ServerDocument document = documents.get(tag);
 		if (document == null) {
-			document = new Document(oid.child(tag));
+			document = new ServerDocument(oid.child(tag));
 			documents.put(tag, document);
 		}
 		return document;

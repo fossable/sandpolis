@@ -15,11 +15,11 @@ import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 import static com.sandpolis.viewer.lifegem.stage.StageStore.StageStore;
-import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 
 import java.util.concurrent.Executors;
 
@@ -39,7 +39,6 @@ import com.sandpolis.viewer.lifegem.common.FxUtil;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 import javafx.application.Application;
-import javafx.collections.FXCollections;
 import javafx.stage.Stage;
 
 /**
@@ -125,7 +124,7 @@ public final class Viewer {
 		});
 
 		ProfileStore.init(config -> {
-			config.ephemeral(FXCollections.observableArrayList());
+			config.ephemeral();
 		});
 
 		StageStore.init(config -> {

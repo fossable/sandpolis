@@ -14,8 +14,8 @@ package com.sandpolis.viewer.lifegem.view.main.list;
 import java.util.Objects;
 import java.util.function.Function;
 
-import com.sandpolis.core.instance.state.Attribute;
 import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.viewer.lifegem.JavaFxAttribute;
 import com.sandpolis.viewer.lifegem.StateTree.FxProfile;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 
@@ -46,22 +46,22 @@ public class AttributeColumn extends TableColumn<FxProfile, Label> {
 		// TODO
 
 		// TODO get actual converters
-		Function<Attribute<?>, Node> iconConverter = a -> null;
-		Function<Attribute<?>, String> textConverter = a -> a.get() == null ? null : a.get().toString();
+		Function<JavaFxAttribute<?>, Node> iconConverter = a -> null;
+		Function<JavaFxAttribute<?>, String> textConverter = a -> a.get() == null ? null : a.get().toString();
 
 		setCellValueFactory(p -> {
 			ObjectProperty<Label> label = new SimpleObjectProperty<>(new Label());
-			Attribute<?> attribute = null;// (Attribute<?>) p.getValue().test(oid);
+			JavaFxAttribute<?> attribute = null;// (Attribute<?>) p.getValue().test(oid);
 
 			// Bind the graphic property to the attribute via the converter function
 			label.get().graphicProperty().bind(Bindings.createObjectBinding(() -> {
 				return iconConverter.apply(attribute);
-			}, (ObservableAttribute<?>) attribute));
+			}, attribute));
 
 			// Bind the text property to the attribute via the converter function
 			label.get().textProperty().bind(Bindings.createObjectBinding(() -> {
 				return textConverter.apply(attribute);
-			}, (ObservableAttribute<?>) attribute));
+			}, attribute));
 
 			return label;
 		});

@@ -18,7 +18,7 @@ import static com.sandpolis.core.foundation.Result.ErrorCode.OK;
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtUser;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.STDocument;
 
 /**
  * Represents a user account on the server.
@@ -27,7 +27,7 @@ import com.sandpolis.core.instance.state.Document;
  */
 public class User extends VirtUser {
 
-	User(Document parent) {
+	User(STDocument parent) {
 		super(parent);
 	}
 

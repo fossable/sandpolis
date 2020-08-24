@@ -12,18 +12,17 @@
 package com.sandpolis.core.instance.profile;
 
 import com.sandpolis.core.instance.StateTree.VirtProfile;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.STDocument;
 
 /**
  * A {@link Profile} is a generic container that stores data for an instance.
  * Most of the data are stored in a tree structure similar to a document store.
  *
- * @author cilki
  * @since 4.0.0
  */
 public class Profile extends VirtProfile {
 
-	Profile(Document parent) {
+	Profile(STDocument parent) {
 		super(parent);
 	}
 

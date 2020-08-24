@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtPlugin;
-import com.sandpolis.core.instance.plugin.PluginStore;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.connection.ConnectionFuture;
 import com.sandpolis.core.net.state.StateTreeCmd;
@@ -30,12 +29,12 @@ import com.sandpolis.core.viewer.cmd.ServerCmd;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.common.controller.FxController;
 import com.sandpolis.viewer.lifegem.common.pane.CarouselPane;
-import com.sandpolis.viewer.lifegem.view.login.LoginController.LoginPhase;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectEndedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectStartedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.LoginEndedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.LoginStartedEvent;
 import com.sandpolis.viewer.lifegem.view.login.phase.PluginPhaseController;
+import com.sandpolis.viewer.lifegem.view.login.phase.PluginPhaseController.PluginProperty;
 import com.sandpolis.viewer.lifegem.view.login.phase.ServerPhaseController;
 import com.sandpolis.viewer.lifegem.view.login.phase.UserPhaseController;
 
@@ -154,10 +153,12 @@ public class LoginController extends FxController {
 						}
 
 						if (rs.getResult()) {
-							StateTreeCmd.async().snapshot(VirtPlugin.COLLECTION, VirtPlugin::new, VirtPlugin.PACKAGE_ID)
+							StateTreeCmd.async()
+									.snapshot(VirtPlugin.COLLECTION, PluginProperty::new, VirtPlugin.PACKAGE_ID)
 									.whenComplete((snapshot, ex) -> {
 										var plugins = snapshot.values().stream().filter(plugin -> {
-											return PluginStore.getByPackageId(plugin.getPackageId()).isEmpty();
+											return PluginStore.getByPackageId(plugin.packageIdProperty().getValue())
+													.isEmpty();
 										}).collect(Collectors.toList());
 
 										post(LoginEndedEvent::new);

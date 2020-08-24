@@ -30,7 +30,7 @@ import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtListener;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.net.util.ChannelUtil;
 import com.sandpolis.core.server.channel.ServerChannelInitializer;
 
@@ -39,7 +39,6 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
-import io.netty.handler.ssl.SslContextBuilder;
 
 /**
  * A network listener that binds to a port and handles new connections.
@@ -66,7 +65,7 @@ public class Listener extends VirtListener {
 	 */
 	private EventLoopGroup childLoopGroup;
 
-	Listener(Document document) {
+	Listener(STDocument document) {
 		super(document);
 	}
 

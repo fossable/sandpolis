@@ -14,21 +14,21 @@ package com.sandpolis.core.instance.state;
 import com.google.protobuf.Message;
 
 /**
- * A member of the explicit state tree which may be optionally persisted to a
- * datastore.
+ * A {@link STObject} is any member of the state tree.
  *
  * @param <E> A protocol buffer representation of the object
  * @since 5.0.0
  */
-public abstract class StateObject<E extends Message> {
+public interface STObject<E extends Message> {
 
 	/**
 	 * Incorporate the given snapshot into the object. If the snapshot is not
-	 * partial, the resulting object
+	 * partial, the object's state becomes identical to the snapshot. If the
+	 * snapshot is partial, it has an additive effect.
 	 *
 	 * @param snapshot A state object snapshot
 	 */
-	public abstract void merge(E snapshot);
+	public void merge(E snapshot);
 
 	/**
 	 * Extract the object's state into a new protocol buffer. If Oids are specified,
@@ -37,5 +37,5 @@ public abstract class StateObject<E extends Message> {
 	 * @param oids Whitelist oids
 	 * @return A new protocol buffer representing the object
 	 */
-	public abstract E snapshot(Oid<?>... oids);
+	public E snapshot(Oid<?>... oids);
 }

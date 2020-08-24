@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.sandpolis.core.instance.state.Document;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
@@ -55,8 +54,13 @@ public final class WindowStore extends CollectionStore<Window> implements Config
 		provider.initialize();
 	}
 
+	public <E extends Window> E create(Supplier<E> constructor) {
+		return create(constructor, config -> {
+		});
+	}
+
 	public <E extends Window> E create(Supplier<E> constructor, Consumer<E> configurator) {
-		var window = add(constructor.get(), configurator);
+		var window = (E) add(constructor.get(), (Consumer<Window>) configurator);
 		gui.addWindow(window);
 		return window;
 	}

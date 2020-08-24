@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Group.GroupConfig;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtGroup;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.STStore;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
@@ -97,7 +97,7 @@ public final class GroupStore extends CollectionStore<Group> implements Configur
 	}
 
 	public Group create(Consumer<Group> configurator) {
-		return add(new Group(new Document(null)), configurator);
+		return add(new Group(STStore.newRootDocument()), configurator);
 	}
 
 	/**

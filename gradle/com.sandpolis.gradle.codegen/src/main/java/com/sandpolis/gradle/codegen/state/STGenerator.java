@@ -136,4 +136,9 @@ public abstract class STGenerator extends DefaultTask {
 	 * Generate the given document from the specification.
 	 */
 	public abstract void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid);
+
+	/**
+	 * Generate the given relation from the specification.
+	 */
+	public abstract void processRelation(TypeSpec.Builder parent, RelationSpec relation, String oid);
 }

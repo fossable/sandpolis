@@ -2,22 +2,22 @@
   {
     "name": "Plugin.Nic.Windows",
     "attributes": {
-      "1": {
+      "11": {
         "name": "luid",
         "type": "java.lang.Long",
         "description": "The interface's locally unique identifier"
       },
-      "2": {
+      "21": {
         "name": "guid",
         "type": "java.lang.String",
         "description": "The interface's globally unique identifier"
       },
-      "3": {
+      "31": {
         "name": "paused",
         "type": "java.lang.Boolean",
         "description": "Whether the interface is in a paused state"
       },
-      "4": {
+      "41": {
         "name": "low_power",
         "type": "java.lang.Boolean",
         "description": "Whether the interface is in a low-power state"
@@ -27,44 +27,44 @@
   {
     "name": "Plugin.Disk.Partition",
     "attributes": {
-      "1": {
+      "11": {
         "name": "identification",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "2": {
+      "21": {
         "name": "name",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "3": {
+      "31": {
         "name": "description",
         "type": "java.lang.String",
         "description": null
       },
-      "4": {
+      "41": {
         "name": "uuid",
         "type": "java.lang.String",
         "description": "The partition's UUID"
       },
-      "5": {
+      "51": {
         "name": "size",
         "type": "java.lang.Long",
         "description": "The partition's total size in bytes"
       },
-      "6": {
+      "61": {
         "name": "major",
         "type": "java.lang.Integer",
         "description": null
       },
-      "7": {
+      "71": {
         "name": "minor",
         "type": "java.lang.Integer",
         "description": null
       },
-      "8": {
+      "81": {
         "name": "mount",
         "type": "java.lang.String",
         "description": "The partition's mount point"
@@ -74,87 +74,87 @@
   {
     "name": "Plugin.Disk.SMART",
     "attributes": {
-      "13": {
+      "11": {
         "name": "rotation_rate",
         "type": "java.lang.Long",
         "description": null
       },
-      "15": {
+      "21": {
         "name": "spin_up_time",
         "type": "java.lang.Long",
         "description": null
       },
-      "16": {
+      "31": {
         "name": "start_stop_cycles",
         "type": "java.lang.Long",
         "description": null
       },
-      "17": {
+      "41": {
         "name": "reallocated_sectors",
         "type": "java.lang.Long",
         "description": null
       },
-      "18": {
+      "51": {
         "name": "seek_error_rate",
         "type": "java.lang.Long",
         "description": null
       },
-      "19": {
+      "61": {
         "name": "power_on_time",
         "type": "java.lang.Long",
         "description": null
       },
-      "20": {
+      "71": {
         "name": "spin_retries",
         "type": "java.lang.Long",
         "description": null
       },
-      "21": {
+      "81": {
         "name": "calibration_retries",
         "type": "java.lang.Long",
         "description": null
       },
-      "22": {
+      "91": {
         "name": "power_cycles",
         "type": "java.lang.Long",
         "description": null
       },
-      "23": {
+      "101": {
         "name": "poweroff_retracts",
         "type": "java.lang.Long",
         "description": null
       },
-      "24": {
+      "111": {
         "name": "load_cycles",
         "type": "java.lang.Long",
         "description": null
       },
-      "25": {
+      "121": {
         "name": "temperature",
         "type": "java.lang.Long",
         "description": null
       },
-      "26": {
+      "131": {
         "name": "reallocated_events",
         "type": "java.lang.Long",
         "description": null
       },
-      "27": {
+      "141": {
         "name": "current_pending_sector",
         "type": "java.lang.Long",
         "description": null
       },
-      "28": {
+      "151": {
         "name": "offline_uncorrectable",
         "type": "java.lang.Long",
         "description": null
       },
-      "29": {
+      "161": {
         "name": "crc_errors",
         "type": "java.lang.Long",
         "description": null
       },
-      "30": {
+      "171": {
         "name": "multizone_error_rate",
         "type": "java.lang.Long",
         "description": null
@@ -164,7 +164,7 @@
   {
     "name": "Plugin.Cpu.Thread",
     "attributes": {
-      "1": {
+      "11": {
         "name": "tid",
         "type": "java.lang.Integer",
         "identity": true,
@@ -175,12 +175,12 @@
   {
     "name": "Plugin.Cpu.Core",
     "attributes": {
-      "1": {
+      "11": {
         "name": "usage",
         "type": "java.lang.Double",
         "description": "The core's usage between 0.0 and 1.0"
       },
-      "2": {
+      "21": {
         "name": "temperature",
         "type": "java.lang.Double",
         "description": "The core's temperature in Celsius"
@@ -190,126 +190,126 @@
   {
     "name": "Plugin.Nic",
     "documents": {
-      "25": "Plugin.Nic.Windows"
+      "12": "Plugin.Nic.Windows"
     },
     "attributes": {
-      "1": {
+      "11": {
         "name": "name",
         "type": "java.lang.String",
         "identity": true,
         "description": "The interface's name"
       },
-      "2": {
+      "21": {
         "name": "description",
         "type": "java.lang.String",
         "description": "The interface's description"
       },
-      "3": {
+      "31": {
         "name": "mtu",
         "type": "java.lang.Integer",
         "description": "The maximum transmission unit"
       },
-      "4": {
+      "41": {
         "name": "mac",
         "type": "java.lang.String",
         "description": null
       },
-      "5": {
+      "51": {
         "name": "virtual",
         "type": "java.lang.Boolean",
         "description": null
       },
-      "6": {
+      "61": {
         "name": "ipv4",
         "type": "java.util.List<java.lang.String>",
         "description": "The interface's IPv4 addresses"
       },
-      "7": {
+      "71": {
         "name": "ipv6",
         "type": "java.util.List<java.lang.String>",
         "description": "The interface's IPv6 addresses"
       },
-      "8": {
+      "81": {
         "name": "broadcast",
         "type": "java.lang.String",
         "description": null
       },
-      "9": {
+      "91": {
         "name": "netmask",
         "type": "java.lang.String",
         "description": "The interface's subnet mask"
       },
-      "10": {
+      "101": {
         "name": "read_bytes",
         "type": "java.lang.Long",
         "description": "The number of bytes read from the interface"
       },
-      "11": {
+      "111": {
         "name": "write_bytes",
         "type": "java.lang.Long",
         "description": "The number of bytes written to the interface"
       },
-      "12": {
+      "121": {
         "name": "read_packets",
         "type": "java.lang.Long",
         "description": "The number of packets read from the interface"
       },
-      "13": {
+      "131": {
         "name": "write_packets",
         "type": "java.lang.Long",
         "description": "The number of packets written to the interface"
       },
-      "14": {
+      "141": {
         "name": "read_errors",
         "type": "java.lang.Long",
         "description": "The number of read errors"
       },
-      "15": {
+      "151": {
         "name": "write_errors",
         "type": "java.lang.Long",
         "description": "The number of write errors"
       },
-      "16": {
+      "161": {
         "name": "read_drops",
         "type": "java.lang.Long",
         "description": "The number of read drops"
       },
-      "17": {
+      "171": {
         "name": "write_drops",
         "type": "java.lang.Long",
         "description": "The number of write drops"
       },
-      "18": {
+      "181": {
         "name": "write_collisions",
         "type": "java.lang.Long",
         "description": "The number of write collisions"
       },
-      "19": {
+      "191": {
         "name": "link_speed",
         "type": "java.lang.Long",
         "description": "The interface's maximum speed in bytes"
       },
-      "20": {
+      "201": {
         "name": "default_gateway",
         "type": "java.lang.Boolean",
         "description": null
       },
-      "21": {
+      "211": {
         "name": "flag_up",
         "type": "java.lang.Boolean",
         "description": null
       },
-      "22": {
+      "221": {
         "name": "flag_running",
         "type": "java.lang.Boolean",
         "description": null
       },
-      "23": {
+      "231": {
         "name": "flag_loopback",
         "type": "java.lang.Boolean",
         "description": null
       },
-      "24": {
+      "241": {
         "name": "flag_multicast",
         "type": "java.lang.Boolean",
         "description": null
@@ -319,76 +319,76 @@
   {
     "name": "Plugin.Disk",
     "collections": {
-      "14": "Plugin.Disk.Partition"
+      "13": "Plugin.Disk.Partition"
     },
     "documents": {
-      "15": "Plugin.Disk.SMART"
+      "12": "Plugin.Disk.SMART"
     },
     "attributes": {
-      "1": {
+      "11": {
         "name": "name",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "2": {
+      "21": {
         "name": "model",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "3": {
+      "31": {
         "name": "serial",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "4": {
+      "41": {
         "name": "size",
         "type": "java.lang.Long",
         "description": "The disk's total size in bytes"
       },
-      "5": {
+      "51": {
         "name": "reads",
         "type": "java.lang.Long",
         "description": null
       },
-      "6": {
+      "61": {
         "name": "read_bytes",
         "type": "java.lang.Long",
         "description": null
       },
-      "7": {
+      "71": {
         "name": "writes",
         "type": "java.lang.Long",
         "description": null
       },
-      "8": {
+      "81": {
         "name": "write_bytes",
         "type": "java.lang.Long",
         "description": null
       },
-      "9": {
+      "91": {
         "name": "queue_length",
         "type": "java.lang.Long",
         "description": null
       },
-      "10": {
+      "101": {
         "name": "transfer_time",
         "type": "java.lang.Long",
         "description": null
       },
-      "11": {
+      "111": {
         "name": "model_family",
         "type": "java.lang.String",
         "description": null
       },
-      "12": {
+      "121": {
         "name": "firmware_version",
         "type": "java.lang.String",
         "description": null
       },
-      "13": {
+      "131": {
         "name": "read_error_rate",
         "type": "java.lang.Long",
         "description": null
@@ -398,43 +398,43 @@
   {
     "name": "Plugin.Cpu",
     "collections": {
-      "8": "Plugin.Cpu.Thread",
-      "9": "Plugin.Cpu.Core"
+      "13": "Plugin.Cpu.Thread",
+      "23": "Plugin.Cpu.Core"
     },
     "attributes": {
-      "1": {
+      "11": {
         "name": "model",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "2": {
+      "21": {
         "name": "vendor",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "3": {
+      "31": {
         "name": "frequency_spec",
         "type": "java.lang.Integer",
         "description": "The specified frequency in Hertz"
       },
-      "4": {
+      "41": {
         "name": "l1_cache",
         "type": "java.lang.Integer",
         "description": "The size of the L1 cache in bytes"
       },
-      "5": {
+      "51": {
         "name": "l2_cache",
         "type": "java.lang.Integer",
         "description": "The size of the L2 cache in bytes"
       },
-      "6": {
+      "61": {
         "name": "l3_cache",
         "type": "java.lang.Integer",
         "description": "The size of the L3 cache in bytes"
       },
-      "7": {
+      "71": {
         "name": "l4_cache",
         "type": "java.lang.Integer",
         "description": "The size of the L4 cache in bytes"
@@ -444,17 +444,17 @@
   {
     "name": "Plugin.Sensor",
     "attributes": {
-      "1": {
+      "11": {
         "name": "fan_speed",
         "type": "java.lang.Integer",
         "description": null
       },
-      "2": {
+      "21": {
         "name": "temperature",
         "type": "java.lang.Double",
         "description": null
       },
-      "3": {
+      "31": {
         "name": "voltage",
         "type": "java.lang.Double",
         "description": null
@@ -464,19 +464,19 @@
   {
     "name": "Plugin.SoundCard",
     "attributes": {
-      "1": {
+      "11": {
         "name": "driver_version",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "2": {
+      "21": {
         "name": "name",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "3": {
+      "31": {
         "name": "codec",
         "type": "java.lang.String",
         "description": null
@@ -486,34 +486,34 @@
   {
     "name": "Plugin.Display",
     "attributes": {
-      "1": {
+      "11": {
         "name": "name",
         "type": "java.lang.String",
         "identity": true,
         "description": "The display's name"
       },
-      "2": {
+      "21": {
         "name": "edid",
         "type": "java.lang.String",
         "description": null
       },
-      "3": {
+      "31": {
         "name": "resolution",
         "type": "java.lang.String",
         "description": "The display's resolution"
       },
-      "4": {
+      "41": {
         "name": "size",
         "type": "java.lang.String",
         "identity": true,
         "description": "The display's physical size in pixels"
       },
-      "5": {
+      "51": {
         "name": "refresh_frequency",
         "type": "java.lang.Integer",
         "description": "Refresh frequency in Hertz"
       },
-      "6": {
+      "61": {
         "name": "bit_depth",
         "type": "java.lang.Integer",
         "description": null
@@ -523,57 +523,58 @@
   {
     "name": "Plugin.UsbDevice",
     "attributes": {
-      "1": {
+      "11": {
         "name": "name",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "2": {
+      "21": {
         "name": "vendor",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "3": {
+      "31": {
         "name": "vendor_id",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "4": {
+      "41": {
         "name": "product_id",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "5": {
+      "51": {
         "name": "serial_number",
         "type": "java.lang.String",
         "identity": true,
         "description": null
-      },
-      "6": {
+      }
+    },
+    "relations": {
+      "14": {
         "name": "children",
-        "type": "java.util.List<UsbDevice>",
-        "description": null
+        "type": "Plugin.UsbDevice"
       }
     }
   },
   {
     "name": "Plugin.Network",
     "attributes": {
-      "1": {
+      "11": {
         "name": "hostname",
         "type": "java.lang.String",
         "description": "The host's hostname"
       },
-      "2": {
+      "21": {
         "name": "fqdn",
         "type": "java.lang.String",
         "description": "The host's fully-qualified domain name"
       },
-      "3": {
+      "31": {
         "name": "dns",
         "type": "java.util.List<java.lang.String>",
         "description": "The host's DNS servers"
@@ -583,17 +584,17 @@
   {
     "name": "Plugin.Power",
     "attributes": {
-      "1": {
+      "11": {
         "name": "name",
         "type": "java.lang.String",
         "description": null
       },
-      "2": {
+      "21": {
         "name": "remaining_capacity",
         "type": "java.lang.Double",
         "description": null
       },
-      "3": {
+      "31": {
         "name": "remaining_time",
         "type": "java.lang.Double",
         "description": null
@@ -603,43 +604,43 @@
   {
     "name": "Plugin.Firmware",
     "attributes": {
-      "1": {
+      "11": {
         "name": "name",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "2": {
+      "21": {
         "name": "manufacturer",
         "type": "java.lang.String",
         "identity": true,
         "description": "The BIOS manufacturer title"
       },
-      "3": {
+      "31": {
         "name": "description",
         "type": "java.lang.String",
         "identity": true,
         "description": "The BIOS description"
       },
-      "4": {
+      "41": {
         "name": "version",
         "type": "java.lang.String",
         "identity": true,
         "description": "The BIOS version number"
       },
-      "5": {
+      "51": {
         "name": "revision",
         "type": "java.lang.String",
         "identity": true,
         "description": "The BIOS revision number"
       },
-      "6": {
+      "61": {
         "name": "release_date",
         "type": "java.lang.String",
         "identity": true,
         "description": "The BIOS release date"
       },
-      "7": {
+      "71": {
         "name": "uefi",
         "type": "java.lang.Boolean",
         "identity": true,
@@ -650,25 +651,25 @@
   {
     "name": "Plugin.Mainboard",
     "attributes": {
-      "1": {
+      "11": {
         "name": "model",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "2": {
+      "21": {
         "name": "manufacturer",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "3": {
+      "31": {
         "name": "version",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "4": {
+      "41": {
         "name": "serial_number",
         "type": "java.lang.String",
         "identity": true,
@@ -679,18 +680,18 @@
   {
     "name": "Plugin.OperatingSystem.User",
     "attributes": {
-      "1": {
+      "11": {
         "name": "uid",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "2": {
+      "21": {
         "name": "username",
         "type": "java.lang.String",
         "description": "The user's username"
       },
-      "3": {
+      "31": {
         "name": "home",
         "type": "java.lang.String",
         "description": "The user's home directory path"
@@ -700,109 +701,109 @@
   {
     "name": "Plugin.OperatingSystem.Process",
     "attributes": {
-      "1": {
+      "11": {
         "name": "name",
         "type": "java.lang.String",
         "identity": true,
         "description": null
       },
-      "2": {
+      "21": {
         "name": "path",
         "type": "java.lang.String",
         "description": null
       },
-      "3": {
+      "31": {
         "name": "command",
         "type": "java.lang.String",
         "description": null
       },
-      "4": {
+      "41": {
         "name": "working_directory",
         "type": "java.lang.String",
         "description": null
       },
-      "5": {
+      "51": {
         "name": "user",
         "type": "java.lang.String",
         "description": null
       },
-      "6": {
+      "61": {
         "name": "user_id",
         "type": "java.lang.String",
         "description": null
       },
-      "7": {
+      "71": {
         "name": "group",
         "type": "java.lang.String",
         "description": null
       },
-      "8": {
+      "81": {
         "name": "group_id",
         "type": "java.lang.String",
         "description": null
       },
-      "9": {
+      "91": {
         "name": "state",
         "type": "java.lang.String",
         "description": null
       },
-      "10": {
+      "101": {
         "name": "pid",
         "type": "java.lang.Integer",
         "identity": true,
         "description": "The process's process ID"
       },
-      "11": {
+      "111": {
         "name": "parent_pid",
         "type": "java.lang.Integer",
         "description": null
       },
-      "12": {
+      "121": {
         "name": "thread_count",
         "type": "java.lang.Integer",
         "description": null
       },
-      "13": {
+      "131": {
         "name": "priority",
         "type": "java.lang.Integer",
         "description": null
       },
-      "14": {
+      "141": {
         "name": "virtual_size",
         "type": "java.lang.Long",
         "description": null
       },
-      "15": {
+      "151": {
         "name": "resident_set_size",
         "type": "java.lang.Long",
         "description": "The resident memory size in bytes"
       },
-      "16": {
+      "161": {
         "name": "kernel_time",
         "type": "java.lang.Long",
         "description": "The number of milliseconds the process has executed in kernel mode"
       },
-      "17": {
+      "171": {
         "name": "user_time",
         "type": "java.lang.Long",
         "description": "The number of milliseconds the process has executed in user mode"
       },
-      "18": {
+      "181": {
         "name": "start_time",
         "type": "java.lang.Long",
         "description": "The epoch timestamp of the process start time"
       },
-      "19": {
+      "191": {
         "name": "bytes_read",
         "type": "java.lang.Long",
         "description": "The number of bytes the process has read from disk"
       },
-      "20": {
+      "201": {
         "name": "bytes_written",
         "type": "java.lang.Long",
         "description": "The number of bytes the process has written to disk"
       },
-      "21": {
+      "211": {
         "name": "handle_count",
         "type": "java.lang.Long",
         "description": "The number of file handles that the process owns"
@@ -812,41 +813,41 @@
   {
     "name": "Plugin.OperatingSystem",
     "collections": {
-      "1": "Plugin.OperatingSystem.Process",
-      "2": "Plugin.OperatingSystem.User"
+      "13": "Plugin.OperatingSystem.Process",
+      "23": "Plugin.OperatingSystem.User"
     },
     "attributes": {
-      "3": {
+      "11": {
         "name": "family",
         "type": "java.lang.String",
         "identity": true,
         "description": "The operating system's family"
       },
-      "4": {
+      "21": {
         "name": "manufacturer",
         "type": "java.lang.String",
         "identity": true,
         "description": "The operating system's manufacturer"
       },
-      "5": {
+      "31": {
         "name": "bitness",
         "type": "java.lang.Integer",
         "identity": true,
         "description": "The operating system's register width in bits"
       },
-      "6": {
+      "41": {
         "name": "version",
         "type": "java.lang.String",
         "identity": true,
         "description": "The operating system's primary version"
       },
-      "7": {
+      "51": {
         "name": "codename",
         "type": "java.lang.String",
         "identity": true,
         "description": "The operating system's code name"
       },
-      "8": {
+      "61": {
         "name": "build_number",
         "type": "java.lang.String",
         "identity": true,
@@ -855,20 +856,21 @@
     }
   },
   {
+    "parent":"1.3",
     "name": "Plugin",
     "collections": {
-      "6": "Plugin.UsbDevice",
-      "7": "Plugin.Display",
-      "8": "Plugin.SoundCard",
-      "9": "Plugin.Sensor",
-      "10": "Plugin.Cpu"
+      "13": "Plugin.UsbDevice",
+      "23": "Plugin.Display",
+      "33": "Plugin.SoundCard",
+      "43": "Plugin.Sensor",
+      "53": "Plugin.Cpu"
     },
     "documents": {
-      "1": "Plugin.OperatingSystem",
-      "2": "Plugin.Mainboard",
-      "3": "Plugin.Firmware",
-      "4": "Plugin.Power",
-      "5": "Plugin.Network"
+      "12": "Plugin.OperatingSystem",
+      "22": "Plugin.Mainboard",
+      "32": "Plugin.Firmware",
+      "42": "Plugin.Power",
+      "52": "Plugin.Network"
     }
   }
 ]

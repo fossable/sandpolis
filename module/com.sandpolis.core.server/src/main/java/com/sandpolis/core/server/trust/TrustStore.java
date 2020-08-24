@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.util.CertUtil;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtTrustAnchor;
-import com.sandpolis.core.instance.state.Document;
+import com.sandpolis.core.instance.state.STStore;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
@@ -101,7 +101,7 @@ public final class TrustStore extends CollectionStore<TrustAnchor> implements Co
 	}
 
 	public TrustAnchor create(Consumer<TrustAnchor> configurator) {
-		return add(new TrustAnchor(new Document(null)), configurator);
+		return add(new TrustAnchor(STStore.newRootDocument()), configurator);
 	}
 
 	public final class TrustStoreConfig extends StoreConfig {

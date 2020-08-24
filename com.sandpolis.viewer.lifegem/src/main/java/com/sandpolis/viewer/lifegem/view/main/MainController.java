@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.profile.Profile;
+import com.sandpolis.viewer.lifegem.StateTree.FxProfile;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 import com.sandpolis.viewer.lifegem.common.pane.CarouselPane;
 import com.sandpolis.viewer.lifegem.common.pane.ExtendPane;
@@ -51,7 +51,7 @@ public class MainController extends AbstractController {
 	@FXML
 	private HostListController hostListController;
 
-	private Cache<Profile, Pane> detailCache;
+	private Cache<FxProfile, Pane> detailCache;
 
 	private StringProperty phase = new SimpleStringProperty();
 
