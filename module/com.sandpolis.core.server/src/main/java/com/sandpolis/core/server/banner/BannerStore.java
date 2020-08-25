@@ -35,7 +35,7 @@ import com.sandpolis.core.sv.msg.MsgServer.RS_ServerBanner;
 /**
  * {@link BannerStore} manages the server banner which is presented to new
  * connections.
- * 
+ *
  * @since 5.0.0
  */
 public final class BannerStore extends StoreBase implements ConfigurableStore<ServerStoreConfig> {

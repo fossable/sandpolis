@@ -39,7 +39,7 @@ public final class GroupCmd extends Cmdlet<GroupCmd> {
 
 	/**
 	 * Create a new group.
-	 * 
+	 *
 	 * @param name The group name
 	 * @return An asynchronous {@link CompletionStage}
 	 */

@@ -45,8 +45,6 @@ public class HostListController extends AbstractController {
 
 	@FXML
 	public void initialize() {
-		if (ProfileStore.getContainer() == null)
-			log.warn("The ProfileStore was not configured to expose the profile container!");
 
 		table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		table.getSelectionModel().selectedItemProperty().addListener((p, o, n) -> {
@@ -55,7 +53,7 @@ public class HostListController extends AbstractController {
 			else
 				post(HostDetailOpenEvent::new, n);
 		});
-		table.setItems((ObservableList<Profile>) ProfileStore.getContainer());
+		// table.setItems(ProfileStore.getContainer());
 
 		// Set default headers
 		addColumns(DEFAULT_HEADERS);

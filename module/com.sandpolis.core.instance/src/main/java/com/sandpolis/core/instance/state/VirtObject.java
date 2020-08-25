@@ -19,7 +19,7 @@ import com.sandpolis.core.instance.state.Oid.AttributeOid;
 /**
  * A {@link VirtObject} is a member of the virtual state tree.
  *
- * @since 6.2.0
+ * @since 7.0.0
  */
 public abstract class VirtObject {
 

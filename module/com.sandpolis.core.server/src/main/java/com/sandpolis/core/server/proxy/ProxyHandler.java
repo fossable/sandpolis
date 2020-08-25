@@ -34,7 +34,7 @@ import io.netty.util.ReferenceCountUtil;
  * {@link ByteBuf} will be efficiently forwarded without decoding the entire
  * message. Otherwise the {@link ByteBuf} will be decoded and executed for this
  * instance.
- * 
+ *
  * <p>
  * This handler MUST be placed after a {@link ProtobufVarint32FrameDecoder}!
  * Otherwise a malicious instance could send messages to unauthorized instances

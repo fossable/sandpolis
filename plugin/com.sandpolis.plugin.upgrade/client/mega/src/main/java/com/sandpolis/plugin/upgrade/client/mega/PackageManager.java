@@ -27,8 +27,7 @@ import com.sandpolis.plugin.upgrade.client.mega.library.Pacman;
  * <li>Removing packages from the local system</li>
  * </ul>
  *
- * @author cilki
- * @since 6.2.0
+ * @since 7.0.0
  */
 public abstract class PackageManager {
 

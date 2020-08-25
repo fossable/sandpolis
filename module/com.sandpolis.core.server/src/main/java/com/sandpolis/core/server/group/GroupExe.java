@@ -26,7 +26,7 @@ import com.sandpolis.core.sv.msg.MsgGroup.RQ_GroupOperation;
 
 /**
  * {@link GroupExe} contains message handlers related to group management.
- * 
+ *
  * @since 5.0.0
  */
 public final class GroupExe extends Exelet {

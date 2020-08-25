@@ -1,3 +1,14 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
 import java.util.Arrays;
@@ -16,7 +27,7 @@ import com.sandpolis.core.instance.state.STStore;
 import com.sandpolis.core.instance.state.VirtObject;
 import com.sandpolis.core.net.cmdlet.Cmdlet;
 
-public class StateTreeCmd extends Cmdlet<StateTreeCmd> {
+public class STCmd extends Cmdlet<STCmd> {
 
 	public CompletionStage<Void> sync(Oid oid, Oid... attributes) {
 		return null;
@@ -49,12 +60,12 @@ public class StateTreeCmd extends Cmdlet<StateTreeCmd> {
 	 * Prepare for an asynchronous command.
 	 *
 	 * @return A configurable object from which all asynchronous (nonstatic)
-	 *         commands in {@link StateTreeCmd} can be invoked
+	 *         commands in {@link STCmd} can be invoked
 	 */
-	public static StateTreeCmd async() {
-		return new StateTreeCmd();
+	public static STCmd async() {
+		return new STCmd();
 	}
 
-	private StateTreeCmd() {
+	private STCmd() {
 	}
 }

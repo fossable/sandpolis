@@ -9,12 +9,13 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.server.state;
+package com.sandpolis.core.instance.state;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -25,21 +26,14 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.Oid;
-import com.sandpolis.core.instance.state.OidConverter;
-import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.STCollection;
 
 /**
- * A document is a group of attributes associated with the entity that the
- * document represents.
+ * {@link DefaultDocument} allows documents to be persistent.
  *
- * @author cilki
  * @since 5.1.1
  */
 @Entity
-public class ServerDocument implements STDocument {
+public class DefaultDocument implements STDocument {
 
 	@Id
 	private String db_id;
@@ -50,30 +44,31 @@ public class ServerDocument implements STDocument {
 
 	@MapKeyColumn
 	@OneToMany(cascade = CascadeType.ALL)
-	private Map<Integer, ServerDocument> documents;
+	private Map<Integer, STDocument> documents;
 
 	@MapKeyColumn
 	@OneToMany(cascade = CascadeType.ALL)
-	private Map<Integer, ServerCollection> collections;
+	private Map<Integer, STCollection> collections;
 
 	@MapKeyColumn
 	@OneToMany(cascade = CascadeType.ALL)
-	private Map<Integer, ServerAttribute<?>> attributes;
+	private Map<Integer, STAttribute<?>> attributes;
 
-	public ServerDocument(Oid<?> oid) {
+	public DefaultDocument(Oid<?> oid) {
+		this.db_id = UUID.randomUUID().toString();
 		this.oid = oid;
-		db_id = UUID.randomUUID().toString();
+
 		documents = new HashMap<>();
 		collections = new HashMap<>();
 		attributes = new HashMap<>();
 	}
 
-	public ServerDocument(Oid<?> oid, ProtoDocument document) {
+	public DefaultDocument(Oid<?> oid, ProtoDocument document) {
 		this(oid);
 		merge(document);
 	}
 
-	protected ServerDocument() {
+	protected DefaultDocument() {
 		// JPA CONSTRUCTOR
 	}
 
@@ -88,37 +83,62 @@ public class ServerDocument implements STDocument {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <E> ServerAttribute<E> attribute(int tag) {
-		ServerAttribute<?> attribute = attributes.get(tag);
+	public <E> DefaultAttribute<E> attribute(int tag) {
+		var attribute = attributes.get(tag);
 		if (attribute == null) {
-			attribute = new ServerAttribute<>(oid.child(tag));
+			attribute = new DefaultAttribute<>(oid.child(tag));
 			attributes.put(tag, attribute);
 		}
-		return (ServerAttribute<E>) attribute;
+		return (DefaultAttribute<E>) attribute;
 	}
 
 	@Override
-	public ServerDocument document(int tag) {
-		ServerDocument document = documents.get(tag);
+	public <E> STAttribute<E> getAttribute(int tag) {
+		return (STAttribute<E>) attributes.get(tag);
+	}
+
+	@Override
+	public void setAttribute(int tag, STAttribute<?> attribute) {
+		attributes.put(tag, (DefaultAttribute<?>) attribute);
+	}
+
+	@Override
+	public STDocument document(int tag) {
+		var document = documents.get(tag);
 		if (document == null) {
-			document = new ServerDocument(oid.child(tag));
+			document = new DefaultDocument(oid.child(tag));
 			documents.put(tag, document);
 		}
 		return document;
 	}
 
+	public STDocument getDocument(int tag) {
+		return documents.get(tag);
+	}
+
 	@Override
-	public ServerCollection collection(int tag) {
-		ServerCollection collection = collections.get(tag);
+	public void setDocument(int tag, STDocument document) {
+		documents.put(tag, (DefaultDocument) document);
+	}
+
+	@Override
+	public STCollection collection(int tag) {
+		var collection = collections.get(tag);
 		if (collection == null) {
-			collection = new ServerCollection(oid.child(tag));
+			collection = new DefaultCollection(oid.child(tag));
 			collections.put(tag, collection);
 		}
 		return collection;
 	}
 
-	public ServerDocument getDocument(int tag) {
-		return documents.get(tag);
+	@Override
+	public STCollection getCollection(int tag) {
+		return collections.get(tag);
+	}
+
+	@Override
+	public void setCollection(int tag, STCollection collection) {
+		collections.put(tag, (DefaultCollection) collection);
 	}
 
 	@Override
@@ -127,22 +147,22 @@ public class ServerDocument implements STDocument {
 	}
 
 	@Override
-	public void merge(ProtoDocument delta) {
-		for (var entry : delta.getDocumentMap().entrySet()) {
+	public void merge(ProtoDocument snapshot) {
+		for (var entry : snapshot.getDocumentMap().entrySet()) {
 			document(entry.getKey()).merge(entry.getValue());
 		}
-		for (var entry : delta.getCollectionMap().entrySet()) {
+		for (var entry : snapshot.getCollectionMap().entrySet()) {
 			collection(entry.getKey()).merge(entry.getValue());
 		}
-		for (var entry : delta.getAttributeMap().entrySet()) {
+		for (var entry : snapshot.getAttributeMap().entrySet()) {
 			attribute(entry.getKey()).merge(entry.getValue());
 		}
 
-		if (!delta.getPartial()) {
+		if (!snapshot.getPartial()) {
 			// Remove anything that wasn't in the snapshot
-			documents.entrySet().removeIf(entry -> !delta.containsDocument(entry.getKey()));
-			collections.entrySet().removeIf(entry -> !delta.containsCollection(entry.getKey()));
-			attributes.entrySet().removeIf(entry -> !delta.containsAttribute(entry.getKey()));
+			documents.entrySet().removeIf(entry -> !snapshot.containsDocument(entry.getKey()));
+			collections.entrySet().removeIf(entry -> !snapshot.containsCollection(entry.getKey()));
+			attributes.entrySet().removeIf(entry -> !snapshot.containsAttribute(entry.getKey()));
 		}
 	}
 
@@ -178,32 +198,19 @@ public class ServerDocument implements STDocument {
 	}
 
 	@Override
-	public <E> STAttribute<E> getAttribute(int tag) {
+	public Stream<STAttribute<?>> attributes() {
+		return attributes.values().stream();
+	}
+
+	@Override
+	public Stream<STCollection> collections() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public STCollection getCollection(int tag) {
+	public Stream<STCollection> documents() {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	@Override
-	public void setAttribute(int tag, STAttribute<?> attribute) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setCollection(int tag, STCollection collection) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setDocument(int tag, STDocument document) {
-		// TODO Auto-generated method stub
-
 	}
 }

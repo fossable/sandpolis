@@ -53,7 +53,7 @@ public class CodeGen implements Plugin<Project> {
 			}
 
 			// Generate server attribute value implementations
-			if (project.getName().equals("com.sandpolis.core.server")) {
+			if (project.getName().equals("com.sandpolis.core.instance")) {
 				project.getTasks().getByName("compileJava").dependsOn(project.getTasks()
 						.create("generateAttributeValueImplementations", AttributeValueGenerator.class));
 			}

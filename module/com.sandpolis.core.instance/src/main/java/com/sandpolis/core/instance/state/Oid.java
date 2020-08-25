@@ -1,3 +1,14 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state;
 
 import java.util.Arrays;
@@ -38,7 +49,7 @@ public class Oid<T> implements Comparable<Oid<?>> {
 
 	/**
 	 * Get the first component of the OID.
-	 * 
+	 *
 	 * @return The OID's first component
 	 */
 	public int head() {
@@ -47,7 +58,7 @@ public class Oid<T> implements Comparable<Oid<?>> {
 
 	/**
 	 * Get the last component of the OID.
-	 * 
+	 *
 	 * @return The OID's last component
 	 */
 	public int last() {
@@ -63,7 +74,7 @@ public class Oid<T> implements Comparable<Oid<?>> {
 
 	/**
 	 * Get the number of components in the OID.
-	 * 
+	 *
 	 * @return The OID's length
 	 */
 	public int size() {

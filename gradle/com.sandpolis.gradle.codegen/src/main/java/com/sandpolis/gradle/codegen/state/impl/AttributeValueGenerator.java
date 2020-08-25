@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.gradle.codegen.state.impl;
 
+import static com.sandpolis.gradle.codegen.state.STGenerator.ST_PACKAGE;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -37,8 +38,6 @@ import com.squareup.javapoet.TypeSpec;
  * the server module.
  */
 public class AttributeValueGenerator extends DefaultTask {
-
-	private static final String ST_PACKAGE = "com.sandpolis.core.server.state";
 
 	/**
 	 * Types that are integral Hibernate entities.
@@ -101,7 +100,7 @@ public class AttributeValueGenerator extends DefaultTask {
 
 	/**
 	 * Generate an attribute value implementation for an array type.
-	 * 
+	 *
 	 * @param type The array type
 	 * @throws IOException
 	 */
@@ -110,7 +109,7 @@ public class AttributeValueGenerator extends DefaultTask {
 				.classBuilder(type.componentType.box().toString().replaceAll(".*\\.", "") + "ArrayAttributeValue") //
 				.addModifiers(PUBLIC) //
 				.addAnnotation(ClassName.get("javax.persistence", "Embeddable")) //
-				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), type));
+				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), type));
 
 		{
 			// Add value field
@@ -144,7 +143,7 @@ public class AttributeValueGenerator extends DefaultTask {
 			var method = MethodSpec.methodBuilder("clone") //
 					.addModifiers(PUBLIC) //
 					.addAnnotation(Override.class) //
-					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), type)) //
+					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), type)) //
 					.addStatement("return new $L()",
 							type.componentType.box().toString().replaceAll(".*\\.", "") + "ArrayAttributeValue");
 			av.addMethod(method.build());
@@ -182,7 +181,7 @@ public class AttributeValueGenerator extends DefaultTask {
 
 	/**
 	 * Generate an attribute value implementation for a scalar type.
-	 * 
+	 *
 	 * @param type
 	 * @throws IOException
 	 */
@@ -192,7 +191,7 @@ public class AttributeValueGenerator extends DefaultTask {
 				.classBuilder(type.simpleName() + "AttributeValue") //
 				.addModifiers(PUBLIC) //
 				.addAnnotation(ClassName.get("javax.persistence", "Embeddable")) //
-				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), type));
+				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), type));
 
 		// Add value field
 		av.addField(newValueField(type).build());
@@ -223,7 +222,7 @@ public class AttributeValueGenerator extends DefaultTask {
 			var method = MethodSpec.methodBuilder("clone") //
 					.addModifiers(PUBLIC) //
 					.addAnnotation(Override.class) //
-					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), type)) //
+					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), type)) //
 					.addStatement("return new $L()", type.simpleName() + "AttributeValue");
 			av.addMethod(method.build());
 		}
@@ -283,7 +282,7 @@ public class AttributeValueGenerator extends DefaultTask {
 		var av = TypeSpec //
 				.classBuilder(type.simpleName() + "ListAttributeValue") //
 				.addModifiers(PUBLIC).addAnnotation(ClassName.get("javax.persistence", "Embeddable")) //
-				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), listType));
+				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), listType));
 
 		// Add value field
 		av.addField(newValueField(listType).build());
@@ -314,7 +313,7 @@ public class AttributeValueGenerator extends DefaultTask {
 			var method = MethodSpec.methodBuilder("clone") //
 					.addModifiers(PUBLIC) //
 					.addAnnotation(Override.class) //
-					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "ServerAttributeValue"), listType)) //
+					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), listType)) //
 					.addStatement("return new $L()", type.simpleName() + "ListAttributeValue");
 			av.addMethod(method.build());
 		}

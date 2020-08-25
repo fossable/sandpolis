@@ -83,7 +83,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 
 	/**
 	 * Alias for {@code target.request(responseType, payload)}.
-	 * 
+	 *
 	 * @param <T>          The expected response type
 	 * @param responseType The expected response type
 	 * @param payload      The request payload

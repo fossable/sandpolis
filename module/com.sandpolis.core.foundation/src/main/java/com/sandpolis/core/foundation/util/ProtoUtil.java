@@ -75,7 +75,7 @@ public final class ProtoUtil {
 		return outcome.setResult(true).setTime(System.currentTimeMillis() - outcome.getTime()).setComment(comment)
 				.build();
 	}
-	
+
 	public static Outcome failure() {
 		return Outcome.newBuilder().setResult(true).build();
 	}

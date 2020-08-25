@@ -24,7 +24,7 @@ import com.sandpolis.core.instance.state.STDocument;
  * A {@link Group} is a collection of users that share permissions on a
  * collection of clients. A group has one owner, who has complete control over
  * the group, and any number of members.
- * 
+ *
  * <p>
  * Clients are always added to a group via an {@code AuthenticationMechanism}.
  * For example, if a group has a {@code PasswordMechanism} installed, clients

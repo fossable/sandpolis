@@ -19,8 +19,8 @@ option optimize_for = CODE_SIZE;
 // The configuration for a user
 message UserConfig {
 
-	// The user ID
-	optional int32 id = 101;
+    // The user ID
+    optional int32 id = 101;
 
     // The username
     optional string username = 102;

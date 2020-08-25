@@ -134,7 +134,8 @@ public final class ConnectionLoop implements Runnable {
 
 				for (NetworkTarget n : config.getTargetList()) {
 
-					ConnectionFuture connect = new ConnectionFuture(bootstrap.remoteAddress(n.getAddress(), n.getPort()).connect());
+					ConnectionFuture connect = new ConnectionFuture(
+							bootstrap.remoteAddress(n.getAddress(), n.getPort()).connect());
 					try {
 						connect.sync();
 					} catch (Exception e) {

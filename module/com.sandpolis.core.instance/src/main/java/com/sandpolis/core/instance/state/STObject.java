@@ -33,7 +33,7 @@ public interface STObject<E extends Message> {
 	/**
 	 * Extract the object's state into a new protocol buffer. If Oids are specified,
 	 * the snapshot will be "partial" and only contain descendants of the oids.
-	 * 
+	 *
 	 * @param oids Whitelist oids
 	 * @return A new protocol buffer representing the object
 	 */

@@ -23,7 +23,7 @@ import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtPlugin;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.connection.ConnectionFuture;
-import com.sandpolis.core.net.state.StateTreeCmd;
+import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
 import com.sandpolis.core.viewer.cmd.ServerCmd;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
@@ -153,8 +153,7 @@ public class LoginController extends FxController {
 						}
 
 						if (rs.getResult()) {
-							StateTreeCmd.async()
-									.snapshot(VirtPlugin.COLLECTION, PluginProperty::new, VirtPlugin.PACKAGE_ID)
+							STCmd.async().snapshot(VirtPlugin.COLLECTION, PluginProperty::new, VirtPlugin.PACKAGE_ID)
 									.whenComplete((snapshot, ex) -> {
 										var plugins = snapshot.values().stream().filter(plugin -> {
 											return PluginStore.getByPackageId(plugin.packageIdProperty().getValue())

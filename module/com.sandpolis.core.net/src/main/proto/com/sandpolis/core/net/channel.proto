@@ -17,12 +17,12 @@ option java_package = "com.sandpolis.core.net";
 option optimize_for = SPEED;
 
 enum ChannelTransportImplementation {
-	NIO = 0;
-	EPOLL = 1;
-	KQUEUE = 2;
+    NIO = 0;
+    EPOLL = 1;
+    KQUEUE = 2;
 }
 
 enum ChannelTransportProtocol {
-	TCP = 0;
-	UDP = 1;
+    TCP = 0;
+    UDP = 1;
 }

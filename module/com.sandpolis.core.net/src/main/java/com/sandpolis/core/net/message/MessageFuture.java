@@ -80,7 +80,7 @@ public class MessageFuture extends DefaultPromise<MSG> {
 
 	/**
 	 * Handle the message response.
-	 * 
+	 *
 	 * @param <E>     The expected response type
 	 * @param type    The expected response type
 	 * @param handler The message handler
@@ -98,7 +98,7 @@ public class MessageFuture extends DefaultPromise<MSG> {
 
 	/**
 	 * Convert this {@link MessageFuture} into a new {@link CompletionStage}.
-	 * 
+	 *
 	 * @param <E>  The expected response type
 	 * @param type The expected response type
 	 * @return An asynchronous {@link CompletionStage}

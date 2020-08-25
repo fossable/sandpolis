@@ -69,4 +69,8 @@ public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscr
 		this.subscription = subscription;
 		this.subscription.request(Long.MAX_VALUE);
 	}
+
+	public void close() {
+
+	}
 }

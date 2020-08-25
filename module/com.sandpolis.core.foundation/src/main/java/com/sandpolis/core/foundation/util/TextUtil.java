@@ -134,7 +134,7 @@ public final class TextUtil {
 
 	/**
 	 * Format the given time duration in English according to the given units.
-	 * 
+	 *
 	 * @param value The duration to format
 	 * @param units The units
 	 * @return A formatted string

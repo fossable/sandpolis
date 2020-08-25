@@ -20,7 +20,7 @@ message PluginConfig {
     string package_id = 1;
 
     string version = 5;
-    
+
     oneof source {
         // The plugin binary
         bytes plugin_binary = 2;

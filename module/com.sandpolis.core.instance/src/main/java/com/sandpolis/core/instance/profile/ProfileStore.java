@@ -29,7 +29,7 @@ import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 /**
  * {@link ProfileStore} manages profiles that can represent any type of
  * instance.
- * 
+ *
  * @since 4.0.0
  */
 public final class ProfileStore extends CollectionStore<Profile> implements ConfigurableStore<ProfileStoreConfig> {

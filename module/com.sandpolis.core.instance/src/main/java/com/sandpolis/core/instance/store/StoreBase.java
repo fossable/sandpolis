@@ -27,11 +27,11 @@ import com.sandpolis.core.instance.store.event.ParameterizedEvent;
  * <p>
  * At a high level, a Store provides an interface to operations on an entity (or
  * on a collection of entities) from a convenient application context.
- * 
+ *
  * <p>
  * This root class defines a highly general structure applicable to all Stores
  * and handles operations like lifecycle management and event propagation.
- * 
+ *
  * @see CollectionStore
  */
 public abstract class StoreBase {

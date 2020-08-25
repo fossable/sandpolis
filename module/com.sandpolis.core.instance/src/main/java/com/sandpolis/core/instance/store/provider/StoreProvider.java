@@ -28,7 +28,7 @@ import com.sandpolis.core.instance.store.StoreMetadata;
  * An additional benefit of offloading this duty to a provider class is that
  * stores that rely on a database can be easily unit tested by using a
  * memory-only implementation such as {@link MemoryListStoreProvider}.
- * 
+ *
  * <p>
  * Note: default implementations should be overridden if more efficient ones
  * exist.
@@ -93,7 +93,7 @@ public interface StoreProvider<E> {
 
 	/**
 	 * Build a new {@link java.util.Collection} with all elements in the store.
-	 * 
+	 *
 	 * @return A new {@link java.util.Collection}
 	 */
 	public java.util.Collection<E> enumerate();

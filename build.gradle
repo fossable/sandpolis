@@ -31,7 +31,7 @@ spotless {
 	cpp {
 		target '**/*.cc', '**/*.hh'
 
-		eclipse()
+		eclipseCdt()
 		endWithNewline()
 		indentWithTabs()
 	}
@@ -124,10 +124,10 @@ allprojects {
 	}
 
 	plugins.withType(JavaPlugin).configureEach {
-        java {
-            modularity.inferModulePath = true
-        }
-    }
+		java {
+			modularity.inferModulePath = true
+		}
+	}
 }
 
 // Apply metadata configuration

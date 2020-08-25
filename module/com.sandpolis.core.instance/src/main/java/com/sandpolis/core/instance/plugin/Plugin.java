@@ -110,7 +110,7 @@ public class Plugin extends VirtPlugin {
 
 	/**
 	 * Recompute the plugin hash and compare it to the saved hash.
-	 * 
+	 *
 	 * @return Whether the current hash matches the saved hash
 	 * @throws IOException
 	 */
@@ -120,7 +120,7 @@ public class Plugin extends VirtPlugin {
 
 	/**
 	 * Load an installed plugin.
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	void load() throws IOException {
@@ -178,7 +178,7 @@ public class Plugin extends VirtPlugin {
 
 	/**
 	 * Get a path to the filesystem artifact identified by the given instance type.
-	 * 
+	 *
 	 * @param instance The instance type
 	 * @param flavor   The instance subtype
 	 * @return The artifact path
@@ -197,7 +197,7 @@ public class Plugin extends VirtPlugin {
 
 	/**
 	 * Calculate a hash unique to this plugin and version.
-	 * 
+	 *
 	 * <p>
 	 * Internally, this hash is composed of the plugin's coordinates and installed
 	 * filesystem artifacts.

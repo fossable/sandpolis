@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.server.state;
+package com.sandpolis.core.instance.state;
 
 import static com.sandpolis.core.instance.state.StateEventStore.StateEventStore;
 
@@ -27,19 +27,16 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 
 import com.sandpolis.core.instance.State.ProtoAttribute;
-import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.Oid;
-import com.sandpolis.core.instance.state.OidConverter;
 
 /**
- * An {@link ServerAttribute} is a container for data of a specific type and
- * meaning. It can
+ * {@link DefaultAttribute} allows attributes to be persistent and optionally
+ * saves the history of the attribute's value.
  *
- * @param <T> The attribute's value type
- * @since 6.2.0
+ * @param <T> The type of the attribute's value
+ * @since 7.0.0
  */
 @Entity
-public class ServerAttribute<T> implements STAttribute<T> {
+public class DefaultAttribute<T> implements STAttribute<T> {
 
 	@Embeddable
 	public enum RetentionPolicy {
@@ -56,13 +53,13 @@ public class ServerAttribute<T> implements STAttribute<T> {
 		TIME_LIMITED,
 
 		/**
-		 * Indicates that a certain number of changes to the attribute will be retained.
+		 * Indicates that a fixed number of changes to the attribute will be retained.
 		 */
 		ITEM_LIMITED;
 	}
 
 	@Id
-	private String db_id = UUID.randomUUID().toString();
+	private String db_id;
 
 	/**
 	 * The {@link Oid} that corresponds with this attribute.
@@ -72,19 +69,19 @@ public class ServerAttribute<T> implements STAttribute<T> {
 	private Oid<T> oid;
 
 	/**
-	 * A quantifier for the retention policy.
-	 */
-	@Column(nullable = true)
-	private long limit;
-
-	/**
 	 * A strategy that determines what happens to old values.
 	 */
 	@Column(nullable = true)
 	private RetentionPolicy retention;
 
 	/**
-	 * The timestamp associated with the current value.
+	 * A quantifier for the retention policy.
+	 */
+	@Column(nullable = true)
+	private long retentionLimit;
+
+	/**
+	 * The UTC epoch timestamp associated with the current value.
 	 */
 	@Column
 	private long currentTimestamp;
@@ -93,7 +90,7 @@ public class ServerAttribute<T> implements STAttribute<T> {
 	 * The current value of the attribute.
 	 */
 	@Embedded
-	private ServerAttributeValue<T> current;
+	private DefaultAttributeValue<T> current;
 
 	/**
 	 * Historical timestamps parallel to {@link #values}.
@@ -105,7 +102,7 @@ public class ServerAttribute<T> implements STAttribute<T> {
 	 * Historical values parallel to {@link #timestamps}.
 	 */
 	@ElementCollection
-	private List<ServerAttributeValue<T>> values;
+	private List<DefaultAttributeValue<T>> values;
 
 	/**
 	 * An optional supplier that overrides the current value.
@@ -113,19 +110,15 @@ public class ServerAttribute<T> implements STAttribute<T> {
 	@Transient
 	private Supplier<T> source;
 
-	public ServerAttribute(Oid<T> oid) {
+	public DefaultAttribute(Oid<T> oid) {
+		this.db_id = UUID.randomUUID().toString();
 		this.oid = oid;
 	}
 
-	protected ServerAttribute() {
+	protected DefaultAttribute() {
 		// JPA Constructor
 	}
 
-	/**
-	 * Set the current value of the attribute.
-	 *
-	 * @param value The new value to replace the current value or {@code null}
-	 */
 	@Override
 	public synchronized void set(T value) {
 
@@ -148,7 +141,7 @@ public class ServerAttribute<T> implements STAttribute<T> {
 
 		// If the current value has not been set, create it (by inefficient means)
 		if (current == null) {
-			current = ServerAttributeValue.newAttributeValue(value);
+			current = DefaultAttributeValue.newAttributeValue(value);
 		}
 
 		// If retention is not enabled, then overwrite the old value
@@ -175,37 +168,6 @@ public class ServerAttribute<T> implements STAttribute<T> {
 		StateEventStore.fire(oid, old, value);
 	}
 
-	/**
-	 * Check the retention condition and remove all violating elements.
-	 */
-	private void checkRetention() {
-		if (retention == null)
-			return;
-
-		switch (retention) {
-		case ITEM_LIMITED:
-			while (timestamps.size() > limit) {
-				timestamps.remove(0);
-				values.remove(0);
-			}
-			break;
-		case TIME_LIMITED:
-			while (timestamps.size() > 0 && timestamps.get(0) > (currentTimestamp - limit)) {
-				timestamps.remove(0);
-				values.remove(0);
-			}
-			break;
-		case UNLIMITED:
-			// Do nothing
-			break;
-		}
-	}
-
-	/**
-	 * Get the current value of the attribute.
-	 *
-	 * @return The current value or {@code null}
-	 */
 	@Override
 	public synchronized T get() {
 		if (source != null)
@@ -230,6 +192,32 @@ public class ServerAttribute<T> implements STAttribute<T> {
 		this.source = source;
 	}
 
+	/**
+	 * Check the retention condition and remove all violating elements.
+	 */
+	private void checkRetention() {
+		if (retention == null)
+			return;
+
+		switch (retention) {
+		case ITEM_LIMITED:
+			while (timestamps.size() > retentionLimit) {
+				timestamps.remove(0);
+				values.remove(0);
+			}
+			break;
+		case TIME_LIMITED:
+			while (timestamps.size() > 0 && timestamps.get(0) > (currentTimestamp - retentionLimit)) {
+				timestamps.remove(0);
+				values.remove(0);
+			}
+			break;
+		case UNLIMITED:
+			// Do nothing
+			break;
+		}
+	}
+
 	public void setRetention(RetentionPolicy retention) {
 		this.retention = retention;
 		checkRetention();
@@ -237,8 +225,29 @@ public class ServerAttribute<T> implements STAttribute<T> {
 
 	public void setRetention(RetentionPolicy retention, int limit) {
 		this.retention = retention;
-		this.limit = limit;
+		this.retentionLimit = limit;
 		checkRetention();
+	}
+
+	@Override
+	public synchronized void merge(ProtoAttribute snapshot) {
+		var newValues = snapshot.getValuesList();
+		if (newValues.isEmpty()) {
+			set(null);
+		} else {
+			current.setProto(newValues.get(0));
+			currentTimestamp = newValues.get(0).getTimestamp();
+
+			timestamps.clear();
+			values.clear();
+
+			for (int i = 1; i < newValues.size(); i++) {
+				var newValue = current.clone();
+				newValue.setProto(newValues.get(i));
+				values.add(newValue);
+				timestamps.add(newValues.get(i).getTimestamp());
+			}
+		}
 	}
 
 	@Override
@@ -266,26 +275,5 @@ public class ServerAttribute<T> implements STAttribute<T> {
 		}
 
 		return proto.build();
-	}
-
-	@Override
-	public synchronized void merge(ProtoAttribute delta) {
-		var newValues = delta.getValuesList();
-		if (newValues.isEmpty()) {
-			set(null);
-		} else {
-			current.setProto(newValues.get(0));
-			currentTimestamp = newValues.get(0).getTimestamp();
-
-			timestamps.clear();
-			values.clear();
-
-			for (int i = 1; i < newValues.size(); i++) {
-				var newValue = current.clone();
-				newValue.setProto(newValues.get(i));
-				values.add(newValue);
-				timestamps.add(newValues.get(i).getTimestamp());
-			}
-		}
 	}
 }

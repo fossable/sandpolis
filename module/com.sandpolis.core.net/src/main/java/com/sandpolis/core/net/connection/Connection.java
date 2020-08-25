@@ -167,7 +167,7 @@ public class Connection extends VirtConnection {
 
 	/**
 	 * Terminate the connection.
-	 * 
+	 *
 	 * @return A future that will be notified when the connection is closed
 	 */
 	public Future<?> close() {
@@ -188,7 +188,7 @@ public class Connection extends VirtConnection {
 
 	/**
 	 * Remove the given handler from the I/O pipeline.
-	 * 
+	 *
 	 * @param handler The handler to remove
 	 */
 	public void disengage(ChannelHandler handler) {
@@ -293,7 +293,7 @@ public class Connection extends VirtConnection {
 
 	/**
 	 * Send a {@link MSG} with the intention of receiving a reply.
-	 * 
+	 *
 	 * @param <E>          The expected response type
 	 * @param responseType The expected response type
 	 * @param payload      The request payload

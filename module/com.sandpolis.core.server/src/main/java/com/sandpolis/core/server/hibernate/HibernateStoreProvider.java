@@ -23,19 +23,19 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
+import com.sandpolis.core.instance.state.DefaultCollection;
+import com.sandpolis.core.instance.state.DefaultDocument;
 import com.sandpolis.core.instance.state.Oid;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtObject;
 import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.instance.store.provider.StoreProvider;
-import com.sandpolis.core.server.state.ServerCollection;
-import com.sandpolis.core.server.state.ServerDocument;
 
 /**
  * {@link HibernateStoreProvider} is a persistent {@link StoreProvider} backed
  * by a Hibernate connection. It is responsible for exactly one
- * {@link ServerCollection}.
- * 
+ * {@link DefaultCollection}.
+ *
  * <p>
  * This object is persisted along with its data.
  *
@@ -52,7 +52,7 @@ public class HibernateStoreProvider<E extends VirtObject> implements StoreProvid
 	private String id;
 
 	@OneToOne(cascade = CascadeType.ALL)
-	private ServerCollection collection;
+	private DefaultCollection collection;
 
 	@OneToOne(cascade = CascadeType.ALL)
 	private HibernateStoreProviderMetadata metadata;
@@ -69,7 +69,7 @@ public class HibernateStoreProvider<E extends VirtObject> implements StoreProvid
 	public HibernateStoreProvider(Class<E> type, Oid<?> oid) {
 		this.type = type;
 		this.id = type.getName();
-		this.collection = new ServerCollection(oid);
+		this.collection = new DefaultCollection(oid);
 		this.metadata = new HibernateStoreProviderMetadata();
 	}
 
@@ -88,7 +88,7 @@ public class HibernateStoreProvider<E extends VirtObject> implements StoreProvid
 	@Override
 	public synchronized void add(E e) {
 		em.getTransaction().begin();
-		collection.add(e.tag(), (ServerDocument) e.document);
+		collection.add(e.tag(), (DefaultDocument) e.document);
 		em.flush();
 		em.getTransaction().commit();
 	}
@@ -138,7 +138,7 @@ public class HibernateStoreProvider<E extends VirtObject> implements StoreProvid
 
 	@Override
 	public synchronized java.util.Collection<E> enumerate() {
-		return collection.stream().map(constructor).collect(Collectors.toList());
+		return collection.documents().map(constructor).collect(Collectors.toList());
 	}
 
 	@Override

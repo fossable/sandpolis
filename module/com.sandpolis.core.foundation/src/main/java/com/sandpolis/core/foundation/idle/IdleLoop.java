@@ -24,12 +24,12 @@ import org.slf4j.LoggerFactory;
 /**
  * The {@link IdleLoop} runs periodic tasks in the background when the instance
  * is "idle".
- * 
+ *
  * <p>
  * No assumptions can be made about the order or timing of task execution on an
  * {@link IdleLoop}. Tasks should not block the {@link IdleLoop} for long
  * periods of time.
- * 
+ *
  * <p>
  * Idle tasks return {@code true} if they should be rescheduled after completion
  * or {@code false} if the task should be removed from the loop.

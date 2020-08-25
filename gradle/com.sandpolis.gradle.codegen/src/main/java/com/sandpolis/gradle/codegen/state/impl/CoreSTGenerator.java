@@ -101,7 +101,7 @@ public class CoreSTGenerator extends STGenerator {
 
 	@Override
 	public void processCollection(TypeSpec.Builder parent, DocumentSpec document, String oid) {
-		var documentClass = TypeSpec.classBuilder(ST_PREFIX + document.name.replaceAll(".*\\.", "")) //
+		var documentClass = TypeSpec.classBuilder(ST_PREFIX + document.shortName()) //
 				.addModifiers(PUBLIC, STATIC) //
 				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
 
@@ -177,9 +177,7 @@ public class CoreSTGenerator extends STGenerator {
 	@Override
 	public void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
 
-		var documentName = ST_PREFIX + document.name.replaceAll(".*\\.", "");
-
-		var documentClass = TypeSpec.classBuilder(documentName) //
+		var documentClass = TypeSpec.classBuilder(ST_PREFIX + document.shortName()) //
 				.addModifiers(PUBLIC, STATIC) //
 				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
 

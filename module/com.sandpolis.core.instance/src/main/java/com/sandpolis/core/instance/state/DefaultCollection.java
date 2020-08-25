@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.server.state;
+package com.sandpolis.core.instance.state;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,16 +27,9 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.EphemeralRelation;
-import com.sandpolis.core.instance.state.Oid;
-import com.sandpolis.core.instance.state.OidConverter;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.STRelation;
-import com.sandpolis.core.instance.state.VirtObject;
 
 @Entity
-public class ServerCollection implements STCollection {
+public class DefaultCollection implements STCollection {
 
 	@Id
 	private String db_id;
@@ -47,20 +40,21 @@ public class ServerCollection implements STCollection {
 
 	@MapKeyColumn
 	@OneToMany(cascade = CascadeType.ALL)
-	private Map<Integer, ServerDocument> documents;
+	private Map<Integer, STDocument> documents;
 
-	public ServerCollection(Oid<?> oid) {
-		this.oid = oid;
+	public DefaultCollection(Oid<?> oid) {
 		this.db_id = UUID.randomUUID().toString();
-		this.documents = new HashMap<>();
+		this.oid = oid;
+
+		documents = new HashMap<>();
 	}
 
-	public ServerCollection(Oid<?> oid, ProtoCollection collection) {
+	public DefaultCollection(Oid<?> oid, ProtoCollection collection) {
 		this(oid);
 		merge(collection);
 	}
 
-	protected ServerCollection() {
+	protected DefaultCollection() {
 		// JPA CONSTRUCTOR
 	}
 
@@ -68,17 +62,18 @@ public class ServerCollection implements STCollection {
 		return oid;
 	}
 
-	public ServerDocument get(int key) {
+	public STDocument get(int key) {
 		return documents.get(key);
 	}
 
-	public Stream<ServerDocument> stream() {
+	@Override
+	public Stream<STDocument> documents() {
 		return documents.values().stream();
 	}
 
 	@Override
-	public <T extends VirtObject> STRelation<T> collectionList(Function<STDocument, T> constructor) {
-		return new EphemeralRelation<>(constructor);
+	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor) {
+		return new DefaultRelation<>(constructor);
 	}
 
 	public int size() {
@@ -93,7 +88,7 @@ public class ServerCollection implements STCollection {
 		return documents.containsValue(document);
 	}
 
-	public void add(int tag, ServerDocument e) {
+	public void add(int tag, DefaultDocument e) {
 		documents.put(tag, e);
 	}
 
@@ -105,24 +100,35 @@ public class ServerCollection implements STCollection {
 		documents.clear();
 	}
 
-	public ServerDocument document(int tag) {
-		ServerDocument document = documents.get(tag);
+	@Override
+	public STDocument document(int tag) {
+		var document = documents.get(tag);
 		if (document == null) {
-			document = new ServerDocument(oid.child(tag));
+			document = new DefaultDocument(oid.child(tag));
 			documents.put(tag, document);
 		}
 		return document;
 	}
 
 	@Override
-	public void merge(ProtoCollection delta) {
-		for (var entry : delta.getDocumentMap().entrySet()) {
+	public STDocument getDocument(int tag) {
+		return documents.get(tag);
+	}
+
+	@Override
+	public void setDocument(int tag, STDocument document) {
+		documents.put(tag, document);
+	}
+
+	@Override
+	public void merge(ProtoCollection snapshot) {
+		for (var entry : snapshot.getDocumentMap().entrySet()) {
 			document(entry.getKey()).merge(entry.getValue());
 		}
 
-		if (!delta.getPartial()) {
+		if (!snapshot.getPartial()) {
 			// Remove anything that wasn't in the snapshot
-			documents.entrySet().removeIf(entry -> !delta.containsDocument(entry.getKey()));
+			documents.entrySet().removeIf(entry -> !snapshot.containsDocument(entry.getKey()));
 		}
 	}
 

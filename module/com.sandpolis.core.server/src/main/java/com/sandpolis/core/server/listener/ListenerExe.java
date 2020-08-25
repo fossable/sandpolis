@@ -26,7 +26,7 @@ import com.sandpolis.core.sv.msg.MsgListener.RQ_ListenerOperation;
 
 /**
  * {@link ListenerExe} contains message handlers related to listener management.
- * 
+ *
  * @since 5.0.0
  */
 public final class ListenerExe extends Exelet {

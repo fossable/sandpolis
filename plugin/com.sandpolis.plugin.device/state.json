@@ -44,7 +44,6 @@
 				"name": "priv_secret",
 				"type": "java.lang.String"
 			}
-
 		}
 	},
 	{
@@ -62,7 +61,7 @@
 		}
 	},
 	{
-		"parent":"1.3",
+		"parent": "1.3",
 		"name": "Plugin",
 		"collections": {
 			"13": "Plugin.Device"

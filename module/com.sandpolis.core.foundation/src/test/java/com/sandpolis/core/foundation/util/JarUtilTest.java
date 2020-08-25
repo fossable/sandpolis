@@ -31,7 +31,8 @@ class JarUtilTest {
 	@Test
 	@DisplayName("Get a manifest value that exists")
 	void getManifestValue_1() throws IOException {
-		assertEquals("93834", getManifestValue(new File("src/test/resources/small_program.jar"), "test-attribute").get());
+		assertEquals("93834",
+				getManifestValue(new File("src/test/resources/small_program.jar"), "test-attribute").get());
 	}
 
 	@Test

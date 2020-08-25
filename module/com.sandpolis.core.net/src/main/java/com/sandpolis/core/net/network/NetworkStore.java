@@ -45,7 +45,7 @@ import com.sandpolis.core.net.util.CvidUtil;
 /**
  * {@link NetworkStore} manages "logical" connections between any two instances
  * in the network.
- * 
+ *
  * <p>
  * Internally, this class uses a graph to represent connections and is therefore
  * compatible with standard graph algorithms.
