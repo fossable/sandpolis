@@ -11,11 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.login.phase;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.sandpolis.core.cv.cmd.PluginCmd;
-import com.sandpolis.core.instance.Plugin.PluginConfig;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.viewer.lifegem.StateTree.FxProfile.FxPlugin;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
@@ -24,6 +20,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
@@ -71,7 +68,7 @@ public class PluginPhaseController extends AbstractController {
 		});
 	}
 
-	public void setPlugins(List<PluginProperty> newPlugins) {
-		plugins.getItems().setAll(newPlugins);
+	public void setPlugins(ObservableList<PluginProperty> plugins) {
+		this.plugins.setItems(plugins);
 	}
 }

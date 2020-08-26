@@ -26,7 +26,11 @@ import javafx.collections.ObservableListBase;
 
 public class JavaFxCollection<T extends VirtObject> extends ObservableListBase<T> implements STCollection {
 
-	private DefaultCollection container;
+	private STCollection container;
+
+	public JavaFxCollection(STCollection container, Function<STDocument, T> constructor) {
+		// TODO Auto-generated constructor stub
+	}
 
 	@Override
 	public T get(int index) {
@@ -36,6 +40,12 @@ public class JavaFxCollection<T extends VirtObject> extends ObservableListBase<T
 	@Override
 	public int size() {
 		return container.size();
+	}
+
+	@Override
+	public T set(int index, T element) {
+		// TODO Auto-generated method stub
+		return super.set(index, element);
 	}
 
 	@Override
@@ -49,7 +59,7 @@ public class JavaFxCollection<T extends VirtObject> extends ObservableListBase<T
 	}
 
 	@Override
-	public <T extends VirtObject> STRelation<T> collectionList(Function<STDocument, T> constructor) {
+	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor) {
 		return container.collectionList(constructor);
 	}
 

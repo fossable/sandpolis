@@ -11,13 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.login;
 
-import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.viewer.lifegem.stage.StageStore.StageStore;
 
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtPlugin;
@@ -26,6 +24,7 @@ import com.sandpolis.core.net.connection.ConnectionFuture;
 import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
 import com.sandpolis.core.viewer.cmd.ServerCmd;
+import com.sandpolis.viewer.lifegem.JavaFxCollection;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.common.controller.FxController;
 import com.sandpolis.viewer.lifegem.common.pane.CarouselPane;
@@ -153,23 +152,20 @@ public class LoginController extends FxController {
 						}
 
 						if (rs.getResult()) {
-							STCmd.async().snapshot(VirtPlugin.COLLECTION, PluginProperty::new, VirtPlugin.PACKAGE_ID)
-									.whenComplete((snapshot, ex) -> {
-										var plugins = snapshot.values().stream().filter(plugin -> {
-											return PluginStore.getByPackageId(plugin.packageIdProperty().getValue())
-													.isEmpty();
-										}).collect(Collectors.toList());
+							STCmd.async().snapshot(VirtPlugin.COLLECTION).whenComplete((snapshot, ex) -> {
+								var plugins = new JavaFxCollection<>(snapshot, PluginProperty::new);
+								// TODO filter plugins that are already installed
 
-										post(LoginEndedEvent::new);
+								post(LoginEndedEvent::new);
 
-										if (!plugins.isEmpty()) {
-											pluginPhaseController.setPlugins(plugins);
-											phase.set(LoginPhase.PLUGIN_PHASE);
-										} else {
-											phase.set(LoginPhase.COMPLETE);
-											launchApplication();
-										}
-									});
+								if (!plugins.isEmpty()) {
+									pluginPhaseController.setPlugins(plugins);
+									phase.set(LoginPhase.PLUGIN_PHASE);
+								} else {
+									phase.set(LoginPhase.COMPLETE);
+									launchApplication();
+								}
+							});
 						} else {
 							setStatus("Login attempt failed");
 							post(LoginEndedEvent::new);

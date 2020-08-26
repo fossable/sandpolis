@@ -11,48 +11,86 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 
 import com.sandpolis.core.instance.State.RQ_STSnapshot;
+import com.sandpolis.core.instance.State.RQ_STSync;
 import com.sandpolis.core.instance.State.RS_STSnapshot;
+import com.sandpolis.core.instance.state.DefaultCollection;
+import com.sandpolis.core.instance.state.DefaultDocument;
 import com.sandpolis.core.instance.state.Oid;
 import com.sandpolis.core.instance.state.Oid.CollectionOid;
 import com.sandpolis.core.instance.state.Oid.DocumentOid;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.STStore;
-import com.sandpolis.core.instance.state.VirtObject;
 import com.sandpolis.core.net.cmdlet.Cmdlet;
 
 public class STCmd extends Cmdlet<STCmd> {
 
-	public CompletionStage<Void> sync(Oid oid, Oid... attributes) {
-		return null;
+	public static final class STSyncStruct {
+		public List<Oid<?>> whitelist = new ArrayList<>();
+		public List<Oid<?>> blacklist = new ArrayList<>();
+
+		public int updatePeriod;
 	}
 
-	public <E extends VirtObject> CompletionStage<Map<Integer, E>> snapshot(CollectionOid<?> oid,
-			Function<STDocument, E> constructor, Oid<?>... attributes) {
+	public static final class STSnapshotStruct {
+		public List<Oid<?>> whitelist = new ArrayList<>();
+		public List<Oid<?>> blacklist = new ArrayList<>();
+	}
 
-		var rq = RQ_STSnapshot.newBuilder().setBaseOid(oid.toString())
-				.addAllWhitelistOid((Iterable<String>) Arrays.stream(attributes).map(Oid::toString));
-
-		return request(RS_STSnapshot.class, rq).thenApply(rs -> {
-			return rs.getCollection().getDocumentMap().entrySet().stream().collect(Collectors.toMap(
-					entry -> entry.getKey(), entry -> constructor.apply(STStore.newRootDocument(entry.getValue()))));
+	public CompletionStage<EntangledCollection> sync(CollectionOid<?> oid) {
+		return sync(oid, struct -> {
 		});
 	}
 
-	public <E extends VirtObject> CompletionStage<E> snapshot(DocumentOid<?> oid, Function<STDocument, E> constructor,
-			Oid<?>... attributes) {
+	public CompletionStage<EntangledCollection> sync(CollectionOid<?> oid, Consumer<STSyncStruct> configurator) {
+		for (var a : attributes)
+			if (!a.isChildOf(oid))
+				throw new IllegalArgumentException();
+
+		var rq = RQ_STSync.newBuilder().setBaseOid(oid.toString())
+				.addAllWhitelistOid((Iterable<String>) Arrays.stream(attributes).map(Oid::toString));
+
+		return null;
+	}
+
+	public CompletionStage<EntangledDocument> sync(DocumentOid<?> oid, Consumer<STSyncStruct> configurator) {
+		for (var a : attributes)
+			if (!a.isChildOf(oid))
+				throw new IllegalArgumentException();
+
+		var rq = RQ_STSync.newBuilder().setBaseOid(oid.toString())
+				.addAllWhitelistOid((Iterable<String>) Arrays.stream(attributes).map(Oid::toString));
+
+		return null;
+	}
+
+	public CompletionStage<DefaultCollection> snapshot(CollectionOid<?> oid, Consumer<STSnapshotStruct> configurator) {
+		for (var a : attributes)
+			if (!a.isChildOf(oid))
+				throw new IllegalArgumentException();
 
 		var rq = RQ_STSnapshot.newBuilder().setBaseOid(oid.toString())
 				.addAllWhitelistOid((Iterable<String>) Arrays.stream(attributes).map(Oid::toString));
 
 		return request(RS_STSnapshot.class, rq).thenApply(rs -> {
-			return constructor.apply(STStore.newRootDocument(rs.getDocument()));
+			return new DefaultCollection(null, rs.getCollection());
+		});
+	}
+
+	public CompletionStage<DefaultDocument> snapshot(DocumentOid<?> oid, Consumer<STSnapshotStruct> configurator) {
+		for (var a : attributes)
+			if (!a.isChildOf(oid))
+				throw new IllegalArgumentException();
+
+		var rq = RQ_STSnapshot.newBuilder().setBaseOid(oid.toString())
+				.addAllWhitelistOid((Iterable<String>) Arrays.stream(attributes).map(Oid::toString));
+
+		return request(RS_STSnapshot.class, rq).thenApply(rs -> {
+			return new DefaultDocument(null, rs.getDocument());
 		});
 	}
 
