@@ -9,13 +9,13 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.viewer.lifegem;
+package com.sandpolis.viewer.lifegem.state;
 
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.DefaultCollection;
 import com.sandpolis.core.instance.state.Oid;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
@@ -24,12 +24,12 @@ import com.sandpolis.core.instance.state.VirtObject;
 
 import javafx.collections.ObservableListBase;
 
-public class JavaFxCollection<T extends VirtObject> extends ObservableListBase<T> implements STCollection {
+public class FxCollection<T extends VirtObject> extends ObservableListBase<T> implements STCollection {
 
 	private STCollection container;
 
-	public JavaFxCollection(STCollection container, Function<STDocument, T> constructor) {
-		// TODO Auto-generated constructor stub
+	public FxCollection(STCollection container, Function<STDocument, T> constructor) {
+		this.container = Objects.requireNonNull(container);
 	}
 
 	@Override

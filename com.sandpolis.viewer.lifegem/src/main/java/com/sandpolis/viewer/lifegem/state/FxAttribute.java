@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.viewer.lifegem;
+package com.sandpolis.viewer.lifegem.state;
 
 import java.util.function.Supplier;
 
@@ -20,7 +20,7 @@ import com.sandpolis.core.instance.state.STAttribute;
 
 import javafx.beans.value.ObservableValueBase;
 
-public class JavaFxAttribute<T> extends ObservableValueBase<T> implements STAttribute<T> {
+public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribute<T> {
 
 	private DefaultAttribute<T> container;
 

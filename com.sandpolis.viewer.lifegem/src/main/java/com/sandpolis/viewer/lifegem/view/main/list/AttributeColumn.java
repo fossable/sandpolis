@@ -14,10 +14,11 @@ package com.sandpolis.viewer.lifegem.view.main.list;
 import java.util.Objects;
 import java.util.function.Function;
 
-import com.sandpolis.core.instance.state.Oid;
-import com.sandpolis.viewer.lifegem.JavaFxAttribute;
+import com.sandpolis.core.instance.state.Oid.AttributeOid;
+import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.viewer.lifegem.StateTree.FxProfile;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
+import com.sandpolis.viewer.lifegem.state.FxAttribute;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -27,15 +28,15 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 
 /**
- * A {@link TableColumn} that takes its value from an {@link Attribute}.
+ * A {@link TableColumn} that takes its value from an {@link STAttribute}.
  *
  * @since 5.0.0
  */
-public class AttributeColumn extends TableColumn<FxProfile, Label> {
+public class AttributeColumn<T> extends TableColumn<FxProfile, Label> {
 
-	private final Oid<?> oid;
+	private final AttributeOid<T> oid;
 
-	public AttributeColumn(Oid<?> oid) {
+	public AttributeColumn(AttributeOid<T> oid) {
 		this.oid = Objects.requireNonNull(oid);
 
 		// Set header text
@@ -46,12 +47,12 @@ public class AttributeColumn extends TableColumn<FxProfile, Label> {
 		// TODO
 
 		// TODO get actual converters
-		Function<JavaFxAttribute<?>, Node> iconConverter = a -> null;
-		Function<JavaFxAttribute<?>, String> textConverter = a -> a.get() == null ? null : a.get().toString();
+		Function<FxAttribute<T>, Node> iconConverter = a -> null;
+		Function<FxAttribute<T>, String> textConverter = a -> a.get() == null ? null : a.get().toString();
 
 		setCellValueFactory(p -> {
 			ObjectProperty<Label> label = new SimpleObjectProperty<>(new Label());
-			JavaFxAttribute<?> attribute = null;// (Attribute<?>) p.getValue().test(oid);
+			FxAttribute<T> attribute = p.getValue().get(oid);
 
 			// Bind the graphic property to the attribute via the converter function
 			label.get().graphicProperty().bind(Bindings.createObjectBinding(() -> {
@@ -67,7 +68,7 @@ public class AttributeColumn extends TableColumn<FxProfile, Label> {
 		});
 	}
 
-	public Oid<?> getOid() {
+	public AttributeOid<T> getOid() {
 		return oid;
 	}
 }

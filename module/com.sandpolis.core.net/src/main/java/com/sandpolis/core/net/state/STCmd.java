@@ -12,14 +12,16 @@
 package com.sandpolis.core.net.state;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
+import com.sandpolis.core.foundation.util.IDUtil;
 import com.sandpolis.core.instance.State.RQ_STSnapshot;
 import com.sandpolis.core.instance.State.RQ_STSync;
+import com.sandpolis.core.instance.State.RQ_STSync.STSyncDirection;
 import com.sandpolis.core.instance.State.RS_STSnapshot;
+import com.sandpolis.core.instance.State.RS_STSync;
 import com.sandpolis.core.instance.state.DefaultCollection;
 import com.sandpolis.core.instance.state.DefaultDocument;
 import com.sandpolis.core.instance.state.Oid;
@@ -33,7 +35,9 @@ public class STCmd extends Cmdlet<STCmd> {
 		public List<Oid<?>> whitelist = new ArrayList<>();
 		public List<Oid<?>> blacklist = new ArrayList<>();
 
+		public int streamId = IDUtil.stream();
 		public int updatePeriod;
+		public STSyncDirection direction = STSyncDirection.DOWNSTREAM;
 	}
 
 	public static final class STSnapshotStruct {
@@ -47,47 +51,102 @@ public class STCmd extends Cmdlet<STCmd> {
 	}
 
 	public CompletionStage<EntangledCollection> sync(CollectionOid<?> oid, Consumer<STSyncStruct> configurator) {
-		for (var a : attributes)
-			if (!a.isChildOf(oid))
+		final var config = new STSyncStruct();
+		configurator.accept(config);
+
+		for (var o : config.whitelist)
+			if (!o.isChildOf(oid))
+				throw new IllegalArgumentException();
+		for (var o : config.blacklist)
+			if (!o.isChildOf(oid))
 				throw new IllegalArgumentException();
 
-		var rq = RQ_STSync.newBuilder().setBaseOid(oid.toString())
-				.addAllWhitelistOid((Iterable<String>) Arrays.stream(attributes).map(Oid::toString));
+		var rq = RQ_STSync.newBuilder() //
+				.setBaseOid(oid.toString()) //
+				.setUpdatePeriod(config.updatePeriod) //
+				.setDirection(config.direction);
 
-		return null;
+		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelistOid);
+
+		return request(RS_STSync.class, rq).thenApply(rs -> {
+			return new EntangledCollection(new DefaultCollection(null, rs.getCollection()), config);
+		});
+	}
+
+	public CompletionStage<EntangledDocument> sync(DocumentOid<?> oid) {
+		return sync(oid, struct -> {
+		});
 	}
 
 	public CompletionStage<EntangledDocument> sync(DocumentOid<?> oid, Consumer<STSyncStruct> configurator) {
-		for (var a : attributes)
-			if (!a.isChildOf(oid))
+		final var config = new STSyncStruct();
+		configurator.accept(config);
+
+		for (var o : config.whitelist)
+			if (!o.isChildOf(oid))
+				throw new IllegalArgumentException();
+		for (var o : config.blacklist)
+			if (!o.isChildOf(oid))
 				throw new IllegalArgumentException();
 
-		var rq = RQ_STSync.newBuilder().setBaseOid(oid.toString())
-				.addAllWhitelistOid((Iterable<String>) Arrays.stream(attributes).map(Oid::toString));
+		var rq = RQ_STSync.newBuilder() //
+				.setBaseOid(oid.toString()) //
+				.setUpdatePeriod(config.updatePeriod) //
+				.setDirection(config.direction);
 
-		return null;
+		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelistOid);
+
+		return request(RS_STSync.class, rq).thenApply(rs -> {
+			return new EntangledDocument(new DefaultDocument(null, rs.getDocument()), config);
+		});
+	}
+
+	public CompletionStage<DefaultCollection> snapshot(CollectionOid<?> oid) {
+		return snapshot(oid, struct -> {
+		});
 	}
 
 	public CompletionStage<DefaultCollection> snapshot(CollectionOid<?> oid, Consumer<STSnapshotStruct> configurator) {
-		for (var a : attributes)
-			if (!a.isChildOf(oid))
+		final var config = new STSnapshotStruct();
+		configurator.accept(config);
+
+		for (var o : config.whitelist)
+			if (!o.isChildOf(oid))
+				throw new IllegalArgumentException();
+		for (var o : config.blacklist)
+			if (!o.isChildOf(oid))
 				throw new IllegalArgumentException();
 
-		var rq = RQ_STSnapshot.newBuilder().setBaseOid(oid.toString())
-				.addAllWhitelistOid((Iterable<String>) Arrays.stream(attributes).map(Oid::toString));
+		var rq = RQ_STSnapshot.newBuilder() //
+				.setBaseOid(oid.toString());
+
+		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelistOid);
 
 		return request(RS_STSnapshot.class, rq).thenApply(rs -> {
 			return new DefaultCollection(null, rs.getCollection());
 		});
 	}
 
+	public CompletionStage<DefaultDocument> snapshot(DocumentOid<?> oid) {
+		return snapshot(oid, struct -> {
+		});
+	}
+
 	public CompletionStage<DefaultDocument> snapshot(DocumentOid<?> oid, Consumer<STSnapshotStruct> configurator) {
-		for (var a : attributes)
-			if (!a.isChildOf(oid))
+		final var config = new STSnapshotStruct();
+		configurator.accept(config);
+
+		for (var o : config.whitelist)
+			if (!o.isChildOf(oid))
+				throw new IllegalArgumentException();
+		for (var o : config.blacklist)
+			if (!o.isChildOf(oid))
 				throw new IllegalArgumentException();
 
-		var rq = RQ_STSnapshot.newBuilder().setBaseOid(oid.toString())
-				.addAllWhitelistOid((Iterable<String>) Arrays.stream(attributes).map(Oid::toString));
+		var rq = RQ_STSnapshot.newBuilder() //
+				.setBaseOid(oid.toString());
+
+		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelistOid);
 
 		return request(RS_STSnapshot.class, rq).thenApply(rs -> {
 			return new DefaultDocument(null, rs.getDocument());

@@ -11,8 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.main.list;
 
-import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,15 +19,15 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.StateTree.VirtProfile;
-import com.sandpolis.core.instance.profile.Profile;
-import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.state.Oid.AttributeOid;
+import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.viewer.lifegem.StateTree.FxProfile;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
+import com.sandpolis.viewer.lifegem.state.FxCollection;
 import com.sandpolis.viewer.lifegem.view.main.Events.HostDetailCloseEvent;
 import com.sandpolis.viewer.lifegem.view.main.Events.HostDetailOpenEvent;
 import com.sandpolis.viewer.lifegem.view.main.Events.HostListHeaderChangeEvent;
 
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableView;
@@ -41,7 +39,7 @@ public class HostListController extends AbstractController {
 	@FXML
 	private TableView<FxProfile> table;
 
-	private static final List<Oid<?>> DEFAULT_HEADERS = List.of(VirtProfile.UUID);
+	private static final List<AttributeOid<?>> DEFAULT_HEADERS = List.of(VirtProfile.UUID);
 
 	@FXML
 	public void initialize() {
@@ -53,7 +51,11 @@ public class HostListController extends AbstractController {
 			else
 				post(HostDetailOpenEvent::new, n);
 		});
-		// table.setItems(ProfileStore.getContainer());
+
+		STCmd.async().sync(VirtProfile.COLLECTION).thenAccept(snapshot -> {
+			var collection = new FxCollection<>(snapshot, FxProfile::new);
+			this.table.setItems(collection);
+		});
 
 		// Set default headers
 		addColumns(DEFAULT_HEADERS);
@@ -83,7 +85,7 @@ public class HostListController extends AbstractController {
 	 *
 	 * @param headers The headers to add
 	 */
-	private void addColumns(List<Oid<?>> headers) {
+	private void addColumns(List<AttributeOid<?>> headers) {
 		headers.stream().map(AttributeColumn::new).forEach(table.getColumns()::add);
 	}
 

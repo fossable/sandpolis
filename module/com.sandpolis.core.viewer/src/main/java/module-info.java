@@ -11,7 +11,6 @@
 //=========================================================S A N D P O L I S==//
 module com.sandpolis.core.viewer {
 	exports com.sandpolis.core.viewer.cmd;
-	exports com.sandpolis.core.viewer.stream;
 
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.foundation;

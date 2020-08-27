@@ -21,6 +21,7 @@ module com.sandpolis.plugin.shell.client.mega {
 	requires com.sandpolis.core.net;
 	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.plugin.shell;
+	requires org.slf4j;
 
 	provides com.sandpolis.core.instance.plugin.SandpolisPlugin with com.sandpolis.plugin.shell.client.mega.ShellPlugin;
 }

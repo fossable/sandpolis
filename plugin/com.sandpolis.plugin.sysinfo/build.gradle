@@ -13,7 +13,6 @@
 plugins {
 	id 'eclipse'
 	id 'java-library'
-	id 'com.google.protobuf' version '0.8.11'
 }
 
 apply plugin: 'com.sandpolis.gradle.plugin'
@@ -23,7 +22,6 @@ apply plugin: 'com.sandpolis.gradle.soi'
 sourceSets {
 	main {
 		java {
-			srcDirs 'src/main/proto'
 			srcDirs 'gen/main/java'
 		}
 	}
@@ -49,16 +47,4 @@ sandpolis_plugin {
 	coordinate = 'com.sandpolis:sandpolis-plugin-sysinfo'
 	name = 'System Info Plugin'
 	description = ''
-}
-
-protobuf {
-	protoc {
-		artifact = 'com.google.protobuf:protoc:3.11.4'
-	}
-
-	generatedFilesBaseDir = "$projectDir/gen/"
-
-	clean {
-		delete generatedFilesBaseDir
-	}
 }

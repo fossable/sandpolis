@@ -76,6 +76,7 @@ public class DefaultCollection implements STCollection {
 		return new DefaultRelation<>(constructor);
 	}
 
+	@Override
 	public int size() {
 		return documents.size();
 	}

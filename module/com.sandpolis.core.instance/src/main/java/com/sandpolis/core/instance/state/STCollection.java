@@ -56,6 +56,13 @@ public interface STCollection extends STObject<ProtoCollection> {
 	 */
 	public void setDocument(int tag, STDocument document);
 
+	/**
+	 * Returns the number of elements in this collection.
+	 * 
+	 * @return The number of elements in this collection
+	 */
+	public int size();
+
 	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor);
 
 }

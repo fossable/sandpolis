@@ -58,7 +58,7 @@ public abstract class STGenerator extends DefaultTask {
 
 		// Find root document
 		flatTree.stream().filter(document -> document.name.equals("Profile")).findAny().ifPresent(document -> {
-			processDocument(root, document, "1");
+			processCollection(root, document, "1");
 		});
 		flatTree.stream().filter(document -> document.name.equals("Plugin")).findAny().ifPresent(document -> {
 			if (document.parent == null || document.parent.isEmpty() || document.parent.contains(".0.")) {

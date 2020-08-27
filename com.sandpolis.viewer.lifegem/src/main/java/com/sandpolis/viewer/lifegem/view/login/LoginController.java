@@ -24,10 +24,10 @@ import com.sandpolis.core.net.connection.ConnectionFuture;
 import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
 import com.sandpolis.core.viewer.cmd.ServerCmd;
-import com.sandpolis.viewer.lifegem.JavaFxCollection;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.common.controller.FxController;
 import com.sandpolis.viewer.lifegem.common.pane.CarouselPane;
+import com.sandpolis.viewer.lifegem.state.FxCollection;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectEndedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectStartedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.LoginEndedEvent;
@@ -153,7 +153,7 @@ public class LoginController extends FxController {
 
 						if (rs.getResult()) {
 							STCmd.async().snapshot(VirtPlugin.COLLECTION).whenComplete((snapshot, ex) -> {
-								var plugins = new JavaFxCollection<>(snapshot, PluginProperty::new);
+								var plugins = new FxCollection<>(snapshot, PluginProperty::new);
 								// TODO filter plugins that are already installed
 
 								post(LoginEndedEvent::new);

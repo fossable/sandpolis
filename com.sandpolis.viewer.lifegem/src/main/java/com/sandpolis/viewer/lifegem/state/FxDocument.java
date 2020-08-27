@@ -9,21 +9,25 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.viewer.lifegem;
+package com.sandpolis.viewer.lifegem.state;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
-import com.sandpolis.core.instance.state.DefaultDocument;
 import com.sandpolis.core.instance.state.Oid;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtObject;
 
-public class JavaFxDocument<T extends VirtObject> implements STDocument {
+public class FxDocument<T extends VirtObject> implements STDocument {
 
-	private DefaultDocument container;
+	private STDocument container;
+
+	public FxDocument(STDocument container) {
+		this.container = Objects.requireNonNull(container);
+	}
 
 	@Override
 	public void merge(ProtoDocument snapshot) {

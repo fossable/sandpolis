@@ -36,11 +36,11 @@ public abstract class VirtObject {
 	 */
 	public abstract int tag();
 
-	public <T> STAttribute<T> get(AttributeOid<T> oid) {
+	public <A extends STAttribute<T>, T> A get(AttributeOid<T> oid) {
 		if (Objects.requireNonNull(oid).isChildOf(document.getOid()))
 			throw new IllegalArgumentException();
 
-		return document.attribute(oid.last());
+		return (A) document.attribute(oid.last());
 	}
 
 	/**

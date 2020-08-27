@@ -15,11 +15,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.net.stream.StreamSource;
 import com.sandpolis.plugin.shell.msg.MsgShell.EV_ShellStream;
 
 public class ShellStreamSource extends StreamSource<EV_ShellStream> {
+
+	private static final Logger log = LoggerFactory.getLogger(ShellStreamSource.class);
 
 	private Process process;
 
@@ -34,8 +39,10 @@ public class ShellStreamSource extends StreamSource<EV_ShellStream> {
 				}
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Shell stream closed", e);
+			if (process.isAlive()) {
+				// TODO send closure notification
+			}
 		}
 	});
 

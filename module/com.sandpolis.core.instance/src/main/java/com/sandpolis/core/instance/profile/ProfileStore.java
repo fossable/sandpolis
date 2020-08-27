@@ -84,12 +84,12 @@ public final class ProfileStore extends CollectionStore<Profile> implements Conf
 
 		@Override
 		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Profile.class, Profile::tag, VirtProfile.DOCUMENT);
+			provider = new MemoryMapStoreProvider<>(Profile.class, Profile::tag, VirtProfile.COLLECTION);
 		}
 
 		@Override
 		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(Profile.class, Profile::new, VirtProfile.DOCUMENT);
+			provider = factory.supply(Profile.class, Profile::new, VirtProfile.COLLECTION);
 		}
 	}
 
