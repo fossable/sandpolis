@@ -17,17 +17,17 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
 import com.sandpolis.core.foundation.util.IDUtil;
-import com.sandpolis.core.instance.State.RQ_STSnapshot;
-import com.sandpolis.core.instance.State.RQ_STSync;
-import com.sandpolis.core.instance.State.RQ_STSync.STSyncDirection;
-import com.sandpolis.core.instance.State.RS_STSnapshot;
-import com.sandpolis.core.instance.State.RS_STSync;
 import com.sandpolis.core.instance.state.DefaultCollection;
 import com.sandpolis.core.instance.state.DefaultDocument;
 import com.sandpolis.core.instance.state.Oid;
 import com.sandpolis.core.instance.state.Oid.CollectionOid;
 import com.sandpolis.core.instance.state.Oid.DocumentOid;
 import com.sandpolis.core.net.cmdlet.Cmdlet;
+import com.sandpolis.core.net.msg.MsgState.RQ_STSnapshot;
+import com.sandpolis.core.net.msg.MsgState.RQ_STSync;
+import com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection;
+import com.sandpolis.core.net.msg.MsgState.RS_STSnapshot;
+import com.sandpolis.core.net.msg.MsgState.RS_STSync;
 
 public class STCmd extends Cmdlet<STCmd> {
 

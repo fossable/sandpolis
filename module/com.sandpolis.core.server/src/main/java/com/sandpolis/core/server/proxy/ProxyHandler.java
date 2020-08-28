@@ -16,11 +16,11 @@ import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.channel.HandlerKey;
-import com.sandpolis.core.net.exception.InvalidMessageException;
 import com.sandpolis.core.net.msg.MsgNetwork.EV_EndpointClosed;
 import com.sandpolis.core.net.util.MsgUtil;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelException;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -74,10 +74,10 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
 					// Verify the from field to prevent spoofing
 					if (ctx.channel().attr(ChannelConstant.CVID).get() != from) {
-						throw new InvalidMessageException("Message 'from' does not match channel's CVID");
+						throw new ChannelException("Message 'from' does not match channel's CVID");
 					}
 				} else {
-					throw new InvalidMessageException("Message specifies 'to' but not 'from'");
+					throw new ChannelException("Message specifies 'to' but not 'from'");
 				}
 
 				// Route the message

@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
  */
 public class Oid<T> implements Comparable<Oid<?>> {
 
+	public static final Oid<?> DETACHED = new Oid<>("0");
+
 	private final int[] value;
 
 	private String stringValue;
@@ -66,7 +68,7 @@ public class Oid<T> implements Comparable<Oid<?>> {
 	}
 
 	public Oid<?> head(int length) {
-		if (value.length < length || length < 0)
+		if (value.length < length || length <= 0)
 			throw new IllegalArgumentException("Target length out of range");
 
 		return new Oid<>(Arrays.copyOf(value, length));
@@ -90,7 +92,7 @@ public class Oid<T> implements Comparable<Oid<?>> {
 
 	@Override
 	public String toString() {
-		if (stringValue != null)
+		if (stringValue == null)
 			// Compute the dotted string form
 			stringValue = Arrays.stream(value).boxed().map(String::valueOf).collect(Collectors.joining("."));
 

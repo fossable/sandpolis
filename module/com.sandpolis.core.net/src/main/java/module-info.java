@@ -15,7 +15,6 @@ open module com.sandpolis.core.net {
 	exports com.sandpolis.core.net.cmdlet;
 	exports com.sandpolis.core.net.connection;
 	exports com.sandpolis.core.net.cvid;
-	exports com.sandpolis.core.net.exception;
 	exports com.sandpolis.core.net.exelet;
 	exports com.sandpolis.core.net.channel.peer;
 	exports com.sandpolis.core.net.handler;

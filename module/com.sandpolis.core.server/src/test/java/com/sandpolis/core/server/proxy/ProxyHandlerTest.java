@@ -23,10 +23,9 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.Message.MSG.PayloadCase;
-import com.sandpolis.core.net.exception.InvalidMessageException;
-import com.sandpolis.core.server.proxy.ProxyHandler;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelException;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.protobuf.ProtobufDecoder;
@@ -92,8 +91,7 @@ class ProxyHandlerTest {
 	@Test
 	@DisplayName("Ensure the 'from' field is specified if the message intends to be routed")
 	void checkFromSpecified() {
-		assertThrows(InvalidMessageException.class,
-				() -> proxy.writeInbound(encode(MSG.newBuilder().setTo(1234).build())));
+		assertThrows(ChannelException.class, () -> proxy.writeInbound(encode(MSG.newBuilder().setTo(1234).build())));
 
 		// Ensure no messages were passed through
 		assertTrue(proxy.inboundMessages().isEmpty());
@@ -103,7 +101,7 @@ class ProxyHandlerTest {
 	@DisplayName("Ensure the 'from' field matches the channel CVID")
 	void spoofDetection() {
 		proxy.attr(CVID).set(4321);
-		assertThrows(InvalidMessageException.class,
+		assertThrows(ChannelException.class,
 				() -> proxy.writeInbound(encode(MSG.newBuilder().setTo(600).setFrom(1234).build())));
 
 		// Ensure no messages were passed through

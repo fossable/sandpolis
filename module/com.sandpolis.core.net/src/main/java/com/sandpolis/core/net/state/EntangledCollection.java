@@ -1,8 +1,9 @@
 package com.sandpolis.core.net.state;
 
-import static com.sandpolis.core.instance.State.RQ_STSync.STSyncDirection.BIDIRECTIONAL;
-import static com.sandpolis.core.instance.State.RQ_STSync.STSyncDirection.DOWNSTREAM;
-import static com.sandpolis.core.instance.State.RQ_STSync.STSyncDirection.UPSTREAM;
+
+import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.BIDIRECTIONAL;
+import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.DOWNSTREAM;
+import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.UPSTREAM;
 
 import java.util.Objects;
 import java.util.function.Function;

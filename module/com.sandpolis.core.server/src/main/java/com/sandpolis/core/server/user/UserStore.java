@@ -25,7 +25,7 @@ import com.google.common.hash.Hashing;
 import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtUser;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.state.STStore;
+import com.sandpolis.core.instance.state.DefaultDocument;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
@@ -56,7 +56,7 @@ public final class UserStore extends CollectionStore<User> implements Configurab
 	}
 
 	public User create(Consumer<User> configurator) {
-		return add(new User(STStore.newRootDocument()), configurator);
+		return add(new User(DefaultDocument.newDetached()), configurator);
 	}
 
 	/**

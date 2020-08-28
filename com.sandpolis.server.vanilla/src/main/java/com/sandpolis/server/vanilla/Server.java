@@ -16,6 +16,7 @@ import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.instance.state.StateEventStore.StateEventStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.exelet.ExeletStore.ExeletStore;
@@ -60,6 +61,7 @@ import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.User.UserConfig;
+import com.sandpolis.core.instance.state.StateEventStore;
 import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
 import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.server.auth.AuthExe;
@@ -205,6 +207,11 @@ public final class Server {
 			providerFactory = null;
 			break;
 		}
+
+		StateEventStore.init(config -> {
+			config.concurrency = 2;
+			config.queueSize = 20;
+		});
 
 		ThreadStore.init(config -> {
 			config.ephemeral();

@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Listener.ListenerConfig;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtListener;
-import com.sandpolis.core.instance.state.STStore;
+import com.sandpolis.core.instance.state.DefaultDocument;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
@@ -77,7 +77,7 @@ public final class ListenerStore extends CollectionStore<Listener> implements Co
 	}
 
 	public Listener create(Consumer<Listener> configurator) {
-		return add(new Listener(STStore.newRootDocument()), configurator);
+		return add(new Listener(DefaultDocument.newDetached()), configurator);
 	}
 
 	public Listener create(ListenerConfig config) {
@@ -88,6 +88,7 @@ public final class ListenerStore extends CollectionStore<Listener> implements Co
 			listener.port().set(config.getPort());
 			listener.name().set(config.getName());
 			listener.enabled().set(config.getEnabled());
+			listener.active().set(false);
 		});
 	}
 

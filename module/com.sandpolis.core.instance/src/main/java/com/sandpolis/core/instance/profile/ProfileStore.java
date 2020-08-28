@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.StateTree.VirtProfile;
 import com.sandpolis.core.instance.profile.ProfileStore.ProfileStoreConfig;
-import com.sandpolis.core.instance.state.STStore;
+import com.sandpolis.core.instance.state.DefaultDocument;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
@@ -77,7 +77,7 @@ public final class ProfileStore extends CollectionStore<Profile> implements Conf
 	}
 
 	public Profile create(Consumer<Profile> configurator) {
-		return add(new Profile(STStore.newRootDocument()), configurator);
+		return add(new Profile(DefaultDocument.newDetached()), configurator);
 	}
 
 	public final class ProfileStoreConfig extends StoreConfig {

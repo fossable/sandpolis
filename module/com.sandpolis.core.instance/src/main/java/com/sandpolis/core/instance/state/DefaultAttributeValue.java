@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state;
 
+import java.security.cert.X509Certificate;
 import java.util.List;
 
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
@@ -82,6 +83,8 @@ abstract class DefaultAttributeValue<T> {
 			return (DefaultAttributeValue<T>) new InstanceTypeAttributeValue();
 		} else if (test instanceof Long) {
 			return (DefaultAttributeValue<T>) new LongAttributeValue();
+		} else if (test instanceof X509Certificate) {
+			return (DefaultAttributeValue<T>) new X509CertificateAttributeValue();
 		} else if (test instanceof List) {
 			var list = ((List<?>) test);
 			if (list.size() == 0)

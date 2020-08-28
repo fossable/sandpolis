@@ -20,7 +20,7 @@ option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
 
 message ProtoAttributeValue {
-	int64 timestamp = 1;
+    int64 timestamp = 1;
 
     repeated string  string   = 2;
     repeated int32   integer  = 3;
@@ -29,6 +29,7 @@ message ProtoAttributeValue {
     repeated double  double   = 6;
     repeated bytes   bytes    = 7;
 
+    // TODO convert these types into one of the above
     repeated core.foundation.OsType os_type = 8;
     repeated core.instance.InstanceType instance_type = 9;
     repeated core.instance.InstanceFlavor instance_flavor = 10;
@@ -39,7 +40,7 @@ message ProtoAttribute {
 }
 
 message ProtoDocument {
-	bool partial = 1;
+    bool partial = 1;
 
     map<int32, ProtoAttribute> attribute = 2;
     map<int32, ProtoDocument> document = 3;
@@ -47,24 +48,7 @@ message ProtoDocument {
 }
 
 message ProtoCollection {
-	bool partial = 1;
+    bool partial = 1;
 
     map<int32, ProtoDocument> document = 2;
-}
-
-message RQ_STSnapshot {
-	string base_oid = 1;
-	repeated string whitelist_oid = 2;
-}
-
-message RS_STSnapshot {
-	oneof snapshot {
-		ProtoDocument document = 1;
-		ProtoCollection collection = 2;
-	}
-}
-
-message RQ_STSync {
-	string base_oid = 1;
-	repeated string whitelist_oid = 2;
 }

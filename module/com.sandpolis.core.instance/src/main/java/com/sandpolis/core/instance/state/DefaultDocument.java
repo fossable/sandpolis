@@ -213,4 +213,8 @@ public class DefaultDocument implements STDocument {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	public static DefaultDocument newDetached() {
+		return new DefaultDocument(Oid.DETACHED);
+	}
 }

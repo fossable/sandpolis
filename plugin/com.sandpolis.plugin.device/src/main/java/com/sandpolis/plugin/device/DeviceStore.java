@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.state.STStore;
+import com.sandpolis.core.instance.state.DefaultDocument;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
@@ -41,7 +41,7 @@ public class DeviceStore extends CollectionStore<Device> implements Configurable
 	}
 
 	public Device create(Consumer<Device> configurator) {
-		return add(new Device(STStore.newRootDocument()), configurator);
+		return add(new Device(DefaultDocument.newDetached()), configurator);
 	}
 
 	public final class DeviceStoreConfig extends StoreConfig {

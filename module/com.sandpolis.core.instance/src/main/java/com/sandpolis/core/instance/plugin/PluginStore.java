@@ -39,7 +39,7 @@ import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.StateTree.VirtProfile.VirtPlugin;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginStore.PluginStoreConfig;
-import com.sandpolis.core.instance.state.STStore;
+import com.sandpolis.core.instance.state.DefaultDocument;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreConfig;
@@ -242,7 +242,7 @@ public final class PluginStore extends CollectionStore<Plugin> implements Config
 	}
 
 	public Plugin create(Consumer<Plugin> configurator) {
-		return add(new Plugin(STStore.newRootDocument()), configurator);
+		return add(new Plugin(DefaultDocument.newDetached()), configurator);
 	}
 
 	public final class PluginStoreConfig extends StoreConfig {

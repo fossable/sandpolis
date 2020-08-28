@@ -9,19 +9,45 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.exception;
+syntax = "proto3";
 
-/**
- * Indicates that a message's content is invalid in some way.
- *
- * @author cilki
- * @since 4.0.0
- */
-public class InvalidMessageException extends RuntimeException {
+package core.net.msg;
 
-	private static final long serialVersionUID = 1L;
+import "com/sandpolis/core/instance/state.proto";
 
-	public InvalidMessageException(String message) {
-		super(message);
-	}
+option java_package = "com.sandpolis.core.net.msg";
+option optimize_for = CODE_SIZE;
+
+message RQ_STSnapshot {
+    string base_oid = 1;
+    repeated string whitelist_oid = 2;
+}
+
+message RS_STSnapshot {
+    oneof snapshot {
+        core.instance.ProtoDocument document = 1;
+        core.instance.ProtoCollection collection = 2;
+    }
+}
+
+message RQ_STSync {
+    enum STSyncDirection {
+        UPSTREAM = 0;
+        DOWNSTREAM = 1;
+        BIDIRECTIONAL = 2;
+    }
+
+    string base_oid = 1;
+    repeated string whitelist_oid = 2;
+
+    STSyncDirection direction = 3;
+    int32 update_period = 4;
+    int32 stream_id = 5;
+}
+
+message RS_STSync {
+    oneof snapshot {
+        core.instance.ProtoDocument document = 1;
+        core.instance.ProtoCollection collection = 2;
+    }
 }

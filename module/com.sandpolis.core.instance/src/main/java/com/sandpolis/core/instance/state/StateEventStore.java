@@ -60,7 +60,7 @@ public final class StateEventStore extends StoreBase implements ConfigurableStor
 		StateEvent event;
 		try {
 			while ((event = eventQueue.take()) != null) {
-				for (int i = 0; i < event.oid.size(); i++) {
+				for (int i = 1; i < event.oid.size(); i++) {
 					var listeners = listenerTree.get(event.oid.head(i));
 					if (listeners != null) {
 						for (var listener : listeners) {
