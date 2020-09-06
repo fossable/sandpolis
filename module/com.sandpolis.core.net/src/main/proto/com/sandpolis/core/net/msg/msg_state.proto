@@ -18,16 +18,16 @@ import "com/sandpolis/core/instance/state.proto";
 option java_package = "com.sandpolis.core.net.msg";
 option optimize_for = CODE_SIZE;
 
-message RQ_STSnapshot {
-    string base_oid = 1;
-    repeated string whitelist_oid = 2;
+enum OidType {
+	DOCUMENT = 0;
+	COLLECTION = 1;
+	ATTRIBUTE = 2;
 }
 
-message RS_STSnapshot {
-    oneof snapshot {
-        core.instance.ProtoDocument document = 1;
-        core.instance.ProtoCollection collection = 2;
-    }
+message RQ_STSnapshot {
+    string oid = 1;
+    OidType oid_type = 2;
+    repeated string whitelist = 3;
 }
 
 message RQ_STSync {
@@ -37,17 +37,11 @@ message RQ_STSync {
         BIDIRECTIONAL = 2;
     }
 
-    string base_oid = 1;
-    repeated string whitelist_oid = 2;
+    string oid = 1;
+    OidType oid_type = 2;
+    repeated string whitelist = 3;
 
-    STSyncDirection direction = 3;
-    int32 update_period = 4;
-    int32 stream_id = 5;
-}
-
-message RS_STSync {
-    oneof snapshot {
-        core.instance.ProtoDocument document = 1;
-        core.instance.ProtoCollection collection = 2;
-    }
+    STSyncDirection direction = 4;
+    int32 update_period = 5;
+    int32 stream_id = 6;
 }

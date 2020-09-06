@@ -15,6 +15,9 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
+import com.sandpolis.core.instance.state.oid.OidBase;
+import com.sandpolis.core.instance.state.oid.RelativeOid;
+import com.sandpolis.core.instance.store.StoreMetadata;
 
 /**
  * A {@link STCollection} is an unordered set of documents. Every document has a
@@ -26,7 +29,7 @@ public interface STCollection extends STObject<ProtoCollection> {
 
 	/**
 	 * Get a subdocument by its tag. This method never returns {@code null}.
-	 * 
+	 *
 	 * @param tag The subdocument tag
 	 * @return The subdocument associated with the tag
 	 */
@@ -34,7 +37,7 @@ public interface STCollection extends STObject<ProtoCollection> {
 
 	/**
 	 * Get all subdocuments.
-	 * 
+	 *
 	 * @return A stream of all subdocuments
 	 */
 	public Stream<STDocument> documents();
@@ -42,7 +45,7 @@ public interface STCollection extends STObject<ProtoCollection> {
 	/**
 	 * Get a subdocument by its tag. This method returns {@code null} if the
 	 * subdocument doesn't exist.
-	 * 
+	 *
 	 * @param tag The subdocument tag
 	 * @return The subdocument associated with the tag or {@code null}
 	 */
@@ -50,7 +53,7 @@ public interface STCollection extends STObject<ProtoCollection> {
 
 	/**
 	 * Overwrite the attribute associated with the given tag.
-	 * 
+	 *
 	 * @param tag      The attribute tag
 	 * @param document The attribute to associate with the tag or {@code null}
 	 */
@@ -58,11 +61,54 @@ public interface STCollection extends STObject<ProtoCollection> {
 
 	/**
 	 * Returns the number of elements in this collection.
-	 * 
+	 *
 	 * @return The number of elements in this collection
 	 */
 	public int size();
 
+	public default <E> STAttribute<E> attribute(RelativeOid<E> oid) {
+		if (!oid.isConcrete())
+			throw new RuntimeException();
+
+		switch (oid.first() % 10) {
+		case OidBase.SUFFIX_DOCUMENT:
+			return (STAttribute<E>) document(oid.first()).attribute(oid.tail());
+		default:
+			throw new RuntimeException("Unacceptable attribute tag: " + oid.first());
+		}
+	}
+
+	public default STDocument document(RelativeOid<?> oid) {
+		if (!oid.isConcrete())
+			throw new RuntimeException();
+
+		switch (oid.first() % 10) {
+		case OidBase.SUFFIX_DOCUMENT:
+			if (oid.size() == 1) {
+				return document(oid.first());
+			} else {
+				return document(oid.first()).document(oid.tail());
+			}
+		default:
+			throw new RuntimeException("Unacceptable document tag: " + oid.first());
+		}
+	}
+
+	public default STCollection collection(RelativeOid<?> oid) {
+		if (!oid.isConcrete())
+			throw new RuntimeException();
+
+		switch (oid.first() % 10) {
+		case OidBase.SUFFIX_DOCUMENT:
+			return document(oid.first()).collection(oid.tail());
+		default:
+			throw new RuntimeException("Unacceptable attribute tag: " + oid.first());
+		}
+	}
+
 	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor);
 
+	public STDocument newDocument();
+
+	public StoreMetadata getMetadata();
 }

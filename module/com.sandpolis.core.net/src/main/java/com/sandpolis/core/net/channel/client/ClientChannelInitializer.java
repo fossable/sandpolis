@@ -32,7 +32,7 @@ import javax.net.ssl.SSLException;
 
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.channel.ChannelConfig;
+import com.sandpolis.core.net.channel.ChannelStruct;
 import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.cvid.CvidRequestHandler;
@@ -67,8 +67,8 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 
 	private final SslContext sslCtx;
 
-	public ClientChannelInitializer(Consumer<ChannelConfig> configurator) {
-		var config = new ChannelConfig();
+	public ClientChannelInitializer(Consumer<ChannelStruct> configurator) {
+		var config = new ChannelStruct();
 		configurator.accept(config);
 
 		if (config.sslBuilder != null) {

@@ -11,18 +11,42 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import static com.sandpolis.core.instance.state.STStore.STStore;
 
-@Converter
-public class OidConverter implements AttributeConverter<Oid<?>, String> {
-	@Override
-	public String convertToDatabaseColumn(Oid<?> value) {
-		return value.toString();
+import java.util.LinkedList;
+import java.util.List;
+
+public class DefaultObject<A extends STObject<?>, T> {
+
+	interface STEventListener<A extends STObject<?>, T> {
+		public void handle(A entity, T oldValue, T newValue);
 	}
 
-	@Override
-	public Oid<?> convertToEntityAttribute(String value) {
-		return new Oid<>(value);
+	private List<STEventListener<A, T>> listeners;
+
+	protected synchronized void fire(A entity, T oldValue, T newValue) {
+		if (listeners != null) {
+			STStore.pool().submit(() -> {
+				for (var listener : listeners) {
+					listener.handle(entity, oldValue, newValue);
+				}
+			});
+		}
+	}
+
+	public synchronized void bind(STEventListener<A, T> listener) {
+		if (listeners == null) {
+			listeners = new LinkedList<>();
+		}
+		listeners.add(listener);
+	}
+
+	public synchronized void unbind(STEventListener<A, T> listener) {
+		if (listeners != null) {
+			listeners.remove(listener);
+		}
+		if (listeners.size() == 0) {
+			listeners = null;
+		}
 	}
 }

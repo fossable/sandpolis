@@ -23,10 +23,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.Message;
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.MetadataStore;
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.stream.StreamStore.StreamStoreConfig;
@@ -203,6 +203,11 @@ public final class StreamStore extends StoreBase
 		var config = new StreamStoreConfig();
 		configurator.accept(config);
 
+		source = new ArrayList<>();
+		sink = new ArrayList<>();
+		inbound = new ArrayList<>();
+		outbound = new ArrayList<>();
+
 		ConnectionStore.register(this);
 	}
 
@@ -230,15 +235,8 @@ public final class StreamStore extends StoreBase
 		}
 	}
 
-	public final class StreamStoreConfig extends StoreConfig {
-
-		@Override
-		public void ephemeral() {
-			source = new ArrayList<>();
-			sink = new ArrayList<>();
-			inbound = new ArrayList<>();
-			outbound = new ArrayList<>();
-		}
+	@ConfigStruct
+	public static final class StreamStoreConfig {
 	}
 
 	/**

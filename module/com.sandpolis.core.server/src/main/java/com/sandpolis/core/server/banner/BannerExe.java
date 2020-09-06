@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.banner;
 
-import static com.sandpolis.core.server.banner.BannerStore.ServerStore;
+import static com.sandpolis.core.server.banner.BannerStore.BannerStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public final class BannerExe extends Exelet {
 
 	@Handler(auth = false)
 	public static MessageOrBuilder rq_server_banner(RQ_ServerBanner rq) {
-		return ServerStore.getBanner();
+		return BannerStore.getBanner();
 	}
 
 	@Handler(auth = false)

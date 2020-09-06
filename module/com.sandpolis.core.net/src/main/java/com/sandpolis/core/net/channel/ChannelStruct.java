@@ -14,18 +14,20 @@ package com.sandpolis.core.net.channel;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.CertUtil;
 import com.sandpolis.core.net.Channel.ChannelTransportProtocol;
 
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 
-public final class ChannelConfig {
+@ConfigStruct
+public final class ChannelStruct {
 
 	/**
 	 * The transport-level protocol.
 	 */
-	public ChannelTransportProtocol transport;
+	public ChannelTransportProtocol transport = ChannelTransportProtocol.TCP;
 
 	/**
 	 * An optional CVID to use during the CVID handshake.
@@ -51,10 +53,14 @@ public final class ChannelConfig {
 	}
 
 	public void clientTlsInsecure() {
-		sslBuilder = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE);
+		sslBuilder = SslContextBuilder.forClient() //
+				.trustManager(InsecureTrustManagerFactory.INSTANCE) //
+				.protocols("TLSv1.3");
 	}
 
 	public void clientTlsVerifyCert() {
-		sslBuilder = SslContextBuilder.forClient().trustManager(CertUtil.getServerRoot());
+		sslBuilder = SslContextBuilder.forClient() //
+				.trustManager(CertUtil.getServerRoot()) //
+				.protocols("TLSv1.3");
 	}
 }

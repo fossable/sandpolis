@@ -26,11 +26,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginUnloadedEvent;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.net.exelet.ExeletStore.ExeletStoreConfig;
 import com.sandpolis.core.net.plugin.ExeletProvider;
 import com.sandpolis.core.net.util.MsgUtil;
@@ -105,7 +105,8 @@ public class ExeletStore extends StoreBase implements ConfigurableStore<ExeletSt
 		PluginStore.register(this);
 	}
 
-	public final class ExeletStoreConfig extends StoreConfig {
+	@ConfigStruct
+	public static final class ExeletStoreConfig {
 
 		/**
 		 * All base {@link Exelet}s possible for the instance.

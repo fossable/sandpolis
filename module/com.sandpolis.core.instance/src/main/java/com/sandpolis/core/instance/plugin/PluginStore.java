@@ -31,20 +31,19 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.CertUtil;
 import com.sandpolis.core.foundation.util.JarUtil;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtPlugin;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginStore.PluginStoreConfig;
-import com.sandpolis.core.instance.state.DefaultDocument;
-import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtPlugin;
 import com.sandpolis.core.instance.store.ConfigurableStore;
-import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
+import com.sandpolis.core.instance.store.STCollectionStore;
 
 /**
  * The {@link PluginStore} manages plugins.<br>
@@ -62,10 +61,9 @@ import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
  * loaded.</li>
  * </ul>
  *
- * @author cilki
  * @since 5.0.0
  */
-public final class PluginStore extends CollectionStore<Plugin> implements ConfigurableStore<PluginStoreConfig> {
+public final class PluginStore extends STCollectionStore<Plugin> implements ConfigurableStore<PluginStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(PluginStore.class);
 
@@ -145,7 +143,7 @@ public final class PluginStore extends CollectionStore<Plugin> implements Config
 				.filter(path -> path.getFileName().toString().startsWith("sandpolis-plugin-"))
 				// Skip installed plugins
 				.filter(path -> {
-					try (Stream<Plugin> stream = provider.stream()) {
+					try (Stream<Plugin> stream = stream()) {
 						// Read plugin id
 						String id = JarUtil.getManifestValue(path.toFile(), "Plugin-Id").orElse(null);
 
@@ -161,7 +159,7 @@ public final class PluginStore extends CollectionStore<Plugin> implements Config
 	 * Load all installed plugins that are enabled and currently unloaded.
 	 */
 	public void loadPlugins() {
-		provider.stream()
+		stream()
 				// Enabled plugins only
 				.filter(Plugin::isEnabled)
 				// Skip loaded plugins
@@ -179,9 +177,9 @@ public final class PluginStore extends CollectionStore<Plugin> implements Config
 		log.debug("Installing plugin: {}", path.toString());
 
 		try {
-			Plugin plugin = new Plugin(null);
+			Plugin plugin = create(p -> {
+			});
 			plugin.install(path, true);
-			provider.add(plugin);
 		} catch (IOException e) {
 			log.error("Failed to install plugin", e);
 		}
@@ -238,26 +236,27 @@ public final class PluginStore extends CollectionStore<Plugin> implements Config
 		var config = new PluginStoreConfig();
 		configurator.accept(config);
 
-		provider.initialize();
+		collection = config.collection;
 	}
 
-	public Plugin create(Consumer<Plugin> configurator) {
-		return add(new Plugin(DefaultDocument.newDetached()), configurator);
+	public Plugin create(Consumer<VirtPlugin> configurator) {
+		var plugin = new Plugin(collection.newDocument());
+		configurator.accept(plugin);
+		add(plugin);
+		return plugin;
 	}
 
-	public final class PluginStoreConfig extends StoreConfig {
+	@Override
+	protected Plugin constructor(STDocument document) {
+		return new Plugin(document);
+	}
+
+	@ConfigStruct
+	public static final class PluginStoreConfig {
 
 		public Function<X509Certificate, Boolean> verifier;
 
-		@Override
-		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Plugin.class, Plugin::tag, VirtPlugin.COLLECTION);
-		}
-
-		@Override
-		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(Plugin.class, Plugin::new, VirtPlugin.COLLECTION);
-		}
+		public STCollection collection;
 	}
 
 	public static final PluginStore PluginStore = new PluginStore();

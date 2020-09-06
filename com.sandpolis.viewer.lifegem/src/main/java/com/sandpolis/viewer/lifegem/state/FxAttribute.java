@@ -14,15 +14,15 @@ package com.sandpolis.viewer.lifegem.state;
 import java.util.function.Supplier;
 
 import com.sandpolis.core.instance.State.ProtoAttribute;
-import com.sandpolis.core.instance.state.DefaultAttribute;
-import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.state.EphemeralAttribute;
 import com.sandpolis.core.instance.state.STAttribute;
+import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 import javafx.beans.value.ObservableValueBase;
 
 public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribute<T> {
 
-	private DefaultAttribute<T> container;
+	private EphemeralAttribute<T> container;
 
 	@Override
 	public T getValue() {
@@ -35,7 +35,7 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	}
 
 	@Override
-	public ProtoAttribute snapshot(Oid<?>... oids) {
+	public ProtoAttribute snapshot(RelativeOid<?>... oids) {
 		return container.snapshot(oids);
 	}
 

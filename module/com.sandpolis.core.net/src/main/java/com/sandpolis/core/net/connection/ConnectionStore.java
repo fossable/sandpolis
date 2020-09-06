@@ -22,17 +22,16 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Generator.LoopConfig;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtConnection;
-import com.sandpolis.core.instance.state.DefaultDocument;
-import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
-import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
-import com.sandpolis.core.net.channel.ChannelConfig;
+import com.sandpolis.core.instance.store.STCollectionStore;
+import com.sandpolis.core.net.channel.ChannelStruct;
 import com.sandpolis.core.net.channel.client.ClientChannelInitializer;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
 import com.sandpolis.core.net.connection.ConnectionStore.ConnectionStoreConfig;
 import com.sandpolis.core.net.network.NetworkStore;
+import com.sandpolis.core.net.util.ChannelUtil;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -44,7 +43,7 @@ import io.netty.channel.Channel;
  * @see NetworkStore
  * @since 5.0.0
  */
-public final class ConnectionStore extends CollectionStore<Connection>
+public final class ConnectionStore extends STCollectionStore<Connection>
 		implements ConfigurableStore<ConnectionStoreConfig> {
 
 	public static final Logger log = LoggerFactory.getLogger(ConnectionStore.class);
@@ -81,6 +80,7 @@ public final class ConnectionStore extends CollectionStore<Connection>
 	 */
 	public ConnectionFuture connect(String address, int port) {
 		return connect(address, port, config -> {
+			config.clientTlsInsecure();
 		});
 	}
 
@@ -92,9 +92,15 @@ public final class ConnectionStore extends CollectionStore<Connection>
 	 * @param strictCerts Whether strict certificate checking is enabled
 	 * @return The future of the action
 	 */
-	public ConnectionFuture connect(String address, int port, Consumer<ChannelConfig> configurator) {
-		return connect(
-				new Bootstrap().remoteAddress(address, port).handler(new ClientChannelInitializer(configurator)));
+	public ConnectionFuture connect(String address, int port, Consumer<ChannelStruct> configurator) {
+		var struct = new ChannelStruct();
+		configurator.accept(struct);
+
+		return connect(new Bootstrap() //
+				.remoteAddress(address, port) //
+				.channel(ChannelUtil.getChannelType(struct.transport)) //
+				// TODO Pass struct instead of configurator
+				.handler(new ClientChannelInitializer(configurator)));
 	}
 
 	/**
@@ -129,13 +135,16 @@ public final class ConnectionStore extends CollectionStore<Connection>
 		var config = new ConnectionStoreConfig();
 		configurator.accept(config);
 
-		register(this);
+		collection = config.collection;
 
-		provider.initialize();
+		register(this);
 	}
 
 	public Connection create(Consumer<Connection> configurator) {
-		return add(new Connection(DefaultDocument.newDetached()), configurator);
+		var connection = new Connection(collection.newDocument());
+		configurator.accept(connection);
+		add(connection);
+		return connection;
 	}
 
 	public Connection create(Channel channel) {
@@ -144,12 +153,14 @@ public final class ConnectionStore extends CollectionStore<Connection>
 		});
 	}
 
-	public final class ConnectionStoreConfig extends StoreConfig {
+	@Override
+	protected Connection constructor(STDocument document) {
+		return new Connection(document);
+	}
 
-		@Override
-		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Connection.class, Connection::tag, VirtConnection.COLLECTION);
-		}
+	public static final class ConnectionStoreConfig {
+
+		public STCollection collection;
 	}
 
 	public static final ConnectionStore ConnectionStore = new ConnectionStore();

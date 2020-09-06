@@ -18,12 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.StateTree.VirtProfile;
-import com.sandpolis.core.instance.state.Oid.AttributeOid;
+import com.sandpolis.core.instance.state.VirtProfile;
+import com.sandpolis.core.instance.state.oid.STAttributeOid;
 import com.sandpolis.core.net.state.STCmd;
-import com.sandpolis.viewer.lifegem.StateTree.FxProfile;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 import com.sandpolis.viewer.lifegem.state.FxCollection;
+import com.sandpolis.viewer.lifegem.state.FxProfile;
 import com.sandpolis.viewer.lifegem.view.main.Events.HostDetailCloseEvent;
 import com.sandpolis.viewer.lifegem.view.main.Events.HostDetailOpenEvent;
 import com.sandpolis.viewer.lifegem.view.main.Events.HostListHeaderChangeEvent;
@@ -39,7 +39,7 @@ public class HostListController extends AbstractController {
 	@FXML
 	private TableView<FxProfile> table;
 
-	private static final List<AttributeOid<?>> DEFAULT_HEADERS = List.of(VirtProfile.UUID);
+	private static final List<STAttributeOid<?>> DEFAULT_HEADERS = List.of(VirtProfile.UUID);
 
 	@FXML
 	public void initialize() {
@@ -85,7 +85,7 @@ public class HostListController extends AbstractController {
 	 *
 	 * @param headers The headers to add
 	 */
-	private void addColumns(List<AttributeOid<?>> headers) {
+	private void addColumns(List<STAttributeOid<?>> headers) {
 		headers.stream().map(AttributeColumn::new).forEach(table.getColumns()::add);
 	}
 

@@ -11,8 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.profile;
 
-import com.sandpolis.core.instance.StateTree.VirtProfile;
 import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtProfile;
 
 /**
  * A {@link Profile} is a generic container that stores data for an instance.

@@ -23,12 +23,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.ValidationUtil;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation;
-import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.state.VirtIpLocation;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.server.location.LocationStore.LocationStoreConfig;
 import com.sandpolis.core.server.location.services.IpApi;
 import com.sandpolis.core.server.location.services.KeyCdn;
@@ -45,7 +45,7 @@ public class LocationStore extends StoreBase implements ConfigurableStore<Locati
 		super(log);
 	}
 
-	public Future<VirtIpLocation> queryAsync(String ip, Oid<?>... fields) {
+	public Future<VirtIpLocation> queryAsync(String ip, Oid... fields) {
 		// Private IPs should not be resolved
 		if (ValidationUtil.privateIP(ip)) {
 			return CompletableFuture.completedFuture(null);
@@ -103,7 +103,8 @@ public class LocationStore extends StoreBase implements ConfigurableStore<Locati
 		}
 	}
 
-	public final class LocationStoreConfig extends StoreConfig {
+	@ConfigStruct
+	public static final class LocationStoreConfig {
 
 		/**
 		 * The location service.

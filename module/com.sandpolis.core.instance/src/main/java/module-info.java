@@ -11,13 +11,13 @@
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.core.instance {
 	exports com.sandpolis.core.instance.state;
+	exports com.sandpolis.core.instance.state.oid;
 	exports com.sandpolis.core.instance.msg;
 	exports com.sandpolis.core.instance.plugin;
 	exports com.sandpolis.core.instance.pref;
 	exports com.sandpolis.core.instance.profile;
 	exports com.sandpolis.core.instance.store;
 	exports com.sandpolis.core.instance.store.event;
-	exports com.sandpolis.core.instance.store.provider;
 	exports com.sandpolis.core.instance.thread;
 	exports com.sandpolis.core.instance.util;
 	exports com.sandpolis.core.instance;

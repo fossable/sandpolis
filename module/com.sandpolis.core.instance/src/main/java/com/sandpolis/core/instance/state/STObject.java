@@ -12,6 +12,7 @@
 package com.sandpolis.core.instance.state;
 
 import com.google.protobuf.Message;
+import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 /**
  * A {@link STObject} is any member of the state tree.
@@ -37,5 +38,5 @@ public interface STObject<E extends Message> {
 	 * @param oids Whitelist oids
 	 * @return A new protocol buffer representing the object
 	 */
-	public E snapshot(Oid<?>... oids);
+	public E snapshot(RelativeOid<?>... oids);
 }

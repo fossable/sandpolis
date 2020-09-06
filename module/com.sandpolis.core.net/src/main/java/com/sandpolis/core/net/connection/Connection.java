@@ -28,8 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtConnection;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtConnection;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.channel.HandlerKey;
@@ -102,20 +103,6 @@ public class Connection extends VirtConnection {
 			});
 		}
 
-		remoteCvid().source(() -> {
-			if (!isConnected())
-				return null;
-
-			return channel().attr(ChannelConstant.CVID).get();
-		});
-
-		remoteUuid().source(() -> {
-			if (!isConnected())
-				return null;
-
-			return channel().attr(ChannelConstant.UUID).get();
-		});
-
 		remotePort().source(() -> {
 			if (!isConnected())
 				return null;
@@ -131,18 +118,20 @@ public class Connection extends VirtConnection {
 		});
 
 		remoteInstance().source(() -> {
-			if (!isConnected())
+			if (!remoteCvid().isPresent())
 				return null;
 
 			return CvidUtil.extractInstance(getRemoteCvid());
 		});
 
 		remoteInstanceFlavor().source(() -> {
-			if (!isConnected())
+			if (!remoteCvid().isPresent())
 				return null;
 
 			return CvidUtil.extractInstanceFlavor(getRemoteCvid());
 		});
+
+		localCvid().source(() -> Core.cvid());
 	}
 
 	/**

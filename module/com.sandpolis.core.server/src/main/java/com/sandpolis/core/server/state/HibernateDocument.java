@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.state;
+package com.sandpolis.core.server.state;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,77 +19,96 @@ import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
+import com.sandpolis.core.instance.state.DefaultObject;
+import com.sandpolis.core.instance.state.STAttribute;
+import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.STObject;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
+import com.sandpolis.core.instance.state.oid.Oid;
+import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 /**
- * {@link DefaultDocument} allows documents to be persistent.
+ * {@link HibernateDocument} allows documents to be persistent.
  *
  * @since 5.1.1
  */
 @Entity
-public class DefaultDocument implements STDocument {
+public class HibernateDocument extends DefaultObject<HibernateDocument, STObject<?>> implements STDocument {
 
 	@Id
 	private String db_id;
 
-	@Column
-	@Convert(converter = OidConverter.class)
-	private Oid<?> oid;
+	@Column(nullable = true)
+	private HibernateDocument parentDocument;
+
+	@Column(nullable = true)
+	private HibernateCollection parentCollection;
 
 	@MapKeyColumn
 	@OneToMany(cascade = CascadeType.ALL)
-	private Map<Integer, STDocument> documents;
+	private Map<Integer, HibernateDocument> documents;
 
 	@MapKeyColumn
 	@OneToMany(cascade = CascadeType.ALL)
-	private Map<Integer, STCollection> collections;
+	private Map<Integer, HibernateCollection> collections;
 
 	@MapKeyColumn
 	@OneToMany(cascade = CascadeType.ALL)
-	private Map<Integer, STAttribute<?>> attributes;
+	private Map<Integer, HibernateAttribute<?>> attributes;
 
-	public DefaultDocument(Oid<?> oid) {
+	public HibernateDocument(HibernateDocument parent) {
+		this.parentDocument = parent;
 		this.db_id = UUID.randomUUID().toString();
-		this.oid = oid;
 
 		documents = new HashMap<>();
 		collections = new HashMap<>();
 		attributes = new HashMap<>();
 	}
 
-	public DefaultDocument(Oid<?> oid, ProtoDocument document) {
-		this(oid);
+	public HibernateDocument(HibernateDocument parent, ProtoDocument document) {
+		this(parent);
 		merge(document);
 	}
 
-	protected DefaultDocument() {
+	public HibernateDocument(HibernateCollection parent) {
+		this.parentCollection = parent;
+		this.db_id = UUID.randomUUID().toString();
+
+		documents = new HashMap<>();
+		collections = new HashMap<>();
+		attributes = new HashMap<>();
+	}
+
+	public HibernateDocument(HibernateCollection parent, ProtoDocument document) {
+		this(parent);
+		merge(document);
+	}
+
+	protected HibernateDocument() {
 		// JPA CONSTRUCTOR
 	}
 
 	@Override
-	public Oid<?> getOid() {
-		return oid;
-	}
-
-	public void setOid(Oid<?> oid) {
-		this.oid = oid;
+	public AbsoluteOid<?> getOid() {
+		return null;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <E> DefaultAttribute<E> attribute(int tag) {
+	public <E> HibernateAttribute<E> attribute(int tag) {
 		var attribute = attributes.get(tag);
 		if (attribute == null) {
-			attribute = new DefaultAttribute<>(oid.child(tag));
+			attribute = new HibernateAttribute<>(this);
 			attributes.put(tag, attribute);
 		}
-		return (DefaultAttribute<E>) attribute;
+		return (HibernateAttribute<E>) attribute;
 	}
 
 	@Override
@@ -99,14 +118,14 @@ public class DefaultDocument implements STDocument {
 
 	@Override
 	public void setAttribute(int tag, STAttribute<?> attribute) {
-		attributes.put(tag, (DefaultAttribute<?>) attribute);
+		attributes.put(tag, (HibernateAttribute<?>) attribute);
 	}
 
 	@Override
 	public STDocument document(int tag) {
 		var document = documents.get(tag);
 		if (document == null) {
-			document = new DefaultDocument(oid.child(tag));
+			document = new HibernateDocument(this);
 			documents.put(tag, document);
 		}
 		return document;
@@ -118,14 +137,14 @@ public class DefaultDocument implements STDocument {
 
 	@Override
 	public void setDocument(int tag, STDocument document) {
-		documents.put(tag, (DefaultDocument) document);
+		documents.put(tag, (HibernateDocument) document);
 	}
 
 	@Override
 	public STCollection collection(int tag) {
 		var collection = collections.get(tag);
 		if (collection == null) {
-			collection = new DefaultCollection(oid.child(tag));
+			collection = new HibernateCollection(this);
 			collections.put(tag, collection);
 		}
 		return collection;
@@ -138,7 +157,7 @@ public class DefaultDocument implements STDocument {
 
 	@Override
 	public void setCollection(int tag, STCollection collection) {
-		collections.put(tag, (DefaultCollection) collection);
+		collections.put(tag, (HibernateCollection) collection);
 	}
 
 	@Override
@@ -167,7 +186,7 @@ public class DefaultDocument implements STDocument {
 	}
 
 	@Override
-	public ProtoDocument snapshot(Oid<?>... oids) {
+	public ProtoDocument snapshot(RelativeOid<?>... oids) {
 		if (oids.length == 0) {
 			var snapshot = ProtoDocument.newBuilder().setPartial(false);
 			documents.forEach((tag, document) -> {
@@ -182,8 +201,9 @@ public class DefaultDocument implements STDocument {
 			return snapshot.build();
 		} else {
 			var snapshot = ProtoDocument.newBuilder().setPartial(true);
-			for (var head : Arrays.stream(oids).mapToInt(Oid::head).distinct().toArray()) {
-				var children = Arrays.stream(oids).filter(oid -> oid.head() != head).map(Oid::tail).toArray(Oid[]::new);
+			for (var head : Arrays.stream(oids).mapToInt(Oid::first).distinct().toArray()) {
+				var children = Arrays.stream(oids).filter(oid -> oid.first() != head).map(Oid::tail)
+						.toArray(RelativeOid[]::new);
 
 				if (documents.containsKey(head))
 					snapshot.putDocument(head, documents.get(head).snapshot(children));
@@ -199,22 +219,16 @@ public class DefaultDocument implements STDocument {
 
 	@Override
 	public Stream<STAttribute<?>> attributes() {
-		return attributes.values().stream();
+		return attributes.values().stream().map(STAttribute.class::cast);
 	}
 
 	@Override
 	public Stream<STCollection> collections() {
-		// TODO Auto-generated method stub
-		return null;
+		return collections.values().stream().map(STCollection.class::cast);
 	}
 
 	@Override
-	public Stream<STCollection> documents() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public static DefaultDocument newDetached() {
-		return new DefaultDocument(Oid.DETACHED);
+	public Stream<STDocument> documents() {
+		return documents.values().stream().map(STDocument.class::cast);
 	}
 }

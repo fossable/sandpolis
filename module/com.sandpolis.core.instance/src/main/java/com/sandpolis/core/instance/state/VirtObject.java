@@ -14,7 +14,7 @@ package com.sandpolis.core.instance.state;
 import java.util.Objects;
 
 import com.sandpolis.core.foundation.Result.ErrorCode;
-import com.sandpolis.core.instance.state.Oid.AttributeOid;
+import com.sandpolis.core.instance.state.oid.STAttributeOid;
 
 /**
  * A {@link VirtObject} is a member of the virtual state tree.
@@ -36,7 +36,7 @@ public abstract class VirtObject {
 	 */
 	public abstract int tag();
 
-	public <A extends STAttribute<T>, T> A get(AttributeOid<T> oid) {
+	public <A extends STAttribute<T>, T> A get(STAttributeOid<T> oid) {
 		if (Objects.requireNonNull(oid).isChildOf(document.getOid()))
 			throw new IllegalArgumentException();
 

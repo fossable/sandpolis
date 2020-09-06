@@ -16,6 +16,7 @@ import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.instance.state.STStore.STStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
@@ -33,6 +34,11 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
+import com.sandpolis.core.instance.state.EphemeralDocument;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtConnection;
+import com.sandpolis.core.instance.state.VirtPlugin;
+import com.sandpolis.core.instance.state.VirtProfile;
 import com.sandpolis.viewer.lifegem.common.FxEventExecutor;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 
@@ -81,8 +87,12 @@ public final class Viewer {
 	@InitializationTask(name = "Load static stores", fatal = true)
 	private static final Task loadStores = new Task(outcome -> {
 
+		STStore.init(config -> {
+			config.concurrency = 1;
+			config.root = new EphemeralDocument((STDocument) null);
+		});
+
 		ThreadStore.init(config -> {
-			config.ephemeral();
 			config.defaults.put("net.exelet", new NioEventLoopGroup(2));
 			config.defaults.put("net.connection.outgoing", new NioEventLoopGroup(2));
 			config.defaults.put("net.message.incoming", new UnorderedThreadPoolEventExecutor(2));
@@ -112,23 +122,18 @@ public final class Viewer {
 		});
 
 		NetworkStore.init(config -> {
-			config.ephemeral();
 		});
 
 		ConnectionStore.init(config -> {
-			config.ephemeral();
+			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		PluginStore.init(config -> {
-			config.ephemeral();
+			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		ProfileStore.init(config -> {
-			config.ephemeral();
-		});
-
-		StageStore.init(config -> {
-			config.ephemeral();
+			config.collection = STStore.root().get(VirtProfile.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		return outcome.success();

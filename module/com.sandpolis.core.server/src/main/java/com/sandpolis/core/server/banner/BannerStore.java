@@ -25,10 +25,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.server.banner.BannerStore.ServerStoreConfig;
 import com.sandpolis.core.sv.msg.MsgServer.RS_ServerBanner;
 
@@ -94,8 +94,9 @@ public final class BannerStore extends StoreBase implements ConfigurableStore<Se
 		banner = b.build();
 	}
 
-	public final class ServerStoreConfig extends StoreConfig {
+	@ConfigStruct
+	public static final class ServerStoreConfig {
 	}
 
-	public static final BannerStore ServerStore = new BannerStore();
+	public static final BannerStore BannerStore = new BannerStore();
 }

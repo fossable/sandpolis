@@ -13,11 +13,10 @@ package com.sandpolis.viewer.lifegem.view.main;
 
 import java.util.List;
 
-import com.sandpolis.core.instance.state.Oid;
-import com.sandpolis.core.instance.state.Oid.AttributeOid;
+import com.sandpolis.core.instance.state.oid.STAttributeOid;
 import com.sandpolis.core.instance.store.event.Event;
 import com.sandpolis.core.instance.store.event.ParameterizedEvent;
-import com.sandpolis.viewer.lifegem.StateTree.FxProfile;
+import com.sandpolis.viewer.lifegem.state.FxProfile;
 
 import javafx.scene.layout.Region;
 
@@ -56,8 +55,8 @@ public final class Events {
 	/**
 	 * Change the headers in the host list.
 	 */
-	public static class HostListHeaderChangeEvent extends ParameterizedEvent<List<AttributeOid<?>>> {
-		public HostListHeaderChangeEvent(List<AttributeOid<?>> parameter) {
+	public static class HostListHeaderChangeEvent extends ParameterizedEvent<List<STAttributeOid<?>>> {
+		public HostListHeaderChangeEvent(List<STAttributeOid<?>> parameter) {
 			super(parameter);
 		}
 	}

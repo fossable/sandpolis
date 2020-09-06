@@ -9,17 +9,48 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store.provider;
+package com.sandpolis.core.instance.state.oid;
 
-import java.util.function.Function;
-
-import com.sandpolis.core.instance.state.Oid;
-import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.VirtObject;
 
-public interface StoreProviderFactory {
+/**
+ * An {@link Oid} that corresponds to a {@link STCollection}.
+ *
+ * @param <T> The type of the corresponding collection
+ */
+public class STCollectionOid<T extends VirtObject> extends OidBase implements AbsoluteOid<T>, RelativeOid<T> {
 
-	public <E extends VirtObject> StoreProvider<E> supply(Class<E> type, Function<STDocument, E> constructor,
-			Oid<?> oid);
+	public STCollectionOid(String oid) {
+		super(oid);
+	}
 
+	public STCollectionOid(int[] oid) {
+		super(oid);
+	}
+
+	@Override
+	public STCollectionOid<?> resolve(int... tags) {
+		return resolve(STCollectionOid::new, tags);
+	}
+
+	@Override
+	public STCollectionOid<?> head(int length) {
+		return head(STCollectionOid::new, length);
+	}
+
+	@Override
+	public STCollectionOid<?> child(int tag) {
+		return child(STCollectionOid::new, tag);
+	}
+
+	@Override
+	public STCollectionOid<T> tail() {
+		return tail(STCollectionOid::new);
+	}
+
+	@Override
+	public STDocumentOid<?> parent() {
+		return parent(STDocumentOid::new);
+	}
 }

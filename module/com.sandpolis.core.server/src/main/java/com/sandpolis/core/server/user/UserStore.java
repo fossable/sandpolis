@@ -11,8 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.user;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -22,18 +20,17 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.CryptoUtil;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtUser;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.state.DefaultDocument;
-import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtUser;
 import com.sandpolis.core.instance.store.ConfigurableStore;
-import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
+import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.user.UserStore.UserStoreConfig;
 
-public final class UserStore extends CollectionStore<User> implements ConfigurableStore<UserStoreConfig> {
+public final class UserStore extends STCollectionStore<User> implements ConfigurableStore<UserStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(UserStore.class);
 
@@ -50,13 +47,14 @@ public final class UserStore extends CollectionStore<User> implements Configurab
 		var config = new UserStoreConfig();
 		configurator.accept(config);
 
-		config.defaults.forEach(this::create);
-
-		provider.initialize();
+		collection = config.collection;
 	}
 
-	public User create(Consumer<User> configurator) {
-		return add(new User(DefaultDocument.newDetached()), configurator);
+	public User create(Consumer<VirtUser> configurator) {
+		var user = new User(collection.newDocument());
+		configurator.accept(user);
+		add(user);
+		return user;
 	}
 
 	/**
@@ -77,19 +75,15 @@ public final class UserStore extends CollectionStore<User> implements Configurab
 		});
 	}
 
-	public final class UserStoreConfig extends StoreConfig {
+	@Override
+	protected User constructor(STDocument document) {
+		return new User(document);
+	}
 
-		public final List<UserConfig> defaults = new ArrayList<>();
+	@ConfigStruct
+	public static final class UserStoreConfig {
 
-		@Override
-		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(User.class, User::tag, VirtUser.COLLECTION);
-		}
-
-		@Override
-		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(User.class, User::new, VirtUser.COLLECTION);
-		}
+		public STCollection collection;
 	}
 
 	/**

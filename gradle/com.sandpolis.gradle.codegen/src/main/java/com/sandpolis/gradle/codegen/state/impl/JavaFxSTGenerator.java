@@ -15,7 +15,6 @@ import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
 
 import com.sandpolis.gradle.codegen.state.AttributeSpec;
 import com.sandpolis.gradle.codegen.state.DocumentSpec;
@@ -55,7 +54,7 @@ public class JavaFxSTGenerator extends STGenerator {
 	@Override
 	public void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
 		var documentClass = TypeSpec.classBuilder("Fx" + document.name.replaceAll(".*\\.", "")) //
-				.addModifiers(PUBLIC, STATIC) //
+				.addModifiers(PUBLIC) //
 				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
 
 		{
@@ -95,7 +94,7 @@ public class JavaFxSTGenerator extends STGenerator {
 			}
 		}
 
-		parent.addType(documentClass.build());
+		writeClass(documentClass.build());
 	}
 
 	@Override

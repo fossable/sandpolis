@@ -43,6 +43,7 @@ public class CvidResponseHandler extends AbstractCvidHandler {
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, MSG msg) throws Exception {
 		Channel ch = ctx.channel();
+		var sock = ch.attr(ChannelConstant.SOCK).get();
 
 		// Autoremove the handler
 		ch.pipeline().remove(this);
@@ -59,9 +60,9 @@ public class CvidResponseHandler extends AbstractCvidHandler {
 					.rs(msg, RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.UUID).setCvid(cvid))
 					.build());
 
-			ch.attr(ChannelConstant.INSTANCE).set(rq.getInstance());
-			ch.attr(ChannelConstant.CVID).set(cvid);
-			ch.attr(ChannelConstant.UUID).set(rq.getUuid());
+			sock.remoteInstance().set(rq.getInstance());
+			sock.remoteCvid().set(cvid);
+			sock.remoteUuid().set(rq.getUuid());
 			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent(Core.cvid(), cvid));
 		}
 	}

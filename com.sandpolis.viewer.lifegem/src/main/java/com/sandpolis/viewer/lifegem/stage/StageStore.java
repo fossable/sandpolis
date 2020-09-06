@@ -20,10 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.store.CollectionStore;
-import com.sandpolis.core.instance.store.ConfigurableStore;
-import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
-import com.sandpolis.viewer.lifegem.stage.StageStore.StageStoreConfig;
 
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -32,10 +28,9 @@ import javafx.stage.Stage;
  * The {@link StageStore} keeps track of the application's loaded
  * {@link Stage}s.
  *
- * @author cilki
  * @since 5.0.0
  */
-public final class StageStore extends CollectionStore<SandpolisStage> implements ConfigurableStore<StageStoreConfig> {
+public final class StageStore extends CollectionStore<SandpolisStage> {
 
 	private static final Logger log = LoggerFactory.getLogger(StageStore.class);
 
@@ -90,16 +85,9 @@ public final class StageStore extends CollectionStore<SandpolisStage> implements
 		});
 	}
 
-	@Override
-	public void init(Consumer<StageStoreConfig> configurator) {
-		var config = new StageStoreConfig();
-		configurator.accept(config);
-
-		provider.initialize();
-	}
-
 	public SandpolisStage create(Consumer<SandpolisStage> configurator) {
-		var stage = add(new SandpolisStage(), configurator);
+		var stage = new SandpolisStage();
+		configurator.accept(stage);
 
 		Platform.runLater(() -> {
 			configurator.accept(stage);
@@ -108,14 +96,6 @@ public final class StageStore extends CollectionStore<SandpolisStage> implements
 		});
 
 		return stage;
-	}
-
-	public final class StageStoreConfig extends StoreConfig {
-
-		@Override
-		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(SandpolisStage.class, SandpolisStage::hashCode, null);
-		}
 	}
 
 	public static final StageStore StageStore = new StageStore();

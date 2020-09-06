@@ -9,31 +9,42 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.server.hibernate;
+package com.sandpolis.core.instance.state.oid;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import com.sandpolis.core.instance.state.oid.RelativeOid.RelativeOidImpl;
 
-import org.hibernate.annotations.GenericGenerator;
+public interface AbsoluteOid<T> extends Oid {
 
-import com.sandpolis.core.instance.store.StoreMetadata;
+	public static class AbsoluteOidImpl<T> extends OidBase implements AbsoluteOid<T> {
 
-@Entity
-public class HibernateStoreProviderMetadata implements StoreMetadata {
+		public AbsoluteOidImpl(int[] value) {
+			super(value);
+		}
 
-	@Id
-	@GeneratedValue(generator = "uuid")
-	@GenericGenerator(name = "uuid", strategy = "uuid2")
-	private String db_id;
+		@Override
+		public AbsoluteOid<?> parent() {
+			return parent(AbsoluteOidImpl::new);
+		}
 
-	@Column
-	int initCount;
+		@Override
+		public AbsoluteOid<T> resolve(int... tags) {
+			return resolve(AbsoluteOidImpl::new, tags);
+		}
 
-	@Override
-	public int getInitCount() {
-		return initCount;
+		@Override
+		public AbsoluteOid<?> head(int length) {
+			return head(AbsoluteOidImpl::new, length);
+		}
+
+		@Override
+		public RelativeOid<T> tail() {
+			return tail(RelativeOidImpl::new);
+		}
+
+		@Override
+		public AbsoluteOid<?> child(int tag) {
+			return child(AbsoluteOidImpl::new, tag);
+		}
+
 	}
-
 }

@@ -1,5 +1,15 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
-
 
 import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.BIDIRECTIONAL;
 import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.DOWNSTREAM;
@@ -10,11 +20,12 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.Oid;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STRelation;
 import com.sandpolis.core.instance.state.VirtObject;
+import com.sandpolis.core.instance.state.oid.RelativeOid;
+import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
 import com.sandpolis.core.net.stream.StreamSink;
 import com.sandpolis.core.net.stream.StreamSource;
@@ -66,7 +77,7 @@ public class EntangledCollection implements STCollection {
 	}
 
 	@Override
-	public ProtoCollection snapshot(Oid<?>... oids) {
+	public ProtoCollection snapshot(RelativeOid<?>... oids) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -103,6 +114,18 @@ public class EntangledCollection implements STCollection {
 
 	@Override
 	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public STDocument newDocument() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public StoreMetadata getMetadata() {
 		// TODO Auto-generated method stub
 		return null;
 	}

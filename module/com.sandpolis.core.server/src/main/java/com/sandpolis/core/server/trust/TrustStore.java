@@ -28,14 +28,13 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.CertUtil;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtTrustAnchor;
-import com.sandpolis.core.instance.state.DefaultDocument;
-import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtTrustAnchor;
 import com.sandpolis.core.instance.store.ConfigurableStore;
-import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
+import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.trust.TrustStore.TrustStoreConfig;
 
 /**
@@ -45,7 +44,7 @@ import com.sandpolis.core.server.trust.TrustStore.TrustStoreConfig;
  * @author cilki
  * @since 5.0.0
  */
-public final class TrustStore extends CollectionStore<TrustAnchor> implements ConfigurableStore<TrustStoreConfig> {
+public final class TrustStore extends STCollectionStore<TrustAnchor> implements ConfigurableStore<TrustStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(TrustStore.class);
 
@@ -63,7 +62,7 @@ public final class TrustStore extends CollectionStore<TrustAnchor> implements Co
 		Objects.requireNonNull(cert);
 
 		PKIXParameters params;
-		try (Stream<TrustAnchor> stream = provider.stream()) {
+		try (Stream<TrustAnchor> stream = stream()) {
 			params = new PKIXParameters(stream.map(t -> new java.security.cert.TrustAnchor(t.getCertificate(), null))
 					.collect(Collectors.toSet()));
 			params.setRevocationEnabled(false);
@@ -89,7 +88,7 @@ public final class TrustStore extends CollectionStore<TrustAnchor> implements Co
 		var config = new TrustStoreConfig();
 		configurator.accept(config);
 
-		provider.initialize();
+		collection = config.collection;
 
 		// Install root CA if required
 		if (getMetadata().getInitCount() == 1) {
@@ -100,22 +99,22 @@ public final class TrustStore extends CollectionStore<TrustAnchor> implements Co
 		}
 	}
 
-	public TrustAnchor create(Consumer<TrustAnchor> configurator) {
-		return add(new TrustAnchor(DefaultDocument.newDetached()), configurator);
+	public TrustAnchor create(Consumer<VirtTrustAnchor> configurator) {
+		var anchor = new TrustAnchor(collection.newDocument());
+		configurator.accept(anchor);
+		add(anchor);
+		return anchor;
 	}
 
-	public final class TrustStoreConfig extends StoreConfig {
+	@Override
+	protected TrustAnchor constructor(STDocument document) {
+		return new TrustAnchor(document);
+	}
 
-		@Override
-		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(TrustAnchor.class, TrustAnchor::tag, VirtTrustAnchor.COLLECTION);
-		}
+	@ConfigStruct
+	public static final class TrustStoreConfig {
 
-		@Override
-		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(TrustAnchor.class, TrustAnchor::new, VirtTrustAnchor.COLLECTION);
-		}
-
+		public STCollection collection;
 	}
 
 	public static final TrustStore TrustStore = new TrustStore();

@@ -16,11 +16,12 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.Oid;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STRelation;
 import com.sandpolis.core.instance.state.VirtObject;
+import com.sandpolis.core.instance.state.oid.RelativeOid;
+import com.sandpolis.core.instance.store.StoreMetadata;
 
 import javafx.collections.ObservableListBase;
 
@@ -54,7 +55,7 @@ public class FxCollection<T extends VirtObject> extends ObservableListBase<T> im
 	}
 
 	@Override
-	public ProtoCollection snapshot(Oid<?>... oids) {
+	public ProtoCollection snapshot(RelativeOid<?>... oids) {
 		return container.snapshot(oids);
 	}
 
@@ -89,4 +90,15 @@ public class FxCollection<T extends VirtObject> extends ObservableListBase<T> im
 		return container.documents();
 	}
 
+	@Override
+	public STDocument newDocument() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public StoreMetadata getMetadata() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

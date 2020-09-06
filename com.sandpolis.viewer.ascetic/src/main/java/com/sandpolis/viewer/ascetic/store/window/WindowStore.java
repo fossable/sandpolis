@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.ascetic.store.window;
 
+import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -19,10 +20,9 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.store.CollectionStore;
 import com.sandpolis.core.instance.store.ConfigurableStore;
-import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
 import com.sandpolis.viewer.ascetic.store.window.WindowStore.WindowStoreConfig;
 
 public final class WindowStore extends CollectionStore<Window> implements ConfigurableStore<WindowStoreConfig> {
@@ -37,7 +37,7 @@ public final class WindowStore extends CollectionStore<Window> implements Config
 
 	public void clear() {
 		stream().forEach(gui::removeWindow);
-		provider.clear();
+		container.clear();
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public final class WindowStore extends CollectionStore<Window> implements Config
 		var config = new WindowStoreConfig();
 		configurator.accept(config);
 
-		provider.initialize();
+		container = new ArrayList<>();
 	}
 
 	public <E extends Window> E create(Supplier<E> constructor) {
@@ -60,17 +60,14 @@ public final class WindowStore extends CollectionStore<Window> implements Config
 	}
 
 	public <E extends Window> E create(Supplier<E> constructor, Consumer<E> configurator) {
-		var window = (E) add(constructor.get(), (Consumer<Window>) configurator);
-		gui.addWindow(window);
+		var window = constructor.get();
+		configurator.accept(window);
+		container.add(window);
 		return window;
 	}
 
-	public final class WindowStoreConfig extends StoreConfig {
-
-		@Override
-		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Window.class, Window::hashCode, null);
-		}
+	@ConfigStruct
+	public static final class WindowStoreConfig {
 	}
 
 	public static final WindowStore WindowStore = new WindowStore();

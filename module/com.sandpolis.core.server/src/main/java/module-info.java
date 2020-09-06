@@ -20,6 +20,7 @@ module com.sandpolis.core.server {
 	exports com.sandpolis.core.server.location;
 	exports com.sandpolis.core.server.plugin;
 	exports com.sandpolis.core.server.proxy;
+	exports com.sandpolis.core.server.state;
 	exports com.sandpolis.core.server.stream;
 	exports com.sandpolis.core.server.trust;
 	exports com.sandpolis.core.server.user;
@@ -42,5 +43,6 @@ module com.sandpolis.core.server {
 	requires java.xml.bind;
 	requires org.slf4j;
 	requires zipset;
+	requires java.persistence;
 	requires static java.desktop;
 }

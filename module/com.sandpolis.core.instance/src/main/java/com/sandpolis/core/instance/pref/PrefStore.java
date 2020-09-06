@@ -22,18 +22,17 @@ import java.util.prefs.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.pref.PrefStore.PrefStoreConfig;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.instance.store.StoreConfig;
 
 /**
  * This store provides access to a unique {@link Preferences} object for
  * persistent instance settings.
  *
- * @author cilki
  * @since 5.0.0
  */
 public final class PrefStore extends StoreBase implements ConfigurableStore<PrefStoreConfig> {
@@ -47,7 +46,7 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 	/**
 	 * The backing {@link Preferences} object.
 	 */
-	private Preferences provider;
+	private Preferences container;
 
 	/**
 	 * Get the {@link Preferences} object unique to the given instance.
@@ -79,7 +78,7 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 	 * @return The String value associated with the provided tag
 	 */
 	public String getString(String tag, String def) {
-		return provider.get(tag, def);
+		return container.get(tag, def);
 	}
 
 	/**
@@ -90,7 +89,7 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 	 */
 	public void putString(String tag, String value) {
 		log.trace("Associating \"{}\": \"{}\"", tag, value);
-		provider.put(tag, value);
+		container.put(tag, value);
 	}
 
 	/**
@@ -100,7 +99,7 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 	 * @return The boolean value associated with the provided tag
 	 */
 	public boolean getBoolean(String tag) {
-		return provider.getBoolean(tag, false);
+		return container.getBoolean(tag, false);
 	}
 
 	/**
@@ -111,7 +110,7 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 	 */
 	public void putBoolean(String tag, boolean value) {
 		log.trace("Associating \"{}\": {}", tag, value);
-		provider.putBoolean(tag, value);
+		container.putBoolean(tag, value);
 	}
 
 	/**
@@ -121,7 +120,7 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 	 * @return The int value associated with the provided tag
 	 */
 	public int getInt(String tag) {
-		return provider.getInt(tag, 0);
+		return container.getInt(tag, 0);
 	}
 
 	/**
@@ -132,7 +131,7 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 	 */
 	public void putInt(String tag, int value) {
 		log.trace("Associating \"{}\": {}", tag, value);
-		provider.putInt(tag, value);
+		container.putInt(tag, value);
 	}
 
 	/**
@@ -142,7 +141,7 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 	 * @return The byte[] value associated with the provided tag
 	 */
 	public byte[] getBytes(String tag) {
-		return provider.getByteArray(tag, null);
+		return container.getByteArray(tag, null);
 	}
 
 	/**
@@ -153,7 +152,7 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 	 */
 	public void putBytes(String tag, byte[] value) {
 		log.trace("Associating \"{}\": {}", tag, value);
-		provider.putByteArray(tag, value);
+		container.putByteArray(tag, value);
 	}
 
 	/**
@@ -190,19 +189,19 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 		Objects.requireNonNull(tag);
 		Objects.requireNonNull(value);
 
-		if (Arrays.stream(provider.keys()).noneMatch(key -> tag.equals(key))) {
+		if (Arrays.stream(container.keys()).noneMatch(key -> tag.equals(key))) {
 			put(tag, value);
 		}
 	}
 
 	@Override
 	public void close() throws BackingStoreException {
-		if (provider != null) {
-			log.debug("Closing preference node: " + provider.absolutePath());
+		if (container != null) {
+			log.debug("Closing preference node: " + container.absolutePath());
 			try {
-				provider.flush();
+				container.flush();
 			} finally {
-				provider = null;
+				container = null;
 			}
 		}
 	}
@@ -212,13 +211,13 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 		var config = new PrefStoreConfig();
 		configurator.accept(config);
 
-		if (provider != null)
+		if (container != null)
 			log.warn("Reinitializing store without flushing Preferences");
 
 		if (config.prefNodeClass != null) {
-			provider = Preferences.userNodeForPackage(config.prefNodeClass);
+			container = Preferences.userNodeForPackage(config.prefNodeClass);
 		} else if (config.instance != null && config.flavor != null) {
-			provider = getPreferences(config.instance, config.flavor);
+			container = getPreferences(config.instance, config.flavor);
 		}
 
 		try {
@@ -229,7 +228,8 @@ public final class PrefStore extends StoreBase implements ConfigurableStore<Pref
 		}
 	}
 
-	public final class PrefStoreConfig extends StoreConfig {
+	@ConfigStruct
+	public static final class PrefStoreConfig {
 		public InstanceType instance;
 		public InstanceFlavor flavor;
 		public Class<?> prefNodeClass;

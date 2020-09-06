@@ -108,7 +108,6 @@ public final class ConnectionLoop implements Runnable {
 		this.bootstrap = Objects.requireNonNull(bootstrap);
 
 		// Set channel options
-		bootstrap.attr(ChannelConstant.STRICT_CERTS, config.getStrictCerts());
 		bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getTimeout());
 
 		// Build a SockFuture without a ChannelFuture

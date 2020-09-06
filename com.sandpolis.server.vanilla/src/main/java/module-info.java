@@ -22,5 +22,8 @@ open module com.sandpolis.server.vanilla {
 	requires io.netty.common;
 	requires io.netty.handler;
 	requires io.netty.transport;
+	requires org.hibernate.orm.core;
+	requires java.persistence;
+	requires java.naming;
 	requires org.slf4j;
 }

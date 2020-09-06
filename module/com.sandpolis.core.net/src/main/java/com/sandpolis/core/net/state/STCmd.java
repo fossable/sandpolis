@@ -16,24 +16,26 @@ import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
+import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.foundation.util.IDUtil;
-import com.sandpolis.core.instance.state.DefaultCollection;
-import com.sandpolis.core.instance.state.DefaultDocument;
-import com.sandpolis.core.instance.state.Oid;
-import com.sandpolis.core.instance.state.Oid.CollectionOid;
-import com.sandpolis.core.instance.state.Oid.DocumentOid;
+import com.sandpolis.core.instance.State.ProtoCollection;
+import com.sandpolis.core.instance.State.ProtoDocument;
+import com.sandpolis.core.instance.state.EphemeralCollection;
+import com.sandpolis.core.instance.state.EphemeralDocument;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.oid.Oid;
+import com.sandpolis.core.instance.state.oid.STCollectionOid;
+import com.sandpolis.core.instance.state.oid.STDocumentOid;
 import com.sandpolis.core.net.cmdlet.Cmdlet;
+import com.sandpolis.core.net.msg.MsgState.OidType;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSnapshot;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSync;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection;
-import com.sandpolis.core.net.msg.MsgState.RS_STSnapshot;
-import com.sandpolis.core.net.msg.MsgState.RS_STSync;
 
 public class STCmd extends Cmdlet<STCmd> {
 
 	public static final class STSyncStruct {
-		public List<Oid<?>> whitelist = new ArrayList<>();
-		public List<Oid<?>> blacklist = new ArrayList<>();
+		public List<Oid> whitelist = new ArrayList<>();
 
 		public int streamId = IDUtil.stream();
 		public int updatePeriod;
@@ -41,115 +43,107 @@ public class STCmd extends Cmdlet<STCmd> {
 	}
 
 	public static final class STSnapshotStruct {
-		public List<Oid<?>> whitelist = new ArrayList<>();
-		public List<Oid<?>> blacklist = new ArrayList<>();
+		public List<Oid> whitelist = new ArrayList<>();
 	}
 
-	public CompletionStage<EntangledCollection> sync(CollectionOid<?> oid) {
+	public CompletionStage<EntangledCollection> sync(STCollectionOid<?> oid) {
 		return sync(oid, struct -> {
 		});
 	}
 
-	public CompletionStage<EntangledCollection> sync(CollectionOid<?> oid, Consumer<STSyncStruct> configurator) {
+	public CompletionStage<EntangledCollection> sync(STCollectionOid<?> oid, Consumer<STSyncStruct> configurator) {
 		final var config = new STSyncStruct();
 		configurator.accept(config);
 
 		for (var o : config.whitelist)
 			if (!o.isChildOf(oid))
 				throw new IllegalArgumentException();
-		for (var o : config.blacklist)
-			if (!o.isChildOf(oid))
-				throw new IllegalArgumentException();
 
 		var rq = RQ_STSync.newBuilder() //
-				.setBaseOid(oid.toString()) //
+				.setOid(oid.toString()) //
+				.setOidType(OidType.COLLECTION) //
 				.setUpdatePeriod(config.updatePeriod) //
 				.setDirection(config.direction);
 
-		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelistOid);
+		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelist);
 
-		return request(RS_STSync.class, rq).thenApply(rs -> {
-			return new EntangledCollection(new DefaultCollection(null, rs.getCollection()), config);
+		return request(Outcome.class, rq).thenApply(rs -> {
+			return new EntangledCollection(new EphemeralCollection(null), config);
 		});
 	}
 
-	public CompletionStage<EntangledDocument> sync(DocumentOid<?> oid) {
+	public CompletionStage<EntangledDocument> sync(STDocumentOid<?> oid) {
 		return sync(oid, struct -> {
 		});
 	}
 
-	public CompletionStage<EntangledDocument> sync(DocumentOid<?> oid, Consumer<STSyncStruct> configurator) {
+	public CompletionStage<EntangledDocument> sync(STDocumentOid<?> oid, Consumer<STSyncStruct> configurator) {
 		final var config = new STSyncStruct();
 		configurator.accept(config);
 
 		for (var o : config.whitelist)
 			if (!o.isChildOf(oid))
 				throw new IllegalArgumentException();
-		for (var o : config.blacklist)
-			if (!o.isChildOf(oid))
-				throw new IllegalArgumentException();
 
 		var rq = RQ_STSync.newBuilder() //
-				.setBaseOid(oid.toString()) //
+				.setOid(oid.toString()) //
+				.setOidType(OidType.DOCUMENT) //
 				.setUpdatePeriod(config.updatePeriod) //
 				.setDirection(config.direction);
 
-		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelistOid);
+		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelist);
 
-		return request(RS_STSync.class, rq).thenApply(rs -> {
-			return new EntangledDocument(new DefaultDocument(null, rs.getDocument()), config);
+		return request(Outcome.class, rq).thenApply(rs -> {
+			return new EntangledDocument(new EphemeralDocument((STDocument) null), config);
 		});
 	}
 
-	public CompletionStage<DefaultCollection> snapshot(CollectionOid<?> oid) {
+	public CompletionStage<EphemeralCollection> snapshot(STCollectionOid<?> oid) {
 		return snapshot(oid, struct -> {
 		});
 	}
 
-	public CompletionStage<DefaultCollection> snapshot(CollectionOid<?> oid, Consumer<STSnapshotStruct> configurator) {
+	public CompletionStage<EphemeralCollection> snapshot(STCollectionOid<?> oid,
+			Consumer<STSnapshotStruct> configurator) {
 		final var config = new STSnapshotStruct();
 		configurator.accept(config);
 
 		for (var o : config.whitelist)
 			if (!o.isChildOf(oid))
 				throw new IllegalArgumentException();
-		for (var o : config.blacklist)
-			if (!o.isChildOf(oid))
-				throw new IllegalArgumentException();
 
 		var rq = RQ_STSnapshot.newBuilder() //
-				.setBaseOid(oid.toString());
+				.setOid(oid.toString()) //
+				.setOidType(OidType.COLLECTION);
 
-		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelistOid);
+		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelist);
 
-		return request(RS_STSnapshot.class, rq).thenApply(rs -> {
-			return new DefaultCollection(null, rs.getCollection());
+		return request(ProtoCollection.class, rq).thenApply(rs -> {
+			return new EphemeralCollection(null, rs);
 		});
 	}
 
-	public CompletionStage<DefaultDocument> snapshot(DocumentOid<?> oid) {
+	public CompletionStage<EphemeralDocument> snapshot(STDocumentOid<?> oid) {
 		return snapshot(oid, struct -> {
 		});
 	}
 
-	public CompletionStage<DefaultDocument> snapshot(DocumentOid<?> oid, Consumer<STSnapshotStruct> configurator) {
+	public CompletionStage<EphemeralDocument> snapshot(STDocumentOid<?> oid, Consumer<STSnapshotStruct> configurator) {
 		final var config = new STSnapshotStruct();
 		configurator.accept(config);
 
 		for (var o : config.whitelist)
 			if (!o.isChildOf(oid))
 				throw new IllegalArgumentException();
-		for (var o : config.blacklist)
-			if (!o.isChildOf(oid))
-				throw new IllegalArgumentException();
 
 		var rq = RQ_STSnapshot.newBuilder() //
-				.setBaseOid(oid.toString());
+				.setOid(oid.toString()) //
+				.setOidType(OidType.DOCUMENT);
 
-		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelistOid);
+		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelist);
 
-		return request(RS_STSnapshot.class, rq).thenApply(rs -> {
-			return new DefaultDocument(null, rs.getDocument());
+		return request(ProtoDocument.class, rq).thenApply(rs -> {
+			return new EphemeralDocument((STDocument) null, rs);
 		});
 	}
 

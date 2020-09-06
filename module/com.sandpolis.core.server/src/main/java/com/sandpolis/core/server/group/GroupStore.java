@@ -13,8 +13,6 @@ package com.sandpolis.core.server.group;
 
 import static com.sandpolis.core.server.user.UserStore.UserStore;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -22,14 +20,13 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Group.GroupConfig;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtGroup;
-import com.sandpolis.core.instance.state.DefaultDocument;
-import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtGroup;
 import com.sandpolis.core.instance.store.ConfigurableStore;
-import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
+import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.group.GroupStore.GroupStoreConfig;
 import com.sandpolis.core.server.user.User;
 
@@ -38,7 +35,7 @@ import com.sandpolis.core.server.user.User;
  *
  * @since 5.0.0
  */
-public final class GroupStore extends CollectionStore<Group> implements ConfigurableStore<GroupStoreConfig> {
+public final class GroupStore extends STCollectionStore<Group> implements ConfigurableStore<GroupStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(GroupStore.class);
 
@@ -91,13 +88,14 @@ public final class GroupStore extends CollectionStore<Group> implements Configur
 		var config = new GroupStoreConfig();
 		configurator.accept(config);
 
-		config.defaults.forEach(this::create);
-
-		provider.initialize();
+		collection = config.collection;
 	}
 
-	public Group create(Consumer<Group> configurator) {
-		return add(new Group(DefaultDocument.newDetached()), configurator);
+	public Group create(Consumer<VirtGroup> configurator) {
+		var group = new Group(collection.newDocument());
+		configurator.accept(group);
+		add(group);
+		return group;
 	}
 
 	/**
@@ -114,19 +112,15 @@ public final class GroupStore extends CollectionStore<Group> implements Configur
 		});
 	}
 
-	public final class GroupStoreConfig extends StoreConfig {
+	@Override
+	protected Group constructor(STDocument document) {
+		return new Group(document);
+	}
 
-		public final List<GroupConfig> defaults = new ArrayList<>();
+	@ConfigStruct
+	public static final class GroupStoreConfig {
 
-		@Override
-		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Group.class, Group::tag, VirtGroup.COLLECTION);
-		}
-
-		@Override
-		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(Group.class, Group::new, VirtGroup.COLLECTION);
-		}
+		public STCollection collection;
 	}
 
 	public static final GroupStore GroupStore = new GroupStore();

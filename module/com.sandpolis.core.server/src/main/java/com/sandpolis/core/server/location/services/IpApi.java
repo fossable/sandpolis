@@ -11,22 +11,22 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.location.services;
 
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.AS_CODE;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.CITY;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.CONTINENT;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.CONTINENT_CODE;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.COUNTRY;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.COUNTRY_CODE;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.CURRENCY;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.DISTRICT;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.ISP;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.LATITUDE;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.LONGITUDE;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.ORGANIZATION;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.POSTAL_CODE;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.REGION;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.REGION_CODE;
-import static com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation.TIMEZONE;
+import static com.sandpolis.core.instance.state.VirtIpLocation.AS_CODE;
+import static com.sandpolis.core.instance.state.VirtIpLocation.CITY;
+import static com.sandpolis.core.instance.state.VirtIpLocation.CONTINENT;
+import static com.sandpolis.core.instance.state.VirtIpLocation.CONTINENT_CODE;
+import static com.sandpolis.core.instance.state.VirtIpLocation.COUNTRY;
+import static com.sandpolis.core.instance.state.VirtIpLocation.COUNTRY_CODE;
+import static com.sandpolis.core.instance.state.VirtIpLocation.CURRENCY;
+import static com.sandpolis.core.instance.state.VirtIpLocation.DISTRICT;
+import static com.sandpolis.core.instance.state.VirtIpLocation.ISP;
+import static com.sandpolis.core.instance.state.VirtIpLocation.LATITUDE;
+import static com.sandpolis.core.instance.state.VirtIpLocation.LONGITUDE;
+import static com.sandpolis.core.instance.state.VirtIpLocation.ORGANIZATION;
+import static com.sandpolis.core.instance.state.VirtIpLocation.POSTAL_CODE;
+import static com.sandpolis.core.instance.state.VirtIpLocation.REGION;
+import static com.sandpolis.core.instance.state.VirtIpLocation.REGION_CODE;
+import static com.sandpolis.core.instance.state.VirtIpLocation.TIMEZONE;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableBiMap;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation;
-import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.state.VirtIpLocation;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.server.location.AbstractGeolocationService;
 
 /**
@@ -47,7 +47,7 @@ public final class IpApi extends AbstractGeolocationService {
 	/**
 	 * The fields provided by the location service associated with {@link Oid}s.
 	 */
-	private static final ImmutableBiMap<Oid<?>, String> JSON_FIELDS = new ImmutableBiMap.Builder<Oid<?>, String>()
+	private static final ImmutableBiMap<Oid, String> JSON_FIELDS = new ImmutableBiMap.Builder<Oid, String>()
 			.put(AS_CODE, "as") //
 			.put(CITY, "city") //
 			.put(CONTINENT, "continent") //
@@ -78,7 +78,7 @@ public final class IpApi extends AbstractGeolocationService {
 	}
 
 	@Override
-	protected String buildQuery(String ip, Oid<?>... fields) {
+	protected String buildQuery(String ip, Oid... fields) {
 		if (fields.length == 0) {
 			return String.format("%s://ip-api.com/json/%s", protocol, ip);
 		} else {

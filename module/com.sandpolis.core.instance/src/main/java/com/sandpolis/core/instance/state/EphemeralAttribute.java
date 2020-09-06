@@ -11,32 +11,22 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state;
 
-import static com.sandpolis.core.instance.state.StateEventStore.StateEventStore;
-
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Supplier;
 
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Transient;
 
 import com.sandpolis.core.instance.State.ProtoAttribute;
+import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 /**
- * {@link DefaultAttribute} allows attributes to be persistent and optionally
+ * {@link EphemeralAttribute} allows attributes to be persistent and optionally
  * saves the history of the attribute's value.
  *
  * @param <T> The type of the attribute's value
  * @since 7.0.0
  */
-@Entity
-public class DefaultAttribute<T> implements STAttribute<T> {
+public class EphemeralAttribute<T> extends DefaultObject<EphemeralAttribute<T>, T> implements STAttribute<T> {
 
 	@Embeddable
 	public enum RetentionPolicy {
@@ -58,65 +48,45 @@ public class DefaultAttribute<T> implements STAttribute<T> {
 		ITEM_LIMITED;
 	}
 
-	@Id
-	private String db_id;
-
-	/**
-	 * The {@link Oid} that corresponds with this attribute.
-	 */
-	@Column(nullable = false)
-	@Convert(converter = OidConverter.class)
-	private Oid<T> oid;
+	private EphemeralDocument parent;
 
 	/**
 	 * A strategy that determines what happens to old values.
 	 */
-	@Column(nullable = true)
 	private RetentionPolicy retention;
 
 	/**
 	 * A quantifier for the retention policy.
 	 */
-	@Column(nullable = true)
 	private long retentionLimit;
 
 	/**
 	 * The UTC epoch timestamp associated with the current value.
 	 */
-	@Column
 	private long currentTimestamp;
 
 	/**
 	 * The current value of the attribute.
 	 */
-	@Embedded
 	private DefaultAttributeValue<T> current;
 
 	/**
 	 * Historical timestamps parallel to {@link #values}.
 	 */
-	@ElementCollection
 	private List<Long> timestamps;
 
 	/**
 	 * Historical values parallel to {@link #timestamps}.
 	 */
-	@ElementCollection
 	private List<DefaultAttributeValue<T>> values;
 
 	/**
 	 * An optional supplier that overrides the current value.
 	 */
-	@Transient
 	private Supplier<T> source;
 
-	public DefaultAttribute(Oid<T> oid) {
-		this.db_id = UUID.randomUUID().toString();
-		this.oid = oid;
-	}
-
-	protected DefaultAttribute() {
-		// JPA Constructor
+	public EphemeralAttribute(EphemeralDocument parent) {
+		this.parent = parent;
 	}
 
 	@Override
@@ -135,7 +105,7 @@ public class DefaultAttribute<T> implements STAttribute<T> {
 			timestamps.clear();
 			values.clear();
 
-			StateEventStore.fire(oid, old, value);
+			fire(this, old, value);
 			return;
 		}
 
@@ -165,7 +135,7 @@ public class DefaultAttribute<T> implements STAttribute<T> {
 			checkRetention();
 		}
 
-		StateEventStore.fire(oid, old, value);
+		fire(this, old, value);
 	}
 
 	@Override
@@ -251,7 +221,7 @@ public class DefaultAttribute<T> implements STAttribute<T> {
 	}
 
 	@Override
-	public synchronized ProtoAttribute snapshot(Oid<?>... oids) {
+	public synchronized ProtoAttribute snapshot(RelativeOid<?>... oids) {
 		if (oids.length != 0) {
 			throw new UnsupportedOperationException("Partial snapshots are not allowed on attributes");
 		}

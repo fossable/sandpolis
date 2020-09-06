@@ -20,9 +20,9 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.instance.thread.ThreadStore.ThreadStoreConfig;
 
 /**
@@ -39,7 +39,7 @@ public final class ThreadStore extends StoreBase implements ConfigurableStore<Th
 		super(log);
 	}
 
-	private Map<String, ExecutorService> provider;
+	private Map<String, ExecutorService> container;
 
 	/**
 	 * Get the {@link ExecutorService} corresponding to the given identifier.
@@ -50,14 +50,14 @@ public final class ThreadStore extends StoreBase implements ConfigurableStore<Th
 	 */
 	@SuppressWarnings("unchecked")
 	public <E extends ExecutorService> E get(String id) {
-		return (E) provider.get(Objects.requireNonNull(id));
+		return (E) container.get(Objects.requireNonNull(id));
 	}
 
 	@Override
 	public void close() throws Exception {
-		log.debug("Closing {} active thread pools", provider.size());
-		provider.values().forEach(service -> service.shutdownNow());
-		provider = null;
+		log.debug("Closing {} active thread pools", container.size());
+		container.values().forEach(service -> service.shutdownNow());
+		container = null;
 	}
 
 	@Override
@@ -65,18 +65,14 @@ public final class ThreadStore extends StoreBase implements ConfigurableStore<Th
 		var config = new ThreadStoreConfig();
 		configurator.accept(config);
 
-		provider.putAll(config.defaults);
+		container = new HashMap<>();
+		container.putAll(config.defaults);
 	}
 
-	public final class ThreadStoreConfig extends StoreConfig {
+	@ConfigStruct
+	public static final class ThreadStoreConfig {
 
 		public final Map<String, ExecutorService> defaults = new HashMap<>();
-
-		@Override
-		public void ephemeral() {
-			provider = new HashMap<>();
-		}
-
 	}
 
 	public static final ThreadStore ThreadStore = new ThreadStore();

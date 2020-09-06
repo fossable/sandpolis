@@ -91,9 +91,9 @@ public class CoreSTGenerator extends STGenerator {
 		{
 			// Add the attribute's OID field
 			var field = FieldSpec
-					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "Oid", "AttributeOid"),
+					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE + ".oid", "STAttributeOid"),
 							attribute.getAttributeType()), attribute.name.toUpperCase(), PUBLIC, STATIC, FINAL)
-					.initializer("new Oid.AttributeOid<>(\"$L\")", oid);
+					.initializer("new STAttributeOid<>(\"$L\")", oid);
 
 			parent.addField(field.build());
 		}
@@ -102,7 +102,7 @@ public class CoreSTGenerator extends STGenerator {
 	@Override
 	public void processCollection(TypeSpec.Builder parent, DocumentSpec document, String oid) {
 		var documentClass = TypeSpec.classBuilder(ST_PREFIX + document.shortName()) //
-				.addModifiers(PUBLIC, STATIC) //
+				.addModifiers(PUBLIC) //
 				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
 
 		{
@@ -161,9 +161,9 @@ public class CoreSTGenerator extends STGenerator {
 			// Add OID field
 			var documentType = ClassName.bestGuess(documentClass.build().name);
 			var field = FieldSpec
-					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "Oid", "CollectionOid"), documentType),
-							"COLLECTION", PUBLIC, STATIC, FINAL) //
-					.initializer("new Oid.CollectionOid<>(\"$L\")", oid);
+					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE + ".oid", "STCollectionOid"),
+							documentType), "COLLECTION", PUBLIC, STATIC, FINAL) //
+					.initializer("new STCollectionOid<>(\"$L\")", oid);
 
 			documentClass.addField(field.build());
 		}
@@ -171,14 +171,14 @@ public class CoreSTGenerator extends STGenerator {
 		// Process subdocuments and attributes
 		processChildren(documentClass, document, oid + ".0");
 
-		parent.addType(documentClass.build());
+		writeClass(documentClass.build());
 	}
 
 	@Override
 	public void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
 
 		var documentClass = TypeSpec.classBuilder(ST_PREFIX + document.shortName()) //
-				.addModifiers(PUBLIC, STATIC) //
+				.addModifiers(PUBLIC) //
 				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
 
 		{
@@ -213,17 +213,15 @@ public class CoreSTGenerator extends STGenerator {
 			// Add OID field
 			var documentType = ClassName.bestGuess(documentClass.build().name);
 			var field = FieldSpec
-					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "Oid", "DocumentOid"), documentType),
-							"DOCUMENT", PUBLIC, STATIC, FINAL) //
-					.initializer("new Oid.DocumentOid<>(\"$L\")", oid);
+					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE + ".oid", "STDocumentOid"),
+							documentType), "DOCUMENT", PUBLIC, STATIC, FINAL) //
+					.initializer("new STDocumentOid<>(\"$L\")", oid);
 
 			documentClass.addField(field.build());
 		}
 
 		// Process subdocuments and attributes
 		processChildren(documentClass, document, oid);
-
-		parent.addType(documentClass.build());
 
 		{
 			// Add document method
@@ -233,9 +231,11 @@ public class CoreSTGenerator extends STGenerator {
 					.addStatement("return new Virt$L(document.document($L))", document.shortName(),
 							oid.replaceAll(".*\\.", ""));
 
-			if (parent.build().superclass.toString().contains("VirtObject"))
+			if (parent != null)
 				parent.addMethod(method.build());
 		}
+
+		writeClass(documentClass.build());
 	}
 
 	private void processChildren(TypeSpec.Builder documentClass, DocumentSpec document, String oid) {

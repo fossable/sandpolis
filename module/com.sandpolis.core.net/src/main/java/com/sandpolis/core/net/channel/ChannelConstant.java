@@ -35,34 +35,14 @@ public final class ChannelConstant {
 	public static final AttributeKey<Boolean> CERTIFICATE_STATE = AttributeKey.valueOf("state.certificate");
 
 	/**
-	 * The remote host's CVID.
-	 */
-	public static final AttributeKey<Integer> CVID = AttributeKey.valueOf("cvid");
-
-	/**
 	 * A future that is notified when the handshake completes.
 	 */
 	public static final AttributeKey<Promise<Void>> HANDSHAKE_FUTURE = AttributeKey.valueOf("handshake_future");
 
 	/**
-	 * The remote host's instance type.
-	 */
-	public static final AttributeKey<InstanceType> INSTANCE = AttributeKey.valueOf("instance");
-
-	/**
 	 * The {@link Connection} associated with the {@link Channel}.
 	 */
 	public static final AttributeKey<Connection> SOCK = AttributeKey.valueOf("sock");
-
-	/**
-	 * Indicates whether an invalid SSL certificate will be allowed.
-	 */
-	public static final AttributeKey<Boolean> STRICT_CERTS = AttributeKey.valueOf("strictcerts");
-
-	/**
-	 * The remote host's UUID.
-	 */
-	public static final AttributeKey<String> UUID = AttributeKey.valueOf("uuid");
 
 	private ChannelConstant() {
 	}

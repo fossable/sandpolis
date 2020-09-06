@@ -20,7 +20,7 @@ import java.util.function.Consumer;
  *
  * @param <E> The configuration type
  */
-public interface ConfigurableStore<E extends StoreConfig> {
+public interface ConfigurableStore<E> {
 
 	/**
 	 * Initialize the store with the given configurator.

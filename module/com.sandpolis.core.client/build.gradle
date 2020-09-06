@@ -29,8 +29,8 @@ sourceSets {
 
 eclipse {
 	project {
-		name = 'com.sandpolis.core.instance'
-		comment = 'The instance library module'
+		name = 'com.sandpolis.core.client'
+		comment = 'The client library module'
 	}
 }
 

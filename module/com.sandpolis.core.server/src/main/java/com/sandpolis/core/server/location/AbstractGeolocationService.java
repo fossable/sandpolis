@@ -24,8 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.Config;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtClient.VirtIpLocation;
-import com.sandpolis.core.instance.state.Oid;
+import com.sandpolis.core.instance.state.VirtIpLocation;
+import com.sandpolis.core.instance.state.oid.Oid;
 
 /**
  * An {@link AbstractGeolocationService} resolves a set of location attributes
@@ -72,7 +72,7 @@ public abstract class AbstractGeolocationService {
 	 * @param fields The desired attributes from {@link VirtIpLocation}
 	 * @return The query
 	 */
-	protected abstract String buildQuery(String ip, Oid<?>... fields);
+	protected abstract String buildQuery(String ip, Oid... fields);
 
 	/**
 	 * Convert the query result into a {@link VirtIpLocation} object.
@@ -83,7 +83,7 @@ public abstract class AbstractGeolocationService {
 	 */
 	protected abstract VirtIpLocation parseLocation(String result) throws Exception;
 
-	public CompletableFuture<VirtIpLocation> query(String ip, Oid<?>... fields) {
+	public CompletableFuture<VirtIpLocation> query(String ip, Oid... fields) {
 		var url = URI.create(buildQuery(ip, fields));
 		log.debug("Query URL: {}", url);
 

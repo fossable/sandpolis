@@ -14,52 +14,31 @@ package com.sandpolis.core.instance.state;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
-
 import com.sandpolis.core.instance.State.ProtoCollection;
+import com.sandpolis.core.instance.state.oid.Oid;
+import com.sandpolis.core.instance.state.oid.RelativeOid;
+import com.sandpolis.core.instance.store.StoreMetadata;
 
-@Entity
-public class DefaultCollection implements STCollection {
+public class EphemeralCollection extends DefaultObject<EphemeralCollection, STDocument> implements STCollection {
 
-	@Id
-	private String db_id;
+	private EphemeralDocument parent;
 
-	@Column
-	@Convert(converter = OidConverter.class)
-	private Oid<?> oid;
-
-	@MapKeyColumn
-	@OneToMany(cascade = CascadeType.ALL)
 	private Map<Integer, STDocument> documents;
 
-	public DefaultCollection(Oid<?> oid) {
-		this.db_id = UUID.randomUUID().toString();
-		this.oid = oid;
+	private final Metadata metadata = new Metadata();
+
+	public EphemeralCollection(EphemeralDocument parent) {
+		this.parent = parent;
 
 		documents = new HashMap<>();
 	}
 
-	public DefaultCollection(Oid<?> oid, ProtoCollection collection) {
-		this(oid);
+	public EphemeralCollection(EphemeralDocument parent, ProtoCollection collection) {
+		this(parent);
 		merge(collection);
-	}
-
-	protected DefaultCollection() {
-		// JPA CONSTRUCTOR
-	}
-
-	public Oid<?> getOid() {
-		return oid;
 	}
 
 	public STDocument get(int key) {
@@ -89,7 +68,7 @@ public class DefaultCollection implements STCollection {
 		return documents.containsValue(document);
 	}
 
-	public void add(int tag, DefaultDocument e) {
+	public void add(int tag, EphemeralDocument e) {
 		documents.put(tag, e);
 	}
 
@@ -105,7 +84,7 @@ public class DefaultCollection implements STCollection {
 	public STDocument document(int tag) {
 		var document = documents.get(tag);
 		if (document == null) {
-			document = new DefaultDocument(oid.child(tag));
+			document = new EphemeralDocument(this);
 			documents.put(tag, document);
 		}
 		return document;
@@ -122,6 +101,11 @@ public class DefaultCollection implements STCollection {
 	}
 
 	@Override
+	public STDocument newDocument() {
+		return new EphemeralDocument(this);
+	}
+
+	@Override
 	public void merge(ProtoCollection snapshot) {
 		for (var entry : snapshot.getDocumentMap().entrySet()) {
 			document(entry.getKey()).merge(entry.getValue());
@@ -134,7 +118,7 @@ public class DefaultCollection implements STCollection {
 	}
 
 	@Override
-	public ProtoCollection snapshot(Oid<?>... oids) {
+	public ProtoCollection snapshot(RelativeOid<?>... oids) {
 		if (oids.length == 0) {
 			var snapshot = ProtoCollection.newBuilder().setPartial(false);
 			documents.forEach((tag, document) -> {
@@ -143,13 +127,27 @@ public class DefaultCollection implements STCollection {
 			return snapshot.build();
 		} else {
 			var snapshot = ProtoCollection.newBuilder().setPartial(true);
-			for (var head : Arrays.stream(oids).mapToInt(Oid::head).distinct().toArray()) {
-				var children = Arrays.stream(oids).filter(oid -> oid.head() != head).map(Oid::tail).toArray(Oid[]::new);
+			for (var head : Arrays.stream(oids).mapToInt(Oid::first).distinct().toArray()) {
+				var children = Arrays.stream(oids).filter(oid -> oid.first() != head).map(Oid::tail)
+						.toArray(RelativeOid[]::new);
 
 				snapshot.putDocument(head, documents.get(head).snapshot(children));
 			}
 
 			return snapshot.build();
+		}
+	}
+
+	@Override
+	public StoreMetadata getMetadata() {
+		return metadata;
+	}
+
+	private class Metadata implements StoreMetadata {
+
+		@Override
+		public int getInitCount() {
+			return 1;
 		}
 	}
 }

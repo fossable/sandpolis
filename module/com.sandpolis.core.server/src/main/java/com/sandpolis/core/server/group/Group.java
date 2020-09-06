@@ -17,8 +17,8 @@ import static com.sandpolis.core.foundation.Result.ErrorCode.OK;
 import static com.sandpolis.core.foundation.util.ValidationUtil.group;
 
 import com.sandpolis.core.foundation.Result.ErrorCode;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtGroup;
 import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtGroup;
 
 /**
  * A {@link Group} is a collection of users that share permissions on a

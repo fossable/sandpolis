@@ -73,7 +73,7 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 					int from = readCvid(msg);
 
 					// Verify the from field to prevent spoofing
-					if (ctx.channel().attr(ChannelConstant.CVID).get() != from) {
+					if (ctx.channel().attr(ChannelConstant.SOCK).get().getRemoteCvid() != from) {
 						throw new ChannelException("Message 'from' does not match channel's CVID");
 					}
 				} else {

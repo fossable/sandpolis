@@ -13,6 +13,7 @@ module com.sandpolis.plugin.device {
 	exports com.sandpolis.plugin.device;
 	exports com.sandpolis.plugin.device.msg;
 
+	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.core.instance;
 	requires org.slf4j;
 	requires com.google.protobuf;

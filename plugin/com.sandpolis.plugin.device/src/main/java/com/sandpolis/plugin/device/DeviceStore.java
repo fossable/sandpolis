@@ -16,15 +16,15 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.state.DefaultDocument;
-import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.foundation.ConfigStruct;
+import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
-import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
+import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.plugin.device.DeviceStore.DeviceStoreConfig;
 import com.sandpolis.plugin.device.StateTree.VirtPlugin.VirtDevice;
 
-public class DeviceStore extends CollectionStore<Device> implements ConfigurableStore<DeviceStoreConfig> {
+public class DeviceStore extends STCollectionStore<Device> implements ConfigurableStore<DeviceStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(DeviceStore.class);
 
@@ -37,19 +37,25 @@ public class DeviceStore extends CollectionStore<Device> implements Configurable
 		var config = new DeviceStoreConfig();
 		configurator.accept(config);
 
-		provider.initialize();
+		collection = config.collection;
 	}
 
-	public Device create(Consumer<Device> configurator) {
-		return add(new Device(DefaultDocument.newDetached()), configurator);
+	public Device create(Consumer<VirtDevice> configurator) {
+		var device = new Device(collection.newDocument());
+		configurator.accept(device);
+		add(device);
+		return device;
 	}
 
-	public final class DeviceStoreConfig extends StoreConfig {
+	@Override
+	protected Device constructor(STDocument document) {
+		return new Device(document);
+	}
 
-		@Override
-		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Device.class, Device::tag, VirtDevice.COLLECTION);
-		}
+	@ConfigStruct
+	public static final class DeviceStoreConfig {
+
+		public STCollection collection;
 	}
 
 	public static final DeviceStore DeviceStore = new DeviceStore();

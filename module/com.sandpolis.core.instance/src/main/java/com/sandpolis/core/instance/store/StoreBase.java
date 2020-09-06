@@ -32,7 +32,7 @@ import com.sandpolis.core.instance.store.event.ParameterizedEvent;
  * This root class defines a highly general structure applicable to all Stores
  * and handles operations like lifecycle management and event propagation.
  *
- * @see CollectionStore
+ * @see STCollectionStore
  */
 public abstract class StoreBase {
 

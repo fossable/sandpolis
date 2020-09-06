@@ -16,13 +16,13 @@ import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
-import static com.sandpolis.core.instance.state.StateEventStore.StateEventStore;
+import static com.sandpolis.core.instance.state.STStore.STStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.exelet.ExeletStore.ExeletStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
-import static com.sandpolis.core.server.banner.BannerStore.ServerStore;
+import static com.sandpolis.core.server.banner.BannerStore.BannerStore;
 import static com.sandpolis.core.server.group.GroupStore.GroupStore;
 import static com.sandpolis.core.server.listener.ListenerStore.ListenerStore;
 import static com.sandpolis.core.server.location.LocationStore.LocationStore;
@@ -61,8 +61,15 @@ import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.state.StateEventStore;
-import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
+import com.sandpolis.core.instance.state.EphemeralDocument;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtConnection;
+import com.sandpolis.core.instance.state.VirtGroup;
+import com.sandpolis.core.instance.state.VirtListener;
+import com.sandpolis.core.instance.state.VirtPlugin;
+import com.sandpolis.core.instance.state.VirtProfile;
+import com.sandpolis.core.instance.state.VirtTrustAnchor;
+import com.sandpolis.core.instance.state.VirtUser;
 import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.server.auth.AuthExe;
 import com.sandpolis.core.server.auth.LoginExe;
@@ -70,9 +77,9 @@ import com.sandpolis.core.server.banner.BannerExe;
 import com.sandpolis.core.server.generator.GeneratorExe;
 import com.sandpolis.core.server.generator.MegaGen;
 import com.sandpolis.core.server.group.GroupExe;
-import com.sandpolis.core.server.hibernate.HibernateStoreProviderFactory;
 import com.sandpolis.core.server.listener.ListenerExe;
 import com.sandpolis.core.server.plugin.PluginExe;
+import com.sandpolis.core.server.state.HibernateDocument;
 import com.sandpolis.core.server.stream.StreamExe;
 import com.sandpolis.core.server.user.UserExe;
 
@@ -166,9 +173,9 @@ public final class Server {
 				//
 				.setProperty("hibernate.ogm.datastore.create_database", "true");
 
-		List.of(com.sandpolis.core.instance.state.DefaultDocument.class,
-				com.sandpolis.core.instance.state.DefaultCollection.class,
-				com.sandpolis.core.instance.state.DefaultAttribute.class,
+		List.of(com.sandpolis.core.server.state.HibernateDocument.class,
+				com.sandpolis.core.server.state.HibernateCollection.class,
+				com.sandpolis.core.server.state.HibernateAttribute.class,
 				com.sandpolis.core.instance.state.StringAttributeValue.class,
 				com.sandpolis.core.instance.state.IntegerAttributeValue.class,
 				com.sandpolis.core.instance.state.LongAttributeValue.class,
@@ -178,11 +185,8 @@ public final class Server {
 				com.sandpolis.core.instance.state.X509CertificateAttributeValue.class,
 				com.sandpolis.core.instance.state.InstanceFlavorAttributeValue.class,
 				com.sandpolis.core.instance.state.InstanceTypeAttributeValue.class,
-				com.sandpolis.core.server.hibernate.HibernateStoreProvider.class,
-				com.sandpolis.core.server.hibernate.HibernateStoreProviderMetadata.class)
-				.forEach(conf::addAnnotatedClass);
+				com.sandpolis.core.server.hibernate.HibernateCollectionMetadata.class).forEach(conf::addAnnotatedClass);
 
-		StoreProviderFactory providerFactory;
 		switch (Config.STORAGE_PROVIDER.value().orElse("mongodb")) {
 		case "mongodb":
 			conf
@@ -195,26 +199,37 @@ public final class Server {
 					.setProperty("hibernate.ogm.datastore.host", Config.MONGODB_HOST.value().orElse("127.0.0.1"))
 					.setProperty("hibernate.ogm.datastore.username", Config.MONGODB_USER.value().orElse(""))
 					.setProperty("hibernate.ogm.datastore.password", Config.MONGODB_PASSWORD.value().orElse(""));
-			providerFactory = new HibernateStoreProviderFactory(conf);
+
+			var em = conf.buildSessionFactory().createEntityManager();
+			STStore.init(config -> {
+				config.concurrency = 2;
+				config.root = em.find(HibernateDocument.class, "st");
+				if (config.root == null) {
+					config.root = new HibernateDocument((HibernateDocument) null);
+
+					em.getTransaction().begin();
+					em.persist(config.root);
+					em.flush();
+					em.getTransaction().commit();
+				}
+
+				// TODO set em
+			});
+
 			break;
 		case "infinispan_embedded":
-			providerFactory = null;
 			break;
 		case "ephemeral":
-			providerFactory = null;
+			STStore.init(config -> {
+				config.concurrency = 2;
+				config.root = new EphemeralDocument((STDocument) null);
+			});
 			break;
 		default:
-			providerFactory = null;
 			break;
 		}
 
-		StateEventStore.init(config -> {
-			config.concurrency = 2;
-			config.queueSize = 20;
-		});
-
 		ThreadStore.init(config -> {
-			config.ephemeral();
 			config.defaults.put("net.exelet", new NioEventLoopGroup(2));
 			config.defaults.put("net.connection.outgoing", new NioEventLoopGroup(2));
 			config.defaults.put("net.message.incoming", new UnorderedThreadPoolEventExecutor(2));
@@ -225,12 +240,11 @@ public final class Server {
 		});
 
 		NetworkStore.init(config -> {
-			config.ephemeral();
 			config.cvid = Core.cvid();
 		});
 
 		ConnectionStore.init(config -> {
-			config.ephemeral();
+			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		ExeletStore.init(config -> {
@@ -239,7 +253,6 @@ public final class Server {
 		});
 
 		StreamStore.init(config -> {
-			config.ephemeral();
 		});
 
 		PrefStore.init(config -> {
@@ -247,47 +260,32 @@ public final class Server {
 			config.flavor = InstanceFlavor.VANILLA;
 		});
 
+		BannerStore.init(config -> {
+		});
+
 		UserStore.init(config -> {
-			if (providerFactory != null)
-				config.persistent(providerFactory);
-			else
-				config.ephemeral();
+			config.collection = STStore.root().get(VirtUser.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		ListenerStore.init(config -> {
-			if (providerFactory != null)
-				config.persistent(providerFactory);
-			else
-				config.ephemeral();
+			config.collection = STStore.root().get(VirtListener.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		GroupStore.init(config -> {
-			if (providerFactory != null)
-				config.persistent(providerFactory);
-			else
-				config.ephemeral();
+			config.collection = STStore.root().get(VirtGroup.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		ProfileStore.init(config -> {
-			if (providerFactory != null)
-				config.persistent(providerFactory);
-			else
-				config.ephemeral();
+			config.collection = STStore.root().get(VirtProfile.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		TrustStore.init(config -> {
-			if (providerFactory != null)
-				config.persistent(providerFactory);
-			else
-				config.ephemeral();
+			config.collection = STStore.root().get(VirtTrustAnchor.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		PluginStore.init(config -> {
 			config.verifier = TrustStore::verifyPluginCertificate;
-			if (providerFactory != null)
-				config.persistent(providerFactory);
-			else
-				config.ephemeral();
+			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		LocationStore.init(config -> {

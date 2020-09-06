@@ -13,8 +13,8 @@ package com.sandpolis.viewer.lifegem.view.login.phase;
 
 import com.sandpolis.core.cv.cmd.PluginCmd;
 import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.viewer.lifegem.StateTree.FxProfile.FxPlugin;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
+import com.sandpolis.viewer.lifegem.state.FxPlugin;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

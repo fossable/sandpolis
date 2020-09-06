@@ -42,7 +42,7 @@ public interface STAttribute<T> extends STObject<ProtoAttribute> {
 	/**
 	 * Specify a source for the attribute's value. Setting an attribute source
 	 * "binds" the attribute and will cause {@link #set(Object)} calls to fail.
-	 * 
+	 *
 	 * @param source The source or {@code null} to remove the previous source
 	 */
 	public void source(Supplier<T> source);

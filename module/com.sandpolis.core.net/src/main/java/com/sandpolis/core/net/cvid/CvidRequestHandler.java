@@ -44,7 +44,8 @@ public class CvidRequestHandler extends AbstractCvidHandler {
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, MSG msg) throws Exception {
-		Channel ch = ctx.channel();
+		var ch = ctx.channel();
+		var sock = ch.attr(ChannelConstant.SOCK).get();
 
 		// Autoremove the handler
 		ch.pipeline().remove(this);
@@ -54,8 +55,8 @@ public class CvidRequestHandler extends AbstractCvidHandler {
 
 			Core.setCvid(rs.getCvid());
 			NetworkStore.post(CvidChangedEvent::new, Core.cvid());
-			ch.attr(ChannelConstant.CVID).set(rs.getServerCvid());
-			ch.attr(ChannelConstant.UUID).set(rs.getServerUuid());
+			sock.remoteCvid().set(rs.getServerCvid());
+			sock.remoteUuid().set(rs.getServerUuid());
 
 			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent(rs.getCvid(), rs.getServerCvid()));
 			log.debug("CVID handshake succeeded ({})", rs.getCvid());

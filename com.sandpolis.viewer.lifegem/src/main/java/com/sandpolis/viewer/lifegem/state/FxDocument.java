@@ -15,11 +15,12 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
-import com.sandpolis.core.instance.state.Oid;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtObject;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
+import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 public class FxDocument<T extends VirtObject> implements STDocument {
 
@@ -35,7 +36,7 @@ public class FxDocument<T extends VirtObject> implements STDocument {
 	}
 
 	@Override
-	public ProtoDocument snapshot(Oid<?>... oids) {
+	public ProtoDocument snapshot(RelativeOid<?>... oids) {
 		return container.snapshot(oids);
 	}
 
@@ -76,7 +77,7 @@ public class FxDocument<T extends VirtObject> implements STDocument {
 	}
 
 	@Override
-	public Oid<?> getOid() {
+	public AbsoluteOid<?> getOid() {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -100,12 +101,6 @@ public class FxDocument<T extends VirtObject> implements STDocument {
 	}
 
 	@Override
-	public void setOid(Oid<?> oid) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public Stream<STAttribute<?>> attributes() {
 		// TODO Auto-generated method stub
 		return null;
@@ -118,7 +113,7 @@ public class FxDocument<T extends VirtObject> implements STDocument {
 	}
 
 	@Override
-	public Stream<STCollection> documents() {
+	public Stream<STDocument> documents() {
 		// TODO Auto-generated method stub
 		return null;
 	}

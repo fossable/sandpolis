@@ -18,7 +18,7 @@ import static com.sandpolis.viewer.lifegem.stage.StageStore.StageStore;
 import java.util.Objects;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtPlugin;
+import com.sandpolis.core.instance.state.VirtPlugin;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.connection.ConnectionFuture;
 import com.sandpolis.core.net.state.STCmd;
@@ -28,6 +28,7 @@ import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.common.controller.FxController;
 import com.sandpolis.viewer.lifegem.common.pane.CarouselPane;
 import com.sandpolis.viewer.lifegem.state.FxCollection;
+import com.sandpolis.viewer.lifegem.view.login.LoginController.LoginPhase;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectEndedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectStartedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.LoginEndedEvent;

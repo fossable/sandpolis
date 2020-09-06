@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.channel.ChannelConfig;
+import com.sandpolis.core.net.channel.ChannelStruct;
 import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.channel.HandlerKey;
 import com.sandpolis.core.net.connection.Connection;
@@ -66,8 +66,8 @@ public class PeerChannelInitializer extends ChannelInitializer<Channel> {
 	private static final ProtobufEncoder HANDLER_PROTO_ENCODER = new ProtobufEncoder();
 	private static final ProtobufVarint32LengthFieldPrepender HANDLER_PROTO_FRAME_ENCODER = new ProtobufVarint32LengthFieldPrepender();
 
-	public PeerChannelInitializer(Consumer<ChannelConfig> configurator) {
-		var config = new ChannelConfig();
+	public PeerChannelInitializer(Consumer<ChannelStruct> configurator) {
+		var config = new ChannelStruct();
 		configurator.accept(config);
 
 	}

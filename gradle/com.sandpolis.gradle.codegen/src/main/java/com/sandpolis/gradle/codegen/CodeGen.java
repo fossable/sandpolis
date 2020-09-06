@@ -44,8 +44,7 @@ public class CodeGen implements Plugin<Project> {
 				if (configuration.javaFxStateTree) {
 					project.getTasks().getByName("compileJava")
 							.dependsOn(project.getTasks().create("generateJavaFxStateTree", JavaFxSTGenerator.class));
-				}
-				if (configuration.coreStateTree) {
+				} else if (configuration.coreStateTree) {
 					project.getTasks().getByName("compileJava")
 							.dependsOn(project.getTasks().create("generateCoreStateTree", CoreSTGenerator.class));
 

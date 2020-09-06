@@ -26,11 +26,11 @@ import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
 import com.google.common.graph.NetworkBuilder;
 import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
-import com.sandpolis.core.instance.store.StoreConfig;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockEstablishedEvent;
 import com.sandpolis.core.net.connection.ConnectionEvents.SockLostEvent;
@@ -296,6 +296,7 @@ public final class NetworkStore extends StoreBase implements ConfigurableStore<N
 		configurator.accept(config);
 
 		preferredServer = config.preferredServer;
+		network = NetworkBuilder.undirected().allowsSelfLoops(false).allowsParallelEdges(true).build();
 
 		if (config.cvid != 0)
 			network.addNode(config.cvid);
@@ -304,16 +305,11 @@ public final class NetworkStore extends StoreBase implements ConfigurableStore<N
 		post(CvidChangedEvent::new, config.cvid);
 	}
 
-	public final class NetworkStoreConfig extends StoreConfig {
+	@ConfigStruct
+	public static final class NetworkStoreConfig {
 
 		public int preferredServer;
 		public int cvid;
-
-		@Override
-		public void ephemeral() {
-			network = NetworkBuilder.undirected().allowsSelfLoops(false).allowsParallelEdges(true).build();
-		}
-
 	}
 
 	public static final NetworkStore NetworkStore = new NetworkStore();

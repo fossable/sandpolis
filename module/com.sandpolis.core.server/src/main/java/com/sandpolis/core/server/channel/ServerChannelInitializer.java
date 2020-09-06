@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.channel.ChannelConfig;
+import com.sandpolis.core.net.channel.ChannelStruct;
 import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.channel.HandlerKey;
 import com.sandpolis.core.net.connection.Connection;
@@ -81,8 +81,8 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 	 */
 	private final int cvid;
 
-	public ServerChannelInitializer(Consumer<ChannelConfig> configurator) {
-		var config = new ChannelConfig();
+	public ServerChannelInitializer(Consumer<ChannelStruct> configurator) {
+		var config = new ChannelStruct();
 		configurator.accept(config);
 
 		cvid = config.cvid;

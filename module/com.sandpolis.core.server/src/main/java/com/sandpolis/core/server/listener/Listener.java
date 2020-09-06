@@ -29,8 +29,8 @@ import com.sandpolis.core.foundation.util.CertUtil;
 import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtListener;
 import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtListener;
 import com.sandpolis.core.net.util.ChannelUtil;
 import com.sandpolis.core.server.channel.ServerChannelInitializer;
 
@@ -98,6 +98,8 @@ public class Listener extends VirtListener {
 
 			if (certificate().isPresent() && privateKey().isPresent())
 				config.serverTlsWithCert(getCertificate(), getPrivateKey());
+			else
+				config.serverTlsSelfSigned();
 		}));
 
 		try {

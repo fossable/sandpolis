@@ -1,13 +1,25 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
 import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
-import com.sandpolis.core.instance.state.Oid;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
+import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
 
 public class EntangledDocument implements STDocument {
@@ -27,7 +39,7 @@ public class EntangledDocument implements STDocument {
 	}
 
 	@Override
-	public ProtoDocument snapshot(Oid<?>... oids) {
+	public ProtoDocument snapshot(RelativeOid<?>... oids) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -87,7 +99,7 @@ public class EntangledDocument implements STDocument {
 	}
 
 	@Override
-	public Stream<STCollection> documents() {
+	public Stream<STDocument> documents() {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -111,15 +123,9 @@ public class EntangledDocument implements STDocument {
 	}
 
 	@Override
-	public Oid<?> getOid() {
+	public AbsoluteOid<?> getOid() {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	@Override
-	public void setOid(Oid<?> oid) {
-		// TODO Auto-generated method stub
-
 	}
 
 }

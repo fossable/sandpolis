@@ -11,8 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.listener;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -20,14 +18,13 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Listener.ListenerConfig;
-import com.sandpolis.core.instance.StateTree.VirtProfile.VirtServer.VirtListener;
-import com.sandpolis.core.instance.state.DefaultDocument;
-import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtListener;
 import com.sandpolis.core.instance.store.ConfigurableStore;
-import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
+import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.listener.ListenerStore.ListenerStoreConfig;
 
 /**
@@ -35,9 +32,13 @@ import com.sandpolis.core.server.listener.ListenerStore.ListenerStoreConfig;
  *
  * @since 1.0.0
  */
-public final class ListenerStore extends CollectionStore<Listener> implements ConfigurableStore<ListenerStoreConfig> {
+public final class ListenerStore extends STCollectionStore<Listener> implements ConfigurableStore<ListenerStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ListenerStore.class);
+
+	public ListenerStore() {
+		super(log);
+	}
 
 	/**
 	 * Start all enabled, unstarted listeners in the store.
@@ -71,13 +72,14 @@ public final class ListenerStore extends CollectionStore<Listener> implements Co
 		var config = new ListenerStoreConfig();
 		configurator.accept(config);
 
-		config.defaults.forEach(this::create);
-
-		provider.initialize();
+		collection = config.collection;
 	}
 
-	public Listener create(Consumer<Listener> configurator) {
-		return add(new Listener(DefaultDocument.newDetached()), configurator);
+	public Listener create(Consumer<VirtListener> configurator) {
+		var listener = new Listener(collection.newDocument());
+		configurator.accept(listener);
+		add(listener);
+		return listener;
 	}
 
 	public Listener create(ListenerConfig config) {
@@ -92,23 +94,15 @@ public final class ListenerStore extends CollectionStore<Listener> implements Co
 		});
 	}
 
-	public final class ListenerStoreConfig extends StoreConfig {
-
-		public final List<ListenerConfig> defaults = new ArrayList<>();
-
-		@Override
-		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Listener.class, Listener::tag, VirtListener.COLLECTION);
-		}
-
-		@Override
-		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(Listener.class, Listener::new, VirtListener.COLLECTION);
-		}
+	@Override
+	protected Listener constructor(STDocument document) {
+		return new Listener(document);
 	}
 
-	public ListenerStore() {
-		super(log);
+	@ConfigStruct
+	public static final class ListenerStoreConfig {
+
+		public STCollection collection;
 	}
 
 	/**

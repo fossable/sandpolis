@@ -17,22 +17,20 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.StateTree.VirtProfile;
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.profile.ProfileStore.ProfileStoreConfig;
-import com.sandpolis.core.instance.state.DefaultDocument;
-import com.sandpolis.core.instance.store.CollectionStore;
+import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtProfile;
 import com.sandpolis.core.instance.store.ConfigurableStore;
-import com.sandpolis.core.instance.store.StoreConfig;
-import com.sandpolis.core.instance.store.provider.MemoryMapStoreProvider;
-import com.sandpolis.core.instance.store.provider.StoreProviderFactory;
+import com.sandpolis.core.instance.store.STCollectionStore;
 
 /**
- * {@link ProfileStore} manages profiles that can represent any type of
- * instance.
+ * {@link ProfileStore} manages profiles which represent any type of instance.
  *
  * @since 4.0.0
  */
-public final class ProfileStore extends CollectionStore<Profile> implements ConfigurableStore<ProfileStoreConfig> {
+public final class ProfileStore extends STCollectionStore<Profile> implements ConfigurableStore<ProfileStoreConfig> {
 
 	private static final Logger log = LoggerFactory.getLogger(ProfileStore.class);
 
@@ -47,7 +45,7 @@ public final class ProfileStore extends CollectionStore<Profile> implements Conf
 	 * @return The requested {@link Profile}
 	 */
 	public Optional<Profile> getViewer(String username) {
-		return provider.stream().filter(profile -> username.equals(profile.viewer().getUsername())).findFirst();
+		return stream().filter(profile -> username.equals(profile.viewer().getUsername())).findFirst();
 	}
 
 	public Profile local() {
@@ -73,24 +71,25 @@ public final class ProfileStore extends CollectionStore<Profile> implements Conf
 		var config = new ProfileStoreConfig();
 		configurator.accept(config);
 
-		provider.initialize();
+		collection = config.collection;
 	}
 
-	public Profile create(Consumer<Profile> configurator) {
-		return add(new Profile(DefaultDocument.newDetached()), configurator);
+	public Profile create(Consumer<VirtProfile> configurator) {
+		var profile = new Profile(collection.newDocument());
+		configurator.accept(profile);
+		add(profile);
+		return profile;
 	}
 
-	public final class ProfileStoreConfig extends StoreConfig {
+	@Override
+	protected Profile constructor(STDocument document) {
+		return new Profile(document);
+	}
 
-		@Override
-		public void ephemeral() {
-			provider = new MemoryMapStoreProvider<>(Profile.class, Profile::tag, VirtProfile.COLLECTION);
-		}
+	@ConfigStruct
+	public static final class ProfileStoreConfig {
 
-		@Override
-		public void persistent(StoreProviderFactory factory) {
-			provider = factory.supply(Profile.class, Profile::new, VirtProfile.COLLECTION);
-		}
+		public STCollection collection;
 	}
 
 	public static final ProfileStore ProfileStore = new ProfileStore();

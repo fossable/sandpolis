@@ -14,6 +14,7 @@ package com.sandpolis.client.mega;
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.state.STStore.STStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.exelet.ExeletStore.ExeletStore;
@@ -39,6 +40,10 @@ import com.sandpolis.core.instance.Generator.MegaConfig;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
+import com.sandpolis.core.instance.state.EphemeralDocument;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtConnection;
+import com.sandpolis.core.instance.state.VirtPlugin;
 import com.sandpolis.core.net.network.NetworkEvents.ServerEstablishedEvent;
 import com.sandpolis.core.net.network.NetworkEvents.ServerLostEvent;
 
@@ -111,7 +116,6 @@ public final class Client {
 	public static final Task loadStores = new Task(outcome -> {
 
 		ThreadStore.init(config -> {
-			config.ephemeral();
 			config.defaults.put("net.exelet", new NioEventLoopGroup(2).next());
 			config.defaults.put("net.connection.outgoing", new NioEventLoopGroup(2).next());
 			config.defaults.put("net.connection.loop", new NioEventLoopGroup(2).next());
@@ -120,25 +124,27 @@ public final class Client {
 			config.defaults.put("attributes", Executors.newScheduledThreadPool(1));
 		});
 
+		STStore.init(config -> {
+			config.concurrency = 1;
+			config.root = new EphemeralDocument((STDocument) null);
+		});
+
 		PluginStore.init(config -> {
-			config.ephemeral();
+			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		StreamStore.init(config -> {
-			config.ephemeral();
 		});
 
 		ExeletStore.init(config -> {
 			config.exelets = List.of(ClientExe.class);
-			config.ephemeral();
 		});
 
 		ConnectionStore.init(config -> {
-			config.ephemeral();
+			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
 		});
 
 		NetworkStore.init(config -> {
-			config.ephemeral();
 		});
 
 		NetworkStore.register(new Object() {

@@ -57,7 +57,7 @@ public class ManagementHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		try {
-			log.trace("An exception occurred in the pipeline", cause);
+			log.debug("An exception occurred in the pipeline", cause);
 		} finally {
 			ReferenceCountUtil.release(cause);
 		}
