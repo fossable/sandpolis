@@ -17,6 +17,9 @@ import static com.sandpolis.viewer.lifegem.stage.StageStore.StageStore;
 
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.state.VirtPlugin;
 import com.sandpolis.core.net.connection.Connection;
@@ -24,6 +27,7 @@ import com.sandpolis.core.net.connection.ConnectionFuture;
 import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.core.viewer.cmd.LoginCmd;
 import com.sandpolis.core.viewer.cmd.ServerCmd;
+import com.sandpolis.viewer.lifegem.common.FxExecutor;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.common.controller.FxController;
 import com.sandpolis.viewer.lifegem.common.pane.CarouselPane;
@@ -50,6 +54,9 @@ import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
 public class LoginController extends FxController {
+
+	private static final Logger log = LoggerFactory.getLogger(LoginController.class);
+
 	public enum LoginPhase {
 		COMPLETE, PLUGIN_PHASE, SERVER_INPUT, USER_INPUT;
 	}
@@ -144,34 +151,36 @@ public class LoginController extends FxController {
 			post(LoginStartedEvent::new);
 			setStatus("Logging in");
 			LoginCmd.async().target(connection)
-					.login(userPhaseController.getUsername(), userPhaseController.getPassword())
-					.whenComplete((rs, exception) -> {
-						if (exception != null) {
-							setStatus("Login attempt failed");
-							post(LoginEndedEvent::new);
-							return;
-						}
+					.login(userPhaseController.getUsername(), userPhaseController.getPassword()).thenAccept(rs -> {
 
 						if (rs.getResult()) {
-							STCmd.async().snapshot(VirtPlugin.COLLECTION).whenComplete((snapshot, ex) -> {
-								var plugins = new FxCollection<>(snapshot, PluginProperty::new);
-								// TODO filter plugins that are already installed
+							STCmd.async().target(connection).snapshot(VirtPlugin.COLLECTION)
+									.thenAcceptAsync(snapshot -> {
+										var plugins = new FxCollection<>(snapshot, PluginProperty::new);
+										// TODO filter plugins that are already installed
+										post(LoginEndedEvent::new);
 
-								post(LoginEndedEvent::new);
-
-								if (!plugins.isEmpty()) {
-									pluginPhaseController.setPlugins(plugins);
-									phase.set(LoginPhase.PLUGIN_PHASE);
-								} else {
-									phase.set(LoginPhase.COMPLETE);
-									launchApplication();
-								}
-							});
+										if (!plugins.isEmpty()) {
+											pluginPhaseController.setPlugins(plugins);
+											phase.set(LoginPhase.PLUGIN_PHASE);
+										} else {
+											phase.set(LoginPhase.COMPLETE);
+											launchApplication();
+										}
+									}, FxExecutor.INSTANCE).exceptionally(e -> {
+										log.error("Failed to load plugins", e);
+										return null;
+									});
 						} else {
-							setStatus("Login attempt failed");
-							post(LoginEndedEvent::new);
+							throw new RuntimeException("Login rejected");
 						}
-					});
+					}).exceptionallyAsync(e -> {
+						setStatus("Login attempt failed");
+						post(LoginEndedEvent::new);
+
+						log.error("Login failed", e);
+						return null;
+					}, FxExecutor.INSTANCE);
 			break;
 		case PLUGIN_PHASE:
 			pluginPhaseController.install();

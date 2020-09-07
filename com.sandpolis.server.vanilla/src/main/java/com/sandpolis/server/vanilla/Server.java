@@ -80,6 +80,7 @@ import com.sandpolis.core.server.group.GroupExe;
 import com.sandpolis.core.server.listener.ListenerExe;
 import com.sandpolis.core.server.plugin.PluginExe;
 import com.sandpolis.core.server.state.HibernateDocument;
+import com.sandpolis.core.server.state.STExe;
 import com.sandpolis.core.server.stream.StreamExe;
 import com.sandpolis.core.server.user.UserExe;
 
@@ -249,7 +250,7 @@ public final class Server {
 
 		ExeletStore.init(config -> {
 			config.exelets = List.of(AuthExe.class, GeneratorExe.class, GroupExe.class, ListenerExe.class,
-					LoginExe.class, BannerExe.class, UserExe.class, PluginExe.class, StreamExe.class);
+					LoginExe.class, BannerExe.class, UserExe.class, PluginExe.class, StreamExe.class, STExe.class);
 		});
 
 		StreamStore.init(config -> {
@@ -356,8 +357,8 @@ public final class Server {
 
 		// Setup default groups
 		if (GroupStore.getMetadata().getInitCount() == 1) {
-			GroupStore.create(GroupConfig.newBuilder().setName("Default Authentication Group").setOwner("admin")
-					.addPasswordMechanism(PasswordContainer.newBuilder().setPassword("12345")).build());
+			GroupStore
+					.create(GroupConfig.newBuilder().setName("Default Authentication Group").setOwner("admin").build());
 			skipped = false;
 		}
 

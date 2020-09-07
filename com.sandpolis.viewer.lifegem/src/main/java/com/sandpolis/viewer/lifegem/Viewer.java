@@ -39,7 +39,6 @@ import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtConnection;
 import com.sandpolis.core.instance.state.VirtPlugin;
 import com.sandpolis.core.instance.state.VirtProfile;
-import com.sandpolis.viewer.lifegem.common.FxEventExecutor;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -96,7 +95,6 @@ public final class Viewer {
 			config.defaults.put("net.exelet", new NioEventLoopGroup(2));
 			config.defaults.put("net.connection.outgoing", new NioEventLoopGroup(2));
 			config.defaults.put("net.message.incoming", new UnorderedThreadPoolEventExecutor(2));
-			config.defaults.put("ui.fx_thread", new FxEventExecutor());
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 

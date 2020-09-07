@@ -48,7 +48,7 @@ public class HostGraphController extends AbstractController {
 		// Load the network's current state
 		graph.beginUpdate();
 		for (int cvid : NetworkStore.getNetwork().nodes()) {
-			ProfileStore.get(cvid).ifPresentOrElse(profile -> {
+			ProfileStore.getByCvid(cvid).ifPresentOrElse(profile -> {
 				model.addCell(HostCell.build(profile));
 			}, () -> {
 				log.warn("No profile found for: {}", cvid);

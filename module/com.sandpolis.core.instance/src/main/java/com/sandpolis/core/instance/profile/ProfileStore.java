@@ -48,22 +48,18 @@ public final class ProfileStore extends STCollectionStore<Profile> implements Co
 		return stream().filter(profile -> username.equals(profile.viewer().getUsername())).findFirst();
 	}
 
-	public Profile local() {
-		return null;
-	}
-
 	/**
 	 * Get a profile by cvid.
 	 *
 	 * @param cvid The profile CVID
 	 * @return The profile
 	 */
-	public Optional<Profile> get(int cvid) {
+	public Optional<Profile> getByCvid(int cvid) {
 		return stream().filter(profile -> profile.getCvid() == cvid).findFirst();
 	}
 
 	public Optional<Profile> getByUuid(String uuid) {
-		return stream().filter(profile -> profile.getUuid().equals(uuid)).findFirst();
+		return stream().filter(profile -> uuid.equals(profile.getUuid())).findFirst();
 	}
 
 	@Override

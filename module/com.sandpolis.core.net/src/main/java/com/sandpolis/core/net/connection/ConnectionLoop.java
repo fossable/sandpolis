@@ -23,19 +23,19 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.instance.Generator.LoopConfig;
 import com.sandpolis.core.instance.Generator.NetworkTarget;
-import com.sandpolis.core.net.channel.ChannelConstant;
+import com.sandpolis.core.net.Channel.ChannelTransportProtocol;
+import com.sandpolis.core.net.util.ChannelUtil;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelOption;
 import io.netty.util.concurrent.EventExecutor;
 
 /**
- * A {@link ConnectionLoop} makes repeated connection attempts to a list of
+ * A {@link ConnectionLoop} makes repeated connection attempts to a set of
  * {@link NetworkTarget}s until a connection is made or the maximum iteration
  * count has been reached. The connection attempt interval can be configured to
- * slowly ease up on a host that is consistently refusing connections.
+ * eventually ease up on a host that is consistently refusing connections.
  *
- * @author cilki
  * @since 5.0.0
  */
 public final class ConnectionLoop implements Runnable {
@@ -108,7 +108,8 @@ public final class ConnectionLoop implements Runnable {
 		this.bootstrap = Objects.requireNonNull(bootstrap);
 
 		// Set channel options
-		bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getTimeout());
+		bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getTimeout())
+				.channel(ChannelUtil.getChannelType(ChannelTransportProtocol.TCP));
 
 		// Build a SockFuture without a ChannelFuture
 		this.future = new ConnectionFuture((EventExecutor) ThreadStore.get("net.connection.loop"));
@@ -135,19 +136,22 @@ public final class ConnectionLoop implements Runnable {
 
 					ConnectionFuture connect = new ConnectionFuture(
 							bootstrap.remoteAddress(n.getAddress(), n.getPort()).connect());
+
 					try {
 						connect.sync();
 					} catch (Exception e) {
-						log.debug("Attempt failed: {}", e.getMessage());
+						log.debug("Connection attempt failed: {}", e.getMessage());
 					}
 
 					if (connect.isSuccess()) {
+						log.debug("Connection attempt succeeded");
 						this.future.setSuccess(connect.get());
 						return;
 					}
 
 					iteration++;
 					cooldown = exponential.get();
+					log.trace("Waiting {} ms before next connection attempt", cooldown);
 					Thread.sleep(cooldown);
 				}
 			}

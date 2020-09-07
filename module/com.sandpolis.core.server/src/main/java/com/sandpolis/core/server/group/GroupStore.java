@@ -106,6 +106,9 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	public Group create(GroupConfig config) {
 		return create(group -> {
 			group.name().set(config.getName());
+			for (var mech : config.getPasswordMechanismList()) {
+				// TODO
+			}
 			UserStore.getByUsername(config.getOwner()).ifPresent(user -> {
 				group.setOwner(user);
 			});

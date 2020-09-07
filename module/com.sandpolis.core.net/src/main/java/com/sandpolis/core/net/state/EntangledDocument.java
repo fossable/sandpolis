@@ -14,6 +14,7 @@ package com.sandpolis.core.net.state;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
@@ -21,13 +22,26 @@ import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
+import com.sandpolis.core.net.stream.StreamSink;
+import com.sandpolis.core.net.stream.StreamSource;
 
 public class EntangledDocument implements STDocument {
 
 	private STDocument container;
 
+	private StreamSink<ProtoCollection> sink;
+	private StreamSource<ProtoCollection> source;
+
 	public EntangledDocument(STDocument container, STSyncStruct config) {
 		this.container = Objects.requireNonNull(container);
+	}
+
+	public StreamSource<ProtoCollection> getSource() {
+		return source;
+	}
+
+	public StreamSink<ProtoCollection> getSink() {
+		return sink;
 	}
 
 	// Begin boilerplate

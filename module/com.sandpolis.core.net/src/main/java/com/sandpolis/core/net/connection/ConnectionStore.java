@@ -113,7 +113,8 @@ public final class ConnectionStore extends STCollectionStore<Connection>
 	public ConnectionLoop connect(LoopConfig config) {
 		Objects.requireNonNull(config);
 
-		Bootstrap bootstrap = new Bootstrap().handler(new ClientChannelInitializer(builder -> {
+		Bootstrap bootstrap = new Bootstrap().handler(new ClientChannelInitializer(struct -> {
+			struct.clientTlsInsecure();
 		}));
 
 		if (bootstrap.config().group() == null)
@@ -127,7 +128,7 @@ public final class ConnectionStore extends STCollectionStore<Connection>
 
 	@Subscribe
 	private void onSockLost(SockLostEvent event) {
-		remove(event.get().getRemoteCvid());
+		removeValue(event.get());
 	}
 
 	@Override

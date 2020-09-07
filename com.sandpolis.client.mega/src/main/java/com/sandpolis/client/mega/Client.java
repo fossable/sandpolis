@@ -34,9 +34,15 @@ import com.sandpolis.client.mega.cmd.AuthCmd;
 import com.sandpolis.client.mega.exe.ClientExe;
 import com.sandpolis.core.cv.cmd.PluginCmd;
 import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.foundation.Platform.OsType;
 import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.instance.Environment;
+import com.sandpolis.core.instance.Generator.ExecutionConfig;
+import com.sandpolis.core.instance.Generator.FeatureSet;
+import com.sandpolis.core.instance.Generator.LoopConfig;
 import com.sandpolis.core.instance.Generator.MegaConfig;
+import com.sandpolis.core.instance.Generator.NetworkConfig;
+import com.sandpolis.core.instance.Generator.NetworkTarget;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
@@ -71,7 +77,17 @@ public final class Client {
 			if (in != null) {
 				SO_CONFIG = MegaConfig.parseFrom(in);
 			} else {
-				throw new RuntimeException("Missing SO_CONFIG!");
+				// Set debug configuration
+				SO_CONFIG = MegaConfig.newBuilder().setMemory(false)
+						.setFeatures(FeatureSet.newBuilder().addPlugin("com.sandpolis.plugin.desktop")
+								.addPlugin("com.sandpolis.plugin.filesys").addPlugin("com.sandpolis.plugin.sysinfo")
+								.addPlugin("com.sandpolis.plugin.shell"))
+						.setExecution(ExecutionConfig.newBuilder().putInstallPath(OsType.LINUX_VALUE,
+								"/home/cilki/.sandpolis"))
+						.setNetwork(NetworkConfig.newBuilder()
+								.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000).setCooldown(5000)
+										.addTarget(NetworkTarget.newBuilder().setAddress("172.17.0.1").setPort(8768))))
+						.build();
 			}
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to read SO_CONFIG!", e);
@@ -170,7 +186,7 @@ public final class Client {
 				future = future.thenApply(rs -> {
 					if (!rs.getResult()) {
 						// Close the connection
-						ConnectionStore.getByCvid(event.get()).ifPresent(sock -> {
+						ConnectionStore.get(event.get()).ifPresent(sock -> {
 							sock.close();
 						});
 					}
@@ -210,7 +226,11 @@ public final class Client {
 	 */
 	@InitializationTask(name = "Begin the connection routine", fatal = true)
 	public static final Task beginConnectionRoutine = new Task(outcome -> {
-		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig());
+		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig()).future().addListener(future -> {
+			if (!future.isSuccess()) {
+				log.error("Connection loop failed to start", future.cause());
+			}
+		});
 
 		return outcome.success();
 	});

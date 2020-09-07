@@ -11,11 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.store;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
+import com.google.common.collect.Streams;
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
@@ -26,18 +29,22 @@ public abstract class STCollectionStore<V extends VirtObject> extends StoreBase
 
 	protected STCollection collection;
 
+	private Map<Integer, V> cache = new HashMap<>();
+
 	protected STCollectionStore(Logger log) {
 		super(log);
 	}
 
 	protected abstract V constructor(STDocument document);
 
-	protected void add(VirtObject object) {
+	protected void add(V object) {
 		if (object.complete() != ErrorCode.OK) {
 			// TODO
 			throw new RuntimeException();
 		}
-		collection.setDocument(object.tag(), object.document);
+		int tag = object.tag();
+		collection.setDocument(tag, object.document);
+		cache.put(tag, object);
 	}
 
 	/**
@@ -50,6 +57,10 @@ public abstract class STCollectionStore<V extends VirtObject> extends StoreBase
 	}
 
 	public Optional<V> get(int tag) {
+		var object = cache.get(tag);
+		if (object != null)
+			return Optional.of(object);
+
 		var document = collection.getDocument(tag);
 		if (document == null) {
 			return Optional.empty();
@@ -66,11 +77,15 @@ public abstract class STCollectionStore<V extends VirtObject> extends StoreBase
 	}
 
 	public void removeValue(V value) {
-
+		cache.values().remove(value);
+		collection.remove(value.document);
 	}
 
 	public Stream<V> stream() {
-		return collection.documents().map(this::constructor);
+		if (cache.size() == 0)
+			return collection.documents().map(this::constructor);
+
+		return Streams.concat(cache.values().stream(), collection.documents().map(this::constructor)).distinct();
 	}
 
 	@Override

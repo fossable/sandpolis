@@ -101,4 +101,10 @@ public class FxCollection<T extends VirtObject> extends ObservableListBase<T> im
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public void remove(STDocument document) {
+		// TODO Auto-generated method stub
+
+	}
 }

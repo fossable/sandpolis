@@ -109,8 +109,9 @@ public class HibernateCollection extends DefaultObject<HibernateCollection, STDo
 		em.getTransaction().commit();
 	}
 
-	public boolean remove(STDocument document) {
-		return documents.values().remove(document);
+	@Override
+	public void remove(STDocument document) {
+		documents.values().remove(document);
 
 	}
 

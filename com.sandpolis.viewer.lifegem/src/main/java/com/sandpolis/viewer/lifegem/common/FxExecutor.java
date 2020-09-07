@@ -9,32 +9,21 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.store;
+package com.sandpolis.viewer.lifegem.common;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
+import java.util.concurrent.Executor;
 
-import org.slf4j.Logger;
+import javafx.application.Platform;
 
-public abstract class CollectionStore<V> extends StoreBase {
+public final class FxExecutor implements Executor {
 
-	protected CollectionStore(Logger log) {
-		super(log);
+	public static final FxExecutor INSTANCE = new FxExecutor();
+
+	private FxExecutor() {
 	}
 
-	protected List<V> container = new ArrayList<>();
-
-	public void removeValue(V value) {
-		container.remove(value);
+	@Override
+	public void execute(Runnable command) {
+		Platform.runLater(command);
 	}
-
-	public Stream<V> stream() {
-		return container.stream();
-	}
-
-	public int size() {
-		return container.size();
-	}
-
 }

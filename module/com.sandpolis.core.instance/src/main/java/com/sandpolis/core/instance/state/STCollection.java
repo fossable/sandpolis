@@ -111,4 +111,6 @@ public interface STCollection extends STObject<ProtoCollection> {
 	public STDocument newDocument();
 
 	public StoreMetadata getMetadata();
+
+	public void remove(STDocument document);
 }

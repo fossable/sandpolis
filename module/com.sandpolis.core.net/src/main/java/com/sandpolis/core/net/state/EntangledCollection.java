@@ -20,6 +20,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
+import com.sandpolis.core.instance.state.DefaultObject;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STRelation;
@@ -55,8 +56,9 @@ public class EntangledCollection implements STCollection {
 
 				@Override
 				public void start() {
-					// TODO Auto-generated method stub
-
+					((DefaultObject) container).bind((entity, oldValue, newValue) -> {
+						// TODO
+					});
 				}
 
 				@Override
@@ -66,6 +68,14 @@ public class EntangledCollection implements STCollection {
 				}
 			};
 		}
+	}
+
+	public StreamSource<ProtoCollection> getSource() {
+		return source;
+	}
+
+	public StreamSink<ProtoCollection> getSink() {
+		return sink;
 	}
 
 	// Begin boilerplate
@@ -128,6 +138,12 @@ public class EntangledCollection implements STCollection {
 	public StoreMetadata getMetadata() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void remove(STDocument document) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

@@ -72,8 +72,9 @@ public class EphemeralCollection extends DefaultObject<EphemeralCollection, STDo
 		documents.put(tag, e);
 	}
 
-	public boolean remove(STDocument document) {
-		return documents.values().remove(document);
+	@Override
+	public void remove(STDocument document) {
+		documents.values().remove(document);
 	}
 
 	public void clear() {
