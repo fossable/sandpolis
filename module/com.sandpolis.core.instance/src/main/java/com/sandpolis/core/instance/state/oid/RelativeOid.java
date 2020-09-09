@@ -15,7 +15,7 @@ public interface RelativeOid<T> extends Oid {
 
 	public static class RelativeOidImpl<T> extends OidBase implements RelativeOid<T> {
 
-		public RelativeOidImpl(int[] value) {
+		public RelativeOidImpl(int... value) {
 			super(value);
 		}
 

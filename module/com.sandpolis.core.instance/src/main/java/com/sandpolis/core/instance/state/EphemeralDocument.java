@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid.AbsoluteOidImpl;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
@@ -83,7 +84,7 @@ public class EphemeralDocument extends EphemeralObject implements STDocument {
 	@Override
 	public void setAttribute(int tag, STAttribute<?> attribute) {
 		attributes.put(tag, attribute);
-		attribute.setOid(oid.child(tag));
+		attribute.setOid(oid == null ? new AbsoluteOidImpl<>(tag) : oid.child(tag));
 	}
 
 	@Override
@@ -103,7 +104,7 @@ public class EphemeralDocument extends EphemeralObject implements STDocument {
 	@Override
 	public void setDocument(int tag, STDocument document) {
 		documents.put(tag, document);
-		document.setOid(oid.child(tag));
+		document.setOid(oid == null ? new AbsoluteOidImpl<>(tag) : oid.child(tag));
 	}
 
 	@Override
@@ -124,7 +125,7 @@ public class EphemeralDocument extends EphemeralObject implements STDocument {
 	@Override
 	public void setCollection(int tag, STCollection collection) {
 		collections.put(tag, collection);
-		collection.setOid(oid.child(tag));
+		collection.setOid(oid == null ? new AbsoluteOidImpl<>(tag) : oid.child(tag));
 	}
 
 	@Override

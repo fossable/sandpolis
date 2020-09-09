@@ -17,7 +17,7 @@ public interface AbsoluteOid<T> extends Oid {
 
 	public static class AbsoluteOidImpl<T> extends OidBase implements AbsoluteOid<T> {
 
-		public AbsoluteOidImpl(int[] value) {
+		public AbsoluteOidImpl(int... value) {
 			super(value);
 		}
 

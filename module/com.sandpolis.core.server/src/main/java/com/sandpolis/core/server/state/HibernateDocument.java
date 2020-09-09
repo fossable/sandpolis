@@ -32,6 +32,7 @@ import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid.AbsoluteOidImpl;
 
 /**
  * {@link HibernateDocument} allows documents to be persistent.
@@ -117,7 +118,7 @@ public class HibernateDocument extends AbstractSTObject implements STDocument {
 	@Override
 	public void setAttribute(int tag, STAttribute<?> attribute) {
 		attributes.put(tag, (HibernateAttribute<?>) attribute);
-		attribute.setOid(oid.child(tag));
+		attribute.setOid(oid == null ? new AbsoluteOidImpl<>(tag) : oid.child(tag));
 	}
 
 	@Override
@@ -137,7 +138,7 @@ public class HibernateDocument extends AbstractSTObject implements STDocument {
 	@Override
 	public void setDocument(int tag, STDocument document) {
 		documents.put(tag, (HibernateDocument) document);
-		document.setOid(oid.child(tag));
+		document.setOid(oid == null ? new AbsoluteOidImpl<>(tag) : oid.child(tag));
 	}
 
 	@Override
@@ -158,7 +159,7 @@ public class HibernateDocument extends AbstractSTObject implements STDocument {
 	@Override
 	public void setCollection(int tag, STCollection collection) {
 		collections.put(tag, (HibernateCollection) collection);
-		collection.setOid(oid.child(tag));
+		collection.setOid(oid == null ? new AbsoluteOidImpl<>(tag) : oid.child(tag));
 	}
 
 	@Override

@@ -83,6 +83,9 @@ public abstract class OidBase implements Oid {
 	}
 
 	protected <E extends OidBase> E resolve(Function<int[], E> cons, int... tags) {
+		if (isConcrete())
+			throw new IllegalStateException("Cannot resolve a concrete OID");
+
 		int[] components = value.clone();
 
 		int i = 0;
@@ -100,7 +103,7 @@ public abstract class OidBase implements Oid {
 
 	protected <E extends OidBase> E parent(Function<int[], E> cons) {
 		if (size() == 1)
-			throw new RuntimeException();
+			return null;
 
 		return (E) head(size() - 1);
 	}

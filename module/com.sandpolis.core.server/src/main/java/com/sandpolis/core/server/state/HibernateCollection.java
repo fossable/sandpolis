@@ -38,6 +38,7 @@ import com.sandpolis.core.instance.state.STRelation;
 import com.sandpolis.core.instance.state.VirtObject;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid.AbsoluteOidImpl;
 import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.server.hibernate.HibernateCollectionMetadata;
 
@@ -145,7 +146,7 @@ public class HibernateCollection extends AbstractSTObject implements STCollectio
 	@Override
 	public void setDocument(int tag, STDocument document) {
 		documents.put(tag, (HibernateDocument) document);
-		document.setOid(oid.child(tag));
+		document.setOid(oid == null ? new AbsoluteOidImpl<>(tag) : oid.child(tag));
 	}
 
 	@Override
