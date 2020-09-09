@@ -16,6 +16,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -24,8 +25,9 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 
 import com.sandpolis.core.instance.State.ProtoAttribute;
-import com.sandpolis.core.instance.state.DefaultObject;
+import com.sandpolis.core.instance.state.AbstractSTObject;
 import com.sandpolis.core.instance.state.STAttribute;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 /**
@@ -36,7 +38,7 @@ import com.sandpolis.core.instance.state.oid.RelativeOid;
  * @since 7.0.0
  */
 @Entity
-public class HibernateAttribute<T> extends DefaultObject<HibernateAttribute<T>, T> implements STAttribute<T> {
+public class HibernateAttribute<T> extends AbstractSTObject implements STAttribute<T> {
 
 	@Embeddable
 	public enum RetentionPolicy {
@@ -60,6 +62,10 @@ public class HibernateAttribute<T> extends DefaultObject<HibernateAttribute<T>, 
 
 	@Id
 	private String db_id;
+
+	@Column(nullable = true)
+	@Convert(converter = OidConverter.class)
+	protected Oid oid;
 
 	@Column(nullable = true)
 	private HibernateDocument parent;
@@ -131,7 +137,10 @@ public class HibernateAttribute<T> extends DefaultObject<HibernateAttribute<T>, 
 			timestamps.clear();
 			values.clear();
 
-			fire(this, old, value);
+			fireAttributeEvent(this, old, value);
+			if (parent != null) {
+//				parent.fireAttributeEvent(this, old, value);
+			}
 			return;
 		}
 
@@ -161,7 +170,10 @@ public class HibernateAttribute<T> extends DefaultObject<HibernateAttribute<T>, 
 			checkRetention();
 		}
 
-		fire(this, old, value);
+		fireAttributeEvent(this, old, value);
+		if (parent != null) {
+//			parent.fireAttributeEvent(this, old, value);
+		}
 	}
 
 	@Override
@@ -229,6 +241,7 @@ public class HibernateAttribute<T> extends DefaultObject<HibernateAttribute<T>, 
 	public synchronized void merge(ProtoAttribute snapshot) {
 		var newValues = snapshot.getValuesList();
 		if (newValues.isEmpty()) {
+			// TODO don't use set
 			set(null);
 		} else {
 			current.setProto(newValues.get(0));
@@ -271,5 +284,15 @@ public class HibernateAttribute<T> extends DefaultObject<HibernateAttribute<T>, 
 		}
 
 		return proto.build();
+	}
+
+	@Override
+	public Oid oid() {
+		return oid;
+	}
+
+	@Override
+	public void setOid(Oid oid) {
+		this.oid = oid;
 	}
 }

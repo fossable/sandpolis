@@ -12,10 +12,15 @@
 package com.sandpolis.core.instance.state;
 
 import com.google.protobuf.Message;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 /**
- * A {@link STObject} is any member of the state tree.
+ * A {@link STObject} is a member of the real state tree (ST).
+ *
+ * <p>
+ * The ST is a tree data-structure containing highly general collections,
+ * documents, and attributes.
  *
  * @param <E> A protocol buffer representation of the object
  * @since 5.0.0
@@ -32,11 +37,49 @@ public interface STObject<E extends Message> {
 	public void merge(E snapshot);
 
 	/**
-	 * Extract the object's state into a new protocol buffer. If Oids are specified,
-	 * the snapshot will be "partial" and only contain descendants of the oids.
+	 * Extract the object's state into a new snapshot. If whitelist OIDs are
+	 * specified, the snapshot will be "partial" and therefore only contain
+	 * descendants that are also children of at least one of the OIDs specified in
+	 * the whitelist.
 	 *
-	 * @param oids Whitelist oids
+	 * @param oids Whitelisted OIDs
 	 * @return A new protocol buffer representing the object
 	 */
 	public E snapshot(RelativeOid<?>... oids);
+
+	/**
+	 * Register a new collection listener on the object. The listener will be
+	 * notified of all collection events from the object's descendants.
+	 *
+	 * @param listener The listener to register
+	 * @return The listener for convenience
+	 */
+	public STCollection.EventListener addListener(STCollection.EventListener listener);
+
+	/**
+	 * Register a new attribute listener on the object. The listener will be
+	 * notified of all attribute events from the object's descendants.
+	 *
+	 * @param <T>      The attribute's type
+	 * @param listener The listener to register
+	 * @return The listener for convenience
+	 */
+	public <T> STAttribute.EventListener<T> addListener(STAttribute.EventListener<T> listener);
+
+	/**
+	 * Deregister a previously registered listener. Any currently queued events will
+	 * still be delivered.
+	 *
+	 * @param listener The listener to deregister
+	 */
+	public void removeListener(Object listener);
+
+	/**
+	 * Get the object's OID.
+	 *
+	 * @return The associated OID or {@code null} if the object is a root node
+	 */
+	public Oid oid();
+
+	public void setOid(Oid oid);
 }

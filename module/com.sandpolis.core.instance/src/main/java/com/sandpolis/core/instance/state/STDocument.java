@@ -14,7 +14,6 @@ package com.sandpolis.core.instance.state;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
-import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.OidBase;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.state.oid.STAttributeOid;
@@ -128,13 +127,6 @@ public interface STDocument extends STObject<ProtoDocument> {
 	public void setDocument(int tag, STDocument document);
 
 	public String getId();
-
-	/**
-	 * Get the document's oid.
-	 *
-	 * @return The document's oid
-	 */
-	public AbsoluteOid<?> getOid();
 
 	public default <E> STAttribute<E> attribute(RelativeOid<E> oid) {
 		if (!oid.isConcrete())

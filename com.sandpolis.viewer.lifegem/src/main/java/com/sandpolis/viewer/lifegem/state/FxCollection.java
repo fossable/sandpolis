@@ -16,10 +16,12 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
+import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STRelation;
 import com.sandpolis.core.instance.state.VirtObject;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.store.StoreMetadata;
 
@@ -104,6 +106,36 @@ public class FxCollection<T extends VirtObject> extends ObservableListBase<T> im
 
 	@Override
 	public void remove(STDocument document) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public STCollection.EventListener addListener(STCollection.EventListener listener) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <E> STAttribute.EventListener<E> addListener(STAttribute.EventListener<E> listener) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void removeListener(Object listener) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Oid oid() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setOid(Oid oid) {
 		// TODO Auto-generated method stub
 
 	}

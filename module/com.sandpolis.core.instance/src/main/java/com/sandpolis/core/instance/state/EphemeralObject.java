@@ -11,36 +11,17 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state;
 
-import java.util.function.Function;
-import java.util.stream.Stream;
+import com.sandpolis.core.instance.state.oid.Oid;
 
-public class DefaultRelation<T extends VirtObject> implements STRelation<T> {
+public abstract class EphemeralObject extends AbstractSTObject {
 
-	public DefaultRelation(Function<STDocument, T> constructor) {
+	protected Oid oid;
+
+	public Oid oid() {
+		return oid;
 	}
 
-	@Override
-	public void add(T element) {
-		// TODO Auto-generated method stub
-
+	public void setOid(Oid oid) {
+		this.oid = oid;
 	}
-
-	@Override
-	public Stream<T> stream() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public boolean contains(T element) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 }

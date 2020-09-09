@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
@@ -29,8 +30,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.DefaultObject;
-import com.sandpolis.core.instance.state.DefaultRelation;
+import com.sandpolis.core.instance.state.AbstractSTObject;
+import com.sandpolis.core.instance.state.EphemeralRelation;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STRelation;
@@ -41,10 +42,14 @@ import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.server.hibernate.HibernateCollectionMetadata;
 
 @Entity
-public class HibernateCollection extends DefaultObject<HibernateCollection, STDocument> implements STCollection {
+public class HibernateCollection extends AbstractSTObject implements STCollection {
 
 	@Id
 	private String db_id;
+
+	@Column(nullable = true)
+	@Convert(converter = OidConverter.class)
+	protected Oid oid;
 
 	@Column(nullable = true)
 	private HibernateDocument parent;
@@ -86,7 +91,7 @@ public class HibernateCollection extends DefaultObject<HibernateCollection, STDo
 
 	@Override
 	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor) {
-		return new DefaultRelation<>(constructor);
+		return new EphemeralRelation<>(constructor);
 	}
 
 	@Override
@@ -123,23 +128,24 @@ public class HibernateCollection extends DefaultObject<HibernateCollection, STDo
 	}
 
 	@Override
-	public STDocument document(int tag) {
-		var document = documents.get(tag);
+	public HibernateDocument document(int tag) {
+		var document = getDocument(tag);
 		if (document == null) {
 			document = new HibernateDocument(this);
-			documents.put(tag, document);
+			setDocument(tag, document);
 		}
 		return document;
 	}
 
 	@Override
-	public STDocument getDocument(int tag) {
+	public HibernateDocument getDocument(int tag) {
 		return documents.get(tag);
 	}
 
 	@Override
 	public void setDocument(int tag, STDocument document) {
 		documents.put(tag, (HibernateDocument) document);
+		document.setOid(oid.child(tag));
 	}
 
 	@Override
@@ -187,5 +193,15 @@ public class HibernateCollection extends DefaultObject<HibernateCollection, STDo
 	@Override
 	public StoreMetadata getMetadata() {
 		return metadata;
+	}
+
+	@Override
+	public Oid oid() {
+		return oid;
+	}
+
+	@Override
+	public void setOid(Oid oid) {
+		this.oid = oid;
 	}
 }

@@ -113,4 +113,8 @@ public interface STCollection extends STObject<ProtoCollection> {
 	public StoreMetadata getMetadata();
 
 	public void remove(STDocument document);
+
+	public static interface EventListener {
+		public void handle(STDocument removed, STDocument added);
+	}
 }

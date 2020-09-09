@@ -18,7 +18,6 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
-import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
@@ -27,11 +26,9 @@ import com.sandpolis.core.instance.state.oid.RelativeOid;
  *
  * @since 5.1.1
  */
-public class EphemeralDocument extends DefaultObject<EphemeralDocument, STObject<?>> implements STDocument {
+public class EphemeralDocument extends EphemeralObject implements STDocument {
 
-	private STDocument parentDocument;
-
-	private STCollection parentCollection;
+	private STObject<?> parent;
 
 	private Map<Integer, STDocument> documents;
 
@@ -42,7 +39,7 @@ public class EphemeralDocument extends DefaultObject<EphemeralDocument, STObject
 	private String id = UUID.randomUUID().toString();
 
 	public EphemeralDocument(STDocument parent) {
-		this.parentDocument = parent;
+		this.parent = parent;
 
 		documents = new HashMap<>();
 		collections = new HashMap<>();
@@ -55,7 +52,7 @@ public class EphemeralDocument extends DefaultObject<EphemeralDocument, STObject
 	}
 
 	public EphemeralDocument(STCollection parent) {
-		this.parentCollection = parent;
+		this.parent = parent;
 
 		documents = new HashMap<>();
 		collections = new HashMap<>();
@@ -67,18 +64,13 @@ public class EphemeralDocument extends DefaultObject<EphemeralDocument, STObject
 		merge(document);
 	}
 
-	@Override
-	public AbsoluteOid<?> getOid() {
-		return null;
-	}
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public <E> EphemeralAttribute<E> attribute(int tag) {
-		var attribute = attributes.get(tag);
+		var attribute = getAttribute(tag);
 		if (attribute == null) {
 			attribute = new EphemeralAttribute<>(this);
-			attributes.put(tag, attribute);
+			setAttribute(tag, attribute);
 		}
 		return (EphemeralAttribute<E>) attribute;
 	}
@@ -90,7 +82,8 @@ public class EphemeralDocument extends DefaultObject<EphemeralDocument, STObject
 
 	@Override
 	public void setAttribute(int tag, STAttribute<?> attribute) {
-		attributes.put(tag, (EphemeralAttribute<?>) attribute);
+		attributes.put(tag, attribute);
+		attribute.setOid(oid.child(tag));
 	}
 
 	@Override
@@ -109,15 +102,16 @@ public class EphemeralDocument extends DefaultObject<EphemeralDocument, STObject
 
 	@Override
 	public void setDocument(int tag, STDocument document) {
-		documents.put(tag, (EphemeralDocument) document);
+		documents.put(tag, document);
+		document.setOid(oid.child(tag));
 	}
 
 	@Override
 	public STCollection collection(int tag) {
-		var collection = collections.get(tag);
+		var collection = getCollection(tag);
 		if (collection == null) {
 			collection = new EphemeralCollection(this);
-			collections.put(tag, collection);
+			setCollection(tag, collection);
 		}
 		return collection;
 	}
@@ -129,7 +123,8 @@ public class EphemeralDocument extends DefaultObject<EphemeralDocument, STObject
 
 	@Override
 	public void setCollection(int tag, STCollection collection) {
-		collections.put(tag, (EphemeralCollection) collection);
+		collections.put(tag, collection);
+		collection.setOid(oid.child(tag));
 	}
 
 	@Override

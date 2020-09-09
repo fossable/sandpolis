@@ -23,25 +23,43 @@ import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtObject;
+import com.sandpolis.core.instance.state.VirtObject.IncompleteObjectException;
 
+/**
+ * {@link STCollectionStore} is a store backed by a {@link STCollection} which
+ * may exist exclusively in memory (ephemeral collection), in a database
+ * (hibernate collection), or on another instance across the network (entangled
+ * collection).
+ *
+ * @param <V>
+ */
 public abstract class STCollectionStore<V extends VirtObject> extends StoreBase
 		implements MetadataStore<StoreMetadata> {
 
 	protected STCollection collection;
 
+	/**
+	 * This top-level cache allows {@link VirtObject}s to store transient state as
+	 * regular fields.
+	 */
 	private Map<Integer, V> cache = new HashMap<>();
 
 	protected STCollectionStore(Logger log) {
 		super(log);
 	}
 
+	/**
+	 * A function that translates an ST object into a VST object.
+	 *
+	 * @param document An ST object
+	 * @return A new VST object
+	 */
 	protected abstract V constructor(STDocument document);
 
 	protected void add(V object) {
-		if (object.complete() != ErrorCode.OK) {
-			// TODO
-			throw new RuntimeException();
-		}
+		if (object.complete() != ErrorCode.OK)
+			throw new IncompleteObjectException();
+
 		int tag = object.tag();
 		collection.setDocument(tag, object.document);
 		cache.put(tag, object);

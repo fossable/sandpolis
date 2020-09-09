@@ -19,6 +19,7 @@ import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.State.ProtoCollection;
+import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.oid.STAttributeOid;
 import com.sandpolis.core.instance.state.oid.STCollectionOid;
 import com.sandpolis.core.instance.state.oid.STDocumentOid;
@@ -87,14 +88,14 @@ public final class STExe extends Exelet {
 			switch (rq.getDirection()) {
 			case BIDIRECTIONAL:
 				StreamStore.add(document.getSource(), new OutboundStreamAdapter<>(rq.getStreamId(), context.connector));
-				StreamStore.add(new InboundStreamAdapter<>(rq.getStreamId(), context.connector, ProtoCollection.class),
+				StreamStore.add(new InboundStreamAdapter<>(rq.getStreamId(), context.connector, ProtoDocument.class),
 						document.getSink());
 				break;
 			case DOWNSTREAM:
 				StreamStore.add(document.getSource(), new OutboundStreamAdapter<>(rq.getStreamId(), context.connector));
 				break;
 			case UPSTREAM:
-				StreamStore.add(new InboundStreamAdapter<>(rq.getStreamId(), context.connector, ProtoCollection.class),
+				StreamStore.add(new InboundStreamAdapter<>(rq.getStreamId(), context.connector, ProtoDocument.class),
 						document.getSink());
 				break;
 			default:

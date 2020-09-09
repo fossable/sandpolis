@@ -19,18 +19,17 @@ import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
-import com.sandpolis.core.instance.state.DefaultObject;
+import com.sandpolis.core.instance.state.AbstractSTObject;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.STObject;
-import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
@@ -40,10 +39,14 @@ import com.sandpolis.core.instance.state.oid.RelativeOid;
  * @since 5.1.1
  */
 @Entity
-public class HibernateDocument extends DefaultObject<HibernateDocument, STObject<?>> implements STDocument {
+public class HibernateDocument extends AbstractSTObject implements STDocument {
 
 	@Id
 	private String db_id;
+
+	@Column(nullable = true)
+	@Convert(converter = OidConverter.class)
+	protected Oid oid;
 
 	@Column(nullable = true)
 	private HibernateDocument parentDocument;
@@ -95,69 +98,67 @@ public class HibernateDocument extends DefaultObject<HibernateDocument, STObject
 		// JPA CONSTRUCTOR
 	}
 
-	@Override
-	public AbsoluteOid<?> getOid() {
-		return null;
-	}
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public <E> HibernateAttribute<E> attribute(int tag) {
-		var attribute = attributes.get(tag);
+		var attribute = getAttribute(tag);
 		if (attribute == null) {
 			attribute = new HibernateAttribute<>(this);
-			attributes.put(tag, attribute);
+			setAttribute(tag, attribute);
 		}
 		return (HibernateAttribute<E>) attribute;
 	}
 
 	@Override
-	public <E> STAttribute<E> getAttribute(int tag) {
-		return (STAttribute<E>) attributes.get(tag);
+	public <E> HibernateAttribute<E> getAttribute(int tag) {
+		return (HibernateAttribute<E>) attributes.get(tag);
 	}
 
 	@Override
 	public void setAttribute(int tag, STAttribute<?> attribute) {
 		attributes.put(tag, (HibernateAttribute<?>) attribute);
+		attribute.setOid(oid.child(tag));
 	}
 
 	@Override
-	public STDocument document(int tag) {
-		var document = documents.get(tag);
+	public HibernateDocument document(int tag) {
+		var document = getDocument(tag);
 		if (document == null) {
 			document = new HibernateDocument(this);
-			documents.put(tag, document);
+			setDocument(tag, document);
 		}
 		return document;
 	}
 
-	public STDocument getDocument(int tag) {
+	public HibernateDocument getDocument(int tag) {
 		return documents.get(tag);
 	}
 
 	@Override
 	public void setDocument(int tag, STDocument document) {
 		documents.put(tag, (HibernateDocument) document);
+		document.setOid(oid.child(tag));
 	}
 
 	@Override
-	public STCollection collection(int tag) {
-		var collection = collections.get(tag);
+	public HibernateCollection collection(int tag) {
+		var collection = getCollection(tag);
 		if (collection == null) {
 			collection = new HibernateCollection(this);
-			collections.put(tag, collection);
+			setCollection(tag, collection);
 		}
 		return collection;
 	}
 
 	@Override
-	public STCollection getCollection(int tag) {
+	public HibernateCollection getCollection(int tag) {
 		return collections.get(tag);
 	}
 
 	@Override
 	public void setCollection(int tag, STCollection collection) {
 		collections.put(tag, (HibernateCollection) collection);
+		collection.setOid(oid.child(tag));
 	}
 
 	@Override
@@ -230,5 +231,15 @@ public class HibernateDocument extends DefaultObject<HibernateDocument, STObject
 	@Override
 	public Stream<STDocument> documents() {
 		return documents.values().stream().map(STDocument.class::cast);
+	}
+
+	@Override
+	public Oid oid() {
+		return oid;
+	}
+
+	@Override
+	public void setOid(Oid oid) {
+		this.oid = oid;
 	}
 }

@@ -66,4 +66,8 @@ public interface STAttribute<T> extends STObject<ProtoAttribute> {
 	public default boolean isPresent() {
 		return get() != null;
 	}
+
+	public static interface EventListener<T> {
+		public void handle(STAttribute<T> attribute, T oldValue, T newValue);
+	}
 }

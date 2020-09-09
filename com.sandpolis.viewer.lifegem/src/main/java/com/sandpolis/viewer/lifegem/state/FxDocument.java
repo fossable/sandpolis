@@ -17,9 +17,11 @@ import java.util.stream.Stream;
 import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STCollection.EventListener;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtObject;
 import com.sandpolis.core.instance.state.oid.AbsoluteOid;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 public class FxDocument<T extends VirtObject> implements STDocument {
@@ -77,12 +79,6 @@ public class FxDocument<T extends VirtObject> implements STDocument {
 	}
 
 	@Override
-	public AbsoluteOid<?> getOid() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public void setAttribute(int tag, STAttribute<?> attribute) {
 		// TODO Auto-generated method stub
 
@@ -116,6 +112,36 @@ public class FxDocument<T extends VirtObject> implements STDocument {
 	public Stream<STDocument> documents() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public STCollection.EventListener addListener(STCollection.EventListener listener) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <E> STAttribute.EventListener<E> addListener(STAttribute.EventListener<E> listener) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void removeListener(Object listener) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Oid oid() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setOid(Oid oid) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

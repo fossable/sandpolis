@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
+import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.foundation.util.IDUtil;
 import com.sandpolis.core.instance.State.ProtoCollection;
@@ -34,6 +35,7 @@ import com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection;
 
 public class STCmd extends Cmdlet<STCmd> {
 
+	@ConfigStruct
 	public static final class STSyncStruct {
 		public List<Oid> whitelist = new ArrayList<>();
 
@@ -42,6 +44,7 @@ public class STCmd extends Cmdlet<STCmd> {
 		public STSyncDirection direction = STSyncDirection.DOWNSTREAM;
 	}
 
+	@ConfigStruct
 	public static final class STSnapshotStruct {
 		public List<Oid> whitelist = new ArrayList<>();
 	}
@@ -52,6 +55,9 @@ public class STCmd extends Cmdlet<STCmd> {
 	}
 
 	public CompletionStage<EntangledCollection> sync(STCollectionOid<?> oid, Consumer<STSyncStruct> configurator) {
+		if (!oid.isConcrete())
+			throw new IllegalArgumentException();
+
 		final var config = new STSyncStruct();
 		configurator.accept(config);
 
@@ -78,6 +84,9 @@ public class STCmd extends Cmdlet<STCmd> {
 	}
 
 	public CompletionStage<EntangledDocument> sync(STDocumentOid<?> oid, Consumer<STSyncStruct> configurator) {
+		if (!oid.isConcrete())
+			throw new IllegalArgumentException();
+
 		final var config = new STSyncStruct();
 		configurator.accept(config);
 
@@ -105,6 +114,9 @@ public class STCmd extends Cmdlet<STCmd> {
 
 	public CompletionStage<EphemeralCollection> snapshot(STCollectionOid<?> oid,
 			Consumer<STSnapshotStruct> configurator) {
+		if (!oid.isConcrete())
+			throw new IllegalArgumentException();
+
 		final var config = new STSnapshotStruct();
 		configurator.accept(config);
 
@@ -129,6 +141,9 @@ public class STCmd extends Cmdlet<STCmd> {
 	}
 
 	public CompletionStage<EphemeralDocument> snapshot(STDocumentOid<?> oid, Consumer<STSnapshotStruct> configurator) {
+		if (!oid.isConcrete())
+			throw new IllegalArgumentException();
+
 		final var config = new STSnapshotStruct();
 		configurator.accept(config);
 

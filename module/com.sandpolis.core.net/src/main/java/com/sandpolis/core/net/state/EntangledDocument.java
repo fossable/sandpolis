@@ -14,34 +14,20 @@ package com.sandpolis.core.net.state;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.oid.AbsoluteOid;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
-import com.sandpolis.core.net.stream.StreamSink;
-import com.sandpolis.core.net.stream.StreamSource;
 
-public class EntangledDocument implements STDocument {
+public class EntangledDocument extends EntangledObject<ProtoDocument> implements STDocument {
 
 	private STDocument container;
 
-	private StreamSink<ProtoCollection> sink;
-	private StreamSource<ProtoCollection> source;
-
 	public EntangledDocument(STDocument container, STSyncStruct config) {
 		this.container = Objects.requireNonNull(container);
-	}
-
-	public StreamSource<ProtoCollection> getSource() {
-		return source;
-	}
-
-	public StreamSink<ProtoCollection> getSink() {
-		return sink;
 	}
 
 	// Begin boilerplate
@@ -137,9 +123,27 @@ public class EntangledDocument implements STDocument {
 	}
 
 	@Override
-	public AbsoluteOid<?> getOid() {
-		// TODO Auto-generated method stub
-		return null;
+	public Oid oid() {
+		return container.oid();
 	}
 
+	@Override
+	public void setOid(Oid oid) {
+		container.setOid(oid);
+	}
+
+	@Override
+	public STCollection.EventListener addListener(STCollection.EventListener listener) {
+		return container.addListener(listener);
+	}
+
+	@Override
+	public <T> STAttribute.EventListener<T> addListener(STAttribute.EventListener<T> listener) {
+		return container.addListener(listener);
+	}
+
+	@Override
+	public void removeListener(Object listener) {
+		container.removeListener(listener);
+	}
 }

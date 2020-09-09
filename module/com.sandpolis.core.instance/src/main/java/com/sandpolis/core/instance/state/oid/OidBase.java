@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.sandpolis.core.instance.state.oid.RelativeOid.RelativeOidImpl;
+
 public abstract class OidBase implements Oid {
 
 	public static final int SUFFIX_ATTRIBUTE = 1;
@@ -70,6 +72,14 @@ public abstract class OidBase implements Oid {
 	@Override
 	public int hashCode() {
 		return value.hashCode();
+	}
+
+	@Override
+	public RelativeOid<?> relativize(Oid oid) {
+		if (!oid.isChildOf(this))
+			throw new IllegalArgumentException();
+
+		return new RelativeOidImpl<>(Arrays.copyOfRange(value, oid.size(), value.length));
 	}
 
 	protected <E extends OidBase> E resolve(Function<int[], E> cons, int... tags) {

@@ -22,7 +22,7 @@ import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.store.StoreMetadata;
 
-public class EphemeralCollection extends DefaultObject<EphemeralCollection, STDocument> implements STCollection {
+public class EphemeralCollection extends EphemeralObject implements STCollection {
 
 	private EphemeralDocument parent;
 
@@ -52,7 +52,7 @@ public class EphemeralCollection extends DefaultObject<EphemeralCollection, STDo
 
 	@Override
 	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor) {
-		return new DefaultRelation<>(constructor);
+		return new EphemeralRelation<>(constructor);
 	}
 
 	@Override
@@ -70,11 +70,13 @@ public class EphemeralCollection extends DefaultObject<EphemeralCollection, STDo
 
 	public void add(int tag, EphemeralDocument e) {
 		documents.put(tag, e);
+		fireCollectionEvent(e, null);
 	}
 
 	@Override
 	public void remove(STDocument document) {
 		documents.values().remove(document);
+		fireCollectionEvent(null, document);
 	}
 
 	public void clear() {
@@ -83,10 +85,10 @@ public class EphemeralCollection extends DefaultObject<EphemeralCollection, STDo
 
 	@Override
 	public STDocument document(int tag) {
-		var document = documents.get(tag);
+		var document = getDocument(tag);
 		if (document == null) {
 			document = new EphemeralDocument(this);
-			documents.put(tag, document);
+			setDocument(tag, document);
 		}
 		return document;
 	}
@@ -99,6 +101,7 @@ public class EphemeralCollection extends DefaultObject<EphemeralCollection, STDo
 	@Override
 	public void setDocument(int tag, STDocument document) {
 		documents.put(tag, document);
+		document.setOid(oid.child(tag));
 	}
 
 	@Override

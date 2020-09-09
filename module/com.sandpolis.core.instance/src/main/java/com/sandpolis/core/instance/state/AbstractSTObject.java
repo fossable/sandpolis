@@ -16,32 +16,51 @@ import static com.sandpolis.core.instance.state.STStore.STStore;
 import java.util.LinkedList;
 import java.util.List;
 
-public class DefaultObject<A extends STObject<?>, T> {
+public abstract class AbstractSTObject {
 
-	interface STEventListener<A extends STObject<?>, T> {
-		public void handle(A entity, T oldValue, T newValue);
-	}
+	private List<Object> listeners;
 
-	private List<STEventListener<A, T>> listeners;
-
-	protected synchronized void fire(A entity, T oldValue, T newValue) {
+	protected synchronized <T> void fireAttributeEvent(STAttribute<T> attribute, T oldValue, T newValue) {
 		if (listeners != null) {
 			STStore.pool().submit(() -> {
 				for (var listener : listeners) {
-					listener.handle(entity, oldValue, newValue);
+					if (listener instanceof STAttribute.EventListener) {
+						((STAttribute.EventListener<T>) listener).handle(attribute, oldValue, newValue);
+					}
 				}
 			});
 		}
 	}
 
-	public synchronized void bind(STEventListener<A, T> listener) {
+	protected synchronized void fireCollectionEvent(STDocument added, STDocument removed) {
+		if (listeners != null) {
+			STStore.pool().submit(() -> {
+				for (var listener : listeners) {
+					if (listener instanceof STCollection.EventListener) {
+						((STCollection.EventListener) listener).handle(added, removed);
+					}
+				}
+			});
+		}
+	}
+
+	public synchronized STCollection.EventListener addListener(STCollection.EventListener listener) {
 		if (listeners == null) {
 			listeners = new LinkedList<>();
 		}
 		listeners.add(listener);
+		return listener;
 	}
 
-	public synchronized void unbind(STEventListener<A, T> listener) {
+	public synchronized <T> STAttribute.EventListener<T> addListener(STAttribute.EventListener<T> listener) {
+		if (listeners == null) {
+			listeners = new LinkedList<>();
+		}
+		listeners.add(listener);
+		return listener;
+	}
+
+	public synchronized void removeListener(Object listener) {
 		if (listeners != null) {
 			listeners.remove(listener);
 		}

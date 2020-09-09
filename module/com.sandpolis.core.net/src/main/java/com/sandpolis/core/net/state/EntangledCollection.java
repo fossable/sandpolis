@@ -20,23 +20,21 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.DefaultObject;
+import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STRelation;
 import com.sandpolis.core.instance.state.VirtObject;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
 import com.sandpolis.core.net.stream.StreamSink;
 import com.sandpolis.core.net.stream.StreamSource;
 
-public class EntangledCollection implements STCollection {
+public class EntangledCollection extends EntangledObject<ProtoCollection> implements STCollection {
 
 	private STCollection container;
-
-	private StreamSink<ProtoCollection> sink;
-	private StreamSource<ProtoCollection> source;
 
 	public EntangledCollection(STCollection container, STSyncStruct config) {
 		this.container = Objects.requireNonNull(container);
@@ -54,72 +52,62 @@ public class EntangledCollection implements STCollection {
 		if (config.direction == UPSTREAM || config.direction == BIDIRECTIONAL) {
 			source = new StreamSource<>() {
 
+				private Object listener;
+
 				@Override
 				public void start() {
-					((DefaultObject) container).bind((entity, oldValue, newValue) -> {
+					listener = container.addListener((added, removed) -> {
 						// TODO
+					});
+
+					container.addListener((attribute, oldValue, newValue) -> {
+						attribute.oid().relativize(oid());
 					});
 				}
 
 				@Override
 				public void stop() {
-					// TODO Auto-generated method stub
-
+					container.removeListener(listener);
 				}
 			};
 		}
-	}
-
-	public StreamSource<ProtoCollection> getSource() {
-		return source;
-	}
-
-	public StreamSink<ProtoCollection> getSink() {
-		return sink;
 	}
 
 	// Begin boilerplate
 
 	@Override
 	public void merge(ProtoCollection snapshot) {
-		// TODO Auto-generated method stub
-
+		container.merge(snapshot);
 	}
 
 	@Override
 	public ProtoCollection snapshot(RelativeOid<?>... oids) {
-		// TODO Auto-generated method stub
-		return null;
+		return container.snapshot(oids);
 	}
 
 	@Override
 	public STDocument document(int tag) {
-		// TODO Auto-generated method stub
-		return null;
+		return container.document(tag);
 	}
 
 	@Override
 	public Stream<STDocument> documents() {
-		// TODO Auto-generated method stub
-		return null;
+		return container.documents();
 	}
 
 	@Override
 	public STDocument getDocument(int tag) {
-		// TODO Auto-generated method stub
-		return null;
+		return container.getDocument(tag);
 	}
 
 	@Override
 	public void setDocument(int tag, STDocument document) {
-		// TODO Auto-generated method stub
-
+		container.setDocument(tag, document);
 	}
 
 	@Override
 	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
+		return container.size();
 	}
 
 	@Override
@@ -130,20 +118,42 @@ public class EntangledCollection implements STCollection {
 
 	@Override
 	public STDocument newDocument() {
-		// TODO Auto-generated method stub
-		return null;
+		return container.newDocument();
 	}
 
 	@Override
 	public StoreMetadata getMetadata() {
-		// TODO Auto-generated method stub
-		return null;
+		return container.getMetadata();
 	}
 
 	@Override
 	public void remove(STDocument document) {
-		// TODO Auto-generated method stub
+		container.remove(document);
+	}
 
+	@Override
+	public STCollection.EventListener addListener(STCollection.EventListener listener) {
+		return container.addListener(listener);
+	}
+
+	@Override
+	public <T> STAttribute.EventListener<T> addListener(STAttribute.EventListener<T> listener) {
+		return container.addListener(listener);
+	}
+
+	@Override
+	public void removeListener(Object listener) {
+		container.removeListener(listener);
+	}
+
+	@Override
+	public Oid oid() {
+		return container.oid();
+	}
+
+	@Override
+	public void setOid(Oid oid) {
+		container.setOid(oid);
 	}
 
 }

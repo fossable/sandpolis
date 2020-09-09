@@ -26,7 +26,7 @@ import com.sandpolis.core.instance.state.oid.RelativeOid;
  * @param <T> The type of the attribute's value
  * @since 7.0.0
  */
-public class EphemeralAttribute<T> extends DefaultObject<EphemeralAttribute<T>, T> implements STAttribute<T> {
+public class EphemeralAttribute<T> extends EphemeralObject implements STAttribute<T> {
 
 	@Embeddable
 	public enum RetentionPolicy {
@@ -105,7 +105,9 @@ public class EphemeralAttribute<T> extends DefaultObject<EphemeralAttribute<T>, 
 			timestamps.clear();
 			values.clear();
 
-			fire(this, old, value);
+			fireAttributeEvent(this, old, value);
+			if (parent != null)
+				parent.fireAttributeEvent(this, old, value);
 			return;
 		}
 
@@ -135,7 +137,9 @@ public class EphemeralAttribute<T> extends DefaultObject<EphemeralAttribute<T>, 
 			checkRetention();
 		}
 
-		fire(this, old, value);
+		fireAttributeEvent(this, old, value);
+		if (parent != null)
+			parent.fireAttributeEvent(this, old, value);
 	}
 
 	@Override
@@ -203,6 +207,7 @@ public class EphemeralAttribute<T> extends DefaultObject<EphemeralAttribute<T>, 
 	public synchronized void merge(ProtoAttribute snapshot) {
 		var newValues = snapshot.getValuesList();
 		if (newValues.isEmpty()) {
+			// TODO don't use set
 			set(null);
 		} else {
 			current.setProto(newValues.get(0));

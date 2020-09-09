@@ -79,4 +79,6 @@ public interface Oid extends Comparable<Oid> {
 	public RelativeOid<?> tail();
 
 	public Oid child(int tag);
+
+	public RelativeOid<?> relativize(Oid oid);
 }
