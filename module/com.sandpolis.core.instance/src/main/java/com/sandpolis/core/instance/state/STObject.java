@@ -48,23 +48,13 @@ public interface STObject<E extends Message> {
 	public E snapshot(RelativeOid<?>... oids);
 
 	/**
-	 * Register a new collection listener on the object. The listener will be
-	 * notified of all collection events from the object's descendants.
+	 * Register a new listener on the object. The listener will be notified of all
+	 * collection, document, and attribute events from the object's descendants.
 	 *
 	 * @param listener The listener to register
 	 * @return The listener for convenience
 	 */
-	public STCollection.EventListener addListener(STCollection.EventListener listener);
-
-	/**
-	 * Register a new attribute listener on the object. The listener will be
-	 * notified of all attribute events from the object's descendants.
-	 *
-	 * @param <T>      The attribute's type
-	 * @param listener The listener to register
-	 * @return The listener for convenience
-	 */
-	public <T> STAttribute.EventListener<T> addListener(STAttribute.EventListener<T> listener);
+	public void addListener(Object listener);
 
 	/**
 	 * Deregister a previously registered listener. Any currently queued events will

@@ -16,7 +16,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STRelation;
@@ -111,15 +110,9 @@ public class FxCollection<T extends VirtObject> extends ObservableListBase<T> im
 	}
 
 	@Override
-	public STCollection.EventListener addListener(STCollection.EventListener listener) {
+	public void addListener(Object listener) {
 		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public <E> STAttribute.EventListener<E> addListener(STAttribute.EventListener<E> listener) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

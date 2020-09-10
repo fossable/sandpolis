@@ -137,9 +137,9 @@ public class HibernateAttribute<T> extends AbstractSTObject implements STAttribu
 			timestamps.clear();
 			values.clear();
 
-			fireAttributeEvent(this, old, value);
+			fireAttributeValueChangedEvent(this, old, value);
 			if (parent != null) {
-//				parent.fireAttributeEvent(this, old, value);
+				parent.fireAttributeEvent(this, old, value);
 			}
 			return;
 		}
@@ -170,9 +170,9 @@ public class HibernateAttribute<T> extends AbstractSTObject implements STAttribu
 			checkRetention();
 		}
 
-		fireAttributeEvent(this, old, value);
+		fireAttributeValueChangedEvent(this, old, value);
 		if (parent != null) {
-//			parent.fireAttributeEvent(this, old, value);
+			parent.fireAttributeEvent(this, old, value);
 		}
 	}
 

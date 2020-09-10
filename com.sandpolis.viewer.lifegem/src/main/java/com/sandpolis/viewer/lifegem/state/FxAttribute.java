@@ -16,7 +16,6 @@ import java.util.function.Supplier;
 import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.state.EphemeralAttribute;
 import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
@@ -57,15 +56,9 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	}
 
 	@Override
-	public STCollection.EventListener addListener(STCollection.EventListener listener) {
+	public void addListener(Object listener) {
 		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public <T> STAttribute.EventListener<T> addListener(STAttribute.EventListener<T> listener) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

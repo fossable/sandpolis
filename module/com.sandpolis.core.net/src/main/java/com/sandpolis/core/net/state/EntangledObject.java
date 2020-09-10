@@ -12,10 +12,28 @@
 package com.sandpolis.core.net.state;
 
 import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
+import com.sandpolis.core.instance.State.ProtoAttribute;
+import com.sandpolis.core.instance.State.ProtoCollection;
+import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.AbstractSTObject;
+import com.sandpolis.core.instance.state.STAttribute;
+import com.sandpolis.core.instance.state.oid.OidBase;
+import com.sandpolis.core.net.stream.Stream;
 import com.sandpolis.core.net.stream.StreamSink;
 import com.sandpolis.core.net.stream.StreamSource;
 
+/**
+ * An {@link EntangledObject} is synchronized with a remote object on another
+ * instance.
+ * 
+ * <p>
+ * It uses the {@link Stream} API to efficiently send real-time updates to the
+ * remote object.
+ *
+ * @param <T> The type of the object's protobuf representation
+ * @since 7.0.0
+ */
 public abstract class EntangledObject<T extends Message> extends AbstractSTObject {
 
 	protected StreamSink<T> sink;
@@ -27,5 +45,42 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 
 	public StreamSink<T> getSink() {
 		return sink;
+	}
+
+	protected <E> ProtoCollection test(STAttribute<E> attribute, E value) {
+		int[] components = attribute.oid().value();
+
+		MessageOrBuilder current = null;
+
+		for (int i = components.length - 1; i >= 0; i--) {
+			switch (components[i] % 10) {
+			case OidBase.SUFFIX_ATTRIBUTE:
+				// TODO use value parameter
+				current = attribute.snapshot();
+				break;
+			case OidBase.SUFFIX_DOCUMENT:
+				switch (components[i + 1] % 10) {
+				case OidBase.SUFFIX_ATTRIBUTE:
+					current = ProtoDocument.newBuilder().putAttribute(components[i],
+							((ProtoAttribute.Builder) current).build());
+					break;
+				case OidBase.SUFFIX_DOCUMENT:
+					current = ProtoDocument.newBuilder().putDocument(components[i],
+							((ProtoDocument.Builder) current).build());
+					break;
+				case OidBase.SUFFIX_COLLECTION:
+					current = ProtoDocument.newBuilder().putCollection(components[i],
+							((ProtoCollection.Builder) current).build());
+					break;
+				}
+				break;
+			case OidBase.SUFFIX_COLLECTION:
+				current = ProtoCollection.newBuilder().putDocument(components[i],
+						((ProtoDocument.Builder) current).build());
+				break;
+			}
+		}
+
+		return ((ProtoCollection.Builder) current).build();
 	}
 }

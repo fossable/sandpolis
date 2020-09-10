@@ -133,13 +133,8 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public STCollection.EventListener addListener(STCollection.EventListener listener) {
-		return container.addListener(listener);
-	}
-
-	@Override
-	public <T> STAttribute.EventListener<T> addListener(STAttribute.EventListener<T> listener) {
-		return container.addListener(listener);
+	public void addListener(Object listener) {
+		container.addListener(listener);
 	}
 
 	@Override

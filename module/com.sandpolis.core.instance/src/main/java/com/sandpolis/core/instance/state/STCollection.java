@@ -28,43 +28,30 @@ import com.sandpolis.core.instance.store.StoreMetadata;
 public interface STCollection extends STObject<ProtoCollection> {
 
 	/**
-	 * Get a subdocument by its tag. This method never returns {@code null}.
-	 *
-	 * @param tag The subdocument tag
-	 * @return The subdocument associated with the tag
+	 * Indicates that an {@link STDocument} has been added to the collection.
 	 */
-	public STDocument document(int tag);
+	public static final class DocumentAddedEvent {
+		public final STCollection collection;
+		public final STDocument newDocument;
+
+		public DocumentAddedEvent(STCollection collection, STDocument newDocument) {
+			this.collection = collection;
+			this.newDocument = newDocument;
+		}
+	}
 
 	/**
-	 * Get all subdocuments.
-	 *
-	 * @return A stream of all subdocuments
+	 * Indicates that an {@link STDocument} has been removed from the collection.
 	 */
-	public Stream<STDocument> documents();
+	public static final class DocumentRemovedEvent {
+		public final STCollection collection;
+		public final STDocument oldDocument;
 
-	/**
-	 * Get a subdocument by its tag. This method returns {@code null} if the
-	 * subdocument doesn't exist.
-	 *
-	 * @param tag The subdocument tag
-	 * @return The subdocument associated with the tag or {@code null}
-	 */
-	public STDocument getDocument(int tag);
-
-	/**
-	 * Overwrite the attribute associated with the given tag.
-	 *
-	 * @param tag      The attribute tag
-	 * @param document The attribute to associate with the tag or {@code null}
-	 */
-	public void setDocument(int tag, STDocument document);
-
-	/**
-	 * Returns the number of elements in this collection.
-	 *
-	 * @return The number of elements in this collection
-	 */
-	public int size();
+		public DocumentRemovedEvent(STCollection collection, STDocument oldDocument) {
+			this.collection = collection;
+			this.oldDocument = oldDocument;
+		}
+	}
 
 	public default <E> STAttribute<E> attribute(RelativeOid<E> oid) {
 		if (!oid.isConcrete())
@@ -75,22 +62,6 @@ public interface STCollection extends STObject<ProtoCollection> {
 			return (STAttribute<E>) document(oid.first()).attribute(oid.tail());
 		default:
 			throw new RuntimeException("Unacceptable attribute tag: " + oid.first());
-		}
-	}
-
-	public default STDocument document(RelativeOid<?> oid) {
-		if (!oid.isConcrete())
-			throw new RuntimeException();
-
-		switch (oid.first() % 10) {
-		case OidBase.SUFFIX_DOCUMENT:
-			if (oid.size() == 1) {
-				return document(oid.first());
-			} else {
-				return document(oid.first()).document(oid.tail());
-			}
-		default:
-			throw new RuntimeException("Unacceptable document tag: " + oid.first());
 		}
 	}
 
@@ -108,13 +79,64 @@ public interface STCollection extends STObject<ProtoCollection> {
 
 	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor);
 
-	public STDocument newDocument();
+	/**
+	 * Get a subdocument by its tag. This method never returns {@code null}.
+	 *
+	 * @param tag The subdocument tag
+	 * @return The subdocument associated with the tag
+	 */
+	public STDocument document(int tag);
+
+	public default STDocument document(RelativeOid<?> oid) {
+		if (!oid.isConcrete())
+			throw new RuntimeException();
+
+		switch (oid.first() % 10) {
+		case OidBase.SUFFIX_DOCUMENT:
+			if (oid.size() == 1) {
+				return document(oid.first());
+			} else {
+				return document(oid.first()).document(oid.tail());
+			}
+		default:
+			throw new RuntimeException("Unacceptable document tag: " + oid.first());
+		}
+	}
+
+	/**
+	 * Get all subdocuments.
+	 *
+	 * @return A stream of all subdocuments
+	 */
+	public Stream<STDocument> documents();
+
+	/**
+	 * Get a subdocument by its tag. This method returns {@code null} if the
+	 * subdocument doesn't exist.
+	 *
+	 * @param tag The subdocument tag
+	 * @return The subdocument associated with the tag or {@code null}
+	 */
+	public STDocument getDocument(int tag);
 
 	public StoreMetadata getMetadata();
 
+	public STDocument newDocument();
+
 	public void remove(STDocument document);
 
-	public static interface EventListener {
-		public void handle(STDocument removed, STDocument added);
-	}
+	/**
+	 * Overwrite the attribute associated with the given tag.
+	 *
+	 * @param tag      The attribute tag
+	 * @param document The attribute to associate with the tag or {@code null}
+	 */
+	public void setDocument(int tag, STDocument document);
+
+	/**
+	 * Returns the number of elements in this collection.
+	 *
+	 * @return The number of elements in this collection
+	 */
+	public int size();
 }

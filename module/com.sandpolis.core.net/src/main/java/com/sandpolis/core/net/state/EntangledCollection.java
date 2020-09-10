@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
@@ -39,7 +40,8 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 	public EntangledCollection(STCollection container, STSyncStruct config) {
 		this.container = Objects.requireNonNull(container);
 
-		if (config.direction == DOWNSTREAM || config.direction == BIDIRECTIONAL) {
+		if ((config.initiator && config.direction == DOWNSTREAM) || (!config.initiator && config.direction == UPSTREAM)
+				|| config.direction == BIDIRECTIONAL) {
 			sink = new StreamSink<>() {
 
 				@Override
@@ -49,28 +51,27 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 			};
 		}
 
-		if (config.direction == UPSTREAM || config.direction == BIDIRECTIONAL) {
+		if ((config.initiator && config.direction == UPSTREAM) || (!config.initiator && config.direction == DOWNSTREAM)
+				|| config.direction == BIDIRECTIONAL) {
 			source = new StreamSource<>() {
-
-				private Object listener;
 
 				@Override
 				public void start() {
-					listener = container.addListener((added, removed) -> {
-						// TODO
-					});
-
-					container.addListener((attribute, oldValue, newValue) -> {
-						attribute.oid().relativize(oid());
-					});
+					container.addListener(EntangledCollection.this);
 				}
 
 				@Override
 				public void stop() {
-					container.removeListener(listener);
+					container.removeListener(EntangledCollection.this);
 				}
 			};
+			source.start();
 		}
+	}
+
+	@Subscribe
+	<T> void handle(STAttribute.ChangeEvent<T> event) {
+		source.submit(test(event.attribute, event.newValue));
 	}
 
 	// Begin boilerplate
@@ -132,13 +133,8 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 	}
 
 	@Override
-	public STCollection.EventListener addListener(STCollection.EventListener listener) {
-		return container.addListener(listener);
-	}
-
-	@Override
-	public <T> STAttribute.EventListener<T> addListener(STAttribute.EventListener<T> listener) {
-		return container.addListener(listener);
+	public void addListener(Object listener) {
+		container.addListener(listener);
 	}
 
 	@Override

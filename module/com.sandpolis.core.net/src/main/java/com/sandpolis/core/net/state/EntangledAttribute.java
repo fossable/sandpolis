@@ -17,7 +17,6 @@ import java.util.function.Supplier;
 import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
@@ -58,13 +57,8 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoCollection> impl
 	}
 
 	@Override
-	public STCollection.EventListener addListener(STCollection.EventListener listener) {
-		return container.addListener(listener);
-	}
-
-	@Override
-	public <T> STAttribute.EventListener<T> addListener(STAttribute.EventListener<T> listener) {
-		return container.addListener(listener);
+	public void addListener(Object listener) {
+		container.addListener(listener);
 	}
 
 	@Override

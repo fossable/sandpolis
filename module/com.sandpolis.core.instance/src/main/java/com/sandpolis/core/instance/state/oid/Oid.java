@@ -12,6 +12,7 @@
 package com.sandpolis.core.instance.state.oid;
 
 import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * An {@link Oid} corresponds to one or more objects in a virtual state tree.
@@ -34,7 +35,7 @@ import java.util.Arrays;
  * state tree, or "relative" which means the OID is a proper subset of an
  * absolute OID.
  */
-public interface Oid extends Comparable<Oid> {
+public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 
 	/**
 	 * Extend the OID by adding the given component to the end.
@@ -88,6 +89,11 @@ public interface Oid extends Comparable<Oid> {
 			if (i == 0)
 				return false;
 		return true;
+	}
+
+	@Override
+	public default Iterator<Integer> iterator() {
+		return Arrays.stream(value()).iterator();
 	}
 
 	/**
@@ -148,4 +154,5 @@ public interface Oid extends Comparable<Oid> {
 	 * @return The OID components
 	 */
 	public int[] value();
+
 }

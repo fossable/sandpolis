@@ -13,59 +13,56 @@ package com.sandpolis.core.instance.state;
 
 import static com.sandpolis.core.instance.state.STStore.STStore;
 
-import java.util.LinkedList;
-import java.util.List;
+import com.google.common.eventbus.EventBus;
 
 public abstract class AbstractSTObject {
 
-	private List<Object> listeners;
+	private EventBus bus;
 
-	protected synchronized <T> void fireAttributeEvent(STAttribute<T> attribute, T oldValue, T newValue) {
-		if (listeners != null) {
+	/**
+	 * The number of listeners registered to the {@link #bus}.
+	 */
+	private int listeners;
+
+	protected synchronized <T> void fireAttributeValueChangedEvent(STAttribute<T> attribute, T oldValue, T newValue) {
+		if (bus != null) {
 			STStore.pool().submit(() -> {
-				for (var listener : listeners) {
-					if (listener instanceof STAttribute.EventListener) {
-						((STAttribute.EventListener<T>) listener).handle(attribute, oldValue, newValue);
-					}
-				}
+				bus.post(new STAttribute.ChangeEvent<T>(attribute, oldValue, newValue));
 			});
 		}
 	}
 
-	protected synchronized void fireCollectionEvent(STDocument added, STDocument removed) {
-		if (listeners != null) {
+	protected synchronized void fireCollectionAddedEvent(STCollection collection, STDocument newDocument) {
+		if (bus != null) {
 			STStore.pool().submit(() -> {
-				for (var listener : listeners) {
-					if (listener instanceof STCollection.EventListener) {
-						((STCollection.EventListener) listener).handle(added, removed);
-					}
-				}
+				bus.post(new STCollection.DocumentAddedEvent(collection, newDocument));
 			});
 		}
 	}
 
-	public synchronized STCollection.EventListener addListener(STCollection.EventListener listener) {
-		if (listeners == null) {
-			listeners = new LinkedList<>();
+	protected synchronized void fireCollectionRemovedEvent(STCollection collection, STDocument oldDocument) {
+		if (bus != null) {
+			STStore.pool().submit(() -> {
+				bus.post(new STCollection.DocumentRemovedEvent(collection, oldDocument));
+			});
 		}
-		listeners.add(listener);
-		return listener;
 	}
 
-	public synchronized <T> STAttribute.EventListener<T> addListener(STAttribute.EventListener<T> listener) {
-		if (listeners == null) {
-			listeners = new LinkedList<>();
+	public synchronized void addListener(Object listener) {
+		if (bus == null) {
+			bus = new EventBus();
 		}
-		listeners.add(listener);
-		return listener;
+		bus.register(listener);
+		listeners++;
 	}
 
 	public synchronized void removeListener(Object listener) {
-		if (listeners != null) {
-			listeners.remove(listener);
+		if (bus != null) {
+			bus.unregister(listener);
+			listeners--;
 		}
-		if (listeners.size() == 0) {
-			listeners = null;
+		if (listeners == 0) {
+			bus = null;
 		}
 	}
 }

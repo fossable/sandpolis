@@ -29,6 +29,58 @@ import com.sandpolis.core.instance.state.oid.STDocumentOid;
 public interface STDocument extends STObject<ProtoDocument> {
 
 	/**
+	 * Indicates that an {@link STCollection} has been added to the document.
+	 */
+	public static final class CollectionAddedEvent {
+		public final STDocument document;
+		public final STCollection oldCollection;
+
+		public CollectionAddedEvent(STDocument document, STCollection oldCollection) {
+			this.document = document;
+			this.oldCollection = oldCollection;
+		}
+	}
+
+	/**
+	 * Indicates that an {@link STCollection} has been removed from the document.
+	 */
+	public static final class CollectionRemovedEvent {
+		public final STDocument document;
+		public final STCollection oldCollection;
+
+		public CollectionRemovedEvent(STDocument document, STCollection oldCollection) {
+			this.document = document;
+			this.oldCollection = oldCollection;
+		}
+	}
+
+	/**
+	 * Indicates that an {@link STDocument} has been added to the document.
+	 */
+	public static final class DocumentAddedEvent {
+		public final STDocument document;
+		public final STDocument newDocument;
+
+		public DocumentAddedEvent(STDocument document, STDocument newDocument) {
+			this.document = document;
+			this.newDocument = newDocument;
+		}
+	}
+
+	/**
+	 * Indicates that an {@link STDocument} has been removed from the document.
+	 */
+	public static final class DocumentRemovedEvent {
+		public final STDocument document;
+		public final STDocument oldDocument;
+
+		public DocumentRemovedEvent(STDocument document, STDocument oldDocument) {
+			this.document = document;
+			this.oldDocument = oldDocument;
+		}
+	}
+
+	/**
 	 * Get an attribute by its tag. This method never returns {@code null}.
 	 *
 	 * @param <E> The type of the attribute's value
@@ -36,97 +88,6 @@ public interface STDocument extends STObject<ProtoDocument> {
 	 * @return The attribute associated with the tag
 	 */
 	public <E> STAttribute<E> attribute(int tag);
-
-	/**
-	 * Get all attributes in the document that currently have a value.
-	 *
-	 * @return A stream of all attributes
-	 */
-	public Stream<STAttribute<?>> attributes();
-
-	/**
-	 * Get an attribute by its tag. This method returns {@code null} if the
-	 * attribute doesn't exist.
-	 *
-	 * @param <E> The type of the attribute's value
-	 * @param tag The attribute tag
-	 * @return The attribute associated with the tag or {@code null}
-	 */
-	public <E> STAttribute<E> getAttribute(int tag);
-
-	/**
-	 * Overwrite the attribute associated with the given tag.
-	 *
-	 * @param tag       The attribute tag
-	 * @param attribute The attribute to associate with the tag or {@code null}
-	 */
-	public void setAttribute(int tag, STAttribute<?> attribute);
-
-	/**
-	 * Get a subcollection by its tag. This method never returns {@code null}.
-	 *
-	 * @param tag The subcollection tag
-	 * @return The subcollection associated with the tag
-	 */
-	public STCollection collection(int tag);
-
-	/**
-	 * Get all subcollections.
-	 *
-	 * @return A stream of all subcollections
-	 */
-	public Stream<STCollection> collections();
-
-	/**
-	 * Get a subcollection by its tag. This method returns {@code null} if the
-	 * subcollection doesn't exist.
-	 *
-	 * @param tag The subcollection tag
-	 * @return The subcollection associated with the tag or {@code null}
-	 */
-	public STCollection getCollection(int tag);
-
-	/**
-	 * Overwrite the subcollection associated with the given tag.
-	 *
-	 * @param tag        The subcollection tag
-	 * @param collection The subcollection to associate with the tag or {@code null}
-	 */
-	public void setCollection(int tag, STCollection collection);
-
-	/**
-	 * Get a subdocument by its tag. This method never returns {@code null}.
-	 *
-	 * @param tag The subdocument tag
-	 * @return The subdocument associated with the tag
-	 */
-	public STDocument document(int tag);
-
-	/**
-	 * Get all subdocuments.
-	 *
-	 * @return A stream of all subdocuments
-	 */
-	public Stream<STDocument> documents();
-
-	/**
-	 * Get a subdocument by its tag. This method returns {@code null} if the
-	 * subdocument doesn't exist.
-	 *
-	 * @param tag The subdocument tag
-	 * @return The subdocument associated with the tag or {@code null}
-	 */
-	public STDocument getDocument(int tag);
-
-	/**
-	 * Overwrite the attribute associated with the given tag.
-	 *
-	 * @param tag      The attribute tag
-	 * @param document The attribute to associate with the tag or {@code null}
-	 */
-	public void setDocument(int tag, STDocument document);
-
-	public String getId();
 
 	public default <E> STAttribute<E> attribute(RelativeOid<E> oid) {
 		if (!oid.isConcrete())
@@ -144,19 +105,20 @@ public interface STDocument extends STObject<ProtoDocument> {
 		}
 	}
 
-	public default STDocument document(RelativeOid<?> oid) {
-		if (!oid.isConcrete())
-			throw new RuntimeException();
+	/**
+	 * Get all attributes in the document that currently have a value.
+	 *
+	 * @return A stream of all attributes
+	 */
+	public Stream<STAttribute<?>> attributes();
 
-		switch (oid.first() % 10) {
-		case OidBase.SUFFIX_DOCUMENT:
-			return document(oid.first()).document(oid.tail());
-		case OidBase.SUFFIX_COLLECTION:
-			return collection(oid.first()).document(oid.tail());
-		default:
-			throw new RuntimeException("Unacceptable document tag: " + oid.first());
-		}
-	}
+	/**
+	 * Get a subcollection by its tag. This method never returns {@code null}.
+	 *
+	 * @param tag The subcollection tag
+	 * @return The subcollection associated with the tag
+	 */
+	public STCollection collection(int tag);
 
 	public default STCollection collection(RelativeOid<?> oid) {
 		if (!oid.isConcrete())
@@ -176,18 +138,105 @@ public interface STDocument extends STObject<ProtoDocument> {
 		}
 	}
 
-	public default <T> STAttribute<T> get(STAttributeOid<T> oid) {
-//		return attribute(oid.relativize(getOid()));
-		return attribute(oid);
+	/**
+	 * Get all subcollections.
+	 *
+	 * @return A stream of all subcollections
+	 */
+	public Stream<STCollection> collections();
+
+	/**
+	 * Get a subdocument by its tag. This method never returns {@code null}.
+	 *
+	 * @param tag The subdocument tag
+	 * @return The subdocument associated with the tag
+	 */
+	public STDocument document(int tag);
+
+	public default STDocument document(RelativeOid<?> oid) {
+		if (!oid.isConcrete())
+			throw new RuntimeException();
+
+		switch (oid.first() % 10) {
+		case OidBase.SUFFIX_DOCUMENT:
+			return document(oid.first()).document(oid.tail());
+		case OidBase.SUFFIX_COLLECTION:
+			return collection(oid.first()).document(oid.tail());
+		default:
+			throw new RuntimeException("Unacceptable document tag: " + oid.first());
+		}
 	}
 
-	public default STDocument get(STDocumentOid<?> oid) {
-//		return document(oid.relativize(getOid()));
-		return document(oid);
+	/**
+	 * Get all subdocuments.
+	 *
+	 * @return A stream of all subdocuments
+	 */
+	public Stream<STDocument> documents();
+
+	public default <T> STAttribute<T> get(STAttributeOid<T> oid) {
+		return (STAttribute<T>) attribute(oid.relativize(oid()));
 	}
 
 	public default STCollection get(STCollectionOid<?> oid) {
-//		return collection(oid.relativize(getOid()));
-		return collection(oid);
+		return collection(oid.relativize(oid()));
 	}
+
+	public default STDocument get(STDocumentOid<?> oid) {
+		return document(oid.relativize(oid()));
+	}
+
+	/**
+	 * Get an attribute by its tag. This method returns {@code null} if the
+	 * attribute doesn't exist.
+	 *
+	 * @param <E> The type of the attribute's value
+	 * @param tag The attribute tag
+	 * @return The attribute associated with the tag or {@code null}
+	 */
+	public <E> STAttribute<E> getAttribute(int tag);
+
+	/**
+	 * Get a subcollection by its tag. This method returns {@code null} if the
+	 * subcollection doesn't exist.
+	 *
+	 * @param tag The subcollection tag
+	 * @return The subcollection associated with the tag or {@code null}
+	 */
+	public STCollection getCollection(int tag);
+
+	/**
+	 * Get a subdocument by its tag. This method returns {@code null} if the
+	 * subdocument doesn't exist.
+	 *
+	 * @param tag The subdocument tag
+	 * @return The subdocument associated with the tag or {@code null}
+	 */
+	public STDocument getDocument(int tag);
+
+	public String getId();
+
+	/**
+	 * Overwrite the attribute associated with the given tag.
+	 *
+	 * @param tag       The attribute tag
+	 * @param attribute The attribute to associate with the tag or {@code null}
+	 */
+	public void setAttribute(int tag, STAttribute<?> attribute);
+
+	/**
+	 * Overwrite the subcollection associated with the given tag.
+	 *
+	 * @param tag        The subcollection tag
+	 * @param collection The subcollection to associate with the tag or {@code null}
+	 */
+	public void setCollection(int tag, STCollection collection);
+
+	/**
+	 * Overwrite the attribute associated with the given tag.
+	 *
+	 * @param tag      The attribute tag
+	 * @param document The attribute to associate with the tag or {@code null}
+	 */
+	public void setDocument(int tag, STDocument document);
 }

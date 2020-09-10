@@ -105,9 +105,9 @@ public class EphemeralAttribute<T> extends EphemeralObject implements STAttribut
 			timestamps.clear();
 			values.clear();
 
-			fireAttributeEvent(this, old, value);
+			fireAttributeValueChangedEvent(this, old, value);
 			if (parent != null)
-				parent.fireAttributeEvent(this, old, value);
+				parent.fireAttributeValueChangedEvent(this, old, value);
 			return;
 		}
 
@@ -137,9 +137,9 @@ public class EphemeralAttribute<T> extends EphemeralObject implements STAttribut
 			checkRetention();
 		}
 
-		fireAttributeEvent(this, old, value);
+		fireAttributeValueChangedEvent(this, old, value);
 		if (parent != null)
-			parent.fireAttributeEvent(this, old, value);
+			parent.fireAttributeValueChangedEvent(this, old, value);
 	}
 
 	@Override

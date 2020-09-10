@@ -131,7 +131,7 @@ public final class Viewer {
 		});
 
 		ProfileStore.init(config -> {
-			config.collection = STStore.root().get(VirtProfile.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtProfile.COLLECTION);
 		});
 
 		return outcome.success();

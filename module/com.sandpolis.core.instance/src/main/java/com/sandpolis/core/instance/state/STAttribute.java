@@ -26,11 +26,21 @@ import com.sandpolis.core.instance.State.ProtoAttribute;
 public interface STAttribute<T> extends STObject<ProtoAttribute> {
 
 	/**
-	 * Set the current value of the attribute.
+	 * Indicates that an {@link STAttribute}'s value has changed.
 	 *
-	 * @param value The new value to replace the current value or {@code null}
+	 * @param <T> The attribute value's type
 	 */
-	public void set(T value);
+	public static final class ChangeEvent<T> {
+		public final STAttribute<T> attribute;
+		public final T newValue;
+		public final T oldValue;
+
+		public ChangeEvent(STAttribute<T> attribute, T oldValue, T newValue) {
+			this.attribute = attribute;
+			this.oldValue = oldValue;
+			this.newValue = newValue;
+		}
+	}
 
 	/**
 	 * Get the current value of the attribute.
@@ -38,14 +48,6 @@ public interface STAttribute<T> extends STObject<ProtoAttribute> {
 	 * @return The current value or {@code null} if there's no value
 	 */
 	public T get();
-
-	/**
-	 * Specify a source for the attribute's value. Setting an attribute source
-	 * "binds" the attribute and will cause {@link #set(Object)} calls to fail.
-	 *
-	 * @param source The source or {@code null} to remove the previous source
-	 */
-	public void source(Supplier<T> source);
 
 	/**
 	 * Perform the given operation if the attribute has a current value.
@@ -67,7 +69,18 @@ public interface STAttribute<T> extends STObject<ProtoAttribute> {
 		return get() != null;
 	}
 
-	public static interface EventListener<T> {
-		public void handle(STAttribute<T> attribute, T oldValue, T newValue);
-	}
+	/**
+	 * Set the current value of the attribute.
+	 *
+	 * @param value The new value to replace the current value or {@code null}
+	 */
+	public void set(T value);
+
+	/**
+	 * Specify a source for the attribute's value. Setting an attribute source
+	 * "binds" the attribute and will cause {@link #set(Object)} calls to fail.
+	 *
+	 * @param source The source or {@code null} to remove the previous source
+	 */
+	public void source(Supplier<T> source);
 }

@@ -76,6 +76,9 @@ public abstract class OidBase implements Oid {
 
 	@Override
 	public RelativeOid<?> relativize(Oid oid) {
+		if (oid == null)
+			return new RelativeOidImpl<>(this.value);
+
 		if (!oid.isChildOf(this))
 			throw new IllegalArgumentException();
 

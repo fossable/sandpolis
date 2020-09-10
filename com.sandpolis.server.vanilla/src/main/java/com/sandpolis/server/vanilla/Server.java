@@ -38,20 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.Config;
-import com.sandpolis.core.foundation.Platform.OsType;
-import com.sandpolis.core.instance.Auth.PasswordContainer;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.Generator.AuthenticationConfig;
-import com.sandpolis.core.instance.Generator.ExecutionConfig;
-import com.sandpolis.core.instance.Generator.FeatureSet;
-import com.sandpolis.core.instance.Generator.GenConfig;
-import com.sandpolis.core.instance.Generator.LoopConfig;
-import com.sandpolis.core.instance.Generator.MegaConfig;
-import com.sandpolis.core.instance.Generator.NetworkConfig;
-import com.sandpolis.core.instance.Generator.NetworkTarget;
-import com.sandpolis.core.instance.Generator.OutputFormat;
-import com.sandpolis.core.instance.Generator.OutputPayload;
 import com.sandpolis.core.instance.Group.GroupConfig;
 import com.sandpolis.core.instance.Listener.ListenerConfig;
 import com.sandpolis.core.instance.MainDispatch;
@@ -75,7 +63,6 @@ import com.sandpolis.core.server.auth.AuthExe;
 import com.sandpolis.core.server.auth.LoginExe;
 import com.sandpolis.core.server.banner.BannerExe;
 import com.sandpolis.core.server.generator.GeneratorExe;
-import com.sandpolis.core.server.generator.MegaGen;
 import com.sandpolis.core.server.group.GroupExe;
 import com.sandpolis.core.server.listener.ListenerExe;
 import com.sandpolis.core.server.plugin.PluginExe;
@@ -107,7 +94,6 @@ public final class Server {
 		register(Server.loadServerStores);
 		register(Server.loadPlugins);
 		register(Server.firstTimeSetup);
-		register(Server.installDebugClient);
 		register(Server.loadListeners);
 
 		register(Server.shutdown);
@@ -277,7 +263,7 @@ public final class Server {
 		});
 
 		ProfileStore.init(config -> {
-			config.collection = STStore.root().get(VirtProfile.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtProfile.COLLECTION);
 		});
 
 		TrustStore.init(config -> {
@@ -366,43 +352,6 @@ public final class Server {
 			return outcome.skipped();
 
 		return outcome.success();
-	});
-
-	/**
-	 * Install a debug client on the local machine.
-	 */
-	@InitializationTask(name = "Install debug client", development = true)
-	public static final Task installDebugClient = new Task(outcome -> {
-		if (!Config.DEBUG_CLIENT.value().orElse(false))
-			return outcome.skipped();
-
-		// Generate client
-		MegaGen generator = MegaGen
-				.build(GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
-						.setMega(MegaConfig.newBuilder().setMemory(false).setFeatures(FeatureSet.newBuilder()
-								.addPlugin("com.sandpolis.plugin.desktop").addPlugin("com.sandpolis.plugin.filesys")
-								.addPlugin("com.sandpolis.plugin.sysinfo").addPlugin("com.sandpolis.plugin.shell"))
-								.setExecution(ExecutionConfig.newBuilder().putInstallPath(OsType.LINUX_VALUE,
-										"/home/cilki/.sandpolis"))
-								.setAuthentication(AuthenticationConfig.newBuilder()
-										.setPassword(PasswordContainer.newBuilder().setPassword("12345")))
-								.setNetwork(
-										NetworkConfig.newBuilder()
-												.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000)
-														.setCooldown(5000)
-														.addTarget(NetworkTarget.newBuilder()
-																.setAddress("host.docker.internal").setPort(8768)))))
-						.build());
-		generator.run();
-
-		if (generator.getReport().getResult()) {
-			// Execute locally
-			Runtime.getRuntime()
-					.exec(new String[] { "java", "-jar", Environment.GEN.path().resolve("0.jar").toString() });
-			return outcome.success();
-		} else {
-			return outcome.failure(generator.getReport().getComment());
-		}
 	});
 
 	private Server() {

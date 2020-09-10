@@ -39,6 +39,7 @@ public class STCmd extends Cmdlet<STCmd> {
 	public static final class STSyncStruct {
 		public List<Oid> whitelist = new ArrayList<>();
 
+		public boolean initiator;
 		public int streamId = IDUtil.stream();
 		public int updatePeriod;
 		public STSyncDirection direction = STSyncDirection.DOWNSTREAM;
@@ -56,9 +57,10 @@ public class STCmd extends Cmdlet<STCmd> {
 
 	public CompletionStage<EntangledCollection> sync(STCollectionOid<?> oid, Consumer<STSyncStruct> configurator) {
 		if (!oid.isConcrete())
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("A concrete OID is required");
 
 		final var config = new STSyncStruct();
+		config.initiator = true;
 		configurator.accept(config);
 
 		for (var o : config.whitelist)
@@ -85,9 +87,10 @@ public class STCmd extends Cmdlet<STCmd> {
 
 	public CompletionStage<EntangledDocument> sync(STDocumentOid<?> oid, Consumer<STSyncStruct> configurator) {
 		if (!oid.isConcrete())
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("A concrete OID is required");
 
 		final var config = new STSyncStruct();
+		config.initiator = true;
 		configurator.accept(config);
 
 		for (var o : config.whitelist)
@@ -115,7 +118,7 @@ public class STCmd extends Cmdlet<STCmd> {
 	public CompletionStage<EphemeralCollection> snapshot(STCollectionOid<?> oid,
 			Consumer<STSnapshotStruct> configurator) {
 		if (!oid.isConcrete())
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("A concrete OID is required");
 
 		final var config = new STSnapshotStruct();
 		configurator.accept(config);
@@ -142,7 +145,7 @@ public class STCmd extends Cmdlet<STCmd> {
 
 	public CompletionStage<EphemeralDocument> snapshot(STDocumentOid<?> oid, Consumer<STSnapshotStruct> configurator) {
 		if (!oid.isConcrete())
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("A concrete OID is required");
 
 		final var config = new STSnapshotStruct();
 		configurator.accept(config);

@@ -57,6 +57,7 @@ public final class STExe extends Exelet {
 		config.direction = rq.getDirection();
 		config.streamId = rq.getStreamId();
 		config.updatePeriod = rq.getUpdatePeriod();
+		config.initiator = false;
 
 		switch (rq.getOidType()) {
 		case ATTRIBUTE:

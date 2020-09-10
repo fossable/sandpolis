@@ -55,7 +55,8 @@ public final class ProfileStore extends STCollectionStore<Profile> implements Co
 	 * @return The profile
 	 */
 	public Optional<Profile> getByCvid(int cvid) {
-		return stream().filter(profile -> profile.getCvid() == cvid).findFirst();
+		return stream().filter(profile -> profile.cvid().isPresent()).filter(profile -> profile.getCvid() == cvid)
+				.findFirst();
 	}
 
 	public Optional<Profile> getByUuid(String uuid) {
