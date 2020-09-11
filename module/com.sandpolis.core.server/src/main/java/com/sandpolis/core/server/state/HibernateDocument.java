@@ -243,4 +243,9 @@ public class HibernateDocument extends AbstractSTObject implements STDocument {
 	public void setOid(Oid oid) {
 		this.oid = oid;
 	}
+
+	@Override
+	public AbstractSTObject parent() {
+		return parentDocument != null ? parentDocument : parentCollection;
+	}
 }

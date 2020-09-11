@@ -34,6 +34,10 @@ public class STDocumentOid<T extends VirtObject> extends OidBase implements Abso
 		return resolve(STDocumentOid::new, tags);
 	}
 
+	public STDocumentOid<?> resolveLocal() {
+		return resolve(2);
+	}
+
 	@Override
 	public STDocumentOid<?> head(int length) {
 		return head(STDocumentOid::new, length);

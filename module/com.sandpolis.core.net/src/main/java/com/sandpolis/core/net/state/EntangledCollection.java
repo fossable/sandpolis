@@ -19,9 +19,8 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.STAttribute;
+import com.sandpolis.core.instance.state.AbstractSTObject;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STRelation;
@@ -69,11 +68,6 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 		}
 	}
 
-	@Subscribe
-	<T> void handle(STAttribute.ChangeEvent<T> event) {
-		source.submit(test(event.attribute, event.newValue));
-	}
-
 	// Begin boilerplate
 
 	@Override
@@ -113,8 +107,7 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 
 	@Override
 	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor) {
-		// TODO Auto-generated method stub
-		return null;
+		return container.collectionList(constructor);
 	}
 
 	@Override
@@ -150,6 +143,11 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 	@Override
 	public void setOid(Oid oid) {
 		container.setOid(oid);
+	}
+
+	@Override
+	public AbstractSTObject parent() {
+		return ((AbstractSTObject) container).parent();
 	}
 
 }

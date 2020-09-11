@@ -34,6 +34,10 @@ public class STCollectionOid<T extends VirtObject> extends OidBase implements Ab
 		return resolve(STCollectionOid::new, tags);
 	}
 
+	public STCollectionOid<?> resolveLocal() {
+		return resolve(2);
+	}
+
 	@Override
 	public STCollectionOid<?> head(int length) {
 		return head(STCollectionOid::new, length);

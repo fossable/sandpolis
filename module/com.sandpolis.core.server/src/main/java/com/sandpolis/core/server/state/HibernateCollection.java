@@ -205,4 +205,9 @@ public class HibernateCollection extends AbstractSTObject implements STCollectio
 	public void setOid(Oid oid) {
 		this.oid = oid;
 	}
+
+	@Override
+	public AbstractSTObject parent() {
+		return parent;
+	}
 }

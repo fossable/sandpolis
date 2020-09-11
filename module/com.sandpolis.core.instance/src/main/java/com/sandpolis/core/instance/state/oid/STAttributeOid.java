@@ -33,6 +33,10 @@ public class STAttributeOid<T> extends OidBase implements AbsoluteOid<T>, Relati
 		return resolve(STAttributeOid::new, tags);
 	}
 
+	public STAttributeOid<?> resolveLocal() {
+		return resolve(2);
+	}
+
 	@Override
 	public STAttributeOid<?> head(int length) {
 		return head(STAttributeOid::new, length);

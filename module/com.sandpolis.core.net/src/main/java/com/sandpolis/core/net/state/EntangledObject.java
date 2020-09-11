@@ -11,7 +11,9 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
+import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.Message;
+import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.State.ProtoCollection;
@@ -47,7 +49,12 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 		return sink;
 	}
 
-	protected <E> ProtoCollection test(STAttribute<E> attribute, E value) {
+	@Subscribe
+	void handle(STAttribute.ChangeEvent<T> event) {
+		getSource().submit((T) eventToProto(event.attribute, event.newValue));
+	}
+
+	private <E> Message eventToProto(STAttribute<E> attribute, E value) {
 		int[] components = attribute.oid().value();
 
 		MessageOrBuilder current = null;
@@ -61,8 +68,7 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 			case OidBase.SUFFIX_DOCUMENT:
 				switch (components[i + 1] % 10) {
 				case OidBase.SUFFIX_ATTRIBUTE:
-					current = ProtoDocument.newBuilder().putAttribute(components[i],
-							((ProtoAttribute.Builder) current).build());
+					current = ProtoDocument.newBuilder().putAttribute(components[i], (ProtoAttribute) current);
 					break;
 				case OidBase.SUFFIX_DOCUMENT:
 					current = ProtoDocument.newBuilder().putDocument(components[i],
@@ -81,6 +87,10 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 			}
 		}
 
-		return ((ProtoCollection.Builder) current).build();
+		if (current instanceof Builder) {
+			return ((Builder) current).build();
+		} else {
+			return (Message) current;
+		}
 	}
 }

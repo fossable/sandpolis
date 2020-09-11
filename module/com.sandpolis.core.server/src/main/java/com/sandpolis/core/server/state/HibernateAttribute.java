@@ -138,9 +138,6 @@ public class HibernateAttribute<T> extends AbstractSTObject implements STAttribu
 			values.clear();
 
 			fireAttributeValueChangedEvent(this, old, value);
-			if (parent != null) {
-				parent.fireAttributeEvent(this, old, value);
-			}
 			return;
 		}
 
@@ -171,9 +168,6 @@ public class HibernateAttribute<T> extends AbstractSTObject implements STAttribu
 		}
 
 		fireAttributeValueChangedEvent(this, old, value);
-		if (parent != null) {
-			parent.fireAttributeEvent(this, old, value);
-		}
 	}
 
 	@Override
@@ -279,8 +273,10 @@ public class HibernateAttribute<T> extends AbstractSTObject implements STAttribu
 			proto.addValues(current.getProto().setTimestamp(currentTimestamp));
 		}
 
-		for (int i = 0; i < values.size(); i++) {
-			proto.addValues(values.get(i).getProto().setTimestamp(timestamps.get(i)));
+		if (values != null) {
+			for (int i = 0; i < values.size(); i++) {
+				proto.addValues(values.get(i).getProto().setTimestamp(timestamps.get(i)));
+			}
 		}
 
 		return proto.build();
@@ -294,5 +290,10 @@ public class HibernateAttribute<T> extends AbstractSTObject implements STAttribu
 	@Override
 	public void setOid(Oid oid) {
 		this.oid = oid;
+	}
+
+	@Override
+	public AbstractSTObject parent() {
+		return parent;
 	}
 }

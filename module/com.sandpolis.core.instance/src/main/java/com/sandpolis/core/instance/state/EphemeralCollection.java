@@ -69,11 +69,6 @@ public class EphemeralCollection extends EphemeralObject implements STCollection
 		return documents.containsValue(document);
 	}
 
-	public void add(int tag, EphemeralDocument e) {
-		documents.put(tag, e);
-		fireCollectionAddedEvent(this, e);
-	}
-
 	@Override
 	public void remove(STDocument document) {
 		documents.values().remove(document);
@@ -102,7 +97,7 @@ public class EphemeralCollection extends EphemeralObject implements STCollection
 	@Override
 	public void setDocument(int tag, STDocument document) {
 		documents.put(tag, document);
-		document.setOid(oid == null ? new AbsoluteOidImpl<>(tag) : oid.child(tag));
+		document.setOid(oid() == null ? new AbsoluteOidImpl<>(tag) : oid().child(tag));
 	}
 
 	@Override
@@ -154,5 +149,10 @@ public class EphemeralCollection extends EphemeralObject implements STCollection
 		public int getInitCount() {
 			return 1;
 		}
+	}
+
+	@Override
+	public AbstractSTObject parent() {
+		return parent;
 	}
 }

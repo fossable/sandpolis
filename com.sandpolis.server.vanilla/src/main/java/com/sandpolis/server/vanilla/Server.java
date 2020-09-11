@@ -231,7 +231,7 @@ public final class Server {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolveLocal());
 		});
 
 		ExeletStore.init(config -> {
@@ -251,15 +251,15 @@ public final class Server {
 		});
 
 		UserStore.init(config -> {
-			config.collection = STStore.root().get(VirtUser.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtUser.COLLECTION.resolveLocal());
 		});
 
 		ListenerStore.init(config -> {
-			config.collection = STStore.root().get(VirtListener.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtListener.COLLECTION.resolveLocal());
 		});
 
 		GroupStore.init(config -> {
-			config.collection = STStore.root().get(VirtGroup.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtGroup.COLLECTION.resolveLocal());
 		});
 
 		ProfileStore.init(config -> {
@@ -267,12 +267,12 @@ public final class Server {
 		});
 
 		TrustStore.init(config -> {
-			config.collection = STStore.root().get(VirtTrustAnchor.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtTrustAnchor.COLLECTION.resolveLocal());
 		});
 
 		PluginStore.init(config -> {
 			config.verifier = TrustStore::verifyPluginCertificate;
-			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolveLocal());
 		});
 
 		LocationStore.init(config -> {

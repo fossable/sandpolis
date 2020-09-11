@@ -11,16 +11,23 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
+import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.BIDIRECTIONAL;
+import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.DOWNSTREAM;
+import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.UPSTREAM;
+
 import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
+import com.sandpolis.core.instance.state.AbstractSTObject;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
+import com.sandpolis.core.net.stream.StreamSink;
+import com.sandpolis.core.net.stream.StreamSource;
 
 public class EntangledDocument extends EntangledObject<ProtoDocument> implements STDocument {
 
@@ -28,98 +35,111 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 
 	public EntangledDocument(STDocument container, STSyncStruct config) {
 		this.container = Objects.requireNonNull(container);
+
+		if ((config.initiator && config.direction == DOWNSTREAM) || (!config.initiator && config.direction == UPSTREAM)
+				|| config.direction == BIDIRECTIONAL) {
+			sink = new StreamSink<>() {
+
+				@Override
+				public void onNext(ProtoDocument item) {
+					container.merge(item);
+				};
+			};
+		}
+
+		if ((config.initiator && config.direction == UPSTREAM) || (!config.initiator && config.direction == DOWNSTREAM)
+				|| config.direction == BIDIRECTIONAL) {
+			source = new StreamSource<>() {
+
+				@Override
+				public void start() {
+					container.addListener(EntangledDocument.this);
+				}
+
+				@Override
+				public void stop() {
+					container.removeListener(EntangledDocument.this);
+				}
+			};
+			source.start();
+		}
 	}
 
 	// Begin boilerplate
 
 	@Override
 	public void merge(ProtoDocument snapshot) {
-		// TODO Auto-generated method stub
-
+		container.merge(snapshot);
 	}
 
 	@Override
 	public ProtoDocument snapshot(RelativeOid<?>... oids) {
-		// TODO Auto-generated method stub
-		return null;
+		return container.snapshot(oids);
 	}
 
 	@Override
 	public <E> STAttribute<E> attribute(int tag) {
-		// TODO Auto-generated method stub
-		return null;
+		return container.attribute(tag);
 	}
 
 	@Override
 	public Stream<STAttribute<?>> attributes() {
-		// TODO Auto-generated method stub
-		return null;
+		return container.attributes();
 	}
 
 	@Override
 	public <E> STAttribute<E> getAttribute(int tag) {
-		// TODO Auto-generated method stub
-		return null;
+		return container.getAttribute(tag);
 	}
 
 	@Override
 	public void setAttribute(int tag, STAttribute<?> attribute) {
-		// TODO Auto-generated method stub
-
+		container.setAttribute(tag, attribute);
 	}
 
 	@Override
 	public STCollection collection(int tag) {
-		// TODO Auto-generated method stub
-		return null;
+		return container.collection(tag);
 	}
 
 	@Override
 	public Stream<STCollection> collections() {
-		// TODO Auto-generated method stub
-		return null;
+		return container.collections();
 	}
 
 	@Override
 	public STCollection getCollection(int tag) {
-		// TODO Auto-generated method stub
-		return null;
+		return container.getCollection(tag);
 	}
 
 	@Override
 	public void setCollection(int tag, STCollection collection) {
-		// TODO Auto-generated method stub
-
+		container.setCollection(tag, collection);
 	}
 
 	@Override
 	public STDocument document(int tag) {
-		// TODO Auto-generated method stub
-		return null;
+		return container.document(tag);
 	}
 
 	@Override
 	public Stream<STDocument> documents() {
-		// TODO Auto-generated method stub
-		return null;
+		return container.documents();
 	}
 
 	@Override
 	public STDocument getDocument(int tag) {
-		// TODO Auto-generated method stub
-		return null;
+		return container.getDocument(tag);
 	}
 
 	@Override
 	public void setDocument(int tag, STDocument document) {
-		// TODO Auto-generated method stub
-
+		container.setDocument(tag, document);
 	}
 
 	@Override
 	public String getId() {
-		// TODO Auto-generated method stub
-		return null;
+		return container.getId();
 	}
 
 	@Override
@@ -140,5 +160,10 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	@Override
 	public void removeListener(Object listener) {
 		container.removeListener(listener);
+	}
+
+	@Override
+	public AbstractSTObject parent() {
+		return ((AbstractSTObject) container).parent();
 	}
 }

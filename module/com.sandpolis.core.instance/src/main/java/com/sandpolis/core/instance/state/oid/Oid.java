@@ -74,7 +74,7 @@ public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 	 * @return Whether this OID is a descendant
 	 */
 	public default boolean isChildOf(Oid oid) {
-		return Arrays.mismatch(value(), oid.value()) == value().length - 1;
+		return Arrays.mismatch(value(), oid.value()) == Math.min(size(), oid.size());
 	}
 
 	/**

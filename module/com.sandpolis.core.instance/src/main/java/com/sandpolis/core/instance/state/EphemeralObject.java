@@ -15,7 +15,7 @@ import com.sandpolis.core.instance.state.oid.Oid;
 
 public abstract class EphemeralObject extends AbstractSTObject {
 
-	protected Oid oid;
+	private Oid oid;
 
 	public Oid oid() {
 		return oid;

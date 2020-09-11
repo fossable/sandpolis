@@ -27,8 +27,6 @@ public final class STStore extends StoreBase implements ConfigurableStore<STStor
 
 	private static final Logger log = LoggerFactory.getLogger(STStore.class);
 
-	public final int LOCAL_INSTANCE = 2;
-
 	/**
 	 * The root of the instance's state tree.
 	 */
@@ -55,6 +53,7 @@ public final class STStore extends StoreBase implements ConfigurableStore<STStor
 
 		service = Executors.newFixedThreadPool(config.concurrency);
 		root = config.root;
+		root.setOid(VirtST.DOCUMENT);
 	}
 
 	@Override

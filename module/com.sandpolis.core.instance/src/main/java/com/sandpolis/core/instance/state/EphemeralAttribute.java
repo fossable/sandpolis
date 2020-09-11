@@ -106,8 +106,6 @@ public class EphemeralAttribute<T> extends EphemeralObject implements STAttribut
 			values.clear();
 
 			fireAttributeValueChangedEvent(this, old, value);
-			if (parent != null)
-				parent.fireAttributeValueChangedEvent(this, old, value);
 			return;
 		}
 
@@ -138,8 +136,6 @@ public class EphemeralAttribute<T> extends EphemeralObject implements STAttribut
 		}
 
 		fireAttributeValueChangedEvent(this, old, value);
-		if (parent != null)
-			parent.fireAttributeValueChangedEvent(this, old, value);
 	}
 
 	@Override
@@ -245,10 +241,17 @@ public class EphemeralAttribute<T> extends EphemeralObject implements STAttribut
 			proto.addValues(current.getProto().setTimestamp(currentTimestamp));
 		}
 
-		for (int i = 0; i < values.size(); i++) {
-			proto.addValues(values.get(i).getProto().setTimestamp(timestamps.get(i)));
+		if (values != null) {
+			for (int i = 0; i < values.size(); i++) {
+				proto.addValues(values.get(i).getProto().setTimestamp(timestamps.get(i)));
+			}
 		}
 
 		return proto.build();
+	}
+
+	@Override
+	public AbstractSTObject parent() {
+		return parent;
 	}
 }

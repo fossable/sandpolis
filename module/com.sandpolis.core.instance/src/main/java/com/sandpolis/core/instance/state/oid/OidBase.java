@@ -77,10 +77,10 @@ public abstract class OidBase implements Oid {
 	@Override
 	public RelativeOid<?> relativize(Oid oid) {
 		if (oid == null)
-			return new RelativeOidImpl<>(this.value);
+			return new RelativeOidImpl<>(value.clone());
 
-		if (!oid.isChildOf(this))
-			throw new IllegalArgumentException();
+		if (!isChildOf(oid))
+			throw new IllegalArgumentException("Target: " + this + " must be a child of: " + oid);
 
 		return new RelativeOidImpl<>(Arrays.copyOfRange(value, oid.size(), value.length));
 	}

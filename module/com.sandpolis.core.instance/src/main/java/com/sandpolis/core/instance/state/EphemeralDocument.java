@@ -29,7 +29,7 @@ import com.sandpolis.core.instance.state.oid.RelativeOid;
  */
 public class EphemeralDocument extends EphemeralObject implements STDocument {
 
-	private STObject<?> parent;
+	private AbstractSTObject parent;
 
 	private Map<Integer, STDocument> documents;
 
@@ -40,7 +40,7 @@ public class EphemeralDocument extends EphemeralObject implements STDocument {
 	private String id = UUID.randomUUID().toString();
 
 	public EphemeralDocument(STDocument parent) {
-		this.parent = parent;
+		this.parent = (AbstractSTObject) parent;
 
 		documents = new HashMap<>();
 		collections = new HashMap<>();
@@ -53,7 +53,7 @@ public class EphemeralDocument extends EphemeralObject implements STDocument {
 	}
 
 	public EphemeralDocument(STCollection parent) {
-		this.parent = parent;
+		this.parent = (AbstractSTObject) parent;
 
 		documents = new HashMap<>();
 		collections = new HashMap<>();
@@ -84,15 +84,15 @@ public class EphemeralDocument extends EphemeralObject implements STDocument {
 	@Override
 	public void setAttribute(int tag, STAttribute<?> attribute) {
 		attributes.put(tag, attribute);
-		attribute.setOid(oid == null ? new AbsoluteOidImpl<>(tag) : oid.child(tag));
+		attribute.setOid(oid() == null ? new AbsoluteOidImpl<>(tag) : oid().child(tag));
 	}
 
 	@Override
 	public STDocument document(int tag) {
-		var document = documents.get(tag);
+		var document = getDocument(tag);
 		if (document == null) {
 			document = new EphemeralDocument(this);
-			documents.put(tag, document);
+			setDocument(tag, document);
 		}
 		return document;
 	}
@@ -104,7 +104,7 @@ public class EphemeralDocument extends EphemeralObject implements STDocument {
 	@Override
 	public void setDocument(int tag, STDocument document) {
 		documents.put(tag, document);
-		document.setOid(oid == null ? new AbsoluteOidImpl<>(tag) : oid.child(tag));
+		document.setOid(oid() == null ? new AbsoluteOidImpl<>(tag) : oid().child(tag));
 	}
 
 	@Override
@@ -125,7 +125,7 @@ public class EphemeralDocument extends EphemeralObject implements STDocument {
 	@Override
 	public void setCollection(int tag, STCollection collection) {
 		collections.put(tag, collection);
-		collection.setOid(oid == null ? new AbsoluteOidImpl<>(tag) : oid.child(tag));
+		collection.setOid(oid() == null ? new AbsoluteOidImpl<>(tag) : oid().child(tag));
 	}
 
 	@Override
@@ -198,5 +198,10 @@ public class EphemeralDocument extends EphemeralObject implements STDocument {
 	@Override
 	public Stream<STDocument> documents() {
 		return documents.values().stream();
+	}
+
+	@Override
+	public AbstractSTObject parent() {
+		return parent;
 	}
 }
