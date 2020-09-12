@@ -19,11 +19,6 @@ import com.sandpolis.core.instance.state.oid.RelativeOid.RelativeOidImpl;
 
 public abstract class OidBase implements Oid {
 
-	public static final int SUFFIX_ATTRIBUTE = 1;
-	public static final int SUFFIX_DOCUMENT = 2;
-	public static final int SUFFIX_COLLECTION = 3;
-	public static final int SUFFIX_RELATION = 4;
-
 	/**
 	 * The components of the oid.
 	 */
@@ -111,11 +106,12 @@ public abstract class OidBase implements Oid {
 		return (E) head(size() - 1);
 	}
 
-	protected <E extends OidBase> E head(Function<int[], E> cons, int length) {
+	@Override
+	public Oid head(int length) {
 		if (value.length < length || length <= 0)
 			throw new IllegalArgumentException("Target length out of range");
 
-		return cons.apply(Arrays.copyOf(value, length));
+		return Oid.newOid(Arrays.copyOf(value, length));
 	}
 
 	protected <E extends OidBase> E tail(Function<int[], E> cons) {
@@ -125,10 +121,10 @@ public abstract class OidBase implements Oid {
 		return cons.apply(Arrays.copyOfRange(value, 1, value.length));
 	}
 
-	protected <E extends OidBase> E child(Function<int[], E> cons, int tag) {
+	@Override
+	public Oid child(int component) {
 		int[] n = Arrays.copyOf(value, value.length + 1);
-		n[n.length - 1] = tag;
-		return cons.apply(n);
+		n[n.length - 1] = component;
+		return Oid.newOid(n);
 	}
-
 }

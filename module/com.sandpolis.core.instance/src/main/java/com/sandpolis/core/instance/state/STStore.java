@@ -53,7 +53,7 @@ public final class STStore extends StoreBase implements ConfigurableStore<STStor
 
 		service = Executors.newFixedThreadPool(config.concurrency);
 		root = config.root;
-		root.setOid(VirtST.DOCUMENT);
+		root.setTag(9);
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public final class STStore extends StoreBase implements ConfigurableStore<STStor
 
 	@ConfigStruct
 	public final class STStoreConfig {
-		public int concurrency;
+		public int concurrency = 1;
 		public STDocument root;
 	}
 

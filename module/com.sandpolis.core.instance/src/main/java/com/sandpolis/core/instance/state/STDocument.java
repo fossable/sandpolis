@@ -14,7 +14,7 @@ package com.sandpolis.core.instance.state;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
-import com.sandpolis.core.instance.state.oid.OidBase;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.state.oid.STAttributeOid;
 import com.sandpolis.core.instance.state.oid.STCollectionOid;
@@ -93,12 +93,12 @@ public interface STDocument extends STObject<ProtoDocument> {
 		if (!oid.isConcrete())
 			throw new RuntimeException();
 
-		switch (oid.first() % 10) {
-		case OidBase.SUFFIX_ATTRIBUTE:
+		switch (Oid.type(oid.first())) {
+		case Oid.TYPE_ATTRIBUTE:
 			return attribute(oid.first());
-		case OidBase.SUFFIX_DOCUMENT:
+		case Oid.TYPE_DOCUMENT:
 			return (STAttribute<E>) document(oid.first()).attribute(oid.tail());
-		case OidBase.SUFFIX_COLLECTION:
+		case Oid.TYPE_COLLECTION:
 			return (STAttribute<E>) collection(oid.first()).attribute(oid.tail());
 		default:
 			throw new RuntimeException("Unacceptable attribute tag: " + oid.first());
@@ -124,10 +124,10 @@ public interface STDocument extends STObject<ProtoDocument> {
 		if (!oid.isConcrete())
 			throw new RuntimeException();
 
-		switch (oid.first() % 10) {
-		case OidBase.SUFFIX_DOCUMENT:
+		switch (Oid.type(oid.first())) {
+		case Oid.TYPE_DOCUMENT:
 			return document(oid.first()).collection(oid.tail());
-		case OidBase.SUFFIX_COLLECTION:
+		case Oid.TYPE_COLLECTION:
 			if (oid.size() == 1) {
 				return collection(oid.first());
 			} else {
@@ -157,10 +157,10 @@ public interface STDocument extends STObject<ProtoDocument> {
 		if (!oid.isConcrete())
 			throw new RuntimeException();
 
-		switch (oid.first() % 10) {
-		case OidBase.SUFFIX_DOCUMENT:
+		switch (Oid.type(oid.first())) {
+		case Oid.TYPE_DOCUMENT:
 			return document(oid.first()).document(oid.tail());
-		case OidBase.SUFFIX_COLLECTION:
+		case Oid.TYPE_COLLECTION:
 			return collection(oid.first()).document(oid.tail());
 		default:
 			throw new RuntimeException("Unacceptable document tag: " + oid.first());

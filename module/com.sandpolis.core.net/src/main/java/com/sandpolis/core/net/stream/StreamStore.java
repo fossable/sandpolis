@@ -175,20 +175,8 @@ public final class StreamStore extends StoreBase
 
 	@Subscribe
 	private synchronized void onSockLost(SockLostEvent event) {
-		inbound.removeIf(adapter -> {
-			if (adapter.getSock().equals(event.get())) {
-				adapter.close();
-				return true;
-			}
-			return false;
-		});
-		outbound.removeIf(adapter -> {
-			if (adapter.getSock().equals(event.get())) {
-				adapter.close();
-				return true;
-			}
-			return false;
-		});
+		inbound.removeIf(adapter -> adapter.getSock().equals(event.get()));
+		outbound.removeIf(adapter -> adapter.getSock().equals(event.get()));
 
 		// TODO find dependent streams to also close
 	}

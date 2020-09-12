@@ -74,9 +74,8 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	}
 
 	@Override
-	public void setOid(Oid oid) {
-		// TODO Auto-generated method stub
-
+	public void setTag(int tag) {
+		container.setTag(tag);
 	}
 
 }

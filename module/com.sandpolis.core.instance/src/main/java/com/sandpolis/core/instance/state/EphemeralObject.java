@@ -11,17 +11,32 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state;
 
+import com.sandpolis.core.instance.state.oid.AbsoluteOid.AbsoluteOidImpl;
 import com.sandpolis.core.instance.state.oid.Oid;
 
 public abstract class EphemeralObject extends AbstractSTObject {
 
-	private Oid oid;
+	private int tag;
 
 	public Oid oid() {
-		return oid;
+		if (parent() == null) {
+			return new AbsoluteOidImpl<>(tag);
+		}
+
+		var parentOid = ((EphemeralObject) parent()).oid();
+		if (parentOid == null) {
+			return new AbsoluteOidImpl<>(tag);
+		}
+
+		return parentOid.child(tag);
 	}
 
-	public void setOid(Oid oid) {
-		this.oid = oid;
+	@Override
+	public int getTag() {
+		return tag;
+	}
+
+	public void setTag(int tag) {
+		this.tag = tag;
 	}
 }

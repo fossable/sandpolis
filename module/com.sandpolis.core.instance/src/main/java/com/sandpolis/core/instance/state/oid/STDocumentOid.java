@@ -23,10 +23,16 @@ public class STDocumentOid<T extends VirtObject> extends OidBase implements Abso
 
 	public STDocumentOid(String oid) {
 		super(oid);
+
+		if (Oid.type(last()) != Oid.TYPE_DOCUMENT)
+			throw new IllegalArgumentException();
 	}
 
 	public STDocumentOid(int[] oid) {
 		super(oid);
+
+		if (Oid.type(last()) != Oid.TYPE_DOCUMENT)
+			throw new IllegalArgumentException("Unacceptable document tag: " + last());
 	}
 
 	@Override
@@ -35,17 +41,7 @@ public class STDocumentOid<T extends VirtObject> extends OidBase implements Abso
 	}
 
 	public STDocumentOid<?> resolveLocal() {
-		return resolve(2);
-	}
-
-	@Override
-	public STDocumentOid<?> head(int length) {
-		return head(STDocumentOid::new, length);
-	}
-
-	@Override
-	public STDocumentOid<?> child(int tag) {
-		return child(STDocumentOid::new, tag);
+		return resolve(9);
 	}
 
 	@Override

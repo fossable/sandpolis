@@ -14,6 +14,8 @@ package com.sandpolis.core.instance.state.oid;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import com.sandpolis.core.instance.state.oid.AbsoluteOid.AbsoluteOidImpl;
+
 /**
  * An {@link Oid} corresponds to one or more objects in a virtual state tree.
  * OIDs have a sequence of 32-bit integers that can uniquely locate objects in a
@@ -36,6 +38,13 @@ import java.util.Iterator;
  * absolute OID.
  */
 public interface Oid extends Comparable<Oid>, Iterable<Integer> {
+
+	public static final int ID_SPACE = 2;
+
+	public static final int TYPE_ATTRIBUTE = 0;
+	public static final int TYPE_DOCUMENT = 1;
+	public static final int TYPE_COLLECTION = 2;
+	public static final int TYPE_RELATION = 3;
 
 	/**
 	 * Extend the OID by adding the given component to the end.
@@ -155,4 +164,25 @@ public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 	 */
 	public int[] value();
 
+	public static int type(int component) {
+		if (component == 0)
+			throw new IllegalArgumentException();
+
+		return component & ((1 << ID_SPACE) - 1);
+	}
+
+	public static <E extends OidBase> E newOid(int... value) {
+		switch (Oid.type(value[value.length - 1])) {
+		case TYPE_ATTRIBUTE:
+			return (E) new STAttributeOid<>(value);
+		case TYPE_DOCUMENT:
+			return (E) new STDocumentOid<>(value);
+		case TYPE_COLLECTION:
+			return (E) new STCollectionOid<>(value);
+		case TYPE_RELATION:
+			return (E) new AbsoluteOidImpl<>(value);// TODO
+		default:
+			throw new IllegalArgumentException();
+		}
+	}
 }

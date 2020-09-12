@@ -11,10 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
-import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.BIDIRECTIONAL;
-import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.DOWNSTREAM;
-import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.UPSTREAM;
-
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -24,8 +20,6 @@ import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
-import com.sandpolis.core.net.stream.StreamSink;
-import com.sandpolis.core.net.stream.StreamSource;
 
 public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> implements STAttribute<T> {
 
@@ -34,32 +28,28 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	public EntangledAttribute(STAttribute<T> container, STSyncStruct config) {
 		this.container = Objects.requireNonNull(container);
 
-		if ((config.initiator && config.direction == DOWNSTREAM) || (!config.initiator && config.direction == UPSTREAM)
-				|| config.direction == BIDIRECTIONAL) {
-			sink = new StreamSink<>() {
-
-				@Override
-				public void onNext(ProtoAttribute item) {
-					container.merge(item);
-				};
-			};
-		}
-
-		if ((config.initiator && config.direction == UPSTREAM) || (!config.initiator && config.direction == DOWNSTREAM)
-				|| config.direction == BIDIRECTIONAL) {
-			source = new StreamSource<>() {
-
-				@Override
-				public void start() {
-					container.addListener(EntangledAttribute.this);
-				}
-
-				@Override
-				public void stop() {
-					container.removeListener(EntangledAttribute.this);
-				}
-			};
-			source.start();
+		// Start streams
+		switch (config.direction) {
+		case BIDIRECTIONAL:
+			startSource(config);
+			startSink(config, ProtoAttribute.class);
+			break;
+		case DOWNSTREAM:
+			if (config.initiator) {
+				startSink(config, ProtoAttribute.class);
+			} else {
+				startSource(config);
+			}
+			break;
+		case UPSTREAM:
+			if (config.initiator) {
+				startSource(config);
+			} else {
+				startSink(config, ProtoAttribute.class);
+			}
+			break;
+		default:
+			throw new IllegalArgumentException();
 		}
 	}
 
@@ -106,13 +96,23 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	}
 
 	@Override
-	public void setOid(Oid oid) {
-		container.setOid(oid);
+	public int getTag() {
+		return ((AbstractSTObject) container).getTag();
+	}
+
+	@Override
+	public void setTag(int tag) {
+		container.setTag(tag);
 	}
 
 	@Override
 	public AbstractSTObject parent() {
 		return ((AbstractSTObject) container).parent();
+	}
+
+	@Override
+	protected AbstractSTObject container() {
+		return (AbstractSTObject) container;
 	}
 
 }

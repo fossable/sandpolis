@@ -11,6 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
+import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
+
 import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
@@ -20,7 +22,11 @@ import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.AbstractSTObject;
 import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.oid.OidBase;
+import com.sandpolis.core.instance.state.STObject;
+import com.sandpolis.core.instance.state.oid.Oid;
+import com.sandpolis.core.net.state.STCmd.STSyncStruct;
+import com.sandpolis.core.net.stream.InboundStreamAdapter;
+import com.sandpolis.core.net.stream.OutboundStreamAdapter;
 import com.sandpolis.core.net.stream.Stream;
 import com.sandpolis.core.net.stream.StreamSink;
 import com.sandpolis.core.net.stream.StreamSource;
@@ -50,40 +56,46 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 	}
 
 	@Subscribe
-	void handle(STAttribute.ChangeEvent<T> event) {
+	void handle(STAttribute.ChangeEvent<?> event) {
 		getSource().submit((T) eventToProto(event.attribute, event.newValue));
 	}
 
-	private <E> Message eventToProto(STAttribute<E> attribute, E value) {
-		int[] components = attribute.oid().value();
+	private Message eventToProto(STAttribute<?> attribute, Object value) {
+		int[] components = attribute.oid().relativize(((STObject<?>) container()).oid().parent()).value();
 
 		MessageOrBuilder current = null;
 
 		for (int i = components.length - 1; i >= 0; i--) {
-			switch (components[i] % 10) {
-			case OidBase.SUFFIX_ATTRIBUTE:
+			System.out.println(components[i]);
+			switch (Oid.type(components[i])) {
+			case Oid.TYPE_ATTRIBUTE:
 				// TODO use value parameter
 				current = attribute.snapshot();
 				break;
-			case OidBase.SUFFIX_DOCUMENT:
-				switch (components[i + 1] % 10) {
-				case OidBase.SUFFIX_ATTRIBUTE:
-					current = ProtoDocument.newBuilder().putAttribute(components[i], (ProtoAttribute) current);
+			case Oid.TYPE_DOCUMENT:
+				switch (Oid.type(components[i + 1])) {
+				case Oid.TYPE_ATTRIBUTE:
+					current = ProtoDocument.newBuilder().putAttribute(components[i + 1], (ProtoAttribute) current);
 					break;
-				case OidBase.SUFFIX_DOCUMENT:
-					current = ProtoDocument.newBuilder().putDocument(components[i],
+				case Oid.TYPE_DOCUMENT:
+					current = ProtoDocument.newBuilder().putDocument(components[i + 1],
 							((ProtoDocument.Builder) current).build());
 					break;
-				case OidBase.SUFFIX_COLLECTION:
-					current = ProtoDocument.newBuilder().putCollection(components[i],
+				case Oid.TYPE_COLLECTION:
+					current = ProtoDocument.newBuilder().putCollection(components[i + 1],
 							((ProtoCollection.Builder) current).build());
 					break;
+				default:
+					throw new RuntimeException();
 				}
+
 				break;
-			case OidBase.SUFFIX_COLLECTION:
-				current = ProtoCollection.newBuilder().putDocument(components[i],
+			case Oid.TYPE_COLLECTION:
+				current = ProtoCollection.newBuilder().putDocument(components[i + 1],
 						((ProtoDocument.Builder) current).build());
 				break;
+			default:
+				throw new RuntimeException();
 			}
 		}
 
@@ -92,5 +104,37 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 		} else {
 			return (Message) current;
 		}
+	}
+
+	protected abstract AbstractSTObject container();
+
+	protected void startSource(STSyncStruct config) {
+		source = new StreamSource<>() {
+
+			@Override
+			public void start() {
+				container().addListener(EntangledObject.this);
+			}
+
+			@Override
+			public void stop() {
+				container().removeListener(EntangledObject.this);
+			}
+		};
+
+		StreamStore.add(getSource(), new OutboundStreamAdapter<>(config.streamId, config.connection));
+		getSource().start();
+	}
+
+	protected void startSink(STSyncStruct config, Class<T> messageType) {
+		sink = new StreamSink<>() {
+
+			@Override
+			public void onNext(T item) {
+				((STObject<T>) container()).merge(item);
+			};
+		};
+
+		StreamStore.add(new InboundStreamAdapter<>(config.streamId, config.connection, messageType), getSink());
 	}
 }

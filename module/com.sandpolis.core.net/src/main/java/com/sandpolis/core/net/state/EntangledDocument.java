@@ -11,10 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
-import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.BIDIRECTIONAL;
-import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.DOWNSTREAM;
-import static com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection.UPSTREAM;
-
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -26,8 +22,6 @@ import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
-import com.sandpolis.core.net.stream.StreamSink;
-import com.sandpolis.core.net.stream.StreamSource;
 
 public class EntangledDocument extends EntangledObject<ProtoDocument> implements STDocument {
 
@@ -36,32 +30,28 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	public EntangledDocument(STDocument container, STSyncStruct config) {
 		this.container = Objects.requireNonNull(container);
 
-		if ((config.initiator && config.direction == DOWNSTREAM) || (!config.initiator && config.direction == UPSTREAM)
-				|| config.direction == BIDIRECTIONAL) {
-			sink = new StreamSink<>() {
-
-				@Override
-				public void onNext(ProtoDocument item) {
-					container.merge(item);
-				};
-			};
-		}
-
-		if ((config.initiator && config.direction == UPSTREAM) || (!config.initiator && config.direction == DOWNSTREAM)
-				|| config.direction == BIDIRECTIONAL) {
-			source = new StreamSource<>() {
-
-				@Override
-				public void start() {
-					container.addListener(EntangledDocument.this);
-				}
-
-				@Override
-				public void stop() {
-					container.removeListener(EntangledDocument.this);
-				}
-			};
-			source.start();
+		// Start streams
+		switch (config.direction) {
+		case BIDIRECTIONAL:
+			startSource(config);
+			startSink(config, ProtoDocument.class);
+			break;
+		case DOWNSTREAM:
+			if (config.initiator) {
+				startSink(config, ProtoDocument.class);
+			} else {
+				startSource(config);
+			}
+			break;
+		case UPSTREAM:
+			if (config.initiator) {
+				startSource(config);
+			} else {
+				startSink(config, ProtoDocument.class);
+			}
+			break;
+		default:
+			throw new IllegalArgumentException();
 		}
 	}
 
@@ -148,8 +138,13 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public void setOid(Oid oid) {
-		container.setOid(oid);
+	public int getTag() {
+		return ((AbstractSTObject) container).getTag();
+	}
+
+	@Override
+	public void setTag(int tag) {
+		container.setTag(tag);
 	}
 
 	@Override
@@ -165,5 +160,10 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	@Override
 	public AbstractSTObject parent() {
 		return ((AbstractSTObject) container).parent();
+	}
+
+	@Override
+	protected AbstractSTObject container() {
+		return (AbstractSTObject) container;
 	}
 }

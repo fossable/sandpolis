@@ -71,5 +71,5 @@ public interface STObject<E extends Message> {
 	 */
 	public Oid oid();
 
-	public void setOid(Oid oid);
+	public void setTag(int tag);
 }

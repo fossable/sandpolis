@@ -32,19 +32,8 @@ public interface AbsoluteOid<T> extends Oid {
 		}
 
 		@Override
-		public AbsoluteOid<?> head(int length) {
-			return head(AbsoluteOidImpl::new, length);
-		}
-
-		@Override
 		public RelativeOid<T> tail() {
 			return tail(RelativeOidImpl::new);
 		}
-
-		@Override
-		public AbsoluteOid<?> child(int tag) {
-			return child(AbsoluteOidImpl::new, tag);
-		}
-
 	}
 }

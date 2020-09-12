@@ -131,9 +131,8 @@ public class FxDocument<T extends VirtObject> implements STDocument {
 	}
 
 	@Override
-	public void setOid(Oid oid) {
-		// TODO Auto-generated method stub
-
+	public void setTag(int tag) {
+		container.setTag(tag);
 	}
 
 }

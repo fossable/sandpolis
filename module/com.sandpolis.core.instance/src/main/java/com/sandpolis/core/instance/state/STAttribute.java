@@ -14,6 +14,8 @@ package com.sandpolis.core.instance.state;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import javax.persistence.Embeddable;
+
 import com.sandpolis.core.instance.State.ProtoAttribute;
 
 /**
@@ -24,6 +26,26 @@ import com.sandpolis.core.instance.State.ProtoAttribute;
  * @since 6.2.0
  */
 public interface STAttribute<T> extends STObject<ProtoAttribute> {
+
+	@Embeddable
+	public enum RetentionPolicy {
+
+		/**
+		 * Indicates that changes to the attribute will be retained forever.
+		 */
+		UNLIMITED,
+
+		/**
+		 * Indicates that changes to the attribute will be retained for a fixed period
+		 * of time.
+		 */
+		TIME_LIMITED,
+
+		/**
+		 * Indicates that a fixed number of changes to the attribute will be retained.
+		 */
+		ITEM_LIMITED;
+	}
 
 	/**
 	 * Indicates that an {@link STAttribute}'s value has changed.

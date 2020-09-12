@@ -128,8 +128,7 @@ public class FxCollection<T extends VirtObject> extends ObservableListBase<T> im
 	}
 
 	@Override
-	public void setOid(Oid oid) {
-		// TODO Auto-generated method stub
-
+	public void setTag(int tag) {
+		container.setTag(tag);
 	}
 }

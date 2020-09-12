@@ -22,10 +22,16 @@ public class STAttributeOid<T> extends OidBase implements AbsoluteOid<T>, Relati
 
 	public STAttributeOid(String oid) {
 		super(oid);
+
+		if (Oid.type(last()) != Oid.TYPE_ATTRIBUTE)
+			throw new IllegalArgumentException();
 	}
 
 	public STAttributeOid(int[] oid) {
 		super(oid);
+
+		if (Oid.type(last()) != Oid.TYPE_ATTRIBUTE)
+			throw new IllegalArgumentException();
 	}
 
 	@Override
@@ -34,17 +40,7 @@ public class STAttributeOid<T> extends OidBase implements AbsoluteOid<T>, Relati
 	}
 
 	public STAttributeOid<?> resolveLocal() {
-		return resolve(2);
-	}
-
-	@Override
-	public STAttributeOid<?> head(int length) {
-		return head(STAttributeOid::new, length);
-	}
-
-	@Override
-	public STAttributeOid<?> child(int tag) {
-		return child(STAttributeOid::new, tag);
+		return resolve(9);
 	}
 
 	@Override

@@ -23,10 +23,16 @@ public class STCollectionOid<T extends VirtObject> extends OidBase implements Ab
 
 	public STCollectionOid(String oid) {
 		super(oid);
+
+		if (Oid.type(last()) != Oid.TYPE_COLLECTION)
+			throw new IllegalArgumentException();
 	}
 
 	public STCollectionOid(int[] oid) {
 		super(oid);
+
+		if (Oid.type(last()) != Oid.TYPE_COLLECTION)
+			throw new IllegalArgumentException();
 	}
 
 	@Override
@@ -35,17 +41,7 @@ public class STCollectionOid<T extends VirtObject> extends OidBase implements Ab
 	}
 
 	public STCollectionOid<?> resolveLocal() {
-		return resolve(2);
-	}
-
-	@Override
-	public STCollectionOid<?> head(int length) {
-		return head(STCollectionOid::new, length);
-	}
-
-	@Override
-	public STCollectionOid<?> child(int tag) {
-		return child(STCollectionOid::new, tag);
+		return resolve(9);
 	}
 
 	@Override

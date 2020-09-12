@@ -15,7 +15,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.oid.OidBase;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.store.StoreMetadata;
 
@@ -57,8 +57,8 @@ public interface STCollection extends STObject<ProtoCollection> {
 		if (!oid.isConcrete())
 			throw new RuntimeException();
 
-		switch (oid.first() % 10) {
-		case OidBase.SUFFIX_DOCUMENT:
+		switch (Oid.type(oid.first())) {
+		case Oid.TYPE_DOCUMENT:
 			return (STAttribute<E>) document(oid.first()).attribute(oid.tail());
 		default:
 			throw new RuntimeException("Unacceptable attribute tag: " + oid.first());
@@ -69,8 +69,8 @@ public interface STCollection extends STObject<ProtoCollection> {
 		if (!oid.isConcrete())
 			throw new RuntimeException();
 
-		switch (oid.first() % 10) {
-		case OidBase.SUFFIX_DOCUMENT:
+		switch (Oid.type(oid.first())) {
+		case Oid.TYPE_DOCUMENT:
 			return document(oid.first()).collection(oid.tail());
 		default:
 			throw new RuntimeException("Unacceptable attribute tag: " + oid.first());
@@ -91,8 +91,8 @@ public interface STCollection extends STObject<ProtoCollection> {
 		if (!oid.isConcrete())
 			throw new RuntimeException();
 
-		switch (oid.first() % 10) {
-		case OidBase.SUFFIX_DOCUMENT:
+		switch (Oid.type(oid.first())) {
+		case Oid.TYPE_DOCUMENT:
 			if (oid.size() == 1) {
 				return document(oid.first());
 			} else {

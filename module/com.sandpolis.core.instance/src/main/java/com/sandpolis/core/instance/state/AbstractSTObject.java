@@ -30,6 +30,9 @@ public abstract class AbstractSTObject {
 	private int listeners;
 
 	protected synchronized <T> void fireAttributeValueChangedEvent(STAttribute<T> attribute, T oldValue, T newValue) {
+		if (getTag() == 0)
+			return;
+
 		if (log.isTraceEnabled()) {
 			log.trace("Attribute ({}) changed value from \"{}\" to \"{}\"", attribute.oid(), oldValue, newValue);
 		}
@@ -45,6 +48,9 @@ public abstract class AbstractSTObject {
 	}
 
 	protected synchronized void fireCollectionAddedEvent(STCollection collection, STDocument newDocument) {
+		if (getTag() == 0)
+			return;
+
 		if (log.isTraceEnabled()) {
 			log.trace("Document ({}) added to collection ({})", newDocument.oid(), collection.oid());
 		}
@@ -60,6 +66,9 @@ public abstract class AbstractSTObject {
 	}
 
 	protected synchronized void fireCollectionRemovedEvent(STCollection collection, STDocument oldDocument) {
+		if (getTag() == 0)
+			return;
+
 		if (log.isTraceEnabled()) {
 			log.trace("Document ({}) removed from collection ({})", oldDocument.oid(), collection.oid());
 		}
@@ -91,6 +100,8 @@ public abstract class AbstractSTObject {
 			bus = null;
 		}
 	}
+
+	public abstract int getTag();
 
 	public abstract AbstractSTObject parent();
 }
