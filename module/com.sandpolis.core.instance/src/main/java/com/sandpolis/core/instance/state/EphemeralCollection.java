@@ -18,12 +18,11 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.oid.AbsoluteOid.AbsoluteOidImpl;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.store.StoreMetadata;
 
-public class EphemeralCollection extends EphemeralObject implements STCollection {
+public class EphemeralCollection extends AbstractSTCollection implements STCollection {
 
 	private EphemeralDocument parent;
 
@@ -97,7 +96,7 @@ public class EphemeralCollection extends EphemeralObject implements STCollection
 	@Override
 	public void setDocument(int tag, STDocument document) {
 		documents.put(tag, document);
-		document.setOid(oid() == null ? new AbsoluteOidImpl<>(tag) : oid().child(tag));
+		document.setTag(tag);
 	}
 
 	@Override

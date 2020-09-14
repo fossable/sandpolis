@@ -11,25 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.state;
 
-import java.security.cert.X509Certificate;
-import java.util.List;
-
-import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
-import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.State.ProtoAttributeValue;
-import com.sandpolis.core.instance.state.BooleanAttributeValue;
-import com.sandpolis.core.instance.state.BooleanListAttributeValue;
-import com.sandpolis.core.instance.state.InstanceFlavorAttributeValue;
-import com.sandpolis.core.instance.state.InstanceFlavorListAttributeValue;
-import com.sandpolis.core.instance.state.InstanceTypeAttributeValue;
-import com.sandpolis.core.instance.state.InstanceTypeListAttributeValue;
-import com.sandpolis.core.instance.state.IntegerAttributeValue;
-import com.sandpolis.core.instance.state.IntegerListAttributeValue;
-import com.sandpolis.core.instance.state.LongAttributeValue;
-import com.sandpolis.core.instance.state.LongListAttributeValue;
-import com.sandpolis.core.instance.state.StringAttributeValue;
-import com.sandpolis.core.instance.state.StringListAttributeValue;
-import com.sandpolis.core.instance.state.X509CertificateAttributeValue;
 
 /**
  * A wrapper for a {@link HibernateAttribute}'s value. All implementations are

@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.EventBus;
+import com.sandpolis.core.instance.state.oid.Oid;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid.AbsoluteOidImpl;
 
 public abstract class AbstractSTObject {
 
@@ -29,7 +31,8 @@ public abstract class AbstractSTObject {
 	 */
 	private int listeners;
 
-	protected synchronized <T> void fireAttributeValueChangedEvent(STAttribute<T> attribute, T oldValue, T newValue) {
+	protected synchronized <T> void fireAttributeValueChangedEvent(STAttribute<T> attribute,
+			STAttributeValue<T> oldValue, STAttributeValue<T> newValue) {
 		if (getTag() == 0)
 			return;
 
@@ -101,7 +104,28 @@ public abstract class AbstractSTObject {
 		}
 	}
 
-	public abstract int getTag();
-
 	public abstract AbstractSTObject parent();
+
+	protected int tag;
+
+	public Oid oid() {
+		if (parent() == null) {
+			return new AbsoluteOidImpl<>(tag);
+		}
+
+		var parentOid = parent().oid();
+		if (parentOid == null) {
+			return new AbsoluteOidImpl<>(tag);
+		}
+
+		return parentOid.child(tag);
+	}
+
+	public int getTag() {
+		return tag;
+	}
+
+	public void setTag(int tag) {
+		this.tag = tag;
+	}
 }

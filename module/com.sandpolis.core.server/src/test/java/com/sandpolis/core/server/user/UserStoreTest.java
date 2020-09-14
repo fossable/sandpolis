@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.user;
 
+import static com.sandpolis.core.instance.state.STStore.STStore;
 import static com.sandpolis.core.server.user.UserStore.UserStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,17 +23,25 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.server.user.UserStore;
+import com.sandpolis.core.instance.state.EphemeralDocument;
+import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.VirtUser;
 
 class UserStoreTest {
 
-	private static final UserConfig TEST_USER = UserConfig.newBuilder().setUsername("TESTUSER").setPassword("abc1234c")
+	private static final UserConfig TEST_USER = UserConfig.newBuilder() //
+			.setUsername("TESTUSER") //
+			.setPassword("abc1234c") //
 			.build();
 
 	@BeforeEach
 	void setup() throws URISyntaxException {
+		STStore.init(config -> {
+			config.root = new EphemeralDocument((STDocument) null);
+		});
+
 		UserStore.init(config -> {
-			config.ephemeral();
+			config.collection = STStore.root().get(VirtUser.COLLECTION.resolveLocal());
 		});
 	}
 
@@ -40,7 +49,7 @@ class UserStoreTest {
 	@DisplayName("Check basic usage of exists")
 	void exists() {
 		assertFalse(UserStore.getByUsername("TESTUSER").isPresent());
-		UserStore.add(TEST_USER);
+		UserStore.create(TEST_USER);
 		assertTrue(UserStore.getByUsername("TESTUSER").isPresent());
 		UserStore.removeValue(UserStore.getByUsername("TESTUSER").get());
 		assertFalse(UserStore.getByUsername("TESTUSER").isPresent());

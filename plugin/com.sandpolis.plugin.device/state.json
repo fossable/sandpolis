@@ -2,7 +2,7 @@
 	{
 		"name": "Plugin.Device.Http",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "username",
 				"type": "java.lang.String"
 			}
@@ -11,7 +11,7 @@
 	{
 		"name": "Plugin.Device.Snmpv2c",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "community",
 				"type": "java.lang.String"
 			}
@@ -20,27 +20,27 @@
 	{
 		"name": "Plugin.Device.Snmpv3",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "security_level",
 				"type": "java.lang.String"
 			},
-			"21": {
+			"2": {
 				"name": "security_name",
 				"type": "java.lang.String"
 			},
-			"31": {
+			"3": {
 				"name": "auth_protocol",
 				"type": "java.lang.String"
 			},
-			"41": {
+			"4": {
 				"name": "auth_secret",
 				"type": "java.lang.String"
 			},
-			"51": {
+			"5": {
 				"name": "priv_protocol",
 				"type": "java.lang.String"
 			},
-			"61": {
+			"6": {
 				"name": "priv_secret",
 				"type": "java.lang.String"
 			}
@@ -49,22 +49,22 @@
 	{
 		"name": "Plugin.Device",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "handler",
 				"type": "java.lang.String"
 			}
 		},
 		"documents": {
-			"12": "Plugin.Device.Http",
-			"22": "Plugin.Device.Snmpv2c",
-			"32": "Plugin.Device.Snmpv3"
+			"1": "Plugin.Device.Http",
+			"2": "Plugin.Device.Snmpv2c",
+			"3": "Plugin.Device.Snmpv3"
 		}
 	},
 	{
 		"parent": "1.3",
 		"name": "Plugin",
 		"collections": {
-			"13": "Plugin.Device"
+			"1": "Plugin.Device"
 		}
 	}
 ]

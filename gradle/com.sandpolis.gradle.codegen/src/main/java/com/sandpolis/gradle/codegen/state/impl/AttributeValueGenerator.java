@@ -12,10 +12,8 @@
 package com.sandpolis.gradle.codegen.state.impl;
 
 import static com.sandpolis.gradle.codegen.state.STGenerator.ST_PACKAGE;
-import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
 
 import java.io.IOException;
 import java.util.List;
@@ -89,7 +87,6 @@ public class AttributeValueGenerator extends DefaultTask {
 
 		convertableTypes.stream().forEach(type -> {
 			try {
-				generateConverter(type);
 				generateAttributeValue(type);
 				generateListAttributeValue(type);
 			} catch (IOException e) {
@@ -109,13 +106,18 @@ public class AttributeValueGenerator extends DefaultTask {
 				.classBuilder(type.componentType.box().toString().replaceAll(".*\\.", "") + "ArrayAttributeValue") //
 				.addModifiers(PUBLIC) //
 				.addAnnotation(ClassName.get("javax.persistence", "Embeddable")) //
-				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), type));
+				.addSuperinterface(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STAttributeValue"), type));
 
 		{
 			// Add value field
 			var field = FieldSpec.builder(type, "value", PRIVATE) //
 					.addAnnotation(ClassName.get("javax.persistence", "Lob"));
 			av.addField(field.build());
+		}
+
+		{
+			// Add timestamp field
+			av.addField(FieldSpec.builder(long.class, "timestamp", PRIVATE).build());
 		}
 
 		{
@@ -129,47 +131,12 @@ public class AttributeValueGenerator extends DefaultTask {
 		}
 
 		{
-			// Add set method
-			var method = MethodSpec.methodBuilder("set") //
+			// Add timestamp method
+			var method = MethodSpec.methodBuilder("timestamp") //
 					.addModifiers(PUBLIC) //
 					.addAnnotation(Override.class) //
-					.addParameter(type, "value") //
-					.addStatement("this.value = value");
-			av.addMethod(method.build());
-		}
-
-		{
-			// Add clone method
-			var method = MethodSpec.methodBuilder("clone") //
-					.addModifiers(PUBLIC) //
-					.addAnnotation(Override.class) //
-					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), type)) //
-					.addStatement("return new $L()",
-							type.componentType.box().toString().replaceAll(".*\\.", "") + "ArrayAttributeValue");
-			av.addMethod(method.build());
-		}
-
-		{
-			// Add getProto method
-			var method = MethodSpec.methodBuilder("getProto") //
-					.addModifiers(PUBLIC) //
-					.addAnnotation(Override.class) //
-					.returns(ClassName.get("com.sandpolis.core.instance", "State", "ProtoAttributeValue", "Builder")) //
-					.addStatement("if (value == null) return null") //
-					.addStatement("return State.ProtoAttributeValue.newBuilder().addBytes($T.copyFrom(value))",
-							ClassName.get("com.google.protobuf", "ByteString"));
-
-			av.addMethod(method.build());
-		}
-
-		{
-			// Add setProto method
-			var method = MethodSpec.methodBuilder("setProto") //
-					.addModifiers(PUBLIC) //
-					.addAnnotation(Override.class) //
-					.addParameter(ClassName.get("com.sandpolis.core.instance", "State", "ProtoAttributeValue"), "v") //
-					.addStatement("value = v.getBytes(0).toByteArray()");
-
+					.returns(long.class) //
+					.addStatement("return timestamp");
 			av.addMethod(method.build());
 		}
 
@@ -191,10 +158,17 @@ public class AttributeValueGenerator extends DefaultTask {
 				.classBuilder(type.simpleName() + "AttributeValue") //
 				.addModifiers(PUBLIC) //
 				.addAnnotation(ClassName.get("javax.persistence", "Embeddable")) //
-				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), type));
+				.addSuperinterface(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STAttributeValue"), type));
 
-		// Add value field
-		av.addField(newValueField(type).build());
+		{
+			// Add value field
+			av.addField(newValueField(type).build());
+		}
+
+		{
+			// Add timestamp field
+			av.addField(FieldSpec.builder(long.class, "timestamp", PRIVATE).build());
+		}
 
 		{
 			// Add get method
@@ -208,63 +182,12 @@ public class AttributeValueGenerator extends DefaultTask {
 		}
 
 		{
-			// Add set method
-			var method = MethodSpec.methodBuilder("set") //
+			// Add timestamp method
+			var method = MethodSpec.methodBuilder("timestamp") //
 					.addModifiers(PUBLIC) //
 					.addAnnotation(Override.class) //
-					.addParameter(type, "value") //
-					.addStatement("this.value = value");
-			av.addMethod(method.build());
-		}
-
-		{
-			// Add clone method
-			var method = MethodSpec.methodBuilder("clone") //
-					.addModifiers(PUBLIC) //
-					.addAnnotation(Override.class) //
-					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), type)) //
-					.addStatement("return new $L()", type.simpleName() + "AttributeValue");
-			av.addMethod(method.build());
-		}
-
-		{
-			// Add getProto method
-			var method = MethodSpec.methodBuilder("getProto") //
-					.addModifiers(PUBLIC) //
-					.addAnnotation(Override.class) //
-					.returns(ClassName.get("com.sandpolis.core.instance", "State", "ProtoAttributeValue", "Builder")) //
-					.addStatement("if (value == null) return null");
-
-			switch (type.toString()) {
-			case "java.security.cert.X509Certificate":
-				method.addStatement(
-						"return State.ProtoAttributeValue.newBuilder().addBytes($T.copyFrom($L.INSTANCE.convertToDatabaseColumn(value)))",
-						ClassName.get("com.google.protobuf", "ByteString"), //
-						type.simpleName() + "Converter");
-				break;
-			default:
-				method.addStatement("return State.ProtoAttributeValue.newBuilder().add$L(value)", type.simpleName());
-			}
-
-			av.addMethod(method.build());
-		}
-
-		{
-			// Add setProto method
-			var method = MethodSpec.methodBuilder("setProto") //
-					.addModifiers(PUBLIC) //
-					.addAnnotation(Override.class) //
-					.addParameter(ClassName.get("com.sandpolis.core.instance", "State", "ProtoAttributeValue"), "v");
-
-			switch (type.toString()) {
-			case "java.security.cert.X509Certificate":
-				method.addStatement("value = $L.INSTANCE.convertToEntityAttribute(v.getBytes(0).toByteArray())",
-						type.simpleName() + "Converter");
-				break;
-			default:
-				method.addStatement("value = v.get$L(0)", type.simpleName());
-			}
-
+					.returns(long.class) //
+					.addStatement("return timestamp");
 			av.addMethod(method.build());
 		}
 
@@ -282,10 +205,17 @@ public class AttributeValueGenerator extends DefaultTask {
 		var av = TypeSpec //
 				.classBuilder(type.simpleName() + "ListAttributeValue") //
 				.addModifiers(PUBLIC).addAnnotation(ClassName.get("javax.persistence", "Embeddable")) //
-				.superclass(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), listType));
+				.addSuperinterface(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STAttributeValue"), listType));
 
-		// Add value field
-		av.addField(newValueField(listType).build());
+		{
+			// Add value field
+			av.addField(newValueField(listType).build());
+		}
+
+		{
+			// Add timestamp field
+			av.addField(FieldSpec.builder(long.class, "timestamp", PRIVATE).build());
+		}
 
 		{
 			// Add get method
@@ -295,73 +225,15 @@ public class AttributeValueGenerator extends DefaultTask {
 					.returns(listType) //
 					.addStatement("return value");
 			av.addMethod(method.build());
-
 		}
 
 		{
-			// Add set method
-			var method = MethodSpec.methodBuilder("set") //
+			// Add timestamp method
+			var method = MethodSpec.methodBuilder("timestamp") //
 					.addModifiers(PUBLIC) //
 					.addAnnotation(Override.class) //
-					.addParameter(listType, "value") //
-					.addStatement("this.value = value");
-			av.addMethod(method.build());
-		}
-
-		{
-			// Add clone method
-			var method = MethodSpec.methodBuilder("clone") //
-					.addModifiers(PUBLIC) //
-					.addAnnotation(Override.class) //
-					.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "DefaultAttributeValue"), listType)) //
-					.addStatement("return new $L()", type.simpleName() + "ListAttributeValue");
-			av.addMethod(method.build());
-		}
-
-		{
-			// Add getProto method
-			var method = MethodSpec.methodBuilder("getProto") //
-					.addModifiers(PUBLIC) //
-					.addAnnotation(Override.class) //
-					.returns(ClassName.get("com.sandpolis.core.instance", "State", "ProtoAttributeValue", "Builder")) //
-					.addStatement("if (value == null) return null");
-
-			switch (type.toString()) {
-			case "com.sandpolis.core.foundation.Platform.OsType":
-			case "com.sandpolis.core.instance.Metatypes.InstanceType":
-			case "com.sandpolis.core.instance.Metatypes.InstanceFlavor":
-				method.addStatement("return null");
-				break;
-			case "java.security.cert.X509Certificate":
-				method.addStatement("var proto = State.ProtoAttributeValue.newBuilder()");
-				method.addStatement(
-						"value.stream().map(X509CertificateConverter.INSTANCE::convertToDatabaseColumn).map($T::copyFrom).forEach(proto::addBytes)",
-						ClassName.get("com.google.protobuf", "ByteString"));
-				method.addStatement("return proto");
-				break;
-			default:
-				method.addStatement("return State.ProtoAttributeValue.newBuilder().addAll$L(value)", type.simpleName());
-			}
-			av.addMethod(method.build());
-		}
-
-		{
-			// Add setProto method
-			var method = MethodSpec.methodBuilder("setProto") //
-					.addModifiers(PUBLIC) //
-					.addAnnotation(Override.class) //
-					.addParameter(ClassName.get("com.sandpolis.core.instance", "State", "ProtoAttributeValue"), "v");
-
-			switch (type.toString()) {
-			case "java.security.cert.X509Certificate":
-				method.addStatement(
-						"value = v.getBytesList().stream().map($T::toByteArray).map(X509CertificateConverter.INSTANCE::convertToEntityAttribute).collect($T.toList());",
-						ClassName.get("com.google.protobuf", "ByteString"),
-						ClassName.get("java.util.stream", "Collectors"));
-				break;
-			default:
-				method.addStatement("value = v.get$LList()", type.simpleName());
-			}
+					.returns(long.class) //
+					.addStatement("return timestamp");
 			av.addMethod(method.build());
 		}
 
@@ -379,7 +251,7 @@ public class AttributeValueGenerator extends DefaultTask {
 		if (convertableTypes.contains(type)) {
 			valueField.addAnnotation( //
 					AnnotationSpec.builder(ClassName.get("javax.persistence", "Convert"))
-							.addMember("converter", "$T.class", ClassName.get(ST_PACKAGE,
+							.addMember("converter", "$T.class", ClassName.get(ST_PACKAGE + ".converter",
 									type.toString().replaceAll(".*\\.", "").replace("[]", "Array") + "Converter"))
 							.build());
 		}
@@ -390,65 +262,5 @@ public class AttributeValueGenerator extends DefaultTask {
 		}
 
 		return valueField;
-	}
-
-	public void generateConverter(ClassName type) throws IOException {
-
-		var converterClass = TypeSpec //
-				.classBuilder(type.simpleName() + "Converter") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(ClassName.get("javax.persistence", "Converter"));
-
-		{
-			// Add instance field
-			var field = FieldSpec
-					.builder(ClassName.get(ST_PACKAGE, type.simpleName() + "Converter"), "INSTANCE", PUBLIC, STATIC,
-							FINAL) //
-					.initializer("new $L()", type.simpleName() + "Converter");
-			converterClass.addField(field.build());
-		}
-
-		// Add convertToDatabaseColumn
-		var convertToDatabaseColumn = MethodSpec.methodBuilder("convertToDatabaseColumn") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.addParameter(type, "value");
-
-		// Add convertToEntityAttribute
-		var convertToEntityAttribute = MethodSpec.methodBuilder("convertToEntityAttribute") //
-				.addModifiers(PUBLIC) //
-				.addAnnotation(Override.class) //
-				.returns(type);
-
-		switch (type.toString()) {
-		case "com.sandpolis.core.foundation.Platform.OsType":
-		case "com.sandpolis.core.instance.Metatypes.InstanceType":
-		case "com.sandpolis.core.instance.Metatypes.InstanceFlavor":
-			converterClass.addSuperinterface(ParameterizedTypeName
-					.get(ClassName.get("javax.persistence", "AttributeConverter"), type, ClassName.get(Integer.class)));
-			convertToDatabaseColumn.addStatement("return value.getNumber()").returns(Integer.class);
-			convertToEntityAttribute.addStatement("return $T.forNumber(value)", type).addParameter(Integer.class,
-					"value");
-			break;
-		case "java.security.cert.X509Certificate":
-			converterClass.addSuperinterface(ParameterizedTypeName
-					.get(ClassName.get("javax.persistence", "AttributeConverter"), type, ArrayTypeName.of(byte.class)));
-			convertToDatabaseColumn
-					.addCode(
-							"try { return value.getEncoded(); } catch (Exception e) { throw new RuntimeException(e); }")
-					.returns(byte[].class);
-			convertToEntityAttribute.addParameter(byte[].class, "value").addCode(
-					"try { return $T.parseCert(value); } catch (Exception e) { throw new RuntimeException(e); }",
-					ClassName.get("com.sandpolis.core.foundation.util", "CertUtil"));
-			break;
-		}
-
-		converterClass.addMethod(convertToDatabaseColumn.build());
-		converterClass.addMethod(convertToEntityAttribute.build());
-
-		// Output the class
-		JavaFile.builder(getProject().getName() + ".state", converterClass.build())
-				.addFileComment("This source file was automatically generated by the Sandpolis codegen plugin.")
-				.skipJavaLangImports(true).build().writeTo(getProject().file("gen/main/java"));
 	}
 }

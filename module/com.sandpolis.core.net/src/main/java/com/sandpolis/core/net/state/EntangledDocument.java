@@ -19,6 +19,7 @@ import com.sandpolis.core.instance.state.AbstractSTObject;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.STObject;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
@@ -29,6 +30,9 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 
 	public EntangledDocument(STDocument container, STSyncStruct config) {
 		this.container = Objects.requireNonNull(container);
+
+		if (container instanceof EntangledObject)
+			throw new IllegalArgumentException("Entanged objects cannot be nested");
 
 		// Start streams
 		switch (config.direction) {
@@ -58,13 +62,8 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	// Begin boilerplate
 
 	@Override
-	public void merge(ProtoDocument snapshot) {
-		container.merge(snapshot);
-	}
-
-	@Override
-	public ProtoDocument snapshot(RelativeOid<?>... oids) {
-		return container.snapshot(oids);
+	public void addListener(Object listener) {
+		container.addListener(listener);
 	}
 
 	@Override
@@ -78,16 +77,6 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public <E> STAttribute<E> getAttribute(int tag) {
-		return container.getAttribute(tag);
-	}
-
-	@Override
-	public void setAttribute(int tag, STAttribute<?> attribute) {
-		container.setAttribute(tag, attribute);
-	}
-
-	@Override
 	public STCollection collection(int tag) {
 		return container.collection(tag);
 	}
@@ -95,16 +84,6 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	@Override
 	public Stream<STCollection> collections() {
 		return container.collections();
-	}
-
-	@Override
-	public STCollection getCollection(int tag) {
-		return container.getCollection(tag);
-	}
-
-	@Override
-	public void setCollection(int tag, STCollection collection) {
-		container.setCollection(tag, collection);
 	}
 
 	@Override
@@ -118,13 +97,18 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public STDocument getDocument(int tag) {
-		return container.getDocument(tag);
+	public <E> STAttribute<E> getAttribute(int tag) {
+		return container.getAttribute(tag);
 	}
 
 	@Override
-	public void setDocument(int tag, STDocument document) {
-		container.setDocument(tag, document);
+	public STCollection getCollection(int tag) {
+		return container.getCollection(tag);
+	}
+
+	@Override
+	public STDocument getDocument(int tag) {
+		return container.getDocument(tag);
 	}
 
 	@Override
@@ -133,28 +117,18 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public Oid oid() {
-		return container.oid();
-	}
-
-	@Override
 	public int getTag() {
 		return ((AbstractSTObject) container).getTag();
 	}
 
 	@Override
-	public void setTag(int tag) {
-		container.setTag(tag);
+	public void merge(ProtoDocument snapshot) {
+		container.merge(snapshot);
 	}
 
 	@Override
-	public void addListener(Object listener) {
-		container.addListener(listener);
-	}
-
-	@Override
-	public void removeListener(Object listener) {
-		container.removeListener(listener);
+	public Oid oid() {
+		return container.oid();
 	}
 
 	@Override
@@ -163,7 +137,37 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	protected AbstractSTObject container() {
-		return (AbstractSTObject) container;
+	public void removeListener(Object listener) {
+		container.removeListener(listener);
+	}
+
+	@Override
+	public void setAttribute(int tag, STAttribute<?> attribute) {
+		container.setAttribute(tag, attribute);
+	}
+
+	@Override
+	public void setCollection(int tag, STCollection collection) {
+		container.setCollection(tag, collection);
+	}
+
+	@Override
+	public void setDocument(int tag, STDocument document) {
+		container.setDocument(tag, document);
+	}
+
+	@Override
+	public void setTag(int tag) {
+		container.setTag(tag);
+	}
+
+	@Override
+	public ProtoDocument snapshot(RelativeOid<?>... oids) {
+		return container.snapshot(oids);
+	}
+
+	@Override
+	protected STObject<ProtoDocument> container() {
+		return container;
 	}
 }

@@ -143,7 +143,7 @@ public class CoreSTGenerator extends STGenerator {
 					.addAnnotation(Override.class) //
 					.addModifiers(PUBLIC, FINAL) //
 					.returns(int.class) //
-					.addStatement("return $T.murmur3_32().newHasher()$L.hash().asInt()",
+					.addStatement("return ($T.murmur3_32().newHasher()$L.hash().asInt() << 2) | 1",
 							ClassName.get("com.google.common.hash", "Hashing"), identityString);
 			documentClass.addMethod(method.build());
 		}
@@ -242,24 +242,31 @@ public class CoreSTGenerator extends STGenerator {
 		if (document.collections != null) {
 			for (var entry : document.collections.entrySet()) {
 				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processCollection(documentClass, subdocument, oid + "." + entry.getKey());
+				processCollection(documentClass, subdocument, oid + "." + addTagType(entry.getKey(), 2));
 			}
 		}
 		if (document.documents != null) {
 			for (var entry : document.documents.entrySet()) {
 				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processDocument(documentClass, subdocument, oid + "." + entry.getKey());
+				processDocument(documentClass, subdocument, oid + "." + addTagType(entry.getKey(), 1));
 			}
 		}
 		if (document.attributes != null) {
 			for (var entry : document.attributes.entrySet()) {
-				processAttribute(documentClass, entry.getValue(), oid + "." + entry.getKey());
+				processAttribute(documentClass, entry.getValue(), oid + "." + addTagType(entry.getKey(), 0));
 			}
 		}
 		if (document.relations != null) {
 			for (var entry : document.relations.entrySet()) {
-				processRelation(documentClass, entry.getValue(), oid + "." + entry.getKey());
+				processRelation(documentClass, entry.getValue(), oid + "." + addTagType(entry.getKey(), 3));
 			}
 		}
+	}
+
+	public static int addTagType(int tag, int type) {
+		if (type > 3 || type < 0) {
+			throw new IllegalArgumentException();
+		}
+		return (tag << 2) | type;
 	}
 }

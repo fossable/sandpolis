@@ -79,18 +79,20 @@ public class JavaFxSTGenerator extends STGenerator {
 		if (document.collections != null) {
 			for (var entry : document.collections.entrySet()) {
 				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processCollection(documentClass, subdocument, oid + "." + entry.getKey());
+				processCollection(documentClass, subdocument,
+						oid + "." + CoreSTGenerator.addTagType(entry.getKey(), 2));
 			}
 		}
 		if (document.documents != null) {
 			for (var entry : document.documents.entrySet()) {
 				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processDocument(documentClass, subdocument, oid + "." + entry.getKey());
+				processDocument(documentClass, subdocument, oid + "." + CoreSTGenerator.addTagType(entry.getKey(), 1));
 			}
 		}
 		if (document.attributes != null) {
 			for (var entry : document.attributes.entrySet()) {
-				processAttribute(documentClass, entry.getValue(), oid + "." + entry.getKey());
+				processAttribute(documentClass, entry.getValue(),
+						oid + "." + CoreSTGenerator.addTagType(entry.getKey(), 1));
 			}
 		}
 

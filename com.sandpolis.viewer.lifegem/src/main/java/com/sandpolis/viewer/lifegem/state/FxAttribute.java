@@ -11,11 +11,13 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.state;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.state.EphemeralAttribute;
 import com.sandpolis.core.instance.state.STAttribute;
+import com.sandpolis.core.instance.state.STAttributeValue;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
@@ -26,23 +28,9 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	private EphemeralAttribute<T> container;
 
 	@Override
-	public T getValue() {
-		return get();
-	}
+	public void addListener(Object listener) {
+		// TODO Auto-generated method stub
 
-	@Override
-	public void merge(ProtoAttribute snapshot) {
-		container.merge(snapshot);
-	}
-
-	@Override
-	public ProtoAttribute snapshot(RelativeOid<?>... oids) {
-		return container.snapshot(oids);
-	}
-
-	@Override
-	public void set(T value) {
-		container.set(value);
 	}
 
 	@Override
@@ -51,20 +39,19 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	}
 
 	@Override
-	public void source(Supplier<T> source) {
-		container.source(source);
+	public T getValue() {
+		return get();
 	}
 
 	@Override
-	public void addListener(Object listener) {
+	public List<STAttributeValue<T>> history() {
 		// TODO Auto-generated method stub
-
+		return null;
 	}
 
 	@Override
-	public void removeListener(Object listener) {
-		// TODO Auto-generated method stub
-
+	public void merge(ProtoAttribute snapshot) {
+		container.merge(snapshot);
 	}
 
 	@Override
@@ -74,8 +61,35 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	}
 
 	@Override
+	public void removeListener(Object listener) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void set(T value) {
+		container.set(value);
+	}
+
+	@Override
 	public void setTag(int tag) {
 		container.setTag(tag);
+	}
+
+	@Override
+	public ProtoAttribute snapshot(RelativeOid<?>... oids) {
+		return container.snapshot(oids);
+	}
+
+	@Override
+	public void source(Supplier<T> source) {
+		container.source(source);
+	}
+
+	@Override
+	public long timestamp() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

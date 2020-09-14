@@ -52,9 +52,10 @@ public class HostListController extends AbstractController {
 				post(HostDetailOpenEvent::new, n);
 		});
 
-		STCmd.async().sync(VirtProfile.COLLECTION).thenAccept(snapshot -> {
-			var collection = new FxCollection<>(snapshot, FxProfile::new);
-			this.table.setItems(collection);
+		var collection = new FxCollection<>(FxProfile::new);
+		table.setItems(collection);
+
+		STCmd.async().sync(collection, VirtProfile.COLLECTION).thenAccept(entangled -> {
 		});
 
 		// Set default headers

@@ -146,7 +146,7 @@ public final class Client {
 		});
 
 		PluginStore.init(config -> {
-			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolveLocal());
 		});
 
 		StreamStore.init(config -> {
@@ -157,7 +157,7 @@ public final class Client {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolveLocal());
 		});
 
 		NetworkStore.init(config -> {

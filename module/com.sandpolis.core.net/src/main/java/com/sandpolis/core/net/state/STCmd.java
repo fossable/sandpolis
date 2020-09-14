@@ -23,11 +23,13 @@ import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.EphemeralCollection;
 import com.sandpolis.core.instance.state.EphemeralDocument;
+import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.STCollectionOid;
 import com.sandpolis.core.instance.state.oid.STDocumentOid;
 import com.sandpolis.core.net.cmdlet.Cmdlet;
+import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.msg.MsgState.OidType;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSnapshot;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSync;
@@ -36,78 +38,32 @@ import com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection;
 public class STCmd extends Cmdlet<STCmd> {
 
 	@ConfigStruct
-	public static final class STSyncStruct {
-		public List<Oid> whitelist = new ArrayList<>();
-
-		public boolean initiator;
-		public int streamId = IDUtil.stream();
-		public int updatePeriod;
-		public STSyncDirection direction = STSyncDirection.DOWNSTREAM;
-	}
-
-	@ConfigStruct
 	public static final class STSnapshotStruct {
 		public List<Oid> whitelist = new ArrayList<>();
 	}
 
-	public CompletionStage<EntangledCollection> sync(STCollectionOid<?> oid) {
-		return sync(oid, struct -> {
-		});
+	@ConfigStruct
+	public static final class STSyncStruct {
+		public Connection connection;
+
+		public STSyncDirection direction = STSyncDirection.DOWNSTREAM;
+		public boolean initiator;
+		public int streamId = IDUtil.stream();
+		public int updatePeriod;
+		public List<Oid> whitelist = new ArrayList<>();
 	}
 
-	public CompletionStage<EntangledCollection> sync(STCollectionOid<?> oid, Consumer<STSyncStruct> configurator) {
-		if (!oid.isConcrete())
-			throw new IllegalArgumentException("A concrete OID is required");
-
-		final var config = new STSyncStruct();
-		config.initiator = true;
-		configurator.accept(config);
-
-		for (var o : config.whitelist)
-			if (!o.isChildOf(oid))
-				throw new IllegalArgumentException();
-
-		var rq = RQ_STSync.newBuilder() //
-				.setOid(oid.toString()) //
-				.setOidType(OidType.COLLECTION) //
-				.setUpdatePeriod(config.updatePeriod) //
-				.setDirection(config.direction);
-
-		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelist);
-
-		return request(Outcome.class, rq).thenApply(rs -> {
-			return new EntangledCollection(new EphemeralCollection(null), config);
-		});
+	/**
+	 * Prepare for an asynchronous command.
+	 *
+	 * @return A configurable object from which all asynchronous (nonstatic)
+	 *         commands in {@link STCmd} can be invoked
+	 */
+	public static STCmd async() {
+		return new STCmd();
 	}
 
-	public CompletionStage<EntangledDocument> sync(STDocumentOid<?> oid) {
-		return sync(oid, struct -> {
-		});
-	}
-
-	public CompletionStage<EntangledDocument> sync(STDocumentOid<?> oid, Consumer<STSyncStruct> configurator) {
-		if (!oid.isConcrete())
-			throw new IllegalArgumentException("A concrete OID is required");
-
-		final var config = new STSyncStruct();
-		config.initiator = true;
-		configurator.accept(config);
-
-		for (var o : config.whitelist)
-			if (!o.isChildOf(oid))
-				throw new IllegalArgumentException();
-
-		var rq = RQ_STSync.newBuilder() //
-				.setOid(oid.toString()) //
-				.setOidType(OidType.DOCUMENT) //
-				.setUpdatePeriod(config.updatePeriod) //
-				.setDirection(config.direction);
-
-		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelist);
-
-		return request(Outcome.class, rq).thenApply(rs -> {
-			return new EntangledDocument(new EphemeralDocument((STDocument) null), config);
-		});
+	private STCmd() {
 	}
 
 	public CompletionStage<EphemeralCollection> snapshot(STCollectionOid<?> oid) {
@@ -165,16 +121,71 @@ public class STCmd extends Cmdlet<STCmd> {
 		});
 	}
 
-	/**
-	 * Prepare for an asynchronous command.
-	 *
-	 * @return A configurable object from which all asynchronous (nonstatic)
-	 *         commands in {@link STCmd} can be invoked
-	 */
-	public static STCmd async() {
-		return new STCmd();
+	public CompletionStage<EntangledCollection> sync(STCollection collection, STCollectionOid<?> oid) {
+		return sync(collection, oid, struct -> {
+		});
 	}
 
-	private STCmd() {
+	public CompletionStage<EntangledCollection> sync(STCollection collection, STCollectionOid<?> oid,
+			Consumer<STSyncStruct> configurator) {
+		if (!oid.isConcrete())
+			throw new IllegalArgumentException("A concrete OID is required");
+
+		final var config = new STSyncStruct();
+		config.connection = target;
+		config.initiator = true;
+		configurator.accept(config);
+
+		for (var o : config.whitelist)
+			if (!o.isChildOf(oid))
+				throw new IllegalArgumentException();
+
+		var rq = RQ_STSync.newBuilder() //
+				.setStreamId(config.streamId) //
+				.setOid(oid.toString()) //
+				.setOidType(OidType.COLLECTION) //
+				.setUpdatePeriod(config.updatePeriod) //
+				.setDirection(config.direction);
+
+		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelist);
+
+		var entangled = new EntangledCollection(collection, config);
+
+		return request(Outcome.class, rq).thenApply(rs -> {
+			return entangled;
+		});
+	}
+
+	public CompletionStage<EntangledDocument> sync(STDocumentOid<?> oid) {
+		return sync(oid, struct -> {
+		});
+	}
+
+	public CompletionStage<EntangledDocument> sync(STDocumentOid<?> oid, Consumer<STSyncStruct> configurator) {
+		if (!oid.isConcrete())
+			throw new IllegalArgumentException("A concrete OID is required");
+
+		final var config = new STSyncStruct();
+		config.initiator = true;
+		configurator.accept(config);
+
+		for (var o : config.whitelist)
+			if (!o.isChildOf(oid))
+				throw new IllegalArgumentException();
+
+		var rq = RQ_STSync.newBuilder() //
+				.setStreamId(config.streamId) //
+				.setOid(oid.toString()) //
+				.setOidType(OidType.DOCUMENT) //
+				.setUpdatePeriod(config.updatePeriod) //
+				.setDirection(config.direction);
+
+		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelist);
+
+		var document = new EntangledDocument(new EphemeralDocument((STDocument) null), config);
+
+		return request(Outcome.class, rq).thenApply(rs -> {
+			return document;
+		});
 	}
 }

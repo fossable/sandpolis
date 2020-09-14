@@ -163,15 +163,15 @@ public final class Server {
 		List.of(com.sandpolis.core.server.state.HibernateDocument.class,
 				com.sandpolis.core.server.state.HibernateCollection.class,
 				com.sandpolis.core.server.state.HibernateAttribute.class,
-				com.sandpolis.core.instance.state.StringAttributeValue.class,
-				com.sandpolis.core.instance.state.IntegerAttributeValue.class,
-				com.sandpolis.core.instance.state.LongAttributeValue.class,
-				com.sandpolis.core.instance.state.BooleanAttributeValue.class,
-				com.sandpolis.core.instance.state.DoubleAttributeValue.class,
-				com.sandpolis.core.instance.state.OsTypeAttributeValue.class,
-				com.sandpolis.core.instance.state.X509CertificateAttributeValue.class,
-				com.sandpolis.core.instance.state.InstanceFlavorAttributeValue.class,
-				com.sandpolis.core.instance.state.InstanceTypeAttributeValue.class,
+				com.sandpolis.core.server.state.StringAttributeValue.class,
+				com.sandpolis.core.server.state.IntegerAttributeValue.class,
+				com.sandpolis.core.server.state.LongAttributeValue.class,
+				com.sandpolis.core.server.state.BooleanAttributeValue.class,
+				com.sandpolis.core.server.state.DoubleAttributeValue.class,
+				com.sandpolis.core.server.state.OsTypeAttributeValue.class,
+				com.sandpolis.core.server.state.X509CertificateAttributeValue.class,
+				com.sandpolis.core.server.state.InstanceFlavorAttributeValue.class,
+				com.sandpolis.core.server.state.InstanceTypeAttributeValue.class,
 				com.sandpolis.core.server.hibernate.HibernateCollectionMetadata.class).forEach(conf::addAnnotatedClass);
 
 		switch (Config.STORAGE_PROVIDER.value().orElse("mongodb")) {
@@ -330,12 +330,14 @@ public final class Server {
 
 		// Setup default users
 		if (UserStore.getMetadata().getInitCount() == 1) {
+			log.debug("Creating default users");
 			UserStore.create(UserConfig.newBuilder().setUsername("admin").setPassword("password").build());
 			skipped = false;
 		}
 
 		// Setup default listeners
 		if (ListenerStore.getMetadata().getInitCount() == 1) {
+			log.debug("Creating default listeners");
 			ListenerStore.create(ListenerConfig.newBuilder().setPort(8768).setAddress("0.0.0.0").setOwner("admin")
 					.setName("Default Listener").setEnabled(true).build());
 			skipped = false;
@@ -343,6 +345,7 @@ public final class Server {
 
 		// Setup default groups
 		if (GroupStore.getMetadata().getInitCount() == 1) {
+			log.debug("Creating default groups");
 			GroupStore
 					.create(GroupConfig.newBuilder().setName("Default Authentication Group").setOwner("admin").build());
 			skipped = false;

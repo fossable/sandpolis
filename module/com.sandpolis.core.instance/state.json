@@ -2,87 +2,87 @@
 	{
 		"name": "Profile.Connection",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "remote_port",
 				"type": "java.lang.Integer"
 			},
-			"21": {
+			"2": {
 				"name": "local_port",
 				"type": "java.lang.Integer"
 			},
-			"31": {
+			"3": {
 				"name": "remote_address",
 				"type": "java.lang.String"
 			},
-			"41": {
+			"4": {
 				"name": "local_address",
 				"type": "java.lang.String"
 			},
-			"51": {
+			"5": {
 				"name": "remote_cvid",
 				"type": "java.lang.Integer"
 			},
-			"61": {
+			"6": {
 				"name": "local_cvid",
 				"type": "java.lang.Integer"
 			},
-			"71": {
+			"7": {
 				"name": "remote_uuid",
 				"type": "java.lang.String"
 			},
-			"81": {
+			"8": {
 				"name": "local_uuid",
 				"type": "java.lang.String"
 			},
-			"91": {
+			"9": {
 				"name": "remote_instance",
 				"type": "com.sandpolis.core.instance.Metatypes.InstanceType"
 			},
-			"101": {
+			"10": {
 				"name": "local_instance",
 				"type": "com.sandpolis.core.instance.Metatypes.InstanceType"
 			},
-			"111": {
+			"11": {
 				"name": "remote_instance_flavor",
 				"type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
 			},
-			"121": {
+			"12": {
 				"name": "local_instance_flavor",
 				"type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
 			},
-			"131": {
+			"13": {
 				"name": "upload_total",
 				"type": "java.lang.Long"
 			},
-			"141": {
+			"14": {
 				"name": "download_total",
 				"type": "java.lang.Long"
 			},
-			"151": {
+			"15": {
 				"name": "connected",
 				"type": "java.lang.Boolean"
 			},
-			"161": {
+			"16": {
 				"name": "authenticated",
 				"type": "java.lang.Boolean"
 			},
-			"171": {
+			"17": {
 				"name": "certificate_valid",
 				"type": "java.lang.Boolean"
 			},
-			"181": {
+			"18": {
 				"name": "cumulative_read_bytes",
 				"type": "java.lang.Long"
 			},
-			"191": {
+			"19": {
 				"name": "cumulative_write_bytes",
 				"type": "java.lang.Long"
 			},
-			"201": {
+			"20": {
 				"name": "read_throughput",
 				"type": "java.lang.Long"
 			},
-			"211": {
+			"21": {
 				"name": "write_throughput",
 				"type": "java.lang.Long"
 			}
@@ -91,42 +91,42 @@
 	{
 		"name": "Profile.Plugin",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "package_id",
 				"type": "java.lang.String",
 				"description": "The plugin's package ID"
 			},
-			"21": {
+			"2": {
 				"name": "name",
 				"type": "java.lang.String",
 				"description": "The plugin's user-friendly name"
 			},
-			"31": {
+			"3": {
 				"name": "description",
 				"type": "java.lang.String",
 				"description": "The plugin's user-friendly description"
 			},
-			"41": {
+			"4": {
 				"name": "coordinates",
 				"type": "java.lang.String",
 				"description": "The plugin's Maven central coordinates in G:A:V format"
 			},
-			"51": {
+			"5": {
 				"name": "enabled",
 				"type": "java.lang.Boolean",
 				"description": "Whether the plugin can be loaded"
 			},
-			"61": {
+			"6": {
 				"name": "hash",
 				"type": "java.lang.Byte[]",
 				"description": "The plugin artifact's hash"
 			},
-			"71": {
+			"7": {
 				"name": "certificate",
 				"type": "java.lang.String",
 				"description": "The plugin's certificate"
 			},
-			"81": {
+			"8": {
 				"name": "loaded",
 				"type": "java.lang.Boolean",
 				"description": "Whether the plugin is currently loaded"
@@ -136,13 +136,13 @@
 	{
 		"name": "Profile.Viewer",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "username",
 				"type": "java.lang.String",
 				"identity": true,
 				"description": "The viewer's username"
 			},
-			"21": {
+			"2": {
 				"name": "ip",
 				"type": "java.lang.String",
 				"description": "The viewer's login IP address"
@@ -152,92 +152,92 @@
 	{
 		"name": "Profile.Client.IpLocation",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "as_name",
 				"type": "java.lang.String",
 				"description": "The AS name"
 			},
-			"21": {
+			"2": {
 				"name": "as_code",
 				"type": "java.lang.Integer",
 				"description": "The numerical AS code"
 			},
-			"31": {
+			"3": {
 				"name": "city",
 				"type": "java.lang.String",
 				"description": "The city name"
 			},
-			"41": {
+			"4": {
 				"name": "continent",
 				"type": "java.lang.String",
 				"description": "The continent name"
 			},
-			"51": {
+			"5": {
 				"name": "continent_code",
 				"type": "java.lang.String",
 				"description": "The ISO continent code"
 			},
-			"61": {
+			"6": {
 				"name": "country",
 				"type": "java.lang.String",
 				"description": "The country name"
 			},
-			"71": {
+			"7": {
 				"name": "country_code",
 				"type": "java.lang.String",
 				"description": "Two-letter country code (ISO 3166-1 alpha-2)"
 			},
-			"81": {
+			"8": {
 				"name": "currency",
 				"type": "java.lang.String",
 				"description": "The currency name"
 			},
-			"91": {
+			"9": {
 				"name": "district",
 				"type": "java.lang.String",
 				"description": "The city district name"
 			},
-			"101": {
+			"10": {
 				"name": "isp",
 				"type": "java.lang.String",
 				"description": "The Internet Service Provider name"
 			},
-			"111": {
+			"11": {
 				"name": "latitude",
 				"type": "java.lang.Double",
 				"description": "The approximate latitude in degrees"
 			},
-			"121": {
+			"12": {
 				"name": "longitude",
 				"type": "java.lang.Double",
 				"description": "The approximate longitude in degrees"
 			},
-			"131": {
+			"13": {
 				"name": "metro_code",
 				"type": "java.lang.Integer",
 				"description": "The metro code"
 			},
-			"141": {
+			"14": {
 				"name": "organization",
 				"type": "java.lang.String",
 				"description": "The organization name"
 			},
-			"151": {
+			"15": {
 				"name": "postal_code",
 				"type": "java.lang.String",
 				"description": "The zip code"
 			},
-			"161": {
+			"16": {
 				"name": "region",
 				"type": "java.lang.String",
 				"description": "The region name"
 			},
-			"171": {
+			"17": {
 				"name": "region_code",
 				"type": "java.lang.String",
 				"description": "The region short code (FIPS or ISO)"
 			},
-			"181": {
+			"18": {
 				"name": "timezone",
 				"type": "java.lang.String",
 				"description": "The timezone name"
@@ -247,35 +247,35 @@
 	{
 		"name": "Profile.Client",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "hostname",
 				"type": "java.lang.String",
 				"identity": true,
 				"description": "The client's network hostname"
 			},
-			"21": {
+			"2": {
 				"name": "os",
 				"type": "com.sandpolis.core.foundation.Platform.OsType",
 				"description": "The client's operating system type"
 			},
-			"31": {
+			"3": {
 				"name": "location",
 				"type": "java.lang.String",
 				"description": "The client's base directory"
 			}
 		},
 		"documents": {
-			"12": "Profile.Client.IpLocation"
+			"1": "Profile.Client.IpLocation"
 		}
 	},
 	{
 		"name": "Profile.Server.TrustAnchor",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "name",
 				"type": "java.lang.String"
 			},
-			"21": {
+			"2": {
 				"name": "certificate",
 				"type": "java.security.cert.X509Certificate"
 			}
@@ -284,27 +284,27 @@
 	{
 		"name": "Profile.Server.User",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "username",
 				"type": "java.lang.String",
 				"description": "The user's unchangable username"
 			},
-			"21": {
+			"2": {
 				"name": "email",
 				"type": "java.lang.String",
 				"description": "The user's email address"
 			},
-			"31": {
+			"3": {
 				"name": "hash",
 				"type": "java.lang.String",
 				"description": "The user's password hash"
 			},
-			"41": {
+			"4": {
 				"name": "expiration",
 				"type": "java.lang.Long",
 				"description": "The user's expiration timestamp"
 			},
-			"51": {
+			"5": {
 				"name": "totp_secret",
 				"type": "java.lang.Byte[]",
 				"description": "The user's TOTP secret"
@@ -314,37 +314,37 @@
 	{
 		"name": "Profile.Server.Listener",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "name",
 				"type": "java.lang.String",
 				"description": "The listener's user-friendly name"
 			},
-			"21": {
+			"2": {
 				"name": "enabled",
 				"type": "java.lang.Boolean",
 				"description": "Whether the listener is enabled"
 			},
-			"31": {
+			"3": {
 				"name": "active",
 				"type": "java.lang.Boolean",
 				"description": "Whether the listener is currently bound to the port and listening"
 			},
-			"41": {
+			"4": {
 				"name": "port",
 				"type": "java.lang.Integer",
 				"description": "The listener's local listening port"
 			},
-			"51": {
+			"5": {
 				"name": "address",
 				"type": "java.lang.String",
 				"description": "The listener's local bind address"
 			},
-			"61": {
+			"6": {
 				"name": "certificate",
 				"type": "java.lang.Byte[]",
 				"description": "A certificate that the listener will present to incoming connections"
 			},
-			"71": {
+			"7": {
 				"name": "private_key",
 				"type": "java.lang.Byte[]",
 				"description": "The private key corresponding to the certificate"
@@ -354,12 +354,12 @@
 	{
 		"name": "Profile.Server.AuthMechanism",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "mech_id",
 				"type": "java.lang.String",
 				"description": "The mechanism identifier"
 			},
-			"21": {
+			"2": {
 				"name": "password",
 				"type": "java.lang.String",
 				"description": "The mechanism password"
@@ -369,22 +369,22 @@
 	{
 		"name": "Profile.Server.Group",
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "name",
 				"type": "java.lang.String"
 			}
 		},
 		"relations": {
-			"24": {
+			"2": {
 				"name": "owner",
 				"type": "Profile.Server.User"
 			},
-			"34": {
+			"3": {
 				"name": "members",
 				"type": "Profile.Server.User",
 				"collection": true
 			},
-			"44": {
+			"4": {
 				"name": "auth_mechanisms",
 				"type": "Profile.Server.AuthMechanism",
 				"collection": true
@@ -394,38 +394,38 @@
 	{
 		"name": "Profile.Server",
 		"collections": {
-			"13": "Profile.Server.User",
-			"23": "Profile.Server.Listener",
-			"33": "Profile.Server.Group",
-			"43": "Profile.Server.TrustAnchor",
-			"63": "Profile.Server.AuthMechanism"
+			"1": "Profile.Server.User",
+			"2": "Profile.Server.Listener",
+			"3": "Profile.Server.Group",
+			"4": "Profile.Server.TrustAnchor",
+			"6": "Profile.Server.AuthMechanism"
 		}
 	},
 	{
 		"name": "Profile",
 		"documents": {
-			"12": "Profile.Server",
-			"22": "Profile.Viewer",
-			"32": "Profile.Client"
+			"1": "Profile.Server",
+			"2": "Profile.Viewer",
+			"3": "Profile.Client"
 		},
 		"collections": {
-			"13": "Profile.Plugin",
-			"23": "Profile.Connection"
+			"1": "Profile.Plugin",
+			"2": "Profile.Connection"
 		},
 		"attributes": {
-			"11": {
+			"1": {
 				"name": "instance_type",
 				"type": "com.sandpolis.core.instance.Metatypes.InstanceType"
 			},
-			"21": {
+			"2": {
 				"name": "instance_flavor",
 				"type": "com.sandpolis.core.instance.Metatypes.InstanceFlavor"
 			},
-			"31": {
+			"3": {
 				"name": "uuid",
 				"type": "java.lang.String"
 			},
-			"41": {
+			"4": {
 				"name": "cvid",
 				"type": "java.lang.Integer"
 			}
@@ -434,7 +434,7 @@
 	{
 		"name": "ST",
 		"collections": {
-			"13": "Profile"
+			"1": "Profile"
 		}
 	}
 ]

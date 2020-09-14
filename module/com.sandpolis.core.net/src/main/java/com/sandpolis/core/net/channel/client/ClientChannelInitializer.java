@@ -109,6 +109,7 @@ public class ClientChannelInitializer extends ChannelInitializer<Channel> {
 
 		p.addLast(ThreadStore.get("net.exelet"), RESPONSE.next(p), new ResponseHandler());
 
+		// TODO only add if ExeletStore is initialized
 		p.addLast(ThreadStore.get("net.exelet"), EXELET.next(p), new ExeletHandler(connection));
 
 		p.addLast(MANAGEMENT.next(p), HANDLER_MANAGEMENT);

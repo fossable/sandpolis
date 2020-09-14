@@ -11,12 +11,15 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.state.AbstractSTObject;
 import com.sandpolis.core.instance.state.STAttribute;
+import com.sandpolis.core.instance.state.STAttributeValue;
+import com.sandpolis.core.instance.state.STObject;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
@@ -27,6 +30,9 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 
 	public EntangledAttribute(STAttribute<T> container, STSyncStruct config) {
 		this.container = Objects.requireNonNull(container);
+
+		if (container instanceof EntangledObject)
+			throw new IllegalArgumentException("Entanged objects cannot be nested");
 
 		// Start streams
 		switch (config.direction) {
@@ -56,18 +62,8 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	// Begin boilerplate
 
 	@Override
-	public void merge(ProtoAttribute snapshot) {
-		container.merge(snapshot);
-	}
-
-	@Override
-	public ProtoAttribute snapshot(RelativeOid<?>... oids) {
-		return container.snapshot(oids);
-	}
-
-	@Override
-	public void set(T value) {
-		container.set(value);
+	public void addListener(Object listener) {
+		container.addListener(listener);
 	}
 
 	@Override
@@ -76,18 +72,18 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	}
 
 	@Override
-	public void source(Supplier<T> source) {
-		container.source(source);
+	public int getTag() {
+		return ((AbstractSTObject) container).getTag();
 	}
 
 	@Override
-	public void addListener(Object listener) {
-		container.addListener(listener);
+	public List<STAttributeValue<T>> history() {
+		return container.history();
 	}
 
 	@Override
-	public void removeListener(Object listener) {
-		container.removeListener(listener);
+	public void merge(ProtoAttribute snapshot) {
+		container.merge(snapshot);
 	}
 
 	@Override
@@ -96,8 +92,18 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	}
 
 	@Override
-	public int getTag() {
-		return ((AbstractSTObject) container).getTag();
+	public AbstractSTObject parent() {
+		return ((AbstractSTObject) container).parent();
+	}
+
+	@Override
+	public void removeListener(Object listener) {
+		container.removeListener(listener);
+	}
+
+	@Override
+	public void set(T value) {
+		container.set(value);
 	}
 
 	@Override
@@ -106,13 +112,23 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	}
 
 	@Override
-	public AbstractSTObject parent() {
-		return ((AbstractSTObject) container).parent();
+	public ProtoAttribute snapshot(RelativeOid<?>... oids) {
+		return container.snapshot(oids);
 	}
 
 	@Override
-	protected AbstractSTObject container() {
-		return (AbstractSTObject) container;
+	public void source(Supplier<T> source) {
+		container.source(source);
+	}
+
+	@Override
+	public long timestamp() {
+		return container.timestamp();
+	}
+
+	@Override
+	protected STObject<ProtoAttribute> container() {
+		return container;
 	}
 
 }

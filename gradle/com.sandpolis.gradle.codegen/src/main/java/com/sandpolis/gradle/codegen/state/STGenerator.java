@@ -53,7 +53,7 @@ public abstract class STGenerator extends DefaultTask {
 
 		// Find root document
 		flatTree.stream().filter(document -> document.name.equals("ST")).findAny().ifPresent(document -> {
-			processDocument(null, document, "2");
+			processDocument(null, document, "9");
 		});
 		flatTree.stream().filter(document -> document.name.equals("Plugin")).findAny().ifPresent(document -> {
 			if (document.parent == null || document.parent.isEmpty() || document.parent.contains(".0.")) {
@@ -90,7 +90,7 @@ public abstract class STGenerator extends DefaultTask {
 		// Validate sub-attributes
 		if (document.attributes != null) {
 			for (var entry : document.attributes.entrySet()) {
-				if (entry.getKey() % 10 != 1)
+				if (entry.getKey() == 0)
 					throw new RuntimeException("Found invalid tag on attribute: " + entry.getValue());
 
 				validateAttribute(entry.getValue());
@@ -100,7 +100,7 @@ public abstract class STGenerator extends DefaultTask {
 		// Validate sub-documents
 		if (document.documents != null) {
 			for (var entry : document.documents.entrySet()) {
-				if (entry.getKey() % 10 != 2)
+				if (entry.getKey() == 0)
 					throw new RuntimeException("Found invalid tag on document: " + entry.getValue());
 
 				// Ensure sub-document exists
@@ -112,7 +112,7 @@ public abstract class STGenerator extends DefaultTask {
 		// Validate sub-collections
 		if (document.collections != null) {
 			for (var entry : document.collections.entrySet()) {
-				if (entry.getKey() % 10 != 3)
+				if (entry.getKey() == 0)
 					throw new RuntimeException("Found invalid tag on collection: " + entry.getValue());
 			}
 		}
@@ -120,7 +120,7 @@ public abstract class STGenerator extends DefaultTask {
 		// Validate sub-relations
 		if (document.relations != null) {
 			for (var entry : document.relations.entrySet()) {
-				if (entry.getKey() % 10 != 4)
+				if (entry.getKey() == 0)
 					throw new RuntimeException("Found invalid tag on relation: " + entry.getValue());
 			}
 		}

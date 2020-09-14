@@ -28,11 +28,6 @@ message ProtoAttributeValue {
     repeated bool    boolean  = 5;
     repeated double  double   = 6;
     repeated bytes   bytes    = 7;
-
-    // TODO convert these types into one of the above
-    repeated core.foundation.OsType os_type = 8;
-    repeated core.instance.InstanceType instance_type = 9;
-    repeated core.instance.InstanceFlavor instance_flavor = 10;
 }
 
 message ProtoAttribute {

@@ -51,8 +51,12 @@ public class AttributeColumn<T> extends TableColumn<FxProfile, Label> {
 		Function<FxAttribute<T>, String> textConverter = a -> a.get() == null ? null : a.get().toString();
 
 		setCellValueFactory(p -> {
+			var profile = p.getValue();
+			if (profile == null)
+				return null;
+
 			ObjectProperty<Label> label = new SimpleObjectProperty<>(new Label());
-			FxAttribute<T> attribute = p.getValue().get(oid);
+			FxAttribute<T> attribute = profile.get(oid);
 
 			// Bind the graphic property to the attribute via the converter function
 			label.get().graphicProperty().bind(Bindings.createObjectBinding(() -> {

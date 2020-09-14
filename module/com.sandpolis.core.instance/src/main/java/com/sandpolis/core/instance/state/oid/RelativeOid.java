@@ -30,19 +30,8 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		@Override
-		public RelativeOid<?> head(int length) {
-			return head(RelativeOidImpl::new, length);
-		}
-
-		@Override
 		public RelativeOid<T> tail() {
 			return tail(RelativeOidImpl::new);
 		}
-
-		@Override
-		public RelativeOid<?> child(int tag) {
-			return child(RelativeOidImpl::new, tag);
-		}
-
 	}
 }

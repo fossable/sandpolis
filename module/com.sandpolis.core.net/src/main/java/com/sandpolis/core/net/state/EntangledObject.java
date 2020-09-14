@@ -45,19 +45,15 @@ import com.sandpolis.core.net.stream.StreamSource;
 public abstract class EntangledObject<T extends Message> extends AbstractSTObject {
 
 	protected StreamSink<T> sink;
-	protected StreamSource<T> source;
 
-	public StreamSource<T> getSource() {
-		return source;
-	}
+	protected StreamSource<T> source;
 
 	public StreamSink<T> getSink() {
 		return sink;
 	}
 
-	@Subscribe
-	void handle(STAttribute.ChangeEvent<?> event) {
-		getSource().submit((T) eventToProto(event.attribute, event.newValue));
+	public StreamSource<T> getSource() {
+		return source;
 	}
 
 	private Message eventToProto(STAttribute<?> attribute, Object value) {
@@ -66,7 +62,6 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 		MessageOrBuilder current = null;
 
 		for (int i = components.length - 1; i >= 0; i--) {
-			System.out.println(components[i]);
 			switch (Oid.type(components[i])) {
 			case Oid.TYPE_ATTRIBUTE:
 				// TODO use value parameter
@@ -106,7 +101,19 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 		}
 	}
 
-	protected abstract AbstractSTObject container();
+	protected abstract STObject<T> container();
+
+	protected void startSink(STSyncStruct config, Class<T> messageType) {
+		sink = new StreamSink<>() {
+
+			@Override
+			public void onNext(T item) {
+				((STObject<T>) container()).merge(item);
+			};
+		};
+
+		StreamStore.add(new InboundStreamAdapter<>(config.streamId, config.connection, messageType), getSink());
+	}
 
 	protected void startSource(STSyncStruct config) {
 		source = new StreamSource<>() {
@@ -126,15 +133,8 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 		getSource().start();
 	}
 
-	protected void startSink(STSyncStruct config, Class<T> messageType) {
-		sink = new StreamSink<>() {
-
-			@Override
-			public void onNext(T item) {
-				((STObject<T>) container()).merge(item);
-			};
-		};
-
-		StreamStore.add(new InboundStreamAdapter<>(config.streamId, config.connection, messageType), getSink());
+	@Subscribe
+	void handle(STAttribute.ChangeEvent<?> event) {
+		getSource().submit((T) eventToProto(event.attribute, event.newValue));
 	}
 }

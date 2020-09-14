@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.core.instance {
 	exports com.sandpolis.core.instance.state;
+	exports com.sandpolis.core.instance.state.converter;
 	exports com.sandpolis.core.instance.state.oid;
 	exports com.sandpolis.core.instance.msg;
 	exports com.sandpolis.core.instance.plugin;

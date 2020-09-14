@@ -15,11 +15,8 @@ import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
 import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
 import static com.sandpolis.core.foundation.util.ProtoUtil.success;
 import static com.sandpolis.core.instance.state.STStore.STStore;
-import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.oid.STAttributeOid;
 import com.sandpolis.core.instance.state.oid.STCollectionOid;
 import com.sandpolis.core.instance.state.oid.STDocumentOid;
@@ -30,8 +27,6 @@ import com.sandpolis.core.net.msg.MsgState.RQ_STSync;
 import com.sandpolis.core.net.state.EntangledCollection;
 import com.sandpolis.core.net.state.EntangledDocument;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
-import com.sandpolis.core.net.stream.InboundStreamAdapter;
-import com.sandpolis.core.net.stream.OutboundStreamAdapter;
 
 public final class STExe extends Exelet {
 
@@ -54,6 +49,7 @@ public final class STExe extends Exelet {
 		var outcome = begin();
 
 		var config = new STSyncStruct();
+		config.connection = context.connector;
 		config.direction = rq.getDirection();
 		config.streamId = rq.getStreamId();
 		config.updatePeriod = rq.getUpdatePeriod();
@@ -64,44 +60,10 @@ public final class STExe extends Exelet {
 			// TODO
 			break;
 		case COLLECTION:
-			var collection = new EntangledCollection(STStore.root().get(new STCollectionOid<>(rq.getOid())), config);
-			switch (rq.getDirection()) {
-			case BIDIRECTIONAL:
-				StreamStore.add(collection.getSource(),
-						new OutboundStreamAdapter<>(rq.getStreamId(), context.connector));
-				StreamStore.add(new InboundStreamAdapter<>(rq.getStreamId(), context.connector, ProtoCollection.class),
-						collection.getSink());
-				break;
-			case DOWNSTREAM:
-				StreamStore.add(collection.getSource(),
-						new OutboundStreamAdapter<>(rq.getStreamId(), context.connector));
-				break;
-			case UPSTREAM:
-				StreamStore.add(new InboundStreamAdapter<>(rq.getStreamId(), context.connector, ProtoCollection.class),
-						collection.getSink());
-				break;
-			default:
-				return failure(outcome, "Unknown sync direction");
-			}
+			new EntangledCollection(STStore.root().get(new STCollectionOid<>(rq.getOid())), config);
 			break;
 		case DOCUMENT:
-			var document = new EntangledDocument(STStore.root().get(new STDocumentOid<>(rq.getOid())), config);
-			switch (rq.getDirection()) {
-			case BIDIRECTIONAL:
-				StreamStore.add(document.getSource(), new OutboundStreamAdapter<>(rq.getStreamId(), context.connector));
-				StreamStore.add(new InboundStreamAdapter<>(rq.getStreamId(), context.connector, ProtoDocument.class),
-						document.getSink());
-				break;
-			case DOWNSTREAM:
-				StreamStore.add(document.getSource(), new OutboundStreamAdapter<>(rq.getStreamId(), context.connector));
-				break;
-			case UPSTREAM:
-				StreamStore.add(new InboundStreamAdapter<>(rq.getStreamId(), context.connector, ProtoDocument.class),
-						document.getSink());
-				break;
-			default:
-				return failure(outcome, "Unknown sync direction");
-			}
+			new EntangledDocument(STStore.root().get(new STDocumentOid<>(rq.getOid())), config);
 			break;
 		default:
 			return failure(outcome, "Unknown OID type");

@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -27,13 +28,30 @@ import com.sandpolis.core.instance.State.ProtoAttribute;
  */
 public interface STAttribute<T> extends STObject<ProtoAttribute> {
 
+	/**
+	 * Indicates that an {@link STAttribute}'s value has changed.
+	 *
+	 * @param <T> The attribute value's type
+	 */
+	public static final class ChangeEvent<T> {
+		public final STAttribute<T> attribute;
+		public final STAttributeValue<T> newValue;
+		public final STAttributeValue<T> oldValue;
+
+		public ChangeEvent(STAttribute<T> attribute, STAttributeValue<T> oldValue, STAttributeValue<T> newValue) {
+			this.attribute = attribute;
+			this.oldValue = oldValue;
+			this.newValue = newValue;
+		}
+	}
+
 	@Embeddable
 	public enum RetentionPolicy {
 
 		/**
-		 * Indicates that changes to the attribute will be retained forever.
+		 * Indicates that a fixed number of changes to the attribute will be retained.
 		 */
-		UNLIMITED,
+		ITEM_LIMITED,
 
 		/**
 		 * Indicates that changes to the attribute will be retained for a fixed period
@@ -42,26 +60,9 @@ public interface STAttribute<T> extends STObject<ProtoAttribute> {
 		TIME_LIMITED,
 
 		/**
-		 * Indicates that a fixed number of changes to the attribute will be retained.
+		 * Indicates that changes to the attribute will be retained forever.
 		 */
-		ITEM_LIMITED;
-	}
-
-	/**
-	 * Indicates that an {@link STAttribute}'s value has changed.
-	 *
-	 * @param <T> The attribute value's type
-	 */
-	public static final class ChangeEvent<T> {
-		public final STAttribute<T> attribute;
-		public final T newValue;
-		public final T oldValue;
-
-		public ChangeEvent(STAttribute<T> attribute, T oldValue, T newValue) {
-			this.attribute = attribute;
-			this.oldValue = oldValue;
-			this.newValue = newValue;
-		}
+		UNLIMITED;
 	}
 
 	/**
@@ -70,6 +71,14 @@ public interface STAttribute<T> extends STObject<ProtoAttribute> {
 	 * @return The current value or {@code null} if there's no value
 	 */
 	public T get();
+
+	/**
+	 * Get the history of the attribute's value if enabled by the
+	 * {@link RetentionPolicy}.
+	 * 
+	 * @return An unmodifiable list
+	 */
+	public List<STAttributeValue<T>> history();
 
 	/**
 	 * Perform the given operation if the attribute has a current value.
@@ -105,4 +114,11 @@ public interface STAttribute<T> extends STObject<ProtoAttribute> {
 	 * @param source The source or {@code null} to remove the previous source
 	 */
 	public void source(Supplier<T> source);
+
+	/**
+	 * Get the timestamp associated with the attribute's current value.
+	 * 
+	 * @return The current timestamp
+	 */
+	public long timestamp();
 }

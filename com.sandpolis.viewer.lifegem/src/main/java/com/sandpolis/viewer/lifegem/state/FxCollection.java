@@ -11,11 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.state;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
+import com.sandpolis.core.instance.state.EphemeralDocument;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STRelation;
@@ -24,76 +27,71 @@ import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.store.StoreMetadata;
 
+import javafx.application.Platform;
 import javafx.collections.ObservableListBase;
 
 public class FxCollection<T extends VirtObject> extends ObservableListBase<T> implements STCollection {
 
-	private STCollection container;
+	private List<T> container;
 
-	public FxCollection(STCollection container, Function<STDocument, T> constructor) {
-		this.container = Objects.requireNonNull(container);
+	private Function<STDocument, T> constructor;
+
+	public FxCollection(Function<STDocument, T> constructor) {
+		this.container = new ArrayList<>();
+		this.constructor = Objects.requireNonNull(constructor);
+	}
+
+	public FxCollection(STCollection base, Function<STDocument, T> constructor) {
+		this(constructor);
+		base.documents().map(constructor).forEach(container::add);
 	}
 
 	@Override
-	public T get(int index) {
-		return null;
-	}
-
-	@Override
-	public int size() {
-		return container.size();
-	}
-
-	@Override
-	public T set(int index, T element) {
-		// TODO Auto-generated method stub
-		return super.set(index, element);
-	}
-
-	@Override
-	public void merge(ProtoCollection snapshot) {
-		container.merge(snapshot);
-	}
-
-	@Override
-	public ProtoCollection snapshot(RelativeOid<?>... oids) {
-		return container.snapshot(oids);
+	public void addListener(Object listener) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor) {
-		return container.collectionList(constructor);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public STDocument document(int tag) {
-		return container.document(tag);
-	}
+		for (var item : container) {
+			if (item.tag() == tag) {
+				return item.document;
+			}
+		}
 
-	@Override
-	public STDocument getDocument(int tag) {
-		return container.getDocument(tag);
-	}
+		var document = newDocument();
 
-	@Override
-	public void setDocument(int tag, STDocument document) {
-		container.setDocument(tag, document);
-	}
+		Platform.runLater(() -> {
+			System.out.println("Adding document tag: " + tag + " at: " + container.size());
+			container.add(constructor.apply(document));
+			System.out.println("size: " + container.size());
+		});
 
-	@Override
-	public Stream<T> stream() {
-		// TODO Auto-generated method stub
-		return null;
+		return document;
 	}
 
 	@Override
 	public Stream<STDocument> documents() {
-		return container.documents();
+		return stream().map(item -> item.document);
 	}
 
 	@Override
-	public STDocument newDocument() {
-		// TODO Auto-generated method stub
+	public T get(int index) {
+		return container.get(index);
+	}
+
+	@Override
+	public STDocument getDocument(int tag) {
+		for (var item : container) {
+			if (item.tag() == tag) {
+				return item.document;
+			}
+		}
 		return null;
 	}
 
@@ -104,31 +102,71 @@ public class FxCollection<T extends VirtObject> extends ObservableListBase<T> im
 	}
 
 	@Override
+	public void merge(ProtoCollection snapshot) {
+		System.out.println("Merging snapshot: " + snapshot);
+		for (var entry : snapshot.getDocumentMap().entrySet()) {
+			document(entry.getKey()).merge(entry.getValue());
+		}
+
+//		if (!snapshot.getPartial()) {
+//			Platform.runLater(() -> {
+//				// Remove anything that wasn't in the snapshot
+//				container.removeIf(item -> !snapshot.containsDocument(item.tag()));
+//			});
+//		}
+	}
+
+	@Override
+	public STDocument newDocument() {
+		return new FxDocument<T>(null);
+	}
+
+	@Override
+	public Oid oid() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void remove(STDocument document) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void addListener(Object listener) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public void removeListener(Object listener) {
-		// TODO Auto-generated method stub
-
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Oid oid() {
-		// TODO Auto-generated method stub
-		return null;
+	public void setDocument(int tag, STDocument document) {
+		Platform.runLater(() -> {
+			for (int i = 0; i < container.size(); i++) {
+				if (container.get(i).tag() == tag) {
+					container.set(i, constructor.apply(document));
+					return;
+				}
+			}
+		});
 	}
 
 	@Override
 	public void setTag(int tag) {
-		container.setTag(tag);
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int size() {
+		System.out.println("Container: " + container);
+		return container.size();
+	}
+
+	@Override
+	public ProtoCollection snapshot(RelativeOid<?>... oids) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Stream<T> stream() {
+		return container.stream();
 	}
 }
