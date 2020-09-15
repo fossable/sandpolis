@@ -20,7 +20,7 @@ package com.sandpolis.core.instance.state;
  */
 public class EphemeralAttribute<T> extends AbstractSTAttribute<T> implements STAttribute<T> {
 
-	public EphemeralAttribute(EphemeralDocument parent) {
+	public EphemeralAttribute(STDocument parent) {
 		this.parent = parent;
 	}
 

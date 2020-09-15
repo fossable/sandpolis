@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.google.protobuf.ByteString;
+import com.sandpolis.core.foundation.Platform.OsType;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.State.ProtoAttributeValue;
 import com.sandpolis.core.instance.state.converter.InstanceFlavorConverter;
 import com.sandpolis.core.instance.state.converter.InstanceTypeConverter;
+import com.sandpolis.core.instance.state.converter.OsTypeConverter;
 import com.sandpolis.core.instance.state.converter.X509CertificateConverter;
 
 @SuppressWarnings("rawtypes")
@@ -114,6 +116,15 @@ public interface STAttributeValue<T> {
 
 	static final Function[] LONG = { LONG_SERIALIZER, LONG_DESERIALIZER };
 
+	// OsType
+	static final Function<ProtoAttributeValue, OsType> OSTYPE_DESERIALIZER //
+			= INTEGER_DESERIALIZER.andThen(OsTypeConverter.DESERIALIZER);
+
+	static final Function<OsType, ProtoAttributeValue.Builder> OSTYPE_SERIALIZER //
+			= OsTypeConverter.SERIALIZER.andThen(INTEGER_SERIALIZER);
+
+	static final Function[] OSTYPE = { OSTYPE_SERIALIZER, OSTYPE_DESERIALIZER };
+
 	// String list
 	static final Function<ProtoAttributeValue, List<String>> STRING_LIST_DESERIALIZER //
 			= proto -> proto.getStringList();
@@ -194,6 +205,10 @@ public interface STAttributeValue<T> {
 			return INSTANCEFLAVOR;
 		}
 
+		else if (value instanceof OsType) {
+			return OSTYPE;
+		}
+
 		else if (value instanceof List) {
 			var list = ((List<?>) value);
 			if (list.size() == 0)
@@ -223,10 +238,10 @@ public interface STAttributeValue<T> {
 			}
 
 			else {
-				throw new IllegalArgumentException("Unknown list type");
+				throw new IllegalArgumentException("Unknown list type: " + item.toString());
 			}
 		} else {
-			throw new IllegalArgumentException("Unknown value type");
+			throw new IllegalArgumentException("Unknown value type: " + value.toString());
 		}
 	}
 

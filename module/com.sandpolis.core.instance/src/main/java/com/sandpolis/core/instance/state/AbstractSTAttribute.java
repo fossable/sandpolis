@@ -24,7 +24,7 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject implements
 	 */
 	protected List<STAttributeValue<T>> history;
 
-	protected AbstractSTObject parent;
+	protected STDocument parent;
 
 	/**
 	 * A strategy that determines what happens to old values.
@@ -92,7 +92,7 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject implements
 
 	@Override
 	public AbstractSTObject parent() {
-		return parent;
+		return (AbstractSTObject) parent;
 	}
 
 	@Override

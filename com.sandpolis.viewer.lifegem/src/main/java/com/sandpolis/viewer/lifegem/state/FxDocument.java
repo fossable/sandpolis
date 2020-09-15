@@ -15,14 +15,16 @@ import java.util.HashMap;
 
 import com.sandpolis.core.instance.state.AbstractSTDocument;
 import com.sandpolis.core.instance.state.AbstractSTObject;
+import com.sandpolis.core.instance.state.EphemeralCollection;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.STObject;
 import com.sandpolis.core.instance.state.VirtObject;
 
 public class FxDocument<T extends VirtObject> extends AbstractSTDocument implements STDocument {
 
-	public FxDocument(STDocument parent) {
+	public FxDocument(STObject<?> parent) {
 		this.parent = (AbstractSTObject) parent;
 
 		documents = new HashMap<>();
@@ -32,7 +34,7 @@ public class FxDocument<T extends VirtObject> extends AbstractSTDocument impleme
 
 	@Override
 	protected STAttribute<?> newAttribute() {
-		return new FxAttribute<>();
+		return new FxAttribute<>(this);
 	}
 
 	@Override
@@ -42,7 +44,8 @@ public class FxDocument<T extends VirtObject> extends AbstractSTDocument impleme
 
 	@Override
 	protected STCollection newCollection() {
-		return new FxCollection<>(null);
+//		return new FxCollection<>(null);
+		return new EphemeralCollection(this);
 	}
 
 }

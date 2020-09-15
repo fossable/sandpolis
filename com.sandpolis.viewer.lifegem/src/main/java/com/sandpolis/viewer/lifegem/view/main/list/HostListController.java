@@ -39,11 +39,14 @@ public class HostListController extends AbstractController {
 	@FXML
 	private TableView<FxProfile> table;
 
-	private static final List<STAttributeOid<?>> DEFAULT_HEADERS = List.of(VirtProfile.UUID);
+	private FxCollection<FxProfile> collection = new FxCollection<>(FxProfile::new);
+
+	private static final List<STAttributeOid<?>> DEFAULT_HEADERS = List.of(VirtProfile.UUID, VirtProfile.INSTANCE_TYPE);
 
 	@FXML
 	public void initialize() {
 
+		table.setItems(collection.getObservable());
 		table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		table.getSelectionModel().selectedItemProperty().addListener((p, o, n) -> {
 			if (n == null)
@@ -52,11 +55,8 @@ public class HostListController extends AbstractController {
 				post(HostDetailOpenEvent::new, n);
 		});
 
-		var collection = new FxCollection<>(FxProfile::new);
-		table.setItems(collection);
-
-		STCmd.async().sync(collection, VirtProfile.COLLECTION).thenAccept(entangled -> {
-		});
+		// Attach the local collection
+		STCmd.async().sync(collection, VirtProfile.COLLECTION);
 
 		// Set default headers
 		addColumns(DEFAULT_HEADERS);

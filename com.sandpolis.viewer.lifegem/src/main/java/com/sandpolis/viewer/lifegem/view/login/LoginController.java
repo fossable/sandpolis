@@ -161,7 +161,7 @@ public class LoginController extends FxController {
 										post(LoginEndedEvent::new);
 
 										if (!plugins.isEmpty()) {
-											pluginPhaseController.setPlugins(plugins);
+											pluginPhaseController.setPlugins(plugins.getObservable());
 											phase.set(LoginPhase.PLUGIN_PHASE);
 										} else {
 											phase.set(LoginPhase.COMPLETE);

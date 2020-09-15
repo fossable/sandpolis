@@ -27,10 +27,13 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 
 	private EphemeralAttribute<T> container;
 
+	public FxAttribute(FxDocument parent) {
+		this.container = new EphemeralAttribute<>(parent);
+	}
+
 	@Override
 	public void addListener(Object listener) {
-		// TODO Auto-generated method stub
-
+		container.addListener(listener);
 	}
 
 	@Override
@@ -45,8 +48,7 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 
 	@Override
 	public List<STAttributeValue<T>> history() {
-		// TODO Auto-generated method stub
-		return null;
+		return container.history();
 	}
 
 	@Override
@@ -56,14 +58,12 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 
 	@Override
 	public Oid oid() {
-		// TODO Auto-generated method stub
-		return null;
+		return container.oid();
 	}
 
 	@Override
 	public void removeListener(Object listener) {
-		// TODO Auto-generated method stub
-
+		container.removeListener(listener);
 	}
 
 	@Override
@@ -88,8 +88,7 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 
 	@Override
 	public long timestamp() {
-		// TODO Auto-generated method stub
-		return 0;
+		return container.timestamp();
 	}
 
 }

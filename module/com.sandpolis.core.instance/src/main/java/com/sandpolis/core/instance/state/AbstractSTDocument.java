@@ -10,15 +10,15 @@ import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 public abstract class AbstractSTDocument extends AbstractSTObject implements STDocument {
 
-	protected String id;
-
-	protected AbstractSTObject parent;
-
-	protected Map<Integer, STDocument> documents;
+	protected Map<Integer, STAttribute<?>> attributes;
 
 	protected Map<Integer, STCollection> collections;
 
-	protected Map<Integer, STAttribute<?>> attributes;
+	protected Map<Integer, STDocument> documents;
+
+	protected String id;
+
+	protected AbstractSTObject parent;
 
 	@Override
 	public <E> STAttribute<E> attribute(int tag) {
@@ -31,34 +31,8 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 	}
 
 	@Override
-	public <E> STAttribute<E> getAttribute(int tag) {
-		return (STAttribute<E>) attributes.get(tag);
-	}
-
-	@Override
-	public void setAttribute(int tag, STAttribute<?> attribute) {
-		attributes.put(tag, attribute);
-		attribute.setTag(tag);
-	}
-
-	@Override
-	public STDocument document(int tag) {
-		var document = getDocument(tag);
-		if (document == null) {
-			document = newDocument();
-			setDocument(tag, document);
-		}
-		return document;
-	}
-
-	public STDocument getDocument(int tag) {
-		return documents.get(tag);
-	}
-
-	@Override
-	public void setDocument(int tag, STDocument document) {
-		documents.put(tag, document);
-		document.setTag(tag);
+	public Stream<STAttribute<?>> attributes() {
+		return attributes.values().stream();
 	}
 
 	@Override
@@ -72,14 +46,37 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 	}
 
 	@Override
+	public Stream<STCollection> collections() {
+		return collections.values().stream();
+	}
+
+	@Override
+	public STDocument document(int tag) {
+		var document = getDocument(tag);
+		if (document == null) {
+			document = newDocument();
+			setDocument(tag, document);
+		}
+		return document;
+	}
+
+	@Override
+	public Stream<STDocument> documents() {
+		return documents.values().stream();
+	}
+
+	@Override
+	public <E> STAttribute<E> getAttribute(int tag) {
+		return (STAttribute<E>) attributes.get(tag);
+	}
+
+	@Override
 	public STCollection getCollection(int tag) {
 		return collections.get(tag);
 	}
 
-	@Override
-	public void setCollection(int tag, STCollection collection) {
-		collections.put(tag, collection);
-		collection.setTag(tag);
+	public STDocument getDocument(int tag) {
+		return documents.get(tag);
 	}
 
 	@Override
@@ -105,6 +102,29 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 			collections.entrySet().removeIf(entry -> !snapshot.containsCollection(entry.getKey()));
 			attributes.entrySet().removeIf(entry -> !snapshot.containsAttribute(entry.getKey()));
 		}
+	}
+
+	@Override
+	public AbstractSTObject parent() {
+		return parent;
+	}
+
+	@Override
+	public void setAttribute(int tag, STAttribute<?> attribute) {
+		attributes.put(tag, attribute);
+		attribute.setTag(tag);
+	}
+
+	@Override
+	public void setCollection(int tag, STCollection collection) {
+		collections.put(tag, collection);
+		collection.setTag(tag);
+	}
+
+	@Override
+	public void setDocument(int tag, STDocument document) {
+		documents.put(tag, document);
+		document.setTag(tag);
 	}
 
 	@Override
@@ -141,27 +161,7 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 
 	protected abstract STAttribute<?> newAttribute();
 
-	protected abstract STDocument newDocument();
-
 	protected abstract STCollection newCollection();
 
-	@Override
-	public Stream<STAttribute<?>> attributes() {
-		return attributes.values().stream();
-	}
-
-	@Override
-	public Stream<STCollection> collections() {
-		return collections.values().stream();
-	}
-
-	@Override
-	public Stream<STDocument> documents() {
-		return documents.values().stream();
-	}
-
-	@Override
-	public AbstractSTObject parent() {
-		return parent;
-	}
+	protected abstract STDocument newDocument();
 }

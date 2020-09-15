@@ -11,12 +11,10 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.state;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -30,14 +28,8 @@ import javax.persistence.Transient;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.state.AbstractSTCollection;
-import com.sandpolis.core.instance.state.AbstractSTObject;
-import com.sandpolis.core.instance.state.EphemeralRelation;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.STRelation;
-import com.sandpolis.core.instance.state.VirtObject;
-import com.sandpolis.core.instance.state.oid.Oid;
-import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.server.hibernate.HibernateCollectionMetadata;
 
@@ -48,14 +40,20 @@ public class HibernateCollection extends AbstractSTCollection implements STColle
 	private String db_id;
 
 	@Column
-	protected int tag;
+	public int getTag() {
+		return tag;
+	}
 
 	@Column(nullable = true)
-	private HibernateDocument parent;
+	protected HibernateDocument getParent() {
+		return (HibernateDocument) parent;
+	}
 
 	@MapKeyColumn
 	@OneToMany(cascade = CascadeType.ALL)
-	private Map<Integer, HibernateDocument> documents;
+	protected Map<Integer, HibernateDocument> getDocuments() {
+		return (Map) documents;
+	}
 
 	@OneToOne(cascade = CascadeType.ALL)
 	private HibernateCollectionMetadata metadata;
@@ -79,44 +77,12 @@ public class HibernateCollection extends AbstractSTCollection implements STColle
 		// JPA CONSTRUCTOR
 	}
 
-	public STDocument get(int key) {
-		return documents.get(key);
-	}
-
-	@Override
-	public Stream<STDocument> documents() {
-		return documents.values().stream().map(STDocument.class::cast);
-	}
-
-	@Override
-	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor) {
-		return new EphemeralRelation<>(constructor);
-	}
-
-	@Override
-	public int size() {
-		return documents.size();
-	}
-
-	public boolean isEmpty() {
-		return documents.isEmpty();
-	}
-
-	public boolean contains(STDocument document) {
-		return documents.containsValue(document);
-	}
-
-	public void add(int tag, HibernateDocument e) {
-		em.getTransaction().begin();
-		documents.put(tag, e);
-		em.flush();
-		em.getTransaction().commit();
-	}
-
 	@Override
 	public void remove(STDocument document) {
+		em.getTransaction().begin();
 		documents.values().remove(document);
-
+		em.flush();
+		em.getTransaction().commit();
 	}
 
 	public void clear() {
@@ -127,57 +93,12 @@ public class HibernateCollection extends AbstractSTCollection implements STColle
 	}
 
 	@Override
-	public HibernateDocument document(int tag) {
-		var document = getDocument(tag);
-		if (document == null) {
-			document = new HibernateDocument(this);
-			setDocument(tag, document);
-		}
-		return document;
-	}
-
-	@Override
-	public HibernateDocument getDocument(int tag) {
-		return documents.get(tag);
-	}
-
-	@Override
 	public void setDocument(int tag, STDocument document) {
+		em.getTransaction().begin();
 		documents.put(tag, (HibernateDocument) document);
 		document.setTag(tag);
-	}
-
-	@Override
-	public void merge(ProtoCollection snapshot) {
-		for (var entry : snapshot.getDocumentMap().entrySet()) {
-			document(entry.getKey()).merge(entry.getValue());
-		}
-
-		if (!snapshot.getPartial()) {
-			// Remove anything that wasn't in the snapshot
-			documents.entrySet().removeIf(entry -> !snapshot.containsDocument(entry.getKey()));
-		}
-	}
-
-	@Override
-	public ProtoCollection snapshot(RelativeOid<?>... oids) {
-		if (oids.length == 0) {
-			var snapshot = ProtoCollection.newBuilder().setPartial(false);
-			documents.forEach((tag, document) -> {
-				snapshot.putDocument(tag, document.snapshot());
-			});
-			return snapshot.build();
-		} else {
-			var snapshot = ProtoCollection.newBuilder().setPartial(true);
-			for (var head : Arrays.stream(oids).mapToInt(Oid::first).distinct().toArray()) {
-				var children = Arrays.stream(oids).filter(oid -> oid.first() != head).map(Oid::tail)
-						.toArray(RelativeOid[]::new);
-
-				snapshot.putDocument(head, documents.get(head).snapshot(children));
-			}
-
-			return snapshot.build();
-		}
+		em.flush();
+		em.getTransaction().commit();
 	}
 
 	@Override
@@ -194,23 +115,4 @@ public class HibernateCollection extends AbstractSTCollection implements STColle
 		return metadata;
 	}
 
-	@Override
-	public Oid oid() {
-		return parent.oid().child(tag);
-	}
-
-	@Override
-	public int getTag() {
-		return tag;
-	}
-
-	@Override
-	public void setTag(int tag) {
-		this.tag = tag;
-	}
-
-	@Override
-	public AbstractSTObject parent() {
-		return parent;
-	}
 }
