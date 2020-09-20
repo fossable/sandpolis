@@ -55,8 +55,10 @@ public final class ThreadStore extends StoreBase implements ConfigurableStore<Th
 
 	@Override
 	public void close() throws Exception {
-		log.debug("Closing {} active thread pools", container.size());
-		container.values().forEach(service -> service.shutdownNow());
+		container.entrySet().forEach(entry -> {
+			log.debug("Closing thread pool: " + entry.getKey());
+			entry.getValue().shutdownNow();
+		});
 		container = null;
 	}
 

@@ -11,10 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state;
 
-import java.util.Objects;
-
 import com.sandpolis.core.foundation.Result.ErrorCode;
-import com.sandpolis.core.instance.state.oid.STAttributeOid;
 
 /**
  * A {@link VirtObject} is a member of the virtual state tree (VST).
@@ -63,13 +60,6 @@ public abstract class VirtObject {
 			return ((VirtObject) obj).document == document;
 		}
 		return false;
-	}
-
-	public <A extends STAttribute<T>, T> A get(STAttributeOid<T> oid) {
-		if (Objects.requireNonNull(oid).isChildOf(document.oid()))
-			throw new IllegalArgumentException();
-
-		return (A) document.attribute(oid.last());
 	}
 
 	/**

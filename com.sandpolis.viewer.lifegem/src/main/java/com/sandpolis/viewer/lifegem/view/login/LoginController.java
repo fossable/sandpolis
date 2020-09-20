@@ -156,7 +156,7 @@ public class LoginController extends FxController {
 						if (rs.getResult()) {
 							STCmd.async().target(connection).snapshot(VirtPlugin.COLLECTION.resolveLocal())
 									.thenAcceptAsync(snapshot -> {
-										var plugins = new FxCollection<>(snapshot, PluginProperty::new);
+										var plugins = new FxCollection<>(null, snapshot, PluginProperty::new);
 										// TODO filter plugins that are already installed
 										post(LoginEndedEvent::new);
 

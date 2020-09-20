@@ -12,7 +12,7 @@
 package com.sandpolis.plugin.device;
 
 import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.plugin.device.StateTree.VirtPlugin.VirtDevice;
+import com.sandpolis.plugin.device.state.VirtDevice;
 
 public class Device extends VirtDevice {
 

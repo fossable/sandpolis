@@ -21,7 +21,7 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 	protected AbstractSTObject parent;
 
 	@Override
-	public <E> STAttribute<E> attribute(int tag) {
+	public synchronized <E> STAttribute<E> attribute(int tag) {
 		STAttribute<?> attribute = getAttribute(tag);
 		if (attribute == null) {
 			attribute = newAttribute();
@@ -31,12 +31,12 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 	}
 
 	@Override
-	public Stream<STAttribute<?>> attributes() {
+	public synchronized Stream<STAttribute<?>> attributes() {
 		return attributes.values().stream();
 	}
 
 	@Override
-	public STCollection collection(int tag) {
+	public synchronized STCollection collection(int tag) {
 		var collection = getCollection(tag);
 		if (collection == null) {
 			collection = newCollection();
@@ -46,12 +46,12 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 	}
 
 	@Override
-	public Stream<STCollection> collections() {
+	public synchronized Stream<STCollection> collections() {
 		return collections.values().stream();
 	}
 
 	@Override
-	public STDocument document(int tag) {
+	public synchronized STDocument document(int tag) {
 		var document = getDocument(tag);
 		if (document == null) {
 			document = newDocument();
@@ -61,31 +61,31 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 	}
 
 	@Override
-	public Stream<STDocument> documents() {
+	public synchronized Stream<STDocument> documents() {
 		return documents.values().stream();
 	}
 
 	@Override
-	public <E> STAttribute<E> getAttribute(int tag) {
+	public synchronized <E> STAttribute<E> getAttribute(int tag) {
 		return (STAttribute<E>) attributes.get(tag);
 	}
 
 	@Override
-	public STCollection getCollection(int tag) {
+	public synchronized STCollection getCollection(int tag) {
 		return collections.get(tag);
 	}
 
-	public STDocument getDocument(int tag) {
+	public synchronized STDocument getDocument(int tag) {
 		return documents.get(tag);
 	}
 
 	@Override
-	public String getId() {
+	public synchronized String getId() {
 		return id;
 	}
 
 	@Override
-	public void merge(ProtoDocument snapshot) {
+	public synchronized void merge(ProtoDocument snapshot) {
 		for (var entry : snapshot.getDocumentMap().entrySet()) {
 			document(entry.getKey()).merge(entry.getValue());
 		}
@@ -105,30 +105,30 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 	}
 
 	@Override
-	public AbstractSTObject parent() {
+	public synchronized AbstractSTObject parent() {
 		return parent;
 	}
 
 	@Override
-	public void setAttribute(int tag, STAttribute<?> attribute) {
+	public synchronized void setAttribute(int tag, STAttribute<?> attribute) {
 		attributes.put(tag, attribute);
 		attribute.setTag(tag);
 	}
 
 	@Override
-	public void setCollection(int tag, STCollection collection) {
+	public synchronized void setCollection(int tag, STCollection collection) {
 		collections.put(tag, collection);
 		collection.setTag(tag);
 	}
 
 	@Override
-	public void setDocument(int tag, STDocument document) {
+	public synchronized void setDocument(int tag, STDocument document) {
 		documents.put(tag, document);
 		document.setTag(tag);
 	}
 
 	@Override
-	public ProtoDocument snapshot(RelativeOid<?>... oids) {
+	public synchronized ProtoDocument snapshot(RelativeOid<?>... oids) {
 		if (oids.length == 0) {
 			var snapshot = ProtoDocument.newBuilder().setPartial(false);
 			documents.forEach((tag, document) -> {

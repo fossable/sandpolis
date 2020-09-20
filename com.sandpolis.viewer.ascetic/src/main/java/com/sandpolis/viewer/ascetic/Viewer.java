@@ -96,11 +96,11 @@ public final class Viewer {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolveLocal());
 		});
 
 		PluginStore.init(config -> {
-			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolve(STStore.LOCAL_INSTANCE));
+			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolveLocal());
 		});
 
 		WindowStore.init(config -> {

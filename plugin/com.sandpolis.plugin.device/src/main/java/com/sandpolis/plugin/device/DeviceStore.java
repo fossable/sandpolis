@@ -22,7 +22,7 @@ import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.plugin.device.DeviceStore.DeviceStoreConfig;
-import com.sandpolis.plugin.device.StateTree.VirtPlugin.VirtDevice;
+import com.sandpolis.plugin.device.state.VirtDevice;
 
 public class DeviceStore extends STCollectionStore<Device> implements ConfigurableStore<DeviceStoreConfig> {
 

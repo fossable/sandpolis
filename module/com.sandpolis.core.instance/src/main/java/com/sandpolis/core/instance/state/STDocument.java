@@ -14,11 +14,9 @@ package com.sandpolis.core.instance.state;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
-import com.sandpolis.core.instance.state.oid.STAttributeOid;
-import com.sandpolis.core.instance.state.oid.STCollectionOid;
-import com.sandpolis.core.instance.state.oid.STDocumentOid;
 
 /**
  * {@link STDocument} represents a composite entity and may contain attributes,
@@ -174,16 +172,28 @@ public interface STDocument extends STObject<ProtoDocument> {
 	 */
 	public Stream<STDocument> documents();
 
-	public default <T> STAttribute<T> get(STAttributeOid<T> oid) {
-		return (STAttribute<T>) attribute(oid.relativize(oid()));
+	public default <T> STAttribute<T> get(AbsoluteOid.STAttributeOid<T> oid) {
+		return get(oid.relativize(oid()));
 	}
 
-	public default STCollection get(STCollectionOid<?> oid) {
-		return collection(oid.relativize(oid()));
+	public default STCollection get(AbsoluteOid.STCollectionOid<?> oid) {
+		return get(oid.relativize(oid()));
 	}
 
-	public default STDocument get(STDocumentOid<?> oid) {
-		return document(oid.relativize(oid()));
+	public default STDocument get(AbsoluteOid.STDocumentOid<?> oid) {
+		return get(oid.relativize(oid()));
+	}
+
+	public default <T> STAttribute<T> get(RelativeOid.STAttributeOid<T> oid) {
+		return attribute(oid);
+	}
+
+	public default STCollection get(RelativeOid.STCollectionOid<?> oid) {
+		return collection(oid);
+	}
+
+	public default STDocument get(RelativeOid.STDocumentOid<?> oid) {
+		return document(oid);
 	}
 
 	/**

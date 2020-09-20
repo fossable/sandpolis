@@ -15,7 +15,8 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.oid.STAttributeOid;
+import com.sandpolis.core.instance.state.VirtProfile;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.state.FxAttribute;
 import com.sandpolis.viewer.lifegem.state.FxProfile;
@@ -34,14 +35,15 @@ import javafx.scene.control.TableColumn;
  */
 public class AttributeColumn<T> extends TableColumn<FxProfile, Label> {
 
-	private final STAttributeOid<T> oid;
+	private final AbsoluteOid.STAttributeOid<T> oid;
 
-	public AttributeColumn(STAttributeOid<T> oid) {
+	public AttributeColumn(AbsoluteOid.STAttributeOid<T> oid) {
 		this.oid = Objects.requireNonNull(oid);
 
 		// Set header text
-		if (FxUtil.getResources().containsKey(oid.toString()))
-			setText(FxUtil.getResources().getObject(oid.toString()).toString());
+		String resourceKey = "oid." + oid.toString() + ".name";
+		if (FxUtil.getResources().containsKey(resourceKey))
+			setText(FxUtil.getResources().getObject(resourceKey).toString());
 
 		// Set header image
 		// TODO
@@ -56,7 +58,8 @@ public class AttributeColumn<T> extends TableColumn<FxProfile, Label> {
 				return null;
 
 			ObjectProperty<Label> label = new SimpleObjectProperty<>(new Label());
-			FxAttribute<T> attribute = profile.get(oid);
+			FxAttribute<T> attribute = (FxAttribute<T>) profile.document
+					.get(oid.tail(VirtProfile.COLLECTION.size() + 1));
 
 			// Bind the graphic property to the attribute via the converter function
 			label.get().graphicProperty().bind(Bindings.createObjectBinding(() -> {
@@ -72,7 +75,7 @@ public class AttributeColumn<T> extends TableColumn<FxProfile, Label> {
 		});
 	}
 
-	public STAttributeOid<T> getOid() {
+	public AbsoluteOid.STAttributeOid<T> getOid() {
 		return oid;
 	}
 }

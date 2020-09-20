@@ -16,6 +16,8 @@ plugins {
 	id 'com.google.protobuf' version '0.8.11'
 }
 
+apply plugin: 'com.sandpolis.gradle.codegen'
+
 sourceSets {
 	main {
 		java {

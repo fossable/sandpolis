@@ -11,6 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.main.list;
 
+import static com.sandpolis.core.instance.state.STStore.STStore;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.state.VirtProfile;
-import com.sandpolis.core.instance.state.oid.STAttributeOid;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 import com.sandpolis.viewer.lifegem.state.FxCollection;
@@ -39,9 +41,10 @@ public class HostListController extends AbstractController {
 	@FXML
 	private TableView<FxProfile> table;
 
-	private FxCollection<FxProfile> collection = new FxCollection<>(FxProfile::new);
+	private FxCollection<FxProfile> collection = (FxCollection<FxProfile>) STStore.root().get(VirtProfile.COLLECTION);
 
-	private static final List<STAttributeOid<?>> DEFAULT_HEADERS = List.of(VirtProfile.UUID, VirtProfile.INSTANCE_TYPE);
+	private static final List<AbsoluteOid.STAttributeOid<?>> DEFAULT_HEADERS = List.of(VirtProfile.UUID,
+			VirtProfile.IP_ADDRESS, VirtProfile.OS_TYPE);
 
 	@FXML
 	public void initialize() {
@@ -86,7 +89,7 @@ public class HostListController extends AbstractController {
 	 *
 	 * @param headers The headers to add
 	 */
-	private void addColumns(List<STAttributeOid<?>> headers) {
+	private void addColumns(List<AbsoluteOid.STAttributeOid<?>> headers) {
 		headers.stream().map(AttributeColumn::new).forEach(table.getColumns()::add);
 	}
 

@@ -54,7 +54,7 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject implements
 	}
 
 	@Override
-	public List<STAttributeValue<T>> history() {
+	public synchronized List<STAttributeValue<T>> history() {
 		if (history == null)
 			return List.of();
 
@@ -91,7 +91,7 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject implements
 	}
 
 	@Override
-	public AbstractSTObject parent() {
+	public synchronized AbstractSTObject parent() {
 		return (AbstractSTObject) parent;
 	}
 
@@ -128,12 +128,12 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject implements
 		fireAttributeValueChangedEvent(this, old, current);
 	}
 
-	public void setRetention(RetentionPolicy retention) {
+	public synchronized void setRetention(RetentionPolicy retention) {
 		this.retention = retention;
 		checkRetention();
 	}
 
-	public void setRetention(RetentionPolicy retention, int limit) {
+	public synchronized void setRetention(RetentionPolicy retention, int limit) {
 		this.retention = retention;
 		this.retentionLimit = limit;
 		checkRetention();
@@ -177,7 +177,7 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject implements
 	}
 
 	@Override
-	public void source(Supplier<T> source) {
+	public synchronized void source(Supplier<T> source) {
 		this.source = source;
 	}
 
@@ -241,4 +241,11 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject implements
 	protected abstract STAttributeValue<T> newValue(T value);
 
 	protected abstract STAttributeValue<T> newValue(T value, long timestamp);
+
+	@Override
+	public String toString() {
+		if (current != null)
+			return current.toString();
+		return null;
+	}
 }

@@ -53,7 +53,6 @@ public final class STStore extends StoreBase implements ConfigurableStore<STStor
 
 		service = Executors.newFixedThreadPool(config.concurrency);
 		root = config.root;
-		root.setTag(9);
 	}
 
 	@Override

@@ -20,16 +20,16 @@ public abstract class AbstractSTCollection extends AbstractSTObject implements S
 	}
 
 	@Override
-	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor) {
+	public synchronized <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor) {
 		return new EphemeralRelation<>(constructor);
 	}
 
-	public boolean contains(STDocument document) {
+	public synchronized boolean contains(STDocument document) {
 		return documents.containsValue(document);
 	}
 
 	@Override
-	public STDocument document(int tag) {
+	public synchronized STDocument document(int tag) {
 		var document = getDocument(tag);
 		if (document == null) {
 			document = new EphemeralDocument(this);
@@ -39,25 +39,25 @@ public abstract class AbstractSTCollection extends AbstractSTObject implements S
 	}
 
 	@Override
-	public Stream<STDocument> documents() {
+	public synchronized Stream<STDocument> documents() {
 		return documents.values().stream();
 	}
 
-	public STDocument get(int key) {
+	public synchronized STDocument get(int key) {
 		return documents.get(key);
 	}
 
 	@Override
-	public STDocument getDocument(int tag) {
+	public synchronized STDocument getDocument(int tag) {
 		return documents.get(tag);
 	}
 
-	public boolean isEmpty() {
+	public synchronized boolean isEmpty() {
 		return documents.isEmpty();
 	}
 
 	@Override
-	public void merge(ProtoCollection snapshot) {
+	public synchronized void merge(ProtoCollection snapshot) {
 		for (var entry : snapshot.getDocumentMap().entrySet()) {
 			document(entry.getKey()).merge(entry.getValue());
 		}
@@ -69,34 +69,34 @@ public abstract class AbstractSTCollection extends AbstractSTObject implements S
 	}
 
 	@Override
-	public STDocument newDocument() {
+	public synchronized STDocument newDocument() {
 		return new EphemeralDocument(this);
 	}
 
 	@Override
-	public AbstractSTObject parent() {
+	public synchronized AbstractSTObject parent() {
 		return (AbstractSTObject) parent;
 	}
 
 	@Override
-	public void remove(STDocument document) {
+	public synchronized void remove(STDocument document) {
 		documents.values().remove(document);
 		fireCollectionRemovedEvent(this, document);
 	}
 
 	@Override
-	public void setDocument(int tag, STDocument document) {
+	public synchronized void setDocument(int tag, STDocument document) {
 		documents.put(tag, document);
 		document.setTag(tag);
 	}
 
 	@Override
-	public int size() {
+	public synchronized int size() {
 		return documents.size();
 	}
 
 	@Override
-	public ProtoCollection snapshot(RelativeOid<?>... oids) {
+	public synchronized ProtoCollection snapshot(RelativeOid<?>... oids) {
 		if (oids.length == 0) {
 			var snapshot = ProtoCollection.newBuilder().setPartial(false);
 			documents.forEach((tag, document) -> {

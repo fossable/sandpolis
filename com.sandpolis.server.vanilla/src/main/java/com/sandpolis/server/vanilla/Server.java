@@ -221,8 +221,6 @@ public final class Server {
 			config.defaults.put("net.connection.outgoing", new NioEventLoopGroup(2));
 			config.defaults.put("net.message.incoming", new UnorderedThreadPoolEventExecutor(2));
 			config.defaults.put("server.generator", Executors.newCachedThreadPool());
-			config.defaults.put("net.ipc.listener", Executors.newSingleThreadExecutor());
-			config.defaults.put("net.ipc.receptor", Executors.newSingleThreadExecutor());
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 

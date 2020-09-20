@@ -37,14 +37,14 @@ public class FxCollection<T extends VirtObject> extends AbstractSTCollection imp
 
 	private Map<Integer, Integer> indexMap;
 
-	public FxCollection(Function<STDocument, T> constructor) {
+	public FxCollection(STDocument parent, Function<STDocument, T> constructor) {
 		this.container = FXCollections.observableArrayList();
 		this.indexMap = new HashMap<>();
 		this.constructor = Objects.requireNonNull(constructor);
 	}
 
-	public FxCollection(STCollection base, Function<STDocument, T> constructor) {
-		this(constructor);
+	public FxCollection(STDocument parent, STCollection base, Function<STDocument, T> constructor) {
+		this(parent, constructor);
 		base.documents().map(constructor).forEach(container::add);
 	}
 

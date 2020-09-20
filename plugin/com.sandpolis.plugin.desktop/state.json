@@ -1,0 +1,11 @@
+[
+	{
+		"name": "Plugin.Desktop",
+		"attributes": {
+			"1": {
+				"name": "screenshot",
+				"type": "java.lang.Byte[]"
+			}
+		}
+	}
+]

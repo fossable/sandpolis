@@ -15,7 +15,6 @@ import java.util.HashMap;
 
 import com.sandpolis.core.instance.state.AbstractSTDocument;
 import com.sandpolis.core.instance.state.AbstractSTObject;
-import com.sandpolis.core.instance.state.EphemeralCollection;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
@@ -44,8 +43,7 @@ public class FxDocument<T extends VirtObject> extends AbstractSTDocument impleme
 
 	@Override
 	protected STCollection newCollection() {
-//		return new FxCollection<>(null);
-		return new EphemeralCollection(this);
+		return new FxCollection<>(this, FxProfile::new);// TODO
 	}
 
 }

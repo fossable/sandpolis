@@ -91,9 +91,10 @@ public class CoreSTGenerator extends STGenerator {
 		{
 			// Add the attribute's OID field
 			var field = FieldSpec
-					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE + ".oid", "STAttributeOid"),
+					.builder(ParameterizedTypeName.get(
+							ClassName.get(ST_PACKAGE + ".oid", "AbsoluteOid", "STAttributeOid"),
 							attribute.getAttributeType()), attribute.name.toUpperCase(), PUBLIC, STATIC, FINAL)
-					.initializer("new STAttributeOid<>(\"$L\")", oid);
+					.initializer("new AbsoluteOid.STAttributeOid<>(\"$L\")", oid);
 
 			parent.addField(field.build());
 		}
@@ -161,9 +162,11 @@ public class CoreSTGenerator extends STGenerator {
 			// Add OID field
 			var documentType = ClassName.bestGuess(documentClass.build().name);
 			var field = FieldSpec
-					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE + ".oid", "STCollectionOid"),
-							documentType), "COLLECTION", PUBLIC, STATIC, FINAL) //
-					.initializer("new STCollectionOid<>(\"$L\")", oid);
+					.builder(
+							ParameterizedTypeName.get(
+									ClassName.get(ST_PACKAGE + ".oid", "AbsoluteOid", "STCollectionOid"), documentType),
+							"COLLECTION", PUBLIC, STATIC, FINAL) //
+					.initializer("new AbsoluteOid.STCollectionOid<>(\"$L\")", oid);
 
 			documentClass.addField(field.build());
 		}
@@ -213,9 +216,11 @@ public class CoreSTGenerator extends STGenerator {
 			// Add OID field
 			var documentType = ClassName.bestGuess(documentClass.build().name);
 			var field = FieldSpec
-					.builder(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE + ".oid", "STDocumentOid"),
-							documentType), "DOCUMENT", PUBLIC, STATIC, FINAL) //
-					.initializer("new STDocumentOid<>(\"$L\")", oid);
+					.builder(
+							ParameterizedTypeName.get(
+									ClassName.get(ST_PACKAGE + ".oid", "AbsoluteOid", "STDocumentOid"), documentType),
+							"DOCUMENT", PUBLIC, STATIC, FINAL) //
+					.initializer("new AbsoluteOid.STDocumentOid<>(\"$L\")", oid);
 
 			documentClass.addField(field.build());
 		}
@@ -261,12 +266,5 @@ public class CoreSTGenerator extends STGenerator {
 				processRelation(documentClass, entry.getValue(), oid + "." + addTagType(entry.getKey(), 3));
 			}
 		}
-	}
-
-	public static int addTagType(int tag, int type) {
-		if (type > 3 || type < 0) {
-			throw new IllegalArgumentException();
-		}
-		return (tag << 2) | type;
 	}
 }

@@ -51,19 +51,18 @@ public abstract class STGenerator extends DefaultTask {
 		// Check tree preconditions
 		flatTree.forEach(this::validateDocument);
 
-		// Find root document
-		flatTree.stream().filter(document -> document.name.equals("ST")).findAny().ifPresent(document -> {
-			processDocument(null, document, "9");
-		});
-		flatTree.stream().filter(document -> document.name.equals("Plugin")).findAny().ifPresent(document -> {
-			if (document.parent == null || document.parent.isEmpty() || document.parent.contains(".0.")) {
-				throw new RuntimeException("Invalid parent OID");
-			}
-			processDocument(null, document,
-					// Calculate plugin tag
-					document.parent + "." + Hashing.murmur3_32().hashBytes(getProject().getName().getBytes()).asInt());
-		});
+		// Calculate module namespace
+		int namespace = addTagType(Hashing.murmur3_32().hashBytes(getProject().getName().getBytes()).asInt(), 1);
 
+		// Find root document
+		flatTree.stream().filter(document -> document.parent != null).findAny().ifPresent(document -> {
+			if (document.parent.isEmpty()) {
+				processDocument(null, document, String.valueOf(namespace));
+			} else {
+				processDocument(null, document, String.valueOf(namespace) + "." + document.parent);
+			}
+
+		});
 	}
 
 	protected void writeClass(TypeSpec spec) {
@@ -159,4 +158,11 @@ public abstract class STGenerator extends DefaultTask {
 	 * Generate the given relation from the specification.
 	 */
 	public abstract void processRelation(TypeSpec.Builder parent, RelationSpec relation, String oid);
+
+	protected static int addTagType(int tag, int type) {
+		if (type > 3 || type < 0) {
+			throw new IllegalArgumentException();
+		}
+		return (tag << 2) | type;
+	}
 }

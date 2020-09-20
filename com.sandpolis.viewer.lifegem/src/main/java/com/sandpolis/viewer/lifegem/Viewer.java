@@ -37,16 +37,16 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.state.EphemeralDocument;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtConnection;
 import com.sandpolis.core.instance.state.VirtPlugin;
 import com.sandpolis.core.instance.state.VirtProfile;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
+import com.sandpolis.viewer.lifegem.state.FxDocument;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.stage.Stage;
 
 /**
@@ -88,10 +88,12 @@ public final class Viewer {
 	 */
 	@InitializationTask(name = "Load static stores", fatal = true)
 	private static final Task loadStores = new Task(outcome -> {
+		Platform.startup(() -> {
+		});
 
 		STStore.init(config -> {
 			config.concurrency = 1;
-			config.root = new EphemeralDocument((STDocument) null);
+			config.root = new FxDocument<>(null);
 		});
 
 		ThreadStore.init(config -> {

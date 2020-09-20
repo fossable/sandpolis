@@ -14,8 +14,6 @@ package com.sandpolis.core.instance.state.oid;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import com.sandpolis.core.instance.state.oid.AbsoluteOid.AbsoluteOidImpl;
-
 /**
  * An {@link Oid} corresponds to one or more objects in a virtual state tree.
  * OIDs have a sequence of 32-bit integers that can uniquely locate objects in a
@@ -83,6 +81,9 @@ public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 	 * @return Whether this OID is a descendant
 	 */
 	public default boolean isChildOf(Oid oid) {
+		if (oid == null)
+			return true;
+
 		return Arrays.mismatch(value(), oid.value()) == Math.min(size(), oid.size());
 	}
 
@@ -155,7 +156,11 @@ public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 	 * 
 	 * @return A new OID
 	 */
-	public RelativeOid<?> tail();
+	public default RelativeOid<?> tail() {
+		return tail(1);
+	}
+
+	public RelativeOid<?> tail(int offset);
 
 	/**
 	 * Get the components of the OID.
@@ -166,23 +171,8 @@ public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 
 	public static int type(int component) {
 		if (component == 0)
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Oid component was 0");
 
 		return component & ((1 << ID_SPACE) - 1);
-	}
-
-	public static <E extends OidBase> E newOid(int... value) {
-		switch (Oid.type(value[value.length - 1])) {
-		case TYPE_ATTRIBUTE:
-			return (E) new STAttributeOid<>(value);
-		case TYPE_DOCUMENT:
-			return (E) new STDocumentOid<>(value);
-		case TYPE_COLLECTION:
-			return (E) new STCollectionOid<>(value);
-		case TYPE_RELATION:
-			return (E) new AbsoluteOidImpl<>(value);// TODO
-		default:
-			throw new IllegalArgumentException();
-		}
 	}
 }

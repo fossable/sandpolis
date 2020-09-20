@@ -153,8 +153,8 @@ artifacts {
 
 githubRelease {
 	token = System.properties['publishing.github.token']
-	owner = 'Subterranean-Security'
-	repo = 'Sandpolis'
+	owner = 'sandpolis'
+	repo = 'sandpolis'
 	draft = true
 	prerelease = true
 	releaseAssets = {[

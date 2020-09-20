@@ -45,4 +45,11 @@ public class EphemeralAttributeValue<T> implements STAttributeValue<T> {
 	public long timestamp() {
 		return timestamp;
 	}
+
+	@Override
+	public String toString() {
+		if (value != null)
+			return value.toString();
+		return null;
+	}
 }

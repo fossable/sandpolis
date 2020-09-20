@@ -18,15 +18,8 @@ import "com/sandpolis/core/instance/state.proto";
 option java_package = "com.sandpolis.core.net.msg";
 option optimize_for = CODE_SIZE;
 
-enum OidType {
-	DOCUMENT = 0;
-	COLLECTION = 1;
-	ATTRIBUTE = 2;
-}
-
 message RQ_STSnapshot {
     string oid = 1;
-    OidType oid_type = 2;
     repeated string whitelist = 3;
 }
 
@@ -38,7 +31,6 @@ message RQ_STSync {
     }
 
     string oid = 1;
-    OidType oid_type = 2;
     repeated string whitelist = 3;
 
     STSyncDirection direction = 4;

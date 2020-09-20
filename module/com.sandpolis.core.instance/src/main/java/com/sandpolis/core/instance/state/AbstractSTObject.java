@@ -17,8 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.EventBus;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.Oid;
-import com.sandpolis.core.instance.state.oid.AbsoluteOid.AbsoluteOidImpl;
 
 public abstract class AbstractSTObject {
 
@@ -31,12 +31,58 @@ public abstract class AbstractSTObject {
 	 */
 	private int listeners;
 
+	protected Integer tag;
+
+	public synchronized void addListener(Object listener) {
+		if (bus == null) {
+			bus = new EventBus();
+		}
+		bus.register(listener);
+		listeners++;
+	}
+
+	public int getTag() {
+		return tag;
+	}
+
+	public Oid oid() {
+		if (tag == null) {
+			return null;
+		}
+		if (parent() == null) {
+			return AbsoluteOid.newOid(tag);
+		}
+
+		var parentOid = parent().oid();
+		if (parentOid == null) {
+			return AbsoluteOid.newOid(tag);
+		}
+
+		return parentOid.child(tag);
+	}
+
+	public abstract AbstractSTObject parent();
+
+	public synchronized void removeListener(Object listener) {
+		if (bus != null) {
+			bus.unregister(listener);
+			listeners--;
+		}
+		if (listeners == 0) {
+			bus = null;
+		}
+	}
+
+	public void setTag(int tag) {
+		this.tag = tag;
+	}
+
 	protected synchronized <T> void fireAttributeValueChangedEvent(STAttribute<T> attribute,
 			STAttributeValue<T> oldValue, STAttributeValue<T> newValue) {
-		if (getTag() == 0)
+		if (tag == null)
 			return;
 
-		if (log.isTraceEnabled()) {
+		if (log.isTraceEnabled() && attribute == this) {
 			log.trace("Attribute ({}) changed value from \"{}\" to \"{}\"", attribute.oid(), oldValue, newValue);
 		}
 
@@ -51,11 +97,11 @@ public abstract class AbstractSTObject {
 	}
 
 	protected synchronized void fireCollectionAddedEvent(STCollection collection, STDocument newDocument) {
-		if (getTag() == 0)
+		if (tag == null)
 			return;
 
-		if (log.isTraceEnabled()) {
-			log.trace("Document ({}) added to collection ({})", newDocument.oid(), collection.oid());
+		if (log.isTraceEnabled() && collection == this) {
+			log.trace("Document ({}) added to collection ({})", newDocument.oid().last(), collection.oid());
 		}
 
 		if (bus != null) {
@@ -69,11 +115,11 @@ public abstract class AbstractSTObject {
 	}
 
 	protected synchronized void fireCollectionRemovedEvent(STCollection collection, STDocument oldDocument) {
-		if (getTag() == 0)
+		if (tag == null)
 			return;
 
-		if (log.isTraceEnabled()) {
-			log.trace("Document ({}) removed from collection ({})", oldDocument.oid(), collection.oid());
+		if (log.isTraceEnabled() && collection == this) {
+			log.trace("Document ({}) removed from collection ({})", oldDocument.oid().last(), collection.oid());
 		}
 
 		if (bus != null) {
@@ -84,48 +130,5 @@ public abstract class AbstractSTObject {
 
 		if (parent() != null)
 			parent().fireCollectionRemovedEvent(collection, oldDocument);
-	}
-
-	public synchronized void addListener(Object listener) {
-		if (bus == null) {
-			bus = new EventBus();
-		}
-		bus.register(listener);
-		listeners++;
-	}
-
-	public synchronized void removeListener(Object listener) {
-		if (bus != null) {
-			bus.unregister(listener);
-			listeners--;
-		}
-		if (listeners == 0) {
-			bus = null;
-		}
-	}
-
-	public abstract AbstractSTObject parent();
-
-	protected int tag;
-
-	public Oid oid() {
-		if (parent() == null) {
-			return new AbsoluteOidImpl<>(tag);
-		}
-
-		var parentOid = parent().oid();
-		if (parentOid == null) {
-			return new AbsoluteOidImpl<>(tag);
-		}
-
-		return parentOid.child(tag);
-	}
-
-	public int getTag() {
-		return tag;
-	}
-
-	public void setTag(int tag) {
-		this.tag = tag;
 	}
 }

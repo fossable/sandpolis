@@ -12,14 +12,11 @@
 package com.sandpolis.core.server.state;
 
 import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
-import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
 import static com.sandpolis.core.foundation.util.ProtoUtil.success;
 import static com.sandpolis.core.instance.state.STStore.STStore;
 
 import com.google.protobuf.MessageOrBuilder;
-import com.sandpolis.core.instance.state.oid.STAttributeOid;
-import com.sandpolis.core.instance.state.oid.STCollectionOid;
-import com.sandpolis.core.instance.state.oid.STDocumentOid;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSnapshot;
@@ -32,15 +29,16 @@ public final class STExe extends Exelet {
 
 	@Handler(auth = false)
 	public static MessageOrBuilder rq_st_snapshot(RQ_STSnapshot rq) {
-		switch (rq.getOidType()) {
-		case ATTRIBUTE:
-			return STStore.root().get(new STAttributeOid<>(rq.getOid())).snapshot();
-		case COLLECTION:
-			return STStore.root().get(new STCollectionOid<>(rq.getOid())).snapshot();
-		case DOCUMENT:
-			return STStore.root().get(new STDocumentOid<>(rq.getOid())).snapshot();
-		default:
-			throw new RuntimeException();
+
+		var oid = AbsoluteOid.newOid(rq.getOid());
+		if (oid instanceof AbsoluteOid.STAttributeOid) {
+			return STStore.root().get((AbsoluteOid.STAttributeOid<?>) oid).snapshot();
+		} else if (oid instanceof AbsoluteOid.STCollectionOid) {
+			return STStore.root().get((AbsoluteOid.STCollectionOid<?>) oid).snapshot();
+		} else if (oid instanceof AbsoluteOid.STDocumentOid) {
+			return STStore.root().get((AbsoluteOid.STDocumentOid<?>) oid).snapshot();
+		} else {
+			return null;
 		}
 	}
 
@@ -55,18 +53,13 @@ public final class STExe extends Exelet {
 		config.updatePeriod = rq.getUpdatePeriod();
 		config.initiator = false;
 
-		switch (rq.getOidType()) {
-		case ATTRIBUTE:
-			// TODO
-			break;
-		case COLLECTION:
-			new EntangledCollection(STStore.root().get(new STCollectionOid<>(rq.getOid())), config);
-			break;
-		case DOCUMENT:
-			new EntangledDocument(STStore.root().get(new STDocumentOid<>(rq.getOid())), config);
-			break;
-		default:
-			return failure(outcome, "Unknown OID type");
+		var oid = AbsoluteOid.newOid(rq.getOid());
+		if (oid instanceof AbsoluteOid.STAttributeOid) {
+
+		} else if (oid instanceof AbsoluteOid.STCollectionOid) {
+			new EntangledCollection(STStore.root().get((AbsoluteOid.STCollectionOid<?>) oid), config);
+		} else if (oid instanceof AbsoluteOid.STDocumentOid) {
+			new EntangledDocument(STStore.root().get((AbsoluteOid.STDocumentOid<?>) oid), config);
 		}
 
 		return success(outcome);

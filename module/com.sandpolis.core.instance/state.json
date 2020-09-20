@@ -423,16 +423,30 @@
 			},
 			"3": {
 				"name": "uuid",
-				"type": "java.lang.String"
+				"type": "java.lang.String",
+				"identity": true
 			},
 			"4": {
 				"name": "cvid",
 				"type": "java.lang.Integer"
+			},
+			"5": {
+				"name": "ip_address",
+				"type": "java.lang.String"
+			},
+			"6": {
+				"name": "os_type",
+				"type": "com.sandpolis.core.foundation.Platform.OsType"
+			},
+			"7": {
+				"name": "online",
+				"type": "java.lang.Boolean"
 			}
 		}
 	},
 	{
 		"name": "ST",
+		"parent": "",
 		"collections": {
 			"1": "Profile"
 		}
