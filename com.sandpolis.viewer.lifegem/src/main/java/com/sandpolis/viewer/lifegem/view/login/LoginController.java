@@ -154,7 +154,8 @@ public class LoginController extends FxController {
 					.login(userPhaseController.getUsername(), userPhaseController.getPassword()).thenAccept(rs -> {
 
 						if (rs.getResult()) {
-							STCmd.async().target(connection).snapshot(VirtPlugin.COLLECTION.resolveLocal())
+							STCmd.async().target(connection)
+									.snapshot(VirtPlugin.COLLECTION.resolveUuid(connection.getRemoteUuid()))
 									.thenAcceptAsync(snapshot -> {
 										var plugins = new FxCollection<>(null, snapshot, PluginProperty::new);
 										// TODO filter plugins that are already installed

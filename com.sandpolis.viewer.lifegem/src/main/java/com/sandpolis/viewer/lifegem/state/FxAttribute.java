@@ -91,4 +91,10 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 		return container.timestamp();
 	}
 
+	@Override
+	public boolean isAttached() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

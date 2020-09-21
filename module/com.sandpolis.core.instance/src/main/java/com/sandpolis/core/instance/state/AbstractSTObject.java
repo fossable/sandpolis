@@ -17,10 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.EventBus;
+import com.google.protobuf.Message;
 import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.Oid;
 
-public abstract class AbstractSTObject {
+public abstract class AbstractSTObject<E extends Message> implements STObject<E> {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractSTObject.class);
 
@@ -31,7 +32,12 @@ public abstract class AbstractSTObject {
 	 */
 	private int listeners;
 
-	protected Integer tag;
+	protected int tag;
+
+	@Override
+	public boolean isAttached() {
+		return tag != 0;
+	}
 
 	public synchronized void addListener(Object listener) {
 		if (bus == null) {
@@ -46,9 +52,9 @@ public abstract class AbstractSTObject {
 	}
 
 	public Oid oid() {
-		if (tag == null) {
+		if (!isAttached())
 			return null;
-		}
+
 		if (parent() == null) {
 			return AbsoluteOid.newOid(tag);
 		}
@@ -61,7 +67,7 @@ public abstract class AbstractSTObject {
 		return parentOid.child(tag);
 	}
 
-	public abstract AbstractSTObject parent();
+	public abstract AbstractSTObject<?> parent();
 
 	public synchronized void removeListener(Object listener) {
 		if (bus != null) {
@@ -79,7 +85,7 @@ public abstract class AbstractSTObject {
 
 	protected synchronized <T> void fireAttributeValueChangedEvent(STAttribute<T> attribute,
 			STAttributeValue<T> oldValue, STAttributeValue<T> newValue) {
-		if (tag == null)
+		if (!isAttached())
 			return;
 
 		if (log.isTraceEnabled() && attribute == this) {
@@ -96,8 +102,8 @@ public abstract class AbstractSTObject {
 			parent().fireAttributeValueChangedEvent(attribute, oldValue, newValue);
 	}
 
-	protected synchronized void fireCollectionAddedEvent(STCollection collection, STDocument newDocument) {
-		if (tag == null)
+	protected synchronized void fireDocumentAddedEvent(STCollection collection, STDocument newDocument) {
+		if (!isAttached())
 			return;
 
 		if (log.isTraceEnabled() && collection == this) {
@@ -111,11 +117,11 @@ public abstract class AbstractSTObject {
 		}
 
 		if (parent() != null)
-			parent().fireCollectionAddedEvent(collection, newDocument);
+			parent().fireDocumentAddedEvent(collection, newDocument);
 	}
 
-	protected synchronized void fireCollectionRemovedEvent(STCollection collection, STDocument oldDocument) {
-		if (tag == null)
+	protected synchronized void fireDocumentRemovedEvent(STCollection collection, STDocument oldDocument) {
+		if (!isAttached())
 			return;
 
 		if (log.isTraceEnabled() && collection == this) {
@@ -129,6 +135,78 @@ public abstract class AbstractSTObject {
 		}
 
 		if (parent() != null)
-			parent().fireCollectionRemovedEvent(collection, oldDocument);
+			parent().fireDocumentRemovedEvent(collection, oldDocument);
+	}
+
+	protected synchronized void fireDocumentAddedEvent(STDocument document, STDocument newDocument) {
+		if (!isAttached())
+			return;
+
+		if (log.isTraceEnabled() && document == this) {
+			log.trace("Document ({}) added to document ({})", newDocument.oid().last(), document.oid());
+		}
+
+		if (bus != null) {
+			STStore.pool().submit(() -> {
+				bus.post(new STDocument.DocumentAddedEvent(document, newDocument));
+			});
+		}
+
+		if (parent() != null)
+			parent().fireDocumentAddedEvent(document, newDocument);
+	}
+
+	protected synchronized void fireDocumentRemovedEvent(STDocument document, STDocument oldDocument) {
+		if (!isAttached())
+			return;
+
+		if (log.isTraceEnabled() && document == this) {
+			log.trace("Document ({}) removed from document ({})", oldDocument.oid().last(), document.oid());
+		}
+
+		if (bus != null) {
+			STStore.pool().submit(() -> {
+				bus.post(new STDocument.DocumentRemovedEvent(document, oldDocument));
+			});
+		}
+
+		if (parent() != null)
+			parent().fireDocumentRemovedEvent(document, oldDocument);
+	}
+
+	protected synchronized void fireCollectionAddedEvent(STDocument document, STCollection newCollection) {
+		if (!isAttached())
+			return;
+
+		if (log.isTraceEnabled() && document == this) {
+			log.trace("Collection ({}) added to document ({})", newCollection.oid().last(), document.oid());
+		}
+
+		if (bus != null) {
+			STStore.pool().submit(() -> {
+				bus.post(new STDocument.CollectionAddedEvent(document, newCollection));
+			});
+		}
+
+		if (parent() != null)
+			parent().fireCollectionAddedEvent(document, newCollection);
+	}
+
+	protected synchronized void fireCollectionRemovedEvent(STDocument document, STCollection oldCollection) {
+		if (!isAttached())
+			return;
+
+		if (log.isTraceEnabled() && document == this) {
+			log.trace("Collection ({}) removed from document ({})", oldCollection.oid().last(), document.oid());
+		}
+
+		if (bus != null) {
+			STStore.pool().submit(() -> {
+				bus.post(new STDocument.CollectionRemovedEvent(document, oldCollection));
+			});
+		}
+
+		if (parent() != null)
+			parent().fireCollectionRemovedEvent(document, oldCollection);
 	}
 }

@@ -2,13 +2,14 @@ package com.sandpolis.core.instance.state;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
-public abstract class AbstractSTDocument extends AbstractSTObject implements STDocument {
+public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument> implements STDocument {
 
 	protected Map<Integer, STAttribute<?>> attributes;
 
@@ -18,7 +19,7 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 
 	protected String id;
 
-	protected AbstractSTObject parent;
+	protected AbstractSTObject<?> parent;
 
 	@Override
 	public synchronized <E> STAttribute<E> attribute(int tag) {
@@ -81,6 +82,8 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 
 	@Override
 	public synchronized String getId() {
+		if (id == null)
+			id = UUID.randomUUID().toString();
 		return id;
 	}
 
@@ -117,14 +120,22 @@ public abstract class AbstractSTDocument extends AbstractSTObject implements STD
 
 	@Override
 	public synchronized void setCollection(int tag, STCollection collection) {
-		collections.put(tag, collection);
+		var previous = collections.put(tag, collection);
 		collection.setTag(tag);
+
+		if (previous == null) {
+			fireCollectionAddedEvent(this, collection);
+		}
 	}
 
 	@Override
 	public synchronized void setDocument(int tag, STDocument document) {
-		documents.put(tag, document);
+		var previous = documents.put(tag, document);
 		document.setTag(tag);
+
+		if (previous == null) {
+			fireDocumentAddedEvent(this, document);
+		}
 	}
 
 	@Override

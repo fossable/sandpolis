@@ -9,7 +9,7 @@ import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
-public abstract class AbstractSTCollection extends AbstractSTObject implements STCollection {
+public abstract class AbstractSTCollection extends AbstractSTObject<ProtoCollection> implements STCollection {
 
 	protected Map<Integer, STDocument> documents;
 
@@ -80,14 +80,19 @@ public abstract class AbstractSTCollection extends AbstractSTObject implements S
 
 	@Override
 	public synchronized void remove(STDocument document) {
-		documents.values().remove(document);
-		fireCollectionRemovedEvent(this, document);
+		if (documents.values().remove(document)) {
+			fireDocumentRemovedEvent(this, document);
+		}
 	}
 
 	@Override
 	public synchronized void setDocument(int tag, STDocument document) {
-		documents.put(tag, document);
+		var previous = documents.put(tag, document);
 		document.setTag(tag);
+
+		if (previous == null) {
+			fireDocumentAddedEvent(this, document);
+		}
 	}
 
 	@Override

@@ -12,7 +12,6 @@
 package com.sandpolis.core.instance.state;
 
 import java.util.HashMap;
-import java.util.UUID;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
 
@@ -26,7 +25,6 @@ public class EphemeralDocument extends AbstractSTDocument implements STDocument 
 
 	public EphemeralDocument(STDocument parent) {
 		this.parent = (AbstractSTObject) parent;
-		id = UUID.randomUUID().toString();
 
 		documents = new HashMap<>();
 		collections = new HashMap<>();
@@ -40,7 +38,6 @@ public class EphemeralDocument extends AbstractSTDocument implements STDocument 
 
 	public EphemeralDocument(STCollection parent) {
 		this.parent = (AbstractSTObject) parent;
-		id = UUID.randomUUID().toString();
 
 		documents = new HashMap<>();
 		collections = new HashMap<>();

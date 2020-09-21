@@ -36,14 +36,16 @@ message ProtoAttribute {
 
 message ProtoDocument {
     bool partial = 1;
+    bool removed = 2;
 
-    map<int32, ProtoAttribute> attribute = 2;
-    map<int32, ProtoDocument> document = 3;
-    map<int32, ProtoCollection> collection = 4;
+    map<int32, ProtoAttribute> attribute = 3;
+    map<int32, ProtoDocument> document = 4;
+    map<int32, ProtoCollection> collection = 5;
 }
 
 message ProtoCollection {
     bool partial = 1;
+    bool removed = 2;
 
-    map<int32, ProtoDocument> document = 2;
+    map<int32, ProtoDocument> document = 3;
 }

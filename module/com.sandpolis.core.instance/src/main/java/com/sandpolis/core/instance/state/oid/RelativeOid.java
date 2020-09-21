@@ -11,6 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state.oid;
 
+import com.sandpolis.core.foundation.util.IDUtil;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
@@ -60,7 +62,11 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		public RelativeOid.STAttributeOid<T> resolveLocal() {
-			return resolve(9);
+			return resolve(IDUtil.uuidToTag(Core.UUID));
+		}
+
+		public RelativeOid.STAttributeOid<T> resolveUuid(String uuid) {
+			return resolve(IDUtil.uuidToTag(uuid));
 		}
 
 		@Override
@@ -116,7 +122,11 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		public RelativeOid.STCollectionOid<?> resolveLocal() {
-			return resolve(9);
+			return resolve(IDUtil.uuidToTag(Core.UUID));
+		}
+
+		public RelativeOid.STCollectionOid<?> resolveUuid(String uuid) {
+			return resolve(IDUtil.uuidToTag(uuid));
 		}
 
 		@Override
@@ -172,7 +182,11 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		public RelativeOid.STDocumentOid<?> resolveLocal() {
-			return resolve(9);
+			return resolve(IDUtil.uuidToTag(Core.UUID));
+		}
+
+		public RelativeOid.STDocumentOid<?> resolveUuid(String uuid) {
+			return resolve(IDUtil.uuidToTag(uuid));
 		}
 
 		@Override

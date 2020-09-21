@@ -10,7 +10,7 @@ import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.State.ProtoAttributeValue;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
-public abstract class AbstractSTAttribute<T> extends AbstractSTObject implements STAttribute<T> {
+public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttribute> implements STAttribute<T> {
 
 	/**
 	 * The current value of the attribute.

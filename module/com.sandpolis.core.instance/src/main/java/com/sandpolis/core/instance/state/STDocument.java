@@ -31,11 +31,11 @@ public interface STDocument extends STObject<ProtoDocument> {
 	 */
 	public static final class CollectionAddedEvent {
 		public final STDocument document;
-		public final STCollection oldCollection;
+		public final STCollection newCollection;
 
-		public CollectionAddedEvent(STDocument document, STCollection oldCollection) {
+		public CollectionAddedEvent(STDocument document, STCollection newCollection) {
 			this.document = document;
-			this.oldCollection = oldCollection;
+			this.newCollection = newCollection;
 		}
 	}
 

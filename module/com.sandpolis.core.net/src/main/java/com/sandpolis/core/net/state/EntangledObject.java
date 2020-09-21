@@ -15,13 +15,13 @@ import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.Message;
-import com.google.protobuf.Message.Builder;
-import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.AbstractSTObject;
 import com.sandpolis.core.instance.state.STAttribute;
+import com.sandpolis.core.instance.state.STCollection;
+import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STObject;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
@@ -42,7 +42,7 @@ import com.sandpolis.core.net.stream.StreamSource;
  * @param <T> The type of the object's protobuf representation
  * @since 7.0.0
  */
-public abstract class EntangledObject<T extends Message> extends AbstractSTObject {
+public abstract class EntangledObject<T extends Message> extends AbstractSTObject<T> {
 
 	protected StreamSink<T> sink;
 
@@ -56,29 +56,24 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 		return source;
 	}
 
-	private Message eventToProto(STAttribute<?> attribute, Object value) {
-		int[] components = attribute.oid().relativize(((STObject<?>) container()).oid().parent()).value();
+	private Message eventToProto(Oid oid, Message snapshot) {
+		int[] components = oid.relativize(container().oid().parent()).value();
 
-		MessageOrBuilder current = null;
-
-		for (int i = components.length - 1; i >= 0; i--) {
+		for (int i = components.length - 2; i >= 0; i--) {
 			switch (Oid.type(components[i])) {
-			case Oid.TYPE_ATTRIBUTE:
-				// TODO use value parameter
-				current = attribute.snapshot();
-				break;
 			case Oid.TYPE_DOCUMENT:
 				switch (Oid.type(components[i + 1])) {
 				case Oid.TYPE_ATTRIBUTE:
-					current = ProtoDocument.newBuilder().putAttribute(components[i + 1], (ProtoAttribute) current);
+					snapshot = ProtoDocument.newBuilder().putAttribute(components[i + 1], (ProtoAttribute) snapshot)
+							.build();
 					break;
 				case Oid.TYPE_DOCUMENT:
-					current = ProtoDocument.newBuilder().putDocument(components[i + 1],
-							((ProtoDocument.Builder) current).build());
+					snapshot = ProtoDocument.newBuilder().putDocument(components[i + 1], ((ProtoDocument) snapshot))
+							.build();
 					break;
 				case Oid.TYPE_COLLECTION:
-					current = ProtoDocument.newBuilder().putCollection(components[i + 1],
-							((ProtoCollection.Builder) current).build());
+					snapshot = ProtoDocument.newBuilder().putCollection(components[i + 1], ((ProtoCollection) snapshot))
+							.build();
 					break;
 				default:
 					throw new RuntimeException();
@@ -86,19 +81,15 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 
 				break;
 			case Oid.TYPE_COLLECTION:
-				current = ProtoCollection.newBuilder().putDocument(components[i + 1],
-						((ProtoDocument.Builder) current).build());
+				snapshot = ProtoCollection.newBuilder().putDocument(components[i + 1], ((ProtoDocument) snapshot))
+						.build();
 				break;
 			default:
-				throw new RuntimeException();
+				throw new RuntimeException("Invalid OID component: " + components[i]);
 			}
 		}
 
-		if (current instanceof Builder) {
-			return ((Builder) current).build();
-		} else {
-			return (Message) current;
-		}
+		return snapshot;
 	}
 
 	protected abstract STObject<T> container();
@@ -135,6 +126,28 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 
 	@Subscribe
 	void handle(STAttribute.ChangeEvent<?> event) {
-		getSource().submit((T) eventToProto(event.attribute, event.newValue));
+		getSource().submit((T) eventToProto(event.attribute.oid(), event.attribute.snapshot()));
+	}
+
+	@Subscribe
+	void handle(STCollection.DocumentAddedEvent event) {
+		getSource().submit((T) eventToProto(event.newDocument.oid(), event.newDocument.snapshot()));
+	}
+
+	@Subscribe
+	void handle(STCollection.DocumentRemovedEvent event) {
+		getSource()
+				.submit((T) eventToProto(event.oldDocument.oid(), ProtoDocument.newBuilder().setRemoved(true).build()));
+	}
+
+	@Subscribe
+	void handle(STDocument.CollectionAddedEvent event) {
+		getSource().submit((T) eventToProto(event.newCollection.oid(), event.newCollection.snapshot()));
+	}
+
+	@Subscribe
+	void handle(STDocument.CollectionRemovedEvent event) {
+		getSource().submit(
+				(T) eventToProto(event.oldCollection.oid(), ProtoCollection.newBuilder().setRemoved(true).build()));
 	}
 }

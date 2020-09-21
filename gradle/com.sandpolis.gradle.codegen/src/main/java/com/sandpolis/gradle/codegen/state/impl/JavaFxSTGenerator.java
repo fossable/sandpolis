@@ -13,7 +13,6 @@ package com.sandpolis.gradle.codegen.state.impl;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
-import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 import com.sandpolis.gradle.codegen.state.AttributeSpec;
@@ -48,83 +47,14 @@ public class JavaFxSTGenerator extends STGenerator {
 
 	@Override
 	public void processCollection(TypeSpec.Builder parent, DocumentSpec document, String oid) {
-		oid = oid + ".0";
-
-		var documentClass = TypeSpec.classBuilder("Fx" + document.name.replaceAll(".*\\.", "")) //
-				.addModifiers(PUBLIC) //
-				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
-
-		{
-			// Add constructor
-			var method = MethodSpec.constructorBuilder() //
-					.addModifiers(PUBLIC) //
-					.addParameter(ClassName.get(ST_PACKAGE, "STDocument"), "document") //
-					.addStatement("super(document)");
-			documentClass.addMethod(method.build());
-		}
-
-		{
-			// Add tag method
-			String identityString = "";
-			if (document.attributes != null) {
-				for (var attribute : document.attributes.values()) {
-					if (attribute.identity) {
-						switch (attribute.type) {
-						case "java.lang.String":
-							identityString += ".putBytes(" + LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name)
-									+ "Property().getValue().getBytes())";
-							break;
-						case "java.lang.Byte[]":
-							identityString += ".putBytes(" + LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name)
-									+ "Property().getValue())";
-							break;
-						}
-					}
-				}
-			}
-
-			// If there were no explicit identity attributes, use the ID field
-			if (identityString.isEmpty()) {
-				identityString = ".putBytes(\"\".getBytes())";
-			}
-
-			var method = MethodSpec.methodBuilder("tag") //
-					.addAnnotation(Override.class) //
-					.addModifiers(PUBLIC, FINAL) //
-					.returns(int.class) //
-					.addStatement("return ($T.murmur3_32().newHasher()$L.hash().asInt() << 2) | 1",
-							ClassName.get("com.google.common.hash", "Hashing"), identityString);
-			documentClass.addMethod(method.build());
-		}
-
-		if (document.collections != null) {
-			for (var entry : document.collections.entrySet()) {
-				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processCollection(documentClass, subdocument,
-						oid + "." + CoreSTGenerator.addTagType(entry.getKey(), 2));
-			}
-		}
-		if (document.documents != null) {
-			for (var entry : document.documents.entrySet()) {
-				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processDocument(documentClass, subdocument, oid + "." + CoreSTGenerator.addTagType(entry.getKey(), 1));
-			}
-		}
-		if (document.attributes != null) {
-			for (var entry : document.attributes.entrySet()) {
-				processAttribute(documentClass, entry.getValue(),
-						oid + "." + CoreSTGenerator.addTagType(entry.getKey(), 1));
-			}
-		}
-
-		writeClass(documentClass.build());
+		processDocument(parent, document, oid + ".0");
 	}
 
 	@Override
 	public void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
-		var documentClass = TypeSpec.classBuilder("Fx" + document.name.replaceAll(".*\\.", "")) //
+		var documentClass = TypeSpec.classBuilder("Fx" + document.shortName()) //
 				.addModifiers(PUBLIC) //
-				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
+				.superclass(ClassName.get(ST_PACKAGE, "Virt" + document.shortName()));
 
 		{
 			// Add constructor
@@ -132,16 +62,6 @@ public class JavaFxSTGenerator extends STGenerator {
 					.addModifiers(PUBLIC) //
 					.addParameter(ClassName.get(ST_PACKAGE, "STDocument"), "document") //
 					.addStatement("super(document)");
-			documentClass.addMethod(method.build());
-		}
-
-		{
-			// Add tag method
-			var method = MethodSpec.methodBuilder("tag") //
-					.addAnnotation(Override.class) //
-					.addModifiers(PUBLIC, FINAL) //
-					.returns(int.class) //
-					.addStatement("return $L", oid.replaceAll(".*\\.", ""));
 			documentClass.addMethod(method.build());
 		}
 
@@ -161,7 +81,7 @@ public class JavaFxSTGenerator extends STGenerator {
 		if (document.attributes != null) {
 			for (var entry : document.attributes.entrySet()) {
 				processAttribute(documentClass, entry.getValue(),
-						oid + "." + CoreSTGenerator.addTagType(entry.getKey(), 1));
+						oid + "." + CoreSTGenerator.addTagType(entry.getKey(), 0));
 			}
 		}
 
