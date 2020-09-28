@@ -72,7 +72,7 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	}
 
 	@Override
-	public void setTag(int tag) {
+	public void setTag(long tag) {
 		container.setTag(tag);
 	}
 

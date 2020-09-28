@@ -39,8 +39,7 @@ import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.state.EphemeralDocument;
 import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.VirtConnection;
-import com.sandpolis.core.instance.state.VirtPlugin;
+import com.sandpolis.core.instance.state.VirtST;
 import com.sandpolis.viewer.ascetic.view.login.LoginWindow;
 
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -96,11 +95,11 @@ public final class Viewer {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolveLocal());
+			config.collection = STStore.root().get(VirtST.profile.connection.resolveLocal());
 		});
 
 		PluginStore.init(config -> {
-			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolveLocal());
+			config.collection = STStore.root().get(VirtST.profile.plugin.resolveLocal());
 		});
 
 		WindowStore.init(config -> {

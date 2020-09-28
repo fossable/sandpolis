@@ -1,5 +1,6 @@
 package com.sandpolis.core.instance.state.oid;
 
+import static com.sandpolis.core.instance.state.oid.AbsoluteOid.newOid;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -10,10 +11,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class OidTest {
-
-	private AbsoluteOid.AbsoluteOidImpl newOid(int... tags) {
-		return new AbsoluteOid.AbsoluteOidImpl<>(tags);
-	}
 
 	@Test
 	@DisplayName("Check whether OIDs are concrete")

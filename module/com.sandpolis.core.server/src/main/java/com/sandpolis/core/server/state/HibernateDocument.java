@@ -40,7 +40,7 @@ public class HibernateDocument extends AbstractSTDocument implements STDocument 
 	private String db_id;
 
 	@Column
-	public int getTag() {
+	public long getTag() {
 		return tag;
 	}
 
@@ -95,17 +95,17 @@ public class HibernateDocument extends AbstractSTDocument implements STDocument 
 	}
 
 	@Override
-	protected STAttribute<?> newAttribute() {
+	public STAttribute<?> newAttribute() {
 		return new HibernateAttribute<>(this);
 	}
 
 	@Override
-	protected STDocument newDocument() {
+	public STDocument newDocument() {
 		return new HibernateDocument(this);
 	}
 
 	@Override
-	protected STCollection newCollection() {
+	public STCollection newCollection() {
 		return new HibernateCollection(this);
 	}
 

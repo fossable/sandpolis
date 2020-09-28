@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
+import static com.sandpolis.core.instance.state.oid.OidUtil.*;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import com.google.common.eventbus.Subscribe;
@@ -24,6 +25,7 @@ import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STObject;
 import com.sandpolis.core.instance.state.oid.Oid;
+import com.sandpolis.core.instance.state.oid.OidUtil;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
 import com.sandpolis.core.net.stream.InboundStreamAdapter;
 import com.sandpolis.core.net.stream.OutboundStreamAdapter;
@@ -57,32 +59,28 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 	}
 
 	private Message eventToProto(Oid oid, Message snapshot) {
-		int[] components = oid.relativize(container().oid().parent()).value();
+		long[] components = oid.relativize(container().oid().parent()).value();
 
 		for (int i = components.length - 2; i >= 0; i--) {
-			switch (Oid.type(components[i])) {
-			case Oid.TYPE_DOCUMENT:
-				switch (Oid.type(components[i + 1])) {
-				case Oid.TYPE_ATTRIBUTE:
-					snapshot = ProtoDocument.newBuilder().putAttribute(components[i + 1], (ProtoAttribute) snapshot)
-							.build();
+			switch (OidUtil.getOidType(components[i])) {
+			case OTYPE_DOCUMENT:
+				switch (OidUtil.getOidType(components[i + 1])) {
+				case OTYPE_ATTRIBUTE:
+					snapshot = ProtoDocument.newBuilder().addAttribute((ProtoAttribute) snapshot).build();
 					break;
-				case Oid.TYPE_DOCUMENT:
-					snapshot = ProtoDocument.newBuilder().putDocument(components[i + 1], ((ProtoDocument) snapshot))
-							.build();
+				case OTYPE_DOCUMENT:
+					snapshot = ProtoDocument.newBuilder().addDocument(((ProtoDocument) snapshot)).build();
 					break;
-				case Oid.TYPE_COLLECTION:
-					snapshot = ProtoDocument.newBuilder().putCollection(components[i + 1], ((ProtoCollection) snapshot))
-							.build();
+				case OTYPE_COLLECTION:
+					snapshot = ProtoDocument.newBuilder().addCollection(((ProtoCollection) snapshot)).build();
 					break;
 				default:
 					throw new RuntimeException();
 				}
 
 				break;
-			case Oid.TYPE_COLLECTION:
-				snapshot = ProtoCollection.newBuilder().putDocument(components[i + 1], ((ProtoDocument) snapshot))
-						.build();
+			case OTYPE_COLLECTION:
+				snapshot = ProtoCollection.newBuilder().addDocument(((ProtoDocument) snapshot)).build();
 				break;
 			default:
 				throw new RuntimeException("Invalid OID component: " + components[i]);
@@ -137,7 +135,7 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 	@Subscribe
 	void handle(STCollection.DocumentRemovedEvent event) {
 		getSource()
-				.submit((T) eventToProto(event.oldDocument.oid(), ProtoDocument.newBuilder().setRemoved(true).build()));
+				.submit((T) eventToProto(event.oldDocument.oid(), ProtoDocument.newBuilder().setRemoval(true).build()));
 	}
 
 	@Subscribe
@@ -148,6 +146,6 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 	@Subscribe
 	void handle(STDocument.CollectionRemovedEvent event) {
 		getSource().submit(
-				(T) eventToProto(event.oldCollection.oid(), ProtoCollection.newBuilder().setRemoved(true).build()));
+				(T) eventToProto(event.oldCollection.oid(), ProtoCollection.newBuilder().setRemoval(true).build()));
 	}
 }

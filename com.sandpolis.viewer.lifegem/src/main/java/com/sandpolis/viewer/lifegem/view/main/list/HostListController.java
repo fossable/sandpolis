@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.state.VirtProfile;
+import com.sandpolis.core.instance.state.VirtST;
 import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
@@ -41,10 +41,10 @@ public class HostListController extends AbstractController {
 	@FXML
 	private TableView<FxProfile> table;
 
-	private FxCollection<FxProfile> collection = (FxCollection<FxProfile>) STStore.root().get(VirtProfile.COLLECTION);
+	private FxCollection<FxProfile> collection = (FxCollection<FxProfile>) STStore.root().get(VirtST.profile);
 
-	private static final List<AbsoluteOid.STAttributeOid<?>> DEFAULT_HEADERS = List.of(VirtProfile.UUID,
-			VirtProfile.IP_ADDRESS, VirtProfile.OS_TYPE);
+	private static final List<AbsoluteOid.STAttributeOid<?>> DEFAULT_HEADERS = List.of(VirtST.profile.uuid,
+			VirtST.profile.ip_address, VirtST.profile.instance_type);
 
 	@FXML
 	public void initialize() {
@@ -59,7 +59,7 @@ public class HostListController extends AbstractController {
 		});
 
 		// Attach the local collection
-		STCmd.async().sync(collection, VirtProfile.COLLECTION);
+		STCmd.async().sync(collection, VirtST.profile);
 
 		// Set default headers
 		addColumns(DEFAULT_HEADERS);

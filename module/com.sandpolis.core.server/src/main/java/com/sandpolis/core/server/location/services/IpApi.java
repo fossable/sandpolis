@@ -11,23 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.location.services;
 
-import static com.sandpolis.core.instance.state.VirtIpLocation.AS_CODE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.CITY;
-import static com.sandpolis.core.instance.state.VirtIpLocation.CONTINENT;
-import static com.sandpolis.core.instance.state.VirtIpLocation.CONTINENT_CODE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.COUNTRY;
-import static com.sandpolis.core.instance.state.VirtIpLocation.COUNTRY_CODE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.CURRENCY;
-import static com.sandpolis.core.instance.state.VirtIpLocation.DISTRICT;
-import static com.sandpolis.core.instance.state.VirtIpLocation.ISP;
-import static com.sandpolis.core.instance.state.VirtIpLocation.LATITUDE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.LONGITUDE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.ORGANIZATION;
-import static com.sandpolis.core.instance.state.VirtIpLocation.POSTAL_CODE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.REGION;
-import static com.sandpolis.core.instance.state.VirtIpLocation.REGION_CODE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.TIMEZONE;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -35,6 +18,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableBiMap;
 import com.sandpolis.core.instance.state.VirtIpLocation;
+import com.sandpolis.core.instance.state.VirtST;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.server.location.AbstractGeolocationService;
 
@@ -48,22 +32,22 @@ public final class IpApi extends AbstractGeolocationService {
 	 * The fields provided by the location service associated with {@link Oid}s.
 	 */
 	private static final ImmutableBiMap<Oid, String> JSON_FIELDS = new ImmutableBiMap.Builder<Oid, String>()
-			.put(AS_CODE, "as") //
-			.put(CITY, "city") //
-			.put(CONTINENT, "continent") //
-			.put(CONTINENT_CODE, "continentCode") //
-			.put(COUNTRY, "country") //
-			.put(COUNTRY_CODE, "countryCode") //
-			.put(CURRENCY, "currency") //
-			.put(DISTRICT, "district") //
-			.put(ISP, "isp") //
-			.put(LATITUDE, "lat") //
-			.put(LONGITUDE, "lon") //
-			.put(ORGANIZATION, "org") //
-			.put(POSTAL_CODE, "zip") //
-			.put(REGION, "regionName") //
-			.put(REGION_CODE, "region") //
-			.put(TIMEZONE, "timezone") //
+			.put(VirtST.profile.client.iplocation.as_code, "as") //
+			.put(VirtST.profile.client.iplocation.city, "city") //
+			.put(VirtST.profile.client.iplocation.continent, "continent") //
+			.put(VirtST.profile.client.iplocation.continent_code, "continentCode") //
+			.put(VirtST.profile.client.iplocation.country, "country") //
+			.put(VirtST.profile.client.iplocation.country_code, "countryCode") //
+			.put(VirtST.profile.client.iplocation.currency, "currency") //
+			.put(VirtST.profile.client.iplocation.district, "district") //
+			.put(VirtST.profile.client.iplocation.isp, "isp") //
+			.put(VirtST.profile.client.iplocation.latitude, "lat") //
+			.put(VirtST.profile.client.iplocation.longitude, "lon") //
+			.put(VirtST.profile.client.iplocation.organization, "org") //
+			.put(VirtST.profile.client.iplocation.postal_code, "zip") //
+			.put(VirtST.profile.client.iplocation.region, "regionName") //
+			.put(VirtST.profile.client.iplocation.region_code, "region") //
+			.put(VirtST.profile.client.iplocation.timezone, "timezone") //
 			.build();
 
 	private String key;

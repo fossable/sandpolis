@@ -20,6 +20,8 @@ option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
 
 message ProtoAttributeValue {
+
+	// The timestamp associated with the value
     int64 timestamp = 1;
 
     repeated string  string   = 2;
@@ -31,21 +33,27 @@ message ProtoAttributeValue {
 }
 
 message ProtoAttribute {
-    repeated ProtoAttributeValue values = 1;
+	int64 tag = 1;
+    bool replacement = 2;
+    bool removal = 3;
+
+    repeated ProtoAttributeValue values = 4;
 }
 
 message ProtoDocument {
-    bool partial = 1;
-    bool removed = 2;
+	int64 tag = 1;
+    bool replacement = 2;
+    bool removal = 3;
 
-    map<int32, ProtoAttribute> attribute = 3;
-    map<int32, ProtoDocument> document = 4;
-    map<int32, ProtoCollection> collection = 5;
+    repeated ProtoAttribute attribute = 4;
+    repeated ProtoDocument document = 5;
+    repeated ProtoCollection collection = 6;
 }
 
 message ProtoCollection {
-    bool partial = 1;
-    bool removed = 2;
+    int64 tag = 1;
+    bool replacement = 2;
+    bool removal = 3;
 
-    map<int32, ProtoDocument> document = 3;
+    repeated ProtoDocument document = 4;
 }

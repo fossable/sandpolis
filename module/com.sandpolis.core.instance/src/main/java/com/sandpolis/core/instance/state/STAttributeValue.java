@@ -1,5 +1,7 @@
 package com.sandpolis.core.instance.state;
 
+import static com.sandpolis.core.instance.state.oid.OidUtil.*;
+
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.function.Function;
@@ -13,6 +15,7 @@ import com.sandpolis.core.instance.state.converter.InstanceFlavorConverter;
 import com.sandpolis.core.instance.state.converter.InstanceTypeConverter;
 import com.sandpolis.core.instance.state.converter.OsTypeConverter;
 import com.sandpolis.core.instance.state.converter.X509CertificateConverter;
+import com.sandpolis.core.instance.state.oid.OidUtil;
 
 @SuppressWarnings("rawtypes")
 public interface STAttributeValue<T> {
@@ -152,97 +155,30 @@ public interface STAttributeValue<T> {
 
 	static final Function[] X509CERTIFICATE = { X509CERTIFICATE_SERIALIZER, X509CERTIFICATE_DESERIALIZER };
 
-	static Function[] determine(ProtoAttributeValue value) {
-		if (value.getStringCount() > 0) {
-			return STRING;
-		}
+	static Function[] determine(long tag) {
 
-		else if (value.getIntegerCount() > 0) {
-			return INTEGER;
-		}
-
-		else if (value.getBytesCount() > 0) {
+		switch (OidUtil.getOidType(tag)) {
+		case ATYPE_BOOLEAN:
+			return OidUtil.isSingular(tag) ? BOOLEAN : BOOLEAN_LIST;
+		case ATYPE_BYTES:
 			return BYTES;
-		}
-		throw new IllegalArgumentException("Unknown value type");
-	}
-
-	static Function[] determine(Object value) {
-
-		if (value instanceof String) {
-			return STRING;
-		}
-
-		else if (value instanceof Boolean) {
-			return BOOLEAN;
-		}
-
-		else if (value instanceof Integer) {
-			return INTEGER;
-		}
-
-		else if (value instanceof byte[]) {
-			return BYTES;
-		}
-
-		else if (value instanceof Long) {
-			return LONG;
-		}
-
-		else if (value instanceof Double) {
-			return DOUBLE;
-		}
-
-		else if (value instanceof X509Certificate) {
+		case ATYPE_DOUBLE:
+			return OidUtil.isSingular(tag) ? DOUBLE : DOUBLE_LIST;
+		case ATYPE_INTEGER:
+			return OidUtil.isSingular(tag) ? INTEGER : INTEGER_LIST;
+		case ATYPE_INSTANCEFLAVOR:
+			return INSTANCEFLAVOR;
+		case ATYPE_LONG:
+			return OidUtil.isSingular(tag) ? LONG : LONG_LIST;
+		case ATYPE_OSTYPE:
+			return OSTYPE;
+		case ATYPE_STRING:
+			return OidUtil.isSingular(tag) ? STRING : STRING_LIST;
+		case ATYPE_X509CERTIFICATE:
 			return X509CERTIFICATE;
 		}
 
-		else if (value instanceof InstanceType) {
-			return INSTANCETYPE;
-		}
-
-		else if (value instanceof InstanceFlavor) {
-			return INSTANCEFLAVOR;
-		}
-
-		else if (value instanceof OsType) {
-			return OSTYPE;
-		}
-
-		else if (value instanceof List) {
-			var list = ((List<?>) value);
-			if (list.size() == 0)
-				throw new IllegalArgumentException("List cannot be empty");
-
-			// Take an element from the list for type discovery
-			var item = list.get(0);
-
-			if (item instanceof String) {
-				return STRING_LIST;
-			}
-
-			else if (item instanceof Boolean) {
-				return BOOLEAN_LIST;
-			}
-
-			else if (item instanceof Long) {
-				return LONG_LIST;
-			}
-
-			else if (item instanceof Double) {
-				return DOUBLE_LIST;
-			}
-
-			else if (item instanceof Integer) {
-				return INTEGER_LIST;
-			}
-
-			else {
-				throw new IllegalArgumentException("Unknown list type: " + item.toString());
-			}
-		} else {
-			throw new IllegalArgumentException("Unknown value type: " + value.toString());
-		}
+		throw new IllegalArgumentException("Unknown attribute type: " + tag);
 	}
 
 	/**

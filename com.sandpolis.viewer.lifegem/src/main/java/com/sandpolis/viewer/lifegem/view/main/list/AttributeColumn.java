@@ -15,7 +15,6 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.VirtProfile;
 import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.state.FxAttribute;
@@ -58,8 +57,7 @@ public class AttributeColumn<T> extends TableColumn<FxProfile, Label> {
 				return null;
 
 			ObjectProperty<Label> label = new SimpleObjectProperty<>(new Label());
-			FxAttribute<T> attribute = (FxAttribute<T>) profile.document
-					.get(oid.tail(VirtProfile.COLLECTION.size() + 1));
+			FxAttribute<T> attribute = (FxAttribute<T>) profile.document.get(oid);
 
 			// Bind the graphic property to the attribute via the converter function
 			label.get().graphicProperty().bind(Bindings.createObjectBinding(() -> {

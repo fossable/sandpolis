@@ -35,14 +35,7 @@ import java.util.Iterator;
  * state tree, or "relative" which means the OID is a proper subset of an
  * absolute OID.
  */
-public interface Oid extends Comparable<Oid>, Iterable<Integer> {
-
-	public static final int ID_SPACE = 2;
-
-	public static final int TYPE_ATTRIBUTE = 0;
-	public static final int TYPE_DOCUMENT = 1;
-	public static final int TYPE_COLLECTION = 2;
-	public static final int TYPE_RELATION = 3;
+public interface Oid extends Comparable<Oid>, Iterable<Long> {
 
 	/**
 	 * Extend the OID by adding the given component to the end.
@@ -50,7 +43,7 @@ public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 	 * @param component The new component
 	 * @return A new OID
 	 */
-	public Oid child(int component);
+	public Oid child(long component);
 
 	@Override
 	public default int compareTo(Oid oid) {
@@ -62,7 +55,7 @@ public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 	 *
 	 * @return The OID's first component
 	 */
-	public default int first() {
+	public default long first() {
 		return value()[0];
 	}
 
@@ -95,14 +88,14 @@ public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 	 * @return Whether the OID is concrete
 	 */
 	public default boolean isConcrete() {
-		for (int i : value())
+		for (long i : value())
 			if (i == 0)
 				return false;
 		return true;
 	}
 
 	@Override
-	public default Iterator<Integer> iterator() {
+	public default Iterator<Long> iterator() {
 		return Arrays.stream(value()).iterator();
 	}
 
@@ -111,7 +104,7 @@ public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 	 *
 	 * @return The OID's last component
 	 */
-	public default int last() {
+	public default long last() {
 		return value()[size() - 1];
 	}
 
@@ -140,7 +133,7 @@ public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 	 * @param components The new components
 	 * @return A new OID
 	 */
-	public Oid resolve(int... components);
+	public Oid resolve(long... components);
 
 	/**
 	 * Get the number of components in the OID.
@@ -167,12 +160,5 @@ public interface Oid extends Comparable<Oid>, Iterable<Integer> {
 	 *
 	 * @return The OID components
 	 */
-	public int[] value();
-
-	public static int type(int component) {
-		if (component == 0)
-			throw new IllegalArgumentException("Oid component was 0");
-
-		return component & ((1 << ID_SPACE) - 1);
-	}
+	public long[] value();
 }

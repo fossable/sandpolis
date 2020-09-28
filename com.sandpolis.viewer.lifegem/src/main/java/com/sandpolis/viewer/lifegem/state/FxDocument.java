@@ -32,17 +32,17 @@ public class FxDocument<T extends VirtObject> extends AbstractSTDocument impleme
 	}
 
 	@Override
-	protected STAttribute<?> newAttribute() {
+	public STAttribute<?> newAttribute() {
 		return new FxAttribute<>(this);
 	}
 
 	@Override
-	protected STDocument newDocument() {
+	public STDocument newDocument() {
 		return new FxDocument<>(this);
 	}
 
 	@Override
-	protected STCollection newCollection() {
+	public STCollection newCollection() {
 		return new FxCollection<>(this, FxProfile::new);// TODO
 	}
 

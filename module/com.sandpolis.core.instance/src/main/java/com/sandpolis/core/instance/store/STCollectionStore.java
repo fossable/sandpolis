@@ -42,7 +42,7 @@ public abstract class STCollectionStore<V extends VirtObject> extends StoreBase
 	 * This top-level cache allows {@link VirtObject}s to store transient state as
 	 * regular fields.
 	 */
-	private Map<Integer, V> cache = new HashMap<>();
+	private Map<Long, V> cache = new HashMap<>();
 
 	protected STCollectionStore(Logger log) {
 		super(log);
@@ -60,7 +60,7 @@ public abstract class STCollectionStore<V extends VirtObject> extends StoreBase
 		if (object.complete() != ErrorCode.OK)
 			throw new IncompleteObjectException();
 
-		int tag = object.tag();
+		long tag = object.tag();
 		collection.setDocument(tag, object.document);
 		cache.put(tag, object);
 	}
@@ -74,7 +74,7 @@ public abstract class STCollectionStore<V extends VirtObject> extends StoreBase
 		return collection.size();
 	}
 
-	public Optional<V> get(int tag) {
+	public Optional<V> get(long tag) {
 		var object = cache.get(tag);
 		if (object != null)
 			return Optional.of(object);
@@ -87,7 +87,7 @@ public abstract class STCollectionStore<V extends VirtObject> extends StoreBase
 		}
 	}
 
-	public Optional<V> remove(int tag) {
+	public Optional<V> remove(long tag) {
 		var item = get(tag);
 		if (item.isPresent())
 			removeValue(item.get());
@@ -101,9 +101,10 @@ public abstract class STCollectionStore<V extends VirtObject> extends StoreBase
 
 	public Stream<V> stream() {
 		if (cache.size() == 0)
-			return collection.documents().map(this::constructor);
+			return collection.documents().stream().map(this::constructor);
 
-		return Streams.concat(cache.values().stream(), collection.documents().map(this::constructor)).distinct();
+		return Streams.concat(cache.values().stream(), collection.documents().stream().map(this::constructor))
+				.distinct();
 	}
 
 	@Override

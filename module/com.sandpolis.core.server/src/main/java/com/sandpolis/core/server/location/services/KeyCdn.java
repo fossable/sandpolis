@@ -11,26 +11,12 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.location.services;
 
-import static com.sandpolis.core.instance.state.VirtIpLocation.AS_CODE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.CITY;
-import static com.sandpolis.core.instance.state.VirtIpLocation.CONTINENT;
-import static com.sandpolis.core.instance.state.VirtIpLocation.CONTINENT_CODE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.COUNTRY;
-import static com.sandpolis.core.instance.state.VirtIpLocation.COUNTRY_CODE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.ISP;
-import static com.sandpolis.core.instance.state.VirtIpLocation.LATITUDE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.LONGITUDE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.METRO_CODE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.POSTAL_CODE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.REGION;
-import static com.sandpolis.core.instance.state.VirtIpLocation.REGION_CODE;
-import static com.sandpolis.core.instance.state.VirtIpLocation.TIMEZONE;
-
 import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableBiMap;
 import com.sandpolis.core.instance.state.VirtIpLocation;
+import com.sandpolis.core.instance.state.VirtST;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.server.location.AbstractGeolocationService;
 
@@ -44,20 +30,20 @@ public final class KeyCdn extends AbstractGeolocationService {
 	 * The fields provided by the location service associated with {@link Oid}s.
 	 */
 	private static final ImmutableBiMap<Oid, String> JSON_FIELDS = new ImmutableBiMap.Builder<Oid, String>()
-			.put(AS_CODE, "asn") //
-			.put(CITY, "city") //
-			.put(CONTINENT, "continent_name") //
-			.put(CONTINENT_CODE, "continent_code") //
-			.put(COUNTRY, "country_name") //
-			.put(COUNTRY_CODE, "country_code") //
-			.put(ISP, "isp") //
-			.put(LATITUDE, "latitude") //
-			.put(LONGITUDE, "lonitude") //
-			.put(METRO_CODE, "metro_code") //
-			.put(POSTAL_CODE, "postal_code") //
-			.put(REGION, "region_name") //
-			.put(REGION_CODE, "region_code") //
-			.put(TIMEZONE, "timezone") //
+			.put(VirtST.profile.client.iplocation.as_code, "asn") //
+			.put(VirtST.profile.client.iplocation.city, "city") //
+			.put(VirtST.profile.client.iplocation.continent, "continent_name") //
+			.put(VirtST.profile.client.iplocation.continent_code, "continent_code") //
+			.put(VirtST.profile.client.iplocation.country, "country_name") //
+			.put(VirtST.profile.client.iplocation.country_code, "country_code") //
+			.put(VirtST.profile.client.iplocation.isp, "isp") //
+			.put(VirtST.profile.client.iplocation.latitude, "latitude") //
+			.put(VirtST.profile.client.iplocation.longitude, "lonitude") //
+			.put(VirtST.profile.client.iplocation.metro_code, "metro_code") //
+			.put(VirtST.profile.client.iplocation.postal_code, "postal_code") //
+			.put(VirtST.profile.client.iplocation.region, "region_name") //
+			.put(VirtST.profile.client.iplocation.region_code, "region_code") //
+			.put(VirtST.profile.client.iplocation.timezone, "timezone") //
 			.build();
 
 	public KeyCdn() {

@@ -67,7 +67,7 @@ public abstract class VirtObject {
 	 *
 	 * @return The document tag
 	 */
-	public abstract int tag();
+	public abstract long tag();
 
 	/**
 	 * A {@link VirtObject} is valid if all present attributes pass value

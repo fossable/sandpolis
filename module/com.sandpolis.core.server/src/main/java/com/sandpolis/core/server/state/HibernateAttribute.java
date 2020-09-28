@@ -54,7 +54,7 @@ public class HibernateAttribute<T> extends AbstractSTAttribute<T> implements STA
 
 	@Column
 	@Override
-	public int getTag() {
+	public long getTag() {
 		return tag;
 	}
 
@@ -64,7 +64,7 @@ public class HibernateAttribute<T> extends AbstractSTAttribute<T> implements STA
 	}
 
 	@Override
-	public void setTag(int tag) {
+	public void setTag(long tag) {
 		this.tag = tag;
 	}
 

@@ -66,7 +66,7 @@ public interface STObject<E extends Message> {
 	 */
 	public void removeListener(Object listener);
 
-	public void setTag(int tag);
+	public void setTag(long tag);
 
 	/**
 	 * Extract the object's state into a new snapshot. If whitelist OIDs are

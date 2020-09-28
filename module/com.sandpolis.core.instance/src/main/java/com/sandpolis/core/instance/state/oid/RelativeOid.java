@@ -11,6 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state.oid;
 
+import static com.sandpolis.core.instance.state.oid.OidUtil.*;
+
 import com.sandpolis.core.foundation.util.IDUtil;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.state.STAttribute;
@@ -20,16 +22,14 @@ import com.sandpolis.core.instance.state.VirtObject;
 
 public interface RelativeOid<T> extends Oid {
 
-	public static RelativeOid<?> newOid(int... value) {
-		switch (Oid.type(value[value.length - 1])) {
-		case TYPE_ATTRIBUTE:
+	public static RelativeOid<?> newOid(long... value) {
+		switch (OidUtil.getOidType(value[value.length - 1])) {
+		case OTYPE_ATTRIBUTE:
 			return new STAttributeOid<>(value);
-		case TYPE_DOCUMENT:
+		case OTYPE_DOCUMENT:
 			return new STDocumentOid<>(value);
-		case TYPE_COLLECTION:
+		case OTYPE_COLLECTION:
 			return new STCollectionOid<>(value);
-		case TYPE_RELATION:
-//			return  new AbsoluteOidImpl<>(value);// TODO
 		default:
 			throw new IllegalArgumentException();
 		}
@@ -45,19 +45,19 @@ public interface RelativeOid<T> extends Oid {
 		public STAttributeOid(String oid) {
 			super(oid);
 
-			if (Oid.type(last()) != Oid.TYPE_ATTRIBUTE)
+			if (OidUtil.getOidType(last()) != OTYPE_ATTRIBUTE)
 				throw new IllegalArgumentException();
 		}
 
-		public STAttributeOid(int[] oid) {
+		public STAttributeOid(long[] oid) {
 			super(oid);
 
-			if (Oid.type(last()) != Oid.TYPE_ATTRIBUTE)
+			if (OidUtil.getOidType(last()) != OTYPE_ATTRIBUTE)
 				throw new IllegalArgumentException();
 		}
 
 		@Override
-		public RelativeOid.STAttributeOid<T> resolve(int... tags) {
+		public RelativeOid.STAttributeOid<T> resolve(long... tags) {
 			return resolve(RelativeOid.STAttributeOid::new, tags);
 		}
 
@@ -80,7 +80,7 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		@Override
-		public Oid child(int component) {
+		public Oid child(long component) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -105,19 +105,19 @@ public interface RelativeOid<T> extends Oid {
 		public STCollectionOid(String oid) {
 			super(oid);
 
-			if (Oid.type(last()) != Oid.TYPE_COLLECTION)
+			if (OidUtil.getOidType(last()) != OTYPE_COLLECTION)
 				throw new IllegalArgumentException();
 		}
 
-		public STCollectionOid(int[] oid) {
+		public STCollectionOid(long[] oid) {
 			super(oid);
 
-			if (Oid.type(last()) != Oid.TYPE_COLLECTION)
+			if (OidUtil.getOidType(last()) != OTYPE_COLLECTION)
 				throw new IllegalArgumentException();
 		}
 
 		@Override
-		public RelativeOid.STCollectionOid<?> resolve(int... tags) {
+		public RelativeOid.STCollectionOid<?> resolve(long... tags) {
 			return resolve(RelativeOid.STCollectionOid::new, tags);
 		}
 
@@ -140,7 +140,7 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		@Override
-		public RelativeOid.STDocumentOid<?> child(int component) {
+		public RelativeOid.STDocumentOid<?> child(long component) {
 			return child(RelativeOid.STDocumentOid::new, component);
 		}
 
@@ -165,19 +165,19 @@ public interface RelativeOid<T> extends Oid {
 		public STDocumentOid(String oid) {
 			super(oid);
 
-			if (Oid.type(last()) != Oid.TYPE_DOCUMENT)
+			if (OidUtil.getOidType(last()) != OTYPE_DOCUMENT)
 				throw new IllegalArgumentException();
 		}
 
-		public STDocumentOid(int[] oid) {
+		public STDocumentOid(long[] oid) {
 			super(oid);
 
-			if (Oid.type(last()) != Oid.TYPE_DOCUMENT)
+			if (OidUtil.getOidType(last()) != OTYPE_DOCUMENT)
 				throw new IllegalArgumentException("Unacceptable document tag: " + last());
 		}
 
 		@Override
-		public RelativeOid.STDocumentOid<?> resolve(int... tags) {
+		public RelativeOid.STDocumentOid<?> resolve(long... tags) {
 			return resolve(RelativeOid.STDocumentOid::new, tags);
 		}
 
@@ -200,7 +200,7 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		@Override
-		public RelativeOid<?> child(int component) {
+		public RelativeOid<?> child(long component) {
 			return child(RelativeOid::newOid, component);
 		}
 

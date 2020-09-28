@@ -26,9 +26,9 @@ public abstract class OidBase implements Oid {
 	/**
 	 * The components of the oid.
 	 */
-	protected final int[] value;
+	protected final long[] value;
 
-	public OidBase(int[] value) {
+	public OidBase(long[] value) {
 		if (value.length == 0)
 			throw new IllegalArgumentException("Empty OID");
 
@@ -36,7 +36,7 @@ public abstract class OidBase implements Oid {
 	}
 
 	public OidBase(String oid) {
-		this(Arrays.stream(oid.split("\\.")).mapToInt(Integer::valueOf).toArray());
+		this(Arrays.stream(oid.split("\\.")).mapToLong(Long::valueOf).toArray());
 		this.dotted = oid;
 	}
 
@@ -63,31 +63,31 @@ public abstract class OidBase implements Oid {
 	}
 
 	@Override
-	public int[] value() {
+	public long[] value() {
 		return value;
 	}
 
-	protected <E extends Oid> E child(Function<int[], E> cons, int component) {
-		int[] n = Arrays.copyOf(value, value.length + 1);
+	protected <E extends Oid> E child(Function<long[], E> cons, long component) {
+		long[] n = Arrays.copyOf(value, value.length + 1);
 		n[n.length - 1] = component;
 		return cons.apply(n);
 	}
 
-	protected <E extends Oid> E head(Function<int[], E> cons, int length) {
+	protected <E extends Oid> E head(Function<long[], E> cons, int length) {
 		if (value.length < length || length <= 0)
 			throw new IllegalArgumentException("Target length out of range");
 
 		return cons.apply(Arrays.copyOf(value, length));
 	}
 
-	protected <E extends Oid> E parent(Function<int[], E> cons) {
+	protected <E extends Oid> E parent(Function<long[], E> cons) {
 		if (size() == 1)
 			return null;
 
 		return (E) head(size() - 1);
 	}
 
-	protected <E extends RelativeOid<?>> E relativize(Function<int[], E> cons, Oid oid) {
+	protected <E extends RelativeOid<?>> E relativize(Function<long[], E> cons, Oid oid) {
 		if (oid == null)
 			return cons.apply(value.clone());
 
@@ -97,14 +97,14 @@ public abstract class OidBase implements Oid {
 		return cons.apply(Arrays.copyOfRange(value, oid.size(), value.length));
 	}
 
-	protected <E extends Oid> E resolve(Function<int[], E> cons, int... tags) {
+	protected <E extends Oid> E resolve(Function<long[], E> cons, long... tags) {
 		if (isConcrete())
 			throw new IllegalStateException("Cannot resolve a concrete OID");
 
-		int[] components = value.clone();
+		long[] components = value.clone();
 
 		int i = 0;
-		for (int tag : tags) {
+		for (var tag : tags) {
 			for (; i < components.length; i++) {
 				if (components[i] == 0) {
 					components[i] = tag;
@@ -116,7 +116,7 @@ public abstract class OidBase implements Oid {
 		return cons.apply(components);
 	}
 
-	protected <E extends Oid> E tail(Function<int[], E> cons, int offset) {
+	protected <E extends Oid> E tail(Function<long[], E> cons, int offset) {
 		if (value.length < offset || offset < 1)
 			throw new IllegalStateException("Invalid tail offset: " + offset);
 

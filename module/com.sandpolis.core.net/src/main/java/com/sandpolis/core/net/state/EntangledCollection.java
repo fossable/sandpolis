@@ -11,9 +11,10 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
+import java.util.Collection;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.state.AbstractSTObject;
@@ -75,17 +76,17 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 	}
 
 	@Override
-	public STDocument document(int tag) {
+	public STDocument document(long tag) {
 		return container.document(tag);
 	}
 
 	@Override
-	public Stream<STDocument> documents() {
+	public Collection<STDocument> documents() {
 		return container.documents();
 	}
 
 	@Override
-	public STDocument getDocument(int tag) {
+	public STDocument getDocument(long tag) {
 		return container.getDocument(tag);
 	}
 
@@ -95,7 +96,7 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 	}
 
 	@Override
-	public int getTag() {
+	public long getTag() {
 		return ((AbstractSTObject) container).getTag();
 	}
 
@@ -130,12 +131,12 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 	}
 
 	@Override
-	public void setDocument(int tag, STDocument document) {
+	public void setDocument(long tag, STDocument document) {
 		container.setDocument(tag, document);
 	}
 
 	@Override
-	public void setTag(int tag) {
+	public void setTag(long tag) {
 		container.setTag(tag);
 	}
 
@@ -152,6 +153,11 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 	@Override
 	protected STObject<ProtoCollection> container() {
 		return container;
+	}
+
+	@Override
+	public void forEachDocument(Consumer<STDocument> consumer) {
+		container.forEachDocument(consumer);
 	}
 
 }

@@ -32,7 +32,7 @@ public abstract class AbstractSTObject<E extends Message> implements STObject<E>
 	 */
 	private int listeners;
 
-	protected int tag;
+	protected long tag;
 
 	@Override
 	public boolean isAttached() {
@@ -47,7 +47,7 @@ public abstract class AbstractSTObject<E extends Message> implements STObject<E>
 		listeners++;
 	}
 
-	public int getTag() {
+	public long getTag() {
 		return tag;
 	}
 
@@ -79,7 +79,7 @@ public abstract class AbstractSTObject<E extends Message> implements STObject<E>
 		}
 	}
 
-	public void setTag(int tag) {
+	public void setTag(long tag) {
 		this.tag = tag;
 	}
 

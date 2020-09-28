@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.state.VirtPlugin;
+import com.sandpolis.core.instance.state.VirtST;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.connection.ConnectionFuture;
 import com.sandpolis.core.net.state.STCmd;
@@ -155,7 +156,7 @@ public class LoginController extends FxController {
 
 						if (rs.getResult()) {
 							STCmd.async().target(connection)
-									.snapshot(VirtPlugin.COLLECTION.resolveUuid(connection.getRemoteUuid()))
+									.snapshot(VirtST.profile.plugin.resolveUuid(connection.getRemoteUuid()))
 									.thenAcceptAsync(snapshot -> {
 										var plugins = new FxCollection<>(null, snapshot, PluginProperty::new);
 										// TODO filter plugins that are already installed

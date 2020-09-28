@@ -51,13 +51,7 @@ import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.instance.state.EphemeralDocument;
 import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.VirtConnection;
-import com.sandpolis.core.instance.state.VirtGroup;
-import com.sandpolis.core.instance.state.VirtListener;
-import com.sandpolis.core.instance.state.VirtPlugin;
-import com.sandpolis.core.instance.state.VirtProfile;
-import com.sandpolis.core.instance.state.VirtTrustAnchor;
-import com.sandpolis.core.instance.state.VirtUser;
+import com.sandpolis.core.instance.state.VirtST;
 import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.server.auth.AuthExe;
 import com.sandpolis.core.server.auth.LoginExe;
@@ -229,7 +223,7 @@ public final class Server {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolveLocal());
+			config.collection = STStore.root().get(VirtST.profile.connection.resolveLocal());
 		});
 
 		ExeletStore.init(config -> {
@@ -249,28 +243,28 @@ public final class Server {
 		});
 
 		UserStore.init(config -> {
-			config.collection = STStore.root().get(VirtUser.COLLECTION.resolveLocal());
+			config.collection = STStore.root().get(VirtST.profile.server.user.resolveLocal());
 		});
 
 		ListenerStore.init(config -> {
-			config.collection = STStore.root().get(VirtListener.COLLECTION.resolveLocal());
+			config.collection = STStore.root().get(VirtST.profile.server.listener.resolveLocal());
 		});
 
 		GroupStore.init(config -> {
-			config.collection = STStore.root().get(VirtGroup.COLLECTION.resolveLocal());
+			config.collection = STStore.root().get(VirtST.profile.server.group.resolveLocal());
 		});
 
 		ProfileStore.init(config -> {
-			config.collection = STStore.root().get(VirtProfile.COLLECTION);
+			config.collection = STStore.root().get(VirtST.profile);
 		});
 
 		TrustStore.init(config -> {
-			config.collection = STStore.root().get(VirtTrustAnchor.COLLECTION.resolveLocal());
+			config.collection = STStore.root().get(VirtST.profile.server.trustanchor.resolveLocal());
 		});
 
 		PluginStore.init(config -> {
 			config.verifier = TrustStore::verifyPluginCertificate;
-			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolveLocal());
+			config.collection = STStore.root().get(VirtST.profile.plugin.resolveLocal());
 		});
 
 		LocationStore.init(config -> {

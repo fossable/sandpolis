@@ -17,6 +17,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
 import com.sandpolis.gradle.codegen.state.AttributeSpec;
 import com.sandpolis.gradle.codegen.state.DocumentSpec;
+import com.sandpolis.gradle.codegen.state.OidUtil;
 import com.sandpolis.gradle.codegen.state.RelationSpec;
 import com.sandpolis.gradle.codegen.state.STGenerator;
 import com.squareup.javapoet.ClassName;
@@ -30,8 +31,7 @@ import com.squareup.javapoet.TypeSpec.Builder;
  */
 public class JavaFxSTGenerator extends STGenerator {
 
-	@Override
-	public void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute, String oid) {
+	protected void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute, String oid) {
 
 		{
 			// Add property getter
@@ -45,13 +45,11 @@ public class JavaFxSTGenerator extends STGenerator {
 		}
 	}
 
-	@Override
-	public void processCollection(TypeSpec.Builder parent, DocumentSpec document, String oid) {
+	protected void processCollection(TypeSpec.Builder parent, DocumentSpec document, String oid) {
 		processDocument(parent, document, oid + ".0");
 	}
 
-	@Override
-	public void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
+	protected void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
 		var documentClass = TypeSpec.classBuilder("Fx" + document.shortName()) //
 				.addModifiers(PUBLIC) //
 				.superclass(ClassName.get(ST_PACKAGE, "Virt" + document.shortName()));
@@ -68,29 +66,32 @@ public class JavaFxSTGenerator extends STGenerator {
 		if (document.collections != null) {
 			for (var entry : document.collections.entrySet()) {
 				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processCollection(documentClass, subdocument,
-						oid + "." + CoreSTGenerator.addTagType(entry.getKey(), 2));
+				processCollection(documentClass, subdocument, oid + "." + OidUtil.computeCollectionTag(entry.getKey()));
 			}
 		}
 		if (document.documents != null) {
 			for (var entry : document.documents.entrySet()) {
 				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processDocument(documentClass, subdocument, oid + "." + CoreSTGenerator.addTagType(entry.getKey(), 1));
+				processDocument(documentClass, subdocument, oid + "." + OidUtil.computeDocumentTag(entry.getKey()));
 			}
 		}
 		if (document.attributes != null) {
 			for (var entry : document.attributes.entrySet()) {
-				processAttribute(documentClass, entry.getValue(),
-						oid + "." + CoreSTGenerator.addTagType(entry.getKey(), 0));
+				processAttribute(documentClass, entry.getValue(), oid + "."
+						+ OidUtil.computeAttributeTag(entry.getKey(), entry.getValue().type, !entry.getValue().list));
 			}
 		}
 
 		writeClass(documentClass.build());
 	}
 
-	@Override
-	public void processRelation(Builder parent, RelationSpec relation, String oid) {
+	protected void processRelation(Builder parent, RelationSpec relation, String oid) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	protected void processRoot(DocumentSpec document, String oid) {
+		processDocument(null, document, oid);
 	}
 }

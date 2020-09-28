@@ -17,7 +17,7 @@ public class RelationSpec {
 
 	public String type;
 
-	public boolean collection;
+	public boolean list;
 
 	public String simpleName() {
 		return type.replaceAll(".*\\.", "");

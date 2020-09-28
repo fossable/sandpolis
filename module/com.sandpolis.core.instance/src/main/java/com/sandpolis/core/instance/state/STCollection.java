@@ -12,11 +12,9 @@
 package com.sandpolis.core.instance.state;
 
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.oid.Oid;
-import com.sandpolis.core.instance.state.oid.RelativeOid;
+import com.sandpolis.core.instance.state.container.DocumentContainer;
 import com.sandpolis.core.instance.store.StoreMetadata;
 
 /**
@@ -25,7 +23,7 @@ import com.sandpolis.core.instance.store.StoreMetadata;
  *
  * @since 5.1.1
  */
-public interface STCollection extends STObject<ProtoCollection> {
+public interface STCollection extends STObject<ProtoCollection>, DocumentContainer {
 
 	/**
 	 * Indicates that an {@link STDocument} has been added to the collection.
@@ -53,85 +51,9 @@ public interface STCollection extends STObject<ProtoCollection> {
 		}
 	}
 
-	public default <E> STAttribute<E> attribute(RelativeOid<E> oid) {
-		if (!oid.isConcrete())
-			throw new RuntimeException();
-
-		switch (Oid.type(oid.first())) {
-		case Oid.TYPE_DOCUMENT:
-			return (STAttribute<E>) document(oid.first()).attribute(oid.tail());
-		default:
-			throw new RuntimeException("Unacceptable attribute tag: " + oid.first());
-		}
-	}
-
-	public default STCollection collection(RelativeOid<?> oid) {
-		if (!oid.isConcrete())
-			throw new RuntimeException();
-
-		switch (Oid.type(oid.first())) {
-		case Oid.TYPE_DOCUMENT:
-			return document(oid.first()).collection(oid.tail());
-		default:
-			throw new RuntimeException("Unacceptable attribute tag: " + oid.first());
-		}
-	}
-
 	public <E extends VirtObject> STRelation<E> collectionList(Function<STDocument, E> constructor);
 
-	/**
-	 * Get a subdocument by its tag. This method never returns {@code null}.
-	 *
-	 * @param tag The subdocument tag
-	 * @return The subdocument associated with the tag
-	 */
-	public STDocument document(int tag);
-
-	public default STDocument document(RelativeOid<?> oid) {
-		if (!oid.isConcrete())
-			throw new RuntimeException();
-
-		switch (Oid.type(oid.first())) {
-		case Oid.TYPE_DOCUMENT:
-			if (oid.size() == 1) {
-				return document(oid.first());
-			} else {
-				return document(oid.first()).document(oid.tail());
-			}
-		default:
-			throw new RuntimeException("Unacceptable document tag: " + oid.first());
-		}
-	}
-
-	/**
-	 * Get all subdocuments.
-	 *
-	 * @return A stream of all subdocuments
-	 */
-	public Stream<STDocument> documents();
-
-	/**
-	 * Get a subdocument by its tag. This method returns {@code null} if the
-	 * subdocument doesn't exist.
-	 *
-	 * @param tag The subdocument tag
-	 * @return The subdocument associated with the tag or {@code null}
-	 */
-	public STDocument getDocument(int tag);
-
 	public StoreMetadata getMetadata();
-
-	public STDocument newDocument();
-
-	public void remove(STDocument document);
-
-	/**
-	 * Overwrite the attribute associated with the given tag.
-	 *
-	 * @param tag      The attribute tag
-	 * @param document The attribute to associate with the tag or {@code null}
-	 */
-	public void setDocument(int tag, STDocument document);
 
 	/**
 	 * Returns the number of elements in this collection.

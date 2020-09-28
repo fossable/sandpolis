@@ -382,12 +382,12 @@
 			"3": {
 				"name": "members",
 				"type": "Profile.Server.User",
-				"collection": true
+				"list": true
 			},
 			"4": {
 				"name": "auth_mechanisms",
 				"type": "Profile.Server.AuthMechanism",
-				"collection": true
+				"list": true
 			}
 		}
 	},

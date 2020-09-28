@@ -72,7 +72,7 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	}
 
 	@Override
-	public int getTag() {
+	public long getTag() {
 		return ((AbstractSTObject) container).getTag();
 	}
 
@@ -107,7 +107,7 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	}
 
 	@Override
-	public void setTag(int tag) {
+	public void setTag(long tag) {
 		container.setTag(tag);
 	}
 

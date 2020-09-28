@@ -221,12 +221,14 @@
 			},
 			"6": {
 				"name": "ipv4",
-				"type": "java.util.List<java.lang.String>",
+				"type": "java.lang.String",
+				"list": true,
 				"description": "The interface's IPv4 addresses"
 			},
 			"7": {
 				"name": "ipv6",
-				"type": "java.util.List<java.lang.String>",
+				"type": "java.lang.String",
+				"list": true,
 				"description": "The interface's IPv6 addresses"
 			},
 			"8": {
@@ -576,7 +578,8 @@
 			},
 			"3": {
 				"name": "dns",
-				"type": "java.util.List<java.lang.String>",
+				"type": "java.lang.String",
+				"list": true,
 				"description": "The host's DNS servers"
 			}
 		}

@@ -1,9 +1,12 @@
 package com.sandpolis.core.instance.state;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Stream;
+import java.util.function.Consumer;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.oid.Oid;
@@ -11,18 +14,18 @@ import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument> implements STDocument {
 
-	protected Map<Integer, STAttribute<?>> attributes;
+	protected Map<Long, STAttribute<?>> attributes;
 
-	protected Map<Integer, STCollection> collections;
+	protected Map<Long, STCollection> collections;
 
-	protected Map<Integer, STDocument> documents;
+	protected Map<Long, STDocument> documents;
 
 	protected String id;
 
 	protected AbstractSTObject<?> parent;
 
 	@Override
-	public synchronized <E> STAttribute<E> attribute(int tag) {
+	public <E> STAttribute<E> attribute(long tag) {
 		STAttribute<?> attribute = getAttribute(tag);
 		if (attribute == null) {
 			attribute = newAttribute();
@@ -32,12 +35,12 @@ public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument>
 	}
 
 	@Override
-	public synchronized Stream<STAttribute<?>> attributes() {
-		return attributes.values().stream();
+	public List<STAttribute<?>> attributes() {
+		return List.copyOf(attributes.values());
 	}
 
 	@Override
-	public synchronized STCollection collection(int tag) {
+	public STCollection collection(long tag) {
 		var collection = getCollection(tag);
 		if (collection == null) {
 			collection = newCollection();
@@ -47,12 +50,39 @@ public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument>
 	}
 
 	@Override
-	public synchronized Stream<STCollection> collections() {
-		return collections.values().stream();
+	public void remove(STAttribute<?> attribute) {
+		synchronized (attributes) {
+			if (attributes.values().remove(attribute)) {
+//				fireAttributeRemovedEvent(this, attribute);
+			}
+		}
 	}
 
 	@Override
-	public synchronized STDocument document(int tag) {
+	public void remove(STCollection collection) {
+		synchronized (collections) {
+			if (collections.values().remove(collection)) {
+				fireCollectionRemovedEvent(this, collection);
+			}
+		}
+	}
+
+	@Override
+	public void remove(STDocument document) {
+		synchronized (documents) {
+			if (documents.values().remove(document)) {
+				fireDocumentRemovedEvent(this, document);
+			}
+		}
+	}
+
+	@Override
+	public List<STCollection> collections() {
+		return List.copyOf(collections.values());
+	}
+
+	@Override
+	public STDocument document(long tag) {
 		var document = getDocument(tag);
 		if (document == null) {
 			document = newDocument();
@@ -62,117 +92,156 @@ public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument>
 	}
 
 	@Override
-	public synchronized Stream<STDocument> documents() {
-		return documents.values().stream();
+	public Collection<STDocument> documents() {
+		return Collections.unmodifiableCollection(documents.values());
 	}
 
 	@Override
-	public synchronized <E> STAttribute<E> getAttribute(int tag) {
+	public void forEachAttribute(Consumer<STAttribute<?>> consumer) {
+		attributes.values().forEach(consumer);
+	}
+
+	@Override
+	public void forEachCollection(Consumer<STCollection> consumer) {
+		collections.values().forEach(consumer);
+	}
+
+	@Override
+	public void forEachDocument(Consumer<STDocument> consumer) {
+		documents.values().forEach(consumer);
+	}
+
+	@Override
+	public <E> STAttribute<E> getAttribute(long tag) {
 		return (STAttribute<E>) attributes.get(tag);
 	}
 
 	@Override
-	public synchronized STCollection getCollection(int tag) {
+	public STCollection getCollection(long tag) {
 		return collections.get(tag);
 	}
 
-	public synchronized STDocument getDocument(int tag) {
+	public STDocument getDocument(long tag) {
 		return documents.get(tag);
 	}
 
 	@Override
-	public synchronized String getId() {
+	public String getId() {
 		if (id == null)
 			id = UUID.randomUUID().toString();
 		return id;
 	}
 
 	@Override
-	public synchronized void merge(ProtoDocument snapshot) {
-		for (var entry : snapshot.getDocumentMap().entrySet()) {
-			document(entry.getKey()).merge(entry.getValue());
-		}
-		for (var entry : snapshot.getCollectionMap().entrySet()) {
-			collection(entry.getKey()).merge(entry.getValue());
-		}
-		for (var entry : snapshot.getAttributeMap().entrySet()) {
-			attribute(entry.getKey()).merge(entry.getValue());
+	public void merge(ProtoDocument snapshot) {
+		synchronized (documents) {
+			for (var document : snapshot.getDocumentList()) {
+				if (document.getRemoval()) {
+					var removal = documents.remove(document.getTag());
+					if (removal != null) {
+						fireDocumentRemovedEvent(this, removal);
+					}
+					continue;
+				} else if (document.getReplacement()) {
+					documents.remove(document.getTag());
+				}
+				document(document.getTag()).merge(document);
+			}
 		}
 
-		if (!snapshot.getPartial()) {
-			// Remove anything that wasn't in the snapshot
-			documents.entrySet().removeIf(entry -> !snapshot.containsDocument(entry.getKey()));
-			collections.entrySet().removeIf(entry -> !snapshot.containsCollection(entry.getKey()));
-			attributes.entrySet().removeIf(entry -> !snapshot.containsAttribute(entry.getKey()));
+		synchronized (collections) {
+			for (var collection : snapshot.getCollectionList()) {
+				if (collection.getRemoval()) {
+					var removal = collections.remove(collection.getTag());
+					if (removal != null) {
+						fireCollectionRemovedEvent(this, removal);
+					}
+					continue;
+				} else if (collection.getReplacement()) {
+					collections.remove(collection.getTag());
+				}
+				collection(collection.getTag()).merge(collection);
+			}
+		}
+
+		synchronized (attributes) {
+			for (var attribute : snapshot.getAttributeList()) {
+				if (attribute.getRemoval()) {
+					attributes.remove(attribute.getTag());
+					continue;
+				} else if (attribute.getReplacement()) {
+					attributes.remove(attribute.getTag());
+				}
+				attribute(attribute.getTag()).merge(attribute);
+			}
 		}
 	}
 
 	@Override
-	public synchronized AbstractSTObject parent() {
+	public AbstractSTObject parent() {
 		return parent;
 	}
 
 	@Override
-	public synchronized void setAttribute(int tag, STAttribute<?> attribute) {
-		attributes.put(tag, attribute);
-		attribute.setTag(tag);
-	}
-
-	@Override
-	public synchronized void setCollection(int tag, STCollection collection) {
-		var previous = collections.put(tag, collection);
-		collection.setTag(tag);
-
-		if (previous == null) {
-			fireCollectionAddedEvent(this, collection);
+	public void setAttribute(long tag, STAttribute<?> attribute) {
+		synchronized (attributes) {
+			attributes.put(tag, attribute);
+			attribute.setTag(tag);
 		}
 	}
 
 	@Override
-	public synchronized void setDocument(int tag, STDocument document) {
-		var previous = documents.put(tag, document);
-		document.setTag(tag);
+	public void setCollection(long tag, STCollection collection) {
+		synchronized (collections) {
+			var previous = collections.put(tag, collection);
+			collection.setTag(tag);
 
-		if (previous == null) {
-			fireDocumentAddedEvent(this, document);
+			if (previous == null) {
+				fireCollectionAddedEvent(this, collection);
+			}
 		}
 	}
 
 	@Override
-	public synchronized ProtoDocument snapshot(RelativeOid<?>... oids) {
+	public void setDocument(long tag, STDocument document) {
+		synchronized (documents) {
+			var previous = documents.put(tag, document);
+			document.setTag(tag);
+
+			if (previous == null) {
+				fireDocumentAddedEvent(this, document);
+			}
+		}
+	}
+
+	@Override
+	public ProtoDocument snapshot(RelativeOid<?>... oids) {
+		var snapshot = ProtoDocument.newBuilder();
+
 		if (oids.length == 0) {
-			var snapshot = ProtoDocument.newBuilder().setPartial(false);
-			documents.forEach((tag, document) -> {
-				snapshot.putDocument(tag, document.snapshot());
-			});
-			collections.forEach((tag, collection) -> {
-				snapshot.putCollection(tag, collection.snapshot());
-			});
-			attributes.forEach((tag, attribute) -> {
-				snapshot.putAttribute(tag, attribute.snapshot());
-			});
-			return snapshot.build();
+			synchronized (documents) {
+				documents.values().stream().map(STDocument::snapshot).forEach(snapshot::addDocument);
+			}
+			synchronized (collections) {
+				collections.values().stream().map(STCollection::snapshot).forEach(snapshot::addCollection);
+			}
+			synchronized (attributes) {
+				attributes.values().stream().map(STAttribute::snapshot).forEach(snapshot::addAttribute);
+			}
 		} else {
-			var snapshot = ProtoDocument.newBuilder().setPartial(true);
-			for (var head : Arrays.stream(oids).mapToInt(Oid::first).distinct().toArray()) {
+			for (var head : Arrays.stream(oids).mapToLong(Oid::first).distinct().toArray()) {
 				var children = Arrays.stream(oids).filter(oid -> oid.first() != head).map(Oid::tail)
 						.toArray(RelativeOid[]::new);
 
 				if (documents.containsKey(head))
-					snapshot.putDocument(head, documents.get(head).snapshot(children));
+					snapshot.addDocument(documents.get(head).snapshot(children));
 				if (collections.containsKey(head))
-					snapshot.putCollection(head, collections.get(head).snapshot(children));
+					snapshot.addCollection(collections.get(head).snapshot(children));
 				if (attributes.containsKey(head))
-					snapshot.putAttribute(head, attributes.get(head).snapshot());
+					snapshot.addAttribute(attributes.get(head).snapshot());
 			}
-
-			return snapshot.build();
 		}
+
+		return snapshot.build();
 	}
-
-	protected abstract STAttribute<?> newAttribute();
-
-	protected abstract STCollection newCollection();
-
-	protected abstract STDocument newDocument();
 }

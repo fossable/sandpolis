@@ -71,13 +71,12 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 			if (history != null)
 				history.clear();
 		} else {
-			var first = snapshot.getValuesList().get(0);
 
-			// Ensure serializers are loaded
-			checkSerializers(first);
+			// Ensure deserializer is loaded
+			requireSerializers(snapshot.getTag());
 
 			// Set current value
-			current = new EphemeralAttributeValue<>(deserializer.apply(first));
+			current = new EphemeralAttributeValue<>(deserializer.apply(snapshot.getValuesList().get(0)));
 
 			if (history != null) {
 				history.clear();
@@ -148,32 +147,27 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 			// Empty attribute shortcut
 			return ProtoAttribute.getDefaultInstance();
 
+		var snapshot = ProtoAttribute.newBuilder();
+
 		// Check the retention condition before serializing
 		checkRetention();
 
-		T value;
-		long timestamp;
+		// Ensure serializer is loaded
+		requireSerializers(tag);
+
+		// Add current value
 		if (source != null) {
-			value = source.get();
-			timestamp = System.currentTimeMillis();
+			snapshot.addValues(serializer.apply(source.get()).setTimestamp(System.currentTimeMillis()));
 		} else {
-			value = current.get();
-			timestamp = current.timestamp();
+			snapshot.addValues(serializer.apply(current.get()).setTimestamp(current.timestamp()));
 		}
-
-		// Ensure serializers are loaded
-		checkSerializers(value);
-
-		var proto = ProtoAttribute.newBuilder()
-				// Add current value
-				.addValues(serializer.apply(value).setTimestamp(timestamp));
 
 		if (history != null) {
 			history.stream().map(av -> serializer.apply(av.get()).setTimestamp(av.timestamp()).build())
-					.forEachOrdered(proto::addValues);
+					.forEachOrdered(snapshot::addValues);
 		}
 
-		return proto.build();
+		return snapshot.build();
 	}
 
 	@Override
@@ -222,17 +216,9 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 		}
 	}
 
-	protected void checkSerializers(ProtoAttributeValue value) {
+	protected void requireSerializers(long tag) {
 		if (serializer == null || deserializer == null) {
-			var v = STAttributeValue.determine(value);
-			serializer = v[0];
-			deserializer = v[1];
-		}
-	}
-
-	protected void checkSerializers(T value) {
-		if (serializer == null || deserializer == null) {
-			var v = STAttributeValue.determine(value);
+			var v = STAttributeValue.determine(tag);
 			serializer = v[0];
 			deserializer = v[1];
 		}

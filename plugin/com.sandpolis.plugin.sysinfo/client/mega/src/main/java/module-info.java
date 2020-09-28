@@ -14,6 +14,7 @@ module com.sandpolis.plugin.sysinfo.client.mega {
 
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.net;
+	requires com.sandpolis.plugin.sysinfo;
 
 	provides com.sandpolis.core.instance.plugin.SandpolisPlugin with com.sandpolis.plugin.sysinfo.client.mega.SysinfoPlugin;
 }

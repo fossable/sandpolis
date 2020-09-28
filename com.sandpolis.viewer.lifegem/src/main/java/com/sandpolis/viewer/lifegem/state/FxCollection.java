@@ -12,10 +12,11 @@
 package com.sandpolis.viewer.lifegem.state;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.state.AbstractSTCollection;
@@ -35,7 +36,7 @@ public class FxCollection<T extends VirtObject> extends AbstractSTCollection imp
 
 	private ObservableList<T> container;
 
-	private Map<Integer, Integer> indexMap;
+	private Map<Long, Integer> indexMap;
 
 	public FxCollection(STDocument parent, Function<STDocument, T> constructor) {
 		this.container = FXCollections.observableArrayList();
@@ -45,11 +46,11 @@ public class FxCollection<T extends VirtObject> extends AbstractSTCollection imp
 
 	public FxCollection(STDocument parent, STCollection base, Function<STDocument, T> constructor) {
 		this(parent, constructor);
-		base.documents().map(constructor).forEach(container::add);
+		base.documents().stream().map(constructor).forEach(container::add);
 	}
 
 	@Override
-	public STDocument document(int tag) {
+	public STDocument document(long tag) {
 		var index = indexMap.get(tag);
 		if (index != null)
 			return container.get(index).document;
@@ -61,12 +62,12 @@ public class FxCollection<T extends VirtObject> extends AbstractSTCollection imp
 	}
 
 	@Override
-	public Stream<STDocument> documents() {
-		return container.stream().map(item -> item.document);
+	public List<STDocument> documents() {
+		return container.stream().map(item -> item.document).collect(Collectors.toList());
 	}
 
 	@Override
-	public STDocument getDocument(int tag) {
+	public STDocument getDocument(long tag) {
 		if (indexMap.containsKey(tag))
 			return container.get(indexMap.get(tag)).document;
 
@@ -90,16 +91,17 @@ public class FxCollection<T extends VirtObject> extends AbstractSTCollection imp
 
 	@Override
 	public void merge(ProtoCollection snapshot) {
-		for (var entry : snapshot.getDocumentMap().entrySet()) {
-			document(entry.getKey()).merge(entry.getValue());
+		synchronized (container) {
+			for (var document : snapshot.getDocumentList()) {
+				if (document.getRemoval()) {
+					// TODO
+					continue;
+				} else if (document.getReplacement()) {
+					// TODO
+				}
+				document(document.getTag()).merge(document);
+			}
 		}
-
-//		if (!snapshot.getPartial()) {
-//			Platform.runLater(() -> {
-//				// Remove anything that wasn't in the snapshot
-//				container.removeIf(item -> !snapshot.containsDocument(item.tag()));
-//			});
-//		}
 	}
 
 	@Override
@@ -120,7 +122,7 @@ public class FxCollection<T extends VirtObject> extends AbstractSTCollection imp
 	}
 
 	@Override
-	public void setDocument(int tag, STDocument document) {
+	public void setDocument(long tag, STDocument document) {
 		Platform.runLater(() -> {
 			var index = indexMap.get(tag);
 			if (index == null) {

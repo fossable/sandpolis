@@ -50,17 +50,17 @@ public class EphemeralDocument extends AbstractSTDocument implements STDocument 
 	}
 
 	@Override
-	protected STAttribute<?> newAttribute() {
+	public STAttribute<?> newAttribute() {
 		return new EphemeralAttribute<>(this);
 	}
 
 	@Override
-	protected STDocument newDocument() {
+	public STDocument newDocument() {
 		return new EphemeralDocument(this);
 	}
 
 	@Override
-	protected STCollection newCollection() {
+	public STCollection newCollection() {
 		return new EphemeralCollection(this);
 	}
 

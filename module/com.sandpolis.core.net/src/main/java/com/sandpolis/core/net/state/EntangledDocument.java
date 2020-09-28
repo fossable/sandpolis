@@ -11,8 +11,9 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
+import java.util.Collection;
 import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.function.Consumer;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.AbstractSTObject;
@@ -67,47 +68,47 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public <E> STAttribute<E> attribute(int tag) {
+	public <E> STAttribute<E> attribute(long tag) {
 		return container.attribute(tag);
 	}
 
 	@Override
-	public Stream<STAttribute<?>> attributes() {
+	public Collection<STAttribute<?>> attributes() {
 		return container.attributes();
 	}
 
 	@Override
-	public STCollection collection(int tag) {
+	public STCollection collection(long tag) {
 		return container.collection(tag);
 	}
 
 	@Override
-	public Stream<STCollection> collections() {
+	public Collection<STCollection> collections() {
 		return container.collections();
 	}
 
 	@Override
-	public STDocument document(int tag) {
+	public STDocument document(long tag) {
 		return container.document(tag);
 	}
 
 	@Override
-	public Stream<STDocument> documents() {
+	public Collection<STDocument> documents() {
 		return container.documents();
 	}
 
 	@Override
-	public <E> STAttribute<E> getAttribute(int tag) {
+	public <E> STAttribute<E> getAttribute(long tag) {
 		return container.getAttribute(tag);
 	}
 
 	@Override
-	public STCollection getCollection(int tag) {
+	public STCollection getCollection(long tag) {
 		return container.getCollection(tag);
 	}
 
 	@Override
-	public STDocument getDocument(int tag) {
+	public STDocument getDocument(long tag) {
 		return container.getDocument(tag);
 	}
 
@@ -117,7 +118,7 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public int getTag() {
+	public long getTag() {
 		return ((AbstractSTObject) container).getTag();
 	}
 
@@ -142,22 +143,22 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public void setAttribute(int tag, STAttribute<?> attribute) {
+	public void setAttribute(long tag, STAttribute<?> attribute) {
 		container.setAttribute(tag, attribute);
 	}
 
 	@Override
-	public void setCollection(int tag, STCollection collection) {
+	public void setCollection(long tag, STCollection collection) {
 		container.setCollection(tag, collection);
 	}
 
 	@Override
-	public void setDocument(int tag, STDocument document) {
+	public void setDocument(long tag, STDocument document) {
 		container.setDocument(tag, document);
 	}
 
 	@Override
-	public void setTag(int tag) {
+	public void setTag(long tag) {
 		container.setTag(tag);
 	}
 
@@ -169,5 +170,59 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	@Override
 	protected STObject<ProtoDocument> container() {
 		return container;
+	}
+
+	@Override
+	public STAttribute<?> newAttribute() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void remove(STAttribute<?> attribute) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void forEachAttribute(Consumer<STAttribute<?>> consumer) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public STDocument newDocument() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void remove(STDocument document) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void forEachDocument(Consumer<STDocument> consumer) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public STCollection newCollection() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void remove(STCollection collection) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void forEachCollection(Consumer<STCollection> consumer) {
+		// TODO Auto-generated method stub
+		
 	}
 }

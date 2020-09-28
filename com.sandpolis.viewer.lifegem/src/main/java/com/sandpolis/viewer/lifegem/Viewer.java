@@ -37,9 +37,7 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.state.VirtConnection;
-import com.sandpolis.core.instance.state.VirtPlugin;
-import com.sandpolis.core.instance.state.VirtProfile;
+import com.sandpolis.core.instance.state.VirtST;
 import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.state.FxDocument;
 
@@ -135,15 +133,15 @@ public final class Viewer {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(VirtConnection.COLLECTION.resolveLocal());
+			config.collection = STStore.root().get(VirtST.profile.connection.resolveLocal());
 		});
 
 		PluginStore.init(config -> {
-			config.collection = STStore.root().get(VirtPlugin.COLLECTION.resolveLocal());
+			config.collection = STStore.root().get(VirtST.profile.plugin.resolveLocal());
 		});
 
 		ProfileStore.init(config -> {
-			config.collection = STStore.root().get(VirtProfile.COLLECTION);
+			config.collection = STStore.root().get(VirtST.profile);
 		});
 
 		return outcome.success();

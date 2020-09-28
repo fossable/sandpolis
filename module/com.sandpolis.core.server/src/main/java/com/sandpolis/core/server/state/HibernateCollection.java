@@ -40,7 +40,7 @@ public class HibernateCollection extends AbstractSTCollection implements STColle
 	private String db_id;
 
 	@Column
-	public int getTag() {
+	public long getTag() {
 		return tag;
 	}
 
@@ -93,7 +93,7 @@ public class HibernateCollection extends AbstractSTCollection implements STColle
 	}
 
 	@Override
-	public void setDocument(int tag, STDocument document) {
+	public void setDocument(long tag, STDocument document) {
 		em.getTransaction().begin();
 		documents.put(tag, (HibernateDocument) document);
 		document.setTag(tag);

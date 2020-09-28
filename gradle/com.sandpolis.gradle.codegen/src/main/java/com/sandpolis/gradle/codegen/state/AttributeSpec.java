@@ -41,22 +41,17 @@ public class AttributeSpec {
 	 */
 	public boolean identity;
 
+	/**
+	 * Whether the attribute is a list type.
+	 */
+	public boolean list;
+
 	public TypeName getAttributeType() {
 
 		if (type.endsWith("[]")) {
 			return ArrayTypeName.of(ClassName.bestGuess(type.replace("[]", "")).unbox());
 		} else {
-			var components = type.split("<|>");
-
-			switch (components.length) {
-			case 1:
-				return ClassName.bestGuess(type);
-			case 2:
-				return ParameterizedTypeName.get(ClassName.bestGuess(components[0]),
-						ClassName.bestGuess(components[1]));
-			default:
-				throw new RuntimeException("Invalid attribute type");
-			}
+			return ClassName.bestGuess(type);
 		}
 	}
 
