@@ -11,11 +11,12 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.state;
 
-import static com.sandpolis.core.instance.state.oid.OidUtil.*;
+import static com.sandpolis.core.foundation.util.OidUtil.*;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.Message;
+import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.State.ProtoDocument;
@@ -25,7 +26,6 @@ import com.sandpolis.core.instance.state.STCollection;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.STObject;
 import com.sandpolis.core.instance.state.oid.Oid;
-import com.sandpolis.core.instance.state.oid.OidUtil;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
 import com.sandpolis.core.net.stream.InboundStreamAdapter;
 import com.sandpolis.core.net.stream.OutboundStreamAdapter;

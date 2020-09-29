@@ -11,13 +11,13 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state.oid;
 
-import static com.sandpolis.core.instance.state.oid.OidUtil.OTYPE_ATTRIBUTE;
-import static com.sandpolis.core.instance.state.oid.OidUtil.OTYPE_COLLECTION;
-import static com.sandpolis.core.instance.state.oid.OidUtil.OTYPE_DOCUMENT;
+import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_ATTRIBUTE;
+import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_COLLECTION;
+import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_DOCUMENT;
 
 import java.util.Arrays;
 
-import com.sandpolis.core.foundation.util.IDUtil;
+import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
@@ -70,11 +70,11 @@ public interface AbsoluteOid<T> extends Oid {
 		}
 
 		public AbsoluteOid.STAttributeOid<T> resolveLocal() {
-			return resolve(IDUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.uuidToTag(Core.UUID));
 		}
 
 		public AbsoluteOid.STAttributeOid<T> resolveUuid(String uuid) {
-			return resolve(IDUtil.uuidToTag(uuid));
+			return resolve(OidUtil.uuidToTag(uuid));
 		}
 
 		@Override
@@ -130,11 +130,11 @@ public interface AbsoluteOid<T> extends Oid {
 		}
 
 		public AbsoluteOid.STCollectionOid<?> resolveLocal() {
-			return resolve(IDUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.uuidToTag(Core.UUID));
 		}
 
 		public AbsoluteOid.STCollectionOid<?> resolveUuid(String uuid) {
-			return resolve(IDUtil.uuidToTag(uuid));
+			return resolve(OidUtil.uuidToTag(uuid));
 		}
 
 		@Override
@@ -190,11 +190,11 @@ public interface AbsoluteOid<T> extends Oid {
 		}
 
 		public AbsoluteOid.STDocumentOid<?> resolveLocal() {
-			return resolve(IDUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.uuidToTag(Core.UUID));
 		}
 
 		public AbsoluteOid.STDocumentOid<?> resolveUuid(String uuid) {
-			return resolve(IDUtil.uuidToTag(uuid));
+			return resolve(OidUtil.uuidToTag(uuid));
 		}
 
 		@Override

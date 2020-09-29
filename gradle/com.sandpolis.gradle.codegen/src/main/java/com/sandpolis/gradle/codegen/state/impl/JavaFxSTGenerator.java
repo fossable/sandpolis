@@ -15,9 +15,9 @@ import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
+import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.gradle.codegen.state.AttributeSpec;
 import com.sandpolis.gradle.codegen.state.DocumentSpec;
-import com.sandpolis.gradle.codegen.state.OidUtil;
 import com.sandpolis.gradle.codegen.state.RelationSpec;
 import com.sandpolis.gradle.codegen.state.STGenerator;
 import com.squareup.javapoet.ClassName;
@@ -40,7 +40,7 @@ public class JavaFxSTGenerator extends STGenerator {
 			var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name + "_property")) //
 					.addModifiers(PUBLIC) //
 					.returns(type) //
-					.addStatement("return ($T) document.attribute($L)", type, oid.replaceAll(".*\\.", ""));
+					.addStatement("return ($T) document.attribute($LL)", type, oid.replaceAll(".*\\.", ""));
 			parent.addMethod(method.build());
 		}
 	}

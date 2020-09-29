@@ -22,6 +22,7 @@ import org.gradle.api.tasks.TaskAction;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.hash.Hashing;
+import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.gradle.codegen.ConfigExtension;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;

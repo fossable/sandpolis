@@ -11,9 +11,11 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state.oid;
 
-import static com.sandpolis.core.instance.state.oid.OidUtil.*;
+import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_ATTRIBUTE;
+import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_COLLECTION;
+import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_DOCUMENT;
 
-import com.sandpolis.core.foundation.util.IDUtil;
+import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.state.STAttribute;
 import com.sandpolis.core.instance.state.STCollection;
@@ -62,11 +64,11 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		public RelativeOid.STAttributeOid<T> resolveLocal() {
-			return resolve(IDUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.uuidToTag(Core.UUID));
 		}
 
 		public RelativeOid.STAttributeOid<T> resolveUuid(String uuid) {
-			return resolve(IDUtil.uuidToTag(uuid));
+			return resolve(OidUtil.uuidToTag(uuid));
 		}
 
 		@Override
@@ -122,11 +124,11 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		public RelativeOid.STCollectionOid<?> resolveLocal() {
-			return resolve(IDUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.uuidToTag(Core.UUID));
 		}
 
 		public RelativeOid.STCollectionOid<?> resolveUuid(String uuid) {
-			return resolve(IDUtil.uuidToTag(uuid));
+			return resolve(OidUtil.uuidToTag(uuid));
 		}
 
 		@Override
@@ -182,11 +184,11 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		public RelativeOid.STDocumentOid<?> resolveLocal() {
-			return resolve(IDUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.uuidToTag(Core.UUID));
 		}
 
 		public RelativeOid.STDocumentOid<?> resolveUuid(String uuid) {
-			return resolve(IDUtil.uuidToTag(uuid));
+			return resolve(OidUtil.uuidToTag(uuid));
 		}
 
 		@Override

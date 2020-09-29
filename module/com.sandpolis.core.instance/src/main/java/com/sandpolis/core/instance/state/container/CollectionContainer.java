@@ -1,13 +1,14 @@
 package com.sandpolis.core.instance.state.container;
 
-import static com.sandpolis.core.instance.state.oid.OidUtil.OTYPE_COLLECTION;
-import static com.sandpolis.core.instance.state.oid.OidUtil.OTYPE_DOCUMENT;
+import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_COLLECTION;
+import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_DOCUMENT;
 
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.oid.OidUtil;
+import com.sandpolis.core.instance.state.oid.GenericOidException;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 public interface CollectionContainer {
@@ -46,7 +47,7 @@ public interface CollectionContainer {
 
 	public default STCollection collection(RelativeOid<?> oid) {
 		if (!oid.isConcrete())
-			throw new RuntimeException();
+			throw new GenericOidException(oid);
 
 		if (oid.size() == 1) {
 			switch (OidUtil.getOidType(oid.first())) {
@@ -62,13 +63,9 @@ public interface CollectionContainer {
 				}
 				break;
 			case OTYPE_COLLECTION:
-				var sub = collection(oid.first());
-				if (sub instanceof CollectionContainer) {
-					return ((CollectionContainer) sub).collection(oid.tail());
-				}
-				break;
+				return collection(oid.first()).document(oid.tail().first()).collection(oid.tail(2));
 			}
-			throw new IllegalArgumentException("OID: " + oid);
+			throw new IllegalArgumentException("Unexpected OID component: " + oid);
 		}
 	}
 

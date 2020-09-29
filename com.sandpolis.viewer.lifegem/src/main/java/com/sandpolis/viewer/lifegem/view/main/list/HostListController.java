@@ -90,7 +90,7 @@ public class HostListController extends AbstractController {
 	 * @param headers The headers to add
 	 */
 	private void addColumns(List<AbsoluteOid.STAttributeOid<?>> headers) {
-		headers.stream().map(AttributeColumn::new).forEach(table.getColumns()::add);
+		headers.stream().map(oid -> oid.resolveUuid("TODO")).map(AttributeColumn::new).forEach(table.getColumns()::add);
 	}
 
 }

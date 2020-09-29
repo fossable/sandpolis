@@ -11,7 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state;
 
-import java.util.Iterator;
 import java.util.stream.Stream;
 
 /**
@@ -20,7 +19,7 @@ import java.util.stream.Stream;
  * @param <T>
  * @since 7.0.0
  */
-public interface STRelation<T extends VirtObject> extends Iterable<T> {
+public interface STRelation<T extends VirtObject> {
 
 	public void add(T element);
 
@@ -30,8 +29,4 @@ public interface STRelation<T extends VirtObject> extends Iterable<T> {
 
 	public boolean contains(T element);
 
-	@Override
-	public default Iterator<T> iterator() {
-		return stream().iterator();
-	}
 }

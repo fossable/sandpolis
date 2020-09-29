@@ -11,8 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.foundation.util;
 
-import com.google.common.hash.Hashing;
-
 /**
  * This utility simplifies the handling of many types of IDs.
  *
@@ -64,10 +62,6 @@ public final class IDUtil {
 	 */
 	public static long group() {
 		return RandUtil.nextLong();
-	}
-
-	public static int uuidToTag(String uuid) {
-		return (Hashing.murmur3_32().newHasher().putBytes(uuid.getBytes()).hash().asInt() << 2) | 1;
 	}
 
 	private IDUtil() {

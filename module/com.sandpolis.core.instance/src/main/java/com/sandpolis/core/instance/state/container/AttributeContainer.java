@@ -1,14 +1,15 @@
 package com.sandpolis.core.instance.state.container;
 
-import static com.sandpolis.core.instance.state.oid.OidUtil.OTYPE_ATTRIBUTE;
-import static com.sandpolis.core.instance.state.oid.OidUtil.OTYPE_COLLECTION;
-import static com.sandpolis.core.instance.state.oid.OidUtil.OTYPE_DOCUMENT;
+import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_ATTRIBUTE;
+import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_COLLECTION;
+import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_DOCUMENT;
 
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.oid.OidUtil;
+import com.sandpolis.core.instance.state.oid.GenericOidException;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
 public interface AttributeContainer {
@@ -49,7 +50,7 @@ public interface AttributeContainer {
 
 	public default <E> STAttribute<E> attribute(RelativeOid<E> oid) {
 		if (!oid.isConcrete())
-			throw new RuntimeException();
+			throw new GenericOidException(oid);
 
 		if (oid.size() == 1) {
 			switch (OidUtil.getOidType(oid.first())) {
@@ -67,8 +68,8 @@ public interface AttributeContainer {
 				break;
 			case OTYPE_COLLECTION:
 				if (this instanceof CollectionContainer) {
-					return (STAttribute<E>) ((AttributeContainer) (((CollectionContainer) this)
-							.collection(oid.first()))).attribute(oid.tail());
+					return (STAttribute<E>) ((CollectionContainer) this).collection(oid.first())
+							.document(oid.tail().first()).attribute(oid.tail(2));
 				}
 				break;
 			}

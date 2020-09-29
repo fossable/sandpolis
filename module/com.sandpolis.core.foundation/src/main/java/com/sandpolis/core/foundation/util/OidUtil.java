@@ -1,4 +1,6 @@
-package com.sandpolis.gradle.codegen.state;
+package com.sandpolis.core.foundation.util;
+
+import com.google.common.hash.Hashing;
 
 public final class OidUtil {
 
@@ -92,6 +94,10 @@ public final class OidUtil {
 			throw new IllegalArgumentException("Only attributes can contain lists");
 
 		return decode(tag, OFFSET_SINGULARITY, LENGTH_SINGULARITY) == 1;
+	}
+
+	public static long uuidToTag(String uuid) {
+		return computeDocumentTag(Hashing.murmur3_128().newHasher().putBytes(uuid.getBytes()).hash().asLong());
 	}
 
 	private static long encode(long base, int offset, int length, long value) {

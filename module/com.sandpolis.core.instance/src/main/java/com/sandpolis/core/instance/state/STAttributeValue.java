@@ -1,6 +1,6 @@
 package com.sandpolis.core.instance.state;
 
-import static com.sandpolis.core.instance.state.oid.OidUtil.*;
+import static com.sandpolis.core.foundation.util.OidUtil.*;
 
 import java.security.cert.X509Certificate;
 import java.util.List;
@@ -8,6 +8,7 @@ import java.util.function.Function;
 
 import com.google.protobuf.ByteString;
 import com.sandpolis.core.foundation.Platform.OsType;
+import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.State.ProtoAttributeValue;
@@ -15,7 +16,6 @@ import com.sandpolis.core.instance.state.converter.InstanceFlavorConverter;
 import com.sandpolis.core.instance.state.converter.InstanceTypeConverter;
 import com.sandpolis.core.instance.state.converter.OsTypeConverter;
 import com.sandpolis.core.instance.state.converter.X509CertificateConverter;
-import com.sandpolis.core.instance.state.oid.OidUtil;
 
 @SuppressWarnings("rawtypes")
 public interface STAttributeValue<T> {

@@ -17,9 +17,9 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
+import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.gradle.codegen.state.AttributeSpec;
 import com.sandpolis.gradle.codegen.state.DocumentSpec;
-import com.sandpolis.gradle.codegen.state.OidUtil;
 import com.sandpolis.gradle.codegen.state.RelationSpec;
 import com.sandpolis.gradle.codegen.state.STGenerator;
 import com.squareup.javapoet.ClassName;
@@ -152,8 +152,7 @@ public class CoreSTGenerator extends STGenerator {
 					.addModifiers(PUBLIC, FINAL) //
 					.returns(long.class) //
 					.addStatement("return $T.computeDocumentTag($T.murmur3_128().newHasher()$L.hash().asLong())",
-							ClassName.get("com.sandpolis.core.instance.state.oid", "OidUtil"),
-							ClassName.get("com.google.common.hash", "Hashing"), identityString);
+							OidUtil.class, ClassName.get("com.google.common.hash", "Hashing"), identityString);
 			documentClass.addMethod(method.build());
 		}
 
