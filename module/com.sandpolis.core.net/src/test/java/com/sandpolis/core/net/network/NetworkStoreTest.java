@@ -20,7 +20,6 @@ class NetworkStoreTest {
 	@BeforeEach
 	void setup() {
 		NetworkStore.init(config -> {
-			config.ephemeral();
 			config.preferredServer = 100;
 			config.cvid = 123;
 		});

@@ -3,7 +3,6 @@ package com.sandpolis.core.instance.state;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -35,8 +34,8 @@ public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument>
 	}
 
 	@Override
-	public List<STAttribute<?>> attributes() {
-		return List.copyOf(attributes.values());
+	public Collection<STAttribute<?>> attributes() {
+		return Collections.unmodifiableCollection(attributes.values());
 	}
 
 	@Override
@@ -77,8 +76,8 @@ public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument>
 	}
 
 	@Override
-	public List<STCollection> collections() {
-		return List.copyOf(collections.values());
+	public Collection<STCollection> collections() {
+		return Collections.unmodifiableCollection(collections.values());
 	}
 
 	@Override
@@ -216,7 +215,7 @@ public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument>
 
 	@Override
 	public ProtoDocument snapshot(RelativeOid<?>... oids) {
-		var snapshot = ProtoDocument.newBuilder();
+		var snapshot = ProtoDocument.newBuilder().setTag(tag);
 
 		if (oids.length == 0) {
 			synchronized (documents) {

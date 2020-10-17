@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.init;
+package com.sandpolis.core.net.channel.peer;
 
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.foundation.util.RandUtil;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.channel.peer.PeerChannelInitializer;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -34,13 +33,13 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 
 class PeerChannelInitializerTest {
 
-	private final PeerChannelInitializer init = new PeerChannelInitializer();
+	private final PeerChannelInitializer init = new PeerChannelInitializer(config -> {
+	});
 
 	@BeforeAll
 	static void configure() {
 
 		ThreadStore.init(config -> {
-			config.ephemeral();
 			config.defaults.put("net.exelet", new NioEventLoopGroup().next());
 		});
 	}

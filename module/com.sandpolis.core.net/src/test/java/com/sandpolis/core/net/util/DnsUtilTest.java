@@ -27,7 +27,6 @@ class DnsUtilTest {
 	@BeforeAll
 	static void configure() {
 		ThreadStore.init(config -> {
-			config.ephemeral();
 			config.defaults.put("net.dns.resolver", new NioEventLoopGroup(1).next());
 		});
 	}

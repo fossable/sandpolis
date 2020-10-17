@@ -36,7 +36,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	/**
 	 * The target CVID. Defaults to the default server CVID.
 	 */
-	private Integer cvid = NetworkStore.getPreferredServer();
+	private Integer cvid = NetworkStore.getPreferredServer().orElse(0);
 
 	/**
 	 * The target sock which will be used to send and receive messages. Defaults to

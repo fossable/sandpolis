@@ -147,7 +147,7 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 			// Empty attribute shortcut
 			return ProtoAttribute.getDefaultInstance();
 
-		var snapshot = ProtoAttribute.newBuilder();
+		var snapshot = ProtoAttribute.newBuilder().setTag(tag);
 
 		// Check the retention condition before serializing
 		checkRetention();

@@ -37,9 +37,9 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 
 	private static final Logger log = LoggerFactory.getLogger(ExeletHandler.class);
 
-	private final Connection sock;
+	final Connection sock;
 
-	private Map<String, ExeletMethod> handlers;
+	Map<String, ExeletMethod> handlers;
 
 	public ExeletHandler(Connection sock) {
 		this.sock = sock;

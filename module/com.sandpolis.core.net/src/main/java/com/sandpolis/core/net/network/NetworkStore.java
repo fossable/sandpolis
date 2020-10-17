@@ -13,6 +13,7 @@ package com.sandpolis.core.net.network;
 
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -123,13 +124,21 @@ public final class NetworkStore extends StoreBase implements ConfigurableStore<N
 		preferredServer = cvid;
 	}
 
-	public synchronized int getPreferredServer() {
-		if (!network.nodes().contains(preferredServer))
-			// Choose a server at random
-			preferredServer = network.nodes().stream()
-					.filter(cvid -> CvidUtil.extractInstance(cvid) == InstanceType.SERVER).findAny().orElse(0);
+	public synchronized Optional<Integer> getPreferredServer() {
 
-		return preferredServer;
+		if (!network.nodes().contains(preferredServer)) {
+			// Choose a server at random
+			var newServer = network.nodes().stream()
+					.filter(cvid -> CvidUtil.extractInstance(cvid) == InstanceType.SERVER).findAny();
+			if (newServer.isPresent()) {
+				preferredServer = newServer.get();
+				return newServer;
+			} else {
+				return Optional.empty();
+			}
+		}
+
+		return Optional.of(preferredServer);
 	}
 
 	/**
@@ -190,8 +199,9 @@ public final class NetworkStore extends StoreBase implements ConfigurableStore<N
 	 * @return The next hop
 	 */
 	public int deliver(MSG message) {
-		ConnectionStore.get(getPreferredServer()).get().send(message);
-		return getPreferredServer();
+		int next = getPreferredServer().orElseThrow();
+		ConnectionStore.get(next).get().send(message);
+		return next;
 	}
 
 	/**
@@ -242,20 +252,22 @@ public final class NetworkStore extends StoreBase implements ConfigurableStore<N
 	 * @return The next hop
 	 */
 	public MessageFuture route(MSG.Builder message, String timeoutClass) {
-		int hop = findHop(message);
+		int next;
 		// TODO use timeout class
 
-		MessageFuture mf = receive(hop, message.getId(), Config.MESSAGE_TIMEOUT.value().get(), TimeUnit.MILLISECONDS);
-		ConnectionStore.get(hop).get().send(message);
+		// Search adjacent nodes first
+		if (network.adjacentNodes(Core.cvid()).contains(message.getTo())) {
+			next = message.getTo();
+		}
+
+		// Try preferred server
+		else {
+			next = getPreferredServer().orElseThrow();
+		}
+
+		MessageFuture mf = receive(next, message.getId(), Config.MESSAGE_TIMEOUT.value().get(), TimeUnit.MILLISECONDS);
+		ConnectionStore.get(next).get().send(message);
 		return mf;
-	}
-
-	// TODO temporary
-	private synchronized int findHop(MSG.Builder message) {
-		if (network.adjacentNodes(Core.cvid()).contains(message.getTo()))
-			return message.getTo();
-
-		return getPreferredServer();
 	}
 
 	/**

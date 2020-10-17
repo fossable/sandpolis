@@ -23,10 +23,7 @@ import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.channel.ChannelConstant;
-import com.sandpolis.core.net.connection.Connection;
-import com.sandpolis.core.net.connection.ConnectionFuture;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -37,14 +34,12 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.util.concurrent.Promise;
 
 class ConnectionFutureTest {
 
 	@BeforeAll
 	static void configure() {
 		ThreadStore.init(config -> {
-			config.ephemeral();
 			config.defaults.put("net.exelet", new NioEventLoopGroup().next());
 		});
 	}
@@ -84,14 +79,9 @@ class ConnectionFutureTest {
 
 	private void testGet(ChannelFuture server, ChannelFuture client) throws InterruptedException, ExecutionException {
 
-		// Set CVIDs manually
-		server.channel().attr(ChannelConstant.CVID).set(123);
-		client.channel().attr(ChannelConstant.CVID).set(321);
-
-		// Create Sock
-		var s = new UnitSock(client.channel());
-		client.channel().attr(ChannelConstant.SOCK).set(s);
-		((Promise<Void>) s.getHandshakeFuture()).setSuccess(null);
+		// Create connection
+		var connection = ConnectionStore.ConnectionStore.create(client.channel());
+		client.channel().attr(ChannelConstant.SOCK).set(connection);
 
 		ConnectionFuture sf = new ConnectionFuture(client);
 		sf.sync();

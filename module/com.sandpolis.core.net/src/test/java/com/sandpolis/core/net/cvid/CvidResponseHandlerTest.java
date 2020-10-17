@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.cvid;
 
+import static java.util.UUID.randomUUID;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -23,10 +24,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.channel.ChannelConstant;
-import com.sandpolis.core.net.cvid.CvidResponseHandler;
 import com.sandpolis.core.net.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
 import com.sandpolis.core.net.msg.MsgCvid.RQ_Cvid;
 import com.sandpolis.core.net.msg.MsgCvid.RS_Cvid;
@@ -61,29 +63,36 @@ class CvidResponseHandlerTest {
 	@Test
 	@DisplayName("Receive an invalid response")
 	void testReceiveIncorrect() {
+		final var testUuid = randomUUID().toString();
+
 		server.writeInbound(MSG.newBuilder()
-				.setRqCvid(RQ_Cvid.newBuilder().setInstance(InstanceType.SERVER).setUuid("testuuid2")).build());
+				.setPayload(Any.pack(RQ_Cvid.newBuilder().setInstance(InstanceType.SERVER).setUuid(testUuid).build()))
+				.build());
 
 		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
-		assertFalse(event.isSuccess());
+		assertFalse(event.success);
 		assertNull(server.pipeline().get(CvidResponseHandler.class), "Handler autoremove failed");
 	}
 
 	@Test
 	@DisplayName("Receive a valid response")
-	void testReceiveCorrect() {
+	void testReceiveCorrect() throws InvalidProtocolBufferException {
+		final var testUuid = randomUUID().toString();
+
 		server.writeInbound(MSG.newBuilder()
-				.setRqCvid(RQ_Cvid.newBuilder().setInstance(InstanceType.CLIENT).setUuid("testuuid2")).build());
+				.setPayload(Any.pack(RQ_Cvid.newBuilder().setInstance(InstanceType.CLIENT).setUuid(testUuid).build()))
+				.build());
 
 		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
-		assertTrue(event.isSuccess());
+		assertTrue(event.success);
 
-		assertEquals(InstanceType.CLIENT, CvidUtil.extractInstance(server.attr(ChannelConstant.CVID).get()));
-		assertEquals("testuuid2", server.attr(ChannelConstant.UUID).get());
+		assertEquals(InstanceType.CLIENT,
+				CvidUtil.extractInstance(server.attr(ChannelConstant.SOCK).get().getRemoteCvid()));
+		assertEquals(testUuid, server.attr(ChannelConstant.SOCK).get().getRemoteUuid());
 		assertNull(server.pipeline().get(CvidResponseHandler.class), "Handler autoremove failed");
 
 		MSG msg = server.readOutbound();
-		RS_Cvid rs = msg.getRsCvid();
+		RS_Cvid rs = msg.getPayload().unpack(RS_Cvid.class);
 
 		assertEquals(InstanceType.CLIENT, CvidUtil.extractInstance(rs.getCvid()));
 		assertFalse(rs.getServerUuid().isEmpty());

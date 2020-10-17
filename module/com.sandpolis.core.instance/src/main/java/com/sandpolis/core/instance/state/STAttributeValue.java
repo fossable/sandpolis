@@ -157,7 +157,7 @@ public interface STAttributeValue<T> {
 
 	static Function[] determine(long tag) {
 
-		switch (OidUtil.getOidType(tag)) {
+		switch (OidUtil.getAttributeType(tag)) {
 		case ATYPE_BOOLEAN:
 			return OidUtil.isSingular(tag) ? BOOLEAN : BOOLEAN_LIST;
 		case ATYPE_BYTES:
@@ -168,6 +168,8 @@ public interface STAttributeValue<T> {
 			return OidUtil.isSingular(tag) ? INTEGER : INTEGER_LIST;
 		case ATYPE_INSTANCEFLAVOR:
 			return INSTANCEFLAVOR;
+		case ATYPE_INSTANCETYPE:
+			return INSTANCETYPE;
 		case ATYPE_LONG:
 			return OidUtil.isSingular(tag) ? LONG : LONG_LIST;
 		case ATYPE_OSTYPE:
@@ -178,7 +180,8 @@ public interface STAttributeValue<T> {
 			return X509CERTIFICATE;
 		}
 
-		throw new IllegalArgumentException("Unknown attribute type: " + tag);
+		throw new IllegalArgumentException(
+				"Unknown attribute type: " + OidUtil.getAttributeType(tag) + " for tag: " + tag);
 	}
 
 	/**

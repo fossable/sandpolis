@@ -12,5 +12,4 @@ class OidUtilTest {
 	void testComputeCollectionTag() {
 		assertEquals(OidUtil.OTYPE_COLLECTION, OidUtil.getOidType(OidUtil.computeCollectionTag(12)));
 	}
-
 }

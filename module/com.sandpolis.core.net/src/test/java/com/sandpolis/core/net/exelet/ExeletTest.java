@@ -11,16 +11,13 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.exelet;
 
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import com.sandpolis.core.net.UnitSock;
 import com.sandpolis.core.net.Message.MSG;
-import com.sandpolis.core.net.channel.ChannelConstant;
-import com.sandpolis.core.net.exelet.Exelet;
-import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.net.exelet.Exelet.Handler;
 
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -43,10 +40,8 @@ public abstract class ExeletTest {
 
 	protected void initTestContext() {
 		var channel = new EmbeddedChannel();
-		channel.attr(ChannelConstant.CVID).set(0);
-		channel.attr(ChannelConstant.UUID).set("123");
 
-		context = new ExeletContext(new UnitSock(channel), MSG.newBuilder().build());
+		context = new ExeletContext(ConnectionStore.create(channel), MSG.newBuilder().build());
 	}
 
 }

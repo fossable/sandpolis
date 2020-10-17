@@ -80,7 +80,7 @@ public final class OidUtil {
 
 	public static int getAttributeType(long tag) {
 		if (getOidType(tag) != OTYPE_ATTRIBUTE)
-			throw new IllegalArgumentException("Only attributes can have value types");
+			throw new IllegalArgumentException("Only attributes can have value types (tag: " + tag + ")");
 
 		return decode(tag, OFFSET_ATYPE, LENGTH_ATYPE);
 	}

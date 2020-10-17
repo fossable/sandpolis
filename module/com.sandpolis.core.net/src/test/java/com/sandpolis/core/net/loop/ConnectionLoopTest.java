@@ -40,7 +40,6 @@ class ConnectionLoopTest {
 	@BeforeAll
 	private static void setup() {
 		ThreadStore.init(config -> {
-			config.ephemeral();
 			config.defaults.put("net.connection.outgoing", GlobalEventExecutor.INSTANCE);
 			config.defaults.put("net.connection.loop", GlobalEventExecutor.INSTANCE);
 		});
@@ -48,7 +47,7 @@ class ConnectionLoopTest {
 
 	@Test
 	@DisplayName("Attempt a connection on a closed port")
-	void connect_1() throws InterruptedException {
+	void testConnectClosedPort() throws InterruptedException {
 		ConnectionLoop loop = new ConnectionLoop("127.0.0.1", 38903, 500, new Bootstrap()
 				.channel(NioSocketChannel.class).group(new NioEventLoopGroup()).handler(new LoggingHandler()));
 
@@ -65,7 +64,7 @@ class ConnectionLoopTest {
 	@Test
 	@Disabled
 	@DisplayName("Make a successful connection to a local socket")
-	void connect_2() throws InterruptedException, IOException {
+	void testConnectionSuccess() throws InterruptedException, IOException {
 
 		new ServerBootstrap().group(new NioEventLoopGroup()).channel(NioServerSocketChannel.class)
 				.childHandler(new LoggingHandler()).bind(InetAddress.getLoopbackAddress(), 23374).sync();

@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.net.handler.peer;
+package com.sandpolis.core.net.channel.peer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -20,8 +20,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import org.junit.jupiter.api.Test;
-
-import com.sandpolis.core.net.handler.peer.HolePunchHandler;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
