@@ -25,11 +25,15 @@ eclipse {
 application {
 	privateHeaders {
 		from project.file("src/main/headers")
-		from project.file("../module/com.sandpolis.core.foundation/gen/main/cpp")
+		from project(':module:com.sandpolis.core.foundation').file("gen/main/cpp")
+		from project(':module:com.sandpolis.core.instance').file("gen/main/cpp")
+		from project(':module:com.sandpolis.core.net').file("gen/main/cpp")
 	}
 	source {
 		from project.file("src/main/cpp")
-		from project.file("../module/com.sandpolis.core.foundation/gen/main/cpp")
+		from project(':module:com.sandpolis.core.foundation').file("gen/main/cpp")
+		from project(':module:com.sandpolis.core.instance').file("gen/main/cpp")
+		from project(':module:com.sandpolis.core.net').file("gen/main/cpp")
 	}
 }
 
@@ -41,5 +45,7 @@ tasks.withType(LinkExecutable).configureEach {
 
 tasks.withType(CppCompile).configureEach {
 	dependsOn project(":module:com.sandpolis.core.foundation").tasks.getByName("generateProto")
+	dependsOn project(":module:com.sandpolis.core.instance").tasks.getByName("generateProto")
+	dependsOn project(":module:com.sandpolis.core.net").tasks.getByName("generateProto")
 	compilerArgs = ['-pthread']
 }

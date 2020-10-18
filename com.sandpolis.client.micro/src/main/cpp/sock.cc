@@ -68,22 +68,29 @@ int Sock::ComputeVarint32Width(int value) {
 
 bool Sock::CvidHandshake() {
 
-	// Send a cvid request containing instance information
-	net::MSG rq;
-	rq.mutable_rq_cvid()->set_instance(util::Instance::CLIENT);
-	rq.mutable_rq_cvid()->set_instance_flavor(util::InstanceFlavor::MICRO);
-	rq.mutable_rq_cvid()->set_uuid(uuid);
+	core::net::MSG rq;
+	core::net::MSG rs;
+	core::net::msg::RQ_Cvid rq_cvid;
+	core::net::msg::RS_Cvid rs_cvid;
+
+	rq_cvid.set_instance(core::instance::InstanceType::CLIENT);
+	rq_cvid.set_instance_flavor(core::instance::InstanceFlavor::MICRO);
+	rq_cvid.set_uuid(uuid);
+	rq.mutable_payload()->PackFrom(rq_cvid);
 	if (!Send(rq)) {
 		return false;
 	}
 
-	net::MSG rs;
 	if (!Recv(rs)) {
 		return false;
 	}
-	remote_cvid = rs.rs_cvid().server_cvid();
-	remote_uuid = rs.rs_cvid().server_uuid();
-	cvid = rs.rs_cvid().cvid();
+
+	if (!rs.payload().UnpackTo(&rs_cvid)) {
+		return false;
+	}
+	remote_cvid = rs_cvid.server_cvid();
+	remote_uuid = rs_cvid.server_uuid();
+	cvid = rs_cvid.cvid();
 
 	std::cout << "CVID Handshake completed:" << std::endl;
 	std::cout << "    Server UUID: " << remote_uuid << std::endl;
@@ -93,7 +100,7 @@ bool Sock::CvidHandshake() {
 	return true;
 }
 
-bool Sock::Send(const net::MSG &msg) {
+bool Sock::Send(const core::net::MSG &msg) {
 
 	int payload_size = msg.ByteSize();
 	int header_size = ComputeVarint32Width(payload_size);
@@ -121,7 +128,7 @@ bool Sock::Send(const net::MSG &msg) {
 	return true;
 }
 
-bool Sock::Recv(net::MSG &msg) {
+bool Sock::Recv(core::net::MSG &msg) {
 	char buffer[1024];
 
 	int r = recv(sockfd, buffer, 1024, 0);

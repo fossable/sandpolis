@@ -15,7 +15,9 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include "com/sandpolis/core/proto/net/message.pb.h"
+#include "com/sandpolis/core/net/message.pb.h"
+#include "com/sandpolis/core/net/msg/msg_cvid.pb.h"
+#include "com/sandpolis/core/instance/metatypes.pb.h"
 
 // The maximum number of bytes that a single protobuf varint can occupy
 #define MAX_VARINT_WIDTH 5
@@ -55,10 +57,10 @@ public:
 	bool CvidHandshake();
 
 	// Serialize and send the given message to the remote host.
-	bool Send(const net::MSG &msg);
+	bool Send(const core::net::MSG &msg);
 
 	// Receive and parse a message from the remote host.
-	bool Recv(net::MSG &msg);
+	bool Recv(core::net::MSG &msg);
 };
 
 #endif

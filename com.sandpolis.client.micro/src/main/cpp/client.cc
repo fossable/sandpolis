@@ -21,12 +21,12 @@
 #include "util/resources.hh"
 #include "util/uuid.hh"
 
-#include "com/sandpolis/core/proto/util/generator.pb.h"
-#include "com/sandpolis/core/soi/build.pb.h"
+#include "com/sandpolis/core/instance/generator.pb.h"
+#include "com/sandpolis/core/foundation/soi/build.pb.h"
 
 int main(int argc, char **argv) {
-	soi::SO_Build so_build;
-	util::MicroConfig config;
+	core::foundation::soi::SO_Build so_build;
+	core::instance::MicroConfig config;
 
 	// Load build metadata from resource file
 	if (!so_build.ParseFromArray(resource_body(soi_build),
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 
 	// Begin connection routine
 	long iteration = 0;
-	const util::LoopConfig &loop_config = config.network().loop_config();
+	const core::instance::LoopConfig &loop_config = config.network().loop_config();
 	while (iteration < loop_config.iteration_limit()
 			|| loop_config.iteration_limit() == 0) {
 
