@@ -9,21 +9,26 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.profile;
+package com.sandpolis.core.instance.state.st;
 
-import com.sandpolis.core.instance.state.VirtProfile;
-import com.sandpolis.core.instance.state.st.STDocument;
+import java.util.stream.Stream;
+
+import com.sandpolis.core.instance.state.vst.VirtObject;
 
 /**
- * A {@link Profile} is a generic container that stores data for an instance.
- * Most of the data are stored in a tree structure similar to a document store.
+ * {@link STRelation} is similar to a collection.
  *
- * @since 4.0.0
+ * @param <T>
+ * @since 7.0.0
  */
-public class Profile extends VirtProfile {
+public interface STRelation<T extends VirtObject> {
 
-	Profile(STDocument parent) {
-		super(parent);
-	}
+	public void add(T element);
+
+	public Stream<T> stream();
+
+	public int size();
+
+	public boolean contains(T element);
 
 }

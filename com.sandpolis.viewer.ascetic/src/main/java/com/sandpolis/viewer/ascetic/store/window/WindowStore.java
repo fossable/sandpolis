@@ -63,6 +63,7 @@ public final class WindowStore extends CollectionStore<Window> implements Config
 		var window = constructor.get();
 		configurator.accept(window);
 		container.add(window);
+		gui.addWindow(window);
 		return window;
 	}
 

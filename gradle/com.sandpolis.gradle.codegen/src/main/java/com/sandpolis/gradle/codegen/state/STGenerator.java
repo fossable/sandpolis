@@ -32,9 +32,14 @@ import com.squareup.javapoet.TypeSpec;
  */
 public abstract class STGenerator extends DefaultTask {
 
-	public static final String ST_PACKAGE = "com.sandpolis.core.instance.state";
+	public static final String OID_PACKAGE = "com.sandpolis.core.instance.state.oid";
+	public static final String ST_PACKAGE = "com.sandpolis.core.instance.state.st";
+	public static final String VST_PACKAGE = "com.sandpolis.core.instance.state.vst";
 
-	public static final String ST_PREFIX = "Virt";
+	/**
+	 * The naming prefix for generated VST classes.
+	 */
+	public static final String VST_PREFIX = "Virt";
 
 	/**
 	 * The elements of a VST tree flattened into a list.

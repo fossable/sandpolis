@@ -445,7 +445,7 @@
 		}
 	},
 	{
-		"name": "ST",
+		"name": "InstanceST",
 		"parent": "",
 		"collections": {
 			"1": "Profile"

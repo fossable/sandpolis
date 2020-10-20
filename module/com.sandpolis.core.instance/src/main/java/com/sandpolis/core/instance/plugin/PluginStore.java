@@ -39,9 +39,9 @@ import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginStore.PluginStoreConfig;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtPlugin;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 

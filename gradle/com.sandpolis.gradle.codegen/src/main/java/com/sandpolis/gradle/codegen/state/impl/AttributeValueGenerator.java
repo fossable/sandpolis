@@ -251,7 +251,7 @@ public class AttributeValueGenerator extends DefaultTask {
 		if (convertableTypes.contains(type)) {
 			valueField.addAnnotation( //
 					AnnotationSpec.builder(ClassName.get("javax.persistence", "Convert"))
-							.addMember("converter", "$T.class", ClassName.get(ST_PACKAGE + ".converter",
+							.addMember("converter", "$T.class", ClassName.get("com.sandpolis.core.instance.converter",
 									type.toString().replaceAll(".*\\.", "").replace("[]", "Array") + "Converter"))
 							.build());
 		}

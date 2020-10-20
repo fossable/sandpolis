@@ -161,4 +161,13 @@ public interface Oid extends Comparable<Oid>, Iterable<Long> {
 	 * @return The OID components
 	 */
 	public long[] value();
+
+	public <T, O extends Oid> O setData(OidData<T> dataType, T data);
+
+	public <T> T getData(OidData<T> dataType);
+
+	public default <T> T getData(OidData<T> dataType, T defaultItem) {
+		T item = getData(dataType);
+		return item == null ? defaultItem : item;
+	}
 }

@@ -12,10 +12,14 @@
 package com.sandpolis.core.instance.state.oid;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class OidBase implements Oid {
+
+	private Map<OidData<?>, Object> data = new HashMap<>();
 
 	/**
 	 * The dotted representation of the oid which is computed and cached when
@@ -49,8 +53,19 @@ public abstract class OidBase implements Oid {
 	}
 
 	@Override
+	public <T> T getData(OidData<T> dataType) {
+		return (T) data.get(dataType);
+	}
+
+	@Override
 	public int hashCode() {
 		return value.hashCode();
+	}
+
+	@Override
+	public <T, O extends Oid> O setData(OidData<T> dataType, T item) {
+		data.put(dataType, item);
+		return (O) this;
 	}
 
 	@Override

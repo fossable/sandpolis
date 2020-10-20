@@ -9,21 +9,41 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.profile;
+package com.sandpolis.core.instance.state.st.ephemeral;
 
-import com.sandpolis.core.instance.state.VirtProfile;
+import java.util.HashMap;
+
+import com.sandpolis.core.instance.State.ProtoCollection;
+import com.sandpolis.core.instance.state.st.AbstractSTCollection;
+import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.store.StoreMetadata;
 
-/**
- * A {@link Profile} is a generic container that stores data for an instance.
- * Most of the data are stored in a tree structure similar to a document store.
- *
- * @since 4.0.0
- */
-public class Profile extends VirtProfile {
+public class EphemeralCollection extends AbstractSTCollection implements STCollection {
 
-	Profile(STDocument parent) {
-		super(parent);
+	private final Metadata metadata = new Metadata();
+
+	public EphemeralCollection(STDocument parent) {
+		this.parent = parent;
+
+		documents = new HashMap<>();
 	}
 
+	public EphemeralCollection(STDocument parent, ProtoCollection collection) {
+		this(parent);
+		merge(collection);
+	}
+
+	@Override
+	public StoreMetadata getMetadata() {
+		return metadata;
+	}
+
+	private class Metadata implements StoreMetadata {
+
+		@Override
+		public int getInitCount() {
+			return 1;
+		}
+	}
 }

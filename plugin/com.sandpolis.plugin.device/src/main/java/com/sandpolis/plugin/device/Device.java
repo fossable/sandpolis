@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.device;
 
-import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.plugin.device.state.VirtDevice;
 
 public class Device extends VirtDevice {

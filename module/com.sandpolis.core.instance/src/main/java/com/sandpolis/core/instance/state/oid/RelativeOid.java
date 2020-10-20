@@ -17,10 +17,10 @@ import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_DOCUMENT;
 
 import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.VirtObject;
+import com.sandpolis.core.instance.state.st.STAttribute;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.VirtObject;
 
 public interface RelativeOid<T> extends Oid {
 

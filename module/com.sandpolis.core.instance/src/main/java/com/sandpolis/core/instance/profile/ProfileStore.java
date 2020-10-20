@@ -19,9 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.profile.ProfileStore.ProfileStoreConfig;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtProfile;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 

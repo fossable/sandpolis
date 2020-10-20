@@ -27,9 +27,9 @@ import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.AbstractSTCollection;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
+import com.sandpolis.core.instance.state.st.AbstractSTCollection;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.store.StoreMetadata;
 import com.sandpolis.core.server.hibernate.HibernateCollectionMetadata;
 

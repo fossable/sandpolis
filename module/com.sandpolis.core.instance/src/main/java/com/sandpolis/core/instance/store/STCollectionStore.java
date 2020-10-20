@@ -20,10 +20,10 @@ import org.slf4j.Logger;
 
 import com.google.common.collect.Streams;
 import com.sandpolis.core.foundation.Result.ErrorCode;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.VirtObject;
-import com.sandpolis.core.instance.state.VirtObject.IncompleteObjectException;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.VirtObject;
+import com.sandpolis.core.instance.state.vst.VirtObject.IncompleteObjectException;
 
 /**
  * {@link STCollectionStore} is a store backed by a {@link STCollection} which

@@ -9,21 +9,49 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.instance.profile;
+package com.sandpolis.core.instance.state.st.ephemeral;
 
-import com.sandpolis.core.instance.state.VirtProfile;
-import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.st.STAttributeValue;
 
 /**
- * A {@link Profile} is a generic container that stores data for an instance.
- * Most of the data are stored in a tree structure similar to a document store.
  *
- * @since 4.0.0
+ * @param <T> The type of the value
  */
-public class Profile extends VirtProfile {
+public class EphemeralAttributeValue<T> implements STAttributeValue<T> {
 
-	Profile(STDocument parent) {
-		super(parent);
+	/**
+	 * A epoch timestamp associated with the value.
+	 */
+	private final long timestamp;
+
+	/**
+	 * The ephemeral value.
+	 */
+	private final T value;
+
+	public EphemeralAttributeValue(T value) {
+		this(value, System.currentTimeMillis());
 	}
 
+	public EphemeralAttributeValue(T value, long timestamp) {
+		this.value = value;
+		this.timestamp = timestamp;
+	}
+
+	@Override
+	public T get() {
+		return value;
+	}
+
+	@Override
+	public long timestamp() {
+		return timestamp;
+	}
+
+	@Override
+	public String toString() {
+		if (value != null)
+			return value.toString();
+		return null;
+	}
 }

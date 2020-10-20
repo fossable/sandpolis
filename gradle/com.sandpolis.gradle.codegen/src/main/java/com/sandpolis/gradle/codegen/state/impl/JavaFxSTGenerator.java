@@ -52,7 +52,7 @@ public class JavaFxSTGenerator extends STGenerator {
 	protected void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
 		var documentClass = TypeSpec.classBuilder("Fx" + document.shortName()) //
 				.addModifiers(PUBLIC) //
-				.superclass(ClassName.get(ST_PACKAGE, "Virt" + document.shortName()));
+				.superclass(ClassName.get(VST_PACKAGE, VST_PREFIX + document.shortName()));
 
 		{
 			// Add constructor
@@ -77,8 +77,8 @@ public class JavaFxSTGenerator extends STGenerator {
 		}
 		if (document.attributes != null) {
 			for (var entry : document.attributes.entrySet()) {
-				processAttribute(documentClass, entry.getValue(), oid + "."
-						+ OidUtil.computeAttributeTag(entry.getKey(), entry.getValue().type, !entry.getValue().list));
+				processAttribute(documentClass, entry.getValue(),
+						oid + "." + OidUtil.computeAttributeTag(entry.getKey()));
 			}
 		}
 

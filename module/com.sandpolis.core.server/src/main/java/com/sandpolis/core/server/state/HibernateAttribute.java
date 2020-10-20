@@ -13,22 +13,17 @@ package com.sandpolis.core.server.state;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Transient;
 
-import com.sandpolis.core.instance.State.ProtoAttribute;
-import com.sandpolis.core.instance.state.AbstractSTAttribute;
-import com.sandpolis.core.instance.state.AbstractSTObject;
-import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.STAttributeValue;
 import com.sandpolis.core.instance.state.oid.Oid;
-import com.sandpolis.core.instance.state.oid.RelativeOid;
+import com.sandpolis.core.instance.state.st.AbstractSTAttribute;
+import com.sandpolis.core.instance.state.st.STAttribute;
+import com.sandpolis.core.instance.state.st.STAttributeValue;
 
 /**
  * {@link HibernateAttribute} allows attributes to be persistent and optionally
