@@ -88,9 +88,9 @@ public class SandpolisConnection {
 				$0.pipeline.addHandlers([
 					self.buildSslHandler(sslContext, server),
 					ByteToMessageHandler(VarintFrameDecoder()),
-					ByteToMessageHandler(ProtobufDecoder<Net_MSG>()),
+					ByteToMessageHandler(ProtobufDecoder<Core_Net_MSG>()),
 					MessageToByteHandler(VarintLengthFieldPrepender()),
-					MessageToByteHandler(ProtobufEncoder<Net_MSG>()),
+					MessageToByteHandler(ProtobufEncoder<Core_Net_MSG>()),
 					CvidRequestHandler(self),
 					self.responseHandler,
 					ClientHandler(self),
@@ -137,11 +137,11 @@ public class SandpolisConnection {
 	///   - rq: The request message
 	///   - timeout: The request timeout in seconds
 	/// - Returns: A response future
-	func request(_ rq: inout Net_MSG, _ timeout: TimeInterval = 8.0) -> EventLoopFuture<Net_MSG> {
+	func request(_ rq: inout Core_Net_MSG, _ timeout: TimeInterval = 8.0) -> EventLoopFuture<Core_Net_MSG> {
 		rq.id = SandpolisUtil.rq()
 		rq.from = cvid
 
-		let p = responseLoop.makePromise(of: Net_MSG.self)
+		let p = responseLoop.makePromise(of: Core_Net_MSG.self)
 		responseHandler.register(rq.id, p, timeout)
 
 		_ = channel.writeAndFlush(rq)
@@ -151,7 +151,7 @@ public class SandpolisConnection {
 	/// A non-blocking method that sends an event.
 	///
 	/// - Parameter rq: The event message
-	func send(_ ev: inout Net_MSG) {
+	func send(_ ev: inout Core_Net_MSG) {
 		_ = channel.writeAndFlush(ev)
 	}
 
@@ -161,45 +161,48 @@ public class SandpolisConnection {
 	///   - username: The user's username
 	///   - password: The user's plaintext password
 	/// - Returns: A response future
-	func login(_ username: String, _ password: String) -> EventLoopFuture<Net_MSG> {
-		var rq = Net_MSG.with {
-			$0.rqLogin = Net_RQ_Login.with {
+	func login(_ username: String, _ password: String) -> EventLoopFuture<Core_Net_MSG> {
+		var rq = Core_Net_MSG.with {
+			$0.payload = try! Google_Protobuf_Any(message: Core_Sv_Msg_RQ_Login.with {
 				$0.username = username
 				$0.password = SHA256.hash(data: password.data(using: .utf8)!).map { String(format: "%02hhx", $0) }.joined()
-			}
+			}, typePrefix: "com.sandpolis.core.sv")
 		}
 
 		os_log("Requesting login for username: %s", username)
 		return request(&rq)
 	}
 
-	/// Login to the connected server.
+	/// Request an ST snapshot.
 	///
 	/// - Parameters:
 	///   - target: The target profile
-	///   - attribute: The attribute to query
+	///   - attribute: The target OID
 	/// - Returns: A response future
-	func query(_ target: SandpolisProfile, _ attribute: String) -> EventLoopFuture<Net_MSG> {
-		var rq = Net_MSG.with {
+	func snapshot_collection(_ target: SandpolisProfile, _ oid: String) -> EventLoopFuture<Core_Instance_ProtoCollection> {
+		var rq = Core_Net_MSG.with {
 			$0.to = target.cvid
-			$0.rqAttributeQuery = Net_RQ_AttributeQuery.with {
-				$0.path = [attribute]
-			}
+			$0.payload = try! Google_Protobuf_Any(message: Core_Net_Msg_RQ_STSnapshot.with {
+				$0.oid = oid
+			}, typePrefix: "com.sandpolis.core.net")
 		}
 
-		os_log("Requesting attribute: %s", attribute)
+		os_log("Requesting snapshot: %s", oid)
 		return request(&rq).map { rs in
-			//target.merge(rs.rsAttributeQuery.result)
-			return rs
+			do {
+				return try Core_Instance_ProtoCollection.init(unpackingAny: rs.payload)
+			} catch {
+				return Core_Instance_ProtoCollection.init()
+			}
 		}
 	}
 
 	/// Open a new profile stream.
 	///
 	/// - Returns: A response future
-	func openProfileStream() -> EventLoopFuture<Net_MSG> {
+	func openProfileStream() -> EventLoopFuture<Core_Net_MSG> {
 		let stream = SandpolisStream(self, SandpolisUtil.stream())
-		stream.register { (m: Net_MSG) -> Void in
+		stream.register { (m: Core_Net_MSG) -> Void in
 			let ev = m.evProfileStream
 			if ev.online {
 
@@ -228,7 +231,7 @@ public class SandpolisConnection {
 		}
 		streams.append(stream)
 
-		var rq = Net_MSG.with {
+		var rq = Core_Net_MSG.with {
 			$0.rqProfileStream = Net_RQ_ProfileStream.with {
 				$0.id = stream.id
 			}

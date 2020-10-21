@@ -11,13 +11,18 @@
 //=========================================================S A N D P O L I S==//
 import Foundation
 
-class Attribute {
-	var path: String
-	var title: String
-	var value: String?
+class STAttribute<T> {
 
-	init(_ path: String, _ title: String) {
-		self.path = path
-		self.title = title
+	/// The attribute's OID
+	let oid: String
+
+	/// The attribute's current value
+	var value: T?
+
+	/// The timestamp associated with the attribute's current value
+	var timestamp: Date?
+	
+	init(_ oid: String) {
+		self.oid = oid
 	}
 }

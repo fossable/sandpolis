@@ -85,15 +85,13 @@ class TerminalViewController: UIViewController, WKNavigationDelegate, WKUIDelega
 
 					if let stream = self.stream {
 						// Inform stream of change
-						var ev = Net_MSG.with {
+						var ev = Core_Net_MSG.with {
 							$0.id = stream.id
 							$0.to = self.profile.cvid
 							$0.from = stream.connection.cvid
-							$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-								$0.evShellStream = Net_EV_ShellStream.with {
-									$0.cols = self.cols
-									$0.rows = self.rows
-								}
+							$0.payload = try! Google_Protobuf_Any(message: Plugin_Shell_Msg_EV_ShellStream.with {
+								$0.cols = self.cols
+								$0.rows = self.rows
 							}, typePrefix: "com.sandpolis.plugin.shell")
 						}
 						stream.connection.send(&ev)
@@ -464,14 +462,12 @@ class TerminalViewController: UIViewController, WKNavigationDelegate, WKUIDelega
 	}
 
 	func insertText(_ text: String) {
-		var ev = Net_MSG.with {
+		var ev = Core_Net_MSG.with {
 			$0.id = stream.id
 			$0.to = profile.cvid
 			$0.from = stream.connection.cvid
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.evShellStream = Net_EV_ShellStream.with {
-					$0.data = text.data(using: .utf8)!
-				}
+			$0.payload = try! Google_Protobuf_Any(message: Plugin_Shell_Msg_EV_ShellStream.with {
+				$0.data = text.data(using: .utf8)!
 			}, typePrefix: "com.sandpolis.plugin.shell")
 		}
 		stream.connection.send(&ev)

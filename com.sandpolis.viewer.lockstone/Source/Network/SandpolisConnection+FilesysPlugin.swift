@@ -25,15 +25,13 @@ extension SandpolisConnection {
 	///   - sizes: Whether file sizes will be returned
 	/// - Returns: A response future
 	func fm_list(_ target: Int32, _ path: String, mtimes: Bool, sizes: Bool) -> EventLoopFuture<Any> {
-		var rq = Net_MSG.with {
+		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_FilesysMSG.with {
-				$0.rqFileListing = Net_RQ_FileListing.with {
-					$0.path = path
-					$0.options = Net_FsHandleOptions.with {
-						$0.mtime = mtimes
-						$0.size = sizes
-					}
+			$0.payload = try! Google_Protobuf_Any(message: Plugin_Filesys_Msg_RQ_FileListing.with {
+				$0.path = path
+				$0.options = Plugin_Filesys_Msg_FsHandleOptions.with {
+					$0.mtime = mtimes
+					$0.size = sizes
 				}
 			}, typePrefix: "com.sandpolis.plugin.filesys")
 		}
@@ -41,9 +39,9 @@ extension SandpolisConnection {
 		os_log("Requesting file listing for client: %d, path: %s", target, path)
 		return request(&rq).map { rs in
 			do {
-				return try Net_FilesysMSG.init(unpackingAny: rs.plugin)
+				return try Plugin_Filesys_Msg_RS_FileListing.init(unpackingAny: rs.payload)
 			} catch {
-				return rs.rsOutcome
+				return try! Core_Foundation_Outcome.init(unpackingAny: rs.payload)
 			}
 		}
 	}
@@ -54,21 +52,20 @@ extension SandpolisConnection {
 	/// - Parameter path: The target file
 	/// - Returns: A response future
 	func fm_delete(_ target: Int32, _ path: String) -> EventLoopFuture<Any> {
-		var rq = Net_MSG.with {
+		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_FilesysMSG.with {
-				$0.rqFileDelete = Net_RQ_FileDelete.with {
-					$0.target = [path]
-				}
+			$0.payload = try! Google_Protobuf_Any(message: Plugin_Filesys_Msg_RQ_FileDelete.with {
+				$0.target = [path]
 			}, typePrefix: "com.sandpolis.plugin.filesys")
 		}
 
 		os_log("Requesting file deletion for client: %d, path: %s", target, path)
 		return request(&rq).map { rs in
 			do {
-				return try Net_FilesysMSG.init(unpackingAny: rs.plugin)
+				return try Core_Foundation_Outcome.init(unpackingAny: rs.payload)
 			} catch {
-				return rs.rsOutcome
+				// TODO
+				return try! Core_Foundation_Outcome.init(unpackingAny: rs.payload)
 			}
 		}
 	}

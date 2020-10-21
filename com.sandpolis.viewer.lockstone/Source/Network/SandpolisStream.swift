@@ -10,6 +10,7 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 import NIO
+import SwiftProtobuf
 
 /// Represents the endpoint of a server stream
 class SandpolisStream {
@@ -18,29 +19,29 @@ class SandpolisStream {
 
 	let id: Int32
 
-	private var listeners = [(Net_MSG) -> Void]()
+	private var listeners = [(Core_Net_MSG) -> Void]()
 
 	init(_ connection: SandpolisConnection, _ id: Int32) {
 		self.connection = connection
 		self.id = id
 	}
 
-	func consume(_ data: Net_MSG) {
+	func consume(_ data: Core_Net_MSG) {
 		for listener in listeners {
 			listener(data)
 		}
 	}
 
-	func register(_ handler: @escaping (Net_MSG) -> Void) {
+	func register(_ handler: @escaping (Core_Net_MSG) -> Void) {
 		listeners.append(handler)
 	}
 
 	/// Close the stream
-	func close() -> EventLoopFuture<Net_MSG> {
-		var rq = Net_MSG.with {
-			$0.rqStreamStop = Net_RQ_StreamStop.with {
+	func close() -> EventLoopFuture<Core_Net_MSG> {
+		var rq = Core_Net_MSG.with {
+			$0.payload = try! Google_Protobuf_Any(message: Core_Net_Msg_RQ_StreamStop.with {
 				$0.id = id
-			}
+			}, typePrefix: "com.sandpolis.core.net")
 		}
 
 		return connection.request(&rq)

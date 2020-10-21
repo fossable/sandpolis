@@ -52,10 +52,13 @@ extension UIViewController {
 			if let connection = connection {
 				let login = connection.login(username, password)
 				login.whenSuccess { rs in
-					if rs.rsOutcome.result {
-						completion(connection)
-					} else {
-						self.alertError("Login failure", "Invalid credentials")
+					do {
+						if try Core_Foundation_Outcome.init(unpackingAny: rs.payload).result {
+							self.alertError("Login failure", "Invalid credentials")
+							completion(nil)
+						}
+					} catch {
+						self.alertError("Login failure", "Invalid server response")
 						completion(nil)
 					}
 				}

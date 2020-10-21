@@ -29,7 +29,7 @@ class Overview: UIViewController {
 		super.viewDidLoad()
 
 		// Set screenshot if it already exists
-		if let data = profile.screenshot, let image = UIImage(data: data) {
+		if let data = profile.screenshot.value, let image = UIImage(data: data) {
 			screenshotHeight.constant = min(screenshot.bounds.width, (image.size.height / image.size.width) * screenshot.bounds.width)
 			screenshot.image = image
 		} else {
@@ -38,16 +38,16 @@ class Overview: UIViewController {
 		}
 
 		// Set location
-		if let code = profile.location?.countryCode {
+		if let code = profile.ipLocationCountryCode.value {
 			flag.image = UIImage(named: "flag/\(code.lowercased())")
-			location.text = FormatUtil.formatProfileLocation(profile)
+			location.text = FormatUtil.formatProfileLocation(city: profile.ipLocationCity.value, region: profile.ipLocationRegion.value, country: profile.ipLocationCountry.value)
 		} else {
 			flag.isHidden = true
-			location.text = profile.ipAddress
+			location.text = profile.ipAddress.value
 		}
 
 		// Set hostname
-		if let host = profile.hostname {
+		if let host = profile.hostname.value {
 			hostname.text = host
 		} else {
 			hostname.text = profile.uuid
@@ -55,14 +55,14 @@ class Overview: UIViewController {
 
 		// Set platform information
 		platformLogo.image = profile.platformIcon
-		switch profile.platform {
+		switch profile.osFamily.value {
 		case .linux:
 			platform.text = "Linux"
-		case .macos:
+		case .darwin:
 			platform.text = "macOS"
 		case .windows:
 			platform.text = "Windows"
-		case .freebsd:
+		case .bsd:
 			platform.text = "FreeBSD"
 		default:
 			platform.text = "Unknown OS"
@@ -93,11 +93,11 @@ class Overview: UIViewController {
 		screenshotProgress.startAnimating()
 		SandpolisUtil.connection.screenshot(profile.cvid).whenComplete { result in
 			switch result {
-			case .success(let rs as Net_DesktopMSG):
-				self.profile.screenshot = rs.rsScreenshot.data
+			case .success(let rs as Plugin_Desktop_Msg_RS_Screenshot):
+				self.profile.screenshot.value = rs.data
 				DispatchQueue.main.async {
 					self.screenshotProgress.stopAnimating()
-					if let image = UIImage(data: self.profile.screenshot!) {
+					if let image = UIImage(data: self.profile.screenshot.value!) {
 						self.screenshotHeight.constant = min(self.screenshot.bounds.width, (image.size.height / image.size.width) * self.screenshot.bounds.width)
 						self.screenshot.image = image
 					}

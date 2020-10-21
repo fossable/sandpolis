@@ -27,7 +27,7 @@ class MacroResultHeader: UITableViewHeaderFooterView {
 	var section: Int = 0
 
 	func setContent(_ profile: SandpolisProfile) {
-		hostname.text = profile.hostname
+		hostname.text = profile.hostname.value
 		platform.image = profile.platformIcon
 	}
 

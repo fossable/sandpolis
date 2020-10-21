@@ -61,7 +61,7 @@ class ShellSession: UIViewController {
 		}
 	}
 
-	public func onEvent(_ ev: Net_EV_ShellStream) {
+	public func onEvent(_ ev: Plugin_Shell_Msg_EV_ShellStream) {
 		DispatchQueue.main.async {
 			self.terminal.write(ev.data)
 		}
@@ -74,16 +74,16 @@ class ShellSession: UIViewController {
 		}
 	}
 
-	private func getShellType() -> Net_Shell? {
+	private func getShellType() -> Plugin_Shell_Msg_Shell? {
 		switch shellSelector.selectedSegmentIndex {
 		case 0:
-			return Net_Shell.pwsh
+			return Plugin_Shell_Msg_Shell.pwsh
 		case 1:
-			return Net_Shell.cmd
+			return Plugin_Shell_Msg_Shell.cmd
 		case 2:
-			return Net_Shell.bash
+			return Plugin_Shell_Msg_Shell.bash
 		case 3:
-			return Net_Shell.zsh
+			return Plugin_Shell_Msg_Shell.zsh
 		default:
 			return nil
 		}

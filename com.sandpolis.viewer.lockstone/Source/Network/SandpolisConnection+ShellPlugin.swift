@@ -24,22 +24,22 @@ extension SandpolisConnection {
 	/// - Parameter cols: The initial column setting
 	/// - Parameter rows: The initial rows setting
 	/// - Returns: The stream
-	func shell_session(_ target: Int32, _ receiver: ShellSession, _ shell: Net_Shell, _ cols: Int32, _ rows: Int32) -> SandpolisStream {
+	func shell_session(_ target: Int32, _ receiver: ShellSession, _ shell: Plugin_Shell_Msg_Shell, _ cols: Int32, _ rows: Int32) -> SandpolisStream {
 		let stream = SandpolisStream(self, SandpolisUtil.stream())
-		stream.register { (m: Net_MSG) -> Void in
-			receiver.onEvent(try! Net_ShellMSG.init(unpackingAny: m.plugin).evShellStream)
+		stream.register { (m: Core_Net_MSG) -> Void in
+			if let ev = try? Plugin_Shell_Msg_EV_ShellStream.init(unpackingAny: m.payload) {
+				receiver.onEvent(ev)
+			}
 		}
 		streams.append(stream)
 
-		var rq = Net_MSG.with {
+		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.rqShellStream = Net_RQ_ShellStream.with {
-					$0.id = stream.id
-					$0.type = shell
-					$0.cols = cols
-					$0.rows = rows
-				}
+			$0.payload = try! Google_Protobuf_Any(message: Plugin_Shell_Msg_RQ_ShellStream.with {
+				$0.id = stream.id
+				$0.type = shell
+				$0.cols = cols
+				$0.rows = rows
 			}, typePrefix: "com.sandpolis.plugin.shell")
 		}
 
@@ -53,19 +53,23 @@ extension SandpolisConnection {
 	/// - Parameter target: The target client's CVID
 	/// - Returns: A response future
 	func shell_list(_ target: Int32) -> EventLoopFuture<Any> {
-		var rq = Net_MSG.with {
+		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.rqListShells = Net_RQ_ListShells()
-			}, typePrefix: "com.sandpolis.plugin.shell")
+			$0.payload = try! Google_Protobuf_Any(message: Plugin_Shell_Msg_RQ_ListShells(), typePrefix: "com.sandpolis.plugin.shell")
 		}
 
 		os_log("Requesting shell list for client: %d", target)
 		return request(&rq).map { rs in
 			do {
-				return try Net_ShellMSG.init(unpackingAny: rs.plugin)
+				return try Plugin_Shell_Msg_RS_ListShells.init(unpackingAny: rs.payload)
 			} catch {
-				return rs.rsOutcome
+				do {
+					return try Core_Foundation_Outcome.init(unpackingAny: rs.payload)
+				} catch {
+					return Core_Foundation_Outcome.with {
+						$0.result = false
+					}
+				}
 			}
 		}
 	}
@@ -75,21 +79,21 @@ extension SandpolisConnection {
 	/// - Parameter target: The target client's CVID
 	/// - Returns: A response future
 	func poweroff(_ target: Int32) -> EventLoopFuture<Any> {
-		var rq = Net_MSG.with {
+		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.rqPowerChange = Net_RQ_PowerChange.with {
-					$0.change = .poweroff
-				}
+			$0.payload = try! Google_Protobuf_Any(message: Plugin_Shell_Msg_RQ_PowerChange.with {
+				$0.change = .poweroff
 			}, typePrefix: "com.sandpolis.plugin.shell")
 		}
 
 		os_log("Requesting poweroff for client: %d", target)
 		return request(&rq).map { rs in
 			do {
-				return try Net_ShellMSG.init(unpackingAny: rs.plugin)
+				return try Core_Foundation_Outcome.init(unpackingAny: rs.payload)
 			} catch {
-				return rs.rsOutcome
+				return Core_Foundation_Outcome.with {
+					$0.result = false
+				}
 			}
 		}
 	}
@@ -99,21 +103,21 @@ extension SandpolisConnection {
 	/// - Parameter target: The target client's CVID
 	/// - Returns: A response future
 	func restart(_ target: Int32) -> EventLoopFuture<Any> {
-		var rq = Net_MSG.with {
+		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.rqPowerChange = Net_RQ_PowerChange.with {
-					$0.change = .restart
-				}
+			$0.payload = try! Google_Protobuf_Any(message: Plugin_Shell_Msg_RQ_PowerChange.with {
+				$0.change = .restart
 			}, typePrefix: "com.sandpolis.plugin.shell")
 		}
 
 		os_log("Requesting restart for client: %d", target)
 		return request(&rq).map { rs in
 			do {
-				return try Net_ShellMSG.init(unpackingAny: rs.plugin)
+				return try Core_Foundation_Outcome.init(unpackingAny: rs.payload)
 			} catch {
-				return rs.rsOutcome
+				return Core_Foundation_Outcome.with {
+					$0.result = false
+				}
 			}
 		}
 	}
@@ -125,23 +129,23 @@ extension SandpolisConnection {
 	/// - Parameter script: The macro script
 	/// - Parameter timeout: The execution timeout in seconds
 	/// - Returns: A response future
-	func execute(_ target: Int32, _ shell: Net_Shell, _ script: String, _ timeout: TimeInterval = 0) -> EventLoopFuture<Any> {
-		var rq = Net_MSG.with {
+	func execute(_ target: Int32, _ shell: Plugin_Shell_Msg_Shell, _ script: String, _ timeout: TimeInterval = 0) -> EventLoopFuture<Any> {
+		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_ShellMSG.with {
-				$0.rqExecute = Net_RQ_Execute.with {
-					$0.type = shell
-					$0.command = script
-				}
+			$0.payload = try! Google_Protobuf_Any(message: Plugin_Shell_Msg_RQ_Execute.with {
+				$0.type = shell
+				$0.command = script
 			}, typePrefix: "com.sandpolis.plugin.shell")
 		}
 
 		os_log("Requesting macro execution for client: %d", target)
-		return request(&rq, timeout).map { rs in
+		return request(&rq).map { rs in
 			do {
-				return try Net_ShellMSG.init(unpackingAny: rs.plugin)
+				return try Core_Foundation_Outcome.init(unpackingAny: rs.payload)
 			} catch {
-				return rs.rsOutcome
+				return Core_Foundation_Outcome.with {
+					$0.result = false
+				}
 			}
 		}
 	}

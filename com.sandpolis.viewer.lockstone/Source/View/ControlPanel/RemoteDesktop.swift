@@ -24,7 +24,7 @@ class RemoteDesktop: UIViewController {
 			stream = nil
 		}
 		if stream != nil {
-			stream.close()
+			_ = stream.close()
 		}
 	}
 
@@ -32,7 +32,7 @@ class RemoteDesktop: UIViewController {
 		stream = SandpolisUtil.connection.remote_desktop(profile.cvid, self)
 	}
 
-	public func onEvent(_ ev: Net_EV_DesktopStream) {
+	public func onEvent(_ ev: Plugin_Desktop_Msg_EV_DesktopStream) {
 		var rect: CGRect
 		switch ev.data! {
 		case .dirtyBlock:

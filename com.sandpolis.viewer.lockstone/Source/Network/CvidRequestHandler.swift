@@ -10,11 +10,12 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 import NIO
+import SwiftProtobuf
 import Foundation
 
 /// Handles the CVID handshake
 final class CvidRequestHandler: ChannelInboundHandler, RemovableChannelHandler {
-	typealias InboundIn = Net_MSG
+	typealias InboundIn = Core_Net_MSG
 
 	private let connection: SandpolisConnection
 
@@ -26,20 +27,20 @@ final class CvidRequestHandler: ChannelInboundHandler, RemovableChannelHandler {
 		// Autoremove
 		_ = context.channel.pipeline.removeHandler(self)
 
-		let rs = self.unwrapInboundIn(data).rsCvid
+		let rs = try! Core_Net_Msg_RS_Cvid.init(unpackingAny: self.unwrapInboundIn(data).payload)
 		connection.cvid = rs.cvid
 		connection.handshakeCompleted = true
 		connection.connectionPromise.succeed(Void())
 	}
 
 	func channelActive(context: ChannelHandlerContext) {
-		let rq = Net_MSG.with({
-			$0.rqCvid = Net_RQ_Cvid.with({
-				$0.instance = Util_Instance.viewer
-				$0.instanceFlavor = Util_InstanceFlavor.lockstone
+		let rq = Core_Net_MSG.with {
+			$0.payload = try! Google_Protobuf_Any(message: Core_Net_Msg_RQ_Cvid.with {
+				$0.instance = Core_Instance_InstanceType.viewer
+				$0.instanceFlavor = Core_Instance_InstanceFlavor.lockstone
 				$0.uuid = UserDefaults.standard.string(forKey: "uuid")!
-			})
-		})
+			}, typePrefix: "com.sandpolis.core.net")
+		}
 
 		_ = context.channel.writeAndFlush(rq)
 	}

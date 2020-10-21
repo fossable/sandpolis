@@ -19,7 +19,7 @@ class FileCell: UITableViewCell {
 	@IBOutlet weak var size: UILabel!
 	@IBOutlet weak var mtime: UILabel!
 
-	func setContent(_ file: Net_FileListlet) {
+	func setContent(_ file: Plugin_Filesys_Msg_FileListlet) {
 		// File name
 		name.text = file.name
 

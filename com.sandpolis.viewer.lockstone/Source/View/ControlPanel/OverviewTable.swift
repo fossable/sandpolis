@@ -35,26 +35,24 @@ class OverviewTable: UITableViewController {
 		tableView.allowsSelection = false
 
 		// Temporarily set values
-		switch profile.platform {
+		switch profile.osFamily.value {
 		case .linux:
 			info[0].1[0].value = "Linux"
-		case .macos:
+		case .darwin:
 			info[0].1[0].value = "macOS"
 		case .windows:
 			info[0].1[0].value = "Windows"
-		case .freebsd:
+		case .bsd:
 			info[0].1[0].value = "FreeBSD"
 		default:
 			info[0].1[0].value = "Unknown OS"
 		}
-		info[0].1[1].value = profile.hostname
-		if let location = profile.location {
-			info[1].1[0].value = String(location.latitude)
-			info[1].1[1].value = String(location.longitude)
-			info[1].1[2].value = location.city
-			info[1].1[3].value = location.country
-			info[1].1[4].value = location.isp
-		}
+		info[0].1[1].value = profile.hostname.value
+		info[1].1[0].value = "\(profile.ipLocationLatitude.value!)"
+		info[1].1[1].value = "\(profile.ipLocationLongitude.value!)"
+		info[1].1[2].value = profile.ipLocationCity.value
+		info[1].1[3].value = profile.ipLocationCountry.value
+		info[1].1[4].value = profile.ipLocationIsp.value
 	}
 
 	override func viewWillAppear(_ animated: Bool) {

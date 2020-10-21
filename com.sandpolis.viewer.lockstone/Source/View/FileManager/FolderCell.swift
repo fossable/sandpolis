@@ -17,7 +17,7 @@ class FolderCell: UITableViewCell {
 	@IBOutlet weak var icon: UIImageView!
 	@IBOutlet weak var name: UILabel!
 
-	func setContent(_ file: Net_FileListlet) {
+	func setContent(_ file: Plugin_Filesys_Msg_FileListlet) {
 		// Directory name
 		name.text = file.name
 	}

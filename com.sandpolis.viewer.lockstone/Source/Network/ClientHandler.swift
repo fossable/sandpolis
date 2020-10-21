@@ -15,7 +15,7 @@ import os
 
 /// A handler for non-request messages
 final class ClientHandler: ChannelInboundHandler {
-	typealias InboundIn = Net_MSG
+	typealias InboundIn = Core_Net_MSG
 
 	private let connection: SandpolisConnection
 

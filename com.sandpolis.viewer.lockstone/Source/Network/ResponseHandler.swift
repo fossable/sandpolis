@@ -14,10 +14,10 @@ import NIO
 
 /// A handler for request responses
 final class ResponseHandler: ChannelInboundHandler {
-	typealias InboundIn = Net_MSG
+	typealias InboundIn = Core_Net_MSG
 
 	/// A map of response IDs
-	private var responseMap: [Int32: (EventLoopPromise<Net_MSG>, Timer?)] = [:]
+	private var responseMap: [Int32: (EventLoopPromise<Core_Net_MSG>, Timer?)] = [:]
 
 	/// An internal queue for synchronization
 	private let queue = DispatchQueue(label: "ResponseHandlerInternal")
@@ -46,7 +46,7 @@ final class ResponseHandler: ChannelInboundHandler {
 	/// - Parameter id: The message id
 	/// - Parameter promise: The response promise
 	/// - Parameter timeout: The timeout
-	public func register(_ id: Int32, _ promise: EventLoopPromise<Net_MSG>, _ timeout: TimeInterval) {
+	public func register(_ id: Int32, _ promise: EventLoopPromise<Core_Net_MSG>, _ timeout: TimeInterval) {
 		queue.sync {
 			if let p = self.responseMap.removeValue(forKey: id) {
 				// Cancel timer before overwriting

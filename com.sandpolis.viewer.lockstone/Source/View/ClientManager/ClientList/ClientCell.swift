@@ -18,8 +18,8 @@ class ClientCell: UITableViewCell {
 	@IBOutlet weak var addressLabel: UILabel!
 
 	func setContent(_ profile: SandpolisProfile) {
-		nameLabel.text = profile.hostname
-		addressLabel.text = profile.ipAddress
+		nameLabel.text = profile.hostname.value
+		addressLabel.text = profile.ipAddress.value
 
 		// Set platform information
 		platform.image = profile.platformIcon

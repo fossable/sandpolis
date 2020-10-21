@@ -34,7 +34,7 @@ class MacroSelect: UITableViewController {
 
 			self.macroList = macros.filter { macro in
 
-				let type: Net_Shell
+				let type: Plugin_Shell_Msg_Shell
 				switch macro["type"] as! String {
 				case "powershell":
 					type = .pwsh

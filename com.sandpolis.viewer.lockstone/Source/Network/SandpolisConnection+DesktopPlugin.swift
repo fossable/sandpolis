@@ -21,19 +21,19 @@ extension SandpolisConnection {
 	/// - Parameter target: The target client's CVID
 	/// - Returns: A response future
 	func screenshot(_ target: Int32) -> EventLoopFuture<Any> {
-		var rq = Net_MSG.with {
+		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_DesktopMSG.with {
-				$0.rqScreenshot = Net_RQ_Screenshot()
-			}, typePrefix: "com.sandpolis.plugin.desktop")
+			$0.payload = try! Google_Protobuf_Any(message: Plugin_Desktop_Msg_RQ_Screenshot(), typePrefix: "com.sandpolis.plugin.desktop")
 		}
 
 		os_log("Requesting screenshot for client: %d", target)
 		return request(&rq).map { rs in
 			do {
-				return try Net_DesktopMSG.init(unpackingAny: rs.plugin)
+				return try Plugin_Desktop_Msg_RS_Screenshot.init(unpackingAny: rs.payload)
 			} catch {
-				return rs.rsOutcome
+				return Core_Foundation_Outcome.with {
+					$0.result = false
+				}
 			}
 		}
 	}
@@ -45,17 +45,19 @@ extension SandpolisConnection {
 	/// - Returns: The stream
 	func remote_desktop(_ target: Int32, _ receiver: RemoteDesktop) -> SandpolisStream {
 		let stream = SandpolisStream(self, SandpolisUtil.stream())
-		stream.register { (m: Net_MSG) -> Void in
-			receiver.onEvent(try! Net_DesktopMSG.init(unpackingAny: m.plugin).evDesktopStream)
+		stream.register { (ev: Core_Net_MSG) -> Void in
+			do {
+				receiver.onEvent(try Plugin_Desktop_Msg_EV_DesktopStream.init(unpackingAny: ev.payload))
+			} catch {
+				os_log("Failed to decode stream event")
+			}
 		}
 		streams.append(stream)
 
-		var rq = Net_MSG.with {
+		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.plugin = try! Google_Protobuf_Any(message: Net_DesktopMSG.with {
-				$0.rqDesktopStream = Net_RQ_DesktopStream.with {
-					$0.id = stream.id
-				}
+			$0.payload = try! Google_Protobuf_Any(message:  Plugin_Desktop_Msg_RQ_DesktopStream.with {
+				$0.id = stream.id
 			}, typePrefix: "com.sandpolis.plugin.desktop")
 		}
 
