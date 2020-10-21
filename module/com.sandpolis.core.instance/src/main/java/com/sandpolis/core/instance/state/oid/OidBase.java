@@ -27,6 +27,8 @@ public abstract class OidBase implements Oid {
 	 */
 	private String dotted;
 
+	protected final long namespace;
+
 	/**
 	 * The components of the oid.
 	 */
@@ -60,6 +62,11 @@ public abstract class OidBase implements Oid {
 	@Override
 	public int hashCode() {
 		return value.hashCode();
+	}
+
+	@Override
+	public long namespace() {
+		return namespace;
 	}
 
 	@Override
@@ -102,7 +109,7 @@ public abstract class OidBase implements Oid {
 		return (E) head(size() - 1);
 	}
 
-	protected <E extends RelativeOid<?>> E relativize(Function<long[], E> cons, Oid oid) {
+	protected <E extends RelativeOid> E relativize(Function<long[], E> cons, Oid oid) {
 		if (oid == null)
 			return cons.apply(value.clone());
 

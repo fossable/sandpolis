@@ -214,7 +214,7 @@ public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument>
 	}
 
 	@Override
-	public ProtoDocument snapshot(RelativeOid<?>... oids) {
+	public ProtoDocument snapshot(RelativeOid... oids) {
 		var snapshot = ProtoDocument.newBuilder().setTag(tag);
 
 		if (oids.length == 0) {

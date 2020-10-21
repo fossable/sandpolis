@@ -20,18 +20,17 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.state.st.STAttribute;
 import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.st.STDocument;
-import com.sandpolis.core.instance.state.vst.VirtObject;
 
-public interface RelativeOid<T> extends Oid {
+public interface RelativeOid extends Oid {
 
-	public static RelativeOid<?> newOid(long... value) {
+	public static RelativeOid newOid(long... value) {
 		switch (OidUtil.getOidType(value[value.length - 1])) {
 		case OTYPE_ATTRIBUTE:
 			return new STAttributeOid<>(value);
 		case OTYPE_DOCUMENT:
-			return new STDocumentOid<>(value);
+			return new STDocumentOid(value);
 		case OTYPE_COLLECTION:
-			return new STCollectionOid<>(value);
+			return new STCollectionOid(value);
 		default:
 			throw new IllegalArgumentException();
 		}
@@ -42,7 +41,7 @@ public interface RelativeOid<T> extends Oid {
 	 *
 	 * @param <T> The type of the corresponding attribute's value
 	 */
-	public static class STAttributeOid<T> extends OidBase implements RelativeOid<T> {
+	public static class STAttributeOid<T> extends OidBase implements RelativeOid {
 
 		public STAttributeOid(String oid) {
 			super(oid);
@@ -72,7 +71,7 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		@Override
-		public RelativeOid.STDocumentOid<?> parent() {
+		public RelativeOid.STDocumentOid parent() {
 			return parent(RelativeOid.STDocumentOid::new);
 		}
 
@@ -87,7 +86,7 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		@Override
-		public RelativeOid<?> head(int length) {
+		public RelativeOid head(int length) {
 			return head(RelativeOid::newOid, length);
 		}
 
@@ -102,7 +101,7 @@ public interface RelativeOid<T> extends Oid {
 	 *
 	 * @param <T> The type of the corresponding collection
 	 */
-	public static class STCollectionOid<T extends VirtObject> extends OidBase implements RelativeOid<T> {
+	public static class STCollectionOid extends OidBase implements RelativeOid {
 
 		public STCollectionOid(String oid) {
 			super(oid);
@@ -119,40 +118,40 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		@Override
-		public RelativeOid.STCollectionOid<?> resolve(long... tags) {
+		public RelativeOid.STCollectionOid resolve(long... tags) {
 			return resolve(RelativeOid.STCollectionOid::new, tags);
 		}
 
-		public RelativeOid.STCollectionOid<?> resolveLocal() {
+		public RelativeOid.STCollectionOid resolveLocal() {
 			return resolve(OidUtil.uuidToTag(Core.UUID));
 		}
 
-		public RelativeOid.STCollectionOid<?> resolveUuid(String uuid) {
+		public RelativeOid.STCollectionOid resolveUuid(String uuid) {
 			return resolve(OidUtil.uuidToTag(uuid));
 		}
 
 		@Override
-		public RelativeOid.STCollectionOid<T> tail(int offset) {
+		public RelativeOid.STCollectionOid tail(int offset) {
 			return tail(RelativeOid.STCollectionOid::new, offset);
 		}
 
 		@Override
-		public RelativeOid.STDocumentOid<?> parent() {
+		public RelativeOid.STDocumentOid parent() {
 			return parent(RelativeOid.STDocumentOid::new);
 		}
 
 		@Override
-		public RelativeOid.STDocumentOid<?> child(long component) {
+		public RelativeOid.STDocumentOid child(long component) {
 			return child(RelativeOid.STDocumentOid::new, component);
 		}
 
 		@Override
-		public RelativeOid<?> head(int length) {
+		public RelativeOid head(int length) {
 			return head(RelativeOid::newOid, length);
 		}
 
 		@Override
-		public RelativeOid.STCollectionOid<T> relativize(Oid oid) {
+		public RelativeOid.STCollectionOid relativize(Oid oid) {
 			return relativize(RelativeOid.STCollectionOid::new, oid);
 		}
 	}
@@ -162,7 +161,7 @@ public interface RelativeOid<T> extends Oid {
 	 *
 	 * @param <T> The type of the corresponding document
 	 */
-	public static class STDocumentOid<T extends VirtObject> extends OidBase implements RelativeOid<T> {
+	public static class STDocumentOid extends OidBase implements RelativeOid {
 
 		public STDocumentOid(String oid) {
 			super(oid);
@@ -179,40 +178,40 @@ public interface RelativeOid<T> extends Oid {
 		}
 
 		@Override
-		public RelativeOid.STDocumentOid<?> resolve(long... tags) {
+		public RelativeOid.STDocumentOid resolve(long... tags) {
 			return resolve(RelativeOid.STDocumentOid::new, tags);
 		}
 
-		public RelativeOid.STDocumentOid<?> resolveLocal() {
+		public RelativeOid.STDocumentOid resolveLocal() {
 			return resolve(OidUtil.uuidToTag(Core.UUID));
 		}
 
-		public RelativeOid.STDocumentOid<?> resolveUuid(String uuid) {
+		public RelativeOid.STDocumentOid resolveUuid(String uuid) {
 			return resolve(OidUtil.uuidToTag(uuid));
 		}
 
 		@Override
-		public RelativeOid<?> parent() {
+		public RelativeOid parent() {
 			return parent(RelativeOid::newOid);
 		}
 
 		@Override
-		public RelativeOid.STDocumentOid<T> tail(int offset) {
+		public RelativeOid.STDocumentOid tail(int offset) {
 			return tail(RelativeOid.STDocumentOid::new, offset);
 		}
 
 		@Override
-		public RelativeOid<?> child(long component) {
+		public RelativeOid child(long component) {
 			return child(RelativeOid::newOid, component);
 		}
 
 		@Override
-		public RelativeOid<?> head(int length) {
+		public RelativeOid head(int length) {
 			return head(RelativeOid::newOid, length);
 		}
 
 		@Override
-		public RelativeOid.STDocumentOid<T> relativize(Oid oid) {
+		public RelativeOid.STDocumentOid relativize(Oid oid) {
 			return relativize(RelativeOid.STDocumentOid::new, oid);
 		}
 	}

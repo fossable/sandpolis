@@ -1,8 +1,26 @@
 package com.sandpolis.core.instance.state.vst;
 
-import com.sandpolis.core.instance.state.st.STCollection;
+import java.util.Map;
+import java.util.Optional;
 
-public class VirtCollection implements VirtObject {
+import com.sandpolis.core.foundation.Result.ErrorCode;
 
-	protected STCollection collection;
+public class VirtCollection<V extends VirtDocument> implements VirtObject {
+
+	protected Map<Long, V> documents;
+
+	public void add(V object) {
+		if (object.complete() != ErrorCode.OK)
+			throw new IncompleteObjectException();
+
+		documents.put(object.tag(), object);
+	}
+
+	public long count() {
+		return documents.size();
+	}
+
+	public Optional<V> get(long tag) {
+		return Optional.ofNullable(documents.get(tag));
+	}
 }

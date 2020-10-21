@@ -47,7 +47,7 @@ public interface STAttributeContainer {
 	 */
 	public void setAttribute(long tag, STAttribute<?> attribute);
 
-	public default <E> STAttribute<E> attribute(RelativeOid<E> oid) {
+	public default <E> STAttribute<E> attribute(RelativeOid oid) {
 		if (!oid.isConcrete())
 			throw new GenericOidException(oid);
 

@@ -22,7 +22,6 @@ import com.sandpolis.core.instance.state.st.AbstractSTObject;
 import com.sandpolis.core.instance.state.st.STAttribute;
 import com.sandpolis.core.instance.state.st.STAttributeValue;
 import com.sandpolis.core.instance.state.st.STObject;
-import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
 
 public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> implements STAttribute<T> {
@@ -113,7 +112,7 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	}
 
 	@Override
-	public ProtoAttribute snapshot(RelativeOid<?>... oids) {
+	public ProtoAttribute snapshot(RelativeOid... oids) {
 		return container.snapshot(oids);
 	}
 

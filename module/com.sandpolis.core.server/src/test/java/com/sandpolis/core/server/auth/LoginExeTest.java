@@ -11,8 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.auth;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
-import static com.sandpolis.core.profile.store.ProfileStore.ProfileStore;
 import static com.sandpolis.core.server.user.UserStore.UserStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,11 +21,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.sandpolis.core.foundation.Result.Outcome;
+import com.sandpolis.core.instance.User.UserConfig;
+import com.sandpolis.core.instance.profile.ProfileStore;
+import com.sandpolis.core.instance.thread.ThreadStore;
 import com.sandpolis.core.net.MsgLogin.RQ_Login;
 import com.sandpolis.core.net.exelet.ExeletTest;
-import com.sandpolis.core.server.auth.LoginExe;
-import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.Result.Outcome;
 
 class LoginExeTest extends ExeletTest {
 

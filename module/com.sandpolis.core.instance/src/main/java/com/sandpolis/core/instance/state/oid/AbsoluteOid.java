@@ -19,25 +19,24 @@ import java.util.Arrays;
 
 import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.VirtObject;
+import com.sandpolis.core.instance.state.st.STAttribute;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
 
-public interface AbsoluteOid<T> extends Oid {
+public interface AbsoluteOid extends Oid {
 
-	public static AbsoluteOid<?> newOid(String value) {
+	public static AbsoluteOid newOid(String value) {
 		return newOid(Arrays.stream(value.split("\\.")).mapToLong(Long::valueOf).toArray());
 	}
 
-	public static AbsoluteOid<?> newOid(long... value) {
+	public static AbsoluteOid newOid(long... value) {
 		switch (OidUtil.getOidType(value[value.length - 1])) {
 		case OTYPE_ATTRIBUTE:
 			return new STAttributeOid<>(value);
 		case OTYPE_DOCUMENT:
-			return new STDocumentOid<>(value);
+			return new STDocumentOid(value);
 		case OTYPE_COLLECTION:
-			return new STCollectionOid<>(value);
+			return new STCollectionOid(value);
 		default:
 			throw new IllegalArgumentException();
 		}
@@ -48,7 +47,7 @@ public interface AbsoluteOid<T> extends Oid {
 	 *
 	 * @param <T> The type of the corresponding attribute's value
 	 */
-	public static class STAttributeOid<T> extends OidBase implements AbsoluteOid<T> {
+	public static class STAttributeOid<T> extends OidBase implements AbsoluteOid {
 
 		public STAttributeOid(String oid) {
 			super(oid);
@@ -78,7 +77,7 @@ public interface AbsoluteOid<T> extends Oid {
 		}
 
 		@Override
-		public AbsoluteOid.STDocumentOid<?> parent() {
+		public AbsoluteOid.STDocumentOid parent() {
 			return parent(AbsoluteOid.STDocumentOid::new);
 		}
 
@@ -93,7 +92,7 @@ public interface AbsoluteOid<T> extends Oid {
 		}
 
 		@Override
-		public AbsoluteOid<?> head(int length) {
+		public AbsoluteOid head(int length) {
 			return head(AbsoluteOid::newOid, length);
 		}
 
@@ -108,7 +107,7 @@ public interface AbsoluteOid<T> extends Oid {
 	 *
 	 * @param <T> The type of the corresponding collection
 	 */
-	public static class STCollectionOid<T extends VirtObject> extends OidBase implements AbsoluteOid<T> {
+	public static class STCollectionOid extends OidBase implements AbsoluteOid {
 
 		public STCollectionOid(String oid) {
 			super(oid);
@@ -125,40 +124,40 @@ public interface AbsoluteOid<T> extends Oid {
 		}
 
 		@Override
-		public AbsoluteOid.STCollectionOid<?> resolve(long... tags) {
+		public AbsoluteOid.STCollectionOid resolve(long... tags) {
 			return resolve(AbsoluteOid.STCollectionOid::new, tags);
 		}
 
-		public AbsoluteOid.STCollectionOid<?> resolveLocal() {
+		public AbsoluteOid.STCollectionOid resolveLocal() {
 			return resolve(OidUtil.uuidToTag(Core.UUID));
 		}
 
-		public AbsoluteOid.STCollectionOid<?> resolveUuid(String uuid) {
+		public AbsoluteOid.STCollectionOid resolveUuid(String uuid) {
 			return resolve(OidUtil.uuidToTag(uuid));
 		}
 
 		@Override
-		public RelativeOid.STCollectionOid<T> tail(int offset) {
+		public RelativeOid.STCollectionOid tail(int offset) {
 			return tail(RelativeOid.STCollectionOid::new, offset);
 		}
 
 		@Override
-		public AbsoluteOid.STDocumentOid<?> parent() {
+		public AbsoluteOid.STDocumentOid parent() {
 			return parent(AbsoluteOid.STDocumentOid::new);
 		}
 
 		@Override
-		public AbsoluteOid.STDocumentOid<?> child(long component) {
+		public AbsoluteOid.STDocumentOid child(long component) {
 			return child(AbsoluteOid.STDocumentOid::new, component);
 		}
 
 		@Override
-		public AbsoluteOid<?> head(int length) {
+		public AbsoluteOid head(int length) {
 			return head(AbsoluteOid::newOid, length);
 		}
 
 		@Override
-		public RelativeOid.STCollectionOid<T> relativize(Oid oid) {
+		public RelativeOid.STCollectionOid relativize(Oid oid) {
 			return relativize(RelativeOid.STCollectionOid::new, oid);
 		}
 	}
@@ -168,7 +167,7 @@ public interface AbsoluteOid<T> extends Oid {
 	 *
 	 * @param <T> The type of the corresponding document
 	 */
-	public static class STDocumentOid<T extends VirtObject> extends OidBase implements AbsoluteOid<T> {
+	public static class STDocumentOid extends OidBase implements AbsoluteOid {
 
 		public STDocumentOid(String oid) {
 			super(oid);
@@ -185,40 +184,40 @@ public interface AbsoluteOid<T> extends Oid {
 		}
 
 		@Override
-		public AbsoluteOid.STDocumentOid<?> resolve(long... tags) {
+		public AbsoluteOid.STDocumentOid resolve(long... tags) {
 			return resolve(AbsoluteOid.STDocumentOid::new, tags);
 		}
 
-		public AbsoluteOid.STDocumentOid<?> resolveLocal() {
+		public AbsoluteOid.STDocumentOid resolveLocal() {
 			return resolve(OidUtil.uuidToTag(Core.UUID));
 		}
 
-		public AbsoluteOid.STDocumentOid<?> resolveUuid(String uuid) {
+		public AbsoluteOid.STDocumentOid resolveUuid(String uuid) {
 			return resolve(OidUtil.uuidToTag(uuid));
 		}
 
 		@Override
-		public AbsoluteOid<?> parent() {
+		public AbsoluteOid parent() {
 			return parent(AbsoluteOid::newOid);
 		}
 
 		@Override
-		public RelativeOid.STDocumentOid<T> tail(int offset) {
+		public RelativeOid.STDocumentOid tail(int offset) {
 			return tail(RelativeOid.STDocumentOid::new, offset);
 		}
 
 		@Override
-		public AbsoluteOid<?> child(long component) {
+		public AbsoluteOid child(long component) {
 			return child(AbsoluteOid::newOid, component);
 		}
 
 		@Override
-		public AbsoluteOid<?> head(int length) {
+		public AbsoluteOid head(int length) {
 			return head(AbsoluteOid::newOid, length);
 		}
 
 		@Override
-		public RelativeOid.STDocumentOid<T> relativize(Oid oid) {
+		public RelativeOid.STDocumentOid relativize(Oid oid) {
 			return relativize(RelativeOid.STDocumentOid::new, oid);
 		}
 	}

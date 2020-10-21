@@ -50,7 +50,7 @@ public interface STDocumentContainer {
 
 	public void forEachDocument(Consumer<STDocument> consumer);
 
-	public default STDocument document(RelativeOid<?> oid) {
+	public default STDocument document(RelativeOid oid) {
 		if (!oid.isConcrete())
 			throw new GenericOidException(oid);
 
@@ -74,7 +74,7 @@ public interface STDocumentContainer {
 		}
 	}
 
-	public default STDocument get(RelativeOid.STDocumentOid<?> oid) {
+	public default STDocument get(RelativeOid.STDocumentOid oid) {
 		return document(oid);
 	}
 }

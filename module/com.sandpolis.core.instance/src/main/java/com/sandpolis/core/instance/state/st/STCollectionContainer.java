@@ -44,7 +44,7 @@ public interface STCollectionContainer {
 	 */
 	public void setCollection(long tag, STCollection collection);
 
-	public default STCollection collection(RelativeOid<?> oid) {
+	public default STCollection collection(RelativeOid oid) {
 		if (!oid.isConcrete())
 			throw new GenericOidException(oid);
 
@@ -68,7 +68,7 @@ public interface STCollectionContainer {
 		}
 	}
 
-	public default STCollection get(RelativeOid.STCollectionOid<?> oid) {
+	public default STCollection get(RelativeOid.STCollectionOid oid) {
 		return collection(oid);
 	}
 

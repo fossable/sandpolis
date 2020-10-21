@@ -15,11 +15,11 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.sandpolis.core.instance.State.ProtoAttribute;
-import com.sandpolis.core.instance.state.EphemeralAttribute;
-import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.STAttributeValue;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
+import com.sandpolis.core.instance.state.st.STAttribute;
+import com.sandpolis.core.instance.state.st.STAttributeValue;
+import com.sandpolis.core.instance.state.st.ephemeral.EphemeralAttribute;
 
 import javafx.beans.value.ObservableValueBase;
 
@@ -77,7 +77,7 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	}
 
 	@Override
-	public ProtoAttribute snapshot(RelativeOid<?>... oids) {
+	public ProtoAttribute snapshot(RelativeOid... oids) {
 		return container.snapshot(oids);
 	}
 

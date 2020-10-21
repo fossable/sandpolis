@@ -16,24 +16,31 @@ import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.foundation.util.IDUtil;
 import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.State.ProtoDocument;
-import com.sandpolis.core.instance.state.EphemeralCollection;
-import com.sandpolis.core.instance.state.EphemeralDocument;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.Oid;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.st.ephemeral.EphemeralCollection;
+import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument;
 import com.sandpolis.core.net.cmdlet.Cmdlet;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSnapshot;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSync;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSync.STSyncDirection;
+import com.sandpolis.core.net.state.st.entangled.EntangledCollection;
+import com.sandpolis.core.net.state.st.entangled.EntangledDocument;
 
 public class STCmd extends Cmdlet<STCmd> {
+
+	private static final Logger log = LoggerFactory.getLogger(STCmd.class);
 
 	@ConfigStruct
 	public static final class STSnapshotStruct {
@@ -64,12 +71,12 @@ public class STCmd extends Cmdlet<STCmd> {
 	private STCmd() {
 	}
 
-	public CompletionStage<EphemeralCollection> snapshot(AbsoluteOid.STCollectionOid<?> oid) {
+	public CompletionStage<EphemeralCollection> snapshot(AbsoluteOid.STCollectionOid oid) {
 		return snapshot(oid, struct -> {
 		});
 	}
 
-	public CompletionStage<EphemeralCollection> snapshot(AbsoluteOid.STCollectionOid<?> oid,
+	public CompletionStage<EphemeralCollection> snapshot(AbsoluteOid.STCollectionOid oid,
 			Consumer<STSnapshotStruct> configurator) {
 		if (!oid.isConcrete())
 			throw new IllegalArgumentException("A concrete OID is required");
@@ -91,12 +98,12 @@ public class STCmd extends Cmdlet<STCmd> {
 		});
 	}
 
-	public CompletionStage<EphemeralDocument> snapshot(AbsoluteOid.STDocumentOid<?> oid) {
+	public CompletionStage<EphemeralDocument> snapshot(AbsoluteOid.STDocumentOid oid) {
 		return snapshot(oid, struct -> {
 		});
 	}
 
-	public CompletionStage<EphemeralDocument> snapshot(AbsoluteOid.STDocumentOid<?> oid,
+	public CompletionStage<EphemeralDocument> snapshot(AbsoluteOid.STDocumentOid oid,
 			Consumer<STSnapshotStruct> configurator) {
 		if (!oid.isConcrete())
 			throw new IllegalArgumentException("A concrete OID is required");
@@ -118,15 +125,17 @@ public class STCmd extends Cmdlet<STCmd> {
 		});
 	}
 
-	public CompletionStage<EntangledCollection> sync(STCollection collection, AbsoluteOid.STCollectionOid<?> oid) {
+	public CompletionStage<EntangledCollection> sync(STCollection collection, AbsoluteOid.STCollectionOid oid) {
 		return sync(collection, oid, struct -> {
 		});
 	}
 
-	public CompletionStage<EntangledCollection> sync(STCollection collection, AbsoluteOid.STCollectionOid<?> oid,
+	public CompletionStage<EntangledCollection> sync(STCollection collection, AbsoluteOid.STCollectionOid oid,
 			Consumer<STSyncStruct> configurator) {
 		if (!oid.isConcrete())
 			throw new IllegalArgumentException("A concrete OID is required");
+
+		log.debug("Entangling local collection ({}) to ({})", collection.oid(), oid);
 
 		final var config = new STSyncStruct();
 		config.connection = target;
@@ -152,13 +161,12 @@ public class STCmd extends Cmdlet<STCmd> {
 		});
 	}
 
-	public CompletionStage<EntangledDocument> sync(AbsoluteOid.STDocumentOid<?> oid) {
+	public CompletionStage<EntangledDocument> sync(AbsoluteOid.STDocumentOid oid) {
 		return sync(oid, struct -> {
 		});
 	}
 
-	public CompletionStage<EntangledDocument> sync(AbsoluteOid.STDocumentOid<?> oid,
-			Consumer<STSyncStruct> configurator) {
+	public CompletionStage<EntangledDocument> sync(AbsoluteOid.STDocumentOid oid, Consumer<STSyncStruct> configurator) {
 		if (!oid.isConcrete())
 			throw new IllegalArgumentException("A concrete OID is required");
 

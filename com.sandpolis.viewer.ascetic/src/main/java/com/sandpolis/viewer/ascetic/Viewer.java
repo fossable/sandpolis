@@ -14,6 +14,7 @@ package com.sandpolis.viewer.ascetic;
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
 import static com.sandpolis.core.instance.state.STStore.STStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
@@ -37,9 +38,9 @@ import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.state.EphemeralDocument;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.VirtST;
+import com.sandpolis.core.instance.state.InstanceOid;
+import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument;
 import com.sandpolis.viewer.ascetic.view.login.LoginWindow;
 
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -95,11 +96,11 @@ public final class Viewer {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile.connection.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.connection.resolveLocal());
 		});
 
 		PluginStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile.plugin.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.plugin.resolveLocal());
 		});
 
 		WindowStore.init(config -> {

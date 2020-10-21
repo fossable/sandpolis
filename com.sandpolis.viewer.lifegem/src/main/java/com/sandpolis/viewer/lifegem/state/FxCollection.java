@@ -19,11 +19,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.AbstractSTCollection;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.VirtObject;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
+import com.sandpolis.core.instance.state.st.AbstractSTCollection;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.VirtObject;
 import com.sandpolis.core.instance.store.StoreMetadata;
 
 import javafx.application.Platform;
@@ -140,7 +140,7 @@ public class FxCollection<T extends VirtObject> extends AbstractSTCollection imp
 	}
 
 	@Override
-	public ProtoCollection snapshot(RelativeOid<?>... oids) {
+	public ProtoCollection snapshot(RelativeOid... oids) {
 		throw new UnsupportedOperationException();
 	}
 

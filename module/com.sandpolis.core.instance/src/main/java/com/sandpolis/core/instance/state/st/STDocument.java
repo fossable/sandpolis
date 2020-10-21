@@ -79,11 +79,11 @@ public interface STDocument
 		return get(oid.relativize(oid()));
 	}
 
-	public default STCollection get(AbsoluteOid.STCollectionOid<?> oid) {
+	public default STCollection get(AbsoluteOid.STCollectionOid oid) {
 		return get(oid.relativize(oid()));
 	}
 
-	public default STDocument get(AbsoluteOid.STDocumentOid<?> oid) {
+	public default STDocument get(AbsoluteOid.STDocumentOid oid) {
 		return get(oid.relativize(oid()));
 	}
 

@@ -21,9 +21,9 @@ import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSnapshot;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSync;
-import com.sandpolis.core.net.state.EntangledCollection;
-import com.sandpolis.core.net.state.EntangledDocument;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
+import com.sandpolis.core.net.state.st.entangled.EntangledCollection;
+import com.sandpolis.core.net.state.st.entangled.EntangledDocument;
 
 public final class STExe extends Exelet {
 
@@ -34,9 +34,9 @@ public final class STExe extends Exelet {
 		if (oid instanceof AbsoluteOid.STAttributeOid) {
 			return STStore.root().get((AbsoluteOid.STAttributeOid<?>) oid).snapshot();
 		} else if (oid instanceof AbsoluteOid.STCollectionOid) {
-			return STStore.root().get((AbsoluteOid.STCollectionOid<?>) oid).snapshot();
+			return STStore.root().get((AbsoluteOid.STCollectionOid) oid).snapshot();
 		} else if (oid instanceof AbsoluteOid.STDocumentOid) {
-			return STStore.root().get((AbsoluteOid.STDocumentOid<?>) oid).snapshot();
+			return STStore.root().get((AbsoluteOid.STDocumentOid) oid).snapshot();
 		} else {
 			return null;
 		}
@@ -57,9 +57,9 @@ public final class STExe extends Exelet {
 		if (oid instanceof AbsoluteOid.STAttributeOid) {
 
 		} else if (oid instanceof AbsoluteOid.STCollectionOid) {
-			new EntangledCollection(STStore.root().get((AbsoluteOid.STCollectionOid<?>) oid), config);
+			new EntangledCollection(STStore.root().get((AbsoluteOid.STCollectionOid) oid), config);
 		} else if (oid instanceof AbsoluteOid.STDocumentOid) {
-			new EntangledDocument(STStore.root().get((AbsoluteOid.STDocumentOid<?>) oid), config);
+			new EntangledDocument(STStore.root().get((AbsoluteOid.STDocumentOid) oid), config);
 		}
 
 		return success(outcome);

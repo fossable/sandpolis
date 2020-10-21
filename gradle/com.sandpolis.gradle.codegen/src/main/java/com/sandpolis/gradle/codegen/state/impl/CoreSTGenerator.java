@@ -14,6 +14,7 @@ package com.sandpolis.gradle.codegen.state.impl;
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
@@ -23,6 +24,7 @@ import com.sandpolis.gradle.codegen.state.DocumentSpec;
 import com.sandpolis.gradle.codegen.state.RelationSpec;
 import com.sandpolis.gradle.codegen.state.STGenerator;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -48,14 +50,14 @@ public class CoreSTGenerator extends STGenerator {
 		}
 		if (document.attributes != null) {
 			for (var entry : document.attributes.entrySet()) {
-				processAttribute(documentClass, oidClass, entry.getValue(), oid + "."
-						+ OidUtil.computeAttributeTag(entry.getKey(), entry.getValue().type, !entry.getValue().list));
+				processAttribute(documentClass, oidClass, entry.getValue(),
+						oid + "." + OidUtil.computeAttributeTag(entry.getKey()));
 			}
 		}
 		if (document.relations != null) {
 			for (var entry : document.relations.entrySet()) {
-				processRelation(documentClass, entry.getValue(), oid + "."
-						+ OidUtil.computeAttributeTag(entry.getKey(), OidUtil.ATYPE_OID, entry.getValue().list));
+				processRelation(documentClass, entry.getValue(),
+						oid + "." + OidUtil.computeAttributeTag(entry.getKey()));
 			}
 		}
 	}
@@ -85,11 +87,28 @@ public class CoreSTGenerator extends STGenerator {
 
 		{
 			// Add the attribute's OID field
+			var initializer = CodeBlock.of("new AbsoluteOid.STAttributeOid<>(\"$L\")", oid);
+
+			// Add type data
+			initializer = CodeBlock.of("$L.setData($T.TYPE, $T.class)", initializer,
+					ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"), attribute.getAttributeType());
+
+			// Add singularity data
+			if (attribute.list) {
+				initializer = CodeBlock.of("$L.setData($T.SINGULARITY, false)", initializer,
+						ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"));
+			}
+
+			// Add identity data
+			if (attribute.identity) {
+				initializer = CodeBlock.of("$L.setData($T.READ_ONLY, true)", initializer,
+						ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"));
+			}
+
 			var field = FieldSpec
-					.builder(ParameterizedTypeName.get(
-							ClassName.get(ST_PACKAGE + ".oid", "AbsoluteOid", "STAttributeOid"),
+					.builder(ParameterizedTypeName.get(ClassName.get(OID_PACKAGE, "AbsoluteOid", "STAttributeOid"),
 							attribute.getAttributeType()), attribute.name, PUBLIC, FINAL)
-					.initializer("new AbsoluteOid.STAttributeOid<>(\"$L\")", oid);
+					.initializer(initializer);
 
 			parentOidClass.addField(field.build());
 		}
@@ -97,13 +116,12 @@ public class CoreSTGenerator extends STGenerator {
 
 	protected void processCollection(TypeSpec.Builder parent, TypeSpec.Builder parentOidClass, DocumentSpec document,
 			String oid) {
-		var documentClass = TypeSpec.classBuilder(ST_PREFIX + document.shortName()) //
+		var documentClass = TypeSpec.classBuilder(VST_PREFIX + document.shortName()) //
 				.addModifiers(PUBLIC) //
-				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
+				.superclass(ClassName.get(VST_PACKAGE, "VirtDocument"));
 
-		var oidClass = TypeSpec.classBuilder("Oid").addModifiers(PUBLIC, STATIC).superclass(
-				ParameterizedTypeName.get(ClassName.get(ST_PACKAGE + ".oid", "AbsoluteOid", "STCollectionOid"),
-						ClassName.bestGuess(ST_PREFIX + document.shortName())));
+		var oidClass = TypeSpec.classBuilder("Oid").addModifiers(PUBLIC, STATIC)
+				.superclass(ClassName.get(OID_PACKAGE, "AbsoluteOid", "STCollectionOid"));
 
 		{
 			// Add constructor
@@ -168,9 +186,9 @@ public class CoreSTGenerator extends STGenerator {
 		{
 			// Add OID field
 			var field = FieldSpec
-					.builder(ClassName.get(ST_PREFIX + document.shortName(), "Oid"), document.shortName().toLowerCase(),
-							PUBLIC, FINAL) //
-					.initializer("new $L(\"$L\")", ST_PREFIX + document.shortName() + ".Oid", oid);
+					.builder(ClassName.get(getProject().getName() + ".state", VST_PREFIX + document.shortName(), "Oid"),
+							document.shortName().toLowerCase(), PUBLIC, FINAL) //
+					.initializer("new $L(\"$L\")", VST_PREFIX + document.shortName() + ".Oid", oid);
 
 			if (parentOidClass != null) {
 				parentOidClass.addField(field.build());
@@ -189,13 +207,12 @@ public class CoreSTGenerator extends STGenerator {
 	protected void processDocument(TypeSpec.Builder parent, TypeSpec.Builder parentOidClass, DocumentSpec document,
 			String oid) {
 
-		var documentClass = TypeSpec.classBuilder(ST_PREFIX + document.shortName()) //
+		var documentClass = TypeSpec.classBuilder(VST_PREFIX + document.shortName()) //
 				.addModifiers(PUBLIC) //
-				.superclass(ClassName.get(ST_PACKAGE, "VirtObject"));
+				.superclass(ClassName.get(VST_PACKAGE, "VirtDocument"));
 
-		var oidClass = TypeSpec.classBuilder("Oid").addModifiers(PUBLIC, STATIC).superclass(
-				ParameterizedTypeName.get(ClassName.get(ST_PACKAGE + ".oid", "AbsoluteOid", "STDocumentOid"),
-						ClassName.bestGuess(ST_PREFIX + document.shortName())));
+		var oidClass = TypeSpec.classBuilder("Oid").addModifiers(PUBLIC, STATIC)
+				.superclass(ClassName.get(OID_PACKAGE, "AbsoluteOid", "STDocumentOid"));
 
 		{
 			// Add constructor
@@ -236,15 +253,11 @@ public class CoreSTGenerator extends STGenerator {
 		{
 			// Add OID field
 			var field = FieldSpec
-					.builder(ClassName.get(ST_PREFIX + document.shortName(), "Oid"), document.shortName().toLowerCase(),
-							PUBLIC, FINAL) //
-					.initializer("new $L(\"$L\")", ST_PREFIX + document.shortName() + ".Oid", oid);
+					.builder(ClassName.get(getProject().getName() + ".state", VST_PREFIX + document.shortName(), "Oid"),
+							document.shortName().toLowerCase(), PUBLIC, FINAL) //
+					.initializer("new $L(\"$L\")", VST_PREFIX + document.shortName() + ".Oid", oid);
 
-			if (parentOidClass != null) {
-				parentOidClass.addField(field.build());
-			} else if (parent != null) {
-				parent.addField(field.addModifiers(STATIC).build());
-			}
+			parentOidClass.addField(field.build());
 		}
 
 		// Process subdocuments and attributes
@@ -273,9 +286,9 @@ public class CoreSTGenerator extends STGenerator {
 				var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "get_" + relation.name)) //
 						.addModifiers(PUBLIC) //
 						.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STRelation"),
-								ClassName.bestGuess(STGenerator.ST_PREFIX + relation.simpleName()))) //
+								ClassName.bestGuess(STGenerator.VST_PREFIX + relation.simpleName()))) //
 						.addStatement("return document.collection($LL).collectionList($L::new)",
-								oid.replaceAll(".*\\.", ""), STGenerator.ST_PREFIX + relation.simpleName());
+								oid.replaceAll(".*\\.", ""), STGenerator.VST_PREFIX + relation.simpleName());
 				parent.addMethod(method.build());
 			}
 
@@ -284,9 +297,9 @@ public class CoreSTGenerator extends STGenerator {
 				// Add the getter method
 				var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "get_" + relation.name)) //
 						.addModifiers(PUBLIC) //
-						.returns(ClassName.bestGuess(STGenerator.ST_PREFIX + relation.simpleName())) //
+						.returns(ClassName.bestGuess(STGenerator.VST_PREFIX + relation.simpleName())) //
 						.addStatement("return new $L(document.document($LL))",
-								STGenerator.ST_PREFIX + relation.simpleName(), oid.replaceAll(".*\\.", ""));
+								STGenerator.VST_PREFIX + relation.simpleName(), oid.replaceAll(".*\\.", ""));
 				parent.addMethod(method.build());
 			}
 
@@ -294,7 +307,7 @@ public class CoreSTGenerator extends STGenerator {
 				// Add the setter method
 				var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "set_" + relation.name)) //
 						.addModifiers(PUBLIC) //
-						.addParameter(ClassName.bestGuess(STGenerator.ST_PREFIX + relation.simpleName()), "v") //
+						.addParameter(ClassName.bestGuess(STGenerator.VST_PREFIX + relation.simpleName()), "v") //
 						.addStatement("document.setDocument($LL, v.document)", oid.replaceAll(".*\\.", ""));
 				parent.addMethod(method.build());
 			}
@@ -303,6 +316,34 @@ public class CoreSTGenerator extends STGenerator {
 
 	@Override
 	protected void processRoot(DocumentSpec document, String oid) {
-		processDocument(null, null, document, oid);
+		var oidClass = TypeSpec.classBuilder(document.shortName()) //
+				.addModifiers(PUBLIC, FINAL);
+
+		{
+			// Add private constructor
+			var constructor = MethodSpec.constructorBuilder().addModifiers(PRIVATE);
+
+			oidClass.addMethod(constructor.build());
+		}
+
+		{
+			// Add root field
+			var field = FieldSpec.builder(ClassName.get(getProject().getName() + ".state", document.shortName()),
+					"root", PUBLIC, FINAL, STATIC).initializer("new $L()", document.shortName());
+
+			oidClass.addField(field.build());
+		}
+
+		{
+			// Add root getter
+			var method = MethodSpec.methodBuilder(document.shortName()) //
+					.addModifiers(PUBLIC, STATIC) //
+					.returns(ClassName.get(getProject().getName() + ".state", document.shortName())) //
+					.addStatement("return root");
+			oidClass.addMethod(method.build());
+		}
+
+		processChildren(null, oidClass, document, oid);
+		writeClass(oidClass.build());
 	}
 }

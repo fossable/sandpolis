@@ -445,7 +445,7 @@
 		}
 	},
 	{
-		"name": "InstanceST",
+		"name": "InstanceOid",
 		"parent": "",
 		"collections": {
 			"1": "Profile"

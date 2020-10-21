@@ -17,16 +17,15 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.sandpolis.core.instance.State.ProtoCollection;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.state.st.AbstractSTObject;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.state.st.STObject;
 import com.sandpolis.core.instance.state.st.STRelation;
 import com.sandpolis.core.instance.state.vst.VirtObject;
 import com.sandpolis.core.instance.store.StoreMetadata;
-import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
 
 public class EntangledCollection extends EntangledObject<ProtoCollection> implements STCollection {
@@ -147,7 +146,7 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 	}
 
 	@Override
-	public ProtoCollection snapshot(RelativeOid<?>... oids) {
+	public ProtoCollection snapshot(RelativeOid... oids) {
 		return container.snapshot(oids);
 	}
 

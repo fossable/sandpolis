@@ -143,7 +143,7 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 	}
 
 	@Override
-	public synchronized ProtoAttribute snapshot(RelativeOid<?>... oids) {
+	public synchronized ProtoAttribute snapshot(RelativeOid... oids) {
 		if (oids.length != 0)
 			throw new UnsupportedOperationException("Partial snapshots are not allowed on attributes");
 

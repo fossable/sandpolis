@@ -120,7 +120,7 @@ public abstract class AbstractSTCollection extends AbstractSTObject<ProtoCollect
 	}
 
 	@Override
-	public ProtoCollection snapshot(RelativeOid<?>... oids) {
+	public ProtoCollection snapshot(RelativeOid... oids) {
 		var snapshot = ProtoCollection.newBuilder().setTag(tag);
 		if (oids.length == 0) {
 

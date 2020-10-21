@@ -11,7 +11,10 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.main.list;
 
+import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
 import static com.sandpolis.core.instance.state.STStore.STStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
+import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.state.VirtST;
 import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
@@ -31,6 +33,7 @@ import com.sandpolis.viewer.lifegem.view.main.Events.HostDetailOpenEvent;
 import com.sandpolis.viewer.lifegem.view.main.Events.HostListHeaderChangeEvent;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableView;
 
@@ -41,10 +44,12 @@ public class HostListController extends AbstractController {
 	@FXML
 	private TableView<FxProfile> table;
 
-	private FxCollection<FxProfile> collection = (FxCollection<FxProfile>) STStore.root().get(VirtST.profile);
+	private FxCollection<FxProfile> collection = (FxCollection<FxProfile>) STStore.root().get(InstanceOid().profile);
 
-	private static final List<AbsoluteOid.STAttributeOid<?>> DEFAULT_HEADERS = List.of(VirtST.profile.uuid,
-			VirtST.profile.ip_address, VirtST.profile.instance_type);
+	private static final List<AbsoluteOid.STAttributeOid<?>> DEFAULT_HEADERS = List.of(InstanceOid().profile.uuid,
+			InstanceOid().profile.ip_address, InstanceOid().profile.instance_type);
+
+	private String serverUuid;
 
 	@FXML
 	public void initialize() {
@@ -58,11 +63,10 @@ public class HostListController extends AbstractController {
 				post(HostDetailOpenEvent::new, n);
 		});
 
-		// Attach the local collection
-		STCmd.async().sync(collection, VirtST.profile);
-
 		// Set default headers
 		addColumns(DEFAULT_HEADERS);
+
+		resync();
 	}
 
 	/**
@@ -90,7 +94,24 @@ public class HostListController extends AbstractController {
 	 * @param headers The headers to add
 	 */
 	private void addColumns(List<AbsoluteOid.STAttributeOid<?>> headers) {
-		headers.stream().map(oid -> oid.resolveUuid("TODO")).map(AttributeColumn::new).forEach(table.getColumns()::add);
+		if (serverUuid == null) {
+			table.getColumns().clear();
+		} else {
+			headers.stream().map(oid -> oid.resolveUuid(serverUuid)).map(AttributeColumn::new)
+					.forEach(table.getColumns()::add);
+		}
+	}
+
+	private void resync() {
+		NetworkStore.getPreferredServer().ifPresentOrElse(cvid -> {
+			serverUuid = ConnectionStore.getByCvid(cvid).get().getRemoteUuid();
+
+			// Attach the local collection
+			STCmd.async().sync(collection, InstanceOid().profile);
+		}, () -> {
+			serverUuid = null;
+			table.setPlaceholder(new Label("Not connected to a server"));
+		});
 	}
 
 }

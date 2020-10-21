@@ -15,9 +15,13 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 /**
- * An {@link Oid} corresponds to one or more objects in a virtual state tree.
- * OIDs have a sequence of 32-bit integers that can uniquely locate objects in a
- * tree structure.
+ * <p>
+ * An {@link Oid} corresponds to one or more objects in a real or virtual state
+ * tree. OIDs locate objects in the state tree with an immutable sequence of
+ * 64-bit integers called tags.
+ * 
+ * <p>
+ * OIDs also contain mutable data which are accessible via {@link OidData}.
  * 
  * <p>
  * When represented as a String, OID components are joined with "." which is
@@ -57,6 +61,13 @@ public interface Oid extends Comparable<Oid>, Iterable<Long> {
 	 */
 	public default long first() {
 		return value()[0];
+	}
+
+	public <T> T getData(OidData<T> dataType);
+
+	public default <T> T getData(OidData<T> dataType, T defaultItem) {
+		T item = getData(dataType);
+		return item == null ? defaultItem : item;
 	}
 
 	/**
@@ -122,7 +133,7 @@ public interface Oid extends Comparable<Oid>, Iterable<Long> {
 	 * @param oid The reference OID which must be an ancestor of {@code this}
 	 * @return A new OID
 	 */
-	public RelativeOid<?> relativize(Oid oid);
+	public RelativeOid relativize(Oid oid);
 
 	/**
 	 * Return a new OID with its generic components replaced (from left to right)
@@ -134,6 +145,8 @@ public interface Oid extends Comparable<Oid>, Iterable<Long> {
 	 * @return A new OID
 	 */
 	public Oid resolve(long... components);
+
+	public <T, O extends Oid> O setData(OidData<T> dataType, T data);
 
 	/**
 	 * Get the number of components in the OID.
@@ -149,11 +162,11 @@ public interface Oid extends Comparable<Oid>, Iterable<Long> {
 	 * 
 	 * @return A new OID
 	 */
-	public default RelativeOid<?> tail() {
+	public default RelativeOid tail() {
 		return tail(1);
 	}
 
-	public RelativeOid<?> tail(int offset);
+	public RelativeOid tail(int offset);
 
 	/**
 	 * Get the components of the OID.
@@ -162,12 +175,5 @@ public interface Oid extends Comparable<Oid>, Iterable<Long> {
 	 */
 	public long[] value();
 
-	public <T, O extends Oid> O setData(OidData<T> dataType, T data);
-
-	public <T> T getData(OidData<T> dataType);
-
-	public default <T> T getData(OidData<T> dataType, T defaultItem) {
-		T item = getData(dataType);
-		return item == null ? defaultItem : item;
-	}
+	public long namespace();
 }

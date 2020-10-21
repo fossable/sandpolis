@@ -25,13 +25,12 @@ import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.State.ProtoCollection;
 import com.sandpolis.core.instance.State.ProtoDocument;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.STObject;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.st.AbstractSTObject;
 import com.sandpolis.core.instance.state.st.STAttribute;
-import com.sandpolis.core.net.state.STCmd;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.st.STObject;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
 import com.sandpolis.core.net.stream.InboundStreamAdapter;
 import com.sandpolis.core.net.stream.OutboundStreamAdapter;
@@ -151,7 +150,6 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 
 	@Subscribe
 	void handle(STDocument.CollectionAddedEvent event) {
-		System.out.println("Collection: " + event.newCollection.oid());
 		getSource().submit((T) eventToProto(event.newCollection.oid(), event.newCollection.snapshot()));
 	}
 

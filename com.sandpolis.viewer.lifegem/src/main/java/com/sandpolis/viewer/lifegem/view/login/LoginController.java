@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.state.VirtPlugin;
 import com.sandpolis.core.instance.state.VirtST;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.connection.ConnectionFuture;
@@ -33,7 +32,6 @@ import com.sandpolis.viewer.lifegem.common.FxUtil;
 import com.sandpolis.viewer.lifegem.common.controller.FxController;
 import com.sandpolis.viewer.lifegem.common.pane.CarouselPane;
 import com.sandpolis.viewer.lifegem.state.FxCollection;
-import com.sandpolis.viewer.lifegem.view.login.LoginController.LoginPhase;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectEndedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.ConnectStartedEvent;
 import com.sandpolis.viewer.lifegem.view.login.LoginEvents.LoginEndedEvent;
@@ -49,14 +47,13 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
 public class LoginController extends FxController {
-
-	private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 
 	public enum LoginPhase {
 		COMPLETE, PLUGIN_PHASE, SERVER_INPUT, USER_INPUT;
@@ -67,6 +64,8 @@ public class LoginController extends FxController {
 	 */
 	private static final Image defaultImage = new Image(
 			LoginController.class.getResourceAsStream("/image/view/login/banner.png"));
+
+	private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 	@FXML
 	private ImageView bannerImage;
 	@FXML
@@ -100,7 +99,8 @@ public class LoginController extends FxController {
 	private void btn_back(ActionEvent event) {
 		switch (phase.get()) {
 		case SERVER_INPUT:
-			System.exit(0);
+			phase.set(LoginPhase.COMPLETE);
+			launchApplication();
 			break;
 		case USER_INPUT:
 			phase.set(LoginPhase.SERVER_INPUT);
@@ -196,6 +196,9 @@ public class LoginController extends FxController {
 
 	@FXML
 	private void initialize() {
+		// Turn off uniform sizing for the button bar
+		ButtonBar.setButtonUniformSize(btn_back, false);
+
 		register(serverPhaseController, userPhaseController, pluginPhaseController);
 
 		resetBannerImage();
@@ -253,30 +256,6 @@ public class LoginController extends FxController {
 		});
 	}
 
-	@Subscribe
-	void onEvent(LoginStartedEvent event) {
-		btn_continue.setDisable(true);
-		btn_back.setDisable(true);
-	}
-
-	@Subscribe
-	void onEvent(LoginEndedEvent event) {
-		btn_continue.setDisable(false);
-		btn_back.setDisable(false);
-	}
-
-	@Subscribe
-	void onEvent(ConnectStartedEvent event) {
-		btn_continue.setDisable(true);
-		btn_back.setDisable(true);
-	}
-
-	@Subscribe
-	void onEvent(ConnectEndedEvent event) {
-		btn_continue.setDisable(false);
-		btn_back.setDisable(false);
-	}
-
 	/**
 	 * Change the banner to default if necessary.
 	 */
@@ -315,6 +294,30 @@ public class LoginController extends FxController {
 		Platform.runLater(() -> {
 			status.setText(s);
 		});
+	}
+
+	@Subscribe
+	void onEvent(ConnectEndedEvent event) {
+		btn_continue.setDisable(false);
+		btn_back.setDisable(false);
+	}
+
+	@Subscribe
+	void onEvent(ConnectStartedEvent event) {
+		btn_continue.setDisable(true);
+		btn_back.setDisable(true);
+	}
+
+	@Subscribe
+	void onEvent(LoginEndedEvent event) {
+		btn_continue.setDisable(false);
+		btn_back.setDisable(false);
+	}
+
+	@Subscribe
+	void onEvent(LoginStartedEvent event) {
+		btn_continue.setDisable(true);
+		btn_back.setDisable(true);
 	}
 
 }

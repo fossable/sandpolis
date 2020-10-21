@@ -16,14 +16,13 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.state.st.AbstractSTObject;
 import com.sandpolis.core.instance.state.st.STAttribute;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.state.st.STObject;
-import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
 
 public class EntangledDocument extends EntangledObject<ProtoDocument> implements STDocument {
@@ -164,7 +163,7 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public ProtoDocument snapshot(RelativeOid<?>... oids) {
+	public ProtoDocument snapshot(RelativeOid... oids) {
 		return container.snapshot(oids);
 	}
 
@@ -182,13 +181,13 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	@Override
 	public void remove(STAttribute<?> attribute) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void forEachAttribute(Consumer<STAttribute<?>> consumer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -200,13 +199,13 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	@Override
 	public void remove(STDocument document) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void forEachDocument(Consumer<STDocument> consumer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -218,12 +217,12 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	@Override
 	public void remove(STCollection collection) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void forEachCollection(Consumer<STCollection> consumer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

@@ -77,5 +77,5 @@ public interface STObject<E extends Message> {
 	 * @param oids Whitelisted OIDs
 	 * @return A new protocol buffer representing the object
 	 */
-	public E snapshot(RelativeOid<?>... oids);
+	public E snapshot(RelativeOid... oids);
 }

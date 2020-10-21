@@ -13,13 +13,13 @@ package com.sandpolis.viewer.lifegem.state;
 
 import java.util.HashMap;
 
-import com.sandpolis.core.instance.state.AbstractSTDocument;
-import com.sandpolis.core.instance.state.AbstractSTObject;
-import com.sandpolis.core.instance.state.STAttribute;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.STObject;
-import com.sandpolis.core.instance.state.VirtObject;
+import com.sandpolis.core.instance.state.st.AbstractSTDocument;
+import com.sandpolis.core.instance.state.st.AbstractSTObject;
+import com.sandpolis.core.instance.state.st.STAttribute;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.st.STObject;
+import com.sandpolis.core.instance.state.vst.VirtObject;
 
 public class FxDocument<T extends VirtObject> extends AbstractSTDocument implements STDocument {
 

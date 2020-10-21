@@ -1,4 +1,4 @@
-FROM adoptopenjdk:14-hotspot
+FROM adoptopenjdk:15-hotspot
 
 # Set application root directory
 WORKDIR /app
