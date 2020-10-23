@@ -19,14 +19,10 @@ import com.sandpolis.core.instance.state.oid.RelativeOid;
  * A {@link STObject} is a member of the real state tree (ST).
  *
  * <p>
- * The ST is a tree data-structure containing highly general collections,
- * documents, and attributes.
- * 
- * <h3>Attached/Detached</h3>
- * <p>
- * An ST object may be attached to a state tree or not attached (detached).
+ * The ST is a tree data-structure containing general collections, documents,
+ * and attributes.
  *
- * @param <E> A protocol buffer representation of the object
+ * @param <E> The protocol buffer representation of the object
  * @since 5.0.0
  */
 public interface STObject<E extends Message> {
@@ -39,8 +35,6 @@ public interface STObject<E extends Message> {
 	 * @return The listener for convenience
 	 */
 	public void addListener(Object listener);
-
-	public boolean isAttached();
 
 	/**
 	 * Incorporate the given snapshot into the object. If the snapshot is not
@@ -59,14 +53,19 @@ public interface STObject<E extends Message> {
 	public Oid oid();
 
 	/**
+	 * Get this object's parent.
+	 * 
+	 * @return The parent {@link STObject} or {@code null}
+	 */
+	public STObject<?> parent();
+
+	/**
 	 * Deregister a previously registered listener. Any currently queued events will
 	 * still be delivered.
 	 *
 	 * @param listener The listener to deregister
 	 */
 	public void removeListener(Object listener);
-
-	public void setTag(long tag);
 
 	/**
 	 * Extract the object's state into a new snapshot. If whitelist OIDs are

@@ -14,9 +14,9 @@ package com.sandpolis.gradle.codegen;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
-import com.sandpolis.gradle.codegen.state.impl.AttributeValueGenerator;
-import com.sandpolis.gradle.codegen.state.impl.CoreSTGenerator;
-import com.sandpolis.gradle.codegen.state.impl.JavaFxSTGenerator;
+import com.sandpolis.gradle.codegen.state.AttributeValueGenerator;
+import com.sandpolis.gradle.codegen.state.CoreSTGenerator;
+import com.sandpolis.gradle.codegen.state.JavaFxSTGenerator;
 
 /**
  * This Gradle plugin adds code generation tasks to the build.

@@ -13,42 +13,12 @@ import com.sandpolis.core.instance.state.oid.RelativeOid;
 public interface STDocumentContainer {
 
 	/**
-	 * Get all subdocuments.
-	 *
-	 * @return A collection of all subdocuments
-	 */
-	public Collection<STDocument> documents();
-
-	/**
 	 * Get a subdocument by its tag. This method never returns {@code null}.
 	 *
 	 * @param tag The subdocument tag
 	 * @return The subdocument associated with the tag
 	 */
 	public STDocument document(long tag);
-
-	/**
-	 * Get a subdocument by its tag. This method returns {@code null} if the
-	 * subdocument doesn't exist.
-	 *
-	 * @param tag The subdocument tag
-	 * @return The subdocument associated with the tag or {@code null}
-	 */
-	public STDocument getDocument(long tag);
-
-	/**
-	 * Overwrite the attribute associated with the given tag.
-	 *
-	 * @param tag      The attribute tag
-	 * @param document The attribute to associate with the tag or {@code null}
-	 */
-	public void setDocument(long tag, STDocument document);
-
-	public STDocument newDocument();
-
-	public void remove(STDocument document);
-
-	public void forEachDocument(Consumer<STDocument> consumer);
 
 	public default STDocument document(RelativeOid oid) {
 		if (!oid.isConcrete())
@@ -74,7 +44,27 @@ public interface STDocumentContainer {
 		}
 	}
 
+	/**
+	 * Get all subdocuments.
+	 *
+	 * @return A collection of all subdocuments
+	 */
+	public Collection<STDocument> documents();
+
+	public void forEachDocument(Consumer<STDocument> consumer);
+
 	public default STDocument get(RelativeOid.STDocumentOid oid) {
 		return document(oid);
 	}
+
+	/**
+	 * Get a subdocument by its tag. This method returns {@code null} if the
+	 * subdocument doesn't exist.
+	 *
+	 * @param tag The subdocument tag
+	 * @return The subdocument associated with the tag or {@code null}
+	 */
+	public STDocument getDocument(long tag);
+
+	public void remove(STDocument document);
 }

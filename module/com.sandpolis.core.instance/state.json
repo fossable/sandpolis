@@ -130,6 +130,11 @@
 				"name": "loaded",
 				"type": "java.lang.Boolean",
 				"description": "Whether the plugin is currently loaded"
+			},
+			"9": {
+				"name": "namespace",
+				"type": "java.lang.Long",
+				"description": "The plugin's 8 byte unique namespace"
 			}
 		}
 	},
@@ -139,7 +144,7 @@
 			"1": {
 				"name": "username",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The viewer's username"
 			},
 			"2": {
@@ -250,7 +255,7 @@
 			"1": {
 				"name": "hostname",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The client's network hostname"
 			},
 			"2": {
@@ -424,7 +429,7 @@
 			"3": {
 				"name": "uuid",
 				"type": "java.lang.String",
-				"identity": true
+				"immutable": true
 			},
 			"4": {
 				"name": "cvid",

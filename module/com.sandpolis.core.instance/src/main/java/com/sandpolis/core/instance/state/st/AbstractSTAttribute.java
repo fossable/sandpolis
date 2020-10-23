@@ -26,8 +26,6 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 	 */
 	protected List<STAttributeValue<T>> history;
 
-	protected STDocument parent;
-
 	/**
 	 * A strategy that determines what happens to old values.
 	 */
@@ -44,6 +42,10 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 	 * An optional supplier that overrides the current value.
 	 */
 	protected Supplier<T> source;
+
+	public AbstractSTAttribute(STObject<?> parent, long id) {
+		super(parent, id);
+	}
 
 	@Override
 	public synchronized T get() {
@@ -91,11 +93,6 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 			}
 		}
 		fireAttributeValueChangedEvent(this, old, current);
-	}
-
-	@Override
-	public synchronized AbstractSTObject parent() {
-		return (AbstractSTObject) parent;
 	}
 
 	@Override
@@ -151,7 +148,7 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 			// Empty attribute shortcut
 			return ProtoAttribute.getDefaultInstance();
 
-		var snapshot = ProtoAttribute.newBuilder().setTag(tag);
+		var snapshot = ProtoAttribute.newBuilder().setTag(oid.last());
 
 		// Check the retention condition before serializing
 		checkRetention();
@@ -195,6 +192,13 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 		return current.timestamp();
 	}
 
+	@Override
+	public String toString() {
+		if (current != null)
+			return current.toString();
+		return null;
+	}
+
 	/**
 	 * Check the retention condition and remove all violating elements.
 	 */
@@ -225,11 +229,4 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 	protected abstract STAttributeValue<T> newValue(T value);
 
 	protected abstract STAttributeValue<T> newValue(T value, long timestamp);
-
-	@Override
-	public String toString() {
-		if (current != null)
-			return current.toString();
-		return null;
-	}
 }

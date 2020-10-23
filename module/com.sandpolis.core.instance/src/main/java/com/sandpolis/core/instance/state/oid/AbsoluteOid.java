@@ -69,11 +69,11 @@ public interface AbsoluteOid extends Oid {
 		}
 
 		public AbsoluteOid.STAttributeOid<T> resolveLocal() {
-			return resolve(OidUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.computeNamespace(Core.UUID));
 		}
 
 		public AbsoluteOid.STAttributeOid<T> resolveUuid(String uuid) {
-			return resolve(OidUtil.uuidToTag(uuid));
+			return resolve(OidUtil.computeNamespace(uuid));
 		}
 
 		@Override
@@ -129,11 +129,11 @@ public interface AbsoluteOid extends Oid {
 		}
 
 		public AbsoluteOid.STCollectionOid resolveLocal() {
-			return resolve(OidUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.computeNamespace(Core.UUID));
 		}
 
 		public AbsoluteOid.STCollectionOid resolveUuid(String uuid) {
-			return resolve(OidUtil.uuidToTag(uuid));
+			return resolve(OidUtil.computeNamespace(uuid));
 		}
 
 		@Override
@@ -189,11 +189,11 @@ public interface AbsoluteOid extends Oid {
 		}
 
 		public AbsoluteOid.STDocumentOid resolveLocal() {
-			return resolve(OidUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.computeNamespace(Core.UUID));
 		}
 
 		public AbsoluteOid.STDocumentOid resolveUuid(String uuid) {
-			return resolve(OidUtil.uuidToTag(uuid));
+			return resolve(OidUtil.computeNamespace(uuid));
 		}
 
 		@Override

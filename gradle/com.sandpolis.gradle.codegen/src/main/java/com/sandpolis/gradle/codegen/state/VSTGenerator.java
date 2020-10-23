@@ -13,6 +13,7 @@ package com.sandpolis.gradle.codegen.state;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.TreeMap;
 
 import javax.lang.model.SourceVersion;
 
@@ -21,23 +22,122 @@ import org.gradle.api.tasks.TaskAction;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.hash.Hashing;
 import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.gradle.codegen.ConfigExtension;
+import com.squareup.javapoet.ArrayTypeName;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 /**
- * Generator for virtual ST classes.
+ * Generator for virtual state tree (VST) classes.
  */
-public abstract class STGenerator extends DefaultTask {
+public abstract class VSTGenerator extends DefaultTask {
+
+	public static class AttributeSpec {
+
+		/**
+		 * A description of the attribute for code documentation.
+		 */
+		public String description;
+
+		/**
+		 * Whether the attribute cannot be modified after initially set.
+		 */
+		public boolean immutable;
+
+		/**
+		 * Whether the attribute is a list type.
+		 */
+		public boolean list;
+
+		/**
+		 * The attribute's name.
+		 */
+		public String name;
+
+		/**
+		 * The attribute's fully-qualified Java type.
+		 */
+		public String type;
+
+		public TypeName getAttributeObjectType() {
+			return ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STAttribute"), getAttributeType());
+		}
+
+		public TypeName getAttributeType() {
+
+			if (type.endsWith("[]")) {
+				return ArrayTypeName.of(ClassName.bestGuess(type.replace("[]", "")).unbox());
+			} else {
+				return ClassName.bestGuess(type);
+			}
+		}
+
+		public String simpleName() {
+			return type.replaceAll(".*\\.", "");
+		}
+	}
+
+	public static class DocumentSpec {
+
+		/**
+		 * The document's attributes sorted by tag.
+		 */
+		public TreeMap<Integer, AttributeSpec> attributes;
+
+		/**
+		 * The document's sub-collections sorted by tag.
+		 */
+		public TreeMap<Integer, String> collections;
+
+		/**
+		 * The document's sub-documents sorted by tag.
+		 */
+		public TreeMap<Integer, String> documents;
+
+		/**
+		 * The fully qualified document name.
+		 */
+		public String name;
+
+		/**
+		 * The OID of the parent document.
+		 */
+		public String parent;
+
+		/**
+		 * The document's relations sorted by tag.
+		 */
+		public TreeMap<Integer, RelationSpec> relations;
+
+		public String shortName() {
+			return name.replaceAll(".*\\.", "");
+		}
+	}
+
+	public static class RelationSpec {
+
+		public boolean list;
+
+		public String name;
+
+		public String type;
+
+		public String simpleName() {
+			return type.replaceAll(".*\\.", "");
+		}
+	}
 
 	public static final String OID_PACKAGE = "com.sandpolis.core.instance.state.oid";
 	public static final String ST_PACKAGE = "com.sandpolis.core.instance.state.st";
+
 	public static final String VST_PACKAGE = "com.sandpolis.core.instance.state.vst";
 
 	/**
-	 * The naming prefix for generated VST classes.
+	 * The naming prefix for generated classes.
 	 */
 	public static final String VST_PREFIX = "Virt";
 
@@ -58,16 +158,14 @@ public abstract class STGenerator extends DefaultTask {
 		// Check tree preconditions
 		flatTree.forEach(this::validateDocument);
 
-		// Calculate module namespace
-		long namespace = OidUtil
-				.computeDocumentTag(Hashing.murmur3_128().hashBytes(getProject().getName().getBytes()).asLong());
+		// Determine module namespace
+		long namespace = OidUtil.computeNamespace(getProject().getName());
 
-		// Find root document
-		flatTree.stream().filter(document -> document.parent != null).findAny().ifPresent(document -> {
-			if (document.parent.isEmpty()) {
-				processRoot(document, String.valueOf(namespace));
-			} else {
-				processRoot(document, String.valueOf(namespace) + "." + document.parent);
+		// Generate classes
+		flatTree.forEach(document -> {
+			if (document.parent != null) {
+				processRoot(document,
+						String.valueOf(namespace) + (document.parent.isEmpty() ? "" : "." + document.parent));
 			}
 		});
 	}

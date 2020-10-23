@@ -26,8 +26,8 @@ public final class OidUtil {
 		return (int) (tag & ((1L << LENGTH_OTYPE) - 1));
 	}
 
-	public static long uuidToTag(String uuid) {
-		return computeDocumentTag(Hashing.murmur3_128().newHasher().putBytes(uuid.getBytes()).hash().asLong());
+	public static long computeNamespace(String id) {
+		return computeDocumentTag(Hashing.murmur3_128().newHasher().putBytes(id.getBytes()).hash().asLong());
 	}
 
 	private OidUtil() {

@@ -15,8 +15,6 @@ import java.util.HashMap;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.st.AbstractSTDocument;
-import com.sandpolis.core.instance.state.st.AbstractSTObject;
-import com.sandpolis.core.instance.state.st.STAttribute;
 import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.st.STDocument;
 
@@ -28,45 +26,29 @@ import com.sandpolis.core.instance.state.st.STDocument;
  */
 public class EphemeralDocument extends AbstractSTDocument implements STDocument {
 
-	public EphemeralDocument(STDocument parent) {
-		this.parent = (AbstractSTObject) parent;
+	public EphemeralDocument(STDocument parent, long id) {
+		super(parent, id);
 
 		documents = new HashMap<>();
 		collections = new HashMap<>();
 		attributes = new HashMap<>();
 	}
 
-	public EphemeralDocument(STDocument parent, ProtoDocument document) {
-		this(parent);
+	public EphemeralDocument(STDocument parent, long id, ProtoDocument document) {
+		this(parent, id);
 		merge(document);
 	}
 
-	public EphemeralDocument(STCollection parent) {
-		this.parent = (AbstractSTObject) parent;
+	public EphemeralDocument(STCollection parent, long id) {
+		super(parent, id);
 
 		documents = new HashMap<>();
 		collections = new HashMap<>();
 		attributes = new HashMap<>();
 	}
 
-	public EphemeralDocument(STCollection parent, ProtoDocument document) {
-		this(parent);
+	public EphemeralDocument(STCollection parent, long id, ProtoDocument document) {
+		this(parent, id);
 		merge(document);
 	}
-
-	@Override
-	public STAttribute<?> newAttribute() {
-		return new EphemeralAttribute<>(this);
-	}
-
-	@Override
-	public STDocument newDocument() {
-		return new EphemeralDocument(this);
-	}
-
-	@Override
-	public STCollection newCollection() {
-		return new EphemeralCollection(this);
-	}
-
 }

@@ -1,5 +1,6 @@
 package com.sandpolis.core.instance.state.vst;
 
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.st.STDocument;
 
 public abstract class VirtDocument implements VirtObject {
@@ -10,5 +11,8 @@ public abstract class VirtDocument implements VirtObject {
 		this.document = document;
 	}
 
-	public abstract long tag();
+	public Oid oid() {
+		return document.oid();
+	}
+
 }

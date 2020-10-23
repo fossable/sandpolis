@@ -3,6 +3,7 @@ package com.sandpolis.core.instance.state.st;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -15,9 +16,13 @@ import com.sandpolis.core.instance.state.vst.VirtObject;
 
 public abstract class AbstractSTCollection extends AbstractSTObject<ProtoCollection> implements STCollection {
 
+	protected BiFunction<STCollection, Long, STDocument> documentConstructor = EphemeralDocument::new;
+
 	protected Map<Long, STDocument> documents;
 
-	protected STDocument parent;
+	public AbstractSTCollection(STObject<?> parent, long id) {
+		super(parent, id);
+	}
 
 	public void clear() {
 		documents.clear();
@@ -36,8 +41,14 @@ public abstract class AbstractSTCollection extends AbstractSTObject<ProtoCollect
 	public STDocument document(long tag) {
 		var document = getDocument(tag);
 		if (document == null) {
-			document = new EphemeralDocument(this);
-			setDocument(tag, document);
+			document = documentConstructor.apply(this, tag);
+			synchronized (documents) {
+				var previous = documents.put(tag, document);
+
+				if (previous == null) {
+					fireDocumentAddedEvent(this, document);
+				}
+			}
 		}
 		return document;
 	}
@@ -50,10 +61,6 @@ public abstract class AbstractSTCollection extends AbstractSTObject<ProtoCollect
 	@Override
 	public void forEachDocument(Consumer<STDocument> consumer) {
 		documents.values().forEach(consumer);
-	}
-
-	public STDocument get(long tag) {
-		return documents.get(tag);
 	}
 
 	@Override
@@ -84,32 +91,10 @@ public abstract class AbstractSTCollection extends AbstractSTObject<ProtoCollect
 	}
 
 	@Override
-	public STDocument newDocument() {
-		return new EphemeralDocument(this);
-	}
-
-	@Override
-	public AbstractSTObject parent() {
-		return (AbstractSTObject) parent;
-	}
-
-	@Override
 	public void remove(STDocument document) {
 		synchronized (documents) {
 			if (documents.values().remove(document)) {
 				fireDocumentRemovedEvent(this, document);
-			}
-		}
-	}
-
-	@Override
-	public void setDocument(long tag, STDocument document) {
-		synchronized (documents) {
-			var previous = documents.put(tag, document);
-			document.setTag(tag);
-
-			if (previous == null) {
-				fireDocumentAddedEvent(this, document);
 			}
 		}
 	}
@@ -121,7 +106,7 @@ public abstract class AbstractSTCollection extends AbstractSTObject<ProtoCollect
 
 	@Override
 	public ProtoCollection snapshot(RelativeOid... oids) {
-		var snapshot = ProtoCollection.newBuilder().setTag(tag);
+		var snapshot = ProtoCollection.newBuilder().setTag(oid.last());
 		if (oids.length == 0) {
 
 			synchronized (documents) {

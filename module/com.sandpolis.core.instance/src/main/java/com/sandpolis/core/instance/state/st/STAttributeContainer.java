@@ -22,31 +22,6 @@ public interface STAttributeContainer {
 	 */
 	public <E> STAttribute<E> attribute(long tag);
 
-	/**
-	 * Get all attributes in the document.
-	 *
-	 * @return A collection of all attributes
-	 */
-	public Collection<STAttribute<?>> attributes();
-
-	/**
-	 * Get an attribute by its tag. This method returns {@code null} if the
-	 * attribute doesn't exist.
-	 *
-	 * @param <E> The type of the attribute's value
-	 * @param tag The attribute tag
-	 * @return The attribute associated with the tag or {@code null}
-	 */
-	public <E> STAttribute<E> getAttribute(long tag);
-
-	/**
-	 * Overwrite the attribute associated with the given tag.
-	 *
-	 * @param tag       The attribute tag
-	 * @param attribute The attribute to associate with the tag or {@code null}
-	 */
-	public void setAttribute(long tag, STAttribute<?> attribute);
-
 	public default <E> STAttribute<E> attribute(RelativeOid oid) {
 		if (!oid.isConcrete())
 			throw new GenericOidException(oid);
@@ -76,13 +51,28 @@ public interface STAttributeContainer {
 		}
 	}
 
+	/**
+	 * Get all attributes in the document.
+	 *
+	 * @return A collection of all attributes
+	 */
+	public Collection<STAttribute<?>> attributes();
+
+	public void forEachAttribute(Consumer<STAttribute<?>> consumer);
+
 	public default <T> STAttribute<T> get(RelativeOid.STAttributeOid<T> oid) {
 		return attribute(oid);
 	}
 
-	public STAttribute<?> newAttribute();
+	/**
+	 * Get an attribute by its tag. This method returns {@code null} if the
+	 * attribute doesn't exist.
+	 *
+	 * @param <E> The type of the attribute's value
+	 * @param tag The attribute tag
+	 * @return The attribute associated with the tag or {@code null}
+	 */
+	public <E> STAttribute<E> getAttribute(long tag);
 
 	public void remove(STAttribute<?> attribute);
-
-	public void forEachAttribute(Consumer<STAttribute<?>> consumer);
 }

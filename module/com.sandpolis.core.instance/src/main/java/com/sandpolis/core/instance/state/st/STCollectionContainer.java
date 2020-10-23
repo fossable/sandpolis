@@ -20,30 +20,6 @@ public interface STCollectionContainer {
 	 */
 	public STCollection collection(long tag);
 
-	/**
-	 * Get all subcollections.
-	 *
-	 * @return A collection of all subcollections
-	 */
-	public Collection<STCollection> collections();
-
-	/**
-	 * Get a subcollection by its tag. This method returns {@code null} if the
-	 * subcollection doesn't exist.
-	 *
-	 * @param tag The subcollection tag
-	 * @return The subcollection associated with the tag or {@code null}
-	 */
-	public STCollection getCollection(long tag);
-
-	/**
-	 * Overwrite the subcollection associated with the given tag.
-	 *
-	 * @param tag        The subcollection tag
-	 * @param collection The subcollection to associate with the tag or {@code null}
-	 */
-	public void setCollection(long tag, STCollection collection);
-
 	public default STCollection collection(RelativeOid oid) {
 		if (!oid.isConcrete())
 			throw new GenericOidException(oid);
@@ -68,13 +44,27 @@ public interface STCollectionContainer {
 		}
 	}
 
+	/**
+	 * Get all subcollections.
+	 *
+	 * @return A collection of all subcollections
+	 */
+	public Collection<STCollection> collections();
+
+	public void forEachCollection(Consumer<STCollection> consumer);
+
 	public default STCollection get(RelativeOid.STCollectionOid oid) {
 		return collection(oid);
 	}
 
-	public STCollection newCollection();
+	/**
+	 * Get a subcollection by its tag. This method returns {@code null} if the
+	 * subcollection doesn't exist.
+	 *
+	 * @param tag The subcollection tag
+	 * @return The subcollection associated with the tag or {@code null}
+	 */
+	public STCollection getCollection(long tag);
 
 	public void remove(STCollection collection);
-
-	public void forEachCollection(Consumer<STCollection> consumer);
 }

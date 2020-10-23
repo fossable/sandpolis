@@ -25,8 +25,8 @@ import com.sandpolis.core.instance.state.st.STDocument;
  */
 public class EphemeralAttribute<T> extends AbstractSTAttribute<T> implements STAttribute<T> {
 
-	public EphemeralAttribute(STDocument parent) {
-		this.parent = parent;
+	public EphemeralAttribute(STDocument parent, long id) {
+		super(parent, id);
 	}
 
 	@Override

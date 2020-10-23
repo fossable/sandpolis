@@ -9,9 +9,9 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.gradle.codegen.state.impl;
+package com.sandpolis.gradle.codegen.state;
 
-import static com.sandpolis.gradle.codegen.state.STGenerator.ST_PACKAGE;
+import static com.sandpolis.gradle.codegen.state.VSTGenerator.ST_PACKAGE;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 

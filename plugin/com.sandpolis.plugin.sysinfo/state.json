@@ -1,6 +1,6 @@
 [
 	{
-		"name": "Plugin.Nic.Windows",
+		"name": "Nic.Windows",
 		"attributes": {
 			"1": {
 				"name": "luid",
@@ -25,18 +25,18 @@
 		}
 	},
 	{
-		"name": "Plugin.Disk.Partition",
+		"name": "Disk.Partition",
 		"attributes": {
 			"1": {
 				"name": "identification",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"2": {
 				"name": "name",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"3": {
@@ -72,7 +72,7 @@
 		}
 	},
 	{
-		"name": "Plugin.Disk.SMART",
+		"name": "Disk.SMART",
 		"attributes": {
 			"1": {
 				"name": "rotation_rate",
@@ -162,18 +162,18 @@
 		}
 	},
 	{
-		"name": "Plugin.Cpu.Thread",
+		"name": "Cpu.Thread",
 		"attributes": {
 			"1": {
 				"name": "tid",
 				"type": "java.lang.Integer",
-				"identity": true,
+				"immutable": true,
 				"description": "The thread's ID"
 			}
 		}
 	},
 	{
-		"name": "Plugin.Cpu.Core",
+		"name": "Cpu.Core",
 		"attributes": {
 			"1": {
 				"name": "usage",
@@ -188,15 +188,15 @@
 		}
 	},
 	{
-		"name": "Plugin.Nic",
+		"name": "Nic",
 		"documents": {
-			"1": "Plugin.Nic.Windows"
+			"1": "Nic.Windows"
 		},
 		"attributes": {
 			"1": {
 				"name": "name",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The interface's name"
 			},
 			"2": {
@@ -319,30 +319,30 @@
 		}
 	},
 	{
-		"name": "Plugin.Disk",
+		"name": "Disk",
 		"collections": {
-			"1": "Plugin.Disk.Partition"
+			"1": "Disk.Partition"
 		},
 		"documents": {
-			"1": "Plugin.Disk.SMART"
+			"1": "Disk.SMART"
 		},
 		"attributes": {
 			"1": {
 				"name": "name",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"2": {
 				"name": "model",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"3": {
 				"name": "serial",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"4": {
@@ -398,22 +398,22 @@
 		}
 	},
 	{
-		"name": "Plugin.Cpu",
+		"name": "Cpu",
 		"collections": {
-			"1": "Plugin.Cpu.Thread",
-			"2": "Plugin.Cpu.Core"
+			"1": "Cpu.Thread",
+			"2": "Cpu.Core"
 		},
 		"attributes": {
 			"1": {
 				"name": "model",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"2": {
 				"name": "vendor",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"3": {
@@ -444,7 +444,7 @@
 		}
 	},
 	{
-		"name": "Plugin.Sensor",
+		"name": "Sensor",
 		"attributes": {
 			"1": {
 				"name": "fan_speed",
@@ -464,18 +464,18 @@
 		}
 	},
 	{
-		"name": "Plugin.SoundCard",
+		"name": "SoundCard",
 		"attributes": {
 			"1": {
 				"name": "driver_version",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"2": {
 				"name": "name",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"3": {
@@ -486,12 +486,12 @@
 		}
 	},
 	{
-		"name": "Plugin.Display",
+		"name": "Display",
 		"attributes": {
 			"1": {
 				"name": "name",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The display's name"
 			},
 			"2": {
@@ -507,7 +507,7 @@
 			"4": {
 				"name": "size",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The display's physical size in pixels"
 			},
 			"5": {
@@ -523,48 +523,48 @@
 		}
 	},
 	{
-		"name": "Plugin.UsbDevice",
+		"name": "UsbDevice",
 		"attributes": {
 			"1": {
 				"name": "name",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"2": {
 				"name": "vendor",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"3": {
 				"name": "vendor_id",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"4": {
 				"name": "product_id",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"5": {
 				"name": "serial_number",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			}
 		},
 		"relations": {
 			"1": {
 				"name": "children",
-				"type": "Plugin.UsbDevice"
+				"type": "UsbDevice"
 			}
 		}
 	},
 	{
-		"name": "Plugin.Network",
+		"name": "Network",
 		"attributes": {
 			"1": {
 				"name": "hostname",
@@ -585,7 +585,7 @@
 		}
 	},
 	{
-		"name": "Plugin.Power",
+		"name": "Power",
 		"attributes": {
 			"1": {
 				"name": "name",
@@ -605,88 +605,88 @@
 		}
 	},
 	{
-		"name": "Plugin.Firmware",
+		"name": "Firmware",
 		"attributes": {
 			"1": {
 				"name": "name",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"2": {
 				"name": "manufacturer",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The BIOS manufacturer title"
 			},
 			"3": {
 				"name": "description",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The BIOS description"
 			},
 			"4": {
 				"name": "version",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The BIOS version number"
 			},
 			"5": {
 				"name": "revision",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The BIOS revision number"
 			},
 			"6": {
 				"name": "release_date",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The BIOS release date"
 			},
 			"7": {
 				"name": "uefi",
 				"type": "java.lang.Boolean",
-				"identity": true,
+				"immutable": true,
 				"description": "Whether the BIOS supports UEFI mode"
 			}
 		}
 	},
 	{
-		"name": "Plugin.Mainboard",
+		"name": "Mainboard",
 		"attributes": {
 			"1": {
 				"name": "model",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"2": {
 				"name": "manufacturer",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"3": {
 				"name": "version",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"4": {
 				"name": "serial_number",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			}
 		}
 	},
 	{
-		"name": "Plugin.OperatingSystem.User",
+		"name": "OperatingSystem.User",
 		"attributes": {
 			"1": {
 				"name": "uid",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"2": {
@@ -702,12 +702,12 @@
 		}
 	},
 	{
-		"name": "Plugin.OperatingSystem.Process",
+		"name": "OperatingSystem.Process",
 		"attributes": {
 			"1": {
 				"name": "name",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": null
 			},
 			"2": {
@@ -753,7 +753,7 @@
 			"10": {
 				"name": "pid",
 				"type": "java.lang.Integer",
-				"identity": true,
+				"immutable": true,
 				"description": "The process's process ID"
 			},
 			"11": {
@@ -814,66 +814,65 @@
 		}
 	},
 	{
-		"name": "Plugin.OperatingSystem",
+		"name": "OperatingSystem",
 		"collections": {
-			"1": "Plugin.OperatingSystem.Process",
-			"2": "Plugin.OperatingSystem.User"
+			"1": "OperatingSystem.Process",
+			"2": "OperatingSystem.User"
 		},
 		"attributes": {
 			"1": {
 				"name": "family",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The operating system's family"
 			},
 			"2": {
 				"name": "manufacturer",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The operating system's manufacturer"
 			},
 			"3": {
 				"name": "bitness",
 				"type": "java.lang.Integer",
-				"identity": true,
+				"immutable": true,
 				"description": "The operating system's register width in bits"
 			},
 			"4": {
 				"name": "version",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The operating system's primary version"
 			},
 			"5": {
 				"name": "codename",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The operating system's code name"
 			},
 			"6": {
 				"name": "build_number",
 				"type": "java.lang.String",
-				"identity": true,
+				"immutable": true,
 				"description": "The operating system's build number"
 			}
 		}
 	},
 	{
 		"parent": "1.3",
-		"name": "Plugin",
 		"collections": {
-			"1": "Plugin.UsbDevice",
-			"2": "Plugin.Display",
-			"3": "Plugin.SoundCard",
-			"4": "Plugin.Sensor",
-			"5": "Plugin.Cpu"
+			"1": "UsbDevice",
+			"2": "Display",
+			"3": "SoundCard",
+			"4": "Sensor",
+			"5": "Cpu"
 		},
 		"documents": {
-			"1": "Plugin.OperatingSystem",
-			"2": "Plugin.Mainboard",
-			"3": "Plugin.Firmware",
-			"4": "Plugin.Power",
-			"5": "Plugin.Network"
+			"1": "OperatingSystem",
+			"2": "Mainboard",
+			"3": "Firmware",
+			"4": "Power",
+			"5": "Network"
 		}
 	}
 ]

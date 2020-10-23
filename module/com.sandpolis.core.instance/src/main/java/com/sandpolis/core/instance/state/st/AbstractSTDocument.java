@@ -5,30 +5,48 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import com.sandpolis.core.instance.State.ProtoDocument;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
+import com.sandpolis.core.instance.state.st.ephemeral.EphemeralAttribute;
+import com.sandpolis.core.instance.state.st.ephemeral.EphemeralCollection;
+import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument;
 
 public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument> implements STDocument {
 
+	protected BiFunction<STDocument, Long, STAttribute<?>> attributeConstructor = EphemeralAttribute::new;
+
 	protected Map<Long, STAttribute<?>> attributes;
 
+	protected BiFunction<STDocument, Long, STCollection> collectionConstructor = EphemeralCollection::new;
+
 	protected Map<Long, STCollection> collections;
+
+	protected BiFunction<STDocument, Long, STDocument> documentConstructor = EphemeralDocument::new;
 
 	protected Map<Long, STDocument> documents;
 
 	protected String id;
 
-	protected AbstractSTObject<?> parent;
+	public AbstractSTDocument(STObject<?> parent, long id) {
+		super(parent, id);
+	}
 
 	@Override
 	public <E> STAttribute<E> attribute(long tag) {
 		STAttribute<?> attribute = getAttribute(tag);
 		if (attribute == null) {
-			attribute = newAttribute();
-			setAttribute(tag, attribute);
+			attribute = attributeConstructor.apply(this, tag);
+			synchronized (attributes) {
+				var previous = attributes.put(tag, attribute);
+
+//				if (previous == null) {
+//					fireAttributeAddedEvent(this, attribute);
+//				}
+			}
 		}
 		return (STAttribute<E>) attribute;
 	}
@@ -42,37 +60,16 @@ public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument>
 	public STCollection collection(long tag) {
 		var collection = getCollection(tag);
 		if (collection == null) {
-			collection = newCollection();
-			setCollection(tag, collection);
+			collection = collectionConstructor.apply(this, tag);
+			synchronized (collections) {
+				var previous = collections.put(tag, collection);
+
+				if (previous == null) {
+					fireCollectionAddedEvent(this, collection);
+				}
+			}
 		}
 		return collection;
-	}
-
-	@Override
-	public void remove(STAttribute<?> attribute) {
-		synchronized (attributes) {
-			if (attributes.values().remove(attribute)) {
-//				fireAttributeRemovedEvent(this, attribute);
-			}
-		}
-	}
-
-	@Override
-	public void remove(STCollection collection) {
-		synchronized (collections) {
-			if (collections.values().remove(collection)) {
-				fireCollectionRemovedEvent(this, collection);
-			}
-		}
-	}
-
-	@Override
-	public void remove(STDocument document) {
-		synchronized (documents) {
-			if (documents.values().remove(document)) {
-				fireDocumentRemovedEvent(this, document);
-			}
-		}
 	}
 
 	@Override
@@ -84,8 +81,14 @@ public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument>
 	public STDocument document(long tag) {
 		var document = getDocument(tag);
 		if (document == null) {
-			document = newDocument();
-			setDocument(tag, document);
+			document = documentConstructor.apply(this, tag);
+			synchronized (documents) {
+				var previous = documents.put(tag, document);
+
+				if (previous == null) {
+					fireDocumentAddedEvent(this, document);
+				}
+			}
 		}
 		return document;
 	}
@@ -177,45 +180,35 @@ public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument>
 	}
 
 	@Override
-	public AbstractSTObject parent() {
-		return parent;
-	}
-
-	@Override
-	public void setAttribute(long tag, STAttribute<?> attribute) {
+	public void remove(STAttribute<?> attribute) {
 		synchronized (attributes) {
-			attributes.put(tag, attribute);
-			attribute.setTag(tag);
-		}
-	}
-
-	@Override
-	public void setCollection(long tag, STCollection collection) {
-		synchronized (collections) {
-			var previous = collections.put(tag, collection);
-			collection.setTag(tag);
-
-			if (previous == null) {
-				fireCollectionAddedEvent(this, collection);
+			if (attributes.values().remove(attribute)) {
+//				fireAttributeRemovedEvent(this, attribute);
 			}
 		}
 	}
 
 	@Override
-	public void setDocument(long tag, STDocument document) {
-		synchronized (documents) {
-			var previous = documents.put(tag, document);
-			document.setTag(tag);
+	public void remove(STCollection collection) {
+		synchronized (collections) {
+			if (collections.values().remove(collection)) {
+				fireCollectionRemovedEvent(this, collection);
+			}
+		}
+	}
 
-			if (previous == null) {
-				fireDocumentAddedEvent(this, document);
+	@Override
+	public void remove(STDocument document) {
+		synchronized (documents) {
+			if (documents.values().remove(document)) {
+				fireDocumentRemovedEvent(this, document);
 			}
 		}
 	}
 
 	@Override
 	public ProtoDocument snapshot(RelativeOid... oids) {
-		var snapshot = ProtoDocument.newBuilder().setTag(tag);
+		var snapshot = ProtoDocument.newBuilder().setTag(oid.last());
 
 		if (oids.length == 0) {
 			synchronized (documents) {

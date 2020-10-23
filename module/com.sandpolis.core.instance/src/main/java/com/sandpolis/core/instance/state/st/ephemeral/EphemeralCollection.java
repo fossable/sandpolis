@@ -23,14 +23,14 @@ public class EphemeralCollection extends AbstractSTCollection implements STColle
 
 	private final Metadata metadata = new Metadata();
 
-	public EphemeralCollection(STDocument parent) {
-		this.parent = parent;
+	public EphemeralCollection(STDocument parent, long id) {
+		super(parent, id);
 
 		documents = new HashMap<>();
 	}
 
-	public EphemeralCollection(STDocument parent, ProtoCollection collection) {
-		this(parent);
+	public EphemeralCollection(STDocument parent, long id, ProtoCollection collection) {
+		this(parent, id);
 		merge(collection);
 	}
 

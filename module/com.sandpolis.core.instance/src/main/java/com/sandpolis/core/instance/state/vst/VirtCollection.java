@@ -13,7 +13,7 @@ public class VirtCollection<V extends VirtDocument> implements VirtObject {
 		if (object.complete() != ErrorCode.OK)
 			throw new IncompleteObjectException();
 
-		documents.put(object.tag(), object);
+		documents.put(object.oid().last(), object);
 	}
 
 	public long count() {

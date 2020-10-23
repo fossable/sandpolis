@@ -63,11 +63,11 @@ public interface RelativeOid extends Oid {
 		}
 
 		public RelativeOid.STAttributeOid<T> resolveLocal() {
-			return resolve(OidUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.computeNamespace(Core.UUID));
 		}
 
 		public RelativeOid.STAttributeOid<T> resolveUuid(String uuid) {
-			return resolve(OidUtil.uuidToTag(uuid));
+			return resolve(OidUtil.computeNamespace(uuid));
 		}
 
 		@Override
@@ -123,11 +123,11 @@ public interface RelativeOid extends Oid {
 		}
 
 		public RelativeOid.STCollectionOid resolveLocal() {
-			return resolve(OidUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.computeNamespace(Core.UUID));
 		}
 
 		public RelativeOid.STCollectionOid resolveUuid(String uuid) {
-			return resolve(OidUtil.uuidToTag(uuid));
+			return resolve(OidUtil.computeNamespace(uuid));
 		}
 
 		@Override
@@ -183,11 +183,11 @@ public interface RelativeOid extends Oid {
 		}
 
 		public RelativeOid.STDocumentOid resolveLocal() {
-			return resolve(OidUtil.uuidToTag(Core.UUID));
+			return resolve(OidUtil.computeNamespace(Core.UUID));
 		}
 
 		public RelativeOid.STDocumentOid resolveUuid(String uuid) {
-			return resolve(OidUtil.uuidToTag(uuid));
+			return resolve(OidUtil.computeNamespace(uuid));
 		}
 
 		@Override

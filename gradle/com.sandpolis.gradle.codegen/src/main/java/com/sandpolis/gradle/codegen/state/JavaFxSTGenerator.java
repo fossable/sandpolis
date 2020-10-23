@@ -9,17 +9,13 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.gradle.codegen.state.impl;
+package com.sandpolis.gradle.codegen.state;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 import com.sandpolis.core.foundation.util.OidUtil;
-import com.sandpolis.gradle.codegen.state.AttributeSpec;
-import com.sandpolis.gradle.codegen.state.DocumentSpec;
-import com.sandpolis.gradle.codegen.state.RelationSpec;
-import com.sandpolis.gradle.codegen.state.STGenerator;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -29,7 +25,7 @@ import com.squareup.javapoet.TypeSpec.Builder;
 /**
  * Generator for JavaFX document bindings.
  */
-public class JavaFxSTGenerator extends STGenerator {
+public class JavaFxSTGenerator extends VSTGenerator {
 
 	protected void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute, String oid) {
 
