@@ -21,7 +21,7 @@ import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.profile.ProfileStore.ProfileStoreConfig;
 import com.sandpolis.core.instance.state.VirtProfile;
 import com.sandpolis.core.instance.state.st.STCollection;
-import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 
@@ -45,7 +45,7 @@ public final class ProfileStore extends STCollectionStore<Profile> implements Co
 	 * @return The requested {@link Profile}
 	 */
 	public Optional<Profile> getViewer(String username) {
-		return stream().filter(profile -> username.equals(profile.viewer().getUsername())).findFirst();
+		return values().stream().filter(profile -> username.equals(profile.viewer().getUsername())).findFirst();
 	}
 
 	/**
@@ -55,12 +55,12 @@ public final class ProfileStore extends STCollectionStore<Profile> implements Co
 	 * @return The profile
 	 */
 	public Optional<Profile> getByCvid(int cvid) {
-		return stream().filter(profile -> profile.cvid().isPresent()).filter(profile -> profile.getCvid() == cvid)
-				.findFirst();
+		return values().stream().filter(profile -> profile.cvid().isPresent())
+				.filter(profile -> profile.getCvid() == cvid).findFirst();
 	}
 
 	public Optional<Profile> getByUuid(String uuid) {
-		return stream().filter(profile -> uuid.equals(profile.getUuid())).findFirst();
+		return values().stream().filter(profile -> uuid.equals(profile.getUuid())).findFirst();
 	}
 
 	@Override
@@ -68,19 +68,13 @@ public final class ProfileStore extends STCollectionStore<Profile> implements Co
 		var config = new ProfileStoreConfig();
 		configurator.accept(config);
 
-		collection = config.collection;
+		collection = new VirtCollection<>(config.collection);
 	}
 
 	public Profile create(Consumer<VirtProfile> configurator) {
-		var profile = new Profile(collection.newDocument());
+		var profile = add(Profile::new);
 		configurator.accept(profile);
-		add(profile);
 		return profile;
-	}
-
-	@Override
-	protected Profile constructor(STDocument document) {
-		return new Profile(document);
 	}
 
 	@ConfigStruct

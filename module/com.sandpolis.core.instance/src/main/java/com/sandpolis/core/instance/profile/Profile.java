@@ -25,5 +25,4 @@ public class Profile extends VirtProfile {
 	Profile(STDocument parent) {
 		super(parent);
 	}
-
 }

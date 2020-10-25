@@ -41,7 +41,7 @@ import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginStore.PluginStoreConfig;
 import com.sandpolis.core.instance.state.VirtPlugin;
 import com.sandpolis.core.instance.state.st.STCollection;
-import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 
@@ -77,7 +77,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 	private static Function<X509Certificate, Boolean> verifier = c -> true;
 
 	public Optional<Plugin> getByPackageId(String packageId) {
-		return stream().filter(plugin -> plugin.getPackageId().equals(packageId)).findAny();
+		return values().stream().filter(plugin -> plugin.getPackageId().equals(packageId)).findAny();
 	}
 
 	/**
@@ -143,7 +143,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 				.filter(path -> path.getFileName().toString().startsWith("sandpolis-plugin-"))
 				// Skip installed plugins
 				.filter(path -> {
-					try (Stream<Plugin> stream = stream()) {
+					try (Stream<Plugin> stream = values().stream()) {
 						// Read plugin id
 						String id = JarUtil.getManifestValue(path.toFile(), "Plugin-Id").orElse(null);
 
@@ -159,7 +159,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 	 * Load all installed plugins that are enabled and currently unloaded.
 	 */
 	public void loadPlugins() {
-		stream()
+		values().stream()
 				// Enabled plugins only
 				.filter(Plugin::isEnabled)
 				// Skip loaded plugins
@@ -228,7 +228,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 	}
 
 	public Stream<Plugin> getLoadedPlugins() {
-		return stream().filter(Plugin::isEnabled).filter(Plugin::isLoaded);
+		return values().stream().filter(Plugin::isEnabled).filter(Plugin::isLoaded);
 	}
 
 	@Override
@@ -236,19 +236,13 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 		var config = new PluginStoreConfig();
 		configurator.accept(config);
 
-		collection = config.collection;
+		collection = new VirtCollection<>(config.collection);
 	}
 
 	public Plugin create(Consumer<VirtPlugin> configurator) {
-		var plugin = new Plugin(collection.newDocument());
+		var plugin = add(Plugin::new);
 		configurator.accept(plugin);
-		add(plugin);
 		return plugin;
-	}
-
-	@Override
-	protected Plugin constructor(STDocument document) {
-		return new Plugin(document);
 	}
 
 	@ConfigStruct

@@ -11,12 +11,13 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.location.services;
 
+import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
+
 import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableBiMap;
 import com.sandpolis.core.instance.state.VirtIpLocation;
-import com.sandpolis.core.instance.state.VirtST;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.server.location.AbstractGeolocationService;
 
@@ -30,20 +31,20 @@ public final class KeyCdn extends AbstractGeolocationService {
 	 * The fields provided by the location service associated with {@link Oid}s.
 	 */
 	private static final ImmutableBiMap<Oid, String> JSON_FIELDS = new ImmutableBiMap.Builder<Oid, String>()
-			.put(VirtST.profile.client.iplocation.as_code, "asn") //
-			.put(VirtST.profile.client.iplocation.city, "city") //
-			.put(VirtST.profile.client.iplocation.continent, "continent_name") //
-			.put(VirtST.profile.client.iplocation.continent_code, "continent_code") //
-			.put(VirtST.profile.client.iplocation.country, "country_name") //
-			.put(VirtST.profile.client.iplocation.country_code, "country_code") //
-			.put(VirtST.profile.client.iplocation.isp, "isp") //
-			.put(VirtST.profile.client.iplocation.latitude, "latitude") //
-			.put(VirtST.profile.client.iplocation.longitude, "lonitude") //
-			.put(VirtST.profile.client.iplocation.metro_code, "metro_code") //
-			.put(VirtST.profile.client.iplocation.postal_code, "postal_code") //
-			.put(VirtST.profile.client.iplocation.region, "region_name") //
-			.put(VirtST.profile.client.iplocation.region_code, "region_code") //
-			.put(VirtST.profile.client.iplocation.timezone, "timezone") //
+			.put(InstanceOid().profile.client.iplocation.as_code, "asn") //
+			.put(InstanceOid().profile.client.iplocation.city, "city") //
+			.put(InstanceOid().profile.client.iplocation.continent, "continent_name") //
+			.put(InstanceOid().profile.client.iplocation.continent_code, "continent_code") //
+			.put(InstanceOid().profile.client.iplocation.country, "country_name") //
+			.put(InstanceOid().profile.client.iplocation.country_code, "country_code") //
+			.put(InstanceOid().profile.client.iplocation.isp, "isp") //
+			.put(InstanceOid().profile.client.iplocation.latitude, "latitude") //
+			.put(InstanceOid().profile.client.iplocation.longitude, "lonitude") //
+			.put(InstanceOid().profile.client.iplocation.metro_code, "metro_code") //
+			.put(InstanceOid().profile.client.iplocation.postal_code, "postal_code") //
+			.put(InstanceOid().profile.client.iplocation.region, "region_name") //
+			.put(InstanceOid().profile.client.iplocation.region_code, "region_code") //
+			.put(InstanceOid().profile.client.iplocation.timezone, "timezone") //
 			.build();
 
 	public KeyCdn() {

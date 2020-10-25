@@ -185,8 +185,8 @@ public abstract class MegaGen extends Generator {
 
 		// Add plugin binaries
 		if (!config.getMega().getDownloader()) {
-			for (var plugin : PluginStore.stream().filter(plugin -> features.getPluginList().contains(plugin.getId()))
-					.toArray(Plugin[]::new)) {
+			for (var plugin : PluginStore.values().stream()
+					.filter(plugin -> features.getPluginList().contains(plugin.getId())).toArray(Plugin[]::new)) {
 				ZipSet pluginArchive = new ZipSet();
 
 				// Add core component

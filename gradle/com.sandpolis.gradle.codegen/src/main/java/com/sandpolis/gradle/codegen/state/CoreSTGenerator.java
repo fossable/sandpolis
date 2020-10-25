@@ -162,6 +162,32 @@ public class CoreSTGenerator extends VSTGenerator {
 		// Process subdocuments and attributes
 		processChildren(documentClass, oidClass, document, oid + ".0");
 
+		if (parent != null) {
+			{
+				// Add collection field
+				var field = FieldSpec.builder(
+						ParameterizedTypeName.get(ClassName.get(VST_PACKAGE, "VirtCollection"),
+								ClassName.bestGuess(VST_PREFIX + document.shortName())),
+						document.shortName().toLowerCase(), PRIVATE);
+
+				parent.addField(field.build());
+			}
+
+			{
+				// Add collection method
+				var method = MethodSpec.methodBuilder(document.shortName().toLowerCase()) //
+						.addModifiers(PUBLIC) //
+						.returns(ParameterizedTypeName.get(ClassName.get(VST_PACKAGE, "VirtCollection"),
+								ClassName.bestGuess(VST_PREFIX + document.shortName()))) //
+						.addStatement("if ($L == null) $L = new VirtCollection<>(document.collection($LL))",
+								document.shortName().toLowerCase(), document.shortName().toLowerCase(),
+								oid.replaceAll(".*\\.", "")) //
+						.addStatement("return $L", document.shortName().toLowerCase());
+
+				parent.addMethod(method.build());
+			}
+		}
+
 		documentClass.addType(oidClass.build());
 		writeClass(documentClass.build());
 	}
@@ -215,16 +241,27 @@ public class CoreSTGenerator extends VSTGenerator {
 		// Process subdocuments and attributes
 		processChildren(documentClass, parent == null ? null : oidClass, document, oid);
 
-		{
-			// Add document method
-			var method = MethodSpec.methodBuilder(document.shortName().toLowerCase()) //
-					.addModifiers(PUBLIC) //
-					.returns(ClassName.bestGuess("Virt" + document.shortName())) //
-					.addStatement("return new Virt$L(document.document($LL))", document.shortName(),
-							oid.replaceAll(".*\\.", ""));
+		if (parent != null) {
+			{
+				// Add document field
+				var field = FieldSpec.builder(ClassName.bestGuess(VST_PREFIX + document.shortName()),
+						document.shortName().toLowerCase(), PRIVATE);
 
-			if (parent != null)
+				parent.addField(field.build());
+			}
+
+			{
+				// Add document method
+				var method = MethodSpec.methodBuilder(document.shortName().toLowerCase()) //
+						.addModifiers(PUBLIC) //
+						.returns(ClassName.bestGuess(VST_PREFIX + document.shortName())) //
+						.addStatement("if ($L == null) $L = new Virt$L(document.document($LL))",
+								document.shortName().toLowerCase(), document.shortName().toLowerCase(),
+								document.shortName(), oid.replaceAll(".*\\.", "")) //
+						.addStatement("return $L", document.shortName().toLowerCase());
+
 				parent.addMethod(method.build());
+			}
 		}
 
 		documentClass.addType(oidClass.build());
@@ -259,8 +296,8 @@ public class CoreSTGenerator extends VSTGenerator {
 				// Add the setter method
 				var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "set_" + relation.name)) //
 						.addModifiers(PUBLIC) //
-						.addParameter(ClassName.bestGuess(VSTGenerator.VST_PREFIX + relation.simpleName()), "v") //
-						.addStatement("document.setDocument($LL, v.document)", oid.replaceAll(".*\\.", ""));
+						.addParameter(ClassName.bestGuess(VSTGenerator.VST_PREFIX + relation.simpleName()), "v"); //
+//						.addStatement("document.setDocument($LL, v.document)", oid.replaceAll(".*\\.", ""));
 				parent.addMethod(method.build());
 			}
 		}

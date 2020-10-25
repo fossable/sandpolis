@@ -11,8 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.network;
 
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtConnection;
+import com.sandpolis.core.instance.state.st.STDocument;
 
 public class NetworkConnection extends VirtConnection {
 

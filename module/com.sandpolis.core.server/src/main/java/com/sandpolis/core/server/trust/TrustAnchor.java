@@ -11,8 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.trust;
 
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtTrustAnchor;
+import com.sandpolis.core.instance.state.st.STDocument;
 
 public class TrustAnchor extends VirtTrustAnchor {
 

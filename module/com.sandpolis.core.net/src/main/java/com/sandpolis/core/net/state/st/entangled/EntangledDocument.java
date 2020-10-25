@@ -30,6 +30,7 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	private STDocument container;
 
 	public EntangledDocument(STDocument container, STSyncStruct config) {
+		super(null, 0);// TODO
 		this.container = Objects.requireNonNull(container);
 
 		if (container instanceof EntangledObject)
@@ -118,11 +119,6 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public long getTag() {
-		return ((AbstractSTObject) container).getTag();
-	}
-
-	@Override
 	public void merge(ProtoDocument snapshot) {
 		container.merge(snapshot);
 	}
@@ -143,26 +139,6 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public void setAttribute(long tag, STAttribute<?> attribute) {
-		container.setAttribute(tag, attribute);
-	}
-
-	@Override
-	public void setCollection(long tag, STCollection collection) {
-		container.setCollection(tag, collection);
-	}
-
-	@Override
-	public void setDocument(long tag, STDocument document) {
-		container.setDocument(tag, document);
-	}
-
-	@Override
-	public void setTag(long tag) {
-		container.setTag(tag);
-	}
-
-	@Override
 	public ProtoDocument snapshot(RelativeOid... oids) {
 		return container.snapshot(oids);
 	}
@@ -170,12 +146,6 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	@Override
 	protected STObject<ProtoDocument> container() {
 		return container;
-	}
-
-	@Override
-	public STAttribute<?> newAttribute() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
@@ -191,12 +161,6 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public STDocument newDocument() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public void remove(STDocument document) {
 		// TODO Auto-generated method stub
 
@@ -206,12 +170,6 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	public void forEachDocument(Consumer<STDocument> consumer) {
 		// TODO Auto-generated method stub
 
-	}
-
-	@Override
-	public STCollection newCollection() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

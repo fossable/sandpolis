@@ -51,6 +51,10 @@ import com.sandpolis.core.net.stream.StreamSource;
  */
 public abstract class EntangledObject<T extends Message> extends AbstractSTObject<T> {
 
+	public EntangledObject(STObject<?> parent, long id) {
+		super(parent, id);
+	}
+
 	private static final Logger log = LoggerFactory.getLogger(EntangledObject.class);
 
 	protected StreamSink<T> sink;

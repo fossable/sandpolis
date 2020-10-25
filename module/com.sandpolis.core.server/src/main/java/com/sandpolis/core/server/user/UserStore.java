@@ -23,9 +23,9 @@ import com.google.common.hash.Hashing;
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtUser;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.user.UserStore.UserStoreConfig;
@@ -39,7 +39,7 @@ public final class UserStore extends STCollectionStore<User> implements Configur
 	}
 
 	public Optional<User> getByUsername(String username) {
-		return stream().filter(user -> user.getUsername().equals(username)).findAny();
+		return values().stream().filter(user -> user.getUsername().equals(username)).findAny();
 	}
 
 	@Override
@@ -47,13 +47,12 @@ public final class UserStore extends STCollectionStore<User> implements Configur
 		var config = new UserStoreConfig();
 		configurator.accept(config);
 
-		collection = config.collection;
+		collection = new VirtCollection<>(config.collection);
 	}
 
 	public User create(Consumer<VirtUser> configurator) {
-		var user = new User(collection.newDocument());
+		var user = add(User::new);
 		configurator.accept(user);
-		add(user);
 		return user;
 	}
 
@@ -73,11 +72,6 @@ public final class UserStore extends STCollectionStore<User> implements Configur
 					// Compute a preliminary hash before PBKDF2 is applied
 					Hashing.sha512().hashString(config.getPassword(), Charsets.UTF_8).toString()));
 		});
-	}
-
-	@Override
-	protected User constructor(STDocument document) {
-		return new User(document);
 	}
 
 	@ConfigStruct

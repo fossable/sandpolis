@@ -94,7 +94,7 @@ public class STCmd extends Cmdlet<STCmd> {
 		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelist);
 
 		return request(ProtoCollection.class, rq).thenApply(rs -> {
-			return new EphemeralCollection(null, rs);
+			return new EphemeralCollection(null, 0, rs);// TODO
 		});
 	}
 
@@ -121,7 +121,7 @@ public class STCmd extends Cmdlet<STCmd> {
 		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelist);
 
 		return request(ProtoDocument.class, rq).thenApply(rs -> {
-			return new EphemeralDocument((STDocument) null, rs);
+			return new EphemeralDocument((STDocument) null, 0, rs);// TODO
 		});
 	}
 
@@ -186,7 +186,7 @@ public class STCmd extends Cmdlet<STCmd> {
 
 		config.whitelist.stream().map(Oid::toString).forEach(rq::addWhitelist);
 
-		var document = new EntangledDocument(new EphemeralDocument((STDocument) null), config);
+		var document = new EntangledDocument(new EphemeralDocument((STDocument) null, 0), config);// TODO
 
 		return request(Outcome.class, rq).thenApply(rs -> {
 			return document;

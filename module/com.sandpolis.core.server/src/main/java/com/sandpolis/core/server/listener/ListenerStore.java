@@ -20,9 +20,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Listener.ListenerConfig;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtListener;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.listener.ListenerStore.ListenerStoreConfig;
@@ -45,7 +45,7 @@ public final class ListenerStore extends STCollectionStore<Listener> implements 
 	 */
 	public void start() {
 
-		stream().filter(listener -> !listener.isActive() && listener.isEnabled()).forEach(listener -> {
+		values().stream().filter(listener -> !listener.isActive() && listener.isEnabled()).forEach(listener -> {
 			log.info("Starting listener on port: {}", listener.getPort());
 
 			listener.start();
@@ -56,7 +56,7 @@ public final class ListenerStore extends STCollectionStore<Listener> implements 
 	 * Stop all running listeners in the store.
 	 */
 	public void stop() {
-		stream().filter(listener -> listener.isActive()).forEach(listener -> {
+		values().stream().filter(listener -> listener.isActive()).forEach(listener -> {
 			log.info("Stopping listener on port: {}", listener.getPort());
 
 			listener.stop();
@@ -64,7 +64,7 @@ public final class ListenerStore extends STCollectionStore<Listener> implements 
 	}
 
 	public Optional<Listener> getByPort(int port) {
-		return stream().filter(listener -> listener.getPort() == port).findAny();
+		return values().stream().filter(listener -> listener.getPort() == port).findAny();
 	}
 
 	@Override
@@ -72,13 +72,12 @@ public final class ListenerStore extends STCollectionStore<Listener> implements 
 		var config = new ListenerStoreConfig();
 		configurator.accept(config);
 
-		collection = config.collection;
+		collection = new VirtCollection<>(config.collection);
 	}
 
 	public Listener create(Consumer<VirtListener> configurator) {
-		var listener = new Listener(collection.newDocument());
+		var listener = add(Listener::new);
 		configurator.accept(listener);
-		add(listener);
 		return listener;
 	}
 
@@ -92,11 +91,6 @@ public final class ListenerStore extends STCollectionStore<Listener> implements 
 			listener.enabled().set(config.getEnabled());
 			listener.active().set(false);
 		});
-	}
-
-	@Override
-	protected Listener constructor(STDocument document) {
-		return new Listener(document);
 	}
 
 	@ConfigStruct

@@ -29,8 +29,8 @@ import com.sandpolis.core.foundation.util.CertUtil;
 import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtListener;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.net.util.ChannelUtil;
 import com.sandpolis.core.server.channel.ServerChannelInitializer;
 

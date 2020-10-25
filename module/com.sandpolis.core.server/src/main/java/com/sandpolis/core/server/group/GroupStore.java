@@ -22,9 +22,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Group.GroupConfig;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtGroup;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.group.GroupStore.GroupStoreConfig;
@@ -50,7 +50,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return The user's groups
 	 */
 	public Stream<Group> getByMembership(User user) {
-		return stream().filter(group -> user.equals(group.getOwner()) || group.getMembers().contains(user));
+		return values().stream().filter(group -> user.equals(group.getOwner()) || group.getMembers().contains(user));
 	}
 
 	/**
@@ -59,7 +59,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return A list of unauth groups
 	 */
 	public Stream<Group> getUnauthGroups() {
-		return stream().filter(group -> group.getAuthMechanisms().size() == 0);
+		return values().stream().filter(group -> group.getAuthMechanisms().size() == 0);
 	}
 
 	/**
@@ -69,18 +69,20 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return Groups with the password
 	 */
 	public Stream<Group> getByPassword(String password) {
-		return stream().filter(group -> {
-			for (var mech : group.getAuthMechanisms()) {
-				if (password.equals(mech.getPassword())) {
-					return true;
-				}
-			}
-			return false;
-		});
+		return values().stream();
+
+//		.filter(group -> {
+//			for (var mech : group.getAuthMechanisms()) {
+//				if (password.equals(mech.getPassword())) {
+//					return true;
+//				}
+//			}
+//			return false;
+//		});
 	}
 
 	public Optional<Group> getByName(String name) {
-		return stream().filter(group -> group.getName().equals(name)).findAny();
+		return values().stream().filter(group -> group.getName().equals(name)).findAny();
 	}
 
 	@Override
@@ -88,13 +90,12 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 		var config = new GroupStoreConfig();
 		configurator.accept(config);
 
-		collection = config.collection;
+		collection = new VirtCollection<>(config.collection);
 	}
 
 	public Group create(Consumer<VirtGroup> configurator) {
-		var group = new Group(collection.newDocument());
+		var group = add(Group::new);
 		configurator.accept(group);
-		add(group);
 		return group;
 	}
 
@@ -113,11 +114,6 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 				group.setOwner(user);
 			});
 		});
-	}
-
-	@Override
-	protected Group constructor(STDocument document) {
-		return new Group(document);
 	}
 
 	@ConfigStruct

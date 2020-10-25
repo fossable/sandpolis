@@ -27,7 +27,7 @@ public abstract class OidBase implements Oid {
 	 */
 	private String dotted;
 
-	protected final long namespace;
+	protected long namespace;
 
 	/**
 	 * The components of the oid.

@@ -30,9 +30,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.CertUtil;
-import com.sandpolis.core.instance.state.STCollection;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtTrustAnchor;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.trust.TrustStore.TrustStoreConfig;
@@ -62,7 +62,7 @@ public final class TrustStore extends STCollectionStore<TrustAnchor> implements 
 		Objects.requireNonNull(cert);
 
 		PKIXParameters params;
-		try (Stream<TrustAnchor> stream = stream()) {
+		try (Stream<TrustAnchor> stream = values().stream()) {
 			params = new PKIXParameters(stream.map(t -> new java.security.cert.TrustAnchor(t.getCertificate(), null))
 					.collect(Collectors.toSet()));
 			params.setRevocationEnabled(false);
@@ -88,7 +88,7 @@ public final class TrustStore extends STCollectionStore<TrustAnchor> implements 
 		var config = new TrustStoreConfig();
 		configurator.accept(config);
 
-		collection = config.collection;
+		collection = new VirtCollection<>(config.collection);
 
 		// Install root CA if required
 		if (getMetadata().getInitCount() == 1) {
@@ -100,15 +100,9 @@ public final class TrustStore extends STCollectionStore<TrustAnchor> implements 
 	}
 
 	public TrustAnchor create(Consumer<VirtTrustAnchor> configurator) {
-		var anchor = new TrustAnchor(collection.newDocument());
+		var anchor = add(TrustAnchor::new);
 		configurator.accept(anchor);
-		add(anchor);
 		return anchor;
-	}
-
-	@Override
-	protected TrustAnchor constructor(STDocument document) {
-		return new TrustAnchor(document);
 	}
 
 	@ConfigStruct

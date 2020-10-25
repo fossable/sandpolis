@@ -33,6 +33,7 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 	private STCollection container;
 
 	public EntangledCollection(STCollection container, STSyncStruct config) {
+		super(null, 0);// TODO
 		this.container = Objects.requireNonNull(container);
 
 		if (container instanceof EntangledObject)
@@ -96,18 +97,8 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 	}
 
 	@Override
-	public long getTag() {
-		return ((AbstractSTObject) container).getTag();
-	}
-
-	@Override
 	public void merge(ProtoCollection snapshot) {
 		container.merge(snapshot);
-	}
-
-	@Override
-	public STDocument newDocument() {
-		return container.newDocument();
 	}
 
 	@Override
@@ -128,16 +119,6 @@ public class EntangledCollection extends EntangledObject<ProtoCollection> implem
 	@Override
 	public void removeListener(Object listener) {
 		container.removeListener(listener);
-	}
-
-	@Override
-	public void setDocument(long tag, STDocument document) {
-		container.setDocument(tag, document);
-	}
-
-	@Override
-	public void setTag(long tag) {
-		container.setTag(tag);
 	}
 
 	@Override

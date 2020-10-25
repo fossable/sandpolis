@@ -17,8 +17,8 @@ import static com.sandpolis.core.foundation.Result.ErrorCode.OK;
 
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.foundation.util.ValidationUtil;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.core.instance.state.VirtUser;
+import com.sandpolis.core.instance.state.st.STDocument;
 
 /**
  * Represents a user account on the server.

@@ -29,6 +29,7 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	private STAttribute<T> container;
 
 	public EntangledAttribute(STAttribute<T> container, STSyncStruct config) {
+		super(null, 0);// TODO
 		this.container = Objects.requireNonNull(container);
 
 		if (container instanceof EntangledObject)
@@ -72,11 +73,6 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	}
 
 	@Override
-	public long getTag() {
-		return ((AbstractSTObject) container).getTag();
-	}
-
-	@Override
 	public List<STAttributeValue<T>> history() {
 		return container.history();
 	}
@@ -104,11 +100,6 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	@Override
 	public void set(T value) {
 		container.set(value);
-	}
-
-	@Override
-	public void setTag(long tag) {
-		container.setTag(tag);
 	}
 
 	@Override

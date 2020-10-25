@@ -28,4 +28,6 @@ public interface ConfigurableStore<E> {
 	 * @param configurator The initialization block
 	 */
 	public void init(Consumer<E> configurator);
+
+//	public boolean isInitialized();
 }

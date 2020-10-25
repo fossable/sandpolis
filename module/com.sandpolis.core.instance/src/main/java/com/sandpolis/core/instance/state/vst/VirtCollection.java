@@ -2,18 +2,28 @@ package com.sandpolis.core.instance.state.vst;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
-import com.sandpolis.core.foundation.Result.ErrorCode;
+import com.sandpolis.core.foundation.util.RandUtil;
+import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.st.STDocument;
 
 public class VirtCollection<V extends VirtDocument> implements VirtObject {
 
 	protected Map<Long, V> documents;
 
-	public void add(V object) {
-		if (object.complete() != ErrorCode.OK)
-			throw new IncompleteObjectException();
+	private STCollection collection;
 
-		documents.put(object.oid().last(), object);
+	public VirtCollection(STCollection collection) {
+		this.collection = collection;
+	}
+
+	public V add(Function<STDocument, V> constructor) {
+		long id = RandUtil.nextLong();
+
+		var object = constructor.apply(collection.document(id));
+		documents.put(id, object);
+		return object;
 	}
 
 	public long count() {

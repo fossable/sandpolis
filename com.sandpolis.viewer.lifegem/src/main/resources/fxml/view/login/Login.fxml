@@ -45,7 +45,7 @@
 				<ButtonBar>
 					<buttons>
 						<Button fx:id="btn_back" mnemonicParsing="false"
-							onAction="#btn_back" text="Exit" />
+							onAction="#btn_back" text="Continue without a server" />
 						<Button fx:id="btn_continue" mnemonicParsing="false"
 							onAction="#btn_continue" text="Connect" />
 					</buttons>

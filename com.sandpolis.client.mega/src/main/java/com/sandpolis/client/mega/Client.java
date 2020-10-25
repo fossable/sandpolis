@@ -14,6 +14,7 @@ package com.sandpolis.client.mega;
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
+import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
 import static com.sandpolis.core.instance.state.STStore.STStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
@@ -46,9 +47,8 @@ import com.sandpolis.core.instance.Generator.NetworkTarget;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.state.EphemeralDocument;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.VirtST;
+import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument;
 import com.sandpolis.core.net.network.NetworkEvents.ServerEstablishedEvent;
 import com.sandpolis.core.net.network.NetworkEvents.ServerLostEvent;
 
@@ -141,11 +141,11 @@ public final class Client {
 
 		STStore.init(config -> {
 			config.concurrency = 1;
-			config.root = new EphemeralDocument((STDocument) null);
+			config.root = new EphemeralDocument((STDocument) null, 0);// TODO
 		});
 
 		PluginStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile.plugin.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.plugin.resolveLocal());
 		});
 
 		StreamStore.init(config -> {
@@ -156,7 +156,7 @@ public final class Client {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile.connection.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.connection.resolveLocal());
 		});
 
 		NetworkStore.init(config -> {
