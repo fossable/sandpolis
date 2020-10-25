@@ -56,7 +56,7 @@ public abstract class Installer {
 	protected final InstallComponent component;
 
 	/**
-	 * The client configuration in Base64 (if the installer component is a client).
+	 * The agent configuration encoded in base64 if applicable.
 	 */
 	private String config;
 
@@ -120,13 +120,13 @@ public abstract class Installer {
 	protected abstract boolean installAutostart(Path launch, String name) throws Exception;
 
 	/**
-	 * Inject the client configuration into the client executable.
+	 * Inject the configuration into the agent executable.
 	 *
 	 * @throws Exception
 	 */
 	protected void installClientConfig() throws Exception {
 		try (FileSystem zip = FileSystems.newFileSystem(executable, (ClassLoader) null)) {
-			try (var out = Files.newOutputStream(zip.getPath("/soi/client.bin"))) {
+			try (var out = Files.newOutputStream(zip.getPath("/soi/agent.bin"))) {
 				new ByteArrayInputStream(Base64.getDecoder().decode(config)).transferTo(out);
 			}
 		}
@@ -233,10 +233,10 @@ public abstract class Installer {
 			Path launch = installLaunchExecutable();
 			Path icon = installIcon();
 			installDesktopEntry(launch, icon, "Sandpolis Viewer");
-		} else if (component == InstallComponent.CLIENT_MEGA) {
+		} else if (component == InstallComponent.AGENT_VANILLA) {
 			installClientConfig();
 			Path launch = installLaunchExecutable();
-			if (!installAutostart(launch, "sandpolis-client")) {
+			if (!installAutostart(launch, "sandpolis-agent")) {
 				exec(launch);
 			}
 		}

@@ -52,8 +52,8 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 
 			if (event.success) {
 				switch (CvidUtil.extractInstance(event.remote)) {
-				case CLIENT:
-					handlers = ExeletStore.client;
+				case AGENT:
+					handlers = ExeletStore.agent;
 					break;
 				case SERVER:
 					handlers = ExeletStore.server;

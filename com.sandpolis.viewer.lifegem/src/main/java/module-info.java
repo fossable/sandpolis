@@ -32,11 +32,12 @@ open module com.sandpolis.viewer.lifegem {
 
 	requires com.google.common;
 	requires com.google.protobuf;
+	requires com.sandpolis.core.clientagent;
+	requires com.sandpolis.core.clientserver;
+	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.net;
-	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.core.viewer;
-	requires com.sandpolis.core.cv;
 	requires fxgraph;
 	requires io.netty.common;
 	requires io.netty.transport;
@@ -48,5 +49,4 @@ open module com.sandpolis.viewer.lifegem {
 	requires javafx.fxml;
 	requires javafx.graphics;
 	requires org.slf4j;
-	requires com.sandpolis.core.sv;
 }

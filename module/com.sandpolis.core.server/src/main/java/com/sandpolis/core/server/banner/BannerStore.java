@@ -30,7 +30,7 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.server.banner.BannerStore.ServerStoreConfig;
-import com.sandpolis.core.sv.msg.MsgServer.RS_ServerBanner;
+import com.sandpolis.core.clientserver.msg.MsgServer.RS_ServerBanner;
 
 /**
  * {@link BannerStore} manages the server banner which is presented to new

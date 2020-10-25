@@ -13,11 +13,6 @@ bin
 # IDEA metadata
 .idea
 
-# Nested repositories
-com.sandpolis.server.cloud
-com.sandpolis.server.demo
-com.sandpolis.client.mega.demo
-
 # Annotation processor
 .apt_generated
 .factorypath

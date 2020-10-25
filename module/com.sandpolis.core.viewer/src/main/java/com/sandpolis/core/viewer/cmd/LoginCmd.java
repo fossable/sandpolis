@@ -19,7 +19,7 @@ import java.util.concurrent.CompletionStage;
 import com.google.common.base.Charsets;
 import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.net.cmdlet.Cmdlet;
-import com.sandpolis.core.sv.msg.MsgLogin.RQ_Login;
+import com.sandpolis.core.clientserver.msg.MsgLogin.RQ_Login;
 
 /**
  * An API for logging into and out of the server.

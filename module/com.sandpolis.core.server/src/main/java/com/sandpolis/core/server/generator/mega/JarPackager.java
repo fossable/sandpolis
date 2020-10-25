@@ -33,19 +33,19 @@ import com.sandpolis.core.foundation.util.ArtifactUtil;
  */
 public class JarPackager extends MegaGen {
 	public JarPackager(GenConfig config) {
-		super(config, ".jar", "/lib/sandpolis-client-installer.jar");
+		super(config, ".jar", "/lib/sandpolis-agent-installer.jar");
 	}
 
 	@Override
 	protected byte[] generate() throws Exception {
-		Path client = Environment.LIB.path().resolve("sandpolis-client-mega-" + Core.SO_BUILD.getVersion() + ".jar");
+		Path agent = Environment.LIB.path().resolve("sandpolis-agent-mega-" + Core.SO_BUILD.getVersion() + ".jar");
 
 		ZipSet output;
 		if (config.getMega().getMemory()) {
-			output = new ZipSet(client);
+			output = new ZipSet(agent);
 
-			// Add client configuration
-			output.add("soi/client.bin", config.getMega().toByteArray());
+			// Add agent configuration
+			output.add("soi/agent.bin", config.getMega().toByteArray());
 
 			for (String gav : getDependencies()) {
 				String filename = String.format("%s-%s.jar", gav.split(":")[1], gav.split(":")[2]);
@@ -54,7 +54,7 @@ public class JarPackager extends MegaGen {
 			}
 		} else {
 			Properties cfg = buildInstallerConfig();
-			cfg.setProperty("screen.session", "com.sandpolis.client.mega");
+			cfg.setProperty("screen.session", "com.sandpolis.agent.vanilla");
 
 			output = new ZipSet(readArtifactBinary());
 
@@ -78,8 +78,8 @@ public class JarPackager extends MegaGen {
 				}
 			}
 
-			// Add client configuration
-			output.add(EntryPath.get("lib/" + client.getFileName(), "soi/client.bin"), config.getMega().toByteArray());
+			// Add agent configuration
+			output.add(EntryPath.get("lib/" + agent.getFileName(), "soi/agent.bin"), config.getMega().toByteArray());
 		}
 
 		return output.build();

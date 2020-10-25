@@ -155,7 +155,7 @@
 		}
 	},
 	{
-		"name": "Profile.Client.IpLocation",
+		"name": "Profile.Agent.IpLocation",
 		"attributes": {
 			"1": {
 				"name": "as_name",
@@ -250,7 +250,7 @@
 		}
 	},
 	{
-		"name": "Profile.Client",
+		"name": "Profile.Agent",
 		"attributes": {
 			"1": {
 				"name": "hostname",
@@ -270,7 +270,7 @@
 			}
 		},
 		"documents": {
-			"1": "Profile.Client.IpLocation"
+			"1": "Profile.Agent.IpLocation"
 		}
 	},
 	{
@@ -411,7 +411,7 @@
 		"documents": {
 			"1": "Profile.Server",
 			"2": "Profile.Viewer",
-			"3": "Profile.Client"
+			"3": "Profile.Agent"
 		},
 		"collections": {
 			"1": "Profile.Plugin",

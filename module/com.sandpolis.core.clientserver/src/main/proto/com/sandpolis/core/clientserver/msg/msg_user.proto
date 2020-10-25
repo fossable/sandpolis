@@ -1,0 +1,31 @@
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
+syntax = "proto3";
+
+package core.clientserver.msg;
+
+import "com/sandpolis/core/instance/user.proto";
+
+option java_package = "com.sandpolis.core.clientserver.msg";
+option optimize_for = CODE_SIZE;
+
+// Request: Attempt a user operation.
+message RQ_UserOperation {
+    enum UserOperation {
+        USER_CREATE = 0;
+        USER_DELETE = 1;
+        USER_UPDATE = 2;
+    }
+    UserOperation operation = 1;
+
+    repeated core.instance.UserConfig user_config = 2;
+}

@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.exelet.Exelet;
-import com.sandpolis.core.sv.msg.MsgGenerator.RQ_Generate;
-import com.sandpolis.core.sv.msg.MsgGenerator.RS_Generate;
+import com.sandpolis.core.clientserver.msg.MsgGenerator.RQ_Generate;
+import com.sandpolis.core.clientserver.msg.MsgGenerator.RS_Generate;
 
 /**
  * {@link GeneratorExe} contains message handlers related to generators.
@@ -46,7 +46,7 @@ public final class GeneratorExe extends Exelet {
 
 			Generator generator;
 			switch (rq.getConfig().getPayload()) {
-			case OUTPUT_MEGA:
+			case OUTPUT_VANILLA:
 				generator = MegaGen.build(rq.getConfig());
 				break;
 			case OUTPUT_MICRO:

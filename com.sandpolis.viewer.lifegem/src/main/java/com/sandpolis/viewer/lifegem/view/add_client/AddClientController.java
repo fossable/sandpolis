@@ -35,7 +35,7 @@ public class AddClientController extends FxController {
 	@FXML
 	private void initialize() throws IOException {
 		dialogs = new HashMap<>();
-		dialogs.put("SNMP subclient", FxUtil.load("/fxml/view/add_client/Snmp.fxml", this));
+		dialogs.put("SNMP subagent", FxUtil.load("/fxml/view/add_client/Snmp.fxml", this));
 		chb_type.getItems().addAll(dialogs.keySet());
 
 		chb_type.valueProperty().addListener((p, o, n) -> {

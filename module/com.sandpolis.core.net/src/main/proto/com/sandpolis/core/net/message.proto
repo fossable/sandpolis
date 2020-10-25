@@ -43,3 +43,9 @@ message MSG {
     // The message payload
     google.protobuf.Any payload = 4;
 }
+
+message Payload {
+    int64 namespace = 1;
+    int32 type = 2;
+    bytes value = 3;
+}

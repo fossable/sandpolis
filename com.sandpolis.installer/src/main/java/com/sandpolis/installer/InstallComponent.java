@@ -35,9 +35,9 @@ public enum InstallComponent {
 	VIEWER_ASCETIC("com.sandpolis:sandpolis-viewer-ascetic:"),
 
 	/**
-	 * com.sandpolis.client.mega
+	 * com.sandpolis.agent.vanilla
 	 */
-	CLIENT_MEGA("com.sandpolis:sandpolis-client-mega:");
+	AGENT_VANILLA("com.sandpolis:sandpolis-agent-vanilla:");
 
 	public final String coordinate;
 	public final String id;

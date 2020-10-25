@@ -21,7 +21,7 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
-import com.sandpolis.core.sv.msg.MsgUser.RQ_UserOperation;
+import com.sandpolis.core.clientserver.msg.MsgUser.RQ_UserOperation;
 
 /**
  * {@link UserExe} contains message handlers related to user management.

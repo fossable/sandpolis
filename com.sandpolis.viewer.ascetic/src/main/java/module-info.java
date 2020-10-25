@@ -19,19 +19,19 @@ open module com.sandpolis.viewer.ascetic {
 	exports com.sandpolis.viewer.ascetic.view.main;
 	exports com.sandpolis.viewer.ascetic;
 
+	requires ch.qos.logback.classic;
+	requires ch.qos.logback.core;
+	requires com.google.protobuf;
+	requires com.googlecode.lanterna;
+	requires com.sandpolis.core.clientserver;
+	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.net;
 	requires com.sandpolis.core.viewer;
-	requires com.sandpolis.core.sv;
-	requires com.googlecode.lanterna;
-	requires ch.qos.logback.classic;
-	requires ch.qos.logback.core;
-	requires org.slf4j;
-	requires io.netty.transport;
 	requires io.netty.common;
 	requires io.netty.handler;
-	requires com.google.protobuf;
-	requires com.sandpolis.core.foundation;
+	requires io.netty.transport;
+	requires org.slf4j;
 
 	provides ch.qos.logback.classic.spi.Configurator with com.sandpolis.viewer.ascetic.logging.LoggingConfigurator;
 }

@@ -31,20 +31,20 @@ public final class KeyCdn extends AbstractGeolocationService {
 	 * The fields provided by the location service associated with {@link Oid}s.
 	 */
 	private static final ImmutableBiMap<Oid, String> JSON_FIELDS = new ImmutableBiMap.Builder<Oid, String>()
-			.put(InstanceOid().profile.client.iplocation.as_code, "asn") //
-			.put(InstanceOid().profile.client.iplocation.city, "city") //
-			.put(InstanceOid().profile.client.iplocation.continent, "continent_name") //
-			.put(InstanceOid().profile.client.iplocation.continent_code, "continent_code") //
-			.put(InstanceOid().profile.client.iplocation.country, "country_name") //
-			.put(InstanceOid().profile.client.iplocation.country_code, "country_code") //
-			.put(InstanceOid().profile.client.iplocation.isp, "isp") //
-			.put(InstanceOid().profile.client.iplocation.latitude, "latitude") //
-			.put(InstanceOid().profile.client.iplocation.longitude, "lonitude") //
-			.put(InstanceOid().profile.client.iplocation.metro_code, "metro_code") //
-			.put(InstanceOid().profile.client.iplocation.postal_code, "postal_code") //
-			.put(InstanceOid().profile.client.iplocation.region, "region_name") //
-			.put(InstanceOid().profile.client.iplocation.region_code, "region_code") //
-			.put(InstanceOid().profile.client.iplocation.timezone, "timezone") //
+			.put(InstanceOid().profile.agent.iplocation.as_code, "asn") //
+			.put(InstanceOid().profile.agent.iplocation.city, "city") //
+			.put(InstanceOid().profile.agent.iplocation.continent, "continent_name") //
+			.put(InstanceOid().profile.agent.iplocation.continent_code, "continent_code") //
+			.put(InstanceOid().profile.agent.iplocation.country, "country_name") //
+			.put(InstanceOid().profile.agent.iplocation.country_code, "country_code") //
+			.put(InstanceOid().profile.agent.iplocation.isp, "isp") //
+			.put(InstanceOid().profile.agent.iplocation.latitude, "latitude") //
+			.put(InstanceOid().profile.agent.iplocation.longitude, "lonitude") //
+			.put(InstanceOid().profile.agent.iplocation.metro_code, "metro_code") //
+			.put(InstanceOid().profile.agent.iplocation.postal_code, "postal_code") //
+			.put(InstanceOid().profile.agent.iplocation.region, "region_name") //
+			.put(InstanceOid().profile.agent.iplocation.region_code, "region_code") //
+			.put(InstanceOid().profile.agent.iplocation.timezone, "timezone") //
 			.build();
 
 	public KeyCdn() {

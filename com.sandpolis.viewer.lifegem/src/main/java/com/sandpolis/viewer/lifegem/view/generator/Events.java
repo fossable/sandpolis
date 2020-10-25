@@ -13,7 +13,7 @@ package com.sandpolis.viewer.lifegem.view.generator;
 
 import com.sandpolis.core.instance.store.event.Event;
 import com.sandpolis.core.instance.store.event.ParameterizedEvent;
-import com.sandpolis.core.sv.msg.MsgGenerator.RS_Generate;
+import com.sandpolis.core.clientserver.msg.MsgGenerator.RS_Generate;
 
 public final class Events {
 

@@ -11,15 +11,15 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
-import static com.sandpolis.core.sv.msg.MsgListener.RQ_ListenerOperation.ListenerOperation.LISTENER_CREATE;
-import static com.sandpolis.core.sv.msg.MsgListener.RQ_ListenerOperation.ListenerOperation.LISTENER_DELETE;
+import static com.sandpolis.core.clientserver.msg.MsgListener.RQ_ListenerOperation.ListenerOperation.LISTENER_CREATE;
+import static com.sandpolis.core.clientserver.msg.MsgListener.RQ_ListenerOperation.ListenerOperation.LISTENER_DELETE;
 
 import java.util.concurrent.CompletionStage;
 
 import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.instance.Listener.ListenerConfig;
 import com.sandpolis.core.net.cmdlet.Cmdlet;
-import com.sandpolis.core.sv.msg.MsgListener.RQ_ListenerOperation;
+import com.sandpolis.core.clientserver.msg.MsgListener.RQ_ListenerOperation;
 
 /**
  * An API for interacting with listeners on the server.

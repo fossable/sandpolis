@@ -50,9 +50,8 @@ import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.foundation.Platform.OsType;
 
 /**
- * This generator builds a {@code com.sandpolis.client.mega} client.
+ * This generator builds a {@code com.sandpolis.agent.vanilla} agent.
  *
- * @author cilki
  * @since 2.0.0
  */
 public abstract class MegaGen extends Generator {
@@ -147,25 +146,25 @@ public abstract class MegaGen extends Generator {
 	}
 
 	protected List<String> getDependencies() throws IOException {
-		Path client = Environment.LIB.path().resolve("sandpolis-client-mega-" + Core.SO_BUILD.getVersion() + ".jar");
+		Path agent = Environment.LIB.path().resolve("sandpolis-agent-mega-" + Core.SO_BUILD.getVersion() + ".jar");
 
-		return SoiUtil.getMatrix(client).getAllDependenciesInclude()
+		return SoiUtil.getMatrix(agent).getAllDependenciesInclude()
 				.map(artifact -> artifact.getArtifact().getCoordinates()).collect(Collectors.toList());
 	}
 
 	protected Object test() throws Exception {
 		log.debug("Computing MEGA payload");
 
-		Path client = Environment.LIB.path().resolve("sandpolis-client-mega-" + Core.SO_BUILD.getVersion() + ".jar");
+		Path agent = Environment.LIB.path().resolve("sandpolis-agent-mega-" + Core.SO_BUILD.getVersion() + ".jar");
 
-		ZipSet output = new ZipSet(client);
+		ZipSet output = new ZipSet(agent);
 		FeatureSet features = config.getMega().getFeatures();
 
-		// Add client configuration
-		output.add("soi/client.bin", config.getMega().toByteArray());
+		// Add agent configuration
+		output.add("soi/agent.bin", config.getMega().toByteArray());
 
-		// Add client dependencies
-		SoiUtil.getMatrix(client).getAllDependencies().forEach(artifact -> {
+		// Add agent dependencies
+		SoiUtil.getMatrix(agent).getAllDependencies().forEach(artifact -> {
 			Path source = ArtifactUtil.getArtifactFile(Environment.LIB.path(), artifact.getArtifact().getCoordinates());
 
 			// Add library
@@ -197,9 +196,9 @@ public abstract class MegaGen extends Generator {
 							ArtifactUtil.getArtifactFile(Environment.LIB.path(), dep.getCoordinates()));
 				});
 
-				// Add mega component
-				Path mega = plugin.getComponent(InstanceType.CLIENT, InstanceFlavor.MEGA);
-				pluginArchive.add("client/mega.jar", mega);
+				// Add vanilla component
+				Path mega = plugin.getComponent(InstanceType.AGENT, InstanceFlavor.VANILLA);
+				pluginArchive.add("agent/vanilla.jar", mega);
 				SoiUtil.getMatrix(mega).getAllDependencies().forEach(dep -> {
 					output.add("lib/" + fromCoordinate(dep.getCoordinates()).filename,
 							ArtifactUtil.getArtifactFile(Environment.LIB.path(), dep.getCoordinates()));

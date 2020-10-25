@@ -11,8 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.viewer.cmd;
 
-import static com.sandpolis.core.sv.msg.MsgGroup.RQ_GroupOperation.GroupOperation.GROUP_CREATE;
-import static com.sandpolis.core.sv.msg.MsgGroup.RQ_GroupOperation.GroupOperation.GROUP_DELETE;
+import static com.sandpolis.core.clientserver.msg.MsgGroup.RQ_GroupOperation.GroupOperation.GROUP_CREATE;
+import static com.sandpolis.core.clientserver.msg.MsgGroup.RQ_GroupOperation.GroupOperation.GROUP_DELETE;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +27,7 @@ import javax.crypto.KeyGenerator;
 import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.instance.Group.GroupConfig;
 import com.sandpolis.core.net.cmdlet.Cmdlet;
-import com.sandpolis.core.sv.msg.MsgGroup.RQ_GroupOperation;
+import com.sandpolis.core.clientserver.msg.MsgGroup.RQ_GroupOperation;
 
 /**
  * An API for interacting with authentication groups on the server.

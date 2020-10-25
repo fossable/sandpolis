@@ -33,22 +33,22 @@ public final class IpApi extends AbstractGeolocationService {
 	 * The fields provided by the location service associated with {@link Oid}s.
 	 */
 	private static final ImmutableBiMap<Oid, String> JSON_FIELDS = new ImmutableBiMap.Builder<Oid, String>()
-			.put(InstanceOid().profile.client.iplocation.as_code, "as") //
-			.put(InstanceOid().profile.client.iplocation.city, "city") //
-			.put(InstanceOid().profile.client.iplocation.continent, "continent") //
-			.put(InstanceOid().profile.client.iplocation.continent_code, "continentCode") //
-			.put(InstanceOid().profile.client.iplocation.country, "country") //
-			.put(InstanceOid().profile.client.iplocation.country_code, "countryCode") //
-			.put(InstanceOid().profile.client.iplocation.currency, "currency") //
-			.put(InstanceOid().profile.client.iplocation.district, "district") //
-			.put(InstanceOid().profile.client.iplocation.isp, "isp") //
-			.put(InstanceOid().profile.client.iplocation.latitude, "lat") //
-			.put(InstanceOid().profile.client.iplocation.longitude, "lon") //
-			.put(InstanceOid().profile.client.iplocation.organization, "org") //
-			.put(InstanceOid().profile.client.iplocation.postal_code, "zip") //
-			.put(InstanceOid().profile.client.iplocation.region, "regionName") //
-			.put(InstanceOid().profile.client.iplocation.region_code, "region") //
-			.put(InstanceOid().profile.client.iplocation.timezone, "timezone") //
+			.put(InstanceOid().profile.agent.iplocation.as_code, "as") //
+			.put(InstanceOid().profile.agent.iplocation.city, "city") //
+			.put(InstanceOid().profile.agent.iplocation.continent, "continent") //
+			.put(InstanceOid().profile.agent.iplocation.continent_code, "continentCode") //
+			.put(InstanceOid().profile.agent.iplocation.country, "country") //
+			.put(InstanceOid().profile.agent.iplocation.country_code, "countryCode") //
+			.put(InstanceOid().profile.agent.iplocation.currency, "currency") //
+			.put(InstanceOid().profile.agent.iplocation.district, "district") //
+			.put(InstanceOid().profile.agent.iplocation.isp, "isp") //
+			.put(InstanceOid().profile.agent.iplocation.latitude, "lat") //
+			.put(InstanceOid().profile.agent.iplocation.longitude, "lon") //
+			.put(InstanceOid().profile.agent.iplocation.organization, "org") //
+			.put(InstanceOid().profile.agent.iplocation.postal_code, "zip") //
+			.put(InstanceOid().profile.agent.iplocation.region, "regionName") //
+			.put(InstanceOid().profile.agent.iplocation.region_code, "region") //
+			.put(InstanceOid().profile.agent.iplocation.timezone, "timezone") //
 			.build();
 
 	private String key;

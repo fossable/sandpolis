@@ -37,7 +37,7 @@
 									promptText="Select a Gateway Client"
 									AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="65.0" />
 								<Label alignment="TOP_LEFT" layoutX="21.0" layoutY="110.0"
-									text="Add an SNMP device as a subclient. The device will only communicate with a &quot;gateway&quot; client of your choice. It's probably best to choose a client on the same LAN as the device, but it's not required."
+									text="Add an SNMP device as a subagent. The device will only communicate with a &quot;gateway&quot; agent of your choice. It's probably best to choose a agent on the same LAN as the device, but it's not required."
 									wrapText="true" AnchorPane.leftAnchor="12.0"
 									AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="8.0" />
 								<TextField layoutX="117.0" layoutY="90.0"

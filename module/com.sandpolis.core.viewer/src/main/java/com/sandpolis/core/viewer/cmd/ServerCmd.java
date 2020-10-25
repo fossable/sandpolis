@@ -19,8 +19,8 @@ import java.util.concurrent.CompletionStage;
 import com.sandpolis.core.instance.msg.MsgPing.RQ_Ping;
 import com.sandpolis.core.instance.msg.MsgPing.RS_Ping;
 import com.sandpolis.core.net.cmdlet.Cmdlet;
-import com.sandpolis.core.sv.msg.MsgServer.RQ_ServerBanner;
-import com.sandpolis.core.sv.msg.MsgServer.RS_ServerBanner;
+import com.sandpolis.core.clientserver.msg.MsgServer.RQ_ServerBanner;
+import com.sandpolis.core.clientserver.msg.MsgServer.RS_ServerBanner;
 
 /**
  * Contains server commands.

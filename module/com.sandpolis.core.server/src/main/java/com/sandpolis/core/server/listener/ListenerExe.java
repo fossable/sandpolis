@@ -22,7 +22,7 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
-import com.sandpolis.core.sv.msg.MsgListener.RQ_ListenerOperation;
+import com.sandpolis.core.clientserver.msg.MsgListener.RQ_ListenerOperation;
 
 /**
  * {@link ListenerExe} contains message handlers related to listener management.

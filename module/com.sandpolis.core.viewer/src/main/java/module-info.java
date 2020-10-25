@@ -12,10 +12,10 @@
 module com.sandpolis.core.viewer {
 	exports com.sandpolis.core.viewer.cmd;
 
-	requires com.sandpolis.core.instance;
-	requires com.sandpolis.core.foundation;
-	requires com.sandpolis.core.net;
-	requires com.sandpolis.core.sv;
 	requires com.google.common;
 	requires com.google.protobuf;
+	requires com.sandpolis.core.clientserver;
+	requires com.sandpolis.core.foundation;
+	requires com.sandpolis.core.instance;
+	requires com.sandpolis.core.net;
 }

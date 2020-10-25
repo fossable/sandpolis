@@ -74,14 +74,14 @@ dependencies {
 	implementation 'io.netty:netty-transport:4.1.48.Final'
 }
 
-project.evaluationDependsOn(":com.sandpolis.client.installer:jar")
-project.evaluationDependsOn(":com.sandpolis.client.installer:py")
+project.evaluationDependsOn(":com.sandpolis.agent.installer:jar")
+project.evaluationDependsOn(":com.sandpolis.agent.installer:py")
 
 jar {
-	from (project(':com.sandpolis.client.installer:jar').tasks.getByName('jar').outputs) {
+	from (project(':com.sandpolis.agent.installer:jar').tasks.getByName('jar').outputs) {
 		into "lib"
 	}
-	from (project(':com.sandpolis.client.installer:py').file('src/sandpolis-client-installer.py')) {
+	from (project(':com.sandpolis.agent.installer:py').file('src/sandpolis-agent-installer.py')) {
 		into "lib"
 	}
 }

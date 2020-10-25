@@ -11,15 +11,15 @@
 //=========================================================S A N D P O L I S==//
 module com.sandpolis.plugin.filesys {
 	exports com.sandpolis.plugin.filesys.cmd;
+	exports com.sandpolis.plugin.filesys.msg;
 	exports com.sandpolis.plugin.filesys.util;
 	exports com.sandpolis.plugin.filesys;
-	exports com.sandpolis.plugin.filesys.msg;
 
 	requires com.google.common;
 	requires com.google.protobuf;
+	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.net;
-	requires com.sandpolis.core.foundation;
 	requires java.desktop;
 	requires org.slf4j;
 }

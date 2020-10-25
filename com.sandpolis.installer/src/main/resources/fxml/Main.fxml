@@ -131,7 +131,7 @@
 									<ProgressIndicator />
 								</VBox>
 								<Label
-									text="Scan the QR code with the Sandpolis iOS application to associate this client with your server. Once associated, you can proceed with the installation."
+									text="Scan the QR code with the Sandpolis iOS application to associate this agent with your server. Once associated, you can proceed with the installation."
 									wrapText="true">
 									<font>
 										<Font size="11.0" />

@@ -15,8 +15,8 @@ import java.util.concurrent.CompletionStage;
 
 import com.sandpolis.core.instance.Generator.GenConfig;
 import com.sandpolis.core.net.cmdlet.Cmdlet;
-import com.sandpolis.core.sv.msg.MsgGenerator.RQ_Generate;
-import com.sandpolis.core.sv.msg.MsgGenerator.RS_Generate;
+import com.sandpolis.core.clientserver.msg.MsgGenerator.RQ_Generate;
+import com.sandpolis.core.clientserver.msg.MsgGenerator.RS_Generate;
 
 /**
  * An API for interacting with generators on the server.

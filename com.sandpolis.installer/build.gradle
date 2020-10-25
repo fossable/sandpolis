@@ -21,7 +21,7 @@ plugins {
 javafx {
 	modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
 	configuration = 'compileOnly'
-	version = '14'
+	version = '15'
 }
 
 eclipse {
@@ -71,23 +71,23 @@ dependencies {
 	installTargets project(':com.sandpolis.server.vanilla')
 	installTargets project(':com.sandpolis.viewer.lifegem')
 	installTargets project(':com.sandpolis.viewer.ascetic')
-	installTargets project(':com.sandpolis.client.mega')
+	installTargets project(':com.sandpolis.agent.vanilla')
 
 	// JavaFX runtimes
-	windows 'org.openjfx:javafx-base:14:win'
-	windows 'org.openjfx:javafx-fxml:14:win'
-	windows 'org.openjfx:javafx-graphics:14:win'
-	windows 'org.openjfx:javafx-controls:14:win'
+	windows 'org.openjfx:javafx-base:15.0.1:win'
+	windows 'org.openjfx:javafx-fxml:15.0.1:win'
+	windows 'org.openjfx:javafx-graphics:15.0.1:win'
+	windows 'org.openjfx:javafx-controls:15.0.1:win'
 
-	linux 'org.openjfx:javafx-base:14:linux'
-	linux 'org.openjfx:javafx-fxml:14:linux'
-	linux 'org.openjfx:javafx-graphics:14:linux'
-	linux 'org.openjfx:javafx-controls:14:linux'
+	linux 'org.openjfx:javafx-base:15.0.1:linux'
+	linux 'org.openjfx:javafx-fxml:15.0.1:linux'
+	linux 'org.openjfx:javafx-graphics:15.0.1:linux'
+	linux 'org.openjfx:javafx-controls:15.0.1:linux'
 
-	mac 'org.openjfx:javafx-base:14:mac'
-	mac 'org.openjfx:javafx-fxml:14:mac'
-	mac 'org.openjfx:javafx-graphics:14:mac'
-	mac 'org.openjfx:javafx-controls:14:mac'
+	mac 'org.openjfx:javafx-base:15.0.1:mac'
+	mac 'org.openjfx:javafx-fxml:15.0.1:mac'
+	mac 'org.openjfx:javafx-graphics:15.0.1:mac'
+	mac 'org.openjfx:javafx-controls:15.0.1:mac'
 }
 
 jar {

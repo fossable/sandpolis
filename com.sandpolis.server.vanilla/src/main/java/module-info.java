@@ -11,19 +11,19 @@
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.server.vanilla {
 
-	requires com.sandpolis.core.cs;
+	requires com.sandpolis.core.clientserver;
 	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.net;
 	requires com.sandpolis.core.server;
-	requires com.sandpolis.core.sv;
+	requires com.sandpolis.core.serveragent;
 	requires io.netty.buffer;
 	requires io.netty.codec;
 	requires io.netty.common;
 	requires io.netty.handler;
 	requires io.netty.transport;
-	requires org.hibernate.orm.core;
-	requires java.persistence;
 	requires java.naming;
+	requires java.persistence;
+	requires org.hibernate.orm.core;
 	requires org.slf4j;
 }

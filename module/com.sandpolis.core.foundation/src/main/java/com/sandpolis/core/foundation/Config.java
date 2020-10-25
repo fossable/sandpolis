@@ -217,12 +217,12 @@ public final class Config {
 			"sandpolis.database.username");
 
 	/**
-	 * Whether a debug client will be generated on startup.
+	 * Whether a debug agent will be generated on startup.
 	 * <p>
 	 * <b> Compatible instances: server</b>
 	 */
-	public static final ConfigProperty<Boolean> DEBUG_CLIENT = new ConfigProperty<>(Boolean.class,
-			"sandpolis.debug.generate_client");
+	public static final ConfigProperty<Boolean> DEBUG_AGENT = new ConfigProperty<>(Boolean.class,
+			"sandpolis.debug.generate_agent");
 
 	/**
 	 * The service to use for geolocation requests.

@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.installer.task;
 
-import static com.sandpolis.installer.InstallComponent.CLIENT_MEGA;
+import static com.sandpolis.installer.InstallComponent.AGENT_VANILLA;
 import static com.sandpolis.installer.InstallComponent.SERVER_VANILLA;
 import static com.sandpolis.installer.InstallComponent.VIEWER_ASCETIC;
 import static com.sandpolis.installer.InstallComponent.VIEWER_LIFEGEM;
@@ -48,7 +48,7 @@ public class GuiInstallTask extends Task<Void> {
 	}
 
 	public static GuiInstallTask newClientTask(Path destination, String config) {
-		var task = new GuiInstallTask(Installer.newPlatformInstaller(destination, CLIENT_MEGA));
+		var task = new GuiInstallTask(Installer.newPlatformInstaller(destination, AGENT_VANILLA));
 		task.installer.setConfig(config);
 
 		return task;

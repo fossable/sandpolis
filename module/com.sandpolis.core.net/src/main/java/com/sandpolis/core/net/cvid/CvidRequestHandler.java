@@ -31,11 +31,10 @@ import io.netty.channel.ChannelHandlerContext;
 
 /**
  * This handler manages the CVID handshake for the requesting instance. Usually
- * the requesting instance will be the client or viewer.
+ * the requesting instance will be the agent or viewer.
  *
  * @see CvidResponseHandler
  *
- * @author cilki
  * @since 5.0.0
  */
 public class CvidRequestHandler extends AbstractCvidHandler {

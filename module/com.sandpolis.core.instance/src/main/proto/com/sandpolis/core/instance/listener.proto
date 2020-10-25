@@ -34,8 +34,8 @@ message ListenerConfig {
     // The username of the user that owns the listener
     optional string owner = 105;
 
-    // Indicates whether client instances can be accepted by the listener
-    optional bool client_acceptor = 107;
+    // Indicates whether agent instances can be accepted by the listener
+    optional bool agent_acceptor = 107;
 
     // Indicates whether viewer instances can be accepted by the listener
     optional bool viewer_acceptor = 108;

@@ -10,8 +10,8 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 module com.sandpolis.plugin.desktop {
-	exports com.sandpolis.plugin.desktop.msg;
 	exports com.sandpolis.plugin.desktop.cmd;
+	exports com.sandpolis.plugin.desktop.msg;
 
 	requires com.google.protobuf;
 	requires com.sandpolis.core.instance;

@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.viewer.lifegem.view.login.phase;
 
-import com.sandpolis.core.cv.cmd.PluginCmd;
+import com.sandpolis.core.clientagent.cmd.PluginCmd;
 import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.viewer.lifegem.common.controller.AbstractController;
 import com.sandpolis.viewer.lifegem.state.FxPlugin;

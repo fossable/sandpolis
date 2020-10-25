@@ -14,7 +14,6 @@ package com.sandpolis.core.instance.util;
 import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.ASCETIC;
 import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.LIFEGEM;
 import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.LOCKSTONE;
-import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.MEGA;
 import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.SOAPSTONE;
 import static com.sandpolis.core.instance.Metatypes.InstanceFlavor.VANILLA;
 
@@ -29,8 +28,8 @@ public class InstanceUtil {
 		switch (instance) {
 		case CHARCOAL:
 			return new InstanceFlavor[] {};
-		case CLIENT:
-			return new InstanceFlavor[] { MEGA };
+		case AGENT:
+			return new InstanceFlavor[] { VANILLA };
 		case INSTALLER:
 			return new InstanceFlavor[] {};
 		case SERVER:

@@ -127,6 +127,8 @@ allprojects {
 		java {
 			modularity.inferModulePath = true
 		}
+
+		sourceCompatibility = 14
 	}
 }
 
@@ -157,15 +159,16 @@ subprojects {
 
 // All modules that will be published to the release repository
 def publishProjects = [
-	'com.sandpolis.client.mega',
-	'com.sandpolis.core.client',
-	'com.sandpolis.core.cs',
-	'com.sandpolis.core.cv',
+	'com.sandpolis.agent.micro',
+	'com.sandpolis.agent.vanilla',
+	'com.sandpolis.core.agent',
+	'com.sandpolis.core.clientagent',
+	'com.sandpolis.core.clientserver',
 	'com.sandpolis.core.foundation',
 	'com.sandpolis.core.instance',
 	'com.sandpolis.core.net',
 	'com.sandpolis.core.server',
-	'com.sandpolis.core.sv',
+	'com.sandpolis.core.serveragent',
 	'com.sandpolis.core.viewer',
 	'com.sandpolis.plugin.desktop',
 	'com.sandpolis.plugin.device',

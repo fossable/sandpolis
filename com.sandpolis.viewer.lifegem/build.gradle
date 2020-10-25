@@ -23,7 +23,7 @@ apply plugin: 'com.sandpolis.gradle.codegen'
 
 javafx {
 	modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
-	version = "14"
+	version = "15"
 }
 
 eclipse {

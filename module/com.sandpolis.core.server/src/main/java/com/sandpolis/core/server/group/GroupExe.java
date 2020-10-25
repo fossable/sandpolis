@@ -22,7 +22,7 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
-import com.sandpolis.core.sv.msg.MsgGroup.RQ_GroupOperation;
+import com.sandpolis.core.clientserver.msg.MsgGroup.RQ_GroupOperation;
 
 /**
  * {@link GroupExe} contains message handlers related to group management.

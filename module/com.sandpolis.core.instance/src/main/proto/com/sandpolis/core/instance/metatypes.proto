@@ -26,7 +26,7 @@ enum InstanceType {
     SERVER = 1;
 
     // An application that runs continuously on hosts in the Sandpolis network
-    CLIENT = 2;
+    AGENT = 2;
 
     // An application used for managing clients and servers
     VIEWER = 3;
@@ -41,7 +41,7 @@ enum InstanceFlavor {
     // Only valid for charcoal and installer instances types
     NONE = 0;
 
-    // The official Java-based server instance
+    // The official Java-based server or agent instance
     VANILLA = 1;
 
     // The official cross-platform client instance

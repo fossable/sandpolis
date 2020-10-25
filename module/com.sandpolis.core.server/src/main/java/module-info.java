@@ -25,24 +25,25 @@ module com.sandpolis.core.server {
 	exports com.sandpolis.core.server.trust;
 	exports com.sandpolis.core.server.user;
 
+	requires static java.desktop;
+
+	requires com.fasterxml.jackson.databind;
 	requires com.google.common;
 	requires com.google.protobuf;
-	requires com.fasterxml.jackson.databind;
+	requires com.sandpolis.core.clientserver;
 	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.net;
-	requires com.sandpolis.core.sv;
-	requires com.sandpolis.core.cs;
+	requires com.sandpolis.core.serveragent;
 	requires io.netty.buffer;
 	requires io.netty.codec;
 	requires io.netty.common;
 	requires io.netty.handler;
 	requires io.netty.transport;
 	requires java.net.http;
-	requires org.hibernate.orm.core;
+	requires java.persistence;
 	requires java.xml.bind;
+	requires org.hibernate.orm.core;
 	requires org.slf4j;
 	requires zipset;
-	requires java.persistence;
-	requires static java.desktop;
 }

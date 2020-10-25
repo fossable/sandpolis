@@ -11,19 +11,19 @@
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.core.net {
 	exports com.sandpolis.core.net.channel.client;
+	exports com.sandpolis.core.net.channel.peer;
 	exports com.sandpolis.core.net.channel;
 	exports com.sandpolis.core.net.cmdlet;
 	exports com.sandpolis.core.net.connection;
 	exports com.sandpolis.core.net.cvid;
 	exports com.sandpolis.core.net.exelet;
-	exports com.sandpolis.core.net.channel.peer;
 	exports com.sandpolis.core.net.handler;
 	exports com.sandpolis.core.net.message;
 	exports com.sandpolis.core.net.msg;
 	exports com.sandpolis.core.net.network;
 	exports com.sandpolis.core.net.plugin;
-	exports com.sandpolis.core.net.state;
 	exports com.sandpolis.core.net.state.st.entangled;
+	exports com.sandpolis.core.net.state;
 	exports com.sandpolis.core.net.stream;
 	exports com.sandpolis.core.net.util;
 	exports com.sandpolis.core.net;

@@ -20,7 +20,7 @@ import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.instance.msg.MsgPing.RQ_Ping;
 import com.sandpolis.core.instance.msg.MsgPing.RS_Ping;
 import com.sandpolis.core.net.exelet.Exelet;
-import com.sandpolis.core.sv.msg.MsgServer.RQ_ServerBanner;
+import com.sandpolis.core.clientserver.msg.MsgServer.RQ_ServerBanner;
 
 /**
  * {@link BannerExe} contains message handlers for server banner requests.

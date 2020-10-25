@@ -32,7 +32,7 @@ message NetworkTarget {
 }
 
 /**
- * Identifies supported client features, platforms, and architectures.
+ * Identifies supported agent features, platforms, and architectures.
  */
 message FeatureSet {
 
@@ -54,10 +54,10 @@ enum OutputPayload {
     // Output a configuration for another payload type
     OUTPUT_CONFIG = 0;
 
-    // Output a full-featured heavyweight client written in Java
-    OUTPUT_MEGA = 1;
+    // Output a full-featured heavyweight agent written in Java
+    OUTPUT_VANILLA = 1;
 
-    // Output a lightweight native client written in C++
+    // Output a lightweight native agent written in C++
     OUTPUT_MICRO = 2;
 }
 
@@ -153,7 +153,7 @@ message NetworkConfig {
     // The ConnectionLoop configuration
     LoopConfig loop_config = 1;
 
-    // When true, the client will not be able to connect to services outside of
+    // When true, the agent will not be able to connect to services outside of
     // the Sandpolis network.
     bool strict_network = 2;
 }
@@ -162,13 +162,13 @@ message NetworkConfig {
  * Configuration specific to payload execution.
  */
 message ExecutionConfig {
-    // Whether the client installer should be deleted upon successful execution
+    // Whether the agent installer should be deleted upon successful execution
     bool cleanup = 1;
 
-    // Whether the client should be automatically started on boot
+    // Whether the agent should be automatically started on boot
     bool auto = 2;
 
-    // Whether the client should force install if the initial installation fails
+    // Whether the agent should force install if the initial installation fails
     // for any reason.
     bool recover = 3;
 

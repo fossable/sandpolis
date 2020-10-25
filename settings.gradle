@@ -18,10 +18,10 @@ includeBuild 'gradle/com.sandpolis.gradle.plugin'
 includeBuild 'gradle/com.sandpolis.gradle.soi'
 
 // Instance Projects
+include 'com.sandpolis.agent.installer:jar'
+include 'com.sandpolis.agent.installer:py'
+include 'com.sandpolis.agent.vanilla'
 include 'com.sandpolis.charcoal'
-include 'com.sandpolis.client.installer:jar'
-include 'com.sandpolis.client.installer:py'
-include 'com.sandpolis.client.mega'
 include 'com.sandpolis.installer'
 include 'com.sandpolis.server.vanilla'
 include 'com.sandpolis.viewer.ascetic'
@@ -30,38 +30,32 @@ include 'com.sandpolis.viewer.lifegem'
 // Optional Instances
 if (System.properties.get('instances.viewer-lockstone', 'false').toBoolean())
 	include 'com.sandpolis.viewer.lockstone'
-if (System.properties.get('instances.server-demo', 'false').toBoolean())
-	include 'com.sandpolis.server.demo'
-if (System.properties.get('instances.server-cloud', 'false').toBoolean())
-	include 'com.sandpolis.server.cloud'
-if (System.properties.get('instances.client-demo', 'false').toBoolean())
-	include 'com.sandpolis.client.mega.demo'
-if (System.properties.get('instances.client-micro', 'false').toBoolean())
-	include 'com.sandpolis.client.micro'
+if (System.properties.get('instances.agent-micro', 'false').toBoolean())
+	include 'com.sandpolis.agent.micro'
 
 // Dependency Projects
-include 'module:com.sandpolis.core.client'
-include 'module:com.sandpolis.core.cs'
-include 'module:com.sandpolis.core.cv'
+include 'module:com.sandpolis.core.agent'
+include 'module:com.sandpolis.core.clientagent'
+include 'module:com.sandpolis.core.clientserver'
 include 'module:com.sandpolis.core.foundation'
 include 'module:com.sandpolis.core.instance'
 include 'module:com.sandpolis.core.net'
 include 'module:com.sandpolis.core.server'
-include 'module:com.sandpolis.core.sv'
+include 'module:com.sandpolis.core.serveragent'
 include 'module:com.sandpolis.core.viewer'
 
 // Core plugins
 include 'plugin:com.sandpolis.plugin.desktop'
-include 'plugin:com.sandpolis.plugin.desktop:client:mega'
+include 'plugin:com.sandpolis.plugin.desktop:agent:vanilla'
 include 'plugin:com.sandpolis.plugin.desktop:viewer:lifegem'
 include 'plugin:com.sandpolis.plugin.device'
-include 'plugin:com.sandpolis.plugin.device:client:mega'
+include 'plugin:com.sandpolis.plugin.device:agent:vanilla'
+include 'plugin:com.sandpolis.plugin.filesys'
+include 'plugin:com.sandpolis.plugin.filesys:agent:vanilla'
 include 'plugin:com.sandpolis.plugin.shell'
-include 'plugin:com.sandpolis.plugin.shell:client:mega'
+include 'plugin:com.sandpolis.plugin.shell:agent:vanilla'
 include 'plugin:com.sandpolis.plugin.sysinfo'
-include 'plugin:com.sandpolis.plugin.sysinfo:client:mega'
+include 'plugin:com.sandpolis.plugin.sysinfo:agent:vanilla'
 include 'plugin:com.sandpolis.plugin.sysinfo:server:vanilla'
 include 'plugin:com.sandpolis.plugin.upgrade'
-include 'plugin:com.sandpolis.plugin.upgrade:client:mega'
-include 'plugin:com.sandpolis.plugin.filesys'
-include 'plugin:com.sandpolis.plugin.filesys:client:mega'
+include 'plugin:com.sandpolis.plugin.upgrade:agent:vanilla'

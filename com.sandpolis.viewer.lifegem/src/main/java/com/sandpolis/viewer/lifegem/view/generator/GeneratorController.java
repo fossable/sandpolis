@@ -29,7 +29,7 @@ import com.sandpolis.core.instance.Generator.NetworkConfig;
 import com.sandpolis.core.instance.Generator.NetworkTarget;
 import com.sandpolis.core.instance.Generator.OutputFormat;
 import com.sandpolis.core.instance.Generator.OutputPayload;
-import com.sandpolis.core.sv.msg.MsgGenerator.RS_Generate;
+import com.sandpolis.core.clientserver.msg.MsgGenerator.RS_Generate;
 import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.core.viewer.cmd.GenCmd;
 import com.sandpolis.viewer.lifegem.common.FxUtil;

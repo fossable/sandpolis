@@ -33,7 +33,7 @@ public final class CloudUtil {
 	public static Optional<String> listen(String token) throws IOException, InterruptedException {
 		HttpClient client = HttpClient.newHttpClient();
 		HttpRequest request = HttpRequest.newBuilder()
-				.uri(URI.create("https://api.sandpolis.com/v1/cloud/client/listen")).timeout(Duration.ofSeconds(30))
+				.uri(URI.create("https://api.sandpolis.com/v1/cloud/agent/listen")).timeout(Duration.ofSeconds(30))
 				.POST(BodyPublishers.ofString("{\"token\": \"" + token + "\"}")).build();
 		log.debug("Request token: {}", token);
 

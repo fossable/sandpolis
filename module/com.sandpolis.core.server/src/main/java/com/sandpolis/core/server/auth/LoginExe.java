@@ -37,8 +37,8 @@ import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.server.auth.otp.TimeBasedOneTimePasswordGenerator;
 import com.sandpolis.core.server.user.User;
-import com.sandpolis.core.sv.msg.MsgLogin.RQ_Login;
-import com.sandpolis.core.sv.msg.MsgLogin.RQ_Logout;
+import com.sandpolis.core.clientserver.msg.MsgLogin.RQ_Login;
+import com.sandpolis.core.clientserver.msg.MsgLogin.RQ_Logout;
 
 /**
  * This {@link Exelet} handles login and logout requests from viewer instances.

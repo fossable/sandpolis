@@ -16,13 +16,13 @@ open module com.sandpolis.core.foundation {
 	exports com.sandpolis.core.foundation.util;
 	exports com.sandpolis.core.foundation;
 
+	requires ch.qos.logback.classic;
+	requires ch.qos.logback.core;
 	requires com.google.common;
 	requires com.google.protobuf;
 	requires java.prefs;
-	requires org.slf4j;
-	requires ch.qos.logback.classic;
-	requires ch.qos.logback.core;
 	requires org.fusesource.jansi;
+	requires org.slf4j;
 
 	provides ch.qos.logback.classic.spi.Configurator
 			with com.sandpolis.core.foundation.logging.DefaultLogbackConfigurator;
