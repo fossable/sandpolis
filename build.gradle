@@ -104,7 +104,7 @@ spotless {
 		target '**/*.json'
 
 		// Exclude iOS projects
-		targetExclude '**/com.sandpolis.viewer.lockstone/**'
+		targetExclude '**/com.sandpolis.client.lockstone/**'
 
 		eclipseWtp('json')
 	}
@@ -161,7 +161,10 @@ subprojects {
 def publishProjects = [
 	'com.sandpolis.agent.micro',
 	'com.sandpolis.agent.vanilla',
+	'com.sandpolis.client.ascetic',
+	'com.sandpolis.client.lifegem',
 	'com.sandpolis.core.agent',
+	'com.sandpolis.core.client',
 	'com.sandpolis.core.clientagent',
 	'com.sandpolis.core.clientserver',
 	'com.sandpolis.core.foundation',
@@ -169,16 +172,13 @@ def publishProjects = [
 	'com.sandpolis.core.net',
 	'com.sandpolis.core.server',
 	'com.sandpolis.core.serveragent',
-	'com.sandpolis.core.viewer',
 	'com.sandpolis.plugin.desktop',
 	'com.sandpolis.plugin.device',
 	'com.sandpolis.plugin.filesys',
 	'com.sandpolis.plugin.shell',
 	'com.sandpolis.plugin.sysinfo',
 	'com.sandpolis.plugin.upgrade',
-	'com.sandpolis.server.vanilla',
-	'com.sandpolis.viewer.ascetic',
-	'com.sandpolis.viewer.lifegem'
+	'com.sandpolis.server.vanilla'
 ]
 
 // Apply publishing configuration

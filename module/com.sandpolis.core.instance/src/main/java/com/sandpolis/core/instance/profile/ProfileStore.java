@@ -39,13 +39,13 @@ public final class ProfileStore extends STCollectionStore<Profile> implements Co
 	}
 
 	/**
-	 * Retrieve a viewer's {@link Profile} by username.
+	 * Retrieve a client's {@link Profile} by username.
 	 *
 	 * @param username The username of the requested profile
 	 * @return The requested {@link Profile}
 	 */
-	public Optional<Profile> getViewer(String username) {
-		return values().stream().filter(profile -> username.equals(profile.viewer().getUsername())).findFirst();
+	public Optional<Profile> getClient(String username) {
+		return values().stream().filter(profile -> username.equals(profile.client().getUsername())).findFirst();
 	}
 
 	/**

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+
+
+<BorderPane fx:id="border" maxHeight="-Infinity"
+	maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+	xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.client.lifegem.view.main.graph.HostController">
+	<center>
+		<ImageView fx:id="image" fitHeight="32.0" fitWidth="32.0"
+			pickOnBounds="true" preserveRatio="true"
+			BorderPane.alignment="CENTER" />
+	</center>
+	<bottom>
+		<Label fx:id="undertext" BorderPane.alignment="CENTER" />
+	</bottom>
+</BorderPane>

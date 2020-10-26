@@ -229,10 +229,10 @@ public abstract class Installer {
 			if (!installAutostart(launch, "sandpolis-server")) {
 				exec(launch);
 			}
-		} else if (component == InstallComponent.VIEWER_LIFEGEM) {
+		} else if (component == InstallComponent.CLIENT_LIFEGEM) {
 			Path launch = installLaunchExecutable();
 			Path icon = installIcon();
-			installDesktopEntry(launch, icon, "Sandpolis Viewer");
+			installDesktopEntry(launch, icon, "Sandpolis Client");
 		} else if (component == InstallComponent.AGENT_VANILLA) {
 			installClientConfig();
 			Path launch = installLaunchExecutable();

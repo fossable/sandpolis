@@ -13,7 +13,7 @@ package com.sandpolis.core.net.exelet;
 
 import static com.sandpolis.core.instance.Metatypes.InstanceType.AGENT;
 import static com.sandpolis.core.instance.Metatypes.InstanceType.SERVER;
-import static com.sandpolis.core.instance.Metatypes.InstanceType.VIEWER;
+import static com.sandpolis.core.instance.Metatypes.InstanceType.CLIENT;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -48,6 +48,6 @@ public abstract class Exelet {
 		 */
 		public boolean auth();
 
-		public InstanceType[] instances() default { AGENT, VIEWER, SERVER };
+		public InstanceType[] instances() default { AGENT, CLIENT, SERVER };
 	}
 }

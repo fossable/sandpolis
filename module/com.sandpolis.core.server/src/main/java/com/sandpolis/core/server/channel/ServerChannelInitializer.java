@@ -58,7 +58,7 @@ import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 
 /**
  * {@link ServerChannelInitializer} configures a {@link Channel} for use in a
- * connection to an agent or viewer.
+ * connection to an agent or client.
  *
  * @since 5.0.0
  */

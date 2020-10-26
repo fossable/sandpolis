@@ -31,7 +31,7 @@ import io.netty.channel.ChannelHandlerContext;
 
 /**
  * This handler manages the CVID handshake for the requesting instance. Usually
- * the requesting instance will be the agent or viewer.
+ * the requesting instance will be the agent or client.
  *
  * @see CvidResponseHandler
  *

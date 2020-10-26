@@ -69,8 +69,8 @@ dependencies {
 
 	// Installation targets
 	installTargets project(':com.sandpolis.server.vanilla')
-	installTargets project(':com.sandpolis.viewer.lifegem')
-	installTargets project(':com.sandpolis.viewer.ascetic')
+	installTargets project(':com.sandpolis.client.lifegem')
+	installTargets project(':com.sandpolis.client.ascetic')
 	installTargets project(':com.sandpolis.agent.vanilla')
 
 	// JavaFX runtimes

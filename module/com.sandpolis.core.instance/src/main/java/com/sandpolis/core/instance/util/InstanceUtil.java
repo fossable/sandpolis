@@ -34,7 +34,7 @@ public class InstanceUtil {
 			return new InstanceFlavor[] {};
 		case SERVER:
 			return new InstanceFlavor[] { VANILLA };
-		case VIEWER:
+		case CLIENT:
 			return new InstanceFlavor[] { ASCETIC, LIFEGEM, SOAPSTONE, LOCKSTONE };
 		default:
 			return null;

@@ -25,14 +25,14 @@ public enum InstallComponent {
 	SERVER_VANILLA("com.sandpolis:sandpolis-server-vanilla:"),
 
 	/**
-	 * com.sandpolis.viewer.lifegem
+	 * com.sandpolis.client.lifegem
 	 */
-	VIEWER_LIFEGEM("com.sandpolis:sandpolis-viewer-lifegem:"),
+	CLIENT_LIFEGEM("com.sandpolis:sandpolis-client-lifegem:"),
 
 	/**
-	 * com.sandpolis.viewer.ascetic
+	 * com.sandpolis.client.ascetic
 	 */
-	VIEWER_ASCETIC("com.sandpolis:sandpolis-viewer-ascetic:"),
+	CLIENT_ASCETIC("com.sandpolis:sandpolis-client-ascetic:"),
 
 	/**
 	 * com.sandpolis.agent.vanilla

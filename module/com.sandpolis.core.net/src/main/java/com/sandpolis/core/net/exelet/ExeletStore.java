@@ -13,7 +13,7 @@ package com.sandpolis.core.net.exelet;
 
 import static com.sandpolis.core.instance.Metatypes.InstanceType.AGENT;
 import static com.sandpolis.core.instance.Metatypes.InstanceType.SERVER;
-import static com.sandpolis.core.instance.Metatypes.InstanceType.VIEWER;
+import static com.sandpolis.core.instance.Metatypes.InstanceType.CLIENT;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 
 import java.util.Arrays;
@@ -39,7 +39,7 @@ public class ExeletStore extends StoreBase implements ConfigurableStore<ExeletSt
 
 	private static final Logger log = LoggerFactory.getLogger(ExeletStore.class);
 
-	Map<String, ExeletMethod> viewer;
+	Map<String, ExeletMethod> client;
 
 	Map<String, ExeletMethod> server;
 
@@ -62,8 +62,8 @@ public class ExeletStore extends StoreBase implements ConfigurableStore<ExeletSt
 				}
 
 				var instances = Arrays.asList(metadata.instances());
-				if (instances.contains(VIEWER))
-					viewer.put(exeletMethod.url, exeletMethod);
+				if (instances.contains(CLIENT))
+					client.put(exeletMethod.url, exeletMethod);
 				if (instances.contains(SERVER))
 					server.put(exeletMethod.url, exeletMethod);
 				if (instances.contains(AGENT))
@@ -75,7 +75,7 @@ public class ExeletStore extends StoreBase implements ConfigurableStore<ExeletSt
 	private synchronized void unregister(Class<? extends Exelet> exelet) {
 		var urlPrefix = MsgUtil.getModuleId(exelet) + "/";
 
-		viewer.entrySet().removeIf(entry -> entry.getKey().startsWith(urlPrefix));
+		client.entrySet().removeIf(entry -> entry.getKey().startsWith(urlPrefix));
 		server.entrySet().removeIf(entry -> entry.getKey().startsWith(urlPrefix));
 		agent.entrySet().removeIf(entry -> entry.getKey().startsWith(urlPrefix));
 	}
@@ -97,7 +97,7 @@ public class ExeletStore extends StoreBase implements ConfigurableStore<ExeletSt
 		var config = new ExeletStoreConfig();
 		configurator.accept(config);
 
-		viewer = new HashMap<>();
+		client = new HashMap<>();
 		server = new HashMap<>();
 		agent = new HashMap<>();
 

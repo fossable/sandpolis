@@ -37,8 +37,8 @@ message ListenerConfig {
     // Indicates whether agent instances can be accepted by the listener
     optional bool agent_acceptor = 107;
 
-    // Indicates whether viewer instances can be accepted by the listener
-    optional bool viewer_acceptor = 108;
+    // Indicates whether client instances can be accepted by the listener
+    optional bool client_acceptor = 108;
 
     // Indicates whether the listener can be started
     optional bool enabled = 109;

@@ -39,11 +39,11 @@
 	<center>
 		<VBox prefHeight="200.0" prefWidth="100.0" spacing="4.0"
 			BorderPane.alignment="CENTER">
-			<TitledPane fx:id="pane_viewer_lifegem"
-				text="Install Viewer Desktop Application">
+			<TitledPane fx:id="pane_client_lifegem"
+				text="Install Client Desktop Application">
 				<graphic>
 					<HBox>
-						<CheckBox fx:id="chk_viewer_lifegem"
+						<CheckBox fx:id="chk_client_lifegem"
 							mnemonicParsing="false" />
 					</HBox>
 				</graphic>
@@ -59,16 +59,16 @@
 					</center>
 				</BorderPane>
 			</TitledPane>
-			<TitledPane fx:id="pane_viewer_ascetic"
-				text="Install Viewer Terminal Application">
+			<TitledPane fx:id="pane_client_ascetic"
+				text="Install Client Terminal Application">
 				<graphic>
-					<CheckBox fx:id="chk_viewer_ascetic"
+					<CheckBox fx:id="chk_client_ascetic"
 						mnemonicParsing="false" />
 				</graphic>
 				<BorderPane>
 					<center>
 						<Label
-							text="The Sandpolis Terminal Viewer is a minimalist text interface similar to the desktop application."
+							text="The Sandpolis Terminal Client is a minimalist text interface similar to the desktop application."
 							wrapText="true" BorderPane.alignment="CENTER_LEFT">
 							<font>
 								<Font size="11.0" />
@@ -84,7 +84,7 @@
 				<BorderPane>
 					<top>
 						<Label
-							text="The Sandpolis server accepts connections from clients and viewers."
+							text="The Sandpolis server accepts connections from clients and clients."
 							wrapText="true" BorderPane.alignment="CENTER">
 							<font>
 								<Font size="11.0" />

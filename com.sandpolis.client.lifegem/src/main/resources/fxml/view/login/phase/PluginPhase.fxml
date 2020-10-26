@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/10.0.2-internal"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.client.lifegem.view.login.phase.PluginPhaseController">
+	<center>
+		<TableView fx:id="plugins" editable="true"
+			prefHeight="100.0" BorderPane.alignment="CENTER">
+			<columns>
+				<TableColumn editable="false" sortable="false"
+					text="Plugin">
+					<cellValueFactory>
+						<PropertyValueFactory property="name" />
+					</cellValueFactory>
+				</TableColumn>
+				<TableColumn editable="false" sortable="false"
+					text="Description">
+					<cellValueFactory>
+						<PropertyValueFactory property="description" />
+					</cellValueFactory>
+				</TableColumn>
+				<TableColumn editable="false" sortable="false"
+					text="Trust Authority">
+					<cellValueFactory>
+						<PropertyValueFactory property="trust" />
+					</cellValueFactory>
+				</TableColumn>
+				<TableColumn prefWidth="60.0" sortable="false"
+					text="Install?">
+					<cellValueFactory>
+						<PropertyValueFactory property="install" />
+					</cellValueFactory>
+				</TableColumn>
+			</columns>
+			<BorderPane.margin>
+				<Insets bottom="4.0" left="4.0" right="4.0" />
+			</BorderPane.margin>
+			<columnResizePolicy>
+				<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+			</columnResizePolicy>
+		</TableView>
+	</center>
+</BorderPane>

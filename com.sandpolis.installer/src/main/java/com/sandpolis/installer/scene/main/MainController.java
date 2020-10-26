@@ -49,17 +49,17 @@ public class MainController {
 	@FXML
 	private CheckBox chk_server;
 	@FXML
-	private CheckBox chk_viewer_lifegem;
+	private CheckBox chk_client_lifegem;
 	@FXML
-	private CheckBox chk_viewer_ascetic;
+	private CheckBox chk_client_ascetic;
 	@FXML
 	private CheckBox chk_client;
 	@FXML
 	private TitledPane pane_server;
 	@FXML
-	private TitledPane pane_viewer_lifegem;
+	private TitledPane pane_client_lifegem;
 	@FXML
-	private TitledPane pane_viewer_ascetic;
+	private TitledPane pane_client_ascetic;
 	@FXML
 	private TitledPane pane_client;
 	@FXML
@@ -92,8 +92,8 @@ public class MainController {
 
 	private ChangeListener<Boolean> refreshScene = (ObservableValue<? extends Boolean> p, Boolean o, Boolean n) -> {
 		// Ensure at least one box is checked
-		btn_install.setDisable((!chk_server.isSelected() && !chk_viewer_lifegem.isSelected()
-				&& !chk_viewer_ascetic.isSelected() && !chk_client.isSelected()) || qrTask != null);
+		btn_install.setDisable((!chk_server.isSelected() && !chk_client_lifegem.isSelected()
+				&& !chk_client_ascetic.isSelected() && !chk_client.isSelected()) || qrTask != null);
 	};
 
 	private ChangeListener<Boolean> refreshClient = (ObservableValue<? extends Boolean> p, Boolean o, Boolean n) -> {
@@ -139,13 +139,13 @@ public class MainController {
 	private void initialize() {
 
 		chk_server.selectedProperty().addListener(refreshScene);
-		chk_viewer_lifegem.selectedProperty().addListener(refreshScene);
-		chk_viewer_ascetic.selectedProperty().addListener(refreshScene);
+		chk_client_lifegem.selectedProperty().addListener(refreshScene);
+		chk_client_ascetic.selectedProperty().addListener(refreshScene);
 		chk_client.selectedProperty().addListener(refreshClient);
 
 		pane_server.expandedProperty().bindBidirectional(chk_server.selectedProperty());
-		pane_viewer_lifegem.expandedProperty().bindBidirectional(chk_viewer_lifegem.selectedProperty());
-		pane_viewer_ascetic.expandedProperty().bindBidirectional(chk_viewer_ascetic.selectedProperty());
+		pane_client_lifegem.expandedProperty().bindBidirectional(chk_client_lifegem.selectedProperty());
+		pane_client_ascetic.expandedProperty().bindBidirectional(chk_client_ascetic.selectedProperty());
 		pane_client.expandedProperty().bindBidirectional(chk_client.selectedProperty());
 
 		banner.setImage(new Image(MainController.class.getResourceAsStream("/image/logo.png")));
@@ -179,27 +179,27 @@ public class MainController {
 		}
 
 		chk_server.selectedProperty().removeListener(refreshScene);
-		chk_viewer_lifegem.selectedProperty().removeListener(refreshScene);
-		chk_viewer_ascetic.selectedProperty().removeListener(refreshScene);
+		chk_client_lifegem.selectedProperty().removeListener(refreshScene);
+		chk_client_ascetic.selectedProperty().removeListener(refreshScene);
 		chk_client.selectedProperty().removeListener(refreshClient);
 
 		chk_server.setDisable(true);
-		chk_viewer_lifegem.setDisable(true);
-		chk_viewer_ascetic.setDisable(true);
+		chk_client_lifegem.setDisable(true);
+		chk_client_ascetic.setDisable(true);
 		chk_client.setDisable(true);
 		btn_install.setDisable(true);
 
 		Main.PATH.evaluate().ifPresent(base -> {
 			// Add installer tasks to the queue
-			if (chk_viewer_lifegem.isSelected()) {
-				install(pane_viewer_lifegem, GuiInstallTask.newViewerLifegemTask(base.resolve("viewer-gui")));
+			if (chk_client_lifegem.isSelected()) {
+				install(pane_client_lifegem, GuiInstallTask.newClientLifegemTask(base.resolve("client-gui")));
 			} else {
-				pane_viewer_lifegem.setCollapsible(false);
+				pane_client_lifegem.setCollapsible(false);
 			}
-			if (chk_viewer_ascetic.isSelected()) {
-				install(pane_viewer_ascetic, GuiInstallTask.newViewerAsceticTask(base.resolve("viewer-cli")));
+			if (chk_client_ascetic.isSelected()) {
+				install(pane_client_ascetic, GuiInstallTask.newClientAsceticTask(base.resolve("client-cli")));
 			} else {
-				pane_viewer_ascetic.setCollapsible(false);
+				pane_client_ascetic.setCollapsible(false);
 			}
 			if (chk_server.isSelected()) {
 				install(pane_server,

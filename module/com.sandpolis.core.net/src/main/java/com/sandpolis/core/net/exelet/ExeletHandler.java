@@ -58,8 +58,8 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 				case SERVER:
 					handlers = ExeletStore.server;
 					break;
-				case VIEWER:
-					handlers = ExeletStore.viewer;
+				case CLIENT:
+					handlers = ExeletStore.client;
 					break;
 				default:
 					throw new RuntimeException(

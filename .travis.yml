@@ -21,8 +21,8 @@ matrix:
       os: osx
       osx_image: xcode11.2
       script:
-        - ./gradlew :com.sandpolis.viewer.lockstone:build -PLOCKSTONE=true --console=plain
-      podfile: com.sandpolis.viewer.lockstone/Podfile
+        - ./gradlew :com.sandpolis.client.lockstone:build -PLOCKSTONE=true --console=plain
+      podfile: com.sandpolis.client.lockstone/Podfile
       cache:
         cocoapods: true
       addons:

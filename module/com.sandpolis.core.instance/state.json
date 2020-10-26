@@ -139,18 +139,18 @@
 		}
 	},
 	{
-		"name": "Profile.Viewer",
+		"name": "Profile.Client",
 		"attributes": {
 			"1": {
 				"name": "username",
 				"type": "java.lang.String",
 				"immutable": true,
-				"description": "The viewer's username"
+				"description": "The client's username"
 			},
 			"2": {
 				"name": "ip",
 				"type": "java.lang.String",
-				"description": "The viewer's login IP address"
+				"description": "The client's login IP address"
 			}
 		}
 	},
@@ -410,7 +410,7 @@
 		"name": "Profile",
 		"documents": {
 			"1": "Profile.Server",
-			"2": "Profile.Viewer",
+			"2": "Profile.Client",
 			"3": "Profile.Agent"
 		},
 		"collections": {

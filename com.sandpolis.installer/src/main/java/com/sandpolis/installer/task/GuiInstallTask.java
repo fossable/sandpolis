@@ -13,8 +13,8 @@ package com.sandpolis.installer.task;
 
 import static com.sandpolis.installer.InstallComponent.AGENT_VANILLA;
 import static com.sandpolis.installer.InstallComponent.SERVER_VANILLA;
-import static com.sandpolis.installer.InstallComponent.VIEWER_ASCETIC;
-import static com.sandpolis.installer.InstallComponent.VIEWER_LIFEGEM;
+import static com.sandpolis.installer.InstallComponent.CLIENT_ASCETIC;
+import static com.sandpolis.installer.InstallComponent.CLIENT_LIFEGEM;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -54,12 +54,12 @@ public class GuiInstallTask extends Task<Void> {
 		return task;
 	}
 
-	public static GuiInstallTask newViewerLifegemTask(Path destination) {
-		return new GuiInstallTask(Installer.newPlatformInstaller(destination, VIEWER_LIFEGEM));
+	public static GuiInstallTask newClientLifegemTask(Path destination) {
+		return new GuiInstallTask(Installer.newPlatformInstaller(destination, CLIENT_LIFEGEM));
 	}
 
-	public static GuiInstallTask newViewerAsceticTask(Path destination) {
-		return new GuiInstallTask(Installer.newPlatformInstaller(destination, VIEWER_ASCETIC));
+	public static GuiInstallTask newClientAsceticTask(Path destination) {
+		return new GuiInstallTask(Installer.newPlatformInstaller(destination, CLIENT_ASCETIC));
 	}
 
 	@Override

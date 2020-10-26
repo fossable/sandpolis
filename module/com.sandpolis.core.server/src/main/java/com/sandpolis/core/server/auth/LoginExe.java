@@ -16,7 +16,7 @@ import static com.sandpolis.core.foundation.Result.ErrorCode.INVALID_USERNAME;
 import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
 import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
 import static com.sandpolis.core.foundation.util.ProtoUtil.success;
-import static com.sandpolis.core.instance.Metatypes.InstanceType.VIEWER;
+import static com.sandpolis.core.instance.Metatypes.InstanceType.CLIENT;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.server.user.UserStore.UserStore;
 
@@ -41,7 +41,7 @@ import com.sandpolis.core.clientserver.msg.MsgLogin.RQ_Login;
 import com.sandpolis.core.clientserver.msg.MsgLogin.RQ_Logout;
 
 /**
- * This {@link Exelet} handles login and logout requests from viewer instances.
+ * This {@link Exelet} handles login and logout requests from client instances.
  *
  * @author cilki
  * @since 4.0.0
@@ -60,13 +60,13 @@ public final class LoginExe extends Exelet {
 		}
 	}
 
-	@Handler(auth = true, instances = VIEWER)
+	@Handler(auth = true, instances = CLIENT)
 	public static void rq_logout(ExeletContext context, RQ_Logout rq) {
 		log.debug("Processing logout request from: {}", context.connector.getRemoteAddress());
 		context.connector.close();
 	}
 
-	@Handler(auth = false, instances = VIEWER)
+	@Handler(auth = false, instances = CLIENT)
 	public static MessageOrBuilder rq_login(ExeletContext context, RQ_Login rq) {
 		log.debug("Processing login request from: {}", context.connector.getRemoteAddress());
 		var outcome = begin();
@@ -123,15 +123,15 @@ public final class LoginExe extends Exelet {
 		context.connector.authenticate();
 
 		// Update login metadata
-		ProfileStore.getViewer(username).ifPresentOrElse(profile -> {
-			profile.viewer().ip().set(context.connector.getRemoteAddress());
+		ProfileStore.getClient(username).ifPresentOrElse(profile -> {
+			profile.client().ip().set(context.connector.getRemoteAddress());
 		}, () -> {
 			ProfileStore.create(profile -> {
 				profile.uuid().set(context.connector.getRemoteUuid());
 				profile.instanceType().set(context.connector.getRemoteInstance());
 				profile.instanceFlavor().set(context.connector.getRemoteInstanceFlavor());
-				profile.viewer().username().set(username);
-				profile.viewer().ip().set(context.connector.getRemoteAddress());
+				profile.client().username().set(username);
+				profile.client().ip().set(context.connector.getRemoteAddress());
 			});
 		});
 

@@ -13,7 +13,7 @@ package com.sandpolis.core.server.generator;
 
 import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
 import static com.sandpolis.core.foundation.util.ProtoUtil.failure;
-import static com.sandpolis.core.instance.Metatypes.InstanceType.VIEWER;
+import static com.sandpolis.core.instance.Metatypes.InstanceType.CLIENT;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 
 import java.util.concurrent.ExecutorService;
@@ -37,7 +37,7 @@ public final class GeneratorExe extends Exelet {
 
 	private static final Logger log = LoggerFactory.getLogger(GeneratorExe.class);
 
-	@Handler(auth = true, instances = VIEWER)
+	@Handler(auth = true, instances = CLIENT)
 	public static MessageOrBuilder rq_generate(RQ_Generate rq) throws Exception {
 		ExecutorService pool = ThreadStore.get("server.generator");
 

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+
+<?import com.sandpolis.client.lifegem.common.button.SvgButton?>
+<?import com.sandpolis.client.lifegem.common.label.SvgLabel?>
+
+<TitledPane maxHeight="-Infinity" maxWidth="-Infinity"
+	minHeight="-Infinity" minWidth="-Infinity" collapsible="false"
+	styleClass="main_menu-header" xmlns="http://javafx.com/javafx/9"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.sandpolis.client.lifegem.view.main.menu.InterfaceController">
+	<graphic>
+		<SvgLabel alignment="CENTER"
+			styleClass="main-menu-header_graphic" id="main-menu-interface-header"
+			text="Interface" />
+	</graphic>
+	<content>
+		<VBox alignment="CENTER" styleClass="main-menu-panel">
+			<children>
+				<VBox styleClass="main-menu-subpanel">
+					<children>
+						<SvgButton mnemonicParsing="false" onAction="#open_list"
+							styleClass="main-menu-button" id="main-menu-interface-btn_list"
+							text="Host List">
+						</SvgButton>
+						<SvgButton mnemonicParsing="false"
+							onAction="#open_graph" styleClass="main-menu-button"
+							id="main-menu-interface-btn_graph" text="Host Graph">
+						</SvgButton>
+						<SvgButton mnemonicParsing="false"
+							styleClass="main-menu-button"
+							id="main-menu-interface-btn_timeline" text="Timeline">
+						</SvgButton>
+					</children>
+				</VBox>
+				<VBox styleClass="main-menu-subpanel">
+					<children>
+						<SvgButton mnemonicParsing="false"
+							styleClass="main-menu-button"
+							id="main-menu-interface-btn_console" text="Console" />
+						<SvgButton mnemonicParsing="false"
+							styleClass="main-menu-button" id="main-menu-interface-btn_status"
+							text="Status" />
+					</children>
+				</VBox>
+				<VBox styleClass="main-menu-subpanel">
+					<children>
+						<SvgButton onAction="#background"
+							mnemonicParsing="false" styleClass="main-menu-button"
+							fx:id="btn_background" id="main-menu-interface-btn_background"
+							text="Background">
+							<tooltip>
+								<Tooltip styleClass=".main-menu-tooltip"
+									text="Minimize to the system tray" />
+							</tooltip>
+						</SvgButton>
+						<SvgButton onAction="#quit" mnemonicParsing="false"
+							styleClass="main-menu-button" id="main-menu-interface-btn_exit"
+							text="Quit">
+							<tooltip>
+								<Tooltip styleClass=".main-menu-tooltip"
+									text="Exit the application" />
+							</tooltip>
+						</SvgButton>
+					</children>
+				</VBox>
+			</children>
+		</VBox>
+	</content>
+</TitledPane>
