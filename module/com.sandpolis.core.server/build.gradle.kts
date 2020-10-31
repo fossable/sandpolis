@@ -10,37 +10,22 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 
+import com.google.protobuf.gradle.*
+
 plugins {
-	id "eclipse"
-	id "java-library"
-}
-
-apply plugin: "com.sandpolis.gradle.codegen"
-
-sourceSets {
-	main {
-		java {
-			srcDirs "src/main/proto"
-			srcDirs "gen/main/java"
-		}
-	}
-}
-
-eclipse {
-	project {
-		name = "com.sandpolis.core.server"
-		comment = "The server library module"
-	}
+	id("com.google.protobuf") version "0.8.11"
+	id("eclipse")
+	id("java-library")
 }
 
 dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
 
-	api project(":module:com.sandpolis.core.serveragent")
-	api project(":module:com.sandpolis.core.instance")
-	api project(":module:com.sandpolis.core.net")
-	api project(":module:com.sandpolis.core.clientserver")
+	api(project(":module:com.sandpolis.core.clientserver"))
+	api(project(":module:com.sandpolis.core.instance"))
+	api(project(":module:com.sandpolis.core.net"))
+	api(project(":module:com.sandpolis.core.serveragent"))
 	
 	// https://github.com/FasterXML/jackson-databind
 	implementation("com.fasterxml.jackson.core:jackson-databind:2.10.1")
@@ -66,7 +51,59 @@ dependencies {
 	implementation("javax.xml.bind:jaxb-api:2.3.0")
 }
 
-// Ignore javadoc errors in generated protobuf sources
-javadoc {
-	failOnError = false
+eclipse {
+	project {
+		name = project.name
+		comment = project.name
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs("src/main/proto")
+			srcDirs("gen/main/java")
+		}
+	}
+}
+
+tasks {
+	javadoc {
+		// Ignore errors in generated protobuf sources
+		setFailOnError(false)
+	}
+}
+
+protobuf {
+	protoc {
+		artifact = "com.google.protobuf:protoc:3.13.0"
+	}
+
+	generatedFilesBaseDir = "$projectDir/gen/"
+
+	tasks {
+		clean {
+			delete(generatedFilesBaseDir)
+		}
+	}
+	generateProtoTasks {
+		ofSourceSet("main").forEach { task ->
+			task.builtins {
+				remove("java")
+				id("java") {
+					option("lite")
+				}
+				if (project.properties["instances.agent.micro"] == "true") {
+					id("cpp") {
+						option("lite")
+					}					
+				}
+				if (project.properties["instances.client.lockstone"] == "true") {
+					id("swift") {
+						option("lite")
+					}
+				}
+			}
+		}
+	}
 }

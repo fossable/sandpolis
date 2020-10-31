@@ -10,26 +10,12 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 
+import com.google.protobuf.gradle.*
+
 plugins {
-	id "eclipse"
-	id "java-library"
-	id "com.google.protobuf" version "0.8.11"
-}
-
-eclipse {
-	project {
-		name = "com.sandpolis.core.foundation"
-		comment = "The foundation library module"
-	}
-}
-
-sourceSets {
-	main {
-		java {
-			srcDirs "src/main/proto"
-			srcDirs "gen/main/java"
-		}
-	}
+	id("com.google.protobuf") version "0.8.11"
+	id("eclipse")
+	id("java-library")
 }
 
 dependencies {
@@ -40,54 +26,85 @@ dependencies {
 
 	// https://github.com/google/guava
 	api ("com.google.guava:guava:30.0-jre") {
-		exclude group: "com.google.code.findbugs", module: "jsr305"
-		exclude group: "com.google.guava", module: "listenablefuture"
-		exclude group: "org.checkerframework", module: "checker-qual"
-		exclude group: "com.google.errorprone", module: "error_prone_annotations"
-		exclude group: "com.google.j2objc", module: "j2objc-annotations"
+		exclude(group = "com.google.code.findbugs", module = "jsr305")
+		exclude(group = "com.google.guava", module = "listenablefuture")
+		exclude(group = "org.checkerframework", module = "checker-qual")
+		exclude(group = "com.google.errorprone", module = "error_prone_annotations")
+		exclude(group = "com.google.j2objc", module = "j2objc-annotations")
 	}
 
 	// https://github.com/fusesource/jansi
 	implementation("org.fusesource.jansi:jansi:2.0.1")
 
 	// https://github.com/protocolbuffers/protobuf
-	api "com.google.protobuf:protobuf-java:3.11.4"
+	api("com.google.protobuf:protobuf-javalite:3.13.0")
 
 	// https://github.com/qos-ch/slf4j
-	api "org.slf4j:slf4j-api:1.7.30"
+	api("org.slf4j:slf4j-api:1.7.30")
 
 	// https://github.com/amaembo/streamex
-	api "one.util:streamex:0.7.3"
+	api("one.util:streamex:0.7.3")
 
 	// https://github.com/qos-ch/logback
 	implementation("ch.qos.logback:logback-core:1.3.0-alpha5")
-	implementation ("ch.qos.logback:logback-classic:1.3.0-alpha5") {
-		exclude group: "com.sun.mail", module: "javax.mail"
+	implementation("ch.qos.logback:logback-classic:1.3.0-alpha5") {
+		exclude(group = "com.sun.mail", module = "javax.mail")
+	}
+}
+
+eclipse {
+	project {
+		name = project.name
+		comment = project.name
+	}
+}
+
+tasks {
+	javadoc {
+		// Ignore errors in generated protobuf sources
+		setFailOnError(false)
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs("src/main/proto")
+			srcDirs("gen/main/java")
+		}
 	}
 }
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:3.11.4"
+		artifact = "com.google.protobuf:protoc:3.13.0"
 	}
 
 	generatedFilesBaseDir = "$projectDir/gen/"
 
-	clean {
-		delete generatedFilesBaseDir
+	tasks {
+		clean {
+			delete(generatedFilesBaseDir)
+		}
 	}
 	generateProtoTasks {
-		all().each { task ->
+		ofSourceSet("main").forEach { task ->
 			task.builtins {
-				cpp {
-					option "lite"
+				remove("java")
+				id("java") {
+					option("lite")
+				}
+				if (project.properties["instances.agent.micro"] == "true") {
+					id("cpp") {
+						option("lite")
+					}					
+				}
+				if (project.properties["instances.client.lockstone"] == "true") {
+					id("swift") {
+						option("lite")
+					}
 				}
 			}
 		}
 	}
-}
-
-// Ignore javadoc errors in generated protobuf sources
-javadoc {
-	failOnError = false
 }
