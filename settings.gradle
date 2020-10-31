@@ -10,52 +10,52 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 
-rootProject.name = 'Sandpolis'
+rootProject.name = "Sandpolis"
 
 // Composite Builds
-includeBuild 'gradle/com.sandpolis.gradle.codegen'
-includeBuild 'gradle/com.sandpolis.gradle.plugin'
-includeBuild 'gradle/com.sandpolis.gradle.soi'
+includeBuild "gradle/com.sandpolis.gradle.codegen"
+includeBuild "gradle/com.sandpolis.gradle.plugin"
+includeBuild "gradle/com.sandpolis.gradle.soi"
 
 // Instance Projects
-include 'com.sandpolis.agent.installer:jar'
-include 'com.sandpolis.agent.installer:py'
-include 'com.sandpolis.agent.vanilla'
-include 'com.sandpolis.charcoal'
-include 'com.sandpolis.client.ascetic'
-include 'com.sandpolis.client.lifegem'
-include 'com.sandpolis.installer'
-include 'com.sandpolis.server.vanilla'
+include "com.sandpolis.agent.installer:jar"
+include "com.sandpolis.agent.installer:py"
+include "com.sandpolis.agent.vanilla"
+include "com.sandpolis.charcoal"
+include "com.sandpolis.client.ascetic"
+include "com.sandpolis.client.lifegem"
+include "com.sandpolis.installer"
+include "com.sandpolis.server.vanilla"
 
 // Optional Instances
-if (System.properties.get('instances.client-lockstone', 'false').toBoolean())
-	include 'com.sandpolis.client.lockstone'
-if (System.properties.get('instances.agent-micro', 'false').toBoolean())
-	include 'com.sandpolis.agent.micro'
+if (System.properties.get("instances.client-lockstone", "false").toBoolean())
+	include "com.sandpolis.client.lockstone"
+if (System.properties.get("instances.agent-micro", "false").toBoolean())
+	include "com.sandpolis.agent.micro"
 
 // Dependency Projects
-include 'module:com.sandpolis.core.agent'
-include 'module:com.sandpolis.core.client'
-include 'module:com.sandpolis.core.clientagent'
-include 'module:com.sandpolis.core.clientserver'
-include 'module:com.sandpolis.core.foundation'
-include 'module:com.sandpolis.core.instance'
-include 'module:com.sandpolis.core.net'
-include 'module:com.sandpolis.core.server'
-include 'module:com.sandpolis.core.serveragent'
+include "module:com.sandpolis.core.agent"
+include "module:com.sandpolis.core.client"
+include "module:com.sandpolis.core.clientagent"
+include "module:com.sandpolis.core.clientserver"
+include "module:com.sandpolis.core.foundation"
+include "module:com.sandpolis.core.instance"
+include "module:com.sandpolis.core.net"
+include "module:com.sandpolis.core.server"
+include "module:com.sandpolis.core.serveragent"
 
 // Core plugins
-include 'plugin:com.sandpolis.plugin.desktop'
-include 'plugin:com.sandpolis.plugin.desktop:agent:vanilla'
-include 'plugin:com.sandpolis.plugin.desktop:client:lifegem'
-include 'plugin:com.sandpolis.plugin.device'
-include 'plugin:com.sandpolis.plugin.device:agent:vanilla'
-include 'plugin:com.sandpolis.plugin.filesys'
-include 'plugin:com.sandpolis.plugin.filesys:agent:vanilla'
-include 'plugin:com.sandpolis.plugin.shell'
-include 'plugin:com.sandpolis.plugin.shell:agent:vanilla'
-include 'plugin:com.sandpolis.plugin.sysinfo'
-include 'plugin:com.sandpolis.plugin.sysinfo:agent:vanilla'
-include 'plugin:com.sandpolis.plugin.sysinfo:server:vanilla'
-include 'plugin:com.sandpolis.plugin.upgrade'
-include 'plugin:com.sandpolis.plugin.upgrade:agent:vanilla'
+include "plugin:com.sandpolis.plugin.desktop"
+include "plugin:com.sandpolis.plugin.desktop:agent:vanilla"
+include "plugin:com.sandpolis.plugin.desktop:client:lifegem"
+include "plugin:com.sandpolis.plugin.device"
+include "plugin:com.sandpolis.plugin.device:agent:vanilla"
+include "plugin:com.sandpolis.plugin.filesys"
+include "plugin:com.sandpolis.plugin.filesys:agent:vanilla"
+include "plugin:com.sandpolis.plugin.shell"
+include "plugin:com.sandpolis.plugin.shell:agent:vanilla"
+include "plugin:com.sandpolis.plugin.sysinfo"
+include "plugin:com.sandpolis.plugin.sysinfo:agent:vanilla"
+include "plugin:com.sandpolis.plugin.sysinfo:server:vanilla"
+include "plugin:com.sandpolis.plugin.upgrade"
+include "plugin:com.sandpolis.plugin.upgrade:agent:vanilla"

@@ -15,13 +15,13 @@ plugins {
 }
 
 xcodebuild {
-	scheme = 'Sandpolis'
-	target = 'Sandpolis'
+	scheme = "Sandpolis"
+	target = "Sandpolis"
 
 	destination {
-		platform = 'iOS Simulator'
-		name = 'iPhone X'
-		os = '12.2'
+		platform = "iOS Simulator"
+		name = "iPhone X"
+		os = "12.2"
 	}
 }
 
@@ -30,13 +30,13 @@ afterEvaluate {
 	mkdir file("build/proto")
 
 	copy {
-		from project(':module:com.sandpolis.core.foundation').file('src/main/proto')
-		from project(':module:com.sandpolis.core.instance').file('src/main/proto')
-		from project(':module:com.sandpolis.core.net').file('src/main/proto')
-		from project(':module:com.sandpolis.core.sv').file('src/main/proto')
-		from project(':plugin:com.sandpolis.plugin.desktop').file('src/main/proto')
-		from project(':plugin:com.sandpolis.plugin.filesys').file('src/main/proto')
-		from project(':plugin:com.sandpolis.plugin.shell').file('src/main/proto')
+		from project(":module:com.sandpolis.core.foundation").file("src/main/proto")
+		from project(":module:com.sandpolis.core.instance").file("src/main/proto")
+		from project(":module:com.sandpolis.core.net").file("src/main/proto")
+		from project(":module:com.sandpolis.core.sv").file("src/main/proto")
+		from project(":plugin:com.sandpolis.plugin.desktop").file("src/main/proto")
+		from project(":plugin:com.sandpolis.plugin.filesys").file("src/main/proto")
+		from project(":plugin:com.sandpolis.plugin.shell").file("src/main/proto")
 
 		into file("build/proto")
 	}

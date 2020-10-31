@@ -3,4 +3,4 @@
 * com.sandpolis.gradle.plugin                                                  *
 *******************************************************************************/
 
-rootProject.name = 'com.sandpolis.gradle.plugin'
+rootProject.name = "com.sandpolis.gradle.plugin"
