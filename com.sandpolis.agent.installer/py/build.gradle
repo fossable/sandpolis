@@ -11,12 +11,12 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id 'eclipse'
+	id "eclipse"
 }
 
 eclipse {
 	project {
-		name = 'com.sandpolis.agent.installer:py'
-		comment = ''
+		name = "com.sandpolis.agent.installer:py"
+		comment = ""
 	}
 }

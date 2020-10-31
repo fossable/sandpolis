@@ -11,54 +11,54 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id 'eclipse'
-	id 'java-library'
+	id "eclipse"
+	id "java-library"
 
-	id 'com.sandpolis.gradle.soi'
-	id 'org.openjfx.javafxplugin' version '0.0.8'
-	id 'com.bmuschko.docker-remote-api' version '6.6.0'
+	id "com.sandpolis.gradle.soi"
+	id "org.openjfx.javafxplugin" version "0.0.8"
+	id "com.bmuschko.docker-remote-api" version "6.6.0"
 }
 
-apply plugin: 'com.sandpolis.gradle.codegen'
+apply plugin: "com.sandpolis.gradle.codegen"
 
 javafx {
-	modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+	modules = [ "javafx.controls", "javafx.fxml", "javafx.graphics" ]
 	version = "15"
 }
 
 eclipse {
 	project {
-		name = 'com.sandpolis.client.lifegem'
-		comment = 'The JavaFX client instance'
+		name = "com.sandpolis.client.lifegem"
+		comment = "The JavaFX client instance"
 	}
 }
 
 sourceSets {
 	main {
 		java {
-			srcDirs 'gen/main/java'
+			srcDirs "gen/main/java"
 		}
 	}
 }
 
 dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
-	testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
-	testImplementation 'org.testfx:testfx-junit5:4.0.16-alpha'
-	testImplementation 'org.testfx:openjfx-monocle:jdk-12.0.1+2'
-	testImplementation 'org.awaitility:awaitility:4.0.1'
+	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
+	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
+	testImplementation("org.testfx:testfx-core:4.0.16-alpha")
+	testImplementation("org.testfx:testfx-junit5:4.0.16-alpha")
+	testImplementation("org.testfx:openjfx-monocle:jdk-12.0.1+2")
+	testImplementation("org.awaitility:awaitility:4.0.1")
 
-	implementation project(':module:com.sandpolis.core.client')
+	implementation project(":module:com.sandpolis.core.client")
 
 	// https://github.com/sirolf2009/fxgraph
-	implementation 'com.sirolf2009:fxgraph:0.0.3'
+	implementation("com.sirolf2009:fxgraph:0.0.3")
 
 	// https://github.com/nayuki/QR-Code-generator
-	implementation 'io.nayuki:qrcodegen:1.6.0'
+	implementation("io.nayuki:qrcodegen:1.6.0")
 
 	// https://github.com/javaee/jpa-spec
-	implementation 'javax.persistence:javax.persistence-api:2.2'
+	implementation("javax.persistence:javax.persistence-api:2.2")
 }
 
 task dockerSyncBuildContext(type: Sync, dependsOn: jar) {
@@ -67,11 +67,11 @@ task dockerSyncBuildContext(type: Sync, dependsOn: jar) {
 }
 
 task dockerBuildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: dockerSyncBuildContext) {
-	inputDir = file('.')
+	inputDir = file(".")
 	images = ["sandpolis/client/lifegem:${project.version}", "sandpolis/client/lifegem:latest"]
 }
 
 codegen {
-	stateTree = project(':module:com.sandpolis.core.instance').file('state.json')
+	stateTree = project(":module:com.sandpolis.core.instance").file("state.json")
 	javaFxStateTree = true
 }

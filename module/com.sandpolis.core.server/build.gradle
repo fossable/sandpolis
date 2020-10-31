@@ -11,59 +11,59 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id 'eclipse'
-	id 'java-library'
+	id "eclipse"
+	id "java-library"
 }
 
-apply plugin: 'com.sandpolis.gradle.codegen'
+apply plugin: "com.sandpolis.gradle.codegen"
 
 sourceSets {
 	main {
 		java {
-			srcDirs 'src/main/proto'
-			srcDirs 'gen/main/java'
+			srcDirs "src/main/proto"
+			srcDirs "gen/main/java"
 		}
 	}
 }
 
 eclipse {
 	project {
-		name = 'com.sandpolis.core.server'
-		comment = 'The server library module'
+		name = "com.sandpolis.core.server"
+		comment = "The server library module"
 	}
 }
 
 dependencies {
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
+	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
+	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
 
-	api project(':module:com.sandpolis.core.serveragent')
-	api project(':module:com.sandpolis.core.instance')
-	api project(':module:com.sandpolis.core.net')
-	api project(':module:com.sandpolis.core.clientserver')
+	api project(":module:com.sandpolis.core.serveragent")
+	api project(":module:com.sandpolis.core.instance")
+	api project(":module:com.sandpolis.core.net")
+	api project(":module:com.sandpolis.core.clientserver")
 	
 	// https://github.com/FasterXML/jackson-databind
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.10.1'
+	implementation("com.fasterxml.jackson.core:jackson-databind:2.10.1")
 
 	// https://github.com/netty/netty
-	implementation 'io.netty:netty-codec:4.1.48.Final'
-	implementation 'io.netty:netty-common:4.1.48.Final'
-	implementation 'io.netty:netty-handler:4.1.48.Final'
-	implementation 'io.netty:netty-transport:4.1.48.Final'
+	implementation("io.netty:netty-codec:4.1.48.Final")
+	implementation("io.netty:netty-common:4.1.48.Final")
+	implementation("io.netty:netty-handler:4.1.48.Final")
+	implementation("io.netty:netty-transport:4.1.48.Final")
 
 	// https://github.com/javaee/jpa-spec
-	implementation 'javax.persistence:javax.persistence-api:2.2'
+	implementation("javax.persistence:javax.persistence-api:2.2")
 
 	// https://github.com/hibernate/hibernate-ogm
-	implementation 'org.hibernate.ogm:hibernate-ogm-mongodb:5.4.1.Final'
+	implementation("org.hibernate.ogm:hibernate-ogm-mongodb:5.4.1.Final")
 
 	// https://github.com/cilki/zipset
-	implementation 'com.github.cilki:zipset:1.2.1'
+	implementation("com.github.cilki:zipset:1.2.1")
 
 	// https://github.com/jchambers/java-otp
-	//implementation 'com.eatthepath:java-otp:0.2.0'
+	//implementation("com.eatthepath:java-otp:0.2.0")
 
-	implementation 'javax.xml.bind:jaxb-api:2.3.0'
+	implementation("javax.xml.bind:jaxb-api:2.3.0")
 }
 
 // Ignore javadoc errors in generated protobuf sources

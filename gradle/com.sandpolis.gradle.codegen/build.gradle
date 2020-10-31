@@ -11,14 +11,14 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id 'eclipse'
-	id 'java-gradle-plugin'
+	id "eclipse"
+	id "java-gradle-plugin"
 }
 
 eclipse {
 	project {
-		name = 'com.sandpolis.gradle.codegen'
-		comment = 'A plugin that generates Sandpolis-specific code'
+		name = "com.sandpolis.gradle.codegen"
+		comment = "A plugin that generates Sandpolis-specific code"
 	}
 }
 
@@ -37,11 +37,11 @@ allprojects {
 
 dependencies {
 
-	implementation project(':module:com.sandpolis.core.foundation')
+	implementation project(":module:com.sandpolis.core.foundation")
 
 	implementation gradleApi()
 
-	implementation 'com.squareup:javapoet:1.11.1'
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
-	implementation 'com.google.guava:guava:29.0-jre'
+	implementation("com.squareup:javapoet:1.11.1")
+	implementation("com.fasterxml.jackson.core:jackson-databind:2.9.8")
+	implementation("com.google.guava:guava:29.0-jre")
 }

@@ -12,25 +12,28 @@
 
 buildscript {
 	dependencies {
-		classpath "org.hibernate:hibernate-gradle-plugin:5.4.14.Final"
+		classpath("org.hibernate:hibernate-gradle-plugin:5.4.14.Final")
 	}
 }
 
 plugins {
-	id 'eclipse'
-	id 'java-library'
+	id "eclipse"
+	id "java-library"
 
-	id 'com.sandpolis.gradle.soi'
-	id 'com.bmuschko.docker-remote-api' version '6.6.0'
-	id 'de.jjohannes.extra-java-module-info' version '0.1'
+	id "com.sandpolis.gradle.soi"
+	id "com.bmuschko.docker-remote-api" version "6.6.0"
+	id "de.jjohannes.extra-java-module-info" version "0.1"
 }
 
-apply plugin: 'org.hibernate.orm'
+import com.bmuschko.gradle.docker.tasks.container.*
+import com.bmuschko.gradle.docker.tasks.image.*
+
+apply plugin: "org.hibernate.orm"
 
 eclipse {
 	project {
-		name = 'com.sandpolis.server.vanilla'
-		comment = 'The server instance'
+		name = "com.sandpolis.server.vanilla"
+		comment = "The server instance"
 	}
 }
 
@@ -58,30 +61,30 @@ extraJavaModuleInfo {
 }
 
 dependencies {
-	testImplementation project(path: ':module:com.sandpolis.core.net', configuration: 'tests')
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
+	testImplementation project(path: ":module:com.sandpolis.core.net", configuration: "tests")
+	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
+	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
 
-	implementation project(':module:com.sandpolis.core.server')
+	implementation project(":module:com.sandpolis.core.server")
 
 	// https://github.com/hibernate/hibernate-ogm
-	implementation 'org.hibernate.ogm:hibernate-ogm-mongodb:5.4.1.Final'
+	implementation("org.hibernate.ogm:hibernate-ogm-mongodb:5.4.1.Final")
 
 	// https://github.com/netty/netty
-	implementation 'io.netty:netty-codec:4.1.48.Final'
-	implementation 'io.netty:netty-common:4.1.48.Final'
-	implementation 'io.netty:netty-handler:4.1.48.Final'
-	implementation 'io.netty:netty-transport:4.1.48.Final'
+	implementation("io.netty:netty-codec:4.1.48.Final")
+	implementation("io.netty:netty-common:4.1.48.Final")
+	implementation("io.netty:netty-handler:4.1.48.Final")
+	implementation("io.netty:netty-transport:4.1.48.Final")
 }
 
 project.evaluationDependsOn(":com.sandpolis.agent.installer:jar")
 project.evaluationDependsOn(":com.sandpolis.agent.installer:py")
 
 jar {
-	from (project(':com.sandpolis.agent.installer:jar').tasks.getByName('jar').outputs) {
+	from (project(":com.sandpolis.agent.installer:jar").tasks.getByName("jar").outputs) {
 		into "lib"
 	}
-	from (project(':com.sandpolis.agent.installer:py').file('src/sandpolis-agent-installer.py')) {
+	from (project(":com.sandpolis.agent.installer:py").file("src/sandpolis-agent-installer.py")) {
 		into "lib"
 	}
 }
@@ -91,9 +94,21 @@ task dockerSyncBuildContext(type: Sync, dependsOn: jar) {
 	into "${buildDir}/docker/lib"
 }
 
-task dockerBuildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: dockerSyncBuildContext) {
-	inputDir = file('.')
+task imageBuild(type: DockerBuildImage, dependsOn: dockerSyncBuildContext) {
+	inputDir = file(".")
 	images = ["sandpolis/server/vanilla:${project.version}", "sandpolis/server/vanilla:latest"]
+}
+
+task imageTestCreate(type: DockerCreateContainer) {
+    dependsOn imageBuild
+    targetImageId imageBuild.getImageId()
+    hostConfig.portBindings = ["8768:8768"]
+    hostConfig.autoRemove = true
+}
+
+task imageTest(type: DockerStartContainer) {
+    dependsOn imageTestCreate
+    targetContainerId imageTestCreate.getContainerId()
 }
 
 hibernate {
