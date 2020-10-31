@@ -22,7 +22,7 @@ plugins {
 
 	id "com.sandpolis.gradle.soi"
 	id "com.bmuschko.docker-remote-api" version "6.6.0"
-	id "de.jjohannes.extra-java-module-info" version "0.1"
+	id "de.jjohannes.extra-java-module-info" version "0.3"
 }
 
 import com.bmuschko.gradle.docker.tasks.container.*
