@@ -13,7 +13,7 @@
 plugins {
 	id "eclipse"
 	id "java-library"
-	id "com.google.protobuf" version "0.8.11"
+	id "com.google.protobuf" version "0.8.13"
 }
 
 eclipse {
