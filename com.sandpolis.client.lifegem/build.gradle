@@ -16,7 +16,7 @@ plugins {
 
 	id "com.sandpolis.gradle.soi"
 	id "org.openjfx.javafxplugin" version "0.0.8"
-	id "com.bmuschko.docker-remote-api" version "6.6.0"
+	id "com.bmuschko.docker-remote-api" version "6.6.1"
 }
 
 apply plugin: "com.sandpolis.gradle.codegen"
