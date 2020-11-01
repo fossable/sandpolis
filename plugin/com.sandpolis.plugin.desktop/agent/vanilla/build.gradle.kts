@@ -11,53 +11,21 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id "eclipse"
-	id "java-library"
-
-	id "com.sandpolis.gradle.soi"
-	id "com.sandpolis.gradle.plugin"
-	id "com.google.protobuf" version "0.8.11"
-}
-
-eclipse {
-	project {
-		name = "com.sandpolis.plugin.desktop"
-		comment = "The desktop plugin"
-	}
-}
-
-sourceSets {
-	main {
-		java {
-			srcDirs "src/main/proto"
-			srcDirs "gen/main/java"
-		}
-	}
+	id("eclipse")
+	id("java-library")
+	id("com.sandpolis.gradle.soi")
 }
 
 dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
 
-	api project(":module:com.sandpolis.core.instance")
-	api project(":module:com.sandpolis.core.net")
+	compileOnly(project(":plugin:com.sandpolis.plugin.desktop"))
 }
 
-sandpolis_plugin {
-	id = "com.sandpolis.plugin.desktop"
-	coordinate = "com.sandpolis:sandpolis-plugin-desktop"
-	name = "Desktop Plugin"
-	description = ""
-}
-
-protobuf {
-	protoc {
-		artifact = "com.google.protobuf:protoc:3.11.4"
-	}
-
-	generatedFilesBaseDir = "$projectDir/gen/"
-
-	clean {
-		delete generatedFilesBaseDir
+eclipse {
+	project {
+		name = "com.sandpolis.plugin.desktop:agent:vanilla"
+		comment = "com.sandpolis.plugin.desktop:agent:vanilla"
 	}
 }

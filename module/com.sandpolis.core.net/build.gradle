@@ -40,12 +40,12 @@ dependencies {
 	implementation project(":module:com.sandpolis.core.instance")
 
 	// https://github.com/netty/netty
-	api "io.netty:netty-common:4.1.48.Final"
-	api "io.netty:netty-codec:4.1.48.Final"
-	api "io.netty:netty-codec-dns:4.1.48.Final"
-	api "io.netty:netty-transport:4.1.48.Final"
-	api "io.netty:netty-handler:4.1.48.Final"
-	api "io.netty:netty-resolver-dns:4.1.48.Final"
+	api("io.netty:netty-common:4.1.48.Final")
+	api("io.netty:netty-codec:4.1.48.Final")
+	api("io.netty:netty-codec-dns:4.1.48.Final")
+	api("io.netty:netty-transport:4.1.48.Final")
+	api("io.netty:netty-handler:4.1.48.Final")
+	api("io.netty:netty-resolver-dns:4.1.48.Final")
 }
 
 // Allow com.sandpolis.server.vanilla to reuse some unit tests
@@ -76,6 +76,9 @@ protobuf {
 		all().each { task ->
 			task.builtins {
 				cpp {
+					option "lite"
+				}
+				java {
 					option "lite"
 				}
 			}

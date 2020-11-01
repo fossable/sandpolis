@@ -11,40 +11,21 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id "eclipse"
-	id "java-library"
-}
-
-apply plugin: "com.sandpolis.gradle.plugin"
-apply plugin: "com.sandpolis.gradle.codegen"
-apply plugin: "com.sandpolis.gradle.soi"
-
-sourceSets {
-	main {
-		java {
-			srcDirs "gen/main/java"
-		}
-	}
-}
-
-eclipse {
-	project {
-		name = "com.sandpolis.plugin.sysinfo"
-		comment = "The system info plugin"
-	}
+	id("eclipse")
+	id("java-library")
+	id("com.sandpolis.gradle.soi")
 }
 
 dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
 
-	api project(":module:com.sandpolis.core.instance")
-	api project(":module:com.sandpolis.core.net")
+	compileOnly(project(":plugin:com.sandpolis.plugin.sysinfo"))
 }
 
-sandpolis_plugin {
-	id = "com.sandpolis.plugin.sysinfo"
-	coordinate = "com.sandpolis:sandpolis-plugin-sysinfo"
-	name = "System Info Plugin"
-	description = ""
+eclipse {
+	project {
+		name = "com.sandpolis.plugin.sysinfo:agent:vanilla"
+		comment = "com.sandpolis.plugin.sysinfo:agent:vanilla"
+	}
 }

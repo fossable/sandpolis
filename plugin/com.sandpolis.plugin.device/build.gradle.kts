@@ -10,43 +10,26 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 
+import com.google.protobuf.gradle.*
+
 plugins {
 	id("eclipse")
 	id("java-library")
+	id("com.sandpolis.gradle.soi")
+	id("com.sandpolis.gradle.plugin")
 	id("com.sandpolis.gradle.codegen")
+	id("com.google.protobuf") version "0.8.11"
 }
 
 dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
 
-	api(project(":module:com.sandpolis.core.clientserver"))
 	api(project(":module:com.sandpolis.core.instance"))
 	api(project(":module:com.sandpolis.core.net"))
-	api(project(":module:com.sandpolis.core.serveragent"))
-	
-	// https://github.com/FasterXML/jackson-databind
-	implementation("com.fasterxml.jackson.core:jackson-databind:2.10.1")
-
-	// https://github.com/netty/netty
-	implementation("io.netty:netty-codec:4.1.48.Final")
-	implementation("io.netty:netty-common:4.1.48.Final")
-	implementation("io.netty:netty-handler:4.1.48.Final")
-	implementation("io.netty:netty-transport:4.1.48.Final")
 
 	// https://github.com/javaee/jpa-spec
 	implementation("javax.persistence:javax.persistence-api:2.2")
-
-	// https://github.com/hibernate/hibernate-ogm
-	implementation("org.hibernate.ogm:hibernate-ogm-mongodb:5.4.1.Final")
-
-	// https://github.com/cilki/zipset
-	implementation("com.github.cilki:zipset:1.2.1")
-
-	// https://github.com/jchambers/java-otp
-	//implementation("com.eatthepath:java-otp:0.2.0")
-
-	implementation("javax.xml.bind:jaxb-api:2.3.0")
 }
 
 eclipse {
@@ -70,4 +53,45 @@ tasks {
 		// Ignore errors in generated protobuf sources
 		setFailOnError(false)
 	}
+}
+
+protobuf {
+	protoc {
+		artifact = "com.google.protobuf:protoc:3.13.0"
+	}
+
+	generatedFilesBaseDir = "$projectDir/gen/"
+
+	tasks {
+		clean {
+			delete(generatedFilesBaseDir)
+		}
+	}
+	generateProtoTasks {
+		ofSourceSet("main").forEach { task ->
+			task.builtins {
+				remove("java")
+				id("java") {
+					option("lite")
+				}
+				if (project.properties["instances.agent.micro"] == "true") {
+					id("cpp") {
+						option("lite")
+					}					
+				}
+				if (project.properties["instances.client.lockstone"] == "true") {
+					id("swift") {
+						option("lite")
+					}
+				}
+			}
+		}
+	}
+}
+
+sandpolis_plugin {
+	id = project.name
+	coordinate = "com.sandpolis:sandpolis-plugin-device"
+	name = "Device Plugin"
+	description = ""
 }

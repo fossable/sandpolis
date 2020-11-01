@@ -11,56 +11,46 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id "eclipse"
-	id "java-library"
-
-	id "com.sandpolis.gradle.soi"
-	id "com.sandpolis.gradle.plugin"
-	id "com.google.protobuf" version "0.8.11"
-}
-
-eclipse {
-	project {
-		name = "com.sandpolis.plugin.upgrade"
-		comment = "The upgrade plugin"
-	}
-}
-
-sourceSets {
-	main {
-		java {
-			srcDirs "src/main/proto"
-			srcDirs "gen/main/java"
-		}
-	}
+	id("eclipse")
+	id("java-library")
+	id("com.sandpolis.gradle.soi")
+	id("com.sandpolis.gradle.plugin")
+	id("com.sandpolis.gradle.codegen")
 }
 
 dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
 
-	api project(":module:com.sandpolis.core.instance")
-	api project(":module:com.sandpolis.core.net")
+	api(project(":module:com.sandpolis.core.instance"))
+	api(project(":module:com.sandpolis.core.net"))
+}
 
-	// https://github.com/javaee/jpa-spec
-	implementation("javax.persistence:javax.persistence-api:2.2")
+eclipse {
+	project {
+		name = project.name
+		comment = project.name
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs("gen/main/java")
+		}
+	}
+}
+
+tasks {
+	javadoc {
+		// Ignore errors in generated protobuf sources
+		setFailOnError(false)
+	}
 }
 
 sandpolis_plugin {
-	id = "com.sandpolis.plugin.upgrade"
-	coordinate = "com.sandpolis:sandpolis-plugin-upgrade"
-	name = "Upgrade Plugin"
-	description = "A plugin that integrates with several upgrade mechanisms."
-}
-
-protobuf {
-	protoc {
-		artifact = "com.google.protobuf:protoc:3.11.4"
-	}
-
-	generatedFilesBaseDir = "$projectDir/gen/"
-
-	clean {
-		delete generatedFilesBaseDir
-	}
+	id = project.name
+	coordinate = "com.sandpolis:sandpolis-plugin-sysinfo"
+	name = "System Info Plugin"
+	description = ""
 }

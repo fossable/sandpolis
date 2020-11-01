@@ -11,22 +11,20 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id "eclipse"
-	id "java-library"
-}
-
-apply plugin: "com.sandpolis.gradle.soi"
-
-eclipse {
-	project {
-		name = "com.sandpolis.plugin.upgrade:agent:vanilla"
-		comment = "The upgrade plugin's vanilla agent component"
-	}
+	id("eclipse")
+	id("java-library")
+	id("com.sandpolis.gradle.soi")
 }
 
 dependencies {
-	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
-	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
+	testImplementation("org.junit.jupiter:junit-jupiter-engine:5.5.1")
 
-	compileOnly project(":plugin:com.sandpolis.plugin.upgrade")
+	compileOnly(project(":plugin:com.sandpolis.plugin.shell"))
+}
+
+eclipse {
+	project {
+		name = "com.sandpolis.plugin.shell:agent:vanilla"
+		comment = "com.sandpolis.plugin.shell:agent:vanilla"
+	}
 }
