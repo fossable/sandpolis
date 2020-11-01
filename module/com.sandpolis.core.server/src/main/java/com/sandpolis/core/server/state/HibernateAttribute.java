@@ -39,29 +39,13 @@ public class HibernateAttribute<T> extends AbstractSTAttribute<T> implements STA
 	private String db_id;
 
 	public HibernateAttribute(HibernateDocument parent) {
-		this.parent = parent;
+		super(parent, 0);
 		this.db_id = UUID.randomUUID().toString();
 	}
 
-	protected HibernateAttribute() {
-		// JPA Constructor
-	}
-
-	@Column
-	@Override
-	public long getTag() {
-		return tag;
-	}
-
-	@Override
-	public Oid oid() {
-		return parent.oid().child(tag);
-	}
-
-	@Override
-	public void setTag(long tag) {
-		this.tag = tag;
-	}
+//	protected HibernateAttribute() {
+//		// JPA Constructor
+//	}
 
 	@Embedded
 	protected HibernateAttributeValue<T> getCurrent() {
@@ -101,6 +85,6 @@ public class HibernateAttribute<T> extends AbstractSTAttribute<T> implements STA
 	}
 
 	protected void setParent(HibernateDocument parent) {
-		this.parent = parent;
+
 	}
 }

@@ -20,8 +20,9 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.Message;
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.net.util.MsgUtil;
 
 public class ExeletMethod {
@@ -30,7 +31,9 @@ public class ExeletMethod {
 
 	public final Exelet.Handler metadata;
 
-	public final String url;
+	public final int type;
+
+	public final String name;
 
 	private Consumer<ExeletContext> handler;
 
@@ -43,15 +46,19 @@ public class ExeletMethod {
 		handler.accept(context);
 	}
 
-	public ExeletMethod(Method method) throws IllegalAccessException {
+	public ExeletMethod(Method method) throws Exception {
 		metadata = checkNotNull(method.getAnnotation(Exelet.Handler.class), "Method not a handler");
+		name = method.getName();
 
 		// Obtain a handle to the static method
 		var handle = MethodHandles.publicLookup().unreflect(method);
 
 		// TYPE 2
-		if (method.getReturnType() == MessageOrBuilder.class && method.getParameterCount() == 1
-				&& Message.class.isAssignableFrom(method.getParameterTypes()[0])) {
+		if (method.getReturnType() == MessageLiteOrBuilder.class && method.getParameterCount() == 1
+				&& MessageLite.class.isAssignableFrom(method.getParameterTypes()[0])) {
+
+			var parseFrom = MethodHandles.publicLookup()
+					.unreflect(method.getParameterTypes()[0].getMethod("parseFrom", ByteString.class));
 
 			handler = context -> {
 				// Access control
@@ -60,8 +67,7 @@ public class ExeletMethod {
 				}
 
 				try {
-					MessageOrBuilder rs = (MessageOrBuilder) handle
-							.invoke(context.request.getPayload().unpack((Class) method.getParameterTypes()[0]));
+					var rs = (MessageLiteOrBuilder) handle.invoke(parseFrom.invoke(context.request.getPayload()));
 
 					if (rs != null)
 						context.connector.send(MsgUtil.rs(context.request, rs));
@@ -74,7 +80,10 @@ public class ExeletMethod {
 
 		// TYPE 1
 		else if (method.getReturnType() == void.class && method.getParameterCount() == 1
-				&& Message.class.isAssignableFrom(method.getParameterTypes()[0])) {
+				&& MessageLite.class.isAssignableFrom(method.getParameterTypes()[0])) {
+
+			var parseFrom = MethodHandles.publicLookup()
+					.unreflect(method.getParameterTypes()[0].getMethod("parseFrom", ByteString.class));
 
 			handler = context -> {
 				// Access control
@@ -83,7 +92,7 @@ public class ExeletMethod {
 				}
 
 				try {
-					handle.invoke(context.request.getPayload().unpack((Class) method.getParameterTypes()[0]));
+					handle.invoke(parseFrom.invoke(context.request.getPayload()));
 				} catch (Throwable e) {
 					log.error("Failed to handle message", e);
 					// No error response because this handler doesn't send a response normally
@@ -94,7 +103,10 @@ public class ExeletMethod {
 		// TYPE 3
 		else if (method.getReturnType() == void.class && method.getParameterCount() == 2
 				&& method.getParameterTypes()[0] == ExeletContext.class
-				&& Message.class.isAssignableFrom(method.getParameterTypes()[1])) {
+				&& MessageLite.class.isAssignableFrom(method.getParameterTypes()[1])) {
+
+			var parseFrom = MethodHandles.publicLookup()
+					.unreflect(method.getParameterTypes()[1].getMethod("parseFrom", ByteString.class));
 
 			handler = context -> {
 				// Access control
@@ -103,7 +115,7 @@ public class ExeletMethod {
 				}
 
 				try {
-					handle.invoke(context, context.request.getPayload().unpack((Class) method.getParameterTypes()[1]));
+					handle.invoke(context, parseFrom.invoke(context.request.getPayload()));
 				} catch (Throwable e) {
 					log.error("Failed to handle message", e);
 					// TODO error outcome
@@ -122,9 +134,12 @@ public class ExeletMethod {
 		}
 
 		// TYPE 4
-		else if (method.getReturnType() == MessageOrBuilder.class && method.getParameterCount() == 2
+		else if (method.getReturnType() == MessageLiteOrBuilder.class && method.getParameterCount() == 2
 				&& method.getParameterTypes()[0] == ExeletContext.class
-				&& Message.class.isAssignableFrom(method.getParameterTypes()[1])) {
+				&& MessageLite.class.isAssignableFrom(method.getParameterTypes()[1])) {
+
+			var parseFrom = MethodHandles.publicLookup()
+					.unreflect(method.getParameterTypes()[1].getMethod("parseFrom", ByteString.class));
 
 			handler = context -> {
 				// Access control
@@ -133,8 +148,8 @@ public class ExeletMethod {
 				}
 
 				try {
-					MessageOrBuilder rs = (MessageOrBuilder) handle.invoke(context,
-							context.request.getPayload().unpack((Class) method.getParameterTypes()[1]));
+					var rs = (MessageLiteOrBuilder) handle.invoke(context,
+							parseFrom.invoke(context.request.getPayload()));
 					if (rs != null)
 						context.connector.send(MsgUtil.rs(context.request, rs));
 				} catch (Throwable e) {
@@ -154,10 +169,10 @@ public class ExeletMethod {
 
 		// Unknown format
 		else
-			throw new RuntimeException("Unknown handler format for method: " + method.getName());
+			throw new IllegalArgumentException("Unknown handler format for method: " + method.getName());
 
 		// Set this last in case the method was not a valid handler
-		url = MsgUtil.getTypeUrl(method);
+		type = MsgUtil.getPayloadType(method);
 	}
 
 }

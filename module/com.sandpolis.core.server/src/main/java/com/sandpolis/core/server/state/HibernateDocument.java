@@ -39,11 +39,6 @@ public class HibernateDocument extends AbstractSTDocument implements STDocument 
 	@Id
 	private String db_id;
 
-	@Column
-	public long getTag() {
-		return tag;
-	}
-
 	@Column(nullable = true)
 	private HibernateDocument parentDocument;
 
@@ -63,7 +58,7 @@ public class HibernateDocument extends AbstractSTDocument implements STDocument 
 	private Map<Integer, HibernateAttribute<?>> attributes;
 
 	public HibernateDocument(HibernateDocument parent) {
-		this.parentDocument = parent;
+		super(parent, 0);
 		this.db_id = UUID.randomUUID().toString();
 
 		documents = new HashMap<>();
@@ -77,7 +72,7 @@ public class HibernateDocument extends AbstractSTDocument implements STDocument 
 	}
 
 	public HibernateDocument(HibernateCollection parent) {
-		this.parentCollection = parent;
+		super(parent, 0);
 		this.db_id = UUID.randomUUID().toString();
 
 		documents = new HashMap<>();
@@ -90,23 +85,8 @@ public class HibernateDocument extends AbstractSTDocument implements STDocument 
 		merge(document);
 	}
 
-	protected HibernateDocument() {
-		// JPA CONSTRUCTOR
-	}
-
-	@Override
-	public STAttribute<?> newAttribute() {
-		return new HibernateAttribute<>(this);
-	}
-
-	@Override
-	public STDocument newDocument() {
-		return new HibernateDocument(this);
-	}
-
-	@Override
-	public STCollection newCollection() {
-		return new HibernateCollection(this);
-	}
+//	protected HibernateDocument() {
+//		// JPA CONSTRUCTOR
+//	}
 
 }

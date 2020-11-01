@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.State.ProtoCollection;
@@ -49,7 +49,7 @@ import com.sandpolis.core.net.stream.StreamSource;
  * @param <T> The type of the object's protobuf representation
  * @since 7.0.0
  */
-public abstract class EntangledObject<T extends Message> extends AbstractSTObject<T> {
+public abstract class EntangledObject<T extends MessageLite> extends AbstractSTObject<T> {
 
 	public EntangledObject(STObject<?> parent, long id) {
 		super(parent, id);
@@ -69,7 +69,7 @@ public abstract class EntangledObject<T extends Message> extends AbstractSTObjec
 		return source;
 	}
 
-	private Message eventToProto(Oid oid, Message snapshot) {
+	private MessageLite eventToProto(Oid oid, MessageLite snapshot) {
 		long[] components = oid.relativize(container().oid().parent()).value();
 
 		for (int i = components.length - 2; i >= 0; i--) {

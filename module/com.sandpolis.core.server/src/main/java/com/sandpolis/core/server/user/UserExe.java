@@ -17,7 +17,7 @@ import static com.sandpolis.core.foundation.util.ProtoUtil.success;
 import static com.sandpolis.core.instance.Metatypes.InstanceType.CLIENT;
 import static com.sandpolis.core.server.user.UserStore.UserStore;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
@@ -31,7 +31,7 @@ import com.sandpolis.core.clientserver.msg.MsgUser.RQ_UserOperation;
 public final class UserExe extends Exelet {
 
 	@Handler(auth = true, instances = CLIENT)
-	public static MessageOrBuilder rq_user_operation(ExeletContext context, RQ_UserOperation rq) {
+	public static MessageLiteOrBuilder rq_user_operation(ExeletContext context, RQ_UserOperation rq) {
 		var outcome = begin();
 		var user = UserStore.get(context.connector.getRemoteCvid()).orElse(null);
 		if (user == null)

@@ -26,4 +26,6 @@ open module com.sandpolis.server.vanilla {
 	requires java.persistence;
 	requires org.hibernate.orm.core;
 	requires org.slf4j;
+
+	requires jdk.unsupported;
 }

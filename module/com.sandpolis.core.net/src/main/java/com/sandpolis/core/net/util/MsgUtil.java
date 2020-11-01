@@ -13,10 +13,11 @@ package com.sandpolis.core.net.util;
 
 import java.lang.reflect.Method;
 
-import com.google.protobuf.Any;
-import com.google.protobuf.Message;
-import com.google.protobuf.Message.Builder;
-import com.google.protobuf.MessageOrBuilder;
+import com.google.common.hash.Hashing;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.MessageLite.Builder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.foundation.util.IDUtil;
 import com.sandpolis.core.net.Message.MSG;
 
@@ -33,17 +34,26 @@ public final class MsgUtil {
 		return MSG.newBuilder();
 	}
 
-	public static MSG.Builder msg(MessageOrBuilder payload) {
-		return setPayload(msg(), payload);
+	public static MSG.Builder msg(MessageLiteOrBuilder payload) {
+		return pack(msg(), payload);
 	}
 
-	private static MSG.Builder setPayload(MSG.Builder msg, MessageOrBuilder payload) {
+	public static MSG.Builder pack(MSG.Builder msg, MessageLiteOrBuilder payload) {
 		if (payload instanceof Builder) {
-			return msg.setPayload(Any.pack(((Builder) payload).build(), getModuleId(payload)));
-		} else if (payload instanceof Message) {
-			return msg.setPayload(Any.pack((Message) payload, getModuleId(payload)));
+			return msg.setPayload(((Builder) payload).build().toByteString()).setPayloadType(getPayloadType(payload));
+		} else if (payload instanceof MessageLite) {
+			return msg.setPayload(((MessageLite) payload).toByteString()).setPayloadType(getPayloadType(payload));
 		} else {
 			throw new AssertionError();
+		}
+	}
+
+	public static <T extends MessageLite> T unpack(MSG msg, Class<T> payloadType) {
+		try {
+			var parseFrom = payloadType.getMethod("parseFrom", ByteString.class);
+			return (T) parseFrom.invoke(null, msg.getPayload());
+		} catch (Exception e) {
+			throw new IllegalArgumentException(e);
 		}
 	}
 
@@ -91,8 +101,8 @@ public final class MsgUtil {
 	 * @param payload The request payload
 	 * @return A new request
 	 */
-	public static MSG.Builder rq(MessageOrBuilder payload) {
-		return setPayload(rq(), payload);
+	public static MSG.Builder rq(MessageLiteOrBuilder payload) {
+		return pack(rq(), payload);
 	}
 
 	/**
@@ -102,49 +112,30 @@ public final class MsgUtil {
 	 * @param payload The response payload
 	 * @return A new response
 	 */
-	public static MSG.Builder rs(MSG msg, MessageOrBuilder payload) {
-		return setPayload(rs(msg), payload);
+	public static MSG.Builder rs(MSG msg, MessageLiteOrBuilder payload) {
+		return pack(rs(msg), payload);
 	}
 
-	public static MSG.Builder ev(int id, MessageOrBuilder payload) {
-		return setPayload(ev(id), payload);
+	public static MSG.Builder ev(int id, MessageLiteOrBuilder payload) {
+		return pack(ev(id), payload);
 	}
 
-	public static String getModuleId(MessageOrBuilder message) {
-		return getModuleId(message.getClass());
+	public static int getPayloadType(MessageLiteOrBuilder payload) {
+		return getPayloadType(payload.getClass());
 	}
 
-	public static String getModuleId(Class<?> messageType) {
-		return messageType.getPackageName().replaceAll("\\.msg$", "");
+	public static int getPayloadType(Class<?> messageType) {
+		return Hashing.murmur3_32().hashUnencodedChars(messageType.getName()).asInt();
 	}
 
-	public static String getModuleId(Method method) {
+	public static int getPayloadType(Method method) {
 		for (var param : method.getParameterTypes()) {
-			if (Message.class.isAssignableFrom(param)) {
-				return getModuleId(param);
+			if (MessageLite.class.isAssignableFrom(param)) {
+				return getPayloadType(param);
 			}
 		}
 
-		throw new RuntimeException();
-	}
-
-	public static String getTypeUrl(Class<?> messageType) {
-		var components = messageType.getPackageName().split("\\.");
-		if (components.length < 3)
-			throw new IllegalArgumentException();
-
-		return String.format("%s/%s.%s.%s.%s", getModuleId(messageType), components[components.length - 3],
-				components[components.length - 2], components[components.length - 1], messageType.getSimpleName());
-	}
-
-	public static String getTypeUrl(Method method) {
-		for (var param : method.getParameterTypes()) {
-			if (Message.class.isAssignableFrom(param)) {
-				return getTypeUrl(param);
-			}
-		}
-
-		throw new RuntimeException();
+		throw new IllegalArgumentException();
 	}
 
 	private MsgUtil() {

@@ -16,6 +16,7 @@ import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
 import static com.sandpolis.core.instance.state.STStore.STStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
@@ -49,9 +50,8 @@ import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.state.EphemeralDocument;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.VirtST;
+import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument;
 import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.server.auth.AuthExe;
 import com.sandpolis.core.server.auth.LoginExe;
@@ -103,7 +103,7 @@ public final class Server {
 		Config.DB_USERNAME.register();
 		Config.DB_PASSWORD.register();
 
-		Config.DEBUG_CLIENT.register(true);
+		Config.DEBUG_AGENT.register(true);
 
 		Config.BANNER_TEXT.register("Welcome to a Sandpolis Server");
 		Config.BANNER_IMAGE.register();
@@ -203,7 +203,7 @@ public final class Server {
 		case "ephemeral":
 			STStore.init(config -> {
 				config.concurrency = 2;
-				config.root = new EphemeralDocument((STDocument) null);
+				config.root = new EphemeralDocument((STDocument) null, 0);
 			});
 			break;
 		default:
@@ -223,7 +223,7 @@ public final class Server {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile.connection.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.connection.resolveLocal());
 		});
 
 		ExeletStore.init(config -> {
@@ -243,28 +243,28 @@ public final class Server {
 		});
 
 		UserStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile.server.user.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.server.user.resolveLocal());
 		});
 
 		ListenerStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile.server.listener.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.server.listener.resolveLocal());
 		});
 
 		GroupStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile.server.group.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.server.group.resolveLocal());
 		});
 
 		ProfileStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile);
+			config.collection = STStore.root().get(InstanceOid().profile);
 		});
 
 		TrustStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile.server.trustanchor.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.server.trustanchor.resolveLocal());
 		});
 
 		PluginStore.init(config -> {
 			config.verifier = TrustStore::verifyPluginCertificate;
-			config.collection = STStore.root().get(VirtST.profile.plugin.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.plugin.resolveLocal());
 		});
 
 		LocationStore.init(config -> {

@@ -14,9 +14,6 @@ package com.sandpolis.client.lifegem.state;
 import java.util.HashMap;
 
 import com.sandpolis.core.instance.state.st.AbstractSTDocument;
-import com.sandpolis.core.instance.state.st.AbstractSTObject;
-import com.sandpolis.core.instance.state.st.STAttribute;
-import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.state.st.STObject;
 import com.sandpolis.core.instance.state.vst.VirtObject;
@@ -24,26 +21,11 @@ import com.sandpolis.core.instance.state.vst.VirtObject;
 public class FxDocument<T extends VirtObject> extends AbstractSTDocument implements STDocument {
 
 	public FxDocument(STObject<?> parent) {
-		this.parent = (AbstractSTObject) parent;
+		super(parent, 0);
 
 		documents = new HashMap<>();
 		collections = new HashMap<>();
 		attributes = new HashMap<>();
-	}
-
-	@Override
-	public STAttribute<?> newAttribute() {
-		return new FxAttribute<>(this);
-	}
-
-	@Override
-	public STDocument newDocument() {
-		return new FxDocument<>(this);
-	}
-
-	@Override
-	public STCollection newCollection() {
-		return new FxCollection<>(this, FxProfile::new);// TODO
 	}
 
 }

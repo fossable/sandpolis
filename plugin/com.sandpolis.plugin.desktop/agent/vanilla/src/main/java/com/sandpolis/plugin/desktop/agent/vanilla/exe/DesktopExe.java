@@ -24,8 +24,8 @@ import java.io.ByteArrayOutputStream;
 
 import javax.imageio.ImageIO;
 
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageOrBuilder;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.net.stream.OutboundStreamAdapter;
@@ -38,7 +38,7 @@ import com.sandpolis.plugin.desktop.msg.MsgRd.RQ_DesktopStream;
 public final class DesktopExe extends Exelet {
 
 	@Handler(auth = true)
-	public static MessageOrBuilder rq_screenshot(RQ_Screenshot rq) {
+	public static MessageLiteOrBuilder rq_screenshot(RQ_Screenshot rq) {
 		var outcome = begin();
 
 		try (var out = new ByteArrayOutputStream()) {
@@ -53,7 +53,7 @@ public final class DesktopExe extends Exelet {
 	}
 
 	@Handler(auth = true)
-	public static MessageOrBuilder rq_desktop_stream(ExeletContext context, RQ_DesktopStream rq) {
+	public static MessageLiteOrBuilder rq_desktop_stream(ExeletContext context, RQ_DesktopStream rq) {
 		var outcome = begin();
 		// TODO use correct stream ID
 		// Stream stream = new Stream();

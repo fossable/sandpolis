@@ -70,7 +70,7 @@ public class StatusBar extends Panel {
 			addComponent(speeds, BorderLayout.Location.RIGHT);
 		}
 
-		ConnectionStore.stream().findAny().ifPresent(sock -> {
+		ConnectionStore.values().stream().findAny().ifPresent(sock -> {
 			updater = new Thread(() -> {
 				int timeout = Config.TRAFFIC_INTERVAL.value().get();
 

@@ -153,7 +153,7 @@ public class GeneratorWindow extends BasicWindow {
 			Button btn_generate = new Button("Generate", () -> {
 				fld_path.setEnabled(false);
 
-				var config = GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_MEGA).setFormat(OutputFormat.JAR)
+				var config = GenConfig.newBuilder().setPayload(OutputPayload.OUTPUT_VANILLA).setFormat(OutputFormat.JAR)
 						.setMega(MegaConfig.newBuilder()
 								.setNetwork(NetworkConfig.newBuilder()
 										.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000)

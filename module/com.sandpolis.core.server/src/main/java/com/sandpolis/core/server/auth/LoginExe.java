@@ -30,7 +30,7 @@ import javax.security.auth.DestroyFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.core.net.exelet.Exelet;
@@ -67,7 +67,7 @@ public final class LoginExe extends Exelet {
 	}
 
 	@Handler(auth = false, instances = CLIENT)
-	public static MessageOrBuilder rq_login(ExeletContext context, RQ_Login rq) {
+	public static MessageLiteOrBuilder rq_login(ExeletContext context, RQ_Login rq) {
 		log.debug("Processing login request from: {}", context.connector.getRemoteAddress());
 		var outcome = begin();
 

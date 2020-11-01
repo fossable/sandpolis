@@ -18,7 +18,7 @@ plugins {
 	id("com.sandpolis.gradle.soi")
 	id("com.sandpolis.gradle.plugin")
 	id("com.sandpolis.gradle.codegen")
-	id("com.google.protobuf") version "0.8.11"
+	id("com.google.protobuf") version "0.8.13"
 }
 
 dependencies {

@@ -19,19 +19,6 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.Generator.AuthenticationConfig;
-import com.sandpolis.core.instance.Generator.ExecutionConfig;
-import com.sandpolis.core.instance.Generator.GenConfig;
-import com.sandpolis.core.instance.Generator.LoopConfig;
-import com.sandpolis.core.instance.Generator.MegaConfig;
-import com.sandpolis.core.instance.Generator.MicroConfig;
-import com.sandpolis.core.instance.Generator.NetworkConfig;
-import com.sandpolis.core.instance.Generator.NetworkTarget;
-import com.sandpolis.core.instance.Generator.OutputFormat;
-import com.sandpolis.core.instance.Generator.OutputPayload;
-import com.sandpolis.core.clientserver.msg.MsgGenerator.RS_Generate;
-import com.sandpolis.core.foundation.util.ValidationUtil;
-import com.sandpolis.core.client.cmd.GenCmd;
 import com.sandpolis.client.lifegem.common.FxUtil;
 import com.sandpolis.client.lifegem.common.controller.AbstractController;
 import com.sandpolis.client.lifegem.common.controller.FxController;
@@ -48,6 +35,18 @@ import com.sandpolis.client.lifegem.view.generator.config_tree.TreeAttributeText
 import com.sandpolis.client.lifegem.view.generator.config_tree.TreeCategoryController;
 import com.sandpolis.client.lifegem.view.generator.config_tree.TreeGroupController;
 import com.sandpolis.client.lifegem.view.generator.config_tree.TreeItemController;
+import com.sandpolis.core.client.cmd.GenCmd;
+import com.sandpolis.core.foundation.util.ValidationUtil;
+import com.sandpolis.core.instance.Generator.AuthenticationConfig;
+import com.sandpolis.core.instance.Generator.ExecutionConfig;
+import com.sandpolis.core.instance.Generator.GenConfig;
+import com.sandpolis.core.instance.Generator.LoopConfig;
+import com.sandpolis.core.instance.Generator.MegaConfig;
+import com.sandpolis.core.instance.Generator.MicroConfig;
+import com.sandpolis.core.instance.Generator.NetworkConfig;
+import com.sandpolis.core.instance.Generator.NetworkTarget;
+import com.sandpolis.core.instance.Generator.OutputFormat;
+import com.sandpolis.core.instance.Generator.OutputPayload;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -232,7 +231,7 @@ public class GeneratorController extends FxController {
 	private GenConfig getConfig() {
 		var config = GenConfig.newBuilder().setRequestUser("TODO").setPayload(payload).setFormat(OutputFormat.JAR);
 
-		if (payload == OutputPayload.OUTPUT_MEGA)
+		if (payload == OutputPayload.OUTPUT_VANILLA)
 			config.setMega(MegaConfig.newBuilder().setNetwork(getNetworkConfig()).setExecution(getExecutionConfig())
 					.setAuthentication(getAuthenticationConfig()));
 		else if (payload == OutputPayload.OUTPUT_MICRO)

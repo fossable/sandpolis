@@ -13,7 +13,7 @@ package com.sandpolis.core.net.exelet;
 
 import java.util.Objects;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.connection.Connection;
 
@@ -30,7 +30,7 @@ public final class ExeletContext {
 
 	public final MSG request;
 
-	Message.Builder reply;
+	MessageLite.Builder reply;
 
 	Runnable deferAction;
 
@@ -44,7 +44,7 @@ public final class ExeletContext {
 	 *
 	 * @param msg The response payload
 	 */
-	public void reply(Message.Builder msg) {
+	public void reply(MessageLite.Builder msg) {
 		if (this.reply != null)
 			throw new IllegalStateException();
 

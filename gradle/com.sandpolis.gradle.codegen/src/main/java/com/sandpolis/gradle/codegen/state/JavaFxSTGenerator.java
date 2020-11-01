@@ -48,7 +48,7 @@ public class JavaFxSTGenerator extends VSTGenerator {
 	protected void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
 		var documentClass = TypeSpec.classBuilder("Fx" + document.shortName()) //
 				.addModifiers(PUBLIC) //
-				.superclass(ClassName.get(VST_PACKAGE, VST_PREFIX + document.shortName()));
+				.superclass(ClassName.get(VST_PACKAGE, VST_PREFIX + "Document"));
 
 		{
 			// Add constructor

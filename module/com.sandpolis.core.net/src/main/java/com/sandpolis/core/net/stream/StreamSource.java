@@ -13,13 +13,13 @@ package com.sandpolis.core.net.stream;
 
 import java.util.concurrent.SubmissionPublisher;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 
 /**
  * @author cilki
  * @since 5.0.2
  */
-public abstract class StreamSource<E extends MessageOrBuilder> extends SubmissionPublisher<E>
+public abstract class StreamSource<E extends MessageLiteOrBuilder> extends SubmissionPublisher<E>
 		implements StreamEndpoint {
 
 	private int id;

@@ -17,11 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.EventBus;
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.Oid;
 
-public abstract class AbstractSTObject<E extends Message> implements STObject<E> {
+public abstract class AbstractSTObject<E extends MessageLite> implements STObject<E> {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractSTObject.class);
 

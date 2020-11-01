@@ -11,14 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.plugin.device.agent.vanilla.exe;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.plugin.device.msg.MsgDevice.RQ_RegisterDevice;
 
 public final class DeviceExe extends Exelet {
 
 	@Handler(auth = true)
-	public static MessageOrBuilder rq_register_device(RQ_RegisterDevice rq) throws Exception {
+	public static MessageLiteOrBuilder rq_register_device(RQ_RegisterDevice rq) throws Exception {
 		// TODO
 		return null;
 	}

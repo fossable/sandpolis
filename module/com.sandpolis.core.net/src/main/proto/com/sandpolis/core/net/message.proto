@@ -13,8 +13,6 @@ syntax = "proto3";
 
 package core.net;
 
-import "google/protobuf/any.proto";
-
 option java_package = "com.sandpolis.core.net";
 option optimize_for = SPEED;
 
@@ -40,12 +38,9 @@ message MSG {
     // For EV messages, this field is the stream ID if applicable.
     int32 id = 3;
 
-    // The message payload
-    google.protobuf.Any payload = 4;
-}
+    // The payload type
+    int32 payload_type = 4;
 
-message Payload {
-    int64 namespace = 1;
-    int32 type = 2;
-    bytes value = 3;
+    // The payload content
+    bytes payload = 5;
 }

@@ -39,11 +39,6 @@ public class HibernateCollection extends AbstractSTCollection implements STColle
 	@Id
 	private String db_id;
 
-	@Column
-	public long getTag() {
-		return tag;
-	}
-
 	@Column(nullable = true)
 	protected HibernateDocument getParent() {
 		return (HibernateDocument) parent;
@@ -62,7 +57,7 @@ public class HibernateCollection extends AbstractSTCollection implements STColle
 	EntityManager em;
 
 	public HibernateCollection(HibernateDocument parent) {
-		this.parent = parent;
+		super(parent, 0);
 		this.db_id = UUID.randomUUID().toString();
 
 		documents = new HashMap<>();
@@ -73,9 +68,9 @@ public class HibernateCollection extends AbstractSTCollection implements STColle
 		merge(collection);
 	}
 
-	protected HibernateCollection() {
-		// JPA CONSTRUCTOR
-	}
+//	protected HibernateCollection() {
+//		// JPA CONSTRUCTOR
+//	}
 
 	@Override
 	public void remove(STDocument document) {
@@ -90,20 +85,6 @@ public class HibernateCollection extends AbstractSTCollection implements STColle
 		documents.clear();
 		em.flush();
 		em.getTransaction().commit();
-	}
-
-	@Override
-	public void setDocument(long tag, STDocument document) {
-		em.getTransaction().begin();
-		documents.put(tag, (HibernateDocument) document);
-		document.setTag(tag);
-		em.flush();
-		em.getTransaction().commit();
-	}
-
-	@Override
-	public STDocument newDocument() {
-		return new HibernateDocument(this);
 	}
 
 	public STDocument newDetached(Function<STCollection, STDocument> cons) {

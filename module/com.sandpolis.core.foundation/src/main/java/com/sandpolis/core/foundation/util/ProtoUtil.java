@@ -15,8 +15,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import com.google.protobuf.Descriptors.FieldDescriptor;
-import com.google.protobuf.Message;
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.foundation.Result.Outcome;
 
@@ -155,20 +153,6 @@ public final class ProtoUtil {
 	 */
 	public static Outcome complete(Outcome.Builder outcome, ErrorCode code) {
 		return code == ErrorCode.OK ? success(outcome) : failure(outcome, code);
-	}
-
-	/**
-	 * Get the payload from the given message.
-	 *
-	 * @param msg The message
-	 * @return The message's payload or {@code null} if empty
-	 */
-	public static Message getPayload(Message msg) {
-		FieldDescriptor oneof = msg.getOneofFieldDescriptor(msg.getDescriptorForType().getOneofs().get(0));
-		if (oneof == null)
-			return null;
-
-		return (Message) msg.getField(oneof);
 	}
 
 	private ProtoUtil() {

@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.clientserver.msg.MsgGenerator.RQ_Generate;
 import com.sandpolis.core.clientserver.msg.MsgGenerator.RS_Generate;
@@ -38,10 +38,10 @@ public final class GeneratorExe extends Exelet {
 	private static final Logger log = LoggerFactory.getLogger(GeneratorExe.class);
 
 	@Handler(auth = true, instances = CLIENT)
-	public static MessageOrBuilder rq_generate(RQ_Generate rq) throws Exception {
+	public static MessageLiteOrBuilder rq_generate(RQ_Generate rq) throws Exception {
 		ExecutorService pool = ThreadStore.get("server.generator");
 
-		Future<MessageOrBuilder> future = pool.submit(() -> {
+		Future<MessageLiteOrBuilder> future = pool.submit(() -> {
 			var outcome = begin();
 
 			Generator generator;

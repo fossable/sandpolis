@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.plugin.device.DeviceStore.DeviceStoreConfig;
@@ -37,19 +38,13 @@ public class DeviceStore extends STCollectionStore<Device> implements Configurab
 		var config = new DeviceStoreConfig();
 		configurator.accept(config);
 
-		collection = config.collection;
+		collection = new VirtCollection<>(config.collection);
 	}
 
 	public Device create(Consumer<VirtDevice> configurator) {
-		var device = new Device(collection.newDocument());
+		var device = add(Device::new);
 		configurator.accept(device);
-		add(device);
 		return device;
-	}
-
-	@Override
-	protected Device constructor(STDocument document) {
-		return new Device(document);
 	}
 
 	@ConfigStruct

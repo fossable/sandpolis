@@ -48,7 +48,7 @@ public class CvidResponseHandler extends AbstractCvidHandler {
 		// Autoremove the handler
 		ch.pipeline().remove(this);
 
-		RQ_Cvid rq = msg.getPayload().unpack(RQ_Cvid.class);
+		RQ_Cvid rq = MsgUtil.unpack(msg, RQ_Cvid.class);
 		if (rq == null || rq.getUuid().isEmpty() || rq.getInstance() == InstanceType.UNRECOGNIZED
 				|| rq.getInstance() == InstanceType.SERVER || rq.getInstanceFlavor() == InstanceFlavor.UNRECOGNIZED) {
 			log.debug("Received invalid CVID request on channel: {}", ch.id());

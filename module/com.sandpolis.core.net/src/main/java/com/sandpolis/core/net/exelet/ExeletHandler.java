@@ -39,7 +39,7 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 
 	final Connection sock;
 
-	Map<String, ExeletMethod> handlers;
+	Map<Integer, ExeletMethod> handlers;
 
 	public ExeletHandler(Connection sock) {
 		this.sock = sock;
@@ -74,9 +74,9 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, MSG msg) throws Exception {
 
-		var handler = handlers.get(msg.getPayload().getTypeUrl());
+		var handler = handlers.get(msg.getPayloadType());
 		if (handler != null) {
-			log.debug("Handling message with exelet: {}", msg.getPayload().getTypeUrl());
+			log.debug("Handling message with exelet: {}", handler.name);
 			handler.accept(new ExeletContext(sock, msg));
 		} else {
 			// There's no valid handler

@@ -19,6 +19,7 @@ import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.state.st.STAttribute;
 import com.sandpolis.core.instance.state.st.STAttributeValue;
+import com.sandpolis.core.instance.state.st.STObject;
 import com.sandpolis.core.instance.state.st.ephemeral.EphemeralAttribute;
 
 import javafx.beans.value.ObservableValueBase;
@@ -28,7 +29,7 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	private EphemeralAttribute<T> container;
 
 	public FxAttribute(FxDocument parent) {
-		this.container = new EphemeralAttribute<>(parent);
+		this.container = new EphemeralAttribute<>(parent, 0);
 	}
 
 	@Override
@@ -72,11 +73,6 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	}
 
 	@Override
-	public void setTag(long tag) {
-		container.setTag(tag);
-	}
-
-	@Override
 	public ProtoAttribute snapshot(RelativeOid... oids) {
 		return container.snapshot(oids);
 	}
@@ -92,9 +88,9 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	}
 
 	@Override
-	public boolean isAttached() {
+	public STObject<?> parent() {
 		// TODO Auto-generated method stub
-		return false;
+		return null;
 	}
 
 }

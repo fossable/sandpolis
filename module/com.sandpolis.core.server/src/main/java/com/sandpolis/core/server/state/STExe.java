@@ -15,7 +15,7 @@ import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
 import static com.sandpolis.core.foundation.util.ProtoUtil.success;
 import static com.sandpolis.core.instance.state.STStore.STStore;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
@@ -28,7 +28,7 @@ import com.sandpolis.core.net.state.st.entangled.EntangledDocument;
 public final class STExe extends Exelet {
 
 	@Handler(auth = false)
-	public static MessageOrBuilder rq_st_snapshot(RQ_STSnapshot rq) {
+	public static MessageLiteOrBuilder rq_st_snapshot(RQ_STSnapshot rq) {
 
 		var oid = AbsoluteOid.newOid(rq.getOid());
 		if (oid instanceof AbsoluteOid.STAttributeOid) {
@@ -43,7 +43,7 @@ public final class STExe extends Exelet {
 	}
 
 	@Handler(auth = false)
-	public static MessageOrBuilder rq_st_sync(ExeletContext context, RQ_STSync rq) {
+	public static MessageLiteOrBuilder rq_st_sync(ExeletContext context, RQ_STSync rq) {
 		var outcome = begin();
 
 		var config = new STSyncStruct();

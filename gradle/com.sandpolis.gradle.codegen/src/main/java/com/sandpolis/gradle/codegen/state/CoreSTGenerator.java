@@ -239,7 +239,7 @@ public class CoreSTGenerator extends VSTGenerator {
 		}
 
 		// Process subdocuments and attributes
-		processChildren(documentClass, parent == null ? null : oidClass, document, oid);
+		processChildren(documentClass, oidClass, document, oid);
 
 		if (parent != null) {
 			{

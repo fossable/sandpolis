@@ -16,7 +16,7 @@ import static com.sandpolis.core.server.banner.BannerStore.BannerStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.instance.msg.MsgPing.RQ_Ping;
 import com.sandpolis.core.instance.msg.MsgPing.RS_Ping;
 import com.sandpolis.core.net.exelet.Exelet;
@@ -32,12 +32,12 @@ public final class BannerExe extends Exelet {
 	private static final Logger log = LoggerFactory.getLogger(BannerExe.class);
 
 	@Handler(auth = false)
-	public static MessageOrBuilder rq_server_banner(RQ_ServerBanner rq) {
+	public static MessageLiteOrBuilder rq_server_banner(RQ_ServerBanner rq) {
 		return BannerStore.getBanner();
 	}
 
 	@Handler(auth = false)
-	public static MessageOrBuilder rq_ping(RQ_Ping rq) {
+	public static MessageLiteOrBuilder rq_ping(RQ_Ping rq) {
 		return RS_Ping.newBuilder();
 	}
 

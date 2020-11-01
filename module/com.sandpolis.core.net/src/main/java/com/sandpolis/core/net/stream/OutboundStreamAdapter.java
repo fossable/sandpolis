@@ -17,11 +17,11 @@ import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.util.MsgUtil;
 
-public class OutboundStreamAdapter<E extends MessageOrBuilder> implements Subscriber<E>, StreamEndpoint {
+public class OutboundStreamAdapter<E extends MessageLiteOrBuilder> implements Subscriber<E>, StreamEndpoint {
 
 	private int cvid;
 	private int id;

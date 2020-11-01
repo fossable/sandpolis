@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.client.lifegem.view.main.menu;
 
-import static com.sandpolis.core.instance.Generator.OutputPayload.OUTPUT_MEGA;
+import static com.sandpolis.core.instance.Generator.OutputPayload.OUTPUT_VANILLA;
 import static com.sandpolis.core.instance.Generator.OutputPayload.OUTPUT_MICRO;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.client.lifegem.stage.StageStore.StageStore;
@@ -34,7 +34,7 @@ public class GeneratorController extends AbstractController {
 	private void open_mega() throws IOException {
 
 		StageStore.create(stage -> {
-			stage.setRoot("/fxml/view/generator/Generator.fxml", OUTPUT_MEGA);
+			stage.setRoot("/fxml/view/generator/Generator.fxml", OUTPUT_VANILLA);
 			stage.setWidth(PrefStore.getInt("ui.view.generator.width"));
 			stage.setHeight(PrefStore.getInt("ui.view.generator.height"));
 			stage.setTitle(FxUtil.translate("stage.generator.title"));

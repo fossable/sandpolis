@@ -11,10 +11,10 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.client.lifegem.view.login.phase;
 
-import com.sandpolis.core.clientagent.cmd.PluginCmd;
-import com.sandpolis.core.instance.state.STDocument;
 import com.sandpolis.client.lifegem.common.controller.AbstractController;
 import com.sandpolis.client.lifegem.state.FxPlugin;
+import com.sandpolis.core.clientagent.cmd.PluginCmd;
+import com.sandpolis.core.instance.state.st.STDocument;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

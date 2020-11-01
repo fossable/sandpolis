@@ -21,7 +21,7 @@ import java.io.InputStreamReader;
 import com.google.common.io.CharStreams;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.net.stream.InboundStreamAdapter;
@@ -43,7 +43,7 @@ import com.sandpolis.plugin.shell.agent.vanilla.stream.ShellStreamSource;
 public final class ShellExe extends Exelet {
 
 	@Handler(auth = true)
-	public static MessageOrBuilder rq_execute(RQ_Execute rq) throws Exception {
+	public static MessageLiteOrBuilder rq_execute(RQ_Execute rq) throws Exception {
 
 		String[] command;
 		switch (rq.getType()) {
@@ -71,7 +71,7 @@ public final class ShellExe extends Exelet {
 	}
 
 	@Handler(auth = true)
-	public static MessageOrBuilder rq_list_shells(RQ_ListShells rq) throws Exception {
+	public static MessageLiteOrBuilder rq_list_shells(RQ_ListShells rq) throws Exception {
 		var rs = RS_ListShells.newBuilder();
 
 		if (Shells.PWSH.getLocation() != null) {
@@ -139,7 +139,7 @@ public final class ShellExe extends Exelet {
 	}
 
 	@Handler(auth = true)
-	public static MessageOrBuilder rq_shell_stream(ExeletContext context, RQ_ShellStream rq) throws Exception {
+	public static MessageLiteOrBuilder rq_shell_stream(ExeletContext context, RQ_ShellStream rq) throws Exception {
 		var outcome = begin();
 
 		ProcessBuilder session = null;

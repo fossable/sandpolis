@@ -11,9 +11,10 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.client.lifegem.view.login;
 
-import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
-import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.client.lifegem.stage.StageStore.StageStore;
+import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
+import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
 import java.util.Objects;
 
@@ -21,12 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.state.VirtST;
-import com.sandpolis.core.net.connection.Connection;
-import com.sandpolis.core.net.connection.ConnectionFuture;
-import com.sandpolis.core.net.state.STCmd;
-import com.sandpolis.core.client.cmd.LoginCmd;
-import com.sandpolis.core.client.cmd.ServerCmd;
 import com.sandpolis.client.lifegem.common.FxExecutor;
 import com.sandpolis.client.lifegem.common.FxUtil;
 import com.sandpolis.client.lifegem.common.controller.FxController;
@@ -40,6 +35,11 @@ import com.sandpolis.client.lifegem.view.login.phase.PluginPhaseController;
 import com.sandpolis.client.lifegem.view.login.phase.PluginPhaseController.PluginProperty;
 import com.sandpolis.client.lifegem.view.login.phase.ServerPhaseController;
 import com.sandpolis.client.lifegem.view.login.phase.UserPhaseController;
+import com.sandpolis.core.client.cmd.LoginCmd;
+import com.sandpolis.core.client.cmd.ServerCmd;
+import com.sandpolis.core.net.connection.Connection;
+import com.sandpolis.core.net.connection.ConnectionFuture;
+import com.sandpolis.core.net.state.STCmd;
 
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
@@ -156,7 +156,7 @@ public class LoginController extends FxController {
 
 						if (rs.getResult()) {
 							STCmd.async().target(connection)
-									.snapshot(VirtST.profile.plugin.resolveUuid(connection.getRemoteUuid()))
+									.snapshot(InstanceOid().profile.plugin.resolveUuid(connection.getRemoteUuid()))
 									.thenAcceptAsync(snapshot -> {
 										var plugins = new FxCollection<>(null, snapshot, PluginProperty::new);
 										// TODO filter plugins that are already installed

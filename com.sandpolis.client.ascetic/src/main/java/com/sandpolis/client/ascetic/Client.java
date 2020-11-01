@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.client.ascetic;
 
+import static com.sandpolis.client.ascetic.store.window.WindowStore.WindowStore;
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
@@ -20,7 +21,6 @@ import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
-import static com.sandpolis.client.ascetic.store.window.WindowStore.WindowStore;
 
 import java.util.concurrent.Executors;
 
@@ -33,15 +33,14 @@ import com.googlecode.lanterna.gui2.SeparateTextGUIThread;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import com.sandpolis.client.ascetic.view.login.LoginWindow;
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.state.InstanceOid;
 import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument;
-import com.sandpolis.client.ascetic.view.login.LoginWindow;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
@@ -83,7 +82,7 @@ public final class Client {
 
 		STStore.init(config -> {
 			config.concurrency = 2;
-			config.root = new EphemeralDocument((STDocument) null);
+			config.root = new EphemeralDocument((STDocument) null, 0);
 		});
 
 		ThreadStore.init(config -> {

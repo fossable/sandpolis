@@ -9,25 +9,22 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.plugin.upgrade.agent.vanilla;
 
-import com.google.protobuf.MessageLiteOrBuilder;
-import com.sandpolis.core.foundation.Result.Outcome;
-import com.sandpolis.core.net.exelet.Exelet;
-import com.sandpolis.plugin.upgrade.msg.MsgUpgrade.RQ_ManagerMetadata;
-import com.sandpolis.plugin.upgrade.msg.MsgUpgrade.RS_ManagerMetadata;
+plugins {
+	id("eclipse")
+	id("java-library")
+}
 
-public final class UpgradeExe extends Exelet {
-
-	@Handler(auth = true)
-	public static MessageLiteOrBuilder rq_manager_metadata(RQ_ManagerMetadata rq) throws Exception {
-		if (PackageManager.INSTANCE == null)
-			return Outcome.newBuilder().setResult(false);
-
-		return RS_ManagerMetadata.newBuilder().setVersion(PackageManager.INSTANCE.getManagerVersion())
-				.setLocation(PackageManager.INSTANCE.getManagerLocation().toString());
+eclipse {
+	project {
+		name = "com.sandpolis.agent.installer:jar"
+		comment = ""
 	}
+}
 
-	private UpgradeExe() {
+tasks.jar {
+	archiveBaseName.set("sandpolis-agent-installer")
+	manifest {
+		attributes(mapOf("Main-Class" to "com.sandpolis.agent.installer.jar.Main"))
 	}
 }

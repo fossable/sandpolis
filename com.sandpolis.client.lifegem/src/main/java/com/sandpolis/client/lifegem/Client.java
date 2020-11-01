@@ -11,18 +11,19 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.client.lifegem;
 
+import static com.sandpolis.client.lifegem.stage.StageStore.StageStore;
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
+import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
 import static com.sandpolis.core.instance.state.STStore.STStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.exelet.ExeletStore.ExeletStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
-import static com.sandpolis.client.lifegem.stage.StageStore.StageStore;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -30,6 +31,8 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.client.lifegem.common.FxUtil;
+import com.sandpolis.client.lifegem.state.FxDocument;
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
@@ -37,9 +40,6 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.state.VirtST;
-import com.sandpolis.client.lifegem.common.FxUtil;
-import com.sandpolis.client.lifegem.state.FxDocument;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
@@ -134,15 +134,15 @@ public final class Client {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile.connection.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.connection.resolveLocal());
 		});
 
 		PluginStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile.plugin.resolveLocal());
+			config.collection = STStore.root().get(InstanceOid().profile.plugin.resolveLocal());
 		});
 
 		ProfileStore.init(config -> {
-			config.collection = STStore.root().get(VirtST.profile);
+			config.collection = STStore.root().get(InstanceOid().profile);
 		});
 
 		return outcome.success();

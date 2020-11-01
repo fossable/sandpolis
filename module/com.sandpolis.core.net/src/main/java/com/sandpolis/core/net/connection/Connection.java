@@ -26,8 +26,8 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.Message;
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.state.VirtConnection;
 import com.sandpolis.core.instance.state.st.STDocument;
@@ -288,7 +288,7 @@ public class Connection extends VirtConnection {
 	 * @param payload      The request payload
 	 * @return An asynchronous {@link CompletionStage}
 	 */
-	public <E extends Message> CompletionStage<E> request(Class<E> responseType, MessageOrBuilder payload) {
+	public <E extends MessageLite> CompletionStage<E> request(Class<E> responseType, MessageLiteOrBuilder payload) {
 		return request(MsgUtil.rq(payload).setTo(getRemoteCvid()).setFrom(getLocalCvid()).build())
 				.toCompletionStage(responseType);
 	}

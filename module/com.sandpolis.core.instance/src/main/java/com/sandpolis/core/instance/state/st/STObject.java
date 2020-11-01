@@ -11,7 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state.st;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 
@@ -25,7 +25,7 @@ import com.sandpolis.core.instance.state.oid.RelativeOid;
  * @param <E> The protocol buffer representation of the object
  * @since 5.0.0
  */
-public interface STObject<E extends Message> {
+public interface STObject<E extends MessageLite> {
 
 	/**
 	 * Register a new listener on the object. The listener will be notified of all

@@ -15,15 +15,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.SubmissionPublisher;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.channel.HandlerKey;
 import com.sandpolis.core.net.connection.Connection;
+import com.sandpolis.core.net.util.MsgUtil;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
 
-public class InboundStreamAdapter<E extends Message> extends SubmissionPublisher<E>
+public class InboundStreamAdapter<E extends MessageLite> extends SubmissionPublisher<E>
 		implements StreamEndpoint, ChannelInboundHandler {
 
 	private int id;
@@ -96,7 +97,7 @@ public class InboundStreamAdapter<E extends Message> extends SubmissionPublisher
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		MSG m = (MSG) msg;
 		if (m.getId() == id) {
-			submit(m.getPayload().unpack(eventType));
+			submit(MsgUtil.unpack(m, eventType));
 		} else {
 			ctx.fireChannelRead(msg);
 		}

@@ -11,23 +11,17 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id "eclipse"
-	id "java-library"
+	id("eclipse")
+	id("java-library")
 }
 
 eclipse {
 	project {
-		name = "com.sandpolis.agent.installer:jar"
+		name = "com.sandpolis.agent.installer:py"
 		comment = ""
 	}
 }
 
-jar {
-	archiveBaseName = "sandpolis-agent-installer"
-	archiveVersion = ""
-	manifest {
-		attributes(
-		"Main-Class": "com.sandpolis.agent.installer.jar.Main"
-		)
-	}
+tasks.jar {
+	archiveBaseName.set("sandpolis-agent-installer")
 }

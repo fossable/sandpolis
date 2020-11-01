@@ -49,7 +49,7 @@ public class CvidRequestHandler extends AbstractCvidHandler {
 		// Autoremove the handler
 		ch.pipeline().remove(this);
 
-		RS_Cvid rs = msg.getPayload().unpack(RS_Cvid.class);
+		RS_Cvid rs = MsgUtil.unpack(msg, RS_Cvid.class);
 		if (rs != null && !rs.getServerUuid().isEmpty()) {
 
 			Core.setCvid(rs.getCvid());

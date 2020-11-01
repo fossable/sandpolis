@@ -11,6 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.gradle.codegen.state;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.TreeMap;
@@ -146,14 +147,15 @@ public abstract class VSTGenerator extends DefaultTask {
 	 */
 	protected List<DocumentSpec> flatTree;
 
+	protected File stateTree;
+
 	@TaskAction
 	public void action() throws Exception {
 
 		// Load the schema
-		flatTree = new ObjectMapper().readValue(
-				((ConfigExtension) getProject().getExtensions().getByName("codegen")).stateTree,
-				new TypeReference<List<DocumentSpec>>() {
-				});
+		stateTree = ((ConfigExtension) getProject().getExtensions().getByName("codegen")).stateTree;
+		flatTree = new ObjectMapper().readValue(stateTree, new TypeReference<List<DocumentSpec>>() {
+		});
 
 		// Check tree preconditions
 		flatTree.forEach(this::validateDocument);
@@ -197,6 +199,11 @@ public abstract class VSTGenerator extends DefaultTask {
 	 * @param document The document specification to validate
 	 */
 	protected void validateDocument(DocumentSpec document) {
+
+		// Name must be specified
+		if (document.name == null) {
+			throw new RuntimeException("Missing document name (" + stateTree.getAbsolutePath() + ")");
+		}
 
 		// Name must be a valid Java identifier
 		for (var component : document.name.split("\\.")) {

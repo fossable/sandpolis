@@ -18,7 +18,7 @@ import static com.sandpolis.core.instance.Metatypes.InstanceType.CLIENT;
 import static com.sandpolis.core.server.listener.ListenerStore.ListenerStore;
 import static com.sandpolis.core.server.user.UserStore.UserStore;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
@@ -32,7 +32,7 @@ import com.sandpolis.core.clientserver.msg.MsgListener.RQ_ListenerOperation;
 public final class ListenerExe extends Exelet {
 
 	@Handler(auth = true, instances = CLIENT)
-	public static MessageOrBuilder rq_listener_operation(ExeletContext context, RQ_ListenerOperation rq) {
+	public static MessageLiteOrBuilder rq_listener_operation(ExeletContext context, RQ_ListenerOperation rq) {
 		var outcome = begin();
 		var user = UserStore.get(context.connector.getRemoteCvid()).orElse(null);
 		if (user == null)

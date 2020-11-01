@@ -18,7 +18,7 @@ import static com.sandpolis.core.instance.Metatypes.InstanceType.CLIENT;
 import static com.sandpolis.core.server.group.GroupStore.GroupStore;
 import static com.sandpolis.core.server.user.UserStore.UserStore;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
@@ -32,7 +32,7 @@ import com.sandpolis.core.clientserver.msg.MsgGroup.RQ_GroupOperation;
 public final class GroupExe extends Exelet {
 
 	@Handler(auth = true, instances = CLIENT)
-	public static MessageOrBuilder rq_group_operation(ExeletContext context, RQ_GroupOperation rq) {
+	public static MessageLiteOrBuilder rq_group_operation(ExeletContext context, RQ_GroupOperation rq) {
 		var outcome = begin();
 		var user = UserStore.get(context.connector.getRemoteCvid()).orElse(null);
 		if (user == null)

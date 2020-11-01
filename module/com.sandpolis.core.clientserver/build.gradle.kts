@@ -13,7 +13,7 @@
 import com.google.protobuf.gradle.*
 
 plugins {
-	id("com.google.protobuf") version "0.8.11"
+	id("com.google.protobuf") version "0.8.13"
 	id("eclipse")
 	id("java-library")
 }

@@ -17,8 +17,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.util.MsgUtil;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.EventExecutor;
@@ -86,11 +87,11 @@ public class MessageFuture extends DefaultPromise<MSG> {
 	 * @param handler The message handler
 	 * @return {@code this}
 	 */
-	public <E extends Message> MessageFuture handle(Class<E> type, MessageHandler<E> handler) {
+	public <E extends MessageLite> MessageFuture handle(Class<E> type, MessageHandler<E> handler) {
 
 		if (!isDone()) {
 			addListener(message -> {
-				handler.handle(this.getNow().getPayload().unpack(type));
+				handler.handle(MsgUtil.unpack(this.getNow(), type));
 			});
 		}
 		return this;
@@ -103,12 +104,12 @@ public class MessageFuture extends DefaultPromise<MSG> {
 	 * @param type The expected response type
 	 * @return An asynchronous {@link CompletionStage}
 	 */
-	public <E extends Message> CompletionStage<E> toCompletionStage(Class<E> type) {
+	public <E extends MessageLite> CompletionStage<E> toCompletionStage(Class<E> type) {
 		var stage = new CompletableFuture<E>();
 
 		addListener(future -> {
 			if (future.isSuccess()) {
-				stage.complete(getNow().getPayload().unpack(type));
+				stage.complete(MsgUtil.unpack(getNow(), type));
 			} else {
 				stage.completeExceptionally(future.cause());
 			}

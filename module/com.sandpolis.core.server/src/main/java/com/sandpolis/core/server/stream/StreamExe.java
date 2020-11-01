@@ -15,7 +15,7 @@ import static com.sandpolis.core.foundation.util.ProtoUtil.begin;
 import static com.sandpolis.core.foundation.util.ProtoUtil.success;
 import static com.sandpolis.core.net.stream.StreamStore.StreamStore;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.msg.MsgStream.RQ_StreamStop;
 
@@ -41,7 +41,7 @@ public final class StreamExe extends Exelet {
 //	}
 
 	@Handler(auth = true)
-	public static MessageOrBuilder rq_stream_stop(RQ_StreamStop rq) {
+	public static MessageLiteOrBuilder rq_stream_stop(RQ_StreamStop rq) {
 		var outcome = begin();
 
 		StreamStore.stop(rq.getId());

@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.serveragent.msg.MsgAuth.RQ_NoAuth;
 import com.sandpolis.core.serveragent.msg.MsgAuth.RQ_PasswordAuth;
 import com.sandpolis.core.serveragent.msg.MsgClient.RQ_AgentMetadata;
@@ -46,7 +46,7 @@ public final class AuthExe extends Exelet {
 	private static final Logger log = LoggerFactory.getLogger(AuthExe.class);
 
 	@Handler(auth = false, instances = AGENT)
-	public static MessageOrBuilder rq_no_auth(ExeletContext context, RQ_NoAuth rq) {
+	public static MessageLiteOrBuilder rq_no_auth(ExeletContext context, RQ_NoAuth rq) {
 		var outcome = begin();
 
 		var groups = GroupStore.getUnauthGroups().collect(Collectors.toList());
@@ -66,7 +66,7 @@ public final class AuthExe extends Exelet {
 	}
 
 	@Handler(auth = false, instances = AGENT)
-	public static MessageOrBuilder rq_password_auth(ExeletContext context, RQ_PasswordAuth rq) {
+	public static MessageLiteOrBuilder rq_password_auth(ExeletContext context, RQ_PasswordAuth rq) {
 		var outcome = begin();
 
 		var groups = GroupStore.getByPassword(rq.getPassword()).collect(Collectors.toList());

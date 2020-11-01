@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.MetadataStore;
@@ -96,7 +96,7 @@ public final class StreamStore extends StoreBase
 	 */
 	private List<OutboundStreamAdapter> outbound;
 
-	public synchronized <E extends Message> void add(InboundStreamAdapter<E> in, OutboundStreamAdapter<E> out) {
+	public synchronized <E extends MessageLite> void add(InboundStreamAdapter<E> in, OutboundStreamAdapter<E> out) {
 		checkArgument(!in.isSubscribed(out));
 		in.subscribe(out);
 
@@ -104,7 +104,7 @@ public final class StreamStore extends StoreBase
 		this.outbound.add(out);
 	}
 
-	public synchronized <E extends Message> void add(InboundStreamAdapter<E> in, StreamSink<E> sink) {
+	public synchronized <E extends MessageLite> void add(InboundStreamAdapter<E> in, StreamSink<E> sink) {
 		checkArgument(!in.isSubscribed(sink));
 		in.subscribe(sink);
 
@@ -112,7 +112,7 @@ public final class StreamStore extends StoreBase
 		this.sink.add(sink);
 	}
 
-	public synchronized <E extends Message> void add(StreamSource<E> source, OutboundStreamAdapter<E> out) {
+	public synchronized <E extends MessageLite> void add(StreamSource<E> source, OutboundStreamAdapter<E> out) {
 		checkArgument(!source.isSubscribed(out));
 		source.subscribe(out);
 
@@ -120,7 +120,7 @@ public final class StreamStore extends StoreBase
 		this.outbound.add(out);
 	}
 
-	public synchronized <E extends Message> void add(StreamSource<E> source, StreamSink<E> sink) {
+	public synchronized <E extends MessageLite> void add(StreamSource<E> source, StreamSink<E> sink) {
 		checkArgument(!source.isSubscribed(sink));
 		source.subscribe(sink);
 
@@ -128,7 +128,7 @@ public final class StreamStore extends StoreBase
 		this.sink.add(sink);
 	}
 
-	public synchronized void streamData(int id, Message data) {
+	public synchronized void streamData(int id, MessageLite data) {
 		inbound.stream().filter(adapter -> adapter.getStreamID() == id).findFirst().ifPresent(adapter -> {
 			adapter.submit(data);
 		});

@@ -16,7 +16,7 @@ import java.net.InetAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.serveragent.msg.MsgClient.RQ_AgentMetadata;
 import com.sandpolis.core.serveragent.msg.MsgClient.RS_AgentMetadata;
 import com.sandpolis.core.foundation.util.SystemUtil;
@@ -28,7 +28,7 @@ public final class AgentExe extends Exelet {
 	private static final Logger log = LoggerFactory.getLogger(AgentExe.class);
 
 	@Handler(auth = true)
-	public static MessageOrBuilder rq_agent_metadata(RQ_AgentMetadata rq) throws Exception {
+	public static MessageLiteOrBuilder rq_agent_metadata(RQ_AgentMetadata rq) throws Exception {
 		log.trace("rq_client_metadata");
 
 		return RS_AgentMetadata.newBuilder()

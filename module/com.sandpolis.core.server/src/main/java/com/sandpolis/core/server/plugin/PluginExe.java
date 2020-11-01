@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteSource;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.foundation.util.ArtifactUtil;
@@ -115,7 +115,7 @@ public final class PluginExe extends Exelet {
 	}
 
 	@Handler(auth = true)
-	public static MessageOrBuilder rq_plugin_install(RQ_PluginInstall rq) throws Exception {
+	public static MessageLiteOrBuilder rq_plugin_install(RQ_PluginInstall rq) throws Exception {
 		var outcome = begin();
 		if (!Config.PLUGIN_ENABLED.value().orElse(true))
 			return failure(outcome);

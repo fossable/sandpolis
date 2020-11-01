@@ -12,8 +12,8 @@
 package com.sandpolis.core.net.exelet;
 
 import static com.sandpolis.core.instance.Metatypes.InstanceType.AGENT;
-import static com.sandpolis.core.instance.Metatypes.InstanceType.SERVER;
 import static com.sandpolis.core.instance.Metatypes.InstanceType.CLIENT;
+import static com.sandpolis.core.instance.Metatypes.InstanceType.SERVER;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 
 import java.util.Arrays;
@@ -39,11 +39,11 @@ public class ExeletStore extends StoreBase implements ConfigurableStore<ExeletSt
 
 	private static final Logger log = LoggerFactory.getLogger(ExeletStore.class);
 
-	Map<String, ExeletMethod> client;
+	Map<Integer, ExeletMethod> client;
 
-	Map<String, ExeletMethod> server;
+	Map<Integer, ExeletMethod> server;
 
-	Map<String, ExeletMethod> agent;
+	Map<Integer, ExeletMethod> agent;
 
 	public ExeletStore() {
 		super(log);
@@ -56,28 +56,30 @@ public class ExeletStore extends StoreBase implements ConfigurableStore<ExeletSt
 				ExeletMethod exeletMethod;
 				try {
 					exeletMethod = new ExeletMethod(method);
-				} catch (IllegalAccessException e) {
+				} catch (Exception e) {
 					log.error("Failed to parse Exelet", e);
 					continue;
 				}
 
 				var instances = Arrays.asList(metadata.instances());
 				if (instances.contains(CLIENT))
-					client.put(exeletMethod.url, exeletMethod);
+					client.put(exeletMethod.type, exeletMethod);
 				if (instances.contains(SERVER))
-					server.put(exeletMethod.url, exeletMethod);
+					server.put(exeletMethod.type, exeletMethod);
 				if (instances.contains(AGENT))
-					agent.put(exeletMethod.url, exeletMethod);
+					agent.put(exeletMethod.type, exeletMethod);
 			}
 		}
 	}
 
 	private synchronized void unregister(Class<? extends Exelet> exelet) {
-		var urlPrefix = MsgUtil.getModuleId(exelet) + "/";
+		for (var method : exelet.getMethods()) {
+			int removal = MsgUtil.getPayloadType(method);
 
-		client.entrySet().removeIf(entry -> entry.getKey().startsWith(urlPrefix));
-		server.entrySet().removeIf(entry -> entry.getKey().startsWith(urlPrefix));
-		agent.entrySet().removeIf(entry -> entry.getKey().startsWith(urlPrefix));
+			client.remove(removal);
+			server.remove(removal);
+			agent.remove(removal);
+		}
 	}
 
 	@Subscribe

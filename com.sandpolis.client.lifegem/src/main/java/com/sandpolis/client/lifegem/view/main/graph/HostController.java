@@ -53,8 +53,8 @@ public class HostController extends AbstractController {
 		this.profile = Objects.requireNonNull(profile);
 
 		switch (profile.getInstanceType()) {
-		case CLIENT:
-			image.setImage(new Image("/image/icon32/common/client.png"));
+		case AGENT:
+			image.setImage(new Image("/image/icon32/common/agent.png"));
 		case SERVER:
 			image.setImage(new Image("/image/icon32/common/server.png"));
 		case CLIENT:

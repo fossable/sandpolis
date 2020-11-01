@@ -17,8 +17,8 @@ import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 
 import java.util.concurrent.CompletionStage;
 
-import com.google.protobuf.Message;
-import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.exelet.Exelet;
 
@@ -89,7 +89,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 * @param payload      The request payload
 	 * @return An asynchronous {@link CompletionStage}
 	 */
-	protected <T extends Message> CompletionStage<T> request(Class<T> responseType, MessageOrBuilder payload) {
+	protected <T extends MessageLite> CompletionStage<T> request(Class<T> responseType, MessageLiteOrBuilder payload) {
 		return target.request(responseType, payload);
 	}
 }

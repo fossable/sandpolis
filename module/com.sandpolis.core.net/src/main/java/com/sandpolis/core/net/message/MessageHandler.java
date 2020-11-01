@@ -11,20 +11,20 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.net.message;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 
 /**
  * A generic message handler.
  *
- * @param <E> The incoming {@link Message} type
+ * @param <E> The incoming {@link MessageLite} type
  */
 @FunctionalInterface
-public interface MessageHandler<E extends Message> {
+public interface MessageHandler<E extends MessageLite> {
 
 	/**
 	 * React to a message.
 	 *
-	 * @param message A {@link Message}
+	 * @param message A {@link MessageLite}
 	 * @throws Exception
 	 */
 	public void handle(E message) throws Exception;
