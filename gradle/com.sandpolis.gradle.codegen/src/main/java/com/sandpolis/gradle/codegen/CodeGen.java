@@ -13,6 +13,7 @@ package com.sandpolis.gradle.codegen;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 
 import com.sandpolis.gradle.codegen.state.AttributeValueGenerator;
 import com.sandpolis.gradle.codegen.state.CoreSTGenerator;
@@ -30,6 +31,10 @@ public class CodeGen implements Plugin<Project> {
 
 		project.afterEvaluate(p -> {
 
+			// Prepare to add dependencies on these tasks
+			Task generateProto = project.getTasks().findByName("generateProto");
+			Task compileJava = project.getTasks().findByName("compileJava");
+
 			if (configuration.stateTree == null && project.file("state.json").exists()) {
 				configuration.stateTree = project.file("state.json");
 			}
@@ -42,24 +47,30 @@ public class CodeGen implements Plugin<Project> {
 
 				// Create the generation tasks
 				if (configuration.javaFxStateTree) {
-					project.getTasks().getByName("compileJava")
-							.dependsOn(project.getTasks().create("generateJavaFxStateTree", JavaFxSTGenerator.class));
-				} else if (configuration.coreStateTree) {
-					project.getTasks().getByName("compileJava")
-							.dependsOn(project.getTasks().create("generateCoreStateTree", CoreSTGenerator.class));
+					Task generateJavaFxStateTree = project.getTasks().create("generateJavaFxStateTree",
+							JavaFxSTGenerator.class);
 
+					if (generateProto != null) {
+						generateJavaFxStateTree.dependsOn(generateProto);
+					}
+					compileJava.dependsOn(generateJavaFxStateTree);
+				} else if (configuration.coreStateTree) {
+					Task generateCoreStateTree = project.getTasks().create("generateCoreStateTree",
+							CoreSTGenerator.class);
+
+					if (generateProto != null) {
+						generateCoreStateTree.dependsOn(generateProto);
+					}
+					compileJava.dependsOn(generateCoreStateTree);
 				}
 			}
 
 			// Generate server attribute value implementations
 			if (project.getName().equals("com.sandpolis.core.server")) {
-				project.getTasks().getByName("compileJava").dependsOn(project.getTasks()
-						.create("generateHibernateAttributeValueImplementations", AttributeValueGenerator.class));
-			}
+				Task generateHibernateAttributeValueImplementations = project.getTasks()
+						.create("generateHibernateAttributeValueImplementations", AttributeValueGenerator.class);
 
-			// Setup automatic protobuf compilation
-			if (project.file("src/main/proto").exists()) {
-				// TODO
+				compileJava.dependsOn(generateHibernateAttributeValueImplementations);
 			}
 		});
 	}

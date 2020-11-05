@@ -23,5 +23,5 @@ eclipse {
 }
 
 tasks.jar {
-	archiveBaseName.set("sandpolis-agent-installer")
+	archiveBaseName.set("sandpolis-agent-installer-go")
 }

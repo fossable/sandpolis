@@ -23,7 +23,7 @@ eclipse {
 }
 
 tasks.jar {
-	archiveBaseName.set("sandpolis-agent-installer")
+	archiveBaseName.set("sandpolis-agent-installer-jar")
 	manifest {
 		attributes(mapOf("Main-Class" to "com.sandpolis.agent.installer.jar.Main"))
 	}

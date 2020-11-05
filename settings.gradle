@@ -18,6 +18,7 @@ includeBuild "gradle/com.sandpolis.gradle.plugin"
 includeBuild "gradle/com.sandpolis.gradle.soi"
 
 // Instance Projects
+include "com.sandpolis.agent.installer:go"
 include "com.sandpolis.agent.installer:jar"
 include "com.sandpolis.agent.installer:py"
 include "com.sandpolis.agent.vanilla"

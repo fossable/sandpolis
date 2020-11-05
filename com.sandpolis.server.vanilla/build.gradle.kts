@@ -38,8 +38,9 @@ dependencies {
 	implementation("io.netty:netty-handler:4.1.48.Final")
 	implementation("io.netty:netty-transport:4.1.48.Final")
 
-	//implementation(project(":com.sandpolis.agent.installer:jar"))
-	//implementation(project(":com.sandpolis.agent.installer:py"))
+	implementation(project(":com.sandpolis.agent.installer:go"))
+	implementation(project(":com.sandpolis.agent.installer:jar"))
+	implementation(project(":com.sandpolis.agent.installer:py"))
 }
 
 eclipse {
