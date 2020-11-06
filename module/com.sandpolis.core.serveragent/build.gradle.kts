@@ -74,9 +74,7 @@ protobuf {
 					}					
 				}
 				if (project.properties["instances.client.lockstone"] == "true") {
-					id("swift") {
-						option("lite")
-					}
+					id("swift")
 				}
 			}
 		}

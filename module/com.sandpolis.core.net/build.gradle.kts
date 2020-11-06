@@ -10,26 +10,12 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 
+import com.google.protobuf.gradle.*
+
 plugins {
-	id "eclipse"
-	id "java-library"
-	id "com.google.protobuf" version "0.8.11"
-}
-
-eclipse {
-	project {
-		name = "com.sandpolis.core.net"
-		comment = "The common networking library module"
-	}
-}
-
-sourceSets {
-	main {
-		java {
-			srcDirs "src/main/proto"
-			srcDirs "gen/main/java"
-		}
-	}
+	id("com.google.protobuf") version "0.8.13"
+	id("eclipse")
+	id("java-library")
 }
 
 dependencies {
@@ -37,7 +23,7 @@ dependencies {
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
 	testImplementation("org.awaitility:awaitility:4.0.1")
 
-	implementation project(":module:com.sandpolis.core.instance")
+	implementation(project(":module:com.sandpolis.core.instance"))
 
 	// https://github.com/netty/netty
 	api("io.netty:netty-common:4.1.48.Final")
@@ -48,45 +34,57 @@ dependencies {
 	api("io.netty:netty-resolver-dns:4.1.48.Final")
 }
 
-// Allow com.sandpolis.server.vanilla to reuse some unit tests
-task testJar(type: Jar, dependsOn: testClasses) {
-	classifier = "tests"
-	from sourceSets.test.output
-}
-configurations {
-	tests {
-		extendsFrom testCompile
+eclipse {
+	project {
+		name = project.name
+		comment = project.name
 	}
 }
-artifacts {
-	tests testJar
-}
 
-protobuf {
-	protoc {
-		artifact = "com.google.protobuf:protoc:3.11.4"
-	}
-
-	generatedFilesBaseDir = "$projectDir/gen/"
-
-	clean {
-		delete generatedFilesBaseDir
-	}
-	generateProtoTasks {
-		all().each { task ->
-			task.builtins {
-				cpp {
-					option "lite"
-				}
-				java {
-					option "lite"
-				}
-			}
+sourceSets {
+	main {
+		java {
+			srcDirs("src/main/proto")
+			srcDirs("gen/main/java")
 		}
 	}
 }
 
-// Ignore javadoc errors in generated protobuf sources
-javadoc {
-	failOnError = false
+tasks {
+	javadoc {
+		// Ignore errors in generated protobuf sources
+		setFailOnError(false)
+	}
+}
+
+protobuf {
+	protoc {
+		artifact = "com.google.protobuf:protoc:3.13.0"
+	}
+
+	generatedFilesBaseDir = "$projectDir/gen/"
+
+	tasks {
+		clean {
+			delete(generatedFilesBaseDir)
+		}
+	}
+	generateProtoTasks {
+		ofSourceSet("main").forEach { task ->
+			task.builtins {
+				remove("java")
+				id("java") {
+					option("lite")
+				}
+				if (project.properties["instances.agent.micro"] == "true") {
+					id("cpp") {
+						option("lite")
+					}					
+				}
+				if (project.properties["instances.client.lockstone"] == "true") {
+					id("swift")
+				}
+			}
+		}
+	}
 }
