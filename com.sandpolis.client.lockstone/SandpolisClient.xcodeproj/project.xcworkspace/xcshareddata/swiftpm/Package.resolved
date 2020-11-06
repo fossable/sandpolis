@@ -1,0 +1,169 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "abseil",
+        "repositoryURL": "https://github.com/firebase/abseil-cpp-SwiftPM.git",
+        "state": {
+          "branch": null,
+          "revision": "05d8107f2971a37e6c77245b7c4c6b0a7e97bc99",
+          "version": "0.20200225.0"
+        }
+      },
+      {
+        "package": "BoringSSL-GRPC",
+        "repositoryURL": "https://github.com/firebase/boringssl-SwiftPM.git",
+        "state": {
+          "branch": null,
+          "revision": "7bcafa2660bc58715c39637494550d1ed7cd7229",
+          "version": "0.0.7"
+        }
+      },
+      {
+        "package": "Charts",
+        "repositoryURL": "https://github.com/danielgindi/Charts",
+        "state": {
+          "branch": null,
+          "revision": "66546404a6739173b8e436ab6bc1f2897cd08594",
+          "version": "3.6.0"
+        }
+      },
+      {
+        "package": "Firebase",
+        "repositoryURL": "https://github.com/firebase/firebase-ios-sdk",
+        "state": {
+          "branch": null,
+          "revision": "d1870fd01d72bef52bd6596f8cbbcda4a4bb9d5d",
+          "version": "7.0.0"
+        }
+      },
+      {
+        "package": "gRPC",
+        "repositoryURL": "https://github.com/firebase/grpc-SwiftPM.git",
+        "state": {
+          "branch": null,
+          "revision": "91b62619e6c83bc5f1b99d9d60fe46b2862d3a5a",
+          "version": "1.28.2"
+        }
+      },
+      {
+        "package": "GTMSessionFetcher",
+        "repositoryURL": "https://github.com/google/gtm-session-fetcher.git",
+        "state": {
+          "branch": null,
+          "revision": "91ed3d188eb95705fef3c249453b81f32dc557d1",
+          "version": "1.5.0"
+        }
+      },
+      {
+        "package": "Gzip",
+        "repositoryURL": "https://github.com/1024jp/GzipSwift.git",
+        "state": {
+          "branch": null,
+          "revision": "ba0b6cb51cc6202f896e469b87d2889a46b10d1b",
+          "version": "5.1.1"
+        }
+      },
+      {
+        "package": "HighlightJS",
+        "repositoryURL": "https://github.com/SwiftWebResources/HighlightJS-Swift.git",
+        "state": {
+          "branch": null,
+          "revision": "392c6dbd569817864ff7112a11e41db477468309",
+          "version": "9.18.1"
+        }
+      },
+      {
+        "package": "Highlightr",
+        "repositoryURL": "https://github.com/helje5/Highlightr",
+        "state": {
+          "branch": "master",
+          "revision": "4a02d29cde59ca143f52ca9834ebc1d3f8da351f",
+          "version": null
+        }
+      },
+      {
+        "package": "leveldb",
+        "repositoryURL": "https://github.com/firebase/leveldb.git",
+        "state": {
+          "branch": null,
+          "revision": "fa1f25f296a766e5a789c4dacd4798dea798b2c2",
+          "version": "1.22.1"
+        }
+      },
+      {
+        "package": "nanopb",
+        "repositoryURL": "https://github.com/firebase/nanopb.git",
+        "state": {
+          "branch": null,
+          "revision": "8119dfe5631f2616d11e50ead95448d12e816062",
+          "version": "2.30906.0"
+        }
+      },
+      {
+        "package": "Promises",
+        "repositoryURL": "https://github.com/google/promises.git",
+        "state": {
+          "branch": null,
+          "revision": "d8accebc8fa32f57196df191e733f946e955c549",
+          "version": "1.2.11"
+        }
+      },
+      {
+        "package": "swift-nio",
+        "repositoryURL": "https://github.com/apple/swift-nio",
+        "state": {
+          "branch": null,
+          "revision": "c3e2359c55cd8b47207ab7363b77c9c398a95294",
+          "version": "2.23.0"
+        }
+      },
+      {
+        "package": "NIOProtobuf",
+        "repositoryURL": "https://github.com/AlanQuatermain/swift-nio-protobuf",
+        "state": {
+          "branch": null,
+          "revision": "f75ca23544fe1f5c40b3cfe10c4aea06bb24930d",
+          "version": "0.1.2"
+        }
+      },
+      {
+        "package": "SwiftProtobuf",
+        "repositoryURL": "https://github.com/apple/swift-protobuf",
+        "state": {
+          "branch": null,
+          "revision": "426bef0ddfdc6449b7bd1418baafad6bbc56110b",
+          "version": "1.13.0"
+        }
+      },
+      {
+        "package": "SwiftEventBus",
+        "repositoryURL": "https://github.com/cesarferreira/SwiftEventBus",
+        "state": {
+          "branch": null,
+          "revision": "cea5121162d88f233f392f63acbc8468fdd77927",
+          "version": "5.0.1"
+        }
+      },
+      {
+        "package": "SwiftKeychainWrapper",
+        "repositoryURL": "https://github.com/jrendel/SwiftKeychainWrapper",
+        "state": {
+          "branch": null,
+          "revision": "185a3165346a03767101c4f62e9a545a0fe0530f",
+          "version": "4.0.1"
+        }
+      },
+      {
+        "package": "SwiftValidators",
+        "repositoryURL": "https://github.com/gkaimakas/SwiftValidators",
+        "state": {
+          "branch": "master",
+          "revision": "00305a7128e63b1580049c95a35bbc43174e3f35",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}

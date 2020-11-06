@@ -10,9 +10,9 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 import UIKit
+import SwiftValidators
 import FirebaseAuth
 import FirebaseFirestore
-import SwiftValidators
 
 class CreateAccount: UIViewController, UITextFieldDelegate {
 

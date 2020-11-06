@@ -10,8 +10,8 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 import UIKit
-import Highlightr
 import FirebaseFirestore
+import Highlightr
 
 class MacroEditor: UIViewController {
 

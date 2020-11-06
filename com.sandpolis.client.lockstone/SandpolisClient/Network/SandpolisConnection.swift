@@ -12,7 +12,7 @@
 import CryptoKit
 import NIO
 import NIOProtobuf
-import NIOSSL
+import NIOTLS
 import SwiftProtobuf
 import SwiftEventBus
 import Foundation

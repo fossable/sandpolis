@@ -11,7 +11,6 @@
 //=========================================================S A N D P O L I S==//
 import UIKit
 import FirebaseAuth
-import GoogleSignIn
 
 class SignInAccount: UIViewController, GIDSignInUIDelegate {
 
