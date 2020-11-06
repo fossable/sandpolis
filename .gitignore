@@ -17,6 +17,12 @@ bin
 .apt_generated
 .factorypath
 
-# Generated directories
-**/gen/main/java
+# Generated sources
 **/gen/main/cpp
+**/gen/main/java
+**/gen/main/swift
+
+# MacOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
