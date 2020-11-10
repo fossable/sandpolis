@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 
 import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.State.ProtoAttributeValue;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.OidData;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.state.st.ephemeral.EphemeralAttributeValue;
@@ -43,8 +44,8 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 	 */
 	protected Supplier<T> source;
 
-	public AbstractSTAttribute(STObject<?> parent, long id) {
-		super(parent, id);
+	public AbstractSTAttribute(STObject<?> parent, Oid oid) {
+		super(parent, oid);
 	}
 
 	@Override
@@ -148,7 +149,7 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 			// Empty attribute shortcut
 			return ProtoAttribute.getDefaultInstance();
 
-		var snapshot = ProtoAttribute.newBuilder().setTag(oid.last());
+		var snapshot = ProtoAttribute.newBuilder().setPath(oid.last());
 
 		// Check the retention condition before serializing
 		checkRetention();

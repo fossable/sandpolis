@@ -14,8 +14,9 @@ package com.sandpolis.agent.vanilla;
 import static com.sandpolis.core.instance.Environment.printEnvironment;
 import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
-import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
+import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.instance.state.STStore.STStore;
+import static com.sandpolis.core.instance.state.oid.InstanceOid.InstanceOid;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.exelet.ExeletStore.ExeletStore;
@@ -37,6 +38,7 @@ import com.sandpolis.core.clientagent.cmd.PluginCmd;
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.foundation.Platform.OsType;
 import com.sandpolis.core.foundation.Result.Outcome;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Generator.ExecutionConfig;
 import com.sandpolis.core.instance.Generator.FeatureSet;
@@ -47,6 +49,7 @@ import com.sandpolis.core.instance.Generator.NetworkTarget;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
+import com.sandpolis.core.instance.profile.ProfileStore;
 import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument;
 import com.sandpolis.core.net.network.NetworkEvents.ServerEstablishedEvent;
@@ -139,11 +142,11 @@ public final class Agent {
 
 		STStore.init(config -> {
 			config.concurrency = 1;
-			config.root = new EphemeralDocument((STDocument) null, 0);// TODO
+			config.root = new EphemeralDocument();
 		});
 
 		PluginStore.init(config -> {
-			config.collection = STStore.root().get(InstanceOid().profile.plugin.resolveLocal());
+			config.collection = ProfileStore.getByUuid(Core.UUID).get().plugin();
 		});
 
 		StreamStore.init(config -> {
@@ -154,7 +157,7 @@ public final class Agent {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(InstanceOid().profile.connection.resolveLocal());
+			config.collection = ProfileStore.getByUuid(Core.UUID).get().connection();
 		});
 
 		NetworkStore.init(config -> {
@@ -183,7 +186,7 @@ public final class Agent {
 				future = future.thenApply(rs -> {
 					if (!rs.getResult()) {
 						// Close the connection
-						ConnectionStore.get(event.get()).ifPresent(sock -> {
+						ConnectionStore.getByCvid(event.get()).ifPresent(sock -> {
 							sock.close();
 						});
 					}

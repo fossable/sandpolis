@@ -13,8 +13,9 @@ package com.sandpolis.gradle.codegen.state;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.Map;
 
 import javax.lang.model.SourceVersion;
 
@@ -23,6 +24,7 @@ import org.gradle.api.tasks.TaskAction;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.CaseFormat;
 import com.sandpolis.core.foundation.util.OidUtil;
 import com.sandpolis.gradle.codegen.ConfigExtension;
 import com.squareup.javapoet.ArrayTypeName;
@@ -54,6 +56,8 @@ public abstract class VSTGenerator extends DefaultTask {
 		 */
 		public boolean list;
 
+		public boolean key;
+
 		/**
 		 * The attribute's name.
 		 */
@@ -70,7 +74,10 @@ public abstract class VSTGenerator extends DefaultTask {
 
 		public TypeName getAttributeType() {
 
-			if (type.endsWith("[]")) {
+			if (type.contains("/")) {
+				// TODO
+				return ClassName.get(String.class);
+			} else if (type.endsWith("[]")) {
 				return ArrayTypeName.of(ClassName.bestGuess(type.replace("[]", "")).unbox());
 			} else {
 				return ClassName.bestGuess(type);
@@ -85,50 +92,27 @@ public abstract class VSTGenerator extends DefaultTask {
 	public static class DocumentSpec {
 
 		/**
-		 * The document's attributes sorted by tag.
+		 * The document's attributes.
 		 */
-		public TreeMap<Integer, AttributeSpec> attributes;
-
-		/**
-		 * The document's sub-collections sorted by tag.
-		 */
-		public TreeMap<Integer, String> collections;
-
-		/**
-		 * The document's sub-documents sorted by tag.
-		 */
-		public TreeMap<Integer, String> documents;
+		public List<AttributeSpec> attributes;
 
 		/**
 		 * The fully qualified document name.
 		 */
 		public String name;
 
-		/**
-		 * The OID of the parent document.
-		 */
-		public String parent;
-
-		/**
-		 * The document's relations sorted by tag.
-		 */
-		public TreeMap<Integer, RelationSpec> relations;
-
-		public String shortName() {
-			return name.replaceAll(".*\\.", "");
+		public String parentPath() {
+			return name.replaceAll("/+[^/]+/*$", "");
 		}
-	}
 
-	public static class RelationSpec {
+		public String basePath() {
+			var components = name.split("/");
+			return components[components.length - 1];
+		}
 
-		public boolean list;
-
-		public String name;
-
-		public String type;
-
-		public String simpleName() {
-			return type.replaceAll(".*\\.", "");
+		public String className() {
+			var components = name.split("/");
+			return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, components[components.length - 1]);
 		}
 	}
 
@@ -147,6 +131,13 @@ public abstract class VSTGenerator extends DefaultTask {
 	 */
 	protected List<DocumentSpec> flatTree;
 
+	protected Map<String, TypeSpec.Builder> vstTypes = new HashMap<>();
+
+	protected Map<String, TypeSpec.Builder> oidTypes = new HashMap<>();
+
+	// Determine module namespace
+	protected final long namespace = OidUtil.computeNamespace(getProject().getName());
+
 	protected File stateTree;
 
 	@TaskAction
@@ -160,22 +151,23 @@ public abstract class VSTGenerator extends DefaultTask {
 		// Check tree preconditions
 		flatTree.forEach(this::validateDocument);
 
-		// Determine module namespace
-		long namespace = OidUtil.computeNamespace(getProject().getName());
-
 		// Generate classes
 		flatTree.forEach(document -> {
-			if (document.parent != null) {
-				processRoot(document,
-						String.valueOf(namespace) + (document.parent.isEmpty() ? "" : "." + document.parent));
+			var vstParent = vstTypes.get(document.parentPath());
+
+			processDocument(vstParent, document);
+		});
+
+		vstTypes.forEach((path, type) -> {
+			var oidClass = oidTypes.get(path);
+			if (oidClass != null) {
+				type.addType(oidClass.build());
 			}
+			writeClass(type.build());
 		});
 	}
 
-	/**
-	 * Generate the given document from the specification.
-	 */
-	protected abstract void processRoot(DocumentSpec document, String oid);
+	protected abstract void processDocument(TypeSpec.Builder parent, DocumentSpec document);
 
 	/**
 	 * Assert the validity the given attribute.
@@ -205,48 +197,19 @@ public abstract class VSTGenerator extends DefaultTask {
 			throw new RuntimeException("Missing document name (" + stateTree.getAbsolutePath() + ")");
 		}
 
-		// Name must be a valid Java identifier
-		for (var component : document.name.split("\\.")) {
-			if (!SourceVersion.isIdentifier(component))
-				throw new RuntimeException("Invalid document name: " + document.name);
+		// Name must be a valid Java identifier or OID path
+		if (document.name.contains("/")) {
+			// TODO
+		} else {
+			for (var component : document.name.split("\\.")) {
+				if (!SourceVersion.isIdentifier(component))
+					throw new RuntimeException("Invalid document name: " + document.name);
+			}
 		}
 
 		// Validate sub-attributes
 		if (document.attributes != null) {
-			for (var entry : document.attributes.entrySet()) {
-				if (entry.getKey() == 0)
-					throw new RuntimeException("Found invalid tag on attribute: " + entry.getValue());
-
-				validateAttribute(entry.getValue());
-			}
-		}
-
-		// Validate sub-documents
-		if (document.documents != null) {
-			for (var entry : document.documents.entrySet()) {
-				if (entry.getKey() == 0)
-					throw new RuntimeException("Found invalid tag on document: " + entry.getValue());
-
-				// Ensure sub-document exists
-				if (flatTree.stream().filter(d -> entry.getValue().equals(d.name)).findAny().isEmpty())
-					throw new RuntimeException("Failed to find document: " + entry.getValue());
-			}
-		}
-
-		// Validate sub-collections
-		if (document.collections != null) {
-			for (var entry : document.collections.entrySet()) {
-				if (entry.getKey() == 0)
-					throw new RuntimeException("Found invalid tag on collection: " + entry.getValue());
-			}
-		}
-
-		// Validate sub-relations
-		if (document.relations != null) {
-			for (var entry : document.relations.entrySet()) {
-				if (entry.getKey() == 0)
-					throw new RuntimeException("Found invalid tag on relation: " + entry.getValue());
-			}
+			document.attributes.forEach(this::validateAttribute);
 		}
 	}
 

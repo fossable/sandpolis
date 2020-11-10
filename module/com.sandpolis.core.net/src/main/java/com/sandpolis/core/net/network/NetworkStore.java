@@ -200,7 +200,7 @@ public final class NetworkStore extends StoreBase implements ConfigurableStore<N
 	 */
 	public int deliver(MSG message) {
 		int next = getPreferredServer().orElseThrow();
-		ConnectionStore.get(next).get().send(message);
+		ConnectionStore.getByCvid(next).get().send(message);
 		return next;
 	}
 
@@ -223,7 +223,7 @@ public final class NetworkStore extends StoreBase implements ConfigurableStore<N
 	 */
 	public synchronized int route(MSG message) {
 		if (network.adjacentNodes(Core.cvid()).contains(message.getTo())) {
-			ConnectionStore.get(message.getTo()).get().send(message);
+			ConnectionStore.getByCvid(message.getTo()).get().send(message);
 			return message.getTo();
 		} else {
 			return deliver(message);
@@ -266,7 +266,7 @@ public final class NetworkStore extends StoreBase implements ConfigurableStore<N
 		}
 
 		MessageFuture mf = receive(next, message.getId(), Config.MESSAGE_TIMEOUT.value().get(), TimeUnit.MILLISECONDS);
-		ConnectionStore.get(next).get().send(message);
+		ConnectionStore.getByCvid(next).get().send(message);
 		return mf;
 	}
 
@@ -278,7 +278,7 @@ public final class NetworkStore extends StoreBase implements ConfigurableStore<N
 	 * @return A MessageFuture
 	 */
 	public MessageFuture receive(int cvid, int id) {
-		var sock = ConnectionStore.get(cvid);
+		var sock = ConnectionStore.getByCvid(cvid);
 		if (sock.isEmpty())
 			return null;
 
@@ -295,7 +295,7 @@ public final class NetworkStore extends StoreBase implements ConfigurableStore<N
 	 * @return A MessageFuture
 	 */
 	public MessageFuture receive(int cvid, int id, int timeout, TimeUnit unit) {
-		var sock = ConnectionStore.get(cvid);
+		var sock = ConnectionStore.getByCvid(cvid);
 		if (sock.isEmpty())
 			return null;
 

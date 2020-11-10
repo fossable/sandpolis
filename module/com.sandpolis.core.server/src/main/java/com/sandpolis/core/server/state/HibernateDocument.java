@@ -40,18 +40,11 @@ public class HibernateDocument extends AbstractSTDocument implements STDocument 
 	private String db_id;
 
 	@Column(nullable = true)
-	private HibernateDocument parentDocument;
-
-	@Column(nullable = true)
-	private HibernateCollection parentCollection;
+	private HibernateDocument parent;
 
 	@MapKeyColumn
 	@OneToMany(cascade = CascadeType.ALL)
 	private Map<Integer, HibernateDocument> documents;
-
-	@MapKeyColumn
-	@OneToMany(cascade = CascadeType.ALL)
-	private Map<Integer, HibernateCollection> collections;
 
 	@MapKeyColumn
 	@OneToMany(cascade = CascadeType.ALL)
@@ -62,25 +55,10 @@ public class HibernateDocument extends AbstractSTDocument implements STDocument 
 		this.db_id = UUID.randomUUID().toString();
 
 		documents = new HashMap<>();
-		collections = new HashMap<>();
 		attributes = new HashMap<>();
 	}
 
 	public HibernateDocument(HibernateDocument parent, ProtoDocument document) {
-		this(parent);
-		merge(document);
-	}
-
-	public HibernateDocument(HibernateCollection parent) {
-		super(parent, 0);
-		this.db_id = UUID.randomUUID().toString();
-
-		documents = new HashMap<>();
-		collections = new HashMap<>();
-		attributes = new HashMap<>();
-	}
-
-	public HibernateDocument(HibernateCollection parent, ProtoDocument document) {
 		this(parent);
 		merge(document);
 	}

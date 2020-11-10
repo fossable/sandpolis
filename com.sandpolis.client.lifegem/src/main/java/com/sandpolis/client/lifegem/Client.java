@@ -17,7 +17,6 @@ import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
-import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
 import static com.sandpolis.core.instance.state.STStore.STStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
@@ -32,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.client.lifegem.common.FxUtil;
-import com.sandpolis.client.lifegem.state.FxDocument;
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
@@ -92,7 +90,11 @@ public final class Client {
 
 		STStore.init(config -> {
 			config.concurrency = 1;
-			config.root = new FxDocument<>(null);
+//			config.root = new FxDocument<>(null);
+		});
+
+		ProfileStore.init(config -> {
+
 		});
 
 		ThreadStore.init(config -> {
@@ -134,15 +136,11 @@ public final class Client {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(InstanceOid().profile.connection.resolveLocal());
+			config.collection = ProfileStore.getByUuid(Core.UUID).get().connection();
 		});
 
 		PluginStore.init(config -> {
-			config.collection = STStore.root().get(InstanceOid().profile.plugin.resolveLocal());
-		});
-
-		ProfileStore.init(config -> {
-			config.collection = STStore.root().get(InstanceOid().profile);
+			config.collection = ProfileStore.getByUuid(Core.UUID).get().plugin();
 		});
 
 		return outcome.success();

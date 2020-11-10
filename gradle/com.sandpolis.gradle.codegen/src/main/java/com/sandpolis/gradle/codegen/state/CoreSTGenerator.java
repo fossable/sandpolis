@@ -18,7 +18,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
-import com.sandpolis.core.foundation.util.OidUtil;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -28,38 +27,40 @@ import com.squareup.javapoet.TypeSpec;
 
 public class CoreSTGenerator extends VSTGenerator {
 
-	private void processChildren(TypeSpec.Builder documentClass, TypeSpec.Builder oidClass, DocumentSpec document,
-			String oid) {
-		if (document.collections != null) {
-			for (var entry : document.collections.entrySet()) {
-				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processCollection(documentClass, oidClass, subdocument,
-						oid + "." + OidUtil.computeCollectionTag(entry.getKey()));
+	protected void processAttributeOid(TypeSpec.Builder oidClass, DocumentSpec document, AttributeSpec attribute) {
+
+		{
+			// Add the attribute's OID field
+			var initializer = CodeBlock.of("new AbsoluteOid<>($LL, \"$L\")", namespace,
+					document.name + "/" + attribute.name);
+
+			// Add type data
+			initializer = CodeBlock.of("$L.setData($T.TYPE, $T.class)", initializer,
+					ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"), attribute.getAttributeType());
+
+			// Add singularity data
+			if (attribute.list) {
+				initializer = CodeBlock.of("$L.setData($T.SINGULARITY, false)", initializer,
+						ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"));
 			}
-		}
-		if (document.documents != null) {
-			for (var entry : document.documents.entrySet()) {
-				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processDocument(documentClass, oidClass, subdocument,
-						oid + "." + OidUtil.computeDocumentTag(entry.getKey()));
+
+			// Add identity data
+			if (attribute.immutable) {
+				initializer = CodeBlock.of("$L.setData($T.IMMUTABLE, true)", initializer,
+						ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"));
 			}
-		}
-		if (document.attributes != null) {
-			for (var entry : document.attributes.entrySet()) {
-				processAttribute(documentClass, oidClass, entry.getValue(),
-						oid + "." + OidUtil.computeAttributeTag(entry.getKey()));
-			}
-		}
-		if (document.relations != null) {
-			for (var entry : document.relations.entrySet()) {
-				processRelation(documentClass, entry.getValue(),
-						oid + "." + OidUtil.computeAttributeTag(entry.getKey()));
-			}
+			var field = FieldSpec
+					.builder(ParameterizedTypeName.get(ClassName.get(OID_PACKAGE, "AbsoluteOid"),
+							ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STAttribute"),
+									attribute.getAttributeType())),
+							attribute.name, PUBLIC, FINAL)
+					.initializer(initializer);
+
+			oidClass.addField(field.build());
 		}
 	}
 
-	protected void processAttribute(TypeSpec.Builder parent, TypeSpec.Builder parentOidClass, AttributeSpec attribute,
-			String oid) {
+	protected void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute) {
 
 		{
 			// Add the attribute's getter method
@@ -77,261 +78,110 @@ public class CoreSTGenerator extends VSTGenerator {
 			var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name)) //
 					.addModifiers(PUBLIC) //
 					.returns(attribute.getAttributeObjectType()) //
-					.addStatement("return document.attribute($LL)", oid.replaceAll(".*\\.", ""));
+					.addStatement("return document.attribute(\"$L\")", attribute.name);
 			parent.addMethod(method.build());
 		}
-
-		{
-			// Add the attribute's OID field
-			var initializer = CodeBlock.of("new AbsoluteOid.STAttributeOid<>(\"$L\")", oid);
-
-			// Add type data
-			initializer = CodeBlock.of("$L.setData($T.TYPE, $T.class)", initializer,
-					ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"), attribute.getAttributeType());
-
-			// Add singularity data
-			if (attribute.list) {
-				initializer = CodeBlock.of("$L.setData($T.SINGULARITY, false)", initializer,
-						ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"));
-			}
-
-			// Add identity data
-			if (attribute.immutable) {
-				initializer = CodeBlock.of("$L.setData($T.IMMUTABLE, true)", initializer,
-						ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"));
-			}
-
-			var field = FieldSpec
-					.builder(ParameterizedTypeName.get(ClassName.get(OID_PACKAGE, "AbsoluteOid", "STAttributeOid"),
-							attribute.getAttributeType()), attribute.name, PUBLIC, FINAL)
-					.initializer(initializer);
-
-			parentOidClass.addField(field.build());
-		}
 	}
 
-	protected void processCollection(TypeSpec.Builder parent, TypeSpec.Builder parentOidClass, DocumentSpec document,
-			String oid) {
-		var documentClass = TypeSpec.classBuilder(VST_PREFIX + document.shortName()) //
-				.addModifiers(PUBLIC) //
-				.superclass(ClassName.get(VST_PACKAGE, "VirtDocument"));
+	protected void processDocumentOid(DocumentSpec document) {
+		var parent = oidTypes.get(document.parentPath());
 
-		var oidClass = TypeSpec.classBuilder("Oid").addModifiers(PUBLIC, STATIC)
-				.superclass(ClassName.get(OID_PACKAGE, "AbsoluteOid", "STCollectionOid"));
+		var oidClass = TypeSpec.classBuilder("Oid").addModifiers(PUBLIC, STATIC).superclass(ParameterizedTypeName
+				.get(ClassName.get(OID_PACKAGE, "AbsoluteOid"), ClassName.get(ST_PACKAGE, "STDocument")));
 
 		{
 			// Add constructor
-			var constructor = MethodSpec.constructorBuilder().addParameter(String.class, "oid")
-					.addStatement("super(oid)");
+			var constructor = MethodSpec.constructorBuilder().addParameter(String.class, "path")
+					.addStatement("super($LL, path)", namespace);
 
 			oidClass.addMethod(constructor.build());
 		}
 
-		{
-			// Add constructor
-			var method = MethodSpec.constructorBuilder() //
-					.addModifiers(PUBLIC) //
-					.addParameter(ClassName.get(ST_PACKAGE, "STDocument"), "document") //
-					.addStatement("super(document)");
-			documentClass.addMethod(method.build());
-		}
-
-		{
-			// Add ID getter
-			var method = MethodSpec.methodBuilder("getId") //
-					.addModifiers(PUBLIC) //
-					.returns(String.class) //
-					.addStatement("return document.getId()");
-			documentClass.addMethod(method.build());
-		}
-
-		{
+		if (parent != null) {
 			// Add OID field
 			var field = FieldSpec
-					.builder(ClassName.get(getProject().getName() + ".state", VST_PREFIX + document.shortName(), "Oid"),
-							document.shortName().toLowerCase(), PUBLIC, FINAL) //
-					.initializer("new $L(\"$L\")", VST_PREFIX + document.shortName() + ".Oid", oid);
+					.builder(ClassName.get(getProject().getName() + ".state", VST_PREFIX + document.className(), "Oid"),
+							document.className().toLowerCase(), PUBLIC, FINAL) //
+					.initializer("new $L(\"$L\")", VST_PREFIX + document.className() + ".Oid", document.name);
 
-			if (parentOidClass != null) {
-				parentOidClass.addField(field.build());
-			} else if (parent != null) {
-				parent.addField(field.addModifiers(STATIC).build());
+			parent.addField(field.build());
+		}
+
+		if (document.attributes != null) {
+			for (var entry : document.attributes) {
+				processAttributeOid(oidClass, document, entry);
 			}
 		}
 
-		// Process subdocuments and attributes
-		processChildren(documentClass, oidClass, document, oid + ".0");
-
-		if (parent != null) {
-			{
-				// Add collection field
-				var field = FieldSpec.builder(
-						ParameterizedTypeName.get(ClassName.get(VST_PACKAGE, "VirtCollection"),
-								ClassName.bestGuess(VST_PREFIX + document.shortName())),
-						document.shortName().toLowerCase(), PRIVATE);
-
-				parent.addField(field.build());
-			}
-
-			{
-				// Add collection method
-				var method = MethodSpec.methodBuilder(document.shortName().toLowerCase()) //
-						.addModifiers(PUBLIC) //
-						.returns(ParameterizedTypeName.get(ClassName.get(VST_PACKAGE, "VirtCollection"),
-								ClassName.bestGuess(VST_PREFIX + document.shortName()))) //
-						.addStatement("if ($L == null) $L = new VirtCollection<>(document.collection($LL))",
-								document.shortName().toLowerCase(), document.shortName().toLowerCase(),
-								oid.replaceAll(".*\\.", "")) //
-						.addStatement("return $L", document.shortName().toLowerCase());
-
-				parent.addMethod(method.build());
-			}
-		}
-
-		documentClass.addType(oidClass.build());
-		writeClass(documentClass.build());
-	}
-
-	protected void processDocument(TypeSpec.Builder parent, TypeSpec.Builder parentOidClass, DocumentSpec document,
-			String oid) {
-
-		var documentClass = TypeSpec.classBuilder(VST_PREFIX + document.shortName()) //
-				.addModifiers(PUBLIC) //
-				.superclass(ClassName.get(VST_PACKAGE, "VirtDocument"));
-
-		var oidClass = TypeSpec.classBuilder("Oid").addModifiers(PUBLIC, STATIC)
-				.superclass(ClassName.get(OID_PACKAGE, "AbsoluteOid", "STDocumentOid"));
-
-		{
-			// Add constructor
-			var constructor = MethodSpec.constructorBuilder().addParameter(String.class, "oid")
-					.addStatement("super(oid)");
-
-			oidClass.addMethod(constructor.build());
-		}
-
-		{
-			// Add constructor
-			var method = MethodSpec.constructorBuilder() //
-					.addModifiers(PUBLIC) //
-					.addParameter(ClassName.get(ST_PACKAGE, "STDocument"), "document") //
-					.addStatement("super(document)");
-			documentClass.addMethod(method.build());
-		}
-
-		{
-			// Add ID getter
-			var method = MethodSpec.methodBuilder("getId") //
-					.addModifiers(PUBLIC) //
-					.returns(String.class) //
-					.addStatement("return document.getId()");
-			documentClass.addMethod(method.build());
-		}
-
-		{
-			// Add OID field
-			var field = FieldSpec
-					.builder(ClassName.get(getProject().getName() + ".state", VST_PREFIX + document.shortName(), "Oid"),
-							document.shortName().toLowerCase(), PUBLIC, FINAL) //
-					.initializer("new $L(\"$L\")", VST_PREFIX + document.shortName() + ".Oid", oid);
-
-			parentOidClass.addField(field.build());
-		}
-
-		// Process subdocuments and attributes
-		processChildren(documentClass, oidClass, document, oid);
-
-		if (parent != null) {
-			{
-				// Add document field
-				var field = FieldSpec.builder(ClassName.bestGuess(VST_PREFIX + document.shortName()),
-						document.shortName().toLowerCase(), PRIVATE);
-
-				parent.addField(field.build());
-			}
-
-			{
-				// Add document method
-				var method = MethodSpec.methodBuilder(document.shortName().toLowerCase()) //
-						.addModifiers(PUBLIC) //
-						.returns(ClassName.bestGuess(VST_PREFIX + document.shortName())) //
-						.addStatement("if ($L == null) $L = new Virt$L(document.document($LL))",
-								document.shortName().toLowerCase(), document.shortName().toLowerCase(),
-								document.shortName(), oid.replaceAll(".*\\.", "")) //
-						.addStatement("return $L", document.shortName().toLowerCase());
-
-				parent.addMethod(method.build());
-			}
-		}
-
-		documentClass.addType(oidClass.build());
-		writeClass(documentClass.build());
-	}
-
-	protected void processRelation(TypeSpec.Builder parent, RelationSpec relation, String oid) {
-		if (relation.list) {
-			{
-				// Add the getter method
-				var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "get_" + relation.name)) //
-						.addModifiers(PUBLIC) //
-						.returns(ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STRelation"),
-								ClassName.bestGuess(VSTGenerator.VST_PREFIX + relation.simpleName()))) //
-						.addStatement("return document.collection($LL).collectionList($L::new)",
-								oid.replaceAll(".*\\.", ""), VSTGenerator.VST_PREFIX + relation.simpleName());
-				parent.addMethod(method.build());
-			}
-
-		} else {
-			{
-				// Add the getter method
-				var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "get_" + relation.name)) //
-						.addModifiers(PUBLIC) //
-						.returns(ClassName.bestGuess(VSTGenerator.VST_PREFIX + relation.simpleName())) //
-						.addStatement("return new $L(document.document($LL))",
-								VSTGenerator.VST_PREFIX + relation.simpleName(), oid.replaceAll(".*\\.", ""));
-				parent.addMethod(method.build());
-			}
-
-			{
-				// Add the setter method
-				var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "set_" + relation.name)) //
-						.addModifiers(PUBLIC) //
-						.addParameter(ClassName.bestGuess(VSTGenerator.VST_PREFIX + relation.simpleName()), "v"); //
-//						.addStatement("document.setDocument($LL, v.document)", oid.replaceAll(".*\\.", ""));
-				parent.addMethod(method.build());
-			}
-		}
+		oidTypes.put(document.name.replaceAll("/+$", ""), oidClass);
 	}
 
 	@Override
-	protected void processRoot(DocumentSpec document, String oid) {
-		var oidClass = TypeSpec.classBuilder(document.shortName()) //
-				.addModifiers(PUBLIC, FINAL);
+	protected void processDocument(TypeSpec.Builder parent, DocumentSpec document) {
+
+		var documentClass = TypeSpec.classBuilder(VST_PREFIX + document.className()) //
+				.addModifiers(PUBLIC) //
+				.superclass(ClassName.get(VST_PACKAGE, "VirtDocument"));
 
 		{
-			// Add private constructor
-			var constructor = MethodSpec.constructorBuilder().addModifiers(PRIVATE);
-			oidClass.addMethod(constructor.build());
+			// Add constructor
+			var method = MethodSpec.constructorBuilder() //
+					.addModifiers(PUBLIC) //
+					.addParameter(ClassName.get(ST_PACKAGE, "STDocument"), "document") //
+					.addStatement("super(document)");
+			documentClass.addMethod(method.build());
 		}
 
-		{
-			// Add root field
-			var field = FieldSpec.builder(ClassName.get(getProject().getName() + ".state", document.shortName()),
-					"root", PUBLIC, FINAL, STATIC).initializer("new $L()", document.shortName());
-
-			oidClass.addField(field.build());
+		if (document.attributes != null) {
+			for (var entry : document.attributes) {
+				processAttribute(documentClass, entry);
+			}
 		}
 
-		{
-			// Add root getter
-			var method = MethodSpec.methodBuilder(document.shortName()) //
-					.addModifiers(PUBLIC, STATIC) //
-					.returns(ClassName.get(getProject().getName() + ".state", document.shortName())) //
-					.addStatement("return root");
-			oidClass.addMethod(method.build());
+		if (parent != null) {
+			if (document.name.endsWith("/")) {
+				// Add collection field
+				var field = FieldSpec.builder(
+						ParameterizedTypeName.get(ClassName.get(VST_PACKAGE, "VirtCollection"),
+								ClassName.bestGuess(VST_PREFIX + document.className())),
+						document.className().toLowerCase(), PRIVATE);
+
+				parent.addField(field.build());
+			} else {
+				// Add document field
+				var field = FieldSpec.builder(ClassName.bestGuess(VST_PREFIX + document.className()),
+						document.className().toLowerCase(), PRIVATE);
+
+				parent.addField(field.build());
+			}
+
+			if (document.name.endsWith("/")) {
+				// Add collection method
+				var method = MethodSpec.methodBuilder(document.className().toLowerCase()) //
+						.addModifiers(PUBLIC) //
+						.returns(ParameterizedTypeName.get(ClassName.get(VST_PACKAGE, "VirtCollection"),
+								ClassName.bestGuess(VST_PREFIX + document.className()))) //
+						.addStatement("if ($L == null) $L = new VirtCollection<>(document.document(\"$L\"))",
+								document.className().toLowerCase(), document.className().toLowerCase(),
+								document.basePath()) //
+						.addStatement("return $L", document.className().toLowerCase());
+
+				parent.addMethod(method.build());
+			} else {
+				// Add document method
+				var method = MethodSpec.methodBuilder(document.className().toLowerCase()) //
+						.addModifiers(PUBLIC) //
+						.returns(ClassName.bestGuess(VST_PREFIX + document.className())) //
+						.addStatement("if ($L == null) $L = new Virt$L(document.document(\"$L\"))",
+								document.className().toLowerCase(), document.className().toLowerCase(),
+								document.className(), document.basePath()) //
+						.addStatement("return $L", document.className().toLowerCase());
+
+				parent.addMethod(method.build());
+			}
 		}
 
-		processChildren(null, oidClass, document, oid);
-		writeClass(oidClass.build());
+		processDocumentOid(document);
+		vstTypes.put(document.name.replaceAll("/+$", ""), documentClass);
 	}
 }

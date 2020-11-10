@@ -11,208 +11,53 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state.oid;
 
-import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_ATTRIBUTE;
-import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_COLLECTION;
-import static com.sandpolis.core.foundation.util.OidUtil.OTYPE_DOCUMENT;
+import com.sandpolis.core.instance.state.st.STObject;
 
-import com.sandpolis.core.foundation.util.OidUtil;
-import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.state.st.STAttribute;
-import com.sandpolis.core.instance.state.st.STCollection;
-import com.sandpolis.core.instance.state.st.STDocument;
+public class RelativeOid<T extends STObject<?>> extends OidBase {
 
-public interface RelativeOid extends Oid {
-
-	public static RelativeOid newOid(long... value) {
-		switch (OidUtil.getOidType(value[value.length - 1])) {
-		case OTYPE_ATTRIBUTE:
-			return new STAttributeOid<>(value);
-		case OTYPE_DOCUMENT:
-			return new STDocumentOid(value);
-		case OTYPE_COLLECTION:
-			return new STCollectionOid(value);
-		default:
-			throw new IllegalArgumentException();
-		}
+	public RelativeOid(String path) {
+		super(0, path);
 	}
 
-	/**
-	 * A relative {@link Oid} that corresponds to an {@link STAttribute}.
-	 *
-	 * @param <T> The type of the corresponding attribute's value
-	 */
-	public static class STAttributeOid<T> extends OidBase implements RelativeOid {
-
-		public STAttributeOid(String oid) {
-			super(oid);
-
-			if (OidUtil.getOidType(last()) != OTYPE_ATTRIBUTE)
-				throw new IllegalArgumentException();
-		}
-
-		public STAttributeOid(long[] oid) {
-			super(oid);
-
-			if (OidUtil.getOidType(last()) != OTYPE_ATTRIBUTE)
-				throw new IllegalArgumentException();
-		}
-
-		@Override
-		public RelativeOid.STAttributeOid<T> resolve(long... tags) {
-			return resolve(RelativeOid.STAttributeOid::new, tags);
-		}
-
-		public RelativeOid.STAttributeOid<T> resolveLocal() {
-			return resolve(OidUtil.computeNamespace(Core.UUID));
-		}
-
-		public RelativeOid.STAttributeOid<T> resolveUuid(String uuid) {
-			return resolve(OidUtil.computeNamespace(uuid));
-		}
-
-		@Override
-		public RelativeOid.STDocumentOid parent() {
-			return parent(RelativeOid.STDocumentOid::new);
-		}
-
-		@Override
-		public RelativeOid.STAttributeOid<T> tail(int offset) {
-			return tail(RelativeOid.STAttributeOid::new, offset);
-		}
-
-		@Override
-		public Oid child(long component) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public RelativeOid head(int length) {
-			return head(RelativeOid::newOid, length);
-		}
-
-		@Override
-		public RelativeOid.STAttributeOid<T> relativize(Oid oid) {
-			return relativize(RelativeOid.STAttributeOid::new, oid);
-		}
+	public RelativeOid(String[] path) {
+		super(0, path);
 	}
 
-	/**
-	 * A relative {@link Oid} that corresponds to a {@link STCollection}.
-	 *
-	 * @param <T> The type of the corresponding collection
-	 */
-	public static class STCollectionOid extends OidBase implements RelativeOid {
-
-		public STCollectionOid(String oid) {
-			super(oid);
-
-			if (OidUtil.getOidType(last()) != OTYPE_COLLECTION)
-				throw new IllegalArgumentException();
-		}
-
-		public STCollectionOid(long[] oid) {
-			super(oid);
-
-			if (OidUtil.getOidType(last()) != OTYPE_COLLECTION)
-				throw new IllegalArgumentException();
-		}
-
-		@Override
-		public RelativeOid.STCollectionOid resolve(long... tags) {
-			return resolve(RelativeOid.STCollectionOid::new, tags);
-		}
-
-		public RelativeOid.STCollectionOid resolveLocal() {
-			return resolve(OidUtil.computeNamespace(Core.UUID));
-		}
-
-		public RelativeOid.STCollectionOid resolveUuid(String uuid) {
-			return resolve(OidUtil.computeNamespace(uuid));
-		}
-
-		@Override
-		public RelativeOid.STCollectionOid tail(int offset) {
-			return tail(RelativeOid.STCollectionOid::new, offset);
-		}
-
-		@Override
-		public RelativeOid.STDocumentOid parent() {
-			return parent(RelativeOid.STDocumentOid::new);
-		}
-
-		@Override
-		public RelativeOid.STDocumentOid child(long component) {
-			return child(RelativeOid.STDocumentOid::new, component);
-		}
-
-		@Override
-		public RelativeOid head(int length) {
-			return head(RelativeOid::newOid, length);
-		}
-
-		@Override
-		public RelativeOid.STCollectionOid relativize(Oid oid) {
-			return relativize(RelativeOid.STCollectionOid::new, oid);
-		}
+	public RelativeOid(long namespace, String path) {
+		super(namespace, path);
 	}
 
-	/**
-	 * A relative {@link Oid} that corresponds to a {@link STDocument}.
-	 *
-	 * @param <T> The type of the corresponding document
-	 */
-	public static class STDocumentOid extends OidBase implements RelativeOid {
+	public RelativeOid(long namespace, String[] path) {
+		super(namespace, path);
+	}
 
-		public STDocumentOid(String oid) {
-			super(oid);
+	@Override
+	public RelativeOid<T> resolve(String... components) {
+		return resolve(RelativeOid::new, components);
+	}
 
-			if (OidUtil.getOidType(last()) != OTYPE_DOCUMENT)
-				throw new IllegalArgumentException();
-		}
+	@Override
+	public RelativeOid parent() {
+		return parent(RelativeOid::new);
+	}
 
-		public STDocumentOid(long[] oid) {
-			super(oid);
+	@Override
+	public RelativeOid<T> tail(int offset) {
+		return tail(RelativeOid::new, offset);
+	}
 
-			if (OidUtil.getOidType(last()) != OTYPE_DOCUMENT)
-				throw new IllegalArgumentException("Unacceptable document tag: " + last());
-		}
+	@Override
+	public RelativeOid<?> child(String component) {
+		throw new UnsupportedOperationException();
+	}
 
-		@Override
-		public RelativeOid.STDocumentOid resolve(long... tags) {
-			return resolve(RelativeOid.STDocumentOid::new, tags);
-		}
+	@Override
+	public RelativeOid head(int length) {
+		return head(RelativeOid::new, length);
+	}
 
-		public RelativeOid.STDocumentOid resolveLocal() {
-			return resolve(OidUtil.computeNamespace(Core.UUID));
-		}
-
-		public RelativeOid.STDocumentOid resolveUuid(String uuid) {
-			return resolve(OidUtil.computeNamespace(uuid));
-		}
-
-		@Override
-		public RelativeOid parent() {
-			return parent(RelativeOid::newOid);
-		}
-
-		@Override
-		public RelativeOid.STDocumentOid tail(int offset) {
-			return tail(RelativeOid.STDocumentOid::new, offset);
-		}
-
-		@Override
-		public RelativeOid child(long component) {
-			return child(RelativeOid::newOid, component);
-		}
-
-		@Override
-		public RelativeOid head(int length) {
-			return head(RelativeOid::newOid, length);
-		}
-
-		@Override
-		public RelativeOid.STDocumentOid relativize(Oid oid) {
-			return relativize(RelativeOid.STDocumentOid::new, oid);
-		}
+	@Override
+	public RelativeOid<T> relativize(Oid oid) {
+		return relativize(RelativeOid::new, oid);
 	}
 }

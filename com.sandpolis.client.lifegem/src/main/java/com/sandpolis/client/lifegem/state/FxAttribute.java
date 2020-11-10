@@ -28,8 +28,8 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 
 	private EphemeralAttribute<T> container;
 
-	public FxAttribute(FxDocument parent) {
-		this.container = new EphemeralAttribute<>(parent, 0);
+	public FxAttribute(FxDocument<?> parent) {
+		this.container = new EphemeralAttribute<>();
 	}
 
 	@Override

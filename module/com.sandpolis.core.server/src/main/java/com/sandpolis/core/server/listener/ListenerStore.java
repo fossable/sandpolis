@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Listener.ListenerConfig;
 import com.sandpolis.core.instance.state.VirtListener;
-import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
@@ -72,7 +71,7 @@ public final class ListenerStore extends STCollectionStore<Listener> implements 
 		var config = new ListenerStoreConfig();
 		configurator.accept(config);
 
-		collection = new VirtCollection<>(config.collection);
+		collection = config.collection;
 	}
 
 	public Listener create(Consumer<VirtListener> configurator) {
@@ -96,7 +95,7 @@ public final class ListenerStore extends STCollectionStore<Listener> implements 
 	@ConfigStruct
 	public static final class ListenerStoreConfig {
 
-		public STCollection collection;
+		public VirtCollection<VirtListener> collection;
 	}
 
 	/**

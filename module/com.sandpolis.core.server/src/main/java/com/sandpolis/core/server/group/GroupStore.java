@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Group.GroupConfig;
 import com.sandpolis.core.instance.state.VirtGroup;
-import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
@@ -90,7 +89,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 		var config = new GroupStoreConfig();
 		configurator.accept(config);
 
-		collection = new VirtCollection<>(config.collection);
+		collection = config.collection;
 	}
 
 	public Group create(Consumer<VirtGroup> configurator) {
@@ -119,7 +118,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	@ConfigStruct
 	public static final class GroupStoreConfig {
 
-		public STCollection collection;
+		public VirtCollection<VirtGroup> collection;
 	}
 
 	public static final GroupStore GroupStore = new GroupStore();

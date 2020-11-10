@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.CertUtil;
 import com.sandpolis.core.instance.state.VirtTrustAnchor;
-import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
@@ -88,7 +87,7 @@ public final class TrustStore extends STCollectionStore<TrustAnchor> implements 
 		var config = new TrustStoreConfig();
 		configurator.accept(config);
 
-		collection = new VirtCollection<>(config.collection);
+		collection = config.collection;
 
 		// Install root CA if required
 		if (getMetadata().getInitCount() == 1) {
@@ -108,7 +107,7 @@ public final class TrustStore extends STCollectionStore<TrustAnchor> implements 
 	@ConfigStruct
 	public static final class TrustStoreConfig {
 
-		public STCollection collection;
+		public VirtCollection<VirtTrustAnchor> collection;
 	}
 
 	public static final TrustStore TrustStore = new TrustStore();

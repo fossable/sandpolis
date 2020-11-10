@@ -14,10 +14,11 @@ package com.sandpolis.client.lifegem.view.main.list;
 import java.util.Objects;
 import java.util.function.Function;
 
-import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.client.lifegem.common.FxUtil;
 import com.sandpolis.client.lifegem.state.FxAttribute;
 import com.sandpolis.client.lifegem.state.FxProfile;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
+import com.sandpolis.core.instance.state.st.STAttribute;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -33,9 +34,9 @@ import javafx.scene.control.TableColumn;
  */
 public class AttributeColumn<T> extends TableColumn<FxProfile, Label> {
 
-	private final AbsoluteOid.STAttributeOid<T> oid;
+	private final AbsoluteOid<STAttribute<T>> oid;
 
-	public AttributeColumn(AbsoluteOid.STAttributeOid<T> oid) {
+	public AttributeColumn(AbsoluteOid<STAttribute<T>> oid) {
 		this.oid = Objects.requireNonNull(oid);
 
 		// Set header text
@@ -72,7 +73,7 @@ public class AttributeColumn<T> extends TableColumn<FxProfile, Label> {
 		});
 	}
 
-	public AbsoluteOid.STAttributeOid<T> getOid() {
+	public AbsoluteOid<STAttribute<T>> getOid() {
 		return oid;
 	}
 }

@@ -11,18 +11,14 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.client.ascetic.view.main.hosts;
 
-import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
-import static com.sandpolis.core.instance.state.STStore.STStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 
 import com.googlecode.lanterna.gui2.table.Table;
-import com.sandpolis.core.instance.state.st.STCollection;
-import com.sandpolis.core.net.state.STCmd;
 
 public class HostList extends Table<String> {
 
-	private STCollection collection = STStore.root().get(InstanceOid().profile);
+//	private STCollection collection = STStore.root().get(InstanceOid().profile);
 
 	private String serverUuid;
 
@@ -33,7 +29,7 @@ public class HostList extends Table<String> {
 			serverUuid = ConnectionStore.getByCvid(cvid).get().getRemoteUuid();
 
 			// Attach the local collection
-			STCmd.async().sync(collection, InstanceOid().profile);
+//			STCmd.async().sync(collection, InstanceOid().profile);
 		}, () -> {
 			serverUuid = null;
 		});

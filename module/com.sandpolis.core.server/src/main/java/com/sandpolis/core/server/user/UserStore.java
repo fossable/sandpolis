@@ -24,7 +24,6 @@ import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.instance.User.UserConfig;
 import com.sandpolis.core.instance.state.VirtUser;
-import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
@@ -47,7 +46,7 @@ public final class UserStore extends STCollectionStore<User> implements Configur
 		var config = new UserStoreConfig();
 		configurator.accept(config);
 
-		collection = new VirtCollection<>(config.collection);
+		collection = config.collection;
 	}
 
 	public User create(Consumer<VirtUser> configurator) {
@@ -77,7 +76,7 @@ public final class UserStore extends STCollectionStore<User> implements Configur
 	@ConfigStruct
 	public static final class UserStoreConfig {
 
-		public STCollection collection;
+		public VirtCollection<VirtUser> collection;
 	}
 
 	/**

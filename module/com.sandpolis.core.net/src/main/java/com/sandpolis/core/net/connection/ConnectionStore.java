@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Generator.LoopConfig;
-import com.sandpolis.core.instance.state.st.STCollection;
+import com.sandpolis.core.instance.state.VirtConnection;
 import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
@@ -136,7 +136,7 @@ public final class ConnectionStore extends STCollectionStore<Connection>
 		var config = new ConnectionStoreConfig();
 		configurator.accept(config);
 
-		collection = new VirtCollection<>(config.collection);
+		collection = config.collection;
 
 		register(this);
 	}
@@ -155,7 +155,7 @@ public final class ConnectionStore extends STCollectionStore<Connection>
 
 	public static final class ConnectionStoreConfig {
 
-		public STCollection collection;
+		public VirtCollection<VirtConnection> collection;
 	}
 
 	public static final ConnectionStore ConnectionStore = new ConnectionStore();

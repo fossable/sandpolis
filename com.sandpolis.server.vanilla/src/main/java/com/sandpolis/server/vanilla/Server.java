@@ -16,7 +16,6 @@ import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
-import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
 import static com.sandpolis.core.instance.state.STStore.STStore;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
@@ -50,7 +49,6 @@ import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument;
 import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.server.auth.AuthExe;
@@ -155,7 +153,6 @@ public final class Server {
 				.setProperty("hibernate.ogm.datastore.create_database", "true");
 
 		List.of(com.sandpolis.core.server.state.HibernateDocument.class,
-				com.sandpolis.core.server.state.HibernateCollection.class,
 				com.sandpolis.core.server.state.HibernateAttribute.class,
 				com.sandpolis.core.server.state.StringAttributeValue.class,
 				com.sandpolis.core.server.state.IntegerAttributeValue.class,
@@ -203,12 +200,16 @@ public final class Server {
 		case "ephemeral":
 			STStore.init(config -> {
 				config.concurrency = 2;
-				config.root = new EphemeralDocument((STDocument) null, 0);
+				config.root = new EphemeralDocument();
 			});
 			break;
 		default:
 			break;
 		}
+
+		ProfileStore.init(config -> {
+
+		});
 
 		ThreadStore.init(config -> {
 			config.defaults.put("net.exelet", new NioEventLoopGroup(2));
@@ -223,7 +224,7 @@ public final class Server {
 		});
 
 		ConnectionStore.init(config -> {
-			config.collection = STStore.root().get(InstanceOid().profile.connection.resolveLocal());
+			config.collection = ProfileStore.getByUuid(Core.UUID).get().connection();
 		});
 
 		ExeletStore.init(config -> {
@@ -243,28 +244,24 @@ public final class Server {
 		});
 
 		UserStore.init(config -> {
-			config.collection = STStore.root().get(InstanceOid().profile.server.user.resolveLocal());
+			config.collection = ProfileStore.getByUuid(Core.UUID).get().server().user();
 		});
 
 		ListenerStore.init(config -> {
-			config.collection = STStore.root().get(InstanceOid().profile.server.listener.resolveLocal());
+			config.collection = ProfileStore.getByUuid(Core.UUID).get().server().listener();
 		});
 
 		GroupStore.init(config -> {
-			config.collection = STStore.root().get(InstanceOid().profile.server.group.resolveLocal());
-		});
-
-		ProfileStore.init(config -> {
-			config.collection = STStore.root().get(InstanceOid().profile);
+			config.collection = ProfileStore.getByUuid(Core.UUID).get().server().group();
 		});
 
 		TrustStore.init(config -> {
-			config.collection = STStore.root().get(InstanceOid().profile.server.trustanchor.resolveLocal());
+			config.collection = ProfileStore.getByUuid(Core.UUID).get().server().trustanchor();
 		});
 
 		PluginStore.init(config -> {
 			config.verifier = TrustStore::verifyPluginCertificate;
-			config.collection = STStore.root().get(InstanceOid().profile.plugin.resolveLocal());
+			config.collection = ProfileStore.getByUuid(Core.UUID).get().plugin();
 		});
 
 		LocationStore.init(config -> {

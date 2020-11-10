@@ -11,15 +11,15 @@ public final class OidUtil {
 	public static final int OTYPE_DOCUMENT = 0;
 
 	public static long computeAttributeTag(long raw) {
-		return (raw << LENGTH_OTYPE) | OTYPE_ATTRIBUTE;
+		return ((raw << LENGTH_OTYPE) | OTYPE_ATTRIBUTE) & Long.MAX_VALUE;
 	}
 
 	public static long computeCollectionTag(long raw) {
-		return (raw << LENGTH_OTYPE) | OTYPE_COLLECTION;
+		return ((raw << LENGTH_OTYPE) | OTYPE_COLLECTION) & Long.MAX_VALUE;
 	}
 
 	public static long computeDocumentTag(long raw) {
-		return (raw << LENGTH_OTYPE) | OTYPE_DOCUMENT;
+		return ((raw << LENGTH_OTYPE) | OTYPE_DOCUMENT) & Long.MAX_VALUE;
 	}
 
 	public static int getOidType(long tag) {
@@ -28,6 +28,22 @@ public final class OidUtil {
 
 	public static long computeNamespace(String id) {
 		return computeDocumentTag(Hashing.murmur3_128().newHasher().putBytes(id.getBytes()).hash().asLong());
+	}
+
+	public static String[] splitPath(String path) {
+		if (path.startsWith("//")) {
+			throw new IllegalArgumentException();
+		}
+
+		// Strip up to one leading slash
+		path = path.replaceAll("^/", "");
+
+		String[] components = path.split("/");
+
+		// Add an empty string for each trailing slash
+		// TODO
+
+		return components;
 	}
 
 	private OidUtil() {

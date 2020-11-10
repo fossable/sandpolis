@@ -17,29 +17,21 @@ import static com.sandpolis.core.instance.state.STStore.STStore;
 
 import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.instance.state.oid.AbsoluteOid;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSnapshot;
 import com.sandpolis.core.net.msg.MsgState.RQ_STSync;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
-import com.sandpolis.core.net.state.st.entangled.EntangledCollection;
 import com.sandpolis.core.net.state.st.entangled.EntangledDocument;
 
 public final class STExe extends Exelet {
 
 	@Handler(auth = false)
 	public static MessageLiteOrBuilder rq_st_snapshot(RQ_STSnapshot rq) {
+		var oid = new AbsoluteOid<STDocument>(0, rq.getOid());
 
-		var oid = AbsoluteOid.newOid(rq.getOid());
-		if (oid instanceof AbsoluteOid.STAttributeOid) {
-			return STStore.root().get((AbsoluteOid.STAttributeOid<?>) oid).snapshot();
-		} else if (oid instanceof AbsoluteOid.STCollectionOid) {
-			return STStore.root().get((AbsoluteOid.STCollectionOid) oid).snapshot();
-		} else if (oid instanceof AbsoluteOid.STDocumentOid) {
-			return STStore.root().get((AbsoluteOid.STDocumentOid) oid).snapshot();
-		} else {
-			return null;
-		}
+		return STStore.root().document(oid).snapshot();
 	}
 
 	@Handler(auth = false)
@@ -53,14 +45,9 @@ public final class STExe extends Exelet {
 		config.updatePeriod = rq.getUpdatePeriod();
 		config.initiator = false;
 
-		var oid = AbsoluteOid.newOid(rq.getOid());
-		if (oid instanceof AbsoluteOid.STAttributeOid) {
+		var oid = new AbsoluteOid<STDocument>(0, rq.getOid());
 
-		} else if (oid instanceof AbsoluteOid.STCollectionOid) {
-			new EntangledCollection(STStore.root().get((AbsoluteOid.STCollectionOid) oid), config);
-		} else if (oid instanceof AbsoluteOid.STDocumentOid) {
-			new EntangledDocument(STStore.root().get((AbsoluteOid.STDocumentOid) oid), config);
-		}
+		new EntangledDocument(STStore.root().document(oid), config);
 
 		return success(outcome);
 	}

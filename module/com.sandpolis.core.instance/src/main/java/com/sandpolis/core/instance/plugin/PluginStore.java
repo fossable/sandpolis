@@ -40,7 +40,6 @@ import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginStore.PluginStoreConfig;
 import com.sandpolis.core.instance.state.VirtPlugin;
-import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
@@ -147,7 +146,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 						// Read plugin id
 						String id = JarUtil.getManifestValue(path.toFile(), "Plugin-Id").orElse(null);
 
-						return stream.noneMatch(plugin -> plugin.getId().equals(id));
+						return stream.noneMatch(plugin -> plugin.getPackageId().equals(id));
 					} catch (IOException e) {
 						return false;
 					}
@@ -216,7 +215,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 			return;
 		}
 
-		log.debug("Loading plugin: {} ({})", plugin.getName(), plugin.getId());
+		log.debug("Loading plugin: {} ({})", plugin.getName(), plugin.getPackageId());
 
 		try {
 			plugin.load();
@@ -236,7 +235,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 		var config = new PluginStoreConfig();
 		configurator.accept(config);
 
-		collection = new VirtCollection<>(config.collection);
+		collection = config.collection;
 	}
 
 	public Plugin create(Consumer<VirtPlugin> configurator) {
@@ -250,7 +249,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 
 		public Function<X509Certificate, Boolean> verifier;
 
-		public STCollection collection;
+		public VirtCollection<VirtPlugin> collection;
 	}
 
 	public static final PluginStore PluginStore = new PluginStore();

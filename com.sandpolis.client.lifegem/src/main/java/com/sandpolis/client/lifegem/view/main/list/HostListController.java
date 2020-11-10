@@ -11,8 +11,7 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.client.lifegem.view.main.list;
 
-import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
-import static com.sandpolis.core.instance.state.STStore.STStore;
+import static com.sandpolis.core.instance.state.oid.InstanceOid.InstanceOid;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.network.NetworkStore.NetworkStore;
 
@@ -23,14 +22,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.state.oid.AbsoluteOid;
-import com.sandpolis.core.net.state.STCmd;
 import com.sandpolis.client.lifegem.common.controller.AbstractController;
-import com.sandpolis.client.lifegem.state.FxCollection;
+import com.sandpolis.client.lifegem.state.FxDocument;
 import com.sandpolis.client.lifegem.state.FxProfile;
 import com.sandpolis.client.lifegem.view.main.Events.HostDetailCloseEvent;
 import com.sandpolis.client.lifegem.view.main.Events.HostDetailOpenEvent;
 import com.sandpolis.client.lifegem.view.main.Events.HostListHeaderChangeEvent;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
+import com.sandpolis.core.instance.state.st.STAttribute;
+import com.sandpolis.core.net.state.STCmd;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -44,9 +44,9 @@ public class HostListController extends AbstractController {
 	@FXML
 	private TableView<FxProfile> table;
 
-	private FxCollection<FxProfile> collection = (FxCollection<FxProfile>) STStore.root().get(InstanceOid().profile);
+	private FxDocument<FxProfile> collection;
 
-	private static final List<AbsoluteOid.STAttributeOid<?>> DEFAULT_HEADERS = List.of(InstanceOid().profile.uuid,
+	private static final List<AbsoluteOid<?>> DEFAULT_HEADERS = List.of(InstanceOid().profile.uuid,
 			InstanceOid().profile.ip_address, InstanceOid().profile.instance_type);
 
 	private String serverUuid;
@@ -64,7 +64,7 @@ public class HostListController extends AbstractController {
 		});
 
 		// Set default headers
-		addColumns(DEFAULT_HEADERS);
+//		addColumns(DEFAULT_HEADERS);
 
 		resync();
 	}
@@ -93,12 +93,12 @@ public class HostListController extends AbstractController {
 	 *
 	 * @param headers The headers to add
 	 */
-	private void addColumns(List<AbsoluteOid.STAttributeOid<?>> headers) {
+	private void addColumns(List<AbsoluteOid<STAttribute<?>>> headers) {
 		if (serverUuid == null) {
 			table.getColumns().clear();
 		} else {
-			headers.stream().map(oid -> oid.resolveUuid(serverUuid)).map(AttributeColumn::new)
-					.forEach(table.getColumns()::add);
+//			headers.stream().map(oid -> oid.resolve(serverUuid)).map(AttributeColumn::new)
+//					.forEach(table.getColumns()::add);
 		}
 	}
 
@@ -107,7 +107,7 @@ public class HostListController extends AbstractController {
 			serverUuid = ConnectionStore.getByCvid(cvid).get().getRemoteUuid();
 
 			// Attach the local collection
-			STCmd.async().sync(collection, InstanceOid().profile);
+//			STCmd.async().sync(collection, InstanceOid().profile);
 		}, () -> {
 			serverUuid = null;
 			table.setPlaceholder(new Label("Not connected to a server"));

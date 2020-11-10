@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 import com.sandpolis.core.instance.State.ProtoAttribute;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.state.st.AbstractSTObject;
@@ -29,7 +30,7 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	private STAttribute<T> container;
 
 	public EntangledAttribute(STAttribute<T> container, STSyncStruct config) {
-		super(null, 0);// TODO
+		super(null, AbsoluteOid.ROOT);
 		this.container = Objects.requireNonNull(container);
 
 		if (container instanceof EntangledObject)

@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.EventBus;
 import com.google.protobuf.MessageLite;
-import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.Oid;
 
 public abstract class AbstractSTObject<E extends MessageLite> implements STObject<E> {
@@ -41,12 +40,13 @@ public abstract class AbstractSTObject<E extends MessageLite> implements STObjec
 
 	protected final AbstractSTObject<?> parent;
 
-	public AbstractSTObject(STObject<?> parent, long id) {
+	public AbstractSTObject(STObject<?> parent, Oid oid) {
 		this.parent = (AbstractSTObject<?>) parent;
-		if (parent != null) {
-			this.oid = parent.oid().child(id);
-		} else {
-			this.oid = AbsoluteOid.newOid(id);
+		this.oid = oid;
+
+		// The parent's OID must be an ancestor of the given OID
+		if (parent != null && oid.isChildOf(parent.oid())) {
+			throw new IllegalArgumentException();
 		}
 	}
 
@@ -96,54 +96,6 @@ public abstract class AbstractSTObject<E extends MessageLite> implements STObjec
 			parent().fireAttributeValueChangedEvent(attribute, oldValue, newValue);
 	}
 
-	protected synchronized void fireCollectionAddedEvent(STDocument document, STCollection newCollection) {
-
-		if (log.isTraceEnabled() && document == this) {
-			log.trace("Collection ({}) added to document ({})", newCollection.oid().last(), document.oid());
-		}
-
-		if (bus != null) {
-			STStore.pool().submit(() -> {
-				bus.post(new STDocument.CollectionAddedEvent(document, newCollection));
-			});
-		}
-
-		if (parent() != null)
-			parent().fireCollectionAddedEvent(document, newCollection);
-	}
-
-	protected synchronized void fireCollectionRemovedEvent(STDocument document, STCollection oldCollection) {
-
-		if (log.isTraceEnabled() && document == this) {
-			log.trace("Collection ({}) removed from document ({})", oldCollection.oid().last(), document.oid());
-		}
-
-		if (bus != null) {
-			STStore.pool().submit(() -> {
-				bus.post(new STDocument.CollectionRemovedEvent(document, oldCollection));
-			});
-		}
-
-		if (parent() != null)
-			parent().fireCollectionRemovedEvent(document, oldCollection);
-	}
-
-	protected synchronized void fireDocumentAddedEvent(STCollection collection, STDocument newDocument) {
-
-		if (log.isTraceEnabled() && collection == this) {
-			log.trace("Document ({}) added to collection ({})", newDocument.oid().last(), collection.oid());
-		}
-
-		if (bus != null) {
-			STStore.pool().submit(() -> {
-				bus.post(new STCollection.DocumentAddedEvent(collection, newDocument));
-			});
-		}
-
-		if (parent() != null)
-			parent().fireDocumentAddedEvent(collection, newDocument);
-	}
-
 	protected synchronized void fireDocumentAddedEvent(STDocument document, STDocument newDocument) {
 
 		if (log.isTraceEnabled() && document == this) {
@@ -158,22 +110,6 @@ public abstract class AbstractSTObject<E extends MessageLite> implements STObjec
 
 		if (parent() != null)
 			parent().fireDocumentAddedEvent(document, newDocument);
-	}
-
-	protected synchronized void fireDocumentRemovedEvent(STCollection collection, STDocument oldDocument) {
-
-		if (log.isTraceEnabled() && collection == this) {
-			log.trace("Document ({}) removed from collection ({})", oldDocument.oid().last(), collection.oid());
-		}
-
-		if (bus != null) {
-			STStore.pool().submit(() -> {
-				bus.post(new STCollection.DocumentRemovedEvent(collection, oldDocument));
-			});
-		}
-
-		if (parent() != null)
-			parent().fireDocumentRemovedEvent(collection, oldDocument);
 	}
 
 	protected synchronized void fireDocumentRemovedEvent(STDocument document, STDocument oldDocument) {

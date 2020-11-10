@@ -81,7 +81,7 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 				}
 
 				// Route the message
-				var sock = ConnectionStore.get(to);
+				var sock = ConnectionStore.getByCvid(to);
 				if (sock.isPresent()) {
 					msg.resetReaderIndex();
 					msg.retain();

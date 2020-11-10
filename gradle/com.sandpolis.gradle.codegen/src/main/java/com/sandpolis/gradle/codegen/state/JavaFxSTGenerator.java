@@ -15,19 +15,17 @@ import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-import com.sandpolis.core.foundation.util.OidUtil;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.TypeSpec.Builder;
 
 /**
  * Generator for JavaFX document bindings.
  */
 public class JavaFxSTGenerator extends VSTGenerator {
 
-	protected void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute, String oid) {
+	protected void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute) {
 
 		{
 			// Add property getter
@@ -36,17 +34,14 @@ public class JavaFxSTGenerator extends VSTGenerator {
 			var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name + "_property")) //
 					.addModifiers(PUBLIC) //
 					.returns(type) //
-					.addStatement("return ($T) document.attribute($LL)", type, oid.replaceAll(".*\\.", ""));
+					.addStatement("return ($T) document.attribute(\"$L\")", type, attribute.name);
 			parent.addMethod(method.build());
 		}
 	}
 
-	protected void processCollection(TypeSpec.Builder parent, DocumentSpec document, String oid) {
-		processDocument(parent, document, oid + ".0");
-	}
-
-	protected void processDocument(TypeSpec.Builder parent, DocumentSpec document, String oid) {
-		var documentClass = TypeSpec.classBuilder("Fx" + document.shortName()) //
+	@Override
+	protected void processDocument(TypeSpec.Builder parent, DocumentSpec document) {
+		var documentClass = TypeSpec.classBuilder("Fx" + document.className()) //
 				.addModifiers(PUBLIC) //
 				.superclass(ClassName.get(VST_PACKAGE, VST_PREFIX + "Document"));
 
@@ -59,35 +54,13 @@ public class JavaFxSTGenerator extends VSTGenerator {
 			documentClass.addMethod(method.build());
 		}
 
-		if (document.collections != null) {
-			for (var entry : document.collections.entrySet()) {
-				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processCollection(documentClass, subdocument, oid + "." + OidUtil.computeCollectionTag(entry.getKey()));
-			}
-		}
-		if (document.documents != null) {
-			for (var entry : document.documents.entrySet()) {
-				var subdocument = flatTree.stream().filter(spec -> spec.name.equals(entry.getValue())).findAny().get();
-				processDocument(documentClass, subdocument, oid + "." + OidUtil.computeDocumentTag(entry.getKey()));
-			}
-		}
 		if (document.attributes != null) {
-			for (var entry : document.attributes.entrySet()) {
-				processAttribute(documentClass, entry.getValue(),
-						oid + "." + OidUtil.computeAttributeTag(entry.getKey()));
+			for (var entry : document.attributes) {
+				processAttribute(documentClass, entry);
 			}
 		}
 
-		writeClass(documentClass.build());
+		vstTypes.put(document.name, documentClass);
 	}
 
-	protected void processRelation(Builder parent, RelationSpec relation, String oid) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	protected void processRoot(DocumentSpec document, String oid) {
-		processDocument(null, document, oid);
-	}
 }

@@ -1,70 +1,59 @@
 [
 	{
-		"name": "Plugin.Device.Http",
-		"attributes": {
-			"1": {
+		"name": "/profile//device/",
+		"attributes": [
+			{
+				"name": "handler",
+				"type": "java.lang.String",
+				"description": "The UUID of the handler instance"
+			}
+		]
+	},
+	{
+		"name": "/profile//device//http",
+		"attributes": [
+			{
 				"name": "username",
 				"type": "java.lang.String"
 			}
-		}
+		]
 	},
 	{
-		"name": "Plugin.Device.Snmpv2c",
-		"attributes": {
-			"1": {
+		"name": "/profile//device//snmp2c",
+		"attributes": [
+			{
 				"name": "community",
 				"type": "java.lang.String"
 			}
-		}
+		]
 	},
 	{
-		"name": "Plugin.Device.Snmpv3",
-		"attributes": {
-			"1": {
+		"name": "/profile//device//snmp3",
+		"attributes": [
+			{
 				"name": "security_level",
 				"type": "java.lang.String"
 			},
-			"2": {
+			{
 				"name": "security_name",
 				"type": "java.lang.String"
 			},
-			"3": {
+			{
 				"name": "auth_protocol",
 				"type": "java.lang.String"
 			},
-			"4": {
+			{
 				"name": "auth_secret",
 				"type": "java.lang.String"
 			},
-			"5": {
+			{
 				"name": "priv_protocol",
 				"type": "java.lang.String"
 			},
-			"6": {
+			{
 				"name": "priv_secret",
 				"type": "java.lang.String"
 			}
-		}
-	},
-	{
-		"name": "Plugin.Device",
-		"attributes": {
-			"1": {
-				"name": "handler",
-				"type": "java.lang.String"
-			}
-		},
-		"documents": {
-			"1": "Plugin.Device.Http",
-			"2": "Plugin.Device.Snmpv2c",
-			"3": "Plugin.Device.Snmpv3"
-		}
-	},
-	{
-		"parent": "1.3",
-		"name": "Plugin",
-		"collections": {
-			"1": "Plugin.Device"
-		}
+		]
 	}
 ]

@@ -17,13 +17,12 @@ import java.util.function.Function;
 
 import org.slf4j.Logger;
 
-import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.state.vst.VirtDocument;
 
 /**
- * {@link STCollectionStore} is a store backed by a {@link STCollection} which
+ * {@link STCollectionStore} is a store backed by an {@link STDocument} which
  * may exist exclusively in memory (ephemeral collection), in a database
  * (hibernate collection), or on another instance across the network (entangled
  * collection).
@@ -33,14 +32,15 @@ import com.sandpolis.core.instance.state.vst.VirtDocument;
 public abstract class STCollectionStore<V extends VirtDocument> extends StoreBase
 		implements MetadataStore<StoreMetadata> {
 
-	protected VirtCollection<V> collection;
+	protected VirtCollection<? super V> collection;
 
 	protected STCollectionStore(Logger log) {
 		super(log);
 	}
 
 	protected V add(Function<STDocument, V> constructor) {
-		return collection.add(constructor);
+//		return collection.add(constructor);
+		return null;
 	}
 
 	/**
@@ -52,12 +52,12 @@ public abstract class STCollectionStore<V extends VirtDocument> extends StoreBas
 		return collection.count();
 	}
 
-	public Optional<V> get(long tag) {
-		return collection.get(tag);
+	public Optional<V> get(String path) {
+		return (Optional<V>) collection.get(path);
 	}
 
-	public Optional<V> remove(long tag) {
-		var item = get(tag);
+	public Optional<V> remove(String path) {
+		var item = get(path);
 		if (item.isPresent())
 			removeValue(item.get());
 		return item;
@@ -74,4 +74,5 @@ public abstract class STCollectionStore<V extends VirtDocument> extends StoreBas
 	public StoreMetadata getMetadata() {
 		return null;// collection.getMetadata();
 	}
+
 }

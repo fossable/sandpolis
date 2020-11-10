@@ -5,21 +5,20 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import com.sandpolis.core.foundation.util.RandUtil;
-import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.st.STDocument;
 
 public class VirtCollection<V extends VirtDocument> implements VirtObject {
 
-	protected Map<Long, V> documents;
+	protected Map<String, V> documents;
 
-	private STCollection collection;
+	private STDocument collection;
 
-	public VirtCollection(STCollection collection) {
+	public VirtCollection(STDocument collection) {
 		this.collection = collection;
 	}
 
 	public V add(Function<STDocument, V> constructor) {
-		long id = RandUtil.nextLong();
+		String id = "" + RandUtil.nextLong();
 
 		var object = constructor.apply(collection.document(id));
 		documents.put(id, object);
@@ -30,7 +29,7 @@ public class VirtCollection<V extends VirtDocument> implements VirtObject {
 		return documents.size();
 	}
 
-	public Optional<V> get(long tag) {
-		return Optional.ofNullable(documents.get(tag));
+	public Optional<V> get(String path) {
+		return Optional.ofNullable(documents.get(path));
 	}
 }

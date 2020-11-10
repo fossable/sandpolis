@@ -33,7 +33,7 @@ message ProtoAttributeValue {
 }
 
 message ProtoAttribute {
-	int64 tag = 1;
+	string path = 1;
     bool replacement = 2;
     bool removal = 3;
 
@@ -41,19 +41,10 @@ message ProtoAttribute {
 }
 
 message ProtoDocument {
-	int64 tag = 1;
+	string path = 1;
     bool replacement = 2;
     bool removal = 3;
 
     repeated ProtoAttribute attribute = 4;
     repeated ProtoDocument document = 5;
-    repeated ProtoCollection collection = 6;
-}
-
-message ProtoCollection {
-    int64 tag = 1;
-    bool replacement = 2;
-    bool removal = 3;
-
-    repeated ProtoDocument document = 4;
 }

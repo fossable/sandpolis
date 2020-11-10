@@ -11,8 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.generator;
 
-import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.foundation.util.ArtifactUtil.ParsedCoordinate.fromCoordinate;
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -29,10 +29,15 @@ import com.github.cilki.zipset.ZipSet;
 import com.github.cilki.zipset.ZipSet.EntryPath;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
+import com.sandpolis.core.foundation.Platform.OsType;
+import com.sandpolis.core.foundation.soi.SoiUtil;
+import com.sandpolis.core.foundation.util.ArtifactUtil;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Generator.FeatureSet;
 import com.sandpolis.core.instance.Generator.GenConfig;
+import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.plugin.Plugin;
 import com.sandpolis.core.server.generator.mega.BatPackager;
 import com.sandpolis.core.server.generator.mega.ElfPackager;
@@ -43,11 +48,6 @@ import com.sandpolis.core.server.generator.mega.QrPackager;
 import com.sandpolis.core.server.generator.mega.RbPackager;
 import com.sandpolis.core.server.generator.mega.ShPackager;
 import com.sandpolis.core.server.generator.mega.UrlPackager;
-import com.sandpolis.core.foundation.soi.SoiUtil;
-import com.sandpolis.core.foundation.util.ArtifactUtil;
-import com.sandpolis.core.instance.Metatypes.InstanceType;
-import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
-import com.sandpolis.core.foundation.Platform.OsType;
 
 /**
  * This generator builds a {@code com.sandpolis.agent.vanilla} agent.
@@ -185,7 +185,8 @@ public abstract class MegaGen extends Generator {
 		// Add plugin binaries
 		if (!config.getMega().getDownloader()) {
 			for (var plugin : PluginStore.values().stream()
-					.filter(plugin -> features.getPluginList().contains(plugin.getId())).toArray(Plugin[]::new)) {
+					.filter(plugin -> features.getPluginList().contains(plugin.getPackageId()))
+					.toArray(Plugin[]::new)) {
 				ZipSet pluginArchive = new ZipSet();
 
 				// Add core component
@@ -204,7 +205,7 @@ public abstract class MegaGen extends Generator {
 							ArtifactUtil.getArtifactFile(Environment.LIB.path(), dep.getCoordinates()));
 				});
 
-				output.add(EntryPath.get("lib/" + plugin.getId() + ".jar"), pluginArchive);
+				output.add(EntryPath.get("lib/" + plugin.getPackageId() + ".jar"), pluginArchive);
 			}
 		}
 

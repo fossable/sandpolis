@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.profile.ProfileStore.ProfileStoreConfig;
 import com.sandpolis.core.instance.state.VirtProfile;
-import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
@@ -68,7 +67,7 @@ public final class ProfileStore extends STCollectionStore<Profile> implements Co
 		var config = new ProfileStoreConfig();
 		configurator.accept(config);
 
-		collection = new VirtCollection<>(config.collection);
+		collection = config.collection;
 	}
 
 	public Profile create(Consumer<VirtProfile> configurator) {
@@ -80,7 +79,7 @@ public final class ProfileStore extends STCollectionStore<Profile> implements Co
 	@ConfigStruct
 	public static final class ProfileStoreConfig {
 
-		public STCollection collection;
+		public VirtCollection<Profile> collection;
 	}
 
 	public static final ProfileStore ProfileStore = new ProfileStore();

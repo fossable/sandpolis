@@ -13,7 +13,6 @@ package com.sandpolis.client.lifegem.view.login;
 
 import static com.sandpolis.client.lifegem.stage.StageStore.StageStore;
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
-import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
 import java.util.Objects;
@@ -26,7 +25,8 @@ import com.sandpolis.client.lifegem.common.FxExecutor;
 import com.sandpolis.client.lifegem.common.FxUtil;
 import com.sandpolis.client.lifegem.common.controller.FxController;
 import com.sandpolis.client.lifegem.common.pane.CarouselPane;
-import com.sandpolis.client.lifegem.state.FxCollection;
+import com.sandpolis.client.lifegem.state.FxDocument;
+import com.sandpolis.client.lifegem.view.login.LoginController.LoginPhase;
 import com.sandpolis.client.lifegem.view.login.LoginEvents.ConnectEndedEvent;
 import com.sandpolis.client.lifegem.view.login.LoginEvents.ConnectStartedEvent;
 import com.sandpolis.client.lifegem.view.login.LoginEvents.LoginEndedEvent;
@@ -37,6 +37,7 @@ import com.sandpolis.client.lifegem.view.login.phase.ServerPhaseController;
 import com.sandpolis.client.lifegem.view.login.phase.UserPhaseController;
 import com.sandpolis.core.client.cmd.LoginCmd;
 import com.sandpolis.core.client.cmd.ServerCmd;
+import com.sandpolis.core.instance.state.oid.InstanceOid;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.connection.ConnectionFuture;
 import com.sandpolis.core.net.state.STCmd;
@@ -156,13 +157,13 @@ public class LoginController extends FxController {
 
 						if (rs.getResult()) {
 							STCmd.async().target(connection)
-									.snapshot(InstanceOid().profile.plugin.resolveUuid(connection.getRemoteUuid()))
+									.snapshot(InstanceOid.InstanceOid().profile(connection.getRemoteUuid()).plugin)
 									.thenAcceptAsync(snapshot -> {
-										var plugins = new FxCollection<>(null, snapshot, PluginProperty::new);
+										var plugins = new FxDocument<>(null, snapshot, PluginProperty::new);
 										// TODO filter plugins that are already installed
 										post(LoginEndedEvent::new);
 
-										if (!plugins.isEmpty()) {
+										if (plugins.documentCount() > 0) {
 											pluginPhaseController.setPlugins(plugins.getObservable());
 											phase.set(LoginPhase.PLUGIN_PHASE);
 										} else {

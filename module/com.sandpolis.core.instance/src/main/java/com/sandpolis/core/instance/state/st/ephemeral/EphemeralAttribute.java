@@ -11,6 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.instance.state.st.ephemeral;
 
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.st.AbstractSTAttribute;
 import com.sandpolis.core.instance.state.st.STAttribute;
 import com.sandpolis.core.instance.state.st.STAttributeValue;
@@ -25,8 +27,12 @@ import com.sandpolis.core.instance.state.st.STDocument;
  */
 public class EphemeralAttribute<T> extends AbstractSTAttribute<T> implements STAttribute<T> {
 
-	public EphemeralAttribute(STDocument parent, long id) {
-		super(parent, id);
+	public EphemeralAttribute(STDocument parent, Oid oid) {
+		super(parent, oid);
+	}
+
+	public EphemeralAttribute() {
+		this(null, AbsoluteOid.ROOT);
 	}
 
 	@Override
