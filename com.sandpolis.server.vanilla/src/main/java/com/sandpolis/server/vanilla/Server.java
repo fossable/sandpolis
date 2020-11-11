@@ -49,6 +49,7 @@ import com.sandpolis.core.instance.MainDispatch.Task;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.User.UserConfig;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument;
 import com.sandpolis.core.net.util.CvidUtil;
 import com.sandpolis.core.server.auth.AuthExe;
@@ -183,7 +184,7 @@ public final class Server {
 				config.concurrency = 2;
 				config.root = em.find(HibernateDocument.class, "st");
 				if (config.root == null) {
-					config.root = new HibernateDocument((HibernateDocument) null);
+					config.root = new HibernateDocument(null, AbsoluteOid.ROOT);
 
 					em.getTransaction().begin();
 					em.persist(config.root);

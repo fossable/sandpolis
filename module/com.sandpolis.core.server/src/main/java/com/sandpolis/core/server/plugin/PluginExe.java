@@ -65,7 +65,7 @@ public final class PluginExe extends Exelet {
 			if (!PluginStore.findComponentTypes(plugin).contains(context.connector.getRemoteInstanceFlavor()))
 				context.reply(Outcome.newBuilder().setResult(false));// TODO message
 			else if (rq.getLocation()) {
-				context.reply(rs.setCoordinates(String.format(":%s:%s", plugin.getId(), plugin.getVersion())));
+				context.reply(rs.setCoordinates(String.format(":%s:%s", plugin.getPackageId(), plugin.getVersion())));
 			} else {
 				// Send binary for correct component
 				ByteSource component = PluginStore.getPluginComponent(plugin, context.connector.getRemoteInstance(),

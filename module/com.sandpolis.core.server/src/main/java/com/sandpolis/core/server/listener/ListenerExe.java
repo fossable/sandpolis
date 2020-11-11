@@ -34,7 +34,7 @@ public final class ListenerExe extends Exelet {
 	@Handler(auth = true, instances = CLIENT)
 	public static MessageLiteOrBuilder rq_listener_operation(ExeletContext context, RQ_ListenerOperation rq) {
 		var outcome = begin();
-		var user = UserStore.get(context.connector.getRemoteCvid()).orElse(null);
+		var user = UserStore.getByCvid(context.connector.getRemoteCvid()).orElse(null);
 		if (user == null)
 			return failure(outcome, ErrorCode.ACCESS_DENIED);
 

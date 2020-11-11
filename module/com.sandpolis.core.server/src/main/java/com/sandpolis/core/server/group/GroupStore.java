@@ -49,7 +49,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return The user's groups
 	 */
 	public Stream<Group> getByMembership(User user) {
-		return values().stream().filter(group -> user.equals(group.getOwner()) || group.getMembers().contains(user));
+		return values().stream();//.filter(group -> user.equals(group.getOwner()) || group.getMembers().contains(user));
 	}
 
 	/**
@@ -58,7 +58,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return A list of unauth groups
 	 */
 	public Stream<Group> getUnauthGroups() {
-		return values().stream().filter(group -> group.getAuthMechanisms().size() == 0);
+		return values().stream();//.filter(group -> group.getAuthMechanisms().size() == 0);
 	}
 
 	/**

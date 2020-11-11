@@ -30,7 +30,7 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	private STDocument container;
 
 	public EntangledDocument(STDocument container, STSyncStruct config) {
-		super(null, AbsoluteOid.ROOT);
+		super(container.parent(), container.oid());
 		this.container = Objects.requireNonNull(container);
 
 		if (container instanceof EntangledObject)
@@ -89,8 +89,8 @@ public class EntangledDocument extends EntangledObject<ProtoDocument> implements
 	}
 
 	@Override
-	public AbstractSTObject parent() {
-		return ((AbstractSTObject) container).parent();
+	public STDocument parent() {
+		return container.parent();
 	}
 
 	@Override

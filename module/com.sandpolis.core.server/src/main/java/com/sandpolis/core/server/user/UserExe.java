@@ -33,7 +33,7 @@ public final class UserExe extends Exelet {
 	@Handler(auth = true, instances = CLIENT)
 	public static MessageLiteOrBuilder rq_user_operation(ExeletContext context, RQ_UserOperation rq) {
 		var outcome = begin();
-		var user = UserStore.get(context.connector.getRemoteCvid()).orElse(null);
+		var user = UserStore.getByCvid(context.connector.getRemoteCvid()).orElse(null);
 		if (user == null)
 			return failure(outcome, ErrorCode.ACCESS_DENIED);
 

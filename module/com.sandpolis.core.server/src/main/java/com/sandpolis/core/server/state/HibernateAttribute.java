@@ -24,6 +24,7 @@ import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.st.AbstractSTAttribute;
 import com.sandpolis.core.instance.state.st.STAttribute;
 import com.sandpolis.core.instance.state.st.STAttributeValue;
+import com.sandpolis.core.instance.state.st.STDocument;
 
 /**
  * {@link HibernateAttribute} allows attributes to be persistent and optionally
@@ -38,8 +39,8 @@ public class HibernateAttribute<T> extends AbstractSTAttribute<T> implements STA
 	@Id
 	private String db_id;
 
-	public HibernateAttribute(HibernateDocument parent) {
-		super(parent, 0);
+	public HibernateAttribute(STDocument parent, Oid oid) {
+		super(parent, oid);
 		this.db_id = UUID.randomUUID().toString();
 	}
 

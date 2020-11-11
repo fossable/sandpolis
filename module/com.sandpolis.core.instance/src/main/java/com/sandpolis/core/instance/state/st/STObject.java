@@ -55,9 +55,9 @@ public interface STObject<E extends MessageLite> {
 	/**
 	 * Get this object's parent.
 	 * 
-	 * @return The parent {@link STObject} or {@code null}
+	 * @return The parent {@link STDocument} or {@code null}
 	 */
-	public STObject<?> parent();
+	public STDocument parent();
 
 	/**
 	 * Deregister a previously registered listener. Any currently queued events will

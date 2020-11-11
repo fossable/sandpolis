@@ -44,7 +44,7 @@ public abstract class AbstractSTAttribute<T> extends AbstractSTObject<ProtoAttri
 	 */
 	protected Supplier<T> source;
 
-	public AbstractSTAttribute(STObject<?> parent, Oid oid) {
+	public AbstractSTAttribute(STDocument parent, Oid oid) {
 		super(parent, oid);
 	}
 

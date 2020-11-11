@@ -75,8 +75,8 @@ public abstract class VSTGenerator extends DefaultTask {
 		public TypeName getAttributeType() {
 
 			if (type.contains("/")) {
-				// TODO
-				return ClassName.get(String.class);
+				// The attribute is a relation
+				return ClassName.get(OID_PACKAGE, "Oid");
 			} else if (type.endsWith("[]")) {
 				return ArrayTypeName.of(ClassName.bestGuess(type.replace("[]", "")).unbox());
 			} else {

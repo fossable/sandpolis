@@ -19,9 +19,9 @@ import com.sandpolis.core.instance.State.ProtoAttribute;
 import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
-import com.sandpolis.core.instance.state.st.AbstractSTObject;
 import com.sandpolis.core.instance.state.st.STAttribute;
 import com.sandpolis.core.instance.state.st.STAttributeValue;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.state.st.STObject;
 import com.sandpolis.core.net.state.STCmd.STSyncStruct;
 
@@ -89,8 +89,8 @@ public class EntangledAttribute<T> extends EntangledObject<ProtoAttribute> imple
 	}
 
 	@Override
-	public AbstractSTObject parent() {
-		return ((AbstractSTObject) container).parent();
+	public STDocument parent() {
+		return container.parent();
 	}
 
 	@Override

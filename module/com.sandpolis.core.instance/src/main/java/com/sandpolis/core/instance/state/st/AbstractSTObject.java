@@ -40,7 +40,7 @@ public abstract class AbstractSTObject<E extends MessageLite> implements STObjec
 
 	protected final AbstractSTObject<?> parent;
 
-	public AbstractSTObject(STObject<?> parent, Oid oid) {
+	public AbstractSTObject(STDocument parent, Oid oid) {
 		this.parent = (AbstractSTObject<?>) parent;
 		this.oid = oid;
 
@@ -64,8 +64,8 @@ public abstract class AbstractSTObject<E extends MessageLite> implements STObjec
 	}
 
 	@Override
-	public AbstractSTObject<?> parent() {
-		return parent;
+	public STDocument parent() {
+		return (STDocument) parent;
 	}
 
 	@Override
@@ -92,8 +92,8 @@ public abstract class AbstractSTObject<E extends MessageLite> implements STObjec
 			});
 		}
 
-		if (parent() != null)
-			parent().fireAttributeValueChangedEvent(attribute, oldValue, newValue);
+		if (parent != null)
+			parent.fireAttributeValueChangedEvent(attribute, oldValue, newValue);
 	}
 
 	protected synchronized void fireDocumentAddedEvent(STDocument document, STDocument newDocument) {
@@ -108,8 +108,8 @@ public abstract class AbstractSTObject<E extends MessageLite> implements STObjec
 			});
 		}
 
-		if (parent() != null)
-			parent().fireDocumentAddedEvent(document, newDocument);
+		if (parent != null)
+			parent.fireDocumentAddedEvent(document, newDocument);
 	}
 
 	protected synchronized void fireDocumentRemovedEvent(STDocument document, STDocument oldDocument) {
@@ -124,7 +124,7 @@ public abstract class AbstractSTObject<E extends MessageLite> implements STObjec
 			});
 		}
 
-		if (parent() != null)
-			parent().fireDocumentRemovedEvent(document, oldDocument);
+		if (parent != null)
+			parent.fireDocumentRemovedEvent(document, oldDocument);
 	}
 }

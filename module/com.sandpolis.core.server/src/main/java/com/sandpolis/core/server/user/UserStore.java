@@ -41,6 +41,10 @@ public final class UserStore extends STCollectionStore<User> implements Configur
 		return values().stream().filter(user -> user.getUsername().equals(username)).findAny();
 	}
 
+	public Optional<User> getByCvid(int cvid) {
+		return null;
+	}
+
 	@Override
 	public void init(Consumer<UserStoreConfig> configurator) {
 		var config = new UserStoreConfig();

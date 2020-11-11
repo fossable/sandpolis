@@ -14,6 +14,7 @@ package com.sandpolis.gradle.codegen;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.tasks.Delete;
 
 import com.sandpolis.gradle.codegen.state.AttributeValueGenerator;
 import com.sandpolis.gradle.codegen.state.CoreSTGenerator;
@@ -34,6 +35,7 @@ public class CodeGen implements Plugin<Project> {
 			// Prepare to add dependencies on these tasks
 			Task generateProto = project.getTasks().findByName("generateProto");
 			Task compileJava = project.getTasks().findByName("compileJava");
+			Task clean = project.getTasks().findByName("clean");
 
 			if (configuration.stateTree == null && project.file("state.json").exists()) {
 				configuration.stateTree = project.file("state.json");
@@ -72,6 +74,12 @@ public class CodeGen implements Plugin<Project> {
 
 				compileJava.dependsOn(generateHibernateAttributeValueImplementations);
 			}
+
+			// Remove generated sources in clean task
+			clean.dependsOn(project.getTasks().create("cleanGeneratedSources", Delete.class, task -> {
+				task.delete(project.file("gen/main/java"));
+			}));
+
 		});
 	}
 }

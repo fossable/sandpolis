@@ -19,7 +19,7 @@ import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.state.st.STAttribute;
 import com.sandpolis.core.instance.state.st.STAttributeValue;
-import com.sandpolis.core.instance.state.st.STObject;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.state.st.ephemeral.EphemeralAttribute;
 
 import javafx.beans.value.ObservableValueBase;
@@ -88,9 +88,8 @@ public class FxAttribute<T> extends ObservableValueBase<T> implements STAttribut
 	}
 
 	@Override
-	public STObject<?> parent() {
-		// TODO Auto-generated method stub
-		return null;
+	public STDocument parent() {
+		return container.parent();
 	}
 
 }

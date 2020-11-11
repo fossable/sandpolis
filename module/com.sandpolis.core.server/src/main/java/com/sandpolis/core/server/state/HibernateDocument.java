@@ -22,10 +22,8 @@ import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
-import com.sandpolis.core.instance.State.ProtoDocument;
+import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.state.st.AbstractSTDocument;
-import com.sandpolis.core.instance.state.st.STAttribute;
-import com.sandpolis.core.instance.state.st.STCollection;
 import com.sandpolis.core.instance.state.st.STDocument;
 
 /**
@@ -50,17 +48,12 @@ public class HibernateDocument extends AbstractSTDocument implements STDocument 
 	@OneToMany(cascade = CascadeType.ALL)
 	private Map<Integer, HibernateAttribute<?>> attributes;
 
-	public HibernateDocument(HibernateDocument parent) {
-		super(parent, 0);
+	public HibernateDocument(STDocument parent, Oid oid) {
+		super(parent, oid);
 		this.db_id = UUID.randomUUID().toString();
 
 		documents = new HashMap<>();
 		attributes = new HashMap<>();
-	}
-
-	public HibernateDocument(HibernateDocument parent, ProtoDocument document) {
-		this(parent);
-		merge(document);
 	}
 
 //	protected HibernateDocument() {

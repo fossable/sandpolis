@@ -23,7 +23,7 @@ public abstract class AbstractSTDocument extends AbstractSTObject<ProtoDocument>
 
 	protected Map<String, STDocument> documents;
 
-	public AbstractSTDocument(STObject<?> parent, Oid oid) {
+	public AbstractSTDocument(STDocument parent, Oid oid) {
 		super(parent, oid);
 	}
 

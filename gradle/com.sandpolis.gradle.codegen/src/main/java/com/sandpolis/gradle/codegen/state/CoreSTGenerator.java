@@ -18,6 +18,9 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
+import java.util.Collection;
+
+import com.google.common.base.CaseFormat;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -57,6 +60,53 @@ public class CoreSTGenerator extends VSTGenerator {
 					.initializer(initializer);
 
 			oidClass.addField(field.build());
+		}
+	}
+
+	protected void processAttributeRelationList(TypeSpec.Builder parent, AttributeSpec attribute) {
+		var type = ClassName.bestGuess(
+				VST_PREFIX + LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, attribute.type.replaceAll(".*/", "")));
+		{
+			// Add the attribute's getter method
+			var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "get_" + attribute.name)) //
+					.addModifiers(PUBLIC) //
+					.returns(ParameterizedTypeName.get(ClassName.get(Collection.class), type)) //
+					.addStatement("STAttribute<Oid> pointer = document.attribute(\"$L\")", attribute.name) //
+					.addStatement("return null");
+			parent.addMethod(method.build());
+		}
+
+		{
+			// Add the attribute's setter method
+			var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "set_" + attribute.name)) //
+					.addModifiers(PUBLIC) //
+					.addParameter(type, "item") //
+					.addStatement("document.attribute(\"$L\").set(item.oid())", attribute.name);
+			parent.addMethod(method.build());
+		}
+	}
+
+	protected void processAttributeRelation(TypeSpec.Builder parent, AttributeSpec attribute) {
+		var type = ClassName.bestGuess(
+				VST_PREFIX + LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, attribute.type.replaceAll(".*/", "")));
+		{
+			// Add the attribute's getter method
+			var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "get_" + attribute.name)) //
+					.addModifiers(PUBLIC) //
+					.returns(type) //
+					.addStatement("STAttribute<Oid> pointer = document.attribute(\"$L\")", attribute.name) //
+					.addStatement("return new $T($T.STStore.root().getDocument(pointer.get()))", type,
+							ClassName.get("com.sandpolis.core.instance.state", "STStore"));
+			parent.addMethod(method.build());
+		}
+
+		{
+			// Add the attribute's setter method
+			var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, "set_" + attribute.name)) //
+					.addModifiers(PUBLIC) //
+					.addParameter(type, "item") //
+					.addStatement("document.attribute(\"$L\").set(item.oid())", attribute.name);
+			parent.addMethod(method.build());
 		}
 	}
 
@@ -134,7 +184,15 @@ public class CoreSTGenerator extends VSTGenerator {
 
 		if (document.attributes != null) {
 			for (var entry : document.attributes) {
-				processAttribute(documentClass, entry);
+				if (entry.type.contains("/")) {
+					if (entry.list) {
+						processAttributeRelationList(documentClass, entry);
+					} else {
+						processAttributeRelation(documentClass, entry);
+					}
+				} else {
+					processAttribute(documentClass, entry);
+				}
 			}
 		}
 

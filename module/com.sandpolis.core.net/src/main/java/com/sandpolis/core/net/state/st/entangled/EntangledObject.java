@@ -45,7 +45,7 @@ import com.sandpolis.core.net.stream.StreamSource;
  */
 public abstract class EntangledObject<T extends MessageLite> extends AbstractSTObject<T> {
 
-	public EntangledObject(STObject<?> parent, Oid oid) {
+	public EntangledObject(STDocument parent, Oid oid) {
 		super(parent, oid);
 	}
 
