@@ -570,22 +570,147 @@
 		]
 	},
 	{
-		"name": "/profile//sysinfo/power",
+		"name": "/profile//sysinfo/network/route/",
 		"attributes": [
+			{
+				"name": "destination",
+				"type": "java.lang.String",
+				"description": "Destination IP address"
+			},
+			{
+				"name": "netmask",
+				"type": "java.lang.Integer",
+				"description": "Netmask length"
+			},
+			{
+				"name": "gateway",
+				"type": "java.lang.Integer",
+				"description": "Route gateway"
+			},
+			{
+				"name": "source",
+				"type": "java.lang.Integer",
+				"description": "Route source"
+			},
+			{
+				"name": "flags",
+				"type": "java.lang.Integer",
+				"description": "Flags to describe route"
+			},
+			{
+				"name": "interface",
+				"type": "java.lang.String",
+				"description": "Route local interface"
+			},
+			{
+				"name": "mtu",
+				"type": "java.lang.Integer",
+				"description": "Maximum Transmission Unit for the route"
+			},
+			{
+				"name": "metric",
+				"type": "java.lang.Integer",
+				"description": "Cost of route. Lowest is preferred"
+			},
+			{
+				"name": "type",
+				"type": "java.lang.String",
+				"description": "Type of route"
+			},
+			{
+				"name": "hopcount",
+				"type": "java.lang.Integer",
+				"description": "Max hops expected"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/battery",
+		"attributes": [
+			{
+				"name": "manufacturer",
+				"type": "java.lang.String",
+				"description": "The battery manufacturer's name"
+			},
+			{
+				"name": "manufacture_date",
+				"type": "java.lang.Long",
+				"description": "The date the battery was manufactured UNIX Epoch"
+			},
+			{
+				"name": "model",
+				"type": "java.lang.String",
+				"description": "The battery's model number"
+			},
+			{
+				"name": "serial_number",
+				"type": "java.lang.String",
+				"description": "The battery's unique serial number"
+			},
+			{
+				"name": "cycle_count",
+				"type": "java.lang.Integer",
+				"description": "The number of charge/discharge cycles"
+			},
+			{
+				"name": "charging",
+				"type": "java.lang.Boolean",
+				"description": "Whether the battery is currently being changed by a power source"
+			},
+			{
+				"name": "charged",
+				"type": "java.lang.Boolean",
+				"description": "Whether the battery is completely charged"
+			},
+			{
+				"name": "designed_capacity",
+				"type": "java.lang.Integer",
+				"description": "The battery's designed capacity in mAh"
+			},
+			{
+				"name": "max_capacity",
+				"type": "java.lang.Integer",
+				"description": "The battery's actual capacity when it is fully charged in mAh"
+			},
+			{
+				"name": "current_capacity",
+				"type": "java.lang.Integer",
+				"description": "The battery's current charged capacity in mAh"
+			},
+			{
+				"name": "percent_remaining",
+				"type": "java.lang.Integer",
+				"description": "The percentage of battery remaining before it is drained"
+			},
+			{
+				"name": "amperage",
+				"type": "java.lang.Integer",
+				"description": "The battery's current amperage in mA"
+			},
+			{
+				"name": "voltage",
+				"type": "java.lang.Integer",
+				"description": "The battery's current voltage in mV"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/power_sensor/",
+		"attributes": [
+			{
+				"name": "category",
+				"type": "java.lang.String",
+				"description": "The sensor category"
+			},
 			{
 				"name": "name",
 				"type": "java.lang.String",
-				"description": null
+				"description": "Name of power source"
 			},
 			{
-				"name": "remaining_capacity",
-				"type": "java.lang.Double",
-				"description": null
-			},
-			{
-				"name": "remaining_time",
-				"type": "java.lang.Double",
-				"description": null
+				"name": "value",
+				"type": "java.lang.String",
+				"description": "Power in watts"
 			}
 		]
 	},
@@ -687,7 +812,7 @@
 		]
 	},
 	{
-		"name": "/profile//sysinfo/os/process/",
+		"name": "/profile//sysinfo/kernel/process/",
 		"attributes": [
 			{
 				"name": "name",
@@ -799,6 +924,121 @@
 		]
 	},
 	{
+		"name": "/profile//sysinfo/kernel/process//namespace/",
+		"attributes": [
+			{
+				"name": "cgroup_namespace",
+				"type": "java.lang.String",
+				"description": "cgroup namespace inode"
+			},
+			{
+				"name": "ipc_namespace",
+				"type": "java.lang.String",
+				"description": "ipc namespace inode"
+			},
+			{
+				"name": "mnt_namespace",
+				"type": "java.lang.String",
+				"description": "mnt namespace inode"
+			},
+			{
+				"name": "net_namespace",
+				"type": "java.lang.String",
+				"description": "net namespace inode"
+			},
+			{
+				"name": "pid_namespace",
+				"type": "java.lang.String",
+				"description": "mnt namespace inode"
+			},
+			{
+				"name": "user_namespace",
+				"type": "java.lang.String",
+				"description": "user namespace inode"
+			},
+			{
+				"name": "uts_namespace",
+				"type": "java.lang.String",
+				"description": "uts namespace inode"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/kernel/process//file",
+		"attributes": [
+			{
+				"name": "fd",
+				"type": "java.lang.Long",
+				"description": "Process-specific file descriptor number"
+			},
+			{
+				"name": "path",
+				"type": "java.lang.Long",
+				"description": "Filesystem path of descriptor"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/kernel/process//socket",
+		"attributes": [
+			{
+				"name": "fd",
+				"type": "java.lang.Long",
+				"description": "Process-specific file descriptor number"
+			},
+			{
+				"name": "socket",
+				"type": "java.lang.Long",
+				"description": "Socket handle or inode number"
+			},
+			{
+				"name": "family",
+				"type": "java.lang.Long",
+				"description": "Network protocol (IPv4, IPv6)"
+			},
+			{
+				"name": "protocol",
+				"type": "java.lang.Long",
+				"description": "Transport protocol (TCP/UDP)"
+			},
+			{
+				"name": "local_address",
+				"type": "java.lang.String",
+				"description": "Socket local address"
+			},
+			{
+				"name": "remote_address",
+				"type": "java.lang.String",
+				"description": "Socket remote address"
+			},
+			{
+				"name": "local_port",
+				"type": "java.lang.Integer",
+				"description": "Socket local port"
+			},
+			{
+				"name": "remote_port",
+				"type": "java.lang.Integer",
+				"description": "Socket remote port"
+			},
+			{
+				"name": "path",
+				"type": "java.lang.String",
+				"description": "For UNIX sockets (family=AF_UNIX), the domain path"
+			},
+			{
+				"name": "state",
+				"type": "java.lang.String",
+				"description": "TCP socket state"
+			},
+			{
+				"name": "net_namespace",
+				"type": "java.lang.String",
+				"description": "The inode number of the network namespace"
+			}
+		]
+	},
+	{
 		"name": "/profile//sysinfo/os",
 		"attributes": [
 			{
@@ -836,6 +1076,251 @@
 				"type": "java.lang.String",
 				"immutable": true,
 				"description": "The operating system's build number"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/memory",
+		"attributes": [
+			{
+				"name": "total",
+				"type": "java.lang.Long",
+				"description": "The amount of physical RAM in bytes"
+			},
+			{
+				"name": "free",
+				"type": "java.lang.Long",
+				"description": "The amount of physical RAM, in bytes, left unused by the system"
+			},
+			{
+				"name": "file_buffers",
+				"type": "java.lang.Long",
+				"description": "The amount of physical RAM, in bytes, used for file buffers"
+			},
+			{
+				"name": "cached",
+				"type": "java.lang.Long",
+				"description": "The amount of physical RAM, in bytes, used as cache memory"
+			},
+			{
+				"name": "swap_cached",
+				"type": "java.lang.Long",
+				"description": "The amount of sawp, in bytes, used as cache memory"
+			},
+			{
+				"name": "active",
+				"type": "java.lang.Long",
+				"description": "The total amount of buffer or page cache memory, in bytes, that is in active use"
+			},
+			{
+				"name": "inactive",
+				"type": "java.lang.Long",
+				"description": "The total amount of buffer or page cache memory, in bytes, that are free and available"
+			},
+			{
+				"name": "swap_total",
+				"type": "java.lang.Long",
+				"description": "The total amount of swap available, in bytes"
+			},
+			{
+				"name": "swap_free",
+				"type": "java.lang.Long",
+				"description": "The total amount of swap free, in bytes"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/memory/device",
+		"attributes": [
+			{
+				"name": "handle",
+				"type": "java.lang.String",
+				"description": "Handle, or instance number, associated with the structure in SMBIOS"
+			},
+			{
+				"name": "array_handle",
+				"type": "java.lang.String",
+				"description": "The memory array that the device is attached to"
+			},
+			{
+				"name": "form_factor",
+				"type": "java.lang.String",
+				"description": "Implementation form factor for this memory device"
+			},
+			{
+				"name": "total_width",
+				"type": "java.lang.Integer",
+				"description": "Total width, in bits, of this memory device, including any check or error-correction bits"
+			},
+			{
+				"name": "data_width",
+				"type": "java.lang.Integer",
+				"description": "Data width, in bits, of this memory device"
+			},
+			{
+				"name": "size",
+				"type": "java.lang.Integer",
+				"description": "Size of memory device in bytes"
+			},
+			{
+				"name": "set",
+				"type": "java.lang.Integer",
+				"description": "Identifies if memory device is one of a set of devices. A value of 0 indicates no set affiliation."
+			},
+			{
+				"name": "device_location",
+				"type": "java.lang.String",
+				"description": "String number of the string that identifies the physically-labeled socket or board position where the memory device is located"
+			},
+			{
+				"name": "bank_location",
+				"type": "java.lang.String",
+				"description": "String number of the string that identifies the physically-labeled bank where the memory device is located"
+			},
+			{
+				"name": "memory_type",
+				"type": "java.lang.String",
+				"description": "Type of memory used"
+			},
+			{
+				"name": "memory_type_details",
+				"type": "java.lang.String",
+				"description": "Additional details for memory device"
+			},
+			{
+				"name": "max_speed",
+				"type": "java.lang.Integer",
+				"description": "Max speed of memory device in megatransfers per second (MT/s)"
+			},
+			{
+				"name": "configured_clock_speed",
+				"type": "java.lang.Integer",
+				"description": "Configured speed of memory device in megatransfers per second (MT/s)"
+			},
+			{
+				"name": "manufacturer",
+				"type": "java.lang.String",
+				"description": "Manufacturer ID string"
+			},
+			{
+				"name": "serial_number",
+				"type": "java.lang.String",
+				"description": "Serial number of memory device"
+			},
+			{
+				"name": "asset_tag",
+				"type": "java.lang.String",
+				"description": "Manufacturer specific asset tag of memory device"
+			},
+			{
+				"name": "part_number",
+				"type": "java.lang.String",
+				"description": "Manufacturer specific serial number of memory device"
+			},
+			{
+				"name": "min_voltage",
+				"type": "java.lang.Integer",
+				"description": "Minimum operating voltage of device in millivolts"
+			},
+			{
+				"name": "max_voltage",
+				"type": "java.lang.Integer",
+				"description": "Maximum operating voltage of device in millivolts"
+			},
+			{
+				"name": "configured_voltage",
+				"type": "java.lang.Integer",
+				"description": "Configured operating voltage of device in millivolts"
+			}
+		]
+	},
+	{
+		"name":"/profile//sysinfo/network/arp_cache/",
+		"attributes":[
+			{
+				"name": "address",
+				"type": "java.lang.String",
+				"description": "IPv4 address target"
+			},
+			{
+				"name": "mac",
+				"type": "java.lang.String",
+				"description": "MAC address of broadcasted address"
+			},
+			{
+				"name": "interface",
+				"type": "java.lang.String",
+				"description": "Interface of the network for the MAC"
+			},
+			{
+				"name": "permanent",
+				"type": "java.lang.Boolean",
+				"description": "Whether the ARP entry is permanent"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/network/host/",
+		"attributes": [
+			{
+				"name": "address",
+				"type": "java.lang.String",
+				"description": "IP address mapping"
+			},
+			{
+				"name": "hostnames",
+				"type": "java.lang.String",
+				"description": "Raw hosts mapping"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/block_device/",
+		"attributes": [
+			{
+				"name": "name",
+				"type": "java.lang.String",
+				"description": "Block device name"
+			},
+			{
+				"name": "parent",
+				"type": "java.lang.String",
+				"description": "Block device parent name"
+			},
+			{
+				"name": "vendor",
+				"type": "java.lang.String",
+				"description": "Block device vendor string"
+			},
+			{
+				"name": "model",
+				"type": "java.lang.String",
+				"description": "Block device model string identifier"
+			},
+			{
+				"name": "size",
+				"type": "java.lang.Long",
+				"description": "Block device size in blocks"
+			},
+			{
+				"name": "block_size",
+				"type": "java.lang.Integer",
+				"description": "Block size in bytes"
+			},
+			{
+				"name": "uuid",
+				"type": "java.lang.String",
+				"description": "Block device Universally Unique Identifier"
+			},
+			{
+				"name": "type",
+				"type": "java.lang.String",
+				"description": "Block device type string"
+			},
+			{
+				"name": "label",
+				"type": "java.lang.String",
+				"description": "Block device label string"
 			}
 		]
 	}
