@@ -14,7 +14,7 @@ plugins {
 	id "eclipse"
 	id "java-library"
 
-	id "org.openjfx.javafxplugin" version "0.0.8"
+	id "org.openjfx.javafxplugin" version "0.0.9"
 	id "com.github.breadmoirai.github-release" version "2.2.9"
 }
 
