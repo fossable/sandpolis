@@ -81,6 +81,15 @@ spotless {
 
 		licenseHeaderFile file("gradle/resources/header_gradle.txt"), "(plugins|buildscript)"
 	}
+	format "gradleKotlin", {
+		target "**/build.gradle.kts"
+
+		trimTrailingWhitespace()
+		endWithNewline()
+		indentWithTabs()
+
+		licenseHeaderFile file("gradle/resources/header_gradle.txt"), "(plugins|import)"
+	}
 	format "swift", {
 		target "**/*.swift"
 
@@ -159,7 +168,7 @@ subprojects {
 
 // All modules that will be published to the release repository
 def publishProjects = [
-	"com.sandpolis.agent.micro",
+	//"com.sandpolis.agent.micro",
 	"com.sandpolis.agent.vanilla",
 	"com.sandpolis.client.ascetic",
 	"com.sandpolis.client.lifegem",

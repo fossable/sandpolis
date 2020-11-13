@@ -71,6 +71,9 @@ extraJavaModuleInfo {
 	automaticModule("dom4j-1.6.1.jar", "dom4j")
 	automaticModule("failureaccess-1.0.1.jar", "failureaccess")
 	automaticModule("checker-framework-1.7.0.jar", "checker.framework")
+	automaticModule("sandpolis-agent-installer-go-6.1.1.jar", "com.sandpolis.agent.installer.go")
+	automaticModule("sandpolis-agent-installer-py-6.1.1.jar", "com.sandpolis.agent.installer.py")
+	automaticModule("sandpolis-agent-installer-jar-6.1.1.jar", "com.sandpolis.agent.installer.jar")
 }
 
 val imageSyncBuildContext by tasks.creating(Sync::class) {
@@ -87,26 +90,7 @@ val imageBuild by tasks.creating(DockerBuildImage::class) {
 	images.add("sandpolis/server/vanilla:latest")
 }
 
-val createTestContainer by tasks.creating(DockerCreateContainer::class) {
+task<Exec>("imageTest") {
 	dependsOn(imageBuild)
-	targetImageId(imageBuild.getImageId())
-	hostConfig.portBindings.set(listOf("8768:8768"))
-	hostConfig.autoRemove.set(true)
-	attachStdout.set(true)
-	attachStderr.set(true)
-	attachStdin.set(true)
-}
-
-val startTestContainer by tasks.creating(DockerStartContainer::class) {
-	dependsOn(createTestContainer)
-	targetContainerId(createTestContainer.getContainerId())
-}
-
-val stopTestContainer by tasks.creating(DockerStopContainer::class) {
-	targetContainerId(createTestContainer.getContainerId())
-}
-
-tasks.create("imageTest") {
-	dependsOn(startTestContainer)
-	finalizedBy(stopTestContainer)
+	commandLine("docker", "run", "-p", "8768:8768", "--rm", "sandpolis/server/vanilla:latest")
 }

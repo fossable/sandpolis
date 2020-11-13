@@ -11,36 +11,10 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id "eclipse"
-	id "java-library"
-
-	id "com.sandpolis.gradle.soi"
-	id "com.bmuschko.docker-remote-api" version "6.6.0"
+	id("org.openbakery.xcode-plugin") version "0.20.0"
 }
 
-eclipse {
-	project {
-		name = "com.sandpolis.agent.vanilla"
-		comment = "The vanilla agent"
-	}
-}
-
-dependencies {
-	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
-	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
-
-	implementation project(":module:com.sandpolis.core.agent")
-
-	// https://github.com/javaee/jpa-spec
-	implementation("javax.persistence:javax.persistence-api:2.2")
-}
-
-task dockerSyncBuildContext(type: Sync, dependsOn: jar) {
-	from configurations.runtimeClasspath, jar
-	into "${buildDir}/docker/lib"
-}
-
-task dockerBuildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: dockerSyncBuildContext) {
-	inputDir = file(".")
-	images = ["sandpolis/agent/vanilla:${project.version}", "sandpolis/agent/vanilla:latest"]
+xcodebuild {
+	scheme = "SandpolisClient"
+	target = "SandpolisClient"
 }

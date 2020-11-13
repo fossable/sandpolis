@@ -10,33 +10,35 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 
-plugins {
-	id "eclipse"
-	id "java-library"
+import com.bmuschko.gradle.docker.tasks.container.*
+import com.bmuschko.gradle.docker.tasks.image.*
 
-	id "com.sandpolis.gradle.soi"
-	id "org.openjfx.javafxplugin" version "0.0.8"
-	id "com.bmuschko.docker-remote-api" version "6.6.0"
+plugins {
+	id("eclipse")
+	id("java-library")
+
+	id("com.sandpolis.gradle.soi")
+	id("com.sandpolis.gradle.codegen")
+	id("org.openjfx.javafxplugin") version "0.0.8"
+	id("com.bmuschko.docker-remote-api") version "6.6.0"
 }
 
-apply plugin: "com.sandpolis.gradle.codegen"
-
 javafx {
-	modules = [ "javafx.controls", "javafx.fxml", "javafx.graphics" ]
+	modules = listOf( "javafx.controls", "javafx.fxml", "javafx.graphics" )
 	version = "15"
 }
 
 eclipse {
 	project {
-		name = "com.sandpolis.client.lifegem"
-		comment = "The JavaFX client instance"
+		name = project.name
+		comment = project.name
 	}
 }
 
 sourceSets {
 	main {
 		java {
-			srcDirs "gen/main/java"
+			srcDirs("gen/main/java")
 		}
 	}
 }
@@ -49,7 +51,7 @@ dependencies {
 	testImplementation("org.testfx:openjfx-monocle:jdk-12.0.1+2")
 	testImplementation("org.awaitility:awaitility:4.0.1")
 
-	implementation project(":module:com.sandpolis.core.client")
+	implementation(project(":module:com.sandpolis.core.client"))
 
 	// https://github.com/sirolf2009/fxgraph
 	implementation("com.sirolf2009:fxgraph:0.0.3")
@@ -61,17 +63,26 @@ dependencies {
 	implementation("javax.persistence:javax.persistence-api:2.2")
 }
 
-task dockerSyncBuildContext(type: Sync, dependsOn: jar) {
-	from configurations.runtimeClasspath, jar
-	into "${buildDir}/docker/lib"
-}
-
-task dockerBuildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: dockerSyncBuildContext) {
-	inputDir = file(".")
-	images = ["sandpolis/client/lifegem:${project.version}", "sandpolis/client/lifegem:latest"]
-}
-
 codegen {
 	stateTree = project(":module:com.sandpolis.core.instance").file("state.json")
 	javaFxStateTree = true
+}
+
+val imageSyncBuildContext by tasks.creating(Sync::class) {
+	dependsOn(tasks.named("jar"))
+	from(configurations.runtimeClasspath)
+	from(tasks.named("jar"))
+	into("${buildDir}/docker/lib")
+}
+
+val imageBuild by tasks.creating(DockerBuildImage::class) {
+	dependsOn(imageSyncBuildContext)
+	inputDir.set(file("."))
+	images.add("sandpolis/client/lifegem:${project.version}")
+	images.add("sandpolis/client/lifegem:latest")
+}
+
+task<Exec>("imageTest") {
+	dependsOn(imageBuild)
+	commandLine("docker", "run", "-v", "/tmp/.X11-unix/:/tmp/.X11-unix/", "-e", "DISPLAY", "--net", "host", "--rm", "sandpolis/client/lifegem:latest")
 }
