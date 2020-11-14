@@ -5,23 +5,27 @@
 			{
 				"name": "name",
 				"type": "java.lang.String",
-				"immutable": true,
-				"description": "The interface's name"
+				"id": true,
+				"description": "The interface's name",
+				"osquery": "interface_details.interface"
 			},
 			{
 				"name": "description",
 				"type": "java.lang.String",
-				"description": "The interface's description"
+				"description": "The interface's description",
+				"osquery": "interface_details.description"
 			},
 			{
 				"name": "mtu",
 				"type": "java.lang.Integer",
-				"description": "The interface's maximum transmission unit in bytes"
+				"description": "The interface's maximum transmission unit in bytes",
+				"osquery": "interface_details.mtu"
 			},
 			{
 				"name": "mac",
 				"type": "java.lang.String",
-				"description": null
+				"description": "The interface's MAC address",
+				"osquery": "interface_details.mac"
 			},
 			{
 				"name": "virtual",
@@ -53,52 +57,62 @@
 			{
 				"name": "read_bytes",
 				"type": "java.lang.Long",
-				"description": "The number of bytes read from the interface"
+				"description": "The number of bytes read from the interface",
+				"osquery": "interface_details.ibytes"
 			},
 			{
 				"name": "write_bytes",
 				"type": "java.lang.Long",
-				"description": "The number of bytes written to the interface"
+				"description": "The number of bytes written to the interface",
+				"osquery": "interface_details.obytes"
 			},
 			{
 				"name": "read_packets",
 				"type": "java.lang.Long",
-				"description": "The number of packets read from the interface"
+				"description": "The number of packets read from the interface",
+				"osquery": "interface_details.ipackets"
 			},
 			{
 				"name": "write_packets",
 				"type": "java.lang.Long",
-				"description": "The number of packets written to the interface"
+				"description": "The number of packets written to the interface",
+				"osquery": "interface_details.opackets"
 			},
 			{
 				"name": "read_errors",
 				"type": "java.lang.Long",
-				"description": "The number of read errors"
+				"description": "The number of read errors",
+				"osquery": "interface_details.ierrors"
 			},
 			{
 				"name": "write_errors",
 				"type": "java.lang.Long",
-				"description": "The number of write errors"
+				"description": "The number of write errors",
+				"osquery": "interface_details.oerrors"
 			},
 			{
 				"name": "read_drops",
 				"type": "java.lang.Long",
-				"description": "The number of read drops"
+				"description": "The number of read drops",
+				"osquery": "interface_details.idrops"
 			},
 			{
 				"name": "write_drops",
 				"type": "java.lang.Long",
-				"description": "The number of write drops"
+				"description": "The number of write drops",
+				"osquery": "interface_details.odrops"
 			},
 			{
 				"name": "write_collisions",
 				"type": "java.lang.Long",
-				"description": "The number of write collisions"
+				"description": "The number of write collisions",
+				"osquery": "interface_details.collisions"
 			},
 			{
 				"name": "link_speed",
 				"type": "java.lang.Long",
-				"description": "The interface's maximum speed in bytes"
+				"description": "The interface's maximum speed in bytes",
+				"osquery": "interface_details.link_speed"
 			},
 			{
 				"name": "default_gateway",
@@ -278,7 +292,8 @@
 			{
 				"name": "rotation_rate",
 				"type": "java.lang.Long",
-				"description": null
+				"description": "Drive rotations per minute",
+				"osquery": "smart_drive_info.rotation_rate"
 			},
 			{
 				"name": "spin_up_time",
@@ -410,7 +425,7 @@
 			{
 				"name": "tid",
 				"type": "java.lang.Integer",
-				"immutable": true,
+				"id": true,
 				"description": "The thread's ID"
 			}
 		]
@@ -598,7 +613,7 @@
 				"description": "Flags to describe route"
 			},
 			{
-				"name": "interface",
+				"name": "interface_id",
 				"type": "java.lang.String",
 				"description": "Route local interface"
 			},
@@ -630,67 +645,80 @@
 			{
 				"name": "manufacturer",
 				"type": "java.lang.String",
-				"description": "The battery manufacturer's name"
+				"description": "The battery manufacturer's name",
+				"osquery": "battery.manufacturer"
 			},
 			{
 				"name": "manufacture_date",
 				"type": "java.lang.Long",
-				"description": "The date the battery was manufactured UNIX Epoch"
+				"description": "The date the battery was manufactured UNIX Epoch",
+				"osquery": "battery.manufacture_date"
 			},
 			{
 				"name": "model",
 				"type": "java.lang.String",
-				"description": "The battery's model number"
+				"description": "The battery's model number",
+				"osquery": "battery.model"
 			},
 			{
 				"name": "serial_number",
 				"type": "java.lang.String",
-				"description": "The battery's unique serial number"
+				"description": "The battery's unique serial number",
+				"osquery": "battery.serial_number"
 			},
 			{
 				"name": "cycle_count",
 				"type": "java.lang.Integer",
-				"description": "The number of charge/discharge cycles"
+				"description": "The number of charge/discharge cycles",
+				"osquery": "battery.cycle_count"
 			},
 			{
 				"name": "charging",
 				"type": "java.lang.Boolean",
-				"description": "Whether the battery is currently being changed by a power source"
+				"description": "Whether the battery is currently being changed by a power source",
+				"osquery": "battery.charging"
 			},
 			{
 				"name": "charged",
 				"type": "java.lang.Boolean",
-				"description": "Whether the battery is completely charged"
+				"description": "Whether the battery is completely charged",
+				"osquery": "battery.charged"
 			},
 			{
 				"name": "designed_capacity",
 				"type": "java.lang.Integer",
-				"description": "The battery's designed capacity in mAh"
+				"description": "The battery's designed capacity in mAh",
+				"osquery": "battery.designed_capacity"
 			},
 			{
 				"name": "max_capacity",
 				"type": "java.lang.Integer",
-				"description": "The battery's actual capacity when it is fully charged in mAh"
+				"description": "The battery's actual capacity when it is fully charged in mAh",
+				"osquery": "battery.max_capacity"
 			},
 			{
 				"name": "current_capacity",
 				"type": "java.lang.Integer",
-				"description": "The battery's current charged capacity in mAh"
+				"description": "The battery's current charged capacity in mAh",
+				"osquery": "battery.current_capacity"
 			},
 			{
 				"name": "percent_remaining",
 				"type": "java.lang.Integer",
-				"description": "The percentage of battery remaining before it is drained"
+				"description": "The percentage of battery remaining before it is drained",
+				"osquery": "battery.percent_remaining"
 			},
 			{
 				"name": "amperage",
 				"type": "java.lang.Integer",
-				"description": "The battery's current amperage in mA"
+				"description": "The battery's current amperage in mA",
+				"osquery": "battery.amperage"
 			},
 			{
 				"name": "voltage",
 				"type": "java.lang.Integer",
-				"description": "The battery's current voltage in mV"
+				"description": "The battery's current voltage in mV",
+				"osquery": "battery.voltage"
 			}
 		]
 	},
@@ -791,27 +819,6 @@
 		]
 	},
 	{
-		"name": "/profile//sysinfo/os/user/",
-		"attributes": [
-			{
-				"name": "uid",
-				"type": "java.lang.String",
-				"immutable": true,
-				"description": null
-			},
-			{
-				"name": "username",
-				"type": "java.lang.String",
-				"description": "The user's username"
-			},
-			{
-				"name": "home",
-				"type": "java.lang.String",
-				"description": "The user's home directory path"
-			}
-		]
-	},
-	{
 		"name": "/profile//sysinfo/kernel/process/",
 		"attributes": [
 			{
@@ -828,12 +835,14 @@
 			{
 				"name": "command",
 				"type": "java.lang.String",
-				"description": null
+				"description": null,
+				"osquery": "processes.cmdline"
 			},
 			{
 				"name": "working_directory",
 				"type": "java.lang.String",
-				"description": null
+				"description": null,
+				"osquery": "processes.cwd"
 			},
 			{
 				"name": "user",
@@ -843,7 +852,8 @@
 			{
 				"name": "user_id",
 				"type": "java.lang.String",
-				"description": null
+				"description": null,
+				"osquery": "processes.uid"
 			},
 			{
 				"name": "group",
@@ -853,28 +863,33 @@
 			{
 				"name": "group_id",
 				"type": "java.lang.String",
-				"description": null
+				"description": null,
+				"osquery": "processes.gid"
 			},
 			{
 				"name": "state",
 				"type": "java.lang.String",
-				"description": null
+				"description": null,
+				"osquery": "processes.state"
 			},
 			{
 				"name": "pid",
 				"type": "java.lang.Integer",
-				"immutable": true,
-				"description": "The process's process ID"
+				"id": true,
+				"description": "The process's process ID",
+				"osquery": "processes.pid"
 			},
 			{
 				"name": "parent_pid",
 				"type": "java.lang.Integer",
-				"description": null
+				"description": null,
+				"osquery": "processes.parent"
 			},
 			{
 				"name": "thread_count",
 				"type": "java.lang.Integer",
-				"description": null
+				"description": null,
+				"osquery": "processes.threads"
 			},
 			{
 				"name": "priority",
@@ -889,37 +904,44 @@
 			{
 				"name": "resident_set_size",
 				"type": "java.lang.Long",
-				"description": "The resident memory size in bytes"
+				"description": "The resident memory size in bytes",
+				"osquery": "processes.resident_size"
 			},
 			{
 				"name": "kernel_time",
 				"type": "java.lang.Long",
-				"description": "The number of milliseconds the process has executed in kernel mode"
+				"description": "The number of milliseconds the process has executed in kernel mode",
+				"osquery": "processes.system_time"
 			},
 			{
 				"name": "user_time",
 				"type": "java.lang.Long",
-				"description": "The number of milliseconds the process has executed in user mode"
+				"description": "The number of milliseconds the process has executed in user mode",
+				"osquery": "processes.user_time"
 			},
 			{
 				"name": "start_time",
 				"type": "java.lang.Long",
-				"description": "The epoch timestamp of the process start time"
+				"description": "The epoch timestamp of the process start time",
+				"osquery": "processes.start_time"
 			},
 			{
 				"name": "bytes_read",
 				"type": "java.lang.Long",
-				"description": "The number of bytes the process has read from disk"
+				"description": "The number of bytes the process has read from disk",
+				"osquery": "processes.disk_bytes_read"
 			},
 			{
 				"name": "bytes_written",
 				"type": "java.lang.Long",
-				"description": "The number of bytes the process has written to disk"
+				"description": "The number of bytes the process has written to disk",
+				"osquery": "processes.disk_bytes_written"
 			},
 			{
 				"name": "handle_count",
 				"type": "java.lang.Long",
-				"description": "The number of file handles that the process owns"
+				"description": "The number of file handles that the process owns",
+				"osquery": "processes.handle_count"
 			}
 		]
 	},
@@ -984,57 +1006,68 @@
 			{
 				"name": "fd",
 				"type": "java.lang.Long",
-				"description": "Process-specific file descriptor number"
+				"description": "Process-specific file descriptor number",
+				"osquery": "process_open_sockets.fd"
 			},
 			{
 				"name": "socket",
 				"type": "java.lang.Long",
-				"description": "Socket handle or inode number"
+				"description": "Socket handle or inode number",
+				"osquery": "process_open_sockets.socket"
 			},
 			{
 				"name": "family",
 				"type": "java.lang.Long",
-				"description": "Network protocol (IPv4, IPv6)"
+				"description": "Network protocol (IPv4, IPv6)",
+				"osquery": "process_open_sockets.family"
 			},
 			{
 				"name": "protocol",
 				"type": "java.lang.Long",
-				"description": "Transport protocol (TCP/UDP)"
+				"description": "Transport protocol (TCP/UDP)",
+				"osquery": "process_open_sockets.protocol"
 			},
 			{
 				"name": "local_address",
 				"type": "java.lang.String",
-				"description": "Socket local address"
+				"description": "Socket local address",
+				"osquery": "process_open_sockets.local_address"
 			},
 			{
 				"name": "remote_address",
 				"type": "java.lang.String",
-				"description": "Socket remote address"
+				"description": "Socket remote address",
+				"osquery": "process_open_sockets.remote_address"
 			},
 			{
 				"name": "local_port",
 				"type": "java.lang.Integer",
-				"description": "Socket local port"
+				"description": "Socket local port",
+				"osquery": "process_open_sockets.local_port"
 			},
 			{
 				"name": "remote_port",
 				"type": "java.lang.Integer",
-				"description": "Socket remote port"
+				"description": "Socket remote port",
+				"osquery": "process_open_sockets.remote_port"
 			},
 			{
 				"name": "path",
 				"type": "java.lang.String",
-				"description": "For UNIX sockets (family=AF_UNIX), the domain path"
+				"description": "For UNIX sockets (family=AF_UNIX), the domain path",
+				"osquery": "process_open_sockets.path"
 			},
 			{
 				"name": "state",
 				"type": "java.lang.String",
-				"description": "TCP socket state"
+				"description": "TCP socket state",
+				"osquery": "process_open_sockets.state"
 			},
 			{
 				"name": "net_namespace",
 				"type": "java.lang.String",
-				"description": "The inode number of the network namespace"
+				"description": "The inode number of the network namespace",
+				"osquery": "process_open_sockets.net_namespace"
 			}
 		]
 	},
@@ -1085,47 +1118,56 @@
 			{
 				"name": "total",
 				"type": "java.lang.Long",
-				"description": "The amount of physical RAM in bytes"
+				"description": "The amount of physical RAM in bytes",
+				"osquery": "memory_info.memory_total"
 			},
 			{
 				"name": "free",
 				"type": "java.lang.Long",
-				"description": "The amount of physical RAM, in bytes, left unused by the system"
+				"description": "The amount of physical RAM, in bytes, left unused by the system",
+				"osquery": "memory_info.memory_free"
 			},
 			{
 				"name": "file_buffers",
 				"type": "java.lang.Long",
-				"description": "The amount of physical RAM, in bytes, used for file buffers"
+				"description": "The amount of physical RAM, in bytes, used for file buffers",
+				"osquery": "memory_info.buffers"
 			},
 			{
 				"name": "cached",
 				"type": "java.lang.Long",
-				"description": "The amount of physical RAM, in bytes, used as cache memory"
+				"description": "The amount of physical RAM, in bytes, used as cache memory",
+				"osquery": "memory_info.cached"
 			},
 			{
 				"name": "swap_cached",
 				"type": "java.lang.Long",
-				"description": "The amount of sawp, in bytes, used as cache memory"
+				"description": "The amount of sawp, in bytes, used as cache memory",
+				"osquery": "memory_info.swap_cached"
 			},
 			{
 				"name": "active",
 				"type": "java.lang.Long",
-				"description": "The total amount of buffer or page cache memory, in bytes, that is in active use"
+				"description": "The total amount of buffer or page cache memory, in bytes, that is in active use",
+				"osquery": "memory_info.active"
 			},
 			{
 				"name": "inactive",
 				"type": "java.lang.Long",
-				"description": "The total amount of buffer or page cache memory, in bytes, that are free and available"
+				"description": "The total amount of buffer or page cache memory, in bytes, that are free and available",
+				"osquery": "memory_info.inactive"
 			},
 			{
 				"name": "swap_total",
 				"type": "java.lang.Long",
-				"description": "The total amount of swap available, in bytes"
+				"description": "The total amount of swap available, in bytes",
+				"osquery": "memory_info.swap_total"
 			},
 			{
 				"name": "swap_free",
 				"type": "java.lang.Long",
-				"description": "The total amount of swap free, in bytes"
+				"description": "The total amount of swap free, in bytes",
+				"osquery": "memory_info.swap_free"
 			}
 		]
 	},
@@ -1135,102 +1177,122 @@
 			{
 				"name": "handle",
 				"type": "java.lang.String",
-				"description": "Handle, or instance number, associated with the structure in SMBIOS"
+				"description": "Handle, or instance number, associated with the structure in SMBIOS",
+				"osquery": "memory_devices.handle"
 			},
 			{
 				"name": "array_handle",
 				"type": "java.lang.String",
-				"description": "The memory array that the device is attached to"
+				"description": "The memory array that the device is attached to",
+				"osquery": "memory_devices.array_handle"
 			},
 			{
 				"name": "form_factor",
 				"type": "java.lang.String",
-				"description": "Implementation form factor for this memory device"
+				"description": "Implementation form factor for this memory device",
+				"osquery": "memory_devices.form_factor"
 			},
 			{
 				"name": "total_width",
 				"type": "java.lang.Integer",
-				"description": "Total width, in bits, of this memory device, including any check or error-correction bits"
+				"description": "Total width, in bits, of this memory device, including any check or error-correction bits",
+				"osquery": "memory_devices.total_width"
 			},
 			{
 				"name": "data_width",
 				"type": "java.lang.Integer",
-				"description": "Data width, in bits, of this memory device"
+				"description": "Data width, in bits, of this memory device",
+				"osquery": "memory_devices.data_width"
 			},
 			{
 				"name": "size",
 				"type": "java.lang.Integer",
-				"description": "Size of memory device in bytes"
+				"description": "Size of memory device in bytes",
+				"osquery": "memory_devices.size"
 			},
 			{
 				"name": "set",
 				"type": "java.lang.Integer",
-				"description": "Identifies if memory device is one of a set of devices. A value of 0 indicates no set affiliation."
+				"description": "Identifies if memory device is one of a set of devices. A value of 0 indicates no set affiliation.",
+				"osquery": "memory_devices.set"
 			},
 			{
 				"name": "device_location",
 				"type": "java.lang.String",
-				"description": "String number of the string that identifies the physically-labeled socket or board position where the memory device is located"
+				"description": "String number of the string that identifies the physically-labeled socket or board position where the memory device is located",
+				"osquery": "memory_devices.device_location"
 			},
 			{
 				"name": "bank_location",
 				"type": "java.lang.String",
-				"description": "String number of the string that identifies the physically-labeled bank where the memory device is located"
+				"description": "String number of the string that identifies the physically-labeled bank where the memory device is located",
+				"osquery": "memory_devices.bank_location"
 			},
 			{
 				"name": "memory_type",
 				"type": "java.lang.String",
-				"description": "Type of memory used"
+				"description": "Type of memory used",
+				"osquery": "memory_devices.memory_type"
 			},
 			{
 				"name": "memory_type_details",
 				"type": "java.lang.String",
-				"description": "Additional details for memory device"
+				"description": "Additional details for memory device",
+				"osquery": "memory_devices.memory_type_details"
 			},
 			{
 				"name": "max_speed",
 				"type": "java.lang.Integer",
-				"description": "Max speed of memory device in megatransfers per second (MT/s)"
+				"description": "Max speed of memory device in megatransfers per second (MT/s)",
+				"osquery": "memory_devices.max_speed"
 			},
 			{
 				"name": "configured_clock_speed",
 				"type": "java.lang.Integer",
-				"description": "Configured speed of memory device in megatransfers per second (MT/s)"
+				"description": "Configured speed of memory device in megatransfers per second (MT/s)",
+				"osquery": "memory_devices.configured_clock_speed"
 			},
 			{
 				"name": "manufacturer",
 				"type": "java.lang.String",
-				"description": "Manufacturer ID string"
+				"description": "Manufacturer ID string",
+				"osquery": "memory_devices.manufacturer"
 			},
 			{
 				"name": "serial_number",
 				"type": "java.lang.String",
-				"description": "Serial number of memory device"
+				"description": "Serial number of memory device",
+				"osquery": "memory_devices.serial_number"
 			},
 			{
 				"name": "asset_tag",
 				"type": "java.lang.String",
-				"description": "Manufacturer specific asset tag of memory device"
+				"description": "Manufacturer specific asset tag of memory device",
+				"osquery": "memory_devices.asset_tag"
 			},
 			{
 				"name": "part_number",
 				"type": "java.lang.String",
-				"description": "Manufacturer specific serial number of memory device"
+				"description": "Manufacturer specific serial number of memory device",
+				"osquery": "memory_devices.part_number"
 			},
 			{
 				"name": "min_voltage",
 				"type": "java.lang.Integer",
-				"description": "Minimum operating voltage of device in millivolts"
+				"description": "Minimum operating voltage of device in millivolts",
+				"osquery": "memory_devices.min_voltage"
 			},
 			{
 				"name": "max_voltage",
 				"type": "java.lang.Integer",
-				"description": "Maximum operating voltage of device in millivolts"
+				"description": "Maximum operating voltage of device in millivolts",
+				"osquery": "memory_devices.max_voltage"
 			},
 			{
 				"name": "configured_voltage",
 				"type": "java.lang.Integer",
-				"description": "Configured operating voltage of device in millivolts"
+				"description": "Configured operating voltage of device in millivolts",
+				"osquery": "memory_devices.configured_voltage"
 			}
 		]
 	},
@@ -1240,22 +1302,26 @@
 			{
 				"name": "address",
 				"type": "java.lang.String",
-				"description": "IPv4 address target"
+				"description": "IPv4 address target",
+				"osquery": "arp_cache.address"
 			},
 			{
 				"name": "mac",
 				"type": "java.lang.String",
-				"description": "MAC address of broadcasted address"
+				"description": "MAC address of broadcasted address",
+				"osquery": "arp_cache.mac"
 			},
 			{
-				"name": "interface",
+				"name": "interface_id",
 				"type": "java.lang.String",
-				"description": "Interface of the network for the MAC"
+				"description": "Interface of the network for the MAC",
+				"osquery": "arp_cache.interface"
 			},
 			{
 				"name": "permanent",
 				"type": "java.lang.Boolean",
-				"description": "Whether the ARP entry is permanent"
+				"description": "Whether the ARP entry is permanent",
+				"osquery": "arp_cache.permanent"
 			}
 		]
 	},
@@ -1265,12 +1331,14 @@
 			{
 				"name": "address",
 				"type": "java.lang.String",
-				"description": "IP address mapping"
+				"description": "IP address mapping",
+				"osquery": "etc_hosts.address"
 			},
 			{
 				"name": "hostnames",
 				"type": "java.lang.String",
-				"description": "Raw hosts mapping"
+				"description": "Raw hosts mapping",
+				"osquery": "etc_hosts.hostnames"
 			}
 		]
 	},
@@ -1280,47 +1348,97 @@
 			{
 				"name": "name",
 				"type": "java.lang.String",
-				"description": "Block device name"
+				"description": "Block device name",
+				"osquery": "block_devices.name"
 			},
 			{
 				"name": "parent",
 				"type": "java.lang.String",
-				"description": "Block device parent name"
+				"description": "Block device parent name",
+				"osquery": "block_devices.parent"
 			},
 			{
 				"name": "vendor",
 				"type": "java.lang.String",
-				"description": "Block device vendor string"
+				"description": "Block device vendor string",
+				"osquery": "block_devices.vendor"
 			},
 			{
 				"name": "model",
 				"type": "java.lang.String",
-				"description": "Block device model string identifier"
+				"description": "Block device model string identifier",
+				"osquery": "block_devices.model"
 			},
 			{
 				"name": "size",
 				"type": "java.lang.Long",
-				"description": "Block device size in blocks"
+				"description": "Block device size in blocks",
+				"osquery": "block_devices.size"
 			},
 			{
 				"name": "block_size",
 				"type": "java.lang.Integer",
-				"description": "Block size in bytes"
+				"description": "Block size in bytes",
+				"osquery": "block_devices.block_size"
 			},
 			{
 				"name": "uuid",
 				"type": "java.lang.String",
-				"description": "Block device Universally Unique Identifier"
+				"description": "Block device Universally Unique Identifier",
+				"osquery": "block_devices.uuid"
 			},
 			{
 				"name": "type",
 				"type": "java.lang.String",
-				"description": "Block device type string"
+				"description": "Block device type string",
+				"osquery": "block_devices.type"
 			},
 			{
 				"name": "label",
 				"type": "java.lang.String",
-				"description": "Block device label string"
+				"description": "Block device label string",
+				"osquery": "block_devices.label"
+			}
+		]
+	},
+	{
+		"name":"/profile//sysinfo/user/",
+		"attributes": [
+			{
+				"name": "uid",
+				"type": "java.lang.Long",
+				"description": "User ID",
+				"osquery": "users.uid"
+			},
+			{
+				"name": "gid",
+				"type": "java.lang.Long",
+				"description": "Group ID",
+				"osquery": "users.gid"
+			},
+			{
+				"name": "username",
+				"type": "java.lang.String",
+				"description": "Username",
+				"osquery": "users.username"
+			},
+			{
+				"name": "description",
+				"type": "java.lang.String",
+				"description": "Description",
+				"osquery": "users.description"
+			},
+			{
+				"name": "directory",
+				"type": "java.lang.String",
+				"description": "Home directory",
+				"osquery": "users.directory"
+			},
+			{
+				"name": "shell",
+				"type": "java.lang.String",
+				"description": "The user's default shell",
+				"osquery": "users.shell"
 			}
 		]
 	}
