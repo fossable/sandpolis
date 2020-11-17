@@ -1075,6 +1075,13 @@
 		"name": "/profile//sysinfo/os",
 		"attributes": [
 			{
+				"name": "name",
+				"type": "java.lang.String",
+				"immutable": true,
+				"description": "Distribution name",
+				"osquery": "os_version.name"
+			},
+			{
 				"name": "family",
 				"type": "java.lang.String",
 				"immutable": true,
@@ -1096,19 +1103,42 @@
 				"name": "version",
 				"type": "java.lang.String",
 				"immutable": true,
-				"description": "The operating system's primary version"
+				"description": "The operating system's primary version",
+				"osquery": "os_version.version"
+			},
+			{
+				"name": "major_version",
+				"type": "java.lang.Integer",
+				"immutable": true,
+				"description": "Major release version",
+				"osquery": "os_version.major"
+			},
+			{
+				"name": "minor_version",
+				"type": "java.lang.Integer",
+				"immutable": true,
+				"description": "Minor release version",
+				"osquery": "os_version.minor"
 			},
 			{
 				"name": "codename",
 				"type": "java.lang.String",
 				"immutable": true,
-				"description": "The operating system's code name"
+				"description": "The operating system's code name",
+				"osquery": "os_version.codename"
 			},
 			{
 				"name": "build_number",
 				"type": "java.lang.String",
 				"immutable": true,
 				"description": "The operating system's build number"
+			},
+			{
+				"name": "arch",
+				"type": "java.lang.String",
+				"immutable": true,
+				"description": "OS architecture",
+				"osquery": "os_version.arch"
 			}
 		]
 	},
@@ -1168,6 +1198,29 @@
 				"type": "java.lang.Long",
 				"description": "The total amount of swap free, in bytes",
 				"osquery": "memory_info.swap_free"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/memory/map/",
+		"attributes": [
+			{
+				"name": "name",
+				"type": "java.lang.String",
+				"description": "Region name",
+				"osquery": "memory_map.name"
+			},
+			{
+				"name": "start",
+				"type": "java.lang.String",
+				"description": "Start address of memory region",
+				"osquery": "memory_map.start"
+			},
+			{
+				"name": "end",
+				"type": "java.lang.String",
+				"description": "End address of memory region",
+				"osquery": "memory_map.end"
 			}
 		]
 	},
@@ -1439,6 +1492,407 @@
 				"type": "java.lang.String",
 				"description": "The user's default shell",
 				"osquery": "users.shell"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/group/",
+		"attributes": [
+			{
+				"name": "gid",
+				"type": "java.lang.Integer",
+				"description": "Unsigned int64 group ID",
+				"osquery": "groups.gid"
+			},
+			{
+				"name": "name",
+				"type": "java.lang.String",
+				"description": "Canonical local group name",
+				"osquery": "groups.groupname"
+			},
+			{
+				"name": "group_sid",
+				"type": "java.lang.String",
+				"description": "Unique group ID",
+				"osquery": "groups.group_sid"
+			},
+			{
+				"name": "comment",
+				"type": "java.lang.String",
+				"description": "Remarks or comments associated with the group",
+				"osquery": "groups.comment"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/kernel/modules/",
+		"attributes": [
+			{
+				"name": "name",
+				"type": "java.lang.String",
+				"description": "Module name",
+				"osquery": "kernel_modules.name"
+			},
+			{
+				"name": "size",
+				"type": "java.lang.String",
+				"description": "Size of module content",
+				"osquery": "kernel_modules.size"
+			},
+			{
+				"name": "used_by",
+				"type": "java.lang.String",
+				"description": "Module reverse dependencies",
+				"osquery": "kernel_modules.used_by"
+			},
+			{
+				"name": "status",
+				"type": "java.lang.String",
+				"description": "Kernel module status",
+				"osquery": "kernel_modules.status"
+			},
+			{
+				"name": "address",
+				"type": "java.lang.String",
+				"description": "Kernel module address",
+				"osquery": "kernel_modules.address"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/bound_port/",
+		"attributes": [
+			{
+				"name": "pid",
+				"type": "java.lang.Integer",
+				"description": "Process (or thread) ID",
+				"osquery": "listening_ports.pid"
+			},
+			{
+				"name": "port",
+				"type": "java.lang.Integer",
+				"description": "Transport layer port",
+				"osquery": "listening_ports.port"
+			},
+			{
+				"name": "protocol",
+				"type": "java.lang.Integer",
+				"description": "Transport protocol (TCP/UDP)",
+				"osquery": "listening_ports.protocol"
+			},
+			{
+				"name": "family",
+				"type": "java.lang.Integer",
+				"description": "Network protocol (IPv4, IPv6)",
+				"osquery": "listening_ports.family"
+			},
+			{
+				"name": "address",
+				"type": "java.lang.String",
+				"description": "Specific address for bind",
+				"osquery": "listening_ports.address"
+			},
+			{
+				"name": "fd",
+				"type": "java.lang.Long",
+				"description": "Socket file descriptor number",
+				"osquery": "listening_ports.fd"
+			},
+			{
+				"name": "socket",
+				"type": "java.lang.Long",
+				"description": "Socket handle or inode number",
+				"osquery": "listening_ports.socket"
+			},
+			{
+				"name": "path",
+				"type": "java.lang.Long",
+				"description": "Path for UNIX domain sockets",
+				"osquery": "listening_ports.path"
+			},
+			{
+				"name": "net_namespace",
+				"type": "java.lang.Long",
+				"description": "The inode number of the network namespace",
+				"osquery": "listening_ports.net_namespace"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/mount/",
+		"attributes": [
+			{
+				"name": "device",
+				"type": "java.lang.String",
+				"description": "Mounted device",
+				"osquery": "mounts.device"
+			},
+			{
+				"name": "device_alias",
+				"type": "java.lang.String",
+				"description": "Mounted device alias",
+				"osquery": "mounts.device_alias"
+			},
+			{
+				"name": "path",
+				"type": "java.lang.String",
+				"description": "Mounted device path",
+				"osquery": "mounts.path"
+			},
+			{
+				"name": "type",
+				"type": "java.lang.String",
+				"description": "Mounted device type",
+				"osquery": "mounts.type"
+			},
+			{
+				"name": "blocks_size",
+				"type": "java.lang.Long",
+				"description": "Block size in bytes",
+				"osquery": "mounts.blocks_size"
+			},
+			{
+				"name": "blocks",
+				"type": "java.lang.Long",
+				"description": "Mounted device used blocks",
+				"osquery": "mounts.blocks"
+			},
+			{
+				"name": "blocks_free",
+				"type": "java.lang.Long",
+				"description": "Mounted device free blocks",
+				"osquery": "mounts.blocks_free"
+			},
+			{
+				"name": "blocks_available",
+				"type": "java.lang.Long",
+				"description": "Mounted device available blocks",
+				"osquery": "mounts.blocks_available"
+			},
+			{
+				"name": "inodes",
+				"type": "java.lang.Long",
+				"description": "Mounted device used inodes",
+				"osquery": "mounts.inodes"
+			},
+			{
+				"name": "inodes_free",
+				"type": "java.lang.Long",
+				"description": "Mounted device free inodes",
+				"osquery": "mounts.inodes_free"
+			},
+			{
+				"name": "flags",
+				"type": "java.lang.String",
+				"description": "Mounted device flags",
+				"osquery": "mounts.flags"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/python_package/",
+		"attributes": [
+			{
+				"name": "name",
+				"type": "java.lang.String",
+				"description": "Package display name",
+				"osquery": "python_packages.name"
+			},
+			{
+				"name": "version",
+				"type": "java.lang.String",
+				"description": "Package-supplied version",
+				"osquery": "python_packages.version"
+			},
+			{
+				"name": "summary",
+				"type": "java.lang.String",
+				"description": "Package-supplied summary",
+				"osquery": "python_packages.summary"
+			},
+			{
+				"name": "author",
+				"type": "java.lang.String",
+				"description": "Optional package author",
+				"osquery": "python_packages.author"
+			},
+			{
+				"name": "license",
+				"type": "java.lang.String",
+				"description": "License under which package is launched",
+				"osquery": "python_packages.license"
+			},
+			{
+				"name": "path",
+				"type": "java.lang.String",
+				"description": "Path at which this module resides",
+				"osquery": "python_packages.path"
+			},
+			{
+				"name": "directory",
+				"type": "java.lang.String",
+				"description": "Directory where Python modules are located",
+				"osquery": "python_packages.directory"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/deb_package/",
+		"attributes": [
+			{
+				"name": "name",
+				"type": "java.lang.String",
+				"description": "Package name",
+				"osquery": "deb_packages.name"
+			},
+			{
+				"name": "version",
+				"type": "java.lang.String",
+				"description": "Package version",
+				"osquery": "deb_packages.version"
+			},
+			{
+				"name": "source",
+				"type": "java.lang.String",
+				"description": "Package source",
+				"osquery": "deb_packages.source"
+			},
+			{
+				"name": "size",
+				"type": "java.lang.Long",
+				"description": "Package size in bytes",
+				"osquery": "deb_packages.size"
+			},
+			{
+				"name": "arch",
+				"type": "java.lang.String",
+				"description": "Package architecture",
+				"osquery": "deb_packages.arch"
+			},
+			{
+				"name": "revision",
+				"type": "java.lang.String",
+				"description": "Package revision",
+				"osquery": "deb_packages.revision"
+			},
+			{
+				"name": "status",
+				"type": "java.lang.String",
+				"description": "Package status",
+				"osquery": "deb_packages.status"
+			},
+			{
+				"name": "maintainer",
+				"type": "java.lang.String",
+				"description": "Package maintainer",
+				"osquery": "deb_packages.maintainer"
+			},
+			{
+				"name": "section",
+				"type": "java.lang.String",
+				"description": "Package section",
+				"osquery": "deb_packages.section"
+			},
+			{
+				"name": "priority",
+				"type": "java.lang.String",
+				"description": "Package priority",
+				"osquery": "deb_packages.priority"
+			}
+		]
+	},
+	{
+		"name": "/profile//sysinfo/firefox/addon/",
+		"attributes": [
+			{
+				"name": "uid",
+				"type": "java.lang.String",
+				"description": "The local user that owns the addon",
+				"osquery": "firefox_addons.uid"
+			},
+			{
+				"name": "name",
+				"type": "java.lang.String",
+				"description": "Addon display name",
+				"osquery": "firefox_addons.name"
+			},
+			{
+				"name": "identifier",
+				"type": "java.lang.String",
+				"description": "Addon identifier",
+				"osquery": "firefox_addons.identifier"
+			},
+			{
+				"name": "creator",
+				"type": "java.lang.String",
+				"description": "Addon-supported creator string",
+				"osquery": "firefox_addons.creator"
+			},
+			{
+				"name": "type",
+				"type": "java.lang.String",
+				"description": "Extension, addon, webapp",
+				"osquery": "firefox_addons.type"
+			},
+			{
+				"name": "version",
+				"type": "java.lang.String",
+				"description": "Addon-supplied version string",
+				"osquery": "firefox_addons.version"
+			},
+			{
+				"name": "description",
+				"type": "java.lang.String",
+				"description": "Addon-supplied description string",
+				"osquery": "firefox_addons.description"
+			},
+			{
+				"name": "source_url",
+				"type": "java.lang.String",
+				"description": "URL that installed the addon",
+				"osquery": "firefox_addons.source_url"
+			},
+			{
+				"name": "visible",
+				"type": "java.lang.Boolean",
+				"description": "Whether the addon is shown in the browser",
+				"osquery": "firefox_addons.visible"
+			},
+			{
+				"name": "active",
+				"type": "java.lang.Boolean",
+				"description": "Whether the addon is active",
+				"osquery": "firefox_addons.active"
+			},
+			{
+				"name": "disabled",
+				"type": "java.lang.Boolean",
+				"description": "Whether the addon is disabled",
+				"osquery": "firefox_addons.disabled"
+			},
+			{
+				"name": "autoupdate",
+				"type": "java.lang.Boolean",
+				"description": "Whether the addon is applies background updates",
+				"osquery": "firefox_addons.autoupdate"
+			},
+			{
+				"name": "native",
+				"type": "java.lang.Boolean",
+				"description": "Whether the addon includes binary components",
+				"osquery": "firefox_addons.native"
+			},
+			{
+				"name": "location",
+				"type": "java.lang.String",
+				"description": "Global, profile location",
+				"osquery": "firefox_addons.location"
+			},
+			{
+				"name": "path",
+				"type": "java.lang.String",
+				"description": "Path to plugin bundle",
+				"osquery": "firefox_addons.path"
 			}
 		]
 	}
