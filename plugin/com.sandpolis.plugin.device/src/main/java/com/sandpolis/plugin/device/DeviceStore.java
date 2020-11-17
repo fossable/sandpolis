@@ -40,9 +40,7 @@ public class DeviceStore extends STCollectionStore<Device> implements Configurab
 	}
 
 	public Device create(Consumer<VirtDevice> configurator) {
-		var device = add(Device::new);
-		configurator.accept(device);
-		return device;
+		return add(configurator, Device::new);
 	}
 
 	@ConfigStruct

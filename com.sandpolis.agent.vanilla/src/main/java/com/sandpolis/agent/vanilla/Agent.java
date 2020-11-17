@@ -16,7 +16,6 @@ import static com.sandpolis.core.instance.MainDispatch.register;
 import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.profile.ProfileStore.ProfileStore;
 import static com.sandpolis.core.instance.state.STStore.STStore;
-import static com.sandpolis.core.instance.state.oid.InstanceOid.InstanceOid;
 import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.net.exelet.ExeletStore.ExeletStore;
@@ -40,18 +39,15 @@ import com.sandpolis.core.foundation.Platform.OsType;
 import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.Generator.ExecutionConfig;
-import com.sandpolis.core.instance.Generator.FeatureSet;
-import com.sandpolis.core.instance.Generator.LoopConfig;
-import com.sandpolis.core.instance.Generator.MegaConfig;
-import com.sandpolis.core.instance.Generator.NetworkConfig;
-import com.sandpolis.core.instance.Generator.NetworkTarget;
+import com.sandpolis.core.instance.Group.AgentConfig;
+import com.sandpolis.core.instance.Group.AgentConfig.LoopConfig;
+import com.sandpolis.core.instance.Group.AgentConfig.NetworkTarget;
 import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
-import com.sandpolis.core.instance.profile.ProfileStore;
-import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.profile.Profile;
 import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument;
+import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.net.network.NetworkEvents.ServerEstablishedEvent;
 import com.sandpolis.core.net.network.NetworkEvents.ServerLostEvent;
 
@@ -70,23 +66,26 @@ public final class Agent {
 	/**
 	 * The configuration included in the instance jar.
 	 */
-	public static final MegaConfig SO_CONFIG;
+	public static final AgentConfig SO_CONFIG;
 
 	static {
 		try (var in = Agent.class.getResourceAsStream("/soi/agent.bin")) {
 			if (in != null) {
-				SO_CONFIG = MegaConfig.parseFrom(in);
+				SO_CONFIG = AgentConfig.parseFrom(in);
 			} else {
 				// Set debug configuration
-				SO_CONFIG = MegaConfig.newBuilder().setMemory(false)
-						.setFeatures(FeatureSet.newBuilder().addPlugin("com.sandpolis.plugin.desktop")
-								.addPlugin("com.sandpolis.plugin.filesys").addPlugin("com.sandpolis.plugin.sysinfo")
-								.addPlugin("com.sandpolis.plugin.shell"))
-						.setExecution(ExecutionConfig.newBuilder().putInstallPath(OsType.LINUX_VALUE,
-								"/home/cilki/.sandpolis"))
-						.setNetwork(NetworkConfig.newBuilder()
-								.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000).setCooldown(5000)
-										.addTarget(NetworkTarget.newBuilder().setAddress("172.17.0.1").setPort(8768))))
+				SO_CONFIG = AgentConfig.newBuilder().setMemory(false)
+
+						// Add standard plugins
+						.addPlugin("com.sandpolis.plugin.desktop").addPlugin("com.sandpolis.plugin.filesys")
+						.addPlugin("com.sandpolis.plugin.sysinfo").addPlugin("com.sandpolis.plugin.shell")
+
+						// Add installation path
+						.putInstallPath(OsType.LINUX_VALUE, "/home/cilki/.sandpolis")
+
+						// Add connection loop configuration
+						.setLoopConfig(LoopConfig.newBuilder().setTimeout(5000).setCooldown(5000)
+								.addTarget(NetworkTarget.newBuilder().setAddress("172.17.0.1").setPort(8768)))
 						.build();
 			}
 		} catch (IOException e) {
@@ -145,6 +144,10 @@ public final class Agent {
 			config.root = new EphemeralDocument();
 		});
 
+		ProfileStore.init(config -> {
+			config.collection = new VirtCollection<Profile>(STStore.root(), Profile::new);
+		});
+
 		PluginStore.init(config -> {
 			config.collection = ProfileStore.getByUuid(Core.UUID).get().plugin();
 		});
@@ -166,17 +169,16 @@ public final class Agent {
 		NetworkStore.register(new Object() {
 			@Subscribe
 			private void onSrvLost(ServerLostEvent event) {
-				ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig());
+				ConnectionStore.connect(SO_CONFIG.getLoopConfig());
 			}
 
 			@Subscribe
 			private void onSrvEstablished(ServerEstablishedEvent event) {
 				CompletionStage<Outcome> future;
-				var auth = SO_CONFIG.getAuthentication();
 
-				switch (auth.getAuthOneofCase()) {
+				switch (SO_CONFIG.getAuthenticationCase()) {
 				case PASSWORD:
-					future = AuthCmd.async().target(event.get()).password(auth.getPassword().getPassword());
+					future = AuthCmd.async().target(event.get()).password(SO_CONFIG.getPassword().getPassword());
 					break;
 				default:
 					future = AuthCmd.async().target(event.get()).none();
@@ -226,7 +228,7 @@ public final class Agent {
 	 */
 	@InitializationTask(name = "Begin the connection routine", fatal = true)
 	public static final Task beginConnectionRoutine = new Task(outcome -> {
-		ConnectionStore.connect(SO_CONFIG.getNetwork().getLoopConfig()).future().addListener(future -> {
+		ConnectionStore.connect(SO_CONFIG.getLoopConfig()).future().addListener(future -> {
 			if (!future.isSuccess()) {
 				log.error("Connection loop failed to start", future.cause());
 			}

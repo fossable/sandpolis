@@ -21,8 +21,8 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Generator.LoopConfig;
-import com.sandpolis.core.instance.Generator.NetworkTarget;
+import com.sandpolis.core.instance.Group.AgentConfig.LoopConfig;
+import com.sandpolis.core.instance.Group.AgentConfig.NetworkTarget;
 import com.sandpolis.core.net.Channel.ChannelTransportProtocol;
 import com.sandpolis.core.net.util.ChannelUtil;
 
@@ -132,10 +132,10 @@ public final class ConnectionLoop implements Runnable {
 		try {
 			while (iteration < config.getIterationLimit() || config.getIterationLimit() == 0) {
 
-				for (NetworkTarget n : config.getTargetList()) {
+				for (NetworkTarget target : config.getTargetList()) {
 
 					ConnectionFuture connect = new ConnectionFuture(
-							bootstrap.remoteAddress(n.getAddress(), n.getPort()).connect());
+							bootstrap.remoteAddress(target.getAddress(), target.getPort()).connect());
 
 					try {
 						connect.sync();

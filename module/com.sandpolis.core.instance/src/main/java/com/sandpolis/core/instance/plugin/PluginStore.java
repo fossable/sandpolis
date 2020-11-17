@@ -239,9 +239,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 	}
 
 	public Plugin create(Consumer<VirtPlugin> configurator) {
-		var plugin = add(Plugin::new);
-		configurator.accept(plugin);
-		return plugin;
+		return add(configurator, Plugin::new);
 	}
 
 	@ConfigStruct

@@ -37,8 +37,6 @@ public abstract class OidBase implements Oid {
 			throw new IllegalArgumentException();
 		if (Arrays.stream(path).anyMatch(Objects::isNull))
 			throw new IllegalArgumentException();
-		if (Arrays.stream(path).allMatch(String::isEmpty))
-			throw new IllegalArgumentException();
 
 		this.namespace = namespace;
 		this.path = path;

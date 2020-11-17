@@ -1,16 +1,19 @@
 package com.sandpolis.core.instance.state.oid;
 
 import com.sandpolis.core.instance.state.VirtProfile;
+import com.sandpolis.core.instance.state.VirtProfile.Oid;
 
 public class InstanceOid {
 
-	public final VirtProfile.Oid profile = null;// new VirtProfile.Oid(null);
+	private static final InstanceOid instance = new InstanceOid();
+
+	public final VirtProfile.Oid profile = new VirtProfile.Oid("/profile");
 
 	public VirtProfile.Oid profile(String path) {
-		return null;//return profile.resolve(path);
+		return (Oid) profile.resolve(path);
 	}
 
 	public static InstanceOid InstanceOid() {
-		return null;
+		return instance;
 	}
 }

@@ -125,7 +125,7 @@ public final class MsgUtil {
 	}
 
 	public static int getPayloadType(Class<?> messageType) {
-		return Hashing.murmur3_32().hashUnencodedChars(messageType.getName()).asInt();
+		return Hashing.murmur3_32().hashUnencodedChars(messageType.getName().replaceAll("\\$Builder$", "")).asInt();
 	}
 
 	public static int getPayloadType(Method method) {

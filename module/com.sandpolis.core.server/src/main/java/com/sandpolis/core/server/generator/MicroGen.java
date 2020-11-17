@@ -24,10 +24,9 @@ import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.Generator.GenConfig;
-import com.sandpolis.core.instance.Generator.MicroConfig;
 import com.sandpolis.core.foundation.soi.Build.SO_Build;
+import com.sandpolis.core.instance.Core;
+import com.sandpolis.core.instance.Group.AgentConfig;
 
 /**
  * Generates a <b>com.sandpolis.agent.micro</b> stub.
@@ -38,7 +37,7 @@ public class MicroGen extends Generator {
 
 	private static final Logger log = LoggerFactory.getLogger(MicroGen.class);
 
-	public MicroGen(GenConfig config, String archiveExtension) {
+	public MicroGen(AgentConfig config, String archiveExtension) {
 		super(config, archiveExtension);
 	}
 
@@ -51,7 +50,7 @@ public class MicroGen extends Generator {
 		inject(output, soi_build, Core.SO_BUILD.toByteArray());
 
 		// Inject the agent configuration
-		inject(output, soi_agent, config.getMicro().toByteArray());
+		inject(output, soi_agent, config.toByteArray());
 
 		// TODO return actual output
 		return new byte[] {};
@@ -131,7 +130,7 @@ public class MicroGen extends Generator {
 			0x18, 0x57, 0xba, 0x73, 0xed, 0x3a, 0x67, 0x9b };
 
 	/**
-	 * A placeholder for the unsigned bytes of a serialized {@link MicroConfig}.
+	 * A placeholder for the unsigned bytes of a serialized {@link AgentConfig}.
 	 *
 	 * <p>
 	 * Note: synchronized with util/resources.hh in

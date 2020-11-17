@@ -12,9 +12,12 @@
 module com.sandpolis.plugin.sysinfo.agent.vanilla {
 	exports com.sandpolis.plugin.sysinfo.agent.vanilla;
 
+	requires com.sandpolis.core.foundation;
 	requires com.sandpolis.core.instance;
 	requires com.sandpolis.core.net;
 	requires com.sandpolis.plugin.sysinfo;
+	requires org.slf4j;
+	requires java.net.http;
 
 	provides com.sandpolis.core.instance.plugin.SandpolisPlugin with com.sandpolis.plugin.sysinfo.agent.vanilla.SysinfoPlugin;
 }

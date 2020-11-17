@@ -54,9 +54,7 @@ public final class UserStore extends STCollectionStore<User> implements Configur
 	}
 
 	public User create(Consumer<VirtUser> configurator) {
-		var user = add(User::new);
-		configurator.accept(user);
-		return user;
+		return add(configurator, User::new);
 	}
 
 	/**

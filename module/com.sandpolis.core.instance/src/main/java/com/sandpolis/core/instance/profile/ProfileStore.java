@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.ConfigStruct;
+import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.profile.ProfileStore.ProfileStoreConfig;
 import com.sandpolis.core.instance.state.VirtProfile;
 import com.sandpolis.core.instance.state.vst.VirtCollection;
@@ -68,12 +69,15 @@ public final class ProfileStore extends STCollectionStore<Profile> implements Co
 		configurator.accept(config);
 
 		collection = config.collection;
+
+		// Create the local instance if it doesn't exist
+		create(profile -> {
+			profile.uuid().set(Core.UUID);
+		});
 	}
 
 	public Profile create(Consumer<VirtProfile> configurator) {
-		var profile = add(Profile::new);
-		configurator.accept(profile);
-		return profile;
+		return add(configurator, Profile::new);
 	}
 
 	@ConfigStruct

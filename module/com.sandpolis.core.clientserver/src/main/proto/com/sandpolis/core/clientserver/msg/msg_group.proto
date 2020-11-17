@@ -29,3 +29,50 @@ message RQ_GroupOperation {
 
     repeated core.instance.GroupConfig group_config = 2;
 }
+
+// Request to generate a new artifact for the given group.
+message RQ_GenerateArtifact {
+
+    // The group ID
+    string group = 1;
+
+    // The payload type
+    string payload = 2;
+
+    // The output format of this client
+    string format = 3;
+}
+
+// The response to an artifact generation request
+message RS_GenerateArtifact {
+
+    // The overall success of the generation attempt
+    bool result = 1;
+
+    // A comment on the result of the generation attempt
+    string comment = 2;
+
+    // The start timestamp of the generation
+    int64 timestamp = 3;
+
+    // How long the generation took in milliseconds
+    int64 duration = 4;
+
+    // A MD5 hash of the result
+    string output_md5 = 5;
+
+    // A SHA256 hash of the result
+    string output_sha256 = 6;
+
+    // A SHA512 hash of the result
+    string output_sha512 = 7;
+
+    // The size of the result in bytes
+    int64 output_size = 9;
+
+    // The type of installer generated
+    string payload = 10;
+
+    // The type of installer generated
+    string format = 11;
+}

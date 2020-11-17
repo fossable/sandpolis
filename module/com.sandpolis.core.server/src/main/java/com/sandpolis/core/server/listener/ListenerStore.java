@@ -75,9 +75,7 @@ public final class ListenerStore extends STCollectionStore<Listener> implements 
 	}
 
 	public Listener create(Consumer<VirtListener> configurator) {
-		var listener = add(Listener::new);
-		configurator.accept(listener);
-		return listener;
+		return add(configurator, Listener::new);
 	}
 
 	public Listener create(ListenerConfig config) {

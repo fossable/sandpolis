@@ -27,7 +27,7 @@ public class AbsoluteOid<T extends STObject<?>> extends RelativeOid<T> {
 	}
 
 	private AbsoluteOid() {
-		super(0, (String) null);
+		super(0, "");
 	}
 
 }

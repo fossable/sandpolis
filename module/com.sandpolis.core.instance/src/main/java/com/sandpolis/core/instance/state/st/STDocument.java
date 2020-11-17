@@ -149,4 +149,13 @@ public interface STDocument extends STObject<ProtoDocument> {
 	 * @param document The document to remove
 	 */
 	public void remove(STDocument document);
+
+	public default void copyFrom(STDocument other) {
+		other.forEachDocument(document -> {
+			this.document(document.oid().last()).copyFrom(document);
+		});
+		other.forEachAttribute(attribute -> {
+			this.attribute(attribute.oid().last()).set(attribute.get());
+		});
+	}
 }

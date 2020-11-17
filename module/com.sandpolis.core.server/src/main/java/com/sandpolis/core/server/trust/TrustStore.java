@@ -99,9 +99,7 @@ public final class TrustStore extends STCollectionStore<TrustAnchor> implements 
 	}
 
 	public TrustAnchor create(Consumer<VirtTrustAnchor> configurator) {
-		var anchor = add(TrustAnchor::new);
-		configurator.accept(anchor);
-		return anchor;
+		return add(configurator, TrustAnchor::new);
 	}
 
 	@ConfigStruct

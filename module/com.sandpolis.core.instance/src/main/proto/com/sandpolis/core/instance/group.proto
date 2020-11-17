@@ -9,33 +9,116 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-syntax = "proto2";
+syntax = "proto3";
 
 package core.instance;
 
+import "com/sandpolis/core/foundation/platform.proto";
 import "com/sandpolis/core/instance/auth.proto";
 
 option java_package = "com.sandpolis.core.instance";
 option optimize_for = CODE_SIZE;
 
+message AgentConfig {
+
+    message NetworkTarget {
+
+        // The DNS or IP address
+        string address = 1;
+
+        // The port number
+        int32 port = 2;
+    }
+
+    message LoopConfig {
+
+        // One or more network targets
+        repeated NetworkTarget target = 1;
+
+        // The maximum number of connection iterations to attempt. A value of 0 indicates unlimited.
+        int32 iteration_limit = 2;
+
+        // The connection timeout in milliseconds
+        int32 timeout = 3;
+
+        // The time to wait after an unsuccessful connection attempt in milliseconds
+        int32 cooldown = 4;
+
+        // The maximum cooldown value. A value less than or equal to the initial cooldown disables cooldown growth.
+        int32 cooldown_limit = 5;
+
+        // The time in milliseconds required to increase the cooldown by one factor of its initial value. Set high to
+        // reduce the speed at which the maximum cooldown is reached. A value of 0 disables cooldown growth entirely.
+        double cooldown_constant = 6;
+    }
+
+    LoopConfig loop_config = 1;
+
+    // Indicates whether server certificates will be strictly verified and enforced
+    bool strict_certs = 2;
+
+    // Supported operating systems
+    repeated core.foundation.OsType supported_os = 3;
+
+    // Supported system architectures
+    repeated string supported_arch = 4;
+
+    // Supported plugins
+    repeated string plugin = 5;
+
+    // When true, the agent will not be able to connect to services outside of
+    // the Sandpolis network.
+    bool strict_network = 6;
+
+    // Whether the agent installer should be deleted upon successful execution
+    bool cleanup = 7;
+
+    // Whether the agent should be automatically started on boot
+    bool autostart = 8;
+
+    // Whether the agent will attempt to install with a different configuration
+    // in the event that the initial installation fails for any reason. This can
+    // reduce the amount of manual remediation required.
+    bool recover = 9;
+
+    // Installation paths. Keys are the enum numbers from OsType.
+    map<int32, string> install_path = 10;
+
+    oneof authentication {
+        // Key authentication mechanism
+        KeyContainer key = 11;
+
+        // Password authentication mechanism
+        PasswordContainer password = 12;
+    }
+
+    // If positive, the agent will poll the server at the configured interval
+    // instead of maintaining a persistent connection.
+    int32 poll_interval = 13;
+
+    bool memory = 14;
+}
+
 // The configuration for a group.
 message GroupConfig {
 
     // The primary ID
-    optional string id = 101;
+    string id = 1;
 
     // The user-friendly name
-    optional string name = 102;
+    string name = 2;
 
     // The username of the user that owns this group
-    optional string owner = 103;
+    string owner = 3;
 
     // The usernames of all group members
-    repeated string member = 104;
+    repeated string member = 4;
+
+    AgentConfig agent_config = 5;
 
     // The password mechanisms that belong to the group
-    repeated PasswordContainer password_mechanism = 105;
+    repeated PasswordContainer password_mechanism = 6;
 
     // The key mechanisms that belong to the group
-    repeated KeyContainer key_mechanism = 106;
+    repeated KeyContainer key_mechanism = 7;
 }

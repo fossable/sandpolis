@@ -38,9 +38,8 @@ public abstract class STCollectionStore<V extends VirtDocument> extends StoreBas
 		super(log);
 	}
 
-	protected V add(Function<STDocument, V> constructor) {
-//		return collection.add(constructor);
-		return null;
+	protected <T extends V> V add(Consumer<? extends VirtDocument> configurator, Function<STDocument, T> constructor) {
+		return (V) collection.add((Consumer) configurator, constructor);
 	}
 
 	/**
@@ -67,7 +66,7 @@ public abstract class STCollectionStore<V extends VirtDocument> extends StoreBas
 	}
 
 	public Collection<V> values() {
-		return null;
+		return (Collection<V>) collection.values();
 	}
 
 	@Override

@@ -56,7 +56,15 @@ public abstract class VSTGenerator extends DefaultTask {
 		 */
 		public boolean list;
 
-		public boolean key;
+		/**
+		 * Whether the attribute can be used as a unique identifier.
+		 */
+		public boolean id;
+
+		/**
+		 * The corresponding osquery identifier.
+		 */
+		public String osquery;
 
 		/**
 		 * The attribute's name.
@@ -64,7 +72,7 @@ public abstract class VSTGenerator extends DefaultTask {
 		public String name;
 
 		/**
-		 * The attribute's fully-qualified Java type.
+		 * The attribute's fully-qualified Java type or OID reference type.
 		 */
 		public String type;
 
@@ -210,6 +218,18 @@ public abstract class VSTGenerator extends DefaultTask {
 		// Validate sub-attributes
 		if (document.attributes != null) {
 			document.attributes.forEach(this::validateAttribute);
+
+			long idCount = document.attributes.stream().map(spec -> spec.id).filter(id -> id).count();
+			if (idCount > 1) {
+				throw new RuntimeException("More than one attribute marked with 'id'");
+			} else if (idCount == 0) {
+				// Add id field
+				var id = new AttributeSpec();
+				id.name = "id";
+				id.type = "java.lang.String";
+				id.id = true;
+				document.attributes.add(id);
+			}
 		}
 	}
 

@@ -40,7 +40,7 @@ public class EphemeralDocument extends AbstractSTDocument implements STDocument 
 	}
 
 	public EphemeralDocument() {
-		super(null, AbsoluteOid.ROOT);
+		this(null, AbsoluteOid.ROOT);
 	}
 
 	public EphemeralDocument(ProtoDocument document) {

@@ -23,4 +23,9 @@ public final class OidData<T> {
 	 * Whether the corresponding attribute is immutable.
 	 */
 	public static final OidData<Boolean> IMMUTABLE = new OidData<>();
+
+	/**
+	 * The corresponding osquery type if applicable.
+	 */
+	public static final OidData<String> OSQUERY = new OidData<>();
 }

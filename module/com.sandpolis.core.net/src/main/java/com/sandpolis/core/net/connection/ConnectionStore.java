@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import com.sandpolis.core.instance.Generator.LoopConfig;
+import com.sandpolis.core.instance.Group.AgentConfig.LoopConfig;
 import com.sandpolis.core.instance.state.VirtConnection;
 import com.sandpolis.core.instance.state.vst.VirtCollection;
 import com.sandpolis.core.instance.store.ConfigurableStore;
@@ -141,16 +141,15 @@ public final class ConnectionStore extends STCollectionStore<Connection>
 		register(this);
 	}
 
-	public Connection create(Consumer<Connection> configurator) {
-		var connection = add(Connection::new);
-		configurator.accept(connection);
-		return connection;
+	public Connection create(Consumer<VirtConnection> configurator) {
+		return add(configurator, Connection::new);
 	}
 
 	public Connection create(Channel channel) {
-		return create(connection -> {
-			connection.setChannel(channel);
+		var connection = create(c -> {
 		});
+		connection.setChannel(channel);
+		return connection;
 	}
 
 	public static final class ConnectionStoreConfig {
