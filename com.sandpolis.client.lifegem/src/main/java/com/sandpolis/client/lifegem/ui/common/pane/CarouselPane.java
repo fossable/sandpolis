@@ -9,11 +9,10 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.lifegem.common.pane;
+package com.sandpolis.client.lifegem.ui.common.pane;
 
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -22,7 +21,7 @@ import javafx.animation.Animation.Status;
 import javafx.animation.Transition;
 import javafx.beans.NamedArg;
 import javafx.event.ActionEvent;
-import javafx.fxml.FXMLLoader;
+import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
@@ -36,10 +35,6 @@ import javafx.util.Duration;
  * @since 5.0.0
  */
 public class CarouselPane extends StackPane {
-
-	public enum Side {
-		LEFT, RIGHT, UP, DOWN;
-	}
 
 	/**
 	 * All possible views in this {@code CarouselPane}.
@@ -123,17 +118,6 @@ public class CarouselPane extends StackPane {
 		down.setDuration(PrefStore.getBoolean("ui.animations") ? Duration.millis(duration) : Duration.ZERO);
 		this.views = Arrays.asList(children);
 		this.direction = Side.valueOf(direction.toUpperCase());
-
-		FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/common/pane/CarouselPane.fxml"));
-		fxmlLoader.setRoot(this);
-		fxmlLoader.setController(this);
-		fxmlLoader.setClassLoader(getClass().getClassLoader());
-
-		try {
-			fxmlLoader.load();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 
 		getChildren().add(views.get(0));
 	}
@@ -229,8 +213,8 @@ public class CarouselPane extends StackPane {
 
 		final SlideTransition move;
 		switch (direction) {
-		case UP:
-		case DOWN:
+		case TOP:
+		case BOTTOM:
 			move = down;
 			break;
 		case LEFT:
@@ -251,7 +235,7 @@ public class CarouselPane extends StackPane {
 
 		switch (direction) {
 		case RIGHT:
-		case DOWN:
+		case BOTTOM:
 			move.setNodes(n > current ? next : curr, n > current ? curr : next);
 			if (n < current) {
 				// Play backwards
@@ -260,7 +244,7 @@ public class CarouselPane extends StackPane {
 			}
 			break;
 		case LEFT:
-		case UP:
+		case TOP:
 			move.setNodes(n < current ? next : curr, n < current ? curr : next);
 			if (n > current) {
 				// Play backwards

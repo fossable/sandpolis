@@ -12,6 +12,9 @@ bin
 
 # IDEA metadata
 .idea
+*.iws
+*.iml
+*.ipr
 
 # Annotation processor
 .apt_generated

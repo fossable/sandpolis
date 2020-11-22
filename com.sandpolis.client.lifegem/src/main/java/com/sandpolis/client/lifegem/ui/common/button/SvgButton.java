@@ -9,13 +9,13 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.lifegem.common.button;
+package com.sandpolis.client.lifegem.ui.common.button;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.sandpolis.client.lifegem.common.MicroSvgParser;
+import com.sandpolis.client.lifegem.ui.common.SvgUtil;
 
 import javafx.css.CssMetaData;
 import javafx.css.SimpleStyleableDoubleProperty;
@@ -117,7 +117,7 @@ public class SvgButton extends Button {
 		getStyleClass().add("default-svg-button");
 
 		svg.addListener((p, o, n) -> {
-			setGraphic(MicroSvgParser.getSvg(n, svgWidth, svgHeight, svgFill));
+			setGraphic(SvgUtil.getSvg(n, svgWidth, svgHeight, svgFill));
 		});
 	}
 

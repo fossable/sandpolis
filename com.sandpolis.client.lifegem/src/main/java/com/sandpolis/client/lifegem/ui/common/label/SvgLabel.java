@@ -9,13 +9,13 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.lifegem.common.label;
+package com.sandpolis.client.lifegem.ui.common.label;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.sandpolis.client.lifegem.common.MicroSvgParser;
+import com.sandpolis.client.lifegem.ui.common.SvgUtil;
 
 import javafx.beans.property.StringProperty;
 import javafx.css.CssMetaData;
@@ -121,7 +121,7 @@ public class SvgLabel extends Label {
 		getStyleClass().add("default-svg-label");
 
 		svg.addListener((p, o, n) -> {
-			setGraphic(MicroSvgParser.getSvg(n, svgWidth, svgHeight, svgFill));
+			setGraphic(SvgUtil.getSvg(n, svgWidth, svgHeight, svgFill));
 		});
 	}
 }

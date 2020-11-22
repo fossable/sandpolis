@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.lifegem.common;
+package com.sandpolis.client.lifegem.ui.common;
 
 import java.io.InputStream;
 
@@ -33,14 +33,13 @@ import javafx.scene.shape.FillRule;
 import javafx.scene.shape.SVGPath;
 
 /**
- * A small parser for extremely simple SVG files.
+ * {@link SvgUtil} implements a small parser for extremely simple SVG files.
  *
- * @author cilki
  * @since 5.0.2
  */
-public final class MicroSvgParser {
+public final class SvgUtil {
 
-	private static final Logger log = LoggerFactory.getLogger(MicroSvgParser.class);
+	private static final Logger log = LoggerFactory.getLogger(SvgUtil.class);
 
 	/**
 	 * Load an SVG image from the classpath.
@@ -53,7 +52,7 @@ public final class MicroSvgParser {
 	 */
 	public static Node getSvg(String url, DoubleProperty svgWidth, DoubleProperty svgHeight,
 			ObjectProperty<Paint> svgFill) {
-		try (InputStream in = MicroSvgParser.class.getResourceAsStream(url)) {
+		try (InputStream in = SvgUtil.class.getResourceAsStream(url)) {
 			return readSvg(in, svgWidth, svgHeight, svgFill);
 		} catch (Exception e) {
 			log.warn("Failed to load svg: {}", url);
@@ -119,5 +118,8 @@ public final class MicroSvgParser {
 		group.scaleYProperty().bind(Bindings.divide(svgHeight, group.getBoundsInParent().getHeight()));
 
 		return group;
+	}
+
+	private SvgUtil() {
 	}
 }

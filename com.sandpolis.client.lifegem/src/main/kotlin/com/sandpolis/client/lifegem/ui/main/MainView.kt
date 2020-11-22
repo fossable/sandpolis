@@ -9,10 +9,14 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.lifegem.view.network;
 
-import com.sandpolis.client.lifegem.common.controller.FxController;
+package com.sandpolis.client.lifegem.ui.main
 
-public class NetworkController extends FxController {
+import com.sandpolis.client.lifegem.ui.common.pane.CarouselPane
+import tornadofx.*
 
+class MainView : View("Main") {
+
+    override val root = borderpane {
+    }
 }

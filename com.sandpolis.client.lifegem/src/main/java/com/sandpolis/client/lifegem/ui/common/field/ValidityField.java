@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.lifegem.common.field;
+package com.sandpolis.client.lifegem.ui.common.field;
 
 import java.util.Objects;
 import java.util.function.Function;

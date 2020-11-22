@@ -27,7 +27,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-import com.sandpolis.client.lifegem.common.pane.CarouselPane;
+import com.sandpolis.client.lifegem.ui.common.pane.CarouselPane;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Label;

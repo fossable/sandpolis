@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.lifegem.view.about;
+package com.sandpolis.client.lifegem.ui.common;
 
 import static javafx.scene.shape.VertexFormat.POINT_NORMAL_TEXCOORD;
 
@@ -22,12 +22,11 @@ import com.google.common.io.LittleEndianDataInputStream;
 import javafx.scene.shape.TriangleMesh;
 
 /**
- * A small parser for binary STL models.
+ * {@link StlUtil} implements a small parser for binary STL models.
  *
- * @author cilki
  * @since 5.0.1
  */
-public final class StlParser {
+public final class StlUtil {
 
 	/**
 	 * Parse a STL model from the given stream.
@@ -78,5 +77,8 @@ public final class StlParser {
 		}
 
 		return mesh;
+	}
+
+	private StlUtil() {
 	}
 }

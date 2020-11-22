@@ -9,21 +9,32 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.lifegem.common;
 
-import java.util.concurrent.Executor;
+package com.sandpolis.client.lifegem.ui.agent_manager
 
-import javafx.application.Platform;
+import com.sandpolis.client.lifegem.ui.common.pane.ExtendPane
+import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleStringProperty
+import javafx.collections.FXCollections
+import javafx.geometry.Orientation
+import javafx.geometry.Side
+import javafx.scene.control.TabPane
+import javafx.scene.layout.Region
+import tornadofx.*
 
-public final class FxExecutor implements Executor {
+class InventoryView : View() {
+    override val root =
+        squeezebox {
+            fold("Controls") {
+                menubar {
+                    menu("Power") {
+                        item("Poweroff")
+                        item("Restart")
+                    }
+                }
+            }
+            fold("Settings") {}
 
-	public static final FxExecutor INSTANCE = new FxExecutor();
-
-	private FxExecutor() {
-	}
-
-	@Override
-	public void execute(Runnable command) {
-		Platform.runLater(command);
-	}
+            fold("Plugins") {}
+        }
 }

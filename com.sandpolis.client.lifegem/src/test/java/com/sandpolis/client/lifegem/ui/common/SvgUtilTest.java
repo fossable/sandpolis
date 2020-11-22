@@ -9,9 +9,9 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.lifegem.common;
+package com.sandpolis.client.lifegem.ui.common;
 
-import static com.sandpolis.client.lifegem.common.MicroSvgParser.readSvg;
+import static com.sandpolis.client.lifegem.ui.common.SvgUtil.readSvg;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -27,7 +27,7 @@ import javafx.scene.Group;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.SVGPath;
 
-class MicroSvgParserTest {
+class SvgUtilTest {
 
 	@Test
 	@DisplayName("Test a simple SVG")

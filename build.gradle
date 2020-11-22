@@ -25,6 +25,7 @@ buildscript {
 
 plugins {
 	id "com.diffplug.spotless" version "5.1.1"
+	id "idea"
 }
 
 spotless {
@@ -34,6 +35,12 @@ spotless {
 		eclipseCdt()
 		endWithNewline()
 		indentWithTabs()
+	}
+	kotlin {
+		target "**/*.kt"
+
+		ktfmt().dropboxStyle()
+		licenseHeaderFile file("gradle/resources/header_gradle.txt"), "(plugins|import|package)"
 	}
 	java {
 		target "**/*.java"
@@ -64,14 +71,6 @@ spotless {
 
 		licenseHeaderFile file("gradle/resources/header_java.txt"), "syntax"
 	}
-	format "groovy", {
-		target "**/*.groovy"
-
-		trimTrailingWhitespace()
-		endWithNewline()
-
-		licenseHeaderFile file("gradle/resources/header_java.txt"), "package"
-	}
 	format "gradle", {
 		target "**/build.gradle"
 
@@ -80,15 +79,6 @@ spotless {
 		indentWithTabs()
 
 		licenseHeaderFile file("gradle/resources/header_gradle.txt"), "(plugins|buildscript)"
-	}
-	format "gradleKotlin", {
-		target "**/build.gradle.kts"
-
-		trimTrailingWhitespace()
-		endWithNewline()
-		indentWithTabs()
-
-		licenseHeaderFile file("gradle/resources/header_gradle.txt"), "(plugins|import)"
 	}
 	format "swift", {
 		target "**/*.swift"

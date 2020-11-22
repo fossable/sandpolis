@@ -9,29 +9,34 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.lifegem.common.controller;
 
-import java.util.Objects;
+package com.sandpolis.client.lifegem.ui.agent_manager
 
-import com.google.common.eventbus.Subscribe;
-import com.sandpolis.client.lifegem.stage.SandpolisStage;
+import com.sandpolis.client.lifegem.ui.common.pane.ExtendPane
+import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleStringProperty
+import javafx.collections.FXCollections
+import javafx.geometry.Orientation
+import javafx.geometry.Side
+import javafx.scene.control.TabPane
+import javafx.scene.layout.Region
+import tornadofx.*
 
-/**
- * A controller that contains convenience fields.
- *
- * @author cilki
- * @since 5.0.0
- */
-public abstract class FxController extends AbstractController {
+class AgentManagerView : View("Agent Manager") {
 
-	protected SandpolisStage stage;
+    val menuHeader =
+        vbox {
+            label("hostname")
+            label("public ip")
+            label("os")
+        }
 
-	@Subscribe
-	public void setStage(SandpolisStage stage) {
-		if (this.stage != null)
-			throw new IllegalStateException();
-
-		this.stage = Objects.requireNonNull(stage);
-	}
-
+    override val root =
+        borderpane {
+            left =
+                vbox {
+                    setPrefWidth(100.0)
+                    menuHeader
+                }
+        }
 }

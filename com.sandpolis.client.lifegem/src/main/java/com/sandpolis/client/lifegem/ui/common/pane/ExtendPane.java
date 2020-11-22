@@ -9,7 +9,7 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.client.lifegem.common.pane;
+package com.sandpolis.client.lifegem.ui.common.pane;
 
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 
@@ -20,6 +20,7 @@ import java.util.Objects;
 import javafx.animation.Animation.Status;
 import javafx.animation.Transition;
 import javafx.beans.NamedArg;
+import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
@@ -35,13 +36,6 @@ import javafx.util.Duration;
  * @since 5.0.0
  */
 public class ExtendPane extends BorderPane {
-
-	/**
-	 * Represents a side in an {@link ExtendPane}.
-	 */
-	public enum ExtendSide {
-		LEFT, RIGHT, TOP, BOTTOM;
-	}
 
 	/**
 	 * A wrapper for {@link Transition}.
@@ -64,7 +58,7 @@ public class ExtendPane extends BorderPane {
 	 * The animation map. If an {@link ExtendSide} exists in the map, then the side
 	 * is currently extended (any could also be executing an animation).
 	 */
-	private Map<ExtendSide, ExtendTransition> map = new HashMap<>(1, 1.0f);
+	private Map<Side, ExtendTransition> map = new HashMap<>(1, 1.0f);
 
 	/**
 	 * Construct a new {@link ExtendPane} around the given {@link Node}.
@@ -82,7 +76,7 @@ public class ExtendPane extends BorderPane {
 	 * @param side An {@link ExtendSide}
 	 * @return The {@link Region} extended on the given side
 	 */
-	public Region get(ExtendSide side) {
+	public Region get(Side side) {
 		if (map.containsKey(side))
 			return map.get(side).getRegion();
 		return null;
@@ -94,7 +88,7 @@ public class ExtendPane extends BorderPane {
 	 * @param side The given side
 	 * @return Whether the side has a running animation
 	 */
-	public boolean isMoving(ExtendSide side) {
+	public boolean isMoving(Side side) {
 		if (!map.containsKey(side))
 			return false;
 		return map.get(side).getStatus() == Status.RUNNING;
@@ -105,7 +99,7 @@ public class ExtendPane extends BorderPane {
 	 *
 	 * @param side The side to drop
 	 */
-	public void drop(ExtendSide side) {
+	public void drop(Side side) {
 		Objects.requireNonNull(side);
 		if (map.containsKey(side) && !isMoving(side))
 			map.get(side).play();
@@ -115,7 +109,7 @@ public class ExtendPane extends BorderPane {
 	 * Drop all extended sides simultaneously.
 	 */
 	public void drop() {
-		for (ExtendSide side : ExtendSide.values())
+		for (var side : Side.values())
 			drop(side);
 	}
 
@@ -130,7 +124,7 @@ public class ExtendPane extends BorderPane {
 	 *                 (along the transition axis)
 	 * @return Whether the transition was scheduled
 	 */
-	public boolean raise(Region region, ExtendSide side, int duration, float size) {
+	public boolean raise(Region region, Side side, int duration, float size) {
 		Objects.requireNonNull(region);
 		Objects.requireNonNull(side);
 		if (duration < 0)
@@ -153,7 +147,7 @@ public class ExtendPane extends BorderPane {
 	 *                 transition axis)
 	 * @return Whether the transition was scheduled
 	 */
-	public boolean raise(Region region, ExtendSide side, int duration, int size) {
+	public boolean raise(Region region, Side side, int duration, int size) {
 		Objects.requireNonNull(region);
 		Objects.requireNonNull(side);
 		if (duration < 0)
@@ -299,7 +293,7 @@ public class ExtendPane extends BorderPane {
 	 * @param side The side
 	 * @param node The node to add or {@code null}
 	 */
-	private void addToLayout(ExtendSide side, Region node) {
+	private void addToLayout(Side side, Region node) {
 		switch (side) {
 		case BOTTOM:
 			setBottom(node);
