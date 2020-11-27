@@ -9,26 +9,37 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+package com.sandpolis.agent.installer;
 
-package com.sandpolis.client.lifegem.ui.main
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-import com.sandpolis.client.lifegem.ui.common.pane.CarouselPane
-import com.sandpolis.client.lifegem.state.FxProfile
-import javafx.collections.ObservableList
-import javafx.collections.FXCollections
-import tornadofx.*
+import com.sandpolis.core.instance.Generator.GenConfig;
+import com.sandpolis.core.server.generator.MegaGen;
 
-class MainView : View("Main") {
+/**
+ * This generator produces a Python script.
+ *
+ * @author cilki
+ * @since 5.0.0
+ */
+public class PyPackager implements Packager {
+	public PyPackager(GenConfig config) {
+		super(config, ".py", "/lib/sandpolis-client-installer.py");
+	}
 
-    val profiles: ObservableList<FxProfile> = FXCollections.observableArrayList()
+	@Override
+	protected byte[] generate() throws Exception {
+		Map<String, String> cfg = new HashMap<>();
 
-    val hostList = tableview(profiles) {
-        readonlyColumn("UUID", FxProfile::uuidProperty)
-    }
+		String stub = readArtifactString();
+		stub.replaceFirst("# PLACEHOLDER",
+				cfg.entrySet().stream()
+						.map(entry -> String.format("config['%s'] = '%s'%n", entry.getKey(), entry.getValue()))
+						.collect(Collectors.joining()));
 
-    override val root = borderpane {
-        center = CarouselPane(hostList).apply {
+		return stub.getBytes();
+	}
 
-        }
-    }
 }

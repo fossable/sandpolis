@@ -10,18 +10,15 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 open module com.sandpolis.client.lifegem {
-	exports com.sandpolis.client.lifegem.common.button;
-	exports com.sandpolis.client.lifegem.common.controller;
-	exports com.sandpolis.client.lifegem.common.field;
-	exports com.sandpolis.client.lifegem.common.label;
-	exports com.sandpolis.client.lifegem.common.pane;
-	exports com.sandpolis.client.lifegem.common.tray;
-	exports com.sandpolis.client.lifegem.common;
+	exports com.sandpolis.client.lifegem.ui.common.button;
+	exports com.sandpolis.client.lifegem.ui.common.controller;
+	exports com.sandpolis.client.lifegem.ui.common.field;
+	exports com.sandpolis.client.lifegem.ui.common.label;
+	exports com.sandpolis.client.lifegem.ui.common.pane;
+	exports com.sandpolis.client.lifegem.ui.common.tray;
+	exports com.sandpolis.client.lifegem.ui.common;
 	exports com.sandpolis.client.lifegem.stage;
 	exports com.sandpolis.client.lifegem.view.about;
-	exports com.sandpolis.client.lifegem.view.generator.config_tree;
-	exports com.sandpolis.client.lifegem.view.generator.detail;
-	exports com.sandpolis.client.lifegem.view.generator;
 	exports com.sandpolis.client.lifegem.view.login.phase;
 	exports com.sandpolis.client.lifegem.view.login;
 	exports com.sandpolis.client.lifegem.view.main.graph;
@@ -49,4 +46,5 @@ open module com.sandpolis.client.lifegem {
 	requires javafx.fxml;
 	requires javafx.graphics;
 	requires org.slf4j;
+	requires tornadofx;
 }
