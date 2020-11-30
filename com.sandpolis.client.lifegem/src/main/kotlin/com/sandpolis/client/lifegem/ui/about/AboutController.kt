@@ -9,24 +9,5 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.server.generator.mega;
 
-import com.sandpolis.core.instance.Generator.GenConfig;
-import com.sandpolis.core.server.generator.MegaGen;
-
-/**
- * This generator produces a QR code as a PNG file.
- *
- * @author cilki
- * @since 5.0.0
- */
-public class QrPackager extends MegaGen {
-	public QrPackager(GenConfig config) {
-		super(config, ".png");
-	}
-
-	@Override
-	protected byte[] generate() throws Exception {
-		return null;
-	}
-}
+package com.sandpolis.client.lifegem.ui.about

@@ -27,6 +27,22 @@ class MainView : View("Main") {
     }
 
     override val root = borderpane {
+        top {
+            menubar {
+                menu("Interface") {
+                    item("List View", "Shortcut+L")
+                    item("Graph View", "Shortcut+G")
+                    separator()
+                    item("Move to system tray") {
+                        tooltip("The application will continue running in the background and the UI will be hidden.")
+                    }
+                }
+                menu("Management")
+                menu("Help") {
+                    item("About")
+                }
+            }
+        }
         center = CarouselPane(hostList).apply {
 
         }

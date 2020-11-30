@@ -52,6 +52,8 @@ message RS_GenerateArtifact {
     // A comment on the result of the generation attempt
     string comment = 2;
 
+    bytes output = 12;
+
     // The start timestamp of the generation
     int64 timestamp = 3;
 

@@ -13,18 +13,20 @@ package com.sandpolis.client.lifegem.stage;
 
 import static com.sandpolis.core.instance.pref.PrefStore.PrefStore;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.stream.Stream;
 
-import com.sandpolis.client.lifegem.common.FxUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import tornadofx.FX;
+import tornadofx.View;
 
 public class SandpolisStage extends Stage {
+
+	private static final Logger log = LoggerFactory.getLogger(SandpolisStage.class);
 
 	public SandpolisStage() {
 		Stream.of("/image/icon.png", "/image/icon@2x.png", "/image/icon@3x.png", "/image/icon@4x.png")
@@ -32,25 +34,26 @@ public class SandpolisStage extends Stage {
 
 	}
 
+	public void setRoot(String root, Object... params) {
+		try {
+			setRoot((Class<View>) Class.forName(root), params);
+		} catch (Exception e) {
+			log.error("Failed to load scene root", e);
+		}
+	}
+
 	/**
 	 * Load the root of the scene graph.
-	 *
-	 * @param root   The root location
-	 * @param params Parameters to pass to the controller
-	 * @return {@code this}
 	 */
-	public void setRoot(String root, Object... params) {
-		// Append stage to end of array
-		params = Arrays.copyOf(params, params.length + 1);
-		params[params.length - 1] = this;
+	public void setRoot(Class<View> root, Object... params) {
 
 		try {
-			setScene(new Scene(FxUtil.loadRoot(Objects.requireNonNull(root), params)));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+			var scene = new Scene(FX.find(root).getRoot());
+			scene.getStylesheets().add("/css/" + PrefStore.getString("ui.theme") + ".css");
+			setScene(scene);
+		} catch (Exception e) {
+			log.error("Failed to load scene root", e);
 		}
-
-		getScene().getStylesheets().add("/css/" + PrefStore.getString("ui.theme") + ".css");
 	}
 
 }

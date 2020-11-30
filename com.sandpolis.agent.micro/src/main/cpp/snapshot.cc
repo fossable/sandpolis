@@ -9,25 +9,43 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.server.generator.mega;
 
-import com.sandpolis.core.instance.Generator.GenConfig;
-import com.sandpolis.core.server.generator.MegaGen;
+// Take/restore disk snapshots
 
-/**
- * This generator produces a unix executable.
- *
- * @author cilki
- * @since 5.0.0
- */
-public class ElfPackager extends MegaGen {
-	public ElfPackager(GenConfig config) {
-		super(config, "", "/lib/sandpolis-client-installer.elf");
+bool snapshot_block_read(char *device) {
+	int fd = open(device, O_RDONLY);
+	if (fd <= 0) {
+		std::cout("Failed to open device");
+		return false;
 	}
 
-	@Override
-	protected byte[] generate() throws Exception {
-		return null;
+	size_t device_size = 0;
+	if (device_size <= 0) {
+		std::cout("Failed to get device size");
+		return false;
 	}
 
+	void *blocks = mmap(nullptr, device_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	if (blocks == nullptr) {
+		std::cout("Failed to map device");
+		return false;
+	}
+
+	void *block;
+	for(unsigned long i = 0; i < device_size; i += SNAPSHOT_BLOCK_SIZE) {
+		block = blocks + i;
+
+		// TODO: hash
+		// TODO: egress
+	}
+}
+
+void snapshot_block_write(char *device) {
+	int fd = open(device, O_WRONLY);
+	if (fd <= 0) {
+		std::cout("Failed to open device");
+		return false;
+	}
+
+	mmap();
 }

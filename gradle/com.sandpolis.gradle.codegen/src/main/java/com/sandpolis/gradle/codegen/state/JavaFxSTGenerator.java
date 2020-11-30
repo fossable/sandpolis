@@ -13,10 +13,11 @@ package com.sandpolis.gradle.codegen.state;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
-import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.*;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 
@@ -27,15 +28,15 @@ public class JavaFxSTGenerator extends VSTGenerator {
 
 	protected void processAttribute(TypeSpec.Builder parent, AttributeSpec attribute) {
 
+		var type = ParameterizedTypeName.get(ClassName.get("javafx.beans.value", "ObservableValue"),
+				attribute.getAttributeType());
+
 		{
-			// Add property getter
-			var type = ParameterizedTypeName.get(ClassName.get("javafx.beans.value", "ObservableValue"),
-					attribute.getAttributeType());
-			var method = MethodSpec.methodBuilder(LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name + "_property")) //
-					.addModifiers(PUBLIC) //
-					.returns(type) //
-					.addStatement("return ($T) document.attribute(\"$L\")", type, attribute.name);
-			parent.addMethod(method.build());
+			// Add property field
+			
+			var field = FieldSpec.builder(type, LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name + "_property"), PUBLIC, FINAL) //
+					.initializer("($T) document.attribute(\"$L\")", type, attribute.name);
+			parent.addField(field.build());
 		}
 	}
 
@@ -43,7 +44,7 @@ public class JavaFxSTGenerator extends VSTGenerator {
 	protected void processDocument(TypeSpec.Builder parent, DocumentSpec document) {
 		var documentClass = TypeSpec.classBuilder("Fx" + document.className()) //
 				.addModifiers(PUBLIC) //
-				.superclass(ClassName.get(VST_PACKAGE, VST_PREFIX + "Document"));
+				.superclass(ClassName.get("com.sandpolis.core.instance.state", VST_PREFIX + document.className()));
 
 		{
 			// Add constructor

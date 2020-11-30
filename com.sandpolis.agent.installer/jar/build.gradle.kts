@@ -15,6 +15,14 @@ plugins {
 	id("java-library")
 }
 
+dependencies {
+	implementation(project(":module:com.sandpolis.core.instance"))
+	implementation(project(":module:com.sandpolis.core.server"))
+
+	// https://github.com/cilki/zipset
+	implementation("com.github.cilki:zipset:1.2.1")
+}
+
 eclipse {
 	project {
 		name = "com.sandpolis.agent.installer:jar"

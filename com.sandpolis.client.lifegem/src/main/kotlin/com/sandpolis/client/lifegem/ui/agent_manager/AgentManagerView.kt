@@ -13,6 +13,7 @@
 package com.sandpolis.client.lifegem.ui.agent_manager
 
 import com.sandpolis.client.lifegem.ui.common.pane.ExtendPane
+import com.sandpolis.client.lifegem.state.FxProfile
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
@@ -23,11 +24,10 @@ import javafx.scene.layout.Region
 import javafx.scene.paint.Color
 import javafx.beans.property.SimpleObjectProperty
 import javafx.geometry.Pos
+import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument
 import tornadofx.*
 
 class AgentManagerView : Fragment() {
-
-    class FxProfile(val name: String) {}
 
     val profile: FxProfile by param()
 
@@ -35,11 +35,6 @@ class AgentManagerView : Fragment() {
             object : ViewModel() {
                 val extendBottom = bind { SimpleObjectProperty<Region>() }
             }
-
-    val powerConfirmation = titledpane("Run power operation") {
-        collapsibleProperty().set(false)
-        button("Power off")
-    }
 
     val menuList = vbox {
 
@@ -67,10 +62,6 @@ class AgentManagerView : Fragment() {
 
                         button("P") {
                             tooltip("Poweroff the host")
-                            action {
-                                model.extendBottom.set(null)
-                                model.extendBottom.set(powerConfirmation)
-                            }
                         }
                         button("R") {
                             tooltip("Restart the host")

@@ -35,6 +35,7 @@ public class CodeGen implements Plugin<Project> {
 			// Prepare to add dependencies on these tasks
 			Task generateProto = project.getTasks().findByName("generateProto");
 			Task compileJava = project.getTasks().findByName("compileJava");
+			Task compileKotlin = project.getTasks().findByName("compileKotlin");
 			Task clean = project.getTasks().findByName("clean");
 
 			if (configuration.stateTree == null && project.file("state.json").exists()) {
@@ -54,6 +55,9 @@ public class CodeGen implements Plugin<Project> {
 
 					if (generateProto != null) {
 						generateJavaFxStateTree.dependsOn(generateProto);
+					}
+					if (compileKotlin != null) {
+						compileKotlin.dependsOn(generateJavaFxStateTree);
 					}
 					compileJava.dependsOn(generateJavaFxStateTree);
 				} else if (configuration.coreStateTree) {

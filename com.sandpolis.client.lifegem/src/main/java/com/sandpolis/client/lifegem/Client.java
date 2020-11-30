@@ -30,7 +30,7 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.client.lifegem.common.FxUtil;
+import com.sandpolis.client.lifegem.ui.common.FxUtil;
 import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
@@ -38,12 +38,16 @@ import com.sandpolis.core.instance.MainDispatch;
 import com.sandpolis.core.instance.MainDispatch.InitializationTask;
 import com.sandpolis.core.instance.MainDispatch.ShutdownTask;
 import com.sandpolis.core.instance.MainDispatch.Task;
+import com.sandpolis.core.instance.profile.Profile;
+import com.sandpolis.core.instance.state.st.ephemeral.EphemeralDocument;
+import com.sandpolis.core.instance.state.vst.VirtCollection;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
+import tornadofx.FX;
 
 /**
  * {@link Client} is responsible for initializing the instance.
@@ -90,11 +94,11 @@ public final class Client {
 
 		STStore.init(config -> {
 			config.concurrency = 1;
-//			config.root = new FxDocument<>(null);
+			config.root = new EphemeralDocument();
 		});
 
 		ProfileStore.init(config -> {
-
+			config.collection = new VirtCollection<Profile>(STStore.root(), Profile::new);
 		});
 
 		ThreadStore.init(config -> {
@@ -210,15 +214,20 @@ public final class Client {
 		}
 
 		@Override
-		public void start(Stage stage) throws Exception {
+		public void start(Stage main) throws Exception {
+
 			// Ignore the primary stage and create a new one
-			StageStore.create(s -> {
-				s.setRoot("/fxml/view/login/Login.fxml");
-				s.setWidth(PrefStore.getInt("ui.view.login.width"));
-				s.setHeight(PrefStore.getInt("ui.view.login.height"));
-				s.setResizable(false);
+			var stage = StageStore.create(s -> {
+				s.setRoot("com.sandpolis.client.lifegem.ui.login.LoginView");
+				//s.setWidth(PrefStore.getInt("ui.view.login.width"));
+				//s.setHeight(PrefStore.getInt("ui.view.login.height"));
+				//s.setResizable(false);
 				s.setTitle(FxUtil.translate("stage.login.title"));
 			});
+
+			// Register application
+			FX.registerApplication(this, stage);
+
 		}
 	}
 

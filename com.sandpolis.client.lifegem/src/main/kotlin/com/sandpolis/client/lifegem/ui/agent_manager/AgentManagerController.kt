@@ -9,24 +9,5 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.server.generator.mega;
 
-import com.sandpolis.core.instance.Generator.GenConfig;
-import com.sandpolis.core.server.generator.MegaGen;
-
-/**
- * This generator produces a shell script.
- *
- * @author cilki
- * @since 5.0.0
- */
-public class ShPackager extends MegaGen {
-	public ShPackager(GenConfig config) {
-		super(config, ".sh", "/lib/sandpolis-client-installer.sh");
-	}
-
-	@Override
-	protected byte[] generate() throws Exception {
-		return null;
-	}
-}
+package com.sandpolis.client.lifegem.ui.agent_manager

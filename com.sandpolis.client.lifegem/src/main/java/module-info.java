@@ -19,8 +19,6 @@ open module com.sandpolis.client.lifegem {
 	exports com.sandpolis.client.lifegem.ui.common;
 	exports com.sandpolis.client.lifegem.stage;
 	exports com.sandpolis.client.lifegem.view.about;
-	exports com.sandpolis.client.lifegem.view.login.phase;
-	exports com.sandpolis.client.lifegem.view.login;
 	exports com.sandpolis.client.lifegem.view.main.graph;
 	exports com.sandpolis.client.lifegem.view.main.list;
 	exports com.sandpolis.client.lifegem.view.main.menu;

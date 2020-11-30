@@ -33,12 +33,12 @@ import com.sandpolis.core.instance.Group.AgentConfig;
  *
  * @since 6.1.0
  */
-public class MicroGen extends Generator {
+public class ArtifactGeneratorMicro extends Generator {
 
-	private static final Logger log = LoggerFactory.getLogger(MicroGen.class);
+	private static final Logger log = LoggerFactory.getLogger(ArtifactGeneratorMicro.class);
 
-	public MicroGen(AgentConfig config, String archiveExtension) {
-		super(config, archiveExtension);
+	public ArtifactGeneratorMicro(AgentConfig config) {
+		super(config, null);
 	}
 
 	@Override

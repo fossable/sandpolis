@@ -24,7 +24,7 @@ ENV SANDPOLIS_PLUGINS_ENABLED       "true"
 COPY build/docker/lib/ /app/lib
 
 # Module-path invocation
-ENTRYPOINT ["java", "--module-path", "/app/lib", "-m", "com.sandpolis.server.vanilla/com.sandpolis.server.vanilla.Main"]
+#ENTRYPOINT ["java", "--module-path", "/app/lib", "-m", "com.sandpolis.server.vanilla/com.sandpolis.server.vanilla.Main"]
 
 # Class-path invocation
-#ENTRYPOINT ["java", "-cp", "/app/lib/*", "com.sandpolis.server.vanilla.Main"]
+ENTRYPOINT ["java", "-cp", "/app/lib/*", "com.sandpolis.server.vanilla.Main"]

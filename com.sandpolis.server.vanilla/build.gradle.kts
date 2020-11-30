@@ -19,7 +19,6 @@ plugins {
 
 	id("com.sandpolis.gradle.soi")
 	id("com.bmuschko.docker-remote-api") version "6.6.0"
-	id("de.jjohannes.extra-java-module-info") version "0.3"
 }
 
 dependencies {
@@ -48,32 +47,6 @@ eclipse {
 		name = project.name
 		comment = project.name
 	}
-}
-
-// TODO remove
-extraJavaModuleInfo {
-	automaticModule("java-otp-0.2.0.jar", "java.otp")
-	automaticModule("hibernate-ogm-mongodb-5.4.1.Final.jar", "hibernate.ogm.mongodb")
-	module("hibernate-ogm-core-5.4.1.Final.jar", "hibernate.ogm.core", "5.4.1")
-	automaticModule("hibernate-hql-parser-1.5.0.Final.jar", "hibernate.hql.parser")
-	automaticModule("mongo-java-driver-3.9.1.jar", "mongo.java.driver")
-	automaticModule("antlr-runtime-3.4.jar", "antlr.runtime")
-	module("parboiled-core-1.1.8.jar", "parboiled.core", "1.1.8")
-	module("parboiled-java-1.1.8.jar", "parboiled.java", "1.1.8")
-	automaticModule("asm-analysis-5.2.jar", "asm.analysis")
-	automaticModule("asm-util-5.2.jar", "asm.util")
-	automaticModule("asm-tree-5.2.jar", "asm.tree")
-	automaticModule("asm-5.2.jar", "asm")
-	automaticModule("javassist-3.23.1-GA.jar", "javassist")
-	automaticModule("stringtemplate-3.2.1.jar", "stringtemplate")
-	automaticModule("antlr-2.7.7.jar", "antlr")
-	automaticModule("jandex-2.0.5.Final.jar", "jandex")
-	automaticModule("dom4j-1.6.1.jar", "dom4j")
-	automaticModule("failureaccess-1.0.1.jar", "failureaccess")
-	automaticModule("checker-framework-1.7.0.jar", "checker.framework")
-	automaticModule("sandpolis-agent-installer-go-6.1.1.jar", "com.sandpolis.agent.installer.go")
-	automaticModule("sandpolis-agent-installer-py-6.1.1.jar", "com.sandpolis.agent.installer.py")
-	automaticModule("sandpolis-agent-installer-jar-6.1.1.jar", "com.sandpolis.agent.installer.jar")
 }
 
 val imageSyncBuildContext by tasks.creating(Sync::class) {

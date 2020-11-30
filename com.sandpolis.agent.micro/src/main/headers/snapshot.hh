@@ -9,24 +9,21 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
-package com.sandpolis.core.server.generator.mega;
+#ifndef SNAPSHOT_H
+#define SNAPSHOT_H
 
-import com.sandpolis.core.instance.Generator.GenConfig;
-import com.sandpolis.core.server.generator.MegaGen;
+#define SNAPSHOT_BLOCK_SIZE 4096
 
-/**
- * This generator produces a Windows batch file.
- *
- * @author cilki
- * @since 5.0.0
- */
-public class BatPackager extends MegaGen {
-	public BatPackager(GenConfig config) {
-		super(config, ".bat", "/lib/sandpolis-client-installer.bat");
-	}
+// Restore a block-mode snapshot
+bool snapshot_block_write();
 
-	@Override
-	protected byte[] generate() throws Exception {
-		return null;
-	}
-}
+// Create a new block-mode snapshot
+bool snapshot_block_read();
+
+// Restore a file-mode snapshot
+bool snapshot_file_write();
+
+// Create a new file-mode snapshot
+bool snapshot_file_read();
+
+#endif

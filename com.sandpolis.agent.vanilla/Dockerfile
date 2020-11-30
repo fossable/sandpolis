@@ -18,4 +18,5 @@ ENV SANDPOLIS_PLUGINS_ENABLED       "true"
 # Install application
 COPY build/docker/lib/ /app/lib
 
-ENTRYPOINT ["java", "--module-path", "/app/lib", "-m", "com.sandpolis.agent.vanilla/com.sandpolis.agent.vanilla.Main"]
+#ENTRYPOINT ["java", "--module-path", "/app/lib", "-m", "com.sandpolis.agent.vanilla/com.sandpolis.agent.vanilla.Main"]
+ENTRYPOINT ["java", "-cp", "/app/lib/*", "com.sandpolis.agent.vanilla.Main"]

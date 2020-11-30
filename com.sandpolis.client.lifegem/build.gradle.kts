@@ -12,6 +12,7 @@
 
 import com.bmuschko.gradle.docker.tasks.container.*
 import com.bmuschko.gradle.docker.tasks.image.*
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
 	id("eclipse")
@@ -19,8 +20,21 @@ plugins {
 
 	id("com.sandpolis.gradle.soi")
 	id("com.sandpolis.gradle.codegen")
-	id("org.openjfx.javafxplugin") version "0.0.8"
+	id("org.openjfx.javafxplugin") version "0.0.9"
 	id("com.bmuschko.docker-remote-api") version "6.6.0"
+	kotlin("jvm") version "1.4.10"
+}
+
+repositories {
+	maven {
+		url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+	}
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+	kotlinOptions {
+		jvmTarget = "1.8"
+	}
 }
 
 javafx {
@@ -61,6 +75,9 @@ dependencies {
 
 	// https://github.com/javaee/jpa-spec
 	implementation("javax.persistence:javax.persistence-api:2.2")
+	
+	implementation("no.tornado:tornadofx:2.0.0-SNAPSHOT")
+	implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.10")
 }
 
 codegen {

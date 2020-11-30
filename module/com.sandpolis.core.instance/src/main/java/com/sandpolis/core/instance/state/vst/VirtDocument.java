@@ -1,6 +1,7 @@
 package com.sandpolis.core.instance.state.vst;
 
 import com.sandpolis.core.instance.state.oid.Oid;
+import com.sandpolis.core.instance.state.st.STAttribute;
 import com.sandpolis.core.instance.state.st.STDocument;
 
 public abstract class VirtDocument implements VirtObject {
@@ -15,4 +16,7 @@ public abstract class VirtDocument implements VirtObject {
 		return document.oid();
 	}
 
+	public abstract String getId();
+
+	public abstract STAttribute<String> id();
 }

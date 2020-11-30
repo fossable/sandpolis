@@ -20,4 +20,5 @@ ENV SANDPOLIS_PLUGINS_ENABLED       "true"
 # Install application
 COPY build/docker/lib/ /app/lib
 
-ENTRYPOINT ["java", "--module-path", "/app/lib", "-m", "com.sandpolis.client.lifegem/com.sandpolis.client.lifegem.Main"]
+#ENTRYPOINT ["java", "--module-path", "/app/lib", "-m", "com.sandpolis.client.lifegem/com.sandpolis.client.lifegem.Main"]
+ENTRYPOINT ["java", "-cp", "/app/lib/*", "com.sandpolis.client.lifegem.Main"]

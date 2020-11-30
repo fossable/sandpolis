@@ -5,6 +5,10 @@
 	-fx-fill: null;
 }
 
+.progress-indicator .tick {
+	-fx-background-color: null;
+}
+
 .progress-indicator {
 	-fx-padding: 0 0 -16 0;
 }
