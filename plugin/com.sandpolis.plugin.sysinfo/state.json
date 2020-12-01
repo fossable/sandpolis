@@ -425,7 +425,6 @@
 			{
 				"name": "tid",
 				"type": "java.lang.Integer",
-				"id": true,
 				"description": "The thread's ID"
 			}
 		]
@@ -875,7 +874,6 @@
 			{
 				"name": "pid",
 				"type": "java.lang.Integer",
-				"id": true,
 				"description": "The process's process ID",
 				"osquery": "processes.pid"
 			},
@@ -1877,7 +1875,7 @@
 				"osquery": "firefox_addons.autoupdate"
 			},
 			{
-				"name": "native",
+				"name": "native_addon",
 				"type": "java.lang.Boolean",
 				"description": "Whether the addon includes binary components",
 				"osquery": "firefox_addons.native"
