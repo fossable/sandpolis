@@ -7,3 +7,12 @@
 [submodule "plugin/com.sandpolis.plugin.shell"]
 	path = plugin/com.sandpolis.plugin.shell
 	url = ../com.sandpolis.plugin.shell
+[submodule "com.sandpolis.agent.micro"]
+	path = com.sandpolis.agent.micro
+	url = ../com.sandpolis.agent.micro
+[submodule "com.sandpolis.client.ascetic"]
+	path = com.sandpolis.client.ascetic
+	url = ../com.sandpolis.client.ascetic
+[submodule "com.sandpolis.client.lifegem"]
+	path = com.sandpolis.client.lifegem
+	url = ../com.sandpolis.client.lifegem
