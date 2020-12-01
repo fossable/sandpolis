@@ -1,0 +1,9 @@
+[submodule "plugin/com.sandpolis.plugin.desktop"]
+	path = plugin/com.sandpolis.plugin.desktop
+	url = ../com.sandpolis.plugin.desktop
+[submodule "plugin/com.sandpolis.plugin.device"]
+	path = plugin/com.sandpolis.plugin.device
+	url = ../com.sandpolis.plugin.device
+[submodule "plugin/com.sandpolis.plugin.shell"]
+	path = plugin/com.sandpolis.plugin.shell
+	url = ../com.sandpolis.plugin.shell
