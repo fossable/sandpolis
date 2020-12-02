@@ -16,3 +16,6 @@
 [submodule "com.sandpolis.client.lifegem"]
 	path = com.sandpolis.client.lifegem
 	url = ../com.sandpolis.client.lifegem
+[submodule "com.sandpolis.server.vanilla"]
+	path = com.sandpolis.server.vanilla
+	url = ../com.sandpolis.server.vanilla
