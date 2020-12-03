@@ -71,7 +71,7 @@ class Login: UIViewController {
 							self.progress.stopAnimating()
 							if let connection = connection {
 								SandpolisUtil.connection = connection
-								connection.openProfileStream()
+								//connection.openProfileStream()
 
 								self.performSegue(withIdentifier: "DirectLoginCompleteSegue", sender: address)
 							} else {

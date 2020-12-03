@@ -90,7 +90,7 @@ class ServerManager: UITableViewController {
 				login(address: server.address, username: server.username, password: server.password) { connection in
 					if let connection = connection {
 						SandpolisUtil.connection = connection
-						connection.openProfileStream()
+						//connection.openProfileStream()
 						DispatchQueue.main.async {
 							self.performSegue(withIdentifier: "ShowHostSegue", sender: server)
 						}

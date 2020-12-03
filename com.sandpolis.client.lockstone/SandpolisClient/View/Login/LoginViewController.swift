@@ -12,11 +12,10 @@
 import UIKit
 import FirebaseAuth
 
-class SignInAccount: UIViewController, GIDSignInUIDelegate {
+class SignInAccount: UIViewController {
 
 	@IBOutlet weak var textFieldLoginEmail: UITextField!
 	@IBOutlet weak var textFieldLoginPassword: UITextField!
-	@IBOutlet weak var googleSignInButton: GIDSignInButton!
 	@IBOutlet weak var loginButton: UIButton!
 	@IBOutlet weak var forgotPasswordButton: UIButton!
 	@IBOutlet weak var createAccountButton: UIButton!
@@ -25,8 +24,6 @@ class SignInAccount: UIViewController, GIDSignInUIDelegate {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-
-		GIDSignIn.sharedInstance().uiDelegate = self
 	}
 
 	override func viewDidDisappear(_ animated: Bool) {
@@ -76,7 +73,6 @@ class SignInAccount: UIViewController, GIDSignInUIDelegate {
 	}
 
 	@IBAction func forgotPassword(_ sender: Any) {
-		loginContainer.openForgotPassword()
 	}
 
 }

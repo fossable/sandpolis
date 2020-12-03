@@ -27,21 +27,21 @@ extension SandpolisConnection {
 	func fm_list(_ target: Int32, _ path: String, mtimes: Bool, sizes: Bool) -> EventLoopFuture<Any> {
 		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.payload = try! Google_Protobuf_Any(message: Plugin_Filesys_Msg_RQ_FileListing.with {
+			$0.payload = try! Plugin_Filesys_Msg_RQ_FileListing.with {
 				$0.path = path
 				$0.options = Plugin_Filesys_Msg_FsHandleOptions.with {
 					$0.mtime = mtimes
 					$0.size = sizes
 				}
-			}, typePrefix: "com.sandpolis.plugin.filesys")
+            }.serializedData()
 		}
 
 		os_log("Requesting file listing for client: %d, path: %s", target, path)
 		return request(&rq).map { rs in
 			do {
-				return try Plugin_Filesys_Msg_RS_FileListing.init(unpackingAny: rs.payload)
+				return try Plugin_Filesys_Msg_RS_FileListing.init(serializedData: rs.payload)
 			} catch {
-				return try! Core_Foundation_Outcome.init(unpackingAny: rs.payload)
+				return try! Core_Foundation_Outcome.init(serializedData: rs.payload)
 			}
 		}
 	}
@@ -54,18 +54,18 @@ extension SandpolisConnection {
 	func fm_delete(_ target: Int32, _ path: String) -> EventLoopFuture<Any> {
 		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.payload = try! Google_Protobuf_Any(message: Plugin_Filesys_Msg_RQ_FileDelete.with {
+			$0.payload = try! Plugin_Filesys_Msg_RQ_FileDelete.with {
 				$0.target = [path]
-			}, typePrefix: "com.sandpolis.plugin.filesys")
+            }.serializedData()
 		}
 
 		os_log("Requesting file deletion for client: %d, path: %s", target, path)
 		return request(&rq).map { rs in
 			do {
-				return try Core_Foundation_Outcome.init(unpackingAny: rs.payload)
+				return try Core_Foundation_Outcome.init(serializedData: rs.payload)
 			} catch {
 				// TODO
-				return try! Core_Foundation_Outcome.init(unpackingAny: rs.payload)
+				return try! Core_Foundation_Outcome.init(serializedData: rs.payload)
 			}
 		}
 	}

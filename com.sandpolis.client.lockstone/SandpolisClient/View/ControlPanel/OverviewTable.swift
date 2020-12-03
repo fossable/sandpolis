@@ -22,9 +22,9 @@ class OverviewTable: UITableViewController {
 		("Processes", [Attribute("/process/count", "Number of Processes")])
 	]*/
 
-	var info: [(String, [Attribute])] = [
-		("System", [Attribute("", "Operating System"), Attribute("", "Hostname")]),
-		("Location", [Attribute("", "Latitude"), Attribute("", "Longitude"), Attribute("", "City"), Attribute("", "Country"), Attribute("", "ISP")])
+	var info: [(String, [Oid<Any>])] = [
+    //    ("System", [InstanceOid.osType, InstanceOid.hostname]),
+//        ("Location", [InstanceOid.ipLocationCountry])
 	]
 
 	/// The table update timer
@@ -35,7 +35,7 @@ class OverviewTable: UITableViewController {
 		tableView.allowsSelection = false
 
 		// Temporarily set values
-		switch profile.osFamily.value {
+		/*switch profile.osFamily.value {
 		case .linux:
 			info[0].1[0].value = "Linux"
 		case .darwin:
@@ -52,7 +52,7 @@ class OverviewTable: UITableViewController {
 		info[1].1[1].value = "\(profile.ipLocationLongitude.value!)"
 		info[1].1[2].value = profile.ipLocationCity.value
 		info[1].1[3].value = profile.ipLocationCountry.value
-		info[1].1[4].value = profile.ipLocationIsp.value
+		info[1].1[4].value = profile.ipLocationIsp.value*/
 	}
 
 	override func viewWillAppear(_ animated: Bool) {
@@ -68,7 +68,7 @@ class OverviewTable: UITableViewController {
 
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "InfoCell") as! InfoCell
-		cell.setAttribute(info[indexPath.section].1[indexPath.row])
+		//cell.setAttribute(info[indexPath.section].1[indexPath.row])
 		return cell
 	}
 

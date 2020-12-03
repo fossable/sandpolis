@@ -71,7 +71,7 @@ class LoginServer: UIViewController, UITextFieldDelegate {
 		login(address: address.text!, username: username.text!, password: password.text!) { connection in
 			if let connection = connection {
 				SandpolisUtil.connection = connection
-				connection.openProfileStream()
+				//connection.openProfileStream()
 
 				UserDefaults.standard.set("direct", forKey: "login.type")
 				UserDefaults.standard.set(true, forKey: "login.auto")

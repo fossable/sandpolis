@@ -11,23 +11,23 @@
 //=========================================================S A N D P O L I S==//
 import Foundation
 
-class Document {
+class STDocument {
 
-	private var documents = [String: Document]()
+    private var attributes = [String: STAttribute<Any>]()
 
-	func document(_ id: String) -> Document {
+	private var documents = [String: STDocument]()
+
+	func document(_ id: String) -> STDocument {
 		if documents[id] == nil {
-			documents[id] = Document()
+			documents[id] = STDocument()
 		}
 		return documents[id]!
 	}
 
-	private var attributes = [String: Attribute]()
-
-	func attribute(_ id: String) -> Attribute {
-		if attributes[id] == nil {
-			attributes[id] = Attribute("", "")
+	func attribute(_ path: String) -> STAttribute<Any> {
+		if attributes[path] == nil {
+		//	attributes[path] = STAttribute()
 		}
-		return attributes[id]!
+		return attributes[path]!
 	}
 }

@@ -27,7 +27,7 @@ final class CvidRequestHandler: ChannelInboundHandler, RemovableChannelHandler {
 		// Autoremove
 		_ = context.channel.pipeline.removeHandler(self)
 
-		let rs = try! Core_Net_Msg_RS_Cvid.init(unpackingAny: self.unwrapInboundIn(data).payload)
+		let rs = try! Core_Net_Msg_RS_Cvid.init(serializedData: self.unwrapInboundIn(data).payload)
 		connection.cvid = rs.cvid
 		connection.handshakeCompleted = true
 		connection.connectionPromise.succeed(Void())
@@ -35,11 +35,11 @@ final class CvidRequestHandler: ChannelInboundHandler, RemovableChannelHandler {
 
 	func channelActive(context: ChannelHandlerContext) {
 		let rq = Core_Net_MSG.with {
-			$0.payload = try! Google_Protobuf_Any(message: Core_Net_Msg_RQ_Cvid.with {
+			$0.payload = try! Core_Net_Msg_RQ_Cvid.with {
 				$0.instance = Core_Instance_InstanceType.client
 				$0.instanceFlavor = Core_Instance_InstanceFlavor.lockstone
 				$0.uuid = UserDefaults.standard.string(forKey: "uuid")!
-			}, typePrefix: "com.sandpolis.core.net")
+            }.serializedData()
 		}
 
 		_ = context.channel.writeAndFlush(rq)

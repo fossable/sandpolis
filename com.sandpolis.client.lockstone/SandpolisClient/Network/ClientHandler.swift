@@ -26,15 +26,8 @@ final class ClientHandler: ChannelInboundHandler {
 	func channelRead(context: ChannelHandlerContext, data: NIOAny) {
 		let rs = self.unwrapInboundIn(data)
 
-		if rs.payload == nil {
-			return
-		}
-
-		switch rs.payload! {
-		default:
-			if let stream = self.connection.streams.first(where: { $0.id == rs.id }) {
-				stream.consume(rs)
-			}
-		}
+        if let stream = self.connection.streams.first(where: { $0.id == rs.id }) {
+            stream.consume(rs)
+        }
 	}
 }

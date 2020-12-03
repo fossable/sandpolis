@@ -16,7 +16,7 @@ class ClientList: UITableViewController {
 
 	@IBOutlet weak var footerView: UIView!
 
-	/// Whether multiple hosts can be selected currently
+	/// Whether multiple hosts can be selected concurrently
 	private var selectionMode = false
 
 	/// The current selection if selection mode is active

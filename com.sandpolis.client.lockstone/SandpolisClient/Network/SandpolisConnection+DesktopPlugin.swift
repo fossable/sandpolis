@@ -23,13 +23,13 @@ extension SandpolisConnection {
 	func screenshot(_ target: Int32) -> EventLoopFuture<Any> {
 		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.payload = try! Google_Protobuf_Any(message: Plugin_Desktop_Msg_RQ_Screenshot(), typePrefix: "com.sandpolis.plugin.desktop")
+            $0.payload = try! Plugin_Desktop_Msg_RQ_Screenshot().serializedData()
 		}
 
 		os_log("Requesting screenshot for client: %d", target)
 		return request(&rq).map { rs in
 			do {
-				return try Plugin_Desktop_Msg_RS_Screenshot.init(unpackingAny: rs.payload)
+                return try Plugin_Desktop_Msg_RS_Screenshot.init(serializedData: rs.payload)
 			} catch {
 				return Core_Foundation_Outcome.with {
 					$0.result = false
@@ -47,7 +47,7 @@ extension SandpolisConnection {
 		let stream = SandpolisStream(self, SandpolisUtil.stream())
 		stream.register { (ev: Core_Net_MSG) -> Void in
 			do {
-				receiver.onEvent(try Plugin_Desktop_Msg_EV_DesktopStream.init(unpackingAny: ev.payload))
+				receiver.onEvent(try Plugin_Desktop_Msg_EV_DesktopStream.init(serializedData: ev.payload))
 			} catch {
 				os_log("Failed to decode stream event")
 			}
@@ -56,9 +56,9 @@ extension SandpolisConnection {
 
 		var rq = Core_Net_MSG.with {
 			$0.to = target
-			$0.payload = try! Google_Protobuf_Any(message:  Plugin_Desktop_Msg_RQ_DesktopStream.with {
+			$0.payload = try! Plugin_Desktop_Msg_RQ_DesktopStream.with {
 				$0.id = stream.id
-			}, typePrefix: "com.sandpolis.plugin.desktop")
+            }.serializedData()
 		}
 
 		os_log("Requesting remote desktop session for client: %d", target)

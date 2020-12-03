@@ -17,10 +17,10 @@ class InfoCell: UITableViewCell {
 	@IBOutlet weak var value: UILabel!
 	@IBOutlet weak var progress: UIActivityIndicatorView!
 
-	public func setAttribute(_ attribute: Attribute) {
-		title.text = attribute.title
+	public func setAttribute(_ attribute: STAttribute<Any>) {
+        title.text = attribute.oid.path
 		if let value = attribute.value {
-			self.value.text = value
+            self.value.text = value as? String
 			self.value.isHidden = false
 			self.progress.stopAnimating()
 		} else {

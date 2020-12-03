@@ -89,10 +89,10 @@ class TerminalViewController: UIViewController, WKNavigationDelegate, WKUIDelega
 							$0.id = stream.id
 							$0.to = self.profile.cvid
 							$0.from = stream.connection.cvid
-							$0.payload = try! Google_Protobuf_Any(message: Plugin_Shell_Msg_EV_ShellStream.with {
+							$0.payload = try! Plugin_Shell_Msg_EV_ShellStream.with {
 								$0.cols = self.cols
 								$0.rows = self.rows
-							}, typePrefix: "com.sandpolis.plugin.shell")
+                            }.serializedData()
 						}
 						stream.connection.send(&ev)
 					}
@@ -466,9 +466,9 @@ class TerminalViewController: UIViewController, WKNavigationDelegate, WKUIDelega
 			$0.id = stream.id
 			$0.to = profile.cvid
 			$0.from = stream.connection.cvid
-			$0.payload = try! Google_Protobuf_Any(message: Plugin_Shell_Msg_EV_ShellStream.with {
+			$0.payload = try! Plugin_Shell_Msg_EV_ShellStream.with {
 				$0.data = text.data(using: .utf8)!
-			}, typePrefix: "com.sandpolis.plugin.shell")
+            }.serializedData()
 		}
 		stream.connection.send(&ev)
 	}

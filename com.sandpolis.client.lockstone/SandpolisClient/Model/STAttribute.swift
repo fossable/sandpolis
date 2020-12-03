@@ -13,8 +13,8 @@ import Foundation
 
 class STAttribute<T> {
 
-	/// The attribute's OID
-	let oid: String
+    /// The attribute OID
+    let oid: Oid<T>
 
 	/// The attribute's current value
 	var value: T?
@@ -22,7 +22,7 @@ class STAttribute<T> {
 	/// The timestamp associated with the attribute's current value
 	var timestamp: Date?
 	
-	init(_ oid: String) {
+    init(_ oid: Oid<T>) {
 		self.oid = oid
 	}
 }

@@ -12,7 +12,7 @@
 import CryptoKit
 import NIO
 import NIOProtobuf
-import NIOTLS
+import NIOSSL
 import SwiftProtobuf
 import SwiftEventBus
 import Foundation
@@ -163,10 +163,10 @@ public class SandpolisConnection {
 	/// - Returns: A response future
 	func login(_ username: String, _ password: String) -> EventLoopFuture<Core_Net_MSG> {
 		var rq = Core_Net_MSG.with {
-			$0.payload = try! Google_Protobuf_Any(message: Core_Sv_Msg_RQ_Login.with {
+			$0.payload = try! Core_Clientserver_Msg_RQ_Login.with {
 				$0.username = username
 				$0.password = SHA256.hash(data: password.data(using: .utf8)!).map { String(format: "%02hhx", $0) }.joined()
-			}, typePrefix: "com.sandpolis.core.sv")
+            }.serializedData()
 		}
 
 		os_log("Requesting login for username: %s", username)
@@ -182,61 +182,18 @@ public class SandpolisConnection {
 	func snapshot_collection(_ target: SandpolisProfile, _ oid: String) -> EventLoopFuture<Core_Instance_ProtoCollection> {
 		var rq = Core_Net_MSG.with {
 			$0.to = target.cvid
-			$0.payload = try! Google_Protobuf_Any(message: Core_Net_Msg_RQ_STSnapshot.with {
+			$0.payload = try! Core_Net_Msg_RQ_STSnapshot.with {
 				$0.oid = oid
-			}, typePrefix: "com.sandpolis.core.net")
+            }.serializedData()
 		}
 
 		os_log("Requesting snapshot: %s", oid)
 		return request(&rq).map { rs in
 			do {
-				return try Core_Instance_ProtoCollection.init(unpackingAny: rs.payload)
+				return try Core_Instance_ProtoCollection.init(serializedData: rs.payload)
 			} catch {
 				return Core_Instance_ProtoCollection.init()
 			}
 		}
-	}
-
-	/// Open a new profile stream.
-	///
-	/// - Returns: A response future
-	func openProfileStream() -> EventLoopFuture<Core_Net_MSG> {
-		let stream = SandpolisStream(self, SandpolisUtil.stream())
-		stream.register { (m: Core_Net_MSG) -> Void in
-			let ev = m.evProfileStream
-			if ev.online {
-
-				let profile = SandpolisProfile(
-					uuid: ev.uuid,
-					cvid: ev.cvid,
-					hostname: ev.hostname,
-					ipAddress: ev.ip,
-					platform: ev.platform,
-					online: ev.online
-				)
-
-				if ev.hasLocation {
-					profile.location = ev.location
-				}
-
-				self.profiles.append(profile)
-				SwiftEventBus.post("profileOnlineEvent", sender: profile)
-			} else {
-				if let index = self.profiles.firstIndex(where: { $0.cvid == ev.cvid }) {
-					let profile = self.profiles.remove(at: index)
-					profile.online = ev.online
-					SwiftEventBus.post("profileOfflineEvent", sender: profile)
-				}
-			}
-		}
-		streams.append(stream)
-
-		var rq = Core_Net_MSG.with {
-			$0.rqProfileStream = Net_RQ_ProfileStream.with {
-				$0.id = stream.id
-			}
-		}
-
-		return request(&rq)
 	}
 }

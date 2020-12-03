@@ -39,9 +39,9 @@ class SandpolisStream {
 	/// Close the stream
 	func close() -> EventLoopFuture<Core_Net_MSG> {
 		var rq = Core_Net_MSG.with {
-			$0.payload = try! Google_Protobuf_Any(message: Core_Net_Msg_RQ_StreamStop.with {
+			$0.payload = try! Core_Net_Msg_RQ_StreamStop.with {
 				$0.id = id
-			}, typePrefix: "com.sandpolis.core.net")
+            }.serializedData()
 		}
 
 		return connection.request(&rq)

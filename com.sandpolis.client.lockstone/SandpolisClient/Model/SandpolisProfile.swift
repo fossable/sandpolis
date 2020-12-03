@@ -13,44 +13,42 @@ import Foundation
 import UIKit
 import os
 
-/// Contains client metadata
+/// Contains agent metadata
 class SandpolisProfile {
 
-	lazy var hostname = STAttribute<String>("1")
-	lazy var osFamily = STAttribute<Core_Foundation_OsType>("9.6.0.24")
-	lazy var online = STAttribute<Bool>("9.6.0.28")
-	lazy var ipAddress = STAttribute<String>("9.6.0.20")
-	lazy var ipLocationCity = STAttribute<String>("9.6.0.13.5.12")
-	lazy var ipLocationContinent = STAttribute<String>("9.6.0.13.5.16")
-	lazy var ipLocationCountry = STAttribute<String>("9.6.0.13.5.24")
-	lazy var ipLocationCountryCode = STAttribute<String>("9.6.0.13.5.20")
-	lazy var ipLocationCurrency = STAttribute<String>("9.6.0.13.5.32")
-	lazy var ipLocationDisctrict = STAttribute<String>("9.6.0.13.5.36")
-	lazy var ipLocationIsp = STAttribute<String>("9.6.0.13.5.40")
-	lazy var ipLocationLatitude = STAttribute<Float32>("9.6.0.13.5.44")
-	lazy var ipLocationLongitude = STAttribute<Float32>("9.6.0.13.5.48")
-	lazy var ipLocationRegion = STAttribute<String>("9.6.0.13.5.64")
-	lazy var instanceType = STAttribute<Core_Instance_InstanceType>("9.6.0.4")
-	lazy var instanceFlavor = STAttribute<Core_Instance_InstanceFlavor>("9.6.0.8")
-	lazy var username = STAttribute<String>("9.6.0.20")
-	lazy var userDirectory = STAttribute<String>("9.6.0.20")
-	lazy var screenshot = STAttribute<Data>("1")
+    lazy var hostname = STAttribute<String>(InstanceOid.hostname.resolve(uuid))
+    lazy var osFamily = STAttribute<Core_Foundation_OsType>(InstanceOid.osType.resolve(uuid))
+    lazy var online = STAttribute<Bool>(InstanceOid.online.resolve(uuid))
+    lazy var ipAddress = STAttribute<String>(InstanceOid.ipAddress.resolve(uuid))
+    lazy var ipLocationCity = STAttribute<String>(InstanceOid.ipLocationCity.resolve(uuid))
+    lazy var ipLocationContinent = STAttribute<String>(InstanceOid.ipLocationContinent.resolve(uuid))
+    lazy var ipLocationCountry = STAttribute<String>(InstanceOid.ipLocationCountry.resolve(uuid))
+    lazy var ipLocationCountryCode = STAttribute<String>(InstanceOid.ipLocationCountryCode.resolve(uuid))
+    lazy var ipLocationCurrency = STAttribute<String>(InstanceOid.ipLocationCurrency.resolve(uuid))
+    lazy var ipLocationDistrict = STAttribute<String>(InstanceOid.ipLocationDistrict.resolve(uuid))
+    lazy var ipLocationIsp = STAttribute<String>(InstanceOid.ipLocationIsp.resolve(uuid))
+    lazy var ipLocationLatitude = STAttribute<Float32>(InstanceOid.ipLocationLatitude.resolve(uuid))
+    lazy var ipLocationLongitude = STAttribute<Float32>(InstanceOid.ipLocationLongitude.resolve(uuid))
+    lazy var ipLocationRegion = STAttribute<String>(InstanceOid.ipLocationRegion.resolve(uuid))
+    lazy var instanceType = STAttribute<Core_Instance_InstanceType>(InstanceOid.instanceType.resolve(uuid))
+    lazy var instanceFlavor = STAttribute<Core_Instance_InstanceFlavor>(InstanceOid.instanceFlavor.resolve(uuid))
+    lazy var screenshot = STAttribute<Data>(InstanceOid.screenshot.resolve(uuid))
 
 	func merge(snapshot: Core_Instance_ProtoDocument) {
 		merge(oid: "", snapshot: snapshot)
 	}
-	
+
 	private func merge(oid: String, snapshot: Core_Instance_ProtoDocument) {
-		for (tag, value) in snapshot.attribute {
-			switch "\(oid).\(tag)" {
-			case hostname.oid:
-				hostname.value = value.values.first?.string.first
-			case osFamily.oid:
-				osFamily.value = Core_Foundation_OsType.init(rawValue: Int(value.values.first?.integer.first ?? 0))
-			case online.oid:
-				online.value = value.values.first?.boolean.first
-			case ipAddress.oid:
-				online.value = value.values.first?.boolean.first
+		for attribute in snapshot.attribute {
+			switch "\(oid)" {
+            case hostname.oid.path:
+				hostname.value = attribute.values.first?.string.first
+            case osFamily.oid.path:
+				osFamily.value = Core_Foundation_OsType.init(rawValue: Int(attribute.values.first?.integer.first ?? 0))
+            case online.oid.path:
+				online.value = attribute.values.first?.boolean.first
+            case ipAddress.oid.path:
+				online.value = attribute.values.first?.boolean.first
 			default:
 				break
 			}

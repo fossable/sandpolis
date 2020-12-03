@@ -40,6 +40,8 @@
 		AA79B3C32554E6C3007E8A6B /* msg_power.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA79B3C12554E6C3007E8A6B /* msg_power.pb.swift */; };
 		AA79B3C42554E6C3007E8A6B /* msg_shell.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA79B3C22554E6C3007E8A6B /* msg_shell.pb.swift */; };
 		AA79B3CB2554E6ED007E8A6B /* msg_device.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA79B3CA2554E6EC007E8A6B /* msg_device.pb.swift */; };
+		AA79B3E62556178D007E8A6B /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = AA79B3E52556178D007E8A6B /* NIOSSL */; };
+		AA79B3EB255619FA007E8A6B /* Oid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA79B3EA255619FA007E8A6B /* Oid.swift */; };
 		AAD2B67225539BC60071D814 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B67125539BC60071D814 /* AppDelegate.swift */; };
 		AAD2B67425539BC60071D814 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B67325539BC60071D814 /* SceneDelegate.swift */; };
 		AAD2B67925539BC60071D814 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AAD2B67725539BC60071D814 /* Main.storyboard */; };
@@ -48,7 +50,6 @@
 		AAD2B68925539BCC0071D814 /* SandpolisClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B68825539BCC0071D814 /* SandpolisClientTests.swift */; };
 		AAD2B69425539BCC0071D814 /* SandpolisClientUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B69325539BCC0071D814 /* SandpolisClientUITests.swift */; };
 		AAD2B6A625539C720071D814 /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = AAD2B6A525539C720071D814 /* Charts */; };
-		AAD2B6AC25539CCD0071D814 /* NIOTLS in Frameworks */ = {isa = PBXBuildFile; productRef = AAD2B6AB25539CCD0071D814 /* NIOTLS */; };
 		AAD2B6AE25539CCD0071D814 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = AAD2B6AD25539CCD0071D814 /* NIO */; };
 		AAD2B6B425539D090071D814 /* NIOProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = AAD2B6B325539D090071D814 /* NIOProtobuf */; };
 		AAD2B6BA25539DD20071D814 /* SwiftEventBus in Frameworks */ = {isa = PBXBuildFile; productRef = AAD2B6B925539DD20071D814 /* SwiftEventBus */; };
@@ -125,7 +126,7 @@
 		AAD2B7752553A5CF0071D814 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B7272553A5CE0071D814 /* LoginViewController.swift */; };
 		AAD2B7762553A5CF0071D814 /* SandpolisServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B7292553A5CF0071D814 /* SandpolisServer.swift */; };
 		AAD2B7772553A5CF0071D814 /* STAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B72A2553A5CF0071D814 /* STAttribute.swift */; };
-		AAD2B7782553A5CF0071D814 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B72B2553A5CF0071D814 /* Document.swift */; };
+		AAD2B7782553A5CF0071D814 /* STDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B72B2553A5CF0071D814 /* STDocument.swift */; };
 		AAD2B7792553A5CF0071D814 /* SandpolisProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B72C2553A5CF0071D814 /* SandpolisProfile.swift */; };
 		AAD2B77A2553A5CF0071D814 /* SandpolisUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B72E2553A5CF0071D814 /* SandpolisUtil.swift */; };
 		AAD2B77B2553A5CF0071D814 /* CloudUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD2B72F2553A5CF0071D814 /* CloudUtil.swift */; };
@@ -186,6 +187,7 @@
 		AA79B3C12554E6C3007E8A6B /* msg_power.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_power.pb.swift; sourceTree = "<group>"; };
 		AA79B3C22554E6C3007E8A6B /* msg_shell.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_shell.pb.swift; sourceTree = "<group>"; };
 		AA79B3CA2554E6EC007E8A6B /* msg_device.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = msg_device.pb.swift; sourceTree = "<group>"; };
+		AA79B3EA255619FA007E8A6B /* Oid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Oid.swift; sourceTree = "<group>"; };
 		AAD2B66E25539BC60071D814 /* SandpolisClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SandpolisClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAD2B67125539BC60071D814 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AAD2B67325539BC60071D814 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -269,7 +271,7 @@
 		AAD2B7272553A5CE0071D814 /* LoginViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
 		AAD2B7292553A5CF0071D814 /* SandpolisServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SandpolisServer.swift; sourceTree = "<group>"; };
 		AAD2B72A2553A5CF0071D814 /* STAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = STAttribute.swift; sourceTree = "<group>"; };
-		AAD2B72B2553A5CF0071D814 /* Document.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
+		AAD2B72B2553A5CF0071D814 /* STDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = STDocument.swift; sourceTree = "<group>"; };
 		AAD2B72C2553A5CF0071D814 /* SandpolisProfile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SandpolisProfile.swift; sourceTree = "<group>"; };
 		AAD2B72E2553A5CF0071D814 /* SandpolisUtil.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SandpolisUtil.swift; sourceTree = "<group>"; };
 		AAD2B72F2553A5CF0071D814 /* CloudUtil.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CloudUtil.swift; sourceTree = "<group>"; };
@@ -285,10 +287,10 @@
 				AAD2B78C2553AC1F0071D814 /* Highlightr in Frameworks */,
 				AAD2B6AE25539CCD0071D814 /* NIO in Frameworks */,
 				AAD2B6C025539ECB0071D814 /* FirebaseAuth in Frameworks */,
+				AA79B3E62556178D007E8A6B /* NIOSSL in Frameworks */,
 				AAD2B6BA25539DD20071D814 /* SwiftEventBus in Frameworks */,
 				AAD2B6A625539C720071D814 /* Charts in Frameworks */,
 				AAD2B6B425539D090071D814 /* NIOProtobuf in Frameworks */,
-				AAD2B6AC25539CCD0071D814 /* NIOTLS in Frameworks */,
 				AAD2B7B62554DA380071D814 /* SwiftValidators in Frameworks */,
 				AAD2B6C825539FAA0071D814 /* SwiftKeychainWrapper in Frameworks */,
 				AAD2B6C225539ECB0071D814 /* FirebaseFirestore in Frameworks */,
@@ -552,7 +554,7 @@
 				AAD2B6DB2553A5CE0071D814 /* ControlPanel */,
 				AAD2B6E32553A5CE0071D814 /* Settings */,
 				AAD2B6E52553A5CE0071D814 /* GroupPanel */,
-				AAD2B6EB2553A5CE0071D814 /* ClientManager */,
+				AAD2B6EB2553A5CE0071D814 /* AgentManager */,
 				AAD2B6F62553A5CE0071D814 /* MacroResults */,
 				AAD2B6FC2553A5CE0071D814 /* MacroManager */,
 				AAD2B7002553A5CE0071D814 /* MacroSelect */,
@@ -603,42 +605,42 @@
 			path = GroupPanel;
 			sourceTree = "<group>";
 		};
-		AAD2B6EB2553A5CE0071D814 /* ClientManager */ = {
+		AAD2B6EB2553A5CE0071D814 /* AgentManager */ = {
 			isa = PBXGroup;
 			children = (
-				AAD2B6EC2553A5CE0071D814 /* ClientList */,
-				AAD2B6EF2553A5CE0071D814 /* ClientScanner */,
+				AAD2B6EC2553A5CE0071D814 /* AgentList */,
+				AAD2B6EF2553A5CE0071D814 /* AgentScanner */,
 				AAD2B6F12553A5CE0071D814 /* ClientManagerWrapper.swift */,
-				AAD2B6F22553A5CE0071D814 /* ClientMap */,
+				AAD2B6F22553A5CE0071D814 /* AgentMap */,
 				AAD2B6F52553A5CE0071D814 /* ClientManager.swift */,
 			);
-			path = ClientManager;
+			path = AgentManager;
 			sourceTree = "<group>";
 		};
-		AAD2B6EC2553A5CE0071D814 /* ClientList */ = {
+		AAD2B6EC2553A5CE0071D814 /* AgentList */ = {
 			isa = PBXGroup;
 			children = (
 				AAD2B6ED2553A5CE0071D814 /* ClientCell.swift */,
 				AAD2B6EE2553A5CE0071D814 /* ClientList.swift */,
 			);
-			path = ClientList;
+			path = AgentList;
 			sourceTree = "<group>";
 		};
-		AAD2B6EF2553A5CE0071D814 /* ClientScanner */ = {
+		AAD2B6EF2553A5CE0071D814 /* AgentScanner */ = {
 			isa = PBXGroup;
 			children = (
 				AAD2B6F02553A5CE0071D814 /* ClientScanner.swift */,
 			);
-			path = ClientScanner;
+			path = AgentScanner;
 			sourceTree = "<group>";
 		};
-		AAD2B6F22553A5CE0071D814 /* ClientMap */ = {
+		AAD2B6F22553A5CE0071D814 /* AgentMap */ = {
 			isa = PBXGroup;
 			children = (
 				AAD2B6F32553A5CE0071D814 /* ClientMap.swift */,
 				AAD2B6F42553A5CE0071D814 /* ClientAnnotation.swift */,
 			);
-			path = ClientMap;
+			path = AgentMap;
 			sourceTree = "<group>";
 		};
 		AAD2B6F62553A5CE0071D814 /* MacroResults */ = {
@@ -761,8 +763,9 @@
 			children = (
 				AAD2B7292553A5CF0071D814 /* SandpolisServer.swift */,
 				AAD2B72A2553A5CF0071D814 /* STAttribute.swift */,
-				AAD2B72B2553A5CF0071D814 /* Document.swift */,
+				AAD2B72B2553A5CF0071D814 /* STDocument.swift */,
 				AAD2B72C2553A5CF0071D814 /* SandpolisProfile.swift */,
+				AA79B3EA255619FA007E8A6B /* Oid.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -810,7 +813,6 @@
 			name = SandpolisClient;
 			packageProductDependencies = (
 				AAD2B6A525539C720071D814 /* Charts */,
-				AAD2B6AB25539CCD0071D814 /* NIOTLS */,
 				AAD2B6AD25539CCD0071D814 /* NIO */,
 				AAD2B6B325539D090071D814 /* NIOProtobuf */,
 				AAD2B6B925539DD20071D814 /* SwiftEventBus */,
@@ -819,6 +821,7 @@
 				AAD2B6C725539FAA0071D814 /* SwiftKeychainWrapper */,
 				AAD2B78B2553AC1F0071D814 /* Highlightr */,
 				AAD2B7B52554DA380071D814 /* SwiftValidators */,
+				AA79B3E52556178D007E8A6B /* NIOSSL */,
 			);
 			productName = SandpolisClient;
 			productReference = AAD2B66E25539BC60071D814 /* SandpolisClient.app */;
@@ -900,6 +903,7 @@
 				AAD2B6C625539FAA0071D814 /* XCRemoteSwiftPackageReference "SwiftKeychainWrapper" */,
 				AAD2B78A2553AC1E0071D814 /* XCRemoteSwiftPackageReference "Highlightr" */,
 				AAD2B7B42554DA370071D814 /* XCRemoteSwiftPackageReference "SwiftValidators" */,
+				AA79B3E42556178D007E8A6B /* XCRemoteSwiftPackageReference "swift-nio-ssl" */,
 			);
 			productRefGroup = AAD2B66F25539BC60071D814 /* Products */;
 			projectDirPath = "";
@@ -974,7 +978,7 @@
 				AAD2B7692553A5CF0071D814 /* FolderCell.swift in Sources */,
 				AAD2B7672553A5CF0071D814 /* FileManager.swift in Sources */,
 				AAD2B76F2553A5CF0071D814 /* UITextField+Icon.swift in Sources */,
-				AAD2B7782553A5CF0071D814 /* Document.swift in Sources */,
+				AAD2B7782553A5CF0071D814 /* STDocument.swift in Sources */,
 				AAD2B7372553A5CF0071D814 /* SandpolisStream.swift in Sources */,
 				AAD2B7572553A5CF0071D814 /* MacroSelectCell.swift in Sources */,
 				AAD2B77B2553A5CF0071D814 /* CloudUtil.swift in Sources */,
@@ -1040,6 +1044,7 @@
 				AA79B3B12554E68C007E8A6B /* msg_generator.pb.swift in Sources */,
 				AA0BA54D2554DFDA0042A3A3 /* result.pb.swift in Sources */,
 				AA0BA5502554DFDA0042A3A3 /* dependency.pb.swift in Sources */,
+				AA79B3EB255619FA007E8A6B /* Oid.swift in Sources */,
 				AAD2B7422553A5CF0071D814 /* Settings.swift in Sources */,
 				AAD2B76E2553A5CF0071D814 /* ServerCreator.swift in Sources */,
 				AAD2B74C2553A5CF0071D814 /* ClientMap.swift in Sources */,
@@ -1232,6 +1237,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 858CG57YNC;
+				GCC_NO_COMMON_BLOCKS = YES;
 				INFOPLIST_FILE = SandpolisClient/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1251,6 +1257,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 858CG57YNC;
+				GCC_NO_COMMON_BLOCKS = YES;
 				INFOPLIST_FILE = SandpolisClient/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1389,6 +1396,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		AA79B3E42556178D007E8A6B /* XCRemoteSwiftPackageReference "swift-nio-ssl" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio-ssl";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.10.0;
+			};
+		};
 		AAD2B6A425539C720071D814 /* XCRemoteSwiftPackageReference "Charts" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/danielgindi/Charts";
@@ -1456,15 +1471,15 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		AA79B3E52556178D007E8A6B /* NIOSSL */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA79B3E42556178D007E8A6B /* XCRemoteSwiftPackageReference "swift-nio-ssl" */;
+			productName = NIOSSL;
+		};
 		AAD2B6A525539C720071D814 /* Charts */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = AAD2B6A425539C720071D814 /* XCRemoteSwiftPackageReference "Charts" */;
 			productName = Charts;
-		};
-		AAD2B6AB25539CCD0071D814 /* NIOTLS */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = AAD2B6AA25539CCD0071D814 /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIOTLS;
 		};
 		AAD2B6AD25539CCD0071D814 /* NIO */ = {
 			isa = XCSwiftPackageProductDependency;

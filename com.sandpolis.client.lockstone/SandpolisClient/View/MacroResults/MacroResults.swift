@@ -61,7 +61,7 @@ class MacroResults: UITableViewController, CollapsibleTableViewHeaderDelegate {
 			SandpolisUtil.connection.execute(profile.cvid, shell, macro["script"] as! String).whenComplete { msg in
 				switch msg {
 				case .success(let msg as Core_Net_MSG):
-					if let rs = try? Plugin_Shell_Msg_RS_Execute.init(unpackingAny: msg.payload) {
+					if let rs = try? Plugin_Shell_Msg_RS_Execute.init(serializedData: msg.payload) {
 						result.output = rs.result
 						result.returnValue = rs.exitCode
 						DispatchQueue.main.async {
