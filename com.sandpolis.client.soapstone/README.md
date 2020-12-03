@@ -1,3 +1,0 @@
-## Sandpolis Android Client (`com.sandpolis.client.soapstone`)
-
-The Android client doesn't exist yet...
