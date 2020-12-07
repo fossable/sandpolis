@@ -25,7 +25,7 @@ import org.gradle.api.tasks.TaskAction;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CaseFormat;
-import com.sandpolis.core.foundation.util.OidUtil;
+import com.google.common.hash.Hashing;
 import com.sandpolis.gradle.codegen.ConfigExtension;
 import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.ClassName;
@@ -47,6 +47,11 @@ public abstract class VSTGenerator extends DefaultTask {
 		public String description;
 
 		/**
+		 * Whether the attribute can be used as a unique identifier.
+		 */
+		public boolean id;
+
+		/**
 		 * Whether the attribute cannot be modified after initially set.
 		 */
 		public boolean immutable;
@@ -57,19 +62,14 @@ public abstract class VSTGenerator extends DefaultTask {
 		public boolean list;
 
 		/**
-		 * Whether the attribute can be used as a unique identifier.
+		 * The attribute's name.
 		 */
-		public boolean id;
+		public String name;
 
 		/**
 		 * The corresponding osquery identifier.
 		 */
 		public String osquery;
-
-		/**
-		 * The attribute's name.
-		 */
-		public String name;
 
 		/**
 		 * The attribute's fully-qualified Java type or OID reference type.
@@ -109,10 +109,6 @@ public abstract class VSTGenerator extends DefaultTask {
 		 */
 		public String name;
 
-		public String parentPath() {
-			return name.replaceAll("/+[^/]+/*$", "");
-		}
-
 		public String basePath() {
 			var components = name.split("/");
 			return components[components.length - 1];
@@ -121,6 +117,10 @@ public abstract class VSTGenerator extends DefaultTask {
 		public String className() {
 			var components = name.split("/");
 			return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, components[components.length - 1]);
+		}
+
+		public String parentPath() {
+			return name.replaceAll("/+[^/]+/*$", "");
 		}
 	}
 
@@ -134,19 +134,29 @@ public abstract class VSTGenerator extends DefaultTask {
 	 */
 	public static final String VST_PREFIX = "Virt";
 
+	// OidUtil duplicate!
+	private static long computeDocumentTag(long raw) {
+		return ((raw << 2) | 0) & Long.MAX_VALUE;
+	}
+
+	// OidUtil duplicate!
+	private static long computeNamespace(String id) {
+		return computeDocumentTag(Hashing.murmur3_128().newHasher().putBytes(id.getBytes()).hash().asLong());
+	}
+
 	/**
 	 * The elements of a VST tree flattened into a list.
 	 */
 	protected List<DocumentSpec> flatTree;
 
-	protected Map<String, TypeSpec.Builder> vstTypes = new HashMap<>();
+	// Determine module namespace
+	protected final long namespace = computeNamespace(getProject().getName());
 
 	protected Map<String, TypeSpec.Builder> oidTypes = new HashMap<>();
 
-	// Determine module namespace
-	protected final long namespace = OidUtil.computeNamespace(getProject().getName());
-
 	protected File stateTree;
+
+	protected Map<String, TypeSpec.Builder> vstTypes = new HashMap<>();
 
 	@TaskAction
 	public void action() throws Exception {
