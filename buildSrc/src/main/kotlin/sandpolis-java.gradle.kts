@@ -11,32 +11,41 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id "eclipse"
-	id "java-gradle-plugin"
+	id("java")
+	id("eclipse")
+	id("idea")
 }
 
+// Configure Java plugin
+java {
+	modularity.inferModulePath.set(true)
+
+	withJavadocJar()
+	withSourcesJar()
+
+	toolchain {
+		languageVersion.set(JavaLanguageVersion.of(14))
+	}
+}
+
+// Configure unit testing
+tasks.test {
+	useJUnitPlatform()
+
+	testLogging {
+		setExceptionFormat("full")
+	}
+}
+
+// Configure Eclipse plugin
 eclipse {
 	project {
-		name = "com.sandpolis.gradle.soi"
-		comment = "A plugin that injects static objects into instance modules"
+		name = project.name
+		comment = project.name
 	}
 }
 
-allprojects {
-
-	repositories {
-		mavenCentral()
-	}
-
-	plugins.withType(JavaPlugin).configureEach {
-		java {
-			modularity.inferModulePath = true
-		}
-	}
-}
-
-dependencies {
-	implementation gradleApi()
-
-	implementation project(":module:com.sandpolis.core.foundation")
+// Configure artifact filename
+tasks.jar {
+	archiveBaseName.set(project.path.substring(4).replace(".", "-").replace(":", "-"))
 }

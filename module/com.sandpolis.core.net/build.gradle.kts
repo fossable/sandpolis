@@ -10,12 +10,12 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 
-import com.google.protobuf.gradle.*
-
 plugins {
-	id("com.google.protobuf") version "0.8.13"
-	id("eclipse")
 	id("java-library")
+	id("sandpolis-java")
+	id("sandpolis-module")
+	id("sandpolis-protobuf")
+	id("sandpolis-publish")
 }
 
 dependencies {
@@ -32,59 +32,4 @@ dependencies {
 	api("io.netty:netty-transport:4.1.48.Final")
 	api("io.netty:netty-handler:4.1.48.Final")
 	api("io.netty:netty-resolver-dns:4.1.48.Final")
-}
-
-eclipse {
-	project {
-		name = project.name
-		comment = project.name
-	}
-}
-
-sourceSets {
-	main {
-		java {
-			srcDirs("src/main/proto")
-			srcDirs("gen/main/java")
-		}
-	}
-}
-
-tasks {
-	javadoc {
-		// Ignore errors in generated protobuf sources
-		setFailOnError(false)
-	}
-}
-
-protobuf {
-	protoc {
-		artifact = "com.google.protobuf:protoc:3.13.0"
-	}
-
-	generatedFilesBaseDir = "$projectDir/gen/"
-
-	tasks {
-		clean {
-			delete(generatedFilesBaseDir)
-		}
-	}
-	generateProtoTasks {
-		ofSourceSet("main").forEach { task ->
-			task.builtins {
-				remove("java")
-				id("java") {
-					option("lite")
-				}
-				if (project.properties["instances.agent.micro"] == "true") {
-					id("cpp") {
-						option("lite")
-					}					
-				}
-				if (project.properties["instances.client.lockstone"] == "true") {
-					id("swift")
-				}
-			}
-		}
-	}
 }

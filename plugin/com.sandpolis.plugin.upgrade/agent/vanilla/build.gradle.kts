@@ -11,9 +11,10 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id("eclipse")
 	id("java-library")
-	id("com.sandpolis.gradle.soi")
+	id("sandpolis-java")
+	id("sandpolis-module")
+	id("sandpolis-soi")
 }
 
 dependencies {

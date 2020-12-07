@@ -10,23 +10,57 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 
+import com.google.protobuf.gradle.*
+
 plugins {
-	id("java-library")
-	id("sandpolis-java")
-	id("sandpolis-module")
-	id("sandpolis-soi")
+	id("java")
+	id("com.google.protobuf")
 }
 
-dependencies {
-	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
-	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
-
-	compileOnly(project(":plugin:com.sandpolis.plugin.sysinfo"))
+sourceSets {
+	main {
+		java {
+			srcDirs("src/main/proto")
+			srcDirs("gen/main/java")
+		}
+	}
 }
 
-eclipse {
-	project {
-		name = "com.sandpolis.plugin.sysinfo:agent:vanilla"
-		comment = "com.sandpolis.plugin.sysinfo:agent:vanilla"
+protobuf {
+	protoc {
+		artifact = "com.google.protobuf:protoc:3.14.0"
+	}
+
+	generatedFilesBaseDir = "$projectDir/gen/"
+
+	tasks {
+		clean {
+			delete(generatedFilesBaseDir)
+		}
+	}
+	generateProtoTasks {
+		ofSourceSet("main").forEach { task ->
+			task.builtins {
+				remove("java")
+				id("java") {
+					option("lite")
+				}
+				if (findProject(":com.sandpolis.agent.micro") != null) {
+					id("cpp") {
+						option("lite")
+					}
+				}
+				if (findProject(":com.sandpolis.client.lockstone") != null) {
+					id("swift")
+				}
+			}
+		}
+	}
+}
+
+// Ignore errors in generated protobuf sources
+tasks {
+	javadoc {
+		setFailOnError(false)
 	}
 }

@@ -24,6 +24,7 @@ bin
 **/gen/main/cpp
 **/gen/main/java
 **/gen/main/swift
+**/src/main/resources/build.properties
 
 # MacOS specific
 .DS_Store

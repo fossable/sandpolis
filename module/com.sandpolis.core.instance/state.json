@@ -13,7 +13,7 @@
 			{
 				"name": "uuid",
 				"type": "java.lang.String",
-				"key": true
+				"id": true
 			},
 			{
 				"name": "cvid",
@@ -128,6 +128,7 @@
 			{
 				"name": "package_id",
 				"type": "java.lang.String",
+				"id": true,
 				"description": "The plugin's package ID"
 			},
 			{

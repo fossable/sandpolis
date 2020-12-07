@@ -11,11 +11,6 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.generator;
 
-import static com.google.common.io.Files.getNameWithoutExtension;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -23,13 +18,15 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
-import com.sandpolis.core.instance.Environment;
-import com.sandpolis.core.instance.Generator.GenConfig;
-import com.sandpolis.core.instance.Generator.GenReport;
-import com.sandpolis.core.foundation.util.TextUtil;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.UnsafeByteOperations;
+import com.sandpolis.core.clientserver.msg.MsgGroup.RS_GenerateArtifact;
+import com.sandpolis.core.instance.Group.AgentConfig;
 
 /**
- * {@link Generator} is a base class for all output generators.
+ * {@link Generator} is a base class for all artifact generators. There are
+ * currently two generators: {@link ArtifactGeneratorVanilla} and
+ * {@link ArtifactGeneratorMicro}.
  *
  * @since 4.0.0
  */
@@ -37,98 +34,71 @@ public abstract class Generator implements Runnable {
 
 	private static final Logger log = LoggerFactory.getLogger(Generator.class);
 
-	/**
-	 * The file extension that should be used for the result archive.
-	 */
-	private String archiveExtension;
+	private RS_GenerateArtifact result;
+
+	private boolean started;
 
 	/**
-	 * The generator's configuration.
+	 * The group's agent configuration.
 	 */
-	protected GenConfig config;
+	protected final AgentConfig config;
 
-	/**
-	 * The generation report.
-	 */
-	private GenReport.Builder report;
+	protected final Packager packager;
 
-	/**
-	 * The final result of the generation.
-	 */
-	protected byte[] result;
-
-	protected Generator(GenConfig config, String archiveExtension) {
+	protected Generator(AgentConfig config, Packager packager) {
 		this.config = Objects.requireNonNull(config);
-		this.archiveExtension = Objects.requireNonNull(archiveExtension);
+		this.packager = Objects.requireNonNull(packager);
 	}
 
 	/**
-	 * Compute output metadata.
+	 * Get the generation report.
 	 *
-	 * @throws IOException
+	 * @return The completed generation response
 	 */
-	protected void computeMetadata() throws IOException {
-		if (result == null)
-			throw new IllegalStateException();
+	public RS_GenerateArtifact getResult() {
+		return result;
+	}
 
-		report.setResult(true);
-		report.setOutputSize(result.length);
-		report.setOutputSha256(ByteSource.wrap(result).hash(Hashing.sha256()).toString());
-		report.setOutputSha512(ByteSource.wrap(result).hash(Hashing.sha512()).toString());
-		report.setDuration(System.currentTimeMillis() - report.getDuration());
+	@Override
+	public void run() {
+		if (started)
+			throw new IllegalStateException("The generator has already been started");
+
+		started = true;
+
+		var result = RS_GenerateArtifact.newBuilder();
+
+		try {
+			result.setTimestamp(System.currentTimeMillis());
+			byte[] binary = generate();
+
+			// Compute metadata
+			result.setOutputSize(binary.length);
+			result.setOutputSha256(ByteSource.wrap(binary).hash(Hashing.sha256()).toString());
+			result.setOutputSha512(ByteSource.wrap(binary).hash(Hashing.sha512()).toString());
+			result.setOutput(UnsafeByteOperations.unsafeWrap(binary));
+
+//			// Find latest number
+//			int seq = Files.list(Environment.GEN.path()).mapToInt(path -> {
+//				return Integer.parseInt(getNameWithoutExtension(path.getFileName().toString()));
+//			}).sorted().findFirst().orElse(-1) + 1;
+//
+//			// Write to archive directory
+//			Path archive = Environment.GEN.path().resolve(String.format("%d%s", seq, archiveExtension));
+//			log.debug("Writing archive: {} ({})", archive, TextUtil.formatByteCount(result.length));
+//			Files.write(archive, result);
+		} catch (Exception e) {
+			log.error("Generation failed", e);
+			result.setResult(false);
+		} finally {
+			// TODO
+			System.currentTimeMillis();
+			this.result = result.build();
+		}
 	}
 
 	/**
 	 * Performs the generation synchronously.
 	 */
 	protected abstract byte[] generate() throws Exception;
-
-	/**
-	 * Get the generation report. Each invocation of this method returns a new (yet
-	 * equivalent) object.
-	 *
-	 * @return The completed generation report
-	 */
-	public GenReport getReport() {
-		if (report == null)
-			throw new IllegalStateException("The generator has not been started");
-
-		return report.build();
-	}
-
-	/**
-	 * Get the generation result.
-	 *
-	 * @return The final result
-	 */
-	public byte[] getResult() {
-		return result;
-	}
-
-	@Override
-	public void run() {
-		if (report != null)
-			throw new IllegalStateException("The generator has already been started");
-
-		report = GenReport.newBuilder().setTimestamp(System.currentTimeMillis())
-				.setDuration(System.currentTimeMillis());
-
-		try {
-			result = generate();
-			computeMetadata();
-
-			// Find latest number
-			int seq = Files.list(Environment.GEN.path()).mapToInt(path -> {
-				return Integer.parseInt(getNameWithoutExtension(path.getFileName().toString()));
-			}).sorted().findFirst().orElse(-1) + 1;
-
-			// Write to archive directory
-			Path archive = Environment.GEN.path().resolve(String.format("%d%s", seq, archiveExtension));
-			log.debug("Writing archive: {} ({})", archive, TextUtil.formatByteCount(result.length));
-			Files.write(archive, result);
-		} catch (Exception e) {
-			log.error("Generation failed", e);
-			report.setResult(false);
-		}
-	}
 }

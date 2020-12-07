@@ -36,9 +36,6 @@ allprojects {
 }
 
 dependencies {
-
-	implementation project(":module:com.sandpolis.core.foundation")
-
 	implementation gradleApi()
 
 	implementation("com.squareup:javapoet:1.11.1")

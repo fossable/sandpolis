@@ -11,9 +11,12 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id("eclipse")
 	id("java-library")
-	id("com.sandpolis.gradle.soi")
+	id("sandpolis-java")
+	id("sandpolis-module")
+	id("sandpolis-protobuf")
+	id("sandpolis-publish")
+	id("sandpolis-soi")
 	id("com.sandpolis.gradle.plugin")
 	id("com.sandpolis.gradle.codegen")
 }
@@ -24,28 +27,6 @@ dependencies {
 
 	api(project(":module:com.sandpolis.core.instance"))
 	api(project(":module:com.sandpolis.core.net"))
-}
-
-eclipse {
-	project {
-		name = project.name
-		comment = project.name
-	}
-}
-
-sourceSets {
-	main {
-		java {
-			srcDirs("gen/main/java")
-		}
-	}
-}
-
-tasks {
-	javadoc {
-		// Ignore errors in generated protobuf sources
-		setFailOnError(false)
-	}
 }
 
 sandpolis_plugin {

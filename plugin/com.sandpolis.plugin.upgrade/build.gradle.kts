@@ -10,14 +10,14 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 
-import com.google.protobuf.gradle.*
-
 plugins {
-	id("eclipse")
 	id("java-library")
-	id("com.sandpolis.gradle.soi")
+	id("sandpolis-java")
+	id("sandpolis-module")
+	id("sandpolis-protobuf")
+	id("sandpolis-publish")
+	id("sandpolis-soi")
 	id("com.sandpolis.gradle.plugin")
-	id("com.google.protobuf") version "0.8.13"
 }
 
 dependencies {
@@ -29,61 +29,6 @@ dependencies {
 
 	// https://github.com/javaee/jpa-spec
 	implementation("javax.persistence:javax.persistence-api:2.2")
-}
-
-eclipse {
-	project {
-		name = project.name
-		comment = project.name
-	}
-}
-
-sourceSets {
-	main {
-		java {
-			srcDirs("src/main/proto")
-			srcDirs("gen/main/java")
-		}
-	}
-}
-
-tasks {
-	javadoc {
-		// Ignore errors in generated protobuf sources
-		setFailOnError(false)
-	}
-}
-
-protobuf {
-	protoc {
-		artifact = "com.google.protobuf:protoc:3.13.0"
-	}
-
-	generatedFilesBaseDir = "$projectDir/gen/"
-
-	tasks {
-		clean {
-			delete(generatedFilesBaseDir)
-		}
-	}
-	generateProtoTasks {
-		ofSourceSet("main").forEach { task ->
-			task.builtins {
-				remove("java")
-				id("java") {
-					option("lite")
-				}
-				if (project.properties["instances.agent.micro"] == "true") {
-					id("cpp") {
-						option("lite")
-					}					
-				}
-				if (project.properties["instances.client.lockstone"] == "true") {
-					id("swift")
-				}
-			}
-		}
-	}
 }
 
 sandpolis_plugin {

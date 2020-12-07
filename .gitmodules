@@ -25,3 +25,6 @@
 [submodule "com.sandpolis.client.lockstone"]
 	path = com.sandpolis.client.lockstone
 	url = ../com.sandpolis.client.lockstone
+[submodule "plugin/com.sandpolis.plugin.snapshot"]
+	path = plugin/com.sandpolis.plugin.snapshot
+	url = ../com.sandpolis.plugin.snapshot

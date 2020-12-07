@@ -11,8 +11,10 @@
 //=========================================================S A N D P O L I S==//
 
 plugins {
-	id("eclipse")
 	id("java-library")
+	id("sandpolis-java")
+	id("sandpolis-module")
+	id("sandpolis-publish")
 	id("com.sandpolis.gradle.codegen")
 }
 
@@ -49,25 +51,10 @@ dependencies {
 	implementation("javax.xml.bind:jaxb-api:2.3.0")
 }
 
-eclipse {
-	project {
-		name = project.name
-		comment = project.name
-	}
-}
-
 sourceSets {
 	main {
 		java {
-			srcDirs("src/main/proto")
 			srcDirs("gen/main/java")
 		}
-	}
-}
-
-tasks {
-	javadoc {
-		// Ignore errors in generated protobuf sources
-		setFailOnError(false)
 	}
 }

@@ -4,6 +4,3 @@
 *******************************************************************************/
 
 rootProject.name = "com.sandpolis.gradle.codegen"
-
-include "module:com.sandpolis.core.foundation"
-project(":module:com.sandpolis.core.foundation").projectDir = file("../../module/com.sandpolis.core.foundation")

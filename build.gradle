@@ -18,84 +18,68 @@ buildscript {
 
 	dependencies {
 		classpath(":com.sandpolis.gradle.plugin:")
-		classpath(":com.sandpolis.gradle.soi:")
 		classpath(":com.sandpolis.gradle.codegen:")
 	}
 }
 
 plugins {
-	id "com.diffplug.spotless" version "5.8.2"
-	id "idea"
+	id("com.diffplug.spotless") version "5.8.2"
+	id("org.ajoberstar.reckon") version "0.13.0"
 }
 
 spotless {
 	cpp {
-		target "**/*.cc", "**/*.hh"
+		target("**/*.cc", "**/*.hh")
 
 		eclipseCdt()
 		endWithNewline()
 		indentWithTabs()
 	}
 	kotlin {
-		target "**/*.kt"
+		target("**/*.kt")
 
-		ktfmt().dropboxStyle()
-		licenseHeaderFile file("gradle/resources/header_gradle.txt"), "(plugins|import|package)"
+		licenseHeaderFile(file("gradle/resources/header_gradle.txt"), "(plugins|import|package)")
 	}
 	java {
-		target "**/*.java"
+		target("**/*.java")
 
 		// Exclude generated sources
-		targetExclude "**/gen/main/java/**"
+		targetExclude("**/gen/main/java/**")
 
 		eclipse().configFile("gradle/resources/EclipseConventions.xml")
 		trimTrailingWhitespace()
 		endWithNewline()
 
-		licenseHeaderFile file("gradle/resources/header_java.txt"), "package"
+		licenseHeaderFile(file("gradle/resources/header_java.txt"), "package")
 	}
 	format "javaModules", {
-		target "**/module-info.java"
+		target("**/module-info.java")
 
 		trimTrailingWhitespace()
 		endWithNewline()
 
-		licenseHeaderFile file("gradle/resources/header_java.txt"), "(module|open module)"
+		licenseHeaderFile(file("gradle/resources/header_java.txt"), "(module|open module)")
 	}
 	format "proto", {
-		target "**/*.proto"
+		target("**/*.proto")
 
 		trimTrailingWhitespace()
 		endWithNewline()
 		indentWithSpaces()
 
-		licenseHeaderFile file("gradle/resources/header_java.txt"), "syntax"
-	}
-	format "gradle", {
-		target "**/build.gradle"
-
-		trimTrailingWhitespace()
-		endWithNewline()
-		indentWithTabs()
-
-		licenseHeaderFile file("gradle/resources/header_gradle.txt"), "(plugins|buildscript)"
+		licenseHeaderFile(file("gradle/resources/header_java.txt"), "syntax")
 	}
 	format "swift", {
-		target "**/*.swift"
+		target("**/*.swift")
 
 		trimTrailingWhitespace()
 		endWithNewline()
 		indentWithTabs()
 
-		licenseHeaderFile file("gradle/resources/header_swift.txt"), "import"
-	}
-	format "fxml", {
-		target "**/*.fxml"
-
-		eclipseWtp("xml")
+		licenseHeaderFile(file("gradle/resources/header_swift.txt"), "import")
 	}
 	format "css", {
-		target "**/*.css"
+		target("**/*.css")
 
 		eclipseWtp("css")
 	}
@@ -121,129 +105,9 @@ allprojects {
 			mavenCentral()
 		}
 	}
-
-	plugins.withType(JavaPlugin).configureEach {
-		java {
-			modularity.inferModulePath = true
-		}
-
-		sourceCompatibility = 14
-	}
 }
 
-// Apply metadata configuration
-allprojects {
-	version = System.properties["versions.sandpolis"]
-}
-
-subprojects {
-	plugins.withType(JavaPlugin) {
-		// Apply testing configuration
-		test {
-			useJUnitPlatform()
-
-			testLogging {
-				exceptionFormat = "full"
-			}
-		}
-
-		// Provide install task for scripts
-		task install(type: Copy) {
-			from configurations.runtimeClasspath
-			from jar.outputs.files
-			into System.getProperty("lib_dest")
-		}
-	}
-}
-
-// All modules that will be published to the release repository
-def publishProjects = [
-	//"com.sandpolis.agent.micro",
-	"com.sandpolis.agent.vanilla",
-	"com.sandpolis.client.ascetic",
-	"com.sandpolis.client.lifegem",
-	"com.sandpolis.core.agent",
-	"com.sandpolis.core.client",
-	"com.sandpolis.core.clientagent",
-	"com.sandpolis.core.clientserver",
-	"com.sandpolis.core.foundation",
-	"com.sandpolis.core.instance",
-	"com.sandpolis.core.net",
-	"com.sandpolis.core.server",
-	"com.sandpolis.core.serveragent",
-	"com.sandpolis.plugin.desktop",
-	"com.sandpolis.plugin.device",
-	"com.sandpolis.plugin.filesys",
-	"com.sandpolis.plugin.shell",
-	"com.sandpolis.plugin.sysinfo",
-	"com.sandpolis.plugin.upgrade",
-	"com.sandpolis.server.vanilla"
-]
-
-// Apply publishing configuration
-configure(subprojects.findAll {publishProjects.contains(it.name)}) {
-	apply plugin: "maven-publish"
-	apply plugin: "signing"
-
-	group = "com.sandpolis"
-	archivesBaseName = it.name.substring(4).replaceAll("\\.", "-")
-
-	afterEvaluate { sub ->
-		java {
-			withJavadocJar()
-			withSourcesJar()
-		}
-
-		publishing {
-			publications {
-				mavenJava(MavenPublication) {
-					groupId = sub.group
-					artifactId = sub.archivesBaseName
-					version = sub.version
-
-					if (it.name.startsWith("com.sandpolis.plugin")) {
-						artifact pluginArchive
-					} else {
-						from sub.components.java
-					}
-
-					pom {
-						name = sub.name
-						description = sub.eclipse.project.comment
-						url = "https://github.com/sandpolis/sandpolis"
-						licenses {
-							license {
-								name = "Mozilla Public License, Version 2.0"
-								url = "https://mozilla.org/MPL/2.0"
-							}
-						}
-						developers {
-							developer {
-								id = "cilki"
-								name = "Tyler Cook"
-								email = "tcc@sandpolis.com"
-							}
-						}
-						scm {
-							url = "https://github.com/sandpolis/sandpolis"
-							connection = "scm:git:git://github.com/sandpolis/sandpolis.git"
-							developerConnection = "scm:git:ssh://git@github.com/sandpolis/sandpolis.git"
-						}
-					}
-				}
-			}
-			repositories {
-				maven {
-					url = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-					credentials {
-						username System.properties["publishing.sonatype.username"]
-						password System.properties["publishing.sonatype.password"]
-					}
-				}
-			}
-		}
-		signing {
-			sign publishing.publications.mavenJava
-		}
-	}
+reckon {
+	scopeFromProp()
+	snapshotFromProp()
 }

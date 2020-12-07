@@ -10,12 +10,12 @@
 //                                                                            //
 //=========================================================S A N D P O L I S==//
 
-import com.google.protobuf.gradle.*
-
 plugins {
-	id("com.google.protobuf") version "0.8.13"
-	id("eclipse")
 	id("java-library")
+	id("sandpolis-java")
+	id("sandpolis-module")
+	id("sandpolis-protobuf")
+	id("sandpolis-publish")
 }
 
 dependencies {
@@ -37,7 +37,7 @@ dependencies {
 	implementation("org.fusesource.jansi:jansi:2.0.1")
 
 	// https://github.com/protocolbuffers/protobuf
-	api("com.google.protobuf:protobuf-java:3.13.0")
+	api("com.google.protobuf:protobuf-java:3.14.0")
 
 	// https://github.com/qos-ch/slf4j
 	api("org.slf4j:slf4j-api:1.7.30")
@@ -49,60 +49,5 @@ dependencies {
 	implementation("ch.qos.logback:logback-core:1.3.0-alpha5")
 	implementation("ch.qos.logback:logback-classic:1.3.0-alpha5") {
 		exclude(group = "com.sun.mail", module = "javax.mail")
-	}
-}
-
-eclipse {
-	project {
-		name = project.name
-		comment = project.name
-	}
-}
-
-tasks {
-	javadoc {
-		// Ignore errors in generated protobuf sources
-		setFailOnError(false)
-	}
-}
-
-sourceSets {
-	main {
-		java {
-			srcDirs("src/main/proto")
-			srcDirs("gen/main/java")
-		}
-	}
-}
-
-protobuf {
-	protoc {
-		artifact = "com.google.protobuf:protoc:3.13.0"
-	}
-
-	generatedFilesBaseDir = "$projectDir/gen/"
-
-	tasks {
-		clean {
-			delete(generatedFilesBaseDir)
-		}
-	}
-	generateProtoTasks {
-		ofSourceSet("main").forEach { task ->
-			task.builtins {
-				remove("java")
-				id("java") {
-					option("lite")
-				}
-				if (project.properties["instances.agent.micro"] == "true") {
-					id("cpp") {
-						option("lite")
-					}					
-				}
-				if (project.properties["instances.client.lockstone"] == "true") {
-					id("swift")
-				}
-			}
-		}
 	}
 }

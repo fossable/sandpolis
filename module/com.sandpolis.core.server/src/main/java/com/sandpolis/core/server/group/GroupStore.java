@@ -49,7 +49,8 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return The user's groups
 	 */
 	public Stream<Group> getByMembership(User user) {
-		return values().stream();//.filter(group -> user.equals(group.getOwner()) || group.getMembers().contains(user));
+		return values().stream();// .filter(group -> user.equals(group.getOwner()) ||
+									// group.getMembers().contains(user));
 	}
 
 	/**
@@ -58,7 +59,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return A list of unauth groups
 	 */
 	public Stream<Group> getUnauthGroups() {
-		return values().stream();//.filter(group -> group.getAuthMechanisms().size() == 0);
+		return values().stream();// .filter(group -> group.getAuthMechanisms().size() == 0);
 	}
 
 	/**
@@ -93,9 +94,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	}
 
 	public Group create(Consumer<VirtGroup> configurator) {
-		var group = add(Group::new);
-		configurator.accept(group);
-		return group;
+		return add(configurator, Group::new);
 	}
 
 	/**

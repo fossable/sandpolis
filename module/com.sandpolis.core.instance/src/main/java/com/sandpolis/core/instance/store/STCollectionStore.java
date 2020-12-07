@@ -13,6 +13,7 @@ package com.sandpolis.core.instance.store;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.slf4j.Logger;
@@ -71,7 +72,15 @@ public abstract class STCollectionStore<V extends VirtDocument> extends StoreBas
 
 	@Override
 	public StoreMetadata getMetadata() {
-		return null;// collection.getMetadata();
+		// TODO
+		return new StoreMetadata() {
+
+			@Override
+			public int getInitCount() {
+				// TODO Auto-generated method stub
+				return 1;
+			}
+		};
 	}
 
 }
