@@ -40,6 +40,11 @@ spotless {
 
 		licenseHeaderFile(file("gradle/resources/header_gradle.txt"), "(plugins|import|package)")
 	}
+	kotlinGradle {
+		target("**/*.kts")
+
+		licenseHeaderFile(file("gradle/resources/header_gradle.txt"), "(plugins|import|package)")
+	}
 	java {
 		target("**/*.java")
 
@@ -52,7 +57,7 @@ spotless {
 
 		licenseHeaderFile(file("gradle/resources/header_java.txt"), "package")
 	}
-	format "javaModules", {
+	format("javaModules") {
 		target("**/module-info.java")
 
 		trimTrailingWhitespace()
@@ -60,7 +65,7 @@ spotless {
 
 		licenseHeaderFile(file("gradle/resources/header_java.txt"), "(module|open module)")
 	}
-	format "proto", {
+	format("proto") {
 		target("**/*.proto")
 
 		trimTrailingWhitespace()
@@ -69,7 +74,7 @@ spotless {
 
 		licenseHeaderFile(file("gradle/resources/header_java.txt"), "syntax")
 	}
-	format "swift", {
+	format("swift") {
 		target("**/*.swift")
 
 		trimTrailingWhitespace()
@@ -78,18 +83,18 @@ spotless {
 
 		licenseHeaderFile(file("gradle/resources/header_swift.txt"), "import")
 	}
-	format "css", {
+	format("css") {
 		target("**/*.css")
 
-		eclipseWtp("css")
+		eclipseWtp(com.diffplug.spotless.extra.wtp.EclipseWtpFormatterStep.CSS)
 	}
-	format "json", {
-		target "**/*.json"
+	format("json") {
+		target("**/*.json")
 
 		// Exclude iOS projects
-		targetExclude "**/com.sandpolis.client.lockstone/**"
+		targetExclude("**/com.sandpolis.client.lockstone/**")
 
-		eclipseWtp("json")
+		eclipseWtp(com.diffplug.spotless.extra.wtp.EclipseWtpFormatterStep.JSON)
 	}
 }
 

@@ -5,24 +5,21 @@ on:
     branches: [ master ]
 
 jobs:
-  test:
-    name: "Test on ${{ matrix.os }}"
+  build:
+    name: "Build on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
     steps:
-
     - name: Initialize Java
       uses: actions/setup-java@v1
       with:
         java-version: 15
-
     - name: Checkout root repository
       uses: actions/checkout@v2
       with:
         repository: sandpolis/sandpolis
-
-    - name: Execute tests
+    - name: Execute build
       run: |
-        ./gradlew test
+        gradle --no-daemon build
