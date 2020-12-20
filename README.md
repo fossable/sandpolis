@@ -2,6 +2,10 @@
 	<img src="https://s3.us-east-2.amazonaws.com/github.sandpolis.com/header.png" />
 </p>
 
+**Sandpolis** is a remote administration platform for servers, desktop computers, embedded devices, and anything in-between. Although designed primarily for sysadmins and enthusiasts, it should also be usable by most hominins.
+
+:zap: **This project is unfinished and should only be used in a secure testing environment!** :zap:
+
 | Module | Status |
 |--------|--------|
 | [Core](https://github.com/sandpolis/sandpolis) | ![Release](https://img.shields.io/github/release-pre/sandpolis/sandpolis.svg?color=blue) [![Build](https://github.com/sandpolis/sandpolis/workflows/.github/workflows/build.yml/badge.svg)](https://github.com/sandpolis/sandpolis/actions?query=workflow%3A.github%2Fworkflows%2Fbuild.yml) |
@@ -11,10 +15,6 @@
 | [Terminal Client](https://github.com/sandpolis/com.sandpolis.client.ascetic) | ![Release](https://img.shields.io/github/release-pre/sandpolis/com.sandpolis.client.ascetic.svg?color=blue) [![Build](https://github.com/sandpolis/com.sandpolis.client.ascetic/workflows/.github/workflows/build.yml/badge.svg)](https://github.com/sandpolis/com.sandpolis.client.ascetic/actions?query=workflow%3A.github%2Fworkflows%2Fbuild.yml) |
 | [Agent](https://github.com/sandpolis/com.sandpolis.agent.vanilla) | ![Release](https://img.shields.io/github/release-pre/sandpolis/com.sandpolis.agent.vanilla.svg?color=blue) [![Build](https://github.com/sandpolis/com.sandpolis.agent.vanilla/workflows/.github/workflows/build.yml/badge.svg)](https://github.com/sandpolis/com.sandpolis.agent.vanilla/actions?query=workflow%3A.github%2Fworkflows%2Fbuild.yml) |
 | [Native Agent](https://github.com/sandpolis/com.sandpolis.agent.micro) | ![Release](https://img.shields.io/github/release-pre/sandpolis/com.sandpolis.agent.micro.svg?color=blue) [![Build](https://github.com/sandpolis/com.sandpolis.agent.micro/workflows/.github/workflows/build.yml/badge.svg)](https://github.com/sandpolis/com.sandpolis.agent.micro/actions?query=workflow%3A.github%2Fworkflows%2Fbuild.yml) |
-
-**Sandpolis** is a remote administration platform for servers, desktop computers, embedded devices, and anything in-between. Although designed primarily for sysadmins and enthusiasts, it should also be usable by most hominins.
-
-:zap: **This project is unfinished and should only be used in a secure testing environment!** :zap:
 
 ### Introduction
 Sandpolis is a real-time distributed application composed of three types of components:
