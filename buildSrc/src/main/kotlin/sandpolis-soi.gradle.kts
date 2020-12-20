@@ -15,27 +15,29 @@ import java.io.FileOutputStream
 
 val writeSoi by tasks.creating(DefaultTask::class) {
 
-	val props = Properties()
+	doLast {
+		val props = Properties()
 
-	// Build time
-	props.setProperty("build.timestamp", "${System.currentTimeMillis()}")
+		// Build time
+		props.setProperty("build.timestamp", "${System.currentTimeMillis()}")
 
-	// Application version
-	props.setProperty("instance.version", "${project.version}")
+		// Application version
+		props.setProperty("instance.version", "${project.version}")
 
-	// Build platform
-	props.setProperty("build.platform", "${System.getProperty("os.name")} (${System.getProperty("os.arch")})")
+		// Build platform
+		props.setProperty("build.platform", "${System.getProperty("os.name")} (${System.getProperty("os.arch")})")
 
-	// Java version
-	props.setProperty("build.java.version",	"${System.getProperty("java.version")} (${System.getProperty("java.vendor")})")
+		// Java version
+		props.setProperty("build.java.version",	"${System.getProperty("java.version")} (${System.getProperty("java.vendor")})")
 
-	// Gradle version
-	props.setProperty("build.gradle.version", project.getGradle().getGradleVersion())
+		// Gradle version
+		props.setProperty("build.gradle.version", project.getGradle().getGradleVersion())
 
-	// Write object
-	project.file("src/main/resources").mkdirs()
-	val out = FileOutputStream(project.file("src/main/resources/build.properties"))
-	props.store(out, null)
+		// Write object
+		project.file("src/main/resources").mkdirs()
+		val out = FileOutputStream(project.file("src/main/resources/build.properties"))
+		props.store(out, null)
+	}
 }
 
 tasks.findByName("processResources")?.dependsOn(writeSoi)

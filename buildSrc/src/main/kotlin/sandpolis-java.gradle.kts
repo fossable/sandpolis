@@ -47,5 +47,5 @@ eclipse {
 
 // Configure artifact filename
 tasks.jar {
-	archiveBaseName.set(project.path.substring(4).replace(".", "-").replace(":", "-"))
+	archiveBaseName.set("^.*com.".toRegex().replace(project.path, "").replace(".", "-").replace(":", "-"))
 }
