@@ -25,7 +25,7 @@ dependencies {
 	testImplementation("net.jodah:concurrentunit:0.4.6")
 
 	// https://github.com/google/guava
-	api ("com.google.guava:guava:30.0-jre") {
+	api ("com.google.guava:guava:30.1-jre") {
 		exclude(group = "com.google.code.findbugs", module = "jsr305")
 		exclude(group = "com.google.guava", module = "listenablefuture")
 		exclude(group = "org.checkerframework", module = "checker-qual")
