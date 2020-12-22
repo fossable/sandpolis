@@ -34,7 +34,7 @@ dependencies {
 	}
 
 	// https://github.com/fusesource/jansi
-	implementation("org.fusesource.jansi:jansi:2.0.1")
+	implementation("org.fusesource.jansi:jansi:2.1.1")
 
 	// https://github.com/protocolbuffers/protobuf
 	api("com.google.protobuf:protobuf-java:3.14.0")
