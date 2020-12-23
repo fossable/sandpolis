@@ -24,12 +24,14 @@ buildscript {
 
 plugins {
 	id("com.diffplug.spotless") version "5.8.2"
-	id("org.ajoberstar.reckon") version "0.13.0"
 }
 
 spotless {
 	cpp {
 		target("**/*.cc", "**/*.hh")
+
+		// Exclude build directory
+		targetExclude("**/build/**")
 
 		eclipseCdt()
 		endWithNewline()
@@ -38,15 +40,24 @@ spotless {
 	kotlin {
 		target("**/*.kt")
 
+		// Exclude build directory
+		targetExclude("**/build/**")
+
 		licenseHeaderFile(file("gradle/resources/header_gradle.txt"), "(plugins|import|package)")
 	}
 	kotlinGradle {
 		target("**/*.kts")
 
+		// Exclude build directory
+		targetExclude("**/build/**")
+
 		licenseHeaderFile(file("gradle/resources/header_gradle.txt"), "(plugins|import|package)")
 	}
 	java {
 		target("**/*.java")
+
+		// Exclude build directory
+		targetExclude("**/build/**")
 
 		// Exclude generated sources
 		targetExclude("**/gen/main/java/**")
@@ -60,6 +71,9 @@ spotless {
 	format("javaModules") {
 		target("**/module-info.java")
 
+		// Exclude build directory
+		targetExclude("**/build/**")
+
 		trimTrailingWhitespace()
 		endWithNewline()
 
@@ -67,6 +81,9 @@ spotless {
 	}
 	format("proto") {
 		target("**/*.proto")
+
+		// Exclude build directory
+		targetExclude("**/build/**")
 
 		trimTrailingWhitespace()
 		endWithNewline()
@@ -77,6 +94,9 @@ spotless {
 	format("swift") {
 		target("**/*.swift")
 
+		// Exclude build directory
+		targetExclude("**/build/**")
+
 		trimTrailingWhitespace()
 		endWithNewline()
 		indentWithTabs()
@@ -86,10 +106,16 @@ spotless {
 	format("css") {
 		target("**/*.css")
 
+		// Exclude build directory
+		targetExclude("**/build/**")
+
 		eclipseWtp(com.diffplug.spotless.extra.wtp.EclipseWtpFormatterStep.CSS)
 	}
 	format("json") {
 		target("**/*.json")
+
+		// Exclude build directory
+		targetExclude("**/build/**")
 
 		// Exclude iOS projects
 		targetExclude("**/com.sandpolis.client.lockstone/**")
@@ -110,9 +136,4 @@ allprojects {
 			mavenCentral()
 		}
 	}
-}
-
-reckon {
-	scopeFromProp()
-	snapshotFromProp()
 }

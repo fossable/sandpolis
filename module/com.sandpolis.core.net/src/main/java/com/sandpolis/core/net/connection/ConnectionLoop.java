@@ -108,8 +108,12 @@ public final class ConnectionLoop implements Runnable {
 		this.bootstrap = Objects.requireNonNull(bootstrap);
 
 		// Set channel options
-		bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getTimeout())
-				.channel(ChannelUtil.getChannelType(ChannelTransportProtocol.TCP));
+		bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getTimeout());
+
+		// Set default channel factory
+		if (bootstrap.config().channelFactory() == null) {
+			bootstrap.channel(ChannelUtil.getChannelType(ChannelTransportProtocol.TCP));
+		}
 
 		// Build a SockFuture without a ChannelFuture
 		this.future = new ConnectionFuture((EventExecutor) ThreadStore.get("net.connection.loop"));

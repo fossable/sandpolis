@@ -12,6 +12,8 @@
 package com.sandpolis.core.server.listener;
 
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.server.listener.ListenerStore.ListenerStore;
 import static com.sandpolis.core.server.user.UserStore.UserStore;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,40 +24,37 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.MsgListener.RQ_AddListener;
-import com.sandpolis.core.net.exelet.ExeletTest;
-import com.sandpolis.core.server.listener.ListenerExe;
+import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.instance.Listener.ListenerConfig;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.instance.thread.ThreadStore;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgListener.RQ_AddListener;
+import com.sandpolis.core.net.exelet.ExeletContext;
 
-class ListenerExeTest extends ExeletTest {
+import io.netty.channel.embedded.EmbeddedChannel;
+
+class ListenerExeTest {
+
+	protected ExeletContext context;
 
 	@BeforeEach
 	void setup() {
 		UserStore.init(config -> {
-			config.ephemeral();
-
-			config.defaults.add(UserConfig.newBuilder().setUsername("junit").setPassword("12345678").build());
 		});
+		UserStore.create(UserConfig.newBuilder().setUsername("junit").setPassword("12345678").build());
 		ListenerStore.init(config -> {
-			config.ephemeral();
-
-			config.defaults
-					.add(ListenerConfig.newBuilder().setOwner("junit").setPort(5000).setAddress("0.0.0.0").build());
 		});
+		ListenerStore.create(ListenerConfig.newBuilder().setOwner("junit").setPort(5000).setAddress("0.0.0.0").build());
 		ThreadStore.init(config -> {
-			config.ephemeral();
-
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
-		initTestContext();
+		context = new ExeletContext(ConnectionStore.create(new EmbeddedChannel()), MSG.newBuilder().build());
 	}
 
 	@Test
 	void testDeclaration() {
-		testNameUniqueness(ListenerExe.class);
 	}
 
 	@Test

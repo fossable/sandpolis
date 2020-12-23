@@ -21,8 +21,11 @@ val writeSoi by tasks.creating(DefaultTask::class) {
 		// Build time
 		props.setProperty("build.timestamp", "${System.currentTimeMillis()}")
 
-		// Application version
+		// Instance version
 		props.setProperty("instance.version", "${project.version}")
+
+		// Core version
+		props.setProperty("core.version", "${project.rootProject.version}")
 
 		// Build platform
 		props.setProperty("build.platform", "${System.getProperty("os.name")} (${System.getProperty("os.arch")})")

@@ -9,3 +9,36 @@
 //    https://mozilla.org/MPL/2.0                                             //
 //                                                                            //
 //=========================================================S A N D P O L I S==//
+
+import java.io.ByteArrayOutputStream
+
+// Determine the module's version according to git
+
+var gitDescribe = ByteArrayOutputStream()
+
+project.exec {
+	commandLine = listOf("git", "describe", "--tags")
+	workingDir = project.getProjectDir()
+	standardOutput = gitDescribe
+	errorOutput = ByteArrayOutputStream()
+	setIgnoreExitValue(true)
+}
+
+var v = gitDescribe.toString()
+
+if (!v.startsWith("v")) {
+
+	project.version = "0.0.0"
+
+} else {
+
+	// Remove version prefix
+	v = v.substring(1)
+
+	// Remove version suffix if it's a release
+	if (v.contains("-0-")) {
+		v = v.substring(0, v.indexOf("-"))
+	}
+
+	project.version = v
+}

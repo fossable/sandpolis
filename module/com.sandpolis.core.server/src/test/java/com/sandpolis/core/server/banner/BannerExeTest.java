@@ -11,7 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.banner;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.concurrent.Executors;
@@ -20,28 +21,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.MsgPing.RQ_Ping;
-import com.sandpolis.core.net.MsgPing.RS_Ping;
-import com.sandpolis.core.net.exelet.ExeletTest;
-import com.sandpolis.core.server.banner.BannerExe;
+import com.sandpolis.core.instance.msg.MsgPing.RQ_Ping;
+import com.sandpolis.core.instance.msg.MsgPing.RS_Ping;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.exelet.ExeletContext;
 
-class BannerExeTest extends ExeletTest {
+import io.netty.channel.embedded.EmbeddedChannel;
 
-	@BeforeEach
-	void setup() {
-		ThreadStore.init(config -> {
-			config.ephemeral();
+class BannerExeTest {
 
-			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
-		});
-
-		initTestContext();
-	}
-
-	@Test
-	void testDeclaration() {
-		testNameUniqueness(BannerExe.class);
-	}
+	protected ExeletContext context;
 
 	@Test
 	@DisplayName("Check that pings get a response")
@@ -50,5 +39,18 @@ class BannerExeTest extends ExeletTest {
 		var rs = BannerExe.rq_ping(rq);
 
 		assertEquals(RS_Ping.newBuilder().build(), ((RS_Ping.Builder) rs).build());
+	}
+
+	@BeforeEach
+	void setup() {
+		ThreadStore.init(config -> {
+			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
+		});
+
+		context = new ExeletContext(ConnectionStore.create(new EmbeddedChannel()), MSG.newBuilder().build());
+	}
+
+	@Test
+	void testDeclaration() {
 	}
 }

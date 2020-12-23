@@ -21,6 +21,7 @@ open module com.sandpolis.core.foundation {
 	requires com.google.common;
 	requires com.google.protobuf;
 	requires java.prefs;
+	requires java.xml;
 	requires org.fusesource.jansi;
 	requires org.slf4j;
 

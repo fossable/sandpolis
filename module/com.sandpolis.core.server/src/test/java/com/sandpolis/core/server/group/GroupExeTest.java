@@ -11,7 +11,8 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.group;
 
-import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.server.group.GroupStore.GroupStore;
 import static com.sandpolis.core.server.user.UserStore.UserStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -23,38 +24,36 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.net.MsgGroup.RQ_AddGroup;
-import com.sandpolis.core.net.MsgGroup.RQ_RemoveGroup;
-import com.sandpolis.core.net.exelet.ExeletTest;
-import com.sandpolis.core.server.group.GroupExe;
+import com.sandpolis.core.foundation.Result.Outcome;
 import com.sandpolis.core.instance.Group.GroupConfig;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.Result.Outcome;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.MsgGroup.RQ_AddGroup;
+import com.sandpolis.core.net.MsgGroup.RQ_RemoveGroup;
+import com.sandpolis.core.net.exelet.ExeletContext;
 
-class GroupExeTest extends ExeletTest {
+import io.netty.channel.embedded.EmbeddedChannel;
+
+class GroupExeTest {
+
+	protected ExeletContext context;
 
 	@BeforeEach
 	void setup() {
 		UserStore.init(config -> {
-			config.ephemeral();
-
-			config.defaults.add(UserConfig.newBuilder().setUsername("admin").setPassword("123").build());
 		});
+		UserStore.create(UserConfig.newBuilder().setUsername("admin").setPassword("123").build());
 		GroupStore.init(config -> {
-			config.ephemeral();
 		});
 		ThreadStore.init(config -> {
-			config.ephemeral();
-
 			config.defaults.put("store.event_bus", Executors.newSingleThreadExecutor());
 		});
 
-		initTestContext();
+		context = new ExeletContext(ConnectionStore.create(new EmbeddedChannel()), MSG.newBuilder().build());
 	}
 
 	@Test
 	void testDeclaration() {
-		testNameUniqueness(GroupExe.class);
 	}
 
 	@Test

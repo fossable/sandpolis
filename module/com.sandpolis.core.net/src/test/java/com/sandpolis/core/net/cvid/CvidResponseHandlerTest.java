@@ -65,9 +65,8 @@ class CvidResponseHandlerTest {
 	void testReceiveIncorrect() {
 		final var testUuid = randomUUID().toString();
 
-		server.writeInbound(MSG.newBuilder()
-				.setPayload(Any.pack(RQ_Cvid.newBuilder().setInstance(InstanceType.SERVER).setUuid(testUuid).build()))
-				.build());
+		server.writeInbound(MsgUtil.pack(MSG.newBuilder(),
+				RQ_Cvid.newBuilder().setInstance(InstanceType.SERVER).setUuid(testUuid).build()));
 
 		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
 		assertFalse(event.success);
@@ -79,9 +78,8 @@ class CvidResponseHandlerTest {
 	void testReceiveCorrect() throws InvalidProtocolBufferException {
 		final var testUuid = randomUUID().toString();
 
-		server.writeInbound(MSG.newBuilder()
-				.setPayload(Any.pack(RQ_Cvid.newBuilder().setInstance(InstanceType.CLIENT).setUuid(testUuid).build()))
-				.build());
+		server.writeInbound(MsgUtil.pack(MSG.newBuilder(),
+				RQ_Cvid.newBuilder().setInstance(InstanceType.CLIENT).setUuid(testUuid).build()));
 
 		await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> event != null);
 		assertTrue(event.success);
@@ -92,7 +90,7 @@ class CvidResponseHandlerTest {
 		assertNull(server.pipeline().get(CvidResponseHandler.class), "Handler autoremove failed");
 
 		MSG msg = server.readOutbound();
-		RS_Cvid rs = msg.getPayload().unpack(RS_Cvid.class);
+		RS_Cvid rs = MsgUtil.unpack(server.readOutbound(), RS_Cvid.class);
 
 		assertEquals(InstanceType.CLIENT, CvidUtil.extractInstance(rs.getCvid()));
 		assertFalse(rs.getServerUuid().isEmpty());

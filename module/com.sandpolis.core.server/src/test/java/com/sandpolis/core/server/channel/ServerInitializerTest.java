@@ -11,8 +11,10 @@
 //=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.channel;
 
+import static com.sandpolis.core.instance.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.plugin.PluginStore.PluginStore;
 import static com.sandpolis.core.instance.store.thread.ThreadStore.ThreadStore;
+import static com.sandpolis.core.instance.thread.ThreadStore.ThreadStore;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -23,8 +25,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.sandpolis.core.instance.Config;
-import com.sandpolis.core.server.channel.ServerChannelInitializer;
+import com.sandpolis.core.instance.plugin.PluginStore;
+import com.sandpolis.core.instance.thread.ThreadStore;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -48,12 +50,10 @@ class ServerInitializerTest {
 	static void configure() {
 
 		ThreadStore.init(config -> {
-			config.ephemeral();
 			config.defaults.put("net.exelet", new NioEventLoopGroup(2));
 		});
 
 		PluginStore.init(config -> {
-			config.ephemeral();
 		});
 	}
 
