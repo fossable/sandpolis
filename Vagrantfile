@@ -30,4 +30,34 @@ Vagrant.configure("2") do |config|
         # Configure environment
         windows.vm.provision :shell, :inline => "choco install -y adoptopenjdk"
     end
+
+    config.vm.define "macos" do |macos|
+        macos.vm.box = "yzgyyang/macOS-10.14"
+
+        macos.vm.synced_folder ".", "/vagrant",
+            id: "core",
+            :nfs => true,
+            :mount_options => ['nolock,vers=3,udp,noatime,actimeo=1,resvport'],
+        :export_options => ['async,insecure,no_subtree_check,no_acl,no_root_squash']
+
+         # NFS needs host-only network
+        macos.vm.network :private_network, ip: "172.16.2.42"
+
+        macos.vm.provider "virtualbox" do |virtualbox|
+            virtualbox.memory = 8192
+            virtualbox.cpus = 16
+
+            virtualbox.customize ["modifyvm", :id, "--cpuid-set", "00000001", "000106e5", "00100800", "0098e3fd", "bfebfbff"]
+            virtualbox.customize ["modifyvm", :id, "--usb", "off"]
+            virtualbox.customize ["modifyvm", :id, "--usbehci", "off"]
+            virtualbox.customize ["setextradata", :id, "VBoxInternal/Devices/efi/0/Config/DmiSystemProduct", "MacBookPro11,3"]
+            virtualbox.customize ["setextradata", :id, "VBoxInternal/Devices/efi/0/Config/DmiSystemVersion", "1.0"]
+            virtualbox.customize ["setextradata", :id, "VBoxInternal/Devices/efi/0/Config/DmiBoardProduct", "Iloveapple"]
+            virtualbox.customize ["setextradata", :id, "VBoxInternal/Devices/smc/0/Config/DeviceKey", "ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc"]
+            virtualbox.customize ["setextradata", :id, "VBoxInternal/Devices/smc/0/Config/GetKeyFromRealSMC", "1"]
+            virtualbox.customize ["setextradata", :id, "VBoxInternal2/EfiGopMode", "4"]
+        end
+
+        macos.vm.provision :shell, :inline => "brew install --cask adoptopenjdk"
+    end
 end

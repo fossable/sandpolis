@@ -12,13 +12,8 @@
 name: "CodeQL"
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ master ]
   schedule:
-    - cron: '29 7 * * 0'
+    - cron: '29 7 1 * *'
 
 jobs:
   analyze:
@@ -34,6 +29,10 @@ jobs:
         # https://docs.github.com/en/free-pro-team@latest/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#changing-the-languages-that-are-analyzed
 
     steps:
+    - name: Initialize Java
+      uses: actions/setup-java@v1
+      with:
+        java-version: 15
     - name: Checkout repository
       uses: actions/checkout@v2
 
