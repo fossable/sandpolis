@@ -34,6 +34,8 @@ spotless {
 		eclipseCdt()
 		endWithNewline()
 		indentWithTabs()
+
+		licenseHeaderFile(file("gradle/resources/header_cpp.txt"), "(\\#include|\\#ifndef)")
 	}
 	kotlin {
 		target("**/*.kt")
