@@ -33,8 +33,9 @@ public class JavaFxSTGenerator extends VSTGenerator {
 
 		{
 			// Add property field
-			
-			var field = FieldSpec.builder(type, LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name + "_property"), PUBLIC, FINAL) //
+
+			var field = FieldSpec
+					.builder(type, LOWER_UNDERSCORE.to(LOWER_CAMEL, attribute.name + "_property"), PUBLIC, FINAL) //
 					.initializer("($T) document.attribute(\"$L\")", type, attribute.name);
 			parent.addField(field.build());
 		}

@@ -49,3 +49,10 @@ eclipse {
 tasks.jar {
 	archiveBaseName.set("^.*com.".toRegex().replace(project.path, "").replace(".", "-").replace(":", "-"))
 }
+
+// Configure module version
+tasks.compileJava {
+
+	// Set module version
+	options.javaModuleVersion.set(provider { project.version as String })
+}

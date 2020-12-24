@@ -75,7 +75,7 @@ public interface STAttribute<T> extends STObject<ProtoAttribute> {
 	/**
 	 * Get the history of the attribute's value if enabled by the
 	 * {@link RetentionPolicy}.
-	 * 
+	 *
 	 * @return An unmodifiable list
 	 */
 	public List<STAttributeValue<T>> history();
@@ -117,7 +117,7 @@ public interface STAttribute<T> extends STObject<ProtoAttribute> {
 
 	/**
 	 * Get the timestamp associated with the attribute's current value.
-	 * 
+	 *
 	 * @return The current timestamp
 	 */
 	public long timestamp();

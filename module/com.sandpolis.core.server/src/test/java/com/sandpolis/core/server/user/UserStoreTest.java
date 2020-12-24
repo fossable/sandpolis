@@ -12,6 +12,7 @@
 package com.sandpolis.core.server.user;
 
 import static com.sandpolis.core.instance.state.STStore.STStore;
+import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 import static com.sandpolis.core.server.user.UserStore.UserStore;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -19,15 +20,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.net.URISyntaxException;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.state.EphemeralDocument;
-import com.sandpolis.core.instance.state.STDocument;
-import com.sandpolis.core.instance.state.VirtUser;
+import com.sandpolis.core.net.Message.MSG;
+import com.sandpolis.core.net.exelet.ExeletContext;
 
+import io.netty.channel.embedded.EmbeddedChannel;
+
+@Disabled
 class UserStoreTest {
+
+	protected ExeletContext context;
 
 	private static final UserConfig TEST_USER = UserConfig.newBuilder() //
 			.setUsername("TESTUSER") //
@@ -37,12 +43,12 @@ class UserStoreTest {
 	@BeforeEach
 	void setup() throws URISyntaxException {
 		STStore.init(config -> {
-			config.root = new EphemeralDocument((STDocument) null);
 		});
 
 		UserStore.init(config -> {
-			config.collection = STStore.root().get(VirtUser.COLLECTION.resolveLocal());
 		});
+
+		context = new ExeletContext(ConnectionStore.create(new EmbeddedChannel()), MSG.newBuilder().build());
 	}
 
 	@Test

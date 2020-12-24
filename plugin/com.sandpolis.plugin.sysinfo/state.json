@@ -1348,8 +1348,8 @@
 		]
 	},
 	{
-		"name":"/profile//sysinfo/network/arp_cache/",
-		"attributes":[
+		"name": "/profile//sysinfo/network/arp_cache/",
+		"attributes": [
 			{
 				"name": "address",
 				"type": "java.lang.String",
@@ -1453,7 +1453,7 @@
 		]
 	},
 	{
-		"name":"/profile//sysinfo/user/",
+		"name": "/profile//sysinfo/user/",
 		"attributes": [
 			{
 				"name": "uid",

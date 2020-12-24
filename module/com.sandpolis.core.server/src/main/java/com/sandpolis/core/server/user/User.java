@@ -34,7 +34,6 @@ public class User extends VirtUser {
 	/**
 	 * Check a user's expiration status.
 	 *
-	 * @param user The user to check
 	 * @return Whether the given user is currently expired
 	 */
 	public boolean isExpired() {

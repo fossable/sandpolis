@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,7 @@ import com.sandpolis.core.net.exelet.ExeletContext;
 
 import io.netty.channel.embedded.EmbeddedChannel;
 
+@Disabled
 class LoginExeTest {
 
 	protected ExeletContext context;

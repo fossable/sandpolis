@@ -1,16 +1,14 @@
-/**
- * <p>
- * Generates HMAC-based one-time passwords (HOTP) as specified in
- * <a href="https://tools.ietf.org/html/rfc4226">RFC&nbsp;4226</a>.
- * </p>
- *
- * <p>
- * {@code HmacOneTimePasswordGenerator} instances are thread-safe and may be
- * shared between threads.
- * </p>
- *
- * @author <a href="https://github.com/jchambers">Jon Chambers</a>
- */
+//============================================================================//
+//                                                                            //
+//                Copyright © 2015 - 2020 Subterranean Security               //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation at:                                //
+//                                                                            //
+//    https://mozilla.org/MPL/2.0                                             //
+//                                                                            //
+//=========================================================S A N D P O L I S==//
 package com.sandpolis.core.server.auth.otp;
 
 import javax.crypto.Mac;
@@ -39,11 +37,11 @@ public class HmacOneTimePasswordGenerator {
 	/**
 	 * Creates a new HMAC-based one-time password (HOTP) generator using a default
 	 * password length
-	 * ({@value com.eatthepath.otp.HmacOneTimePasswordGenerator#DEFAULT_PASSWORD_LENGTH}
+	 * ({@value com.sandpolis.core.server.auth.otp.HmacOneTimePasswordGenerator#DEFAULT_PASSWORD_LENGTH}
 	 * digits).
 	 *
 	 * @throws NoSuchAlgorithmException if the underlying JRE doesn't support the
-	 *                                  {@value com.eatthepath.otp.HmacOneTimePasswordGenerator#HOTP_HMAC_ALGORITHM}
+	 *                                  {@value com.sandpolis.core.server.auth.otp.HmacOneTimePasswordGenerator#HOTP_HMAC_ALGORITHM}
 	 *                                  algorithm, which should never happen except
 	 *                                  in cases of serious misconfiguration
 	 */
@@ -60,7 +58,7 @@ public class HmacOneTimePasswordGenerator {
 	 *                       inclusive
 	 *
 	 * @throws NoSuchAlgorithmException if the underlying JRE doesn't support the
-	 *                                  {@value com.eatthepath.otp.HmacOneTimePasswordGenerator#HOTP_HMAC_ALGORITHM}
+	 *                                  {@value com.sandpolis.core.server.auth.otp.HmacOneTimePasswordGenerator#HOTP_HMAC_ALGORITHM}
 	 *                                  algorithm, which should never happen except
 	 *                                  in cases of serious misconfiguration
 	 */
@@ -83,7 +81,7 @@ public class HmacOneTimePasswordGenerator {
 	 * @param algorithm      the name of the {@link javax.crypto.Mac} algorithm to
 	 *                       use when generating passwords; note that HOTP only
 	 *                       allows for
-	 *                       {@value com.eatthepath.otp.HmacOneTimePasswordGenerator#HOTP_HMAC_ALGORITHM},
+	 *                       {@value com.sandpolis.core.server.auth.otp.HmacOneTimePasswordGenerator#HOTP_HMAC_ALGORITHM},
 	 *                       but derived standards like TOTP may allow for other
 	 *                       algorithms
 	 *

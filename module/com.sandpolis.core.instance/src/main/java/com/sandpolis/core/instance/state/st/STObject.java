@@ -54,7 +54,7 @@ public interface STObject<E extends MessageLite> {
 
 	/**
 	 * Get this object's parent.
-	 * 
+	 *
 	 * @return The parent {@link STDocument} or {@code null}
 	 */
 	public STDocument parent();

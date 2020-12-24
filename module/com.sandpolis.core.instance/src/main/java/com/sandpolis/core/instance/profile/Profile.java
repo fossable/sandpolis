@@ -22,7 +22,7 @@ import com.sandpolis.core.instance.state.st.STDocument;
  */
 public class Profile extends VirtProfile {
 
-	Profile(STDocument parent) {
+	public Profile(STDocument parent) {
 		super(parent);
 	}
 }

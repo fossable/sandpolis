@@ -51,7 +51,7 @@ spotless {
 		// Exclude build directory
 		targetExclude("**/build/**")
 
-		licenseHeaderFile(file("gradle/resources/header_gradle.txt"), "(plugins|import|package)")
+		licenseHeaderFile(file("gradle/resources/header_gradle.txt"), "(plugins|import|buildscript|rootProject)")
 	}
 	java {
 		target("**/*.java")
@@ -61,6 +61,7 @@ spotless {
 
 		// Exclude generated sources
 		targetExclude("**/gen/main/java/**")
+		targetExclude("**/src/main/java/com/sandpolis/core/instance/converter/**")
 
 		eclipse().configFile("gradle/resources/EclipseConventions.xml")
 		trimTrailingWhitespace()

@@ -26,6 +26,7 @@ import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -71,6 +72,7 @@ class NetUtilTest {
 	}
 
 	@Test
+	@Disabled
 	@DisplayName("Check well-known service names")
 	void serviceName_1() {
 		assumeTrue(System.getProperty("os.name").toLowerCase().contains("linux"));

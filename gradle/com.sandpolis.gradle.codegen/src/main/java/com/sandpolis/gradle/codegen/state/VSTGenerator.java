@@ -189,7 +189,7 @@ public abstract class VSTGenerator extends DefaultTask {
 
 	/**
 	 * Assert the validity the given attribute.
-	 * 
+	 *
 	 * @param attribute The attribute specification to validate
 	 */
 	protected void validateAttribute(AttributeSpec attribute) {
@@ -205,7 +205,7 @@ public abstract class VSTGenerator extends DefaultTask {
 
 	/**
 	 * Assert the validity the given document.
-	 * 
+	 *
 	 * @param document The document specification to validate
 	 */
 	protected void validateDocument(DocumentSpec document) {
@@ -245,7 +245,7 @@ public abstract class VSTGenerator extends DefaultTask {
 
 	/**
 	 * Write the given class to the appropriate generated sources directory.
-	 * 
+	 *
 	 * @param spec The class specification
 	 */
 	protected void writeClass(TypeSpec spec) {

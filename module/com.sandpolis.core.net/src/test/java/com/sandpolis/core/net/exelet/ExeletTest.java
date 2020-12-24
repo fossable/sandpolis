@@ -39,9 +39,7 @@ public abstract class ExeletTest {
 	protected ExeletContext context;
 
 	protected void initTestContext() {
-		var channel = new EmbeddedChannel();
-
-		context = new ExeletContext(ConnectionStore.create(channel), MSG.newBuilder().build());
+		context = new ExeletContext(ConnectionStore.create(new EmbeddedChannel()), MSG.newBuilder().build());
 	}
 
 }

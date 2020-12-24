@@ -24,7 +24,7 @@ project.exec {
 	setIgnoreExitValue(true)
 }
 
-var v = gitDescribe.toString()
+var v = gitDescribe.toString().trim()
 
 if (!v.startsWith("v")) {
 

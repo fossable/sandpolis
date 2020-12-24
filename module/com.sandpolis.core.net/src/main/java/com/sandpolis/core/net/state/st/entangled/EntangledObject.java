@@ -35,7 +35,7 @@ import com.sandpolis.core.net.stream.StreamSource;
 /**
  * An {@link EntangledObject} is synchronized with a remote object on another
  * instance.
- * 
+ *
  * <p>
  * It uses the {@link Stream} API to efficiently send real-time updates to the
  * remote object.

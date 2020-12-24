@@ -21,7 +21,7 @@ option optimize_for = CODE_SIZE;
 
 message ProtoAttributeValue {
 
-	// The timestamp associated with the value
+    // The timestamp associated with the value
     int64 timestamp = 1;
 
     repeated string  string   = 2;
@@ -33,7 +33,7 @@ message ProtoAttributeValue {
 }
 
 message ProtoAttribute {
-	string path = 1;
+    string path = 1;
     bool replacement = 2;
     bool removal = 3;
 
@@ -41,7 +41,7 @@ message ProtoAttribute {
 }
 
 message ProtoDocument {
-	string path = 1;
+    string path = 1;
     bool replacement = 2;
     bool removal = 3;
 

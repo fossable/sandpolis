@@ -97,14 +97,14 @@ public interface STDocument extends STObject<ProtoDocument> {
 
 	/**
 	 * Perform the given action on all {@link STAttribute} members.
-	 * 
+	 *
 	 * @param consumer The action
 	 */
 	public void forEachAttribute(Consumer<STAttribute<?>> consumer);
 
 	/**
 	 * Perform the given action on all {@link STDocument} members.
-	 * 
+	 *
 	 * @param consumer The action
 	 */
 	public void forEachDocument(Consumer<STDocument> consumer);
@@ -138,14 +138,14 @@ public interface STDocument extends STObject<ProtoDocument> {
 
 	/**
 	 * Remove the given {@link STAttribute} member.
-	 * 
+	 *
 	 * @param attribute The attribute to remove
 	 */
 	public void remove(STAttribute<?> attribute);
 
 	/**
 	 * Remove the given {@link STDocument} member.
-	 * 
+	 *
 	 * @param document The document to remove
 	 */
 	public void remove(STDocument document);
