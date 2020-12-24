@@ -7,19 +7,8 @@
 //  as published by the Mozilla Foundation.                                   //
 //                                                                            //
 //============================================================================//
-syntax = "proto3";
+package com.sandpolis.core.instance;
 
-package core.net.msg;
+public abstract class Entrypoint {
 
-option java_package = "com.sandpolis.core.net.msg";
-option optimize_for = CODE_SIZE;
-
-/**
- * Request: Stop a Stream
- * Response: rs_outcome
- */
-message RQ_StreamStop {
-
-    // The stream ID of the stream to stop
-    int32 id = 1;
 }
