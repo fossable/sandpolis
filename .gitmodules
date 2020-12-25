@@ -31,3 +31,9 @@
 [submodule "com.sandpolis.agent.vanilla"]
 	path = com.sandpolis.agent.vanilla
 	url = ../com.sandpolis.agent.vanilla
+[submodule "plugin/com.sandpolis.plugin.filesystem"]
+	path = plugin/com.sandpolis.plugin.filesystem
+	url = ../com.sandpolis.plugin.filesystem
+[submodule "plugin/com.sandpolis.plugin.osquery"]
+	path = plugin/com.sandpolis.plugin.osquery
+	url = ../com.sandpolis.plugin.osquery
