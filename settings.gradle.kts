@@ -53,17 +53,17 @@ if (file("${rootDir}/plugin/com.sandpolis.plugin.device/.git").exists()) {
 	include("plugin:com.sandpolis.plugin.device:agent:vanilla")
 }
 if (file("${rootDir}/plugin/com.sandpolis.plugin.filesystem/.git").exists()) {
-	include("plugin:com.sandpolis.plugin.filesys")
-	include("plugin:com.sandpolis.plugin.filesys:agent:vanilla")
+	include("plugin:com.sandpolis.plugin.filesystem")
+	include("plugin:com.sandpolis.plugin.filesystem:agent:vanilla")
 }
 if (file("${rootDir}/plugin/com.sandpolis.plugin.shell/.git").exists()) {
 	include("plugin:com.sandpolis.plugin.shell")
 	include("plugin:com.sandpolis.plugin.shell:agent:vanilla")
 }
-if (file("${rootDir}/plugin/com.sandpolis.plugin.sysinfo/.git").exists()) {
-	include("plugin:com.sandpolis.plugin.sysinfo")
-	include("plugin:com.sandpolis.plugin.sysinfo:agent:vanilla")
-	include("plugin:com.sandpolis.plugin.sysinfo:server:vanilla")
+if (file("${rootDir}/plugin/com.sandpolis.plugin.osquery/.git").exists()) {
+	include("plugin:com.sandpolis.plugin.osquery")
+	include("plugin:com.sandpolis.plugin.osquery:agent:vanilla")
+	include("plugin:com.sandpolis.plugin.osquery:server:vanilla")
 }
 if (file("${rootDir}/plugin/com.sandpolis.plugin.upgrade/.git").exists()) {
 	include("plugin:com.sandpolis.plugin.upgrade")
