@@ -11,19 +11,18 @@ package com.sandpolis.core.instance;
 
 import static java.util.UUID.randomUUID;
 
+import java.io.IOException;
+import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sandpolis.core.foundation.soi.Build.SO_Build;
-import com.sandpolis.core.foundation.soi.Dependency.SO_DependencyMatrix;
-import com.sandpolis.core.foundation.Platform;
-import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
+import com.sandpolis.core.instance.Metatypes.InstanceType;
 
 /**
  * Contains common fields useful to every instance type.
  *
- * @author cilki
  * @since 2.0.0
  */
 public final class Core {
@@ -43,12 +42,7 @@ public final class Core {
 	/**
 	 * Build information included in the instance jar.
 	 */
-	public static final SO_Build SO_BUILD;
-
-	/**
-	 * The dependency matrix included in the instance jar.
-	 */
-	public static final SO_DependencyMatrix SO_MATRIX;
+	public static final Properties SO_BUILD;
 
 	/**
 	 * The instance's UUID.
@@ -85,8 +79,6 @@ public final class Core {
 		if (MainDispatch.getInstance() != null && MainDispatch.getInstanceFlavor() != null) {
 			INSTANCE = MainDispatch.getInstance();
 			FLAVOR = MainDispatch.getInstanceFlavor();
-			SO_MATRIX = readMatrix();
-			SO_BUILD = readBuild();
 
 			// TODO set from PrefStore
 			UUID = randomUUID().toString();
@@ -95,41 +87,14 @@ public final class Core {
 
 			INSTANCE = InstanceType.CHARCOAL;
 			FLAVOR = InstanceFlavor.NONE;
-			SO_BUILD = null;
-			SO_MATRIX = null;
 			UUID = randomUUID().toString();
 		}
-	}
 
-	/**
-	 * Get the instance's {@link SO_DependencyMatrix} object.
-	 *
-	 * @return The instance's {@link SO_DependencyMatrix} object
-	 */
-	private static SO_DependencyMatrix readMatrix() {
-		if (MainDispatch.getMain() == null)
-			throw new IllegalStateException("Core initialized before dispatch");
-
+		SO_BUILD = new Properties();
 		try {
-			return SO_DependencyMatrix.parseFrom(MainDispatch.getMain().getResourceAsStream("/soi/matrix.bin"));
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to read SO_MATRIX!", e);
-		}
-	}
-
-	/**
-	 * Get the instance's {@link SO_Build} object.
-	 *
-	 * @return The instance's {@link SO_Build} object
-	 */
-	private static SO_Build readBuild() {
-		if (MainDispatch.getMain() == null)
-			throw new IllegalStateException("Core initialized before dispatch");
-
-		try {
-			return SO_Build.parseFrom(MainDispatch.getMain().getResourceAsStream("/soi/build.bin"));
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to read SO_MATRIX!", e);
+			SO_BUILD.load(MainDispatch.getMain().getResourceAsStream("/build.properties"));
+		} catch (IOException e) {
+			log.warn("Failed to load SO_BUILD");
 		}
 	}
 

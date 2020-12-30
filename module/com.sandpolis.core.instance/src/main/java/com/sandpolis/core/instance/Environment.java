@@ -162,16 +162,14 @@ public enum Environment {
 	 * @param name The instance name
 	 */
 	public static void printEnvironment(Logger log, String name) {
-		log.info("Launching {} ({})", TextUtil.rainbowText(name), Core.SO_BUILD.getVersion());
-		log.debug("Build Environment:");
-		log.debug("  Timestamp: {}", new Date(Core.SO_BUILD.getTime()));
-		log.debug("   Platform: {}", Core.SO_BUILD.getPlatform());
-		log.debug("     Gradle: {}", Core.SO_BUILD.getGradleVersion());
-		log.debug("       Java: {}", Core.SO_BUILD.getJavaVersion());
-		log.debug("Runtime Environment:");
-		log.debug("  Timestamp: {}", new Date());
-		log.debug("   Platform: {} ({})", System.getProperty("os.name"), System.getProperty("os.arch"));
-		log.debug("       Java: {} ({})", System.getProperty("java.version"), System.getProperty("java.vendor"));
-		log.debug("  Libraries: {}", LIB.path);
+		log.info("Launching {} ({})", TextUtil.rainbowText(name),
+				Core.SO_BUILD.getProperty("instance.version", "?.?.?"));
+		log.debug("Core version: {}", Core.SO_BUILD.getProperty("core.version", "?.?.?"));
+		log.debug("  Build timestamp: {}", new Date(Long.parseLong(Core.SO_BUILD.getProperty("build.timestamp", "0"))));
+		log.debug("Runtime timestamp: {}", new Date());
+		log.debug("   Build platform: {}", Core.SO_BUILD.getProperty("build.platform", "Unknown"));
+		log.debug(" Runtime platform: {} ({})", System.getProperty("os.name"), System.getProperty("os.arch"));
+		log.debug("        Build JVM: {}", Core.SO_BUILD.getProperty("build.java.version", "Unknown"));
+		log.debug("      Runtime JVM: {} ({})", System.getProperty("java.version"), System.getProperty("java.vendor"));
 	}
 }

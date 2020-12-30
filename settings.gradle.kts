@@ -39,8 +39,13 @@ if (file("${rootDir}/com.sandpolis.server.vanilla/.git").exists())
 	include("com.sandpolis.server.vanilla")
 if (file("${rootDir}/com.sandpolis.client.lockstone/.git").exists())
 	include("com.sandpolis.client.lockstone")
-if (file("${rootDir}/com.sandpolis.agent.micro/.git").exists())
+if (file("${rootDir}/com.sandpolis.agent.micro/.git").exists()) {
 	include("com.sandpolis.agent.micro")
+	include("com.sandpolis.agent.micro:agent")
+	if (org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem().isLinux()) {
+		include("com.sandpolis.agent.micro:boot")
+	}
+}
 
 // Core plugins
 if (file("${rootDir}/plugin/com.sandpolis.plugin.desktop/.git").exists()) {

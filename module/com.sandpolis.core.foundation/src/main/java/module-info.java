@@ -10,7 +10,6 @@
 open module com.sandpolis.core.foundation {
 	exports com.sandpolis.core.foundation.idle;
 	exports com.sandpolis.core.foundation.logging;
-	exports com.sandpolis.core.foundation.soi;
 	exports com.sandpolis.core.foundation.util;
 	exports com.sandpolis.core.foundation;
 

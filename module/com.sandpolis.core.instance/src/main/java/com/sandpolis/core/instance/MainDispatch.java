@@ -301,7 +301,8 @@ public final class MainDispatch {
 			throw new IllegalArgumentException("Shutdown tasks cannot be registered more than once");
 
 		if (task.initMetadata != null) {
-			if (task.initMetadata.development() && !Core.SO_BUILD.getDevelopment())
+			if (task.initMetadata.development()
+					&& !Core.SO_BUILD.getProperty("build.development", "false").equalsIgnoreCase("true"))
 				return;
 			tasks.add(task);
 		} else if (task.shutdownMetadata != null)

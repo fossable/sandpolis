@@ -14,6 +14,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -24,30 +25,48 @@ import java.nio.file.ProviderNotFoundException;
 import java.util.Optional;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
+import java.util.zip.ZipFile;
 
 import com.google.common.io.Resources;
 
 /**
  * Utilities for working with jar files and their resources.
  *
- * @author cilki
  * @since 4.0.0
  */
 public final class JarUtil {
 
+	public interface ResourceParser<T> {
+		public T parse(InputStream in) throws Exception;
+	}
+
 	/**
-	 * Retrieve the value of a manifest attribute from the given jar.
+	 * Retrieve the attribute map from the manifest of the given jar.
 	 *
-	 * @param file      The target jar file
-	 * @param attribute The attribute to query
-	 * @return The attribute's value
+	 * @param file The target jar file
+	 * @return The jar's manifest attributes
 	 * @throws IOException
 	 */
-	public static Optional<String> getManifestValue(Path file, String attribute) throws IOException {
+	public static Attributes getManifest(File file) throws IOException {
 		checkNotNull(file);
-		checkNotNull(attribute);
 
-		return getManifestValue(file.toFile(), attribute);
+		try (JarFile jar = new JarFile(file, false)) {
+			if (jar.getManifest() == null)
+				throw new NoSuchFileException("Manifest not found");
+
+			return jar.getManifest().getMainAttributes();
+		}
+	}
+
+	/**
+	 * Retrieve the attribute map from the manifest of the given jar.
+	 *
+	 * @param file The target jar file
+	 * @return The jar's manifest attributes
+	 * @throws IOException
+	 */
+	public static Attributes getManifest(Path file) throws IOException {
+		return getManifest(file.toFile());
 	}
 
 	/**
@@ -70,32 +89,66 @@ public final class JarUtil {
 	}
 
 	/**
-	 * Retrieve the attribute map from the manifest of the given jar.
+	 * Retrieve the value of a manifest attribute from the given jar.
 	 *
-	 * @param file The target jar file
-	 * @return The jar's manifest attributes
+	 * @param file      The target jar file
+	 * @param attribute The attribute to query
+	 * @return The attribute's value
 	 * @throws IOException
 	 */
-	public static Attributes getManifest(Path file) throws IOException {
-		return getManifest(file.toFile());
+	public static Optional<String> getManifestValue(Path file, String attribute) throws IOException {
+		checkNotNull(file);
+		checkNotNull(attribute);
+
+		return getManifestValue(file.toFile(), attribute);
 	}
 
 	/**
-	 * Retrieve the attribute map from the manifest of the given jar.
+	 * Read the given resource from the given zip.
 	 *
-	 * @param file The target jar file
-	 * @return The jar's manifest attributes
+	 * @param file     A zip containing the entry
+	 * @param resource The resource path
+	 * @param parser   The parsing function
+	 * @return The parsed object
+	 * @throws Exception If the file does not exist, have the required entry, could
+	 *                   not be read, or could not be parsed
+	 */
+	public static <T> T getResource(Path file, String resource, ResourceParser<T> parser) throws Exception {
+		checkNotNull(resource);
+		checkNotNull(file);
+		checkNotNull(parser);
+
+		if (!resource.startsWith("/"))
+			resource = "/" + resource;
+
+		// Attempt to use the newer filesystem API first
+		try (FileSystem zip = FileSystems.newFileSystem(file, (ClassLoader) null)) {
+			try (var in = Files.newInputStream(zip.getPath(resource))) {
+				return parser.parse(in);
+			}
+		} catch (ProviderNotFoundException e) {
+			// ZipFile fallback
+			try (ZipFile zip = new ZipFile(file.toFile())) {
+				try (var in = zip.getInputStream(zip.getEntry(resource))) {
+					return parser.parse(in);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Calculate the size of a resource by (probably) reading it entirely.
+	 *
+	 * @param file     The target jar file
+	 * @param resource Absolute location of target resource within the given jar
+	 * @return The size of the target resource in bytes
 	 * @throws IOException
 	 */
-	public static Attributes getManifest(File file) throws IOException {
+	public static long getResourceSize(File file, String resource) throws IOException {
+		checkNotNull(resource);
 		checkNotNull(file);
 
-		try (JarFile jar = new JarFile(file, false)) {
-			if (jar.getManifest() == null)
-				throw new NoSuchFileException("Manifest not found");
-
-			return jar.getManifest().getMainAttributes();
-		}
+		return getResourceSize(file.toPath(), resource);
 	}
 
 	/**
@@ -115,21 +168,6 @@ public final class JarUtil {
 			throw new IOException();
 
 		return Resources.asByteSource(url).size();
-	}
-
-	/**
-	 * Calculate the size of a resource by (probably) reading it entirely.
-	 *
-	 * @param file     The target jar file
-	 * @param resource Absolute location of target resource within the given jar
-	 * @return The size of the target resource in bytes
-	 * @throws IOException
-	 */
-	public static long getResourceSize(File file, String resource) throws IOException {
-		checkNotNull(resource);
-		checkNotNull(file);
-
-		return getResourceSize(file.toPath(), resource);
 	}
 
 	/**

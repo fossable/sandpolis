@@ -9,6 +9,7 @@
 //============================================================================//
 
 import java.util.Properties
+import java.util.stream.Collectors
 import java.io.FileOutputStream
 
 val writeSoi by tasks.creating(DefaultTask::class) {
@@ -20,10 +21,10 @@ val writeSoi by tasks.creating(DefaultTask::class) {
 		props.setProperty("build.timestamp", "${System.currentTimeMillis()}")
 
 		// Instance version
-		props.setProperty("instance.version", "${project.version}")
+		props.setProperty("instance.version", project.version.toString())
 
 		// Core version
-		props.setProperty("core.version", "${project.rootProject.version}")
+		props.setProperty("core.version", project(":module:com.sandpolis.core.instance").version.toString())
 
 		// Build platform
 		props.setProperty("build.platform", "${System.getProperty("os.name")} (${System.getProperty("os.arch")})")
@@ -33,6 +34,11 @@ val writeSoi by tasks.creating(DefaultTask::class) {
 
 		// Gradle version
 		props.setProperty("build.gradle.version", project.getGradle().getGradleVersion())
+
+		// Module dependencies
+		props.setProperty("build.dependencies", project.getConfigurations().getByName("runtimeClasspath").getResolvedConfiguration().getResolvedArtifacts().stream().map {
+			it.getModuleVersion().getId().getGroup() + ":" + it.getModuleVersion().getId().getName() + ":" + it.getModuleVersion().getId().getVersion()
+		}.collect(Collectors.joining(",")))
 
 		// Write object
 		project.file("src/main/resources").mkdirs()

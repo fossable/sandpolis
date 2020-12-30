@@ -66,7 +66,7 @@ public final class BannerStore extends StoreBase implements ConfigurableStore<Se
 		if (banner != null)
 			log.debug("Reloading server banner");
 
-		var b = RS_ServerBanner.newBuilder().setVersion(Core.SO_BUILD.getVersion())
+		var b = RS_ServerBanner.newBuilder().setVersion(Core.SO_BUILD.getProperty("instance.version"))
 				.setBanner(Config.BANNER_TEXT.value().orElse("Sandpolis Server"));
 
 		Config.BANNER_IMAGE.value().ifPresentOrElse(path -> {
