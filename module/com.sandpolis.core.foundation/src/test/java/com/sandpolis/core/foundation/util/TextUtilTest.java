@@ -9,9 +9,12 @@
 //============================================================================//
 package com.sandpolis.core.foundation.util;
 
+import static com.sandpolis.core.foundation.util.TextUtil.compareVersion;
 import static com.sandpolis.core.foundation.util.TextUtil.formatByteCount;
 import static com.sandpolis.core.foundation.util.TextUtil.formatByteCountSI;
+import static com.sandpolis.core.foundation.util.TextUtil.parseJavaVersion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +23,7 @@ class TextUtilTest {
 
 	@Test
 	@DisplayName("Format byte counts")
-	void formatByteCount_1() {
+	void testFormatByteCount() {
 
 		assertEquals("0 B", formatByteCount(0L));
 		assertEquals("27 B", formatByteCount(27L));
@@ -39,7 +42,7 @@ class TextUtilTest {
 
 	@Test
 	@DisplayName("Format byte counts in SI system")
-	void formatByteCountSI_1() {
+	void testFormatByteCountSI() {
 
 		assertEquals("0 B", formatByteCountSI(0L));
 		assertEquals("27 B", formatByteCountSI(27L));
@@ -54,5 +57,25 @@ class TextUtilTest {
 		assertEquals("29.0 GB", formatByteCountSI(28991029248L));
 		assertEquals("1.9 TB", formatByteCountSI(1855425871872L));
 		assertEquals("9.2 EB", formatByteCountSI(9223372036854775807L));
+	}
+
+	@Test
+	@DisplayName("Parse Java version text")
+	void testParseJavaVersion() {
+
+		assertEquals("14.0.2", parseJavaVersion("""
+				openjdk 14.0.2 2020-07-14
+				OpenJDK Runtime Environment (build 14.0.2+12)
+				OpenJDK 64-Bit Server VM (build 14.0.2+12, mixed mode)
+				"""));
+	}
+
+	@Test
+	@DisplayName("Compare version strings")
+	void testCompareVersion() {
+
+		assertEquals(0, compareVersion("1.0.0", "1.0.0"));
+		assertTrue(compareVersion("1.0.0", "1.0.1") < 0);
+		assertTrue(compareVersion("1.0.1", "1.0.0") > 0);
 	}
 }

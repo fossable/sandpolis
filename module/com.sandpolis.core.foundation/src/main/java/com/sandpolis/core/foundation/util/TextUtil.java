@@ -16,14 +16,14 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 
 /**
- * Utilities for text processing.
+ * Text processing utilities.
  *
- * @author cilki
  * @since 5.0.0
  */
 public final class TextUtil {
@@ -76,58 +76,6 @@ public final class TextUtil {
 										: (b /= 1000) < 999_950L ? String.format("%.1f TB", b / 1e3)
 												: (b /= 1000) < 999_950L ? String.format("%.1f PB", b / 1e3)
 														: String.format("%.1f EB", b / 1e6);
-	}
-
-	/**
-	 * Get the value represented by the given byte count string formatted in base-2
-	 * prefixes.
-	 *
-	 * @param count The byte count
-	 * @return The value
-	 */
-	public static long unformatByteCount(String count) {
-		String[] c = Objects.requireNonNull(count).trim().split("\\s+");
-		if (c.length != 2)
-			throw new IllegalArgumentException("Invalid format");
-
-		double value = Double.parseDouble(c[0]);
-
-		return (long) (value * switch (c[1].toLowerCase()) {
-		case "b" -> 1L;
-		case "kib", "kb" -> 1L << 10;
-		case "mib", "mb" -> 1L << 20;
-		case "gib", "gb" -> 1L << 30;
-		case "tib", "tb" -> 1L << 40;
-		case "pib", "pb" -> 1L << 50;
-		case "eib", "eb" -> 1L << 60;
-		default -> throw new IllegalArgumentException("Unknown unit: " + c[1]);
-		});
-	}
-
-	/**
-	 * Get the value represented by the given byte count string formatted in base-10
-	 * prefixes.
-	 *
-	 * @param count The byte count
-	 * @return The value
-	 */
-	public static long unformatByteCountSI(String count) {
-		String[] c = Objects.requireNonNull(count).trim().split("\\s+");
-		if (c.length != 2)
-			throw new IllegalArgumentException("Invalid format");
-
-		double value = Double.parseDouble(c[0]);
-
-		return (long) (value * switch (c[1].toLowerCase()) {
-		case "b" -> 1L;
-		case "kb" -> 1000L;
-		case "mb" -> 1000000L;
-		case "gb" -> 1000000000L;
-		case "tb" -> 1000000000000L;
-		case "pb" -> 1000000000000000L;
-		case "eb" -> 1000000000000000000L;
-		default -> throw new IllegalArgumentException("Unknown unit: " + c[1]);
-		});
 	}
 
 	/**
@@ -201,6 +149,34 @@ public final class TextUtil {
 	}
 
 	/**
+	 * Extract the version number out of the JVM --version text.
+	 * 
+	 * @param versionText The version info
+	 * @return The version number
+	 */
+	public static String parseJavaVersion(String versionText) {
+		checkNotNull(versionText);
+
+		var matcher = Pattern.compile("\\b([0-9]+\\.[0-9]\\.[0-9])\\b").matcher(versionText);
+		if (matcher.find()) {
+			return matcher.group(1);
+		}
+		return null;
+	}
+
+	/**
+	 * Compare two semantic versions.
+	 * 
+	 * @param version1 First version
+	 * @param version2 Second version
+	 * @return
+	 */
+	public static int compareVersion(String version1, String version2) {
+		return Arrays.compare(Arrays.stream(version1.split("\\.|\\+")).mapToInt(Integer::parseInt).toArray(),
+				Arrays.stream(version2.split("\\.")).mapToInt(Integer::parseInt).toArray());
+	}
+
+	/**
 	 * Randomly colorize a String with ANSI escape codes. No two consecutive
 	 * characters will be the same color.
 	 *
@@ -225,6 +201,58 @@ public final class TextUtil {
 		}
 
 		return ansi.reset().toString();
+	}
+
+	/**
+	 * Get the value represented by the given byte count string formatted in base-2
+	 * prefixes.
+	 *
+	 * @param count The byte count
+	 * @return The value
+	 */
+	public static long unformatByteCount(String count) {
+		String[] c = Objects.requireNonNull(count).trim().split("\\s+");
+		if (c.length != 2)
+			throw new IllegalArgumentException("Invalid format");
+
+		double value = Double.parseDouble(c[0]);
+
+		return (long) (value * switch (c[1].toLowerCase()) {
+		case "b" -> 1L;
+		case "kib", "kb" -> 1L << 10;
+		case "mib", "mb" -> 1L << 20;
+		case "gib", "gb" -> 1L << 30;
+		case "tib", "tb" -> 1L << 40;
+		case "pib", "pb" -> 1L << 50;
+		case "eib", "eb" -> 1L << 60;
+		default -> throw new IllegalArgumentException("Unknown unit: " + c[1]);
+		});
+	}
+
+	/**
+	 * Get the value represented by the given byte count string formatted in base-10
+	 * prefixes.
+	 *
+	 * @param count The byte count
+	 * @return The value
+	 */
+	public static long unformatByteCountSI(String count) {
+		String[] c = Objects.requireNonNull(count).trim().split("\\s+");
+		if (c.length != 2)
+			throw new IllegalArgumentException("Invalid format");
+
+		double value = Double.parseDouble(c[0]);
+
+		return (long) (value * switch (c[1].toLowerCase()) {
+		case "b" -> 1L;
+		case "kb" -> 1000L;
+		case "mb" -> 1000000L;
+		case "gb" -> 1000000000L;
+		case "tb" -> 1000000000000L;
+		case "pb" -> 1000000000000000L;
+		case "eb" -> 1000000000000000000L;
+		default -> throw new IllegalArgumentException("Unknown unit: " + c[1]);
+		});
 	}
 
 	private TextUtil() {
