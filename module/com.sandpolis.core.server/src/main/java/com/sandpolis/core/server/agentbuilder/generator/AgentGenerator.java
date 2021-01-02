@@ -7,12 +7,21 @@
 //  as published by the Mozilla Foundation.                                   //
 //                                                                            //
 //============================================================================//
-package com.sandpolis.core.server.generator;
+package com.sandpolis.core.server.agentbuilder.generator;
 
 import com.sandpolis.core.server.group.Group;
 
-public interface Packager {
+/**
+ * {@link AgentGenerator} is a base class for all artifact generators. There are
+ * currently two generators: {@link VanillaGenerator} and
+ * {@link MicroGenerator}.
+ *
+ * @since 4.0.0
+ */
+public interface AgentGenerator {
 
-	public byte[] generate(Group group) throws Exception;
-
+	/**
+	 * Performs the generation synchronously.
+	 */
+	public GeneratedAgent run(Group group) throws Exception;
 }

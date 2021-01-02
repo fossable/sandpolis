@@ -51,7 +51,7 @@ public enum Environment {
 	/**
 	 * The database data directory.
 	 */
-	DB(LIB.path() == null ? null : LIB.path().resolveSibling("db")),
+	DATA(LIB.path() == null ? null : LIB.path().resolveSibling("data")),
 
 	/**
 	 * The payload archive.

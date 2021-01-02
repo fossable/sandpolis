@@ -7,7 +7,7 @@
 //  as published by the Mozilla Foundation.                                   //
 //                                                                            //
 //============================================================================//
-package com.sandpolis.core.server.generator;
+package com.sandpolis.core.server.agentbuilder.packager;
 
 import java.lang.module.ResolvedModule;
 import java.net.URI;
@@ -27,9 +27,9 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.foundation.Platform.OsType;
 import com.sandpolis.core.instance.Environment;
 
-public class RuntimeCache {
+public final class RuntimeStore {
 
-	private static final Logger log = LoggerFactory.getLogger(RuntimeCache.class);
+	private static final Logger log = LoggerFactory.getLogger(RuntimeStore.class);
 
 	private HttpClient client = HttpClient.newHttpClient();
 

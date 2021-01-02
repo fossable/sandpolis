@@ -23,7 +23,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import com.sandpolis.core.foundation.Result.Outcome;
-import com.sandpolis.core.foundation.soi.SoiUtil;
 import com.sandpolis.core.foundation.util.ArtifactUtil;
 import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.core.instance.Environment;
@@ -127,8 +126,9 @@ public final class PluginCmd extends Cmdlet<PluginCmd> {
 				}
 
 				// Get any missing dependencies recursively
-				return CompletableFuture.allOf(SoiUtil.getMatrix(destination).getAllDependencies()
-						.map(dep -> installDependency(dep.getCoordinates())).toArray(CompletableFuture[]::new));
+				// TODO
+//				return CompletableFuture.allOf(SoiUtil.getMatrix(destination).getAllDependencies()
+//						.map(dep -> installDependency(dep.getCoordinates())).toArray(CompletableFuture[]::new));
 			} catch (NoSuchFileException e) {
 				// This dependency does not have a soi/matrix.bin (skip it)
 			} catch (IOException e) {

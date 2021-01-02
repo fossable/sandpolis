@@ -16,14 +16,48 @@ import "com/sandpolis/core/instance/group.proto";
 option java_package = "com.sandpolis.core.clientserver.msg";
 option optimize_for = CODE_SIZE;
 
-// Request: Attempt a group operation.
-message RQ_GroupOperation {
-    enum GroupOperation {
-        GROUP_CREATE = 0;
-        GROUP_DELETE = 1;
-        GROUP_UPDATE = 2;
-    }
-    GroupOperation operation = 1;
+message GeneratorOptions {
 
-    repeated core.instance.GroupConfig group_config = 2;
+    // The payload type
+    string payload = 1;
+}
+
+message PackagerOptions {
+
+    // The output format of this client
+    string format = 1;
+}
+
+message DeploymentOptions {
+
+    // The target hostname
+    string ssh_host = 1;
+
+    // The target SSH username
+    string ssh_username = 2;
+
+    // The target SSH password
+    string ssh_password = 3;
+
+    // The SSH private key
+    bytes ssh_private_key = 4;
+}
+
+// Request to build an agent for the given group.
+message RQ_BuildAgent {
+
+    // The group ID
+    string group = 1;
+
+    // The agent configuration
+    core.instance.AgentConfig config = 2;
+
+    // Options for the generator component
+    GeneratorOptions generator_options = 3;
+
+    // Options for the packager component
+    PackagerOptions packager_options = 4;
+
+    // Options for the deployment component
+    DeploymentOptions deployment_options = 5;
 }

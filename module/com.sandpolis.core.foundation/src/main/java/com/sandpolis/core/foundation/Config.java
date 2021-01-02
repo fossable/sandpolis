@@ -268,7 +268,7 @@ public final class Config {
 	 * <p>
 	 * <b> Compatible instances: server</b>
 	 */
-	public static final ConfigProperty<String> PATH_DB = new ConfigProperty<>(String.class, "sandpolis.path.db");
+	public static final ConfigProperty<String> PATH_DATA = new ConfigProperty<>(String.class, "sandpolis.path.db");
 
 	/**
 	 * The generator output directory.

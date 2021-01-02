@@ -7,14 +7,12 @@
 //  as published by the Mozilla Foundation.                                   //
 //                                                                            //
 //============================================================================//
-module com.sandpolis.agent.installer.jar {
-	exports com.sandpolis.agent.installer.jar;
+package com.sandpolis.core.server.agentbuilder.packager;
 
-	requires com.sandpolis.core.foundation;
-	requires com.sandpolis.core.instance;
-	requires com.sandpolis.core.server;
-	requires zipset;
+import com.sandpolis.core.server.agentbuilder.generator.GeneratedAgent;
 
-	provides com.sandpolis.core.server.agentbuilder.packager.AgentPackager
-			with com.sandpolis.agent.installer.JarPackager;
+public interface AgentPackager {
+
+	public PackagedAgent run(GeneratedAgent agent) throws Exception;
+
 }

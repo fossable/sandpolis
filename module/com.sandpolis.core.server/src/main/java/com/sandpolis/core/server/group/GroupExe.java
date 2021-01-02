@@ -18,18 +18,14 @@ import static com.sandpolis.core.server.group.GroupStore.GroupStore;
 import static com.sandpolis.core.server.user.UserStore.UserStore;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
-import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageLiteOrBuilder;
-import com.sandpolis.core.clientserver.msg.MsgGroup.RQ_GenerateArtifact;
+import com.sandpolis.core.clientserver.msg.MsgAgentbuilder.RQ_BuildAgent;
 import com.sandpolis.core.clientserver.msg.MsgGroup.RQ_GroupOperation;
-import com.sandpolis.core.clientserver.msg.MsgGroup.RS_GenerateArtifact;
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
-import com.sandpolis.core.server.generator.ArtifactGeneratorVanilla;
-import com.sandpolis.core.server.generator.Generator;
+import com.sandpolis.core.server.agentbuilder.CreateAgentTask;
 
 /**
  * {@link GroupExe} contains message handlers related to group management.
@@ -59,32 +55,17 @@ public final class GroupExe extends Exelet {
 		return success(outcome);
 	}
 
-//	@Handler(auth = true, instances = CLIENT)
-//	public static MessageLiteOrBuilder rq_generate(RQ_GenerateArtifact rq) throws Exception {
-//		ExecutorService pool = ThreadStore.get("server.generator");
-//
-//		Group group = GroupStore.getByName(rq.getGroup()).get();
-//
-//		Future<MessageLiteOrBuilder> future = pool.submit(() -> {
-//			var outcome = begin();
-//
-//			Generator generator;
-//			switch (rq.getConfig().getPayload()) {
-//			case "vanilla":
-//				generator = ArtifactGeneratorVanilla.build(rq.getConfig());
-//				break;
-//			case "micro":
-//			default:
-//				log.warn("No generator found for type: {}", rq.getConfig().getPayload());
-//				return failure(outcome);
-//			}
-//
-//			generator.run();
-//			return generator.getResult();
-//		});
-//
-//		return future.get();
-//	}
+	@Handler(auth = true, instances = CLIENT)
+	public static MessageLiteOrBuilder rq_build_agent(RQ_BuildAgent rq) throws Exception {
+		ExecutorService pool = ThreadStore.get("server.generator");
+
+		Group group = GroupStore.getByName(rq.getGroup()).get();
+
+		var task = new CreateAgentTask(rq.getConfig(), rq.getGeneratorOptions(), rq.getPackagerOptions(),
+				rq.getDeploymentOptions());
+
+		return task.start().toCompletableFuture().get();
+	}
 
 	private GroupExe() {
 	}

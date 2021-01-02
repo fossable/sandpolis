@@ -7,37 +7,46 @@
 //  as published by the Mozilla Foundation.                                   //
 //                                                                            //
 //============================================================================//
-package com.sandpolis.core.server.generator;
+package com.sandpolis.core.server.agentbuilder.generator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.clientserver.msg.MsgAgentbuilder.GeneratorOptions;
 import com.sandpolis.core.foundation.util.FileUtil;
 import com.sandpolis.core.foundation.util.JarUtil;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Group.AgentConfig;
+import com.sandpolis.core.server.group.Group;
 
 /**
  * Generates a <b>com.sandpolis.agent.micro</b> stub.
  *
  * @since 6.1.0
  */
-public class ArtifactGeneratorMicro extends Generator {
+public class MicroGenerator implements AgentGenerator {
 
-	private static final Logger log = LoggerFactory.getLogger(ArtifactGeneratorMicro.class);
+	private static final Logger log = LoggerFactory.getLogger(MicroGenerator.class);
 
-	public ArtifactGeneratorMicro(AgentConfig config) {
-		super(config, null);
+	private GeneratorOptions options;
+
+	private AgentConfig config;
+
+	public MicroGenerator(GeneratorOptions options, AgentConfig config) {
+		this.options = Objects.requireNonNull(options);
+		this.config = Objects.requireNonNull(config);
 	}
 
 	@Override
-	protected byte[] generate() throws Exception {
+	public GeneratedAgent run(Group group) throws Exception {
 
 		Path micro = FileUtil.findModule(Environment.LIB.path(), "com.sandpolis.agent.micro").get();
 
@@ -61,7 +70,7 @@ public class ArtifactGeneratorMicro extends Generator {
 			out.write(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(config_path.getBytes().length)
 					.array());
 
-			return out.toByteArray();
+			return new GeneratedAgent(group, Map.of("sandpolis-micro", out.toByteArray()));
 		}
 	}
 }

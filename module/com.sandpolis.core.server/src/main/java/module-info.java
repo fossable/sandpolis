@@ -11,7 +11,9 @@ module com.sandpolis.core.server {
 	exports com.sandpolis.core.server.auth;
 	exports com.sandpolis.core.server.banner;
 	exports com.sandpolis.core.server.channel;
-	exports com.sandpolis.core.server.generator;
+	exports com.sandpolis.core.server.agentbuilder.generator;
+	exports com.sandpolis.core.server.agentbuilder.packager;
+	exports com.sandpolis.core.server.agentbuilder.deployer;
 	exports com.sandpolis.core.server.group;
 	exports com.sandpolis.core.server.hibernate;
 	exports com.sandpolis.core.server.listener;
@@ -44,4 +46,5 @@ module com.sandpolis.core.server {
 	requires org.hibernate.orm.core;
 	requires org.slf4j;
 	requires zipset;
+	requires sshj;
 }
