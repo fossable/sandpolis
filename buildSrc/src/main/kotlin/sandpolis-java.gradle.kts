@@ -48,4 +48,7 @@ tasks.compileJava {
 
 	// Set module version
 	options.javaModuleVersion.set(provider { project.version as String })
+
+	// Enable preview features
+	options.compilerArgs.addAll(listOf("--source", "15", "--enable-preview"))
 }

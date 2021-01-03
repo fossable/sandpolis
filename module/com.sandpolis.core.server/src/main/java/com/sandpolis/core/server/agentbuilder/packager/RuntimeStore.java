@@ -54,7 +54,7 @@ public final class RuntimeStore {
 		}
 
 		// Check cache
-		var destination = Environment.GEN.path().resolve(String.format("%d-%s", majorVersion, jlinkOs));
+		var destination = Environment.TMP.path().resolve(String.format("%d-%s", majorVersion, jlinkOs));
 		if (Files.exists(destination)) {
 			return Optional.of(destination);
 		}
@@ -75,7 +75,7 @@ public final class RuntimeStore {
 		var url = URI.create(String.format("https://jlink.online/runtime/%s"));
 		log.debug("Query URL: {}", url);
 
-		Path destination = Environment.GEN.path().resolve("");
+		Path destination = Environment.TMP.path().resolve("");
 
 		return client.sendAsync(HttpRequest.newBuilder().uri(url).timeout(Duration.ofMinutes(2)).GET().build(),
 				HttpResponse.BodyHandlers.ofFile(destination));

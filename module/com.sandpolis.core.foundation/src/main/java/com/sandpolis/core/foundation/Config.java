@@ -184,6 +184,14 @@ public final class Config {
 			"sandpolis.banner.text");
 
 	/**
+	 * Whether the instance is in "configuration mode".
+	 * <p>
+	 * <b> Compatible instances: agent</b>
+	 */
+	public static final ConfigProperty<Boolean> CONFIG_MODE = new ConfigProperty<>(Boolean.class,
+			"sandpolis.config_mode");
+
+	/**
 	 * The database user password.
 	 * <p>
 	 * <b> Compatible instances: server</b>
@@ -271,11 +279,9 @@ public final class Config {
 	public static final ConfigProperty<String> PATH_DATA = new ConfigProperty<>(String.class, "sandpolis.path.db");
 
 	/**
-	 * The generator output directory.
-	 * <p>
-	 * <b> Compatible instances: server</b>
+	 * The configuration directory.
 	 */
-	public static final ConfigProperty<String> PATH_GEN = new ConfigProperty<>(String.class, "sandpolis.path.gen");
+	public static final ConfigProperty<String> PATH_CFG = new ConfigProperty<>(String.class, "sandpolis.path.config");
 
 	/**
 	 * The library directory.

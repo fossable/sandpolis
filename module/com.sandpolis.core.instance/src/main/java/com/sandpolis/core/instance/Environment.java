@@ -18,12 +18,13 @@ import java.util.Date;
 
 import org.slf4j.Logger;
 
+import com.sandpolis.core.foundation.Config;
+import com.sandpolis.core.foundation.Config.ConfigProperty;
 import com.sandpolis.core.foundation.util.TextUtil;
 
 /**
- * This class contains important information about the runtime file hierarchy.
+ * {@link Environment} contains nformation about the runtime file hierarchy.
  *
- * @author cilki
  * @since 4.0.0
  */
 public enum Environment {
@@ -36,32 +37,103 @@ public enum Environment {
 	/**
 	 * The library directory for Java modules.
 	 */
-	LIB(JAR.path() == null ? null : JAR.path().getParent()),
+	LIB(discoverPath(Config.PATH_LIB, JAR.path() == null ? null : JAR.path().getParent())),
 
 	/**
-	 * The log directory.
+	 * The configuration directory.
 	 */
-	LOG(LIB.path() == null ? null : LIB.path().resolveSibling("log")),
-
-	/**
-	 * The plugin directory.
-	 */
-	PLUGIN(LIB.path() == null ? null : LIB.path().resolveSibling("plugin")),
+	CFG(discoverPath(Config.PATH_CFG, LIB.path() == null ? null : LIB.path().resolveSibling("config"))),
 
 	/**
 	 * The database data directory.
 	 */
-	DATA(LIB.path() == null ? null : LIB.path().resolveSibling("data")),
+	DATA(discoverPath(Config.PATH_DATA, LIB.path() == null ? null : LIB.path().resolveSibling("data"))),
 
 	/**
-	 * The payload archive.
+	 * The log directory.
 	 */
-	GEN(LIB.path() == null ? null : LIB.path().resolveSibling("gen")),
+	LOG(discoverPath(Config.PATH_LOG, LIB.path() == null ? null : LIB.path().resolveSibling("log"))),
+
+	/**
+	 * The plugin directory.
+	 */
+	PLUGIN(discoverPath(Config.PATH_PLUGIN, LIB.path() == null ? null : LIB.path().resolveSibling("plugin"))),
 
 	/**
 	 * The temporary directory.
 	 */
-	TMP(Paths.get(System.getProperty("java.io.tmpdir")));
+	TMP(discoverPath(Config.PATH_TMP, System.getProperty("java.io.tmpdir")));
+
+	public static void clearEnvironment() {
+		LIB.set(null);
+		LOG.set(null);
+		PLUGIN.set(null);
+		DATA.set(null);
+		CFG.set(null);
+		TMP.set(null);
+	}
+
+	/**
+	 * Locate the instance jar by querying the {@link ProtectionDomain} of the
+	 * instance class.
+	 *
+	 * @return A {@link Path} to the main jar file or {@code null}
+	 */
+	private static Path discoverJar() {
+		if (MainDispatch.getMain() == null)
+			// Called before dispatch
+			return null;
+
+		try {
+			return Paths.get(MainDispatch.getMain().getProtectionDomain().getCodeSource().getLocation().toURI());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static Path discoverPath(Object... candidates) {
+		for (Object candidate : candidates) {
+			if (candidate == null) {
+				continue;
+			}
+
+			if (candidate instanceof ConfigProperty property) {
+				if (property.defined()) {
+					return Paths.get(property.value().get().toString());
+				}
+			} else if (candidate instanceof String path) {
+				return Paths.get(path);
+			} else if (candidate instanceof Path path) {
+				return path;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Print environment details on startup.
+	 *
+	 * @param log  The output log
+	 * @param name The instance name
+	 */
+	public static void printEnvironment(Logger log, String name) {
+		log.info("Launching {} ({})", TextUtil.rainbowText(name),
+				Core.SO_BUILD.getProperty("instance.version", "?.?.?"));
+		log.debug("Core version: {}", Core.SO_BUILD.getProperty("core.version", "?.?.?"));
+		log.debug("  Build timestamp: {}", new Date(Long.parseLong(Core.SO_BUILD.getProperty("build.timestamp", "0"))));
+		log.debug("Runtime timestamp: {}", new Date());
+		log.debug("   Build platform: {}", Core.SO_BUILD.getProperty("build.platform", "Unknown"));
+		log.debug(" Runtime platform: {} ({})", System.getProperty("os.name"), System.getProperty("os.arch"));
+		log.debug("        Build JVM: {}", Core.SO_BUILD.getProperty("build.java.version", "Unknown"));
+		log.debug("      Runtime JVM: {} ({})", System.getProperty("java.version"), System.getProperty("java.vendor"));
+		log.debug("         JAR path: {}", JAR.path);
+		log.debug("         LIB path: {}", LIB.path);
+		log.debug("         LOG path: {}", LOG.path);
+		log.debug("      PLUGIN path: {}", PLUGIN.path);
+		log.debug("        DATA path: {}", DATA.path);
+		log.debug("         CFG path: {}", CFG.path);
+		log.debug("         TMP path: {}", TMP.path);
+	}
 
 	/**
 	 * The absolute {@link Path} of the environment path.
@@ -88,18 +160,6 @@ public enum Environment {
 	 */
 	public Path path() {
 		return path;
-	}
-
-	/**
-	 * Set the path unless {@code null}.
-	 *
-	 * @param path The new path or {@code null}
-	 * @return {@code this}
-	 */
-	public Environment set(String path) {
-		if (path != null)
-			this.path = Paths.get(path).toAbsolutePath();
-		return this;
 	}
 
 	/**
@@ -138,38 +198,14 @@ public enum Environment {
 	}
 
 	/**
-	 * Locate the instance jar by querying the {@link ProtectionDomain} of the
-	 * instance class.
+	 * Set the path unless {@code null}.
 	 *
-	 * @return A {@link Path} to the main jar file or {@code null}
+	 * @param path The new path or {@code null}
+	 * @return {@code this}
 	 */
-	private static Path discoverJar() {
-		if (MainDispatch.getMain() == null)
-			// Called before dispatch
-			return null;
-
-		try {
-			return Paths.get(MainDispatch.getMain().getProtectionDomain().getCodeSource().getLocation().toURI());
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
-	 * Print environment details on startup.
-	 *
-	 * @param log  The output log
-	 * @param name The instance name
-	 */
-	public static void printEnvironment(Logger log, String name) {
-		log.info("Launching {} ({})", TextUtil.rainbowText(name),
-				Core.SO_BUILD.getProperty("instance.version", "?.?.?"));
-		log.debug("Core version: {}", Core.SO_BUILD.getProperty("core.version", "?.?.?"));
-		log.debug("  Build timestamp: {}", new Date(Long.parseLong(Core.SO_BUILD.getProperty("build.timestamp", "0"))));
-		log.debug("Runtime timestamp: {}", new Date());
-		log.debug("   Build platform: {}", Core.SO_BUILD.getProperty("build.platform", "Unknown"));
-		log.debug(" Runtime platform: {} ({})", System.getProperty("os.name"), System.getProperty("os.arch"));
-		log.debug("        Build JVM: {}", Core.SO_BUILD.getProperty("build.java.version", "Unknown"));
-		log.debug("      Runtime JVM: {} ({})", System.getProperty("java.version"), System.getProperty("java.vendor"));
+	public Environment set(String path) {
+		if (path != null)
+			this.path = Paths.get(path).toAbsolutePath();
+		return this;
 	}
 }
