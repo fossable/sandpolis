@@ -1,3 +1,12 @@
+//============================================================================//
+//                                                                            //
+//                         Copyright © 2015 Sandpolis                         //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPL    //
+//  as published by the Mozilla Foundation.                                   //
+//                                                                            //
+//============================================================================//
 package com.sandpolis.core.server.agentbuilder.deployer;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -61,7 +70,7 @@ public class SshDeployer implements AgentDeployer {
 
 	/**
 	 * Determine the remote host's Java version if available.
-	 * 
+	 *
 	 * @param ssh The SSH client
 	 * @return The ascertained Java version
 	 * @throws IOException
@@ -91,7 +100,7 @@ public class SshDeployer implements AgentDeployer {
 	/**
 	 * Determine the remote host's OS by observing the results of a series of test
 	 * commands.
-	 * 
+	 *
 	 * @param ssh The SSH client
 	 * @return The ascertained OS
 	 * @throws IOException

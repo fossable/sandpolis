@@ -150,7 +150,7 @@ public final class TextUtil {
 
 	/**
 	 * Extract the version number out of the JVM --version text.
-	 * 
+	 *
 	 * @param versionText The version info
 	 * @return The version number
 	 */
@@ -166,7 +166,7 @@ public final class TextUtil {
 
 	/**
 	 * Compare two semantic versions.
-	 * 
+	 *
 	 * @param version1 First version
 	 * @param version2 Second version
 	 * @return

@@ -74,7 +74,7 @@ public final class FileUtil {
 
 	/**
 	 * Locate a module's jar file in the given directory.
-	 * 
+	 *
 	 * @param directory The directory to search
 	 * @param module    The module name
 	 * @return The file containing the desired module
@@ -112,7 +112,7 @@ public final class FileUtil {
 	 * Replace the first occurrence of the placeholder in the binary file with the
 	 * given replacement. This method uses a standard needle/haystack linear search
 	 * algorithm with backtracking.
-	 * 
+	 *
 	 * @param binary      The binary file to process
 	 * @param placeholder The unique placeholder
 	 * @param replacement The payload buffer
