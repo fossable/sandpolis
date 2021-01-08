@@ -29,7 +29,7 @@ spotless {
 		target("**/*.cc", "**/*.hh")
 
 		// Exclude build directory
-		targetExclude("**/build/**")
+		targetExclude("**/build/**", "**/gen/main/cpp/**")
 
 		eclipseCdt()
 		endWithNewline()
@@ -56,12 +56,8 @@ spotless {
 	java {
 		target("**/*.java")
 
-		// Exclude build directory
-		targetExclude("**/build/**")
-
-		// Exclude generated sources
-		targetExclude("**/gen/main/java/**")
-		targetExclude("**/src/main/java/com/sandpolis/core/instance/converter/**")
+		// Exclude build directory and generated sources
+		targetExclude("**/build/**", "**/gen/main/java/**", "**/src/main/java/com/sandpolis/core/instance/converter/**")
 
 		eclipse().configFile("gradle/resources/EclipseConventions.xml")
 		trimTrailingWhitespace()
@@ -115,11 +111,8 @@ spotless {
 	format("json") {
 		target("**/*.json")
 
-		// Exclude build directory
-		targetExclude("**/build/**")
-
-		// Exclude iOS projects
-		targetExclude("**/com.sandpolis.client.lockstone/**")
+		// Exclude build directory and iOS projects
+		targetExclude("**/build/**", "**/com.sandpolis.client.lockstone/**")
 
 		eclipseWtp(com.diffplug.spotless.extra.wtp.EclipseWtpFormatterStep.JSON)
 	}

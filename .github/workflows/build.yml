@@ -22,4 +22,4 @@ jobs:
         repository: sandpolis/sandpolis
     - name: Execute build
       run: |
-        gradle --no-daemon build
+        gradle --no-daemon build -x javadoc
