@@ -8,35 +8,15 @@
 //                                                                            //
 //============================================================================//
 
-import java.io.ByteArrayOutputStream
+import org.ajoberstar.grgit.Grgit
 
-// Determine the module's version according to git
+// Set project version according to the latest git tag
+val gitDescribe = Grgit.open {
+	currentDir = project.getProjectDir().toString()
+}.describe { tags = true }
 
-var gitDescribe = ByteArrayOutputStream()
-
-project.exec {
-	commandLine = listOf("git", "describe", "--tags")
-	workingDir = project.getProjectDir()
-	standardOutput = gitDescribe
-	errorOutput = ByteArrayOutputStream()
-	setIgnoreExitValue(true)
-}
-
-var v = gitDescribe.toString().trim()
-
-if (!v.startsWith("v")) {
-
+if (gitDescribe == null) {
 	project.version = "0.0.0"
-
 } else {
-
-	// Remove version prefix
-	v = v.substring(1)
-
-	// Remove version suffix if it's a release
-	if (v.contains("-0-")) {
-		v = v.substring(0, v.indexOf("-"))
-	}
-
-	project.version = v
+	project.version = gitDescribe.replaceFirst("^v".toRegex(), "")
 }

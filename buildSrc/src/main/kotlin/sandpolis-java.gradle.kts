@@ -44,11 +44,19 @@ eclipse {
 }
 
 // Configure module version
-tasks.compileJava {
+tasks.withType<JavaCompile> {
 
 	// Set module version
 	options.javaModuleVersion.set(provider { project.version as String })
 
 	// Enable preview features
 	options.compilerArgs.addAll(listOf("--source", "15", "--enable-preview"))
+}
+
+tasks.withType<Test> {
+	jvmArgs("--enable-preview")
+}
+
+tasks.withType<JavaExec> {
+	jvmArgs("--enable-preview")
 }

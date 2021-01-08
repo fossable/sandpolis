@@ -18,4 +18,5 @@ repositories {
 
 dependencies {
 	implementation("com.google.protobuf:protobuf-gradle-plugin:0.8.14")
+	implementation("org.ajoberstar.grgit:grgit-core:4.1.0")
 }
