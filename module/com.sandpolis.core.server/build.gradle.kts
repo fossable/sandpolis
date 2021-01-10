@@ -13,7 +13,6 @@ plugins {
 	id("sandpolis-java")
 	id("sandpolis-module")
 	id("sandpolis-publish")
-	id("com.sandpolis.gradle.codegen")
 	id("de.jjohannes.extra-java-module-info") version "0.4"
 }
 

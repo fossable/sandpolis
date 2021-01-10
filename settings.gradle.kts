@@ -10,10 +10,6 @@
 
 rootProject.name = "sandpolis"
 
-// Composite Builds
-includeBuild("gradle/com.sandpolis.gradle.codegen")
-includeBuild("gradle/com.sandpolis.gradle.plugin")
-
 // Core modules
 include("module:com.sandpolis.core.agent")
 include("module:com.sandpolis.core.client")

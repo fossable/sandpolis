@@ -13,11 +13,6 @@ buildscript {
 		mavenCentral()
 		jcenter()
 	}
-
-	dependencies {
-		classpath(":com.sandpolis.gradle.plugin:")
-		classpath(":com.sandpolis.gradle.codegen:")
-	}
 }
 
 plugins {

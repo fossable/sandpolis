@@ -15,7 +15,7 @@ plugins {
 	id("sandpolis-protobuf")
 	id("sandpolis-publish")
 	id("sandpolis-soi")
-	id("com.sandpolis.gradle.plugin")
+	id("sandpolis-plugin")
 }
 
 dependencies {
