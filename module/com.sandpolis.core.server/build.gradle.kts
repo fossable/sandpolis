@@ -26,7 +26,7 @@ dependencies {
 	api(project(":module:com.sandpolis.core.serveragent"))
 	
 	// https://github.com/FasterXML/jackson-databind
-	implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
+	implementation("com.fasterxml.jackson.core:jackson-databind:2.12.1")
 
 	// https://github.com/netty/netty
 	implementation("io.netty:netty-codec:4.1.56.Final")
