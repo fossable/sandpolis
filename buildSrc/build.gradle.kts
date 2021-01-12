@@ -27,5 +27,7 @@ dependencies {
 	// For sandpolis-codegen plugin
 	implementation("com.squareup:javapoet:1.11.1")
 	implementation("com.google.guava:guava:30.1-jre")
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1")
+
+	// Use this library temporarily until the JSON compiler plugin works
+	implementation("com.beust:klaxon:5.4")
 }

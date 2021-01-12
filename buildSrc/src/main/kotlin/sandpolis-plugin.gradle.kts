@@ -13,7 +13,7 @@
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.creating
 
-class ConfigExtension {
+open class ConfigExtension {
 
     /**
      * The plugin's Sandpolis ID.
