@@ -32,7 +32,7 @@ dependencies {
 	implementation("io.netty:netty-codec:4.1.56.Final")
 	implementation("io.netty:netty-common:4.1.56.Final")
 	implementation("io.netty:netty-handler:4.1.56.Final")
-	implementation("io.netty:netty-transport:4.1.56.Final")
+	implementation("io.netty:netty-transport:4.1.57.Final")
 
 	// https://github.com/javaee/jpa-spec
 	implementation("javax.persistence:javax.persistence-api:2.2")
