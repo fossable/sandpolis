@@ -199,5 +199,5 @@ public interface Oid extends Comparable<Oid>, Iterable<String> {
 	 *
 	 * @return The namespace
 	 */
-	public long namespace();
+	public String namespace();
 }

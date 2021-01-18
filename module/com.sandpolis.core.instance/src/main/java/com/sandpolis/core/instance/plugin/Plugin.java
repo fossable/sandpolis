@@ -35,15 +35,16 @@ import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
-import com.sandpolis.core.instance.state.VirtPlugin;
+import com.sandpolis.core.instance.state.PluginOid;
 import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.AbstractSTDomainObject;
 
 /**
  * Represents a Sandpolis plugin installed in the {@code PLUGIN} directory.
  *
  * @since 5.0.0
  */
-public class Plugin extends VirtPlugin {
+public class Plugin extends AbstractSTDomainObject {
 
 	private ClassLoader classloader;
 
@@ -54,15 +55,15 @@ public class Plugin extends VirtPlugin {
 	}
 
 	public void install(Path path, boolean enabled) throws IOException {
-		if (hash().isPresent())
+		if (attribute(PluginOid.HASH).isPresent())
 			throw new IllegalStateException();
 
 		var manifest = JarUtil.getManifest(path.toFile());
-		packageId().set(manifest.getValue("Plugin-Id"));
-		coordinates().set(manifest.getValue("Plugin-Coordinate"));
-		name().set(manifest.getValue("Plugin-Name"));
-		description().set(manifest.getValue("Description"));
-		certificate().set(manifest.getValue("Plugin-Cert"));
+		set(PluginOid.PACKAGE_ID, manifest.getValue("Plugin-Id"));
+		set(PluginOid.COORDINATES, manifest.getValue("Plugin-Coordinate"));
+		set(PluginOid.NAME, manifest.getValue("Plugin-Name"));
+		set(PluginOid.DESCRIPTION, manifest.getValue("Description"));
+		set(PluginOid.CERTIFICATE, manifest.getValue("Plugin-Cert"));
 
 		// Install core
 		Path core = getComponent(null, null);
@@ -86,12 +87,12 @@ public class Plugin extends VirtPlugin {
 			}
 		}
 
-		enabled().set(enabled);
-		hash().set(computeHash());
+		set(PluginOid.ENABLED, enabled);
+		set(PluginOid.HASH, computeHash());
 	}
 
 	public String getVersion() {
-		String[] gav = getCoordinates().split(":");
+		String[] gav = get(PluginOid.COORDINATES).split(":");
 		if (gav.length == 3)
 			return gav[2];
 		return null;
@@ -113,7 +114,7 @@ public class Plugin extends VirtPlugin {
 	 * @throws IOException
 	 */
 	public boolean checkHash() throws IOException {
-		return Arrays.equals(computeHash(), getHash());
+		return Arrays.equals(computeHash(), get(PluginOid.HASH));
 	}
 
 	/**
@@ -122,7 +123,7 @@ public class Plugin extends VirtPlugin {
 	 * @throws IOException
 	 */
 	void load() throws IOException {
-		checkState(!isLoaded());
+		checkState(!get(PluginOid.LOADED));
 
 		Path component = getComponent(Core.INSTANCE, Core.FLAVOR);
 
@@ -138,23 +139,23 @@ public class Plugin extends VirtPlugin {
 		handle = ServiceLoader.load(SandpolisPlugin.class, classloader).stream().filter(prov -> {
 			// Restrict to services in the plugin component
 			return prov.type().getName()
-					.startsWith(String.format("%s.%s.%s", getPackageId(), Core.INSTANCE.toString().toLowerCase(),
-							Core.FLAVOR.toString().toLowerCase()));
+					.startsWith(String.format("%s.%s.%s", get(PluginOid.PACKAGE_ID),
+							Core.INSTANCE.toString().toLowerCase(), Core.FLAVOR.toString().toLowerCase()));
 		}).map(ServiceLoader.Provider::get).findFirst().orElse(null);
 
 		if (handle != null)
 			handle.loaded();
 
-		loaded().set(true);
+		set(PluginOid.LOADED, false);
 	}
 
 	void unload() {
-		checkState(isLoaded());
+		checkState(!get(PluginOid.LOADED));
 
 		if (handle != null)
 			handle.unloaded();
 
-		loaded().set(false);
+		set(PluginOid.LOADED, false);
 	}
 
 	/**
@@ -183,12 +184,13 @@ public class Plugin extends VirtPlugin {
 	 */
 	public Path getComponent(InstanceType instance, InstanceFlavor flavor) {
 		if (instance == null && flavor == null) {
-			return Environment.PLUGIN.path().resolve(getPackageId()).resolve(getVersion()).resolve("core.jar");
+			return Environment.PLUGIN.path().resolve(get(PluginOid.PACKAGE_ID)).resolve(getVersion())
+					.resolve("core.jar");
 		} else {
 			Objects.requireNonNull(instance);
 			Objects.requireNonNull(flavor);
 
-			return Environment.PLUGIN.path().resolve(getPackageId()).resolve(getVersion())
+			return Environment.PLUGIN.path().resolve(get(PluginOid.PACKAGE_ID)).resolve(getVersion())
 					.resolve(instance.toString().toLowerCase()).resolve(flavor.toString().toLowerCase() + ".jar");
 		}
 	}
@@ -206,7 +208,7 @@ public class Plugin extends VirtPlugin {
 	private byte[] computeHash() throws IOException {
 		return ByteSource.concat(
 				// Get coordinates
-				ByteSource.wrap(coordinates().get().getBytes()),
+				ByteSource.wrap(get(PluginOid.COORDINATES).getBytes()),
 				// Get component artifacts
 				ByteSource.concat(components().map(MoreFiles::asByteSource).collect(Collectors.toList())))
 				// Perform hash function

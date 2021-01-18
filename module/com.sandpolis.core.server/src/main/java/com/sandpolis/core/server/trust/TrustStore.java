@@ -28,8 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.CertUtil;
-import com.sandpolis.core.instance.state.VirtTrustAnchor;
-import com.sandpolis.core.instance.state.vst.VirtCollection;
+import com.sandpolis.core.instance.state.TrustAnchorOid;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.trust.TrustStore.TrustStoreConfig;
@@ -43,10 +43,37 @@ import com.sandpolis.core.server.trust.TrustStore.TrustStoreConfig;
  */
 public final class TrustStore extends STCollectionStore<TrustAnchor> implements ConfigurableStore<TrustStoreConfig> {
 
+	@ConfigStruct
+	public static final class TrustStoreConfig {
+
+		public STDocument collection;
+	}
+
 	private static final Logger log = LoggerFactory.getLogger(TrustStore.class);
 
+	/**
+	 * The global context {@link TrustStore}.
+	 */
+	public static final TrustStore TrustStore = new TrustStore();
+
 	public TrustStore() {
-		super(log);
+		super(log, TrustAnchor::new);
+	}
+
+	@Override
+	public void init(Consumer<TrustStoreConfig> configurator) {
+		var config = new TrustStoreConfig();
+		configurator.accept(config);
+
+		setDocument(config.collection);
+
+		// Install root CA if required
+		if (getMetadata().getInitCount() == 1) {
+			create(anchor -> {
+				anchor.set(TrustAnchorOid.NAME, "PLUGIN CA");
+				anchor.set(TrustAnchorOid.CERTIFICATE, CertUtil.getPluginRoot());
+			});
+		}
 	}
 
 	/**
@@ -60,8 +87,9 @@ public final class TrustStore extends STCollectionStore<TrustAnchor> implements 
 
 		PKIXParameters params;
 		try (Stream<TrustAnchor> stream = values().stream()) {
-			params = new PKIXParameters(stream.map(t -> new java.security.cert.TrustAnchor(t.getCertificate(), null))
-					.collect(Collectors.toSet()));
+			params = new PKIXParameters(
+					stream.map(t -> new java.security.cert.TrustAnchor(t.get(TrustAnchorOid.CERTIFICATE), null))
+							.collect(Collectors.toSet()));
 			params.setRevocationEnabled(false);
 		} catch (InvalidAlgorithmParameterException e) {
 			throw new RuntimeException(e);
@@ -79,32 +107,4 @@ public final class TrustStore extends STCollectionStore<TrustAnchor> implements 
 		log.debug("Successfully verified certificate: {}", cert.getSerialNumber());
 		return true;
 	}
-
-	@Override
-	public void init(Consumer<TrustStoreConfig> configurator) {
-		var config = new TrustStoreConfig();
-		configurator.accept(config);
-
-		collection = config.collection;
-
-		// Install root CA if required
-		if (getMetadata().getInitCount() == 1) {
-			create(anchor -> {
-				anchor.name().set("PLUGIN CA");
-				anchor.certificate().set(CertUtil.getPluginRoot());
-			});
-		}
-	}
-
-	public TrustAnchor create(Consumer<VirtTrustAnchor> configurator) {
-		return add(configurator, TrustAnchor::new);
-	}
-
-	@ConfigStruct
-	public static final class TrustStoreConfig {
-
-		public VirtCollection<VirtTrustAnchor> collection;
-	}
-
-	public static final TrustStore TrustStore = new TrustStore();
 }

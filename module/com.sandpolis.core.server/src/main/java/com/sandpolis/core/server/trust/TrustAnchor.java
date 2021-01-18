@@ -9,10 +9,10 @@
 //============================================================================//
 package com.sandpolis.core.server.trust;
 
-import com.sandpolis.core.instance.state.VirtTrustAnchor;
 import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.AbstractSTDomainObject;
 
-public class TrustAnchor extends VirtTrustAnchor {
+public class TrustAnchor extends AbstractSTDomainObject {
 
 	TrustAnchor(STDocument parent) {
 		super(parent);

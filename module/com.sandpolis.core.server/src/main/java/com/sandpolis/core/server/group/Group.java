@@ -15,8 +15,8 @@ import static com.sandpolis.core.foundation.Result.ErrorCode.OK;
 import static com.sandpolis.core.foundation.util.ValidationUtil.group;
 
 import com.sandpolis.core.foundation.Result.ErrorCode;
-import com.sandpolis.core.instance.state.VirtGroup;
 import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.AbstractSTDomainObject;
 
 /**
  * A {@link Group} is a collection of users that share permissions on a
@@ -31,7 +31,7 @@ import com.sandpolis.core.instance.state.st.STDocument;
  *
  * @since 5.0.0
  */
-public class Group extends VirtGroup {
+public class Group extends AbstractSTDomainObject {
 
 	Group(STDocument parent) {
 		super(parent);

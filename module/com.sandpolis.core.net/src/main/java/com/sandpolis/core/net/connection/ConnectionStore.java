@@ -20,8 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.sandpolis.core.instance.Group.AgentConfig.LoopConfig;
-import com.sandpolis.core.instance.state.VirtConnection;
-import com.sandpolis.core.instance.state.vst.VirtCollection;
+import com.sandpolis.core.instance.state.ConnectionOid;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.net.channel.ChannelStruct;
@@ -47,11 +47,11 @@ public final class ConnectionStore extends STCollectionStore<Connection>
 	public static final Logger log = LoggerFactory.getLogger(ConnectionStore.class);
 
 	public ConnectionStore() {
-		super(log);
+		super(log, Connection::new);
 	}
 
 	public Optional<Connection> getByCvid(int cvid) {
-		return values().stream().filter(connection -> connection.getRemoteCvid() == cvid).findFirst();
+		return values().stream().filter(connection -> connection.get(ConnectionOid.REMOTE_CVID) == cvid).findFirst();
 	}
 
 	/**
@@ -134,13 +134,9 @@ public final class ConnectionStore extends STCollectionStore<Connection>
 		var config = new ConnectionStoreConfig();
 		configurator.accept(config);
 
-		collection = config.collection;
+		setDocument(config.collection);
 
 		register(this);
-	}
-
-	public Connection create(Consumer<VirtConnection> configurator) {
-		return add(configurator, Connection::new);
 	}
 
 	public Connection create(Channel channel) {
@@ -152,7 +148,7 @@ public final class ConnectionStore extends STCollectionStore<Connection>
 
 	public static final class ConnectionStoreConfig {
 
-		public VirtCollection<VirtConnection> collection;
+		public STDocument collection;
 	}
 
 	public static final ConnectionStore ConnectionStore = new ConnectionStore();

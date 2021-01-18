@@ -28,6 +28,7 @@ import com.sandpolis.core.foundation.Config;
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.state.ConnectionOid;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
 import com.sandpolis.core.net.Message.MSG;
@@ -73,30 +74,36 @@ public final class NetworkStore extends StoreBase implements ConfigurableStore<N
 
 	@Subscribe
 	private synchronized void onSockLost(SockLostEvent event) {
-		if (network.nodes().contains(Core.cvid()) && network.nodes().contains(event.get().getRemoteCvid()))
-			network.edgeConnecting(Core.cvid(), event.get().getRemoteCvid()).ifPresent(network::removeEdge);
+		event.ifPresent(connection -> {
+			if (network.nodes().contains(Core.cvid())
+					&& network.nodes().contains(connection.get(ConnectionOid.REMOTE_CVID)))
+				network.edgeConnecting(Core.cvid(), connection.get(ConnectionOid.REMOTE_CVID))
+						.ifPresent(network::removeEdge);
 
-		// Remove nodes that are now disconnected
-		network.nodes().stream().filter(cvid -> Core.cvid() != cvid).filter(cvid -> network.degree(cvid) == 0)
-				.collect(Collectors.toUnmodifiableList()).forEach(network::removeNode);
+			// Remove nodes that are now disconnected
+			network.nodes().stream().filter(cvid -> Core.cvid() != cvid).filter(cvid -> network.degree(cvid) == 0)
+					.collect(Collectors.toUnmodifiableList()).forEach(network::removeNode);
 
-		// See if that was the last connection to a server
-		if (event.get().getRemoteInstance() == InstanceType.SERVER) {
-			// TODO
-			post(ServerLostEvent::new, event.get().getRemoteCvid());
-		}
+			// See if that was the last connection to a server
+			if (connection.get(ConnectionOid.REMOTE_INSTANCE) == InstanceType.SERVER) {
+				// TODO
+				post(ServerLostEvent::new, connection.get(ConnectionOid.REMOTE_CVID));
+			}
+		});
 	}
 
 	@Subscribe
 	private synchronized void onSockEstablished(SockEstablishedEvent event) {
-		network.addNode(event.get().getRemoteCvid());
-		// TODO add edge
+		event.ifPresent(connection -> {
+			network.addNode(connection.get(ConnectionOid.REMOTE_CVID));
+			// TODO add edge
 
-		// See if that was the first connection to a server
-		if (event.get().getRemoteInstance() == InstanceType.SERVER) {
-			// TODO
-			post(ServerEstablishedEvent::new, event.get().getRemoteCvid());
-		}
+			// See if that was the first connection to a server
+			if (connection.get(ConnectionOid.REMOTE_INSTANCE) == InstanceType.SERVER) {
+				// TODO
+				post(ServerEstablishedEvent::new, connection.get(ConnectionOid.REMOTE_CVID));
+			}
+		});
 	}
 
 	@Subscribe

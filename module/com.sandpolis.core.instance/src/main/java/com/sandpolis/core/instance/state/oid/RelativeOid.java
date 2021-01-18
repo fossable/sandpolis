@@ -14,18 +14,18 @@ import com.sandpolis.core.instance.state.st.STObject;
 public class RelativeOid<T extends STObject<?>> extends OidBase {
 
 	public RelativeOid(String path) {
-		super(0, path);
+		super(null, path);
 	}
 
 	public RelativeOid(String[] path) {
-		super(0, path);
+		super(null, path);
 	}
 
-	public RelativeOid(long namespace, String path) {
+	public RelativeOid(String namespace, String path) {
 		super(namespace, path);
 	}
 
-	public RelativeOid(long namespace, String[] path) {
+	public RelativeOid(String namespace, String[] path) {
 		super(namespace, path);
 	}
 

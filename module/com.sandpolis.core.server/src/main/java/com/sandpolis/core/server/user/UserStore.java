@@ -21,38 +21,29 @@ import com.google.common.hash.Hashing;
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.instance.User.UserConfig;
-import com.sandpolis.core.instance.state.VirtUser;
-import com.sandpolis.core.instance.state.vst.VirtCollection;
+import com.sandpolis.core.instance.state.UserOid;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.user.UserStore.UserStoreConfig;
 
 public final class UserStore extends STCollectionStore<User> implements ConfigurableStore<UserStoreConfig> {
 
+	@ConfigStruct
+	public static final class UserStoreConfig {
+
+		public STDocument collection;
+	}
+
 	private static final Logger log = LoggerFactory.getLogger(UserStore.class);
 
+	/**
+	 * The global context {@link UserStore}.
+	 */
+	public static final UserStore UserStore = new UserStore();
+
 	public UserStore() {
-		super(log);
-	}
-
-	public Optional<User> getByUsername(String username) {
-		return values().stream().filter(user -> user.getUsername().equals(username)).findAny();
-	}
-
-	public Optional<User> getByCvid(int cvid) {
-		return null;
-	}
-
-	@Override
-	public void init(Consumer<UserStoreConfig> configurator) {
-		var config = new UserStoreConfig();
-		configurator.accept(config);
-
-		collection = config.collection;
-	}
-
-	public User create(Consumer<VirtUser> configurator) {
-		return add(configurator, User::new);
+		super(log, User::new);
 	}
 
 	/**
@@ -64,23 +55,28 @@ public final class UserStore extends STCollectionStore<User> implements Configur
 		Objects.requireNonNull(config);
 
 		return create(user -> {
-			user.username().set(config.getUsername());
-			user.email().set(config.getEmail());
-			user.expiration().set(config.getExpiration());
-			user.hash().set(CryptoUtil.PBKDF2.hash(
+			user.set(UserOid.USERNAME, config.getUsername());
+			user.set(UserOid.EMAIL, config.getEmail());
+			user.set(UserOid.EXPIRATION, config.getExpiration());
+			user.set(UserOid.HASH, CryptoUtil.PBKDF2.hash(
 					// Compute a preliminary hash before PBKDF2 is applied
 					Hashing.sha512().hashString(config.getPassword(), Charsets.UTF_8).toString()));
 		});
 	}
 
-	@ConfigStruct
-	public static final class UserStoreConfig {
-
-		public VirtCollection<VirtUser> collection;
+	public Optional<User> getByCvid(int cvid) {
+		return null;
 	}
 
-	/**
-	 * The global context {@link UserStore}.
-	 */
-	public static final UserStore UserStore = new UserStore();
+	public Optional<User> getByUsername(String username) {
+		return values().stream().filter(user -> username.equals(user.get(UserOid.USERNAME))).findAny();
+	}
+
+	@Override
+	public void init(Consumer<UserStoreConfig> configurator) {
+		var config = new UserStoreConfig();
+		configurator.accept(config);
+
+		setDocument(config.collection);
+	}
 }

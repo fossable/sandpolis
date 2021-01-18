@@ -9,7 +9,7 @@
 //============================================================================//
 package com.sandpolis.core.server.location.services;
 
-import static com.sandpolis.core.instance.state.oid.InstanceOid.InstanceOid;
+import static com.sandpolis.core.instance.state.InstanceOid.InstanceOid;
 
 import java.util.Arrays;
 import java.util.Objects;

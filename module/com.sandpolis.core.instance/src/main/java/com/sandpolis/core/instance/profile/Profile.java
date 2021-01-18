@@ -9,8 +9,8 @@
 //============================================================================//
 package com.sandpolis.core.instance.profile;
 
-import com.sandpolis.core.instance.state.VirtProfile;
 import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.AbstractSTDomainObject;
 
 /**
  * A {@link Profile} is a generic container that stores data for an instance.
@@ -18,7 +18,7 @@ import com.sandpolis.core.instance.state.st.STDocument;
  *
  * @since 4.0.0
  */
-public class Profile extends VirtProfile {
+public class Profile extends AbstractSTDomainObject {
 
 	public Profile(STDocument parent) {
 		super(parent);

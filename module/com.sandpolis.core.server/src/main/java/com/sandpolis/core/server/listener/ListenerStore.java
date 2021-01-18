@@ -18,8 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Listener.ListenerConfig;
-import com.sandpolis.core.instance.state.VirtListener;
-import com.sandpolis.core.instance.state.vst.VirtCollection;
+import com.sandpolis.core.instance.state.ListenerOid;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.listener.ListenerStore.ListenerStoreConfig;
@@ -31,37 +31,37 @@ import com.sandpolis.core.server.listener.ListenerStore.ListenerStoreConfig;
  */
 public final class ListenerStore extends STCollectionStore<Listener> implements ConfigurableStore<ListenerStoreConfig> {
 
+	@ConfigStruct
+	public static final class ListenerStoreConfig {
+
+		public STDocument collection;
+	}
+
+	/**
+	 * The global context {@link ListenerStore}.
+	 */
+	public static final ListenerStore ListenerStore = new ListenerStore();
+
 	private static final Logger log = LoggerFactory.getLogger(ListenerStore.class);
 
 	public ListenerStore() {
-		super(log);
+		super(log, Listener::new);
 	}
 
-	/**
-	 * Start all enabled, unstarted listeners in the store.
-	 */
-	public void start() {
+	public Listener create(ListenerConfig config) {
+		Objects.requireNonNull(config);
 
-		values().stream().filter(listener -> !listener.isActive() && listener.isEnabled()).forEach(listener -> {
-			log.info("Starting listener on port: {}", listener.getPort());
-
-			listener.start();
-		});
-	}
-
-	/**
-	 * Stop all running listeners in the store.
-	 */
-	public void stop() {
-		values().stream().filter(listener -> listener.isActive()).forEach(listener -> {
-			log.info("Stopping listener on port: {}", listener.getPort());
-
-			listener.stop();
+		return create(listener -> {
+			listener.set(ListenerOid.ADDRESS, config.getAddress());
+			listener.set(ListenerOid.PORT, config.getPort());
+			listener.set(ListenerOid.NAME, config.getName());
+			listener.set(ListenerOid.ENABLED, config.getEnabled());
+			listener.set(ListenerOid.ACTIVE, false);
 		});
 	}
 
 	public Optional<Listener> getByPort(int port) {
-		return values().stream().filter(listener -> listener.getPort() == port).findAny();
+		return values().stream().filter(listener -> listener.get(ListenerOid.PORT) == port).findAny();
 	}
 
 	@Override
@@ -69,33 +69,30 @@ public final class ListenerStore extends STCollectionStore<Listener> implements 
 		var config = new ListenerStoreConfig();
 		configurator.accept(config);
 
-		collection = config.collection;
-	}
-
-	public Listener create(Consumer<VirtListener> configurator) {
-		return add(configurator, Listener::new);
-	}
-
-	public Listener create(ListenerConfig config) {
-		Objects.requireNonNull(config);
-
-		return create(listener -> {
-			listener.address().set(config.getAddress());
-			listener.port().set(config.getPort());
-			listener.name().set(config.getName());
-			listener.enabled().set(config.getEnabled());
-			listener.active().set(false);
-		});
-	}
-
-	@ConfigStruct
-	public static final class ListenerStoreConfig {
-
-		public VirtCollection<VirtListener> collection;
+		setDocument(config.collection);
 	}
 
 	/**
-	 * The global context {@link ListenerStore}.
+	 * Start all enabled, unstarted listeners in the store.
 	 */
-	public static final ListenerStore ListenerStore = new ListenerStore();
+	public void start() {
+
+		values().stream().filter(listener -> !listener.get(ListenerOid.ACTIVE) && listener.get(ListenerOid.ENABLED))
+				.forEach(listener -> {
+					log.info("Starting listener on port: {}", listener.get(ListenerOid.PORT));
+
+					listener.start();
+				});
+	}
+
+	/**
+	 * Stop all running listeners in the store.
+	 */
+	public void stop() {
+		values().stream().filter(listener -> listener.get(ListenerOid.ACTIVE)).forEach(listener -> {
+			log.info("Stopping listener on port: {}", listener.get(ListenerOid.PORT));
+
+			listener.stop();
+		});
+	}
 }

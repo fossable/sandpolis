@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.MessageLiteOrBuilder;
+import com.sandpolis.core.instance.state.ConnectionOid;
 import com.sandpolis.core.net.util.MsgUtil;
 
 public class ExeletMethod {
@@ -60,7 +61,7 @@ public class ExeletMethod {
 
 			handler = context -> {
 				// Access control
-				if (!context.connector.isAuthenticated() && metadata.auth()) {
+				if (!context.connector.get(ConnectionOid.AUTHENTICATED) && metadata.auth()) {
 					return;
 				}
 
@@ -85,7 +86,7 @@ public class ExeletMethod {
 
 			handler = context -> {
 				// Access control
-				if (!context.connector.isAuthenticated() && metadata.auth()) {
+				if (!context.connector.get(ConnectionOid.AUTHENTICATED) && metadata.auth()) {
 					return;
 				}
 
@@ -108,7 +109,7 @@ public class ExeletMethod {
 
 			handler = context -> {
 				// Access control
-				if (!context.connector.isAuthenticated() && metadata.auth()) {
+				if (!context.connector.get(ConnectionOid.AUTHENTICATED) && metadata.auth()) {
 					return;
 				}
 
@@ -141,7 +142,7 @@ public class ExeletMethod {
 
 			handler = context -> {
 				// Access control
-				if (!context.connector.isAuthenticated() && metadata.auth()) {
+				if (!context.connector.get(ConnectionOid.AUTHENTICATED) && metadata.auth()) {
 					return;
 				}
 

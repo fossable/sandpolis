@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.sandpolis.core.instance.Core;
 import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.state.ConnectionOid;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.msg.MsgCvid.RQ_Cvid;
@@ -58,9 +59,9 @@ public class CvidResponseHandler extends AbstractCvidHandler {
 					.rs(msg, RS_Cvid.newBuilder().setServerCvid(Core.cvid()).setServerUuid(Core.UUID).setCvid(cvid))
 					.build());
 
-			sock.remoteInstance().set(rq.getInstance());
-			sock.remoteCvid().set(cvid);
-			sock.remoteUuid().set(rq.getUuid());
+			sock.set(ConnectionOid.REMOTE_INSTANCE, rq.getInstance());
+			sock.set(ConnectionOid.REMOTE_CVID, cvid);
+			sock.set(ConnectionOid.REMOTE_UUID, rq.getUuid());
 			super.userEventTriggered(ctx, new CvidHandshakeCompletionEvent(Core.cvid(), cvid));
 		}
 	}

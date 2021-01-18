@@ -9,6 +9,8 @@
 //============================================================================//
 package com.sandpolis.core.instance.store.event;
 
+import java.util.function.Consumer;
+
 /**
  * An event that contains an {@link Object} parameter.
  *
@@ -30,6 +32,12 @@ public abstract class ParameterizedEvent<E> extends Event {
 	 */
 	public E get() {
 		return parameter;
+	}
+
+	public void ifPresent(Consumer<E> consumer) {
+		if (parameter != null) {
+			consumer.accept(parameter);
+		}
 	}
 
 	@Override

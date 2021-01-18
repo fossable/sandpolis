@@ -9,26 +9,27 @@
 //============================================================================//
 package com.sandpolis.core.instance.state.vst;
 
-import com.sandpolis.core.instance.state.oid.Oid;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.oid.RelativeOid;
 import com.sandpolis.core.instance.state.st.STAttribute;
 import com.sandpolis.core.instance.state.st.STDocument;
 
-public abstract class VirtDocument implements VirtObject {
+public abstract class AbstractSTDomainObject implements STDomainObject {
 
 	protected STDocument document;
 
-	public VirtDocument(STDocument document) {
+	public AbstractSTDomainObject(STDocument document) {
 		this.document = document;
 	}
 
-	public Oid oid() {
-		return document.oid();
+	public AbsoluteOid<STDocument> oid() {
+		// TODO
+		return (AbsoluteOid<STDocument>) document.oid();
 	}
 
-	public abstract String getId();
-
-	public abstract STAttribute<String> id();
+//	public abstract String getId();
+//
+//	public abstract STAttribute<String> id();
 
 	public <T> STAttribute<T> attribute(RelativeOid<STAttribute<T>> oid) {
 		return document.getAttribute(oid);

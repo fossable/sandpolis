@@ -23,14 +23,14 @@ public abstract class OidBase implements Oid {
 	/**
 	 * The OID unique namespace.
 	 */
-	protected final long namespace;
+	protected final String namespace;
 
 	/**
 	 * The OID path.
 	 */
 	protected final String[] path;
 
-	public OidBase(long namespace, String[] path) {
+	public OidBase(String namespace, String[] path) {
 		if (path.length == 0)
 			throw new IllegalArgumentException();
 		if (Arrays.stream(path).anyMatch(Objects::isNull))
@@ -40,7 +40,7 @@ public abstract class OidBase implements Oid {
 		this.path = path;
 	}
 
-	public OidBase(long namespace, String path) {
+	public OidBase(String namespace, String path) {
 		this(namespace, path.replaceAll("^/", "").split("/"));
 	}
 
@@ -60,11 +60,11 @@ public abstract class OidBase implements Oid {
 
 	@Override
 	public int hashCode() {
-		return (int) (path.hashCode() * namespace);
+		return (namespace + path).hashCode();
 	}
 
 	@Override
-	public long namespace() {
+	public String namespace() {
 		return namespace;
 	}
 
@@ -84,27 +84,27 @@ public abstract class OidBase implements Oid {
 		return path;
 	}
 
-	protected <E extends Oid> E child(BiFunction<Long, String[], E> cons, String component) {
+	protected <E extends Oid> E child(BiFunction<String, String[], E> cons, String component) {
 		String[] n = Arrays.copyOf(path, path.length + 1);
 		n[n.length - 1] = component;
 		return cons.apply(namespace, n);
 	}
 
-	protected <E extends Oid> E head(BiFunction<Long, String[], E> cons, int length) {
+	protected <E extends Oid> E head(BiFunction<String, String[], E> cons, int length) {
 		if (path.length < length || length <= 0)
 			throw new IllegalArgumentException("Target length out of range");
 
 		return cons.apply(namespace, Arrays.copyOf(path, length));
 	}
 
-	protected <E extends Oid> E parent(BiFunction<Long, String[], E> cons) {
+	protected <E extends Oid> E parent(BiFunction<String, String[], E> cons) {
 		if (size() == 1)
 			return null;
 
 		return (E) head(size() - 1);
 	}
 
-	protected <E extends RelativeOid> E relativize(BiFunction<Long, String[], E> cons, Oid oid) {
+	protected <E extends RelativeOid> E relativize(BiFunction<String, String[], E> cons, Oid oid) {
 		if (oid == null)
 			return cons.apply(namespace, path.clone());
 
@@ -114,7 +114,7 @@ public abstract class OidBase implements Oid {
 		return cons.apply(namespace, Arrays.copyOfRange(path, oid.size(), path.length));
 	}
 
-	protected <E extends Oid> E resolve(BiFunction<Long, String[], E> cons, String... components) {
+	protected <E extends Oid> E resolve(BiFunction<String, String[], E> cons, String... components) {
 		if (isConcrete())
 			throw new IllegalStateException("Cannot resolve a concrete OID");
 
@@ -133,7 +133,7 @@ public abstract class OidBase implements Oid {
 		return cons.apply(namespace, components);
 	}
 
-	protected <E extends Oid> E tail(BiFunction<Long, String[], E> cons, int offset) {
+	protected <E extends Oid> E tail(BiFunction<String, String[], E> cons, int offset) {
 		if (path.length < offset || offset < 1)
 			throw new IllegalStateException("Invalid tail offset: " + offset);
 

@@ -23,6 +23,7 @@ import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.clientserver.msg.MsgAgentbuilder.RQ_BuildAgent;
 import com.sandpolis.core.clientserver.msg.MsgGroup.RQ_GroupOperation;
 import com.sandpolis.core.foundation.Result.ErrorCode;
+import com.sandpolis.core.instance.state.ConnectionOid;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.server.agentbuilder.CreateAgentTask;
@@ -37,7 +38,7 @@ public final class GroupExe extends Exelet {
 	@Handler(auth = true, instances = CLIENT)
 	public static MessageLiteOrBuilder rq_group_operation(ExeletContext context, RQ_GroupOperation rq) {
 		var outcome = begin();
-		var user = UserStore.getByCvid(context.connector.getRemoteCvid()).orElse(null);
+		var user = UserStore.getByCvid(context.connector.get(ConnectionOid.REMOTE_CVID)).orElse(null);
 		if (user == null)
 			return failure(outcome, ErrorCode.ACCESS_DENIED);
 

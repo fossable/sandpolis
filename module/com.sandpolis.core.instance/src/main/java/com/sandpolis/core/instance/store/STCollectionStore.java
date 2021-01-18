@@ -10,6 +10,7 @@
 package com.sandpolis.core.instance.store;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -17,8 +18,7 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 
 import com.sandpolis.core.instance.state.st.STDocument;
-import com.sandpolis.core.instance.state.vst.VirtCollection;
-import com.sandpolis.core.instance.state.vst.VirtDocument;
+import com.sandpolis.core.instance.state.vst.AbstractSTDomainObject;
 
 /**
  * {@link STCollectionStore} is a store backed by an {@link STDocument} which
@@ -28,17 +28,18 @@ import com.sandpolis.core.instance.state.vst.VirtDocument;
  *
  * @param <V>
  */
-public abstract class STCollectionStore<V extends VirtDocument> extends StoreBase
+public abstract class STCollectionStore<V extends AbstractSTDomainObject> extends StoreBase
 		implements MetadataStore<StoreMetadata> {
 
-	protected VirtCollection<? super V> collection;
+	private Map<String, V> documents;
 
-	protected STCollectionStore(Logger log) {
+	private STDocument collection;
+
+	private final Function<STDocument, V> constructor;
+
+	protected STCollectionStore(Logger log, Function<STDocument, V> constructor) {
 		super(log);
-	}
-
-	protected <T extends V> V add(Consumer<? extends VirtDocument> configurator, Function<STDocument, T> constructor) {
-		return (V) collection.add((Consumer) configurator, constructor);
+		this.constructor = constructor;
 	}
 
 	/**
@@ -47,11 +48,11 @@ public abstract class STCollectionStore<V extends VirtDocument> extends StoreBas
 	 * @return The number of elements in the store
 	 */
 	public long count() {
-		return collection.count();
+		return documents.size();
 	}
 
 	public Optional<V> get(String path) {
-		return (Optional<V>) collection.get(path);
+		return Optional.ofNullable(documents.get(path));
 	}
 
 	public Optional<V> remove(String path) {
@@ -64,8 +65,24 @@ public abstract class STCollectionStore<V extends VirtDocument> extends StoreBas
 	public void removeValue(V value) {
 	}
 
+	public void setDocument(STDocument collection) {
+		this.collection = collection;
+		this.documents.clear();
+
+		collection.forEachDocument(document -> {
+			documents.put(null, constructor.apply(document));
+		});
+	}
+
 	public Collection<V> values() {
-		return (Collection<V>) collection.values();
+		return documents.values();
+	}
+
+	public V create(Consumer<AbstractSTDomainObject> configurator) {
+		V object = constructor.apply(null);
+		configurator.accept(object);
+		documents.put(null, object);
+		return object;
 	}
 
 	@Override

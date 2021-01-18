@@ -9,10 +9,10 @@
 //============================================================================//
 package com.sandpolis.core.net.network;
 
-import com.sandpolis.core.instance.state.VirtConnection;
 import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.AbstractSTDomainObject;
 
-public class NetworkConnection extends VirtConnection {
+public class NetworkConnection extends AbstractSTDomainObject {
 
 	NetworkConnection(STDocument document) {
 		super(document);

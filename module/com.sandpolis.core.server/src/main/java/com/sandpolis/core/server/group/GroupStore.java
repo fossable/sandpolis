@@ -20,8 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.Group.GroupConfig;
-import com.sandpolis.core.instance.state.VirtGroup;
-import com.sandpolis.core.instance.state.vst.VirtCollection;
+import com.sandpolis.core.instance.state.GroupOid;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 import com.sandpolis.core.server.group.GroupStore.GroupStoreConfig;
@@ -37,7 +37,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	private static final Logger log = LoggerFactory.getLogger(GroupStore.class);
 
 	public GroupStore() {
-		super(log);
+		super(log, Group::new);
 	}
 
 	/**
@@ -47,8 +47,10 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return The user's groups
 	 */
 	public Stream<Group> getByMembership(User user) {
-		return values().stream();// .filter(group -> user.equals(group.getOwner()) ||
-									// group.getMembers().contains(user));
+		return values().stream().filter(group -> {
+			var owner = group.get(GroupOid.OWNER);
+			return user.equals(group.getOwner()) || group.getMembers().contains(user);
+		});
 	}
 
 	/**
@@ -57,7 +59,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return A list of unauth groups
 	 */
 	public Stream<Group> getUnauthGroups() {
-		return values().stream();// .filter(group -> group.getAuthMechanisms().size() == 0);
+		return values().stream().filter(group -> group.getAuthMechanisms().size() == 0);
 	}
 
 	/**
@@ -67,20 +69,18 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return Groups with the password
 	 */
 	public Stream<Group> getByPassword(String password) {
-		return values().stream();
-
-//		.filter(group -> {
-//			for (var mech : group.getAuthMechanisms()) {
-//				if (password.equals(mech.getPassword())) {
-//					return true;
-//				}
-//			}
-//			return false;
-//		});
+		return values().stream().filter(group -> {
+			for (var mech : group.getAuthMechanisms()) {
+				if (password.equals(mech.getPassword())) {
+					return true;
+				}
+			}
+			return false;
+		});
 	}
 
 	public Optional<Group> getByName(String name) {
-		return values().stream().filter(group -> group.getName().equals(name)).findAny();
+		return values().stream().filter(group -> name.equals(group.get(GroupOid.NAME))).findAny();
 	}
 
 	@Override
@@ -88,11 +88,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 		var config = new GroupStoreConfig();
 		configurator.accept(config);
 
-		collection = config.collection;
-	}
-
-	public Group create(Consumer<VirtGroup> configurator) {
-		return add(configurator, Group::new);
+		setDocument(config.collection);
 	}
 
 	/**
@@ -102,12 +98,12 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 */
 	public Group create(GroupConfig config) {
 		return create(group -> {
-			group.name().set(config.getName());
+			group.set(GroupOid.NAME, config.getName());
 			for (var mech : config.getPasswordMechanismList()) {
 				// TODO
 			}
 			UserStore.getByUsername(config.getOwner()).ifPresent(user -> {
-				group.setOwner(user);
+				group.set(GroupOid.OWNER, user.oid());
 			});
 		});
 	}
@@ -115,7 +111,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	@ConfigStruct
 	public static final class GroupStoreConfig {
 
-		public VirtCollection<VirtGroup> collection;
+		public STDocument collection;
 	}
 
 	public static final GroupStore GroupStore = new GroupStore();

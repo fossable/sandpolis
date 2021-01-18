@@ -17,6 +17,7 @@ import java.util.concurrent.CompletionStage;
 
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.MessageLiteOrBuilder;
+import com.sandpolis.core.instance.state.ConnectionOid;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.exelet.Exelet;
 
@@ -50,7 +51,7 @@ public abstract class Cmdlet<E extends Cmdlet<E>> {
 	 */
 	public E target(Connection sock) {
 		this.target = checkNotNull(sock);
-		this.cvid = sock.getRemoteCvid();
+		this.cvid = sock.get(ConnectionOid.REMOTE_CVID);
 		return (E) this;
 	}
 

@@ -15,15 +15,16 @@ import static com.sandpolis.core.foundation.Result.ErrorCode.OK;
 
 import com.sandpolis.core.foundation.Result.ErrorCode;
 import com.sandpolis.core.foundation.util.ValidationUtil;
-import com.sandpolis.core.instance.state.VirtUser;
+import com.sandpolis.core.instance.state.UserOid;
 import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.AbstractSTDomainObject;
 
 /**
  * Represents a user account on the server.
  *
  * @since 5.0.0
  */
-public class User extends VirtUser {
+public class User extends AbstractSTDomainObject {
 
 	User(STDocument parent) {
 		super(parent);
@@ -35,11 +36,11 @@ public class User extends VirtUser {
 	 * @return Whether the given user is currently expired
 	 */
 	public boolean isExpired() {
-		var expiration = getExpiration();
-		if (expiration == null)
+		var expiration = attribute(UserOid.EXPIRATION);
+		if (!expiration.isPresent())
 			return false;
 
-		return expiration > 0 && expiration < System.currentTimeMillis();
+		return expiration.get() > 0 && expiration.get() < System.currentTimeMillis();
 	}
 
 	@Override

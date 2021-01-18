@@ -39,6 +39,8 @@ import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.msg.MsgPlugin.RQ_ArtifactDownload;
 import com.sandpolis.core.instance.msg.MsgPlugin.RQ_PluginInstall;
 import com.sandpolis.core.instance.msg.MsgPlugin.RS_ArtifactDownload;
+import com.sandpolis.core.instance.state.ConnectionOid;
+import com.sandpolis.core.instance.state.PluginOid;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 
@@ -60,13 +62,16 @@ public final class PluginExe extends Exelet {
 		log.debug("Received artifact request: " + coordinate.coordinate);
 
 		PluginStore.getByPackageId(coordinate.artifactId).ifPresentOrElse(plugin -> {
-			if (!PluginStore.findComponentTypes(plugin).contains(context.connector.getRemoteInstanceFlavor()))
+			if (!PluginStore.findComponentTypes(plugin)
+					.contains(context.connector.get(ConnectionOid.REMOTE_INSTANCE_FLAVOR)))
 				context.reply(Outcome.newBuilder().setResult(false));// TODO message
 			else if (rq.getLocation()) {
-				context.reply(rs.setCoordinates(String.format(":%s:%s", plugin.getPackageId(), plugin.getVersion())));
+				context.reply(rs.setCoordinates(
+						String.format(":%s:%s", plugin.get(PluginOid.PACKAGE_ID), plugin.getVersion())));
 			} else {
 				// Send binary for correct component
-				ByteSource component = PluginStore.getPluginComponent(plugin, context.connector.getRemoteInstance(),
+				ByteSource component = PluginStore.getPluginComponent(plugin,
+						context.connector.get(ConnectionOid.REMOTE_INSTANCE),
 						// TODO hardcoded subtype
 						InstanceFlavor.MEGA);
 

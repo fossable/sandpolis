@@ -16,16 +16,16 @@ public class AbsoluteOid<T extends STObject<?>> extends RelativeOid<T> {
 
 	public static final AbsoluteOid<STDocument> ROOT = new AbsoluteOid<>();
 
-	public AbsoluteOid(long namespace, String path) {
+	public AbsoluteOid(String namespace, String path) {
 		super(namespace, path);
 	}
 
-	public AbsoluteOid(long namespace, String[] path) {
+	public AbsoluteOid(String namespace, String[] path) {
 		super(namespace, path);
 	}
 
 	private AbsoluteOid() {
-		super(0, "");
+		super(null, "");
 	}
 
 }

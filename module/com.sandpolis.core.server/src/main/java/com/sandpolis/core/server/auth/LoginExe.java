@@ -31,6 +31,10 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.foundation.util.CryptoUtil;
 import com.sandpolis.core.foundation.util.ValidationUtil;
+import com.sandpolis.core.instance.state.ClientOid;
+import com.sandpolis.core.instance.state.ConnectionOid;
+import com.sandpolis.core.instance.state.ProfileOid;
+import com.sandpolis.core.instance.state.UserOid;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.server.auth.otp.TimeBasedOneTimePasswordGenerator;
@@ -60,13 +64,13 @@ public final class LoginExe extends Exelet {
 
 	@Handler(auth = true, instances = CLIENT)
 	public static void rq_logout(ExeletContext context, RQ_Logout rq) {
-		log.debug("Processing logout request from: {}", context.connector.getRemoteAddress());
+		log.debug("Processing logout request from: {}", context.connector.get(ConnectionOid.REMOTE_ADDRESS));
 		context.connector.close();
 	}
 
 	@Handler(auth = false, instances = CLIENT)
 	public static MessageLiteOrBuilder rq_login(ExeletContext context, RQ_Login rq) {
-		log.debug("Processing login request from: {}", context.connector.getRemoteAddress());
+		log.debug("Processing login request from: {}", context.connector.get(ConnectionOid.REMOTE_ADDRESS));
 		var outcome = begin();
 
 		// Validate username
@@ -89,8 +93,8 @@ public final class LoginExe extends Exelet {
 		}
 
 		// Check OTP if required
-		if (user.totpSecret().isPresent()) {
-			var key = new SecretKeySpec(user.getTotpSecret(), TOTP.getAlgorithm());
+		if (user.attribute(UserOid.TOTP_SECRET).isPresent()) {
+			var key = new SecretKeySpec(user.get(UserOid.TOTP_SECRET), TOTP.getAlgorithm());
 			try {
 				if (rq.getTotp() != TOTP.generateOneTimePassword(key, Instant.now())) {
 					log.debug("OTP validation failed", username);
@@ -110,7 +114,7 @@ public final class LoginExe extends Exelet {
 		}
 
 		// Check password
-		if (!CryptoUtil.PBKDF2.check(rq.getPassword(), user.getHash())) {
+		if (!CryptoUtil.PBKDF2.check(rq.getPassword(), user.get(UserOid.HASH))) {
 			log.debug("Password validation failed", username);
 			return failure(outcome, ACCESS_DENIED);
 		}
@@ -122,14 +126,14 @@ public final class LoginExe extends Exelet {
 
 		// Update login metadata
 		ProfileStore.getClient(username).ifPresentOrElse(profile -> {
-			profile.client().ip().set(context.connector.getRemoteAddress());
+			profile.set(ClientOid.IP, context.connector.get(ConnectionOid.REMOTE_ADDRESS));
 		}, () -> {
 			ProfileStore.create(profile -> {
-				profile.uuid().set(context.connector.getRemoteUuid());
-				profile.instanceType().set(context.connector.getRemoteInstance());
-				profile.instanceFlavor().set(context.connector.getRemoteInstanceFlavor());
-				profile.client().username().set(username);
-				profile.client().ip().set(context.connector.getRemoteAddress());
+				profile.set(ProfileOid.UUID, context.connector.get(ConnectionOid.REMOTE_ADDRESS));
+				profile.set(ProfileOid.INSTANCE_TYPE, context.connector.get(ConnectionOid.REMOTE_INSTANCE));
+				profile.set(ProfileOid.INSTANCE_FLAVOR, context.connector.get(ConnectionOid.REMOTE_INSTANCE_FLAVOR));
+				profile.set(ClientOid.USERNAME, username);
+				profile.set(ClientOid.IP, context.connector.get(ConnectionOid.REMOTE_ADDRESS));
 			});
 		});
 

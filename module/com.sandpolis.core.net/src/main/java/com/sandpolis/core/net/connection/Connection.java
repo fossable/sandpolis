@@ -27,8 +27,9 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.MessageLiteOrBuilder;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.state.VirtConnection;
+import com.sandpolis.core.instance.state.ConnectionOid;
 import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.AbstractSTDomainObject;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.channel.HandlerKey;
@@ -50,7 +51,7 @@ import io.netty.util.concurrent.Future;
  *
  * @since 5.0.0
  */
-public class Connection extends VirtConnection {
+public class Connection extends AbstractSTDomainObject {
 
 	private static final Logger log = LoggerFactory.getLogger(Connection.class);
 
@@ -76,60 +77,62 @@ public class Connection extends VirtConnection {
 		channel.attr(ChannelConstant.AUTH_STATE).set(false);
 		channel.attr(ChannelConstant.CERTIFICATE_STATE).set(false);
 
-		certificateValid().source(() -> channel().attr(ChannelConstant.CERTIFICATE_STATE).get());
-		authenticated().source(() -> channel().attr(ChannelConstant.AUTH_STATE).get());
-		connected()
+		attribute(ConnectionOid.CERTIFICATE_VALID).source(channel().attr(ChannelConstant.CERTIFICATE_STATE)::get);
+		attribute(ConnectionOid.AUTHENTICATED).source(channel().attr(ChannelConstant.AUTH_STATE)::get);
+		attribute(ConnectionOid.CONNECTED)
 				.source(() -> channel().attr(ChannelConstant.HANDSHAKE_FUTURE).get().isDone() && channel().isActive());
-		cumulativeReadBytes().source(() -> getTrafficHandler().trafficCounter().cumulativeReadBytes());
-		cumulativeWriteBytes().source(() -> getTrafficHandler().trafficCounter().cumulativeWrittenBytes());
-		readThroughput().source(() -> getTrafficHandler().trafficCounter().lastReadThroughput());
-		writeThroughput().source(() -> getTrafficHandler().trafficCounter().lastWriteThroughput());
+		attribute(ConnectionOid.CUMULATIVE_READ_BYTES)
+				.source(getTrafficHandler().trafficCounter()::cumulativeReadBytes);
+		attribute(ConnectionOid.CUMULATIVE_WRITE_BYTES)
+				.source(getTrafficHandler().trafficCounter()::cumulativeWrittenBytes);
+		attribute(ConnectionOid.READ_THROUGHPUT).source(getTrafficHandler().trafficCounter()::lastReadThroughput);
+		attribute(ConnectionOid.WRITE_THROUGHPUT).source(getTrafficHandler().trafficCounter()::lastWriteThroughput);
 
 		if (this.channel instanceof EmbeddedChannel) {
-			remoteAddress().source(() -> {
-				if (!isConnected())
+			attribute(ConnectionOid.REMOTE_ADDRESS).source(() -> {
+				if (!get(ConnectionOid.CONNECTED))
 					return null;
 
 				return channel().remoteAddress().toString();
 			});
 		} else {
-			remoteAddress().source(() -> {
-				if (!isConnected())
+			attribute(ConnectionOid.REMOTE_ADDRESS).source(() -> {
+				if (!get(ConnectionOid.CONNECTED))
 					return null;
 
 				return ((InetSocketAddress) channel().remoteAddress()).getAddress().getHostAddress();
 			});
 		}
 
-		remotePort().source(() -> {
-			if (!isConnected())
+		attribute(ConnectionOid.REMOTE_PORT).source(() -> {
+			if (!get(ConnectionOid.CONNECTED))
 				return null;
 
 			return ((InetSocketAddress) channel().remoteAddress()).getPort();
 		});
 
-		localPort().source(() -> {
-			if (!isConnected())
+		attribute(ConnectionOid.LOCAL_PORT).source(() -> {
+			if (!get(ConnectionOid.CONNECTED))
 				return null;
 
 			return ((InetSocketAddress) channel().localAddress()).getPort();
 		});
 
-		remoteInstance().source(() -> {
-			if (!remoteCvid().isPresent())
+		attribute(ConnectionOid.REMOTE_INSTANCE).source(() -> {
+			if (!attribute(ConnectionOid.REMOTE_CVID).isPresent())
 				return null;
 
-			return CvidUtil.extractInstance(getRemoteCvid());
+			return CvidUtil.extractInstance(get(ConnectionOid.REMOTE_CVID));
 		});
 
-		remoteInstanceFlavor().source(() -> {
-			if (!remoteCvid().isPresent())
+		attribute(ConnectionOid.REMOTE_INSTANCE_FLAVOR).source(() -> {
+			if (!attribute(ConnectionOid.REMOTE_CVID).isPresent())
 				return null;
 
-			return CvidUtil.extractInstanceFlavor(getRemoteCvid());
+			return CvidUtil.extractInstanceFlavor(get(ConnectionOid.REMOTE_CVID));
 		});
 
-		localCvid().source(() -> Core.cvid());
+		attribute(ConnectionOid.LOCAL_CVID).source(Core::cvid);
 	}
 
 	/**
@@ -137,8 +140,8 @@ public class Connection extends VirtConnection {
 	 * it to handle messages that require authentication.
 	 */
 	public void authenticate() {
-		checkState(isConnected());
-		checkState(!isAuthenticated());
+		checkState(get(ConnectionOid.CONNECTED));
+		checkState(!get(ConnectionOid.AUTHENTICATED));
 
 		channel().attr(ChannelConstant.AUTH_STATE).set(true);
 	}
@@ -167,8 +170,8 @@ public class Connection extends VirtConnection {
 	 * prevents it from handling messages that require authentication.
 	 */
 	public void deauthenticate() {
-		checkState(isConnected());
-		checkState(isAuthenticated());
+		checkState(get(ConnectionOid.CONNECTED));
+		checkState(get(ConnectionOid.AUTHENTICATED));
 
 		channel().attr(ChannelConstant.AUTH_STATE).set(false);
 	}
@@ -209,7 +212,7 @@ public class Connection extends VirtConnection {
 	}
 
 	public X509Certificate getRemoteCertificate() throws SSLPeerUnverifiedException {
-		checkState(isConnected());
+		checkState(get(ConnectionOid.CONNECTED));
 
 		return (X509Certificate) getHandler(HandlerKey.TLS)
 				.orElseThrow(() -> new SSLPeerUnverifiedException("SSL is disabled"))
@@ -287,8 +290,8 @@ public class Connection extends VirtConnection {
 	 * @return An asynchronous {@link CompletionStage}
 	 */
 	public <E extends MessageLite> CompletionStage<E> request(Class<E> responseType, MessageLiteOrBuilder payload) {
-		return request(MsgUtil.rq(payload).setTo(getRemoteCvid()).setFrom(getLocalCvid()).build())
-				.toCompletionStage(responseType);
+		return request(MsgUtil.rq(payload).setTo(get(ConnectionOid.REMOTE_CVID)).setFrom(get(ConnectionOid.LOCAL_CVID))
+				.build()).toCompletionStage(responseType);
 	}
 
 	/**

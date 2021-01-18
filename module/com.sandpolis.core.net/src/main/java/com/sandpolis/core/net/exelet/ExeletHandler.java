@@ -16,6 +16,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sandpolis.core.instance.state.ConnectionOid;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.connection.Connection;
 import com.sandpolis.core.net.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
@@ -60,8 +61,8 @@ public final class ExeletHandler extends SimpleChannelInboundHandler<MSG> {
 					handlers = ExeletStore.client;
 					break;
 				default:
-					throw new RuntimeException(
-							"Cannot create ExeletHandler with remote instance: " + sock.getRemoteInstance().toString());
+					throw new RuntimeException("Cannot create ExeletHandler with remote instance: "
+							+ sock.get(ConnectionOid.REMOTE_INSTANCE).toString());
 				}
 			}
 		}

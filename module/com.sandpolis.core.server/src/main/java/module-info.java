@@ -15,7 +15,6 @@ module com.sandpolis.core.server {
 	exports com.sandpolis.core.server.agentbuilder.packager;
 	exports com.sandpolis.core.server.agentbuilder.deployer;
 	exports com.sandpolis.core.server.group;
-	exports com.sandpolis.core.server.hibernate;
 	exports com.sandpolis.core.server.listener;
 	exports com.sandpolis.core.server.location;
 	exports com.sandpolis.core.server.plugin;

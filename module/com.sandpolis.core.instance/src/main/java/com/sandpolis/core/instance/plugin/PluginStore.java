@@ -10,6 +10,7 @@
 package com.sandpolis.core.instance.plugin;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.io.IOException;
 import java.net.URL;
@@ -37,8 +38,8 @@ import com.sandpolis.core.instance.Metatypes.InstanceFlavor;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
 import com.sandpolis.core.instance.plugin.PluginEvents.PluginLoadedEvent;
 import com.sandpolis.core.instance.plugin.PluginStore.PluginStoreConfig;
-import com.sandpolis.core.instance.state.VirtPlugin;
-import com.sandpolis.core.instance.state.vst.VirtCollection;
+import com.sandpolis.core.instance.state.PluginOid;
+import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.STCollectionStore;
 
@@ -62,34 +63,25 @@ import com.sandpolis.core.instance.store.STCollectionStore;
  */
 public final class PluginStore extends STCollectionStore<Plugin> implements ConfigurableStore<PluginStoreConfig> {
 
+	@ConfigStruct
+	public static final class PluginStoreConfig {
+
+		public STDocument collection;
+
+		public Function<X509Certificate, Boolean> verifier;
+	}
+
 	private static final Logger log = LoggerFactory.getLogger(PluginStore.class);
 
-	public PluginStore() {
-		super(log);
-	}
+	public static final PluginStore PluginStore = new PluginStore();
 
 	/**
 	 * The default certificate verifier which allows all plugins.
 	 */
 	private static Function<X509Certificate, Boolean> verifier = c -> true;
 
-	public Optional<Plugin> getByPackageId(String packageId) {
-		return values().stream().filter(plugin -> plugin.getPackageId().equals(packageId)).findAny();
-	}
-
-	/**
-	 * Get a component of a plugin archive.
-	 *
-	 * @param plugin   The plugin
-	 * @param instance The instance type of the component
-	 * @param sub      The subtype of the component
-	 * @return The component as a {@link ByteSource} or {@code null} if the
-	 *         component does not exist
-	 */
-	public ByteSource getPluginComponent(Plugin plugin, InstanceType instance, InstanceFlavor sub) {
-		URL url = getPluginComponentUrl(plugin, instance, sub);
-
-		return url != null ? Resources.asByteSource(url) : null;
+	private PluginStore() {
+		super(log, Plugin::new);
 	}
 
 	/**
@@ -112,6 +104,29 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 		return types;
 	}
 
+	public Optional<Plugin> getByPackageId(String packageId) {
+		return values().stream().filter(plugin -> plugin.get(PluginOid.PACKAGE_ID).equals(packageId)).findAny();
+	}
+
+	public Stream<Plugin> getLoadedPlugins() {
+		return values().stream().filter(plugin -> plugin.get(PluginOid.LOADED) && plugin.get(PluginOid.ENABLED));
+	}
+
+	/**
+	 * Get a component of a plugin archive.
+	 *
+	 * @param plugin   The plugin
+	 * @param instance The instance type of the component
+	 * @param sub      The subtype of the component
+	 * @return The component as a {@link ByteSource} or {@code null} if the
+	 *         component does not exist
+	 */
+	public ByteSource getPluginComponent(Plugin plugin, InstanceType instance, InstanceFlavor sub) {
+		URL url = getPluginComponentUrl(plugin, instance, sub);
+
+		return url != null ? Resources.asByteSource(url) : null;
+	}
+
 	/**
 	 * Get a {@link URL} representing a component of the given plugin.
 	 *
@@ -128,41 +143,12 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 		return null;
 	}
 
-	/**
-	 * Scan the plugin directory for uninstalled core plugins and install them.
-	 *
-	 * @throws IOException If a filesystem error occurs
-	 */
-	public void scanPluginDirectory() throws IOException {
-		// TODO will install an arbitrary version if there's more than one
-		Files.list(Environment.LIB.path())
-				// Core plugins only
-				.filter(path -> path.getFileName().toString().startsWith("sandpolis-plugin-"))
-				// Skip installed plugins
-				.filter(path -> {
-					try (Stream<Plugin> stream = values().stream()) {
-						// Read plugin id
-						String id = JarUtil.getManifestValue(path.toFile(), "Plugin-Id").orElse(null);
+	@Override
+	public void init(Consumer<PluginStoreConfig> configurator) {
+		var config = new PluginStoreConfig();
+		configurator.accept(config);
 
-						return stream.noneMatch(plugin -> plugin.getPackageId().equals(id));
-					} catch (IOException e) {
-						return false;
-					}
-				}).forEach(PluginStore::installPlugin);
-
-	}
-
-	/**
-	 * Load all installed plugins that are enabled and currently unloaded.
-	 */
-	public void loadPlugins() {
-		values().stream()
-				// Enabled plugins only
-				.filter(Plugin::isEnabled)
-				// Skip loaded plugins
-				.filter(plugin -> !plugin.isLoaded())
-				// Load each plugin
-				.forEach(PluginStore::loadPlugin);
+		setDocument(config.collection);
 	}
 
 	/**
@@ -188,8 +174,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 	 * @param plugin The plugin to load
 	 */
 	private void loadPlugin(Plugin plugin) {
-		if (plugin.isLoaded())
-			throw new IllegalStateException();
+		checkState(!plugin.get(PluginOid.LOADED));
 
 		// Verify hash
 		try {
@@ -204,7 +189,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 
 		// Verify certificate
 		try {
-			if (!verifier.apply(CertUtil.parseCert(plugin.getCertificate()))) {
+			if (!verifier.apply(CertUtil.parseCert(plugin.get(PluginOid.CERTIFICATE)))) {
 				log.error("Failed to verify plugin certificate");
 				return;
 			}
@@ -213,7 +198,7 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 			return;
 		}
 
-		log.debug("Loading plugin: {} ({})", plugin.getName(), plugin.getPackageId());
+		log.debug("Loading plugin: {} ({})", plugin.get(PluginOid.NAME), plugin.get(PluginOid.PACKAGE_ID));
 
 		try {
 			plugin.load();
@@ -224,29 +209,40 @@ public final class PluginStore extends STCollectionStore<Plugin> implements Conf
 		post(PluginLoadedEvent::new, plugin);
 	}
 
-	public Stream<Plugin> getLoadedPlugins() {
-		return values().stream().filter(Plugin::isEnabled).filter(Plugin::isLoaded);
+	/**
+	 * Load all installed plugins that are enabled and currently unloaded.
+	 */
+	public void loadPlugins() {
+		values().stream()
+				// Enabled plugins only
+				.filter(plugin -> plugin.get(PluginOid.ENABLED))
+				// Skip loaded plugins
+				.filter(plugin -> !plugin.get(PluginOid.LOADED))
+				// Load each plugin
+				.forEach(PluginStore::loadPlugin);
 	}
 
-	@Override
-	public void init(Consumer<PluginStoreConfig> configurator) {
-		var config = new PluginStoreConfig();
-		configurator.accept(config);
+	/**
+	 * Scan the plugin directory for uninstalled core plugins and install them.
+	 *
+	 * @throws IOException If a filesystem error occurs
+	 */
+	public void scanPluginDirectory() throws IOException {
+		// TODO will install an arbitrary version if there's more than one
+		Files.list(Environment.LIB.path())
+				// Core plugins only
+				.filter(path -> path.getFileName().toString().startsWith("sandpolis-plugin-"))
+				// Skip installed plugins
+				.filter(path -> {
+					try (Stream<Plugin> stream = values().stream()) {
+						// Read plugin id
+						String id = JarUtil.getManifestValue(path.toFile(), "Plugin-Id").orElse(null);
 
-		collection = config.collection;
+						return stream.noneMatch(plugin -> plugin.get(PluginOid.PACKAGE_ID).equals(id));
+					} catch (IOException e) {
+						return false;
+					}
+				}).forEach(PluginStore::installPlugin);
+
 	}
-
-	public Plugin create(Consumer<VirtPlugin> configurator) {
-		return add(configurator, Plugin::new);
-	}
-
-	@ConfigStruct
-	public static final class PluginStoreConfig {
-
-		public Function<X509Certificate, Boolean> verifier;
-
-		public VirtCollection<VirtPlugin> collection;
-	}
-
-	public static final PluginStore PluginStore = new PluginStore();
 }

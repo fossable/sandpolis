@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.instance.state.STStore.STStoreConfig;
+import com.sandpolis.core.instance.state.oid.AbsoluteOid;
 import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
@@ -66,4 +67,8 @@ public final class STStore extends StoreBase implements ConfigurableStore<STStor
 	}
 
 	public static final STStore STStore = new STStore();
+
+	public STDocument get(AbsoluteOid<STDocument> oid) {
+		return root.getDocument(oid);
+	}
 }

@@ -29,6 +29,9 @@ import com.sandpolis.core.serveragent.msg.MsgAuth.RQ_PasswordAuth;
 import com.sandpolis.core.serveragent.msg.MsgClient.RQ_AgentMetadata;
 import com.sandpolis.core.serveragent.msg.MsgClient.RS_AgentMetadata;
 import com.sandpolis.core.instance.profile.ProfileEvents.ProfileOnlineEvent;
+import com.sandpolis.core.instance.state.AgentOid;
+import com.sandpolis.core.instance.state.ConnectionOid;
+import com.sandpolis.core.instance.state.ProfileOid;
 import com.sandpolis.core.net.exelet.Exelet;
 import com.sandpolis.core.net.exelet.ExeletContext;
 import com.sandpolis.core.server.group.Group;
@@ -88,7 +91,7 @@ public final class AuthExe extends Exelet {
 		// Connection is now authenticated
 		context.connector.authenticate();
 
-		ProfileStore.getByUuid(context.connector.getRemoteUuid()).ifPresentOrElse(profile -> {
+		ProfileStore.getByUuid(context.connector.get(ConnectionOid.REMOTE_UUID)).ifPresentOrElse(profile -> {
 			groups.forEach(group -> {
 				// TODO add client to group
 			});
@@ -98,12 +101,13 @@ public final class AuthExe extends Exelet {
 			// Metadata query
 			context.connector.request(RS_AgentMetadata.class, RQ_AgentMetadata.newBuilder()).thenAccept(rs -> {
 				var clientProfile = ProfileStore.create(profile -> {
-					profile.uuid().set(context.connector.getRemoteUuid());
-					profile.instanceType().set(context.connector.getRemoteInstance());
-					profile.instanceFlavor().set(context.connector.getRemoteInstanceFlavor());
-					profile.agent().hostname().set(rs.getHostname());
-					profile.agent().location().set(rs.getInstallDirectory());
-					profile.agent().os().set(rs.getOs());
+					profile.set(ProfileOid.UUID, context.connector.get(ConnectionOid.REMOTE_UUID));
+					profile.set(ProfileOid.INSTANCE_TYPE, context.connector.get(ConnectionOid.REMOTE_INSTANCE));
+					profile.set(ProfileOid.INSTANCE_FLAVOR,
+							context.connector.get(ConnectionOid.REMOTE_INSTANCE_FLAVOR));
+					profile.set(AgentOid.HOSTNAME, rs.getHostname());
+					profile.set(AgentOid.LOCATION, rs.getInstallDirectory());
+					profile.set(AgentOid.OS, rs.getOs());
 				});
 
 				groups.forEach(group -> {

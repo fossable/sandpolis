@@ -15,6 +15,11 @@ import static com.sandpolis.core.foundation.Result.ErrorCode.INVALID_KEY;
 import static com.sandpolis.core.foundation.Result.ErrorCode.INVALID_PORT;
 import static com.sandpolis.core.foundation.Result.ErrorCode.OK;
 import static com.sandpolis.core.foundation.util.ValidationUtil.ipv4;
+import static com.sandpolis.core.instance.state.ListenerOid.ACTIVE;
+import static com.sandpolis.core.instance.state.ListenerOid.ADDRESS;
+import static com.sandpolis.core.instance.state.ListenerOid.CERTIFICATE;
+import static com.sandpolis.core.instance.state.ListenerOid.PORT;
+import static com.sandpolis.core.instance.state.ListenerOid.PRIVATE_KEY;
 
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
@@ -27,8 +32,9 @@ import com.sandpolis.core.foundation.util.CertUtil;
 import com.sandpolis.core.foundation.util.NetUtil;
 import com.sandpolis.core.foundation.util.ValidationUtil;
 import com.sandpolis.core.instance.Core;
-import com.sandpolis.core.instance.state.VirtListener;
+import com.sandpolis.core.instance.state.ListenerOid;
 import com.sandpolis.core.instance.state.st.STDocument;
+import com.sandpolis.core.instance.state.vst.AbstractSTDomainObject;
 import com.sandpolis.core.net.util.ChannelUtil;
 import com.sandpolis.core.server.channel.ServerChannelInitializer;
 
@@ -43,7 +49,7 @@ import io.netty.channel.ServerChannel;
  *
  * @since 1.0.0
  */
-public class Listener extends VirtListener {
+public class Listener extends AbstractSTDomainObject {
 
 	public static final Logger log = LoggerFactory.getLogger(Listener.class);
 
@@ -71,10 +77,10 @@ public class Listener extends VirtListener {
 		if (acceptor != null)
 			throw new IllegalStateException("The listener is already running");
 
-		NetUtil.serviceName(getPort()).ifPresentOrElse(name -> {
-			log.debug("Starting listener on port: {} ({})", getPort(), name);
+		NetUtil.serviceName(get(PORT)).ifPresentOrElse(name -> {
+			log.debug("Starting listener on port: {} ({})", get(PORT), name);
 		}, () -> {
-			log.debug("Starting listener on port: {}", getPort());
+			log.debug("Starting listener on port: {}", get(PORT));
 		});
 
 		// Build new loop groups to handle socket events
@@ -94,20 +100,21 @@ public class Listener extends VirtListener {
 		b.childHandler(new ServerChannelInitializer(config -> {
 			config.cvid = Core.cvid();
 
-			if (certificate().isPresent() && privateKey().isPresent())
-				config.serverTlsWithCert(getCertificate(), getPrivateKey());
-			else
+			if (attribute(ListenerOid.CERTIFICATE).isPresent() && attribute(ListenerOid.PRIVATE_KEY).isPresent()) {
+				config.serverTlsWithCert(get(CERTIFICATE), get(PRIVATE_KEY));
+			} else {
 				config.serverTlsSelfSigned();
+			}
 		}));
 
 		try {
-			acceptor = (ServerChannel) b.bind(getAddress(), getPort()).await().channel();
+			acceptor = (ServerChannel) b.bind(get(ADDRESS), get(PORT)).await().channel();
 		} catch (InterruptedException e) {
 			log.error("Failed to start the listener", e);
 			acceptor = null;
-			active().set(false);
+			set(ACTIVE, false);
 		}
-		active().set(true);
+		set(ACTIVE, true);
 	}
 
 	/**
@@ -117,7 +124,7 @@ public class Listener extends VirtListener {
 		if (acceptor == null)
 			throw new IllegalStateException("The listener is not running");
 
-		log.debug("Stopping listener on port: {}", getPort());
+		log.debug("Stopping listener on port: {}", get(ListenerOid.PORT));
 
 		try {
 			acceptor.close().sync();
@@ -126,7 +133,7 @@ public class Listener extends VirtListener {
 		} finally {
 			parentLoopGroup.shutdownGracefully();
 			acceptor = null;
-			active().set(false);
+			set(ListenerOid.ACTIVE, false);
 		}
 	}
 

@@ -12,102 +12,78 @@ import com.google.common.base.CaseFormat
 import com.squareup.javapoet.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Modifier
-import com.beust.klaxon.Klaxon
-
-open class AttributeSpec(val name: String, val type: String, val description: String? = null, val list: Boolean? = false, val immutable: Boolean? = false, val osquery: String? = null, val id: Boolean? = false) {
-
-    /*init {
-        require(SourceVersion.isIdentifier(name)) {
-            "Missing attribute name"
-        }
-    }*/
-
-    fun getAttributeObjectType(): TypeName {
-        return ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STAttribute"), getAttributeType())
-    }
-
-    fun getAttributeType(): TypeName {
-        return if (type.contains("/")) {
-            // The attribute is a relation
-            ClassName.get(OID_PACKAGE, "Oid")
-        } else if (type.endsWith("[]")) {
-            ArrayTypeName.of(ClassName.bestGuess(type.replace("[]", "")).unbox())
-        } else {
-            ClassName.bestGuess(type)
-        }
-    }
-
-    fun simpleName(): String {
-        return type.replace(".*\\.".toRegex(), "")
-    }
-}
-
-open class DocumentSpec(val name: String, val attributes: Array<AttributeSpec>? = null) {
-
-    /*init {
-        require(SourceVersion.isIdentifier(name) || name.contains("/")) {
-            "Missing attribute name"
-        }
-    }*/
-
-    fun basePath(): String {
-        val components = name.split("/").toTypedArray()
-        return components[components.size - 1]
-    }
-
-    fun className(): String {
-        val components = name.split("/").toTypedArray()
-        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, components[components.size - 1])
-    }
-
-    fun parentPath(): String {
-        return name.replace("/+[^/]+/*$".toRegex(), "")
-    }
-}
+import com.beust.klaxon.*
 
 val OID_PACKAGE = "com.sandpolis.core.instance.state.oid"
 val ST_PACKAGE = "com.sandpolis.core.instance.state.st"
 
-fun processAttribute(oidClass: TypeSpec.Builder, document: DocumentSpec, attribute: AttributeSpec) {
+fun processAttribute(oidClass: TypeSpec.Builder, document: JsonObject, attribute: JsonObject) {
+
+    // Validate name
+    if (!SourceVersion.isIdentifier(attribute.string("name"))) {
+        throw RuntimeException("Invalid name: " + attribute.string("name"))
+    }
+
+    // Determine type
+    val type = if (attribute.string("type")!!.contains("/"))
+        ClassName.get(Object::class.java)
+    else if (attribute.string("type")!!.equals("java.lang.Byte[]"))
+        ArrayTypeName.of(TypeName.BYTE)
+    else
+        ClassName.bestGuess(attribute.string("type"))
 
     // Add the attribute's OID field
     var initializer = CodeBlock.of("new AbsoluteOid<>(\"\$L\", \"\$L\")", project.name,
-            document.name + "/" + attribute.name)
+            document.string("name") + "/" + attribute.string("name"))
 
     // Add type data
     initializer = CodeBlock.of("\$L.setData(\$T.TYPE, \$T.class)", initializer,
-            ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"), attribute.getAttributeType())
+            ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"), type)
 
     // Add singularity data
-    if (attribute.list!!) {
+    if (attribute.boolean("list") == true) {
         initializer = CodeBlock.of("\$L.setData(\$T.SINGULARITY, false)", initializer,
                 ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"))
     }
 
     // Add identity data
-    if (attribute.immutable!!) {
+    if (attribute.boolean("immutable") == true) {
         initializer = CodeBlock.of("\$L.setData(\$T.IMMUTABLE, true)", initializer,
                 ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"))
     }
 
     // Add osquery data
-    if (attribute.osquery != null) {
+    if (attribute.string("osquery") != null) {
         initializer = CodeBlock.of("\$L.setData(\$T.OSQUERY, \"\$L\")", initializer,
-                ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"), attribute.osquery)
+                ClassName.get("com.sandpolis.core.instance.state.oid", "OidData"), attribute.string("osquery"))
     }
+
+    // Create fields
     val field = FieldSpec
             .builder(ParameterizedTypeName.get(ClassName.get(OID_PACKAGE, "AbsoluteOid"),
                     ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STAttribute"),
-                            attribute.getAttributeType())),
-                    attribute.name, Modifier.PUBLIC, Modifier.FINAL)
-            .initializer(initializer)
+                            type)),
+                    attribute.string("name"), Modifier.PUBLIC, Modifier.FINAL)
+            .initializer(attribute.string("name")!!.toUpperCase())
     oidClass.addField(field.build())
+
+    val staticField = FieldSpec
+            .builder(ParameterizedTypeName.get(ClassName.get(OID_PACKAGE, "AbsoluteOid"),
+                    ParameterizedTypeName.get(ClassName.get(ST_PACKAGE, "STAttribute"),
+                            type)),
+                    attribute.string("name")!!.toUpperCase(), Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC)
+            .initializer(initializer)
+    oidClass.addField(staticField.build())
 }
 
+fun generateDocument(parent: TypeSpec.Builder?, document: JsonObject): TypeSpec.Builder {
 
-fun generateDocument(parent: TypeSpec.Builder?, document: DocumentSpec): TypeSpec.Builder {
+    // Determine class name
+    val className = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, document.string("name")!!.replace("/$".toRegex(), "").split("/").last())
 
-    val oidClass = TypeSpec.classBuilder("Oid").addModifiers(Modifier.PUBLIC, Modifier.STATIC).superclass(ParameterizedTypeName
+    val attributes: JsonArray<JsonObject>? = document.array("attributes")
+
+    val oidClass = TypeSpec.classBuilder(className + "Oid").addModifiers(Modifier.PUBLIC).superclass(ParameterizedTypeName
             .get(ClassName.get(OID_PACKAGE, "AbsoluteOid"), ClassName.get(ST_PACKAGE, "STDocument")))
 
     // Add constructor
@@ -118,13 +94,22 @@ fun generateDocument(parent: TypeSpec.Builder?, document: DocumentSpec): TypeSpe
     if (parent != null) {
         // Add OID field
         val field = FieldSpec
-                .builder(ClassName.get(project.name + ".state", document.className() + "Oid"),
-                        document.className().toLowerCase(), Modifier.PUBLIC, Modifier.FINAL) //
-                .initializer("new \$L(\"\$L\")", document.className() + "Oid", document.name)
+                .builder(ClassName.get(project.name + ".state", className + "Oid"),
+                        className.toLowerCase(), Modifier.PUBLIC, Modifier.FINAL) //
+                .initializer("new \$L(\"\$L\")", className + "Oid", document.string("name"))
         parent.addField(field.build())
+
+        // Add resolve method
+        if (document.string("name")!!.endsWith("/")) {
+            val resolveMethod = MethodSpec.methodBuilder(className.toLowerCase()).addModifiers(Modifier.PUBLIC)
+                .addParameter(String::class.java, "id")
+                .returns(ClassName.get(project.name + ".state", className + "Oid"))
+                .addStatement("return null")
+            parent.addMethod(resolveMethod.build())
+        }
     }
-    if (document.attributes != null) {
-        for (entry in document.attributes) {
+    if (attributes != null) {
+        for (entry in attributes) {
             processAttribute(oidClass, document, entry)
         }
     }
@@ -148,11 +133,22 @@ project.afterEvaluate {
                 val oidClasses = HashMap<String, TypeSpec.Builder>()
 
                 // Load the schema
-                val schema = Klaxon().parseArray<DocumentSpec>(specification.readText())
+                val schema = Klaxon().parseJsonArray(specification.reader()) as JsonArray<JsonObject>
+
+                // Root class
+                val root = generateDocument(null, JsonObject(mapOf("name" to "Instance")))
+
+                // Add root method
+                val rootMethod = MethodSpec.methodBuilder("InstanceOid").addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .returns(ClassName.get(project.name + ".state", "InstanceOid"))
+                    .addStatement("return null")
+                root.addMethod(rootMethod.build())
+                oidClasses.put("", root)
 
                 // Generate classes
-                schema!!.forEach {
-                    oidClasses.put(it.name.replace("/+$".toRegex(), ""), generateDocument(oidClasses.get(it.parentPath()), it))
+                schema.forEach {
+                    val name = it.string("name")!!
+                    oidClasses.put(name.replace("/+$".toRegex(), ""), generateDocument(oidClasses.get(name.replace("/+[^/]+/*$".toRegex(), "")), it))
                 }
 
                 // Add an "id" field if there isn't one already
