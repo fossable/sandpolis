@@ -27,7 +27,7 @@ public final class STExe extends Exelet {
 
 	@Handler(auth = false)
 	public static MessageLiteOrBuilder rq_st_snapshot(RQ_STSnapshot rq) {
-		var oid = new AbsoluteOid<STDocument>(0, rq.getOid());
+		var oid = new AbsoluteOid<STDocument>(null, rq.getOid());
 
 		return STStore.root().document(oid).snapshot();
 	}
@@ -43,7 +43,7 @@ public final class STExe extends Exelet {
 		config.updatePeriod = rq.getUpdatePeriod();
 		config.initiator = false;
 
-		var oid = new AbsoluteOid<STDocument>(0, rq.getOid());
+		var oid = new AbsoluteOid<STDocument>(null, rq.getOid());
 
 		new EntangledDocument(STStore.root().document(oid), config);
 

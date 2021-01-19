@@ -8,7 +8,6 @@
 //                                                                            //
 //============================================================================//
 open module com.sandpolis.core.instance {
-	exports com.sandpolis.core.instance.converter;
 	exports com.sandpolis.core.instance.msg;
 	exports com.sandpolis.core.instance.plugin;
 	exports com.sandpolis.core.instance.pref;
@@ -27,7 +26,6 @@ open module com.sandpolis.core.instance {
 	requires com.google.common;
 	requires com.google.protobuf;
 	requires com.sandpolis.core.foundation;
-	requires java.persistence;
 	requires java.prefs;
 	requires org.slf4j;
 

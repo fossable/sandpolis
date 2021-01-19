@@ -15,6 +15,7 @@ import static com.sandpolis.core.foundation.Result.ErrorCode.OK;
 import static com.sandpolis.core.foundation.util.ValidationUtil.group;
 
 import com.sandpolis.core.foundation.Result.ErrorCode;
+import com.sandpolis.core.instance.state.GroupOid;
 import com.sandpolis.core.instance.state.st.STDocument;
 import com.sandpolis.core.instance.state.vst.AbstractSTDomainObject;
 
@@ -40,7 +41,7 @@ public class Group extends AbstractSTDomainObject {
 	@Override
 	public ErrorCode valid() {
 
-		if (name().isPresent() && !group(getName()))
+		if (attribute(GroupOid.NAME).isPresent() && !group(get(GroupOid.NAME)))
 			return INVALID_GROUPNAME;
 
 		return OK;
@@ -49,7 +50,7 @@ public class Group extends AbstractSTDomainObject {
 	@Override
 	public ErrorCode complete() {
 
-		if (!name().isPresent())
+		if (!attribute(GroupOid.NAME).isPresent())
 			return INVALID_ID;
 
 		return OK;

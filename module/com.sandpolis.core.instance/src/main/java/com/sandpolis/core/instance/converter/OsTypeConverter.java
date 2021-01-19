@@ -3,25 +3,19 @@ package com.sandpolis.core.instance.converter;
 
 import java.util.function.Function;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-
 import com.sandpolis.core.foundation.Platform;
 
-@Converter
-public class OsTypeConverter implements AttributeConverter<Platform.OsType, Integer> {
+public class OsTypeConverter {
 	public static final OsTypeConverter INSTANCE = new OsTypeConverter();
 
 	public static final Function<Platform.OsType, Integer> SERIALIZER = INSTANCE::convertToDatabaseColumn;
 
 	public static final Function<Integer, Platform.OsType> DESERIALIZER = INSTANCE::convertToEntityAttribute;
 
-	@Override
 	public Integer convertToDatabaseColumn(Platform.OsType value) {
 		return value.getNumber();
 	}
 
-	@Override
 	public Platform.OsType convertToEntityAttribute(Integer value) {
 		return Platform.OsType.forNumber(value);
 	}

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.sandpolis.core.instance.Metatypes.InstanceType;
+import com.sandpolis.core.instance.state.ConnectionOid;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.cvid.AbstractCvidHandler.CvidHandshakeCompletionEvent;
@@ -85,8 +86,8 @@ class CvidResponseHandlerTest {
 		assertTrue(event.success);
 
 		assertEquals(InstanceType.CLIENT,
-				CvidUtil.extractInstance(server.attr(ChannelConstant.SOCK).get().getRemoteCvid()));
-		assertEquals(testUuid, server.attr(ChannelConstant.SOCK).get().getRemoteUuid());
+				CvidUtil.extractInstance(server.attr(ChannelConstant.SOCK).get().get(ConnectionOid.REMOTE_CVID)));
+		assertEquals(testUuid, server.attr(ChannelConstant.SOCK).get().get(ConnectionOid.REMOTE_UUID));
 		assertNull(server.pipeline().get(CvidResponseHandler.class), "Handler autoremove failed");
 
 		MSG msg = server.readOutbound();

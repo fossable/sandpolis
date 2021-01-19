@@ -29,6 +29,7 @@ import com.sandpolis.core.foundation.util.JarUtil;
 import com.sandpolis.core.instance.Environment;
 import com.sandpolis.core.instance.Group.AgentConfig;
 import com.sandpolis.core.instance.plugin.Plugin;
+import com.sandpolis.core.instance.state.PluginOid;
 import com.sandpolis.core.server.group.Group;
 
 /**
@@ -105,7 +106,8 @@ public class VanillaGenerator implements AgentGenerator {
 
 		// Add plugin binaries
 		for (var plugin : PluginStore.values().stream()
-				.filter(plugin -> config.getPluginList().contains(plugin.getPackageId())).toArray(Plugin[]::new)) {
+				.filter(plugin -> config.getPluginList().contains(plugin.get(PluginOid.PACKAGE_ID)))
+				.toArray(Plugin[]::new)) {
 			// TODO
 		}
 

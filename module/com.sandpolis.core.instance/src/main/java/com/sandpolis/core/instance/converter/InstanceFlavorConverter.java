@@ -3,25 +3,19 @@ package com.sandpolis.core.instance.converter;
 
 import java.util.function.Function;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-
 import com.sandpolis.core.instance.Metatypes;
 
-@Converter
-public class InstanceFlavorConverter implements AttributeConverter<Metatypes.InstanceFlavor, Integer> {
+public class InstanceFlavorConverter {
 	public static final InstanceFlavorConverter INSTANCE = new InstanceFlavorConverter();
 
 	public static final Function<Metatypes.InstanceFlavor, Integer> SERIALIZER = INSTANCE::convertToDatabaseColumn;
 
 	public static final Function<Integer, Metatypes.InstanceFlavor> DESERIALIZER = INSTANCE::convertToEntityAttribute;
 
-	@Override
 	public Integer convertToDatabaseColumn(Metatypes.InstanceFlavor value) {
 		return value.getNumber();
 	}
 
-	@Override
 	public Metatypes.InstanceFlavor convertToEntityAttribute(Integer value) {
 		return Metatypes.InstanceFlavor.forNumber(value);
 	}

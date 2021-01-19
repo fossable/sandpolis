@@ -4,20 +4,15 @@ package com.sandpolis.core.instance.converter;
 import java.security.cert.X509Certificate;
 import java.util.function.Function;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-
 import com.sandpolis.core.foundation.util.CertUtil;
 
-@Converter
-public class X509CertificateConverter implements AttributeConverter<X509Certificate, byte[]> {
+public class X509CertificateConverter {
 	public static final X509CertificateConverter INSTANCE = new X509CertificateConverter();
 
 	public static final Function<byte[], X509Certificate> DESERIALIZER = INSTANCE::convertToEntityAttribute;
 
 	public static final Function<X509Certificate, byte[]> SERIALIZER = INSTANCE::convertToDatabaseColumn;
 
-	@Override
 	public byte[] convertToDatabaseColumn(X509Certificate value) {
 		try {
 			return value.getEncoded();
@@ -26,7 +21,6 @@ public class X509CertificateConverter implements AttributeConverter<X509Certific
 		}
 	}
 
-	@Override
 	public X509Certificate convertToEntityAttribute(byte[] value) {
 		try {
 			return CertUtil.parseCert(value);

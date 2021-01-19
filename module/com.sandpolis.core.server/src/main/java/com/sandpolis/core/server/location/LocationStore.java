@@ -23,7 +23,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.sandpolis.core.foundation.ConfigStruct;
 import com.sandpolis.core.foundation.util.ValidationUtil;
-import com.sandpolis.core.instance.state.VirtIpLocation;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.instance.store.ConfigurableStore;
 import com.sandpolis.core.instance.store.StoreBase;
@@ -35,7 +34,7 @@ public class LocationStore extends StoreBase implements ConfigurableStore<Locati
 
 	private static final Logger log = LoggerFactory.getLogger(LocationStore.class);
 
-	private Cache<String, VirtIpLocation> cache;
+	private Cache<String, IpLocation> cache;
 
 	private AbstractGeolocationService service;
 
@@ -43,7 +42,7 @@ public class LocationStore extends StoreBase implements ConfigurableStore<Locati
 		super(log);
 	}
 
-	public Future<VirtIpLocation> queryAsync(String ip, Oid... fields) {
+	public Future<IpLocation> queryAsync(String ip, Oid... fields) {
 		// Private IPs should not be resolved
 		if (ValidationUtil.privateIP(ip)) {
 			return CompletableFuture.completedFuture(null);
@@ -66,7 +65,7 @@ public class LocationStore extends StoreBase implements ConfigurableStore<Locati
 		});
 	}
 
-	public VirtIpLocation query(String ip, long timeout) {
+	public IpLocation query(String ip, long timeout) {
 		try {
 			return queryAsync(ip).get(timeout, TimeUnit.MILLISECONDS);
 		} catch (TimeoutException e) {

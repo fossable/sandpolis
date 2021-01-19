@@ -60,7 +60,7 @@ public final class ProfileStore extends STCollectionStore<Profile> implements Co
 
 	/**
 	 * Get a profile by UUID.
-	 * 
+	 *
 	 * @param uuid The profile UUID
 	 * @return The requested profile
 	 */

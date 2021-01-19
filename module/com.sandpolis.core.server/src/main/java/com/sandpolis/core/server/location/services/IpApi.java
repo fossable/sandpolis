@@ -17,9 +17,10 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableBiMap;
-import com.sandpolis.core.instance.state.VirtIpLocation;
+import com.sandpolis.core.instance.state.IpLocationOid;
 import com.sandpolis.core.instance.state.oid.Oid;
 import com.sandpolis.core.server.location.AbstractGeolocationService;
+import com.sandpolis.core.server.location.IpLocation;
 
 /**
  * This {@link AbstractGeolocationService} implementation interacts with
@@ -71,57 +72,57 @@ public final class IpApi extends AbstractGeolocationService {
 	}
 
 	@Override
-	protected VirtIpLocation parseLocation(String result) throws Exception {
-		VirtIpLocation location = new VirtIpLocation(null);
+	protected IpLocation parseLocation(String result) throws Exception {
+		IpLocation location = new IpLocation(null);
 		new ObjectMapper().readTree(result).fields().forEachRemaining(entry -> {
 			switch (entry.getKey()) {
 			case "as":
-				location.asCode().set(entry.getValue().asInt());
+				location.set(IpLocationOid.AS_CODE, entry.getValue().asInt());
 				break;
 			case "city":
-				location.city().set(entry.getValue().asText());
+				location.set(IpLocationOid.CITY, entry.getValue().asText());
 				break;
 			case "continent":
-				location.continent().set(entry.getValue().asText());
+				location.set(IpLocationOid.CONTINENT, entry.getValue().asText());
 				break;
 			case "continentCode":
-				location.continentCode().set(entry.getValue().asText());
+				location.set(IpLocationOid.CONTINENT_CODE, entry.getValue().asText());
 				break;
 			case "country":
-				location.country().set(entry.getValue().asText());
+				location.set(IpLocationOid.COUNTRY, entry.getValue().asText());
 				break;
 			case "countryCode":
-				location.countryCode().set(entry.getValue().asText());
+				location.set(IpLocationOid.COUNTRY_CODE, entry.getValue().asText());
 				break;
 			case "currency":
-				location.currency().set(entry.getValue().asText());
+				location.set(IpLocationOid.CURRENCY, entry.getValue().asText());
 				break;
 			case "district":
-				location.district().set(entry.getValue().asText());
+				location.set(IpLocationOid.DISTRICT, entry.getValue().asText());
 				break;
 			case "isp":
-				location.isp().set(entry.getValue().asText());
+				location.set(IpLocationOid.ISP, entry.getValue().asText());
 				break;
 			case "lat":
-				location.latitude().set(entry.getValue().asDouble());
+				location.set(IpLocationOid.LATITUDE, entry.getValue().asDouble());
 				break;
 			case "long":
-				location.longitude().set(entry.getValue().asDouble());
+				location.set(IpLocationOid.LONGITUDE, entry.getValue().asDouble());
 				break;
 			case "org":
-				location.organization().set(entry.getValue().asText());
+				location.set(IpLocationOid.ORGANIZATION, entry.getValue().asText());
 				break;
 			case "zip":
-				location.postalCode().set(entry.getValue().asText());
+				location.set(IpLocationOid.POSTAL_CODE, entry.getValue().asText());
 				break;
 			case "regionName":
-				location.region().set(entry.getValue().asText());
+				location.set(IpLocationOid.REGION, entry.getValue().asText());
 				break;
 			case "region":
-				location.regionCode().set(entry.getValue().asText());
+				location.set(IpLocationOid.REGION_CODE, entry.getValue().asText());
 				break;
 			case "timezone":
-				location.timezone().set(entry.getValue().asText());
+				location.set(IpLocationOid.TIMEZONE, entry.getValue().asText());
 				break;
 			}
 		});

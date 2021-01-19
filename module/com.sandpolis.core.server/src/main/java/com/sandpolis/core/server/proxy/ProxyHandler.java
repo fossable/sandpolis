@@ -11,6 +11,7 @@ package com.sandpolis.core.server.proxy;
 
 import static com.sandpolis.core.net.connection.ConnectionStore.ConnectionStore;
 
+import com.sandpolis.core.instance.state.ConnectionOid;
 import com.sandpolis.core.net.Message.MSG;
 import com.sandpolis.core.net.channel.ChannelConstant;
 import com.sandpolis.core.net.channel.HandlerKey;
@@ -71,7 +72,7 @@ public class ProxyHandler extends SimpleChannelInboundHandler<ByteBuf> {
 					int from = readCvid(msg);
 
 					// Verify the from field to prevent spoofing
-					if (ctx.channel().attr(ChannelConstant.SOCK).get().getRemoteCvid() != from) {
+					if (ctx.channel().attr(ChannelConstant.SOCK).get().get(ConnectionOid.REMOTE_CVID) != from) {
 						throw new ChannelException("Message 'from' does not match channel's CVID");
 					}
 				} else {

@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sandpolis.core.foundation.Config;
-import com.sandpolis.core.instance.state.VirtIpLocation;
 import com.sandpolis.core.instance.state.oid.Oid;
 
 /**
@@ -79,9 +78,9 @@ public abstract class AbstractGeolocationService {
 	 * @return The location
 	 * @throws Exception
 	 */
-	protected abstract VirtIpLocation parseLocation(String result) throws Exception;
+	protected abstract IpLocation parseLocation(String result) throws Exception;
 
-	public CompletableFuture<VirtIpLocation> query(String ip, Oid... fields) {
+	public CompletableFuture<IpLocation> query(String ip, Oid... fields) {
 		var url = URI.create(buildQuery(ip, fields));
 		log.debug("Query URL: {}", url);
 

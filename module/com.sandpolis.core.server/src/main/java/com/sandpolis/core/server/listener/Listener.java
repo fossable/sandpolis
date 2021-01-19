@@ -140,24 +140,24 @@ public class Listener extends AbstractSTDomainObject {
 	@Override
 	public ErrorCode valid() {
 
-		if (port().isPresent() && !ValidationUtil.port(getPort()))
+		if (attribute(ListenerOid.PORT).isPresent() && !ValidationUtil.port(get(ListenerOid.PORT)))
 			return INVALID_PORT;
-		if (address().isPresent() && !ipv4(getAddress()))
+		if (attribute(ListenerOid.ADDRESS).isPresent() && !ipv4(get(ListenerOid.ADDRESS)))
 			return INVALID_ADDRESS;
-		if (!certificate().isPresent() && privateKey().isPresent())
+		if (!attribute(ListenerOid.CERTIFICATE).isPresent() && attribute(ListenerOid.PRIVATE_KEY).isPresent())
 			return INVALID_CERTIFICATE;
-		if (certificate().isPresent() && !privateKey().isPresent())
+		if (attribute(ListenerOid.CERTIFICATE).isPresent() && !attribute(ListenerOid.PRIVATE_KEY).isPresent())
 			return INVALID_KEY;
-		if (certificate().isPresent() && privateKey().isPresent()) {
+		if (attribute(ListenerOid.CERTIFICATE).isPresent() && attribute(ListenerOid.PRIVATE_KEY).isPresent()) {
 			// Check certificate and key formats
 			try {
-				CertUtil.parseCert(getCertificate());
+				CertUtil.parseCert(get(ListenerOid.CERTIFICATE));
 			} catch (CertificateException e) {
 				return INVALID_CERTIFICATE;
 			}
 
 			try {
-				CertUtil.parseKey(getPrivateKey());
+				CertUtil.parseKey(get(ListenerOid.PRIVATE_KEY));
 			} catch (InvalidKeySpecException e) {
 				return INVALID_KEY;
 			}
@@ -169,9 +169,9 @@ public class Listener extends AbstractSTDomainObject {
 	@Override
 	public ErrorCode complete() {
 
-		if (!port().isPresent())
+		if (!attribute(ListenerOid.PORT).isPresent())
 			return INVALID_PORT;
-		if (!address().isPresent())
+		if (!attribute(ListenerOid.ADDRESS).isPresent())
 			return INVALID_ADDRESS;
 
 		return OK;

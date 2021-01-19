@@ -46,9 +46,9 @@ public class User extends AbstractSTDomainObject {
 	@Override
 	public ErrorCode valid() {
 
-		if (username().isPresent() && !ValidationUtil.username(getUsername()))
+		if (attribute(UserOid.USERNAME).isPresent() && !ValidationUtil.username(get(UserOid.USERNAME)))
 			return INVALID_USERNAME;
-		if (email().isPresent() && !ValidationUtil.email(getEmail()))
+		if (attribute(UserOid.EMAIL).isPresent() && !ValidationUtil.email(get(UserOid.EMAIL)))
 			return INVALID_EMAIL;
 
 		return OK;
@@ -57,7 +57,7 @@ public class User extends AbstractSTDomainObject {
 	@Override
 	public ErrorCode complete() {
 
-		if (!username().isPresent())
+		if (!attribute(UserOid.USERNAME).isPresent())
 			return INVALID_USERNAME;
 
 		return OK;

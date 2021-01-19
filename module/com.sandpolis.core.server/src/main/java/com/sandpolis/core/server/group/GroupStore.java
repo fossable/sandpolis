@@ -49,7 +49,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	public Stream<Group> getByMembership(User user) {
 		return values().stream().filter(group -> {
 			var owner = group.get(GroupOid.OWNER);
-			return user.equals(group.getOwner()) || group.getMembers().contains(user);
+			return false;// user.equals(group.getOwner()) || group.getMembers().contains(user);
 		});
 	}
 
@@ -59,7 +59,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return A list of unauth groups
 	 */
 	public Stream<Group> getUnauthGroups() {
-		return values().stream().filter(group -> group.getAuthMechanisms().size() == 0);
+		return null;// values().stream().filter(group -> group.getAuthMechanisms().size() == 0);
 	}
 
 	/**
@@ -70,11 +70,11 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 */
 	public Stream<Group> getByPassword(String password) {
 		return values().stream().filter(group -> {
-			for (var mech : group.getAuthMechanisms()) {
-				if (password.equals(mech.getPassword())) {
-					return true;
-				}
-			}
+//			for (var mech : group.getAuthMechanisms()) {
+//				if (password.equals(mech.getPassword())) {
+//					return true;
+//				}
+//			}
 			return false;
 		});
 	}
