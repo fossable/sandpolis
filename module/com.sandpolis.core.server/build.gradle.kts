@@ -13,7 +13,7 @@ plugins {
 	id("sandpolis-java")
 	id("sandpolis-module")
 	id("sandpolis-publish")
-	id("de.jjohannes.extra-java-module-info") version "0.4"
+	id("de.jjohannes.extra-java-module-info") version "0.5"
 }
 
 dependencies {
