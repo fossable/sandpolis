@@ -20,6 +20,5 @@ dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
 
-	implementation("javax.persistence:javax.persistence-api:2.2")
 	implementation(project(":module:com.sandpolis.core.instance"))
 }

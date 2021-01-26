@@ -34,19 +34,11 @@ dependencies {
 	implementation("io.netty:netty-handler:4.1.56.Final")
 	implementation("io.netty:netty-transport:4.1.56.Final")
 
-	// https://github.com/javaee/jpa-spec
-	implementation("javax.persistence:javax.persistence-api:2.2")
-
-	// https://github.com/hibernate/hibernate-ogm
-	implementation("org.hibernate.ogm:hibernate-ogm-mongodb:5.4.1.Final")
-
 	// https://github.com/cilki/zipset
 	implementation("com.github.cilki:zipset:1.2.1")
 
 	// https://github.com/jchambers/java-otp
 	//implementation("com.eatthepath:java-otp:0.2.0")
-
-	implementation("javax.xml.bind:jaxb-api:2.3.0")
 	
 	// https://github.com/hierynomus/sshj
 	implementation("com.hierynomus:sshj:0.30.0")

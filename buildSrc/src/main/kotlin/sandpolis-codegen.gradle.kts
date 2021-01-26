@@ -104,7 +104,7 @@ fun generateDocument(parent: TypeSpec.Builder?, document: JsonObject): TypeSpec.
             val resolveMethod = MethodSpec.methodBuilder(className.toLowerCase()).addModifiers(Modifier.PUBLIC)
                 .addParameter(String::class.java, "id")
                 .returns(ClassName.get(project.name + ".state", className + "Oid"))
-                .addStatement("return null")
+                .addStatement("return new \$L(this.toString() + \"/\$L/\" + id)", className + "Oid", className.toLowerCase())
             parent.addMethod(resolveMethod.build())
         }
     }
@@ -141,7 +141,7 @@ project.afterEvaluate {
                 // Add root method
                 val rootMethod = MethodSpec.methodBuilder("InstanceOid").addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                     .returns(ClassName.get(project.name + ".state", "InstanceOid"))
-                    .addStatement("return null")
+                    .addStatement("return new InstanceOid(\"\")")
                 root.addMethod(rootMethod.build())
                 oidClasses.put("", root)
 
@@ -150,15 +150,6 @@ project.afterEvaluate {
                     val name = it.string("name")!!
                     oidClasses.put(name.replace("/+$".toRegex(), ""), generateDocument(oidClasses.get(name.replace("/+[^/]+/*$".toRegex(), "")), it))
                 }
-
-                // Add an "id" field if there isn't one already
-                /*val idCount = document.attributes.stream().filter<Boolean> { spec -> spec.id!! }.count()
-                if (idCount > 1) {
-                    throw RuntimeException("More than one attribute marked with 'id'")
-                } else if (idCount == 0L) {
-                    // Add id field
-                    document.attributes.add(AttributeSpec(name = "id", type = "java.lang.String", id = true))
-                }*/
 
                 // Write classes
                 oidClasses.values.forEach {

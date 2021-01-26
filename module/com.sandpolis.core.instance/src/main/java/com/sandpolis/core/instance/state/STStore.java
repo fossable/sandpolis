@@ -69,6 +69,6 @@ public final class STStore extends StoreBase implements ConfigurableStore<STStor
 	public static final STStore STStore = new STStore();
 
 	public STDocument get(AbsoluteOid<STDocument> oid) {
-		return root.getDocument(oid);
+		return root.document(oid);
 	}
 }

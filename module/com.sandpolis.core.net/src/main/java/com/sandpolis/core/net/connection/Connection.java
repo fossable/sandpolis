@@ -81,12 +81,34 @@ public class Connection extends AbstractSTDomainObject {
 		attribute(ConnectionOid.AUTHENTICATED).source(channel().attr(ChannelConstant.AUTH_STATE)::get);
 		attribute(ConnectionOid.CONNECTED)
 				.source(() -> channel().attr(ChannelConstant.HANDSHAKE_FUTURE).get().isDone() && channel().isActive());
-		attribute(ConnectionOid.CUMULATIVE_READ_BYTES)
-				.source(getTrafficHandler().trafficCounter()::cumulativeReadBytes);
-		attribute(ConnectionOid.CUMULATIVE_WRITE_BYTES)
-				.source(getTrafficHandler().trafficCounter()::cumulativeWrittenBytes);
-		attribute(ConnectionOid.READ_THROUGHPUT).source(getTrafficHandler().trafficCounter()::lastReadThroughput);
-		attribute(ConnectionOid.WRITE_THROUGHPUT).source(getTrafficHandler().trafficCounter()::lastWriteThroughput);
+		attribute(ConnectionOid.CUMULATIVE_READ_BYTES).source(() -> {
+			var trafficHandler = getTrafficHandler();
+			if (trafficHandler.isPresent()) {
+				return trafficHandler.get().trafficCounter().cumulativeReadBytes();
+			}
+			return -1L;
+		});
+		attribute(ConnectionOid.CUMULATIVE_WRITE_BYTES).source(() -> {
+			var trafficHandler = getTrafficHandler();
+			if (trafficHandler.isPresent()) {
+				return trafficHandler.get().trafficCounter().cumulativeWrittenBytes();
+			}
+			return -1L;
+		});
+		attribute(ConnectionOid.READ_THROUGHPUT).source(() -> {
+			var trafficHandler = getTrafficHandler();
+			if (trafficHandler.isPresent()) {
+				return trafficHandler.get().trafficCounter().lastReadThroughput();
+			}
+			return -1L;
+		});
+		attribute(ConnectionOid.WRITE_THROUGHPUT).source(() -> {
+			var trafficHandler = getTrafficHandler();
+			if (trafficHandler.isPresent()) {
+				return trafficHandler.get().trafficCounter().lastWriteThroughput();
+			}
+			return -1L;
+		});
 
 		if (this.channel instanceof EmbeddedChannel) {
 			attribute(ConnectionOid.REMOTE_ADDRESS).source(() -> {
@@ -225,8 +247,8 @@ public class Connection extends AbstractSTDomainObject {
 	 *
 	 * @return The associated {@link ChannelTrafficShapingHandler}
 	 */
-	public ChannelTrafficShapingHandler getTrafficHandler() {
-		return getHandler(HandlerKey.TRAFFIC).get();
+	public Optional<ChannelTrafficShapingHandler> getTrafficHandler() {
+		return getHandler(HandlerKey.TRAFFIC);
 	}
 
 	/**

@@ -32,7 +32,7 @@ public abstract class AbstractSTDomainObject implements STDomainObject {
 //	public abstract STAttribute<String> id();
 
 	public <T> STAttribute<T> attribute(RelativeOid<STAttribute<T>> oid) {
-		return document.getAttribute(oid);
+		return document.attribute(oid);
 	}
 
 	public <T> T get(RelativeOid<STAttribute<T>> oid) {

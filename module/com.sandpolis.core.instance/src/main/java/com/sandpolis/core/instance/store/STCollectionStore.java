@@ -10,8 +10,10 @@
 package com.sandpolis.core.instance.store;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -40,6 +42,7 @@ public abstract class STCollectionStore<V extends AbstractSTDomainObject> extend
 	protected STCollectionStore(Logger log, Function<STDocument, V> constructor) {
 		super(log);
 		this.constructor = constructor;
+		this.documents = new HashMap<>();
 	}
 
 	/**
@@ -79,9 +82,10 @@ public abstract class STCollectionStore<V extends AbstractSTDomainObject> extend
 	}
 
 	public V create(Consumer<AbstractSTDomainObject> configurator) {
-		V object = constructor.apply(null);
+		String id = UUID.randomUUID().toString();
+		V object = constructor.apply(collection.document(id));
 		configurator.accept(object);
-		documents.put(null, object);
+		documents.put(id, object);
 		return object;
 	}
 
