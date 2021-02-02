@@ -59,7 +59,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 	 * @return A list of unauth groups
 	 */
 	public Stream<Group> getUnauthGroups() {
-		return null;// values().stream().filter(group -> group.getAuthMechanisms().size() == 0);
+		return values().stream();//.filter(group -> group.getAuthMechanisms().size() == 0);
 	}
 
 	/**
@@ -103,7 +103,7 @@ public final class GroupStore extends STCollectionStore<Group> implements Config
 				// TODO
 			}
 			UserStore.getByUsername(config.getOwner()).ifPresent(user -> {
-				group.set(GroupOid.OWNER, user.oid());
+				//group.set(GroupOid.OWNER, user.oid());
 			});
 		});
 	}

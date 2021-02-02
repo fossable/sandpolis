@@ -94,6 +94,7 @@ public class STCmd extends Cmdlet<STCmd> {
 
 	public CompletionStage<EntangledDocument> sync(AbsoluteOid<STDocument> oid) {
 		return sync(oid, struct -> {
+			struct.connection = target;
 		});
 	}
 
