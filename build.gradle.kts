@@ -113,20 +113,6 @@ spotless {
 	}
 }
 
-// Apply repository configuration
-allprojects {
-	repositories {
-		mavenLocal()
-		mavenCentral()
-	}
-
-	buildscript {
-		repositories {
-			mavenCentral()
-		}
-	}
-}
-
 // Uncheckout buildSrc submodules and use root instead
 subprojects {
 	// TODO
