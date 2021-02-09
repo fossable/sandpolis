@@ -37,3 +37,30 @@
 [submodule "plugin/com.sandpolis.plugin.osquery"]
 	path = plugin/com.sandpolis.plugin.osquery
 	url = ../com.sandpolis.plugin.osquery
+[submodule "module/com.sandpolis.core.agent"]
+	path = module/com.sandpolis.core.agent
+	url = ../com.sandpolis.core.agent
+[submodule "module/com.sandpolis.core.client"]
+	path = module/com.sandpolis.core.client
+	url = ../com.sandpolis.core.client
+[submodule "module/com.sandpolis.core.clientagent"]
+	path = module/com.sandpolis.core.clientagent
+	url = ../com.sandpolis.core.clientagent
+[submodule "module/com.sandpolis.core.clientserver"]
+	path = module/com.sandpolis.core.clientserver
+	url = ../com.sandpolis.core.clientserver
+[submodule "module/com.sandpolis.core.foundation"]
+	path = module/com.sandpolis.core.foundation
+	url = ../com.sandpolis.core.foundation
+[submodule "module/com.sandpolis.core.instance"]
+	path = module/com.sandpolis.core.instance
+	url = ../com.sandpolis.core.instance
+[submodule "module/com.sandpolis.core.net"]
+	path = module/com.sandpolis.core.net
+	url = ../com.sandpolis.core.net
+[submodule "module/com.sandpolis.core.server"]
+	path = module/com.sandpolis.core.server
+	url = ../com.sandpolis.core.server
+[submodule "module/com.sandpolis.core.serveragent"]
+	path = module/com.sandpolis.core.serveragent
+	url = ../com.sandpolis.core.serveragent
