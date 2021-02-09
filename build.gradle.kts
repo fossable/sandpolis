@@ -126,3 +126,8 @@ allprojects {
 		}
 	}
 }
+
+// Uncheckout buildSrc submodules and use root instead
+subprojects {
+	// TODO
+}
