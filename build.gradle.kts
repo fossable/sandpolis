@@ -8,13 +8,6 @@
 //                                                                            //
 //============================================================================//
 
-buildscript {
-	repositories {
-		mavenCentral()
-		jcenter()
-	}
-}
-
 plugins {
 	id("com.diffplug.spotless") version "5.9.0"
 }
@@ -113,7 +106,24 @@ spotless {
 	}
 }
 
-// Uncheckout buildSrc submodules and use root instead
-subprojects {
-	// TODO
+task<Exec>("enableMicro") {
+	commandLine("git", "submodule", "update", "--init", "--remote", "com.sandpolis.agent.micro")
+}
+
+task<Exec>("disableMicro") {
+	commandLine("git", "submodule", "deinit", "com.sandpolis.agent.micro")
+}
+
+// Uncheckout all submodules in instance modules because they are present in the root
+for ((name, sub) in project.getChildProjects()) {
+	if (name.startsWith("com.sandpolis")) {
+		sub.afterEvaluate {
+			exec {
+				commandLine = listOf("git", "submodule", "--quiet", "deinit", "buildSrc", "module")
+				workingDir = sub.getProjectDir()
+				setIgnoreExitValue(true)
+				setErrorOutput(java.io.ByteArrayOutputStream())
+			}
+		}
+	}
 }
