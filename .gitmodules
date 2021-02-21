@@ -64,3 +64,9 @@
 [submodule "buildSrc"]
 	path = buildSrc
 	url = ../com.sandpolis.build
+[submodule "com.sandpolis.agent.micro"]
+	path = com.sandpolis.agent.micro
+	url = ../com.sandpolis.agent.micro
+[submodule "com.sandpolis.agent.nano"]
+	path = com.sandpolis.agent.nano
+	url = ../com.sandpolis.agent.nano
