@@ -14,8 +14,17 @@ Vagrant.configure("2") do |config|
         linux.vm.provision :shell, :inline => "hostnamectl set-hostname sandpolis_linux && locale-gen en_US.UTF.8"
         linux.vm.provision :shell, :inline => "apt-get update --fix-missing"
         linux.vm.provision :shell, :inline => "apt-get install -q -y g++ make git curl vim libncursesw5-dev"
+
+        # Configure Java
         linux.vm.provision :shell, :inline => "wget -q -O- https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.1+9/OpenJDK15U-jdk_x64_linux_hotspot_15.0.1_9.tar.gz | tar zxf -"
         linux.vm.provision :shell, :inline => "echo 'export JAVA_HOME=/home/vagrant/jdk-15.0.1+9' >>/home/vagrant/.profile"
+
+        # Configure Rust
+        # TODO
+
+        # Configure rust-protobuf
+        linux.vm.provision :shell, :inline => "git clone --depth 1 --branch v2.22 https://github.com/stepancheg/rust-protobuf"
+        linux.vm.provision :shell, :inline => "(cd rust-protobuf; cargo build --package protobuf-codegen --release; cp target/release/protoc-gen-rust /usr/bin/protoc-gen-rust)"
     end
 
     config.vm.define "windows" do |windows|
