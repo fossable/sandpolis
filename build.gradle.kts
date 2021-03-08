@@ -9,7 +9,7 @@
 //============================================================================//
 
 plugins {
-	id("com.diffplug.spotless") version "5.9.0"
+	id("com.diffplug.spotless") version "5.11.0"
 }
 
 spotless {
