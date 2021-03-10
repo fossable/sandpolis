@@ -22,9 +22,6 @@ include("module:com.sandpolis.core.server")
 include("module:com.sandpolis.core.serveragent")
 
 // Instance modules
-include("com.sandpolis.agent.installer:go")
-include("com.sandpolis.agent.installer:jar")
-include("com.sandpolis.agent.installer:py")
 if (file("${rootDir}/com.sandpolis.agent.vanilla/.git").exists())
 	include("com.sandpolis.agent.vanilla")
 if (file("${rootDir}/com.sandpolis.client.ascetic/.git").exists())
@@ -35,13 +32,10 @@ if (file("${rootDir}/com.sandpolis.server.vanilla/.git").exists())
 	include("com.sandpolis.server.vanilla")
 if (file("${rootDir}/com.sandpolis.client.lockstone/.git").exists())
 	include("com.sandpolis.client.lockstone")
-if (file("${rootDir}/com.sandpolis.agent.micro/.git").exists()) {
+if (file("${rootDir}/com.sandpolis.agent.micro/.git").exists())
 	include("com.sandpolis.agent.micro")
-	include("com.sandpolis.agent.micro:agent")
-	if (org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem().isLinux()) {
-		include("com.sandpolis.agent.micro:boot")
-	}
-}
+if (file("${rootDir}/com.sandpolis.agent.nano/.git").exists())
+	include("com.sandpolis.agent.nano")
 
 // Core plugins
 if (file("${rootDir}/plugin/com.sandpolis.plugin.desktop/.git").exists()) {

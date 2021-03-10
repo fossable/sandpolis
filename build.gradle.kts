@@ -114,12 +114,12 @@ task<Exec>("disableMicro") {
 	commandLine("git", "submodule", "deinit", "com.sandpolis.agent.micro")
 }
 
-// Uncheckout all submodules in instance modules because they are present in the root
+// Uncheckout all buildSrc directories in instance modules
 for ((name, sub) in project.getChildProjects()) {
 	if (name.startsWith("com.sandpolis")) {
 		sub.afterEvaluate {
 			exec {
-				commandLine = listOf("git", "submodule", "--quiet", "deinit", "buildSrc", "module")
+				commandLine = listOf("git", "submodule", "--quiet", "deinit", "buildSrc")
 				workingDir = sub.getProjectDir()
 				setIgnoreExitValue(true)
 				setErrorOutput(java.io.ByteArrayOutputStream())
