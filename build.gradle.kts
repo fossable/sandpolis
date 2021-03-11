@@ -114,6 +114,24 @@ task<Exec>("disableMicro") {
 	commandLine("git", "submodule", "deinit", "com.sandpolis.agent.micro")
 }
 
+task("updateJavaVersion") {
+	doLast {
+		project.fileTree(".") {
+			include("**/Dockerfile")
+			include("**/*.gradle.kts")
+			include("**/*.yml")
+			exclude("/build.gradle.kts")
+		}.forEach {
+			it.writeText(it.readText()
+				.replace("java-version: 15", "java-version: 16")
+				.replace("FROM adoptopenjdk:15-hotspot", "FROM adoptopenjdk:16-hotspot")
+				.replace("JavaLanguageVersion.of(15)", "JavaLanguageVersion.of(16)")
+				.replace("jvmTarget = \"15\"", "jvmTarget = \"16\"")
+				.replace("version = \"15\"", "version = \"16\""))
+		}
+	}
+}
+
 // Uncheckout all buildSrc directories in instance modules
 for ((name, sub) in project.getChildProjects()) {
 	if (name.startsWith("com.sandpolis")) {
