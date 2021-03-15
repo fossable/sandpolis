@@ -7,7 +7,14 @@
 **This project is unfinished and should only be used in a secure testing environment!**
 
 ### Introduction
-The vision for Sandpolis is to build the ultimate no-expense-spared administration system that provides full control over any device :computer:, is crazy fast :zap:, scales to thousands of devices :boom:, and gives you money :moneybag:. Maybe not that last one, but it won't cost you anything because it's free in terms of cost and, more importantly, **free as in freedom**.
+The vision for Sandpolis is to build the ultimate no-expense-spared administration system that:
+
+- provides full control over any device :computer:,
+- is crazy fast :zap:,
+- scales to thousands of devices :boom:,
+- and gives you money :moneybag:.
+
+Maybe not that last one, but it won't cost you anything because it's free in terms of cost and, more importantly, **free as in freedom**.
 
 This project has existed in some form since 2013 and has always been [a solo endeavour](https://github.com/cilki). It's already unbelievable that it's come this far, but maybe it will be fully functional by 2023?
 
