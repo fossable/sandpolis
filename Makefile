@@ -22,54 +22,70 @@ updateJavaVersion:
 
 enableAgentMicro:
 	git submodule update --init com.sandpolis.agent.micro
+	(cd com.sandpolis.agent.micro; git checkout master; git pull origin master)
 
 disableAgentMicro:
-	git submodule deinit com.sandpolis.agent.micro
+	git submodule deinit --force com.sandpolis.agent.micro
 
 enableAgentNano:
 	git submodule update --init com.sandpolis.agent.nano
+	(cd com.sandpolis.agent.nano; git checkout master; git pull origin master)
 
 disableAgentNano:
-	git submodule deinit com.sandpolis.agent.nano
+	git submodule deinit --force com.sandpolis.agent.nano
 
 enableAgentVanilla:
 	git submodule update --init com.sandpolis.agent.vanilla
+	(cd com.sandpolis.agent.vanilla; git checkout master; git pull origin master)
 
 disableAgentVanilla:
-	git submodule deinit com.sandpolis.agent.vanilla
+	git submodule deinit --force com.sandpolis.agent.vanilla
 
 enableClientAscetic:
 	git submodule update --init com.sandpolis.client.ascetic
+	(cd com.sandpolis.client.ascetic; git checkout master; git pull origin master)
 
 disableClientAscetic:
-	git submodule deinit com.sandpolis.client.ascetic
+	git submodule deinit --force com.sandpolis.client.ascetic
 
 enableClientLifegem:
 	git submodule update --init com.sandpolis.client.lifegem
+	(cd com.sandpolis.client.lifegem; git checkout master; git pull origin master)
 
 disableClientLifegem:
-	git submodule deinit com.sandpolis.client.lifegem
+	git submodule deinit --force com.sandpolis.client.lifegem
 
 enableClientLockstone:
 	git submodule update --init com.sandpolis.client.lockstone
+	(cd com.sandpolis.client.lockstone; git checkout master; git pull origin master)
 
 disableClientLockstone:
-	git submodule deinit com.sandpolis.client.lockstone
+	git submodule deinit --force com.sandpolis.client.lockstone
+
+enableDistagent:
+	git submodule update --init com.sandpolis.distagent
+	(cd com.sandpolis.distagent; git checkout master; git pull origin master)
+
+disableDistagent:
+	git submodule deinit --force com.sandpolis.distagent
 
 enableServerVanilla:
 	git submodule update --init com.sandpolis.server.vanilla
+	(cd com.sandpolis.server.vanilla; git checkout master; git pull origin master)
 
 disableServerVanilla:
-	git submodule deinit com.sandpolis.server.vanilla
+	git submodule deinit --force com.sandpolis.server.vanilla
 
 enableModules:
 	git submodule update --init module
+	(cd module; git submodule foreach 'git checkout master && git pull origin master')
 
 disableModules:
-	git submodule deinit module
+	git submodule deinit --force module
 
 enablePlugins:
 	git submodule update --init plugin
+	(cd plugin; git submodule foreach 'git checkout master && git pull origin master')
 
 disablePlugins:
-	git submodule deinit plugin
+	git submodule deinit --force plugin
