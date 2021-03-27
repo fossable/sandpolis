@@ -1,6 +1,4 @@
-**/gen/main/cpp
-**/gen/main/java
-**/gen/main/swift
+**/gen/main/**
 **/src/main/resources/build.properties
 *.iml
 *.ipr
