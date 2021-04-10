@@ -9,7 +9,7 @@
 //============================================================================//
 
 plugins {
-	id("com.diffplug.spotless") version "5.9.0"
+	id("com.diffplug.spotless") version "5.11.1"
 }
 
 spotless {
@@ -116,6 +116,15 @@ for ((name, sub) in project.getChildProjects()) {
 				setIgnoreExitValue(true)
 				setErrorOutput(java.io.ByteArrayOutputStream())
 			}
+		}
+	}
+}
+
+// Create tasks to update Gradle wrapper
+allprojects.forEach {
+	if (it.name.startsWith("com.sandpolis")) {
+		val updateWrappers by it.tasks.creating(Wrapper::class) {
+			gradleVersion = "7.0"
 		}
 	}
 }
