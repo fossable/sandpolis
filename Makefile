@@ -20,42 +20,42 @@ updateJavaVersion:
 	find . -type f -name '*.gradle.kts' -exec \
 		sed -i "s/JavaLanguageVersion.of(..)/JavaLanguageVersion.of(${VERSION})/g;s/jvmTarget = \"..\"/jvmTarget = \"${VERSION}\"/g;s/version = \"..\"/version = \"${VERSION}\"/g" {} \;
 
-enableAgentMicro:
+enableAgentMicro: enableModules
 	git submodule update --init com.sandpolis.agent.micro
 	(cd com.sandpolis.agent.micro; git checkout master; git pull origin master)
 
 disableAgentMicro:
 	git submodule deinit --force com.sandpolis.agent.micro
 
-enableAgentNano:
+enableAgentNano: enableModules
 	git submodule update --init com.sandpolis.agent.nano
 	(cd com.sandpolis.agent.nano; git checkout master; git pull origin master)
 
 disableAgentNano:
 	git submodule deinit --force com.sandpolis.agent.nano
 
-enableAgentVanilla:
+enableAgentVanilla: enableModules
 	git submodule update --init com.sandpolis.agent.vanilla
 	(cd com.sandpolis.agent.vanilla; git checkout master; git pull origin master)
 
 disableAgentVanilla:
 	git submodule deinit --force com.sandpolis.agent.vanilla
 
-enableClientAscetic:
+enableClientAscetic: enableModules
 	git submodule update --init com.sandpolis.client.ascetic
 	(cd com.sandpolis.client.ascetic; git checkout master; git pull origin master)
 
 disableClientAscetic:
 	git submodule deinit --force com.sandpolis.client.ascetic
 
-enableClientLifegem:
+enableClientLifegem: enableModules
 	git submodule update --init com.sandpolis.client.lifegem
 	(cd com.sandpolis.client.lifegem; git checkout master; git pull origin master)
 
 disableClientLifegem:
 	git submodule deinit --force com.sandpolis.client.lifegem
 
-enableClientLockstone:
+enableClientLockstone: enableModules
 	git submodule update --init com.sandpolis.client.lockstone
 	(cd com.sandpolis.client.lockstone; git checkout master; git pull origin master)
 
@@ -69,7 +69,7 @@ enableDistagent:
 disableDistagent:
 	git submodule deinit --force com.sandpolis.distagent
 
-enableServerVanilla:
+enableServerVanilla: enableModules
 	git submodule update --init com.sandpolis.server.vanilla
 	(cd com.sandpolis.server.vanilla; git checkout master; git pull origin master)
 

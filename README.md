@@ -4,19 +4,19 @@
 
 **Sandpolis** is a real-time distributed administration platform for servers, desktop computers, embedded devices, and anything in-between.
 
-**This project is unfinished and should only be used in a secure testing environment!**
+**This project is unfinished (unstable) and should only be used in a testing environment!**
 
 ### Introduction
 The vision for Sandpolis is to build the ultimate no-expense-spared administration system that:
 
-- provides full control over any device :computer:,
-- is crazy fast :zap:,
+- provides unlimited control over any kind of device :computer:,
+- is fast and responsive :zap:,
 - scales to thousands of devices :boom:,
 - and gives you money :moneybag:.
 
-Maybe not that last one, but it won't cost you anything because it's free in terms of cost and, more importantly, **free as in freedom**.
+Maybe that last one is a stretch, but at least Sandpolis won't cost you anything because it's free in terms of cost and, more importantly, **free as in freedom**.
 
-This project has existed in some form since 2013 and has always been [a solo endeavour](https://github.com/cilki). It's already unbelievable that it's come this far, but maybe it will be fully functional by 2023?
+This project has existed in some form since 2013 and has made tremendous progress since, but it's also the kind that can never truly be completed.
 
 #### Instances
 Sandpolis is not just one program, but a set of several working together. There are three catagories in which every Sandpolis component (or "instance") belongs:
@@ -66,29 +66,29 @@ The following library modules define the core of Sandpolis. Instances and plugin
 | [core.serveragent](https://github.com/sandpolis/com.sandpolis.core.serveragent) | ![Release](https://img.shields.io/github/v/tag/sandpolis/com.sandpolis.core.serveragent.svg?label=release) [![Build](https://github.com/sandpolis/com.sandpolis.core.serveragent/workflows/.github/workflows/build.yml/badge.svg)](https://github.com/sandpolis/com.sandpolis.core.serveragent/actions?query=workflow%3A.github%2Fworkflows%2Fbuild.yml) |
 
 ### Installing
-You could install Sandpolis now, but it's likely to be an underwhelming experience. Once things are more stable, installation instructions will appear out of thin air.
+You could install Sandpolis now, but it's likely to be an underwhelming experience. Once things are more stable, installation instructions will appear here.
 
-In the meantime, here's a screenshot to admire of the iOS client back when it was actually functional:
+In the meantime, here's a screenshot of the iOS client back when it was actually functional:
 <p align="center">
 	<img src="https://s3.us-east-2.amazonaws.com/github.sandpolis.com/client/lockstone/triptych.png" />
 </p>
 
 ### Building
-Since there are many complex components in Sandpolis, you'll usually only want to build a small subset them. To choose what components to build, initialize the desired submodules:
+Since git submodules are used extensively here, you can conveniently build just a subset of the project. To choose what components to build, initialize the desired submodules using the makefile utilities:
 ```sh
-# Sandpolis uses git submodules extensively
-git submodule update --init com.sandpolis.server.vanilla
-git submodule update --init module
+# Checkout required modules for the server component
+make enableServerVanilla
 ```
 
-Since Sandpolis is built with Gradle, building the code is the easy part:
+Gradle is used to orchestrate the build:
 ```sh
-# Just make sure you have JDK 16 first
 ./gradlew build
 ```
 
+This will build all modules that are currently checked out.
+
 #### Using Vagrant
-In order to build components for other operating systems, Vagrant can be used:
+In order to conveniently build components for other operating systems, Vagrant can be used:
 
 ```sh
 vagrant up linux
