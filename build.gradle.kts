@@ -124,7 +124,7 @@ for ((name, sub) in project.getChildProjects()) {
 allprojects.forEach {
 	if (it.name.startsWith("com.sandpolis")) {
 		val updateWrappers by it.tasks.creating(Wrapper::class) {
-			gradleVersion = "7.0"
+			gradleVersion = "7.0.2"
 		}
 	}
 }
