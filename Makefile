@@ -2,7 +2,8 @@
 ## actually build anything.
 
 updateSubmodules:
-	git submodule foreach git pull origin master
+	git submodule foreach --recursive \
+		git submodule update --init --remote --merge
 
 createVersionCommit:
 	git commit -m "v$(shell date +'%Y.%m.%d')"

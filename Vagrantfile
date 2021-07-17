@@ -20,7 +20,7 @@ Vagrant.configure("2") do |config|
         linux.vm.provision :shell, :inline => "echo 'export JAVA_HOME=/home/vagrant/jdk-15.0.1+9' >>/home/vagrant/.profile"
 
         # Configure Rust
-        # TODO
+        linux.vm.provision :shell, :inline => "curl https://sh.rustup.rs -sSf | sh -s -- -y"
 
         # Configure rust-protobuf
         linux.vm.provision :shell, :inline => "git clone --depth 1 --branch v2.22 https://github.com/stepancheg/rust-protobuf"
