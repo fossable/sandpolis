@@ -73,6 +73,3 @@
 [submodule "plugin/com.sandpolis.plugin.update"]
 	path = plugin/com.sandpolis.plugin.update
 	url = ../com.sandpolis.plugin.update
-[submodule "com.sandpolis.distagent"]
-	path = com.sandpolis.distagent
-	url = ../com.sandpolis.distagent
