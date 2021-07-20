@@ -25,9 +25,6 @@
 [submodule "plugin/com.sandpolis.plugin.snapshot"]
 	path = plugin/com.sandpolis.plugin.snapshot
 	url = ../com.sandpolis.plugin.snapshot
-[submodule "com.sandpolis.agent.vanilla"]
-	path = com.sandpolis.agent.vanilla
-	url = ../com.sandpolis.agent.vanilla
 [submodule "plugin/com.sandpolis.plugin.filesystem"]
 	path = plugin/com.sandpolis.plugin.filesystem
 	url = ../com.sandpolis.plugin.filesystem
