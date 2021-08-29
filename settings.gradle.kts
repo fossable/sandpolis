@@ -15,6 +15,7 @@ include("module:com.sandpolis.core.agent")
 include("module:com.sandpolis.core.client")
 include("module:com.sandpolis.core.clientagent")
 include("module:com.sandpolis.core.clientserver")
+include("module:com.sandpolis.core.foreign")
 include("module:com.sandpolis.core.foundation")
 include("module:com.sandpolis.core.instance")
 include("module:com.sandpolis.core.net")
@@ -22,8 +23,8 @@ include("module:com.sandpolis.core.server")
 include("module:com.sandpolis.core.serveragent")
 
 // Instance modules
-if (file("${rootDir}/com.sandpolis.agent.vanilla/.git").exists())
-	include("com.sandpolis.agent.vanilla")
+if (file("${rootDir}/com.sandpolis.agent.kilo/.git").exists())
+	include("com.sandpolis.agent.kilo")
 if (file("${rootDir}/com.sandpolis.client.ascetic/.git").exists())
 	include("com.sandpolis.client.ascetic")
 if (file("${rootDir}/com.sandpolis.client.lifegem/.git").exists())
@@ -40,32 +41,33 @@ if (file("${rootDir}/com.sandpolis.agent.nano/.git").exists())
 // Core plugins
 if (file("${rootDir}/plugin/com.sandpolis.plugin.desktop/.git").exists()) {
 	include("plugin:com.sandpolis.plugin.desktop")
-	include("plugin:com.sandpolis.plugin.desktop:agent:vanilla")
+	include("plugin:com.sandpolis.plugin.desktop:agent:kilo")
 	include("plugin:com.sandpolis.plugin.desktop:client:lifegem")
 }
 if (file("${rootDir}/plugin/com.sandpolis.plugin.device/.git").exists()) {
 	include("plugin:com.sandpolis.plugin.device")
-	include("plugin:com.sandpolis.plugin.device:agent:vanilla")
+	include("plugin:com.sandpolis.plugin.device:agent:kilo")
 }
 if (file("${rootDir}/plugin/com.sandpolis.plugin.filesystem/.git").exists()) {
 	include("plugin:com.sandpolis.plugin.filesystem")
-	include("plugin:com.sandpolis.plugin.filesystem:agent:vanilla")
+	include("plugin:com.sandpolis.plugin.filesystem:agent:kilo")
 }
 if (file("${rootDir}/plugin/com.sandpolis.plugin.shell/.git").exists()) {
 	include("plugin:com.sandpolis.plugin.shell")
-	include("plugin:com.sandpolis.plugin.shell:agent:vanilla")
+	include("plugin:com.sandpolis.plugin.shell:agent:kilo")
+	include("plugin:com.sandpolis.plugin.shell:client:lifegem")
 }
 if (file("${rootDir}/plugin/com.sandpolis.plugin.osquery/.git").exists()) {
 	include("plugin:com.sandpolis.plugin.osquery")
-	include("plugin:com.sandpolis.plugin.osquery:agent:vanilla")
+	include("plugin:com.sandpolis.plugin.osquery:agent:kilo")
 	include("plugin:com.sandpolis.plugin.osquery:server:vanilla")
 }
 if (file("${rootDir}/plugin/com.sandpolis.plugin.upgrade/.git").exists()) {
 	include("plugin:com.sandpolis.plugin.upgrade")
-	include("plugin:com.sandpolis.plugin.upgrade:agent:vanilla")
+	include("plugin:com.sandpolis.plugin.upgrade:agent:kilo")
 }
 if (file("${rootDir}/plugin/com.sandpolis.plugin.snapshot/.git").exists()) {
 	include("plugin:com.sandpolis.plugin.snapshot")
 	include("plugin:com.sandpolis.plugin.snapshot:server:vanilla")
-	include("plugin:com.sandpolis.plugin.snapshot:agent:vanilla")
+	include("plugin:com.sandpolis.plugin.snapshot:agent:kilo")
 }

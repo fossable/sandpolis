@@ -10,6 +10,7 @@
 
 plugins {
 	id("com.diffplug.spotless") version "5.14.0"
+	kotlin("jvm") version "1.5.20"
 }
 
 spotless {
@@ -103,20 +104,6 @@ spotless {
 		targetExclude("**/build/**", "**/com.sandpolis.client.lockstone/**")
 
 		eclipseWtp(com.diffplug.spotless.extra.wtp.EclipseWtpFormatterStep.JSON)
-	}
-}
-
-// Uncheckout all buildSrc directories in instance modules
-for ((name, sub) in project.getChildProjects()) {
-	if (name.startsWith("com.sandpolis")) {
-		sub.afterEvaluate {
-			exec {
-				commandLine = listOf("git", "submodule", "--quiet", "deinit", "buildSrc")
-				workingDir = sub.getProjectDir()
-				setIgnoreExitValue(true)
-				setErrorOutput(java.io.ByteArrayOutputStream())
-			}
-		}
 	}
 }
 

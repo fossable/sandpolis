@@ -76,3 +76,6 @@
 [submodule "com.sandpolis.agent.kilo"]
 	path = com.sandpolis.agent.kilo
 	url = ../com.sandpolis.agent.kilo
+[submodule "module/com.sandpolis.core.foreign"]
+	path = module/com.sandpolis.core.foreign
+	url = ../com.sandpolis.core.foreign
