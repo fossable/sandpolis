@@ -79,3 +79,6 @@
 [submodule "module/com.sandpolis.core.foreign"]
 	path = module/com.sandpolis.core.foreign
 	url = ../com.sandpolis.core.foreign
+[submodule "com.sandpolis.client.brightstone"]
+	path = com.sandpolis.client.brightstone
+	url = ../com.sandpolis.client.brightstone
