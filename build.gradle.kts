@@ -16,9 +16,7 @@ plugins {
 spotless {
 	cpp {
 		target("**/*.cc", "**/*.hh")
-
-		// Exclude build directory
-		targetExclude("**/build/**", "**/gen/main/cpp/**")
+		targetExclude("**/build/**", "**/src/gen/**")
 
 		eclipseCdt()
 		endWithNewline()
@@ -28,25 +26,19 @@ spotless {
 	}
 	kotlin {
 		target("**/*.kt")
-
-		// Exclude build directory
-		targetExclude("**/build/**")
+		targetExclude("**/build/**", "**/src/gen/**")
 
 		licenseHeaderFile(file("gradle/resources/header_gradle.txt"), "(plugins|import|package)")
 	}
 	kotlinGradle {
 		target("**/*.kts")
-
-		// Exclude build directory
-		targetExclude("**/build/**")
+		targetExclude("**/build/**", "**/src/gen/**")
 
 		licenseHeaderFile(file("gradle/resources/header_gradle.txt"), "(plugins|import|buildscript|rootProject)")
 	}
 	java {
 		target("**/*.java")
-
-		// Exclude build directory and generated sources
-		targetExclude("**/build/**", "**/gen/main/java/**", "**/src/main/java/com/sandpolis/core/instance/converter/**")
+		targetExclude("**/build/**", "**/src/gen/**")
 
 		eclipse().configFile("gradle/resources/EclipseConventions.xml")
 		trimTrailingWhitespace()
@@ -56,9 +48,7 @@ spotless {
 	}
 	format("javaModules") {
 		target("**/module-info.java")
-
-		// Exclude build directory
-		targetExclude("**/build/**")
+		targetExclude("**/build/**", "**/src/gen/**")
 
 		trimTrailingWhitespace()
 		endWithNewline()
@@ -67,9 +57,7 @@ spotless {
 	}
 	format("proto") {
 		target("**/*.proto")
-
-		// Exclude build directory
-		targetExclude("**/build/**")
+		targetExclude("**/build/**", "**/src/gen/**")
 
 		trimTrailingWhitespace()
 		endWithNewline()
@@ -79,9 +67,7 @@ spotless {
 	}
 	format("swift") {
 		target("**/*.swift")
-
-		// Exclude build directory
-		targetExclude("**/build/**")
+		targetExclude("**/build/**", "**/src/gen/**")
 
 		trimTrailingWhitespace()
 		endWithNewline()
@@ -91,19 +77,33 @@ spotless {
 	}
 	format("css") {
 		target("**/*.css")
-
-		// Exclude build directory
-		targetExclude("**/build/**")
+		targetExclude("**/build/**", "**/src/gen/**")
 
 		eclipseWtp(com.diffplug.spotless.extra.wtp.EclipseWtpFormatterStep.CSS)
 	}
 	format("json") {
 		target("**/*.json")
-
-		// Exclude build directory and iOS projects
-		targetExclude("**/build/**", "**/com.sandpolis.client.lockstone/**")
+		targetExclude("**/build/**", "**/src/gen/**", "**/com.sandpolis.client.lockstone/**")
 
 		eclipseWtp(com.diffplug.spotless.extra.wtp.EclipseWtpFormatterStep.JSON)
+	}
+	format("markdown") {
+		target("**/*.md")
+		targetExclude("**/build/**", "**/src/gen/**")
+
+		prettier().config(mapOf("proseWrap" to "always"))
+	}
+	format("yaml") {
+		target("**/*.yml", "**/*.yaml")
+		targetExclude("**/build/**", "**/src/gen/**")
+
+		prettier()
+	}
+	format("javascript") {
+		target("**/*.js")
+		targetExclude("**/build/**", "**/src/gen/**")
+
+		prettier()
 	}
 }
 
