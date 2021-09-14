@@ -21,6 +21,9 @@ updateJavaVersion:
 	find . -type f -name '*.gradle.kts' -exec \
 		sed -i "s/JavaLanguageVersion.of(..)/JavaLanguageVersion.of(${VERSION})/g;s/jvmTarget = \"..\"/jvmTarget = \"${VERSION}\"/g;s/version = \"..\"/version = \"${VERSION}\"/g" {} \;
 
+updateGitIgnore:
+	find . -type f -name '.gitignore' -exec cp .gitignore {} \;
+
 enableAgentMicro: enableModules
 	git submodule update --init com.sandpolis.agent.micro
 	(cd com.sandpolis.agent.micro; git checkout master; git pull origin master)
@@ -90,3 +93,7 @@ enablePlugins:
 
 disablePlugins:
 	git submodule deinit --force plugin
+
+vLinux:
+	vagrant status linux | grep -q 'running' || vagrant up linux
+	vagrant ssh linux

@@ -105,6 +105,12 @@ spotless {
 
 		prettier()
 	}
+	python {
+		target("**/*.py")
+		targetExclude("**/build/**", "**/src/gen/**")
+
+		black("21.8b0")
+	}
 }
 
 // Create tasks to update Gradle wrapper

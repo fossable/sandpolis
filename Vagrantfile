@@ -1,7 +1,7 @@
 Vagrant.configure("2") do |config|
 
     config.vm.define "linux" do |linux|
-        linux.vm.box = "ubuntu/groovy64"
+        linux.vm.box = "archlinux/archlinux"
         linux.vm.synced_folder ".", "/home/vagrant/sandpolis"
 
         linux.vm.provider "virtualbox" do |virtualbox|
@@ -10,21 +10,32 @@ Vagrant.configure("2") do |config|
         end
 
         # Configure environment
-        linux.vm.provision :shell, :inline => "touch .hushlogin"
         linux.vm.provision :shell, :inline => "hostnamectl set-hostname sandpolis_linux && locale-gen en_US.UTF.8"
-        linux.vm.provision :shell, :inline => "apt-get update --fix-missing"
-        linux.vm.provision :shell, :inline => "apt-get install -q -y g++ make git curl vim libncursesw5-dev"
+        linux.vm.provision :shell, :inline => "pacman -Syu --noconfirm binutils gcc make git curl wget vim ncurses python-pip npm"
 
-        # Configure Java
-        linux.vm.provision :shell, :inline => "wget -q -O- https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.1+9/OpenJDK15U-jdk_x64_linux_hotspot_15.0.1_9.tar.gz | tar zxf -"
-        linux.vm.provision :shell, :inline => "echo 'export JAVA_HOME=/home/vagrant/jdk-15.0.1+9' >>/home/vagrant/.profile"
+        # Install Java
+        linux.vm.provision :shell, :inline => "wget -q -O- https://download.java.net/java/early_access/panama/3/openjdk-17-panama+3-167_linux-x64_bin.tar.gz | tar zxf -"
+        linux.vm.provision :shell, :inline => "echo 'export JAVA_HOME=/home/vagrant/jdk-17' >>/home/vagrant/.profile"
 
-        # Configure Rust
+        # Install Rust
         linux.vm.provision :shell, :inline => "curl https://sh.rustup.rs -sSf | sh -s -- -y"
 
-        # Configure rust-protobuf
-        linux.vm.provision :shell, :inline => "git clone --depth 1 --branch v2.22 https://github.com/stepancheg/rust-protobuf"
+        # Install Swift
+        linux.vm.provision :shell, :inline => "wget -q -O- https://swift.org/builds/swift-5.4.3-release/ubuntu2004/swift-5.4.3-RELEASE/swift-5.4.3-RELEASE-ubuntu20.04.tar.gz | tar zxf -"
+        linux.vm.provision :shell, :inline => "echo 'export PATH=\${PATH}:~/swift-5.4.3-RELEASE-ubuntu20.04/usr/bin' >>/home/vagrant/.profile"
+        linux.vm.provision :shell, :inline => "source /home/vagrant/.profile"
+
+        # Install protoc-gen-swift
+        #linux.vm.provision :shell, :inline => "git clone --depth 1 https://github.com/apple/swift-protobuf"
+        #linux.vm.provision :shell, :inline => "(cd swift-protobuf; swift build -c release; cp .build/release/protoc-gen-swift /usr/bin/protoc-gen-swift)"
+
+        # Install protoc-gen-rust
+        linux.vm.provision :shell, :inline => "git clone --depth 1 --branch v2.25 https://github.com/stepancheg/rust-protobuf"
         linux.vm.provision :shell, :inline => "(cd rust-protobuf; cargo build --package protobuf-codegen --release; cp target/release/protoc-gen-rust /usr/bin/protoc-gen-rust)"
+
+        # Install formatters
+        linux.vm.provision :shell, :inline => "pacman -Syu --noconfirm python-black"
+        linux.vm.provision :shell, :inline => "npm install -g prettier"
     end
 
     config.vm.define "windows" do |windows|

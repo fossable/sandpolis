@@ -27,6 +27,11 @@ if (file("${rootDir}/com.sandpolis.agent.kilo/.git").exists())
 	include("com.sandpolis.agent.kilo")
 if (file("${rootDir}/com.sandpolis.client.ascetic/.git").exists())
 	include("com.sandpolis.client.ascetic")
+if (file("${rootDir}/com.sandpolis.client.brightstone/.git").exists()) {
+	include("com.sandpolis.client.brightstone")
+	include("com.sandpolis.client.brightstone:api")
+	include("com.sandpolis.client.brightstone:www")
+}
 if (file("${rootDir}/com.sandpolis.client.lifegem/.git").exists())
 	include("com.sandpolis.client.lifegem")
 if (file("${rootDir}/com.sandpolis.server.vanilla/.git").exists())
