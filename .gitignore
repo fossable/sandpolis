@@ -1,5 +1,5 @@
+**/Gen
 **/src/gen
-**/src/main/resources/build.json
 *.iml
 *.ipr
 *.iws
@@ -19,5 +19,7 @@
 __pycache__
 bin
 build
+build.json
 node_modules
 target
+xcuserdata

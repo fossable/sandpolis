@@ -11,19 +11,19 @@ Vagrant.configure("2") do |config|
 
         # Configure environment
         linux.vm.provision :shell, :inline => "hostnamectl set-hostname sandpolis_linux && locale-gen en_US.UTF.8"
-        linux.vm.provision :shell, :inline => "pacman -Syu --noconfirm binutils gcc make git curl wget vim ncurses python-pip npm"
+        linux.vm.provision :shell, :inline => "pacman -Syu --noconfirm binutils gcc make git wget vim python-pip npm linux-headers"
 
         # Install Java
         linux.vm.provision :shell, :inline => "wget -q -O- https://download.java.net/java/early_access/panama/3/openjdk-17-panama+3-167_linux-x64_bin.tar.gz | tar zxf -"
-        linux.vm.provision :shell, :inline => "echo 'export JAVA_HOME=/home/vagrant/jdk-17' >>/home/vagrant/.profile"
+        linux.vm.provision :shell, :inline => "echo 'export JAVA_HOME=/home/vagrant/jdk-17' >>/home/vagrant/.bash_profile"
 
         # Install Rust
         linux.vm.provision :shell, :inline => "curl https://sh.rustup.rs -sSf | sh -s -- -y"
 
         # Install Swift
         linux.vm.provision :shell, :inline => "wget -q -O- https://swift.org/builds/swift-5.4.3-release/ubuntu2004/swift-5.4.3-RELEASE/swift-5.4.3-RELEASE-ubuntu20.04.tar.gz | tar zxf -"
-        linux.vm.provision :shell, :inline => "echo 'export PATH=\${PATH}:~/swift-5.4.3-RELEASE-ubuntu20.04/usr/bin' >>/home/vagrant/.profile"
-        linux.vm.provision :shell, :inline => "source /home/vagrant/.profile"
+        linux.vm.provision :shell, :inline => "echo 'export PATH=\${PATH}:~/swift-5.4.3-RELEASE-ubuntu20.04/usr/bin' >>/home/vagrant/.bash_profile"
+        linux.vm.provision :shell, :inline => "source /home/vagrant/.bash_profile"
 
         # Install protoc-gen-swift
         #linux.vm.provision :shell, :inline => "git clone --depth 1 https://github.com/apple/swift-protobuf"
@@ -68,8 +68,6 @@ Vagrant.configure("2") do |config|
             virtualbox.cpus = 16
 
             virtualbox.customize ["modifyvm", :id, "--cpuid-set", "00000001", "000106e5", "00100800", "0098e3fd", "bfebfbff"]
-            virtualbox.customize ["modifyvm", :id, "--usb", "off"]
-            virtualbox.customize ["modifyvm", :id, "--usbehci", "off"]
             virtualbox.customize ["setextradata", :id, "VBoxInternal/Devices/efi/0/Config/DmiSystemProduct", "MacBookPro11,3"]
             virtualbox.customize ["setextradata", :id, "VBoxInternal/Devices/efi/0/Config/DmiSystemVersion", "1.0"]
             virtualbox.customize ["setextradata", :id, "VBoxInternal/Devices/efi/0/Config/DmiBoardProduct", "Iloveapple"]
@@ -79,5 +77,9 @@ Vagrant.configure("2") do |config|
         end
 
         macos.vm.provision :shell, :inline => "brew install --cask adoptopenjdk"
+
+        # Install Xcode
+        #macos.vm.provision :shell, :inline => "gem install xcode-install"
+        #macos.vm.provision :shell, :inline => "xcversion install"
     end
 end
