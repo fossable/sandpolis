@@ -70,9 +70,6 @@
 [submodule "plugin/com.sandpolis.plugin.update"]
 	path = plugin/com.sandpolis.plugin.update
 	url = ../com.sandpolis.plugin.update
-[submodule "com.sandpolis.distagent.rust"]
-	path = com.sandpolis.distagent.rust
-	url = ../com.sandpolis.distagent.rust
 [submodule "com.sandpolis.agent.kilo"]
 	path = com.sandpolis.agent.kilo
 	url = ../com.sandpolis.agent.kilo
