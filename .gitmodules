@@ -79,3 +79,9 @@
 [submodule "com.sandpolis.client.brightstone"]
 	path = com.sandpolis.client.brightstone
 	url = ../com.sandpolis.client.brightstone
+[submodule "com.sandpolis.deployer.rust"]
+	path = com.sandpolis.deployer.rust
+	url = ../com.sandpolis.deployer.rust
+[submodule "plugin/com.sandpolis.plugin.alert"]
+	path = plugin/com.sandpolis.plugin.alert
+	url = ../com.sandpolis.plugin.alert
