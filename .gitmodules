@@ -85,3 +85,6 @@
 [submodule "plugin/com.sandpolis.plugin.alert"]
 	path = plugin/com.sandpolis.plugin.alert
 	url = ../com.sandpolis.plugin.alert
+[submodule "com.sandpolis.agent.boot"]
+	path = com.sandpolis.agent.boot
+	url = ../com.sandpolis.agent.boot

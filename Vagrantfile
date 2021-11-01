@@ -30,12 +30,26 @@ Vagrant.configure("2") do |config|
         #linux.vm.provision :shell, :inline => "(cd swift-protobuf; swift build -c release; cp .build/release/protoc-gen-swift /usr/bin/protoc-gen-swift)"
 
         # Install protoc-gen-rust
-        linux.vm.provision :shell, :inline => "git clone --depth 1 --branch v2.25 https://github.com/stepancheg/rust-protobuf"
+        linux.vm.provision :shell, :inline => "git clone --depth 1 https://github.com/stepancheg/rust-protobuf"
         linux.vm.provision :shell, :inline => "(cd rust-protobuf; cargo build --package protobuf-codegen --release; cp target/release/protoc-gen-rust /usr/bin/protoc-gen-rust)"
 
         # Install formatters
         linux.vm.provision :shell, :inline => "pacman -Syu --noconfirm python-black"
         linux.vm.provision :shell, :inline => "npm install -g prettier"
+    end
+
+    config.vm.define "openbsd" do |openbsd|
+        openbsd.vm.box = "poad/openbsd"
+        openbsd.ssh.shell = "sh"
+        openbsd.vm.synced_folder ".", "/home/vagrant/sandpolis", type: "nfs"
+
+        # NFS needs host-only network
+        openbsd.vm.network :private_network, ip: "172.16.2.42"
+
+        openbsd.vm.provider "virtualbox" do |virtualbox|
+            virtualbox.memory = 8192
+            virtualbox.cpus = 16
+        end
     end
 
     config.vm.define "windows" do |windows|
@@ -49,6 +63,7 @@ Vagrant.configure("2") do |config|
 
         # Configure environment
         windows.vm.provision :shell, :inline => "choco install -y adoptopenjdk"
+        windows.vm.provision :shell, :inline => "choco install -y windows-sdk-10.0"
     end
 
     config.vm.define "macos" do |macos|
