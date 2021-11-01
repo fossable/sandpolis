@@ -64,9 +64,6 @@
 [submodule "com.sandpolis.agent.micro"]
 	path = com.sandpolis.agent.micro
 	url = ../com.sandpolis.agent.micro
-[submodule "com.sandpolis.agent.nano"]
-	path = com.sandpolis.agent.nano
-	url = ../com.sandpolis.agent.nano
 [submodule "plugin/com.sandpolis.plugin.update"]
 	path = plugin/com.sandpolis.plugin.update
 	url = ../com.sandpolis.plugin.update
@@ -88,3 +85,6 @@
 [submodule "com.sandpolis.agent.boot"]
 	path = com.sandpolis.agent.boot
 	url = ../com.sandpolis.agent.boot
+[submodule "com.sandpolis.probe.nano"]
+	path = com.sandpolis.probe.nano
+	url = ../com.sandpolis.probe.nano
