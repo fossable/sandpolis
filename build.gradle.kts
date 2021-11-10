@@ -10,7 +10,7 @@
 
 plugins {
 	id("com.diffplug.spotless") version "6.0.0"
-	kotlin("jvm") version "1.5.20"
+	kotlin("jvm") version "1.5.31"
 }
 
 spotless {
