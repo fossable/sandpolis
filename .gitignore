@@ -16,10 +16,10 @@
 .project
 .settings
 .vagrant
+/bin
+/build
+/target
 __pycache__
-bin
-build
 build.json
 node_modules
-target
 xcuserdata

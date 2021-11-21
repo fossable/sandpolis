@@ -42,8 +42,10 @@ if (file("${rootDir}/com.sandpolis.agent.micro/.git").exists())
 	include("com.sandpolis.agent.micro")
 if (file("${rootDir}/com.sandpolis.agent.nano/.git").exists())
 	include("com.sandpolis.agent.nano")
-if (file("${rootDir}/com.sandpolis.distagent.rust/.git").exists())
-	include("com.sandpolis.distagent.rust")
+if (file("${rootDir}/com.sandpolis.agent.boot/.git").exists())
+	include("com.sandpolis.agent.boot")
+if (file("${rootDir}/com.sandpolis.deployer.rust/.git").exists())
+	include("com.sandpolis.deployer.rust")
 
 // Core plugins
 if (file("${rootDir}/plugin/com.sandpolis.plugin.desktop/.git").exists()) {

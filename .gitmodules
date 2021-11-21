@@ -58,9 +58,6 @@
 [submodule "module/com.sandpolis.core.serveragent"]
 	path = module/com.sandpolis.core.serveragent
 	url = ../com.sandpolis.core.serveragent
-[submodule "buildSrc"]
-	path = buildSrc
-	url = ../com.sandpolis.build
 [submodule "com.sandpolis.agent.micro"]
 	path = com.sandpolis.agent.micro
 	url = ../com.sandpolis.agent.micro

@@ -112,12 +112,3 @@ spotless {
 		black("21.8b0")
 	}
 }
-
-// Create tasks to update Gradle wrapper
-allprojects.forEach {
-	if (it.name.startsWith("com.sandpolis")) {
-		val updateWrappers by it.tasks.creating(Wrapper::class) {
-			gradleVersion = "7.0.2"
-		}
-	}
-}
