@@ -85,3 +85,9 @@
 [submodule "com.sandpolis.probe.nano"]
 	path = com.sandpolis.probe.nano
 	url = ../com.sandpolis.probe.nano
+[submodule "module/com.sandpolis.core.deployer"]
+	path = module/com.sandpolis.core.deployer
+	url = ../com.sandpolis.core.deployer
+[submodule "com.sandpolis.deployer.java"]
+	path = com.sandpolis.deployer.java
+	url = ../com.sandpolis.deployer.java

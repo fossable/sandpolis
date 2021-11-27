@@ -13,6 +13,11 @@ plugins {
 	kotlin("jvm") version "1.6.0"
 }
 
+repositories {
+	mavenLocal()
+	mavenCentral()
+}
+
 spotless {
 	cpp {
 		target("**/*.cc", "**/*.hh")
