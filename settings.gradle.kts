@@ -15,6 +15,7 @@ include("module:com.sandpolis.core.agent")
 include("module:com.sandpolis.core.client")
 include("module:com.sandpolis.core.clientagent")
 include("module:com.sandpolis.core.clientserver")
+include("module:com.sandpolis.core.deployer")
 include("module:com.sandpolis.core.foreign")
 include("module:com.sandpolis.core.foundation")
 include("module:com.sandpolis.core.instance")
@@ -46,6 +47,8 @@ if (file("${rootDir}/com.sandpolis.agent.boot/.git").exists())
 	include("com.sandpolis.agent.boot")
 if (file("${rootDir}/com.sandpolis.deployer.rust/.git").exists())
 	include("com.sandpolis.deployer.rust")
+if (file("${rootDir}/com.sandpolis.deployer.java/.git").exists())
+	include("com.sandpolis.deployer.java")
 
 // Core plugins
 if (file("${rootDir}/plugin/com.sandpolis.plugin.desktop/.git").exists()) {

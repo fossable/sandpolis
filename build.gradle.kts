@@ -39,6 +39,10 @@ spotless {
 		target("**/*.kts")
 		targetExclude("**/build/**", "**/src/gen/**", "**/node_modules/**")
 
+		trimTrailingWhitespace()
+		endWithNewline()
+		indentWithTabs()
+
 		licenseHeaderFile(file("gradle/resources/header_gradle.txt"), "(plugins|import|buildscript|rootProject)")
 	}
 	java {

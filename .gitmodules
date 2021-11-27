@@ -91,3 +91,6 @@
 [submodule "com.sandpolis.deployer.java"]
 	path = com.sandpolis.deployer.java
 	url = ../com.sandpolis.deployer.java
+[submodule "buildSrc"]
+	path = buildSrc
+	url = ../com.sandpolis.build
