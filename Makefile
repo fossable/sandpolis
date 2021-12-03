@@ -9,18 +9,6 @@ createVersionCommit:
 	git commit -m "v$(shell date +'%Y.%m.%d')"
 	git tag "v$(shell date +'%Y.%m.%d')"
 
-updateJavaVersion:
-	[ "${VERSION}" != "" ]
-
-	find . -type f -name 'Dockerfile' -exec \
-		sed -i "s/FROM adoptopenjdk:..-/FROM adoptopenjdk:${VERSION}-/g" {} \;
-
-	find . -type f -name '*.yml' -exec \
-		sed -i "s/java-version: ../java-version: ${VERSION}/g" {} \;
-
-	find . -type f -name '*.gradle.kts' -exec \
-		sed -i "s/JavaLanguageVersion.of(..)/JavaLanguageVersion.of(${VERSION})/g;s/jvmTarget = \"..\"/jvmTarget = \"${VERSION}\"/g;s/version = \"..\"/version = \"${VERSION}\"/g" {} \;
-
 updateGitIgnore:
 	find . -type f -name '.gitignore' -exec cp .gitignore {} \;
 
