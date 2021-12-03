@@ -1,3 +1,6 @@
+[submodule "buildSrc"]
+	path = buildSrc
+	url = ../com.sandpolis.build
 [submodule "plugin/com.sandpolis.plugin.desktop"]
 	path = plugin/com.sandpolis.plugin.desktop
 	url = ../com.sandpolis.plugin.desktop
@@ -7,21 +10,6 @@
 [submodule "plugin/com.sandpolis.plugin.shell"]
 	path = plugin/com.sandpolis.plugin.shell
 	url = ../com.sandpolis.plugin.shell
-[submodule "com.sandpolis.client.ascetic"]
-	path = com.sandpolis.client.ascetic
-	url = ../com.sandpolis.client.ascetic
-[submodule "com.sandpolis.client.lifegem"]
-	path = com.sandpolis.client.lifegem
-	url = ../com.sandpolis.client.lifegem
-[submodule "com.sandpolis.server.vanilla"]
-	path = com.sandpolis.server.vanilla
-	url = ../com.sandpolis.server.vanilla
-[submodule "com.sandpolis.client.soapstone"]
-	path = com.sandpolis.client.soapstone
-	url = ../com.sandpolis.client.soapstone
-[submodule "com.sandpolis.client.lockstone"]
-	path = com.sandpolis.client.lockstone
-	url = ../com.sandpolis.client.lockstone
 [submodule "plugin/com.sandpolis.plugin.snapshot"]
 	path = plugin/com.sandpolis.plugin.snapshot
 	url = ../com.sandpolis.plugin.snapshot
@@ -31,66 +19,9 @@
 [submodule "plugin/com.sandpolis.plugin.osquery"]
 	path = plugin/com.sandpolis.plugin.osquery
 	url = ../com.sandpolis.plugin.osquery
-[submodule "module/com.sandpolis.core.agent"]
-	path = module/com.sandpolis.core.agent
-	url = ../com.sandpolis.core.agent
-[submodule "module/com.sandpolis.core.client"]
-	path = module/com.sandpolis.core.client
-	url = ../com.sandpolis.core.client
-[submodule "module/com.sandpolis.core.clientagent"]
-	path = module/com.sandpolis.core.clientagent
-	url = ../com.sandpolis.core.clientagent
-[submodule "module/com.sandpolis.core.clientserver"]
-	path = module/com.sandpolis.core.clientserver
-	url = ../com.sandpolis.core.clientserver
-[submodule "module/com.sandpolis.core.foundation"]
-	path = module/com.sandpolis.core.foundation
-	url = ../com.sandpolis.core.foundation
-[submodule "module/com.sandpolis.core.instance"]
-	path = module/com.sandpolis.core.instance
-	url = ../com.sandpolis.core.instance
-[submodule "module/com.sandpolis.core.net"]
-	path = module/com.sandpolis.core.net
-	url = ../com.sandpolis.core.net
-[submodule "module/com.sandpolis.core.server"]
-	path = module/com.sandpolis.core.server
-	url = ../com.sandpolis.core.server
-[submodule "module/com.sandpolis.core.serveragent"]
-	path = module/com.sandpolis.core.serveragent
-	url = ../com.sandpolis.core.serveragent
-[submodule "com.sandpolis.agent.micro"]
-	path = com.sandpolis.agent.micro
-	url = ../com.sandpolis.agent.micro
 [submodule "plugin/com.sandpolis.plugin.update"]
 	path = plugin/com.sandpolis.plugin.update
 	url = ../com.sandpolis.plugin.update
-[submodule "com.sandpolis.agent.kilo"]
-	path = com.sandpolis.agent.kilo
-	url = ../com.sandpolis.agent.kilo
-[submodule "module/com.sandpolis.core.foreign"]
-	path = module/com.sandpolis.core.foreign
-	url = ../com.sandpolis.core.foreign
-[submodule "com.sandpolis.client.brightstone"]
-	path = com.sandpolis.client.brightstone
-	url = ../com.sandpolis.client.brightstone
-[submodule "com.sandpolis.deployer.rust"]
-	path = com.sandpolis.deployer.rust
-	url = ../com.sandpolis.deployer.rust
 [submodule "plugin/com.sandpolis.plugin.alert"]
 	path = plugin/com.sandpolis.plugin.alert
 	url = ../com.sandpolis.plugin.alert
-[submodule "com.sandpolis.agent.boot"]
-	path = com.sandpolis.agent.boot
-	url = ../com.sandpolis.agent.boot
-[submodule "com.sandpolis.probe.nano"]
-	path = com.sandpolis.probe.nano
-	url = ../com.sandpolis.probe.nano
-[submodule "module/com.sandpolis.core.deployer"]
-	path = module/com.sandpolis.core.deployer
-	url = ../com.sandpolis.core.deployer
-[submodule "com.sandpolis.deployer.java"]
-	path = com.sandpolis.deployer.java
-	url = ../com.sandpolis.deployer.java
-[submodule "buildSrc"]
-	path = buildSrc
-	url = ../com.sandpolis.build
