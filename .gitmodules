@@ -88,3 +88,27 @@
 [submodule "core/com.sandpolis.core.serveragent"]
 	path = core/com.sandpolis.core.serveragent
 	url = ../com.sandpolis.core.serveragent
+[submodule "core/integration/com.sandpolis.core.integration.apt"]
+	path = core/integration/com.sandpolis.core.integration.apt
+	url = ../com.sandpolis.core.integration.apt
+[submodule "core/integration/com.sandpolis.core.integration.pacman"]
+	path = core/integration/com.sandpolis.core.integration.pacman
+	url = ../com.sandpolis.core.integration.pacman
+[submodule "core/integration/com.sandpolis.core.integration.osquery"]
+	path = core/integration/com.sandpolis.core.integration.osquery
+	url = ../com.sandpolis.core.integration.osquery
+[submodule "core/integration/com.sandpolis.core.integration.homebrew"]
+	path = core/integration/com.sandpolis.core.integration.homebrew
+	url = ../com.sandpolis.core.integration.homebrew
+[submodule "core/integration/com.sandpolis.core.integration.launchd"]
+	path = core/integration/com.sandpolis.core.integration.launchd
+	url = ../com.sandpolis.core.integration.launchd
+[submodule "core/integration/com.sandpolis.core.integration.fuse"]
+	path = core/integration/com.sandpolis.core.integration.fuse
+	url = ../com.sandpolis.core.integration.fuse
+[submodule "core/integration/com.sandpolis.core.integration.linux"]
+	path = core/integration/com.sandpolis.core.integration.linux
+	url = ../com.sandpolis.core.integration.linux
+[submodule "core/integration/com.sandpolis.core.integration.systemd"]
+	path = core/integration/com.sandpolis.core.integration.systemd
+	url = ../com.sandpolis.core.integration.systemd
