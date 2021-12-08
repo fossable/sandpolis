@@ -29,6 +29,7 @@ include("core:integration:com.sandpolis.core.integration.launchd")
 include("core:integration:com.sandpolis.core.integration.linux")
 include("core:integration:com.sandpolis.core.integration.osquery")
 include("core:integration:com.sandpolis.core.integration.pacman")
+include("core:integration:com.sandpolis.core.integration.qcow2")
 include("core:integration:com.sandpolis.core.integration.systemd")
 
 // Instance modules

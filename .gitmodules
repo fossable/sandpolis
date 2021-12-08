@@ -112,3 +112,6 @@
 [submodule "core/integration/com.sandpolis.core.integration.systemd"]
 	path = core/integration/com.sandpolis.core.integration.systemd
 	url = ../com.sandpolis.core.integration.systemd
+[submodule "core/integration/com.sandpolis.core.integration.qcow2"]
+	path = core/integration/com.sandpolis.core.integration.qcow2
+	url = ../com.sandpolis.core.integration.qcow2
