@@ -115,3 +115,6 @@
 [submodule "core/integration/com.sandpolis.core.integration.qcow2"]
 	path = core/integration/com.sandpolis.core.integration.qcow2
 	url = ../com.sandpolis.core.integration.qcow2
+[submodule "core/integration/com.sandpolis.core.integration.uefi"]
+	path = core/integration/com.sandpolis.core.integration.uefi
+	url = ../com.sandpolis.core.integration.uefi

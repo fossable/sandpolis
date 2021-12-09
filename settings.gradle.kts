@@ -31,6 +31,7 @@ include("core:integration:com.sandpolis.core.integration.osquery")
 include("core:integration:com.sandpolis.core.integration.pacman")
 include("core:integration:com.sandpolis.core.integration.qcow2")
 include("core:integration:com.sandpolis.core.integration.systemd")
+include("core:integration:com.sandpolis.core.integration.uefi")
 
 // Instance modules
 if (file("${rootDir}/instance/com.sandpolis.agent.kilo/.git").exists())
