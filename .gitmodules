@@ -121,3 +121,6 @@
 [submodule "instance/com.sandpolis.installer"]
 	path = instance/com.sandpolis.installer
 	url = ../com.sandpolis.installer
+[submodule "core/integration/com.sandpolis.core.integration.freedesktop"]
+	path = core/integration/com.sandpolis.core.integration.freedesktop
+	url = ../com.sandpolis.core.integration.freedesktop

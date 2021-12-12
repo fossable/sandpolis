@@ -23,6 +23,7 @@ include("core:com.sandpolis.core.server")
 include("core:com.sandpolis.core.serveragent")
 
 include("core:integration:com.sandpolis.core.integration.apt")
+include("core:integration:com.sandpolis.core.integration.freedesktop")
 include("core:integration:com.sandpolis.core.integration.fuse")
 include("core:integration:com.sandpolis.core.integration.homebrew")
 include("core:integration:com.sandpolis.core.integration.launchd")
