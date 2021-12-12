@@ -118,3 +118,6 @@
 [submodule "core/integration/com.sandpolis.core.integration.uefi"]
 	path = core/integration/com.sandpolis.core.integration.uefi
 	url = ../com.sandpolis.core.integration.uefi
+[submodule "instance/com.sandpolis.installer"]
+	path = instance/com.sandpolis.installer
+	url = ../com.sandpolis.installer

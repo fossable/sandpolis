@@ -59,6 +59,8 @@ if (file("${rootDir}/instance/com.sandpolis.deployer.rust/.git").exists())
 	include("instance:com.sandpolis.deployer.rust")
 if (file("${rootDir}/instance/com.sandpolis.deployer.java/.git").exists())
 	include("instance:com.sandpolis.deployer.java")
+if (file("${rootDir}/instance/com.sandpolis.installer/.git").exists())
+	include("instance:com.sandpolis.installer")
 
 // Core plugins
 if (file("${rootDir}/plugin/com.sandpolis.plugin.desktop/.git").exists()) {
