@@ -1,0 +1,117 @@
+[submodule "core/org.s7s.core.agent"]
+	path = core/org.s7s.core.agent
+	url = ../org.s7s.core.agent
+[submodule "core/org.s7s.core.client"]
+	path = core/org.s7s.core.client
+	url = ../org.s7s.core.client
+[submodule "core/org.s7s.core.clientagent"]
+	path = core/org.s7s.core.clientagent
+	url = ../org.s7s.core.clientagent
+[submodule "core/org.s7s.core.clientserver"]
+	path = core/org.s7s.core.clientserver
+	url = ../org.s7s.core.clientserver
+[submodule "core/org.s7s.core.deployer"]
+	path = core/org.s7s.core.deployer
+	url = ../org.s7s.core.deployer
+[submodule "core/org.s7s.core.foundation"]
+	path = core/org.s7s.core.foundation
+	url = ../org.s7s.core.foundation
+[submodule "core/org.s7s.core.instance"]
+	path = core/org.s7s.core.instance
+	url = ../org.s7s.core.instance
+[submodule "core/integration/org.s7s.core.integration.apt"]
+	path = core/integration/org.s7s.core.integration.apt
+	url = ../org.s7s.core.integration.apt
+[submodule "core/integration/org.s7s.core.integration.freedesktop"]
+	path = core/integration/org.s7s.core.integration.freedesktop
+	url = ../org.s7s.core.integration.freedesktop
+[submodule "core/integration/org.s7s.core.integration.fuse"]
+	path = core/integration/org.s7s.core.integration.fuse
+	url = ../org.s7s.core.integration.fuse
+[submodule "core/integration/org.s7s.core.integration.homebrew"]
+	path = core/integration/org.s7s.core.integration.homebrew
+	url = ../org.s7s.core.integration.homebrew
+[submodule "core/integration/org.s7s.core.integration.launchd"]
+	path = core/integration/org.s7s.core.integration.launchd
+	url = ../org.s7s.core.integration.launchd
+[submodule "core/integration/org.s7s.core.integration.linux"]
+	path = core/integration/org.s7s.core.integration.linux
+	url = ../org.s7s.core.integration.linux
+[submodule "core/integration/org.s7s.core.integration.osquery"]
+	path = core/integration/org.s7s.core.integration.osquery
+	url = ../org.s7s.core.integration.osquery
+[submodule "core/integration/org.s7s.core.integration.pacman"]
+	path = core/integration/org.s7s.core.integration.pacman
+	url = ../org.s7s.core.integration.pacman
+[submodule "core/integration/org.s7s.core.integration.qcow2"]
+	path = core/integration/org.s7s.core.integration.qcow2
+	url = ../org.s7s.core.integration.qcow2
+[submodule "core/integration/org.s7s.core.integration.systemd"]
+	path = core/integration/org.s7s.core.integration.systemd
+	url = ../org.s7s.core.integration.systemd
+[submodule "core/integration/org.s7s.core.integration.uefi"]
+	path = core/integration/org.s7s.core.integration.uefi
+	url = ../org.s7s.core.integration.uefi
+[submodule "instance/org.s7s.instance.agent.java"]
+	path = instance/org.s7s.instance.agent.java
+	url = ../org.s7s.instance.agent.java
+[submodule "instance/org.s7s.instance.agent.rust"]
+	path = instance/org.s7s.instance.agent.rust
+	url = ../org.s7s.instance.agent.rust
+[submodule "instance/org.s7s.instance.agent.uefi"]
+	path = instance/org.s7s.instance.agent.uefi
+	url = ../org.s7s.instance.agent.uefi
+[submodule "instance/org.s7s.instance.client.android"]
+	path = instance/org.s7s.instance.client.android
+	url = ../org.s7s.instance.client.android
+[submodule "instance/org.s7s.instance.client.desktop"]
+	path = instance/org.s7s.instance.client.desktop
+	url = ../org.s7s.instance.client.desktop
+[submodule "instance/org.s7s.instance.client.ios"]
+	path = instance/org.s7s.instance.client.ios
+	url = ../org.s7s.instance.client.ios
+[submodule "instance/org.s7s.instance.client.terminal"]
+	path = instance/org.s7s.instance.client.terminal
+	url = ../org.s7s.instance.client.terminal
+[submodule "instance/org.s7s.instance.client.web"]
+	path = instance/org.s7s.instance.client.web
+	url = ../org.s7s.instance.client.web
+[submodule "instance/org.s7s.instance.deployer.java"]
+	path = instance/org.s7s.instance.deployer.java
+	url = ../org.s7s.instance.deployer.java
+[submodule "instance/org.s7s.instance.deployer.rust"]
+	path = instance/org.s7s.instance.deployer.rust
+	url = ../org.s7s.instance.deployer.rust
+[submodule "instance/org.s7s.instance.installer.java"]
+	path = instance/org.s7s.instance.installer.java
+	url = ../org.s7s.instance.installer.java
+[submodule "instance/org.s7s.instance.probe.cpp"]
+	path = instance/org.s7s.instance.probe.cpp
+	url = ../org.s7s.instance.probe.cpp
+[submodule "instance/org.s7s.instance.server.java"]
+	path = instance/org.s7s.instance.server.java
+	url = ../org.s7s.instance.server.java
+[submodule "plugin/org.s7s.plugin.alert"]
+	path = plugin/org.s7s.plugin.alert
+	url = ../org.s7s.plugin.alert
+[submodule "plugin/org.s7s.plugin.desktop"]
+	path = plugin/org.s7s.plugin.desktop
+	url = ../org.s7s.plugin.desktop
+[submodule "plugin/org.s7s.plugin.device"]
+	path = plugin/org.s7s.plugin.device
+	url = ../org.s7s.plugin.device
+[submodule "plugin/org.s7s.plugin.filesystem"]
+	path = plugin/org.s7s.plugin.filesystem
+	url = ../org.s7s.plugin.filesystem
+[submodule "plugin/org.s7s.plugin.shell"]
+	path = plugin/org.s7s.plugin.shell
+	url = ../org.s7s.plugin.shell
+[submodule "plugin/org.s7s.plugin.snapshot"]
+	path = plugin/org.s7s.plugin.snapshot
+	url = ../org.s7s.plugin.snapshot
+[submodule "plugin/org.s7s.plugin.update"]
+	path = plugin/org.s7s.plugin.update
+	url = ../org.s7s.plugin.update
+[submodule "buildSrc"]
+	path = buildSrc
+	url = ../org.s7s.build
