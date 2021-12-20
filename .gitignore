@@ -20,6 +20,6 @@
 /build
 /target
 __pycache__
-com.sandpolis.build.json
+org.s7s.build.json
 node_modules
 xcuserdata

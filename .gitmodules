@@ -115,3 +115,9 @@
 [submodule "buildSrc"]
 	path = buildSrc
 	url = ../org.s7s.build
+[submodule "core/org.s7s.core.server"]
+	path = core/org.s7s.core.server
+	url = ../org.s7s.core.server
+[submodule "core/org.s7s.core.serveragent"]
+	path = core/org.s7s.core.serveragent
+	url = ../org.s7s.core.serveragent

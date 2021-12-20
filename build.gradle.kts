@@ -1,10 +1,9 @@
 //============================================================================//
 //                                                                            //
-//                         Copyright © 2015 Sandpolis                         //
+//            Copyright © 2015 - 2022 Sandpolis Software Foundation           //
 //                                                                            //
 //  This source file is subject to the terms of the Mozilla Public License    //
-//  version 2. You may not use this file except in compliance with the MPL    //
-//  as published by the Mozilla Foundation.                                   //
+//  version 2. You may not use this file except in compliance with the MPLv2. //
 //                                                                            //
 //============================================================================//
 
@@ -91,7 +90,7 @@ spotless {
 	}
 	format("json") {
 		target("**/*.json")
-		targetExclude("**/build/**", "**/src/gen/**", "**/node_modules/**", "**/com.sandpolis.client.lockstone/**")
+		targetExclude("**/build/**", "**/src/gen/**", "**/node_modules/**", "**/org.s7s.instance.client.ios/**")
 
 		eclipseWtp(com.diffplug.spotless.extra.wtp.EclipseWtpFormatterStep.JSON)
 	}
