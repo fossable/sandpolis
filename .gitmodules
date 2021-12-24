@@ -4,12 +4,6 @@
 [submodule "core/org.s7s.core.client"]
 	path = core/org.s7s.core.client
 	url = ../org.s7s.core.client
-[submodule "core/org.s7s.core.clientagent"]
-	path = core/org.s7s.core.clientagent
-	url = ../org.s7s.core.clientagent
-[submodule "core/org.s7s.core.clientserver"]
-	path = core/org.s7s.core.clientserver
-	url = ../org.s7s.core.clientserver
 [submodule "core/org.s7s.core.deployer"]
 	path = core/org.s7s.core.deployer
 	url = ../org.s7s.core.deployer
@@ -118,6 +112,6 @@
 [submodule "core/org.s7s.core.server"]
 	path = core/org.s7s.core.server
 	url = ../org.s7s.core.server
-[submodule "core/org.s7s.core.serveragent"]
-	path = core/org.s7s.core.serveragent
-	url = ../org.s7s.core.serveragent
+[submodule "core/org.s7s.core.protocol"]
+	path = core/org.s7s.core.protocol
+	url = ../org.s7s.core.protocol
