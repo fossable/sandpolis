@@ -40,9 +40,6 @@
 [submodule "core/ext/uefi"]
 	path = core/ext/uefi
 	url = ../org.s7s.core.ext.uefi
-[submodule "instance/agent"]
-	path = instance/agent
-	url = ../org.s7s.instance.agent
 [submodule "instance/client"]
 	path = instance/client
 	url = ../org.s7s.instance.client
@@ -52,9 +49,6 @@
 [submodule "instance/installer"]
 	path = instance/installer
 	url = ../org.s7s.instance.installer
-[submodule "instance/probe"]
-	path = instance/probe
-	url = ../org.s7s.instance.probe
 [submodule "instance/server"]
 	path = instance/server
 	url = ../org.s7s.instance.server
