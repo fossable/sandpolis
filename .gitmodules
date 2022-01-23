@@ -73,3 +73,6 @@
 [submodule "plugin/update"]
 	path = plugin/update
 	url = ../org.s7s.plugin.update
+[submodule "instance/agent"]
+	path = instance/agent
+	url = ../org.s7s.instance.agent
