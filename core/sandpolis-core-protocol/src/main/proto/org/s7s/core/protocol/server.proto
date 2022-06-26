@@ -1,0 +1,30 @@
+//============================================================================//
+//                                                                            //
+//            Copyright © 2015 - 2022 Sandpolis Software Foundation           //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPLv2. //
+//                                                                            //
+//============================================================================//
+syntax = "proto3";
+
+package core.protocol;
+
+option java_package = "org.s7s.core.protocol";
+option optimize_for = SPEED;
+
+// Response bearing the server's banner
+message GetBannerResponse {
+
+    // Maintenance mode indicates that only admin users will be allowed to login
+    bool maintenance = 1;
+
+    // The 3-field version of the server
+    string version = 2;
+
+    // A string to display on the login screen
+    string message = 3;
+
+    // An image to display on the login screen
+    bytes image = 4;
+}

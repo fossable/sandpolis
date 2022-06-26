@@ -1,0 +1,70 @@
+{
+	"collection": true,
+	"attributes": [
+	{
+		"name": "fd",
+		"type": "java.lang.Long",
+		"description": "Process-specific file descriptor number",
+		"osquery": "process_open_sockets.fd"
+	},
+	{
+		"name": "socket",
+		"type": "java.lang.Long",
+		"description": "Socket handle or inode number",
+		"osquery": "process_open_sockets.socket"
+	},
+	{
+		"name": "family",
+		"type": "java.lang.Long",
+		"description": "Network protocol (IPv4, IPv6)",
+		"osquery": "process_open_sockets.family"
+	},
+	{
+		"name": "protocol",
+		"type": "java.lang.Long",
+		"description": "Transport protocol (TCP/UDP)",
+		"osquery": "process_open_sockets.protocol"
+	},
+	{
+		"name": "local_address",
+		"type": "java.lang.String",
+		"description": "Socket local address",
+		"osquery": "process_open_sockets.local_address"
+	},
+	{
+		"name": "remote_address",
+		"type": "java.lang.String",
+		"description": "Socket remote address",
+		"osquery": "process_open_sockets.remote_address"
+	},
+	{
+		"name": "local_port",
+		"type": "java.lang.Integer",
+		"description": "Socket local port",
+		"osquery": "process_open_sockets.local_port"
+	},
+	{
+		"name": "remote_port",
+		"type": "java.lang.Integer",
+		"description": "Socket remote port",
+		"osquery": "process_open_sockets.remote_port"
+	},
+	{
+		"name": "path",
+		"type": "java.lang.String",
+		"description": "For UNIX sockets (family=AF_UNIX), the domain path",
+		"osquery": "process_open_sockets.path"
+	},
+	{
+		"name": "state",
+		"type": "java.lang.String",
+		"description": "TCP socket state",
+		"osquery": "process_open_sockets.state"
+	},
+	{
+		"name": "net_namespace",
+		"type": "java.lang.String",
+		"description": "The inode number of the network namespace",
+		"osquery": "process_open_sockets.net_namespace"
+	}
+]}

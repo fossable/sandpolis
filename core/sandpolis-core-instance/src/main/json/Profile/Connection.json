@@ -1,0 +1,88 @@
+{
+	"collection": true,
+	"attributes": [
+	{
+		"name": "remote_port",
+		"type": "java.lang.Integer"
+	},
+	{
+		"name": "local_port",
+		"type": "java.lang.Integer"
+	},
+	{
+		"name": "remote_address",
+		"type": "java.lang.String"
+	},
+	{
+		"name": "local_address",
+		"type": "java.lang.String"
+	},
+	{
+		"name": "remote_sid",
+		"type": "java.lang.Integer"
+	},
+	{
+		"name": "local_sid",
+		"type": "java.lang.Integer"
+	},
+	{
+		"name": "remote_uuid",
+		"type": "java.lang.String"
+	},
+	{
+		"name": "local_uuid",
+		"type": "java.lang.String"
+	},
+	{
+		"name": "remote_instance",
+		"type": "org.s7s.core.foundation.Instance.InstanceType"
+	},
+	{
+		"name": "local_instance",
+		"type": "org.s7s.core.foundation.Instance.InstanceType"
+	},
+	{
+		"name": "remote_instance_flavor",
+		"type": "org.s7s.core.foundation.Instance.InstanceFlavor"
+	},
+	{
+		"name": "local_instance_flavor",
+		"type": "org.s7s.core.foundation.Instance.InstanceFlavor"
+	},
+	{
+		"name": "upload_total",
+		"type": "java.lang.Long"
+	},
+	{
+		"name": "download_total",
+		"type": "java.lang.Long"
+	},
+	{
+		"name": "connected",
+		"type": "java.lang.Boolean"
+	},
+	{
+		"name": "authenticated",
+		"type": "java.lang.Boolean"
+	},
+	{
+		"name": "certificate_valid",
+		"type": "java.lang.Boolean"
+	},
+	{
+		"name": "cumulative_read_bytes",
+		"type": "java.lang.Long"
+	},
+	{
+		"name": "cumulative_write_bytes",
+		"type": "java.lang.Long"
+	},
+	{
+		"name": "read_throughput",
+		"type": "java.lang.Long"
+	},
+	{
+		"name": "write_throughput",
+		"type": "java.lang.Long"
+	}
+]}

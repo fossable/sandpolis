@@ -1,0 +1,17 @@
+{
+	"collection": true,
+	"attributes": [
+		{
+			"name": "oid",
+			"type": "java.lang.String"
+		},
+		{
+			"name": "type",
+			"type": "java.lang.String"
+		},
+		{
+			"name": "value",
+			"type": "java.lang.String"
+		}
+	]
+}

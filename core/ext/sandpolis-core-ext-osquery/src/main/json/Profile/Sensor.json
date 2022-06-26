@@ -1,0 +1,19 @@
+{
+	"collection": true,
+	"attributes": [
+	{
+		"name": "fan_speed",
+		"type": "java.lang.Integer",
+		"description": null
+	},
+	{
+		"name": "temperature",
+		"type": "java.lang.Double",
+		"description": null
+	},
+	{
+		"name": "voltage",
+		"type": "java.lang.Double",
+		"description": null
+	}
+]}

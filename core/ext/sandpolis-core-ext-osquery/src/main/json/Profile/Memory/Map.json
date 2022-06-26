@@ -1,0 +1,23 @@
+{
+	"collection": true,
+	"attributes": [
+		{
+			"name": "name",
+			"type": "java.lang.String",
+			"description": "Region name",
+			"osquery": "memory_map.name"
+		},
+		{
+			"name": "start",
+			"type": "java.lang.String",
+			"description": "Start address of memory region",
+			"osquery": "memory_map.start"
+		},
+		{
+			"name": "end",
+			"type": "java.lang.String",
+			"description": "End address of memory region",
+			"osquery": "memory_map.end"
+		}
+	]
+}

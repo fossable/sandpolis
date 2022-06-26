@@ -1,0 +1,42 @@
+{
+	"collection": true,
+	"attributes": [
+		{
+			"name": "uuid",
+			"type": "java.lang.String",
+			"id": true
+		},
+		{
+			"name": "type",
+			"type": "java.lang.String"
+		},
+		{
+			"name": "progress",
+			"type": "java.lang.Double"
+		},
+		{
+			"name": "status",
+			"type": "java.lang.String"
+		},
+		{
+			"name": "estimation",
+			"type": "java.lang.Long"
+		},
+		{
+			"name": "start_time",
+			"type": "java.lang.Long"
+		},
+		{
+			"name": "end_time",
+			"type": "java.lang.Long"
+		},
+		{
+			"name": "transfer_rate",
+			"type": "java.lang.Long"
+		},
+		{
+			"name": "error",
+			"type": "java.lang.String"
+		}
+	]
+}

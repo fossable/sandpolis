@@ -16,9 +16,9 @@
 .project
 .settings
 .vagrant
-/bin
-/build
-/target
+bin
+build
+target
 __pycache__
 org.s7s.build.json
 node_modules

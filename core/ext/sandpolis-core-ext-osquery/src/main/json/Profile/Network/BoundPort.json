@@ -1,0 +1,59 @@
+{
+	"collection": true,
+	"attributes": [
+		{
+			"name": "pid",
+			"type": "java.lang.Integer",
+			"description": "Process (or thread) ID",
+			"osquery": "listening_ports.pid"
+		},
+		{
+			"name": "port",
+			"type": "java.lang.Integer",
+			"description": "Transport layer port",
+			"osquery": "listening_ports.port"
+		},
+		{
+			"name": "protocol",
+			"type": "java.lang.Integer",
+			"description": "Transport protocol (TCP/UDP)",
+			"osquery": "listening_ports.protocol"
+		},
+		{
+			"name": "family",
+			"type": "java.lang.Integer",
+			"description": "Network protocol (IPv4, IPv6)",
+			"osquery": "listening_ports.family"
+		},
+		{
+			"name": "address",
+			"type": "java.lang.String",
+			"description": "Specific address for bind",
+			"osquery": "listening_ports.address"
+		},
+		{
+			"name": "fd",
+			"type": "java.lang.Long",
+			"description": "Socket file descriptor number",
+			"osquery": "listening_ports.fd"
+		},
+		{
+			"name": "socket",
+			"type": "java.lang.Long",
+			"description": "Socket handle or inode number",
+			"osquery": "listening_ports.socket"
+		},
+		{
+			"name": "path",
+			"type": "java.lang.Long",
+			"description": "Path for UNIX domain sockets",
+			"osquery": "listening_ports.path"
+		},
+		{
+			"name": "net_namespace",
+			"type": "java.lang.Long",
+			"description": "The inode number of the network namespace",
+			"osquery": "listening_ports.net_namespace"
+		}
+	]
+}

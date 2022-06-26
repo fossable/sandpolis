@@ -1,0 +1,72 @@
+{
+	"collection": true,
+	"attributes": [
+	{
+		"name": "name",
+		"type": "java.lang.String",
+		"immutable": true,
+		"description": null
+	},
+	{
+		"name": "model",
+		"type": "java.lang.String",
+		"immutable": true,
+		"description": null
+	},
+	{
+		"name": "serial",
+		"type": "java.lang.String",
+		"immutable": true,
+		"description": null
+	},
+	{
+		"name": "size",
+		"type": "java.lang.Long",
+		"description": "The disk's total size in bytes"
+	},
+	{
+		"name": "reads",
+		"type": "java.lang.Long",
+		"description": null
+	},
+	{
+		"name": "read_bytes",
+		"type": "java.lang.Long",
+		"description": null
+	},
+	{
+		"name": "writes",
+		"type": "java.lang.Long",
+		"description": null
+	},
+	{
+		"name": "write_bytes",
+		"type": "java.lang.Long",
+		"description": null
+	},
+	{
+		"name": "queue_length",
+		"type": "java.lang.Long",
+		"description": null
+	},
+	{
+		"name": "transfer_time",
+		"type": "java.lang.Long",
+		"description": null
+	},
+	{
+		"name": "model_family",
+		"type": "java.lang.String",
+		"description": null
+	},
+	{
+		"name": "firmware_version",
+		"type": "java.lang.String",
+		"description": null
+	},
+	{
+		"name": "read_error_rate",
+		"type": "java.lang.Long",
+		"description": null
+	}
+]}

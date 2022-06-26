@@ -1,0 +1,34 @@
+{
+	"collection": true,
+	"attributes": [
+	{
+		"name": "username",
+		"type": "java.lang.String",
+		"description": "The user's unchangable username"
+	},
+	{
+		"name": "email",
+		"type": "java.lang.String",
+		"description": "The user's email address"
+	},
+	{
+		"name": "hash",
+		"type": "java.lang.String",
+		"description": "The user's password hash"
+	},
+	{
+		"name": "expiration",
+		"type": "java.lang.Long",
+		"description": "The user's expiration timestamp"
+	},
+	{
+		"name": "totp_secret",
+		"type": "java.lang.Byte[]",
+		"description": "The user's TOTP secret"
+	},
+	{
+		"name": "current_sid",
+		"type": "java.lang.Integer[]",
+		"description": "The user's current SIDs"
+	}
+]}

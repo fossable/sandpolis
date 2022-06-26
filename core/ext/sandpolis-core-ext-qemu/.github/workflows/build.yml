@@ -1,0 +1,27 @@
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Execute build
+        uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: build --no-daemon -x javadoc

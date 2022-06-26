@@ -1,0 +1,29 @@
+{
+	"collection": true,
+	"attributes": [
+		{
+			"name": "address",
+			"type": "java.lang.String",
+			"description": "IPv4 address target",
+			"osquery": "arp_cache.address"
+		},
+		{
+			"name": "mac",
+			"type": "java.lang.String",
+			"description": "MAC address of broadcasted address",
+			"osquery": "arp_cache.mac"
+		},
+		{
+			"name": "interface_id",
+			"type": "java.lang.String",
+			"description": "Interface of the network for the MAC",
+			"osquery": "arp_cache.interface"
+		},
+		{
+			"name": "permanent",
+			"type": "java.lang.Boolean",
+			"description": "Whether the ARP entry is permanent",
+			"osquery": "arp_cache.permanent"
+		}
+	]
+}

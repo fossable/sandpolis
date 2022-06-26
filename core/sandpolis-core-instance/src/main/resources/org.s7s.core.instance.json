@@ -1,0 +1,14 @@
+{
+	"container_resident": false,
+	"development": false,
+	"logging": {
+		"levels": [
+			"io.netty=WARN",
+			"java.util.prefs=OFF",
+			"org.s7s=INFO"
+		]
+	},
+	"plugin": {
+		"enabled": true
+	}
+}

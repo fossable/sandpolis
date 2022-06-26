@@ -1,0 +1,13 @@
+{
+	"collection": true,
+	"attributes": [
+		{
+			"name": "name",
+			"type": "java.lang.String"
+		},
+		{
+			"name": "certificate",
+			"type": "java.security.cert.X509Certificate"
+		}
+	]
+}

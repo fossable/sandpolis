@@ -1,0 +1,50 @@
+{
+	"collection": true,
+	"attributes": [
+	{
+		"name": "package_id",
+		"type": "java.lang.String",
+		"id": true,
+		"description": "The plugin's package ID"
+	},
+	{
+		"name": "name",
+		"type": "java.lang.String",
+		"description": "The plugin's user-friendly name"
+	},
+	{
+		"name": "description",
+		"type": "java.lang.String",
+		"description": "The plugin's user-friendly description"
+	},
+	{
+		"name": "coordinates",
+		"type": "java.lang.String",
+		"description": "The plugin's Maven central coordinates in G:A:V format"
+	},
+	{
+		"name": "enabled",
+		"type": "java.lang.Boolean",
+		"description": "Whether the plugin can be loaded"
+	},
+	{
+		"name": "hash",
+		"type": "java.lang.Byte[]",
+		"description": "The plugin artifact's hash"
+	},
+	{
+		"name": "certificate",
+		"type": "java.lang.String",
+		"description": "The plugin's certificate"
+	},
+	{
+		"name": "loaded",
+		"type": "java.lang.Boolean",
+		"description": "Whether the plugin is currently loaded"
+	},
+	{
+		"name": "namespace",
+		"type": "java.lang.Long",
+		"description": "The plugin's 8 byte unique namespace"
+	}
+]}

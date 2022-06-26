@@ -1,0 +1,141 @@
+{
+	"collection": true,
+	"attributes": [
+	{
+		"name": "name",
+		"type": "java.lang.String",
+		"id": true,
+		"description": "The interface's name",
+		"osquery": "interface_details.interface"
+	},
+	{
+		"name": "description",
+		"type": "java.lang.String",
+		"description": "The interface's description",
+		"osquery": "interface_details.description"
+	},
+	{
+		"name": "mtu",
+		"type": "java.lang.Integer",
+		"description": "The interface's maximum transmission unit in bytes",
+		"osquery": "interface_details.mtu"
+	},
+	{
+		"name": "mac",
+		"type": "java.lang.String",
+		"description": "The interface's MAC address",
+		"osquery": "interface_details.mac"
+	},
+	{
+		"name": "virtual",
+		"type": "java.lang.Boolean",
+		"description": null
+	},
+	{
+		"name": "ipv4",
+		"type": "java.lang.String",
+		"list": true,
+		"description": "The interface's IPv4 addresses"
+	},
+	{
+		"name": "ipv6",
+		"type": "java.lang.String",
+		"list": true,
+		"description": "The interface's IPv6 addresses"
+	},
+	{
+		"name": "broadcast",
+		"type": "java.lang.String",
+		"description": null
+	},
+	{
+		"name": "netmask",
+		"type": "java.lang.String",
+		"description": "The interface's subnet mask"
+	},
+	{
+		"name": "read_bytes",
+		"type": "java.lang.Long",
+		"description": "The number of bytes read from the interface",
+		"osquery": "interface_details.ibytes"
+	},
+	{
+		"name": "write_bytes",
+		"type": "java.lang.Long",
+		"description": "The number of bytes written to the interface",
+		"osquery": "interface_details.obytes"
+	},
+	{
+		"name": "read_packets",
+		"type": "java.lang.Long",
+		"description": "The number of packets read from the interface",
+		"osquery": "interface_details.ipackets"
+	},
+	{
+		"name": "write_packets",
+		"type": "java.lang.Long",
+		"description": "The number of packets written to the interface",
+		"osquery": "interface_details.opackets"
+	},
+	{
+		"name": "read_errors",
+		"type": "java.lang.Long",
+		"description": "The number of read errors",
+		"osquery": "interface_details.ierrors"
+	},
+	{
+		"name": "write_errors",
+		"type": "java.lang.Long",
+		"description": "The number of write errors",
+		"osquery": "interface_details.oerrors"
+	},
+	{
+		"name": "read_drops",
+		"type": "java.lang.Long",
+		"description": "The number of read drops",
+		"osquery": "interface_details.idrops"
+	},
+	{
+		"name": "write_drops",
+		"type": "java.lang.Long",
+		"description": "The number of write drops",
+		"osquery": "interface_details.odrops"
+	},
+	{
+		"name": "write_collisions",
+		"type": "java.lang.Long",
+		"description": "The number of write collisions",
+		"osquery": "interface_details.collisions"
+	},
+	{
+		"name": "link_speed",
+		"type": "java.lang.Long",
+		"description": "The interface's maximum speed in bytes",
+		"osquery": "interface_details.link_speed"
+	},
+	{
+		"name": "default_gateway",
+		"type": "java.lang.Boolean",
+		"description": null
+	},
+	{
+		"name": "flag_up",
+		"type": "java.lang.Boolean",
+		"description": null
+	},
+	{
+		"name": "flag_running",
+		"type": "java.lang.Boolean",
+		"description": null
+	},
+	{
+		"name": "flag_loopback",
+		"type": "java.lang.Boolean",
+		"description": null
+	},
+	{
+		"name": "flag_multicast",
+		"type": "java.lang.Boolean",
+		"description": null
+	}
+]}

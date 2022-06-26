@@ -1,0 +1,25 @@
+{
+	"collection": true,
+	"attributes": [
+		{
+			"name": "type",
+			"type": "java.lang.String",
+			"description": "The shell's type"
+		},
+		{
+			"name": "path",
+			"type": "java.lang.String",
+			"description": "The path to the shell's executable"
+		},
+		{
+			"name": "cpu",
+			"type": "java.lang.Double",
+			"description": "The CPU utilization percentage of the session's process"
+		},
+		{
+			"name": "memory",
+			"type": "java.lang.Long",
+			"description": "The memory usage of the session's process"
+		}
+	]
+}

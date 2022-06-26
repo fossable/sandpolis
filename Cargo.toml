@@ -1,0 +1,7 @@
+[profile.release]
+strip = true
+
+[workspace]
+members = [
+    "core/sandpolis-core-foundation",
+]

@@ -1,0 +1,15 @@
+{
+	"collection": true,
+	"attributes": [
+		{
+			"name": "mech_id",
+			"type": "java.lang.String",
+			"description": "The mechanism identifier"
+		},
+		{
+			"name": "password",
+			"type": "java.lang.String",
+			"description": "The mechanism password"
+		}
+	]
+}

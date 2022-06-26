@@ -1,0 +1,94 @@
+{
+	"collection": true,
+	"attributes": [
+	{
+		"name": "as_name",
+		"type": "java.lang.String",
+		"description": "The AS name"
+	},
+	{
+		"name": "as_code",
+		"type": "java.lang.Integer",
+		"description": "The numerical AS code"
+	},
+	{
+		"name": "city",
+		"type": "java.lang.String",
+		"description": "The city name"
+	},
+	{
+		"name": "continent",
+		"type": "java.lang.String",
+		"description": "The continent name"
+	},
+	{
+		"name": "continent_code",
+		"type": "java.lang.String",
+		"description": "The ISO continent code"
+	},
+	{
+		"name": "country",
+		"type": "java.lang.String",
+		"description": "The country name"
+	},
+	{
+		"name": "country_code",
+		"type": "java.lang.String",
+		"description": "Two-letter country code (ISO 3166-1 alpha-2)"
+	},
+	{
+		"name": "currency",
+		"type": "java.lang.String",
+		"description": "The currency name"
+	},
+	{
+		"name": "district",
+		"type": "java.lang.String",
+		"description": "The city district name"
+	},
+	{
+		"name": "isp",
+		"type": "java.lang.String",
+		"description": "The Internet Service Provider name"
+	},
+	{
+		"name": "latitude",
+		"type": "java.lang.Double",
+		"description": "The approximate latitude in degrees"
+	},
+	{
+		"name": "longitude",
+		"type": "java.lang.Double",
+		"description": "The approximate longitude in degrees"
+	},
+	{
+		"name": "metro_code",
+		"type": "java.lang.Integer",
+		"description": "The metro code"
+	},
+	{
+		"name": "organization",
+		"type": "java.lang.String",
+		"description": "The organization name"
+	},
+	{
+		"name": "postal_code",
+		"type": "java.lang.String",
+		"description": "The zip code"
+	},
+	{
+		"name": "region",
+		"type": "java.lang.String",
+		"description": "The region name"
+	},
+	{
+		"name": "region_code",
+		"type": "java.lang.String",
+		"description": "The region short code (FIPS or ISO)"
+	},
+	{
+		"name": "timezone",
+		"type": "java.lang.String",
+		"description": "The timezone name"
+	}
+]}

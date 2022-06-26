@@ -1,0 +1,106 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Charts",
+        "repositoryURL": "https://github.com/danielgindi/Charts",
+        "state": {
+          "branch": null,
+          "revision": "66546404a6739173b8e436ab6bc1f2897cd08594",
+          "version": "3.6.0"
+        }
+      },
+      {
+        "package": "Gzip",
+        "repositoryURL": "https://github.com/1024jp/GzipSwift.git",
+        "state": {
+          "branch": null,
+          "revision": "ba0b6cb51cc6202f896e469b87d2889a46b10d1b",
+          "version": "5.1.1"
+        }
+      },
+      {
+        "package": "HighlightJS",
+        "repositoryURL": "https://github.com/SwiftWebResources/HighlightJS-Swift.git",
+        "state": {
+          "branch": null,
+          "revision": "392c6dbd569817864ff7112a11e41db477468309",
+          "version": "9.18.1"
+        }
+      },
+      {
+        "package": "Highlightr",
+        "repositoryURL": "https://github.com/helje5/Highlightr",
+        "state": {
+          "branch": "master",
+          "revision": "4a02d29cde59ca143f52ca9834ebc1d3f8da351f",
+          "version": null
+        }
+      },
+      {
+        "package": "swift-nio",
+        "repositoryURL": "https://github.com/apple/swift-nio",
+        "state": {
+          "branch": null,
+          "revision": "c3e2359c55cd8b47207ab7363b77c9c398a95294",
+          "version": "2.23.0"
+        }
+      },
+      {
+        "package": "NIOProtobuf",
+        "repositoryURL": "https://github.com/AlanQuatermain/swift-nio-protobuf",
+        "state": {
+          "branch": null,
+          "revision": "f75ca23544fe1f5c40b3cfe10c4aea06bb24930d",
+          "version": "0.1.2"
+        }
+      },
+      {
+        "package": "swift-nio-ssl",
+        "repositoryURL": "https://github.com/apple/swift-nio-ssl",
+        "state": {
+          "branch": null,
+          "revision": "eb102ad32add8638410e37a69bc815ea11379813",
+          "version": "2.10.0"
+        }
+      },
+      {
+        "package": "SwiftProtobuf",
+        "repositoryURL": "https://github.com/apple/swift-protobuf",
+        "state": {
+          "branch": null,
+          "revision": "426bef0ddfdc6449b7bd1418baafad6bbc56110b",
+          "version": "1.13.0"
+        }
+      },
+      {
+        "package": "SwiftEventBus",
+        "repositoryURL": "https://github.com/cesarferreira/SwiftEventBus",
+        "state": {
+          "branch": null,
+          "revision": "cea5121162d88f233f392f63acbc8468fdd77927",
+          "version": "5.0.1"
+        }
+      },
+      {
+        "package": "SwiftKeychainWrapper",
+        "repositoryURL": "https://github.com/jrendel/SwiftKeychainWrapper",
+        "state": {
+          "branch": null,
+          "revision": "185a3165346a03767101c4f62e9a545a0fe0530f",
+          "version": "4.0.1"
+        }
+      },
+      {
+        "package": "SwiftValidators",
+        "repositoryURL": "https://github.com/gkaimakas/SwiftValidators",
+        "state": {
+          "branch": "master",
+          "revision": "00305a7128e63b1580049c95a35bbc43174e3f35",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}

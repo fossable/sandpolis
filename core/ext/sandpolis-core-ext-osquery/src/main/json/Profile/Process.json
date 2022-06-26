@@ -1,0 +1,125 @@
+{
+	"collection": true,
+	"attributes": [
+	{
+		"name": "name",
+		"type": "java.lang.String",
+		"immutable": true,
+		"description": null
+	},
+	{
+		"name": "path",
+		"type": "java.lang.String",
+		"description": null
+	},
+	{
+		"name": "command",
+		"type": "java.lang.String",
+		"description": null,
+		"osquery": "processes.cmdline"
+	},
+	{
+		"name": "working_directory",
+		"type": "java.lang.String",
+		"description": null,
+		"osquery": "processes.cwd"
+	},
+	{
+		"name": "user",
+		"type": "java.lang.String",
+		"description": null
+	},
+	{
+		"name": "user_id",
+		"type": "java.lang.String",
+		"description": null,
+		"osquery": "processes.uid"
+	},
+	{
+		"name": "group",
+		"type": "java.lang.String",
+		"description": null
+	},
+	{
+		"name": "group_id",
+		"type": "java.lang.String",
+		"description": null,
+		"osquery": "processes.gid"
+	},
+	{
+		"name": "state",
+		"type": "java.lang.String",
+		"description": null,
+		"osquery": "processes.state"
+	},
+	{
+		"name": "pid",
+		"type": "java.lang.Integer",
+		"description": "The process's process ID",
+		"osquery": "processes.pid"
+	},
+	{
+		"name": "parent_pid",
+		"type": "java.lang.Integer",
+		"description": null,
+		"osquery": "processes.parent"
+	},
+	{
+		"name": "thread_count",
+		"type": "java.lang.Integer",
+		"description": null,
+		"osquery": "processes.threads"
+	},
+	{
+		"name": "priority",
+		"type": "java.lang.Integer",
+		"description": null
+	},
+	{
+		"name": "virtual_size",
+		"type": "java.lang.Long",
+		"description": null
+	},
+	{
+		"name": "resident_set_size",
+		"type": "java.lang.Long",
+		"description": "The resident memory size in bytes",
+		"osquery": "processes.resident_size"
+	},
+	{
+		"name": "kernel_time",
+		"type": "java.lang.Long",
+		"description": "The number of milliseconds the process has executed in kernel mode",
+		"osquery": "processes.system_time"
+	},
+	{
+		"name": "user_time",
+		"type": "java.lang.Long",
+		"description": "The number of milliseconds the process has executed in user mode",
+		"osquery": "processes.user_time"
+	},
+	{
+		"name": "start_time",
+		"type": "java.lang.Long",
+		"description": "The epoch timestamp of the process start time",
+		"osquery": "processes.start_time"
+	},
+	{
+		"name": "bytes_read",
+		"type": "java.lang.Long",
+		"description": "The number of bytes the process has read from disk",
+		"osquery": "processes.disk_bytes_read"
+	},
+	{
+		"name": "bytes_written",
+		"type": "java.lang.Long",
+		"description": "The number of bytes the process has written to disk",
+		"osquery": "processes.disk_bytes_written"
+	},
+	{
+		"name": "handle_count",
+		"type": "java.lang.Long",
+		"description": "The number of file handles that the process owns",
+		"osquery": "processes.handle_count"
+	}
+]}

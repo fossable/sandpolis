@@ -1,0 +1,28 @@
+{
+	"collection": true,
+	"attributes": [
+		{
+			"name": "hostname",
+			"type": "java.lang.String",
+			"description": "The client's network hostname"
+		},
+		{
+			"name": "os_type",
+			"type": "org.s7s.core.foundation.Platform.OsType",
+			"description": "The client's operating system type"
+		},
+		{
+			"name": "start_time",
+			"type": "java.lang.Long"
+		},
+		{
+			"name": "contact_time",
+			"type": "java.lang.Long"
+		},
+		{
+			"name": "location",
+			"type": "java.lang.String",
+			"description": "The client's base directory"
+		}
+	]
+}

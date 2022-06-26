@@ -1,0 +1,22 @@
+{
+	"collection": true,
+	"attributes": [
+	{
+		"name": "name",
+		"type": "java.lang.String"
+	},
+	{
+		"name": "owner",
+		"type": "/user"
+	},
+	{
+		"name": "members",
+		"type": "/user",
+		"list": true
+	},
+	{
+		"name": "auth_mechanisms",
+		"type": "/profile//server/auth_mechanism",
+		"list": true
+	}
+]}

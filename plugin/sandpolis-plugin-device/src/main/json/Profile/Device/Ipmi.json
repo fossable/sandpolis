@@ -1,0 +1,13 @@
+{
+	"collection": false,
+	"attributes": [
+		{
+			"name": "username",
+			"type": "java.lang.String"
+		},
+		{
+			"name": "password",
+			"type": "java.lang.String"
+		}
+	]
+}

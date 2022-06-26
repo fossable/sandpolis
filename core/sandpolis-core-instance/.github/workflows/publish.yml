@@ -1,0 +1,51 @@
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  publish:
+    name: Publish release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install protoc-gen-rust
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: protobuf-codegen
+
+      - name: Checkout swift-protobuf
+        uses: actions/checkout@v2
+        with:
+          repository: apple/swift-protobuf
+          path: ./swift-protobuf
+
+      - name: Install protoc-gen-swift
+        working-directory: ./swift-protobuf
+        run: |
+          swift build -c release
+          mkdir -p ${HOME}/.local/bin
+          cp .build/release/protoc-gen-swift ${HOME}/.local/bin
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Publish release
+        uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: publish --no-daemon
+        env:
+          SIGNING_PGP_KEY: ${{ secrets.SIGNING_PGP_KEY }}
+          SIGNING_PGP_PASSWORD: ${{ secrets.SIGNING_PGP_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          S7S_BUILD_PROTO_RUST: 1
+          S7S_BUILD_PROTO_SWIFT: 1
+          S7S_BUILD_PROTO_CPP: 1
+          S7S_BUILD_PROTO_PYTHON: 1

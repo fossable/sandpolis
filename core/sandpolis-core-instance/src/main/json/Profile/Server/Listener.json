@@ -1,0 +1,39 @@
+{
+	"collection": true,
+	"attributes": [
+	{
+		"name": "name",
+		"type": "java.lang.String",
+		"description": "The listener's user-friendly name"
+	},
+	{
+		"name": "enabled",
+		"type": "java.lang.Boolean",
+		"description": "Whether the listener is enabled"
+	},
+	{
+		"name": "active",
+		"type": "java.lang.Boolean",
+		"description": "Whether the listener is currently bound to the port and listening"
+	},
+	{
+		"name": "port",
+		"type": "java.lang.Integer",
+		"description": "The listener's local listening port"
+	},
+	{
+		"name": "address",
+		"type": "java.lang.String",
+		"description": "The listener's local bind address"
+	},
+	{
+		"name": "certificate",
+		"type": "java.lang.Byte[]",
+		"description": "A certificate that the listener will present to incoming connections"
+	},
+	{
+		"name": "private_key",
+		"type": "java.lang.Byte[]",
+		"description": "The private key corresponding to the certificate"
+	}
+]}

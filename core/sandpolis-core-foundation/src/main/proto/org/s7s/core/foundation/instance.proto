@@ -1,0 +1,42 @@
+//============================================================================//
+//                                                                            //
+//            Copyright © 2015 - 2022 Sandpolis Software Foundation           //
+//                                                                            //
+//  This source file is subject to the terms of the Mozilla Public License    //
+//  version 2. You may not use this file except in compliance with the MPLv2. //
+//                                                                            //
+//============================================================================//
+syntax = "proto3";
+
+package core.foundation;
+
+option java_package = "org.s7s.core.foundation";
+option optimize_for = CODE_SIZE;
+
+// An enumeration of all possible instance types.
+enum InstanceType {
+
+    // Indicates the runtime environment is not an instance
+    NONE = 0;
+
+    // A headless application that coordinates interaction among instances
+    SERVER = 1;
+
+    // A UI application used for managing agents and servers
+    CLIENT = 2;
+
+    // A headless application that provides read/write access to a host
+    AGENT = 3;
+
+    // A UEFI agent that runs in a pre-boot environment
+    BOOTAGENT = 4;
+
+    // A headless application that provides read-only access to a host
+    PROBE = 5;
+
+    // A headless application that installs or updates an agent or probe
+    DEPLOYER = 6;
+
+    // A UI application used to install other instances
+    INSTALLER = 7;
+}

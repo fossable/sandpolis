@@ -1,0 +1,30 @@
+[package]
+name = "sandpolis-server"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+name = "server"
+path = "src/main/rust/main.rs"
+
+[dependencies]
+actix-session = "0.5.0-beta.7"
+actix-web = {version = "4.0.0-beta.21", features = ["rustls"]}
+anyhow = "1.0"
+async-stream = "0.3"
+env_logger = "0.9"
+log = "0.4"
+reqwest = {version = "0.11.9", features = ["cookies", "json", "stream"]}
+serde = "1"
+serde_json = "1"
+sandpolis-core-protocol = {path = "../../core/protocol"}
+prost = "0.9"
+prost-types = "0.9"
+ring = "0.16.20"
+validator = { version = "0.12", features = ["derive", "phone"] }
+rustls = "0.20.2"
+rustls-pemfile = "0.2.1"
+rcgen = "0.9.1"
+rsa = "0.5.0"
+time = "0.3.7"
+tokio = "1.17.0"

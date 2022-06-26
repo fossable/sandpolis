@@ -1,0 +1,55 @@
+{
+	"collection": true,
+	"attributes": [
+		{
+			"name": "destination",
+			"type": "java.lang.String",
+			"description": "Destination IP address"
+		},
+		{
+			"name": "netmask",
+			"type": "java.lang.Integer",
+			"description": "Netmask length"
+		},
+		{
+			"name": "gateway",
+			"type": "java.lang.Integer",
+			"description": "Route gateway"
+		},
+		{
+			"name": "source",
+			"type": "java.lang.Integer",
+			"description": "Route source"
+		},
+		{
+			"name": "flags",
+			"type": "java.lang.Integer",
+			"description": "Flags to describe route"
+		},
+		{
+			"name": "interface_id",
+			"type": "java.lang.String",
+			"description": "Route local interface"
+		},
+		{
+			"name": "mtu",
+			"type": "java.lang.Integer",
+			"description": "Maximum Transmission Unit for the route"
+		},
+		{
+			"name": "metric",
+			"type": "java.lang.Integer",
+			"description": "Cost of route. Lowest is preferred"
+		},
+		{
+			"name": "type",
+			"type": "java.lang.String",
+			"description": "Type of route"
+		},
+		{
+			"name": "hopcount",
+			"type": "java.lang.Integer",
+			"description": "Max hops expected"
+		}
+	]
+}

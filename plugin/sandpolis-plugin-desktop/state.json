@@ -1,0 +1,11 @@
+[
+	{
+		"name": "/profile/*/desktop/*",
+		"attributes": [
+			{
+				"name": "screenshot",
+				"type": "java.lang.Byte[]"
+			}
+		]
+	}
+]
