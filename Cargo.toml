@@ -3,5 +3,6 @@ strip = true
 
 [workspace]
 members = [
-    "core/sandpolis-core-foundation",
+    "sandpolis",
+    "sandpolis-bootagent",
 ]
