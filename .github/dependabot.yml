@@ -1,8 +1,10 @@
 version: 2
 updates:
-  - package-ecosystem: gradle
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
       interval: daily
-      timezone: America/Chicago
-    open-pull-requests-limit: 99
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "daily"
