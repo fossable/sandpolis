@@ -7,7 +7,7 @@ edition = "2021"
 anyhow = "1.0.76"
 axum = { version = "0.7.4", optional = true }
 clap = { version = "4.4.7", features = ["derive", "string"] }
-reqwest = { version = "0.11.22", features = ["stream"] }
+reqwest = { version = "0.12.4", features = ["stream"] }
 tokio = { version = "1.34.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
