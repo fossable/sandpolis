@@ -1,7 +1,12 @@
 [package]
-name = "sandpolis"
-version = "0.1.0"
+authors = ["Tyler Cook"]
+description = "Ultimate remote monitoring and management"
 edition = "2021"
+license = "AGPL-3.0-only"
+name = "sandpolis"
+repository = "https://github.com/fossable/sandpolis"
+rust-version = "1.74"
+version = "0.0.1"
 
 [dependencies]
 anyhow = "1.0.76"
