@@ -1,47 +1,206 @@
-//============================================================================//
-//                                                                            //
-//                         Copyright © 2015 Sandpolis                         //
-//                                                                            //
-//  This source file is subject to the terms of the Mozilla Public License    //
-//  version 2. You may not use this file except in compliance with the MPL    //
-//  as published by the Mozilla Foundation.                                   //
-//                                                                            //
-//============================================================================//
-
-#[path = "../../gen/rust"]
-pub mod core {
-
-	#[path = "core.foundation"]
-	pub mod foundation {
-		pub mod platform;
-	}
-
-	#[path = "core.instance"]
-	pub mod instance {
-		pub mod auth;
-		pub mod group;
-		pub mod metatypes;
-	}
-
-	#[path = "core.net"]
-	pub mod net {
-		pub mod message;
-		pub mod messages;
-	}
-}
+//! # Agent Instance
+//!
+//! At a general level, agents are responsible for carrying out tasks for remote
+//! users. They can connect over the network to any other type of instance. At
+//! minimum, agents must be associated with one server.
+//!
+//! ## Instance Configuration
+//!
+//! ```py
+//! # com.sandpolis.agent
+//! {
+//!   "network" : {
+//!     "servers"          : [
+//!       String(), # A server hostname and port
+//!     ],
+//!     "timeout"          : Number(default=1000),  # The server connection timeout in milliseconds
+//!     "cooldown"         : Number(default=1000),  # How long to wait after each connection
+//!     "strict_certs"     : Boolean(default=True), # The agent will refuse to connect to a server that presents an invalid certificate
+//!     "polling_interval" : Number(default=0),     # The connection poll interval in seconds
+//!   },
+//!   "auth" : {
+//!     "password"    : String(),
+//!     "certificate" : String(),
+//!   },
+//!   "collectors": [
+//!   	String()
+//!   ]
+//! }
+//! ```
+//!
+//! ## Connection Modes
+//!
+//! There are two connection modes that have an impact on performance and latency.
+//!
+//! ### Continuous
+//!
+//! In continuous mode, the agent maintains its primary connection at all times. If
+//! the connection is lost, the agent will periodically attempt to reestablish the
+//! connection using the same parameters it used to establish the initial
+//! connection.
+//!
+//! The connection mode can be changed on-the-fly by a user or scheduled to change
+//! automatically according to the time and day.
+//!
+//! ### Polling
+//!
+//! In polling mode, the agent intentionally closes the primary connection unless
+//! there exists an active stream. On a configurable schedule, the agent reconnects
+//! to a server, flushes any cached data, and checks for any new work items. After
+//! executing all available work items, the primary connection is closed again.
+//!
+//! The agent may attempt a spontaneous connection outside of the regular schedule
+//! if an internal agent process triggers it.
+//!
+//! ## Plugins
+//!
+//! Agents can optionally support plugins to enhance functionality beyond the
+//! standard feature set. Upon initial connection, the agent provides a list of
+//! plugin versions that it has loaded. The server responds with a list of plugin
+//! archives that the agent should install.
+//!
+//! ## Standard Feature Set
+//!
+//! The standard feature set is the minimum amount of functionality an agent
+//! implementation must provide.
+//!
+//! ### AgentMetadata
+//!
+//! ## Upgrades
+//!
+//! There are two ways to upgrade the agent:
+//!
+//! - automatically by sending the update command to the server,
+//! - manually by generating a new installer and executing it on the agent
+//!
+//! ### Manual Upgrade
+//!
+//! A manual upgrade is triggered when an installer is executed on the agent and the
+//! relevant base directory is already populated with an installation. If the agent
+//! is not running, the installer will overwrite the base directory and install
+//! itself. Any data that the agent has cached but not sent to the server will be
+//! lost!
+//!
+//! Advantages
+//!
+//! - This is the only way to upgrade if the agent can no longer connect to the
+//!   server
+//!
+//! Disadvantages
+//!
+//! - Manual intervention required
+//! - Cached data may be lost
+//!
+//! ### Automated Upgrade
+//!
+//! If the agent is connected to a server, it can be upgraded remotely. This will
+//! cause the server to fetch the agent configuration, generate a new installer, and
+//! transfer it to the agent. The agent then executes the new installer and
+//! terminates.
+//!
+//! ### Container Resident
+//!
+//! ## Boot Agent
+//!
+//! Several boot agent operations are accessible from typical agents.
+//!
+//! ### Installation
+//!
+//! Typical agent instances are capable of installing a boot agent on their host
+//! machine if installed with sufficient permissions. Write access to the `EFI`
+//! directory on the ESP partition is required for installation and uninstallation.
+//!
+//! The boot agent artifact is a standard `.efi` file generated by a server
+//! instance. The agent simply copies the file to the ESP partition.
+//!
+//! ### Uninstallation
+//!
+//! To uninstall, an agent must simply delete the boot agent from the ESP partition.
+//!
+//! ### Reboot into boot agent
+//!
+//! Agents can launch the boot agent indirectly by setting the `BootNext` variable
+//! to the index of the boot agent's EFI entry and rebooting the machine.
+//!
+//!
+//! ## Installation Types
+//!
+//! There are three ways to install the agent, each with advantages and
+//! disadvantages.
+//!
+//! ### Package Manager Installation
+//!
+//! This option makes installation itself easy, but requires some effort to
+//! configure the agent to connect to a server. This installation type also means
+//! that upgrades must only occur through the package manager.
+//!
+//! #### Filesystem Layout
+//!
+//! ##### Pacman (Arch Linux)
+//!
+//! | Path                                              | Description                |
+//! | ------------------------------------------------- | -------------------------- |
+//! | `/usr/lib/systemd/system/sandpolis-agent.service` | Systemd service definition |
+//! | `/usr/bin/sandpolis-agent-config`                 | Configuration executable   |
+//! | `/usr/bin/sandpolis-agent`                        | Main executable            |
+//! | `/usr/share/java/sandpolis-agent/lib`             | `LIB` location             |
+//! | `/usr/share/java/sandpolis-agent/plugin`          | `PLUGIN` location          |
+//! | `/var/lib/sandpolis-agent/data`                   | `DATA` location            |
+//!
+//! ##### Apk (Alpine)
+//!
+//! ### Deployer Installation
+//!
+//! This option requires no explicit configuration, but the _deployer_ executable
+//! must be transferred to the host and invoked explicitly.
+//!
+//! #### Filesystem Layout
+//!
+//! Deployers install everything under a single _base directory_ and create symbolic
+//! links in certain locations outside of the base directory.
+//!
+//! | Platform | Default base directory path |
+//! | -------- | --------------------------- |
+//! | Linux    | `/opt/sandpolis-agent`      |
+//! | Windows  |                             |
+//! | macOS    |                             |
+//!
+//! ### Docker Installation
+//!
+//! This option is easy to deploy and configure, but can limit the functionality of
+//! the agent in some cases.
+//!
+//! Certain elements of the host filesystem may be optionally mounted into the
+//! container.
+//!
+//! ## Probe Mode
+//!
+//! Probes are similar to agents, but are only allowed to egress data to a server.
+//! They cannot receive messages, so their configuration is immutable unless the
+//! system also runs an agent capable of managing probe instances.
+//!
+//! This design is a security feature which ensures probe instances cannot be compromised
+//! even when the gateway server is compromised.
+//!
+//! The only connection mode supported by probes is the _polling_ mode. On a
+//! configurable schedule, the probe reconnects to a server, flushes any cached
+//! data, and closes the connection.
+//!
+//! The probe may attempt a spontaneous connection outside of the regular schedule
+//! at any time.
 
 pub mod connection;
 
-use anyhow::{bail, Result};
 use crate::core::instance::group::*;
-use log::{debug, info, error};
+use anyhow::{bail, Result};
+use log::{debug, error, info};
+use predicates::{prelude::*, Predicate};
 use protobuf::Message;
 use rust_embed::RustEmbed;
 use std::collections::HashMap;
+use std::io::BufRead;
 use std::net::TcpStream;
 use std::{thread, time};
-use predicates::{Predicate, prelude::*};
-use std::io::{BufRead};
 
 /// Contains embedded resources
 #[derive(RustEmbed)]
@@ -49,107 +208,113 @@ use std::io::{BufRead};
 struct BinaryAssets;
 
 fn main() -> Result<()> {
+    // Initialize logging
+    env_logger::init();
 
-	// Initialize logging
-	env_logger::init();
+    // Load build metadata
+    if let Some(build_properties) = BinaryAssets::get("build.properties") {
+        let properties: HashMap<String, String> = parse_from_slice(&build_properties)
+            .expect("Failed to parse properties file")
+            .into_iter()
+            .collect();
 
-	// Load build metadata
-	if let Some(build_properties) = BinaryAssets::get("build.properties") {
-		let properties: HashMap<String, String> = parse_from_slice(&build_properties).expect("Failed to parse properties file").into_iter().collect();
+        // Output debug build info
+        debug!("Build platform: {}", properties["build.platform"]);
+        debug!("Build JVM version: {}", properties["build.java_version"]);
 
-		// Output debug build info
-		debug!("Build platform: {}", properties["build.platform"]);
-		debug!("Build JVM version: {}", properties["build.java_version"]);
+        info!("Starting Sandpolis agent v{}", properties["build.version"]);
+    } else {
+        error!("Failed to locate embedded build.properties resource");
+        bail!("");
+    }
 
-		info!("Starting Sandpolis agent v{}", properties["build.version"]);
-	} else {
-		error!("Failed to locate embedded build.properties resource");
-		bail!("");
-	}
+    // Load agent configuration
+    if let Some(config_bytes) = BinaryAssets::get("config.bin") {
+        if let Ok(config) = AgentConfig::parse_from_bytes(&config_bytes) {
+        } else {
+            error!("The embedded configuration is invalid")
+        }
+    } else {
+        debug!("Failed to locate embedded configuration")
+    }
 
-	// Load agent configuration
-	if let Some(config_bytes) = BinaryAssets::get("config.bin") {
-		if let Ok(config) = AgentConfig::parse_from_bytes(&config_bytes) {
+    // Prompt user
+    info!("Preparing to configure agent");
+    print!("Please enter the server's address [127.0.0.1]: ");
 
-		} else {
-			error!("The embedded configuration is invalid")
-		}
-	} else {
-		debug!("Failed to locate embedded configuration")
-	}
+    let mut server_host = String::new();
+    std::io::stdin().read_line(&mut server_host)?;
 
-	// Prompt user
-	info!("Preparing to configure agent");
-	print!("Please enter the server's address [127.0.0.1]: ");
+    if server_host == "" {
+        server_host = "127.0.0.1".to_string();
+    }
 
-	let mut server_host = String::new();
-	std::io::stdin().read_line(&mut server_host)?;
+    // Attempt a connection
+    info!("Attempting connection to server");
+    if let Ok(connection) = connect(server_host.as_str(), 8768) {
+        // TODO
+    }
 
-	if server_host == "" {
-		server_host = "127.0.0.1".to_string();
-	}
+    if prompt_bool("Configure client certificate authentication?", false) {}
 
-	// Attempt a connection
-	info!("Attempting connection to server");
-	if let Ok(connection) = connect(server_host.as_str(), 8768) {
-		// TODO
-	}
+    if prompt_bool("Configure password authentication? ", false) {
+        let password = prompt_string(
+            "Enter password: ",
+            "",
+            &predicate::function(|x: &String| x.len() >= 5_usize),
+        );
+    }
 
-	if prompt_bool("Configure client certificate authentication?", false) {
-
-	}
-
-	if prompt_bool("Configure password authentication? ", false) {
-		let password = prompt_string("Enter password: ", "", &predicate::function(|x: &String| x.len() >= 5_usize));
-	}
-
-	return Ok(())
+    return Ok(());
 }
 
 fn prompt_bool(prompt: &str, default: bool) -> bool {
+    let answer = prompt_string(
+        prompt,
+        match default {
+            true => "y",
+            false => "n",
+        },
+        &predicate::in_iter(vec![
+            "y".to_string(),
+            "Y".to_string(),
+            "n".to_string(),
+            "N".to_string(),
+        ]),
+    );
 
-	let answer = prompt_string(prompt, match default {
-		true => "y",
-		false => "n",
-	}, &predicate::in_iter(vec!["y".to_string(), "Y".to_string(), "n".to_string(), "N".to_string()]));
-
-	return match answer.as_str() {
-		"y" => true,
-		"n" => false,
-		_ => false,
-	}	
+    return match answer.as_str() {
+        "y" => true,
+        "n" => false,
+        _ => false,
+    };
 }
 
 fn prompt_string(prompt: &str, default: &str, validator: &dyn Predicate<String>) -> String {
-
-	for line in std::io::stdin().lock().lines().map(|l| l.unwrap()) {
-		if validator.eval(&line) {
-			return line;
-		}
-	}
-	return "".to_string();
+    for line in std::io::stdin().lock().lines().map(|l| l.unwrap()) {
+        if validator.eval(&line) {
+            return line;
+        }
+    }
+    return "".to_string();
 }
 
 fn connection_routine(config: &AgentConfig_LoopConfig) {
+    debug!("Starting connection routine");
 
-	debug!("Starting connection routine");
+    let mut iteration: i32 = 0;
+    while iteration < config.iteration_limit || config.iteration_limit == 0 {
+        iteration += 1;
+        if let Ok(connection) = connect("127.0.0.1", 8768) {}
 
-	let mut iteration: i32 = 0;
-	while iteration < config.iteration_limit || config.iteration_limit == 0 {
-		iteration += 1;
-		if let Ok(connection) = connect("127.0.0.1", 8768) {
-
-		}
-
-		thread::sleep(time::Duration::from_millis(config.cooldown as u64));
-	}
+        thread::sleep(time::Duration::from_millis(config.cooldown as u64));
+    }
 }
 
 fn dispatch_routine(connection: &mut Connection) {
+    debug!("Starting command dispatch routine");
 
-	debug!("Starting command dispatch routine");
-
-	loop {
-		// TODO
-	}
+    loop {
+        // TODO
+    }
 }
