@@ -1,17 +1,3 @@
-//============================================================================//
-//                                                                            //
-//            Copyright © 2015 - 2022 Sandpolis Software Foundation           //
-//                                                                            //
-//  This source file is subject to the terms of the Mozilla Public License    //
-//  version 2. You may not use this file except in compliance with the MPLv2. //
-//                                                                            //
-//============================================================================//
-syntax = "proto3";
-
-package core.protocol;
-
-option java_package = "org.s7s.core.protocol";
-option optimize_for = SPEED;
 
 // Ping response.
 enum GetPingResponse {
