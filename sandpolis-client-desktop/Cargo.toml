@@ -1,0 +1,9 @@
+[package]
+name = "sandpolis-client-desktop"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dioxus = { version = "0.5.1", features = ["desktop"] }
+dioxus-desktop = { version = "0.5.1" }
+sandpolis = { path = "../sandpolis" }

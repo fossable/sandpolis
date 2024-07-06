@@ -5,4 +5,5 @@ strip = true
 members = [
     "sandpolis",
     "sandpolis-bootagent",
+    "sandpolis-client-desktop",
 ]
