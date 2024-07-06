@@ -1,16 +1,19 @@
+use serde::{Deserialize, Serialize};
 
-// Response bearing the server's banner
-message GetBannerResponse {
+/// Response bearing the server's banner
+#[cfg(any(feature = "server", feature = "client"))]
+#[derive(Serialize, Deserialize)]
+pub struct GetBannerResponse {
+    /// Indicates that only admin users will be allowed to login
+    pub maintenance: bool,
 
-    // Maintenance mode indicates that only admin users will be allowed to login
-    bool maintenance = 1;
+    /// The 3-field version of the server
+    pub version: String,
 
-    // The 3-field version of the server
-    string version = 2;
+    /// A string to display on the login screen
+    pub message: Option<String>,
 
-    // A string to display on the login screen
-    string message = 3;
-
-    // An image to display on the login screen
-    bytes image = 4;
+    /// An image to display on the login screen
+    #[serde(with = "serde_bytes")]
+    pub image: Option<Vec<u8>>,
 }

@@ -1,30 +1,38 @@
+use serde::Deserialize;
+use serde::Serialize;
 
-message PostListenerRequest {
+#[cfg(any(feature = "server", feature = "client"))]
+#[derive(Serialize, Deserialize)]
+pub struct PostListenerRequest {
+    /// The listening address
+    pub address: String,
 
-    // The listening address
-    string address = 1;
-
-    // The listening port
-    int32 port = 2;
+    /// The listening port
+    pub port: u16,
 }
 
-enum PostListenerResponse {
-    CREATE_LISTENER_OK = 0;
-    CREATE_LISTENER_ACCESS_DENIED = 1;
-
-    CREATE_LISTENER_INVALID_PORT = 2;
+#[cfg(any(feature = "server", feature = "client"))]
+#[derive(Serialize, Deserialize)]
+pub enum PostListenerResponse {
+    Ok,
+    AccessDenied,
+    InvalidPort,
 }
 
-enum DeleteListenerResponse {
-    DELETE_LISTENER_OK = 0;
-    DELETE_LISTENER_ACCESS_DENIED = 1;
+#[cfg(any(feature = "server", feature = "client"))]
+#[derive(Serialize, Deserialize)]
+pub enum DeleteListenerResponse {
+    Ok,
+    AccessDenied,
 }
 
-message PutListenerRequest {
+#[cfg(any(feature = "server", feature = "client"))]
+#[derive(Serialize, Deserialize)]
+pub struct PutListenerRequest {}
 
-}
-
-enum PutListenerResponse {
-    UPDATE_LISTENER_OK = 0;
-    UPDATE_LISTENER_ACCESS_DENIED = 1;
+#[cfg(any(feature = "server", feature = "client"))]
+#[derive(Serialize, Deserialize)]
+pub enum PutListenerResponse {
+    Ok,
+    AccessDenied,
 }
