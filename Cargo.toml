@@ -2,6 +2,7 @@
 strip = true
 
 [workspace]
+resolver = "2"
 members = [
     "sandpolis",
     "sandpolis-bootagent",

@@ -1,5 +1,7 @@
 use dioxus::prelude::*;
+use sandpolis::client::world::{World, WorldSvg};
 
 fn main() {
-    launch_desktop(sandpolis::client::app);
+    let mut world = World::new();
+    launch_desktop(WorldSvg);
 }

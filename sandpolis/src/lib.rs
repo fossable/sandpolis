@@ -1,8 +1,8 @@
-mod api;
-mod core;
+pub mod api;
+pub mod core;
 
 #[cfg(feature = "server")]
-mod server;
+pub mod server;
 
 #[cfg(feature = "client")]
 pub mod client;
