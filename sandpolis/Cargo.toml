@@ -24,6 +24,7 @@ indradb-lib = { version = "4.0.0", features = []}
 axum-server = { version = "0.6.0", features = ["tls-rustls"], optional = true }
 rapier2d = { version = "0.21.0", optional = true }
 futures = "0.3.30"
+axum-macros = "0.4.1"
 
 [features]
 server = [ "dep:axum", "dep:axum-server" ]
