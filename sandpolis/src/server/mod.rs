@@ -17,7 +17,7 @@ pub async fn main() -> Result<()> {
         db: Arc::new(Mutex::new(MemoryDatastore::new_db())),
     };
 
-    let app = Router::new()
+    let app = Router::new();
     // .with_state(state)
     // .route("/db/*path", get(crate::api::read));
 

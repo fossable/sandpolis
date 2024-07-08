@@ -195,19 +195,12 @@ use crate::core::instance::group::*;
 use anyhow::{bail, Result};
 use log::{debug, error, info};
 use predicates::{prelude::*, Predicate};
-use protobuf::Message;
-use rust_embed::RustEmbed;
 use std::collections::HashMap;
 use std::io::BufRead;
 use std::net::TcpStream;
 use std::{thread, time};
 
-/// Contains embedded resources
-#[derive(RustEmbed)]
-#[folder = "src/main/resources/agent"]
-struct BinaryAssets;
-
-fn main() -> Result<()> {
+pub async fn main() -> Result<()> {
     // Initialize logging
     env_logger::init();
 

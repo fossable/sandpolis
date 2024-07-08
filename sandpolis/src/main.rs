@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use futures::future::join_all;
 use std::{net::SocketAddr, path::PathBuf, process::ExitCode};
 use tracing::debug;
 
@@ -17,8 +18,18 @@ async fn main() -> Result<ExitCode> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
+    let mut futures = Vec::with_capacity(3);
+
     #[cfg(feature = "server")]
-    crate::server::main().await?;
+    futures.push(sandpolis::server::main());
+    #[cfg(feature = "agent")]
+    futures.push(sandpolis::agent::main());
+    #[cfg(feature = "client")]
+    futures.push(sandpolis::client::main());
+
+    for result in join_all(futures).await {
+        result?;
+    }
 
     Ok(ExitCode::SUCCESS)
 }

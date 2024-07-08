@@ -1,4 +1,3 @@
-use dioxus::prelude::*;
 use rapier2d::{na::Vector2, prelude::*};
 
 pub struct World {
@@ -57,29 +56,4 @@ impl World {
             &(),
         );
     }
-}
-
-#[allow(non_snake_case)]
-#[component]
-pub fn WorldSvg() -> Element {
-    rsx!(
-        div {
-            svg {
-                xmlns: "http://www.w3.org/2000/svg",
-                width: "123",
-                height: "123",
-                preserve_aspect_ratio: "xMidYMid meet",
-                view_box: "0 0 123 123",
-                g {
-                    line {
-                        x1: "123",
-                        y1: "123",
-                        x2: "123",
-                        y2: "123",
-                        stroke: "rgba(20, 20, 20, 0.8)",
-                    }
-                }
-            }
-        }
-    )
 }

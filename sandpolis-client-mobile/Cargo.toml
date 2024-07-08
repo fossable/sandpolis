@@ -4,32 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["staticlib", "cdylib", "rlib"]
-
-# [[bin]]
-# name = "mobile-demo-desktop"
-# path = "gen/bin/desktop.rs"
-
-[package.metadata.cargo-android]
-app-activity-name = "com.example.mobile_demo.MainActivity"
-app-dependencies = [
-    "androidx.webkit:webkit:1.6.1",
-    "androidx.appcompat:appcompat:1.6.1",
-    "com.google.android.material:material:1.8.0",
-]
-project-dependencies = ["org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.21"]
-app-plugins = ["org.jetbrains.kotlin.android"]
-app-permissions = ["android.permission.INTERNET"]
-app-theme-parent = "Theme.MaterialComponents.DayNight.DarkActionBar"
-vulkan-validation = false
-
-[package.metadata.cargo-android.env-vars]
-WRY_ANDROID_PACKAGE = "com.example.mobile_demo"
-WRY_ANDROID_LIBRARY = "mobile_demo"
-WRY_ANDROID_KOTLIN_FILES_OUT_DIR = "<android-project-dir>/app/src/main/kotlin/com/example/mobile_demo"
-
-[package.metadata.cargo-apple.ios]
-frameworks = ["WebKit"]
+name = "sandpolis_client_mobile"
+crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
 anyhow = "1.0.56"
@@ -38,13 +14,17 @@ wry = "0.35.0"
 dioxus = { version = "0.5.1", features = ["mobile"]}
 sandpolis = { path = "../sandpolis", features = ["client"]}
 
-[target.'cfg(target_os = "android")'.dependencies]
-android_logger = "0.9.0"
-jni = "0.19.0"
-paste = "1.0"
+[package.metadata.android]
+package = "org.fossable.sandpolis"
+apk_name = "Sandpolis"
+# assets = "../../assets"
+# resources = "../../assets/android-res"
+strip = "strip"
+build_targets = ["aarch64-linux-android", "armv7-linux-androideabi"]
 
-[target.'cfg(not(target_os = "android"))'.dependencies]
-env_logger = "0.9.0"
+[package.metadata.android.sdk]
+target_sdk_version = 31
 
-[target.'cfg(target_os = "ios")'.dependencies]
-core-foundation = "0.9.3"
+[package.metadata.android.application]
+icon = "@mipmap/ic_launcher"
+label = "Sandpolis"
