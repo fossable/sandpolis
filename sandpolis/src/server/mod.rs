@@ -6,7 +6,7 @@ use axum::{routing::get, Router};
 use axum_server::tls_rustls::RustlsConfig;
 use indradb::{Database, MemoryDatastore};
 use tokio::sync::Mutex;
-use tracing::debug;
+use tracing::info;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -30,7 +30,7 @@ pub async fn main() -> Result<()> {
     .unwrap();
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8443));
-    debug!("listening on {}", addr);
+    info!("listening on {}", addr);
     axum_server::bind_rustls(addr, config)
         .serve(app.into_make_service())
         .await

@@ -3,8 +3,12 @@ use bevy::{
     color::palettes::basic::*,
     input::{gestures::RotationGesture, touch::TouchPhase},
     prelude::*,
+    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
     window::{AppLifecycle, WindowMode},
 };
+use rapier2d::dynamics::RigidBodyHandle;
+
+use self::world::GraphLayoutEngine;
 
 pub mod world;
 
@@ -25,8 +29,17 @@ pub async fn main() -> Result<()> {
         }),
         ..default()
     }))
-    .add_systems(Startup, setup_scene)
-    .add_systems(Update, (touch_camera, button_handler, handle_lifetime));
+    .insert_resource(GraphLayoutEngine::new())
+    .add_systems(Startup, setup)
+    .add_systems(
+        Update,
+        (
+            touch_camera,
+            button_handler,
+            handle_lifetime,
+            update_node_positions,
+        ),
+    );
 
     // MSAA makes some Android devices panic, this is under investigation
     // https://github.com/bevyengine/bevy/issues/8229
@@ -71,49 +84,34 @@ fn touch_camera(
     }
 }
 
-/// set up a simple 3D scene
-fn setup_scene(
+#[derive(Bundle, Clone)]
+pub struct Node {
+    pub id: NodeId,
+    pub mesh: Mesh2dHandle,
+    pub material: Handle<ColorMaterial>,
+    pub transform: Transform,
+    // pub global_transform: GlobalTransform,
+    // /// User indication of whether an entity is visible
+    pub visibility: Visibility,
+    // // Inherited visibility of an entity.
+    // pub inherited_visibility: InheritedVisibility,
+    // // Indication of whether an entity is visible in any view.
+    // pub view_visibility: ViewVisibility,
+}
+
+fn setup(
     mut commands: Commands,
+    mut layout_engine: ResMut<GraphLayoutEngine>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    // plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
-        material: materials.add(Color::srgb(0.1, 0.2, 0.1)),
-        ..default()
-    });
-    // cube
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Cuboid::default()),
-        material: materials.add(Color::srgb(0.5, 0.4, 0.3)),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        ..default()
-    });
-    // sphere
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Sphere::new(0.5).mesh().ico(4).unwrap()),
-        material: materials.add(Color::srgb(0.1, 0.4, 0.8)),
-        transform: Transform::from_xyz(1.5, 1.5, 1.5),
-        ..default()
-    });
-    // light
-    commands.spawn(PointLightBundle {
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        point_light: PointLight {
-            intensity: 1_000_000.0,
-            // Shadows makes some Android devices segfault, this is under investigation
-            // https://github.com/bevyengine/bevy/issues/8214
-            #[cfg(not(target_os = "android"))]
-            shadows_enabled: true,
-            ..default()
-        },
-        ..default()
-    });
-    // camera
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
+    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Node {
+        id: NodeId(layout_engine.add()),
+        mesh: meshes.add(Rectangle::default()).into(),
+        transform: Transform::default().with_scale(Vec3::splat(128.)),
+        material: materials.add(Color::from(PURPLE)),
+        visibility: Visibility::Visible,
     });
 
     // Test ui
@@ -181,6 +179,24 @@ fn handle_lifetime(
             AppLifecycle::Idle | AppLifecycle::WillSuspend | AppLifecycle::WillResume => {}
             AppLifecycle::Suspended => music_controller.pause(),
             AppLifecycle::Running => music_controller.play(),
+        }
+    }
+}
+
+#[derive(Clone, Component, Debug)]
+struct NodeId(RigidBodyHandle);
+
+fn update_node_positions(
+    time: Res<Time>,
+    mut layout_engine: ResMut<GraphLayoutEngine>,
+    mut nodes: Query<(&NodeId, &mut Transform)>,
+) {
+    layout_engine.step();
+
+    for (id, mut node) in &mut nodes {
+        if let Some((y, x)) = layout_engine.get_position(id.0) {
+            node.translation.y = y;
+            node.translation.x = x;
         }
     }
 }

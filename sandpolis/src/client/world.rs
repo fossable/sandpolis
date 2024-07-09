@@ -1,6 +1,8 @@
+use bevy::ecs::system::Resource;
 use rapier2d::{na::Vector2, prelude::*};
 
-pub struct World {
+#[derive(Resource)]
+pub struct GraphLayoutEngine {
     pub integration_parameters: IntegrationParameters,
     pub physics_pipeline: PhysicsPipeline,
     pub island_manager: IslandManager,
@@ -14,9 +16,9 @@ pub struct World {
     pub collider_set: ColliderSet,
 }
 
-impl World {
+impl GraphLayoutEngine {
     pub fn new() -> Self {
-        World {
+        GraphLayoutEngine {
             integration_parameters: IntegrationParameters::default(),
             physics_pipeline: PhysicsPipeline::new(),
             island_manager: IslandManager::new(),
@@ -31,15 +33,22 @@ impl World {
         }
     }
 
-    pub fn step(&mut self) {
-        /* Create the bouncing ball. */
+    pub fn add(&mut self) -> RigidBodyHandle {
         let rigid_body = RigidBodyBuilder::dynamic()
             .translation(vector![0.0, 10.0])
             .build();
         let collider = ColliderBuilder::ball(0.5).restitution(0.7).build();
-        // let ball_body_handle = rigid_body_set.insert(rigid_body);
-        // collider_set.insert_with_parent(collider, ball_body_handle, &mut rigid_body_set);
+        self.rigid_body_set.insert(rigid_body)
+    }
 
+    pub fn get_position(&self, handle: RigidBodyHandle) -> Option<(f32, f32)> {
+        self.rigid_body_set
+            .get(handle)
+            .map(|body| body.translation())
+            .map(|translation| (translation.y, translation.x))
+    }
+
+    pub fn step(&mut self) {
         self.physics_pipeline.step(
             &Vector2::zeros(),
             &self.integration_parameters,
