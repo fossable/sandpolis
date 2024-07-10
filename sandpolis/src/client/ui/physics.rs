@@ -1,5 +1,7 @@
 use bevy::ecs::system::Resource;
+use rapier2d::dynamics::RigidBodyHandle;
 use rapier2d::{na::Vector2, prelude::*};
+use tracing::trace;
 
 #[derive(Resource)]
 pub struct GraphLayoutEngine {
@@ -38,6 +40,12 @@ impl GraphLayoutEngine {
             .translation(vector![0.0, 10.0])
             .build();
         let collider = ColliderBuilder::ball(0.5).restitution(0.7).build();
+        self.collider_set.insert(collider);
+
+        trace!(
+            total = self.rigid_body_set.len() + 1,
+            "Adding rigid body to simulator"
+        );
         self.rigid_body_set.insert(rigid_body)
     }
 
@@ -49,8 +57,10 @@ impl GraphLayoutEngine {
     }
 
     pub fn step(&mut self) {
+        trace!("Running simulation step");
         self.physics_pipeline.step(
-            &Vector2::zeros(),
+            // &Vector2::zeros(),
+            &Vector2::identity(),
             &self.integration_parameters,
             &mut self.island_manager,
             &mut self.broad_phase,

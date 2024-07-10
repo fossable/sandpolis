@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use futures::{future::join_all, Future};
 use std::{net::SocketAddr, path::PathBuf, pin::Pin, process::ExitCode};
+use tokio::join;
 use tracing::debug;
 
 #[derive(Parser, Debug)]
@@ -18,18 +19,21 @@ async fn main() -> Result<ExitCode> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    let mut futures: Vec<Pin<Box<dyn Future<Output = Result<()>>>>> = Vec::with_capacity(3);
-
     #[cfg(feature = "server")]
-    futures.push(Box::pin(sandpolis::server::main()));
+    let server_thread = tokio::spawn(async { sandpolis::server::main().await });
     #[cfg(feature = "agent")]
-    futures.push(Box::pin(sandpolis::agent::main()));
-    #[cfg(feature = "client")]
-    futures.push(Box::pin(sandpolis::client::main()));
+    let agent_thread = tokio::spawn(async { sandpolis::agent::main().await });
 
-    for result in join_all(futures).await {
-        result?;
-    }
+    // The client must run on the main thread
+    #[cfg(feature = "client")]
+    sandpolis::client::main().await?;
+
+    // TODO single join
+    // TODO if not client
+    #[cfg(feature = "server")]
+    join!(server_thread).0??;
+    #[cfg(feature = "agent")]
+    join!(agent_thread).0??;
 
     Ok(ExitCode::SUCCESS)
 }
