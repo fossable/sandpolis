@@ -191,19 +191,21 @@
 
 pub mod connection;
 
-use crate::core::instance::group::*;
 use anyhow::{bail, Result};
-use log::{debug, error, info};
+use clap::Parser;
 use predicates::{prelude::*, Predicate};
 use std::collections::HashMap;
 use std::io::BufRead;
 use std::net::TcpStream;
 use std::{thread, time};
+use tracing::{debug, error, info};
 
-pub async fn main() -> Result<()> {
-    // Initialize logging
-    env_logger::init();
+use crate::CommandLine;
 
+#[derive(Parser, Debug, Clone)]
+pub struct AgentCommandLine {}
+
+pub async fn main(args: CommandLine) -> Result<()> {
     // Load build metadata
     if let Some(build_properties) = BinaryAssets::get("build.properties") {
         let properties: HashMap<String, String> = parse_from_slice(&build_properties)
@@ -259,37 +261,6 @@ pub async fn main() -> Result<()> {
     }
 
     return Ok(());
-}
-
-fn prompt_bool(prompt: &str, default: bool) -> bool {
-    let answer = prompt_string(
-        prompt,
-        match default {
-            true => "y",
-            false => "n",
-        },
-        &predicate::in_iter(vec![
-            "y".to_string(),
-            "Y".to_string(),
-            "n".to_string(),
-            "N".to_string(),
-        ]),
-    );
-
-    return match answer.as_str() {
-        "y" => true,
-        "n" => false,
-        _ => false,
-    };
-}
-
-fn prompt_string(prompt: &str, default: &str, validator: &dyn Predicate<String>) -> String {
-    for line in std::io::stdin().lock().lines().map(|l| l.unwrap()) {
-        if validator.eval(&line) {
-            return line;
-        }
-    }
-    return "".to_string();
 }
 
 fn connection_routine(config: &AgentConfig_LoopConfig) {

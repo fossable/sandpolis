@@ -1,21 +1,26 @@
-use std::{net::SocketAddr, path::PathBuf, sync::Arc};
-
+use crate::core::database::Database;
+use crate::CommandLine;
 use anyhow::Result;
-use axum::ServiceExt;
 use axum::{routing::get, Router};
 use axum_server::tls_rustls::RustlsConfig;
-use indradb::{Database, MemoryDatastore};
-use tokio::sync::Mutex;
+use clap::Parser;
+use std::{net::SocketAddr, path::PathBuf, sync::Arc};
 use tracing::info;
+
+#[derive(Parser, Debug, Clone)]
+pub struct ServerCommandLine {
+    /// The server listen address:port
+    pub listen: Option<Vec<String>>,
+}
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db: Arc<Mutex<Database<MemoryDatastore>>>,
+    pub db: Database,
 }
 
-pub async fn main() -> Result<()> {
+pub async fn main(args: CommandLine) -> Result<()> {
     let state = AppState {
-        db: Arc::new(Mutex::new(MemoryDatastore::new_db())),
+        db: Database::new(None, "test", "test").await?,
     };
 
     let app = Router::new()

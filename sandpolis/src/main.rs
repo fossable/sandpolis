@@ -1,16 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
 use futures::{future::join_all, Future};
+use sandpolis::CommandLine;
 use std::{net::SocketAddr, path::PathBuf, pin::Pin, process::ExitCode};
 use tokio::join;
 use tracing::debug;
-
-#[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
-struct CommandLine {
-    #[cfg(any(feature = "agent", feature = "client"))]
-    pub server: Option<Vec<String>>,
-}
 
 #[tokio::main]
 async fn main() -> Result<ExitCode> {
@@ -20,13 +14,20 @@ async fn main() -> Result<ExitCode> {
         .init();
 
     #[cfg(feature = "server")]
-    let server_thread = tokio::spawn(async { sandpolis::server::main().await });
-    #[cfg(feature = "agent")]
-    let agent_thread = tokio::spawn(async { sandpolis::agent::main().await });
+    let server_thread = {
+        let args = args.clone();
+        tokio::spawn(async move { sandpolis::server::main(args).await })
+    };
 
-    // The client must run on the main thread
+    #[cfg(feature = "agent")]
+    let agent_thread = {
+        let args = args.clone();
+        tokio::spawn(async move { sandpolis::agent::main(args).await })
+    };
+
+    // The client must run on the main thread per bevy requirements
     #[cfg(feature = "client")]
-    sandpolis::client::main().await?;
+    sandpolis::client::main(args).await?;
 
     // TODO single join
     // TODO if not client

@@ -12,6 +12,5 @@ pub mod server;
 
 #[debug_handler]
 pub async fn read(State(state): State<AppState>, Path(path): Path<String>) -> impl IntoResponse {
-    let db = state.db.lock().await;
     todo!()
 }

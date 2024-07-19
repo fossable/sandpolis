@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+pub mod database;
 pub mod random;
 
 /// Major OS types.
