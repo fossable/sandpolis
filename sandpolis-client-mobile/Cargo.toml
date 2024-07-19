@@ -10,7 +10,7 @@ crate-type = ["staticlib", "cdylib"]
 [dependencies]
 anyhow = "1.0.56"
 log = "0.4.11"
-wry = "0.35.0"
+wry = "0.37.0"
 dioxus = { version = "0.5.1", features = ["mobile"]}
 sandpolis = { path = "../sandpolis", features = ["client"]}
 

@@ -2505,7 +2505,7 @@ dependencies = [
  "tracing",
  "urlencoding",
  "webbrowser 0.8.15",
- "wry 0.37.0",
+ "wry",
 ]
 
 [[package]]
@@ -4340,7 +4340,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e310b3a6b5907f99202fcdb4960ff45b93735d7c7d96b760fcff8db2dc0e103d"
 dependencies = [
  "cfg-if",
- "windows-targets 0.52.6",
+ "windows-targets 0.48.5",
 ]
 
 [[package]]
@@ -6264,7 +6264,7 @@ dependencies = [
  "dioxus",
  "log",
  "sandpolis",
- "wry 0.35.2",
+ "wry",
 ]
 
 [[package]]
@@ -8382,51 +8382,6 @@ checksum = "a277a57398d4bfa075df44f501a17cfdf8542d224f0d36095a2adc7aee4ef0a5"
 dependencies = [
  "cfg-if",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "wry"
-version = "0.35.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3016c47c9b6f7029a9da7cd48af8352327226bba0e955f3c92e2966651365a9"
-dependencies = [
- "base64 0.21.7",
- "block",
- "cfg_aliases 0.1.1",
- "cocoa",
- "core-graphics",
- "crossbeam-channel",
- "dunce",
- "gdkx11",
- "gtk",
- "html5ever",
- "http 0.2.12",
- "javascriptcore-rs",
- "jni",
- "kuchikiki",
- "libc",
- "log",
- "ndk 0.7.0",
- "ndk-context",
- "ndk-sys 0.4.1+23.1.7779620",
- "objc",
- "objc_id",
- "once_cell",
- "raw-window-handle 0.5.2",
- "serde",
- "serde_json",
- "sha2",
- "soup3",
- "tao-macros",
- "thiserror",
- "url",
- "webkit2gtk",
- "webkit2gtk-sys",
- "webview2-com",
- "windows 0.52.0",
- "windows-implement 0.52.0",
- "windows-version",
- "x11-dl",
 ]
 
 [[package]]
