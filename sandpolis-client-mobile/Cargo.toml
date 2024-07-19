@@ -11,7 +11,7 @@ crate-type = ["staticlib", "cdylib"]
 anyhow = "1.0.56"
 log = "0.4.11"
 wry = "0.35.0"
-dioxus = { version = "0.5.1", features = ["mobile"]}
+dioxus = { version = "0.5.6", features = ["mobile"]}
 sandpolis = { path = "../sandpolis", features = ["client"]}
 
 [package.metadata.android]
