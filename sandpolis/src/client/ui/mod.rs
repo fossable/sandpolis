@@ -1,4 +1,3 @@
-use crate::client::ui::physics::GraphLayoutEngine;
 use bevy::{
     color::palettes::basic::*,
     input::{gestures::RotationGesture, touch::TouchPhase},
@@ -6,12 +5,18 @@ use bevy::{
     sprite::Mesh2dHandle,
     window::{AppLifecycle, WindowMode},
 };
-use rapier2d::dynamics::RigidBodyHandle;
+use bevy_egui::{EguiContexts, EguiPlugin};
+use bevy_rapier2d::prelude::*;
 
-mod physics;
+use crate::core::database::Database;
+
+#[derive(Resource)]
+pub struct AppState {
+    pub db: Database,
+}
 
 /// Initialize and start rendering the UI.
-pub fn run() {
+pub fn run(state: AppState) {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
@@ -28,7 +33,10 @@ pub fn run() {
         }),
         ..default()
     }))
-    .insert_resource(GraphLayoutEngine::new())
+    .add_plugins(EguiPlugin)
+    .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+    .add_plugins(RapierDebugRenderPlugin::default())
+    .insert_resource(state)
     .add_systems(Startup, setup)
     .add_systems(
         Update,
@@ -36,7 +44,7 @@ pub fn run() {
             touch_camera,
             button_handler,
             handle_lifetime,
-            update_node_positions,
+            ui_example_system,
         ),
     );
 
@@ -46,6 +54,12 @@ pub fn run() {
     app.insert_resource(Msaa::Off);
 
     app.run();
+}
+
+fn ui_example_system(mut contexts: EguiContexts) {
+    egui::Window::new("Hello").show(contexts.ctx_mut(), |ui| {
+        ui.label("world");
+    });
 }
 
 fn touch_camera(
@@ -84,7 +98,7 @@ fn touch_camera(
 
 #[derive(Bundle, Clone)]
 pub struct Node {
-    pub id: NodeId,
+    // pub id: NodeId,
     pub mesh: Mesh2dHandle,
     pub material: Handle<ColorMaterial>,
     pub transform: Transform,
@@ -99,46 +113,19 @@ pub struct Node {
 
 fn setup(
     mut commands: Commands,
-    mut layout_engine: ResMut<GraphLayoutEngine>,
+    mut rapier_config: ResMut<RapierConfiguration>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
+    rapier_config.gravity = Vec2::ZERO;
     commands.spawn(Camera2dBundle::default());
-    commands.spawn(Node {
-        id: NodeId(layout_engine.add()),
-        mesh: meshes.add(Rectangle::default()).into(),
-        transform: Transform::default().with_scale(Vec3::splat(128.)),
-        material: materials.add(Color::from(PURPLE)),
-        visibility: Visibility::Visible,
-    });
 
-    // Test ui
+    /* Create the bouncing ball. */
     commands
-        .spawn(ButtonBundle {
-            style: Style {
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                position_type: PositionType::Absolute,
-                left: Val::Px(50.0),
-                right: Val::Px(50.0),
-                bottom: Val::Px(50.0),
-                ..default()
-            },
-            ..default()
-        })
-        .with_children(|b| {
-            b.spawn(
-                TextBundle::from_section(
-                    "Test Button",
-                    TextStyle {
-                        font_size: 30.0,
-                        color: Color::BLACK,
-                        ..default()
-                    },
-                )
-                .with_text_justify(JustifyText::Center),
-            );
-        });
+        .spawn(RigidBody::Dynamic)
+        .insert(Collider::ball(50.0))
+        .insert(Restitution::coefficient(0.7))
+        .insert(TransformBundle::from(Transform::from_xyz(0.0, 400.0, 0.0)));
 }
 
 fn button_handler(
@@ -177,29 +164,6 @@ fn handle_lifetime(
             AppLifecycle::Idle | AppLifecycle::WillSuspend | AppLifecycle::WillResume => {}
             AppLifecycle::Suspended => music_controller.pause(),
             AppLifecycle::Running => music_controller.play(),
-        }
-    }
-}
-
-#[derive(Clone, Component, Debug)]
-struct NodeId(RigidBodyHandle);
-
-fn update_node_positions(
-    time: Res<Time>,
-    mut layout_engine: ResMut<GraphLayoutEngine>,
-    mut nodes: Query<(&NodeId, &mut Transform)>,
-) {
-    layout_engine.step();
-
-    for (id, mut node) in &mut nodes {
-        if let Some((y, x)) = layout_engine.get_position(id.0) {
-            if node.translation.y != y || node.translation.x != x {
-                trace!(y = y, x = x, "Translating node");
-                node.translation.y = y;
-                node.translation.x = x;
-            }
-        } else {
-            trace!("Node not found");
         }
     }
 }

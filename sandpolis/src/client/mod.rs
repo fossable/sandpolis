@@ -1,6 +1,8 @@
-use crate::CommandLine;
+use crate::{core::database::Database, CommandLine};
 use anyhow::Result;
 use clap::Parser;
+
+use self::ui::AppState;
 
 pub mod ui;
 
@@ -8,6 +10,9 @@ pub mod ui;
 pub struct ClientCommandLine {}
 
 pub async fn main(args: CommandLine) -> Result<()> {
-    crate::client::ui::run();
+    let state = AppState {
+        db: Database::new(None, "test", "test").await?,
+    };
+    crate::client::ui::run(state);
     Ok(())
 }
