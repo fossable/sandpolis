@@ -1,60 +1,54 @@
+use anyhow::{bail, Result};
+use couch_rs::CouchDocument;
+use couch_rs::{document::TypedCouchDocument, types::document::DocumentId};
+use serde::{Deserialize, Serialize};
 use std::{
+    collections::HashMap,
     process::{Child, Command, Stdio},
     sync::{Arc, Mutex},
     thread::sleep,
     time::Duration,
 };
-
-use anyhow::{bail, Result};
-use serde::{Deserialize, Serialize};
 use tracing::debug;
 
-#[derive(Serialize)]
-struct PostSession {
-    username: String,
-    password: String,
-}
+use super::InstanceId;
 
-#[derive(Deserialize)]
-struct RsPostSession {
-    ok: bool,
-    name: String,
-}
+#[derive(Serialize, Deserialize, CouchDocument)]
+pub struct LocalMetadata {
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub _id: DocumentId,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub _rev: String,
 
-#[derive(Serialize)]
-enum ReplicationAuth {
-    #[serde(rename = "basic")]
-    Basic { username: String, password: String },
-}
-
-#[derive(Serialize)]
-struct ReplicationTarget {
-    url: String,
-    auth: ReplicationAuth,
-}
-
-#[derive(Serialize)]
-struct PostReplication {
-    _id: String,
-    source: String,
-    create_target: bool,
-    continuous: bool,
-    target: ReplicationTarget,
+    pub id: InstanceId,
+    pub os_info: os_info::Info,
 }
 
 #[derive(Clone)]
 pub struct Database {
     address: String,
     db_process: Option<Arc<Mutex<Child>>>,
-    pub local: reqwest::Client,
-    remote: Vec<reqwest::Client>,
+    pub local: couch_rs::Client,
+    remote: HashMap<InstanceId, couch_rs::Client>,
+}
+
+impl Drop for Database {
+    fn drop(&mut self) {
+        if let Some(process) = self.db_process.as_mut() {
+            if let Some(process) = Arc::get_mut(process) {
+                let mut process = process.lock().unwrap();
+
+                debug!("Stopping database");
+                process.kill().unwrap_or_default();
+            }
+        }
+    }
 }
 
 impl Database {
     pub async fn new(address: Option<String>, username: &str, password: &str) -> Result<Self> {
-        let client = reqwest::Client::builder().cookie_store(true).build()?;
-
         if let Some(address) = address {
+            let client = couch_rs::Client::new(&address, username, password)?;
             let rs = client
                 .post(format!("{}/_session", address))
                 .header("Content-Type", "application/json")
@@ -75,9 +69,11 @@ impl Database {
                 address: address.to_string(),
                 db_process: None,
                 local: client,
-                remote: Vec::new(),
+                remote: HashMap::new(),
             })
         } else {
+            let client = couch_rs::Client::new("http://127.0.0.1:5984", username, password)?;
+
             // Allow external access to the database in debug mode
             let bind_address = if cfg!(debug_assertions) {
                 "0.0.0.0"
@@ -146,7 +142,7 @@ impl Database {
                 address: "http://127.0.0.1:5984".to_string(),
                 db_process: Some(Arc::new(Mutex::new(db_process))),
                 local: client,
-                remote: Vec::new(),
+                remote: HashMap::new(),
             })
         }
     }
@@ -187,6 +183,19 @@ impl Database {
 
         self.remote.push(client);
         Ok(())
+    }
+
+    pub async fn metadata(&self) -> Result<LocalMetadata> {
+        match self
+            .local
+            .db("local")
+            .await?
+            .get::<LocalMetadata>("instance")
+            .await
+        {
+            Ok(metadata) => Ok(metadata),
+            Err(e) => if e.is_not_found() {},
+        }
     }
 
     /// Create persistent databases if necessary and reset transient databases.
@@ -245,6 +254,8 @@ impl Database {
     //         .status()
     //         .is_success())
     // }
+
+    // TODO add _changes
 
     pub async fn list_oid(&self, oid: &str) -> Result<()> {
         self

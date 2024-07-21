@@ -9,6 +9,12 @@ pub struct CommandLine {
     /// Servers (address:port) to connect
     pub server: Option<Vec<String>>,
 
+    #[clap(default_value_t = false)]
+    pub debug: bool,
+
+    #[clap(default_value_t = false)]
+    pub trace: bool,
+
     #[cfg(feature = "server")]
     #[clap(flatten)]
     pub server_args: crate::server::ServerCommandLine,

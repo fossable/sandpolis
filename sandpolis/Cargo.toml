@@ -11,14 +11,18 @@ version = "0.0.1"
 [dependencies]
 anyhow = "1.0.76"
 clap = { version = "4.4.7", features = ["derive", "string"] }
+couch_rs = { version = "0.10.1", default-features = false, features = ["couch_rs_derive", "derive", "rustls-tls"] }
+futures = "0.3.30"
+os_info = "3.8.2"
+rand = "0.8.5"
 reqwest = { version = "0.12.5", default-features = false, features = ["stream", "cookies", "json", "rustls-tls", "charset"] }
+serde_bytes = "0.11.15"
+serde = { version = "1.0.203", features = ["derive"] }
+strum = { version = "0.26.3", features = ["derive"] }
 tokio = { version = "1.34.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-rand = "0.8.5"
-serde = { version = "1.0.203", features = ["derive"] }
-serde_bytes = "0.11.15"
-futures = "0.3.30"
+uuid = { version = "1.10.0", features = ["v7"] }
 
 # Server dependencies
 axum-macros = { version = "0.4.1", optional = true }

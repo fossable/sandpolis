@@ -3,7 +3,6 @@ use clap::Parser;
 use futures::{future::join_all, Future};
 use sandpolis::CommandLine;
 use std::{net::SocketAddr, path::PathBuf, pin::Pin, process::ExitCode};
-use tokio::join;
 use tracing::debug;
 
 #[tokio::main]
@@ -12,6 +11,8 @@ async fn main() -> Result<ExitCode> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
+
+    info!(os_info = ?os_info::get(), "Starting instance");
 
     #[cfg(feature = "server")]
     let server_thread = {
@@ -32,9 +33,9 @@ async fn main() -> Result<ExitCode> {
     // TODO single join
     // TODO if not client
     #[cfg(feature = "server")]
-    join!(server_thread).0??;
+    tokio::join!(server_thread).0??;
     #[cfg(feature = "agent")]
-    join!(agent_thread).0??;
+    tokio::join!(agent_thread).0??;
 
     Ok(ExitCode::SUCCESS)
 }

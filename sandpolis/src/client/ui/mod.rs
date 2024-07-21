@@ -1,12 +1,18 @@
 use bevy::{
     color::palettes::basic::*,
-    input::{gestures::RotationGesture, touch::TouchPhase},
+    input::{
+        gestures::RotationGesture,
+        mouse::{MouseButtonInput, MouseMotion, MouseWheel},
+        touch::TouchPhase,
+    },
     prelude::*,
     sprite::Mesh2dHandle,
     window::{AppLifecycle, WindowMode},
 };
 use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_rapier2d::prelude::*;
+use std::ops::{Add, Range};
+use tracing::Instrument;
 
 use crate::core::database::Database;
 
@@ -14,6 +20,9 @@ use crate::core::database::Database;
 pub struct AppState {
     pub db: Database,
 }
+
+#[derive(Resource)]
+struct MousePressed(bool);
 
 /// Initialize and start rendering the UI.
 pub fn run(state: AppState) {
@@ -41,7 +50,8 @@ pub fn run(state: AppState) {
     .add_systems(
         Update,
         (
-            touch_camera,
+            // touch_camera,
+            move_camera,
             button_handler,
             handle_lifetime,
             ui_example_system,
@@ -96,6 +106,71 @@ fn touch_camera(
     }
 }
 
+const CAMERA_KEYBOARD_ZOOM_SPEED: f32 = 1.0;
+const CAMERA_MOUSE_WHEEL_ZOOM_SPEED: f32 = 0.25;
+const CAMERA_ZOOM_RANGE: Range<f32> = 1.0..12.0;
+
+// Processes input related to camera movement.
+fn move_camera(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut mouse_button_events: EventReader<MouseButtonInput>,
+    mut mouse_motion_events: EventReader<MouseMotion>,
+    mut mouse_wheel_input: EventReader<MouseWheel>,
+    mut mouse_pressed: ResMut<MousePressed>,
+    mut cameras: Query<&mut Transform, With<Camera2d>>,
+) {
+    let mut distance_delta = 0.0;
+
+    // Handle mouse events.
+    for mouse_wheel_event in mouse_wheel_input.read() {
+        distance_delta -= mouse_wheel_event.y * CAMERA_MOUSE_WHEEL_ZOOM_SPEED;
+    }
+
+    // Update transforms.
+    for mut camera_transform in cameras.iter_mut() {
+        // Handle keyboard events.
+        if keyboard_input.pressed(KeyCode::KeyW) {
+            camera_transform.translation.y -= CAMERA_KEYBOARD_ZOOM_SPEED;
+        }
+        if keyboard_input.pressed(KeyCode::KeyA) {
+            camera_transform.translation.x -= CAMERA_KEYBOARD_ZOOM_SPEED;
+        }
+        if keyboard_input.pressed(KeyCode::KeyS) {
+            camera_transform.translation.y += CAMERA_KEYBOARD_ZOOM_SPEED;
+        }
+        if keyboard_input.pressed(KeyCode::KeyD) {
+            camera_transform.translation.x += CAMERA_KEYBOARD_ZOOM_SPEED;
+        }
+
+        let local_z = camera_transform.local_z().as_vec3().normalize_or_zero();
+
+        if distance_delta != 0.0 {
+            camera_transform.translation = (camera_transform.translation.length() + distance_delta)
+                .clamp(CAMERA_ZOOM_RANGE.start, CAMERA_ZOOM_RANGE.end)
+                * local_z;
+            debug!(
+                position = ?camera_transform.translation,
+                "Moved camera position"
+            );
+        }
+
+        // Store left-pressed state in the MousePressed resource
+        for button_event in mouse_button_events.read() {
+            if button_event.button != MouseButton::Left {
+                continue;
+            }
+            *mouse_pressed = MousePressed(button_event.state.is_pressed());
+        }
+
+        if mouse_pressed.0 {
+            let displacement = mouse_motion_events
+                .read()
+                .fold(Vec2::ZERO, |acc, mouse_motion| acc + mouse_motion.delta);
+            camera_transform.translation -= Vec3::new(displacement.x, -displacement.y, 0.0);
+        }
+    }
+}
+
 #[derive(Bundle, Clone)]
 pub struct Node {
     // pub id: NodeId,
@@ -114,18 +189,21 @@ pub struct Node {
 fn setup(
     mut commands: Commands,
     mut rapier_config: ResMut<RapierConfiguration>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
     rapier_config.gravity = Vec2::ZERO;
     commands.spawn(Camera2dBundle::default());
+    commands.insert_resource(MousePressed(false));
 
-    /* Create the bouncing ball. */
+    commands.spawn(SpriteBundle {
+        texture: asset_server.load("os/arch_linux.png"),
+        ..default()
+    });
     commands
         .spawn(RigidBody::Dynamic)
         .insert(Collider::ball(50.0))
         .insert(Restitution::coefficient(0.7))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, 400.0, 0.0)));
+        .insert(TransformBundle::from(Transform::from_xyz(0.0, 200.0, 0.0)));
 }
 
 fn button_handler(
