@@ -49,6 +49,8 @@ jobs:
           targets: ${{ matrix.target }}
 
       - uses: rust-mobile/setup-xbuild-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Build apk
         run: |

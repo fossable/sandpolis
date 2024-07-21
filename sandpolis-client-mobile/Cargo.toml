@@ -1,6 +1,6 @@
 [package]
 name = "sandpolis-client-mobile"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 
 [lib]
@@ -10,8 +10,6 @@ crate-type = ["staticlib", "cdylib"]
 [dependencies]
 anyhow = "1.0.56"
 log = "0.4.11"
-wry = "0.35.0"
-dioxus = { version = "0.5.1", features = ["mobile"]}
 sandpolis = { path = "../sandpolis", features = ["client"]}
 
 [package.metadata.android]
