@@ -13,7 +13,7 @@ use tracing::debug;
 
 use super::InstanceId;
 
-#[derive(Serialize, Deserialize, CouchDocument)]
+#[derive(Serialize, Deserialize, Clone, Debug, CouchDocument)]
 pub struct LocalMetadata {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub _id: DocumentId,
@@ -30,6 +30,7 @@ pub struct Database {
     db_process: Option<Arc<Mutex<Child>>>,
     pub local: couch_rs::Client,
     remote: HashMap<InstanceId, couch_rs::Client>,
+    pub metadata: LocalMetadata,
 }
 
 impl Drop for Database {
@@ -47,33 +48,9 @@ impl Drop for Database {
 
 impl Database {
     pub async fn new(address: Option<String>, username: &str, password: &str) -> Result<Self> {
-        if let Some(address) = address {
-            let client = couch_rs::Client::new(&address, username, password)?;
-            let rs = client
-                .post(format!("{}/_session", address))
-                .header("Content-Type", "application/json")
-                .json(&PostSession {
-                    username: username.to_string(),
-                    password: password.to_string(),
-                })
-                .send()
-                .await?
-                .json::<RsPostSession>()
-                .await?;
-
-            if !rs.ok {
-                bail!("Login error");
-            }
-
-            Ok(Self {
-                address: address.to_string(),
-                db_process: None,
-                local: client,
-                remote: HashMap::new(),
-            })
+        let (address, db_process) = if let Some(address) = address {
+            (address, None)
         } else {
-            let client = couch_rs::Client::new("http://127.0.0.1:5984", username, password)?;
-
             // Allow external access to the database in debug mode
             let bind_address = if cfg!(debug_assertions) {
                 "0.0.0.0"
@@ -103,145 +80,89 @@ impl Database {
                 .spawn()?;
             debug!("Spawned new database process");
 
-            // Try until the database accepts our connection
-            let mut i = 0;
-            let rs = loop {
-                i += 1;
+            (
+                "http://127.0.0.1:5984".to_string(),
+                Some(Arc::new(Mutex::new(db_process))),
+            )
+        };
 
-                debug!(attempt = i, "Attempting connection to local database");
-                match client
-                    .post("http://127.0.0.1:5984/_session")
-                    .header("Content-Type", "application/json")
-                    .json(&PostSession {
-                        username: username.to_string(),
-                        password: password.to_string(),
-                    })
-                    .send()
-                    .await
-                {
-                    Ok(response) => {
-                        break response.json::<RsPostSession>().await?;
-                    }
-                    Err(_) => sleep(Duration::from_secs(1)),
-                }
-
-                if i >= 10 {
-                    bail!("The database failed to start");
-                }
-            };
-
-            if !rs.ok {
-                bail!("Login error");
-            }
+        let client = couch_rs::Client::new(&address, username, password)?;
+        // Check connection
+        let mut i = 0;
+        let metadata = loop {
+            i += 1;
 
             debug!(
-                attempts = i,
-                "Connection to the local database was successful"
+                attempt = i,
+                address = address,
+                "Attempting connection to database"
             );
-            Ok(Self {
-                address: "http://127.0.0.1:5984".to_string(),
-                db_process: Some(Arc::new(Mutex::new(db_process))),
-                local: client,
-                remote: HashMap::new(),
-            })
-        }
+            match client.db("local").await {
+                Ok(local) => {
+                    break match local.get::<LocalMetadata>("metadata").await {
+                        Ok(metadata) => metadata,
+                        Err(e) => {
+                            if e.is_not_found() {
+                                let mut metadata = LocalMetadata {
+                                    _id: "metadata".to_string(),
+                                    _rev: "".to_string(),
+                                    id: InstanceId::new(&vec![]),
+                                    os_info: os_info::get(),
+                                };
+                                local.save(&mut metadata).await?;
+                                metadata
+                            } else {
+                                bail!("Failed to get database metadata");
+                            }
+                        }
+                    }
+                }
+                Err(_) => sleep(Duration::from_secs(i)),
+            }
+
+            if i >= 5 {
+                bail!("The database failed to start");
+            }
+        };
+
+        debug!(
+            attempts = i,
+            address = address,
+            metadata = ?metadata,
+            "Connection to the database was successful"
+        );
+        Ok(Self {
+            address,
+            db_process,
+            metadata,
+            local: client,
+            remote: HashMap::new(),
+        })
     }
 
     /// Setup a remote server for database replication.
-    pub async fn add_server(&mut self, address: &str) -> Result<()> {
-        let client = reqwest::Client::builder().cookie_store(true).build()?;
+    pub async fn add_server(
+        &mut self,
+        address: &str,
+        username: &str,
+        password: &str,
+    ) -> Result<()> {
+        debug!(address = address, "Attempting server connection");
 
-        let rs = client
-            .post(format!("{}/_session", address))
-            .header("Content-Type", "application/json")
-            .json(&PostSession {
-                username: "".to_string(),
-                password: "".to_string(),
-            })
-            .send()
-            .await?
-            .json::<RsPostSession>()
-            .await?;
+        let client = couch_rs::Client::new(&address, username, password)?;
 
-        if !rs.ok {
-            bail!("Login error");
-        }
-
-        // Setup replication
-        client
-            .post(format!("{}/_session", address))
-            .header("Content-Type", "application/json")
-            .json(&PostReplication {
-                _id: todo!(),
-                source: todo!(),
-                create_target: todo!(),
-                continuous: todo!(),
-                target: todo!(),
-            })
-            .send()
-            .await?;
-
-        self.remote.push(client);
-        Ok(())
-    }
-
-    pub async fn metadata(&self) -> Result<LocalMetadata> {
-        match self
-            .local
+        let metadata = client
             .db("local")
             .await?
-            .get::<LocalMetadata>("instance")
-            .await
-        {
-            Ok(metadata) => Ok(metadata),
-            Err(e) => if e.is_not_found() {},
-        }
-    }
+            .get::<LocalMetadata>("metadata")
+            .await?;
 
-    /// Create persistent databases if necessary and reset transient databases.
-    pub async fn setup_db(&self) -> Result<()> {
-        for persistent_db in vec!["users", "listeners", "groups", "instances", "plugins"] {
-            if !self
-                .local
-                .get(format!("{}/{}", self.address, persistent_db))
-                .send()
-                .await?
-                .status()
-                .is_success()
-            {
-                if !self
-                    .local
-                    .put(format!("{}/{}", self.address, persistent_db))
-                    .send()
-                    .await?
-                    .status()
-                    .is_success()
-                {
-                    bail!("Failed to create database");
-                }
-            }
-        }
+        // Setup replications
+        // TODO
 
-        for transient_db in vec!["network", "connections", "streams"] {
-            self.local
-                .delete(format!("{}/{}", self.address, transient_db))
-                .send()
-                .await?
-                .status()
-                .is_success();
+        debug!(server_id = ?metadata.id, "Connected to server successfully");
 
-            if !self
-                .local
-                .put(format!("{}/{}", self.address, transient_db))
-                .send()
-                .await?
-                .status()
-                .is_success()
-            {
-                bail!("Failed to create database");
-            }
-        }
-
+        self.remote.insert(metadata.id, client);
         Ok(())
     }
 
@@ -257,13 +178,13 @@ impl Database {
 
     // TODO add _changes
 
-    pub async fn list_oid(&self, oid: &str) -> Result<()> {
-        self
-        .local
-        .get(format!("{}/instances/_all_docs?startkey=%22/{}/%22&endkey=%22{}/%EF%BF%B0%22&include_docs=true", self.address, oid, oid))
-        .send()
-        .await?;
+    // pub async fn list_oid(&self, oid: &str) -> Result<()> {
+    //     self
+    //     .local
+    //     .get(format!("{}/instances/_all_docs?startkey=%22/{}/%22&endkey=%22{}/%EF%BF%B0%22&include_docs=true", self.address, oid, oid))
+    //     .send()
+    //     .await?;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 }

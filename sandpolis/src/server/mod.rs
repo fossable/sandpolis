@@ -56,21 +56,19 @@ async fn db_proxy(state: State<AppState>, request: Request) -> impl IntoResponse
     let response = state
         .db
         .local
-        .request(request.method().to_owned(), "")
-        // .body(request.body().to_owned())
+        .req(request.method().to_owned(), request.uri().path(), None)
+        .body(reqwest::Body::wrap_stream(
+            request.body().into_data_stream(),
+        ))
         .send()
         .await
         .unwrap();
 
-    let response_builder = Response::builder().status(response.status().as_u16());
+    let mut response_builder = Response::builder().status(response.status().as_u16());
 
-    // Here the mapping of headers is required due to reqwest and axum differ on the http crate versions
-    let mut headers = HeaderMap::with_capacity(response.headers().len());
-    headers.extend(response.headers().into_iter().map(|(name, value)| {
-        let name = HeaderName::from_bytes(name.as_ref()).unwrap();
-        let value = HeaderValue::from_bytes(value.as_ref()).unwrap();
-        (name, value)
-    }));
+    for (header, value) in response.headers().into_iter() {
+        response_builder = response_builder.header(header, value);
+    }
 
     response_builder
         .body(Body::from_stream(response.bytes_stream()))

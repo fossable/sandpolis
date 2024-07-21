@@ -6,7 +6,7 @@ pub mod database;
 pub mod random;
 
 /// Major system architecture types.
-#[derive(Serialize, Deserialize, Clone, Copy, EnumIter)]
+#[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug)]
 pub enum ArchClassification {
     X86,
     X86_64,
@@ -20,7 +20,7 @@ pub enum ArchClassification {
 }
 
 /// All possible instance types.
-#[derive(Serialize, Deserialize, Clone, Copy, EnumIter)]
+#[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug)]
 pub enum InstanceType {
     /// A headless application that provides read/write access to a host
     Agent,
@@ -54,7 +54,7 @@ impl InstanceType {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct InstanceId(uuid::Uuid);
 
 impl Deref for InstanceId {
@@ -81,7 +81,7 @@ impl InstanceId {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, EnumIter)]
+#[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug)]
 pub enum Layer {
     #[cfg(feature = "layer-desktop")]
     Desktop,

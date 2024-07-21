@@ -6,15 +6,6 @@ pub mod core;
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about, long_about = None)]
 pub struct CommandLine {
-    /// Servers (address:port) to connect
-    pub server: Option<Vec<String>>,
-
-    #[clap(default_value_t = false)]
-    pub debug: bool,
-
-    #[clap(default_value_t = false)]
-    pub trace: bool,
-
     #[cfg(feature = "server")]
     #[clap(flatten)]
     pub server_args: crate::server::ServerCommandLine,
@@ -26,6 +17,16 @@ pub struct CommandLine {
     #[cfg(feature = "agent")]
     #[clap(flatten)]
     pub agent_args: crate::agent::AgentCommandLine,
+
+    /// Servers (address:port) to connect
+    #[clap(long)]
+    pub server: Option<Vec<String>>,
+
+    #[clap(long, num_args = 0, default_value_t = false)]
+    pub debug: bool,
+
+    #[clap(long, num_args = 0, default_value_t = false)]
+    pub trace: bool,
 }
 
 #[cfg(feature = "agent")]

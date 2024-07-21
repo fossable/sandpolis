@@ -22,7 +22,7 @@ strum = { version = "0.26.3", features = ["derive"] }
 tokio = { version = "1.34.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-uuid = { version = "1.10.0", features = ["v7"] }
+uuid = { version = "1.10.0", features = ["v7", "serde"] }
 
 # Server dependencies
 axum-macros = { version = "0.4.1", optional = true }

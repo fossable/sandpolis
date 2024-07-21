@@ -10,11 +10,14 @@ pub mod ui;
 pub struct ClientCommandLine {}
 
 pub async fn main(args: CommandLine) -> Result<()> {
-    let state = AppState {
+    let mut state = AppState {
         db: Database::new(None, "test", "test").await?,
     };
 
-    // Setup database
+    // Create server connection(s)
+    for server in args.server.unwrap_or(Vec::new()) {
+        state.db.add_server(&server, "test", "test").await?;
+    }
 
     crate::client::ui::run(state);
     Ok(())

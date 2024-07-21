@@ -6,15 +6,17 @@ use bevy::{
         touch::TouchPhase,
     },
     prelude::*,
-    sprite::Mesh2dHandle,
     window::{AppLifecycle, WindowMode},
 };
 use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_rapier2d::prelude::*;
 use std::ops::{Add, Range};
-use tracing::Instrument;
 
 use crate::core::database::Database;
+
+use self::node::spawn_node;
+
+pub mod node;
 
 #[derive(Resource)]
 pub struct AppState {
@@ -27,21 +29,25 @@ struct MousePressed(bool);
 /// Initialize and start rendering the UI.
 pub fn run(state: AppState) {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-            resizable: false,
-            mode: if cfg!(target_os = "android") {
-                WindowMode::BorderlessFullscreen
-            } else {
-                WindowMode::Windowed
-            },
-            // on iOS, gestures must be enabled.
-            // This doesn't work on Android
-            recognize_rotation_gesture: true,
-            ..default()
-        }),
-        ..default()
-    }))
+    app.add_plugins(
+        DefaultPlugins
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    resizable: false,
+                    mode: if cfg!(target_os = "android") {
+                        WindowMode::BorderlessFullscreen
+                    } else {
+                        WindowMode::Windowed
+                    },
+                    // on iOS, gestures must be enabled.
+                    // This doesn't work on Android
+                    recognize_rotation_gesture: true,
+                    ..default()
+                }),
+                ..default()
+            })
+            .disable::<bevy::log::LogPlugin>(),
+    )
     .add_plugins(EguiPlugin)
     .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
     .add_plugins(RapierDebugRenderPlugin::default())
@@ -54,7 +60,7 @@ pub fn run(state: AppState) {
             move_camera,
             button_handler,
             handle_lifetime,
-            ui_example_system,
+            // ui_example_system,
         ),
     );
 
@@ -66,11 +72,11 @@ pub fn run(state: AppState) {
     app.run();
 }
 
-fn ui_example_system(mut contexts: EguiContexts) {
-    egui::Window::new("Hello").show(contexts.ctx_mut(), |ui| {
-        ui.label("world");
-    });
-}
+// fn ui_example_system(mut contexts: EguiContexts) {
+//     egui::Window::new("Hello").show(contexts.ctx_mut(), |ui| {
+//         ui.label("world");
+//     });
+// }
 
 fn touch_camera(
     windows: Query<&Window>,
@@ -145,6 +151,7 @@ fn move_camera(
         let local_z = camera_transform.local_z().as_vec3().normalize_or_zero();
 
         if distance_delta != 0.0 {
+            // TODO z position doesn't work in 2D
             camera_transform.translation = (camera_transform.translation.length() + distance_delta)
                 .clamp(CAMERA_ZOOM_RANGE.start, CAMERA_ZOOM_RANGE.end)
                 * local_z;
@@ -171,39 +178,25 @@ fn move_camera(
     }
 }
 
-#[derive(Bundle, Clone)]
-pub struct Node {
-    // pub id: NodeId,
-    pub mesh: Mesh2dHandle,
-    pub material: Handle<ColorMaterial>,
-    pub transform: Transform,
-    // pub global_transform: GlobalTransform,
-    // /// User indication of whether an entity is visible
-    pub visibility: Visibility,
-    // // Inherited visibility of an entity.
-    // pub inherited_visibility: InheritedVisibility,
-    // // Indication of whether an entity is visible in any view.
-    // pub view_visibility: ViewVisibility,
-}
-
 fn setup(
     mut commands: Commands,
     mut rapier_config: ResMut<RapierConfiguration>,
     asset_server: Res<AssetServer>,
+    state: Res<AppState>,
+    mut contexts: EguiContexts,
 ) {
     rapier_config.gravity = Vec2::ZERO;
     commands.spawn(Camera2dBundle::default());
     commands.insert_resource(MousePressed(false));
 
-    commands.spawn(SpriteBundle {
-        texture: asset_server.load("os/arch_linux.png"),
-        ..default()
-    });
-    commands
-        .spawn(RigidBody::Dynamic)
-        .insert(Collider::ball(50.0))
-        .insert(Restitution::coefficient(0.7))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, 200.0, 0.0)));
+    // Spawn the local client
+    spawn_node(
+        &asset_server,
+        &mut commands,
+        &mut contexts,
+        state.db.metadata.id,
+        state.db.metadata.os_info.os_type(),
+    );
 }
 
 fn button_handler(

@@ -3,7 +3,7 @@ use clap::Parser;
 use futures::{future::join_all, Future};
 use sandpolis::CommandLine;
 use std::{net::SocketAddr, path::PathBuf, pin::Pin, process::ExitCode};
-use tracing::debug;
+use tracing::{debug, info};
 
 #[tokio::main]
 async fn main() -> Result<ExitCode> {
