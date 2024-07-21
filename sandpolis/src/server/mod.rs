@@ -53,13 +53,13 @@ pub async fn main(args: CommandLine) -> Result<()> {
 #[debug_handler]
 async fn db_proxy(state: State<AppState>, request: Request) -> impl IntoResponse {
     trace!("Passing request to local database");
+
     let response = state
         .db
         .local
         .req(request.method().to_owned(), request.uri().path(), None)
-        .body(reqwest::Body::wrap_stream(
-            request.body().into_data_stream(),
-        ))
+        .headers(request.headers().to_owned())
+        // .body(reqwest::Body::from(request.body()))
         .send()
         .await
         .unwrap();
