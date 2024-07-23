@@ -17,6 +17,7 @@ use crate::core::{database::Database, Layer};
 use self::{input::MousePressed, node::spawn_node};
 
 pub mod input;
+pub mod layer;
 pub mod node;
 
 #[derive(Resource)]
@@ -71,6 +72,12 @@ pub fn run(state: AppState) {
             handle_lifetime,
             // ui_example_system,
         ),
+    );
+
+    #[cfg(feature = "layer-desktop")]
+    app.add_systems(
+        Update,
+        self::layer::desktop::handle_layer.run_if(self::layer::desktop::check_layer_active),
     );
 
     // MSAA makes some Android devices panic, this is under investigation

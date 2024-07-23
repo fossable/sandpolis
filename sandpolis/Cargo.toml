@@ -19,7 +19,7 @@ reqwest = { version = "0.12.5", default-features = false, features = ["stream", 
 serde_bytes = "0.11.15"
 serde = { version = "1.0.203", features = ["derive"] }
 strum = { version = "0.26.3", features = ["derive"] }
-tokio = { version = "1.34.0", features = ["full"] }
+tokio = { version = "1.34.0", default-features = false, features = ["rt", "macros"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 uuid = { version = "1.10.0", features = ["v7", "serde"] }

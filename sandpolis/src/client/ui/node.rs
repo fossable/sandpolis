@@ -16,7 +16,7 @@ pub struct Node {
     pub collier: Collider,
     pub rigid_body: RigidBody,
     // /// User indication of whether an entity is visible
-    // pub visibility: Visibility,
+    pub visibility: Visibility,
     pub sprite: SpriteBundle,
     // // Inherited visibility of an entity.
     // pub inherited_visibility: InheritedVisibility,
@@ -38,6 +38,7 @@ pub fn spawn_node(
         rigid_body: RigidBody::Dynamic,
         // visibility: todo!(),
         restitution: Restitution::coefficient(0.7),
+        visibility: Visibility::Visible,
         sprite: SpriteBundle {
             texture: asset_server.load(get_os_image(os_type)),
             ..default()
@@ -45,12 +46,12 @@ pub fn spawn_node(
     };
 
     // TODO store a handle somehow
-    egui::Window::new("Hello")
-        .resizable(false)
-        .movable(false)
-        .show(contexts.ctx_mut(), |ui| {
-            ui.label("world");
-        });
+    // egui::Window::new("Hello")
+    //     .resizable(false)
+    //     .movable(false)
+    //     .show(contexts.ctx_mut(), |ui| {
+    //         ui.label("world");
+    //     });
 
     commands.spawn(node);
 }

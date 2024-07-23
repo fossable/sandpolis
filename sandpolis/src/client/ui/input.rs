@@ -119,13 +119,20 @@ pub fn handle_camera(
 }
 
 /// Show a help window with keyboard shortcuts.
-pub fn handle_keymap(mut contexts: EguiContexts, keyboard_input: Res<ButtonInput<KeyCode>>) {
+pub fn handle_keymap(
+    mut contexts: EguiContexts,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut windows: Query<&mut Window>,
+) {
     if keyboard_input.pressed(KeyCode::KeyK) {
+        let window_size = windows.single_mut().size();
         egui::Window::new("Keyboard shortcuts")
             .id(egui::Id::new("keymap"))
+            .pivot(egui::Align2::CENTER_CENTER)
             .resizable(false)
             .movable(false)
             .collapsible(false)
+            .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y / 2.0))
             .show(contexts.ctx_mut(), |ui| {
                 ui.label("W  -  Pan camera upwards");
                 ui.label("A  -  Pan camera upwards");
@@ -159,13 +166,11 @@ pub fn handle_layer_change(
         let window_size = windows.single_mut().size();
         egui::Window::new("Current layer")
             .id(egui::Id::new("current_layer"))
+            .pivot(egui::Align2::CENTER_CENTER)
             .resizable(false)
             .movable(false)
             .collapsible(false)
-            .fixed_pos(egui::Pos2::new(
-                window_size.x / 2.0,
-                window_size.y + window_size.y / 3.0,
-            ))
+            .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y - 30.0))
             .show(contexts.ctx_mut(), |ui| {
                 ui.label(format!("{:?}", **current_layer));
             });

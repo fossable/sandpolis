@@ -81,7 +81,7 @@ impl InstanceId {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq)]
 pub enum Layer {
     /// Interact with Desktop environments.
     #[cfg(feature = "layer-desktop")]
