@@ -47,4 +47,8 @@ client = [ "dep:bevy", "dep:bevy_rapier2d", "dep:bevy_egui", "dep:egui" ]
 # Layers
 layer-desktop = []
 layer-filesystem = []
+layer-shell = []
 layer-inventory = []
+layer-account = []
+layer-logging = []
+layer-meta = []

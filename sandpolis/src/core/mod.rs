@@ -83,6 +83,30 @@ impl InstanceId {
 
 #[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug)]
 pub enum Layer {
+    /// Interact with Desktop environments.
     #[cfg(feature = "layer-desktop")]
     Desktop,
+
+    /// Manipulate filesystem contents.
+    #[cfg(feature = "layer-filesystem")]
+    Filesystem,
+
+    /// Interact with shell prompts.
+    #[cfg(feature = "layer-shell")]
+    Shell,
+
+    /// View system information.
+    #[cfg(feature = "layer-inventory")]
+    Inventory,
+
+    /// View logs.
+    #[cfg(feature = "layer-logging")]
+    Logging,
+
+    /// View accounts.
+    #[cfg(feature = "layer-account")]
+    Account,
+
+    #[cfg(feature = "layer-meta")]
+    Meta,
 }
