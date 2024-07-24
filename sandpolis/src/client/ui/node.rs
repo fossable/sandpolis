@@ -7,7 +7,7 @@ use bevy_rapier2d::{
 
 use crate::core::InstanceId;
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Debug, Deref, DerefMut)]
 pub struct NodeId(InstanceId);
 
 #[derive(Bundle)]
@@ -22,31 +22,19 @@ pub struct Node {
 pub fn spawn_node(
     asset_server: &AssetServer,
     commands: &mut Commands,
-    contexts: &mut EguiContexts,
     instance_id: InstanceId,
     os_type: os_info::Type,
 ) {
-    let node = Node {
+    commands.spawn(Node {
         id: NodeId(instance_id),
         collier: Collider::ball(50.0),
         rigid_body: RigidBody::Dynamic,
-        // visibility: todo!(),
         restitution: Restitution::coefficient(0.7),
         sprite: SpriteBundle {
             texture: asset_server.load(get_os_image(os_type)),
             ..default()
         },
-    };
-
-    // TODO store a handle somehow
-    // egui::Window::new("Hello")
-    //     .resizable(false)
-    //     .movable(false)
-    //     .show(contexts.ctx_mut(), |ui| {
-    //         ui.label("world");
-    //     });
-
-    commands.spawn(node);
+    });
 }
 
 pub fn get_os_image(os_type: os_info::Type) -> String {

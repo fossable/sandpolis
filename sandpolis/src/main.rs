@@ -12,7 +12,7 @@ async fn main() -> Result<ExitCode> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    info!(os_info = ?os_info::get(), "Starting instance");
+    info!(os_info = ?os_info::get(), version = sandpolis::built_info::PKG_VERSION, build_time = sandpolis::built_info::BUILT_TIME_UTC, "Starting instance");
 
     #[cfg(feature = "server")]
     let server_thread = {

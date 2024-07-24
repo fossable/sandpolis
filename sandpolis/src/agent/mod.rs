@@ -192,82 +192,42 @@
 use anyhow::{bail, Result};
 use clap::Parser;
 use std::collections::HashMap;
-use std::io::BufRead;
+use std::io::{BufRead, IsTerminal};
 use std::net::TcpStream;
 use std::{thread, time};
 use tracing::{debug, error, info};
 
+use crate::core::database::Database;
 use crate::CommandLine;
 
 #[derive(Parser, Debug, Clone)]
 pub struct AgentCommandLine {}
 
 pub async fn main(args: CommandLine) -> Result<()> {
-    // Load build metadata
-    if let Some(build_properties) = BinaryAssets::get("build.properties") {
-        let properties: HashMap<String, String> = parse_from_slice(&build_properties)
-            .expect("Failed to parse properties file")
-            .into_iter()
-            .collect();
+    let mut db = Database::new(None, "test", "test").await?;
 
-        // Output debug build info
-        debug!("Build platform: {}", properties["build.platform"]);
-        debug!("Build JVM version: {}", properties["build.java_version"]);
-
-        info!("Starting Sandpolis agent v{}", properties["build.version"]);
-    } else {
-        error!("Failed to locate embedded build.properties resource");
-        bail!("");
-    }
-
-    // Load agent configuration
-    if let Some(config_bytes) = BinaryAssets::get("config.bin") {
-        if let Ok(config) = AgentConfig::parse_from_bytes(&config_bytes) {
-        } else {
-            error!("The embedded configuration is invalid")
+    if let Some(servers) = args.server {
+        for server in servers {
+            db.add_server(&server, "test", "test").await?;
         }
     } else {
-        debug!("Failed to locate embedded configuration")
+        if std::io::stdout().is_terminal() {
+            // TODO prompt
+            print!("Please enter the server's address [127.0.0.1]: ");
+        } else {
+            bail!("Cannot configure server");
+        }
     }
 
-    // Prompt user
-    info!("Preparing to configure agent");
-    print!("Please enter the server's address [127.0.0.1]: ");
+    // if prompt_bool("Configure client certificate authentication?", false) {}
 
-    let mut server_host = String::new();
-    std::io::stdin().read_line(&mut server_host)?;
-
-    if server_host == "" {
-        server_host = "127.0.0.1".to_string();
-    }
-
-    // Attempt a connection
-    info!("Attempting connection to server");
-    if let Ok(connection) = connect(server_host.as_str(), 8768) {
-        // TODO
-    }
-
-    if prompt_bool("Configure client certificate authentication?", false) {}
-
-    if prompt_bool("Configure password authentication? ", false) {
-        let password = prompt_string(
-            "Enter password: ",
-            "",
-            &predicate::function(|x: &String| x.len() >= 5_usize),
-        );
-    }
+    // if prompt_bool("Configure password authentication? ", false) {
+    //     let password = prompt_string(
+    //         "Enter password: ",
+    //         "",
+    //         &predicate::function(|x: &String| x.len() >= 5_usize),
+    //     );
+    // }
 
     return Ok(());
-}
-
-fn connection_routine(config: &AgentConfig_LoopConfig) {
-    debug!("Starting connection routine");
-
-    let mut iteration: i32 = 0;
-    while iteration < config.iteration_limit || config.iteration_limit == 0 {
-        iteration += 1;
-        if let Ok(connection) = connect("127.0.0.1", 8768) {}
-
-        thread::sleep(time::Duration::from_millis(config.cooldown as u64));
-    }
 }

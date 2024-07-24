@@ -70,7 +70,6 @@ pub fn run(state: AppState) {
             self::input::handle_layer_change,
             button_handler,
             handle_lifetime,
-            // ui_example_system,
         ),
     );
 
@@ -88,12 +87,6 @@ pub fn run(state: AppState) {
     app.run();
 }
 
-// fn ui_example_system(mut contexts: EguiContexts) {
-//     egui::Window::new("Hello").show(contexts.ctx_mut(), |ui| {
-//         ui.label("world");
-//     });
-// }
-
 fn setup(
     mut commands: Commands,
     mut rapier_config: ResMut<RapierConfiguration>,
@@ -108,7 +101,6 @@ fn setup(
     spawn_node(
         &asset_server,
         &mut commands,
-        &mut contexts,
         state.db.metadata.id,
         state.db.metadata.os_info.os_type(),
     );

@@ -3,6 +3,11 @@ use clap::Parser;
 pub mod api;
 pub mod core;
 
+/// Build info
+pub mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about, long_about = None)]
 pub struct CommandLine {
