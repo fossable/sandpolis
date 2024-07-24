@@ -189,11 +189,8 @@
 //! The probe may attempt a spontaneous connection outside of the regular schedule
 //! at any time.
 
-pub mod connection;
-
 use anyhow::{bail, Result};
 use clap::Parser;
-use predicates::{prelude::*, Predicate};
 use std::collections::HashMap;
 use std::io::BufRead;
 use std::net::TcpStream;
@@ -272,13 +269,5 @@ fn connection_routine(config: &AgentConfig_LoopConfig) {
         if let Ok(connection) = connect("127.0.0.1", 8768) {}
 
         thread::sleep(time::Duration::from_millis(config.cooldown as u64));
-    }
-}
-
-fn dispatch_routine(connection: &mut Connection) {
-    debug!("Starting command dispatch routine");
-
-    loop {
-        // TODO
     }
 }

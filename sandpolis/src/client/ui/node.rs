@@ -15,14 +15,8 @@ pub struct Node {
     pub id: NodeId,
     pub collier: Collider,
     pub rigid_body: RigidBody,
-    // /// User indication of whether an entity is visible
-    pub visibility: Visibility,
     pub sprite: SpriteBundle,
-    // // Inherited visibility of an entity.
-    // pub inherited_visibility: InheritedVisibility,
     pub restitution: Restitution,
-    // // Indication of whether an entity is visible in any view.
-    // pub view_visibility: ViewVisibility,
 }
 
 pub fn spawn_node(
@@ -38,7 +32,6 @@ pub fn spawn_node(
         rigid_body: RigidBody::Dynamic,
         // visibility: todo!(),
         restitution: Restitution::coefficient(0.7),
-        visibility: Visibility::Visible,
         sprite: SpriteBundle {
             texture: asset_server.load(get_os_image(os_type)),
             ..default()

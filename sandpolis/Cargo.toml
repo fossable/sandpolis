@@ -8,6 +8,9 @@ repository = "https://github.com/fossable/sandpolis"
 rust-version = "1.74"
 version = "0.0.1"
 
+[build-dependencies]
+built = { version = "0.7", features = ["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }
+
 [dependencies]
 anyhow = "1.0.76"
 clap = { version = "4.4.7", features = ["derive", "string"] }

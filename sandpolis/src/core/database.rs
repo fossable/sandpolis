@@ -24,6 +24,31 @@ pub struct LocalMetadata {
     pub os_info: os_info::Info,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum ReplicationAuth {
+    #[serde(rename = "basic")]
+    Basic { username: String, password: String },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ReplicationTarget {
+    pub url: String,
+    pub auth: ReplicationAuth,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, CouchDocument)]
+pub struct ReplicationTask {
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub _id: DocumentId,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub _rev: String,
+
+    pub source: String,
+    pub target: ReplicationTarget,
+    pub create_target: bool,
+    pub continuous: bool,
+}
+
 #[derive(Clone)]
 pub struct Database {
     address: String,
@@ -158,7 +183,24 @@ impl Database {
             .await?;
 
         // Setup replications
-        // TODO
+        client
+            .db("_replicator")
+            .await?
+            .save(&mut ReplicationTask {
+                _id: "servers".into(),
+                _rev: "".into(),
+                source: "http://127.0.0.1:80/servers".into(),
+                target: ReplicationTarget {
+                    url: "http://127.0.0.1:5984/servers".into(),
+                    auth: ReplicationAuth::Basic {
+                        username: "test".into(),
+                        password: "test".into(),
+                    },
+                },
+                create_target: true,
+                continuous: true,
+            })
+            .await?;
 
         debug!(server_id = ?metadata.id, "Connected to server successfully");
 

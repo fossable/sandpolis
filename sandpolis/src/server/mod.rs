@@ -2,22 +2,21 @@ use crate::core::database::Database;
 use crate::CommandLine;
 use anyhow::Result;
 use axum::{
-    body::{Body, Bytes},
+    body::Body,
     extract::{Request, State},
-    http::{HeaderMap, HeaderName, HeaderValue, Uri},
     response::{IntoResponse, Response},
-    routing::get,
     Router,
 };
 use axum_macros::debug_handler;
 use axum_server::tls_rustls::RustlsConfig;
 use clap::Parser;
-use std::{net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{net::SocketAddr, path::PathBuf};
 use tracing::{info, trace};
 
 #[derive(Parser, Debug, Clone)]
 pub struct ServerCommandLine {
     /// The server listen address:port
+    #[clap(long)]
     pub listen: Option<String>,
 }
 
@@ -27,25 +26,36 @@ pub struct AppState {
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {
+    // Use given listen address or default
+    let listen: SocketAddr = args
+        .server_args
+        .listen
+        .unwrap_or("0.0.0.0:8768".into())
+        .parse()?;
+
     let state = AppState {
         db: Database::new(None, "test", "test").await?,
     };
 
     let app = Router::new().fallback(db_proxy).with_state(state);
 
-    let config = RustlsConfig::from_pem_file(
-        PathBuf::from("/tmp/cert.pem"),
-        PathBuf::from("/tmp/cert.key"),
-    )
-    .await
-    .unwrap();
+    if listen.port() == 80 {
+        info!(socket = ?listen, "Starting plaintext listener");
+        axum_server::bind(listen)
+            .serve(app.into_make_service())
+            .await?;
+    } else {
+        let config = RustlsConfig::from_pem_file(
+            PathBuf::from("/tmp/cert.pem"),
+            PathBuf::from("/tmp/cert.key"),
+        )
+        .await?;
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8768));
-    info!("listening on {}", addr);
-    axum_server::bind_rustls(addr, config)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+        info!(socket = ?listen, "Starting TLS listener");
+        axum_server::bind_rustls(listen, config)
+            .serve(app.into_make_service())
+            .await?;
+    }
     Ok(())
 }
 
@@ -59,7 +69,12 @@ async fn db_proxy(state: State<AppState>, request: Request) -> impl IntoResponse
         .local
         .req(request.method().to_owned(), request.uri().path(), None)
         .headers(request.headers().to_owned())
-        // .body(reqwest::Body::from(request.body()))
+        // TODO figure out how to stream
+        .body(
+            axum::body::to_bytes(request.into_body(), usize::MAX)
+                .await
+                .unwrap(),
+        )
         .send()
         .await
         .unwrap();
