@@ -56,3 +56,5 @@ layer-inventory = []
 layer-account = []
 layer-logging = []
 layer-meta = []
+
+default = [ "layer-desktop", "layer-filesystem", "layer-shell", "layer-inventory", "layer-account", "layer-logging", "layer-meta" ]

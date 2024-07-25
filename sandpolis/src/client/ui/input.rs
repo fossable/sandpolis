@@ -5,17 +5,19 @@ use bevy::{
         touch::TouchPhase,
     },
     prelude::*,
-    window::{AppLifecycle, WindowMode},
 };
 use bevy_egui::EguiContexts;
-use std::ops::{Add, Range};
+use std::ops::Range;
 
 use crate::core::Layer;
 
-use super::{CurrentLayer, LayerChangeTimer};
+use super::{CurrentLayer, ZoomLevel};
 
 #[derive(Resource)]
 pub struct MousePressed(pub bool);
+
+#[derive(Resource, Deref, DerefMut)]
+pub struct LayerChangeTimer(pub Timer);
 
 // #[cfg(target_os = "android")]
 pub fn touch_camera(
@@ -54,24 +56,42 @@ pub fn touch_camera(
 
 const CAMERA_KEYBOARD_ZOOM_SPEED: f32 = 1.0;
 const CAMERA_MOUSE_WHEEL_ZOOM_SPEED: f32 = 0.25;
-const CAMERA_ZOOM_RANGE: Range<f32> = 1.0..12.0;
+const CAMERA_ZOOM_RANGE: Range<f32> = 0.5..2.0;
+const SPRITE_SIZE: f32 = 32.0;
+
+/// Handle zooming using the mouse wheel or keyboard.
+pub fn handle_zoom(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut mouse_wheel_input: EventReader<MouseWheel>,
+    mut zoom_level: ResMut<ZoomLevel>,
+    mut sprites: Query<&mut Sprite>,
+) {
+    let mut zoom_delta = 0.0;
+    for mouse_wheel_event in mouse_wheel_input.read() {
+        zoom_delta -= mouse_wheel_event.y * CAMERA_MOUSE_WHEEL_ZOOM_SPEED;
+    }
+
+    if zoom_delta != 0.0 {
+        **zoom_level =
+            (zoom_level.0 + zoom_delta).clamp(CAMERA_ZOOM_RANGE.start, CAMERA_ZOOM_RANGE.end);
+
+        for mut sprite in sprites.iter_mut() {
+            sprite.custom_size = Some(Vec2 {
+                x: zoom_level.0 * SPRITE_SIZE,
+                y: zoom_level.0 * SPRITE_SIZE,
+            });
+        }
+    }
+}
 
 /// Handle camera movement (panning) using the mouse or keyboard.
 pub fn handle_camera(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut mouse_button_events: EventReader<MouseButtonInput>,
     mut mouse_motion_events: EventReader<MouseMotion>,
-    mut mouse_wheel_input: EventReader<MouseWheel>,
     mut mouse_pressed: ResMut<MousePressed>,
     mut cameras: Query<&mut Transform, With<Camera2d>>,
 ) {
-    let mut distance_delta = 0.0;
-
-    // Handle mouse events.
-    for mouse_wheel_event in mouse_wheel_input.read() {
-        distance_delta -= mouse_wheel_event.y * CAMERA_MOUSE_WHEEL_ZOOM_SPEED;
-    }
-
     // Update transforms.
     for mut camera_transform in cameras.iter_mut() {
         // Handle keyboard events.
@@ -86,19 +106,6 @@ pub fn handle_camera(
         }
         if keyboard_input.pressed(KeyCode::KeyD) {
             camera_transform.translation.x += CAMERA_KEYBOARD_ZOOM_SPEED;
-        }
-
-        let local_z = camera_transform.local_z().as_vec3().normalize_or_zero();
-
-        if distance_delta != 0.0 {
-            // TODO z position doesn't work in 2D
-            camera_transform.translation = (camera_transform.translation.length() + distance_delta)
-                .clamp(CAMERA_ZOOM_RANGE.start, CAMERA_ZOOM_RANGE.end)
-                * local_z;
-            debug!(
-                position = ?camera_transform.translation,
-                "Moved camera position"
-            );
         }
 
         // Store left-pressed state in the MousePressed resource
@@ -126,6 +133,8 @@ pub fn handle_keymap(
 ) {
     if keyboard_input.pressed(KeyCode::KeyK) {
         let window_size = windows.single_mut().size();
+
+        // TODO separate window for layers and highlight active (HUD)
         egui::Window::new("Keyboard shortcuts")
             .id(egui::Id::new("keymap"))
             .pivot(egui::Align2::CENTER_CENTER)
@@ -141,13 +150,14 @@ pub fn handle_keymap(
                 ui.label(">  -  Next layer");
                 ui.label("<  -  Previous layer");
                 ui.label("M  -  Meta layer");
+                ui.label("F  -  Filesystem layer");
             });
     }
 }
 
 /// Switch to another layer from keypress
 pub fn handle_layer_change(
-    mut commands: Commands,
+    commands: Commands,
     mut contexts: EguiContexts,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut current_layer: ResMut<CurrentLayer>,
@@ -164,6 +174,7 @@ pub fn handle_layer_change(
     // Now show the current layer for a few seconds
     if !timer.tick(time.delta()).finished() {
         let window_size = windows.single_mut().size();
+        // TODO util
         egui::Window::new("Current layer")
             .id(egui::Id::new("current_layer"))
             .pivot(egui::Align2::CENTER_CENTER)

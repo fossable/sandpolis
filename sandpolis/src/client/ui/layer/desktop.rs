@@ -11,16 +11,16 @@ pub fn check_layer_active(current_layer: Res<CurrentLayer>) -> bool {
 }
 
 pub fn handle_layer(
-    mut commands: Commands,
+    commands: Commands,
     mut contexts: EguiContexts,
     mut nodes: Query<(&mut Transform, &NodeId), With<NodeId>>,
     mut windows: Query<&mut Window>,
-    mut cameras: Query<&Transform, (With<Camera2d>, Without<NodeId>)>,
+    cameras: Query<&Transform, (With<Camera2d>, Without<NodeId>)>,
 ) {
     let window_size = windows.single_mut().size();
     let camera_transform = cameras.single();
 
-    for (mut transform, id) in nodes.iter_mut() {
+    for (transform, id) in nodes.iter_mut() {
         egui::Window::new("Hello")
             .movable(false)
             .resizable(false)

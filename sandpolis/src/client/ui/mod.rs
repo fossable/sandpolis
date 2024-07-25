@@ -1,20 +1,17 @@
 use bevy::{
     color::palettes::basic::*,
-    input::{
-        gestures::RotationGesture,
-        mouse::{MouseButtonInput, MouseMotion, MouseWheel},
-        touch::TouchPhase,
-    },
     prelude::*,
     window::{AppLifecycle, WindowMode},
 };
 use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_rapier2d::prelude::*;
-use std::ops::{Add, Range};
 
 use crate::core::{database::Database, Layer};
 
-use self::{input::MousePressed, node::spawn_node};
+use self::{
+    input::{LayerChangeTimer, MousePressed},
+    node::spawn_node,
+};
 
 pub mod input;
 pub mod layer;
@@ -29,7 +26,7 @@ pub struct AppState {
 pub struct CurrentLayer(Layer);
 
 #[derive(Resource, Deref, DerefMut)]
-pub struct LayerChangeTimer(Timer);
+pub struct ZoomLevel(f32);
 
 /// Initialize and start rendering the UI.
 pub fn run(state: AppState) {
@@ -57,6 +54,7 @@ pub fn run(state: AppState) {
     .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
     .add_plugins(RapierDebugRenderPlugin::default())
     .insert_resource(CurrentLayer(Layer::Desktop))
+    .insert_resource(ZoomLevel(1.0))
     .insert_resource(LayerChangeTimer(Timer::from_seconds(3.0, TimerMode::Once)))
     .insert_resource(state)
     .insert_resource(MousePressed(false))
@@ -65,6 +63,7 @@ pub fn run(state: AppState) {
         Update,
         (
             // touch_camera,
+            self::input::handle_zoom,
             self::input::handle_camera,
             self::input::handle_keymap,
             self::input::handle_layer_change,
@@ -92,7 +91,7 @@ fn setup(
     mut rapier_config: ResMut<RapierConfiguration>,
     asset_server: Res<AssetServer>,
     state: Res<AppState>,
-    mut contexts: EguiContexts,
+    contexts: EguiContexts,
 ) {
     rapier_config.gravity = Vec2::ZERO;
     commands.spawn(Camera2dBundle::default());

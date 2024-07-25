@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 
 use rand::distributions::{Alphanumeric, DistString};
-use rand::{thread_rng, Rng};
+use rand::{Rng};
 
 pub fn next_alphanumeric(length: usize) -> String {
     Alphanumeric.sample_string(&mut rand::thread_rng(), length)

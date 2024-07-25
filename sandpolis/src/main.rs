@@ -1,9 +1,9 @@
 use anyhow::Result;
 use clap::Parser;
-use futures::{future::join_all, Future};
+use futures::Future;
 use sandpolis::CommandLine;
-use std::{net::SocketAddr, path::PathBuf, pin::Pin, process::ExitCode};
-use tracing::{debug, info};
+use std::process::ExitCode;
+use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<ExitCode> {
@@ -37,5 +37,5 @@ async fn main() -> Result<ExitCode> {
     #[cfg(feature = "agent")]
     tokio::join!(agent_thread).0??;
 
-    Ok(ExitCode::SUCCESS)
+    bail!("No instance was enabled at build time");
 }

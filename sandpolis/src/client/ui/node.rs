@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_egui::EguiContexts;
 use bevy_rapier2d::{
     dynamics::RigidBody,
     geometry::{Collider, Restitution},

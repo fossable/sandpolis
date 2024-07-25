@@ -191,11 +191,7 @@
 
 use anyhow::{bail, Result};
 use clap::Parser;
-use std::collections::HashMap;
-use std::io::{BufRead, IsTerminal};
-use std::net::TcpStream;
-use std::{thread, time};
-use tracing::{debug, error, info};
+use std::io::{IsTerminal};
 
 use crate::core::database::Database;
 use crate::CommandLine;
