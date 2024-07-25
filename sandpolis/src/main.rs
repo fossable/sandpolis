@@ -1,3 +1,4 @@
+use anyhow::bail;
 use anyhow::Result;
 use clap::Parser;
 use futures::Future;
@@ -37,5 +38,5 @@ async fn main() -> Result<ExitCode> {
     #[cfg(feature = "agent")]
     tokio::join!(agent_thread).0??;
 
-    bail!("No instance was enabled at build time");
+    bail!("No instance was enabled at build time")
 }

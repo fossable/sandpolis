@@ -181,6 +181,7 @@ pub fn handle_layer_change(
             .resizable(false)
             .movable(false)
             .collapsible(false)
+            .title_bar(false)
             .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y - 30.0))
             .show(contexts.ctx_mut(), |ui| {
                 ui.label(format!("{:?}", **current_layer));

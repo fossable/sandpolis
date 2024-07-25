@@ -18,6 +18,8 @@ jobs:
           - x86_64-unknown-linux-gnu
           - x86_64-unknown-linux-musl
     steps:
+      - run: sudo apt-get install -y libwayland-dev
+
       - uses: actions/checkout@v4
         with:
           fetch-tags: true
@@ -53,6 +55,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Build apk
+        working-directory: sandpolis-client-mobile
         run: |
           x doctor
           x build
