@@ -6,7 +6,7 @@ use self::ui::AppState;
 
 pub mod ui;
 
-#[derive(Parser, Debug, Clone)]
+#[derive(Parser, Debug, Clone, Default)]
 pub struct ClientCommandLine {}
 
 pub async fn main(args: CommandLine) -> Result<()> {
