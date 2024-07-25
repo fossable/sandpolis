@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 uefi = { version = "0.29.0", features = ["panic_handler"] }
-smoltcp = { version = "0.11.0", default-features = false, features = ["log", "alloc"] }
+smoltcp = { version = "0.11.0", default-features = false, features = ["log", "alloc", "proto-ipv4"] }
 # ring = "0.17.8"

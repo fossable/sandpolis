@@ -10,7 +10,7 @@ crate-type = ["staticlib", "cdylib"]
 [dependencies]
 anyhow = "1.0.56"
 log = "0.4.11"
-sandpolis = { path = "../sandpolis", default-features = false, features = ["client"]}
+sandpolis = { path = "../sandpolis", default-features = false, features = ["client", "layer-desktop"]}
 
 [package.metadata.android]
 package = "org.fossable.sandpolis"
