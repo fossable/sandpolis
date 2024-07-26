@@ -29,6 +29,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - uses: actions-rs/cargo@v1
+        working-directory: sandpolis
         with:
           command: build
           args: --release --target ${{ matrix.target }} --all-features
@@ -61,7 +62,8 @@ jobs:
         run: |
           x doctor
           x build --arch arm64 --platform android --format apk
-          tree
+          cd ..
+          tree -L 3
 
       - uses: actions/upload-artifact@v4
         with:
