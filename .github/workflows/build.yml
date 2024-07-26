@@ -29,7 +29,6 @@ jobs:
           targets: ${{ matrix.target }}
 
       - uses: actions-rs/cargo@v1
-        working-directory: sandpolis
         with:
           command: build
           args: --bin sandpolis --target ${{ matrix.target }} --all-features
