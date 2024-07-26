@@ -46,7 +46,7 @@ jobs:
       matrix:
         target:
           - aarch64-linux-android
-          - armv7-linux-androideabi
+          # - armv7-linux-androideabi
     steps:
       - run: sudo apt-get install -y libasound2-dev libudev-dev llvm
 
@@ -73,5 +73,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: build_artifacts
-          path: target/x/debug/*.apk
+          path: target/x/debug/android/*.apk
 
