@@ -32,7 +32,12 @@ jobs:
         working-directory: sandpolis
         with:
           command: build
-          args: --release --target ${{ matrix.target }} --all-features
+          args: --bin sandpolis --target ${{ matrix.target }} --all-features
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build_artifacts
+          path: target/${{ matrix.target }}/debug/sandpolis
 
   android:
     name: android / ${{ matrix.target }}
