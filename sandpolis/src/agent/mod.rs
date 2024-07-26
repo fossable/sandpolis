@@ -191,12 +191,12 @@
 
 use anyhow::{bail, Result};
 use clap::Parser;
-use std::io::{IsTerminal};
+use std::io::IsTerminal;
 
 use crate::core::database::Database;
 use crate::CommandLine;
 
-#[derive(Parser, Debug, Clone)]
+#[derive(Parser, Debug, Clone, Default)]
 pub struct AgentCommandLine {}
 
 pub async fn main(args: CommandLine) -> Result<()> {

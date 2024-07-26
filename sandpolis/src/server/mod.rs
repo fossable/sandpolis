@@ -13,7 +13,7 @@ use clap::Parser;
 use std::{net::SocketAddr, path::PathBuf};
 use tracing::{info, trace};
 
-#[derive(Parser, Debug, Clone)]
+#[derive(Parser, Debug, Clone, Default)]
 pub struct ServerCommandLine {
     /// The server listen address:port
     #[clap(long)]
