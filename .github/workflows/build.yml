@@ -35,7 +35,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: build_artifacts
+          name: linux_artifacts
           path: target/${{ matrix.target }}/debug/sandpolis
 
   android:
@@ -66,12 +66,10 @@ jobs:
         working-directory: sandpolis-client-mobile
         run: |
           x doctor
-          x build --arch arm64 --platform android --format apk
-          cd ..
-          tree -L 5 target
+          x build --release --arch arm64 --platform android --format apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: build_artifacts
+          name: android_artifacts
           path: target/x/debug/android/*.apk
 

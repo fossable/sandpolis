@@ -18,6 +18,10 @@ pub struct ServerCommandLine {
     /// The server listen address:port
     #[clap(long)]
     pub listen: Option<String>,
+
+    /// Create user with interactive prompt
+    #[clap(long)]
+    pub create_user: bool,
 }
 
 #[derive(Clone)]

@@ -3,6 +3,7 @@ use std::ops::Deref;
 use strum::EnumIter;
 
 pub mod database;
+pub mod layer;
 pub mod random;
 
 /// Major system architecture types.
@@ -83,30 +84,43 @@ impl InstanceId {
 
 #[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq)]
 pub enum Layer {
+    /// View accounts.
+    #[cfg(feature = "layer-account")]
+    Account,
+
+    #[cfg(feature = "layer-alerts")]
+    Alerts,
+
     /// Interact with Desktop environments.
     #[cfg(feature = "layer-desktop")]
     Desktop,
 
+    // Docker,
     /// Manipulate filesystem contents.
     #[cfg(feature = "layer-filesystem")]
     Filesystem,
 
-    /// Interact with shell prompts.
-    #[cfg(feature = "layer-shell")]
-    Shell,
+    // Goldboot,
+    #[cfg(feature = "layer-health")]
+    Health,
 
     /// View system information.
     #[cfg(feature = "layer-inventory")]
     Inventory,
 
+    // Libvirt,
+    Location,
+
     /// View logs.
     #[cfg(feature = "layer-logging")]
     Logging,
 
-    /// View accounts.
-    #[cfg(feature = "layer-account")]
-    Account,
-
-    #[cfg(feature = "layer-meta")]
     Meta,
+    Network,
+    #[cfg(feature = "layer-packages")]
+    Packages,
+    /// Interact with shell prompts / macros.
+    #[cfg(feature = "layer-shell")]
+    Shell,
+    // Tunnel,
 }
