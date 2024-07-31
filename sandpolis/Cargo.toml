@@ -30,7 +30,7 @@ dialoguer = { version = "0.11.0" }
 
 # Server dependencies
 axum-macros = { version = "0.4.1", optional = true }
-axum-server = { version = "0.6.0", features = ["tls-rustls"], optional = true }
+axum-server = { version = "0.7.1", features = ["tls-rustls"], optional = true }
 axum = { version = "0.7.4", optional = true }
 rcgen = { version = "0.13.1", optional = true }
 
