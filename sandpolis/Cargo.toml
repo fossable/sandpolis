@@ -13,7 +13,7 @@ built = { version = "0.7", features = ["cargo-lock", "dependency-tree", "git2", 
 
 [dependencies]
 anyhow = "1.0.76"
-clap = { version = "4.4.7", features = ["derive", "string"] }
+clap = { version = "4.5.15", features = ["derive", "string"] }
 couch_rs = { version = "0.10.1", default-features = false, features = ["couch_rs_derive", "derive", "rustls-tls"] }
 futures = "0.3.30"
 os_info = "3.8.2"
