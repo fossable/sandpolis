@@ -1,3 +1,4 @@
+use anyhow::Result;
 use bevy::{
     color::palettes::basic::*,
     prelude::*,
@@ -6,7 +7,10 @@ use bevy::{
 use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_rapier2d::prelude::*;
 
-use crate::core::{database::Database, Layer};
+use crate::{
+    core::{database::Database, Layer},
+    CommandLine,
+};
 
 use self::{
     input::{LayerChangeTimer, MousePressed},
@@ -19,7 +23,7 @@ pub mod node;
 
 #[derive(Resource)]
 pub struct AppState {
-    pub db: Database,
+    pub db: Option<Database>,
 }
 
 #[derive(Resource, Deref, DerefMut)]
@@ -29,7 +33,14 @@ pub struct CurrentLayer(Layer);
 pub struct ZoomLevel(f32);
 
 /// Initialize and start rendering the UI.
-pub fn run(state: AppState) {
+pub async fn run(args: CommandLine) -> Result<()> {
+    let mut state = AppState {
+        #[cfg(feature = "local-database")]
+        db: Some(Database::new(None, "test", "test").await?),
+        #[cfg(not(feature = "local-database"))]
+        db: None,
+    };
+
     let mut app = App::new();
     app.add_plugins(
         DefaultPlugins
@@ -57,6 +68,7 @@ pub fn run(state: AppState) {
     .insert_resource(ZoomLevel(1.0))
     .insert_resource(LayerChangeTimer(Timer::from_seconds(3.0, TimerMode::Once)))
     .insert_resource(state)
+    .insert_resource(args)
     .insert_resource(MousePressed(false))
     .add_systems(Startup, setup)
     .add_systems(
@@ -84,6 +96,7 @@ pub fn run(state: AppState) {
     app.insert_resource(Msaa::Off);
 
     app.run();
+    Ok(())
 }
 
 fn setup(
@@ -97,12 +110,12 @@ fn setup(
     commands.spawn(Camera2dBundle::default());
 
     // Spawn the local client
-    spawn_node(
-        &asset_server,
-        &mut commands,
-        state.db.metadata.id,
-        state.db.metadata.os_info.os_type(),
-    );
+    // spawn_node(
+    //     &asset_server,
+    //     &mut commands,
+    //     state.db.metadata.id,
+    //     state.db.metadata.os_info.os_type(),
+    // );
 }
 
 fn button_handler(
@@ -144,3 +157,38 @@ fn handle_lifetime(
         }
     }
 }
+
+// #[derive(Component)]
+// pub struct ConnectionTask(pub Task<()>);
+
+// pub fn prepare_connection_tasks(
+//     args: Res<CommandLine>,
+//     pool: Res<AsyncComputeTaskPool>,
+//     mut commands: Commands,
+// ) {
+//     while let Some(key) = queue.queue.pop() {
+//         if let Some(entity) = chunks.entity(key) {
+//             let task = pool.spawn(async move {
+//                 // TODO no references
+//                 // Create server connection(s)
+//                 for server in args.server.unwrap_or(Vec::new()) {
+//                     state.db.add_server(&server, "test", "test").await?;
+//                 }
+//             });
+
+//             cmds.entity(entity).insert(ConnectionTask { 0: task });
+//         }
+//     }
+// }
+
+// pub fn apply_connection_tasks(
+//     mut query: Query<(Entity, &mut ConnectionTask)>,
+//     mut commands: Commands,
+// ) {
+//     query.for_each_mut(|(entity, mut task)| {
+//         if futures::block_on(futures::poll_once(&mut task.0)) {
+//             cmds.entity(entity).remove::<GenTask>();
+//         }
+//         return;
+//     });
+// }

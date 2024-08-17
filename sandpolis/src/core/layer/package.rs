@@ -1,3 +1,5 @@
+use couch_rs::{document::TypedCouchDocument, types::document::DocumentId};
+
 // message RQ_InstallOrUpgradePackages {
 //     repeated string package = 1;
 // }
@@ -9,14 +11,38 @@
 // message RQ_RefreshPackages {
 // }
 
+use couch_rs::CouchDocument;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
 pub enum PackageManager {
     Pacman,
     Apt,
     Nix,
 }
 
-#[derive(CouchDocument)]
+#[derive(Serialize, Deserialize, CouchDocument)]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
+pub struct PackageManagerInfo {
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub _id: DocumentId,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub _rev: String,
+
+    /// Type of package manager
+    pub manager: PackageManager,
+
+    pub package_count: u64,
+}
+
+#[derive(Serialize, Deserialize, CouchDocument)]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct Package {
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub _id: DocumentId,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub _rev: String,
+
     /// Canonical name/identifier
     pub name: String,
 

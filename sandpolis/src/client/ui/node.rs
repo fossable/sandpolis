@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_egui::EguiContexts;
 use bevy_rapier2d::{
     dynamics::RigidBody,
     geometry::{Collider, Restitution},
@@ -88,4 +89,33 @@ pub fn get_os_image(os_type: os_info::Type) -> String {
         _ => todo!(),
     }
     .to_string()
+}
+
+/// A `WindowStack` is a set of collapsible Windows that are rendered below a node.
+#[derive(Component, Clone, Debug)]
+pub struct WindowStack {}
+
+pub fn handle_window_stacks(
+    commands: Commands,
+    mut contexts: EguiContexts,
+    mut nodes: Query<(&mut Transform, (&NodeId, &WindowStack)), With<NodeId>>,
+    mut windows: Query<&mut Window>,
+    cameras: Query<&Transform, (With<Camera2d>, Without<NodeId>)>,
+) {
+    let window_size = windows.single_mut().size();
+    let camera_transform = cameras.single();
+
+    for (transform, (id, window_stack)) in nodes.iter_mut() {
+        egui::Window::new("Hello")
+            .movable(false)
+            .resizable(false)
+            .pivot(egui::Align2::CENTER_TOP)
+            .current_pos(egui::Pos2::new(
+                window_size.x / 2.0 + transform.translation.x - camera_transform.translation.x,
+                window_size.y / 2.0 + transform.translation.y + camera_transform.translation.y,
+            ))
+            .show(contexts.ctx_mut(), |ui| {
+                ui.label("world");
+            });
+    }
 }

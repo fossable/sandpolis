@@ -95,16 +95,16 @@ pub fn handle_camera(
     // Update transforms.
     for mut camera_transform in cameras.iter_mut() {
         // Handle keyboard events.
-        if keyboard_input.pressed(KeyCode::KeyW) {
+        if keyboard_input.pressed(KeyCode::ArrowUp) {
             camera_transform.translation.y -= CAMERA_KEYBOARD_ZOOM_SPEED;
         }
-        if keyboard_input.pressed(KeyCode::KeyA) {
+        if keyboard_input.pressed(KeyCode::ArrowLeft) {
             camera_transform.translation.x -= CAMERA_KEYBOARD_ZOOM_SPEED;
         }
-        if keyboard_input.pressed(KeyCode::KeyS) {
+        if keyboard_input.pressed(KeyCode::ArrowDown) {
             camera_transform.translation.y += CAMERA_KEYBOARD_ZOOM_SPEED;
         }
-        if keyboard_input.pressed(KeyCode::KeyD) {
+        if keyboard_input.pressed(KeyCode::ArrowRight) {
             camera_transform.translation.x += CAMERA_KEYBOARD_ZOOM_SPEED;
         }
 
@@ -165,9 +165,21 @@ pub fn handle_layer_change(
     mut timer: ResMut<LayerChangeTimer>,
     mut windows: Query<&mut Window>,
 ) {
+    // TODO don't allow change while timer is running
+
     #[cfg(feature = "layer-filesystem")]
     if keyboard_input.pressed(KeyCode::KeyF) {
         **current_layer = Layer::Filesystem;
+        timer.reset();
+    }
+    #[cfg(feature = "layer-packages")]
+    if keyboard_input.pressed(KeyCode::KeyP) {
+        **current_layer = Layer::Packages;
+        timer.reset();
+    }
+    #[cfg(feature = "layer-desktop")]
+    if keyboard_input.pressed(KeyCode::KeyD) {
+        **current_layer = Layer::Desktop;
         timer.reset();
     }
 
