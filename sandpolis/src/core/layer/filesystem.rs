@@ -142,13 +142,16 @@ message EV_MountStreamFuse {
     }
 }
 
-// Request for one or more files to be deleted.
-message RQ_DeleteFile {
+/// Delete one or more files from the filesystem.
+pub struct FilesystemDeleteRequest {
 
-    // A list of absolute paths to delete
-    repeated string target = 1;
+    /// Absolute paths to delete
+    pub targets: Vec<PathBuf>,
+
+    /// Whether to recursively delete directories
+    pub recursive: bool,
 }
 
-enum RS_DeleteFile {
-    DELETE_FILE_OK = 0;
+pub enum FilesystemDeleteResponse {
+    Ok,
 }

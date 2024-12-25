@@ -22,6 +22,45 @@ pub enum ShellType {
     Zsh,
 }
 
+pub struct ShellSession {
+    pub shell_type: ShellType,
+
+    /// Path to the executing shell's executable
+    pub shell: PathBuf,
+
+    /// Total CPU time used by the process and all children
+    pub cpu_time: f64,
+
+    /// Peak memory used by the process and all children
+    pub max_memory: u64,
+}
+
+/// A reusable shell script.
+pub struct ShellSnippet {
+    pub shell_type: ShellType,
+    pub content: String,
+}
+
+pub union ShellCommand {
+    /// Inline command
+    pub command: Vec<String>,
+    /// Snippet ID
+    pub snippet: String,
+}
+
+/// Register a scheduled command to execute in a shell.
+pub struct ShellScheduleRequest {
+
+    /// Shell executable to use for request
+    pub shell: PathBuf,
+
+    /// Command to execute in a new shell
+    pub command: ShellCommand,
+
+    /// Execution timeout in seconds
+    pub timeout: u64,
+}
+
 /// Request to execute a command in a shell.
 pub struct ShellExecuteRequest {
 
@@ -29,7 +68,7 @@ pub struct ShellExecuteRequest {
     pub shell: PathBuf,
 
     /// Command to execute in a new shell
-    pub command: Vec<String>,
+    pub command: ShellCommand,
 
     /// Execution timeout in seconds
     pub timeout: u64,
@@ -59,7 +98,7 @@ pub struct ShellListRequest;
 pub struct DiscoveredShell {
 
     /// Closest type of discovered shell
-    pub type: ShellType,
+    pub shell_type: ShellType,
 
     /// Location of the shell executable
     pub location: PathBuf,
