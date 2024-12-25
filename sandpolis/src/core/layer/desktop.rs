@@ -1,57 +1,51 @@
-//============================================================================//
-//                                                                            //
-//            Copyright © 2015 - 2022 Sandpolis Software Foundation           //
-//                                                                            //
-//  This source file is subject to the terms of the Mozilla Public License    //
-//  version 2. You may not use this file except in compliance with the MPLv2. //
-//                                                                            //
-//============================================================================//
-syntax = "proto3";
 
-package plugin.desktop;
+pub enum DesktopStreamColorMode {
+    /// Each pixel encoded in three bytes
+    Rgb888,
+    /// Each pixel encoded in two bytes
+    Rgb565,
+    /// Each pixel encoded in one byte
+    Rgb332,
+}
 
-option java_package = "org.s7s.plugin.desktop";
+pub enum DesktopStreamCompressionMode {
+    None,
+    Zlib,
+    Zstd,
+}
 
-// Request for a listing of available desktops
-message RQ_DesktopList {
+pub enum DesktopStreamPointerButton {
+    Primary,
+    Middle,
+    Secondary,
+    Back,
+    Forward,
+}
+
+/// List available desktops.
+pub struct DesktopListRequest;
+
+message Desktop {
+
+    // The desktop name
+    string name = 1;
+
+    // The desktop width in pixels
+    int32 width = 2;
+
+    // The desktop height in pixels
+    int32 height = 3;
 }
 
 // Response containing all available desktops
 message RS_DesktopList {
 
-    message Desktop {
-
-        // The desktop name
-        string name = 1;
-
-        // The desktop width in pixels
-        int32 width = 2;
-
-        // The desktop height in pixels
-        int32 height = 3;
-    }
 
     repeated Desktop desktop = 1;
 }
 
 message RQ_DesktopStream {
 
-    enum ColorMode {
-        // Each pixel encoded in three bytes
-        RGB888 = 0;
-
-        // Each pixel encoded in two bytes
-        RGB565 = 1;
-
-        // Each pixel encoded in one byte
-        RGB332 = 2;
-    }
-
-    enum CompressionMode {
-        NONE = 0;
-
-        ZLIB = 1;
-    }
 
     // The requested stream ID
     int32 stream_id = 1;
@@ -67,76 +61,70 @@ enum RS_DesktopStream {
     DESKTOP_STREAM_OK = 0;
 }
 
-message EV_DesktopStreamInput {
+pub struct DesktopStreamInputEvent {
 
-    enum PointerButton {
-        PRIMARY   = 0;
-        MIDDLE    = 1;
-        SECONDARY = 2;
-        BACK      = 3;
-        FORWARD   = 4;
-    }
+    /// Indicates a key was pressed
+    pub key_pressed: Option<char>,
 
-    //
-    string key_pressed = 1;
+    /// Indicates a key was released
+    pub key_released: Option<char>,
 
-    //
-    string key_released = 2;
+    /// Indicates a key was typed
+    pub key_typed: Option<char>,
 
-    //
-    string key_typed = 3;
+    /// Indicates a pointing device was pressed
+    pub pointer_pressed: Option<DesktopStreamPointerButton>,
 
-    //
-    PointerButton pointer_pressed = 4;
+    /// Indicates a pointing device was released
+    pub pointer_released: Option<DesktopStreamPointerButton>,
 
-    //
-    PointerButton pointer_released = 5;
+    /// The X coordinate of the pointer
+    pub pointer_x: Option<i32>,
 
-    // The X coordinate of the pointer
-    int32 pointer_x = 6;
+    /// The Y coordinate of the pointer
+    pub pointer_y: Option<i32>,
 
-    // The Y coordinate of the pointer
-    int32 pointer_y = 7;
+    /// Screen scale factor
+    pub scale_factor: Option<f64>,
 
-    // Scale factor
-    double scale_factor = 8;
-
-    // Clipboard data
-    string clipboard = 9;
+    /// Clipboard data
+    pub clipboard: Option<Vec<u8>>,
 }
 
-message EV_DesktopStreamOutput {
+pub struct DesktopStreamOutputEvent {
 
-    // The width of the destination block in pixels
-    int32 width = 1;
+    /// The width of the destination block in pixels
+    pub width: Option<i32>,
 
-    // The height of the destination block in pixels
-    int32 height = 2;
+    /// The height of the destination block in pixels
+    pub height: Option<i32>,
 
-    // The X coordinate of the destination block's top left corner
-    int32 dest_x = 3;
+    /// The X coordinate of the destination block's top left corner
+    pub dest_x: Option<i32>,
 
-    // The Y coordinate of the destination block's top left corner
-    int32 dest_y = 4;
+    /// The Y coordinate of the destination block's top left corner
+    pub dest_y: Option<i32>,
 
-    // The X coordinate of the source block's top left corner
-    int32 source_x = 5;
+    /// The X coordinate of the source block's top left corner
+    pub source_x: Option<i32>,
 
-    // The Y coordinate of the source block's top left corner
-    int32 source_y = 6;
+    /// The Y coordinate of the source block's top left corner
+    pub source_y: Option<i32>,
 
-    // The pixel data encoded according to the session's parameters
-    bytes pixel_data = 7;
+    /// The pixel data encoded according to the session's parameters
+    pub pixel_data: Option<Vec<u8>>,
 
-    // Clipboard data
-    string clipboard = 8;
+    /// Clipboard data
+    pub clipboard: Option<Vec<u8>>,
 }
 
-message RQ_CaptureScreenshot {
-    // The desktop to capture
-    string desktop_uuid = 1;
+pub struct DesktopScreenshotRequest {
+    /// The desktop to capture
+    pub desktop_uuid: String,
+
+    // TODO geometry
 }
 
-message RS_CaptureScreenshot {
-    bytes data = 1;
+pub struct DesktopScreenshotResponse {
+    pub data: Vec<u8>,
 }

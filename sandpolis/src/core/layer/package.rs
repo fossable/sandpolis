@@ -32,7 +32,11 @@ pub struct PackageManagerInfo {
     /// Type of package manager
     pub manager: PackageManager,
 
-    pub package_count: u64,
+    /// Number of installed packages
+    pub installed_packages: u64,
+
+    /// Number of cached packages
+    pub cached_packages: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize, CouchDocument)]
