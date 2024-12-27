@@ -1,4 +1,3 @@
-
 pub enum DesktopStreamColorMode {
     /// Each pixel encoded in three bytes
     Rgb888,
@@ -25,44 +24,35 @@ pub enum DesktopStreamPointerButton {
 /// List available desktops.
 pub struct DesktopListRequest;
 
-message Desktop {
+pub struct Desktop {
+    /// Desktop name
+    pub name: String,
 
-    // The desktop name
-    string name = 1;
+    /// Desktop width in pixels
+    pub width: u32,
 
-    // The desktop width in pixels
-    int32 width = 2;
-
-    // The desktop height in pixels
-    int32 height = 3;
+    /// Desktop height in pixels
+    pub height: u32,
 }
 
 // Response containing all available desktops
-message RS_DesktopList {
-
-
-    repeated Desktop desktop = 1;
+pub enum DesktopListResponse {
+    Ok(Vec<Desktop>),
 }
 
-message RQ_DesktopStream {
+pub struct DesktopStreamRequest {
+    /// The desktop to capture
+    pub desktop_uuid: String,
 
-
-    // The requested stream ID
-    int32 stream_id = 1;
-
-    // The desktop to capture
-    string desktop_uuid = 2;
-
-    // The screen scale factor
-    double scale_factor = 3;
+    /// The screen scale factor
+    pub scale_factor: f64,
 }
 
-enum RS_DesktopStream {
-    DESKTOP_STREAM_OK = 0;
+pub enum DesktopStreamResponse {
+    Ok(u64),
 }
 
 pub struct DesktopStreamInputEvent {
-
     /// Indicates a key was pressed
     pub key_pressed: Option<char>,
 
@@ -92,7 +82,6 @@ pub struct DesktopStreamInputEvent {
 }
 
 pub struct DesktopStreamOutputEvent {
-
     /// The width of the destination block in pixels
     pub width: Option<i32>,
 
@@ -121,10 +110,9 @@ pub struct DesktopStreamOutputEvent {
 pub struct DesktopScreenshotRequest {
     /// The desktop to capture
     pub desktop_uuid: String,
-
     // TODO geometry
 }
 
-pub struct DesktopScreenshotResponse {
-    pub data: Vec<u8>,
+pub enum DesktopScreenshotResponse {
+    Ok(Vec<u8>),
 }

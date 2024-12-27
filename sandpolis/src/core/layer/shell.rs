@@ -1,3 +1,4 @@
+use std::{collections::HashMap, path::PathBuf};
 
 pub enum ShellType {
     /// Busybox shell
@@ -41,16 +42,15 @@ pub struct ShellSnippet {
     pub content: String,
 }
 
-pub union ShellCommand {
+pub enum ShellCommand {
     /// Inline command
-    pub command: Vec<String>,
+    Command(Vec<String>),
     /// Snippet ID
-    pub snippet: String,
+    Snippet(String),
 }
 
 /// Register a scheduled command to execute in a shell.
 pub struct ShellScheduleRequest {
-
     /// Shell executable to use for request
     pub shell: PathBuf,
 
@@ -63,7 +63,6 @@ pub struct ShellScheduleRequest {
 
 /// Request to execute a command in a shell.
 pub struct ShellExecuteRequest {
-
     /// Shell executable to use for request
     pub shell: PathBuf,
 
@@ -79,7 +78,6 @@ pub struct ShellExecuteRequest {
 
 /// Response containing execution results.
 pub struct ShellExecuteResponse {
-
     /// Process exit code
     pub exit_code: i32,
 
@@ -88,7 +86,6 @@ pub struct ShellExecuteResponse {
 
     /// Process output on all descriptors
     pub output: HashMap<i32, Vec<u8>>,
-
     // TODO cgroup-y info like max memory, cpu time, etc
 }
 
@@ -96,7 +93,6 @@ pub struct ShellExecuteResponse {
 pub struct ShellListRequest;
 
 pub struct DiscoveredShell {
-
     /// Closest type of discovered shell
     pub shell_type: ShellType,
 
@@ -112,35 +108,29 @@ pub struct ShellListResponse {
     pub shells: Vec<DiscoveredShell>,
 }
 
-// Request to start a new shell session
-message RQ_ShellStream {
-
-    // The desired stream ID
-    int32 stream_id = 1;
-
-    // The path to the shell executable
-    string path = 2;
+// Start a new shell session
+pub struct ShellSessionRequest {
+    /// Path to the shell executable
+    pub path: PathBuf,
 
     // TODO request permissions
     // Permission permission = 3;
+    /// Additional environment variables
+    pub environment: HashMap<String, String>,
 
-    // Additional environment variables
-    map<string, string> environment = 4;
+    /// Number of rows to request
+    pub rows: u32,
 
-    // The number of rows to request
-    int32 rows = 5;
-
-    // The number of columns to request
-    int32 cols = 6;
+    /// Number of columns to request
+    pub cols: u32,
 }
 
-enum RS_ShellStream {
-    SHELL_STREAM_OK = 0;
+enum ShellSessionResponse {
+    Ok(u64),
 }
 
 /// Send standard-input or resizes to a shell session.
-pub struct ShellStreamInputEvent {
-
+pub struct ShellSessionInputEvent {
     /// STDIN data
     pub stdin: Option<Vec<u8>>,
 
@@ -151,12 +141,7 @@ pub struct ShellStreamInputEvent {
     pub cols: Option<u32>,
 }
 
-// Event containing standard-output and standard-error
-message EV_ShellStreamOutput {
-
-    // The process standard-output
-    bytes stdout = 1;
-
-    // The process standard-error
-    bytes stderr = 2;
+/// Event containing standard-output and standard-error
+pub struct ShellSessionOutputEvent {
+    pub output: HashMap<i32, Vec<u8>>,
 }

@@ -93,7 +93,6 @@ pub enum Layer {
     Desktop,
 
     // Docker,
-
     /// Mount and manipulate filesystems.
     #[cfg(feature = "layer-filesystem")]
     Filesystem,
@@ -122,7 +121,7 @@ pub enum Layer {
     /// connect through a "gateway" instance over a well known protocol.
     #[cfg(feature = "layer-probe")]
     Probe,
-    
+
     /// Interact with shell prompts / snippets.
     #[cfg(feature = "layer-shell")]
     Shell,

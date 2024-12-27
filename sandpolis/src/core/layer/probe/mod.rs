@@ -1,145 +1,103 @@
+use crate::core::InstanceId;
+
 // An enumeration of all available communicator types.
 pub enum ProbeType {
-    Ssh,
-    Snmp,
-    Ipmi,
+    Arp,
     Http,
+    Ipmi,
     Onvif,
     Rtsp,
+    Snmp,
+    Ssh,
     Wol,
 }
 
+/// Initiate a scan for probes matching the given criteria.
+pub struct ProbeScanRequest {
+    /// Only scan for probes of this type.
+    pub probe_type: ProbeType,
 
-// Request that the receiver scan its local network for
-message RQ_FindSubagents {
-
-
-    // If specified, the search will be restricted to the given networks (CIDR)
-    repeated string network = 1;
-
-    // If specified, the search will be restricted to the given communicator types
-    repeated CommunicatorType communicator = 2;
+    /// Limit the scan to this network (CIDR)
+    pub network: String,
 }
 
-message RS_FindSubagents {
+// message RS_FindSubagents {
 
-    message SshDevice {
+//     message SshDevice {
 
-        // The device's IP address
-        string ip_address = 1;
+//         // The device's IP address
+//         string ip_address = 1;
 
-        // The device's SSH fingerprint
-        string fingerprint = 2;
-    }
+//         // The device's SSH fingerprint
+//         string fingerprint = 2;
+//     }
 
-    message SnmpDevice {
+//     message SnmpDevice {
 
-        // The device's IP address
-        string ip_address = 1;
-    }
+//         // The device's IP address
+//         string ip_address = 1;
+//     }
 
-    message IpmiDevice {
+//     message IpmiDevice {
 
-        // The device's IP address
-        string ip_address = 1;
-    }
+//         // The device's IP address
+//         string ip_address = 1;
+//     }
 
-    message OnvifDevice {
+//     message OnvifDevice {
 
-        // The device's IP address
-        string ip_address = 1;
-    }
+//         // The device's IP address
+//         string ip_address = 1;
+//     }
 
-    message HttpDevice {
+//     message HttpDevice {
 
-        // The device's IP address
-        string ip_address = 1;
+//         // The device's IP address
+//         string ip_address = 1;
 
-        // Whether HTTPS is supported
-        bool secure = 2;
-    }
+//         // Whether HTTPS is supported
+//         bool secure = 2;
+//     }
 
-    message RtspDevice {
+//     message RtspDevice {
 
-        // The device's IP address
-        string ip_address = 1;
-    }
+//         // The device's IP address
+//         string ip_address = 1;
+//     }
 
-    message WolDevice {
+//     message WolDevice {
 
-        // The device's IP address
-        string ip_address = 1;
+//         // The device's IP address
+//         string ip_address = 1;
 
-        // The device's MAC address
-        string mac_address = 2;
-    }
+//         // The device's MAC address
+//         string mac_address = 2;
+//     }
 
-    repeated SshDevice ssh_device = 1;
+//     repeated SshDevice ssh_device = 1;
 
-    repeated SnmpDevice snmp_device = 2;
+//     repeated SnmpDevice snmp_device = 2;
 
-    repeated IpmiDevice ipmi_device = 3;
+//     repeated IpmiDevice ipmi_device = 3;
 
-    repeated HttpDevice http_device = 4;
+//     repeated HttpDevice http_device = 4;
 
-    repeated OnvifDevice onvif_device = 5;
+//     repeated OnvifDevice onvif_device = 5;
 
-    repeated RtspDevice rtsp_device = 6;
+//     repeated RtspDevice rtsp_device = 6;
 
-    repeated WolDevice wol_device = 7;
+//     repeated WolDevice wol_device = 7;
+// }
+
+/// Rather than scanning for probes, register one manually.
+pub struct RegisterProbeRequest {
+    pub ip_address: Option<String>,
+    pub mac_address: Option<String>,
+
+    /// The gateway instance
+    pub gateway: InstanceId,
 }
 
-message RQ_RegisterSubagent {
-
-    oneof target {
-        string ip_address = 1;
-        string mac_address = 2;
-    }
-
-    // The uuid of the gateway instance
-    string gateway_uuid = 3;
-}
-
-enum RS_RegisterSubagent {
-    REGISTER_SUBAGENT_OK = 0;
-}
-
-// Request an IPMI command be executed
-message RQ_IpmiCommand {
-
-    // The IPMI command
-    string command = 1;
-}
-
-// Request an SNMP walk operation be executed
-message RQ_SnmpWalk {
-
-    // The OID to retrieve
-    string oid = 1;
-}
-
-// Response containing the result of a walk operation
-message RS_SnmpWalk {
-
-    message Data {
-
-        // The retrieved OID
-        string oid = 1;
-
-        // The OID's type
-        string type = 2;
-
-        // The OID's value
-        string value = 3;
-    }
-
-    repeated Data data = 1;
-}
-
-message RQ_SendWolPacket {
-
-}
-
-enum RS_SendWolPacket {
-    SEND_WOL_PACKET_OK = 0;
+pub enum RegisterProbeResponse {
+    Ok,
 }

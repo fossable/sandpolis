@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
 
         # Configure environment
         linux.vm.provision :shell, :inline => "hostnamectl set-hostname sandpolis_linux && locale-gen en_US.UTF.8"
-        linux.vm.provision :shell, :inline => "pacman -Syu --noconfirm binutils gcc make git wget vim python-pip npm linux-headers"
+        linux.vm.provision :shell, :inline => "pacman -Syu --noconfirm binutils gcc git curl linux-headers pkg-config wayland alsa-lib"
 
         # Install Rust
         linux.vm.provision :shell, :inline => "curl https://sh.rustup.rs -sSf | sh -s -- -y"

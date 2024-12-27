@@ -48,7 +48,7 @@ pub async fn run(args: CommandLine) -> Result<()> {
                 primary_window: Some(Window {
                     resizable: false,
                     mode: if cfg!(target_os = "android") {
-                        WindowMode::BorderlessFullscreen
+                        WindowMode::BorderlessFullscreen(MonitorSelection::Current)
                     } else {
                         WindowMode::Windowed
                     },
@@ -101,12 +101,14 @@ pub async fn run(args: CommandLine) -> Result<()> {
 
 fn setup(
     mut commands: Commands,
-    mut rapier_config: ResMut<RapierConfiguration>,
+    mut rapier_config: Query<&mut RapierConfiguration>,
     asset_server: Res<AssetServer>,
     state: Res<AppState>,
     contexts: EguiContexts,
 ) {
-    rapier_config.gravity = Vec2::ZERO;
+    for mut rapier_config in &mut rapier_config {
+        rapier_config.gravity = Vec2::ZERO;
+    }
     commands.spawn(Camera2dBundle::default());
 
     // Spawn the local client

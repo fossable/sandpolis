@@ -15,7 +15,7 @@ pub struct Node {
     pub id: NodeId,
     pub collier: Collider,
     pub rigid_body: RigidBody,
-    pub sprite: SpriteBundle,
+    pub sprite: Sprite,
     pub restitution: Restitution,
 }
 
@@ -30,8 +30,8 @@ pub fn spawn_node(
         collier: Collider::ball(50.0),
         rigid_body: RigidBody::Dynamic,
         restitution: Restitution::coefficient(0.7),
-        sprite: SpriteBundle {
-            texture: asset_server.load(get_os_image(os_type)),
+        sprite: Sprite {
+            image: asset_server.load(get_os_image(os_type)),
             ..default()
         },
     });

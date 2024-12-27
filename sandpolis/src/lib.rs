@@ -1,6 +1,5 @@
 use clap::Parser;
 
-pub mod api;
 pub mod core;
 
 /// Build info
@@ -28,9 +27,11 @@ pub struct CommandLine {
     #[clap(long)]
     pub server: Option<Vec<String>>,
 
+    /// Enable debug mode
     #[clap(long, num_args = 0, default_value_t = false)]
     pub debug: bool,
 
+    /// Enable trace mode
     #[clap(long, num_args = 0, default_value_t = false)]
     pub trace: bool,
 }
