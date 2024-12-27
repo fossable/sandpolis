@@ -45,9 +45,9 @@ egui = { version = "0.30.0", optional = true }
 sysinfo = { version = "0.33.0", optional = true }
 
 [features]
+# Instances
 server = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:rcgen", "local-database" ]
 agent = [ "dep:sysinfo" ]
-probe = [ "agent" ]
 client = [ "dep:bevy", "dep:bevy_rapier2d", "dep:bevy_egui", "dep:egui" ]
 
 # Layers
@@ -60,6 +60,8 @@ layer-inventory = []
 layer-logging = []
 layer-packages = []
 layer-shell = []
+layer-sysinfo = []
+layer-probe = [] # renamed device
 
 default = [ "local-database", "layer-desktop", "layer-filesystem", "layer-shell", "layer-inventory", "layer-account", "layer-logging" ]
 local-database = []

@@ -35,9 +35,6 @@ pub enum InstanceType {
     /// A headless application that installs or updates an agent or probe
     Deployer,
 
-    /// A headless application that provides read-only access to a host
-    Probe,
-
     /// A headless application that coordinates interaction among instances
     Server,
 }
@@ -49,7 +46,6 @@ impl InstanceType {
             InstanceType::BootAgent => 0b00000010,
             InstanceType::Client => 0b00000100,
             InstanceType::Deployer => 0b00001000,
-            InstanceType::Probe => 0b00010000,
             InstanceType::Server => 0b00100000,
         }
     }
@@ -82,9 +78,10 @@ impl InstanceId {
     }
 }
 
+/// Layers are optional feature-sets that may be enabled on instances.
 #[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq)]
 pub enum Layer {
-    /// View accounts.
+    /// Manage accounts.
     #[cfg(feature = "layer-account")]
     Account,
 
@@ -96,7 +93,8 @@ pub enum Layer {
     Desktop,
 
     // Docker,
-    /// Manipulate filesystem contents.
+
+    /// Mount and manipulate filesystems.
     #[cfg(feature = "layer-filesystem")]
     Filesystem,
 
@@ -119,7 +117,13 @@ pub enum Layer {
     Network,
     #[cfg(feature = "layer-packages")]
     Packages,
-    /// Interact with shell prompts / macros.
+
+    /// Support for probe devices which do not run agent software. Instead they
+    /// connect through a "gateway" instance over a well known protocol.
+    #[cfg(feature = "layer-probe")]
+    Probe,
+    
+    /// Interact with shell prompts / snippets.
     #[cfg(feature = "layer-shell")]
     Shell,
     // Tunnel,
