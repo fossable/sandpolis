@@ -18,7 +18,7 @@ jobs:
           - x86_64-unknown-linux-gnu
           # - x86_64-unknown-linux-musl
     steps:
-      - run: sudo apt-get install -y libwayland-dev libasound2-dev libudev-dev
+      - run: sudo apt-get install -y libwayland-dev libasound2-dev libudev-dev libfuse3-dev
 
       - uses: actions/checkout@v4
         with:
@@ -72,4 +72,3 @@ jobs:
         with:
           name: android_artifacts
           path: target/x/debug/android/*.apk
-

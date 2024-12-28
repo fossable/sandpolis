@@ -1,24 +1,38 @@
 
-// Create a new user account.
-message PostUserRequest {
+#[derive(Clone, Serialize, Deserialize, Validate)]
+pub struct UserData {
+    /// Unchangable username
+    #[validate(length(min = 4), length(max = 20))]
+    pub username: String,
 
-    // The user's immutable username
-    string username = 1;
+    /// Whether the user is an admin
+    pub admin: bool,
 
-    // The user's password
-    string password = 2;
+    /// Email address
+    #[validate(email)]
+    pub email: Option<String>,
 
-    // The user's token for TOTP verification
-    string totp_token = 3;
+    /// Phone number
+    #[validate(phone)]
+    pub phone: Option<String>,
 
-    // The user's optional email
-    string email = 4;
+    pub expiration: Option<i64>,
+}
 
-    // The user's optional phone number
-    string phone = 5;
+/// Create a new user account.
+pub struct CreateUserRequest {
 
-    // The user's optional expiration timestamp
-    int64 expiration = 6;
+    pub data: UserData,
+
+    /// Initial password as unsalted hash
+    pub password: String,
+
+    /// TOTP secret URL
+    pub totp_secret: Option<URL>,
+}
+
+pub enum CreateUserResponse {
+    Ok,
 }
 
 message GetUserResponse {
@@ -40,18 +54,20 @@ message GetUsersResponse {
     repeated GetUserResponse user = 1;
 }
 
-// Update an existing user account.
-message PutUserRequest {
+/// Update an existing user account.
+pub struct UpdateUserRequest {
 
-    // The user's new password
-    string password = 1;
+    pub username: String,
 
-    // The user's new email
-    string email = 2;
+    /// New password
+    pub password: Option<String>,
 
-    // The user's new phone number
-    string phone = 3;
+    /// New email
+    pub email: Option<String>,
 
-    // The user's new expiration timestamp
-    int64 expiration = 4;
+    /// New phone number
+    pub phone: Option<String>,
+
+    /// New expiration timestamp
+    pub expiration: Option<u64>,
 }

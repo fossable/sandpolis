@@ -15,26 +15,26 @@ pub struct PasswordHash {
     pub hash: String,
 }
 
-#[derive(Clone, Serialize, Deserialize, Validate, Default)]
+#[derive(Clone, Serialize, Deserialize, Validate)]
 pub struct User {
-    /// The user's unchangable username
+    /// Unchangable username
     #[validate(length(min = 4), length(max = 20))]
     pub username: String,
 
     /// Whether the user is an admin
     pub admin: bool,
 
-    /// The user's password hash
+    /// Password hash
     pub password: PasswordHash,
 
-    /// The user's TOTP secret token
+    /// TOTP secret token
     pub totp_secret: Option<String>,
 
-    /// The user's optional email address
+    /// Email address
     #[validate(email)]
     pub email: Option<String>,
 
-    /// The user's optional phone number
+    /// Phone number
     #[validate(phone)]
     pub phone: Option<String>,
 
