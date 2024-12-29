@@ -1,3 +1,5 @@
+//! This layer extends management functionality out to agent-less "probe" devices.
+
 use crate::core::InstanceId;
 
 // An enumeration of all available communicator types.

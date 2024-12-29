@@ -1,3 +1,26 @@
+//! ## Server Strata
+//!
+//! There can be multiple servers in a Sandpolis network which improves both
+//! scalability and failure tolerance. There are two roles in which a server can
+//! exist: a global level and a local level.
+//!
+//! ### Global Stratum (GS)
+//!
+//! By default, servers exist in the global stratum. Every network must have at
+//! least one GS server and every GS server maintains a persistent connection to
+//! every other GS server (fully-connected graph).
+//!
+//! Every GS server maintains a database containing the entire contents of the
+//! network.
+//!
+//! ### Local Stratum (LS)
+//!
+//! Local stratum servers are used to serve localized regions and can operate
+//! independently if all GS servers becomes unreachable.
+//!
+//! Every LS server maintains a database containing just the contents relevant to it
+//! which is continuously replicated to a GS server's database.
+
 use crate::core::database::Database;
 use crate::CommandLine;
 use anyhow::Result;
@@ -38,10 +61,10 @@ pub async fn main(args: CommandLine) -> Result<()> {
         .parse()?;
 
     let state = AppState {
-        db: Database::new(None, "test", "test").await?,
+        db: Database::new("test")?,
     };
 
-    let app = Router::new().fallback(db_proxy).with_state(state);
+    let app = Router::new().fallback(fallback_handler).with_state(state);
 
     if listen.port() == 80 {
         info!(socket = ?listen, "Starting plaintext listener");
@@ -65,32 +88,8 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
 /// Proxy a request to the local database and return its response
 #[debug_handler]
-async fn db_proxy(state: State<AppState>, request: Request) -> impl IntoResponse {
+async fn fallback_handler(state: State<AppState>, request: Request) -> impl IntoResponse {
     trace!("Passing request to local database");
 
-    let response = state
-        .db
-        .local
-        .req(request.method().to_owned(), request.uri().path(), None)
-        .headers(request.headers().to_owned())
-        // TODO figure out how to stream
-        .body(
-            axum::body::to_bytes(request.into_body(), usize::MAX)
-                .await
-                .unwrap(),
-        )
-        .send()
-        .await
-        .unwrap();
-
-    let mut response_builder = Response::builder().status(response.status().as_u16());
-
-    for (header, value) in response.headers().into_iter() {
-        response_builder = response_builder.header(header, value);
-    }
-
-    response_builder
-        .body(Body::from_stream(response.bytes_stream()))
-        // This unwrap is fine because the body is empty here
-        .unwrap()
+    todo!()
 }

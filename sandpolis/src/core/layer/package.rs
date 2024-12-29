@@ -1,5 +1,3 @@
-use couch_rs::{document::TypedCouchDocument, types::document::DocumentId};
-
 // message RQ_InstallOrUpgradePackages {
 //     repeated string package = 1;
 // }
@@ -11,8 +9,17 @@ use couch_rs::{document::TypedCouchDocument, types::document::DocumentId};
 // message RQ_RefreshPackages {
 // }
 
-use couch_rs::CouchDocument;
 use serde::{Deserialize, Serialize};
+
+pub struct PackageLayer {
+    tree: sled::Tree,
+}
+
+impl PackageLayer {
+    pub fn pacman() {}
+
+    pub fn packages_iter() -> impl Iterator<Item = Package> {}
+}
 
 #[derive(Serialize, Deserialize)]
 pub enum PackageManager {
@@ -21,7 +28,7 @@ pub enum PackageManager {
     Nix,
 }
 
-#[derive(Serialize, Deserialize, CouchDocument)]
+#[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct PackageManagerInfo {
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -39,7 +46,7 @@ pub struct PackageManagerInfo {
     pub cached_packages: Option<u64>,
 }
 
-#[derive(Serialize, Deserialize, CouchDocument)]
+#[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct Package {
     #[serde(skip_serializing_if = "String::is_empty")]

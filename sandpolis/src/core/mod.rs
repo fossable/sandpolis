@@ -32,7 +32,7 @@ pub enum InstanceType {
     /// A UI application used for managing agents and servers
     Client,
 
-    /// A headless application that installs or updates an agent or probe
+    /// A headless application that installs or updates an agent
     Deployer,
 
     /// A headless application that coordinates interaction among instances
@@ -51,6 +51,12 @@ impl InstanceType {
     }
 }
 
+impl From<InstanceId> for InstanceType {
+    fn from(value: InstanceId) -> Self {
+        todo!()
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct InstanceId(uuid::Uuid);
 
@@ -59,6 +65,12 @@ impl Deref for InstanceId {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl AsRef<[u8]> for InstanceId {
+    fn as_ref(&self) -> &[u8] {
+        todo!()
     }
 }
 
@@ -126,4 +138,14 @@ pub enum Layer {
     #[cfg(feature = "layer-shell")]
     Shell,
     // Tunnel,
+}
+
+pub struct Instance {
+    pub id: InstanceId,
+    pub db: sled::Tree,
+}
+
+impl Instance {
+    #[cfg(feature = "layer-packages")]
+    pub fn package(&self) -> crate::core::layer::package::PackageLayer {}
 }

@@ -23,7 +23,7 @@ pub mod node;
 
 #[derive(Resource)]
 pub struct AppState {
-    pub db: Option<Database>,
+    pub db: Database,
 }
 
 #[derive(Resource, Deref, DerefMut)]
@@ -35,10 +35,7 @@ pub struct ZoomLevel(f32);
 /// Initialize and start rendering the UI.
 pub async fn run(args: CommandLine) -> Result<()> {
     let mut state = AppState {
-        #[cfg(feature = "local-database")]
-        db: Some(Database::new(None, "test", "test").await?),
-        #[cfg(not(feature = "local-database"))]
-        db: None,
+        db: Database::new(None, "test", "test").await?,
     };
 
     let mut app = App::new();

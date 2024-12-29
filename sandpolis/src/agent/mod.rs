@@ -52,13 +52,6 @@
 //! The agent may attempt a spontaneous connection outside of the regular schedule
 //! if an internal agent process triggers it.
 //!
-//! ## Plugins
-//!
-//! Agents can optionally support plugins to enhance functionality beyond the
-//! standard feature set. Upon initial connection, the agent provides a list of
-//! plugin versions that it has loaded. The server responds with a list of plugin
-//! archives that the agent should install.
-//!
 //! ## Standard Feature Set
 //!
 //! The standard feature set is the minimum amount of functionality an agent
@@ -173,21 +166,13 @@
 //! Certain elements of the host filesystem may be optionally mounted into the
 //! container.
 //!
-//! ## Probe Mode
+//! ## Read-only Mode
 //!
-//! Probes are similar to agents, but are only allowed to egress data to a server.
-//! They cannot receive messages, so their configuration is immutable unless the
-//! system also runs an agent capable of managing probe instances.
+//! Agents can also run in "read-only" mode which will prohibit all write operations,
+//! including to the configuration.
 //!
-//! This design is a security feature which ensures probe instances cannot be compromised
+//! This design is a security feature which ensures read-only agents cannot be compromised
 //! even when the gateway server is compromised.
-//!
-//! The only connection mode supported by probes is the _polling_ mode. On a
-//! configurable schedule, the probe reconnects to a server, flushes any cached
-//! data, and closes the connection.
-//!
-//! The probe may attempt a spontaneous connection outside of the regular schedule
-//! at any time.
 
 use anyhow::{bail, Result};
 use clap::Parser;
@@ -197,10 +182,14 @@ use crate::core::database::Database;
 use crate::CommandLine;
 
 #[derive(Parser, Debug, Clone, Default)]
-pub struct AgentCommandLine {}
+pub struct AgentCommandLine {
+    /// Enables 'immutable mode'
+    #[clap(long)]
+    pub immutable: bool,
+}
 
 pub async fn main(args: CommandLine) -> Result<()> {
-    let mut db = Database::new(None, "test", "test").await?;
+    let mut db = Database::new("test")?;
 
     if let Some(servers) = args.server {
         for server in servers {
