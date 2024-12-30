@@ -1,10 +1,14 @@
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::ops::Deref;
+use std::{ops::Deref, path::PathBuf, str::FromStr};
 use strum::EnumIter;
 
 pub mod database;
 pub mod layer;
 pub mod random;
+
+/// The official server port: https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=8768
+pub const S7S_PORT: u16 = 8768;
 
 /// Major system architecture types.
 #[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug)]
@@ -70,11 +74,12 @@ impl Deref for InstanceId {
 
 impl AsRef<[u8]> for InstanceId {
     fn as_ref(&self) -> &[u8] {
-        todo!()
+        self.0.as_bytes()
     }
 }
 
 impl InstanceId {
+    /// Generate a new instance ID for an instance of the given type(s).
     pub fn new(instance_types: &[InstanceType]) -> Self {
         let mut bytes = uuid::Uuid::now_v7().as_bytes().to_owned();
 

@@ -21,9 +21,9 @@
 //! Every LS server maintains a database containing just the contents relevant to it
 //! which is continuously replicated to a GS server's database.
 
-use crate::core::database::Database;
+use crate::core::{database::Database, S7S_PORT};
 use crate::CommandLine;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use axum::{
     body::Body,
     extract::{Request, State},
@@ -33,14 +33,17 @@ use axum::{
 use axum_macros::debug_handler;
 use axum_server::tls_rustls::RustlsConfig;
 use clap::Parser;
-use std::{net::SocketAddr, path::PathBuf};
+use std::{
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    path::PathBuf,
+};
 use tracing::{info, trace};
 
-#[derive(Parser, Debug, Clone, Default)]
+#[derive(Parser, Debug, Clone)]
 pub struct ServerCommandLine {
-    /// The server listen address:port
-    #[clap(long)]
-    pub listen: Option<String>,
+    /// Server listen address:port
+    #[clap(long, default_value_t = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), S7S_PORT))]
+    pub listen: SocketAddr,
 
     /// Create user with interactive prompt
     #[clap(long)]
@@ -53,35 +56,30 @@ pub struct AppState {
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {
-    // Use given listen address or default
-    let listen: SocketAddr = args
-        .server_args
-        .listen
-        .unwrap_or("0.0.0.0:8768".into())
-        .parse()?;
-
     let state = AppState {
-        db: Database::new("test")?,
+        db: Database::new(args.storage.join("server.db"))?,
     };
 
     let app = Router::new().fallback(fallback_handler).with_state(state);
 
-    if listen.port() == 80 {
-        info!(socket = ?listen, "Starting plaintext listener");
-        axum_server::bind(listen)
+    info!(listener = ?args.server_args.listen, "Starting server instance");
+    if args.server_args.listen.port() == 8080 {
+        axum_server::bind(args.server_args.listen)
             .serve(app.into_make_service())
-            .await?;
+            .await
+            .context("binding socket")?;
     } else {
         let config = RustlsConfig::from_pem_file(
+            // TODO args
             PathBuf::from("/tmp/cert.pem"),
             PathBuf::from("/tmp/cert.key"),
         )
         .await?;
 
-        info!(socket = ?listen, "Starting TLS listener");
-        axum_server::bind_rustls(listen, config)
+        axum_server::bind_rustls(args.server_args.listen, config)
             .serve(app.into_make_service())
-            .await?;
+            .await
+            .context("binding socket")?;
     }
     Ok(())
 }

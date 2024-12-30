@@ -177,24 +177,29 @@
 use anyhow::{bail, Result};
 use clap::Parser;
 use std::io::IsTerminal;
+use tracing::info;
 
 use crate::core::database::Database;
 use crate::CommandLine;
 
 #[derive(Parser, Debug, Clone, Default)]
 pub struct AgentCommandLine {
-    /// Enables 'immutable mode'
-    #[clap(long)]
-    pub immutable: bool,
+    /// Prohibits all write operations
+    #[clap(long, default_value_t = false)]
+    pub read_only: bool,
+
+    /// Instead of maintaining a persistent connection, poll the server on this cron expression
+    pub poll: Option<String>,
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {
-    let mut db = Database::new("test")?;
+    let mut db = Database::new(args.storage.join("agent.db"))?;
 
+    info!("Starting agent instance");
+
+    // TODO if a server is running in the same process, just use that
     if let Some(servers) = args.server {
-        for server in servers {
-            db.add_server(&server, "test", "test").await?;
-        }
+        for server in servers {}
     } else {
         if std::io::stdout().is_terminal() {
             // TODO prompt

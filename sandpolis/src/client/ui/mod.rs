@@ -35,7 +35,7 @@ pub struct ZoomLevel(f32);
 /// Initialize and start rendering the UI.
 pub async fn run(args: CommandLine) -> Result<()> {
     let mut state = AppState {
-        db: Database::new(None, "test", "test").await?,
+        db: Database::new(args.storage.join("client.db"))?,
     };
 
     let mut app = App::new();

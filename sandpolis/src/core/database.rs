@@ -10,13 +10,29 @@ use std::{
 };
 use tracing::debug;
 
-use super::Instance;
 use super::InstanceId;
+use super::{Instance, InstanceType};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct LocalMetadata {
+struct DatabaseMetadata {
     pub id: InstanceId,
     pub os_info: os_info::Info,
+}
+
+impl DatabaseMetadata {
+    pub fn new() -> Self {
+        DatabaseMetadata {
+            id: InstanceId::new(&[
+                #[cfg(feature = "server")]
+                InstanceType::Server,
+                #[cfg(feature = "client")]
+                InstanceType::Client,
+                #[cfg(feature = "agent")]
+                InstanceType::Agent,
+            ]),
+            os_info: os_info::get(),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -33,10 +49,15 @@ impl Database {
         let db = sled::Config::new().path(path.as_ref()).open()?;
 
         // Query for the local instance
-        let local: LocalMetadata = if let Some(local) = db.get("local")? {
-            serde_json::from_slice(&local)?
+        let local: DatabaseMetadata = if let Some(local) = db.get("local")? {
+            let local = serde_json::from_slice(&local)?;
+            debug!(local = ?local, "Restoring local instance metadata");
+            local
         } else {
-            todo!()
+            let local = DatabaseMetadata::new();
+            debug!(local = ?local, "Creating new local instance metadata");
+            db.insert("local", serde_json::to_vec(&local)?)?;
+            local
         };
 
         Ok(Self {
