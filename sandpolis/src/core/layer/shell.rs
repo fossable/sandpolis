@@ -1,5 +1,9 @@
 use std::{collections::HashMap, path::PathBuf};
 
+pub struct ShellLayer {
+    tree: sled::Tree,
+}
+
 pub enum ShellType {
     /// Busybox shell
     Ash,
@@ -23,10 +27,10 @@ pub enum ShellType {
     Zsh,
 }
 
-pub struct ShellSession {
+pub struct ShellSessionData {
     pub shell_type: ShellType,
 
-    /// Path to the executing shell's executable
+    /// Path to the shell's executable
     pub shell: PathBuf,
 
     /// Total CPU time used by the process and all children

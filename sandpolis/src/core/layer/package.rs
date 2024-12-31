@@ -18,7 +18,7 @@ pub struct PackageLayer {
 impl PackageLayer {
     pub fn pacman() {}
 
-    pub fn packages_iter() -> impl Iterator<Item = Package> {}
+    // pub fn packages_iter() -> impl Iterator<Item = Package> {}
 }
 
 #[derive(Serialize, Deserialize)]
@@ -31,11 +31,6 @@ pub enum PackageManager {
 #[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct PackageManagerInfo {
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub _id: DocumentId,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub _rev: String,
-
     /// Type of package manager
     pub manager: PackageManager,
 
@@ -49,11 +44,6 @@ pub struct PackageManagerInfo {
 #[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct Package {
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub _id: DocumentId,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub _rev: String,
-
     /// Canonical name/identifier
     pub name: String,
 

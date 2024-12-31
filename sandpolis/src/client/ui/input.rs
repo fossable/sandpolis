@@ -172,7 +172,7 @@ pub fn handle_layer_change(
         **current_layer = Layer::Filesystem;
         timer.reset();
     }
-    #[cfg(feature = "layer-packages")]
+    #[cfg(feature = "layer-package")]
     if keyboard_input.pressed(KeyCode::KeyP) {
         **current_layer = Layer::Packages;
         timer.reset();

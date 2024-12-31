@@ -1,26 +1,40 @@
+use anyhow::Result;
+use serde::Serialize;
 
-message RQ_STStream {
-    enum Direction {
-        UPSTREAM = 0;
-        DOWNSTREAM = 1;
-        BIDIRECTIONAL = 2;
-    }
+pub trait StreamSource {
+    type O: Serialize;
 
-    int32 stream_id = 1;
+    async fn emit(&self) -> Result<Self::O>;
+}
 
-    bool permanent = 2;
+pub trait StreamSink {
+    type I: Deserialize;
+    type O: Serialize;
+
+    async fn accept(&self, input: Self::I) -> Result<Self::O>;
+}
+
+pub enum DataStreamDirection {
+    Upstream,
+    Downstream,
+    Bidirectional,
+}
+
+pub struct DataStreamRequest {
+
+    pub permanent: bool,
 
     string oid = 3;
     repeated string whitelist = 4;
 
-    Direction direction = 5;
-    int32 update_period = 6;
+    pub direction: DataStreamDirection,
+    pub update_period: Optional<u64>,
 }
 
-enum RS_STStream {
-    ST_STREAM_OK = 0;
-    ST_STREAM_INVALID = 1;
-    ST_STREAM_FAILED = 2;
+enum DataStreamResponse {
+    Ok(u64),
+    Invalid,
+    Failed,
 }
 
 message EV_STStreamData {

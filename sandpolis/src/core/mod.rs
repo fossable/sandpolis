@@ -131,8 +131,8 @@ pub enum Layer {
 
     Meta,
     Network,
-    #[cfg(feature = "layer-packages")]
-    Packages,
+    #[cfg(feature = "layer-package")]
+    Package,
 
     /// Support for probe devices which do not run agent software. Instead they
     /// connect through a "gateway" instance over a well known protocol.
@@ -145,12 +145,35 @@ pub enum Layer {
     // Tunnel,
 }
 
-pub struct Instance {
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct InstanceData {
     pub id: InstanceId,
-    pub db: sled::Tree,
+    pub os_info: os_info::Info,
 }
 
-impl Instance {
-    #[cfg(feature = "layer-packages")]
-    pub fn package(&self) -> crate::core::layer::package::PackageLayer {}
+impl InstanceData {
+    pub fn new() -> Self {
+        Self {
+            id: InstanceId::new(&[
+                #[cfg(feature = "server")]
+                InstanceType::Server,
+                #[cfg(feature = "client")]
+                InstanceType::Client,
+                #[cfg(feature = "agent")]
+                InstanceType::Agent,
+            ]),
+            os_info: os_info::get(),
+        }
+    }
+
+    #[cfg(feature = "layer-package")]
+    pub fn package(&self) -> crate::core::layer::package::PackageLayerData {}
+}
+
+pub struct Instance {
+    pub db: sled::Tree,
+    pub data: InstanceData,
+
+    #[cfg(feature = "layer-package")]
+    pub package: crate::core::layer::package::PackageLayer,
 }

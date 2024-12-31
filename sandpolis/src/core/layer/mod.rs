@@ -2,7 +2,7 @@
 pub mod desktop;
 #[cfg(feature = "layer-filesystem")]
 pub mod filesystem;
-#[cfg(feature = "layer-packages")]
+#[cfg(feature = "layer-package")]
 pub mod package;
 #[cfg(feature = "layer-probe")]
 pub mod probe;
