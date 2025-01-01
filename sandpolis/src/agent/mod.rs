@@ -175,12 +175,17 @@
 //! even when the gateway server is compromised.
 
 use anyhow::{bail, Result};
+use axum::Router;
 use clap::Parser;
 use std::io::IsTerminal;
+use std::path::PathBuf;
+use tokio::net::UnixListener;
 use tracing::info;
 
 use crate::core::database::Database;
 use crate::CommandLine;
+
+pub mod layer;
 
 #[derive(Parser, Debug, Clone, Default)]
 pub struct AgentCommandLine {
@@ -190,12 +195,33 @@ pub struct AgentCommandLine {
 
     /// Instead of maintaining a persistent connection, poll the server on this cron expression
     pub poll: Option<String>,
+
+    /// Agent socket
+    #[clap(long, value_parser = parse_storage_dir, default_value = default_storage_dir().into_os_string())]
+    pub agent_socket: PathBuf,
+}
+
+#[derive(Clone)]
+pub struct AgentState {
+    pub db: Database,
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {
     let mut db = Database::new(args.storage.join("agent.db"))?;
 
     info!("Starting agent instance");
+
+    let _ = tokio::fs::remove_file(&args.agent_args.agent_socket).await;
+
+    let uds = UnixListener::bind(&args.agent_args.agent_socket)?;
+    tokio::spawn(async move {
+        let app = Router::new();
+
+        #[cfg(feature = "layer-shell")]
+        let app = app.nest("/layer/shell", crate::agent::layer::shell::router());
+
+        axum::serve(uds, app.into_make_service()).await.unwrap();
+    });
 
     // TODO if a server is running in the same process, just use that
     if let Some(servers) = args.server {

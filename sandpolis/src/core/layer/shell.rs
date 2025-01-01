@@ -1,9 +1,12 @@
 use std::{collections::HashMap, path::PathBuf};
 
+use serde::{Deserialize, Serialize};
+
 pub struct ShellLayer {
     tree: sled::Tree,
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum ShellType {
     /// Busybox shell
     Ash,
@@ -27,11 +30,16 @@ pub enum ShellType {
     Zsh,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct ShellSessionData {
     pub shell_type: ShellType,
 
     /// Path to the shell's executable
     pub shell: PathBuf,
+
+    pub started: Option<u64>,
+
+    pub ended: Option<u64>,
 
     /// Total CPU time used by the process and all children
     pub cpu_time: f64,
@@ -41,11 +49,13 @@ pub struct ShellSessionData {
 }
 
 /// A reusable shell script.
+#[derive(Serialize, Deserialize)]
 pub struct ShellSnippet {
     pub shell_type: ShellType,
     pub content: String,
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum ShellCommand {
     /// Inline command
     Command(Vec<String>),
@@ -54,6 +64,7 @@ pub enum ShellCommand {
 }
 
 /// Register a scheduled command to execute in a shell.
+#[derive(Serialize, Deserialize)]
 pub struct ShellScheduleRequest {
     /// Shell executable to use for request
     pub shell: PathBuf,
@@ -66,6 +77,7 @@ pub struct ShellScheduleRequest {
 }
 
 /// Request to execute a command in a shell.
+#[derive(Serialize, Deserialize)]
 pub struct ShellExecuteRequest {
     /// Shell executable to use for request
     pub shell: PathBuf,
@@ -81,21 +93,27 @@ pub struct ShellExecuteRequest {
 }
 
 /// Response containing execution results.
-pub struct ShellExecuteResponse {
-    /// Process exit code
-    pub exit_code: i32,
+#[derive(Serialize, Deserialize)]
+pub enum ShellExecuteResponse {
+    Ok {
+        /// Process exit code
+        exit_code: i32,
 
-    /// Execution duration in seconds
-    pub duration: f64,
+        /// Execution duration in seconds
+        duration: f64,
 
-    /// Process output on all descriptors
-    pub output: HashMap<i32, Vec<u8>>,
-    // TODO cgroup-y info like max memory, cpu time, etc
+        /// Process output on all descriptors
+        output: HashMap<i32, Vec<u8>>,
+        // TODO cgroup-y info like max memory, cpu time, etc
+    },
+    Timeout,
 }
 
 /// Locate supported shells on the system.
+#[derive(Serialize, Deserialize)]
 pub struct ShellListRequest;
 
+#[derive(Serialize, Deserialize)]
 pub struct DiscoveredShell {
     /// Closest type of discovered shell
     pub shell_type: ShellType,
@@ -108,11 +126,13 @@ pub struct DiscoveredShell {
 }
 
 /// Supported shell information.
+#[derive(Serialize, Deserialize)]
 pub struct ShellListResponse {
     pub shells: Vec<DiscoveredShell>,
 }
 
 // Start a new shell session
+#[derive(Serialize, Deserialize)]
 pub struct ShellSessionRequest {
     /// Path to the shell executable
     pub path: PathBuf,
@@ -129,11 +149,13 @@ pub struct ShellSessionRequest {
     pub cols: u32,
 }
 
+#[derive(Serialize, Deserialize)]
 enum ShellSessionResponse {
     Ok(u64),
 }
 
 /// Send standard-input or resizes to a shell session.
+#[derive(Serialize, Deserialize, Default)]
 pub struct ShellSessionInputEvent {
     /// STDIN data
     pub stdin: Option<Vec<u8>>,
@@ -146,6 +168,8 @@ pub struct ShellSessionInputEvent {
 }
 
 /// Event containing standard-output and standard-error
+#[derive(Serialize, Deserialize, Default)]
 pub struct ShellSessionOutputEvent {
-    pub output: HashMap<i32, Vec<u8>>,
+    pub stdout: Vec<u8>,
+    pub stderr: Vec<u8>,
 }

@@ -1,13 +1,5 @@
 use anyhow::{bail, Result};
-use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    path::{Path, PathBuf},
-    process::{Child, Command, Stdio},
-    sync::{Arc, Mutex},
-    thread::sleep,
-    time::Duration,
-};
+use std::{path::Path, sync::Arc};
 use tracing::debug;
 
 use super::InstanceId;
@@ -47,12 +39,16 @@ impl Database {
         })
     }
 
-    pub fn instance(&self, id: impl Into<InstanceId>) -> InstanceData {
+    pub fn instance(&self, id: impl Into<InstanceId>) -> Result<InstanceData> {
         let id = id.into();
+        let db = self.db.open_tree(id)?;
 
-        Instance {
-            id,
-            db: self.db.open_tree(id.into_bytes()).unwrap(),
-        }
+        Ok(if let Some(data) = db.get("instance")? {
+            serde_json::from_slice::<InstanceData>(&data)?
+        } else {
+            let instance = InstanceData::new();
+            db.insert("local", serde_json::to_vec(&instance)?)?;
+            instance
+        })
     }
 }

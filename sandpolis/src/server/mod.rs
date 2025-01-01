@@ -51,12 +51,12 @@ pub struct ServerCommandLine {
 }
 
 #[derive(Clone)]
-pub struct AppState {
+pub struct ServerState {
     pub db: Database,
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {
-    let state = AppState {
+    let state = ServerState {
         db: Database::new(args.storage.join("server.db"))?,
     };
 
@@ -86,7 +86,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
 /// Proxy a request to the local database and return its response
 #[debug_handler]
-async fn fallback_handler(state: State<AppState>, request: Request) -> impl IntoResponse {
+async fn fallback_handler(state: State<ServerState>, request: Request) -> impl IntoResponse {
     trace!("Passing request to local database");
 
     todo!()
