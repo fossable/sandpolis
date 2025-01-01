@@ -7,4 +7,5 @@ members = [
     "sandpolis",
     "sandpolis-bootagent",
     "sandpolis-client-mobile",
+    "sandpolis-macros",
 ]

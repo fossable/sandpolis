@@ -51,3 +51,7 @@ pub trait PackageManager {
         bail!("Not implemented");
     }
 }
+
+pub fn router() -> Router {
+    todo!()
+}

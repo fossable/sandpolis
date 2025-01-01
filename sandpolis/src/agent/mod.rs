@@ -197,7 +197,8 @@ pub struct AgentCommandLine {
     pub poll: Option<String>,
 
     /// Agent socket
-    #[clap(long, value_parser = parse_storage_dir, default_value = default_storage_dir().into_os_string())]
+    #[clap(long)]
+    //, value_parser = parse_storage_dir, default_value = default_storage_dir().into_os_string())]
     pub agent_socket: PathBuf,
 }
 
@@ -219,6 +220,12 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
         #[cfg(feature = "layer-shell")]
         let app = app.nest("/layer/shell", crate::agent::layer::shell::router());
+
+        #[cfg(feature = "layer-package")]
+        let app = app.nest("/layer/package", crate::agent::layer::package::router());
+
+        #[cfg(feature = "layer-desktop")]
+        let app = app.nest("/layer/desktop", crate::agent::layer::desktop::router());
 
         axum::serve(uds, app.into_make_service()).await.unwrap();
     });

@@ -6,6 +6,7 @@ use axum::{
         self,
         ws::{Message, WebSocket, WebSocketUpgrade},
     },
+    http::StatusCode,
     response::IntoResponse,
     routing::{any, post},
     Json, Router,
@@ -19,12 +20,9 @@ use tokio::{
 };
 use tracing::debug;
 
-use crate::core::layer::{
-    network::stream::{StreamSink, StreamSource},
-    shell::{
-        ShellExecuteRequest, ShellExecuteResponse, ShellSessionData, ShellSessionInputEvent,
-        ShellSessionOutputEvent, ShellSessionRequest,
-    },
+use crate::core::layer::shell::{
+    ShellExecuteRequest, ShellExecuteResponse, ShellSessionData, ShellSessionInputEvent,
+    ShellSessionOutputEvent, ShellSessionRequest,
 };
 
 pub struct ShellSession {
@@ -34,13 +32,20 @@ pub struct ShellSession {
 }
 
 impl ShellSession {
-    pub fn new() -> Self {}
+    pub fn new(request: ShellSessionRequest) -> Result<Self> {
+        Ok(Self {
+            process: Command::new(&request.path)
+                .envs(request.environment)
+                .spawn()?,
+            data: todo!(),
+        })
+    }
 
-    pub async fn run(&mut self, socket: WebSocket) {
+    pub async fn run(mut self, socket: WebSocket) {
         let (mut sender, mut receiver) = socket.split();
 
+        let mut stdin = self.process.stdin.take().unwrap();
         let mut stdin_task = tokio::spawn(async move {
-            let stdin = self.process.stdin.take().unwrap();
             while let Some(Ok(msg)) = receiver.next().await {
                 match msg {
                     Message::Binary(data) => match stdin.write_all(&data).await {
@@ -53,8 +58,8 @@ impl ShellSession {
             }
         });
 
+        let mut stdout = self.process.stdout.take().unwrap();
         let mut stdout_task = tokio::spawn(async move {
-            let stdout = self.process.stdout.take().unwrap();
             loop {
                 let mut event = ShellSessionOutputEvent::default();
                 match stdout.read_buf(&mut event.stdout).await {
@@ -100,19 +105,22 @@ async fn shell_session(
     // state: State<AppState>,
     ws: WebSocketUpgrade,
     extract::Json(request): extract::Json<ShellSessionRequest>,
-) -> impl IntoResponse {
-    let mut session = ShellSession::new();
-    ws.on_upgrade(move |socket| session.run(socket))
+) -> Result<(), StatusCode> {
+    let session = ShellSession::new(request).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    ws.on_upgrade(move |socket| session.run(socket));
+
+    Ok(())
 }
 
 #[debug_handler]
 async fn shell_execute(
     // state: State<AppState>,
     extract::Json(request): extract::Json<ShellExecuteRequest>,
-) -> Result<Json<ShellExecuteResponse>, axum::http::StatusCode> {
-    let cmd = Command::new(request.shell)
+) -> Result<Json<ShellExecuteResponse>, StatusCode> {
+    let mut cmd = Command::new(request.shell)
         .spawn()
-        .map_err(|_| axum::http::StatusCode::NOT_FOUND)?;
+        .map_err(|_| StatusCode::NOT_FOUND)?;
 
     Ok(Json(if request.capture_output {
         match timeout(Duration::from_secs(request.timeout), cmd.wait_with_output()).await {
@@ -122,7 +130,10 @@ async fn shell_execute(
     } else {
         match timeout(Duration::from_secs(request.timeout), cmd.wait()).await {
             Ok(exit_status) => ShellExecuteResponse::Ok {
-                exit_code: exit_status,
+                exit_code: exit_status
+                    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+                    .code()
+                    .unwrap_or(-1),
                 duration: todo!(),
                 output: todo!(),
             },
