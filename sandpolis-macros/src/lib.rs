@@ -2,10 +2,12 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{self, parse_macro_input, DeriveInput};
 
-#[proc_macro_derive(Event)]
+#[proc_macro_derive(StreamEvent)]
 pub fn derive_event(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident;
+
+    // TODO assert type name ends with 'Event'?
 
     let expanded = quote! {
         impl Into<axum::extract::ws::Message> for #name {
@@ -17,3 +19,5 @@ pub fn derive_event(input: TokenStream) -> TokenStream {
 
     TokenStream::from(expanded)
 }
+
+// TODO data objects

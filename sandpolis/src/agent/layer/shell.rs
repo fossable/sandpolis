@@ -32,7 +32,29 @@ pub struct ShellSession {
 }
 
 impl ShellSession {
-    pub fn new(request: ShellSessionRequest) -> Result<Self> {
+    pub fn new(mut request: ShellSessionRequest) -> Result<Self> {
+        // Add a default for TERM
+        if request.environment.get("TERM").is_none() {
+            request
+                .environment
+                .insert("TERM".to_string(), "screen-256color".to_string());
+        }
+
+        // Add a default for rows/cols
+        if request.rows == 0 {
+            request.rows = 120;
+        }
+        if request.cols == 0 {
+            request.cols = 80;
+        }
+
+        request
+            .environment
+            .insert("ROWS".to_string(), request.rows.to_string());
+        request
+            .environment
+            .insert("COLS".to_string(), request.cols.to_string());
+
         Ok(Self {
             process: Command::new(&request.path)
                 .envs(request.environment)

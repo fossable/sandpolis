@@ -1,6 +1,6 @@
 use std::{collections::HashMap, path::PathBuf};
 
-use sandpolis_macros::Event;
+use sandpolis_macros::StreamEvent;
 use serde::{Deserialize, Serialize};
 
 pub struct ShellLayer {
@@ -169,7 +169,7 @@ pub struct ShellSessionInputEvent {
 }
 
 /// Event containing standard-output and standard-error
-#[derive(Serialize, Deserialize, Default, Event)]
+#[derive(Serialize, Deserialize, Default, StreamEvent)]
 pub struct ShellSessionOutputEvent {
     pub stdout: Vec<u8>,
     pub stderr: Vec<u8>,

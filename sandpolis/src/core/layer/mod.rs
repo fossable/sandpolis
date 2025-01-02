@@ -8,5 +8,7 @@ pub mod package;
 pub mod probe;
 #[cfg(feature = "layer-shell")]
 pub mod shell;
+#[cfg(feature = "layer-tunnel")]
+pub mod tunnel;
 
 pub mod network;

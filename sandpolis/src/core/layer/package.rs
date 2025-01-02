@@ -30,7 +30,7 @@ pub enum PackageManager {
 
 #[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
-pub struct PackageManagerInfo {
+pub struct PackageManagerData {
     /// Type of package manager
     pub manager: PackageManager,
 
@@ -43,7 +43,7 @@ pub struct PackageManagerInfo {
 
 #[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
-pub struct Package {
+pub struct PackageData {
     /// Canonical name/identifier
     pub name: String,
 

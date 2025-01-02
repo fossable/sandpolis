@@ -65,6 +65,7 @@ layer-package = []
 layer-shell = []
 layer-sysinfo = []
 layer-probe = []
+layer-tunnel = []
 
 default = [ "layer-desktop", "layer-filesystem", "layer-shell", "layer-inventory", "layer-account", "layer-logging" ]
 wayland = [ "bevy/wayland" ]
