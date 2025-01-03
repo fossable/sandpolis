@@ -174,7 +174,7 @@ pub fn handle_layer_change(
     }
     #[cfg(feature = "layer-package")]
     if keyboard_input.pressed(KeyCode::KeyP) {
-        **current_layer = Layer::Packages;
+        **current_layer = Layer::Package;
         timer.reset();
     }
     #[cfg(feature = "layer-desktop")]

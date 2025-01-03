@@ -142,7 +142,10 @@ pub enum Layer {
     /// Interact with shell prompts / snippets.
     #[cfg(feature = "layer-shell")]
     Shell,
-    // Tunnel,
+
+    /// Establish tunnels between instances.
+    #[cfg(feature = "layer-tunnel")]
+    Tunnel,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -176,4 +179,13 @@ pub struct Instance {
 
     #[cfg(feature = "layer-package")]
     pub package: crate::core::layer::package::PackageLayer,
+}
+
+// TODO ReadOnlyAttribute, HistoricalAttribute, ...
+pub struct Attribute<T>
+where
+    T: Serialize,
+{
+    db: sled::Tree,
+    data: T,
 }

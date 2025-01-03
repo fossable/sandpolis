@@ -7,7 +7,7 @@ use crate::{
 };
 
 pub fn check_layer_active(current_layer: Res<CurrentLayer>) -> bool {
-    return **current_layer == Layer::Packages;
+    return **current_layer == Layer::Package;
 }
 
 pub fn handle_layer(

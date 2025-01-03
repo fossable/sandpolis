@@ -13,6 +13,7 @@ built = { version = "0.7", features = ["cargo-lock", "dependency-tree", "git2", 
 
 [dependencies]
 anyhow = "1.0.76"
+chrono = { version = "0.4.39", features = ["serde"] }
 clap = { version = "4.4.7", features = ["derive", "string"] }
 dialoguer = { version = "0.11.0" }
 fuser = { version = "0.15.1", optional = true, features = ["serializable"] }
@@ -20,17 +21,19 @@ futures = "0.3.30"
 os_info = "3.8.2"
 rand = "0.8.5"
 reqwest = { version = "0.12.5", default-features = false, features = ["stream", "cookies", "json", "rustls-tls", "charset"] }
+reqwest-websocket = "0.4.4"
+sandpolis-macros = { path = "../sandpolis-macros" }
 serde_bytes = "0.11.15"
 serde_cbor = "0.11.2"
 serde_json = "1.0.134"
 serde = { version = "1.0.203", features = ["derive"] }
-strum = { version = "0.26.3", features = ["derive"] }
+serde_with = { version = "3.12.0", features = ["chrono"] }
 sled = { version = "0.34.7" }
+strum = { version = "0.26.3", features = ["derive"] }
 tokio = { version = "1.42.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 uuid = { version = "1.10.0", features = ["v7", "serde"] }
-sandpolis-macros = { path = "../sandpolis-macros" }
 
 # Server dependencies
 axum-macros = { version = "0.4.1", optional = true }

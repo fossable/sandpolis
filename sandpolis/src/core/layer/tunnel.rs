@@ -1,5 +1,10 @@
 use std::net::SocketAddr;
 
+use sandpolis_macros::StreamEvent;
+use serde::{Deserialize, Serialize};
+
+use crate::core::InstanceId;
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct TunnelStreamData {
     /// Instance hosting the listener

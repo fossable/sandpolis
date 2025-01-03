@@ -200,6 +200,7 @@ pub struct AgentCommandLine {
     #[clap(long)]
     //, value_parser = parse_storage_dir, default_value = default_storage_dir().into_os_string())]
     pub agent_socket: PathBuf,
+    // TODO subcommands for operations on local control socket
 }
 
 #[derive(Clone)]
