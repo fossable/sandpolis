@@ -1,4 +1,5 @@
 use anyhow::Result;
+use database::Document;
 use serde::{Deserialize, Serialize};
 use std::{ops::Deref, path::PathBuf, str::FromStr};
 use strum::EnumIter;
@@ -168,24 +169,12 @@ impl InstanceData {
             os_info: os_info::get(),
         }
     }
-
-    #[cfg(feature = "layer-package")]
-    pub fn package(&self) -> crate::core::layer::package::PackageLayerData {}
 }
 
 pub struct Instance {
     pub db: sled::Tree,
-    pub data: InstanceData,
+    pub data: Document<InstanceData>,
 
     #[cfg(feature = "layer-package")]
     pub package: crate::core::layer::package::PackageLayer,
-}
-
-// TODO ReadOnlyAttribute, HistoricalAttribute, ...
-pub struct Attribute<T>
-where
-    T: Serialize,
-{
-    db: sled::Tree,
-    data: T,
 }

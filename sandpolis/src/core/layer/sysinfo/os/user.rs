@@ -1,12 +1,17 @@
-/// User ID
-pub uid: java.lang.Long,
-/// Group ID
-pub gid: java.lang.Long,
-/// Username
-pub username: java.lang.String,
-/// Description
-pub description: java.lang.String,
-/// Home directory
-pub directory: java.lang.String,
-/// The user's default shell
-pub shell: java.lang.String,
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub struct UserData {
+    /// User ID
+    pub uid: u64,
+    /// Group ID
+    pub gid: u64,
+    /// Username
+    pub username: Option<String>,
+    /// Description
+    pub description: Option<String>,
+    /// Home directory
+    pub directory: Option<String>,
+    /// The user's default shell
+    pub shell: Option<String>,
+}

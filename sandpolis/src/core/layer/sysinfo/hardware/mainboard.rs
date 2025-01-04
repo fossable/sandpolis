@@ -1,8 +1,10 @@
-/// null
-pub model: java.lang.String,
-/// null
-pub manufacturer: java.lang.String,
-/// null
-pub version: java.lang.String,
-/// null
-pub serial_number: java.lang.String,
+pub struct MainboardData {
+    /// null
+    pub model: String,
+    /// null
+    pub manufacturer: String,
+    /// null
+    pub version: String,
+    /// null
+    pub serial_number: String,
+}

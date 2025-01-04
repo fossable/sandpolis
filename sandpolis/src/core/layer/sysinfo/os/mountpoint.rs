@@ -1,22 +1,24 @@
-/// Mounted device
-pub device: java.lang.String,
-/// Mounted device alias
-pub device_alias: java.lang.String,
-/// Mounted device path
-pub path: java.lang.String,
-/// Mounted device type
-pub type: java.lang.String,
-/// Block size in bytes
-pub blocks_size: java.lang.Long,
-/// Mounted device used blocks
-pub blocks: java.lang.Long,
-/// Mounted device free blocks
-pub blocks_free: java.lang.Long,
-/// Mounted device available blocks
-pub blocks_available: java.lang.Long,
-/// Mounted device used inodes
-pub inodes: java.lang.Long,
-/// Mounted device free inodes
-pub inodes_free: java.lang.Long,
-/// Mounted device flags
-pub flags: java.lang.String,
+pub struct MountpointData {
+    /// Mounted device
+    pub device: String,
+    /// Mounted device alias
+    pub device_alias: String,
+    /// Mounted device path
+    pub path: String,
+    /// Mounted device type
+    pub r#type: String,
+    /// Block size in bytes
+    pub blocks_size: u64,
+    /// Mounted device used blocks
+    pub blocks: u64,
+    /// Mounted device free blocks
+    pub blocks_free: u64,
+    /// Mounted device available blocks
+    pub blocks_available: u64,
+    /// Mounted device used inodes
+    pub inodes: u64,
+    /// Mounted device free inodes
+    pub inodes_free: u64,
+    /// Mounted device flags
+    pub flags: String,
+}

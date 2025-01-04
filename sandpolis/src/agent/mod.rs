@@ -255,3 +255,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
     return Ok(());
 }
+
+pub trait Monitor {
+    fn refresh(&mut self) -> Result<()>;
+}

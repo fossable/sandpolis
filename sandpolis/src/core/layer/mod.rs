@@ -8,6 +8,8 @@ pub mod package;
 pub mod probe;
 #[cfg(feature = "layer-shell")]
 pub mod shell;
+#[cfg(feature = "layer-sysinfo")]
+pub mod sysinfo;
 #[cfg(feature = "layer-tunnel")]
 pub mod tunnel;
 

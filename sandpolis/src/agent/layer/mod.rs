@@ -4,3 +4,5 @@ pub mod desktop;
 pub mod package;
 #[cfg(feature = "layer-shell")]
 pub mod shell;
+#[cfg(feature = "layer-sysinfo")]
+pub mod sysinfo;
