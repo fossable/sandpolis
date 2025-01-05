@@ -56,32 +56,3 @@ message RQ_RefreshAuthCertificate {
     bytes certificate = 1;
 }
 
-// Request a login from the server
-message PostLoginRequest {
-
-    // The login username
-    string username = 1;
-
-    // The password
-    string password = 2;
-
-    // Time-based One-Time Password token
-    int32 token = 3;
-}
-
-enum PostLoginResponse {
-    LOGIN_OK = 0;
-
-    LOGIN_FAILED = 1;
-    LOGIN_FAILED_EXPIRED_USER = 2;
-
-    // The given username was not valid
-    LOGIN_INVALID_USERNAME = 3;
-
-    // The given password was not valid
-    LOGIN_INVALID_PASSWORD = 4;
-
-    // The given token
-    LOGIN_INVALID_TOKEN = 5;
-
-}

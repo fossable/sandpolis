@@ -179,6 +179,7 @@ use axum::Router;
 use clap::Parser;
 use std::io::IsTerminal;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tokio::net::UnixListener;
 use tracing::info;
 
@@ -206,18 +207,24 @@ pub struct AgentCommandLine {
 #[derive(Clone)]
 pub struct AgentState {
     pub db: Database,
+    pub local: Arc<AgentInstance>,
+}
+
+pub struct AgentInstance {
+    #[cfg(feature = "layer-sysinfo")]
+    pub sysinfo: crate::agent::layer::sysinfo::SysinfoLayer,
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {
-    let mut db = Database::new(args.storage.join("agent.db"))?;
-
     info!("Starting agent instance");
 
     let _ = tokio::fs::remove_file(&args.agent_args.agent_socket).await;
 
+    let db = Database::new(args.storage.join("agent.db"))?;
+
     let uds = UnixListener::bind(&args.agent_args.agent_socket)?;
     tokio::spawn(async move {
-        let app = Router::new();
+        let app = Router::new().with_state(AgentState { db });
 
         #[cfg(feature = "layer-shell")]
         let app = app.nest("/layer/shell", crate::agent::layer::shell::router());
@@ -258,4 +265,6 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
 pub trait Monitor {
     fn refresh(&mut self) -> Result<()>;
+    //start
+    //stop
 }

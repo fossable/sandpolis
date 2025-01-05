@@ -20,14 +20,17 @@ use tokio::{
 };
 use tracing::debug;
 
-use crate::core::layer::shell::{
-    ShellExecuteRequest, ShellExecuteResponse, ShellSessionData, ShellSessionInputEvent,
-    ShellSessionOutputEvent, ShellSessionRequest,
+use crate::core::{
+    database::Document,
+    layer::shell::{
+        ShellExecuteRequest, ShellExecuteResponse, ShellSessionData, ShellSessionInputEvent,
+        ShellSessionOutputEvent, ShellSessionRequest,
+    },
 };
 
 pub struct ShellSession {
     // pub id: StreamId,
-    pub data: ShellSessionData,
+    pub data: Document<ShellSessionData>,
     pub process: Child,
 }
 

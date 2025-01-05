@@ -1,7 +1,9 @@
 use anyhow::{bail, Result};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Write};
 use std::marker::PhantomData;
+use std::str::FromStr;
 use std::{path::Path, sync::Arc};
 use tracing::debug;
 
@@ -9,37 +11,21 @@ use super::InstanceId;
 use super::{Instance, InstanceData, InstanceType};
 
 #[derive(Clone)]
-pub struct Database {
-    db: sled::Db,
-    this: Arc<Instance>,
-}
+pub struct Database(sled::Db);
 
 impl Database {
     pub fn new<P>(path: P) -> Result<Self>
     where
         P: AsRef<Path>,
     {
-        let db = sled::Config::new().path(path.as_ref()).open()?;
+        Ok(Self(sled::Config::new().path(path.as_ref()).open()?))
+    }
 
-        // Query for the local instance
-        let local: InstanceData = if let Some(local) = db.get("local")? {
-            let local = serde_json::from_slice(&local)?;
-            debug!(local = ?local, "Restoring local instance metadata");
-            local
-        } else {
-            let local = InstanceData::new();
-            debug!(local = ?local, "Creating new local instance metadata");
-            db.insert("local", serde_json::to_vec(&local)?)?;
-            local
-        };
-
-        Ok(Self {
-            this: Arc::new(Instance {
-                db: db.open_tree(local.id)?,
-                data: local,
-            }),
-            db,
-        })
+    pub fn document<T>(&self, oid: impl TryInto<Oid>) -> Result<Document<T>>
+    where
+        T: Serialize + DeserializeOwned + Clone,
+    {
+        todo!()
     }
 
     pub fn instance(&self, id: impl Into<InstanceId>) -> Result<Oid> {
@@ -50,9 +36,27 @@ impl Database {
     }
 }
 
-/// Identifies an object in the database.
+/// Locates a `Document` or `Collection` in the instance state tree.
 #[derive(Clone)]
 pub struct Oid(Vec<u8>);
+
+impl Display for Oid {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut iter = self.0.iter();
+        loop {
+            if let Some(b) = iter.next() {
+                f.write_char(*b as char);
+
+                if ':' as u8 == *b {
+                    // TODO timestamp
+                }
+            } else {
+                break;
+            }
+        }
+        todo!()
+    }
+}
 
 impl Oid {
     pub fn extend(mut self, extension: &str) -> Result<Oid> {
@@ -61,8 +65,8 @@ impl Oid {
         Ok(self)
     }
 
-    pub fn extend_id(mut self, id: u64) -> Result<Oid<T>> {
-        // Prohibit multiple IDs
+    pub fn timestamp(mut self, timestamp: u64) -> Result<Oid<T>> {
+        // TODO overwrite timestamp if one exists
         for byte in self.path.iter().rev() {
             if *byte == ':' as u8 {
                 // TODO
@@ -84,6 +88,14 @@ impl Oid {
 impl From<u32> for Oid {
     fn from(value: u32) -> Self {
         Oid(value.to_be_bytes().to_vec())
+    }
+}
+
+impl TryFrom<&str> for Oid {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> Result<Self> {
+        todo!()
     }
 }
 
@@ -120,6 +132,13 @@ impl<T: Serialize + DeserializeOwned + Clone> Collection<T> {
             None
         })
     }
+
+    pub fn collection<U>(&self) -> Result<Collection<U>>
+    where
+        U: Serialize + DeserializeOwned + Clone,
+    {
+        todo!()
+    }
 }
 
 impl<T: Serialize + DeserializeOwned + Clone + Default> Collection<T> {
@@ -146,9 +165,9 @@ pub struct Document<T>
 where
     T: Serialize + DeserializeOwned + Clone,
 {
-    db: sled::Tree,
-    oid: Oid,
-    data: T,
+    pub db: sled::Tree,
+    pub oid: Oid,
+    pub data: T,
 }
 
 impl<T: Serialize + DeserializeOwned + Clone> Document<T> {

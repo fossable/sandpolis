@@ -1,13 +1,13 @@
 use std::{collections::HashMap, path::PathBuf};
 
-use sandpolis_macros::StreamEvent;
+use sandpolis_macros::{Delta, StreamEvent};
 use serde::{Deserialize, Serialize};
 
 pub struct ShellLayer {
     tree: sled::Tree,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum ShellType {
     /// Busybox shell
     Ash,
@@ -31,7 +31,7 @@ pub enum ShellType {
     Zsh,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Delta)]
 pub struct ShellSessionData {
     pub shell_type: ShellType,
 

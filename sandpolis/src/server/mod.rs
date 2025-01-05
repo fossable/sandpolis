@@ -33,11 +33,15 @@ use axum::{
 use axum_macros::debug_handler;
 use axum_server::tls_rustls::RustlsConfig;
 use clap::Parser;
+use std::sync::Arc;
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     path::PathBuf,
 };
 use tracing::{info, trace};
+use user::User;
+
+pub mod user;
 
 #[derive(Parser, Debug, Clone)]
 pub struct ServerCommandLine {
@@ -53,6 +57,11 @@ pub struct ServerCommandLine {
 #[derive(Clone)]
 pub struct ServerState {
     pub db: Database,
+    pub local: Arc<ServerInstance>,
+}
+
+pub struct ServerInstance {
+    pub users: Collection<UserData>,
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {

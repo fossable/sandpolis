@@ -7,6 +7,7 @@ use strum::EnumIter;
 pub mod database;
 pub mod layer;
 pub mod random;
+pub mod user;
 
 /// The official server port: https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=8768
 pub const S7S_PORT: u16 = 8768;
@@ -155,8 +156,8 @@ pub struct InstanceData {
     pub os_info: os_info::Info,
 }
 
-impl InstanceData {
-    pub fn new() -> Self {
+impl Default for InstanceData {
+    fn default() -> Self {
         Self {
             id: InstanceId::new(&[
                 #[cfg(feature = "server")]
@@ -169,12 +170,4 @@ impl InstanceData {
             os_info: os_info::get(),
         }
     }
-}
-
-pub struct Instance {
-    pub db: sled::Tree,
-    pub data: Document<InstanceData>,
-
-    #[cfg(feature = "layer-package")]
-    pub package: crate::core::layer::package::PackageLayer,
 }

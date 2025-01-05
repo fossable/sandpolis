@@ -1,8 +1,12 @@
+use serde::{Deserialize, Serialize};
+use url::Url;
+use validator::Validate;
 
-#[derive(Clone, Serialize, Deserialize, Validate)]
+#[derive(Serialize, Deserialize, Validate)]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct UserData {
     /// Unchangable username
-    #[validate(length(min = 4), length(max = 20))]
+    #[validate(length(min = 4, max = 20))]
     pub username: String,
 
     /// Whether the user is an admin
@@ -13,50 +17,42 @@ pub struct UserData {
     pub email: Option<String>,
 
     /// Phone number
-    #[validate(phone)]
     pub phone: Option<String>,
 
     pub expiration: Option<i64>,
 }
 
 /// Create a new user account.
+#[derive(Serialize, Deserialize, Validate)]
 pub struct CreateUserRequest {
-
     pub data: UserData,
 
-    /// Initial password as unsalted hash
+    /// Password as unsalted hash
     pub password: String,
 
     /// TOTP secret URL
-    pub totp_secret: Option<URL>,
+    pub totp_secret: Option<Url>,
 }
 
 pub enum CreateUserResponse {
     Ok,
 }
 
-message GetUserResponse {
+pub struct GetUsersRequest {
+    /// Search by username prefix
+    pub username: Option<String>,
 
-    // The user's immutable username
-    string username = 1;
-
-    // The user's optional email
-    string email = 2;
-
-    // The user's optional phone number
-    string phone = 3;
-
-    // The user's optional expiration timestamp
-    int64 expiration = 4;
+    /// Search by email prefix
+    pub email: Option<String>,
 }
 
-message GetUsersResponse {
-    repeated GetUserResponse user = 1;
+pub enum GetUsersResponse {
+    Ok(Vec<UserData>),
 }
 
 /// Update an existing user account.
 pub struct UpdateUserRequest {
-
+    /// User to edit
     pub username: String,
 
     /// New password
@@ -70,4 +66,36 @@ pub struct UpdateUserRequest {
 
     /// New expiration timestamp
     pub expiration: Option<u64>,
+}
+
+pub enum UpdateUserResponse {
+    Ok,
+
+    /// The requested user does not exist
+    NotFound,
+}
+
+/// Request a login from the server
+pub struct LoginRequest {
+    /// User to login as
+    pub username: String,
+
+    /// Password as unsalted hash
+    pub password: String,
+
+    /// Time-based One-Time Password token
+    pub totp_token: Option<String>,
+}
+
+pub enum LoginResponse {
+    Ok,
+
+    /// The request was invalid
+    Invalid,
+
+    /// The user account is expired
+    Expired,
+
+    /// The password and/or TOTP token were incorrect
+    Denied,
 }

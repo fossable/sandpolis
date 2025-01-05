@@ -37,3 +37,21 @@ impl Monitor for MemoryMonitor {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{agent::Monitor, core::database::Database};
+    use anyhow::Result;
+
+    #[test]
+    fn test_memory_monitor() -> Result<()> {
+        let db_path = tempfile::tempdir()?;
+        let db = Database::new(db_path)?;
+
+        let mut monitor = super::MemoryMonitor::new(db.document("/test")?);
+        monitor.refresh()?;
+
+        assert!(monitor.document.data.total > 0);
+        Ok(())
+    }
+}
