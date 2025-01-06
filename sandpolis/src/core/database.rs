@@ -3,28 +3,39 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Write};
 use std::marker::PhantomData;
-use std::str::FromStr;
 use std::{path::Path, sync::Arc};
 use tracing::debug;
 
 use super::InstanceId;
-use super::{Instance, InstanceData, InstanceType};
 
 #[derive(Clone)]
 pub struct Database(sled::Db);
 
 impl Database {
+    /// Initialize a new database from the given directory.
     pub fn new<P>(path: P) -> Result<Self>
     where
         P: AsRef<Path>,
     {
-        Ok(Self(sled::Config::new().path(path.as_ref()).open()?))
+        let path = path.as_ref();
+
+        debug!(path = %path.display(), "Initializing database");
+        Ok(Self(sled::Config::new().path(path).open()?))
     }
 
     pub fn document<T>(&self, oid: impl TryInto<Oid>) -> Result<Document<T>>
     where
-        T: Serialize + DeserializeOwned + Clone,
+        T: Serialize + DeserializeOwned,
     {
+        let oid = oid.try_into()?;
+        todo!()
+    }
+
+    pub fn collection<T>(&self, oid: impl TryInto<Oid>) -> Result<Collection<T>>
+    where
+        T: Serialize + DeserializeOwned,
+    {
+        let oid = oid.try_into()?;
         todo!()
     }
 
@@ -45,27 +56,49 @@ impl Display for Oid {
         let mut iter = self.0.iter();
         loop {
             if let Some(b) = iter.next() {
-                f.write_char(*b as char);
+                f.write_char(*b as char)?;
 
                 if ':' as u8 == *b {
-                    // TODO timestamp
+                    // The next 8 bytes are the timestamp
+                    let mut timestamp = 0u64;
+                    for i in 0..8 {
+                        if let Some(byte) = iter.next() {
+                            timestamp |= (*byte as u64) << (i * 8);
+                        } else {
+                            return Err(std::fmt::Error);
+                        }
+                    }
+                    f.write_str(&format!("{}", timestamp))?;
                 }
             } else {
                 break;
             }
         }
-        todo!()
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test_display {
+    use super::Oid;
+
+    #[test]
+    fn test_format_good() {
+        assert_eq!(Oid("/a".as_bytes().to_vec()).to_string(), "/a");
     }
 }
 
 impl Oid {
-    pub fn extend(mut self, extension: &str) -> Result<Oid> {
-        self.path.push('/' as u8);
-        self.path.extend_from_slice(extension.as_bytes());
-        Ok(self)
+    pub fn extend(&self, oid: impl TryInto<Oid>) -> Result<Oid> {
+        let mut path = self.0.clone();
+
+        path.push('/' as u8);
+        path.extend_from_slice(&oid.try_into()?.0);
+        Ok(Oid(path))
     }
 
-    pub fn timestamp(mut self, timestamp: u64) -> Result<Oid<T>> {
+    /// Add or replace the timestamp.
+    pub fn timestamp(mut self, timestamp: u64) -> Result<Oid> {
         // TODO overwrite timestamp if one exists
         for byte in self.path.iter().rev() {
             if *byte == ':' as u8 {
@@ -108,19 +141,16 @@ impl AsRef<[u8]> for Oid {
 #[derive(Clone)]
 pub struct Collection<T>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: Serialize + DeserializeOwned,
 {
     db: sled::Tree,
     oid: Oid,
     data: PhantomData<T>,
 }
 
-impl<T: Serialize + DeserializeOwned + Clone> Collection<T> {
-    pub fn get_document<I>(&self, id: I) -> Result<Option<Document<T>>>
-    where
-        I: Into<Oid>,
-    {
-        let oid = self.oid.extend_id(id.into())?;
+impl<T: Serialize + DeserializeOwned> Collection<T> {
+    pub fn get_document(&self, oid: impl TryInto<Oid>) -> Result<Option<Document<T>>> {
+        let oid = self.oid.extend(oid)?;
 
         Ok(if let Some(data) = self.db.get(&oid)? {
             Some(Document {
@@ -133,20 +163,26 @@ impl<T: Serialize + DeserializeOwned + Clone> Collection<T> {
         })
     }
 
-    pub fn collection<U>(&self) -> Result<Collection<U>>
+    pub fn documents(&self) {
+        self.db
+            .range::<&Oid, std::ops::Range<&Oid>>(&self.oid..&self.oid);
+    }
+
+    pub fn collection<U>(&self, oid: impl TryInto<Oid>) -> Result<Collection<U>>
     where
         U: Serialize + DeserializeOwned + Clone,
     {
-        todo!()
+        Ok(Collection {
+            db: self.db.clone(),
+            oid: self.oid.extend(oid)?,
+            data: PhantomData {},
+        })
     }
 }
 
-impl<T: Serialize + DeserializeOwned + Clone + Default> Collection<T> {
-    pub fn document<I>(&self, id: I) -> Result<Document<T>>
-    where
-        I: Into<Oid>,
-    {
-        let oid = self.oid.extend_id(id.into())?;
+impl<T: Serialize + DeserializeOwned + Default> Collection<T> {
+    pub fn document(&self, oid: impl TryInto<Oid>) -> Result<Document<T>> {
+        let oid = self.oid.extend(oid)?;
 
         Ok(Document {
             db: self.db.clone(),
@@ -163,11 +199,15 @@ impl<T: Serialize + DeserializeOwned + Clone + Default> Collection<T> {
 #[derive(Clone)]
 pub struct Document<T>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: Serialize + DeserializeOwned,
 {
     pub db: sled::Tree,
     pub oid: Oid,
     pub data: T,
+}
+
+impl<T: Serialize + DeserializeOwned> Document<T> {
+    // pub fn update<U>(&mut self, update: )
 }
 
 impl<T: Serialize + DeserializeOwned + Clone> Document<T> {

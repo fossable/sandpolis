@@ -1,7 +1,9 @@
 pub mod battery;
 pub mod cpu;
+pub mod disk;
 pub mod display;
 pub mod mainboard;
 pub mod memory;
 pub mod nic;
+pub mod sensor;
 pub mod usb;

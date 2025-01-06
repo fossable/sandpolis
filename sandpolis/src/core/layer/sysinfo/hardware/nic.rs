@@ -4,7 +4,7 @@ pub struct NicData {
     /// The interface's description
     pub description: String,
     /// The interface's maximum transmission unit in bytes
-    pub mtu: Integer,
+    pub mtu: u32,
     /// The interface's MAC address
     pub mac: String,
     /// null

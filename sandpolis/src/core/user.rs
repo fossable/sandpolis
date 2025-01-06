@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use url::Url;
 use validator::Validate;
 
 #[derive(Serialize, Deserialize, Validate)]
@@ -31,13 +30,15 @@ pub struct CreateUserRequest {
     pub password: String,
 
     /// TOTP secret URL
-    pub totp_secret: Option<Url>,
+    pub totp_secret: Option<String>,
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum CreateUserResponse {
     Ok,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct GetUsersRequest {
     /// Search by username prefix
     pub username: Option<String>,
@@ -46,11 +47,13 @@ pub struct GetUsersRequest {
     pub email: Option<String>,
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum GetUsersResponse {
     Ok(Vec<UserData>),
 }
 
 /// Update an existing user account.
+#[derive(Serialize, Deserialize)]
 pub struct UpdateUserRequest {
     /// User to edit
     pub username: String,
@@ -68,6 +71,7 @@ pub struct UpdateUserRequest {
     pub expiration: Option<u64>,
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum UpdateUserResponse {
     Ok,
 
@@ -76,6 +80,7 @@ pub enum UpdateUserResponse {
 }
 
 /// Request a login from the server
+#[derive(Serialize, Deserialize)]
 pub struct LoginRequest {
     /// User to login as
     pub username: String,
@@ -87,8 +92,10 @@ pub struct LoginRequest {
     pub totp_token: Option<String>,
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum LoginResponse {
-    Ok,
+    /// The login was successful and returned a session token
+    Ok(String),
 
     /// The request was invalid
     Invalid,

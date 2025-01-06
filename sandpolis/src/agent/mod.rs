@@ -221,10 +221,17 @@ pub async fn main(args: CommandLine) -> Result<()> {
     let _ = tokio::fs::remove_file(&args.agent_args.agent_socket).await;
 
     let db = Database::new(args.storage.join("agent.db"))?;
+    let state = AgentState {
+        local: Arc::new(AgentInstance {
+            #[cfg(feature = "layer-sysinfo")]
+            sysinfo: crate::agent::layer::sysinfo::SysinfoLayer::new(),
+        }),
+        db,
+    };
 
     let uds = UnixListener::bind(&args.agent_args.agent_socket)?;
     tokio::spawn(async move {
-        let app = Router::new().with_state(AgentState { db });
+        let app = Router::new().with_state(state);
 
         #[cfg(feature = "layer-shell")]
         let app = app.nest("/layer/shell", crate::agent::layer::shell::router());

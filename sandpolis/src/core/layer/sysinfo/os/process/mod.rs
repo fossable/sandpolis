@@ -42,3 +42,10 @@ pub struct ProcessData {
     /// The number of file handles that the process owns
     pub handle_count: u64,
 }
+
+pub struct FdData {
+    /// Process-specific file descriptor number
+    pub fd: u64,
+    /// Filesystem path of descriptor
+    pub path: String,
+}

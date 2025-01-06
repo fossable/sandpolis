@@ -25,3 +25,16 @@ pub struct OsData {
     /// OS architecture
     pub arch: String,
 }
+
+pub struct KernelModuleData {
+    /// Module name
+    pub name: String,
+    /// Size of module content
+    pub size: String,
+    /// Module reverse dependencies
+    pub used_by: String,
+    /// Kernel module status
+    pub status: String,
+    /// Kernel module address
+    pub address: String,
+}

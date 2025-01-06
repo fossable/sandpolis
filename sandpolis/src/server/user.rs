@@ -9,7 +9,13 @@ use serde::{Deserialize, Serialize};
 use std::{fmt::Display, num::NonZeroU32};
 use validator::Validate;
 
-use crate::core::database::Document;
+use crate::core::{
+    database::Document,
+    user::{
+        CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
+        LoginResponse,
+    },
+};
 
 use super::ServerState;
 
@@ -26,7 +32,7 @@ pub struct PasswordData {
     pub hash: Vec<u8>,
 
     /// TOTP secret token
-    pub totp_secret: Option<URL>,
+    pub totp_secret: Option<String>,
 }
 
 impl Display for PasswordData {

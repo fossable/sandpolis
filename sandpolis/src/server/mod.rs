@@ -21,6 +21,8 @@
 //! Every LS server maintains a database containing just the contents relevant to it
 //! which is continuously replicated to a GS server's database.
 
+use crate::core::database::Collection;
+use crate::core::user::UserData;
 use crate::core::{database::Database, S7S_PORT};
 use crate::CommandLine;
 use anyhow::{Context, Result};
@@ -39,7 +41,6 @@ use std::{
     path::PathBuf,
 };
 use tracing::{info, trace};
-use user::User;
 
 pub mod user;
 
@@ -65,8 +66,12 @@ pub struct ServerInstance {
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {
+    let db = Database::new(args.storage.join("server.db"))?;
     let state = ServerState {
-        db: Database::new(args.storage.join("server.db"))?,
+        local: Arc::new(ServerInstance {
+            users: db.collection("/server/users")?,
+        }),
+        db,
     };
 
     let app = Router::new().fallback(fallback_handler).with_state(state);

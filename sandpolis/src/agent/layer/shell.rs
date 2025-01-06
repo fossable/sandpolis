@@ -121,7 +121,7 @@ impl Drop for ShellSession {
         debug!("Killing child process");
         self.process.kill(); // TODO await
 
-        self.data.ended = todo!();
+        // self.data.update(ShellSessionDelta::ended);
     }
 }
 
