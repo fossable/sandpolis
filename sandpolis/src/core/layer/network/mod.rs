@@ -5,6 +5,7 @@ use futures::StreamExt;
 use reqwest::ClientBuilder;
 use reqwest_websocket::RequestBuilderExt;
 use serde::{Deserialize, Serialize};
+use serde_with::chrono::serde::ts_seconds_option;
 use std::{cmp::min, collections::HashMap, net::SocketAddr, sync::Arc, time::Duration};
 use tokio::time::sleep;
 use tracing::debug;

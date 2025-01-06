@@ -224,7 +224,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
     let state = AgentState {
         local: Arc::new(AgentInstance {
             #[cfg(feature = "layer-sysinfo")]
-            sysinfo: crate::agent::layer::sysinfo::SysinfoLayer::new(),
+            sysinfo: crate::agent::layer::sysinfo::SysinfoLayer::new(db.document("/sysinfo")?)?,
         }),
         db,
     };

@@ -1,19 +1,19 @@
 use crate::agent::Monitor;
 use crate::core::database::Document;
-use crate::core::layer::sysinfo::os::memory::MemoryData;
+use crate::core::layer::sysinfo::os::memory::{MemoryData, MemoryDataDelta};
 use anyhow::Result;
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 use tracing::trace;
 
 pub struct MemoryMonitor {
-    document: Document<MemoryData>,
+    data: Document<MemoryData>,
     system: System,
 }
 
 impl MemoryMonitor {
-    pub fn new(document: Document<MemoryData>) -> Self {
+    pub fn new(data: Document<MemoryData>) -> Self {
         Self {
-            document,
+            data,
             system: System::new_with_specifics(
                 RefreshKind::nothing().with_memory(MemoryRefreshKind::everything()),
             ),
@@ -24,7 +24,7 @@ impl MemoryMonitor {
 impl Monitor for MemoryMonitor {
     fn refresh(&mut self) -> Result<()> {
         self.system.refresh_memory();
-        self.document.mutate(|data| {
+        self.data.mutate(|data| {
             data.total = self.system.total_memory();
             data.free = self.system.free_memory();
             data.swap_free = self.system.free_swap();
@@ -51,7 +51,7 @@ mod tests {
         let mut monitor = super::MemoryMonitor::new(db.document("/test")?);
         monitor.refresh()?;
 
-        assert!(monitor.document.data.total > 0);
+        assert!(monitor.data.data.total > 0);
         Ok(())
     }
 }

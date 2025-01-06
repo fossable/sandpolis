@@ -1,6 +1,7 @@
+use sandpolis_macros::Delta;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Default, Debug, Delta)]
 pub struct MemoryData {
     /// The amount of physical RAM in bytes
     pub total: u64,

@@ -8,6 +8,13 @@ use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<ExitCode> {
+    #[cfg(all(
+        not(feature = "server"),
+        not(feature = "agent"),
+        not(feature = "client")
+    ))]
+    bail!("No instance was enabled at build time");
+
     let args = CommandLine::parse();
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
@@ -42,5 +49,5 @@ async fn main() -> Result<ExitCode> {
     #[cfg(feature = "agent")]
     tokio::join!(agent_thread).0??;
 
-    bail!("No instance was enabled at build time")
+    Ok(ExitCode::SUCCESS)
 }

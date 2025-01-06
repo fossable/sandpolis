@@ -1,10 +1,10 @@
-use anyhow::{bail, Result};
+use anyhow::{anyhow, Result};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Write};
 use std::marker::PhantomData;
 use std::{path::Path, sync::Arc};
-use tracing::debug;
+use tracing::{debug, trace};
 
 use super::InstanceId;
 
@@ -25,25 +25,35 @@ impl Database {
 
     pub fn document<T>(&self, oid: impl TryInto<Oid>) -> Result<Document<T>>
     where
-        T: Serialize + DeserializeOwned,
+        T: Serialize + DeserializeOwned + Default,
     {
-        let oid = oid.try_into()?;
-        todo!()
+        let oid = oid.try_into().map_err(|_| anyhow!("Invalid OID"))?;
+        let db = self.0.open_tree("default")?;
+        Ok(Document {
+            data: if let Some(data) = db.get(&oid)? {
+                serde_cbor::from_slice::<T>(&data)?
+            } else {
+                T::default()
+            },
+            db,
+            oid,
+        })
     }
 
     pub fn collection<T>(&self, oid: impl TryInto<Oid>) -> Result<Collection<T>>
     where
         T: Serialize + DeserializeOwned,
     {
-        let oid = oid.try_into()?;
+        let oid = oid.try_into().map_err(|_| anyhow!("Invalid OID"))?;
         todo!()
     }
 
     pub fn instance(&self, id: impl Into<InstanceId>) -> Result<Oid> {
-        Ok(Oid {
-            db: self.db.open_tree(id.into())?,
-            path: vec!['/' as u8],
-        })
+        // Ok(Oid {
+        //     db: self.db.open_tree(id.into())?,
+        //     path: vec!['/' as u8],
+        // })
+        todo!()
     }
 }
 
@@ -90,25 +100,26 @@ mod test_display {
 
 impl Oid {
     pub fn extend(&self, oid: impl TryInto<Oid>) -> Result<Oid> {
+        let oid = oid.try_into().map_err(|_| anyhow!("Invalid OID"))?;
         let mut path = self.0.clone();
 
         path.push('/' as u8);
-        path.extend_from_slice(&oid.try_into()?.0);
+        path.extend_from_slice(&oid.0);
         Ok(Oid(path))
     }
 
     /// Add or replace the timestamp.
-    pub fn timestamp(mut self, timestamp: u64) -> Result<Oid> {
+    pub fn timestamp(&self, timestamp: u64) -> Result<Oid> {
         // TODO overwrite timestamp if one exists
-        for byte in self.path.iter().rev() {
-            if *byte == ':' as u8 {
-                // TODO
-            }
-        }
+        // for byte in self.path.iter().rev() {
+        //     if *byte == ':' as u8 {
+        //         // TODO
+        //     }
+        // }
 
-        self.path.push(':' as u8);
-        self.path.extend_from_slice(&id.to_be_bytes());
-        Ok(self)
+        // self.path.push(':' as u8);
+        // self.path.extend_from_slice(&id.to_be_bytes());
+        todo!()
     }
 
     pub fn history(&self) -> Oid {
@@ -128,7 +139,8 @@ impl TryFrom<&str> for Oid {
     type Error = anyhow::Error;
 
     fn try_from(value: &str) -> Result<Self> {
-        todo!()
+        // TODO validate
+        Ok(Oid(value.as_bytes().to_vec()))
     }
 }
 
@@ -208,6 +220,24 @@ where
 
 impl<T: Serialize + DeserializeOwned> Document<T> {
     // pub fn update<U>(&mut self, update: )
+
+    pub fn document<U>(&self, oid: impl TryInto<Oid>) -> Result<Document<U>>
+    where
+        U: Serialize + DeserializeOwned + Default,
+    {
+        let oid = self.oid.extend(oid)?;
+
+        Ok(Document {
+            db: self.db.clone(),
+            data: if let Some(data) = self.db.get(&oid)? {
+                serde_cbor::from_slice::<U>(&data)?
+            } else {
+                trace!(oid = %oid, "Creating new document");
+                U::default()
+            },
+            oid,
+        })
+    }
 }
 
 impl<T: Serialize + DeserializeOwned + Clone> Document<T> {
