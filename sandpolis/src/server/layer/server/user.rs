@@ -1,24 +1,54 @@
 use anyhow::Result;
 use axum::{
-    extract::{self, State},
-    Json,
+    extract::{self, FromRequestParts, State},
+    http::{request::Parts, StatusCode},
+    Json, RequestPartsExt,
+};
+use axum_extra::{
+    headers::{authorization::Bearer, Authorization},
+    TypedHeader,
 };
 use axum_macros::debug_handler;
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use rand::Rng;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
-use std::{fmt::Display, num::NonZeroU32};
+use std::sync::LazyLock;
+use std::{
+    fmt::{Debug, Display},
+    num::NonZeroU32,
+};
+use tracing::{debug, error};
 use validator::Validate;
 
 use crate::core::{
     database::Document,
     layer::server::user::{
         CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
-        LoginResponse,
+        LoginResponse, UserData,
     },
 };
 
 use super::ServerState;
+
+static KEY: LazyLock<ServerKey> = LazyLock::new(|| {
+    let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    ServerKey::new(secret.as_bytes())
+});
+
+struct ServerKey {
+    encoding: EncodingKey,
+    decoding: DecodingKey,
+}
+
+impl ServerKey {
+    fn new(secret: &[u8]) -> Self {
+        Self {
+            encoding: EncodingKey::from_secret(secret),
+            decoding: DecodingKey::from_secret(secret),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Validate)]
 pub struct PasswordData {
@@ -36,30 +66,98 @@ pub struct PasswordData {
     pub totp_secret: Option<String>,
 }
 
-// TODO Debug?
 impl Display for PasswordData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
     }
 }
 
-#[debug_handler]
-async fn login(
-    state: State<ServerState>,
-    extract::Json(request): extract::Json<LoginRequest>,
-) -> Result<Json<LoginResponse>, Json<LoginResponse>> {
-    pbkdf2::verify(
-        pbkdf2::PBKDF2_HMAC_SHA256,
-        NonZeroU32::new(self.password.data.iterations).unwrap_or(NonZeroU32::new(1).unwrap()),
-        &self.password.data.salt,
-        password.as_bytes(),
-        &self.password.data.hash,
-    )
-    .is_ok();
+impl Debug for PasswordData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PasswordData")
+            .field("iterations", &self.iterations)
+            .finish()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    sub: String,
+    exp: usize,
+}
+
+impl<S> FromRequestParts<S> for Claims
+where
+    S: Send + Sync,
+{
+    type Rejection = StatusCode;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        // Extract the token from the authorization header
+        let TypedHeader(Authorization(bearer)) = parts
+            .extract::<TypedHeader<Authorization<Bearer>>>()
+            .await
+            .map_err(|_| StatusCode::BAD_REQUEST)?;
+
+        let token_data = decode::<Claims>(bearer.token(), &KEY.decoding, &Validation::default())
+            .map_err(|_| StatusCode::FORBIDDEN)?;
+
+        Ok(token_data.claims)
+    }
 }
 
 #[debug_handler]
-async fn create_user(
+pub async fn login(
+    state: State<ServerState>,
+    extract::Json(request): extract::Json<LoginRequest>,
+) -> Result<Json<LoginResponse>, Json<LoginResponse>> {
+    let user: Document<UserData> = match state.server.users.get_document(&request.username) {
+        Ok(Some(user)) => user,
+        Ok(None) => {
+            debug!(username = %request.username, "User does not exist");
+            return Err(Json(LoginResponse::Denied));
+        }
+        _ => {
+            error!("Failed to get user");
+            return Err(Json(LoginResponse::Invalid));
+        }
+    };
+
+    let password: Document<PasswordData> = match user.get_document("password") {
+        Ok(Some(password)) => password,
+        Ok(None) => {
+            error!("Password does not exist");
+            return Err(Json(LoginResponse::Denied));
+        }
+        _ => {
+            error!("Failed to get user password");
+            return Err(Json(LoginResponse::Invalid));
+        }
+    };
+
+    match pbkdf2::verify(
+        pbkdf2::PBKDF2_HMAC_SHA256,
+        NonZeroU32::new(password.data.iterations).unwrap_or(NonZeroU32::new(1).unwrap()),
+        &password.data.salt,
+        request.password.as_bytes(),
+        &password.data.hash,
+    ) {
+        Ok(_) => {
+            let claims = Claims {
+                sub: user.data.username.clone(),
+                exp: todo!(),
+            };
+            Ok(Json(LoginResponse::Ok(
+                encode(&Header::default(), &claims, &KEY.encoding)
+                    .map_err(|_| Json(LoginResponse::Denied))?,
+            )))
+        }
+        Err(_) => Err(Json(LoginResponse::Denied)),
+    }
+}
+
+#[debug_handler]
+pub async fn create_user(
     state: State<ServerState>,
     extract::Json(request): extract::Json<CreateUserRequest>,
 ) -> Result<Json<CreateUserResponse>, Json<CreateUserResponse>> {
@@ -78,14 +176,15 @@ async fn create_user(
     );
 
     // TODO atomic insert
-    state.server.users.document(request.data.username);
+    // state.server.users.document(request.data.username);
 
     Ok(Json(CreateUserResponse::Ok))
 }
 
 #[debug_handler]
-async fn get_users(
+pub async fn get_users(
     state: State<ServerState>,
+    claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
 ) -> Result<Json<GetUsersResponse>, Json<CreateUserResponse>> {
     todo!()

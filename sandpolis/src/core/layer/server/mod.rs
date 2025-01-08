@@ -4,7 +4,7 @@ pub mod user;
 
 /// Response bearing the server's banner
 #[cfg(any(feature = "server", feature = "client"))]
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Banner {
     /// Indicates that only admin users will be allowed to login
     pub maintenance: bool,

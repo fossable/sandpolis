@@ -144,6 +144,15 @@ impl TryFrom<&str> for Oid {
     }
 }
 
+impl TryFrom<&String> for Oid {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &String) -> Result<Self> {
+        // TODO validate
+        Ok(Oid(value.as_bytes().to_vec()))
+    }
+}
+
 impl AsRef<[u8]> for Oid {
     fn as_ref(&self) -> &[u8] {
         &self.0
@@ -182,7 +191,7 @@ impl<T: Serialize + DeserializeOwned> Collection<T> {
 
     pub fn collection<U>(&self, oid: impl TryInto<Oid>) -> Result<Collection<U>>
     where
-        U: Serialize + DeserializeOwned + Clone,
+        U: Serialize + DeserializeOwned,
     {
         Ok(Collection {
             db: self.db.clone(),
@@ -221,6 +230,23 @@ where
 impl<T: Serialize + DeserializeOwned> Document<T> {
     // pub fn update<U>(&mut self, update: )
 
+    pub fn get_document<U>(&self, oid: impl TryInto<Oid>) -> Result<Option<Document<U>>>
+    where
+        U: Serialize + DeserializeOwned,
+    {
+        let oid = self.oid.extend(oid)?;
+
+        Ok(if let Some(data) = self.db.get(&oid)? {
+            Some(Document {
+                db: self.db.clone(),
+                data: serde_cbor::from_slice::<U>(&data)?,
+                oid,
+            })
+        } else {
+            None
+        })
+    }
+
     pub fn document<U>(&self, oid: impl TryInto<Oid>) -> Result<Document<U>>
     where
         U: Serialize + DeserializeOwned + Default,
@@ -236,6 +262,17 @@ impl<T: Serialize + DeserializeOwned> Document<T> {
                 U::default()
             },
             oid,
+        })
+    }
+
+    pub fn collection<U>(&self, oid: impl TryInto<Oid>) -> Result<Collection<U>>
+    where
+        U: Serialize + DeserializeOwned,
+    {
+        Ok(Collection {
+            db: self.db.clone(),
+            oid: self.oid.extend(oid)?,
+            data: PhantomData {},
         })
     }
 }

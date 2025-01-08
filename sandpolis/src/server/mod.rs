@@ -64,13 +64,14 @@ pub struct ServerState {
 pub async fn main(args: CommandLine) -> Result<()> {
     let db = Database::new(args.storage.join("server.db"))?;
     let state = ServerState {
-        local: Arc::new(ServerInstance {
-            users: db.collection("/server/users")?,
-        }),
+        server: Arc::new(ServerLayer::new(db.document("server")?)?),
         db,
     };
 
-    let app = Router::new().fallback(fallback_handler).with_state(state);
+    let app: Router<()> = Router::new()
+        .fallback(fallback_handler)
+        .nest("/server", ServerLayer::router())
+        .with_state(state);
 
     info!(listener = ?args.server_args.listen, "Starting server instance");
     if args.server_args.listen.port() == 8080 {
@@ -94,10 +95,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
     Ok(())
 }
 
-/// Proxy a request to the local database and return its response
 #[debug_handler]
 async fn fallback_handler(state: State<ServerState>, request: Request) -> impl IntoResponse {
-    trace!("Passing request to local database");
-
     todo!()
 }
