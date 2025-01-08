@@ -1,5 +1,3 @@
-use anyhow::Result;
-use database::Document;
 use serde::{Deserialize, Serialize};
 use std::{ops::Deref, path::PathBuf, str::FromStr};
 use strum::EnumIter;
@@ -7,7 +5,6 @@ use strum::EnumIter;
 pub mod database;
 pub mod layer;
 pub mod random;
-pub mod user;
 
 /// The official server port: https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=8768
 pub const S7S_PORT: u16 = 8768;
@@ -83,6 +80,7 @@ impl AsRef<[u8]> for InstanceId {
 impl InstanceId {
     /// Generate a new instance ID for an instance of the given type(s).
     pub fn new(instance_types: &[InstanceType]) -> Self {
+        // TODO reverse?
         let mut bytes = uuid::Uuid::now_v7().as_bytes().to_owned();
 
         bytes[15] = 0;

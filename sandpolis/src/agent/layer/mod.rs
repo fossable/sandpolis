@@ -6,3 +6,6 @@ pub mod package;
 pub mod shell;
 #[cfg(feature = "layer-sysinfo")]
 pub mod sysinfo;
+
+// These modules are required
+pub mod agent;

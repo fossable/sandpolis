@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+pub mod user;
+
 /// Response bearing the server's banner
 #[cfg(any(feature = "server", feature = "client"))]
-#[derive(Serialize, Deserialize)]
-pub struct GetBannerResponse {
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Banner {
     /// Indicates that only admin users will be allowed to login
     pub maintenance: bool,
 
@@ -15,5 +17,15 @@ pub struct GetBannerResponse {
 
     /// An image to display on the login screen
     #[serde(with = "serde_bytes")]
-    pub image: Option<Vec<u8>>,
+    pub image: Option<Vec<u8>>, // TODO validate with image decoder
+}
+
+#[cfg(any(feature = "server", feature = "client"))]
+#[derive(Serialize, Deserialize)]
+pub struct GetBannerRequest;
+
+#[cfg(any(feature = "server", feature = "client"))]
+#[derive(Serialize, Deserialize)]
+pub enum GetBannerResponse {
+    Ok(Banner),
 }

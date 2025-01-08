@@ -6588,6 +6588,7 @@ dependencies = [
  "rcgen",
  "reqwest",
  "reqwest-websocket",
+ "ring",
  "sandpolis-macros",
  "serde",
  "serde_bytes",

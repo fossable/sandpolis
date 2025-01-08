@@ -13,4 +13,7 @@ pub mod sysinfo;
 #[cfg(feature = "layer-tunnel")]
 pub mod tunnel;
 
+// These modules are required
+pub mod agent;
 pub mod network;
+pub mod server;

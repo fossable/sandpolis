@@ -22,8 +22,8 @@
 //! which is continuously replicated to a GS server's database.
 
 use crate::core::database::Collection;
-use crate::core::user::UserData;
 use crate::core::{database::Database, S7S_PORT};
+use crate::server::layer::server::ServerLayer;
 use crate::CommandLine;
 use anyhow::{Context, Result};
 use axum::{
@@ -42,7 +42,7 @@ use std::{
 };
 use tracing::{info, trace};
 
-pub mod user;
+pub mod layer;
 
 #[derive(Parser, Debug, Clone)]
 pub struct ServerCommandLine {
@@ -58,11 +58,7 @@ pub struct ServerCommandLine {
 #[derive(Clone)]
 pub struct ServerState {
     pub db: Database,
-    pub local: Arc<ServerInstance>,
-}
-
-pub struct ServerInstance {
-    pub users: Collection<UserData>,
+    pub server: Arc<ServerLayer>,
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {

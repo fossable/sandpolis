@@ -4,6 +4,7 @@ use axum::{
     Json,
 };
 use axum_macros::debug_handler;
+use rand::Rng;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, num::NonZeroU32};
@@ -11,7 +12,7 @@ use validator::Validate;
 
 use crate::core::{
     database::Document,
-    user::{
+    layer::server::user::{
         CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
         LoginResponse,
     },
@@ -35,6 +36,7 @@ pub struct PasswordData {
     pub totp_secret: Option<String>,
 }
 
+// TODO Debug?
 impl Display for PasswordData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
@@ -45,7 +47,7 @@ impl Display for PasswordData {
 async fn login(
     state: State<ServerState>,
     extract::Json(request): extract::Json<LoginRequest>,
-) -> Result<Json<LoginResponse>, StatusCode> {
+) -> Result<Json<LoginResponse>, Json<LoginResponse>> {
     pbkdf2::verify(
         pbkdf2::PBKDF2_HMAC_SHA256,
         NonZeroU32::new(self.password.data.iterations).unwrap_or(NonZeroU32::new(1).unwrap()),
@@ -53,21 +55,38 @@ async fn login(
         password.as_bytes(),
         &self.password.data.hash,
     )
-    .is_ok()
+    .is_ok();
 }
 
 #[debug_handler]
 async fn create_user(
     state: State<ServerState>,
     extract::Json(request): extract::Json<CreateUserRequest>,
-) -> Result<Json<CreateUserResponse>, StatusCode> {
-    todo!()
+) -> Result<Json<CreateUserResponse>, Json<CreateUserResponse>> {
+    let mut password = PasswordData {
+        iterations: 15000,
+        salt: rand::thread_rng().gen::<[u8; 32]>().to_vec(),
+        hash: Vec::new(),
+        totp_secret: None,
+    };
+    pbkdf2::derive(
+        pbkdf2::PBKDF2_HMAC_SHA256,
+        NonZeroU32::new(password.iterations).expect("nonzero"),
+        &password.salt,
+        request.password.as_bytes(),
+        &mut password.hash,
+    );
+
+    // TODO atomic insert
+    state.server.users.document(request.data.username);
+
+    Ok(Json(CreateUserResponse::Ok))
 }
 
 #[debug_handler]
 async fn get_users(
     state: State<ServerState>,
     extract::Json(request): extract::Json<GetUsersRequest>,
-) -> Result<Json<GetUsersResponse>, StatusCode> {
+) -> Result<Json<GetUsersResponse>, Json<CreateUserResponse>> {
     todo!()
 }

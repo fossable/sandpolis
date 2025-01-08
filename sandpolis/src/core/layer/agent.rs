@@ -2,29 +2,25 @@ use serde::Deserialize;
 use serde::Serialize;
 
 /// Request that the agent alter its power state.
-#[cfg(any(feature = "server", feature = "client", feature = "agent"))]
 #[derive(Serialize, Deserialize)]
-pub enum PostPowerRequest {
+pub enum PowerRequest {
     Poweroff,
     Reboot,
 }
 
-#[cfg(any(feature = "server", feature = "client", feature = "agent"))]
 #[derive(Serialize, Deserialize)]
-pub enum PostPowerResponse {
+pub enum PowerResponse {
     Ok,
     Failed(String),
 }
 
 /// Request that the boot agent be started.
-#[cfg(any(feature = "server", feature = "client", feature = "agent"))]
 #[derive(Serialize, Deserialize)]
 pub struct LaunchBootAgentRequest {
     /// The UUID of the partition containing the boot agent
     pub target_uuid: String,
 }
 
-#[cfg(any(feature = "server", feature = "client", feature = "agent"))]
 #[derive(Serialize, Deserialize)]
 pub enum LaunchBootAgentResponse {
     Ok,
@@ -32,14 +28,12 @@ pub enum LaunchBootAgentResponse {
 }
 
 /// Request a boot agent be uninstalled from the system.
-#[cfg(any(feature = "server", feature = "client", feature = "agent"))]
 #[derive(Serialize, Deserialize)]
 pub struct UninstallBootAgentRequest {
     /// The UUID of the partition containing the boot agent
     pub target_uuid: String,
 }
 
-#[cfg(any(feature = "server", feature = "client", feature = "agent"))]
 #[derive(Serialize, Deserialize)]
 pub enum UninstallBootAgentResponse {
     Ok,
@@ -69,7 +63,6 @@ pub enum UninstallBootAgentResponse {
 // }
 
 /// Request a boot agent be installed on the system.
-#[cfg(any(feature = "server", feature = "client", feature = "agent"))]
 #[derive(Serialize, Deserialize)]
 pub struct InstallBootAgentRequest {
     /// The UUID of the target partition
@@ -91,7 +84,6 @@ pub struct InstallBootAgentRequest {
     pub gateway_ip: String,
 }
 
-#[cfg(any(feature = "server", feature = "client", feature = "agent"))]
 #[derive(Serialize, Deserialize)]
 pub enum InstallBootAgentResponse {
     Ok,
