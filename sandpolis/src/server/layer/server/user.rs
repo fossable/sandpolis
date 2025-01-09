@@ -18,6 +18,7 @@ use std::{
     fmt::{Debug, Display},
     num::NonZeroU32,
 };
+use totp_rs::{Secret, TOTP};
 use tracing::{debug, error};
 use validator::Validate;
 
@@ -31,10 +32,7 @@ use crate::core::{
 
 use super::ServerState;
 
-static KEY: LazyLock<ServerKey> = LazyLock::new(|| {
-    let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-    ServerKey::new(secret.as_bytes())
-});
+static KEY: LazyLock<ServerKey> = LazyLock::new(|| ServerKey::new());
 
 struct ServerKey {
     encoding: EncodingKey,
@@ -42,10 +40,11 @@ struct ServerKey {
 }
 
 impl ServerKey {
-    fn new(secret: &[u8]) -> Self {
+    fn new() -> Self {
+        let secret = rand::thread_rng().gen::<[u8; 32]>().to_vec();
         Self {
-            encoding: EncodingKey::from_secret(secret),
-            decoding: DecodingKey::from_secret(secret),
+            encoding: EncodingKey::from_secret(&secret),
+            decoding: DecodingKey::from_secret(&secret),
         }
     }
 }
@@ -135,25 +134,41 @@ pub async fn login(
         }
     };
 
-    match pbkdf2::verify(
+    // Check TOTP token if there is one
+    if let Some(totp_url) = password.data.totp_secret {
+        if request.totp_token.unwrap_or(String::new())
+            != TOTP::from_url(totp_url)
+                .unwrap()
+                .generate_current()
+                .unwrap()
+        {
+            debug!("TOTP check failed");
+            return Err(Json(LoginResponse::Denied));
+        }
+    }
+
+    // Check password
+    if pbkdf2::verify(
         pbkdf2::PBKDF2_HMAC_SHA256,
         NonZeroU32::new(password.data.iterations).unwrap_or(NonZeroU32::new(1).unwrap()),
         &password.data.salt,
         request.password.as_bytes(),
         &password.data.hash,
-    ) {
-        Ok(_) => {
-            let claims = Claims {
-                sub: user.data.username.clone(),
-                exp: todo!(),
-            };
-            Ok(Json(LoginResponse::Ok(
-                encode(&Header::default(), &claims, &KEY.encoding)
-                    .map_err(|_| Json(LoginResponse::Denied))?,
-            )))
-        }
-        Err(_) => Err(Json(LoginResponse::Denied)),
+    )
+    .is_err()
+    {
+        debug!("Password check failed");
+        return Err(Json(LoginResponse::Denied));
     }
+
+    let claims = Claims {
+        sub: user.data.username.clone(),
+        exp: todo!(),
+    };
+    Ok(Json(LoginResponse::Ok(
+        encode(&Header::default(), &claims, &KEY.encoding)
+            .map_err(|_| Json(LoginResponse::Denied))?,
+    )))
 }
 
 #[debug_handler]
@@ -165,7 +180,23 @@ pub async fn create_user(
         iterations: 15000,
         salt: rand::thread_rng().gen::<[u8; 32]>().to_vec(),
         hash: Vec::new(),
-        totp_secret: None,
+        totp_secret: if request.totp {
+            Some(
+                TOTP::new(
+                    totp_rs::Algorithm::SHA1,
+                    6,
+                    1,
+                    30,
+                    Secret::default().to_bytes().unwrap(),
+                    Some("Sandpolis".to_string()),
+                    "".to_string(),
+                )
+                .unwrap()
+                .get_url(),
+            )
+        } else {
+            None
+        },
     };
     pbkdf2::derive(
         pbkdf2::PBKDF2_HMAC_SHA256,
@@ -176,9 +207,10 @@ pub async fn create_user(
     );
 
     // TODO atomic insert
+    let users = &state.server.users;
     // state.server.users.document(request.data.username);
 
-    Ok(Json(CreateUserResponse::Ok))
+    Ok(Json(CreateUserResponse::Ok { totp_secret: None }))
 }
 
 #[debug_handler]
@@ -186,6 +218,16 @@ pub async fn get_users(
     state: State<ServerState>,
     claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
-) -> Result<Json<GetUsersResponse>, Json<CreateUserResponse>> {
+) -> Result<Json<GetUsersResponse>, Json<GetUsersResponse>> {
+    let users = &state.server.users;
+
+    if let Some(username) = request.username {
+        match users.get_document(&username) {
+            Ok(Some(user)) => return Ok(Json(GetUsersResponse::Ok(vec![user.data]))),
+            Ok(None) => return Ok(Json(GetUsersResponse::Ok(Vec::new()))),
+            Err(_) => todo!(),
+        }
+    }
+
     todo!()
 }

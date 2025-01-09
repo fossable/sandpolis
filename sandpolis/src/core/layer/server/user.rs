@@ -1,3 +1,5 @@
+use std::net::SocketAddr;
+
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -21,6 +23,14 @@ pub struct UserData {
     pub expiration: Option<i64>,
 }
 
+#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
+pub struct LoginAttempt {
+    pub timestamp: u64,
+
+    pub address: SocketAddr,
+}
+
 /// Create a new user account.
 #[derive(Serialize, Deserialize, Validate)]
 pub struct CreateUserRequest {
@@ -29,13 +39,16 @@ pub struct CreateUserRequest {
     /// Password as unsalted hash
     pub password: String,
 
-    /// TOTP secret URL
-    pub totp_secret: Option<String>,
+    /// Whether a TOTP secret should be generated
+    pub totp: bool,
 }
 
 #[derive(Serialize, Deserialize)]
 pub enum CreateUserResponse {
-    Ok,
+    Ok {
+        /// TOTP secret URL
+        totp_secret: Option<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -50,6 +63,7 @@ pub struct GetUsersRequest {
 #[derive(Serialize, Deserialize)]
 pub enum GetUsersResponse {
     Ok(Vec<UserData>),
+    PermissionDenied,
 }
 
 /// Update an existing user account.

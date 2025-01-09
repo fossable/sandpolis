@@ -256,6 +256,7 @@ impl<T: Serialize + DeserializeOwned> Document<T> {
         Ok(Document {
             db: self.db.clone(),
             data: if let Some(data) = self.db.get(&oid)? {
+                trace!(oid = %oid, "Loading document");
                 serde_cbor::from_slice::<U>(&data)?
             } else {
                 trace!(oid = %oid, "Creating new document");
@@ -263,6 +264,12 @@ impl<T: Serialize + DeserializeOwned> Document<T> {
             },
             oid,
         })
+    }
+
+    pub fn create_document<F>(&mut self, mutator: F) -> Result<()>
+    where
+        F: Fn() -> Result<T>,
+    {
     }
 
     pub fn collection<U>(&self, oid: impl TryInto<Oid>) -> Result<Collection<U>>

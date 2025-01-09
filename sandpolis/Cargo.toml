@@ -49,6 +49,7 @@ axum = { version = "0.8.0", optional = true, features = ["ws", "json"] }
 jsonwebtoken = { version = "9.3.0", optional = true }
 rcgen = { version = "0.13.1", optional = true }
 ring = { version = "0.17.8", optional = true }
+totp-rs = { version = "5.6.0", optional = true, features = ["otpauth", "qr", "gen_secret", "zeroize"] } # TODO client QR support
 
 # Client dependencies
 bevy = { version = "0.15.0", optional = true }
@@ -61,7 +62,7 @@ sysinfo = { version = "0.33.0", optional = true }
 
 [features]
 # Instances
-server = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:axum-extra", "dep:rcgen", "dep:ring", "dep:jsonwebtoken" ]
+server = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:axum-extra", "dep:rcgen", "dep:ring", "dep:jsonwebtoken", "dep:totp-rs" ]
 agent = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:sysinfo" ]
 client = [ "dep:bevy", "dep:bevy_rapier2d", "dep:bevy_egui", "dep:egui" ]
 

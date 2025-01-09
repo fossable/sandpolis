@@ -38,6 +38,7 @@ impl ServerLayer {
             .route("/banner", get(banner))
             .route("/users", get(user::get_users))
             .route("/users", post(user::create_user))
+            .route("/login", post(user::login))
     }
 }
 
