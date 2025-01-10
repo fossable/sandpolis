@@ -24,9 +24,12 @@ use validator::Validate;
 
 use crate::core::{
     database::Document,
-    layer::server::user::{
-        CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
-        LoginResponse, UserData,
+    layer::{
+        network::RequestResult,
+        server::user::{
+            CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
+            LoginResponse, UserData,
+        },
     },
 };
 
@@ -49,7 +52,7 @@ impl ServerKey {
     }
 }
 
-#[derive(Serialize, Deserialize, Validate)]
+#[derive(Serialize, Deserialize, Validate, Clone)]
 pub struct PasswordData {
     /// Number of rounds to use when hashing password
     #[validate(range(min = 1800, max = 200000))]
@@ -63,6 +66,55 @@ pub struct PasswordData {
 
     /// TOTP secret token
     pub totp_secret: Option<String>,
+}
+
+impl PasswordData {
+    /// Create a new password without a TOTP.
+    pub fn new(password: &str) -> Self {
+        let mut data = PasswordData {
+            iterations: 15000,
+            salt: rand::thread_rng().gen::<[u8; 32]>().to_vec(),
+            hash: Vec::new(),
+            totp_secret: None,
+        };
+        pbkdf2::derive(
+            pbkdf2::PBKDF2_HMAC_SHA256,
+            NonZeroU32::new(data.iterations).expect("nonzero"),
+            &data.salt,
+            password.as_bytes(),
+            &mut data.hash,
+        );
+        data
+    }
+
+    /// Create a new password with a TOTP.
+    pub fn new_with_totp(username: &str, password: &str) -> Result<Self> {
+        let mut data = PasswordData {
+            iterations: 15000,
+            salt: rand::thread_rng().gen::<[u8; 32]>().to_vec(),
+            hash: Vec::new(),
+            totp_secret: Some(
+                TOTP::new(
+                    totp_rs::Algorithm::SHA1,
+                    6,
+                    1,
+                    30,
+                    Secret::default().to_bytes()?,
+                    Some("Sandpolis".to_string()),
+                    username.to_string(),
+                )?
+                .get_url(),
+            ),
+        };
+        pbkdf2::derive(
+            pbkdf2::PBKDF2_HMAC_SHA256,
+            NonZeroU32::new(data.iterations).expect("nonzero"),
+            &data.salt,
+            password.as_bytes(),
+            &mut data.hash,
+        );
+        Ok(data)
+    }
 }
 
 impl Display for PasswordData {
@@ -109,7 +161,7 @@ where
 pub async fn login(
     state: State<ServerState>,
     extract::Json(request): extract::Json<LoginRequest>,
-) -> Result<Json<LoginResponse>, Json<LoginResponse>> {
+) -> RequestResult<LoginResponse> {
     let user: Document<UserData> = match state.server.users.get_document(&request.username) {
         Ok(Some(user)) => user,
         Ok(None) => {
@@ -175,42 +227,32 @@ pub async fn login(
 pub async fn create_user(
     state: State<ServerState>,
     extract::Json(request): extract::Json<CreateUserRequest>,
-) -> Result<Json<CreateUserResponse>, Json<CreateUserResponse>> {
-    let mut password = PasswordData {
-        iterations: 15000,
-        salt: rand::thread_rng().gen::<[u8; 32]>().to_vec(),
-        hash: Vec::new(),
-        totp_secret: if request.totp {
-            Some(
-                TOTP::new(
-                    totp_rs::Algorithm::SHA1,
-                    6,
-                    1,
-                    30,
-                    Secret::default().to_bytes().unwrap(),
-                    Some("Sandpolis".to_string()),
-                    "".to_string(),
-                )
-                .unwrap()
-                .get_url(),
-            )
-        } else {
-            None
-        },
+) -> RequestResult<CreateUserResponse> {
+    // Validate user data
+    request
+        .data
+        .validate()
+        .map_err(|_| Json(CreateUserResponse::InvalidUser))?;
+
+    let password = if request.totp {
+        PasswordData::new_with_totp(&request.data.username, &request.password)
+            .map_err(|_| Json(CreateUserResponse::Failed))?
+    } else {
+        PasswordData::new(&request.password)
     };
-    pbkdf2::derive(
-        pbkdf2::PBKDF2_HMAC_SHA256,
-        NonZeroU32::new(password.iterations).expect("nonzero"),
-        &password.salt,
-        request.password.as_bytes(),
-        &mut password.hash,
-    );
 
-    // TODO atomic insert
-    let users = &state.server.users;
-    // state.server.users.document(request.data.username);
+    let user = state
+        .server
+        .users
+        .insert_document(&request.data.username.clone(), request.data)
+        .map_err(|_| Json(CreateUserResponse::Failed))?;
 
-    Ok(Json(CreateUserResponse::Ok { totp_secret: None }))
+    user.insert_document("password", password.clone())
+        .map_err(|_| Json(CreateUserResponse::Failed))?;
+
+    Ok(Json(CreateUserResponse::Ok {
+        totp_secret: password.totp_secret,
+    }))
 }
 
 #[debug_handler]
@@ -218,7 +260,7 @@ pub async fn get_users(
     state: State<ServerState>,
     claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
-) -> Result<Json<GetUsersResponse>, Json<GetUsersResponse>> {
+) -> RequestResult<GetUsersResponse> {
     let users = &state.server.users;
 
     if let Some(username) = request.username {

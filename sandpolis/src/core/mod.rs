@@ -139,13 +139,17 @@ pub enum Layer {
     #[cfg(feature = "layer-probe")]
     Probe,
 
+    Server,
+
     /// Interact with shell prompts / snippets.
     #[cfg(feature = "layer-shell")]
     Shell,
 
-    /// Establish tunnels between instances.
+    /// Establish persistent or ephemeral tunnels between instances.
     #[cfg(feature = "layer-tunnel")]
     Tunnel,
+
+    User,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

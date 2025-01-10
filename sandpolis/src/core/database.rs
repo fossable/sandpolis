@@ -1,8 +1,11 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use sled::transaction::ConflictableTransactionError::Abort;
+use sled::IVec;
 use std::fmt::{Display, Write};
 use std::marker::PhantomData;
+use std::ops::Range;
 use std::{path::Path, sync::Arc};
 use tracing::{debug, trace};
 
@@ -153,9 +156,24 @@ impl TryFrom<&String> for Oid {
     }
 }
 
+impl TryFrom<IVec> for Oid {
+    type Error = anyhow::Error;
+
+    fn try_from(value: IVec) -> Result<Self> {
+        // TODO validate
+        Ok(Oid(value.to_vec()))
+    }
+}
+
 impl AsRef<[u8]> for Oid {
     fn as_ref(&self) -> &[u8] {
         &self.0
+    }
+}
+
+impl Into<IVec> for Oid {
+    fn into(self) -> IVec {
+        self.as_ref().into()
     }
 }
 
@@ -169,7 +187,7 @@ where
     data: PhantomData<T>,
 }
 
-impl<T: Serialize + DeserializeOwned> Collection<T> {
+impl<T: Serialize + DeserializeOwned + std::fmt::Debug> Collection<T> {
     pub fn get_document(&self, oid: impl TryInto<Oid>) -> Result<Option<Document<T>>> {
         let oid = self.oid.extend(oid)?;
 
@@ -184,9 +202,19 @@ impl<T: Serialize + DeserializeOwned> Collection<T> {
         })
     }
 
-    pub fn documents(&self) {
+    pub fn documents(&self) -> impl Iterator<Item = Result<(Oid, T)>> {
+        trace!(oid = %self.oid, "Querying collection");
         self.db
-            .range::<&Oid, std::ops::Range<&Oid>>(&self.oid..&self.oid);
+            .range::<&Oid, Range<&Oid>>(&self.oid..&self.oid) // TODO
+            .map(|r| match r {
+                Ok((key, value)) => match (key.try_into(), serde_cbor::from_slice::<T>(&value)) {
+                    (Ok(oid), Ok(data)) => Ok((oid, data)),
+                    (Ok(_), Err(_)) => todo!(),
+                    (Err(_), Ok(_)) => todo!(),
+                    (Err(_), Err(_)) => todo!(),
+                },
+                Err(_) => todo!(),
+            })
     }
 
     pub fn collection<U>(&self, oid: impl TryInto<Oid>) -> Result<Collection<U>>
@@ -197,6 +225,29 @@ impl<T: Serialize + DeserializeOwned> Collection<T> {
             db: self.db.clone(),
             oid: self.oid.extend(oid)?,
             data: PhantomData {},
+        })
+    }
+
+    pub fn insert_document(&self, oid: impl TryInto<Oid>, data: T) -> Result<Document<T>> {
+        let oid = self.oid.extend(oid)?;
+        let d = serde_cbor::to_vec(&data)?;
+
+        trace!(oid = %oid, data = ?data, "Inserting new document");
+        self.db
+            .transaction(|tx_db| {
+                if tx_db.get(&oid)?.is_some() {
+                    return Err(Abort(anyhow::anyhow!("Already exists")));
+                }
+
+                tx_db.insert(oid.clone(), d.clone())?;
+                Ok(())
+            })
+            .map_err(|_| anyhow::anyhow!(""))?;
+
+        Ok(Document {
+            oid,
+            data,
+            db: self.db.clone(),
         })
     }
 }
@@ -266,10 +317,29 @@ impl<T: Serialize + DeserializeOwned> Document<T> {
         })
     }
 
-    pub fn create_document<F>(&mut self, mutator: F) -> Result<()>
+    pub fn insert_document<U>(&self, oid: impl TryInto<Oid>, data: U) -> Result<Document<U>>
     where
-        F: Fn() -> Result<T>,
+        U: Serialize + DeserializeOwned,
     {
+        let oid = self.oid.extend(oid)?;
+        let d = serde_cbor::to_vec(&data)?;
+
+        self.db
+            .transaction(|tx_db| {
+                if tx_db.get(&oid)?.is_some() {
+                    return Err(Abort(anyhow::anyhow!("Already exists")));
+                }
+
+                tx_db.insert(oid.clone(), d.clone())?;
+                Ok(())
+            })
+            .map_err(|_| anyhow::anyhow!(""))?;
+
+        Ok(Document {
+            oid,
+            data,
+            db: self.db.clone(),
+        })
     }
 
     pub fn collection<U>(&self, oid: impl TryInto<Oid>) -> Result<Collection<U>>

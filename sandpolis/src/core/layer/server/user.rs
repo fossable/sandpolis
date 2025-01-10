@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-#[derive(Serialize, Deserialize, Validate)]
+#[derive(Serialize, Deserialize, Validate, Debug)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct UserData {
     /// Unchangable username
@@ -49,6 +49,8 @@ pub enum CreateUserResponse {
         /// TOTP secret URL
         totp_secret: Option<String>,
     },
+    Failed,
+    InvalidUser,
 }
 
 #[derive(Serialize, Deserialize)]

@@ -49,22 +49,25 @@ axum = { version = "0.8.0", optional = true, features = ["ws", "json"] }
 jsonwebtoken = { version = "9.3.0", optional = true }
 rcgen = { version = "0.13.1", optional = true }
 ring = { version = "0.17.8", optional = true }
-totp-rs = { version = "5.6.0", optional = true, features = ["otpauth", "qr", "gen_secret", "zeroize"] } # TODO client QR support
 
 # Client dependencies
 bevy = { version = "0.15.0", optional = true }
 bevy_egui = { version = "0.31.1", optional = true }
 bevy_rapier2d = { version = "0.28.0", optional = true }
 egui = { version = "0.29.1", optional = true }
+passwords = { version = "3.1.16", optional = true, features = ["common-password"] }
 
 # Agent dependencies
 sysinfo = { version = "0.33.0", optional = true }
 
+# Server/Client dependencies
+totp-rs = { version = "5.6.0", optional = true, features = ["otpauth", "zeroize"] }
+
 [features]
 # Instances
-server = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:axum-extra", "dep:rcgen", "dep:ring", "dep:jsonwebtoken", "dep:totp-rs" ]
+server = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:axum-extra", "dep:rcgen", "dep:ring", "dep:jsonwebtoken", "dep:totp-rs", "totp-rs?/gen_secret" ]
 agent = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:sysinfo" ]
-client = [ "dep:bevy", "dep:bevy_rapier2d", "dep:bevy_egui", "dep:egui" ]
+client = [ "dep:bevy", "dep:bevy_rapier2d", "dep:bevy_egui", "dep:egui", "dep:totp-rs", "totp-rs?/qr", "dep:passwords" ]
 
 # Layers
 layer-account = []

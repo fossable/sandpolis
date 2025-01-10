@@ -1,5 +1,6 @@
 use crate::core::InstanceId;
 use anyhow::Result;
+use axum::Json;
 use chrono::{serde::ts_seconds, DateTime, NaiveDate, Utc};
 use futures::StreamExt;
 use reqwest::ClientBuilder;
@@ -27,6 +28,9 @@ pub struct PingResponse {
     pub id: InstanceId,
     pub from: Option<Box<PingResponse>>,
 }
+
+/// Convenience type to be used as return of request handler.
+pub type RequestResult<T> = Result<Json<T>, Json<T>>;
 
 impl NetworkLayer {
     /// Send a message to the given instance and measure the time/path it took.
