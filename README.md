@@ -5,7 +5,33 @@
 ![License](https://img.shields.io/github/license/fossable/sandpolis)
 ![GitHub repo size](https://img.shields.io/github/repo-size/fossable/sandpolis)
 ![Stars](https://img.shields.io/github/stars/fossable/sandpolis?style=social)
+
 <hr>
 
-`sandpolis` is a _remote monitoring/management_ tool under active development. Come
-back in a few years when it's usable :).
+`sandpolis` is a _remote monitoring/management_ tool under active development.
+
+## Layers
+
+Features are organized into _layers_ that can be toggled on/off in the UI.
+
+### Account
+
+### Alert
+
+### Desktop
+
+### Filesystem
+
+### Logging
+
+### Package
+
+### Probe
+
+### Shell
+
+Provides an interactive remote shell.
+
+### Tunnel
+
+### User

@@ -207,12 +207,8 @@ pub struct AgentCommandLine {
 #[derive(Clone)]
 pub struct AgentState {
     pub db: Database,
-    pub local: Arc<AgentInstance>,
-}
-
-pub struct AgentInstance {
     #[cfg(feature = "layer-sysinfo")]
-    pub sysinfo: crate::agent::layer::sysinfo::SysinfoLayer,
+    pub sysinfo: Arc<layer::sysinfo::SysinfoLayer>,
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {
@@ -222,10 +218,8 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
     let db = Database::new(args.storage.join("agent.db"))?;
     let state = AgentState {
-        local: Arc::new(AgentInstance {
-            #[cfg(feature = "layer-sysinfo")]
-            sysinfo: crate::agent::layer::sysinfo::SysinfoLayer::new(db.document("/sysinfo")?)?,
-        }),
+        #[cfg(feature = "layer-sysinfo")]
+        sysinfo: Arc::new(layer::sysinfo::SysinfoLayer::new(db.document("/sysinfo")?)?),
         db,
     };
 
@@ -234,13 +228,13 @@ pub async fn main(args: CommandLine) -> Result<()> {
         let app = Router::new().with_state(state);
 
         #[cfg(feature = "layer-shell")]
-        let app = app.nest("/layer/shell", crate::agent::layer::shell::router());
+        let app = app.nest("/layer/shell", layer::shell::router());
 
         #[cfg(feature = "layer-package")]
-        let app = app.nest("/layer/package", crate::agent::layer::package::router());
+        let app = app.nest("/layer/package", layer::package::router());
 
         #[cfg(feature = "layer-desktop")]
-        let app = app.nest("/layer/desktop", crate::agent::layer::desktop::router());
+        let app = app.nest("/layer/desktop", layer::desktop::router());
 
         axum::serve(uds, app.into_make_service()).await.unwrap();
     });

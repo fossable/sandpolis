@@ -109,7 +109,6 @@ pub enum Layer {
     #[cfg(feature = "layer-desktop")]
     Desktop,
 
-    // Docker,
     /// Mount and manipulate filesystems.
     #[cfg(feature = "layer-filesystem")]
     Filesystem,
@@ -122,15 +121,15 @@ pub enum Layer {
     #[cfg(feature = "layer-inventory")]
     Inventory,
 
-    // Libvirt,
     Location,
 
     /// View logs.
     #[cfg(feature = "layer-logging")]
     Logging,
 
-    Meta,
+    /// Manage the Sandpolis network.
     Network,
+
     #[cfg(feature = "layer-package")]
     Package,
 

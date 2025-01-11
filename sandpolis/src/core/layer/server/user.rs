@@ -96,7 +96,7 @@ pub enum UpdateUserResponse {
 }
 
 /// Request a login from the server
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LoginRequest {
     /// User to login as
     pub username: String,

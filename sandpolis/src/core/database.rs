@@ -12,6 +12,7 @@ use tracing::{debug, trace};
 use super::InstanceId;
 
 #[derive(Clone)]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 pub struct Database(sled::Db);
 
 impl Database {
@@ -204,11 +205,19 @@ impl<T: Serialize + DeserializeOwned + std::fmt::Debug> Collection<T> {
 
     pub fn documents(&self) -> impl Iterator<Item = Result<(Oid, T)>> {
         trace!(oid = %self.oid, "Querying collection");
+        let mut start = self.oid.0.clone();
+        start.push('/' as u8);
+        let mut end = start.clone();
+        end.push(0xff);
+
         self.db
-            .range::<&Oid, Range<&Oid>>(&self.oid..&self.oid) // TODO
+            .range::<&[u8], Range<&[u8]>>(&start..&end)
             .map(|r| match r {
                 Ok((key, value)) => match (key.try_into(), serde_cbor::from_slice::<T>(&value)) {
-                    (Ok(oid), Ok(data)) => Ok((oid, data)),
+                    (Ok(oid), Ok(data)) => {
+                        trace!(oid = %oid, "Yielding document");
+                        Ok((oid, data))
+                    }
                     (Ok(_), Err(_)) => todo!(),
                     (Err(_), Ok(_)) => todo!(),
                     (Err(_), Err(_)) => todo!(),

@@ -53,7 +53,7 @@ impl ServerLayer {
 
             let default = "test"; // TODO hash
             user.insert_document("password", PasswordData::new(&default))?;
-            info!(password = %default, "Created default admin user");
+            info!(username = "admin", password = %default, "Created default admin user");
         }
 
         Ok(Self {

@@ -13,13 +13,16 @@ use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation}
 use rand::Rng;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
-use std::sync::LazyLock;
 use std::{
     fmt::{Debug, Display},
     num::NonZeroU32,
 };
+use std::{
+    sync::LazyLock,
+    time::{Duration, SystemTime},
+};
 use totp_rs::{Secret, TOTP};
-use tracing::{debug, error};
+use tracing::{debug, error, info};
 use validator::Validate;
 
 use crate::core::{
@@ -74,7 +77,7 @@ impl PasswordData {
         let mut data = PasswordData {
             iterations: 15000,
             salt: rand::thread_rng().gen::<[u8; 32]>().to_vec(),
-            hash: Vec::new(),
+            hash: vec![0u8; ring::digest::SHA256_OUTPUT_LEN],
             totp_secret: None,
         };
         pbkdf2::derive(
@@ -127,14 +130,21 @@ impl Debug for PasswordData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PasswordData")
             .field("iterations", &self.iterations)
+            .field("salt", &self.salt)
             .finish()
     }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
+    /// Username
     sub: String,
+
+    /// Claim expiration
     exp: usize,
+
+    /// Whether the user is an admin
+    admin: bool,
 }
 
 impl<S> FromRequestParts<S> for Claims
@@ -215,8 +225,14 @@ pub async fn login(
 
     let claims = Claims {
         sub: user.data.username.clone(),
-        exp: todo!(),
+        exp: (SystemTime::now() + Duration::from_secs(3600))
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as usize,
+        admin: user.data.admin,
     };
+
+    info!(claims = ?claims, "Login succeeded");
     Ok(Json(LoginResponse::Ok(
         encode(&Header::default(), &claims, &KEY.encoding)
             .map_err(|_| Json(LoginResponse::Denied))?,
@@ -226,6 +242,7 @@ pub async fn login(
 #[debug_handler]
 pub async fn create_user(
     state: State<ServerState>,
+    claims: Claims,
     extract::Json(request): extract::Json<CreateUserRequest>,
 ) -> RequestResult<CreateUserResponse> {
     // Validate user data
@@ -233,6 +250,11 @@ pub async fn create_user(
         .data
         .validate()
         .map_err(|_| Json(CreateUserResponse::InvalidUser))?;
+
+    // Only admins can create other admins
+    if request.data.admin && !claims.admin {
+        return Err(Json(CreateUserResponse::Failed));
+    }
 
     let password = if request.totp {
         PasswordData::new_with_totp(&request.data.username, &request.password)
