@@ -58,7 +58,7 @@ impl ServerKey {
 #[derive(Serialize, Deserialize, Validate, Clone)]
 pub struct PasswordData {
     /// Number of rounds to use when hashing password
-    #[validate(range(min = 1800, max = 200000))]
+    #[validate(range(min = 4284, max = 200000))]
     pub iterations: u32,
 
     /// Random data used to salt the password hash

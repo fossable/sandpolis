@@ -207,6 +207,7 @@ pub struct AgentCommandLine {
 #[derive(Clone)]
 pub struct AgentState {
     pub db: Database,
+    pub read_only: bool,
     #[cfg(feature = "layer-sysinfo")]
     pub sysinfo: Arc<layer::sysinfo::SysinfoLayer>,
 }
@@ -218,6 +219,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
     let db = Database::new(args.storage.join("agent.db"))?;
     let state = AgentState {
+        read_only: args.agent_args.read_only,
         #[cfg(feature = "layer-sysinfo")]
         sysinfo: Arc::new(layer::sysinfo::SysinfoLayer::new(db.document("/sysinfo")?)?),
         db,
@@ -240,7 +242,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
     });
 
     // TODO if a server is running in the same process, just use that
-    if let Some(servers) = args.server {
+    if let Some(mut servers) = args.server {
         for server in servers {}
     } else {
         if std::io::stdout().is_terminal() {
@@ -264,6 +266,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
     return Ok(());
 }
 
+// TODO Collector?
 pub trait Monitor {
     fn refresh(&mut self) -> Result<()>;
     //start

@@ -33,7 +33,7 @@ use axum::{
     Router,
 };
 use axum_macros::debug_handler;
-use axum_server::tls_rustls::RustlsConfig;
+use axum_server::tls_rustls::{RustlsAcceptor, RustlsConfig};
 use clap::Parser;
 use std::sync::Arc;
 use std::{
@@ -74,24 +74,11 @@ pub async fn main(args: CommandLine) -> Result<()> {
         .with_state(state);
 
     info!(listener = ?args.server_args.listen, "Starting server instance");
-    if args.server_args.listen.port() == 8080 {
-        axum_server::bind(args.server_args.listen)
-            .serve(app.into_make_service())
-            .await
-            .context("binding socket")?;
-    } else {
-        let config = RustlsConfig::from_pem_file(
-            // TODO args
-            PathBuf::from("/tmp/cert.pem"),
-            PathBuf::from("/tmp/cert.key"),
-        )
-        .await?;
-
-        axum_server::bind_rustls(args.server_args.listen, config)
-            .serve(app.into_make_service())
-            .await
-            .context("binding socket")?;
-    }
+    axum_server::bind(args.server_args.listen)
+        // .acceptor(TLSAcceptor::new(RustlsAcceptor::new(config)))
+        .serve(app.into_make_service())
+        .await
+        .context("binding socket")?;
     Ok(())
 }
 
