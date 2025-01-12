@@ -56,6 +56,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
     .add_plugins(EguiPlugin)
     .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
     .add_plugins(RapierDebugRenderPlugin::default())
+    .add_plugin(bevy_svg::prelude::SvgPlugin)
     .insert_resource(CurrentLayer(Layer::Desktop))
     .insert_resource(ZoomLevel(1.0))
     .insert_resource(LayerChangeTimer(Timer::from_seconds(3.0, TimerMode::Once)))
@@ -104,12 +105,17 @@ fn setup(
     commands.spawn(Camera2d::default());
 
     // Spawn the local client
-    spawn_node(
-        &asset_server,
-        &mut commands,
-        state.db.metadata.id,
-        state.db.metadata.os_info.os_type(),
-    );
+    match db.metadata() {
+        Ok(metadata) => {
+            spawn_node(
+                &asset_server,
+                &mut commands,
+                metadata.id,
+                metadata.os_info.os_type(),
+            );
+        }
+        Err(_) => {}
+    }
 }
 
 fn button_handler(

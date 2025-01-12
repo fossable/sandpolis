@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_egui::EguiContexts;
 
 use crate::{
-    client::ui::{node::NodeId, CurrentLayer},
+    client::{node::NodeId, CurrentLayer},
     core::Layer,
 };
 

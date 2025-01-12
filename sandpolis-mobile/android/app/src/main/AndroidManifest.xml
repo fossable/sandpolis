@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
-        android:label="Bevy Example"
+        android:label="Sandpolis"
         android:theme="@style/Theme.AppCompat.NoActionBar"
         tools:targetApi="33">
         <activity

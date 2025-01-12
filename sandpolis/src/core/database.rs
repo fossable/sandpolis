@@ -9,7 +9,7 @@ use std::ops::Range;
 use std::{path::Path, sync::Arc};
 use tracing::{debug, trace};
 
-use super::InstanceId;
+use super::{InstanceData, InstanceId};
 
 #[derive(Clone)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
@@ -52,12 +52,8 @@ impl Database {
         todo!()
     }
 
-    pub fn instance(&self, id: impl Into<InstanceId>) -> Result<Oid> {
-        // Ok(Oid {
-        //     db: self.db.open_tree(id.into())?,
-        //     path: vec!['/' as u8],
-        // })
-        todo!()
+    pub fn metadata(&self) -> Result<InstanceData> {
+        Ok(self.document("metadata")?.data)
     }
 }
 

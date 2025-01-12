@@ -18,6 +18,8 @@ let
 
 in mkShell {
   buildInputs = [ android-studio android-sdk jdk ];
+  nativeBuildInputs =
+    [ cargo cargo-ndk rustc rust-analyzer rustfmt clippy rustup ];
 
   GRADLE_OPTS =
     "-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/share/android-sdk/build-tools/34.0.0/aapt2";
