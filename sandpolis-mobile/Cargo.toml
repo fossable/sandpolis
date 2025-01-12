@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2021"
 
 [lib]
-name = "sandpolis_client_mobile"
+name = "sandpolis_mobile"
 crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
@@ -13,17 +13,3 @@ bevy = { version = "0.14.0" }
 log = "0.4.11"
 sandpolis = { path = "../sandpolis", default-features = false, features = ["client", "layer-desktop"]}
 
-[package.metadata.android]
-package = "org.fossable.sandpolis"
-apk_name = "Sandpolis"
-# assets = "../../assets"
-# resources = "../../assets/android-res"
-strip = "strip"
-build_targets = ["aarch64-linux-android", "armv7-linux-androideabi"]
-
-[package.metadata.android.sdk]
-target_sdk_version = 31
-
-[package.metadata.android.application]
-icon = "@mipmap/ic_launcher"
-label = "Sandpolis"

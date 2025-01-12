@@ -6,6 +6,6 @@ resolver = "2"
 members = [
     "sandpolis",
     "sandpolis-bootagent",
-    "sandpolis-client-mobile",
+    "sandpolis-mobile",
     "sandpolis-macros",
 ]
