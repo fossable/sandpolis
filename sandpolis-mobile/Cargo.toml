@@ -1,15 +1,14 @@
 [package]
-name = "sandpolis-client-mobile"
+name = "sandpolis-mobile"
 version = "0.0.1"
 edition = "2021"
+publish = false
 
 [lib]
 name = "sandpolis_mobile"
 crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
-anyhow = "1.0.56"
-bevy = { version = "0.14.0" }
-log = "0.4.11"
-sandpolis = { path = "../sandpolis", default-features = false, features = ["client", "layer-desktop"]}
+bevy = { version = "0.15.1" }
+sandpolis = { path = "../sandpolis", features = ["client", "agent"]}
 

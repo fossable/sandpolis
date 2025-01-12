@@ -4,18 +4,16 @@ use bevy_rapier2d::{
     dynamics::RigidBody,
     geometry::{Collider, Restitution},
 };
+use bevy_svg::prelude::Svg2d;
 
 use crate::core::InstanceId;
 
-#[derive(Component, Clone, Debug, Deref, DerefMut)]
-pub struct NodeId(InstanceId);
-
 #[derive(Bundle)]
 pub struct Node {
-    pub id: NodeId,
-    pub collier: Collider,
+    pub id: InstanceId,
+    pub collider: Collider,
     pub rigid_body: RigidBody,
-    pub sprite: Sprite,
+    pub svg: Svg2d,
     pub restitution: Restitution,
 }
 
@@ -26,14 +24,11 @@ pub fn spawn_node(
     os_type: os_info::Type,
 ) {
     commands.spawn(Node {
-        id: NodeId(instance_id),
-        collier: Collider::ball(50.0),
+        id: instance_id,
+        collider: Collider::ball(50.0),
         rigid_body: RigidBody::Dynamic,
         restitution: Restitution::coefficient(0.7),
-        sprite: Sprite {
-            image: asset_server.load(get_os_image(os_type)),
-            ..default()
-        },
+        svg: Svg2d(asset_server.load(get_os_image(os_type))),
     });
 }
 
@@ -57,9 +52,9 @@ pub struct WindowStack {}
 pub fn handle_window_stacks(
     commands: Commands,
     mut contexts: EguiContexts,
-    mut nodes: Query<(&mut Transform, (&NodeId, &WindowStack)), With<NodeId>>,
+    mut nodes: Query<(&mut Transform, (&InstanceId, &WindowStack)), With<InstanceId>>,
     mut windows: Query<&mut Window>,
-    cameras: Query<&Transform, (With<Camera2d>, Without<NodeId>)>,
+    cameras: Query<&Transform, (With<Camera2d>, Without<InstanceId>)>,
 ) {
     let window_size = windows.single_mut().size();
     let camera_transform = cameras.single();

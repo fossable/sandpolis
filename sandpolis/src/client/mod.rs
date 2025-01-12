@@ -56,7 +56,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
     .add_plugins(EguiPlugin)
     .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
     .add_plugins(RapierDebugRenderPlugin::default())
-    .add_plugin(bevy_svg::prelude::SvgPlugin)
+    .add_plugins(bevy_svg::prelude::SvgPlugin)
     .insert_resource(CurrentLayer(Layer::Desktop))
     .insert_resource(ZoomLevel(1.0))
     .insert_resource(LayerChangeTimer(Timer::from_seconds(3.0, TimerMode::Once)))

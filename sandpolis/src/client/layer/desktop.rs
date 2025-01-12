@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use bevy_egui::EguiContexts;
 
 use crate::{
-    client::{node::NodeId, CurrentLayer},
-    core::Layer,
+    client::CurrentLayer,
+    core::{InstanceId, Layer},
 };
 
 pub fn check_layer_active(current_layer: Res<CurrentLayer>) -> bool {
@@ -13,9 +13,9 @@ pub fn check_layer_active(current_layer: Res<CurrentLayer>) -> bool {
 pub fn handle_layer(
     commands: Commands,
     mut contexts: EguiContexts,
-    mut nodes: Query<(&mut Transform, &NodeId), With<NodeId>>,
+    mut nodes: Query<(&mut Transform, &InstanceId), With<InstanceId>>,
     mut windows: Query<&mut Window>,
-    cameras: Query<&Transform, (With<Camera2d>, Without<NodeId>)>,
+    cameras: Query<&Transform, (With<Camera2d>, Without<InstanceId>)>,
 ) {
     let window_size = windows.single_mut().size();
     let camera_transform = cameras.single();

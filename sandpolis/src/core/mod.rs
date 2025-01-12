@@ -61,6 +61,7 @@ impl From<InstanceId> for InstanceType {
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct InstanceId(uuid::Uuid);
 
 impl Deref for InstanceId {
