@@ -48,6 +48,11 @@ pub struct CommandLine {
     #[clap(long)]
     pub server: Option<Vec<String>>,
 
+    /// Path to authentication certificate which will be installed into the database
+    /// on first run. Subsequent runs don't require this option.
+    #[clap(long)]
+    pub certificate: Option<String>,
+
     /// Enable debug mode
     #[clap(long, num_args = 0, default_value_t = false)]
     pub debug: bool,

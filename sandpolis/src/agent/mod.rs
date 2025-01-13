@@ -28,36 +28,6 @@
 //! }
 //! ```
 //!
-//! ## Connection Modes
-//!
-//! There are two connection modes that have an impact on performance and latency.
-//!
-//! ### Continuous
-//!
-//! In continuous mode, the agent maintains its primary connection at all times. If
-//! the connection is lost, the agent will periodically attempt to reestablish the
-//! connection using the same parameters it used to establish the initial
-//! connection.
-//!
-//! The connection mode can be changed on-the-fly by a user or scheduled to change
-//! automatically according to the time and day.
-//!
-//! ### Polling
-//!
-//! In polling mode, the agent intentionally closes the primary connection unless
-//! there exists an active stream. On a configurable schedule, the agent reconnects
-//! to a server, flushes any cached data, and checks for any new work items. After
-//! executing all available work items, the primary connection is closed again.
-//!
-//! The agent may attempt a spontaneous connection outside of the regular schedule
-//! if an internal agent process triggers it.
-//!
-//! ## Standard Feature Set
-//!
-//! The standard feature set is the minimum amount of functionality an agent
-//! implementation must provide.
-//!
-//! ### AgentMetadata
 //!
 //! ## Upgrades
 //!
@@ -165,14 +135,6 @@
 //!
 //! Certain elements of the host filesystem may be optionally mounted into the
 //! container.
-//!
-//! ## Read-only Mode
-//!
-//! Agents can also run in "read-only" mode which will prohibit all write operations,
-//! including to the configuration.
-//!
-//! This design is a security feature which ensures read-only agents cannot be compromised
-//! even when the gateway server is compromised.
 
 use anyhow::{bail, Result};
 use axum::Router;
@@ -207,6 +169,12 @@ pub struct AgentCommandLine {
 #[derive(Clone)]
 pub struct AgentState {
     pub db: Database,
+
+    /// Agents can also run in "read-only" mode which will prohibit all write operations,
+    /// including to the configuration.
+    ///
+    /// This design is a security feature which ensures read-only agents cannot be compromised
+    /// even when the gateway server is compromised.
     pub read_only: bool,
     #[cfg(feature = "layer-sysinfo")]
     pub sysinfo: Arc<layer::sysinfo::SysinfoLayer>,

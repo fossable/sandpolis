@@ -15,21 +15,6 @@ development.
 	<img src="https://raw.githubusercontent.com/fossable/sandpolis/master/.github/images/overview.png" />
 </p>
 
-#### Partially virtual
-
-Sandpolis originally focused on monitoring/management of devices that you
-physically own.
-
-#### Purely virtual
-
-Some parts of your virtual estate have no associated physical entity, for
-example:
-
-- VPS cloud hosting
-- User accounts with online services
-
-Sandpolis also manages these components.
-
 ## Security Warning
 
 Sandpolis is an extremely high-value attack target as it provides management

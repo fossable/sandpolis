@@ -2,7 +2,7 @@ use crate::core::InstanceId;
 use anyhow::Result;
 use chrono::{serde::ts_seconds, DateTime, NaiveDate, Utc};
 use futures::StreamExt;
-use reqwest::ClientBuilder;
+use reqwest::{Certificate, ClientBuilder, Identity};
 use reqwest_websocket::RequestBuilderExt;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::ts_seconds_option;
@@ -125,7 +125,28 @@ impl ConnectionCooldown {
     }
 }
 
-/// A "continuous" or "polling" connection to a server from any other instance.
+pub struct CertificateBundle {
+    server: Certificate,
+    client: Identity,
+}
+
+/// A connection to a server from any other instance (including another server).
+///
+/// In continuous mode, the agent maintains its primary connection at all times. If
+/// the connection is lost, the agent will periodically attempt to reestablish the
+/// connection using the same parameters it used to establish the initial
+/// connection.
+///
+/// The connection mode can be changed on-the-fly by a user or scheduled to change
+/// automatically according to the time and day.
+///
+/// In polling mode, the agent intentionally closes the primary connection unless
+/// there exists an active stream. On a configurable schedule, the agent reconnects
+/// to a server, flushes any cached data, and checks for any new work items. After
+/// executing all available work items, the primary connection is closed again.
+///
+/// The agent may attempt a spontaneous connection outside of the regular schedule
+/// if an internal agent process triggers it.
 pub struct ServerConnection {
     iterations: u64, // TODO Data?
     cooldown: Option<ConnectionCooldown>,
@@ -133,13 +154,26 @@ pub struct ServerConnection {
 }
 
 impl ServerConnection {
-    pub fn new(addresses: Vec<String>, cooldown: Option<ConnectionCooldown>) -> Self {
+    pub fn new(
+        auth: CertificateBundle,
+        addresses: Vec<String>,
+        cooldown: Option<ConnectionCooldown>,
+    ) -> Self {
         Self {
             iterations: 0,
             cooldown,
             connections: addresses
                 .into_iter()
-                .map(|a| (a, ClientBuilder::new().build().unwrap()))
+                .map(|a| {
+                    (
+                        a,
+                        ClientBuilder::new()
+                            .add_root_certificate(auth.server.clone())
+                            .identity(auth.client.clone())
+                            .build()
+                            .unwrap(),
+                    )
+                })
                 .collect(),
         }
     }
