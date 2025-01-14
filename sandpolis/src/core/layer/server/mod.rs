@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+pub mod group;
 pub mod user;
 
 /// Response bearing the server's banner

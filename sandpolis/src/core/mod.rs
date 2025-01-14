@@ -106,6 +106,10 @@ pub enum Layer {
     #[cfg(feature = "layer-alerts")]
     Alerts,
 
+    /// Deploy new Sandpolis agents.
+    #[cfg(feature = "layer-deploy")]
+    Deploy,
+
     /// Interact with Desktop environments.
     #[cfg(feature = "layer-desktop")]
     Desktop,

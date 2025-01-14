@@ -34,18 +34,6 @@ message AgentConfig {
 
     LoopConfig loop_config = 1;
 
-    // Indicates whether server certificates will be strictly verified and enforced
-    bool strict_certs = 2;
-
-    // Supported operating systems
-    //repeated core.foundation.OsType supported_os = 3;
-
-    // Supported system architectures
-    repeated string supported_arch = 4;
-
-    // Supported plugins
-    repeated string plugin = 5;
-
     // When true, the agent will not be able to connect to services outside of
     // the Sandpolis network.
     bool strict_network = 6;
@@ -69,31 +57,6 @@ message AgentConfig {
     int32 poll_interval = 13;
 
     bool memory = 14;
-}
-
-message RQ_CreateGroup {
-
-    // The group's name
-    string name = 1;
-}
-
-enum RS_CreateGroup {
-    CREATE_GROUP_OK = 0;
-    CREATE_GROUP_FAILED_ACCESS_DENIED = 1;
-}
-
-enum RS_DeleteGroup {
-    DELETE_GROUP_OK = 0;
-    DELETE_GROUP_FAILED_ACCESS_DENIED = 1;
-}
-
-message RQ_UpdateGroup {
-
-}
-
-enum RS_UpdateGroup {
-    UPDATE_GROUP_OK = 0;
-    UPDATE_GROUP_FAILED_ACCESS_DENIED = 1;
 }
 
 // Request to build an agent for the given group.
@@ -146,3 +109,4 @@ enum RS_BuildAgent {
     BUILD_AGENT_OK = 0;
     BUILD_AGENT_FAILED = 1;
 }
+

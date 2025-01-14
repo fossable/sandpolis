@@ -20,6 +20,7 @@ use crate::{
 };
 use anyhow::Result;
 
+pub mod group;
 pub mod user;
 
 #[derive(Serialize, Deserialize, Default)]
