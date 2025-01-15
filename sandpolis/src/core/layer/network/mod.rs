@@ -125,6 +125,7 @@ impl ConnectionCooldown {
     }
 }
 
+// TODO groupcert
 pub struct CertificateBundle {
     server: Certificate,
     client: Identity,

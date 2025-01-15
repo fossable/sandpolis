@@ -35,6 +35,7 @@ use axum::{
 use axum_macros::debug_handler;
 use axum_server::tls_rustls::{RustlsAcceptor, RustlsConfig};
 use clap::Parser;
+use layer::server::group::GroupAcceptor;
 use std::sync::Arc;
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
@@ -64,7 +65,7 @@ pub struct ServerState {
 pub async fn main(args: CommandLine) -> Result<()> {
     let db = Database::new(args.storage.join("server.db"))?;
     let state = ServerState {
-        server: Arc::new(ServerLayer::new(db.document("server")?)?),
+        server: Arc::new(ServerLayer::new(db.metadata()?.id, db.document("server")?)?),
         db,
     };
 
@@ -75,7 +76,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
     info!(listener = ?args.server_args.listen, "Starting server instance");
     axum_server::bind(args.server_args.listen)
-        // .acceptor(TLSAcceptor::new(RustlsAcceptor::new(config)))
+        .acceptor(GroupAcceptor::new(state.server.groups.clone())?)
         .serve(app.into_make_service())
         .await
         .context("binding socket")?;

@@ -13,8 +13,13 @@ use crate::{
         database::{Collection, Document},
         layer::{
             network::RequestResult,
-            server::{user::UserData, Banner, GetBannerRequest, GetBannerResponse},
+            server::{
+                group::{GroupCaCertificate, GroupData},
+                user::UserData,
+                Banner, GetBannerRequest, GetBannerResponse,
+            },
         },
+        InstanceId,
     },
     server::ServerState,
 };
@@ -27,12 +32,13 @@ pub mod user;
 pub struct ServerLayerData;
 
 pub struct ServerLayer {
-    banner: Document<Banner>,
-    users: Collection<UserData>,
+    pub banner: Document<Banner>,
+    pub users: Collection<UserData>,
+    pub groups: Collection<GroupData>,
 }
 
 impl ServerLayer {
-    pub fn new(document: Document<ServerLayerData>) -> Result<Self> {
+    pub fn new(server_id: InstanceId, document: Document<ServerLayerData>) -> Result<Self> {
         // Create a new admin user if one doesn't exist
         let users: Collection<UserData> = document.collection("users")?;
         if users
@@ -53,14 +59,40 @@ impl ServerLayer {
             )?;
 
             let default = "test"; // TODO hash
+                                  // TODO transaction
             user.insert_document("password", PasswordData::new(&default))?;
             info!(username = "admin", password = %default, "Created default admin user");
         }
 
+        // Create default group if one doesn't exist
+        let groups: Collection<GroupData> = document.collection("groups")?;
+        if groups
+            .documents()
+            .filter_map(|group| group.ok())
+            .find(|(_, group)| group.name == "default")
+            .is_none()
+        {
+            let group = groups.insert_document(
+                "default",
+                GroupData {
+                    name: "default".to_string(),
+                    owner: "admin".to_string(),
+                    members: Vec::new(),
+                },
+            )?;
+
+            group.insert_document("ca", GroupCaCertificate::new(server_id)?)?;
+        }
+
         Ok(Self {
             users,
+            groups,
             banner: document.document("banner")?,
         })
+    }
+
+    pub fn default_group(&self) -> Result<GroupData> {
+        todo!()
     }
 
     pub fn router() -> Router<ServerState> {

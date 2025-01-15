@@ -85,3 +85,5 @@ pub fn derive_delta(input: TokenStream) -> TokenStream {
 
     TokenStream::from(expanded)
 }
+
+// TODO annotate a Data struct with attribute that identifies key so it can be automatically obtained

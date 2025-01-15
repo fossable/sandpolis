@@ -1,20 +1,17 @@
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
-
-pub type GroupId = Uuid;
 
 /// A group is a set of clients and agents that can interact. Each group has a
 /// CA certificate that signs certificates used to connect to the server.
 ///
 /// All servers have a default group.
-#[derive(Validate)]
+#[derive(Serialize, Deserialize, Validate, Debug, Clone)]
 pub struct GroupData {
-    pub id: GroupId,
     #[validate(length(min = 4, max = 20))]
     pub name: String,
+    pub owner: String,
     pub members: Vec<String>,
-    pub ca: String,
-    pub key: String,
 }
 
 /// Create a new group with the given user as owner
@@ -25,13 +22,27 @@ pub struct CreateGroupRequest {
 }
 
 pub enum CreateGroupResponse {
-    Ok(GroupId),
+    Ok,
 }
 
+/// Delete a group by name.
 pub struct DeleteGroupRequest {
-    pub id: GroupId,
+    pub name: String,
 }
 
 pub enum DeleteGroupResponse {
     Ok,
+    NotFound,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GroupCaCertificate {
+    pub cert: String,
+    pub key: String,
+}
+
+/// A _client_ certificate used to authenticate at a group level.
+pub struct GroupCertificate {
+    pub cert: String,
+    pub key: String,
 }
