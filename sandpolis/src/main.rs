@@ -26,6 +26,11 @@ async fn main() -> Result<ExitCode> {
         "Initializing Sandpolis"
     );
 
+    // Get ready to do some cryptography
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .expect("crypto provider is available");
+
     #[cfg(feature = "server")]
     let server_thread = {
         let args = args.clone();

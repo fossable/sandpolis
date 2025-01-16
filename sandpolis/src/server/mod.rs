@@ -69,6 +69,8 @@ pub async fn main(args: CommandLine) -> Result<()> {
         db,
     };
 
+    let groups = state.server.groups.clone();
+
     let app: Router<()> = Router::new()
         .fallback(fallback_handler)
         .nest("/server", ServerLayer::router())
@@ -76,7 +78,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
     info!(listener = ?args.server_args.listen, "Starting server instance");
     axum_server::bind(args.server_args.listen)
-        .acceptor(GroupAcceptor::new(state.server.groups.clone())?)
+        .acceptor(GroupAcceptor::new(groups)?)
         .serve(app.into_make_service())
         .await
         .context("binding socket")?;

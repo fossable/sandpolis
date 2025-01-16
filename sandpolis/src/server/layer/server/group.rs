@@ -1,6 +1,8 @@
 use crate::core::database::Collection;
+use crate::core::database::Document;
 use crate::core::layer::server::group::GroupCaCertificate;
 use crate::core::layer::server::group::GroupCertificate;
+use crate::core::layer::server::group::GroupData;
 use crate::core::InstanceId;
 use anyhow::Result;
 use axum::{
@@ -17,10 +19,11 @@ use rcgen::DnType;
 use rcgen::ExtendedKeyUsagePurpose;
 use rcgen::IsCa;
 use rcgen::KeyPair;
+use rustls::server::ResolvesServerCertUsingSni;
 use rustls::server::WebPkiClientVerifier;
-use rustls::Certificate;
 use rustls::RootCertStore;
 use rustls::ServerConfig;
+use rustls_pki_types::CertificateDer;
 use serde::{Deserialize, Serialize};
 use std::io;
 use std::sync::Arc;
@@ -42,8 +45,6 @@ impl GroupCaCertificate {
         let mut cert_params = CertificateParams::default();
         cert_params.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
         cert_params.not_before = OffsetDateTime::now_utc();
-
-        // Set common name to the group's name
         cert_params.distinguished_name = DistinguishedName::new();
         cert_params
             .distinguished_name
@@ -62,8 +63,17 @@ impl GroupCaCertificate {
         })
     }
 
+    pub fn ca(&self) -> Result<Certificate> {
+        // TODO https://github.com/rustls/rcgen/issues/274
+
+        Ok(CertificateParams::from_ca_cert_der(
+            &pem::parse(&self.cert)?.into_contents().try_into()?,
+        )?
+        .self_signed(&KeyPair::from_pem(&self.key)?)?)
+    }
+
     /// Generate a new certificate signed by the group's CA.
-    pub fn generate_cert(&self) -> Result<GroupCertificate> {
+    pub fn generate_cert(&self, group_name: &str) -> Result<GroupCertificate> {
         // Generate key
         let keypair = KeyPair::generate()?;
 
@@ -73,11 +83,13 @@ impl GroupCaCertificate {
             .extended_key_usages
             .push(ExtendedKeyUsagePurpose::ClientAuth);
         cert_params.not_before = OffsetDateTime::now_utc();
+        cert_params
+            .distinguished_name
+            .push(DnType::CommonName, group_name.to_string());
         // TODO not_after of 1 month
 
-        // Generate the certificate
-        let issuer_der = pem::parse(&self.cert)?;
-        let cert = cert_params.signed_by(&keypair, todo!(), &KeyPair::from_pem(&self.key)?)?;
+        // Generate the certificate signed by the CA
+        let cert = cert_params.signed_by(&keypair, &self.ca()?, &KeyPair::from_pem(&self.key)?)?;
 
         Ok(GroupCertificate {
             cert: cert.pem(),
@@ -87,11 +99,11 @@ impl GroupCaCertificate {
 }
 
 #[derive(Debug, Clone)]
-pub struct GroupAuth {}
+pub struct GroupAuth(String);
 
 #[derive(Debug, Clone)]
 pub struct TlsData {
-    peer_certificates: Option<Vec<rustls::Certificate>>,
+    peer_certificates: Option<Vec<CertificateDer<'static>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -99,16 +111,26 @@ pub struct GroupAcceptor(RustlsAcceptor);
 
 impl GroupAcceptor {
     pub fn new(groups: Collection<GroupData>) -> Result<Self> {
-        let roots = RootCertStore::empty();
+        // TODO add all groups to the cert store
+        let mut roots = RootCertStore::empty();
 
-        // TODO add all groups
-        let verifier = WebPkiClientVerifier::builder(Arc::new(roots));
+        // TODO add server certs
+        let mut sni_resolver = ResolvesServerCertUsingSni::new();
+
+        for group in groups.documents() {
+            let group = group?;
+            let ca: Document<GroupCaCertificate> = group.get_document("ca")?.unwrap();
+
+            roots.add(pem::parse(&ca.data.cert)?.into_contents().try_into()?)?;
+        }
+
         Ok(Self(RustlsAcceptor::new(RustlsConfig::from_config(
             Arc::new(
                 ServerConfig::builder()
-                    .with_client_cert_verifier(Arc::new(verifier.build()?))
-                    .with_single_cert(certs, private_key)
-                    .unwrap(),
+                    .with_client_cert_verifier(
+                        WebPkiClientVerifier::builder(Arc::new(roots)).build()?,
+                    )
+                    .with_cert_resolver(Arc::new(sni_resolver)),
             ),
         ))))
     }
@@ -148,11 +170,11 @@ pub async fn auth_middleware(
         let cert = X509Certificate::from_der(
             &peer_certificates
                 .first()
-                .ok_or("missing client certificate")?
-                .0,
+                .ok_or("missing client certificate")?,
         )
         .map_err(|_| "invalid client certificate")?
         .1;
+
         // Take first common name from certificate
         let cn = cert
             .subject()
@@ -163,7 +185,7 @@ pub async fn auth_middleware(
             .map_err(|_| "invalid common name in client certificate")?;
 
         // Pass authentication to routes
-        request.extensions_mut().insert(GroupAuth {});
+        request.extensions_mut().insert(GroupAuth(cn.to_string()));
     } else {
         return Err("missing client certificate");
     }

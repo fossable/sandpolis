@@ -199,7 +199,7 @@ impl<T: Serialize + DeserializeOwned + std::fmt::Debug> Collection<T> {
         })
     }
 
-    pub fn documents(&self) -> impl Iterator<Item = Result<(Oid, T)>> {
+    pub fn documents(&self) -> impl Iterator<Item = Result<Document<T>>> + use<'_, T> {
         trace!(oid = %self.oid, "Querying collection");
         let mut start = self.oid.0.clone();
         start.push('/' as u8);
@@ -212,7 +212,11 @@ impl<T: Serialize + DeserializeOwned + std::fmt::Debug> Collection<T> {
                 Ok((key, value)) => match (key.try_into(), serde_cbor::from_slice::<T>(&value)) {
                     (Ok(oid), Ok(data)) => {
                         trace!(oid = %oid, "Yielding document");
-                        Ok((oid, data))
+                        Ok(Document {
+                            db: self.db.clone(),
+                            oid,
+                            data,
+                        })
                     }
                     (Ok(_), Err(_)) => todo!(),
                     (Err(_), Ok(_)) => todo!(),

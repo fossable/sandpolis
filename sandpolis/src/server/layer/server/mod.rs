@@ -44,7 +44,7 @@ impl ServerLayer {
         if users
             .documents()
             .filter_map(|user| user.ok())
-            .find(|(_, user)| user.admin)
+            .find(|user| user.data.admin)
             .is_none()
         {
             let user = users.insert_document(
@@ -69,7 +69,7 @@ impl ServerLayer {
         if groups
             .documents()
             .filter_map(|group| group.ok())
-            .find(|(_, group)| group.name == "default")
+            .find(|group| group.data.name == "default")
             .is_none()
         {
             let group = groups.insert_document(

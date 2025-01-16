@@ -95,6 +95,10 @@ pub enum UpdateUserResponse {
     NotFound,
 }
 
+/// Prehashed password to avoid sending a plaintext password to the server. The
+/// password is salted with a static value to prevent hash shucking.
+pub struct PrehashedPassword(String);
+
 /// Request a login from the server
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LoginRequest {

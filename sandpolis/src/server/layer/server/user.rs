@@ -2,7 +2,7 @@ use anyhow::Result;
 use axum::{
     extract::{self, FromRequestParts, State},
     http::{request::Parts, StatusCode},
-    Json, RequestPartsExt,
+    Extension, Json, RequestPartsExt,
 };
 use axum_extra::{
     headers::{authorization::Bearer, Authorization},
@@ -36,7 +36,7 @@ use crate::core::{
     },
 };
 
-use super::ServerState;
+use super::{group::GroupAuth, ServerState};
 
 static KEY: LazyLock<ServerKey> = LazyLock::new(|| ServerKey::new());
 
@@ -170,6 +170,7 @@ where
 #[debug_handler]
 pub async fn login(
     state: State<ServerState>,
+    Extension(_): Extension<GroupAuth>,
     extract::Json(request): extract::Json<LoginRequest>,
 ) -> RequestResult<LoginResponse> {
     let user: Document<UserData> = match state.server.users.get_document(&request.username) {
@@ -242,6 +243,7 @@ pub async fn login(
 #[debug_handler]
 pub async fn create_user(
     state: State<ServerState>,
+    Extension(_): Extension<GroupAuth>,
     claims: Claims,
     extract::Json(request): extract::Json<CreateUserRequest>,
 ) -> RequestResult<CreateUserResponse> {
@@ -280,6 +282,7 @@ pub async fn create_user(
 #[debug_handler]
 pub async fn get_users(
     state: State<ServerState>,
+    Extension(_): Extension<GroupAuth>,
     claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
 ) -> RequestResult<GetUsersResponse> {
