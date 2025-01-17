@@ -1,7 +1,10 @@
 use std::net::SocketAddr;
 
+use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
+
+use crate::core::{InstanceId, InstanceType};
 
 #[derive(Serialize, Deserialize, Validate, Debug)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
@@ -98,6 +101,15 @@ pub enum UpdateUserResponse {
 /// Prehashed password to avoid sending a plaintext password to the server. The
 /// password is salted with a static value to prevent hash shucking.
 pub struct PrehashedPassword(String);
+
+impl PrehashedPassword {
+    pub fn new(server_id: InstanceId, plaintext: &str) -> Result<Self> {
+        if !server_id.check(InstanceType::Server) {
+            bail!("Server ID required");
+        }
+        todo!()
+    }
+}
 
 /// Request a login from the server
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -19,11 +19,14 @@ use rcgen::DnType;
 use rcgen::ExtendedKeyUsagePurpose;
 use rcgen::IsCa;
 use rcgen::KeyPair;
+use rcgen::SanType;
 use rustls::server::ResolvesServerCertUsingSni;
 use rustls::server::WebPkiClientVerifier;
 use rustls::RootCertStore;
 use rustls::ServerConfig;
+use rustls_pki_types::pem::PemObject;
 use rustls_pki_types::CertificateDer;
+use rustls_pki_types::PrivateKeyDer;
 use serde::{Deserialize, Serialize};
 use std::io;
 use std::sync::Arc;
@@ -45,13 +48,14 @@ impl GroupCaCertificate {
         let mut cert_params = CertificateParams::default();
         cert_params.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
         cert_params.not_before = OffsetDateTime::now_utc();
+        cert_params.subject_alt_names = vec![SanType::DnsName("test".try_into()?)];
         cert_params.distinguished_name = DistinguishedName::new();
+        // cert_params
+        //     .distinguished_name
+        //     .push(DnType::OrganizationName, "s7s");
         cert_params
             .distinguished_name
-            .push(DnType::OrganizationName, "s7s");
-        cert_params
-            .distinguished_name
-            .push(DnType::CommonName, server_id.to_string());
+            .push(DnType::CommonName, "test".to_string()); // server_id.to_string());
 
         // Generate the certificate
         let cert = cert_params.self_signed(&keypair)?;
@@ -117,16 +121,34 @@ impl GroupAcceptor {
         // TODO add server certs
         let mut sni_resolver = ResolvesServerCertUsingSni::new();
 
+        let config = ServerConfig::builder();
+
         for group in groups.documents() {
             let group = group?;
             let ca: Document<GroupCaCertificate> = group.get_document("ca")?.unwrap();
 
             roots.add(pem::parse(&ca.data.cert)?.into_contents().try_into()?)?;
+
+            let private_key = config
+                .crypto_provider()
+                .key_provider
+                .load_private_key(PrivateKeyDer::from_pem_slice(&ca.data.key.as_bytes())?)?;
+
+            sni_resolver.add(
+                "test", //&group.data.name,
+                rustls::sign::CertifiedKey::new(
+                    vec![pem::parse(&ca.data.cert)?.into_contents().try_into()?],
+                    private_key,
+                ),
+            )?;
+
+            // TODO
+            break;
         }
 
         Ok(Self(RustlsAcceptor::new(RustlsConfig::from_config(
             Arc::new(
-                ServerConfig::builder()
+                config
                     .with_client_cert_verifier(
                         WebPkiClientVerifier::builder(Arc::new(roots)).build()?,
                     )

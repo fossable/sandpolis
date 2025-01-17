@@ -328,11 +328,12 @@ impl<T: Serialize + DeserializeOwned> Document<T> {
 
     pub fn insert_document<U>(&self, oid: impl TryInto<Oid>, data: U) -> Result<Document<U>>
     where
-        U: Serialize + DeserializeOwned,
+        U: Serialize + DeserializeOwned + std::fmt::Debug,
     {
         let oid = self.oid.extend(oid)?;
         let d = serde_cbor::to_vec(&data)?;
 
+        trace!(oid = %oid, data = ?data, "Inserting new document");
         self.db
             .transaction(|tx_db| {
                 if tx_db.get(&oid)?.is_some() {

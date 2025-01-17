@@ -77,7 +77,6 @@ impl ServerLayer {
                 GroupData {
                     name: "default".to_string(),
                     owner: "admin".to_string(),
-                    members: Vec::new(),
                 },
             )?;
 

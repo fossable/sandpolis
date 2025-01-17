@@ -21,7 +21,8 @@
 //! Every LS server maintains a database containing just the contents relevant to it
 //! which is continuously replicated to a GS server's database.
 
-use crate::core::database::Collection;
+use crate::core::database::{Collection, Document};
+use crate::core::layer::server::group::GroupCaCertificate;
 use crate::core::{database::Database, S7S_PORT};
 use crate::server::layer::server::ServerLayer;
 use crate::CommandLine;
@@ -34,8 +35,10 @@ use axum::{
 };
 use axum_macros::debug_handler;
 use axum_server::tls_rustls::{RustlsAcceptor, RustlsConfig};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use layer::server::group::GroupAcceptor;
+use std::fs::File;
+use std::io::Write;
 use std::sync::Arc;
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
@@ -54,6 +57,23 @@ pub struct ServerCommandLine {
     /// Create user with interactive prompt
     #[clap(long)]
     pub create_user: bool,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug, Clone)]
+enum Commands {
+    /// Generate a new endpoint certificate signed by the group CA
+    GenerateCert {
+        /// Group to generate the certificate for
+        #[clap(long, default_value = "default")]
+        group: String,
+
+        /// Output file path
+        #[clap(long, default_value = "./endpoint.pem")]
+        output: PathBuf,
+    },
 }
 
 #[derive(Clone)]
@@ -71,9 +91,28 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
     let groups = state.server.groups.clone();
 
+    match args.server_args.command {
+        Some(Commands::GenerateCert { group, output }) => {
+            let g = groups.get_document(&group)?.expect("the group exists");
+            let ca: Document<GroupCaCertificate> = g.get_document("ca")?.expect("the CA exists");
+
+            let cert = ca.data.generate_cert(&group)?;
+
+            info!(path = %output.display(), "Writing endpoint certificate");
+            let mut output = File::create(output)?;
+            output.write_all(cert.cert.as_bytes())?;
+            output.write_all(cert.key.as_bytes())?;
+            return Ok(());
+        }
+        _ => {}
+    }
+
     let app: Router<()> = Router::new()
         .fallback(fallback_handler)
         .nest("/server", ServerLayer::router())
+        .route_layer(axum::middleware::from_fn(
+            layer::server::group::auth_middleware,
+        ))
         .with_state(state);
 
     info!(listener = ?args.server_args.listen, "Starting server instance");

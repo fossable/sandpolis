@@ -11,7 +11,6 @@ pub struct GroupData {
     #[validate(length(min = 4, max = 20))]
     pub name: String,
     pub owner: String,
-    pub members: Vec<String>,
 }
 
 /// Create a new group with the given user as owner
@@ -41,6 +40,7 @@ pub struct GroupCaCertificate {
     pub key: String,
 }
 
+// TODO EndpointCertificate?
 /// A _client_ certificate used to authenticate at a group level.
 pub struct GroupCertificate {
     pub cert: String,
