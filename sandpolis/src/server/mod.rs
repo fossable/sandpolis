@@ -58,6 +58,7 @@ pub struct ServerCommandLine {
     #[clap(long)]
     pub create_user: bool,
 
+    // TODO move to CommandLine
     #[command(subcommand)]
     command: Option<Commands>,
 }
