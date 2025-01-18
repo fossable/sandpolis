@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use crate::core::{InstanceId, InstanceType};
+use crate::core::{ClusterId, InstanceId, InstanceType};
 
 #[derive(Serialize, Deserialize, Validate, Debug)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
@@ -98,15 +98,27 @@ pub enum UpdateUserResponse {
     NotFound,
 }
 
-/// Prehashed password to avoid sending a plaintext password to the server. The
-/// password is salted with a static value to prevent hash shucking.
-pub struct PrehashedPassword(String);
+/// To avoid sending plaintext passwords around, this password is hashed and
+/// salted with the cluster ID. The server will also hash and salt this value.
+#[cfg(any(feature = "server", feature = "client"))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct LoginPassword(pub String);
 
-impl PrehashedPassword {
-    pub fn new(server_id: InstanceId, plaintext: &str) -> Result<Self> {
-        if !server_id.check(InstanceType::Server) {
-            bail!("Server ID required");
-        }
+impl LoginPassword {
+    pub fn new(cluster_id: ClusterId, plaintext: &str) -> Result<Self> {
+        use argon2::{
+            password_hash::{
+                rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
+            },
+            Argon2,
+        };
+
+        // Ok(Self(
+        //     Argon2::default()
+        //         .hash_password(plaintext.as_bytes(), cluster_id.try_into()?)
+        //         .map_err(|err| todo!())?
+        //         .to_string(),
+        // ))
         todo!()
     }
 }
@@ -118,7 +130,7 @@ pub struct LoginRequest {
     pub username: String,
 
     /// Password as unsalted hash
-    pub password: String,
+    pub password: LoginPassword,
 
     /// Time-based One-Time Password token
     pub totp_token: Option<String>,

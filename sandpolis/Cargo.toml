@@ -16,7 +16,7 @@ tempfile = "3.15.0"
 
 [dependencies]
 anyhow = "1.0.76"
-aws-lc-rs = "1.12.0"
+aws-lc-rs = "1.12.1"
 chrono = { version = "0.4.39", features = ["serde"] }
 clap = { version = "4.4.7", features = ["derive", "string"] }
 dialoguer = { version = "0.11.0" }
@@ -47,7 +47,7 @@ uuid = { version = "1.10.0", features = ["v7", "serde"] }
 validator = { version = "0.19", features = ["derive"] }
 
 # Server dependencies
-axum-macros = { version = "0.4.1", optional = true }
+axum-macros = { version = "0.5.0", optional = true }
 axum-extra = { version = "0.10.0", optional = true, features = ["typed-header"] }
 axum-server = { version = "0.7.1", features = ["tls-rustls"], optional = true }
 axum = { version = "0.8.0", optional = true, features = ["ws", "json"] }
@@ -73,12 +73,13 @@ sysinfo = { version = "0.33.0", optional = true }
 
 # Server/Client dependencies
 totp-rs = { version = "5.6.0", optional = true, features = ["otpauth", "zeroize"] }
+argon2 = { version = "0.5.3", optional = true }
 
 [features]
 # Instances
-server = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:axum-extra", "dep:tower", "dep:rcgen", "dep:rustls-pki-types", "dep:tokio-rustls", "dep:ring", "dep:jsonwebtoken", "dep:totp-rs", "totp-rs?/gen_secret", "dep:x509-parser", "dep:openraft" ]
+server = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:axum-extra", "dep:tower", "dep:rcgen", "dep:rustls-pki-types", "dep:tokio-rustls", "dep:ring", "dep:jsonwebtoken", "dep:totp-rs", "totp-rs?/gen_secret", "dep:x509-parser", "dep:openraft", "dep:argon2" ]
 agent = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:sysinfo" ]
-client = [ "dep:bevy", "dep:bevy_rapier2d", "dep:bevy_egui", "dep:bevy_svg", "dep:egui", "dep:totp-rs", "totp-rs?/qr", "dep:passwords" ]
+client = [ "dep:bevy", "dep:bevy_rapier2d", "dep:bevy_egui", "dep:bevy_svg", "dep:egui", "dep:totp-rs", "totp-rs?/qr", "dep:passwords", "dep:argon2" ]
 
 # Layers
 layer-account = []

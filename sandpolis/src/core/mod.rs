@@ -61,10 +61,9 @@ impl From<InstanceId> for InstanceType {
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
-pub struct InstanceId(uuid::Uuid);
+pub struct ClusterId(uuid::Uuid);
 
-impl Deref for InstanceId {
+impl Deref for ClusterId {
     type Target = uuid::Uuid;
 
     fn deref(&self) -> &Self::Target {
@@ -72,11 +71,15 @@ impl Deref for InstanceId {
     }
 }
 
-impl AsRef<[u8]> for InstanceId {
+impl AsRef<[u8]> for ClusterId {
     fn as_ref(&self) -> &[u8] {
         self.0.as_bytes()
     }
 }
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
+pub struct InstanceId(uuid::Uuid);
 
 impl InstanceId {
     /// Generate a new instance ID for an instance of the given type(s).
@@ -93,6 +96,20 @@ impl InstanceId {
 
     pub fn check(&self, instance_type: InstanceType) -> bool {
         self.as_bytes()[15] & instance_type.mask() > 0
+    }
+}
+
+impl Deref for InstanceId {
+    type Target = uuid::Uuid;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AsRef<[u8]> for InstanceId {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_bytes()
     }
 }
 
@@ -126,9 +143,10 @@ pub enum Layer {
     #[cfg(feature = "layer-inventory")]
     Inventory,
 
+    #[cfg(feature = "layer-location")]
     Location,
 
-    /// View logs.
+    /// Aggregate and view logs.
     #[cfg(feature = "layer-logging")]
     Logging,
 

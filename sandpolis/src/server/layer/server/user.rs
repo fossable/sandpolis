@@ -211,11 +211,12 @@ pub async fn login(
     }
 
     // Check password
+    // TODO argon2
     if pbkdf2::verify(
         pbkdf2::PBKDF2_HMAC_SHA256,
         NonZeroU32::new(password.data.iterations).unwrap_or(NonZeroU32::new(1).unwrap()),
         &password.data.salt,
-        request.password.as_bytes(),
+        request.password.0.as_bytes(),
         &password.data.hash,
     )
     .is_err()
