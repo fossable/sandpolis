@@ -48,7 +48,7 @@ jobs:
           - aarch64-linux-android
           # - armv7-linux-androideabi
     steps:
-      - run: sudo apt-get install -y libasound2-dev libudev-dev llvm
+      - run: sudo apt-get install -y libasound2-dev libudev-dev libfuse3-dev llvm
 
       - uses: actions/checkout@v4
         with:
@@ -63,7 +63,8 @@ jobs:
           command: install
           args: cargo-ndk
 
-      - uses: ClementTsang/cargo-action@v0.0.6
+      - name: Build native library
+        uses: ClementTsang/cargo-action@v0.0.6
         with:
           command: ndk
           args: -t arm64-v8a -o android/app/src/main/jniLibs build
