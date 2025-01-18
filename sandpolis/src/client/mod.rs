@@ -83,11 +83,6 @@ pub async fn main(args: CommandLine) -> Result<()> {
         self::layer::desktop::handle_layer.run_if(self::layer::desktop::check_layer_active),
     );
 
-    // MSAA makes some Android devices panic, this is under investigation
-    // https://github.com/bevyengine/bevy/issues/8229
-    #[cfg(target_os = "android")]
-    app.insert_resource(Msaa::Off);
-
     app.run();
     Ok(())
 }
@@ -102,7 +97,13 @@ fn setup(
     for mut rapier_config in &mut rapier_config {
         rapier_config.gravity = Vec2::ZERO;
     }
-    commands.spawn(Camera2d::default());
+    commands.spawn((
+        Camera2d::default(),
+        // MSAA makes some Android devices panic, this is under investigation
+        // https://github.com/bevyengine/bevy/issues/8229
+        #[cfg(target_os = "android")]
+        Msaa::Off,
+    ));
 
     // Spawn the local client
     match db.metadata() {
