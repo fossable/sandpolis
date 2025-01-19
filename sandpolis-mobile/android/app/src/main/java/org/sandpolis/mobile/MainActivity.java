@@ -1,11 +1,13 @@
 package org.sandpolis.mobile;
 
 import android.view.View;
+import android.util.Log;
 
 import com.google.androidgamesdk.GameActivity;
 
 public class MainActivity extends GameActivity {
     static {
+        Log.d("main", "Preparing to load native library");
         System.loadLibrary("sandpolis_mobile");
     }
 
