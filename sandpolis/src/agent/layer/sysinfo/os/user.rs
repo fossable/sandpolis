@@ -1,10 +1,10 @@
-use crate::agent::Monitor;
+use crate::agent::layer::agent::Collector;
 use crate::core::database::{Collection, Oid};
 use crate::core::layer::sysinfo::os::user::UserData;
 use anyhow::Result;
 use sysinfo::Users;
 
-impl Monitor for Collection<UserData> {
+impl Collector for Collection<UserData> {
     fn refresh(&mut self) -> Result<()> {
         for user in Users::new_with_refreshed_list().list() {
             self.document(**user.id())?.mutate(|data| {

@@ -1,4 +1,4 @@
-use crate::agent::Monitor;
+use crate::agent::layer::agent::Collector;
 use crate::core::database::Document;
 use crate::core::layer::sysinfo::os::memory::{MemoryData, MemoryDataDelta};
 use anyhow::Result;
@@ -21,7 +21,7 @@ impl MemoryMonitor {
     }
 }
 
-impl Monitor for MemoryMonitor {
+impl Collector for MemoryMonitor {
     fn refresh(&mut self) -> Result<()> {
         self.system.refresh_memory();
         self.data.mutate(|data| {
@@ -40,7 +40,7 @@ impl Monitor for MemoryMonitor {
 
 #[cfg(test)]
 mod tests {
-    use crate::{agent::Monitor, core::database::Database};
+    use crate::{agent::layer::agent::Collector, core::database::Database};
     use anyhow::Result;
 
     #[test]

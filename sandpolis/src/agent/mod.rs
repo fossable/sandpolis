@@ -194,7 +194,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
     let db = Database::new(args.storage.join("agent.db"))?;
     let state = AgentState {
         read_only: args.agent_args.read_only,
-        agent: Arc::new(layer::agent::AgentLayer::new(db.document("/agent")?)?),
+        agent: Arc::new(layer::agent::AgentLayer::new(db.document("/agent")?).await?),
         #[cfg(feature = "layer-sysinfo")]
         sysinfo: Arc::new(layer::sysinfo::SysinfoLayer::new(db.document("/sysinfo")?)?),
         db,
@@ -257,7 +257,8 @@ pub async fn main(args: CommandLine) -> Result<()> {
             };
 
             // If a server is running in the same process, add it with highest priority
-            if cfg!(feature = "server") {
+            #[cfg(feature = "server")]
+            {
                 servers.insert(
                     0,
                     ServerAddress::Ip(args.server_args.listen),
@@ -285,11 +286,4 @@ pub async fn main(args: CommandLine) -> Result<()> {
     }
 
     return Ok(());
-}
-
-// TODO Collector?
-pub trait Monitor {
-    fn refresh(&mut self) -> Result<()>;
-    //start
-    //stop
 }
