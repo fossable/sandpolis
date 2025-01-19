@@ -45,6 +45,7 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 url = "2.5.4"
 uuid = { version = "1.10.0", features = ["v7", "serde"] }
 validator = { version = "0.19", features = ["derive"] }
+x509-parser = { version = "0.16.0" }
 
 # Server dependencies
 axum-macros = { version = "0.5.0", optional = true }
@@ -57,7 +58,6 @@ rcgen = { version = "0.13.1", optional = true, features = ["crypto", "pem", "x50
 ring = { version = "0.17.8", optional = true }
 rustls-pki-types = { version = "1.10.1", optional = true }
 tokio-rustls = { version = "0.26.0", optional = true }
-x509-parser = { version = "0.16.0", optional = true }
 openraft = { git = "https://github.com/databendlabs/openraft", optional = true, features=["serde", "type-alias"] }
 
 # Client dependencies
@@ -81,7 +81,7 @@ argon2 = { version = "0.5.3", optional = true }
 
 [features]
 # Instances
-server = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:axum-extra", "dep:tower", "dep:rcgen", "dep:rustls-pki-types", "dep:tokio-rustls", "dep:ring", "dep:jsonwebtoken", "dep:totp-rs", "totp-rs?/gen_secret", "dep:x509-parser", "dep:openraft", "dep:argon2" ]
+server = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:axum-extra", "dep:tower", "dep:rcgen", "dep:rustls-pki-types", "dep:tokio-rustls", "dep:ring", "dep:jsonwebtoken", "dep:totp-rs", "totp-rs?/gen_secret", "dep:openraft", "dep:argon2" ]
 agent = [ "dep:axum", "dep:axum-server", "dep:axum-macros", "dep:sysinfo", "dep:tokio-cron-scheduler" ]
 client = [ "dep:bevy", "dep:bevy_rapier2d", "dep:bevy_egui", "dep:bevy_svg", "dep:egui", "dep:totp-rs", "totp-rs?/qr", "dep:passwords", "dep:argon2" ]
 
