@@ -290,7 +290,7 @@ pub async fn get_users(
     let users = &state.server.users;
 
     if let Some(username) = request.username {
-        match users.get_document(&username) {
+        match users.get_document(&*username) {
             Ok(Some(user)) => return Ok(Json(GetUsersResponse::Ok(vec![user.data]))),
             Ok(None) => return Ok(Json(GetUsersResponse::Ok(Vec::new()))),
             Err(_) => todo!(),

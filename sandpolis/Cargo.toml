@@ -26,6 +26,7 @@ once_cell = "1.20.2"
 os_info = "3.8.2"
 pem = "3.0.4"
 rand = "0.8.5"
+regex = "1.11.1"
 reqwest = { version = "0.12.5", default-features = false, features = ["stream", "cookies", "json", "rustls-tls", "charset"] }
 reqwest-websocket = "0.4.4"
 rustls = "0.23.21"
@@ -57,7 +58,7 @@ ring = { version = "0.17.8", optional = true }
 rustls-pki-types = { version = "1.10.1", optional = true }
 tokio-rustls = { version = "0.26.0", optional = true }
 x509-parser = { version = "0.16.0", optional = true }
-openraft = { version = "0.9.17", optional = true }
+openraft = { git = "https://github.com/databendlabs/openraft", optional = true, features=["serde", "type-alias"] }
 
 # Client dependencies
 bevy = { version = "0.15.1", optional = true }

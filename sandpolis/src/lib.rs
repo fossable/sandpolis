@@ -1,7 +1,7 @@
 use anyhow::bail;
 use anyhow::Result;
 use clap::builder::OsStr;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use std::{path::PathBuf, str::FromStr};
 
 pub mod core;
@@ -64,6 +64,24 @@ pub struct CommandLine {
     /// Storage directory
     #[clap(long, value_parser = parse_storage_dir, default_value = default_storage_dir().into_os_string())]
     pub storage: PathBuf,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum Commands {
+    #[cfg(feature = "server")]
+    /// Generate a new endpoint certificate signed by the group CA
+    GenerateCert {
+        /// Group to generate the certificate for
+        #[clap(long, default_value = "default")]
+        group: String,
+
+        /// Output file path
+        #[clap(long, default_value = "./endpoint.pem")]
+        output: PathBuf,
+    },
 }
 
 #[cfg(feature = "agent")]

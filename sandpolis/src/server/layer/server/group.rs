@@ -1,7 +1,7 @@
 use crate::core::database::Collection;
 use crate::core::database::Document;
 use crate::core::layer::server::group::GroupCaCertificate;
-use crate::core::layer::server::group::GroupCertificate;
+use crate::core::layer::server::group::GroupClientCert;
 use crate::core::layer::server::group::GroupData;
 use crate::core::InstanceId;
 use anyhow::Result;
@@ -77,7 +77,7 @@ impl GroupCaCertificate {
     }
 
     /// Generate a new certificate signed by the group's CA.
-    pub fn generate_cert(&self, group_name: &str) -> Result<GroupCertificate> {
+    pub fn generate_cert(&self, group_name: &str) -> Result<GroupClientCert> {
         // Generate key
         let keypair = KeyPair::generate()?;
 
@@ -95,7 +95,7 @@ impl GroupCaCertificate {
         // Generate the certificate signed by the CA
         let cert = cert_params.signed_by(&keypair, &self.ca()?, &KeyPair::from_pem(&self.key)?)?;
 
-        Ok(GroupCertificate {
+        Ok(GroupClientCert {
             cert: cert.pem(),
             key: keypair.serialize_pem(),
         })

@@ -1,3 +1,5 @@
+use std::io::Cursor;
+
 use axum::{
     extract::{self, State},
     routing::{get, post},
@@ -16,7 +18,7 @@ use crate::{
             server::{
                 group::{GroupCaCertificate, GroupData},
                 user::UserData,
-                Banner, GetBannerRequest, GetBannerResponse,
+                GetBannerRequest, GetBannerResponse, ServerBanner,
             },
         },
         InstanceId,
@@ -26,13 +28,14 @@ use crate::{
 use anyhow::Result;
 
 pub mod group;
+pub mod raft;
 pub mod user;
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct ServerLayerData;
 
 pub struct ServerLayer {
-    pub banner: Document<Banner>,
+    pub banner: Document<ServerBanner>,
     pub users: Collection<UserData>,
     pub groups: Collection<GroupData>,
 }
@@ -50,7 +53,7 @@ impl ServerLayer {
             let user = users.insert_document(
                 "admin",
                 UserData {
-                    username: "admin".to_string(),
+                    username: "admin".to_string().into(),
                     admin: true,
                     email: None,
                     phone: None,
@@ -69,13 +72,13 @@ impl ServerLayer {
         if groups
             .documents()
             .filter_map(|group| group.ok())
-            .find(|group| group.data.name == "default")
+            .find(|group| *group.data.name == "default")
             .is_none()
         {
             let group = groups.insert_document(
                 "default",
                 GroupData {
-                    name: "default".to_string(),
+                    name: "default".to_string().into(),
                     owner: "admin".to_string(),
                 },
             )?;

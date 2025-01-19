@@ -4875,9 +4875,8 @@ checksum = "1261fe7e33c73b354eab43b1273a57c8f967d0391e80353e51f764ac02cf6775"
 
 [[package]]
 name = "openraft"
-version = "0.9.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c99ea08834a7786c6b19a6a40163291d55933889079af2caed24230358d4467a"
+version = "0.10.0"
+source = "git+https://github.com/databendlabs/openraft#71db5f15992f11c60d87da583243445f8489424a"
 dependencies = [
  "anyerror",
  "byte-unit",
@@ -4888,6 +4887,7 @@ dependencies = [
  "maplit",
  "openraft-macros",
  "rand",
+ "serde",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
@@ -4897,9 +4897,8 @@ dependencies = [
 
 [[package]]
 name = "openraft-macros"
-version = "0.9.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "226ce477d851088815fdbd05a35921960edeb8767427b2369b424fa57e303ae5"
+version = "0.10.0"
+source = "git+https://github.com/databendlabs/openraft#71db5f15992f11c60d87da583243445f8489424a"
 dependencies = [
  "chrono",
  "proc-macro2",
@@ -6019,6 +6018,7 @@ dependencies = [
  "pem",
  "rand",
  "rcgen",
+ "regex",
  "reqwest",
  "reqwest-websocket",
  "ring",

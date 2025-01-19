@@ -23,9 +23,10 @@
 
 use crate::core::database::{Collection, Document};
 use crate::core::layer::server::group::GroupCaCertificate;
+use crate::core::layer::server::ServerStratum;
 use crate::core::{database::Database, S7S_PORT};
 use crate::server::layer::server::ServerLayer;
-use crate::CommandLine;
+use crate::{CommandLine, Commands};
 use anyhow::{Context, Result};
 use axum::{
     body::Body,
@@ -54,27 +55,9 @@ pub struct ServerCommandLine {
     #[clap(long, default_value_t = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), S7S_PORT))]
     pub listen: SocketAddr,
 
-    /// Create user with interactive prompt
+    /// Run a local stratum (LS) server instead of global stratum (GS).
     #[clap(long)]
-    pub create_user: bool,
-
-    // TODO move to CommandLine
-    #[command(subcommand)]
-    command: Option<Commands>,
-}
-
-#[derive(Subcommand, Debug, Clone)]
-enum Commands {
-    /// Generate a new endpoint certificate signed by the group CA
-    GenerateCert {
-        /// Group to generate the certificate for
-        #[clap(long, default_value = "default")]
-        group: String,
-
-        /// Output file path
-        #[clap(long, default_value = "./endpoint.pem")]
-        output: PathBuf,
-    },
+    pub local: bool,
 }
 
 #[derive(Clone)]
@@ -92,7 +75,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
     let groups = state.server.groups.clone();
 
-    match args.server_args.command {
+    match args.command {
         Some(Commands::GenerateCert { group, output }) => {
             let g = groups.get_document(&group)?.expect("the group exists");
             let ca: Document<GroupCaCertificate> = g.get_document("ca")?.expect("the CA exists");

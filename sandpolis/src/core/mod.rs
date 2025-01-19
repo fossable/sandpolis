@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::{ops::Deref, path::PathBuf, str::FromStr};
+use std::{fmt::Display, ops::Deref, path::PathBuf, str::FromStr};
 use strum::EnumIter;
 
 pub mod database;
@@ -96,6 +96,12 @@ impl InstanceId {
 
     pub fn check(&self, instance_type: InstanceType) -> bool {
         self.as_bytes()[15] & instance_type.mask() > 0
+    }
+}
+
+impl Display for InstanceId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0.to_string())
     }
 }
 

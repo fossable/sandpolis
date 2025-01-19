@@ -1,17 +1,16 @@
-use std::net::SocketAddr;
+use std::{net::SocketAddr, ops::Deref};
 
 use anyhow::{bail, Result};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
-use validator::Validate;
+use validator::{Validate, ValidationErrors};
 
 use crate::core::{ClusterId, InstanceId, InstanceType};
 
 #[derive(Serialize, Deserialize, Validate, Debug)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct UserData {
-    /// Unchangable username
-    #[validate(length(min = 4, max = 20))]
-    pub username: String,
+    pub username: UserName,
 
     /// Whether the user is an admin
     pub admin: bool,
@@ -24,6 +23,34 @@ pub struct UserData {
     pub phone: Option<String>,
 
     pub expiration: Option<i64>,
+}
+
+/// A user's username is forever unchangable.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UserName(String);
+
+impl Deref for UserName {
+    type Target = String;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<String> for UserName {
+    fn from(value: String) -> Self {
+        UserName(value)
+    }
+}
+
+impl Validate for UserName {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        if Regex::new("^[a-z0-9]{4,32}$").unwrap().is_match(&self.0) {
+            Ok(())
+        } else {
+            Err(ValidationErrors::new())
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -59,7 +86,7 @@ pub enum CreateUserResponse {
 #[derive(Serialize, Deserialize)]
 pub struct GetUsersRequest {
     /// Search by username prefix
-    pub username: Option<String>,
+    pub username: Option<UserName>,
 
     /// Search by email prefix
     pub email: Option<String>,
@@ -75,7 +102,7 @@ pub enum GetUsersResponse {
 #[derive(Serialize, Deserialize)]
 pub struct UpdateUserRequest {
     /// User to edit
-    pub username: String,
+    pub username: UserName,
 
     /// New password
     pub password: Option<String>,
