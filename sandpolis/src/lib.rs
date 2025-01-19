@@ -2,6 +2,7 @@ use anyhow::bail;
 use anyhow::Result;
 use clap::builder::OsStr;
 use clap::{Parser, Subcommand};
+use core::layer::server::ServerAddress;
 use std::{path::PathBuf, str::FromStr};
 
 pub mod core;
@@ -44,12 +45,16 @@ pub struct CommandLine {
     #[clap(flatten)]
     pub agent_args: crate::agent::AgentCommandLine,
 
-    /// Servers (address:port) to connect
+    /// Servers (address:port) to connect.
+    ///
+    /// For GS servers, connections will be established to all given values at
+    /// the same time. For LS servers, agents, and clients, only one connection
+    /// can be maintained at a time.
     #[clap(long)]
-    pub server: Option<Vec<String>>,
+    pub server: Option<Vec<ServerAddress>>,
 
-    /// Path to authentication certificate which will be installed into the database
-    /// on first run. Subsequent runs don't require this option.
+    /// Path to authentication certificate which will be installed into the database.
+    /// Subsequent runs don't require this option.
     #[clap(long)]
     pub certificate: Option<String>,
 
@@ -66,7 +71,7 @@ pub struct CommandLine {
     pub storage: PathBuf,
 
     #[command(subcommand)]
-    command: Option<Commands>,
+    pub command: Option<Commands>,
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -79,7 +84,7 @@ pub enum Commands {
         group: String,
 
         /// Output file path
-        #[clap(long, default_value = "./endpoint.pem")]
+        #[clap(long, default_value = "./endpoint.json")]
         output: PathBuf,
     },
 }

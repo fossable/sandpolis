@@ -20,11 +20,14 @@ use tokio::{
 };
 use tracing::debug;
 
-use crate::core::{
-    database::Document,
-    layer::shell::{
-        ShellExecuteRequest, ShellExecuteResponse, ShellSessionData, ShellSessionInputEvent,
-        ShellSessionOutputEvent, ShellSessionRequest,
+use crate::{
+    agent::AgentState,
+    core::{
+        database::Document,
+        layer::shell::{
+            ShellExecuteRequest, ShellExecuteResponse, ShellSessionData, ShellSessionInputEvent,
+            ShellSessionOutputEvent, ShellSessionRequest,
+        },
     },
 };
 
@@ -167,7 +170,7 @@ async fn shell_execute(
     }))
 }
 
-pub fn router() -> Router {
+pub fn router() -> Router<AgentState> {
     Router::new()
         .route("/execute", post(shell_execute))
         .route("/session", any(shell_session))

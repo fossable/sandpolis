@@ -16,5 +16,6 @@ fn main() {
         debug: false,
         trace: false,
         storage: "/tmp".into(),
+        command: None,
     });
 }

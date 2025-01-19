@@ -29,14 +29,17 @@ use crate::core::{
     database::Document,
     layer::{
         network::RequestResult,
-        server::user::{
-            CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
-            LoginResponse, UserData,
+        server::{
+            group::GroupName,
+            user::{
+                CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse,
+                LoginRequest, LoginResponse, UserData,
+            },
         },
     },
 };
 
-use super::{group::GroupAuth, ServerState};
+use super::ServerState;
 
 static KEY: LazyLock<ServerKey> = LazyLock::new(|| ServerKey::new());
 
@@ -170,7 +173,7 @@ where
 #[debug_handler]
 pub async fn login(
     state: State<ServerState>,
-    Extension(_): Extension<GroupAuth>,
+    Extension(_): Extension<GroupName>,
     extract::Json(request): extract::Json<LoginRequest>,
 ) -> RequestResult<LoginResponse> {
     let user: Document<UserData> = match state.server.users.get_document(&request.username) {
@@ -244,7 +247,7 @@ pub async fn login(
 #[debug_handler]
 pub async fn create_user(
     state: State<ServerState>,
-    Extension(_): Extension<GroupAuth>,
+    Extension(_): Extension<GroupName>,
     claims: Claims,
     extract::Json(request): extract::Json<CreateUserRequest>,
 ) -> RequestResult<CreateUserResponse> {
@@ -283,7 +286,7 @@ pub async fn create_user(
 #[debug_handler]
 pub async fn get_users(
     state: State<ServerState>,
-    Extension(_): Extension<GroupAuth>,
+    Extension(_): Extension<GroupName>,
     claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
 ) -> RequestResult<GetUsersResponse> {

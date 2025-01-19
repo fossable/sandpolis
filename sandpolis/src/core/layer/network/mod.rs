@@ -10,6 +10,11 @@ use std::{cmp::min, collections::HashMap, net::SocketAddr, sync::Arc, time::Dura
 use tokio::time::sleep;
 use tracing::debug;
 
+use super::server::{
+    group::{GroupClientCert, GroupName},
+    ServerAddress,
+};
+
 pub mod stream;
 
 pub struct NetworkLayerData {}
@@ -104,31 +109,34 @@ pub struct AgentConnectionRequest {
 pub struct AgentConnection {}
 
 pub struct ConnectionCooldown {
-    /// Initial cooldown value in milliseconds
-    pub initial_ms: u64,
-    /// Number of connection iterations required for the total cooldown to increase
-    /// by a factor of the initial cooldown. Zero disables cooldown increase.
-    pub constant: f64,
+    /// Initial cooldown value
+    pub initial: Duration,
 
-    /// Maximum cooldown value in milliseconds
-    pub limit_ms: u64,
+    /// Number of connection iterations required for the total cooldown to increase
+    /// by a factor of the initial cooldown.
+    pub constant: Option<f64>,
+
+    /// Maximum cooldown value
+    pub limit: Option<Duration>,
 }
 
 impl ConnectionCooldown {
     fn next(&self, iteration: u64) -> Duration {
-        Duration::from_millis(min(
-            self.limit_ms,
-            ((self.initial_ms as f64)
-                * (self.initial_ms as f64).powf(iteration as f64 / self.constant))
-                as u64,
-        ))
-    }
-}
+        let value = match self.constant {
+            Some(constant) => Duration::from_millis(
+                ((self.initial.as_millis() as f64)
+                    * (self.initial.as_millis() as f64).powf(iteration as f64 / constant))
+                    as u64,
+            ),
+            None => self.initial,
+        };
 
-// TODO groupcert
-pub struct CertificateBundle {
-    server: Certificate,
-    client: Identity,
+        // Apply maximum limit
+        match self.limit {
+            Some(limit) => min(value, limit),
+            None => value,
+        }
+    }
 }
 
 /// A connection to a server from any other instance (including another server).
@@ -149,64 +157,68 @@ pub struct CertificateBundle {
 /// The agent may attempt a spontaneous connection outside of the regular schedule
 /// if an internal agent process triggers it.
 pub struct ServerConnection {
+    group: GroupName,
     iterations: u64, // TODO Data?
-    cooldown: Option<ConnectionCooldown>,
-    connections: HashMap<String, reqwest::Client>,
+    cooldown: ConnectionCooldown,
+    client: reqwest::Client,
 }
 
 impl ServerConnection {
     pub fn new(
-        auth: CertificateBundle,
-        addresses: Vec<String>,
-        cooldown: Option<ConnectionCooldown>,
-    ) -> Self {
-        Self {
+        auth: GroupClientCert,
+        addresses: Vec<ServerAddress>,
+        cooldown: ConnectionCooldown,
+    ) -> Result<Self> {
+        let ca = auth.ca()?;
+        let identity = auth.identity()?;
+
+        Ok(Self {
+            group: auth.name()?,
             iterations: 0,
             cooldown,
-            connections: addresses
-                .into_iter()
-                .map(|a| {
-                    (
-                        a,
-                        ClientBuilder::new()
-                            .add_root_certificate(auth.server.clone())
-                            .identity(auth.client.clone())
-                            .build()
-                            .unwrap(),
-                    )
-                })
-                .collect(),
-        }
+            client: ClientBuilder::new()
+                .add_root_certificate(ca.clone())
+                .identity(identity.clone())
+                .resolve_to_addrs(
+                    &auth.name()?,
+                    &addresses
+                        .iter()
+                        .filter_map(|address| address.resolve().ok())
+                        .flat_map(|address| address)
+                        .collect::<Vec<SocketAddr>>(),
+                )
+                .build()
+                .unwrap(),
+        })
     }
 
     /// Run the connection routine forever.
     pub async fn run(mut self) {
         loop {
             if self.iterations > 0 {
-                if let Some(cooldown) = self.cooldown.as_ref() {
-                    sleep(cooldown.next(self.iterations)).await;
-                }
+                sleep(self.cooldown.next(self.iterations)).await;
             }
 
-            for (address, client) in self.connections.iter() {
-                debug!(address = %address, "Attempting server connection");
-                match client
-                    .get(format!("wss://{address}/"))
-                    .upgrade()
-                    .send()
-                    .await
-                {
-                    Ok(response) => match response.into_websocket().await {
-                        // TODO include instance ID in the response
-                        Ok(websocket) => {
-                            let (sender, receiver) = websocket.split();
-                            // TODO
-                        }
-                        Err(_) => debug!(address = %address, "Connection upgrade failed"),
-                    },
-                    Err(_) => debug!(address = %address, "Connection failed"),
-                }
+            debug!("Attempting server connection");
+            match self
+                .client
+                .get(format!("wss://{}/", self.group))
+                .header("Host", &*self.group)
+                .upgrade()
+                .send()
+                .await
+            {
+                Ok(response) => match response.into_websocket().await {
+                    // TODO include instance ID in the response
+                    Ok(websocket) => {
+                        let (sender, receiver) = websocket.split();
+                        // TODO
+                    }
+                    Err(e) => debug!(error = ?e, "Connection upgrade failed"),
+                },
+                Err(e) => debug!(error = ?e, "Connection failed"),
             }
+            self.iterations += 1;
         }
     }
 }

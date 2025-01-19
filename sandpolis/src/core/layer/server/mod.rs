@@ -1,4 +1,10 @@
-use std::{ffi::OsString, fmt::Display};
+use anyhow::Result;
+use std::{
+    ffi::OsString,
+    fmt::Display,
+    net::{SocketAddr, ToSocketAddrs},
+    str::FromStr,
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -20,6 +26,33 @@ pub enum ServerStratum {
     /// stratum (GS) servers connect to every other GS server (fully-connected)
     /// for data replication and leader election.
     Global,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum ServerAddress {
+    Dns(String),
+    Ip(SocketAddr),
+}
+
+impl ServerAddress {
+    pub fn resolve(&self) -> Result<Vec<SocketAddr>> {
+        match self {
+            Self::Dns(name) => Ok(name.to_socket_addrs()?.collect()),
+            Self::Ip(socket_addr) => Ok(vec![socket_addr.clone()]),
+        }
+    }
+}
+
+impl FromStr for ServerAddress {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        match s.parse::<SocketAddr>() {
+            Ok(addr) => Ok(Self::Ip(addr)),
+            // TODO regex
+            Err(_) => Ok(Self::Dns(s.to_string())),
+        }
+    }
 }
 
 /// Response bearing the server's banner

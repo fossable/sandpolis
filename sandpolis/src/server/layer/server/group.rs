@@ -1,8 +1,9 @@
 use crate::core::database::Collection;
 use crate::core::database::Document;
-use crate::core::layer::server::group::GroupCaCertificate;
+use crate::core::layer::server::group::GroupCaCert;
 use crate::core::layer::server::group::GroupClientCert;
 use crate::core::layer::server::group::GroupData;
+use crate::core::layer::server::group::GroupName;
 use crate::core::InstanceId;
 use anyhow::Result;
 use axum::{
@@ -38,7 +39,7 @@ use tracing::debug;
 use validator::Validate;
 use x509_parser::prelude::{FromDer, X509Certificate};
 
-impl GroupCaCertificate {
+impl GroupCaCert {
     /// Generate a new group CA certificate.
     pub fn new(server_id: InstanceId) -> Result<Self> {
         // Generate key
@@ -96,14 +97,12 @@ impl GroupCaCertificate {
         let cert = cert_params.signed_by(&keypair, &self.ca()?, &KeyPair::from_pem(&self.key)?)?;
 
         Ok(GroupClientCert {
+            ca: self.ca()?.pem(),
             cert: cert.pem(),
             key: keypair.serialize_pem(),
         })
     }
 }
-
-#[derive(Debug, Clone)]
-pub struct GroupAuth(String);
 
 #[derive(Debug, Clone)]
 pub struct TlsData {
@@ -125,7 +124,7 @@ impl GroupAcceptor {
 
         for group in groups.documents() {
             let group = group?;
-            let ca: Document<GroupCaCertificate> = group.get_document("ca")?.unwrap();
+            let ca: Document<GroupCaCert> = group.get_document("ca")?.unwrap();
 
             roots.add(pem::parse(&ca.data.cert)?.into_contents().try_into()?)?;
 
@@ -207,7 +206,9 @@ pub async fn auth_middleware(
             .map_err(|_| "invalid common name in client certificate")?;
 
         // Pass authentication to routes
-        request.extensions_mut().insert(GroupAuth(cn.to_string()));
+        request
+            .extensions_mut()
+            .insert(cn.parse::<GroupName>().map_err(|_| "Invalid group name")?);
     } else {
         return Err("missing client certificate");
     }

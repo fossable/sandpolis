@@ -139,13 +139,16 @@
 use anyhow::{bail, Result};
 use axum::Router;
 use clap::Parser;
-use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::net::UnixListener;
 use tracing::info;
 
-use crate::core::database::Database;
+use crate::core::database::{Database, Document};
+use crate::core::layer::network::{ConnectionCooldown, ServerConnection};
+use crate::core::layer::server::group::GroupClientCert;
+use crate::core::layer::server::ServerAddress;
 use crate::CommandLine;
 
 pub mod layer;
@@ -161,9 +164,9 @@ pub struct AgentCommandLine {
 
     /// Agent socket
     #[clap(long)]
+    // TODO enforce .sock
     //, value_parser = parse_storage_dir, default_value = default_storage_dir().into_os_string())]
     pub agent_socket: PathBuf,
-    // TODO subcommands for operations on local control socket
 }
 
 #[derive(Clone)]
@@ -176,6 +179,9 @@ pub struct AgentState {
     /// This design is a security feature which ensures read-only agents cannot be compromised
     /// even when the gateway server is compromised.
     pub read_only: bool,
+
+    pub agent: Arc<layer::agent::AgentLayer>,
+
     #[cfg(feature = "layer-sysinfo")]
     pub sysinfo: Arc<layer::sysinfo::SysinfoLayer>,
 }
@@ -188,48 +194,95 @@ pub async fn main(args: CommandLine) -> Result<()> {
     let db = Database::new(args.storage.join("agent.db"))?;
     let state = AgentState {
         read_only: args.agent_args.read_only,
+        agent: Arc::new(layer::agent::AgentLayer::new(db.document("/agent")?)?),
         #[cfg(feature = "layer-sysinfo")]
         sysinfo: Arc::new(layer::sysinfo::SysinfoLayer::new(db.document("/sysinfo")?)?),
         db,
     };
 
-    let uds = UnixListener::bind(&args.agent_args.agent_socket)?;
-    tokio::spawn(async move {
-        let app = Router::new().with_state(state);
+    // Import certificate if it's newer than the one in the database
+    let cert_db: Option<Document<GroupClientCert>> = state.agent.data.get_document("/cert")?;
+    let cert = if let Some(path) = args.certificate {
+        let cert_fs = GroupClientCert::read(path)?;
 
-        #[cfg(feature = "layer-shell")]
-        let app = app.nest("/layer/shell", layer::shell::router());
-
-        #[cfg(feature = "layer-package")]
-        let app = app.nest("/layer/package", layer::package::router());
-
-        #[cfg(feature = "layer-desktop")]
-        let app = app.nest("/layer/desktop", layer::desktop::router());
-
-        axum::serve(uds, app.into_make_service()).await.unwrap();
-    });
-
-    // TODO if a server is running in the same process, just use that
-    if let Some(mut servers) = args.server {
-        for server in servers {}
+        match cert_db {
+            Some(cert_db) => {
+                if cert_fs.creation_time()? > cert_db.data.creation_time()? {
+                    info!("Updating existing certificate in database");
+                    state.agent.data.insert_document("/cert", cert_fs.clone())?;
+                    cert_fs
+                } else {
+                    cert_db.data
+                }
+            }
+            None => {
+                info!("Adding new certificate to database");
+                state.agent.data.insert_document("/cert", cert_fs.clone())?;
+                cert_fs
+            }
+        }
     } else {
-        if std::io::stdout().is_terminal() {
-            // TODO prompt
-            print!("Please enter the server's address [127.0.0.1]: ");
-        } else {
-            bail!("Cannot configure server");
+        match cert_db {
+            Some(cert_db) => cert_db.data,
+            // TODO get from server if running in same instance
+            None => bail!("No certificate given"),
+        }
+    };
+
+    // Dispatch commands
+    match args.command {
+        _ => {
+            let uds = UnixListener::bind(&args.agent_args.agent_socket)?;
+            tokio::spawn(async move {
+                let app = Router::new().nest("/layer/agent", layer::agent::router());
+
+                #[cfg(feature = "layer-shell")]
+                let app = app.nest("/layer/shell", layer::shell::router());
+
+                #[cfg(feature = "layer-package")]
+                let app = app.nest("/layer/package", layer::package::router());
+
+                #[cfg(feature = "layer-desktop")]
+                let app = app.nest("/layer/desktop", layer::desktop::router());
+
+                axum::serve(uds, app.with_state(state).into_make_service())
+                    .await
+                    .unwrap();
+            });
+
+            let mut servers = if let Some(servers) = args.server {
+                servers
+            } else {
+                Vec::new()
+            };
+
+            // If a server is running in the same process, add it with highest priority
+            if cfg!(feature = "server") {
+                servers.insert(
+                    0,
+                    ServerAddress::Ip(args.server_args.listen),
+                    // .to_string()
+                    // .replace("0.0.0.0", "127.0.0.1"),
+                );
+            }
+
+            if servers.len() == 0 {
+                bail!("No server defined");
+            }
+
+            ServerConnection::new(
+                cert,
+                servers,
+                ConnectionCooldown {
+                    initial: Duration::from_millis(4000),
+                    constant: None,
+                    limit: None,
+                },
+            )?
+            .run()
+            .await;
         }
     }
-
-    // if prompt_bool("Configure client certificate authentication?", false) {}
-
-    // if prompt_bool("Configure password authentication? ", false) {
-    //     let password = prompt_string(
-    //         "Enter password: ",
-    //         "",
-    //         &predicate::function(|x: &String| x.len() >= 5_usize),
-    //     );
-    // }
 
     return Ok(());
 }

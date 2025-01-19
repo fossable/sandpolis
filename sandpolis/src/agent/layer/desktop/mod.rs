@@ -1,5 +1,7 @@
 use axum::Router;
 
-pub fn router() -> Router {
+use crate::agent::AgentState;
+
+pub fn router() -> Router<AgentState> {
     Router::new()
 }

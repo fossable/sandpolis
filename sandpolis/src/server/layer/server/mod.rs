@@ -16,7 +16,7 @@ use crate::{
         layer::{
             network::RequestResult,
             server::{
-                group::{GroupCaCertificate, GroupData},
+                group::{GroupCaCert, GroupData},
                 user::UserData,
                 GetBannerRequest, GetBannerResponse, ServerBanner,
             },
@@ -53,7 +53,7 @@ impl ServerLayer {
             let user = users.insert_document(
                 "admin",
                 UserData {
-                    username: "admin".to_string().into(),
+                    username: "admin".parse()?,
                     admin: true,
                     email: None,
                     phone: None,
@@ -78,12 +78,12 @@ impl ServerLayer {
             let group = groups.insert_document(
                 "default",
                 GroupData {
-                    name: "default".to_string().into(),
+                    name: "default".parse()?,
                     owner: "admin".to_string(),
                 },
             )?;
 
-            group.insert_document("ca", GroupCaCertificate::new(server_id)?)?;
+            group.insert_document("ca", GroupCaCert::new(server_id)?)?;
         }
 
         Ok(Self {

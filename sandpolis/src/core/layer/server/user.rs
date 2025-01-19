@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, ops::Deref};
+use std::{net::SocketAddr, ops::Deref, str::FromStr};
 
 use anyhow::{bail, Result};
 use regex::Regex;
@@ -37,9 +37,13 @@ impl Deref for UserName {
     }
 }
 
-impl From<String> for UserName {
-    fn from(value: String) -> Self {
-        UserName(value)
+impl FromStr for UserName {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let name = UserName(s.to_string());
+        name.validate()?;
+        Ok(name)
     }
 }
 

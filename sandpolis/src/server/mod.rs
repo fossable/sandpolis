@@ -22,8 +22,7 @@
 //! which is continuously replicated to a GS server's database.
 
 use crate::core::database::{Collection, Document};
-use crate::core::layer::server::group::GroupCaCertificate;
-use crate::core::layer::server::ServerStratum;
+use crate::core::layer::server::group::GroupCaCert;
 use crate::core::{database::Database, S7S_PORT};
 use crate::server::layer::server::ServerLayer;
 use crate::{CommandLine, Commands};
@@ -35,16 +34,12 @@ use axum::{
     Router,
 };
 use axum_macros::debug_handler;
-use axum_server::tls_rustls::{RustlsAcceptor, RustlsConfig};
 use clap::{Parser, Subcommand};
 use layer::server::group::GroupAcceptor;
 use std::fs::File;
 use std::io::Write;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
-use std::{
-    net::{IpAddr, Ipv4Addr, SocketAddr},
-    path::PathBuf,
-};
 use tracing::{info, trace};
 
 pub mod layer;
@@ -75,36 +70,37 @@ pub async fn main(args: CommandLine) -> Result<()> {
 
     let groups = state.server.groups.clone();
 
+    // Dispatch subcommands
     match args.command {
         Some(Commands::GenerateCert { group, output }) => {
             let g = groups.get_document(&group)?.expect("the group exists");
-            let ca: Document<GroupCaCertificate> = g.get_document("ca")?.expect("the CA exists");
+            let ca: Document<GroupCaCert> = g.get_document("ca")?.expect("the CA exists");
 
             let cert = ca.data.generate_cert(&group)?;
 
             info!(path = %output.display(), "Writing endpoint certificate");
             let mut output = File::create(output)?;
-            output.write_all(cert.cert.as_bytes())?;
-            output.write_all(cert.key.as_bytes())?;
-            return Ok(());
+            output.write_all(&serde_json::to_vec(&cert)?)?;
         }
-        _ => {}
+        // Start listener
+        _ => {
+            let app: Router<()> = Router::new()
+                .fallback(fallback_handler)
+                .nest("/server", ServerLayer::router())
+                .route_layer(axum::middleware::from_fn(
+                    layer::server::group::auth_middleware,
+                ))
+                .with_state(state);
+
+            info!(listener = ?args.server_args.listen, "Starting server instance");
+            axum_server::bind(args.server_args.listen)
+                .acceptor(GroupAcceptor::new(groups)?)
+                .serve(app.into_make_service())
+                .await
+                .context("binding socket")?;
+        }
     }
 
-    let app: Router<()> = Router::new()
-        .fallback(fallback_handler)
-        .nest("/server", ServerLayer::router())
-        .route_layer(axum::middleware::from_fn(
-            layer::server::group::auth_middleware,
-        ))
-        .with_state(state);
-
-    info!(listener = ?args.server_args.listen, "Starting server instance");
-    axum_server::bind(args.server_args.listen)
-        .acceptor(GroupAcceptor::new(groups)?)
-        .serve(app.into_make_service())
-        .await
-        .context("binding socket")?;
     Ok(())
 }
 
