@@ -9,7 +9,7 @@ use bevy_rapier2d::prelude::*;
 use clap::Parser;
 
 use crate::{
-    core::{database::Database, Layer},
+    core::{database::Database, layer::Layer},
     CommandLine,
 };
 

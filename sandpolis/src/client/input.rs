@@ -9,7 +9,7 @@ use bevy::{
 use bevy_egui::EguiContexts;
 use std::ops::Range;
 
-use crate::core::Layer;
+use crate::core::layer::Layer;
 
 use super::{CurrentLayer, ZoomLevel};
 

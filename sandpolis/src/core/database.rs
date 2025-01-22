@@ -27,12 +27,31 @@ impl Database {
         Ok(Self(sled::Config::new().path(path).open()?))
     }
 
+    pub fn get_document<T>(&self, oid: impl TryInto<Oid>) -> Result<Option<Document<T>>>
+    where
+        T: Serialize + DeserializeOwned,
+    {
+        let oid = oid.try_into().map_err(|_| anyhow!("Invalid OID"))?;
+        let db = self.0.open_tree("default")?;
+
+        Ok(if let Some(data) = db.get(&oid)? {
+            Some(Document {
+                db: db.clone(),
+                data: serde_cbor::from_slice::<T>(&data)?,
+                oid,
+            })
+        } else {
+            None
+        })
+    }
+
     pub fn document<T>(&self, oid: impl TryInto<Oid>) -> Result<Document<T>>
     where
         T: Serialize + DeserializeOwned + Default,
     {
         let oid = oid.try_into().map_err(|_| anyhow!("Invalid OID"))?;
         let db = self.0.open_tree("default")?;
+
         Ok(Document {
             data: if let Some(data) = db.get(&oid)? {
                 serde_cbor::from_slice::<T>(&data)?

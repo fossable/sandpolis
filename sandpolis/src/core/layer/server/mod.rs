@@ -11,7 +11,9 @@ use serde::{Deserialize, Serialize};
 pub mod group;
 pub mod user;
 
-/// Indicates what level the server is from.
+/// There can be multiple servers in a Sandpolis network which improves both
+/// scalability and failure tolerance. There are two roles in which a server can
+/// exist: a global level and a local level.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum ServerStratum {
     /// This server maintains data only for the agents that its directly connected
@@ -40,6 +42,11 @@ impl ServerAddress {
             Self::Dns(name) => Ok(name.to_socket_addrs()?.collect()),
             Self::Ip(socket_addr) => Ok(vec![socket_addr.clone()]),
         }
+    }
+
+    /// Official server port: <https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=8768>
+    pub const fn default_port() -> u16 {
+        8768
     }
 }
 

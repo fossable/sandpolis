@@ -21,7 +21,7 @@ use crate::{
                 GetBannerRequest, GetBannerResponse, ServerBanner,
             },
         },
-        InstanceId,
+        ClusterId, InstanceId,
     },
     server::ServerState,
 };
@@ -41,7 +41,7 @@ pub struct ServerLayer {
 }
 
 impl ServerLayer {
-    pub fn new(server_id: InstanceId, document: Document<ServerLayerData>) -> Result<Self> {
+    pub fn new(cluster_id: ClusterId, document: Document<ServerLayerData>) -> Result<Self> {
         // Create a new admin user if one doesn't exist
         let users: Collection<UserData> = document.collection("users")?;
         if users
@@ -83,7 +83,7 @@ impl ServerLayer {
                 },
             )?;
 
-            group.insert_document("ca", GroupCaCert::new(server_id)?)?;
+            group.insert_document("ca", GroupCaCert::new(cluster_id)?)?;
         }
 
         Ok(Self {

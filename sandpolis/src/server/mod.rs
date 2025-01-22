@@ -1,29 +1,8 @@
-//! ## Server Strata
-//!
-//! There can be multiple servers in a Sandpolis network which improves both
-//! scalability and failure tolerance. There are two roles in which a server can
-//! exist: a global level and a local level.
-//!
-//! ### Global Stratum (GS)
-//!
-//! By default, servers exist in the global stratum. Every network must have at
-//! least one GS server and every GS server maintains a persistent connection to
-//! every other GS server (fully-connected graph).
-//!
-//! Every GS server maintains a database containing the entire contents of the
-//! network.
-//!
-//! ### Local Stratum (LS)
-//!
-//! Local stratum servers are used to serve localized regions and can operate
-//! independently if all GS servers becomes unreachable.
-//!
-//! Every LS server maintains a database containing just the contents relevant to it
-//! which is continuously replicated to a GS server's database.
-
+use crate::core::database::Database;
 use crate::core::database::{Collection, Document};
 use crate::core::layer::server::group::GroupCaCert;
-use crate::core::{database::Database, S7S_PORT};
+use crate::core::layer::server::ServerAddress;
+use crate::core::ClusterId;
 use crate::server::layer::server::ServerLayer;
 use crate::{CommandLine, Commands};
 use anyhow::{Context, Result};
@@ -47,7 +26,7 @@ pub mod layer;
 #[derive(Parser, Debug, Clone)]
 pub struct ServerCommandLine {
     /// Server listen address:port
-    #[clap(long, default_value_t = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), S7S_PORT))]
+    #[clap(long, default_value_t = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), ServerAddress::default_port()))]
     pub listen: SocketAddr,
 
     /// Run a local stratum (LS) server instead of global stratum (GS).
@@ -63,8 +42,23 @@ pub struct ServerState {
 
 pub async fn main(args: CommandLine) -> Result<()> {
     let db = Database::new(args.storage.join("server.db"))?;
+
+    // Determine cluster ID
+    let cluster_id: ClusterId = if let Some(document) = db.get_document("/cluster_id")? {
+        // Use saved cluster ID
+        document.data
+    } else {
+        if let Some(servers) = args.server {
+            // TODO start connecting to other servers to get cluster ID?
+            todo!()
+        } else {
+            // Generate a new one
+            ClusterId::default()
+        }
+    };
+
     let state = ServerState {
-        server: Arc::new(ServerLayer::new(db.metadata()?.id, db.document("server")?)?),
+        server: Arc::new(ServerLayer::new(cluster_id, db.document("server")?)?),
         db,
     };
 
@@ -76,7 +70,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
             let g = groups.get_document(&group)?.expect("the group exists");
             let ca: Document<GroupCaCert> = g.get_document("ca")?.expect("the CA exists");
 
-            let cert = ca.data.generate_cert(&group)?;
+            let cert = ca.data.client_cert(&group.parse()?)?;
 
             info!(path = %output.display(), "Writing endpoint certificate");
             let mut output = File::create(output)?;

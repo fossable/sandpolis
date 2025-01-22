@@ -4,7 +4,11 @@ use crate::core::layer::server::group::GroupCaCert;
 use crate::core::layer::server::group::GroupClientCert;
 use crate::core::layer::server::group::GroupData;
 use crate::core::layer::server::group::GroupName;
+use crate::core::layer::server::group::GroupServerCert;
+use crate::core::ClusterId;
 use crate::core::InstanceId;
+use crate::core::InstanceType;
+use anyhow::bail;
 use anyhow::Result;
 use axum::{
     extract::Request, middleware::AddExtension, middleware::Next, response::Response, Extension,
@@ -41,7 +45,7 @@ use x509_parser::prelude::{FromDer, X509Certificate};
 
 impl GroupCaCert {
     /// Generate a new group CA certificate.
-    pub fn new(server_id: InstanceId) -> Result<Self> {
+    pub fn new(cluster_id: ClusterId) -> Result<Self> {
         // Generate key
         let keypair = KeyPair::generate()?;
 
@@ -49,14 +53,13 @@ impl GroupCaCert {
         let mut cert_params = CertificateParams::default();
         cert_params.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
         cert_params.not_before = OffsetDateTime::now_utc();
-        cert_params.subject_alt_names = vec![SanType::DnsName("test".try_into()?)];
+        cert_params.subject_alt_names = vec![SanType::DnsName(cluster_id.to_string().try_into()?)];
+
+        // TODO still needed?
         cert_params.distinguished_name = DistinguishedName::new();
-        // cert_params
-        //     .distinguished_name
-        //     .push(DnType::OrganizationName, "s7s");
         cert_params
             .distinguished_name
-            .push(DnType::CommonName, "test".to_string()); // server_id.to_string());
+            .push(DnType::CommonName, cluster_id.to_string());
 
         // Generate the certificate
         let cert = cert_params.self_signed(&keypair)?;
@@ -77,8 +80,8 @@ impl GroupCaCert {
         .self_signed(&KeyPair::from_pem(&self.key)?)?)
     }
 
-    /// Generate a new certificate signed by the group's CA.
-    pub fn generate_cert(&self, group_name: &str) -> Result<GroupClientCert> {
+    /// Generate a new _clientAuth_ certificate signed by the group's CA.
+    pub fn client_cert(&self, group_name: &GroupName) -> Result<GroupClientCert> {
         // Generate key
         let keypair = KeyPair::generate()?;
 
@@ -98,6 +101,39 @@ impl GroupCaCert {
 
         Ok(GroupClientCert {
             ca: self.ca()?.pem(),
+            cert: cert.pem(),
+            key: keypair.serialize_pem(),
+        })
+    }
+
+    /// Generate a new _serverAuth_ certificate signed by the group's CA.
+    pub fn server_cert(
+        &self,
+        server_id: InstanceId,
+        group_name: &GroupName,
+    ) -> Result<GroupServerCert> {
+        if !server_id.is_type(InstanceType::Server) {
+            bail!("A server ID is required");
+        }
+
+        // Generate key
+        let keypair = KeyPair::generate()?;
+
+        // Generate certificate
+        let mut cert_params = CertificateParams::default();
+        cert_params
+            .extended_key_usages
+            .push(ExtendedKeyUsagePurpose::ServerAuth);
+        cert_params.not_before = OffsetDateTime::now_utc();
+        cert_params.subject_alt_names = vec![SanType::DnsName(
+            format!("{group_name}.{server_id}").try_into()?,
+        )];
+        // TODO not_after of 1 year
+
+        // Generate the certificate signed by the CA
+        let cert = cert_params.signed_by(&keypair, &self.ca()?, &KeyPair::from_pem(&self.key)?)?;
+
+        Ok(GroupServerCert {
             cert: cert.pem(),
             key: keypair.serialize_pem(),
         })

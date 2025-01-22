@@ -3,7 +3,7 @@ use bevy_egui::EguiContexts;
 
 use crate::{
     client::CurrentLayer,
-    core::{InstanceId, Layer},
+    core::{layer::Layer, InstanceId},
 };
 
 pub fn check_layer_active(current_layer: Res<CurrentLayer>) -> bool {
