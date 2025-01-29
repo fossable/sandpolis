@@ -4,8 +4,24 @@ strip = true
 [workspace]
 resolver = "2"
 members = [
-    "sandpolis",
-    "sandpolis-bootagent",
-    "sandpolis-mobile",
-    "sandpolis-macros",
+  "sandpolis",
+  "sandpolis-account",
+  "sandpolis-agent",
+  "sandpolis-alert",
+  "sandpolis-bootagent",
+  "sandpolis-client",
+  "sandpolis-deploy",
+  "sandpolis-desktop",
+  "sandpolis-filesystem",
+  "sandpolis-instance",
+  "sandpolis-location",
+  "sandpolis-macros",
+  "sandpolis-mobile",
+  "sandpolis-package",
+  "sandpolis-probe",
+  "sandpolis-server",
+  "sandpolis-shell",
+  "sandpolis-snapshot",
+  "sandpolis-sysinfo",
+  "sandpolis-tunnel",
 ]

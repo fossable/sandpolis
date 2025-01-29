@@ -1,0 +1,11 @@
+[package]
+name = "sandpolis-alert"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[features]
+server = []
+agent = []
+client = []

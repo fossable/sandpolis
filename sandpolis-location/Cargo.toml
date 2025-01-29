@@ -1,0 +1,10 @@
+[package]
+name = "sandpolis-location"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[features]
+server = []
+client = []

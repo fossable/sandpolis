@@ -1,0 +1,11 @@
+[package]
+name = "sandpolis-filesystem"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fuser = { version = "0.15.1", optional = true, features = ["serializable"] }
+
+[features]
+agent = []
+client = ["dep:fuser"]

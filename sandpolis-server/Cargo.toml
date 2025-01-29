@@ -1,0 +1,11 @@
+[package]
+name = "sandpolis-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[features]
+server = []
+client = []
+agent = []
