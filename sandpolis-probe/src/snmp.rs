@@ -1,9 +1,35 @@
 
-// Request an SNMP walk operation be executed
+/// Request an SNMP walk operation be executed
 pub struct SnmpWalkRequest {
 
     /// OID to retrieve
     pub oid: String,
+}
+
+pub enum SnmpAuth {
+    Md5,
+    Sha1,
+}
+
+pub enum SnmpPrivacy {
+    Aes,
+    Des,
+}
+
+pub enum SnmpSecurityLevel {
+    AuthPriv,
+    AuthNoPriv,
+}
+
+pub enum SnmpCredentials {
+    V3 {
+        pub username: String,
+        pub security: SnmpSecurityLevel,
+    },
+    V2c,
+    V1 {
+        community: String,
+    },
 }
 
 // Response containing the result of a walk operation

@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = { workspace = true }
 tokio-cron-scheduler = { version = "0.13.0", optional = true }
 
 [features]

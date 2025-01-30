@@ -13,6 +13,7 @@ members = [
   "sandpolis-deploy",
   "sandpolis-desktop",
   "sandpolis-filesystem",
+  "sandpolis-group",
   "sandpolis-instance",
   "sandpolis-location",
   "sandpolis-macros",
@@ -24,4 +25,18 @@ members = [
   "sandpolis-snapshot",
   "sandpolis-sysinfo",
   "sandpolis-tunnel",
+  "sandpolis-user",
 ]
+
+[workspace.dependencies]
+anyhow = { version = "1.0.76", default-features = false }
+rand = { version = "0.8.5", default-features = false }
+regex = { version = "1.11.1", default-features = false }
+serde = { version = "1.0.203", default-features = false, features = ["derive"] }
+strum = { version = "0.26.3", default-features = false, features = ["derive"] }
+tracing = "0.1.40"
+url = { version = "2.5.4", default-features = false, features = ["serde"] }
+uuid = { version = "1.10.0", default-features = false, features = [
+  "v7",
+  "serde",
+] }

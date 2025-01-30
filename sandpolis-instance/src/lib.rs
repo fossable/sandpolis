@@ -7,8 +7,6 @@ use uuid::Uuid;
 
 pub mod database;
 pub mod format;
-pub mod layer;
-pub mod random;
 
 /// All instances are identified by a unique 128-bit string that's generated on
 /// first start. This identifier is reused for all subsequent runs.
@@ -23,8 +21,8 @@ impl InstanceId {
         // makes it easier to tell two UUIDs apart).
         let mut uuid = Uuid::now_v7().to_u128_le();
 
-        // Wipe out last byte
-        uuid &= 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00;
+        // Wipe out last nibble
+        uuid &= 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0;
 
         for instance_type in instance_types {
             uuid |= instance_type.mask() as u128;
@@ -57,19 +55,13 @@ impl Display for InstanceId {
 /// All possible instance types.
 #[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug)]
 pub enum InstanceType {
-    /// A headless application that provides read/write access to a host
+    /// Manages a host
     Agent,
 
-    /// A UEFI agent that runs in a pre-boot environment
-    BootAgent,
-
-    /// A UI application used for managing agents and servers
+    /// User interface for managing agents and servers
     Client,
 
-    /// A headless application that installs or updates an agent
-    Deployer,
-
-    /// A headless application that coordinates interaction among instances
+    /// Coordinates interaction among instances
     Server,
 }
 
@@ -78,10 +70,8 @@ impl InstanceType {
     const fn mask(&self) -> u8 {
         match self {
             InstanceType::Agent => 0b00000001,
-            InstanceType::BootAgent => 0b00000010,
-            InstanceType::Client => 0b00000100,
-            InstanceType::Deployer => 0b00001000,
-            InstanceType::Server => 0b00100000,
+            InstanceType::Client => 0b00000010,
+            InstanceType::Server => 0b00000100,
         }
     }
 }

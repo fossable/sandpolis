@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = { workspace = true }
 # TODO needs to be published
 scrap = { git = "https://github.com/rustdesk/rustdesk", optional = true }
 enigo = { version = "0.3.0", optional = true }
