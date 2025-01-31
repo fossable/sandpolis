@@ -1,9 +1,9 @@
-use crate::core::InstanceId;
 use anyhow::Result;
 use chrono::{serde::ts_seconds, DateTime, NaiveDate, Utc};
 use futures::StreamExt;
 use reqwest::{Certificate, ClientBuilder, Identity};
 use reqwest_websocket::RequestBuilderExt;
+use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::ts_seconds_option;
 use std::{cmp::min, collections::HashMap, net::SocketAddr, sync::Arc, time::Duration};

@@ -135,9 +135,8 @@ pub enum UpdateUserResponse {
     NotFound,
 }
 
-/// To avoid sending plaintext passwords around, this password is hashed and
-/// salted with the cluster ID. The server will also hash and salt this value.
-#[cfg(any(feature = "server", feature = "client"))]
+/// This password is "pre-hashed" and salted with the cluster ID to avoid _hash shucking_
+/// attacks. The server will hash and salt this value with a random value.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LoginPassword(pub String);
 
@@ -166,7 +165,7 @@ pub struct LoginRequest {
     /// User to login as
     pub username: String,
 
-    /// Password as unsalted hash
+    /// Pre-hashed password
     pub password: LoginPassword,
 
     /// Time-based One-Time Password token

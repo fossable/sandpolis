@@ -72,9 +72,19 @@
 
 use uefi::prelude::*;
 
+// TODO also invoke embassy main somehow
 #[entry]
-fn main(_handle: Handle, system_table: SystemTable<Boot>) -> Status {
+fn main() -> Status {
     uefi::helpers::init().unwrap();
 
     Status::SUCCESS
+}
+
+/// Use Rng protocol for getrandom.
+#[no_mangle]
+unsafe extern "Rust" fn __getrandom_v03_custom(
+    dest: *mut u8,
+    len: usize,
+) -> Result<(), getrandom::Error> {
+    todo!()
 }

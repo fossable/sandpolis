@@ -1,17 +1,12 @@
 [package]
-name = "sandpolis-instance"
+name = "sandpolis-database"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
-os_info = "3.8.2"
+serde_cbor = "0.11.2"
 serde = { workspace = true }
-strum = { workspace = true }
+sled = { version = "0.34.7" }
 tracing = { workspace = true }
-uuid = { workspace = true }
-
-[features]
-agent = []
-client = []
-server = []
+sandpolis-instance = { path = "../sandpolis-instance" }

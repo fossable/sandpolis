@@ -29,7 +29,6 @@ dialoguer = { version = "0.11.0" }
 futures = "0.3.30"
 futures-util = "0.3.31"
 once_cell = "1.20.2"
-pem = "3.0.4"
 reqwest = { version = "0.12.5", default-features = false, features = [
   "stream",
   "cookies",
@@ -46,7 +45,6 @@ serde_with = { version = "3.12.0", features = ["chrono"] }
 tokio = { version = "1.42.0", features = ["full"] }
 time = { version = "0.3.37" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-validator = { version = "0.19", features = ["derive"] }
 x509-parser = { version = "0.16.0" }
 
 # Server dependencies

@@ -4,6 +4,25 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-uefi = { version = "0.29.0", features = ["panic_handler"] }
-smoltcp = { version = "0.11.0", default-features = false, features = ["log", "alloc", "proto-ipv4"] }
-# ring = "0.17.8"
+uefi = { version = "0.31.0", features = ["panic_handler"] }
+embassy-executor = { version = "0.7.0", features = [
+  "task-arena-size-32768",
+  "arch-spin",
+  "executor-thread",
+  "defmt",
+] }
+embassy-time = { version = "0.4.0", features = [
+  "defmt",
+  "defmt-timestamp-uptime",
+  "tick-hz-32_768",
+] }
+embassy-net = { version = "0.6.0", features = [
+  "defmt",
+  "tcp",
+  "dhcpv4",
+  "medium-ethernet",
+  "proto-ipv4",
+  "proto-ipv6",
+  "dns",
+] }
+sandpolis-snapshot = { path = "../sandpolis-snapshot" }

@@ -5,12 +5,14 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
+pem = { workspace = true }
 rcgen = { version = "0.13.1", optional = true, features = [
   "crypto",
   "pem",
   "x509-parser",
 ] }
 rustls-pki-types = { version = "1.10.1", optional = true }
+validator = { workspace = true }
 
 [features]
 server = ["dep:rcgen", "rustls-pki-types"]

@@ -6,7 +6,7 @@ use bevy_rapier2d::{
 };
 use bevy_svg::prelude::Svg2d;
 
-use crate::core::InstanceId;
+use sandpolis_instance::InstanceId;
 
 #[derive(Bundle)]
 pub struct Node {

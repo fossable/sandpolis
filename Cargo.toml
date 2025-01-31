@@ -10,14 +10,17 @@ members = [
   "sandpolis-alert",
   "sandpolis-bootagent",
   "sandpolis-client",
+  "sandpolis-database",
   "sandpolis-deploy",
   "sandpolis-desktop",
   "sandpolis-filesystem",
   "sandpolis-group",
   "sandpolis-instance",
   "sandpolis-location",
+  "sandpolis-logs",
   "sandpolis-macros",
   "sandpolis-mobile",
+  "sandpolis-network",
   "sandpolis-package",
   "sandpolis-probe",
   "sandpolis-server",
@@ -30,6 +33,7 @@ members = [
 
 [workspace.dependencies]
 anyhow = { version = "1.0.76", default-features = false }
+pem = { version = "3.0.4", default-features = false }
 rand = { version = "0.8.5", default-features = false }
 regex = { version = "1.11.1", default-features = false }
 serde = { version = "1.0.203", default-features = false, features = ["derive"] }
@@ -40,3 +44,4 @@ uuid = { version = "1.10.0", default-features = false, features = [
   "v7",
   "serde",
 ] }
+validator = { version = "0.19", features = ["derive"] }

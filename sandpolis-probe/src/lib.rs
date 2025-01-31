@@ -1,6 +1,6 @@
 //! This layer extends management functionality out to agent-less "probe" devices.
 
-use crate::core::InstanceId;
+use sandpolis_instance::InstanceId;
 
 // An enumeration of all available communicator types.
 pub enum ProbeType {
