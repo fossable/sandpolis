@@ -8,10 +8,12 @@ use std::{net::SocketAddr, ops::Deref, str::FromStr};
 
 use anyhow::{bail, Result};
 use regex::Regex;
+use sandpolis_instance::{ClusterId, InstanceId, InstanceType};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationErrors};
 
-use crate::core::{ClusterId, InstanceId, InstanceType};
+#[cfg(feature = "client")]
+pub mod client;
 
 #[derive(Serialize, Deserialize, Validate, Debug)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
@@ -139,25 +141,6 @@ pub enum UpdateUserResponse {
 /// attacks. The server will hash and salt this value with a random value.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LoginPassword(pub String);
-
-impl LoginPassword {
-    pub fn new(cluster_id: ClusterId, plaintext: &str) -> Result<Self> {
-        use argon2::{
-            password_hash::{
-                rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
-            },
-            Argon2,
-        };
-
-        // Ok(Self(
-        //     Argon2::default()
-        //         .hash_password(plaintext.as_bytes(), cluster_id.try_into()?)
-        //         .map_err(|err| todo!())?
-        //         .to_string(),
-        // ))
-        todo!()
-    }
-}
 
 /// Request a login from the server
 #[derive(Serialize, Deserialize, Debug, Clone)]

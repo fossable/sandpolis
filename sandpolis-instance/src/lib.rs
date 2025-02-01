@@ -5,7 +5,6 @@ use std::{fmt::Display, ops::Deref, path::PathBuf, str::FromStr};
 use strum::{EnumIter, IntoEnumIterator};
 use uuid::Uuid;
 
-pub mod database;
 pub mod format;
 
 /// All instances are identified by a unique 128-bit string that's generated on

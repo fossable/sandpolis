@@ -67,17 +67,21 @@
 //!  └────────────────────────────────────────────────┘
 //! ```
 
-#![no_main]
-#![no_std]
-
-use uefi::prelude::*;
+#![cfg_attr(target_os = "none", no_main)]
+#![cfg_attr(target_os = "none", no_str)]
 
 // TODO also invoke embassy main somehow
+#[cfg(target_os = "none")]
 #[entry]
-fn main() -> Status {
+fn main() -> uefi::prelude::Status {
     uefi::helpers::init().unwrap();
 
-    Status::SUCCESS
+    uefi::prelude::Status::SUCCESS
+}
+
+#[cfg(not(target_os = "none"))]
+fn main() {
+    panic!();
 }
 
 /// Use Rng protocol for getrandom.

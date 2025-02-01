@@ -3,9 +3,8 @@ use std::{collections::HashMap, path::PathBuf};
 use sandpolis_macros::{Delta, StreamEvent};
 use serde::{Deserialize, Serialize};
 
-pub struct ShellLayer {
-    tree: sled::Tree,
-}
+#[cfg(feature = "agent")]
+pub mod agent;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum ShellType {
@@ -132,7 +131,7 @@ pub struct ShellListResponse {
     pub shells: Vec<DiscoveredShell>,
 }
 
-// Start a new shell session
+/// Start a new shell session
 #[derive(Serialize, Deserialize)]
 pub struct ShellSessionRequest {
     /// Path to the shell executable
@@ -168,7 +167,7 @@ pub struct ShellSessionInputEvent {
     pub cols: Option<u32>,
 }
 
-/// Event containing standard-output and standard-error
+/// Event containing standard-output and standard-error.
 #[derive(Serialize, Deserialize, Default, StreamEvent)]
 pub struct ShellSessionOutputEvent {
     pub stdout: Vec<u8>,

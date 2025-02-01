@@ -20,16 +20,11 @@ use tokio::{
 };
 use tracing::debug;
 
-use crate::{
-    agent::AgentState,
-    core::{
-        database::Document,
-        layer::shell::{
-            ShellExecuteRequest, ShellExecuteResponse, ShellSessionData, ShellSessionInputEvent,
-            ShellSessionOutputEvent, ShellSessionRequest,
-        },
-    },
+use super::{
+    ShellExecuteRequest, ShellExecuteResponse, ShellSessionData, ShellSessionInputEvent,
+    ShellSessionOutputEvent, ShellSessionRequest,
 };
+use sandpolis_database::Document;
 
 pub struct ShellSession {
     // pub id: StreamId,

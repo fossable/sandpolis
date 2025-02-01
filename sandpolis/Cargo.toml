@@ -21,42 +21,12 @@ built = { version = "0.7", features = [
 tempfile = "3.15.0"
 
 [dependencies]
-anyhow = { workspace = true, features = ["std"] }
-aws-lc-rs = "1.12.1"
-chrono = { version = "0.4.39", features = ["serde"] }
+anyhow = { workspace = true }
 clap = { version = "4.4.7", features = ["derive", "string"] }
-dialoguer = { version = "0.11.0" }
-futures = "0.3.30"
-futures-util = "0.3.31"
-once_cell = "1.20.2"
-reqwest = { version = "0.12.5", default-features = false, features = [
-  "stream",
-  "cookies",
-  "json",
-  "rustls-tls",
-  "charset",
-] }
-reqwest-websocket = "0.4.4"
-rustls = "0.23.21"
 sandpolis-macros = { path = "../sandpolis-macros" }
-serde_bytes = "0.11.15"
-serde_json = "1.0.134"
-serde_with = { version = "3.12.0", features = ["chrono"] }
-tokio = { version = "1.42.0", features = ["full"] }
-time = { version = "0.3.37" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-x509-parser = { version = "0.16.0" }
 
 # Server dependencies
-axum-macros = { version = "0.5.0", optional = true }
-axum-extra = { version = "0.10.0", optional = true, features = [
-  "typed-header",
-] }
-axum-server = { version = "0.7.1", features = ["tls-rustls"], optional = true }
-axum = { version = "0.8.0", optional = true, features = ["ws", "json"] }
-tower = { version = "0.5.2", optional = true }
-ring = { version = "0.17.8", optional = true }
-tokio-rustls = { version = "0.26.0", optional = true }
 openraft = { git = "https://github.com/databendlabs/openraft", optional = true, features = [
   "serde",
   "type-alias",
@@ -64,17 +34,8 @@ openraft = { git = "https://github.com/databendlabs/openraft", optional = true, 
 
 [features]
 # Instances
-server = [
-  "dep:axum",
-  "dep:axum-server",
-  "dep:axum-macros",
-  "dep:axum-extra",
-  "dep:tower",
-  "dep:tokio-rustls",
-  "dep:ring",
-  "dep:openraft",
-]
-agent = ["dep:axum", "dep:axum-server", "dep:axum-macros"]
+server = ["dep:openraft"]
+agent = []
 client = []
 
 # Layers

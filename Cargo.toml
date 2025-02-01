@@ -32,16 +32,39 @@ members = [
 ]
 
 [workspace.dependencies]
-anyhow = { version = "1.0.76", default-features = false }
-pem = { version = "3.0.4", default-features = false }
-rand = { version = "0.8.5", default-features = false }
-regex = { version = "1.11.1", default-features = false }
-serde = { version = "1.0.203", default-features = false, features = ["derive"] }
-strum = { version = "0.26.3", default-features = false, features = ["derive"] }
+anyhow = "1.0.76"
+aws-lc-rs = "1.12.1"
+axum-extra = { version = "0.10.0", features = ["typed-header"] }
+axum-macros = "0.5.0"
+axum-server = { version = "0.7.1", features = ["tls-rustls"] }
+axum = { version = "0.8.0", features = ["ws", "json"] }
+chrono = { version = "0.4.39", features = ["serde"] }
+futures = "0.3.30"
+futures-util = "0.3.31"
+once_cell = "1.20.2"
+pem = "3.0.4"
+rand = "0.8.5"
+regex = "1.11.1"
+ring = "0.17.8"
+rustls = "0.23.21"
+serde_bytes = "0.11.15"
+serde_json = "1.0.134"
+serde = { version = "1.0.203", features = ["derive"] }
+serde_with = { version = "3.12.0", features = ["chrono"] }
+strum = { version = "0.26.3", features = ["derive"] }
+time = { version = "0.3.37" }
+tokio-rustls = "0.26.0"
+tokio = { version = "1.42.0", features = ["full"] }
+tower = "0.5.2"
 tracing = "0.1.40"
-url = { version = "2.5.4", default-features = false, features = ["serde"] }
-uuid = { version = "1.10.0", default-features = false, features = [
-  "v7",
-  "serde",
-] }
+url = { version = "2.5.4", features = ["serde"] }
+uuid = { version = "1.10.0", features = ["v7", "serde"] }
 validator = { version = "0.19", features = ["derive"] }
+reqwest = { version = "0.12.5", default-features = false, features = [
+  "stream",
+  "cookies",
+  "json",
+  "rustls-tls",
+  "charset",
+] }
+reqwest-websocket = "0.4.4"

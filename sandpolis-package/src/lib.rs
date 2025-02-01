@@ -11,15 +11,9 @@
 
 use serde::{Deserialize, Serialize};
 
-pub struct PackageLayer {
-    tree: sled::Tree,
-}
+pub fn pacman() {}
 
-impl PackageLayer {
-    pub fn pacman() {}
-
-    // pub fn packages_iter() -> impl Iterator<Item = Package> {}
-}
+// pub fn packages_iter() -> impl Iterator<Item = Package> {}
 
 #[derive(Serialize, Deserialize)]
 pub enum PackageManager {

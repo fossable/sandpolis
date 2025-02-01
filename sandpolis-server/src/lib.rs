@@ -8,9 +8,6 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-pub mod group;
-pub mod user;
-
 /// There can be multiple servers in a Sandpolis network which improves both
 /// scalability and failure tolerance. There are two roles in which a server can
 /// exist: a global level and a local level.

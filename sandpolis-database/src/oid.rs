@@ -1,6 +1,11 @@
+use anyhow::{anyhow, Result};
+use sled::IVec;
+use std::fmt::Display;
+use std::fmt::Write;
+
 /// Locates a `Document` or `Collection` in the instance state tree.
 #[derive(Clone)]
-pub struct Oid(Vec<u8>);
+pub struct Oid(pub Vec<u8>);
 
 impl Display for Oid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

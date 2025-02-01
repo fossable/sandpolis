@@ -5,6 +5,13 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+tokio = { workspace = true, optional = true }
+futures = { workspace = true, optional = true }
+axum = { workspace = true, optional = true }
+sandpolis-macros = { path = "../sandpolis-macros" }
+sandpolis-database = { path = "../sandpolis-database" }
 
 [features]
-agent = []
+agent = ["dep:tokio", "dep:axum", "dep:futures"]
