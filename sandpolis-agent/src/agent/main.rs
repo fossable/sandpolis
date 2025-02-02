@@ -154,22 +154,6 @@ use crate::CommandLine;
 
 pub mod layer;
 
-#[derive(Parser, Debug, Clone, Default)]
-pub struct AgentCommandLine {
-    /// Prohibits all write operations
-    #[clap(long, default_value_t = false)]
-    pub read_only: bool,
-
-    /// Instead of maintaining a persistent connection, poll the server on this cron expression
-    pub poll: Option<String>,
-
-    /// Agent socket
-    #[clap(long)]
-    // TODO enforce .sock
-    //, value_parser = parse_storage_dir, default_value = default_storage_dir().into_os_string())]
-    pub agent_socket: PathBuf,
-}
-
 #[derive(Clone, FromRef)]
 pub struct AgentState {
     pub db: Database,
@@ -238,62 +222,6 @@ pub async fn main(args: CommandLine) -> Result<()> {
             None => bail!("No certificate given"),
         }
     };
-
-    // Dispatch commands
-    match args.command {
-        _ => {
-            let uds = UnixListener::bind(&args.agent_args.agent_socket)?;
-            tokio::spawn(async move {
-                let app = Router::new().nest("/layer/agent", layer::agent::router());
-
-                #[cfg(feature = "layer-shell")]
-                let app = app.nest("/layer/shell", layer::shell::router());
-
-                #[cfg(feature = "layer-package")]
-                let app = app.nest("/layer/package", layer::package::router());
-
-                #[cfg(feature = "layer-desktop")]
-                let app = app.nest("/layer/desktop", layer::desktop::router());
-
-                axum::serve(uds, app.with_state(state).into_make_service())
-                    .await
-                    .unwrap();
-            });
-
-            let mut servers = if let Some(servers) = args.server {
-                servers
-            } else {
-                Vec::new()
-            };
-
-            // If a server is running in the same process, add it with highest priority
-            #[cfg(feature = "server")]
-            {
-                servers.insert(
-                    0,
-                    ServerAddress::Ip(args.server_args.listen),
-                    // .to_string()
-                    // .replace("0.0.0.0", "127.0.0.1"),
-                );
-            }
-
-            if servers.len() == 0 {
-                bail!("No server defined");
-            }
-
-            ServerConnection::new(
-                cert,
-                servers,
-                ConnectionCooldown {
-                    initial: Duration::from_millis(4000),
-                    constant: None,
-                    limit: None,
-                },
-            )?
-            .run()
-            .await;
-        }
-    }
 
     return Ok(());
 }

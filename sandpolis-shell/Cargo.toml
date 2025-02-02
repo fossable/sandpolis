@@ -10,8 +10,17 @@ serde = { workspace = true }
 tokio = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 axum = { workspace = true, optional = true }
+axum-macros = { workspace = true, optional = true }
 sandpolis-macros = { path = "../sandpolis-macros" }
+sandpolis-network = { path = "../sandpolis-network" }
 sandpolis-database = { path = "../sandpolis-database" }
+sandpolis-agent = { path = "../sandpolis-agent", optional = true }
 
 [features]
-agent = ["dep:tokio", "dep:axum", "dep:futures"]
+agent = [
+  "dep:tokio",
+  "dep:axum",
+  "dep:axum-macros",
+  "dep:futures",
+  "dep:sandpolis-agent",
+]

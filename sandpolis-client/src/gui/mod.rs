@@ -28,19 +28,6 @@ pub struct CurrentLayer(Layer);
 #[derive(Resource, Deref, DerefMut)]
 pub struct ZoomLevel(f32);
 
-#[derive(Parser, Debug, Clone, Default)]
-pub struct ClientCommandLine {
-    /// Run client graphical UI (even if invoked from a terminal)
-    #[cfg(feature = "client-gui")]
-    #[clap(long, conflicts_with = "tui")]
-    pub gui: bool,
-
-    /// Run client terminal UI
-    #[cfg(feature = "client-tui")]
-    #[clap(long, conflicts_with = "gui")]
-    pub tui: bool,
-}
-
 /// Initialize and start rendering the UI.
 pub async fn main(args: CommandLine) -> Result<()> {
     let mut app = App::new();

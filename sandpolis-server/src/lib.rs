@@ -8,6 +8,9 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "server")]
+pub mod server;
+
 /// Response bearing the server's banner
 #[cfg(any(feature = "server", feature = "client"))]
 #[derive(Serialize, Deserialize, Clone, Default)]

@@ -1,7 +1,9 @@
-use sandpolis_macros::Delta;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize, Deserialize, Default, Debug, Delta)]
+#[cfg(feature = "agent")]
+pub mod agent;
+
+#[derive(Clone, Serialize, Deserialize, Default, Debug)]
 pub struct MemoryData {
     /// The amount of physical RAM in bytes
     pub total: u64,

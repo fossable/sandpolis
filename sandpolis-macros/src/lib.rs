@@ -13,7 +13,7 @@ pub fn derive_event(input: TokenStream) -> TokenStream {
         #[cfg(any(feature = "server", feature = "agent"))]
         impl Into<axum::extract::ws::Message> for #name {
             fn into(self) -> axum::extract::ws::Message {
-                axum::extract::ws::Message::Binary(axum::body::Bytes::from(serde_cbor::to_vec(&self).unwrap()))
+                sandpolis_network::stream::event_to_message(&self)
             }
         }
     };

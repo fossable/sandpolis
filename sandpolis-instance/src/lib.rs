@@ -45,6 +45,12 @@ fn format_uuid(src: u128) -> [u8; 36] {
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ClusterId(u128);
 
+impl ClusterId {
+    pub fn as_bytes(&self) -> [u8; 16] {
+        self.0.to_be_bytes()
+    }
+}
+
 impl Display for ClusterId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(std::str::from_utf8(&format_uuid(self.0)).unwrap())

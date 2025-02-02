@@ -35,7 +35,15 @@
 //! Direct streams cannot be multicast.
 
 use anyhow::Result;
+use axum::extract::ws::Message;
 use serde::{Deserialize, Serialize};
+
+pub fn event_to_message<T>(event: &T) -> Message
+where
+    T: Serialize,
+{
+    Message::Binary(axum::body::Bytes::from(serde_cbor::to_vec(&event).unwrap()))
+}
 
 pub enum DataStreamDirection {
     Upstream,

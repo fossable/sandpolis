@@ -32,6 +32,9 @@ sandpolis-server = { path = "../sandpolis-server", optional = true, features = [
 sandpolis-agent = { path = "../sandpolis-agent", optional = true, features = [
   "agent",
 ] }
+sandpolis-client = { path = "../sandpolis-client", optional = true, features = [
+  "client",
+] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 
 # Server dependencies

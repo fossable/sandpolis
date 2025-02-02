@@ -26,29 +26,22 @@ use totp_rs::{Secret, TOTP};
 use tracing::{debug, error, info};
 use validator::Validate;
 
-use crate::core::{
-    database::Document,
-    layer::{
-        network::RequestResult,
-        server::{
-            group::GroupName,
-            user::{
-                CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse,
-                LoginRequest, LoginResponse, UserData,
-            },
-        },
-    },
+use super::{
+    CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
+    LoginResponse, UserData,
 };
+use crate::core::layer::{network::RequestResult, server::group::GroupName};
+use sandpolis_database::{Database, Document};
+use sandpolis_server::server::ServerState;
 
-use super::ServerState;
-
+#[derive(Clone)]
 pub struct UserState {
     users: Collection<UserData>,
 }
 
 impl UserState {
-    pub fn new(users: Collection<UserData>) -> Result<Self> {
-        let groups = db.collection("/server/users")?;
+    pub fn new(db: Database) -> Result<Self> {
+        let users = db.collection("/server/users")?;
 
         // Create an admin user if one doesn't exist already
         if users

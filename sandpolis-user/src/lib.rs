@@ -18,7 +18,7 @@ pub mod client;
 #[cfg(feature = "server")]
 pub mod server;
 
-#[derive(Serialize, Deserialize, Validate, Debug)]
+#[derive(Serialize, Deserialize, Validate, Debug, Clone)]
 pub struct UserData {
     pub username: UserName,
 
@@ -36,7 +36,7 @@ pub struct UserData {
 }
 
 /// A user's username is forever unchangable.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserName(String);
 
 impl Deref for UserName {

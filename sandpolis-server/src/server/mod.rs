@@ -27,9 +27,19 @@ use crate::{
 };
 use anyhow::Result;
 
-pub mod group;
 pub mod raft;
-pub mod user;
+
+#[derive(Clone, FromRef)]
+pub struct ServerState {
+    pub db: Database,
+    pub group: GroupState,
+    pub user: UserState,
+    pub banner: Document<ServerBanner>,
+}
+
+impl ServerState {
+    pub fn new(db: Database) -> Result<Self> {}
+}
 
 impl ServerLayer {
     pub fn new(cluster_id: ClusterId, document: Document<ServerLayerData>) -> Result<Self> {

@@ -40,6 +40,7 @@ use tracing::debug;
 use validator::Validate;
 use x509_parser::prelude::{FromDer, X509Certificate};
 
+#[derive(Clone)]
 pub struct GroupState {
     groups: Collection<GroupData>,
 }

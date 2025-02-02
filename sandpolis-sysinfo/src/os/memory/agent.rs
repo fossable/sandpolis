@@ -1,7 +1,7 @@
-use crate::agent::layer::agent::Collector;
-use crate::core::database::Document;
-use crate::core::layer::sysinfo::os::memory::{MemoryData, MemoryDataDelta};
+use super::MemoryData;
 use anyhow::Result;
+use sandpolis_agent::Collector;
+use sandpolis_database::Document;
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 use tracing::trace;
 
