@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::{bail, Result};
 use axum::Router;
 
-use crate::{agent::AgentState, core::layer::package::PackageData};
+pub struct PackageState {}
 
 pub trait PackageManager {
     /// Get the location of the package manager's binary on the filesystem.

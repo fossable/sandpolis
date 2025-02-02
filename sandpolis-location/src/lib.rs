@@ -1,3 +1,6 @@
+#[cfg(feature = "server")]
+pub mod server;
+
 pub struct LocationData {
     /// The AS name
     pub as_name: String,

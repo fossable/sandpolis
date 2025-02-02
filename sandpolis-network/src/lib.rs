@@ -21,7 +21,34 @@ pub struct NetworkState {
     connection: ServerConnection,
 }
 
-struct PingRequest;
+impl NetworkState {
+    /// Send a message to the given instance and measure the time/path it took.
+    pub async fn ping(&self, id: InstanceId) -> Result<PingResponse> {
+        let response: PingResponse = self
+            .connection
+            .client
+            .get("/ping")
+            .json(&PingRequest { id })
+            .send()
+            .await?
+            .json()?;
+    }
+
+    /// Request the server to coordinate a direct connection to the given agent.
+    pub async fn direct_connect(&self, agent: InstanceId, port: Option<u16>) {}
+}
+
+#[debug_handler]
+async fn ping(
+    state: State<NetworkState>,
+    extract::Json(_): extract::Json<PingRequest>,
+) -> RequestResult<PingResponse> {
+    todo!()
+}
+
+struct PingRequest {
+    id: InstanceId,
+}
 
 pub struct PingResponse {
     pub time: u64,
@@ -32,14 +59,6 @@ pub struct PingResponse {
 /// Convenience type to be used as return of request handler.
 #[cfg(any(feature = "server", feature = "agent"))]
 pub type RequestResult<T> = Result<axum::Json<T>, axum::Json<T>>;
-
-/// Send a message to the given instance and measure the time/path it took.
-pub async fn ping(id: InstanceId) -> Result<PingResponse> {
-    todo!()
-}
-
-/// Request the server to coordinate a direct connection to the given agent.
-pub async fn direct_connect(agent: InstanceId, port: Option<u16>) {}
 
 #[derive(Serialize, Deserialize)]
 pub struct ConnectionData {
@@ -154,7 +173,7 @@ pub struct ServerConnection {
     group: GroupName,
     iterations: u64, // TODO Data?
     cooldown: ConnectionCooldown,
-    client: reqwest::Client,
+    pub client: reqwest::Client,
 }
 
 impl ServerConnection {

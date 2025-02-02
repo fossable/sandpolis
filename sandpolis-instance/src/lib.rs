@@ -6,7 +6,65 @@ use strum::{EnumIter, IntoEnumIterator};
 use uuid::Uuid;
 
 pub mod cli;
-pub mod format;
+
+/// Format a UUID in the usual "lowercase hex encoded with hyphens" style.
+#[inline]
+fn format_uuid(src: u128) -> [u8; 36] {
+    let src: [u8; 16] = src.to_be_bytes();
+    let lut = [
+        b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'a', b'b', b'c', b'd', b'e',
+        b'f',
+    ];
+
+    let groups = [(0, 8), (9, 13), (14, 18), (19, 23), (24, 36)];
+    let mut dst = [0; 36];
+
+    let mut group_idx = 0;
+    let mut i = 0;
+    while group_idx < 5 {
+        let (start, end) = groups[group_idx];
+        let mut j = start;
+        while j < end {
+            let x = src[i];
+            i += 1;
+
+            dst[j] = lut[(x >> 4) as usize];
+            dst[j + 1] = lut[(x & 0x0f) as usize];
+            j += 2;
+        }
+        if group_idx < 4 {
+            dst[end] = b'-';
+        }
+        group_idx += 1;
+    }
+    dst
+}
+
+/// Shared ID across the entire cluster. This never changes throughout the cluster's
+/// lifetime.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ClusterId(u128);
+
+impl Display for ClusterId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(std::str::from_utf8(&format_uuid(self.0)).unwrap())
+    }
+}
+
+impl Default for ClusterId {
+    fn default() -> Self {
+        Self(Uuid::now_v7().to_u128_le())
+    }
+}
+
+#[cfg(test)]
+mod test_cluster_id {
+    use super::*;
+    #[test]
+    fn test_display() {
+        assert_eq!(ClusterId::default().to_string().len(), 36);
+    }
+}
 
 /// All instances are identified by a unique 128-bit string that's generated on
 /// first start. This identifier is reused for all subsequent runs.
@@ -47,12 +105,14 @@ impl InstanceId {
 
 impl Display for InstanceId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(std::str::from_utf8(&format::uuid(self.0)).unwrap())
+        f.write_str(std::str::from_utf8(&format_uuid(self.0)).unwrap())
     }
 }
 
 /// All possible instance types.
-#[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug)]
+#[derive(
+    Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
 pub enum InstanceType {
     /// Manages a host
     Agent,
@@ -75,20 +135,27 @@ impl InstanceType {
     }
 }
 
-/// Shared ID across the entire cluster. This never changes throughout the cluster's
-/// lifetime.
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ClusterId(u128);
-
-impl Display for ClusterId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(std::str::from_utf8(&format::uuid(self.0)).unwrap())
+#[cfg(test)]
+mod test_instance_id {
+    use super::*;
+    #[test]
+    fn test_display() {
+        assert_eq!(
+            InstanceId::new(&[InstanceType::Agent]).to_string().len(),
+            36
+        );
     }
-}
 
-impl Default for ClusterId {
-    fn default() -> Self {
-        Self(Uuid::now_v7().to_u128_le())
+    #[test]
+    fn test_types() {
+        assert!(InstanceId::new(&[
+            InstanceType::Agent,
+            InstanceType::Server,
+            InstanceType::Client
+        ])
+        .is_type(InstanceType::Agent));
+        assert!(InstanceId::new(&[InstanceType::Agent]).is_type(InstanceType::Agent));
+        assert!(!InstanceId::new(&[InstanceType::Server]).is_type(InstanceType::Agent));
     }
 }
 
