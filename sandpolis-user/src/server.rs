@@ -12,6 +12,7 @@ use axum_macros::debug_handler;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use rand::Rng;
 use ring::pbkdf2;
+use sandpolis_database::Collection;
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::{Debug, Display},
@@ -40,6 +41,41 @@ use crate::core::{
 };
 
 use super::ServerState;
+
+pub struct UserState {
+    users: Collection<UserData>,
+}
+
+impl UserState {
+    pub fn new(users: Collection<UserData>) -> Result<Self> {
+        let groups = db.collection("/server/users")?;
+
+        // Create an admin user if one doesn't exist already
+        if users
+            .documents()
+            .filter_map(|user| user.ok())
+            .find(|user| user.data.admin)
+            .is_none()
+        {
+            let user = users.insert_document(
+                "admin",
+                UserData {
+                    username: "admin".parse()?,
+                    admin: true,
+                    email: None,
+                    phone: None,
+                    expiration: None,
+                },
+            )?;
+
+            let default = "test"; // TODO hash
+                                  // TODO transaction
+            user.insert_document("password", PasswordData::new(&default))?;
+            info!(username = "admin", password = %default, "Created default admin user");
+        }
+        Ok(Self { users })
+    }
+}
 
 static KEY: LazyLock<ServerKey> = LazyLock::new(|| ServerKey::new());
 
@@ -285,15 +321,13 @@ pub async fn create_user(
 
 #[debug_handler]
 pub async fn get_users(
-    state: State<ServerState>,
+    state: State<UserState>,
     Extension(_): Extension<GroupName>,
     claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
 ) -> RequestResult<GetUsersResponse> {
-    let users = &state.server.users;
-
     if let Some(username) = request.username {
-        match users.get_document(&*username) {
+        match state.users.get_document(&*username) {
             Ok(Some(user)) => return Ok(Json(GetUsersResponse::Ok(vec![user.data]))),
             Ok(None) => return Ok(Json(GetUsersResponse::Ok(Vec::new()))),
             Err(_) => todo!(),

@@ -14,7 +14,6 @@ use tracing::{debug, trace};
 pub mod oid;
 
 #[derive(Clone)]
-#[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 pub struct Database(sled::Db);
 
 impl Database {

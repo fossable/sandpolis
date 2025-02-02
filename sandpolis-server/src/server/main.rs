@@ -8,7 +8,7 @@ use crate::{CommandLine, Commands};
 use anyhow::{Context, Result};
 use axum::{
     body::Body,
-    extract::{Request, State},
+    extract::{FromRef, Request, State},
     response::{IntoResponse, Response},
     Router,
 };
@@ -34,10 +34,12 @@ pub struct ServerCommandLine {
     pub local: bool,
 }
 
-#[derive(Clone)]
+#[derive(Clone, FromRef)]
 pub struct ServerState {
     pub db: Database,
-    pub server: Arc<ServerLayer>,
+    pub group: GroupState,
+    pub user: UserState,
+    pub banner: Document<ServerBanner>,
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {
@@ -96,6 +98,14 @@ pub async fn main(args: CommandLine) -> Result<()> {
     }
 
     Ok(())
+}
+
+#[debug_handler]
+async fn banner(
+    state: State<ServerState>,
+    extract::Json(_): extract::Json<GetBannerRequest>,
+) -> RequestResult<GetBannerResponse> {
+    Ok(Json(GetBannerResponse::Ok(state.banner.data.clone())))
 }
 
 #[debug_handler]

@@ -6,6 +6,8 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 serde = { workspace = true }
+serde_with = { workspace = true }
+serde_bytes = { workspace = true }
 sandpolis-instance = { path = "../sandpolis-instance" }
 
 [features]

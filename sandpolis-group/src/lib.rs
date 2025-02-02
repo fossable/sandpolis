@@ -11,7 +11,8 @@ use validator::{Validate, ValidationErrors};
 use x509_parser::prelude::FromDer;
 use x509_parser::prelude::X509Certificate;
 
-use super::user::UserName;
+#[cfg(feature = "server")]
+pub mod server;
 
 /// A group is a set of clients and agents that can interact. Each group has a
 /// CA certificate that signs certificates used to connect to the server.
@@ -62,7 +63,7 @@ impl Validate for GroupName {
 
 /// Create a new group with the given user as owner
 pub struct CreateGroupRequest {
-    pub owner: UserName,
+    pub owner: String,
     pub name: GroupName,
 }
 
@@ -72,7 +73,7 @@ pub enum CreateGroupResponse {
 
 /// Delete a group by name.
 pub struct DeleteGroupRequest {
-    pub name: String,
+    pub name: GroupName,
 }
 
 pub enum DeleteGroupResponse {

@@ -137,6 +137,7 @@
 //! container.
 
 use anyhow::{bail, Result};
+use axum::extract::FromRef;
 use axum::Router;
 use clap::Parser;
 use std::path::PathBuf;
@@ -169,7 +170,7 @@ pub struct AgentCommandLine {
     pub agent_socket: PathBuf,
 }
 
-#[derive(Clone)]
+#[derive(Clone, FromRef)]
 pub struct AgentState {
     pub db: Database,
 
@@ -180,10 +181,19 @@ pub struct AgentState {
     /// even when the gateway server is compromised.
     pub read_only: bool,
 
-    pub agent: Arc<layer::agent::AgentLayer>,
+    pub scheduler: JobScheduler,
 
     #[cfg(feature = "layer-sysinfo")]
-    pub sysinfo: Arc<layer::sysinfo::SysinfoLayer>,
+    pub sysinfo: sandpolis_sysinfo::agent::SysinfoState,
+}
+
+impl AgentState {
+    async fn new(db: Database) -> Result<Self> {
+        Ok(Self {
+            data,
+            scheduler: JobScheduler::new().await?,
+        })
+    }
 }
 
 pub async fn main(args: CommandLine) -> Result<()> {

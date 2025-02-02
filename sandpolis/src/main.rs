@@ -1,10 +1,31 @@
 use anyhow::bail;
 use anyhow::Result;
-use clap::Parser;
+use clap::builder::OsStr;
+use clap::{Parser, Subcommand};
 use futures::Future;
 use sandpolis::CommandLine;
 use std::process::ExitCode;
+use tokio::task::JoinSet;
 use tracing::info;
+
+#[derive(Parser, Debug, Clone)]
+#[clap(author, version, about, long_about = None)]
+struct CommandLine {
+    #[cfg(feature = "server")]
+    #[clap(flatten)]
+    pub server_args: sandpolis_server::ServerCommandLine,
+
+    #[cfg(feature = "client")]
+    #[clap(flatten)]
+    pub client_args: sandpolis_client::ClientCommandLine,
+
+    #[cfg(feature = "agent")]
+    #[clap(flatten)]
+    pub agent_args: sandpolis_agent::AgentCommandLine,
+
+    #[clap(flatten)]
+    pub instance_args: sandpolis_instance::cli::InstanceCommandLine,
+}
 
 #[tokio::main]
 async fn main() -> Result<ExitCode> {
@@ -31,28 +52,26 @@ async fn main() -> Result<ExitCode> {
         .install_default()
         .expect("crypto provider is available");
 
+    let mut tasks = JoinSet::new();
+
     #[cfg(feature = "server")]
-    let server_thread = {
-        let args = args.clone();
-        tokio::spawn(async move { sandpolis::server::main(args).await })
-    };
+    tasks.spawn(async move {
+        sandpolis_server::main(sandpolis_server::ServerCommandLine::parse()).await
+    });
 
     #[cfg(feature = "agent")]
-    let agent_thread = {
-        let args = args.clone();
-        tokio::spawn(async move { sandpolis::agent::main(args).await })
-    };
+    tasks.spawn(async move { sandpolis_agent::main(args).await });
 
     // The client must run on the main thread per bevy requirements
     #[cfg(feature = "client")]
     sandpolis::client::main(args).await?;
 
-    // TODO single join
-    // TODO if not client
-    #[cfg(feature = "server")]
-    tokio::join!(server_thread).0??;
-    #[cfg(feature = "agent")]
-    tokio::join!(agent_thread).0??;
+    // If this was a client, don't hold up the user by waiting for server/agent
+    if !cfg!(feature = "client") {
+        while let Some(result) = tasks.join_next().await {
+            result?;
+        }
+    }
 
     Ok(ExitCode::SUCCESS)
 }

@@ -1,6 +1,13 @@
 use serde::Deserialize;
 use serde::Serialize;
 
+/// Polls data periodically.
+pub trait Collector {
+    fn refresh(&mut self) -> Result<()>;
+    //start
+    //stop
+}
+
 /// Request that the agent alter its power state.
 #[derive(Serialize, Deserialize)]
 pub enum PowerRequest {

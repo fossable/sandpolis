@@ -5,12 +5,12 @@ use std::{fmt::Display, ops::Deref, path::PathBuf, str::FromStr};
 use strum::{EnumIter, IntoEnumIterator};
 use uuid::Uuid;
 
+pub mod cli;
 pub mod format;
 
 /// All instances are identified by a unique 128-bit string that's generated on
 /// first start. This identifier is reused for all subsequent runs.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct InstanceId(u128);
 
 impl InstanceId {

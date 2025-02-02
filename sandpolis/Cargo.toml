@@ -22,8 +22,16 @@ tempfile = "3.15.0"
 
 [dependencies]
 anyhow = { workspace = true }
-clap = { version = "4.4.7", features = ["derive", "string"] }
+serde = { workspace = true }
+tokio = { workspace = true }
 sandpolis-macros = { path = "../sandpolis-macros" }
+sandpolis-network = { path = "../sandpolis-network" }
+sandpolis-server = { path = "../sandpolis-server", optional = true, features = [
+  "server",
+] }
+sandpolis-agent = { path = "../sandpolis-agent", optional = true, features = [
+  "agent",
+] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 
 # Server dependencies
@@ -34,8 +42,8 @@ openraft = { git = "https://github.com/databendlabs/openraft", optional = true, 
 
 [features]
 # Instances
-server = ["dep:openraft"]
-agent = []
+server = ["dep:openraft", "dep:sandpolis-server"]
+agent = ["dep:sandpolis-agent"]
 client = []
 
 # Layers

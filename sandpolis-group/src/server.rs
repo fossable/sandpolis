@@ -1,12 +1,6 @@
 //! Server implementation
 
-use crate::core::database::Collection;
-use crate::core::database::Document;
-use crate::core::layer::server::group::GroupCaCert;
-use crate::core::layer::server::group::GroupClientCert;
-use crate::core::layer::server::group::GroupData;
-use crate::core::layer::server::group::GroupName;
-use crate::core::layer::server::group::GroupServerCert;
+use super::GroupData;
 use anyhow::bail;
 use anyhow::Result;
 use axum::{
@@ -31,6 +25,7 @@ use rustls::ServerConfig;
 use rustls_pki_types::pem::PemObject;
 use rustls_pki_types::CertificateDer;
 use rustls_pki_types::PrivateKeyDer;
+use sandpolis_database::Database;
 use sandpolis_instance::ClusterId;
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::InstanceType;
@@ -44,6 +39,36 @@ use tower::Layer;
 use tracing::debug;
 use validator::Validate;
 use x509_parser::prelude::{FromDer, X509Certificate};
+
+pub struct GroupState {
+    groups: Collection<GroupData>,
+}
+
+impl GroupState {
+    pub fn new(db: &Database, cluster_id: ClusterId) -> Result<Self> {
+        let groups = db.collection("/server/groups")?;
+
+        // Create the default group if it doesn't exist
+        if groups
+            .documents()
+            .filter_map(|group| group.ok())
+            .find(|group| *group.data.name == "default")
+            .is_none()
+        {
+            let group = groups.insert_document(
+                "default",
+                GroupData {
+                    name: "default".parse().expect("valid group name"),
+                    owner: "admin".to_string(),
+                },
+            )?;
+
+            group.insert_document("ca", GroupCaCert::new(cluster_id)?)?;
+        }
+
+        Ok(Self { groups })
+    }
+}
 
 impl GroupCaCert {
     /// Generate a new group CA certificate.

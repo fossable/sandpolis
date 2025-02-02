@@ -8,6 +8,9 @@ mkShell rec {
     udev
     alsa-lib
     vulkan-loader
+    libyuv
+    libvpx
+    libclang
     xorg.libX11
     xorg.libXcursor
     xorg.libXi

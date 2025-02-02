@@ -15,8 +15,10 @@ use validator::{Validate, ValidationErrors};
 #[cfg(feature = "client")]
 pub mod client;
 
+#[cfg(feature = "server")]
+pub mod server;
+
 #[derive(Serialize, Deserialize, Validate, Debug)]
-#[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct UserData {
     pub username: UserName,
 
@@ -66,7 +68,6 @@ impl Validate for UserName {
 }
 
 #[derive(Serialize, Deserialize)]
-#[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 pub struct LoginAttempt {
     pub timestamp: u64,
 
