@@ -11,6 +11,9 @@
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone)]
+pub struct PackageState {}
+
 pub fn pacman() {}
 
 // pub fn packages_iter() -> impl Iterator<Item = Package> {}

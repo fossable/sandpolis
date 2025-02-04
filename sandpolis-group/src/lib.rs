@@ -14,6 +14,13 @@ use x509_parser::prelude::X509Certificate;
 #[cfg(feature = "server")]
 pub mod server;
 
+pub(crate) mod messages;
+
+#[derive(Clone)]
+pub struct GroupLayer {
+    groups: Collection<GroupData>,
+}
+
 /// A group is a set of clients and agents that can interact. Each group has a
 /// CA certificate that signs certificates used to connect to the server.
 ///
@@ -59,26 +66,6 @@ impl Validate for GroupName {
             Err(ValidationErrors::new())
         }
     }
-}
-
-/// Create a new group with the given user as owner
-pub struct CreateGroupRequest {
-    pub owner: String,
-    pub name: GroupName,
-}
-
-pub enum CreateGroupResponse {
-    Ok,
-}
-
-/// Delete a group by name.
-pub struct DeleteGroupRequest {
-    pub name: GroupName,
-}
-
-pub enum DeleteGroupResponse {
-    Ok,
-    NotFound,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

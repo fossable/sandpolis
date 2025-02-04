@@ -40,12 +40,7 @@ use tracing::debug;
 use validator::Validate;
 use x509_parser::prelude::{FromDer, X509Certificate};
 
-#[derive(Clone)]
-pub struct GroupState {
-    groups: Collection<GroupData>,
-}
-
-impl GroupState {
+impl GroupLayer {
     pub fn new(db: &Database, cluster_id: ClusterId) -> Result<Self> {
         let groups = db.collection("/server/groups")?;
 

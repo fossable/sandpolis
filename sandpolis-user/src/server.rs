@@ -34,17 +34,11 @@ use crate::core::layer::{network::RequestResult, server::group::GroupName};
 use sandpolis_database::{Database, Document};
 use sandpolis_server::server::ServerState;
 
-#[derive(Clone)]
-pub struct UserState {
-    users: Collection<UserData>,
-}
-
 impl UserState {
-    pub fn new(db: Database) -> Result<Self> {
-        let users = db.collection("/server/users")?;
-
-        // Create an admin user if one doesn't exist already
-        if users
+    /// Create an admin user if one doesn't exist already.
+    pub fn create_admin(&self) -> Result<()> {
+        if self
+            .users
             .documents()
             .filter_map(|user| user.ok())
             .find(|user| user.data.admin)
@@ -66,7 +60,7 @@ impl UserState {
             user.insert_document("password", PasswordData::new(&default))?;
             info!(username = "admin", password = %default, "Created default admin user");
         }
-        Ok(Self { users })
+        Ok(())
     }
 }
 
@@ -201,7 +195,7 @@ where
 
 #[debug_handler]
 pub async fn login(
-    state: State<ServerState>,
+    state: State<UserLayer>,
     Extension(_): Extension<GroupName>,
     extract::Json(request): extract::Json<LoginRequest>,
 ) -> RequestResult<LoginResponse> {
@@ -275,7 +269,7 @@ pub async fn login(
 
 #[debug_handler]
 pub async fn create_user(
-    state: State<ServerState>,
+    state: State<UserLayer>,
     Extension(_): Extension<GroupName>,
     claims: Claims,
     extract::Json(request): extract::Json<CreateUserRequest>,
@@ -299,7 +293,6 @@ pub async fn create_user(
     };
 
     let user = state
-        .server
         .users
         .insert_document(&request.data.username.clone(), request.data)
         .map_err(|_| Json(CreateUserResponse::Failed))?;

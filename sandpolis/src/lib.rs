@@ -1,9 +1,9 @@
 use anyhow::bail;
 use anyhow::Result;
+use axum::extract::FromRef;
 use sandpolis_network::ServerAddress;
-use std::{path::PathBuf, str::FromStr};
-
 use serde::{Deserialize, Serialize};
+use std::{path::PathBuf, str::FromStr};
 use strum::EnumIter;
 
 /// Build info
@@ -11,6 +11,21 @@ pub mod built_info {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
 }
 
+#[derive(Clone, FromRef)]
+pub struct State {
+    pub db: Database,
+
+    pub group: GroupState,
+    pub user: UserState,
+    #[cfg(feature = "layer-sysinfo")]
+    pub sysinfo: SysinfoState,
+    #[cfg(feature = "layer-package")]
+    pub package: PackageState,
+    #[cfg(feature = "layer-shell")]
+    pub shell: ShellState,
+}
+
+// TODO move to client?
 /// Layers are feature-sets that may be enabled on instances.
 #[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq)]
 pub enum Layer {

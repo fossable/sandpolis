@@ -9,48 +9,6 @@ use tokio::task::JoinSet;
 use tracing::info;
 use tracing_subscriber::filter::LevelFilter;
 
-#[derive(Parser, Debug, Clone)]
-#[clap(author, version, about, long_about = None)]
-struct CommandLine {
-    #[cfg(feature = "server")]
-    #[clap(flatten)]
-    pub server: sandpolis_server::cli::ServerCommandLine,
-
-    #[cfg(feature = "client")]
-    #[clap(flatten)]
-    pub client: sandpolis_client::cli::ClientCommandLine,
-
-    #[cfg(feature = "agent")]
-    #[clap(flatten)]
-    pub agent: sandpolis_agent::cli::AgentCommandLine,
-
-    #[clap(flatten)]
-    pub instance: sandpolis_instance::cli::InstanceCommandLine,
-
-    #[clap(flatten)]
-    pub database: sandpolis_database::cli::DatabaseCommandLine,
-
-    #[command(subcommand)]
-    pub command: Option<Commands>,
-}
-
-#[derive(Subcommand, Debug, Clone)]
-pub enum Commands {
-    #[cfg(feature = "server")]
-    /// Generate a new endpoint certificate signed by the group CA
-    GenerateCert {
-        /// Group to generate the certificate for
-        #[clap(long, default_value = "default")]
-        group: String,
-
-        /// Output file path
-        #[clap(long, default_value = "./endpoint.json")]
-        output: PathBuf,
-    },
-
-    InstallCert {},
-}
-
 #[tokio::main]
 async fn main() -> Result<ExitCode> {
     #[cfg(all(
@@ -135,7 +93,7 @@ async fn main() -> Result<ExitCode> {
 #[cfg(feature = "server")]
 async fn server(args: &CommandLine, db: Database) -> Result<()> {
     let state = ServerState::new(db);
-    
+
     let app: Router<()> = Router::new()
         .fallback(fallback_handler)
         .nest("/server", ServerLayer::router())
@@ -157,7 +115,7 @@ async fn server(args: &CommandLine, db: Database) -> Result<()> {
 #[cfg(feature = "agent")]
 async fn agent(args: &CommandLine, db: Database) -> Result<()> {
     let state = AgentState::new(db);
-    
+
     let uds = UnixListener::bind(&args.agent_args.agent_socket)?;
     tokio::spawn(async move {
         let app = Router::new().nest("/layer/agent", layer::agent::router());
@@ -214,7 +172,7 @@ async fn agent(args: &CommandLine, db: Database) -> Result<()> {
 #[cfg(feature = "client")]
 async fn client(args: &CommandLine, db: Database) -> Result<()> {
     let state = ClientState::new(db);
-    
+
     #[cfg(feature = "client-gui")]
     if args.client.gui {}
 

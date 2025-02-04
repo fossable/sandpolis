@@ -7238,6 +7238,8 @@ name = "sandpolis-server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
+ "axum-macros",
  "sandpolis-instance",
  "serde",
  "serde_bytes",

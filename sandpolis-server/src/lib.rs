@@ -11,6 +11,33 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "server")]
 pub mod server;
 
+pub(crate) mod messages;
+
+#[derive(Clone)]
+pub struct ServerLayer {
+    pub banner: Document<ServerBanner>,
+}
+
+impl ServerLayer {
+    pub fn new(cluster_id: ClusterId, document: Document<ServerLayerData>) -> Result<Self> {
+        Ok(Self {
+            banner: document.document("banner")?,
+        })
+    }
+
+    pub fn default_group(&self) -> Result<GroupData> {
+        todo!()
+    }
+
+    #[cfg(feature = "server")]
+    pub fn router() -> Router {
+        Router::new().route("/banner", get(banner))
+    }
+
+    #[cfg(feature = "client")]
+    pub fn banner() -> Result<ServerBanner> {}
+}
+
 /// Response bearing the server's banner
 #[cfg(any(feature = "server", feature = "client"))]
 #[derive(Serialize, Deserialize, Clone, Default)]
@@ -27,14 +54,4 @@ pub struct ServerBanner {
     /// An image to display on the login screen
     #[serde(with = "serde_bytes")]
     pub image: Option<Vec<u8>>, // TODO validate with image decoder
-}
-
-#[cfg(any(feature = "server", feature = "client"))]
-#[derive(Serialize, Deserialize)]
-pub struct GetBannerRequest;
-
-#[cfg(any(feature = "server", feature = "client"))]
-#[derive(Serialize, Deserialize)]
-pub enum GetBannerResponse {
-    Ok(ServerBanner),
 }

@@ -3,4 +3,4 @@ pub mod agent;
 #[cfg(feature = "client")]
 pub mod client;
 
-pub struct PowerState {}
+pub struct PowerLayer {}

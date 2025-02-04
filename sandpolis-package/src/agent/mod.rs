@@ -3,8 +3,6 @@ use std::path::PathBuf;
 use anyhow::{bail, Result};
 use axum::Router;
 
-pub struct PackageState {}
-
 pub trait PackageManager {
     /// Get the location of the package manager's binary on the filesystem.
     fn get_location(&self) -> Result<PathBuf> {
