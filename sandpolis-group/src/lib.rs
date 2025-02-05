@@ -3,6 +3,7 @@
 
 use anyhow::Result;
 use regex::Regex;
+use sandpolis_database::Collection;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::str::FromStr;

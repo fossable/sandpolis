@@ -4,7 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+serde = { workspace = true }
+ratatui = { workspace = true, optional = true }
+axum = { workspace = true, optional = true }
+axum-macros = { workspace = true, optional = true }
 
 [features]
-agent = []
+agent = ["dep:axum", "dep:axum-macros"]
 client = []
+client-tui = ["dep:ratatui"]
+client-gui = []

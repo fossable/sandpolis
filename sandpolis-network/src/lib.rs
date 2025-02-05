@@ -38,7 +38,7 @@ impl NetworkState {
     pub async fn direct_connect(&self, agent: InstanceId, port: Option<u16>) {}
 }
 
-#[debug_handler]
+#[axum_macros::debug_handler]
 async fn ping(
     state: State<NetworkState>,
     extract::Json(_): extract::Json<PingRequest>,

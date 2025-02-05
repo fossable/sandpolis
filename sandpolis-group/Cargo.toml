@@ -7,6 +7,15 @@ edition = "2021"
 anyhow = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+axum = { workspace = true }
+axum-server = { workspace = true }
+futures-util = { workspace = true }
+time = { workspace = true }
+tokio-rustls = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tower = { workspace = true }
+rustls = { workspace = true }
 reqwest = { workspace = true }
 pem = { workspace = true }
 rcgen = { version = "0.13.1", optional = true, features = [

@@ -123,7 +123,7 @@ impl Drop for ShellSession {
     }
 }
 
-#[debug_handler]
+#[axum_macros::debug_handler]
 async fn shell_session(
     // state: State<AppState>,
     ws: WebSocketUpgrade,
@@ -136,7 +136,7 @@ async fn shell_session(
     Ok(())
 }
 
-#[debug_handler]
+#[axum_macros::debug_handler]
 async fn shell_execute(
     // state: State<AppState>,
     extract::Json(request): extract::Json<ShellExecuteRequest>,

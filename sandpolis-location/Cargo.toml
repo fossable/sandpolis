@@ -5,6 +5,11 @@ edition = "2021"
 
 [dependencies]
 reqwest = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+
 [features]
 server = []
 client = []

@@ -1,11 +1,5 @@
 use anyhow::Result;
-use std::{
-    ffi::OsString,
-    fmt::Display,
-    net::{SocketAddr, ToSocketAddrs},
-    str::FromStr,
-};
-
+use sandpolis_database::Document;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
@@ -13,29 +7,27 @@ pub mod server;
 
 pub(crate) mod messages;
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ServerLayerData {}
+
 #[derive(Clone)]
 pub struct ServerLayer {
+    pub data: Document<ServerLayerData>,
     pub banner: Document<ServerBanner>,
 }
 
 impl ServerLayer {
-    pub fn new(cluster_id: ClusterId, document: Document<ServerLayerData>) -> Result<Self> {
+    pub fn new(data: Document<ServerLayerData>) -> Result<Self> {
         Ok(Self {
-            banner: document.document("banner")?,
+            banner: data.document("banner")?,
+            data,
         })
     }
 
-    pub fn default_group(&self) -> Result<GroupData> {
+    #[cfg(feature = "client")]
+    pub fn get_banner() -> Result<ServerBanner> {
         todo!()
     }
-
-    #[cfg(feature = "server")]
-    pub fn router() -> Router {
-        Router::new().route("/banner", get(banner))
-    }
-
-    #[cfg(feature = "client")]
-    pub fn banner() -> Result<ServerBanner> {}
 }
 
 /// Response bearing the server's banner

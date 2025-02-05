@@ -98,7 +98,7 @@ async fn server(args: &CommandLine, db: Database) -> Result<()> {
         .fallback(fallback_handler)
         .nest("/server", ServerLayer::router())
         .route_layer(axum::middleware::from_fn(
-            layer::server::group::auth_middleware,
+            sandpolis_group::server::auth_middleware,
         ))
         .with_state(state);
 

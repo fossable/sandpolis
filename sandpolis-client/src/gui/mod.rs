@@ -1,27 +1,21 @@
+use self::{
+    input::{LayerChangeTimer, MousePressed},
+    node::spawn_node,
+};
 use anyhow::Result;
 use bevy::{
     color::palettes::basic::*,
     prelude::*,
     window::{AppLifecycle, WindowMode},
 };
-use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_rapier2d::prelude::*;
-use clap::Parser;
-
-use crate::{
-    core::{database::Database, layer::Layer},
-    CommandLine,
-};
-
-use self::{
-    input::{LayerChangeTimer, MousePressed},
-    node::spawn_node,
-};
+use sandpolis_database::Database;
+use sandpolis_instance::Layer;
 
 pub mod input;
-pub mod layer;
 pub mod node;
 
+/// Only one layer can be selected at a time.
 #[derive(Resource, Deref, DerefMut)]
 pub struct CurrentLayer(Layer);
 
@@ -50,7 +44,6 @@ pub async fn main(args: CommandLine) -> Result<()> {
             })
             .disable::<bevy::log::LogPlugin>(),
     )
-    .add_plugins(EguiPlugin)
     .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
     .add_plugins(RapierDebugRenderPlugin::default())
     .add_plugins(bevy_svg::prelude::SvgPlugin)

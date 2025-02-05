@@ -43,15 +43,7 @@ pub async fn main(args: CommandLine) -> Result<()> {
     Ok(())
 }
 
-#[debug_handler]
-async fn banner(
-    state: State<ServerState>,
-    extract::Json(_): extract::Json<GetBannerRequest>,
-) -> RequestResult<GetBannerResponse> {
-    Ok(Json(GetBannerResponse::Ok(state.banner.data.clone())))
-}
-
-#[debug_handler]
+#[axum_macros::debug_handler]
 async fn fallback_handler(state: State<ServerState>, request: Request) -> impl IntoResponse {
     todo!()
 }

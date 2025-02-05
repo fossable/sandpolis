@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+axum = { workspace = true, optional = true }
+serde = { workspace = true }
 anyhow = { workspace = true }
 # TODO needs to be published
 # scrap = { git = "https://github.com/rustdesk/rustdesk", optional = true, features = [
@@ -13,5 +15,5 @@ enigo = { version = "0.3.0", optional = true }
 tracing = { workspace = true }
 
 [features]
-agent = ["dep:enigo"]
+agent = ["dep:enigo", "dep:axum"]
 client = []

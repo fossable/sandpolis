@@ -1,3 +1,26 @@
+pub enum DesktopStreamColorMode {
+    /// Each pixel encoded in three bytes
+    Rgb888,
+    /// Each pixel encoded in two bytes
+    Rgb565,
+    /// Each pixel encoded in one byte
+    Rgb332,
+}
+
+pub enum DesktopStreamCompressionMode {
+    None,
+    Zlib,
+    Zstd,
+}
+
+pub enum DesktopStreamPointerButton {
+    Primary,
+    Middle,
+    Secondary,
+    Back,
+    Forward,
+}
+
 pub struct DesktopStreamRequest {
     /// The desktop to capture
     pub desktop_uuid: String,

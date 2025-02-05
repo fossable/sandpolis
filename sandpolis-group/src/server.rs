@@ -1,6 +1,10 @@
 //! Server implementation
 
+use super::GroupCaCert;
+use super::GroupClientCert;
 use super::GroupData;
+use super::GroupName;
+use super::GroupServerCert;
 use anyhow::bail;
 use anyhow::Result;
 use axum::{
@@ -25,7 +29,9 @@ use rustls::ServerConfig;
 use rustls_pki_types::pem::PemObject;
 use rustls_pki_types::CertificateDer;
 use rustls_pki_types::PrivateKeyDer;
+use sandpolis_database::Collection;
 use sandpolis_database::Database;
+use sandpolis_database::Document;
 use sandpolis_instance::ClusterId;
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::InstanceType;
@@ -40,7 +46,7 @@ use tracing::debug;
 use validator::Validate;
 use x509_parser::prelude::{FromDer, X509Certificate};
 
-impl GroupLayer {
+impl super::GroupLayer {
     pub fn new(db: &Database, cluster_id: ClusterId) -> Result<Self> {
         let groups = db.collection("/server/groups")?;
 
@@ -66,7 +72,7 @@ impl GroupLayer {
     }
 }
 
-impl GroupCaCert {
+impl super::GroupCaCert {
     /// Generate a new group CA certificate.
     pub fn new(cluster_id: ClusterId) -> Result<Self> {
         // Generate key

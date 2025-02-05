@@ -193,7 +193,7 @@ where
     }
 }
 
-#[debug_handler]
+#[axum_macros::debug_handler]
 pub async fn login(
     state: State<UserLayer>,
     Extension(_): Extension<GroupName>,
@@ -267,7 +267,7 @@ pub async fn login(
     )))
 }
 
-#[debug_handler]
+#[axum_macros::debug_handler]
 pub async fn create_user(
     state: State<UserLayer>,
     Extension(_): Extension<GroupName>,
@@ -305,7 +305,7 @@ pub async fn create_user(
     }))
 }
 
-#[debug_handler]
+#[axum_macros::debug_handler]
 pub async fn get_users(
     state: State<UserState>,
     Extension(_): Extension<GroupName>,

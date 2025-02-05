@@ -11,6 +11,8 @@ serde_bytes = { workspace = true }
 axum = { workspace = true }
 axum-macros = { workspace = true }
 sandpolis-instance = { path = "../sandpolis-instance" }
+sandpolis-database = { path = "../sandpolis-database" }
+sandpolis-network = { path = "../sandpolis-network" }
 
 [features]
 server = []

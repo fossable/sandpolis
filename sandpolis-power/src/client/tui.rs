@@ -1,9 +1,5 @@
-use ratatui::{
-    backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
-    widgets::{Block, Borders, Paragraph, Text, Widget},
-    Terminal,
-};
+use ratatui::text::Text;
+use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 
 // Define a custom widget
 pub struct PowerStatusWidget {
@@ -41,7 +37,8 @@ impl Widget for PowerStatusWidget {
         ];
 
         // Display the text inside the block area
-        let paragraph = Paragraph::new(text).block(Block::default().borders(Borders::NONE));
+        let paragraph = Paragraph::new(Text::raw(format!("Power State: {}\n", self.power_state)))
+            .block(Block::default().borders(Borders::NONE));
         paragraph.render(area, buf);
     }
 }
