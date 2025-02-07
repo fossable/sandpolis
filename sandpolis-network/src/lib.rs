@@ -1,6 +1,10 @@
 use anyhow::Result;
+use axum::extract;
+use axum::extract::State;
 use chrono::{serde::ts_seconds, DateTime, NaiveDate, Utc};
 use futures::StreamExt;
+use messages::PingRequest;
+use messages::PingResponse;
 use reqwest::{Certificate, ClientBuilder, Identity};
 use reqwest_websocket::RequestBuilderExt;
 use sandpolis_group::{GroupClientCert, GroupName};
@@ -13,15 +17,17 @@ use std::{cmp::min, collections::HashMap, net::SocketAddr, sync::Arc, time::Dura
 use tokio::time::sleep;
 use tracing::debug;
 
+pub(crate) mod messages;
 pub mod stream;
 
-pub struct NetworkData {}
+pub struct NetworkLayerData {}
 
-pub struct NetworkState {
-    connection: ServerConnection,
+#[derive(Clone)]
+pub struct NetworkLayer {
+    connection: Arc<ServerConnection>,
 }
 
-impl NetworkState {
+impl NetworkLayer {
     /// Send a message to the given instance and measure the time/path it took.
     pub async fn ping(&self, id: InstanceId) -> Result<PingResponse> {
         let response: PingResponse = self
@@ -31,7 +37,9 @@ impl NetworkState {
             .json(&PingRequest { id })
             .send()
             .await?
-            .json()?;
+            .json()
+            .await?;
+        todo!()
     }
 
     /// Request the server to coordinate a direct connection to the given agent.
@@ -40,20 +48,10 @@ impl NetworkState {
 
 #[axum_macros::debug_handler]
 async fn ping(
-    state: State<NetworkState>,
+    state: State<NetworkLayer>,
     extract::Json(_): extract::Json<PingRequest>,
 ) -> RequestResult<PingResponse> {
     todo!()
-}
-
-struct PingRequest {
-    id: InstanceId,
-}
-
-pub struct PingResponse {
-    pub time: u64,
-    pub id: InstanceId,
-    pub from: Option<Box<PingResponse>>,
 }
 
 /// Convenience type to be used as return of request handler.

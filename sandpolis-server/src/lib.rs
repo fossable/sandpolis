@@ -2,6 +2,8 @@ use anyhow::Result;
 use sandpolis_database::Document;
 use serde::{Deserialize, Serialize};
 
+pub mod cli;
+
 #[cfg(feature = "server")]
 pub mod server;
 

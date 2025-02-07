@@ -11,6 +11,7 @@ use std::ops::Range;
 use std::{path::Path, sync::Arc};
 use tracing::{debug, trace};
 
+pub mod cli;
 pub mod oid;
 
 #[derive(Clone)]

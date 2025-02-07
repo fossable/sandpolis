@@ -5,14 +5,11 @@ use axum::{
         ws::{Message, WebSocket, WebSocketUpgrade},
     },
     http::StatusCode,
-    response::IntoResponse,
     routing::{any, post},
     Json, Router,
 };
-use axum_macros::debug_handler;
 use futures::{SinkExt, StreamExt};
-use sandpolis_agent::agent::AgentState;
-use std::{os::unix::process::CommandExt, time::Duration};
+use std::time::Duration;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     process::{Child, Command},
@@ -20,11 +17,23 @@ use tokio::{
 };
 use tracing::debug;
 
-use super::{
-    ShellExecuteRequest, ShellExecuteResponse, ShellSessionData, ShellSessionInputEvent,
-    ShellSessionOutputEvent, ShellSessionRequest,
+use super::messages::{
+    ShellExecuteRequest, ShellExecuteResponse, ShellSessionOutputEvent, ShellSessionRequest,
 };
+use super::ShellLayer;
+use super::ShellSessionData;
 use sandpolis_database::Document;
+
+impl ShellLayer {
+    pub fn agent_routes<S>() -> Router<S>
+    where
+        S: Clone + Send + Sync + 'static,
+    {
+        Router::new()
+            .route("/execute", post(shell_execute))
+            .route("/session", any(shell_session))
+    }
+}
 
 pub struct ShellSession {
     // pub id: StreamId,
@@ -163,10 +172,4 @@ async fn shell_execute(
             Err(_) => ShellExecuteResponse::Timeout,
         }
     }))
-}
-
-pub fn router() -> Router<AgentState> {
-    Router::new()
-        .route("/execute", post(shell_execute))
-        .route("/session", any(shell_session))
 }

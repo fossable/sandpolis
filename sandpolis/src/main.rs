@@ -1,9 +1,17 @@
 use anyhow::bail;
 use anyhow::Result;
+use axum::Router;
 use clap::builder::OsStr;
 use clap::{Parser, Subcommand};
 use futures::Future;
-use sandpolis::CommandLine;
+use sandpolis::cli::CommandLine;
+use sandpolis::cli::Commands;
+use sandpolis::InstanceState;
+use sandpolis_database::Database;
+use sandpolis_database::Document;
+use sandpolis_group::GroupCaCert;
+use std::fs::File;
+use std::io::Write;
 use std::process::ExitCode;
 use tokio::task::JoinSet;
 use tracing::info;
@@ -67,18 +75,21 @@ async fn main() -> Result<ExitCode> {
         _ => (),
     }
 
+    // Load state
+    let state = InstanceState::new(db);
+
     // Prepare to launch instances
     let mut tasks = JoinSet::new();
 
     #[cfg(feature = "server")]
-    tasks.spawn(async { server(&args, db.clone()).await });
+    tasks.spawn(async { server(&args, state.clone()).await });
 
     #[cfg(feature = "agent")]
-    tasks.spawn(async { agent(&args, db.clone()).await });
+    tasks.spawn(async { agent(&args, state.clone()).await });
 
     // The client must run on the main thread per bevy requirements
     #[cfg(feature = "client")]
-    client(&args, db).await?;
+    client(&args, state).await?;
 
     // If this was a client, don't hold up the user by waiting for server/agent
     if !cfg!(feature = "client") {
@@ -91,12 +102,10 @@ async fn main() -> Result<ExitCode> {
 }
 
 #[cfg(feature = "server")]
-async fn server(args: &CommandLine, db: Database) -> Result<()> {
-    let state = ServerState::new(db);
-
+async fn server(args: &CommandLine, state: InstanceState) -> Result<()> {
     let app: Router<()> = Router::new()
-        .fallback(fallback_handler)
-        .nest("/server", ServerLayer::router())
+        .nest("/server", sandpolis_server::ServerLayer::server_routes())
+        .nest("/server", sandpolis_user::UserLayer::server_routes())
         .route_layer(axum::middleware::from_fn(
             sandpolis_group::server::auth_middleware,
         ))
@@ -113,21 +122,25 @@ async fn server(args: &CommandLine, db: Database) -> Result<()> {
 }
 
 #[cfg(feature = "agent")]
-async fn agent(args: &CommandLine, db: Database) -> Result<()> {
-    let state = AgentState::new(db);
-
+async fn agent(args: &CommandLine, state: InstanceState) -> Result<()> {
     let uds = UnixListener::bind(&args.agent_args.agent_socket)?;
     tokio::spawn(async move {
-        let app = Router::new().nest("/layer/agent", layer::agent::router());
+        let app = Router::new().nest("/layer/agent", sandpolis_agent::AgentLayer::agent_routes());
 
         #[cfg(feature = "layer-shell")]
-        let app = app.nest("/layer/shell", sandpolis_shell::agent::router());
+        let app = app.nest("/layer/shell", sandpolis_shell::ShellLayer::agent_routes());
 
         #[cfg(feature = "layer-package")]
-        let app = app.nest("/layer/package", sandpolis_package::agent::router());
+        let app = app.nest(
+            "/layer/package",
+            sandpolis_package::PackageLayer::agent_routes(),
+        );
 
         #[cfg(feature = "layer-desktop")]
-        let app = app.nest("/layer/desktop", sandpolis_desktop::agent::router());
+        let app = app.nest(
+            "/layer/desktop",
+            sandpolis_desktop::DesktopLayer::agent_routes(),
+        );
 
         axum::serve(uds, app.with_state(state).into_make_service())
             .await
@@ -170,12 +183,12 @@ async fn agent(args: &CommandLine, db: Database) -> Result<()> {
 }
 
 #[cfg(feature = "client")]
-async fn client(args: &CommandLine, db: Database) -> Result<()> {
-    let state = ClientState::new(db);
-
+async fn client(args: &CommandLine, state: InstanceState) -> Result<()> {
     #[cfg(feature = "client-gui")]
     if args.client.gui {}
 
     #[cfg(feature = "client-tui")]
     if args.client.tui {}
+
+    Ok(())
 }

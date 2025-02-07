@@ -1,3 +1,7 @@
+use crate::{LoginPassword, UserData, UserName};
+use serde::{Deserialize, Serialize};
+use validator::Validate;
+
 /// Create a new user account.
 #[derive(Serialize, Deserialize, Validate)]
 pub struct CreateUserRequest {

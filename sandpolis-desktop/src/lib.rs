@@ -11,10 +11,4 @@ pub mod client;
 #[derive(Clone)]
 pub struct DesktopLayer {}
 
-impl DesktopLayer {
-    pub fn router() -> Router<Self> {
-        Router::new()
-    }
-}
-
 // TODO agent lists available desktops for db

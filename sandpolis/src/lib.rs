@@ -1,10 +1,9 @@
 use anyhow::bail;
 use anyhow::Result;
-use axum::extract::FromRef;
-use sandpolis_network::ServerAddress;
-use serde::{Deserialize, Serialize};
-use std::{path::PathBuf, str::FromStr};
-use strum::EnumIter;
+use axum_macros::FromRef;
+use sandpolis_database::Database;
+
+pub mod cli;
 
 /// Build info
 pub mod built_info {
@@ -12,17 +11,31 @@ pub mod built_info {
 }
 
 #[derive(Clone, FromRef)]
-pub struct State {
+pub struct InstanceState {
     pub db: Database,
 
-    pub group: GroupLayer,
+    pub group: sandpolis_group::GroupLayer,
     #[cfg(feature = "layer-package")]
-    pub package: PackageLayer,
+    pub package: sandpolis_package::PackageLayer,
     #[cfg(feature = "layer-shell")]
-    pub power: PowerLayer,
+    pub power: sandpolis_power::PowerLayer,
     #[cfg(feature = "layer-shell")]
-    pub shell: ShellLayer,
+    pub shell: sandpolis_shell::ShellLayer,
     #[cfg(feature = "layer-sysinfo")]
-    pub sysinfo: SysinfoLayer,
-    pub user: UserLayer,
+    pub sysinfo: sandpolis_sysinfo::SysinfoLayer,
+    pub user: sandpolis_user::UserLayer,
+}
+
+impl InstanceState {
+    pub fn new(db: Database) -> Self {
+        Self {
+            group: todo!(),
+            package: todo!(),
+            power: todo!(),
+            shell: todo!(),
+            sysinfo: todo!(),
+            user: todo!(),
+            db,
+        }
+    }
 }

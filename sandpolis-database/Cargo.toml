@@ -5,7 +5,8 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
-serde_cbor = "0.11.2"
+clap = { workspace = true }
+serde_cbor = { workspace = true }
 serde = { workspace = true }
 sled = { version = "0.34.7" }
 tracing = { workspace = true }

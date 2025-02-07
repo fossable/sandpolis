@@ -1,3 +1,5 @@
+use clap::Parser;
+
 #[derive(Parser, Debug, Clone, Default)]
 pub struct ClientCommandLine {
     /// Run client graphical UI (even if invoked from a terminal)

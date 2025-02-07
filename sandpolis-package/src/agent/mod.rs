@@ -1,7 +1,8 @@
-use std::path::PathBuf;
-
+use super::PackageData;
+use super::PackageLayer;
 use anyhow::{bail, Result};
 use axum::Router;
+use std::path::PathBuf;
 
 pub trait PackageManager {
     /// Get the location of the package manager's binary on the filesystem.
@@ -55,6 +56,11 @@ pub trait PackageManager {
     }
 }
 
-pub fn router() -> Router<AgentState> {
-    todo!()
+impl PackageLayer {
+    pub fn agent_routes<S>() -> Router<S>
+    where
+        S: Clone + Send + Sync + 'static,
+    {
+        todo!()
+    }
 }

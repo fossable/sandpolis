@@ -2,7 +2,8 @@ use anyhow::Result;
 use axum::{
     extract::{self, FromRequestParts, State},
     http::{request::Parts, StatusCode},
-    Extension, Json, RequestPartsExt,
+    routing::{get, post},
+    Extension, Json, RequestPartsExt, Router,
 };
 use axum_extra::{
     headers::{authorization::Bearer, Authorization},
@@ -26,15 +27,16 @@ use totp_rs::{Secret, TOTP};
 use tracing::{debug, error, info};
 use validator::Validate;
 
-use super::{
+use super::messages::{
     CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
-    LoginResponse, UserData,
+    LoginResponse,
 };
-use crate::core::layer::{network::RequestResult, server::group::GroupName};
+use super::UserData;
+use super::UserLayer;
 use sandpolis_database::{Database, Document};
-use sandpolis_server::server::ServerState;
+use sandpolis_network::RequestResult;
 
-impl UserState {
+impl UserLayer {
     /// Create an admin user if one doesn't exist already.
     pub fn create_admin(&self) -> Result<()> {
         if self
@@ -44,7 +46,7 @@ impl UserState {
             .find(|user| user.data.admin)
             .is_none()
         {
-            let user = users.insert_document(
+            let user = self.users.insert_document(
                 "admin",
                 UserData {
                     username: "admin".parse()?,
@@ -61,6 +63,16 @@ impl UserState {
             info!(username = "admin", password = %default, "Created default admin user");
         }
         Ok(())
+    }
+
+    pub fn server_routes<S>() -> Router<S>
+    where
+        S: Clone + Send + Sync + 'static,
+    {
+        Router::new()
+            .route("/users", get(get_users))
+            .route("/users", post(create_user))
+            .route("/login", post(login))
     }
 }
 
@@ -196,10 +208,10 @@ where
 #[axum_macros::debug_handler]
 pub async fn login(
     state: State<UserLayer>,
-    Extension(_): Extension<GroupName>,
+    // Extension(_): Extension<GroupName>,
     extract::Json(request): extract::Json<LoginRequest>,
 ) -> RequestResult<LoginResponse> {
-    let user: Document<UserData> = match state.server.users.get_document(&request.username) {
+    let user: Document<UserData> = match state.users.get_document(&request.username) {
         Ok(Some(user)) => user,
         Ok(None) => {
             debug!(username = %request.username, "User does not exist");
@@ -252,7 +264,7 @@ pub async fn login(
     }
 
     let claims = Claims {
-        sub: user.data.username.clone(),
+        sub: user.data.username.to_string(),
         exp: (SystemTime::now() + Duration::from_secs(3600))
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -270,7 +282,7 @@ pub async fn login(
 #[axum_macros::debug_handler]
 pub async fn create_user(
     state: State<UserLayer>,
-    Extension(_): Extension<GroupName>,
+    // Extension(_): Extension<GroupName>,
     claims: Claims,
     extract::Json(request): extract::Json<CreateUserRequest>,
 ) -> RequestResult<CreateUserResponse> {
@@ -294,7 +306,7 @@ pub async fn create_user(
 
     let user = state
         .users
-        .insert_document(&request.data.username.clone(), request.data)
+        .insert_document(&request.data.username.to_string(), request.data)
         .map_err(|_| Json(CreateUserResponse::Failed))?;
 
     user.insert_document("password", password.clone())
@@ -307,8 +319,8 @@ pub async fn create_user(
 
 #[axum_macros::debug_handler]
 pub async fn get_users(
-    state: State<UserState>,
-    Extension(_): Extension<GroupName>,
+    state: State<UserLayer>,
+    // Extension(_): Extension<GroupName>,
     claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
 ) -> RequestResult<GetUsersResponse> {

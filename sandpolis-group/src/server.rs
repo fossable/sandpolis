@@ -48,7 +48,7 @@ use x509_parser::prelude::{FromDer, X509Certificate};
 
 impl super::GroupLayer {
     pub fn new(db: &Database, cluster_id: ClusterId) -> Result<Self> {
-        let groups = db.collection("/server/groups")?;
+        let groups: Collection<GroupData> = db.collection("/server/groups")?;
 
         // Create the default group if it doesn't exist
         if groups

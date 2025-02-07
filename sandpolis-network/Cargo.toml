@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
+axum = { workspace = true }
+axum-macros = { workspace = true }
 reqwest = { workspace = true }
 chrono = { workspace = true }
 tracing = { workspace = true }
@@ -12,6 +14,7 @@ futures = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_with = { workspace = true }
+serde_cbor = { workspace = true }
 reqwest-websocket = { workspace = true }
 sandpolis-instance = { path = "../sandpolis-instance" }
 sandpolis-group = { path = "../sandpolis-group" }

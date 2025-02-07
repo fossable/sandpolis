@@ -4,5 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = { workspace = true }
+axum = { workspace = true }
 serde = { workspace = true }
 tracing = { workspace = true }
+
+[features]
+agent = []
+client = []

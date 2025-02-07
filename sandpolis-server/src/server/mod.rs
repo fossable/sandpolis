@@ -7,12 +7,10 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use axum_macros::debug_handler;
 use sandpolis_network::RequestResult;
-use serde::{Deserialize, Serialize};
 
 impl ServerLayer {
-    pub fn router() -> Router {
+    pub fn server_router() -> Router<Self> {
         Router::new().route("/banner", get(banner))
     }
 }

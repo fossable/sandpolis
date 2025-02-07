@@ -6,7 +6,8 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 tracing = { workspace = true }
+russh = { workspace = true, optional = true }
 sandpolis-group = { path = "../sandpolis-group" }
 
 [features]
-agent = []
+agent = ["dep:russh"]

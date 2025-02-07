@@ -8,7 +8,7 @@ use std::{net::SocketAddr, ops::Deref, str::FromStr};
 
 use anyhow::{bail, Result};
 use regex::Regex;
-use sandpolis_instance::{ClusterId, InstanceId, InstanceType};
+use sandpolis_database::{Collection, Database};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationErrors};
 
@@ -32,14 +32,6 @@ impl UserLayer {
             #[cfg(any(feature = "server", feature = "client"))]
             users: db.collection("/server/users")?,
         })
-    }
-
-    #[cfg(feature = "server")]
-    pub fn router() -> Router {
-        Router::new()
-            .route("/users", get(user::get_users))
-            .route("/users", post(user::create_user))
-            .route("/login", post(user::login))
     }
 }
 

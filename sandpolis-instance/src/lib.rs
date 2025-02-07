@@ -248,3 +248,9 @@ pub enum Layer {
     #[cfg(feature = "layer-tunnel")]
     Tunnel,
 }
+
+pub struct LayerVersion {
+    major: u32,
+    minor: u32,
+    patch: u32,
+}

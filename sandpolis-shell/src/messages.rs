@@ -1,3 +1,9 @@
+use super::ShellCommand;
+use sandpolis_macros::StreamEvent;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::PathBuf;
+
 /// Register a scheduled command to execute in a shell.
 #[derive(Serialize, Deserialize)]
 pub struct ShellScheduleRequest {

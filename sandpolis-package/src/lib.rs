@@ -11,8 +11,11 @@
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "agent")]
+pub mod agent;
+
 #[derive(Clone)]
-pub struct PackageState {}
+pub struct PackageLayer {}
 
 pub fn pacman() {}
 
