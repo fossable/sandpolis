@@ -1,39 +1,17 @@
 use anyhow::Result;
-use axum::{
-    extract::{
-        self,
-        ws::{Message, WebSocket, WebSocketUpgrade},
-    },
-    http::StatusCode,
-    routing::{any, post},
-    Json, Router,
-};
+use axum::extract::ws::{Message, WebSocket};
 use futures::{SinkExt, StreamExt};
-use std::time::Duration;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     process::{Child, Command},
-    time::timeout,
 };
 use tracing::debug;
 
-use super::messages::{
-    ShellExecuteRequest, ShellExecuteResponse, ShellSessionOutputEvent, ShellSessionRequest,
-};
-use super::ShellLayer;
+use super::messages::{ShellSessionOutputEvent, ShellSessionRequest};
 use super::ShellSessionData;
 use sandpolis_database::Document;
 
-impl ShellLayer {
-    pub fn agent_routes<S>() -> Router<S>
-    where
-        S: Clone + Send + Sync + 'static,
-    {
-        Router::new()
-            .route("/execute", post(shell_execute))
-            .route("/session", any(shell_session))
-    }
-}
+pub mod routes;
 
 pub struct ShellSession {
     // pub id: StreamId,
@@ -130,46 +108,4 @@ impl Drop for ShellSession {
 
         // self.data.update(ShellSessionDelta::ended);
     }
-}
-
-#[axum_macros::debug_handler]
-async fn shell_session(
-    // state: State<AppState>,
-    ws: WebSocketUpgrade,
-    extract::Json(request): extract::Json<ShellSessionRequest>,
-) -> Result<(), StatusCode> {
-    let session = ShellSession::new(request).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    ws.on_upgrade(move |socket| session.run(socket));
-
-    Ok(())
-}
-
-#[axum_macros::debug_handler]
-async fn shell_execute(
-    // state: State<AppState>,
-    extract::Json(request): extract::Json<ShellExecuteRequest>,
-) -> Result<Json<ShellExecuteResponse>, StatusCode> {
-    let mut cmd = Command::new(request.shell)
-        .spawn()
-        .map_err(|_| StatusCode::NOT_FOUND)?;
-
-    Ok(Json(if request.capture_output {
-        match timeout(Duration::from_secs(request.timeout), cmd.wait_with_output()).await {
-            Ok(output) => todo!(),
-            Err(_) => ShellExecuteResponse::Timeout,
-        }
-    } else {
-        match timeout(Duration::from_secs(request.timeout), cmd.wait()).await {
-            Ok(exit_status) => ShellExecuteResponse::Ok {
-                exit_code: exit_status
-                    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
-                    .code()
-                    .unwrap_or(-1),
-                duration: todo!(),
-                output: todo!(),
-            },
-            Err(_) => ShellExecuteResponse::Timeout,
-        }
-    }))
 }

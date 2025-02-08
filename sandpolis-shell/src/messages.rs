@@ -47,6 +47,8 @@ pub enum ShellExecuteResponse {
         output: HashMap<i32, Vec<u8>>,
         // TODO cgroup-y info like max memory, cpu time, etc
     },
+    Failed,
+    NotFound,
     Timeout,
 }
 

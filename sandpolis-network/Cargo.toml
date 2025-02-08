@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
+clap = { workspace = true }
 axum = { workspace = true }
 axum-macros = { workspace = true }
 reqwest = { workspace = true }

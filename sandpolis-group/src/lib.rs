@@ -19,7 +19,7 @@ pub(crate) mod messages;
 
 #[derive(Clone)]
 pub struct GroupLayer {
-    groups: Collection<GroupData>,
+    pub groups: Collection<GroupData>,
 }
 
 /// A group is a set of clients and agents that can interact. Each group has a

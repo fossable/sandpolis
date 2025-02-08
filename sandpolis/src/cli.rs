@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about, long_about = None)]
-struct CommandLine {
+pub struct CommandLine {
     #[cfg(feature = "server")]
     #[clap(flatten)]
     pub server: sandpolis_server::cli::ServerCommandLine,
@@ -23,6 +23,9 @@ struct CommandLine {
     #[clap(flatten)]
     pub database: sandpolis_database::cli::DatabaseCommandLine,
 
+    #[clap(flatten)]
+    pub network: sandpolis_network::cli::NetworkCommandLine,
+
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
@@ -34,7 +37,7 @@ pub enum Commands {
     GenerateCert {
         /// Group to generate the certificate for
         #[clap(long, default_value = "default")]
-        group: String,
+        group: String, // TODO GroupName
 
         /// Output file path
         #[clap(long, default_value = "./endpoint.json")]

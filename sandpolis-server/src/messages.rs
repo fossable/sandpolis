@@ -1,12 +1,13 @@
-use super::ServerBanner;
+use crate::ServerBannerData;
 use serde::{Deserialize, Serialize};
 
-#[cfg(any(feature = "server", feature = "client"))]
 #[derive(Serialize, Deserialize)]
-pub struct GetBannerRequest;
+pub struct GetBannerRequest {
+    /// Whether to include the banner image in the response.
+    pub include_image: bool,
+}
 
-#[cfg(any(feature = "server", feature = "client"))]
 #[derive(Serialize, Deserialize)]
 pub enum GetBannerResponse {
-    Ok(ServerBanner),
+    Ok(ServerBannerData),
 }

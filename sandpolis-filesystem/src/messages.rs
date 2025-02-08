@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 /// Start a new stream that will receive filesystem updates.
-pub struct FsStreamRequest {
+#[derive(Serialize, Deserialize)]
+pub struct FsSessionRequest {
     /// The initial working directory
     pub path: PathBuf,
 
@@ -12,19 +14,22 @@ pub struct FsStreamRequest {
     pub polling: bool,
 }
 
-pub enum FsStreamResponse {
+#[derive(Serialize, Deserialize)]
+pub enum FsSessionResponse {
     Ok(u64),
     PathNotFound,
 }
 
-pub enum FsStreamEvent {
+#[derive(Serialize, Deserialize)]
+pub enum FsSessionEvent {
     Created,
     Deleted,
     Modified,
     SetCwd,
 }
 
-pub struct FsMountStreamRequest {
+#[derive(Serialize, Deserialize)]
+pub struct FsMountRequest {
     /// The initial working directory
     pub path: PathBuf,
 }
@@ -71,7 +76,8 @@ pub struct FsMountStreamRequest {
 //     repeated DirectoryEntry entry = 2;
 // }
 
-pub enum FsMountStreamEvent {
+#[derive(Serialize, Deserialize)]
+pub enum FsMountEvent {
     /// Look up a directory entry by name and get its attributes.
     Lookup {
         /// Inode number of the parent directory.
@@ -83,6 +89,7 @@ pub enum FsMountStreamEvent {
 }
 
 /// Delete one or more files from the filesystem.
+#[derive(Serialize, Deserialize)]
 pub struct FsDeleteRequest {
     /// Absolute paths to delete
     pub targets: Vec<PathBuf>,
@@ -91,6 +98,7 @@ pub struct FsDeleteRequest {
     pub recursive: bool,
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum FsDeleteResponse {
     Ok,
     PathNotFound,

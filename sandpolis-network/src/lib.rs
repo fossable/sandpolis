@@ -1,23 +1,23 @@
 use anyhow::Result;
-use axum::extract;
-use axum::extract::State;
-use chrono::{serde::ts_seconds, DateTime, NaiveDate, Utc};
+use chrono::{DateTime, Utc};
 use futures::StreamExt;
 use messages::PingRequest;
 use messages::PingResponse;
-use reqwest::{Certificate, ClientBuilder, Identity};
+use reqwest::ClientBuilder;
 use reqwest_websocket::RequestBuilderExt;
 use sandpolis_group::{GroupClientCert, GroupName};
 use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
-use serde_with::chrono::serde::ts_seconds_option;
+use serde_with::chrono::serde::{ts_seconds, ts_seconds_option};
 use std::net::ToSocketAddrs;
 use std::str::FromStr;
-use std::{cmp::min, collections::HashMap, net::SocketAddr, sync::Arc, time::Duration};
+use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
 use tokio::time::sleep;
 use tracing::debug;
 
-pub(crate) mod messages;
+pub mod cli;
+pub mod messages;
+pub mod routes;
 pub mod stream;
 
 pub struct NetworkLayerData {}
@@ -44,14 +44,6 @@ impl NetworkLayer {
 
     /// Request the server to coordinate a direct connection to the given agent.
     pub async fn direct_connect(&self, agent: InstanceId, port: Option<u16>) {}
-}
-
-#[axum_macros::debug_handler]
-async fn ping(
-    state: State<NetworkLayer>,
-    extract::Json(_): extract::Json<PingRequest>,
-) -> RequestResult<PingResponse> {
-    todo!()
 }
 
 /// Convenience type to be used as return of request handler.

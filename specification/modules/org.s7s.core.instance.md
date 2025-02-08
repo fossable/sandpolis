@@ -2,82 +2,6 @@
 
 The following sections apply to all Sandpolis instances.
 
-## Instance Types
-
-Every instance belongs to one of five mutually exclusive _instance types_. There
-is often more than one implementation in each category.
-
-| Instance Type | Description                                                                         |
-| ------------- | ----------------------------------------------------------------------------------- |
-| `server`      | A headless application that coordinates interactions among instances in the network |
-| `agent`       | A headless application that runs continuously on hosts in the Sandpolis network     |
-| `probe`       | A headless application that provides strictly read-only data to servers             |
-| `client`      | A UI application used for managing agents and probes                                |
-| `deployer`    | A headless application that installs or updates agents and probes                   |
-
-### Instance Flavors (subtypes)
-
-Each instance type may have multiple implementations (or flavors) to support a
-variety of use cases. Flavors are identified by a codename and also have a
-user-friendly "official" name.
-
-| Type       | Flavor codename | Implementation languages | Official name         |
-| ---------- | --------------- | ------------------------ | --------------------- |
-| `server`   | `vanilla`       | Java                     | Server                |
-| `client`   | `lifegem`       | Java, Kotlin             | Desktop Client        |
-| `client`   | `ascetic`       | Java                     | Terminal Client       |
-| `client`   | `lockstone`     | Swift                    | iOS Client            |
-| `client`   | `brightstone`   | JavaScript               | Web Client            |
-| `agent`    | `kilo`          | Java                     | Agent                 |
-| `agent`    | `micro`         | Rust                     | Native Agent          |
-| `agent`    | `boot`          | Rust                     | Boot Agent            |
-| `probe`    | `nano`          | C++                      | Probe                 |
-| `deployer` | `rust`          | Rust                     | Agent deployer (Rust) |
-| `deployer` | `java`          | Java                     | Agent deployer (Java) |
-
-## Configuration Model
-
-### Precedence
-
-
-## Instance Configuration
-
-```py
-# com.sandpolis.core.instance
-{
-  "container_resident" : Boolean(default=False), # Whether the instance is running in a container
-  "development"        : Boolean(default=False), # Whether development mode is enabled
-  "logging"            : {
-    "levels" : [
-      String(), # 
-    ]
-  },
-  "plugin"             : {
-    "enabled": Boolean(default=True), # Whether plugins will be loaded
-  }
-}
-```
-
-## Build Metadata
-
-```py
-# com.sandpolis.build.json
-{
-  "platform"   : String(), # The build platform
-  "timestamp"  : Number(), # The build timestamp
-  "versions"   : {
-    "instance" : String(), # The instance's version
-    "gradle"   : String(), # The Gradle version
-    "java"     : String(), # The Java version
-    "kotlin"   : String(), # The kotlin version is applicable
-    "rust"     : String(), # The rust version if applicable
-  },
-  "dependencies" : [
-    String(), # The artifact coordinates in G:A:V format
-  ]
-}
-```
-
 ## Data Model
 
 There are three layers in the Sandpolis data model. Of which, client
@@ -116,18 +40,6 @@ fired for all children of the added document as a direct result of the addition.
 ##### DocumentRemovedEvent
 
 Indicates that a document has been removed from the tree.
-
-#### Entanglement
-
-A concept that exists at the ST layer is **entanglement**: ST trees that reside
-on remote instances can synchronize their state. The relation can be
-bidirectional or unidirectional and last as long as necessary. All changes to
-the source of an entanglement pair will be propagated to the destination in
-real-time.
-
-#### Snapshots and Merging
-
-### The VST Layer
 
 ### The OID Layer
 
@@ -189,16 +101,3 @@ To select one value, omit the range specifier entirely:
 ```
 /profile/ba4412ea-1ec6-4e76-be78-3849d2196b52/example[1]
 ```
-
-## Message Format
-
-The Sandpolis network protocol is based on
-[protocol buffers](https://github.com/protocolbuffers/protobuf).
-
-### Request/Response messages
-
-Request messages are named with a `RQ_` prefix.
-
-### Event messages
-
-Event messages are named with a `EV_` prefix and are typically part of a stream.

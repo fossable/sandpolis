@@ -1,5 +1,9 @@
+use std::{collections::HashMap, sync::Arc};
+
 use anyhow::Result;
 use sandpolis_database::Document;
+use sandpolis_instance::{ClusterId, Layer, LayerVersion};
+use sandpolis_network::NetworkLayer;
 use serde::{Deserialize, Serialize};
 
 pub mod cli;
@@ -7,7 +11,7 @@ pub mod cli;
 #[cfg(feature = "server")]
 pub mod server;
 
-pub(crate) mod messages;
+pub mod messages;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ServerLayerData {}
@@ -15,32 +19,41 @@ pub struct ServerLayerData {}
 #[derive(Clone)]
 pub struct ServerLayer {
     pub data: Document<ServerLayerData>,
-    pub banner: Document<ServerBanner>,
+    pub banner: Document<ServerBannerData>,
+    pub network: NetworkLayer,
 }
 
 impl ServerLayer {
-    pub fn new(data: Document<ServerLayerData>) -> Result<Self> {
+    pub fn new(data: Document<ServerLayerData>, network: NetworkLayer) -> Result<Self> {
+        let banner = if let Some(document) = data.get_document("/banner")? {
+            document
+        } else {
+            // Load banner from another server if there is one
+            // TODO
+
+            // Create a new banner
+            data.document("/banner")?
+        };
+
         Ok(Self {
-            banner: data.document("banner")?,
+            banner,
             data,
+            network,
         })
     }
 
-    #[cfg(feature = "client")]
-    pub fn get_banner() -> Result<ServerBanner> {
+    pub fn get_banner() -> Result<ServerBannerData> {
         todo!()
     }
 }
 
 /// Response bearing the server's banner
-#[cfg(any(feature = "server", feature = "client"))]
 #[derive(Serialize, Deserialize, Clone, Default)]
-pub struct ServerBanner {
+pub struct ServerBannerData {
+    pub cluster_id: ClusterId,
+
     /// Indicates that only admin users will be allowed to login
     pub maintenance: bool,
-
-    /// The 3-field version of the server
-    pub version: String,
 
     /// A string to display on the login screen
     pub message: Option<String>,

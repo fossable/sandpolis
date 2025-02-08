@@ -7181,6 +7181,7 @@ dependencies = [
  "sandpolis-client",
  "sandpolis-database",
  "sandpolis-desktop",
+ "sandpolis-filesystem",
  "sandpolis-group",
  "sandpolis-instance",
  "sandpolis-macros",
@@ -7211,7 +7212,11 @@ name = "sandpolis-agent"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
+ "axum-macros",
  "clap",
+ "sandpolis-database",
+ "sandpolis-network",
  "serde",
  "tokio-cron-scheduler",
 ]
@@ -7290,8 +7295,12 @@ name = "sandpolis-filesystem"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
+ "axum-macros",
  "fuser",
  "notify",
+ "sandpolis-network",
+ "serde",
  "tracing",
 ]
 
@@ -7375,6 +7384,7 @@ dependencies = [
  "axum",
  "axum-macros",
  "chrono",
+ "clap",
  "futures",
  "reqwest",
  "reqwest-websocket",

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "agent")]
 pub mod agent;
 
-pub(crate) mod messages;
+pub mod messages;
 
 #[derive(Clone)]
 pub struct ShellLayer {}

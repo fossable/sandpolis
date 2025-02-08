@@ -1,3 +1,6 @@
+use crate::ServerAddress;
+use clap::Parser;
+
 #[derive(Parser, Debug, Clone)]
 pub struct NetworkCommandLine {
     /// Servers (address:port) to connect.

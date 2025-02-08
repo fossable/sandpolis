@@ -18,7 +18,7 @@ pub mod client;
 #[cfg(feature = "server")]
 pub mod server;
 
-pub(crate) mod messages;
+pub mod messages;
 
 #[derive(Clone)]
 pub struct UserLayer {

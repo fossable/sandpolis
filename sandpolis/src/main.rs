@@ -1,21 +1,26 @@
 use anyhow::bail;
 use anyhow::Result;
+use axum::routing::{any, get, post};
 use axum::Router;
-use clap::builder::OsStr;
-use clap::{Parser, Subcommand};
-use futures::Future;
+use clap::Parser;
 use sandpolis::cli::CommandLine;
 use sandpolis::cli::Commands;
 use sandpolis::InstanceState;
+use sandpolis_database::Collection;
 use sandpolis_database::Database;
 use sandpolis_database::Document;
-use sandpolis_group::GroupCaCert;
+use sandpolis_group::{GroupCaCert, GroupData};
+use sandpolis_network::ServerAddress;
+use sandpolis_network::{ConnectionCooldown, ServerConnection};
 use std::fs::File;
 use std::io::Write;
 use std::process::ExitCode;
+use std::time::Duration;
 use tokio::task::JoinSet;
 use tracing::info;
 use tracing_subscriber::filter::LevelFilter;
+
+pub mod routes;
 
 #[tokio::main]
 async fn main() -> Result<ExitCode> {
@@ -55,12 +60,13 @@ async fn main() -> Result<ExitCode> {
         .expect("crypto provider is available");
 
     // Load instance database
-    let db = Database::new(args.database.storage)?;
+    let db = Database::new(&args.database.storage)?;
 
     // Dispatch subcommands
     match args.command {
         #[cfg(feature = "server")]
         Some(Commands::GenerateCert { group, output }) => {
+            let groups: Collection<GroupData> = db.collection("/groups")?;
             let g = groups.get_document(&group)?.expect("the group exists");
             let ca: Document<GroupCaCert> = g.get_document("ca")?.expect("the CA exists");
 
@@ -82,14 +88,22 @@ async fn main() -> Result<ExitCode> {
     let mut tasks = JoinSet::new();
 
     #[cfg(feature = "server")]
-    tasks.spawn(async { server(&args, state.clone()).await });
+    {
+        let s = state.clone();
+        let a = args.clone();
+        tasks.spawn(async move { server(a, s).await });
+    }
 
     #[cfg(feature = "agent")]
-    tasks.spawn(async { agent(&args, state.clone()).await });
+    {
+        let s = state.clone();
+        let a = args.clone();
+        tasks.spawn(async move { agent(a, s).await });
+    }
 
     // The client must run on the main thread per bevy requirements
     #[cfg(feature = "client")]
-    client(&args, state).await?;
+    client(args, state).await?;
 
     // If this was a client, don't hold up the user by waiting for server/agent
     if !cfg!(feature = "client") {
@@ -102,19 +116,39 @@ async fn main() -> Result<ExitCode> {
 }
 
 #[cfg(feature = "server")]
-async fn server(args: &CommandLine, state: InstanceState) -> Result<()> {
-    let app: Router<()> = Router::new()
-        .nest("/server", sandpolis_server::ServerLayer::server_routes())
-        .nest("/server", sandpolis_user::UserLayer::server_routes())
+async fn server(args: CommandLine, state: InstanceState) -> Result<()> {
+    // TODO fallback routes from client to agent?
+
+    use anyhow::Context;
+
+    let app: Router<InstanceState> = Router::new()
+        // TODO from_fn_with_state for IP blocking
         .route_layer(axum::middleware::from_fn(
             sandpolis_group::server::auth_middleware,
-        ))
-        .with_state(state);
+        ));
 
-    info!(listener = ?args.server_args.listen, "Starting server listener");
-    axum_server::bind(args.server_args.listen)
-        .acceptor(GroupAcceptor::new(groups)?)
-        .serve(app.into_make_service())
+    // Server layer
+    let app: Router<InstanceState> = app.route(
+        "/server/banner",
+        get(sandpolis_server::server::routes::banner),
+    );
+
+    // User layer
+    let app: Router<InstanceState> =
+        app.route("/user/login", post(sandpolis_user::server::routes::login));
+
+    // Network layer
+    let app: Router<InstanceState> =
+        app.route("/network/ping", get(sandpolis_network::routes::ping));
+
+    // let app: Router<()> = app.with_state(state);
+
+    info!(listener = ?args.server.listen, "Starting server listener");
+    axum_server::bind(args.server.listen)
+        .acceptor(sandpolis_group::server::GroupAcceptor::new(
+            state.group.groups.clone(),
+        )?)
+        .serve(app.with_state(state).into_make_service())
         .await
         .context("binding socket")?;
 
@@ -122,20 +156,52 @@ async fn server(args: &CommandLine, state: InstanceState) -> Result<()> {
 }
 
 #[cfg(feature = "agent")]
-async fn agent(args: &CommandLine, state: InstanceState) -> Result<()> {
-    let uds = UnixListener::bind(&args.agent_args.agent_socket)?;
+async fn agent(args: CommandLine, state: InstanceState) -> Result<()> {
+    let uds = tokio::net::UnixListener::bind(&args.agent.agent_socket)?;
     tokio::spawn(async move {
-        let app = Router::new().nest("/layer/agent", sandpolis_agent::AgentLayer::agent_routes());
+        let app: Router<InstanceState> = Router::new();
 
+        // Agent layer
+        let app = app.route(
+            "/agent/uninstall",
+            post(sandpolis_agent::agent::routes::uninstall),
+        );
+
+        // Network layer
+        let app = app.route("/network/ping", get(sandpolis_network::routes::ping));
+
+        // Shell layer
         #[cfg(feature = "layer-shell")]
-        let app = app.nest("/layer/shell", sandpolis_shell::ShellLayer::agent_routes());
+        let app = app
+            .route(
+                "/shell/session",
+                any(sandpolis_shell::agent::routes::session),
+            )
+            .route(
+                "/shell/execute",
+                post(sandpolis_shell::agent::routes::execute),
+            );
 
+        // Filesystem layer
+        #[cfg(feature = "layer-filesystem")]
+        let app = app
+            .route(
+                "/filesystem/session",
+                any(sandpolis_filesystem::agent::routes::session),
+            )
+            .route(
+                "/shell/delete",
+                post(sandpolis_filesystem::agent::routes::delete),
+            );
+
+        // Package layer
         #[cfg(feature = "layer-package")]
         let app = app.nest(
             "/layer/package",
             sandpolis_package::PackageLayer::agent_routes(),
         );
 
+        // Desktop layer
         #[cfg(feature = "layer-desktop")]
         let app = app.nest(
             "/layer/desktop",
@@ -147,10 +213,9 @@ async fn agent(args: &CommandLine, state: InstanceState) -> Result<()> {
             .unwrap();
     });
 
-    let mut servers = if let Some(servers) = args.server {
-        servers
-    } else {
-        Vec::new()
+    let mut servers = match args.network.server {
+        Some(servers) => servers,
+        None => Vec::new(),
     };
 
     // If a server is running in the same process, add it with highest priority
@@ -158,7 +223,7 @@ async fn agent(args: &CommandLine, state: InstanceState) -> Result<()> {
     {
         servers.insert(
             0,
-            ServerAddress::Ip(args.server_args.listen),
+            ServerAddress::Ip(args.server.listen),
             // .to_string()
             // .replace("0.0.0.0", "127.0.0.1"),
         );
@@ -169,7 +234,7 @@ async fn agent(args: &CommandLine, state: InstanceState) -> Result<()> {
     }
 
     ServerConnection::new(
-        cert,
+        todo!(),
         servers,
         ConnectionCooldown {
             initial: Duration::from_millis(4000),
@@ -183,7 +248,7 @@ async fn agent(args: &CommandLine, state: InstanceState) -> Result<()> {
 }
 
 #[cfg(feature = "client")]
-async fn client(args: &CommandLine, state: InstanceState) -> Result<()> {
+async fn client(args: CommandLine, state: InstanceState) -> Result<()> {
     #[cfg(feature = "client-gui")]
     if args.client.gui {}
 

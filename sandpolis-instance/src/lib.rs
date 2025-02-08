@@ -1,7 +1,7 @@
 //! Instance layer
 
 use serde::{Deserialize, Serialize};
-use std::{fmt::Display, ops::Deref, path::PathBuf, str::FromStr};
+use std::{cmp::Ordering, fmt::Display, ops::Deref, path::PathBuf, str::FromStr};
 use strum::{EnumIter, IntoEnumIterator};
 use uuid::Uuid;
 
@@ -120,13 +120,15 @@ impl Display for InstanceId {
     Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq, PartialOrd, Ord, Hash,
 )]
 pub enum InstanceType {
-    /// Manages a host
+    /// Runs continuously on hosts and responds to management requests from servers
+    /// and clients.
     Agent,
 
-    /// User interface for managing agents and servers
+    /// User interface for managing instances in the Sandpolis network.
     Client,
 
-    /// Coordinates interaction among instances
+    /// Runs continously and coordinates interactions among instances in a Sandpolis
+    /// network. All networks include at least one server instance.
     Server,
 }
 
@@ -188,7 +190,7 @@ impl Default for InstanceData {
 }
 
 /// Layers are feature-sets that may be enabled on instances.
-#[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq, Hash)]
 pub enum Layer {
     /// Manage accounts.
     #[cfg(feature = "layer-account")]
@@ -226,7 +228,8 @@ pub enum Layer {
     #[cfg(feature = "layer-logging")]
     Logging,
 
-    /// Manage the Sandpolis network.
+    /// Support for connecting to instances in the Sandpolis network and sending
+    /// messages back and forth.
     Network,
 
     #[cfg(feature = "layer-package")]
@@ -244,13 +247,37 @@ pub enum Layer {
     #[cfg(feature = "layer-snapshot")]
     Snapshot,
 
+    #[cfg(feature = "layer-sysinfo")]
+    Sysinfo,
+
     /// Establish persistent or ephemeral tunnels between instances.
     #[cfg(feature = "layer-tunnel")]
     Tunnel,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Ord)]
 pub struct LayerVersion {
     major: u32,
     minor: u32,
     patch: u32,
+}
+
+impl PartialOrd for LayerVersion {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self.major > other.major {
+            Some(Ordering::Greater)
+        } else if self.major < other.major {
+            Some(Ordering::Less)
+        } else if self.minor > other.minor {
+            Some(Ordering::Greater)
+        } else if self.minor < other.minor {
+            Some(Ordering::Less)
+        } else if self.patch > other.patch {
+            Some(Ordering::Greater)
+        } else if self.patch < other.patch {
+            Some(Ordering::Less)
+        } else {
+            Some(Ordering::Equal)
+        }
+    }
 }

@@ -1,24 +1,14 @@
 use anyhow::Result;
-use axum::{
-    extract::{self, State},
-    routing::post,
-    Json, Router,
-};
-use axum_macros::debug_handler;
+use sandpolis_database::Document;
 use serde::{Deserialize, Serialize};
 use tokio_cron_scheduler::JobScheduler;
 
-use crate::{
-    agent::AgentState,
-    core::{
-        database::Document,
-        layer::agent::{PowerRequest, PowerResponse},
-    },
-};
+pub mod routes;
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct AgentLayerData;
 
+#[derive(Clone)]
 pub struct AgentLayer {
     pub data: Document<AgentLayerData>,
     pub scheduler: JobScheduler,

@@ -51,6 +51,7 @@ sandpolis-power = { path = "../sandpolis-power", optional = true }
 sandpolis-sysinfo = { path = "../sandpolis-sysinfo", optional = true }
 sandpolis-package = { path = "../sandpolis-package", optional = true }
 sandpolis-desktop = { path = "../sandpolis-desktop", optional = true }
+sandpolis-filesystem = { path = "../sandpolis-filesystem", optional = true }
 sandpolis-shell = { path = "../sandpolis-shell", optional = true }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 
@@ -71,7 +72,7 @@ layer-account = []
 layer-alert = []
 layer-deploy = []
 layer-desktop = ["dep:sandpolis-desktop"]
-layer-filesystem = []                     # ["dep:fuser"]
+layer-filesystem = ["dep:sandpolis-filesystem"]
 layer-health = []
 layer-inventory = []
 layer-location = []
