@@ -1,7 +1,7 @@
-use std::{collections::HashMap, path::PathBuf};
-
+use anyhow::Result;
 use sandpolis_macros::{Delta, StreamEvent};
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, path::PathBuf};
 
 #[cfg(feature = "agent")]
 pub mod agent;
@@ -10,6 +10,12 @@ pub mod messages;
 
 #[derive(Clone)]
 pub struct ShellLayer {}
+
+impl ShellLayer {
+    pub fn new() -> Result<Self> {
+        Ok(Self {})
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum ShellType {

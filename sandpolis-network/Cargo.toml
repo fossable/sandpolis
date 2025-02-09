@@ -18,7 +18,7 @@ serde_with = { workspace = true }
 serde_cbor = { workspace = true }
 reqwest-websocket = { workspace = true }
 sandpolis-instance = { path = "../sandpolis-instance" }
-sandpolis-group = { path = "../sandpolis-group" }
+sandpolis-database = { path = "../sandpolis-database" }
 
 [features]
 agent = []

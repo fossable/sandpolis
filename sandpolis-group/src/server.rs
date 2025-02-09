@@ -47,7 +47,8 @@ use validator::Validate;
 use x509_parser::prelude::{FromDer, X509Certificate};
 
 impl super::GroupLayer {
-    pub fn new(db: &Database, cluster_id: ClusterId) -> Result<Self> {
+    /// Create the default group if it doesn't exist.
+    pub fn create_default(db: &Database, cluster_id: ClusterId) -> Result<()> {
         let groups: Collection<GroupData> = db.collection("/server/groups")?;
 
         // Create the default group if it doesn't exist
@@ -57,6 +58,7 @@ impl super::GroupLayer {
             .find(|group| *group.data.name == "default")
             .is_none()
         {
+            debug!("Creating default group");
             let group = groups.insert_document(
                 "default",
                 GroupData {
@@ -68,7 +70,7 @@ impl super::GroupLayer {
             group.insert_document("ca", GroupCaCert::new(cluster_id)?)?;
         }
 
-        Ok(Self { groups })
+        Ok(())
     }
 }
 

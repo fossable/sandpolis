@@ -1,10 +1,15 @@
+use anyhow::bail;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
+use cli::NetworkCommandLine;
 use futures::StreamExt;
 use messages::PingRequest;
 use messages::PingResponse;
+use reqwest::Certificate;
 use reqwest::ClientBuilder;
+use reqwest::Identity;
 use reqwest_websocket::RequestBuilderExt;
+use sandpolis_database::Document;
 use sandpolis_group::{GroupClientCert, GroupName};
 use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
@@ -20,18 +25,41 @@ pub mod messages;
 pub mod routes;
 pub mod stream;
 
-pub struct NetworkLayerData {}
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub struct NetworkLayerData {
+    server_cooldown: ConnectionCooldown,
+}
 
 #[derive(Clone)]
 pub struct NetworkLayer {
-    connection: Arc<ServerConnection>,
+    pub data: Document<NetworkLayerData>,
+    pub servers: Arc<Vec<ServerConnection>>,
 }
 
 impl NetworkLayer {
+    pub fn new(args: &NetworkCommandLine, data: Document<NetworkLayerData>) -> Result<Self> {
+        #[cfg(feature = "agent")]
+        if args.server.is_none() {
+            bail!("No servers given");
+        }
+
+        Ok(Self {
+            servers: Arc::new(
+                args.server
+                    .unwrap()
+                    .into_iter()
+                    .map(|address| {
+                        ServerConnection::new(todo!(), address, data.data.server_cooldown.clone())
+                    })
+                    .collect::<Result<Vec<ServerConnection>>>()?,
+            ),
+            data,
+        })
+    }
+
     /// Send a message to the given instance and measure the time/path it took.
     pub async fn ping(&self, id: InstanceId) -> Result<PingResponse> {
-        let response: PingResponse = self
-            .connection
+        let response: PingResponse = self.servers[0] // TODO select best
             .client
             .get("/ping")
             .json(&PingRequest { id })
@@ -111,6 +139,7 @@ pub struct AgentConnectionRequest {
 /// A direct connection to an agent from a client.
 pub struct AgentConnection {}
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ConnectionCooldown {
     /// Initial cooldown value
     pub initial: Duration,
@@ -142,6 +171,16 @@ impl ConnectionCooldown {
     }
 }
 
+impl Default for ConnectionCooldown {
+    fn default() -> Self {
+        Self {
+            initial: Duration::from_millis(4000),
+            constant: None,
+            limit: None,
+        }
+    }
+}
+
 /// A connection to a server from any other instance (including another server).
 ///
 /// In continuous mode, the agent maintains its primary connection at all times. If
@@ -168,13 +207,11 @@ pub struct ServerConnection {
 
 impl ServerConnection {
     pub fn new(
-        auth: GroupClientCert,
-        addresses: Vec<ServerAddress>,
+        address: ServerAddress,
         cooldown: ConnectionCooldown,
+        ca: Certificate,
+        identity: Identity,
     ) -> Result<Self> {
-        let ca = auth.ca()?;
-        let identity = auth.identity()?;
-
         Ok(Self {
             group: auth.name()?,
             iterations: 0,
@@ -182,14 +219,7 @@ impl ServerConnection {
             client: ClientBuilder::new()
                 .add_root_certificate(ca.clone())
                 .identity(identity.clone())
-                .resolve_to_addrs(
-                    &auth.name()?,
-                    &addresses
-                        .iter()
-                        .filter_map(|address| address.resolve().ok())
-                        .flat_map(|address| address)
-                        .collect::<Vec<SocketAddr>>(),
-                )
+                .resolve_to_addrs(&auth.name()?, &address.resolve()?)
                 .build()
                 .unwrap(),
         })

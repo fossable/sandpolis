@@ -13,7 +13,7 @@ pub mod server;
 
 pub mod messages;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct ServerLayerData {}
 
 #[derive(Clone)]

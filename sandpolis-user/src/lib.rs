@@ -8,7 +8,7 @@ use std::{net::SocketAddr, ops::Deref, str::FromStr};
 
 use anyhow::{bail, Result};
 use regex::Regex;
-use sandpolis_database::{Collection, Database};
+use sandpolis_database::{Collection, Database, Document};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationErrors};
 
@@ -20,17 +20,22 @@ pub mod server;
 
 pub mod messages;
 
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct UserLayerData {}
+
 #[derive(Clone)]
 pub struct UserLayer {
-    #[cfg(any(feature = "server", feature = "client"))]
+    pub data: Document<UserLayerData>,
+    #[cfg(feature = "server")]
     pub users: Collection<UserData>,
 }
 
 impl UserLayer {
-    pub fn new(db: Database) -> Result<Self> {
+    pub fn new(data: Document<UserLayerData>) -> Result<Self> {
         Ok(Self {
-            #[cfg(any(feature = "server", feature = "client"))]
-            users: db.collection("/server/users")?,
+            #[cfg(feature = "server")]
+            users: data.collection("/users")?,
+            data,
         })
     }
 }

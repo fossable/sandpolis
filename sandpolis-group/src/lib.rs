@@ -3,7 +3,7 @@
 
 use anyhow::Result;
 use regex::Regex;
-use sandpolis_database::Collection;
+use sandpolis_database::{Collection, Document};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::str::FromStr;
@@ -15,11 +15,25 @@ use x509_parser::prelude::X509Certificate;
 #[cfg(feature = "server")]
 pub mod server;
 
-pub(crate) mod messages;
+pub mod messages;
+
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub struct GroupLayerData;
 
 #[derive(Clone)]
 pub struct GroupLayer {
+    pub data: Document<GroupLayerData>,
     pub groups: Collection<GroupData>,
+}
+
+impl GroupLayer {
+    pub fn new(data: Document<GroupLayerData>) -> Result<Self> {
+        // TODO call default
+        Ok(Self {
+            groups: data.collection("/groups")?,
+            data,
+        })
+    }
 }
 
 /// A group is a set of clients and agents that can interact. Each group has a

@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 // message RQ_InstallOrUpgradePackages {
 //     repeated string package = 1;
 // }
@@ -16,6 +18,12 @@ pub mod agent;
 
 #[derive(Clone)]
 pub struct PackageLayer {}
+
+impl PackageLayer {
+    pub fn new() -> Result<Self> {
+        Ok(Self {})
+    }
+}
 
 pub fn pacman() {}
 

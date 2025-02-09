@@ -1,4 +1,5 @@
 use anyhow::bail;
+use anyhow::Context;
 use anyhow::Result;
 use axum::routing::{any, get, post};
 use axum::Router;
@@ -82,7 +83,7 @@ async fn main() -> Result<ExitCode> {
     }
 
     // Load state
-    let state = InstanceState::new(db);
+    let state = InstanceState::new(&args, db).await?;
 
     // Prepare to launch instances
     let mut tasks = JoinSet::new();
@@ -116,16 +117,10 @@ async fn main() -> Result<ExitCode> {
 }
 
 #[cfg(feature = "server")]
-async fn server(args: CommandLine, state: InstanceState) -> Result<()> {
+pub async fn server(args: CommandLine, state: InstanceState) -> Result<()> {
     // TODO fallback routes from client to agent?
 
-    use anyhow::Context;
-
-    let app: Router<InstanceState> = Router::new()
-        // TODO from_fn_with_state for IP blocking
-        .route_layer(axum::middleware::from_fn(
-            sandpolis_group::server::auth_middleware,
-        ));
+    let app: Router<InstanceState> = Router::new().route("/versions", get(routes::versions));
 
     // Server layer
     let app: Router<InstanceState> = app.route(
@@ -141,7 +136,10 @@ async fn server(args: CommandLine, state: InstanceState) -> Result<()> {
     let app: Router<InstanceState> =
         app.route("/network/ping", get(sandpolis_network::routes::ping));
 
-    // let app: Router<()> = app.with_state(state);
+    // TODO from_fn_with_state for IP blocking
+    let app = app.route_layer(axum::middleware::from_fn(
+        sandpolis_group::server::auth_middleware,
+    ));
 
     info!(listener = ?args.server.listen, "Starting server listener");
     axum_server::bind(args.server.listen)
@@ -156,99 +154,67 @@ async fn server(args: CommandLine, state: InstanceState) -> Result<()> {
 }
 
 #[cfg(feature = "agent")]
-async fn agent(args: CommandLine, state: InstanceState) -> Result<()> {
+pub async fn agent(args: CommandLine, state: InstanceState) -> Result<()> {
     let uds = tokio::net::UnixListener::bind(&args.agent.agent_socket)?;
-    tokio::spawn(async move {
-        let app: Router<InstanceState> = Router::new();
+    let app: Router<InstanceState> = Router::new().route("/versions", get(routes::versions));
 
-        // Agent layer
-        let app = app.route(
-            "/agent/uninstall",
-            post(sandpolis_agent::agent::routes::uninstall),
+    // Agent layer
+    let app = app.route(
+        "/agent/uninstall",
+        post(sandpolis_agent::agent::routes::uninstall),
+    );
+
+    // Network layer
+    let app = app.route("/network/ping", get(sandpolis_network::routes::ping));
+
+    // Shell layer
+    #[cfg(feature = "layer-shell")]
+    let app = app
+        .route(
+            "/shell/session",
+            any(sandpolis_shell::agent::routes::session),
+        )
+        .route(
+            "/shell/execute",
+            post(sandpolis_shell::agent::routes::execute),
         );
 
-        // Network layer
-        let app = app.route("/network/ping", get(sandpolis_network::routes::ping));
-
-        // Shell layer
-        #[cfg(feature = "layer-shell")]
-        let app = app
-            .route(
-                "/shell/session",
-                any(sandpolis_shell::agent::routes::session),
-            )
-            .route(
-                "/shell/execute",
-                post(sandpolis_shell::agent::routes::execute),
-            );
-
-        // Filesystem layer
-        #[cfg(feature = "layer-filesystem")]
-        let app = app
-            .route(
-                "/filesystem/session",
-                any(sandpolis_filesystem::agent::routes::session),
-            )
-            .route(
-                "/shell/delete",
-                post(sandpolis_filesystem::agent::routes::delete),
-            );
-
-        // Package layer
-        #[cfg(feature = "layer-package")]
-        let app = app.nest(
-            "/layer/package",
-            sandpolis_package::PackageLayer::agent_routes(),
+    // Filesystem layer
+    #[cfg(feature = "layer-filesystem")]
+    let app = app
+        .route(
+            "/filesystem/session",
+            any(sandpolis_filesystem::agent::routes::session),
+        )
+        .route(
+            "/shell/delete",
+            post(sandpolis_filesystem::agent::routes::delete),
         );
 
-        // Desktop layer
-        #[cfg(feature = "layer-desktop")]
-        let app = app.nest(
-            "/layer/desktop",
-            sandpolis_desktop::DesktopLayer::agent_routes(),
-        );
+    // Package layer
+    #[cfg(feature = "layer-package")]
+    let app = app.nest(
+        "/layer/package",
+        sandpolis_package::PackageLayer::agent_routes(),
+    );
 
-        axum::serve(uds, app.with_state(state).into_make_service())
-            .await
-            .unwrap();
-    });
+    // Desktop layer
+    #[cfg(feature = "layer-desktop")]
+    let app = app.nest(
+        "/layer/desktop",
+        sandpolis_desktop::DesktopLayer::agent_routes(),
+    );
 
-    let mut servers = match args.network.server {
-        Some(servers) => servers,
-        None => Vec::new(),
-    };
-
-    // If a server is running in the same process, add it with highest priority
-    #[cfg(feature = "server")]
-    {
-        servers.insert(
-            0,
-            ServerAddress::Ip(args.server.listen),
-            // .to_string()
-            // .replace("0.0.0.0", "127.0.0.1"),
-        );
-    }
-
-    if servers.len() == 0 {
-        bail!("No server defined");
-    }
-
-    ServerConnection::new(
-        todo!(),
-        servers,
-        ConnectionCooldown {
-            initial: Duration::from_millis(4000),
-            constant: None,
-            limit: None,
-        },
-    )?
-    .run()
-    .await;
+    axum::serve(uds, app.with_state(state).into_make_service())
+        .await
+        .unwrap();
     Ok(())
 }
 
 #[cfg(feature = "client")]
-async fn client(args: CommandLine, state: InstanceState) -> Result<()> {
+pub async fn client(args: CommandLine, state: InstanceState) -> Result<()> {
+    let app: Router<InstanceState> = Router::new().route("/versions", get(routes::versions));
+
     #[cfg(feature = "client-gui")]
     if args.client.gui {}
 
