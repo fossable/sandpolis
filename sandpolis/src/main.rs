@@ -71,7 +71,7 @@ async fn main() -> Result<ExitCode> {
             let g = groups.get_document(&group)?.expect("the group exists");
             let ca: Document<GroupCaCert> = g.get_document("ca")?.expect("the CA exists");
 
-            let cert = ca.data.client_cert(&group.parse()?)?;
+            let cert = ca.data.client_cert()?;
 
             info!(path = %output.display(), "Writing endpoint certificate");
             let mut output = File::create(output)?;

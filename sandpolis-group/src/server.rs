@@ -67,7 +67,7 @@ impl super::GroupLayer {
                 },
             )?;
 
-            group.insert_document("ca", GroupCaCert::new(cluster_id)?)?;
+            group.insert_document("ca", GroupCaCert::new(cluster_id, group.data.name.clone())?)?;
         }
 
         Ok(())
@@ -76,7 +76,7 @@ impl super::GroupLayer {
 
 impl super::GroupCaCert {
     /// Generate a new group CA certificate.
-    pub fn new(cluster_id: ClusterId) -> Result<Self> {
+    pub fn new(cluster_id: ClusterId, name: GroupName) -> Result<Self> {
         // Generate key
         let keypair = KeyPair::generate()?;
 
@@ -97,6 +97,7 @@ impl super::GroupCaCert {
 
         debug!(cert = ?cert.params(), "Generated new group CA certificate");
         Ok(Self {
+            name,
             cert: cert.pem(),
             key: keypair.serialize_pem(),
         })
@@ -112,7 +113,7 @@ impl super::GroupCaCert {
     }
 
     /// Generate a new _clientAuth_ certificate signed by the group's CA.
-    pub fn client_cert(&self, group_name: &GroupName) -> Result<GroupClientCert> {
+    pub fn client_cert(&self) -> Result<GroupClientCert> {
         // Generate key
         let keypair = KeyPair::generate()?;
 
@@ -124,7 +125,7 @@ impl super::GroupCaCert {
         cert_params.not_before = OffsetDateTime::now_utc();
         cert_params
             .distinguished_name
-            .push(DnType::CommonName, group_name.to_string());
+            .push(DnType::CommonName, &*self.name);
         // TODO not_after of 1 month
 
         // Generate the certificate signed by the CA
@@ -138,11 +139,7 @@ impl super::GroupCaCert {
     }
 
     /// Generate a new _serverAuth_ certificate signed by the group's CA.
-    pub fn server_cert(
-        &self,
-        server_id: InstanceId,
-        group_name: &GroupName,
-    ) -> Result<GroupServerCert> {
+    pub fn server_cert(&self, server_id: InstanceId) -> Result<GroupServerCert> {
         if !server_id.is_type(InstanceType::Server) {
             bail!("A server ID is required");
         }
@@ -157,7 +154,7 @@ impl super::GroupCaCert {
             .push(ExtendedKeyUsagePurpose::ServerAuth);
         cert_params.not_before = OffsetDateTime::now_utc();
         cert_params.subject_alt_names = vec![SanType::DnsName(
-            format!("{group_name}.{server_id}").try_into()?,
+            format!("{}.{server_id}", self.name).try_into()?,
         )];
         // TODO not_after of 1 year
 
@@ -168,6 +165,20 @@ impl super::GroupCaCert {
             cert: cert.pem(),
             key: keypair.serialize_pem(),
         })
+    }
+}
+
+#[cfg(test)]
+mod test_group_ca {
+    use super::*;
+
+    #[test]
+    fn test_generate() -> Result<()> {
+        let ca = GroupCaCert::new(ClusterId::default(), "default".parse()?)?;
+        let client = ca.client_cert()?;
+        let server = ca.server_cert(InstanceId::new_server());
+
+        Ok(())
     }
 }
 

@@ -188,7 +188,7 @@ where
 {
     pub db: sled::Tree,
     pub oid: Oid,
-    pub data: T,
+    pub data: T, // TODO impl AsRef?
 }
 
 impl<T: Serialize + DeserializeOwned> Document<T> {

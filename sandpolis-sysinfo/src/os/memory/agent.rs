@@ -40,8 +40,9 @@ impl Collector for MemoryMonitor {
 
 #[cfg(test)]
 mod tests {
-    use crate::{agent::layer::agent::Collector, core::database::Database};
     use anyhow::Result;
+    use sandpolis_agent::Collector;
+    use sandpolis_database::Database;
 
     #[test]
     fn test_memory_monitor() -> Result<()> {

@@ -17,7 +17,6 @@ pub struct InstanceState {
     pub db: Database,
     #[cfg(feature = "layer-filesystem")]
     pub filesystem: sandpolis_filesystem::FilesystemLayer,
-    #[cfg(feature = "server")]
     pub group: sandpolis_group::GroupLayer,
     pub network: sandpolis_network::NetworkLayer,
     #[cfg(feature = "layer-package")]
@@ -34,11 +33,13 @@ pub struct InstanceState {
 
 impl InstanceState {
     pub async fn new(args: &CommandLine, db: Database) -> Result<Self> {
-        let network =
-            sandpolis_network::NetworkLayer::new(&args.network, db.document("/network")?)?;
+        let group = sandpolis_group::GroupLayer::new(&args.group, db.document("/group")?)?;
+        let network = sandpolis_network::NetworkLayer::new(
+            &args.network,
+            db.document("/network")?,
+            group.clone(),
+        )?;
         Ok(Self {
-            #[cfg(feature = "server")]
-            group: sandpolis_group::GroupLayer::new(db.document("/group")?)?,
             #[cfg(feature = "layer-package")]
             package: sandpolis_package::PackageLayer::new()?,
             #[cfg(feature = "layer-power")]
@@ -53,6 +54,7 @@ impl InstanceState {
             agent: sandpolis_agent::AgentLayer::new(db.document("/agent")?).await?,
             server: sandpolis_server::ServerLayer::new(db.document("/server")?, network.clone())?,
             network,
+            group,
             db,
         })
     }

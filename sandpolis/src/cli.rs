@@ -5,26 +5,29 @@ use std::path::PathBuf;
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about, long_about = None)]
 pub struct CommandLine {
-    #[cfg(feature = "server")]
+    #[cfg(feature = "agent")]
     #[clap(flatten)]
-    pub server: sandpolis_server::cli::ServerCommandLine,
+    pub agent: sandpolis_agent::cli::AgentCommandLine,
 
     #[cfg(feature = "client")]
     #[clap(flatten)]
     pub client: sandpolis_client::cli::ClientCommandLine,
 
-    #[cfg(feature = "agent")]
     #[clap(flatten)]
-    pub agent: sandpolis_agent::cli::AgentCommandLine,
+    pub database: sandpolis_database::cli::DatabaseCommandLine,
+
+    #[clap(flatten)]
+    pub group: sandpolis_group::cli::GroupCommandLine,
 
     #[clap(flatten)]
     pub instance: sandpolis_instance::cli::InstanceCommandLine,
 
     #[clap(flatten)]
-    pub database: sandpolis_database::cli::DatabaseCommandLine,
-
-    #[clap(flatten)]
     pub network: sandpolis_network::cli::NetworkCommandLine,
+
+    #[cfg(feature = "server")]
+    #[clap(flatten)]
+    pub server: sandpolis_server::cli::ServerCommandLine,
 
     #[command(subcommand)]
     pub command: Option<Commands>,

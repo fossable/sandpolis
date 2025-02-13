@@ -93,6 +93,11 @@ impl InstanceId {
         Self(uuid)
     }
 
+    /// Generate a new server-only ID as a convenience.
+    pub fn new_server() -> Self {
+        Self::new(&[InstanceType::Server])
+    }
+
     /// Check whether this UUID was generated with the given instance type.
     pub fn is_type(&self, instance_type: InstanceType) -> bool {
         self.0 & instance_type.mask() as u128 > 0

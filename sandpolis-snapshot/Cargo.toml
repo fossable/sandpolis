@@ -6,4 +6,10 @@ edition = "2021"
 [dependencies]
 serde = { workspace = true }
 uuid = { workspace = true }
+qcow = { version = "1.2.0", optional = true }
 sandpolis-instance = { path = "../sandpolis-instance" }
+
+[features]
+server = ["dep:qcow"]
+agent-boot = []
+agent = []

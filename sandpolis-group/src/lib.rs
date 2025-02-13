@@ -2,6 +2,7 @@
 //! clientAuth certificates.
 
 use anyhow::Result;
+use cli::GroupCommandLine;
 use regex::Regex;
 use sandpolis_database::{Collection, Document};
 use serde::{Deserialize, Serialize};
@@ -12,13 +13,15 @@ use validator::{Validate, ValidationErrors};
 use x509_parser::prelude::FromDer;
 use x509_parser::prelude::X509Certificate;
 
+pub mod cli;
+pub mod messages;
 #[cfg(feature = "server")]
 pub mod server;
 
-pub mod messages;
-
 #[derive(Serialize, Deserialize, Clone, Default)]
-pub struct GroupLayerData;
+pub struct GroupLayerData {
+    pub client: Option<GroupClientCert>,
+}
 
 #[derive(Clone)]
 pub struct GroupLayer {
@@ -27,7 +30,19 @@ pub struct GroupLayer {
 }
 
 impl GroupLayer {
-    pub fn new(data: Document<GroupLayerData>) -> Result<Self> {
+    pub fn new(args: &GroupCommandLine, mut data: Document<GroupLayerData>) -> Result<Self> {
+        if let Some(new_cert) = args.certificate()? {
+            if let Some(old_cert) = data.data.client.as_ref() {
+                // Only import if the given certificate is newer than the one already
+                // in the database.
+                if new_cert.creation_time()? > old_cert.creation_time()? {
+                    data.data.client = Some(new_cert);
+                }
+            } else {
+                data.data.client = Some(new_cert);
+            }
+        }
+
         // TODO call default
         Ok(Self {
             groups: data.collection("/groups")?,
@@ -46,6 +61,8 @@ pub struct GroupData {
     pub owner: String,
 }
 
+/// Groups have unique names and are shared across the entire cluster. Group
+/// names cannot be changed after they are created.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GroupName(String);
 
@@ -83,8 +100,30 @@ impl Validate for GroupName {
     }
 }
 
+#[cfg(test)]
+mod test_group_name {
+    use super::*;
+
+    #[test]
+    fn test_valid() {
+        assert!("test".parse::<GroupName>().is_ok());
+        assert!("default".parse::<GroupName>().is_ok());
+    }
+
+    #[test]
+    fn test_invalid() {
+        assert!("t".parse::<GroupName>().is_err());
+        assert!("".parse::<GroupName>().is_err());
+        assert!("test*".parse::<GroupName>().is_err());
+        assert!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            .parse::<GroupName>()
+            .is_err());
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GroupCaCert {
+    pub name: GroupName,
     pub cert: String,
     pub key: String,
 }

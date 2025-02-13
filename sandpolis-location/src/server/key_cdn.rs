@@ -52,7 +52,26 @@ struct Response {
 
 impl From<Response> for LocationData {
     fn from(value: Response) -> Self {
-        todo!()
+        Self {
+            as_name: value.asn,
+            as_code: None,
+            city: value.city,
+            continent: value.continent_name,
+            continent_code: value.continent_code,
+            country: value.country_name,
+            country_code: value.country_code,
+            currency: None,
+            district: None,
+            isp: value.isp,
+            latitude: value.latitude,
+            longitude: value.longitude,
+            metro_code: value.metro_code.map(|m| m.parse().unwrap_or_default()),
+            organization: None,
+            postal_code: value.postal_code,
+            region: value.region_name,
+            region_code: value.region_code,
+            timezone: value.timezone,
+        }
     }
 }
 

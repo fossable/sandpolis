@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
@@ -10,6 +11,7 @@ use reqwest::ClientBuilder;
 use reqwest::Identity;
 use reqwest_websocket::RequestBuilderExt;
 use sandpolis_database::Document;
+use sandpolis_group::GroupLayer;
 use sandpolis_group::{GroupClientCert, GroupName};
 use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
@@ -37,19 +39,35 @@ pub struct NetworkLayer {
 }
 
 impl NetworkLayer {
-    pub fn new(args: &NetworkCommandLine, data: Document<NetworkLayerData>) -> Result<Self> {
-        #[cfg(feature = "agent")]
-        if args.server.is_none() {
+    pub fn new(
+        args: &NetworkCommandLine,
+        data: Document<NetworkLayerData>,
+        group: GroupLayer,
+    ) -> Result<Self> {
+        let cert = if args.server.is_none() {
+            #[cfg(feature = "agent")]
             bail!("No servers given");
-        }
+        } else {
+            // Make sure we have a clientAuth cert
+            group
+                .data
+                .data
+                .client
+                .ok_or(anyhow!("No group certificate found"))?
+        };
 
         Ok(Self {
             servers: Arc::new(
                 args.server
+                    .as_ref()
                     .unwrap()
                     .into_iter()
                     .map(|address| {
-                        ServerConnection::new(todo!(), address, data.data.server_cooldown.clone())
+                        ServerConnection::new(
+                            address.to_owned(),
+                            data.data.server_cooldown.clone(),
+                            cert.clone(),
+                        )
                     })
                     .collect::<Result<Vec<ServerConnection>>>()?,
             ),
@@ -181,6 +199,8 @@ impl Default for ConnectionCooldown {
     }
 }
 
+pub struct ServerConnectionData {}
+
 /// A connection to a server from any other instance (including another server).
 ///
 /// In continuous mode, the agent maintains its primary connection at all times. If
@@ -209,17 +229,16 @@ impl ServerConnection {
     pub fn new(
         address: ServerAddress,
         cooldown: ConnectionCooldown,
-        ca: Certificate,
-        identity: Identity,
+        cert: GroupClientCert,
     ) -> Result<Self> {
         Ok(Self {
-            group: auth.name()?,
+            group: cert.name()?,
             iterations: 0,
             cooldown,
             client: ClientBuilder::new()
-                .add_root_certificate(ca.clone())
-                .identity(identity.clone())
-                .resolve_to_addrs(&auth.name()?, &address.resolve()?)
+                .add_root_certificate(cert.ca()?)
+                .identity(cert.identity()?)
+                .resolve_to_addrs(&cert.name()?, &address.resolve()?)
                 .build()
                 .unwrap(),
         })

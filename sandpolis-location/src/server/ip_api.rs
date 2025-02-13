@@ -71,7 +71,26 @@ struct Response {
 
 impl From<Response> for LocationData {
     fn from(value: Response) -> Self {
-        todo!()
+        Self {
+            as_name: value.asname,
+            as_code: None,
+            city: value.city,
+            continent: value.continent,
+            continent_code: value.continentCode,
+            country: value.country,
+            country_code: value.countryCode,
+            currency: value.currency,
+            district: value.district,
+            isp: value.isp,
+            latitude: value.lat,
+            longitude: value.lon,
+            metro_code: None,
+            organization: value.org,
+            postal_code: None,
+            region: value.regionName,
+            region_code: value.region,
+            timezone: value.timezone,
+        }
     }
 }
 
