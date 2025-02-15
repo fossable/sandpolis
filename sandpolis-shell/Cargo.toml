@@ -24,3 +24,7 @@ agent = [
   "dep:futures",
   "dep:sandpolis-agent",
 ]
+server = []
+client = []
+client-gui = ["client"]
+client-tui = ["client"]

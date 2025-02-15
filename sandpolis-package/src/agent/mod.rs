@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use axum::Router;
 use std::path::PathBuf;
 
-pub trait PackageManager {
+pub(crate) trait PackageManager {
     /// Get the location of the package manager's binary on the filesystem.
     fn get_location(&self) -> Result<PathBuf> {
         bail!("Not implemented");
@@ -61,6 +61,6 @@ impl PackageLayer {
     where
         S: Clone + Send + Sync + 'static,
     {
-        todo!()
+        Router::new()
     }
 }

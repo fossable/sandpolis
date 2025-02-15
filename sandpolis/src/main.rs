@@ -215,11 +215,20 @@ pub async fn agent(args: CommandLine, state: InstanceState) -> Result<()> {
 pub async fn client(args: CommandLine, state: InstanceState) -> Result<()> {
     let app: Router<InstanceState> = Router::new().route("/versions", get(routes::versions));
 
-    #[cfg(feature = "client-gui")]
-    if args.client.gui {}
+    // Check command line preference
+    #[cfg(all(feature = "client-gui", feature = "client-tui"))]
+    {
+        if args.client.gui {
+            todo!();
+            return Ok(());
+        } else if args.client.tui {
+            sandpolis_client::tui::main(args.client).await?;
+            return Ok(());
+        }
+    }
 
     #[cfg(feature = "client-tui")]
-    if args.client.tui {}
+    sandpolis_client::tui::main(args.client).await.unwrap();
 
     Ok(())
 }

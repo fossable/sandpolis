@@ -16,3 +16,6 @@ sandpolis-network = { path = "../sandpolis-network" }
 [features]
 agent = ["dep:notify"]
 client = ["dep:fuser"]
+client-gui = ["client"]
+client-tui = ["client"]
+server = []

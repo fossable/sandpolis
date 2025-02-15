@@ -13,5 +13,6 @@ axum-macros = { workspace = true, optional = true }
 [features]
 agent = ["dep:axum", "dep:axum-macros"]
 client = []
-client-tui = ["dep:ratatui"]
 client-gui = []
+client-tui = ["dep:ratatui"]
+server = []

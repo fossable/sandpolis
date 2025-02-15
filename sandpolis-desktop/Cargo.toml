@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = { workspace = true, optional = true }
+axum = { workspace = true }
 serde = { workspace = true }
 anyhow = { workspace = true }
 # TODO needs to be published
@@ -15,5 +15,8 @@ enigo = { version = "0.3.0", optional = true }
 tracing = { workspace = true }
 
 [features]
-agent = ["dep:enigo", "dep:axum"]
+agent = ["dep:enigo"]
 client = []
+client-gui = ["client"]
+client-tui = ["client"]
+server = []

@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-uefi = { version = "0.31.0", features = [ #"panic_handler"
+uefi = { version = "0.34.1", features = [ #"panic_handler"
 ], optional = true }
 getrandom = { version = "0.3.1" }
 embassy-executor = { version = "0.7.0", features = [

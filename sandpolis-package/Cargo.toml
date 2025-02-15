@@ -11,4 +11,7 @@ tracing = { workspace = true }
 
 [features]
 agent = []
+server = []
 client = []
+client-tui = ["client"]
+client-gui = ["client"]

@@ -79,3 +79,47 @@ jobs:
         with:
           name: android_artifacts
           path: sandpolis-mobile/android/app/build/outputs/apk/debug/*.apk
+
+  docker:
+    name: docker / sandpolis-${{ matrix.instance }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        instance:
+          - server
+          - agent
+          - client
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Find version tags
+        id: get_tags
+        run: |
+          for tag in $(git tag --points-at HEAD); do
+            echo "${tag%-*}=${tag##*-}" >>"$GITHUB_OUTPUT"
+          done
+
+      - uses: docker/build-push-action@v5
+        with:
+          file: sandpolis/${{ matrix.instance }}.Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          tags: sandpolis/${{ matrix.instance }}:nightly
+
+      - uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: sandpolis/${{ matrix.instance }}

@@ -45,28 +45,33 @@ impl NetworkLayer {
         group: GroupLayer,
     ) -> Result<Self> {
         let cert = if args.server.is_none() {
-            #[cfg(feature = "agent")]
-            bail!("No servers given");
+            if cfg!(feature = "agent") {
+                bail!("No servers given")
+            } else {
+                None
+            }
         } else {
             // Make sure we have a clientAuth cert
-            group
-                .data
-                .data
-                .client
-                .ok_or(anyhow!("No group certificate found"))?
+            Some(
+                group
+                    .data
+                    .data
+                    .client
+                    .ok_or(anyhow!("No group certificate found"))?,
+            )
         };
 
         Ok(Self {
             servers: Arc::new(
                 args.server
                     .as_ref()
-                    .unwrap()
+                    .unwrap_or(&Vec::new())
                     .into_iter()
                     .map(|address| {
                         ServerConnection::new(
                             address.to_owned(),
                             data.data.server_cooldown.clone(),
-                            cert.clone(),
+                            cert.clone().ok_or(anyhow!(""))?,
                         )
                     })
                     .collect::<Result<Vec<ServerConnection>>>()?,
@@ -93,7 +98,6 @@ impl NetworkLayer {
 }
 
 /// Convenience type to be used as return of request handler.
-#[cfg(any(feature = "server", feature = "agent"))]
 pub type RequestResult<T> = Result<axum::Json<T>, axum::Json<T>>;
 
 #[derive(Serialize, Deserialize)]
@@ -129,6 +133,7 @@ pub struct ConnectionData {
 /// Request the server for a new direct connection to an agent.
 // #[from = "client"]
 // #[to = "server"]
+#[derive(Serialize, Deserialize)]
 pub struct AgentConnectionRequest {
     // The requested node
     id: InstanceId,
