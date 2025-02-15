@@ -1,13 +1,14 @@
+use crate::PowerLayer;
 use ratatui::text::Text;
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
+use sandpolis_instance::InstanceId;
 
-// Define a custom widget
-pub struct PowerStatusWidget {
-    power_state: String,
-    uptime: u64,
+pub struct PowerWidget {
+    instance: InstanceId,
+    power: PowerLayer,
 }
 
-impl PowerStatusWidget {
+impl PowerWidget {
     pub fn new(power_state: String, uptime: u64) -> Self {
         PowerStatusWidget {
             power_state,
@@ -16,7 +17,7 @@ impl PowerStatusWidget {
     }
 }
 
-impl Widget for PowerStatusWidget {
+impl Widget for PowerWidget {
     fn render(self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         // Create the widget's block
         let block = Block::default()

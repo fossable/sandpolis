@@ -222,7 +222,7 @@ pub async fn client(args: CommandLine, state: InstanceState) -> Result<()> {
             todo!();
             return Ok(());
         } else if args.client.tui {
-            sandpolis_client::tui::main(args.client).await?;
+            sandpolis_client::tui::main(args.client).await.unwrap();
             return Ok(());
         }
     }

@@ -2,6 +2,7 @@ use clap::Parser;
 use clap::Subcommand;
 use std::path::PathBuf;
 
+// TODO move to decl config file over cli args
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about, long_about = None)]
 pub struct CommandLine {
@@ -47,5 +48,6 @@ pub enum Commands {
         output: PathBuf,
     },
 
+    // TODO no command
     InstallCert {},
 }

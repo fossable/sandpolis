@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = { workspace = true }
+tokio = { workspace = true }
 serde = { workspace = true }
 uuid = { workspace = true }
 qcow = { version = "1.2.0", optional = true }

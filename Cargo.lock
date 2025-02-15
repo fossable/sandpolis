@@ -7545,6 +7545,8 @@ dependencies = [
  "axum",
  "axum-macros",
  "ratatui",
+ "sandpolis-instance",
+ "sandpolis-network",
  "serde",
 ]
 
@@ -7599,9 +7601,11 @@ dependencies = [
 name = "sandpolis-snapshot"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "qcow",
  "sandpolis-instance",
  "serde",
+ "tokio",
  "uuid",
 ]
 

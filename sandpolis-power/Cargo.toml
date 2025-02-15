@@ -9,6 +9,8 @@ serde = { workspace = true }
 ratatui = { workspace = true, optional = true }
 axum = { workspace = true, optional = true }
 axum-macros = { workspace = true, optional = true }
+sandpolis-instance = { path = "../sandpolis-instance" }
+sandpolis-network = { path = "../sandpolis-network" }
 
 [features]
 agent = ["dep:axum", "dep:axum-macros"]

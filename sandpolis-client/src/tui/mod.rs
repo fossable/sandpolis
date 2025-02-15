@@ -33,6 +33,7 @@ pub async fn main(args: ClientCommandLine) -> Result<()> {
 struct App {
     fps: f32,
     should_quit: bool,
+    power: sandpolis_power::PowerStatusWidget,
 }
 
 impl App {

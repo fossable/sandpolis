@@ -6,6 +6,7 @@ mkShell rec {
   nativeBuildInputs = [ pkg-config cargo rustc rust-analyzer rustfmt clippy ];
   buildInputs = [
     udev
+    cmake
     alsa-lib
     vulkan-loader
     libyuv
