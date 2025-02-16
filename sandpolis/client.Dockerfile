@@ -1,5 +1,5 @@
 FROM rust:alpine3.21 AS builder
-RUN apk add build-base gcc openssl-dev alsa-lib-dev eudev-dev cmake
+RUN apk add build-base gcc openssl-dev alsa-lib-dev eudev-dev fuse3-dev cmake
 WORKDIR /build
 
 COPY . .
