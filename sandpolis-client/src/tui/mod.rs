@@ -4,14 +4,14 @@ use std::{
 };
 
 use crate::cli::ClientCommandLine;
-use color_eyre::Result;
+use color_eyre::{owo_colors::OwoColorize, Result};
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{Event, EventStream, KeyCode, KeyEventKind},
     layout::{Constraint, Layout, Rect},
     style::{Style, Stylize},
     text::Line,
-    widgets::{Block, HighlightSpacing, Row, StatefulWidget, Table, TableState, Widget},
+    widgets::{Block, HighlightSpacing, Row, StatefulWidget, Table, TableState, Widget, WidgetRef},
     DefaultTerminal, Frame,
 };
 use tokio_stream::StreamExt;
@@ -33,6 +33,7 @@ pub async fn main(args: ClientCommandLine) -> Result<()> {
 struct App {
     fps: f32,
     should_quit: bool,
+    #[cfg(feature = "layer-power")]
     power: sandpolis_power::PowerStatusWidget,
 }
 
@@ -77,3 +78,25 @@ impl App {
 
 struct ServerListWidget;
 struct AgentListWidget;
+
+/// Renders a widget for testing/rapid iteration.
+pub async fn test_widget<W>(widget: W) -> Result<()>
+where
+    W: WidgetRef + Clone, // TODO remove Clone
+{
+    color_eyre::install()?;
+    let mut terminal = ratatui::init();
+
+    let mut should_quit = false;
+    let mut interval = tokio::time::interval(Duration::from_secs_f32(1.0 / 30.0));
+    let mut events = EventStream::new();
+
+    while !should_quit {
+        tokio::select! {
+            _ = interval.tick() => { terminal.draw(|frame| frame.render_widget_ref(widget.clone(), frame.area()))?; },
+            Some(Ok(event)) = events.next() => {should_quit = true;},
+        }
+    }
+    ratatui::restore();
+    Ok(())
+}

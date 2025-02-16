@@ -7545,9 +7545,11 @@ dependencies = [
  "axum",
  "axum-macros",
  "ratatui",
+ "sandpolis-client",
  "sandpolis-instance",
  "sandpolis-network",
  "serde",
+ "tokio",
 ]
 
 [[package]]

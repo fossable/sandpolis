@@ -1,24 +1,16 @@
 use crate::PowerLayer;
 use ratatui::text::Text;
-use ratatui::widgets::{Block, Borders, Paragraph, Widget};
+use ratatui::widgets::{Block, Borders, Paragraph, Widget, WidgetRef};
 use sandpolis_instance::InstanceId;
 
+#[derive(Clone)] // TODO remove
 pub struct PowerWidget {
-    instance: InstanceId,
-    power: PowerLayer,
+    pub instance: InstanceId,
+    pub power: PowerLayer,
 }
 
-impl PowerWidget {
-    pub fn new(power_state: String, uptime: u64) -> Self {
-        PowerStatusWidget {
-            power_state,
-            uptime,
-        }
-    }
-}
-
-impl Widget for PowerWidget {
-    fn render(self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+impl WidgetRef for PowerWidget {
+    fn render_ref(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         // Create the widget's block
         let block = Block::default()
             .title("System Power Info")
@@ -29,8 +21,8 @@ impl Widget for PowerWidget {
 
         // Render the text inside the block
         let text = vec![
-            Text::raw(format!("Power State: {}\n", self.power_state)),
-            Text::raw(format!("Uptime: {} seconds\n", self.uptime)),
+            Text::raw(format!("Power State: {}\n", "state")),
+            Text::raw(format!("Uptime: {} seconds\n", "uptime")),
             Text::raw("\n"),
             Text::raw("Controls:"),
             Text::raw("\n- Press 'r' to Restart"),
@@ -38,7 +30,7 @@ impl Widget for PowerWidget {
         ];
 
         // Display the text inside the block area
-        let paragraph = Paragraph::new(Text::raw(format!("Power State: {}\n", self.power_state)))
+        let paragraph = Paragraph::new(Text::raw(format!("Power State: {}\n", "state")))
             .block(Block::default().borders(Borders::NONE));
         paragraph.render(area, buf);
     }

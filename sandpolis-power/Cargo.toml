@@ -5,16 +5,18 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
+tokio = { workspace = true }
 serde = { workspace = true }
 ratatui = { workspace = true, optional = true }
 axum = { workspace = true, optional = true }
 axum-macros = { workspace = true, optional = true }
 sandpolis-instance = { path = "../sandpolis-instance" }
 sandpolis-network = { path = "../sandpolis-network" }
+sandpolis-client = { path = "../sandpolis-client" }
 
 [features]
 agent = ["dep:axum", "dep:axum-macros"]
 client = []
 client-gui = []
-client-tui = ["dep:ratatui"]
+client-tui = ["dep:ratatui", "sandpolis-client/client-tui"]
 server = []

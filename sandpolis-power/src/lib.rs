@@ -18,7 +18,7 @@ pub struct PowerLayer {
 
 impl PowerLayer {
     pub fn new() -> Result<Self> {
-        Ok(Self {})
+        Ok(Self { network: todo!() })
     }
 
     pub async fn schedule(&self, id: InstanceId, request: PowerRequest) -> Result<PowerResponse> {
