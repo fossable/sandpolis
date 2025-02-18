@@ -1,9 +1,11 @@
 use anyhow::Result;
 use axum_macros::FromRef;
 use cli::CommandLine;
+use config::Configuration;
 use sandpolis_database::Database;
 
 pub mod cli;
+pub mod config;
 
 /// Build info
 pub mod built_info {
@@ -32,10 +34,10 @@ pub struct InstanceState {
 }
 
 impl InstanceState {
-    pub async fn new(args: &CommandLine, db: Database) -> Result<Self> {
-        let group = sandpolis_group::GroupLayer::new(&args.group, db.document("/group")?)?;
+    pub async fn new(config: Configuration, db: Database) -> Result<Self> {
+        let group = sandpolis_group::GroupLayer::new(config.group, db.document("/group")?)?;
         let network = sandpolis_network::NetworkLayer::new(
-            &args.network,
+            config.network,
             db.document("/network")?,
             group.clone(),
         )?;
@@ -43,7 +45,9 @@ impl InstanceState {
             #[cfg(feature = "layer-package")]
             package: sandpolis_package::PackageLayer::new()?,
             #[cfg(feature = "layer-power")]
-            power: sandpolis_power::PowerLayer::new()?,
+            power: sandpolis_power::PowerLayer {
+                network: network.clone(),
+            },
             #[cfg(feature = "layer-shell")]
             shell: sandpolis_shell::ShellLayer::new()?,
             #[cfg(feature = "layer-sysinfo")]

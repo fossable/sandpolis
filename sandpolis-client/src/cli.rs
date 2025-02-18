@@ -11,7 +11,4 @@ pub struct ClientCommandLine {
     #[cfg(all(feature = "client-gui", feature = "client-tui"))]
     #[clap(long, conflicts_with = "gui")]
     pub tui: bool,
-
-    #[clap(long, default_value_t = 30)]
-    pub fps: u32,
 }

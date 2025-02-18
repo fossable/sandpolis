@@ -3,7 +3,7 @@ use sandpolis_database::Document;
 use serde::{Deserialize, Serialize};
 use tokio_cron_scheduler::JobScheduler;
 
-pub mod cli;
+pub mod config;
 
 #[cfg(feature = "agent")]
 pub mod agent;

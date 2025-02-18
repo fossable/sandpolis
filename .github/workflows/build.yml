@@ -118,8 +118,8 @@ jobs:
           push: true
           tags: sandpolis/${{ matrix.instance }}:nightly
 
-      - uses: peter-evans/dockerhub-description@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: sandpolis/${{ matrix.instance }}
+      # - uses: peter-evans/dockerhub-description@v4
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      #     repository: sandpolis/${{ matrix.instance }}

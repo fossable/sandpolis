@@ -30,12 +30,10 @@ use rustls_pki_types::pem::PemObject;
 use rustls_pki_types::CertificateDer;
 use rustls_pki_types::PrivateKeyDer;
 use sandpolis_database::Collection;
-use sandpolis_database::Database;
 use sandpolis_database::Document;
 use sandpolis_instance::ClusterId;
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::InstanceType;
-use serde::{Deserialize, Serialize};
 use std::io;
 use std::sync::Arc;
 use time::OffsetDateTime;
@@ -43,23 +41,21 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_rustls::server::TlsStream;
 use tower::Layer;
 use tracing::debug;
-use validator::Validate;
 use x509_parser::prelude::{FromDer, X509Certificate};
 
 impl super::GroupLayer {
     /// Create the default group if it doesn't exist.
-    pub fn create_default(db: &Database, cluster_id: ClusterId) -> Result<()> {
-        let groups: Collection<GroupData> = db.collection("/server/groups")?;
-
+    pub fn create_default(self, cluster_id: ClusterId) -> Result<Self> {
         // Create the default group if it doesn't exist
-        if groups
+        if self
+            .groups
             .documents()
             .filter_map(|group| group.ok())
             .find(|group| *group.data.name == "default")
             .is_none()
         {
             debug!("Creating default group");
-            let group = groups.insert_document(
+            let group = self.groups.insert_document(
                 "default",
                 GroupData {
                     name: "default".parse().expect("valid group name"),
@@ -70,7 +66,7 @@ impl super::GroupLayer {
             group.insert_document("ca", GroupCaCert::new(cluster_id, group.data.name.clone())?)?;
         }
 
-        Ok(())
+        Ok(self)
     }
 }
 

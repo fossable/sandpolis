@@ -3,6 +3,7 @@
 
 use anyhow::Result;
 use cli::GroupCommandLine;
+use config::GroupConfig;
 use regex::Regex;
 use sandpolis_database::{Collection, Document};
 use serde::{Deserialize, Serialize};
@@ -14,6 +15,7 @@ use x509_parser::prelude::FromDer;
 use x509_parser::prelude::X509Certificate;
 
 pub mod cli;
+pub mod config;
 pub mod messages;
 #[cfg(feature = "server")]
 pub mod server;
@@ -30,8 +32,8 @@ pub struct GroupLayer {
 }
 
 impl GroupLayer {
-    pub fn new(args: &GroupCommandLine, mut data: Document<GroupLayerData>) -> Result<Self> {
-        if let Some(new_cert) = args.certificate()? {
+    pub fn new(config: GroupConfig, mut data: Document<GroupLayerData>) -> Result<Self> {
+        if let Some(new_cert) = config.certificate()? {
             if let Some(old_cert) = data.data.client.as_ref() {
                 // Only import if the given certificate is newer than the one already
                 // in the database.

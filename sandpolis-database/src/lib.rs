@@ -1,17 +1,16 @@
 use crate::oid::Oid;
-use anyhow::{anyhow, bail, Result};
-use sandpolis_instance::{InstanceData, InstanceId};
+use anyhow::{anyhow, Result};
+use sandpolis_instance::InstanceData;
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use sled::transaction::ConflictableTransactionError::Abort;
-use sled::IVec;
-use std::fmt::{Display, Write};
-use std::marker::PhantomData;
 use std::ops::Range;
-use std::{path::Path, sync::Arc};
+use std::path::Path;
+use std::{marker::PhantomData, sync::Arc};
+use tempfile::{tempdir, TempDir};
 use tracing::{debug, trace};
 
-pub mod cli;
+pub mod config;
 pub mod oid;
 
 #[derive(Clone)]
@@ -281,5 +280,32 @@ impl<T: Serialize + DeserializeOwned + Clone> Document<T> {
 
         self.db.insert(&self.oid, serde_cbor::to_vec(&object)?)?;
         Ok(())
+    }
+}
+
+/// Holds a database that's deleted once we're done with it.
+#[derive(Clone)]
+pub struct TemporaryDatabase {
+    pub db: Database,
+    _path: Arc<TempDir>,
+}
+
+impl TemporaryDatabase {
+    pub fn new() -> Result<Self> {
+        let path = tempdir()?;
+        Ok(Self {
+            db: Database::new(&path)?,
+            _path: Arc::new(path),
+        })
+    }
+
+    /// Create a new temporary database and seed it with the given initializer.
+    pub fn new_with<F>(seed: F) -> Result<Self>
+    where
+        F: Fn(&Database) -> Result<()>,
+    {
+        let temp = Self::new()?;
+        seed(&temp.db)?;
+        Ok(temp)
     }
 }

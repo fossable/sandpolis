@@ -10,4 +10,5 @@ serde_cbor = { workspace = true }
 serde = { workspace = true }
 sled = { version = "0.34.7" }
 tracing = { workspace = true }
+tempfile = { workspace = true }
 sandpolis-instance = { path = "../sandpolis-instance" }

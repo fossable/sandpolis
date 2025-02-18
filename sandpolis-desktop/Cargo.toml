@@ -12,11 +12,12 @@ anyhow = { workspace = true }
 #   "linux-pkg-config",
 # ] }
 enigo = { version = "0.3.0", optional = true }
+ratatui-image = { version = "4.2.0", optional = true }
 tracing = { workspace = true }
 
 [features]
 agent = ["dep:enigo"]
 client = []
 client-gui = ["client"]
-client-tui = ["client"]
+client-tui = ["client", "dep:ratatui-image"]
 server = []

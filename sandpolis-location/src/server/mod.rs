@@ -1,10 +1,11 @@
 use super::LocationData;
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
 
 pub mod ip_api;
 pub mod key_cdn;
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub enum LocationService {
     IpApi,
     #[default]

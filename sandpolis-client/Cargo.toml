@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 os_info = { workspace = true }
+serde = { workspace = true }
 tokio = { workspace = true }
 tokio-stream = { workspace = true }
 clap = { workspace = true }

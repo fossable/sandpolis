@@ -13,10 +13,11 @@ axum-macros = { workspace = true, optional = true }
 sandpolis-instance = { path = "../sandpolis-instance" }
 sandpolis-network = { path = "../sandpolis-network" }
 sandpolis-client = { path = "../sandpolis-client" }
+sandpolis-database = { path = "../sandpolis-database" }
 
 [features]
 agent = ["dep:axum", "dep:axum-macros"]
 client = []
-client-gui = []
-client-tui = ["dep:ratatui", "sandpolis-client/client-tui"]
+client-gui = ["client"]
+client-tui = ["client", "dep:ratatui", "sandpolis-client/client-tui"]
 server = []

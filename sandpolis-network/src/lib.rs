@@ -2,13 +2,11 @@ use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use cli::NetworkCommandLine;
+use config::NetworkLayerConfig;
 use futures::StreamExt;
 use messages::PingRequest;
 use messages::PingResponse;
-use reqwest::Certificate;
 use reqwest::ClientBuilder;
-use reqwest::Identity;
 use reqwest_websocket::RequestBuilderExt;
 use sandpolis_database::Document;
 use sandpolis_group::GroupLayer;
@@ -23,6 +21,7 @@ use tokio::time::sleep;
 use tracing::debug;
 
 pub mod cli;
+pub mod config;
 pub mod messages;
 pub mod routes;
 pub mod stream;
@@ -40,11 +39,11 @@ pub struct NetworkLayer {
 
 impl NetworkLayer {
     pub fn new(
-        args: &NetworkCommandLine,
+        config: NetworkLayerConfig,
         data: Document<NetworkLayerData>,
         group: GroupLayer,
     ) -> Result<Self> {
-        let cert = if args.server.is_none() {
+        let cert = if config.servers.is_none() {
             if cfg!(feature = "agent") {
                 bail!("No servers given")
             } else {
@@ -63,7 +62,8 @@ impl NetworkLayer {
 
         Ok(Self {
             servers: Arc::new(
-                args.server
+                config
+                    .servers
                     .as_ref()
                     .unwrap_or(&Vec::new())
                     .into_iter()

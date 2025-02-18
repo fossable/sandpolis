@@ -18,6 +18,8 @@ pub mod agent;
 #[cfg(feature = "server")]
 pub mod server;
 
+pub mod config;
+
 pub(crate) mod messages;
 
 pub struct SnapshotLayer {}

@@ -6,6 +6,7 @@ use axum::Router;
 use clap::Parser;
 use sandpolis::cli::CommandLine;
 use sandpolis::cli::Commands;
+use sandpolis::config::Configuration;
 use sandpolis::InstanceState;
 use sandpolis_database::Collection;
 use sandpolis_database::Database;
@@ -18,6 +19,7 @@ use std::io::Write;
 use std::process::ExitCode;
 use std::time::Duration;
 use tokio::task::JoinSet;
+use tracing::debug;
 use tracing::info;
 use tracing_subscriber::filter::LevelFilter;
 
@@ -55,13 +57,17 @@ async fn main() -> Result<ExitCode> {
         "Initializing Sandpolis"
     );
 
+    // Load config
+    let config = Configuration::new(&args)?;
+    debug!(config = ?config, "Loaded configuration");
+
     // Get ready to do some cryptography
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
         .expect("crypto provider is available");
 
     // Load instance database
-    let db = Database::new(&args.database.storage)?;
+    let db = Database::new(&config.database.storage)?;
 
     // Dispatch subcommands
     match args.command {
@@ -83,7 +89,7 @@ async fn main() -> Result<ExitCode> {
     }
 
     // Load state
-    let state = InstanceState::new(&args, db).await?;
+    let state = InstanceState::new(config.clone(), db).await?;
 
     // Prepare to launch instances
     let mut tasks = JoinSet::new();
@@ -91,20 +97,35 @@ async fn main() -> Result<ExitCode> {
     #[cfg(feature = "server")]
     {
         let s = state.clone();
-        let a = args.clone();
-        tasks.spawn(async move { server(a, s).await });
+        let c = config.clone();
+        tasks.spawn(async move { server::main(c, s).await });
     }
 
     #[cfg(feature = "agent")]
     {
         let s = state.clone();
-        let a = args.clone();
-        tasks.spawn(async move { agent(a, s).await });
+        let c = config.clone();
+        tasks.spawn(async move { agent::main(c, s).await });
     }
 
-    // The client must run on the main thread per bevy requirements
+    // The client must run on the main thread
     #[cfg(feature = "client")]
-    client(args, state).await?;
+    {
+        let app: Router<InstanceState> = Router::new().route("/versions", get(routes::versions));
+
+        // Check command line preference
+        #[cfg(all(feature = "client-gui", feature = "client-tui"))]
+        {
+            if args.client.gui {
+                todo!();
+            } else if args.client.tui {
+                client::tui::main(config, state).await.unwrap();
+            }
+        }
+
+        // #[cfg(feature = "client-tui")]
+        // client::tui::main(config, state).await.unwrap();
+    }
 
     // If this was a client, don't hold up the user by waiting for server/agent
     if !cfg!(feature = "client") {
@@ -117,118 +138,10 @@ async fn main() -> Result<ExitCode> {
 }
 
 #[cfg(feature = "server")]
-pub async fn server(args: CommandLine, state: InstanceState) -> Result<()> {
-    // TODO fallback routes from client to agent?
-
-    let app: Router<InstanceState> = Router::new().route("/versions", get(routes::versions));
-
-    // Server layer
-    let app: Router<InstanceState> = app.route(
-        "/server/banner",
-        get(sandpolis_server::server::routes::banner),
-    );
-
-    // User layer
-    let app: Router<InstanceState> =
-        app.route("/user/login", post(sandpolis_user::server::routes::login));
-
-    // Network layer
-    let app: Router<InstanceState> =
-        app.route("/network/ping", get(sandpolis_network::routes::ping));
-
-    // TODO from_fn_with_state for IP blocking
-    let app = app.route_layer(axum::middleware::from_fn(
-        sandpolis_group::server::auth_middleware,
-    ));
-
-    info!(listener = ?args.server.listen, "Starting server listener");
-    axum_server::bind(args.server.listen)
-        .acceptor(sandpolis_group::server::GroupAcceptor::new(
-            state.group.groups.clone(),
-        )?)
-        .serve(app.with_state(state).into_make_service())
-        .await
-        .context("binding socket")?;
-
-    Ok(())
-}
+pub mod server;
 
 #[cfg(feature = "agent")]
-pub async fn agent(args: CommandLine, state: InstanceState) -> Result<()> {
-    let uds = tokio::net::UnixListener::bind(&args.agent.agent_socket)?;
-    let app: Router<InstanceState> = Router::new().route("/versions", get(routes::versions));
-
-    // Agent layer
-    let app = app.route(
-        "/agent/uninstall",
-        post(sandpolis_agent::agent::routes::uninstall),
-    );
-
-    // Network layer
-    let app = app.route("/network/ping", get(sandpolis_network::routes::ping));
-
-    // Shell layer
-    #[cfg(feature = "layer-shell")]
-    let app = app
-        .route(
-            "/shell/session",
-            any(sandpolis_shell::agent::routes::session),
-        )
-        .route(
-            "/shell/execute",
-            post(sandpolis_shell::agent::routes::execute),
-        );
-
-    // Filesystem layer
-    #[cfg(feature = "layer-filesystem")]
-    let app = app
-        .route(
-            "/filesystem/session",
-            any(sandpolis_filesystem::agent::routes::session),
-        )
-        .route(
-            "/shell/delete",
-            post(sandpolis_filesystem::agent::routes::delete),
-        );
-
-    // Package layer
-    #[cfg(feature = "layer-package")]
-    let app = app.nest(
-        "/layer/package",
-        sandpolis_package::PackageLayer::agent_routes(),
-    );
-
-    // Desktop layer
-    #[cfg(feature = "layer-desktop")]
-    let app = app.nest(
-        "/layer/desktop",
-        sandpolis_desktop::DesktopLayer::agent_routes(),
-    );
-
-    axum::serve(uds, app.with_state(state).into_make_service())
-        .await
-        .unwrap();
-    Ok(())
-}
+pub mod agent;
 
 #[cfg(feature = "client")]
-pub async fn client(args: CommandLine, state: InstanceState) -> Result<()> {
-    let app: Router<InstanceState> = Router::new().route("/versions", get(routes::versions));
-
-    // Check command line preference
-    #[cfg(all(feature = "client-gui", feature = "client-tui"))]
-    {
-        if args.client.gui {
-            todo!();
-            return Ok(());
-        } else if args.client.tui {
-            sandpolis_client::tui::main(args.client).await.unwrap();
-            return Ok(());
-        }
-    }
-
-    #[cfg(feature = "client-tui")]
-    sandpolis_client::tui::main(args.client).await.unwrap();
-
-    Ok(())
-}
+pub mod client;

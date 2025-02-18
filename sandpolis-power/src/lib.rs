@@ -13,14 +13,10 @@ pub mod messages;
 
 #[derive(Clone)]
 pub struct PowerLayer {
-    network: NetworkLayer,
+    pub network: NetworkLayer,
 }
 
 impl PowerLayer {
-    pub fn new() -> Result<Self> {
-        Ok(Self { network: todo!() })
-    }
-
     pub async fn schedule(&self, id: InstanceId, request: PowerRequest) -> Result<PowerResponse> {
         todo!()
     }

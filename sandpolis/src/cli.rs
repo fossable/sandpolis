@@ -6,16 +6,9 @@ use std::path::PathBuf;
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about, long_about = None)]
 pub struct CommandLine {
-    #[cfg(feature = "agent")]
-    #[clap(flatten)]
-    pub agent: sandpolis_agent::cli::AgentCommandLine,
-
     #[cfg(feature = "client")]
     #[clap(flatten)]
     pub client: sandpolis_client::cli::ClientCommandLine,
-
-    #[clap(flatten)]
-    pub database: sandpolis_database::cli::DatabaseCommandLine,
 
     #[clap(flatten)]
     pub group: sandpolis_group::cli::GroupCommandLine,
@@ -25,10 +18,6 @@ pub struct CommandLine {
 
     #[clap(flatten)]
     pub network: sandpolis_network::cli::NetworkCommandLine,
-
-    #[cfg(feature = "server")]
-    #[clap(flatten)]
-    pub server: sandpolis_server::cli::ServerCommandLine,
 
     #[command(subcommand)]
     pub command: Option<Commands>,
@@ -50,4 +39,7 @@ pub enum Commands {
 
     // TODO no command
     InstallCert {},
+
+    /// Show versions of all installed layers
+    Versions,
 }

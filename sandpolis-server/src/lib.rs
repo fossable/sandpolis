@@ -1,12 +1,10 @@
-use std::{collections::HashMap, sync::Arc};
-
 use anyhow::Result;
 use sandpolis_database::Document;
 use sandpolis_instance::{ClusterId, Layer, LayerVersion};
 use sandpolis_network::NetworkLayer;
 use serde::{Deserialize, Serialize};
 
-pub mod cli;
+pub mod config;
 
 #[cfg(feature = "server")]
 pub mod server;

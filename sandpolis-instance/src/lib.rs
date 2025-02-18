@@ -1,6 +1,7 @@
 //! Instance layer
 
-use serde::{Deserialize, Serialize};
+use clap::Parser;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{cmp::Ordering, fmt::Display, ops::Deref, path::PathBuf, str::FromStr};
 use strum::{EnumIter, IntoEnumIterator};
 use uuid::Uuid;
@@ -114,6 +115,19 @@ impl InstanceId {
     }
 }
 
+impl Default for InstanceId {
+    fn default() -> Self {
+        InstanceId::new(&[
+            #[cfg(feature = "server")]
+            InstanceType::Server,
+            #[cfg(feature = "client")]
+            InstanceType::Client,
+            #[cfg(feature = "agent")]
+            InstanceType::Agent,
+        ])
+    }
+}
+
 impl Display for InstanceId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(std::str::from_utf8(&format_uuid(self.0)).unwrap())
@@ -181,14 +195,7 @@ pub struct InstanceData {
 impl Default for InstanceData {
     fn default() -> Self {
         Self {
-            id: InstanceId::new(&[
-                #[cfg(feature = "server")]
-                InstanceType::Server,
-                #[cfg(feature = "client")]
-                InstanceType::Client,
-                #[cfg(feature = "agent")]
-                InstanceType::Agent,
-            ]),
+            id: InstanceId::default(),
             os_info: os_info::get(),
         }
     }
@@ -284,5 +291,23 @@ impl PartialOrd for LayerVersion {
         } else {
             Some(Ordering::Equal)
         }
+    }
+}
+
+/// A config fragment that can take overrides from the command line or from
+/// the process environment.
+pub trait OverridableConfig<C>
+where
+    C: Parser,
+    Self: Serialize + DeserializeOwned,
+{
+    /// Override the config with values from the command line
+    fn override_cli(&mut self, args: C) {
+        // Default no-op
+    }
+
+    /// Override the config with values from the environment
+    fn override_env(&mut self) {
+        // Default no-op
     }
 }
