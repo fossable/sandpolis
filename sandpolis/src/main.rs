@@ -130,7 +130,7 @@ async fn main() -> Result<ExitCode> {
     // If this was a client, don't hold up the user by waiting for server/agent
     if !cfg!(feature = "client") {
         while let Some(result) = tasks.join_next().await {
-            result?;
+            let _ = result??;
         }
     }
 

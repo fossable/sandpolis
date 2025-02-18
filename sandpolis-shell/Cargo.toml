@@ -3,27 +3,24 @@ name = "sandpolis-shell"
 version = "0.1.0"
 edition = "2021"
 
+[build-dependencies]
+built = { version = "0.7", features = ["git2", "chrono", "semver"] }
+
 [dependencies]
 anyhow = { workspace = true }
 tracing = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
-axum = { workspace = true, optional = true }
-axum-macros = { workspace = true, optional = true }
+axum = { workspace = true }
+axum-macros = { workspace = true }
 sandpolis-macros = { path = "../sandpolis-macros" }
 sandpolis-network = { path = "../sandpolis-network" }
 sandpolis-database = { path = "../sandpolis-database" }
 sandpolis-agent = { path = "../sandpolis-agent", optional = true }
 
 [features]
-agent = [
-  "dep:tokio",
-  "dep:axum",
-  "dep:axum-macros",
-  "dep:futures",
-  "dep:sandpolis-agent",
-]
+agent = ["dep:tokio", "dep:futures", "dep:sandpolis-agent"]
 server = []
 client = []
 client-gui = ["client"]

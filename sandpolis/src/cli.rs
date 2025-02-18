@@ -1,8 +1,9 @@
+use anyhow::Result;
 use clap::Parser;
 use clap::Subcommand;
 use std::path::PathBuf;
+use std::process::ExitCode;
 
-// TODO move to decl config file over cli args
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about, long_about = None)]
 pub struct CommandLine {
@@ -11,13 +12,7 @@ pub struct CommandLine {
     pub client: sandpolis_client::cli::ClientCommandLine,
 
     #[clap(flatten)]
-    pub group: sandpolis_group::cli::GroupCommandLine,
-
-    #[clap(flatten)]
     pub instance: sandpolis_instance::cli::InstanceCommandLine,
-
-    #[clap(flatten)]
-    pub network: sandpolis_network::cli::NetworkCommandLine,
 
     #[command(subcommand)]
     pub command: Option<Commands>,
@@ -41,5 +36,15 @@ pub enum Commands {
     InstallCert {},
 
     /// Show versions of all installed layers
-    Versions,
+    About,
+}
+
+impl Commands {
+    pub fn dispatch(&self) -> Result<ExitCode> {
+        match self {
+            Commands::GenerateCert { group, output } => todo!(),
+            Commands::InstallCert {} => todo!(),
+            Commands::About => todo!(),
+        }
+    }
 }

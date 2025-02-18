@@ -1,7 +1,6 @@
 use anyhow::Result;
 use sandpolis_database::Document;
 use serde::{Deserialize, Serialize};
-use tokio_cron_scheduler::JobScheduler;
 
 pub mod config;
 
@@ -17,7 +16,7 @@ pub struct AgentLayerData;
 pub struct AgentLayer {
     pub data: Document<AgentLayerData>,
     #[cfg(feature = "agent")]
-    pub scheduler: JobScheduler,
+    pub scheduler: tokio_cron_scheduler::JobScheduler,
 }
 
 impl AgentLayer {
@@ -25,7 +24,7 @@ impl AgentLayer {
         Ok(Self {
             data,
             #[cfg(feature = "agent")]
-            scheduler: JobScheduler::new().await?,
+            scheduler: tokio_cron_scheduler::JobScheduler::new().await?,
         })
     }
 }

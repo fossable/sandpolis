@@ -1966,7 +1966,6 @@ version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73848a43c5d63a1251d17adf6c2bf78aa94830e60a335a95eeea45d6ba9e1e4d"
 dependencies = [
- "cargo-lock",
  "chrono",
  "git2",
  "semver",
@@ -2067,19 +2066,6 @@ dependencies = [
  "rustix",
  "slab",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "cargo-lock"
-version = "10.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c06acb4f71407ba205a07cb453211e0e6a67b21904e47f6ba1f9589e38f2e454"
-dependencies = [
- "petgraph",
- "semver",
- "serde",
- "toml",
- "url",
 ]
 
 [[package]]
@@ -7604,6 +7590,7 @@ dependencies = [
  "sandpolis-agent",
  "sandpolis-client",
  "sandpolis-database",
+ "sandpolis-deploy",
  "sandpolis-desktop",
  "sandpolis-filesystem",
  "sandpolis-group",
@@ -7613,6 +7600,7 @@ dependencies = [
  "sandpolis-network",
  "sandpolis-package",
  "sandpolis-power",
+ "sandpolis-probe",
  "sandpolis-server",
  "sandpolis-shell",
  "sandpolis-snapshot",
@@ -7897,6 +7885,7 @@ dependencies = [
  "anyhow",
  "axum",
  "axum-macros",
+ "built",
  "futures",
  "sandpolis-agent",
  "sandpolis-database",
@@ -8018,9 +8007,6 @@ name = "semver"
 version = "1.0.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f79dfe2d285b0488816f30e700a7438c5a73d816b5b7d3ac72fbc48b0d185e03"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "send_wrapper"

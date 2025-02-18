@@ -5,8 +5,12 @@ use std::{collections::HashMap, path::PathBuf};
 
 #[cfg(feature = "agent")]
 pub mod agent;
-
 pub mod messages;
+
+/// Build info
+pub mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
 
 #[derive(Clone)]
 pub struct ShellLayer {}

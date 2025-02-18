@@ -2,7 +2,6 @@
 //! clientAuth certificates.
 
 use anyhow::Result;
-use cli::GroupCommandLine;
 use config::GroupConfig;
 use regex::Regex;
 use sandpolis_database::{Collection, Document};
@@ -14,7 +13,6 @@ use validator::{Validate, ValidationErrors};
 use x509_parser::prelude::FromDer;
 use x509_parser::prelude::X509Certificate;
 
-pub mod cli;
 pub mod config;
 pub mod messages;
 #[cfg(feature = "server")]

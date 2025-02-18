@@ -9,13 +9,7 @@ rust-version = "1.74"
 version = "0.0.1"
 
 [build-dependencies]
-built = { version = "0.7", features = [
-  "cargo-lock",
-  "dependency-tree",
-  "git2",
-  "chrono",
-  "semver",
-] }
+built = { version = "0.7", features = ["git2", "chrono", "semver"] }
 
 [dev-dependencies]
 tempfile = "3.15.0"
@@ -42,7 +36,9 @@ sandpolis-user = { path = "../sandpolis-user" }
 sandpolis-database = { path = "../sandpolis-database" }
 sandpolis-server = { path = "../sandpolis-server" }
 sandpolis-agent = { path = "../sandpolis-agent" }
-sandpolis-client = { path = "../sandpolis-client", optional = true }
+sandpolis-client = { path = "../sandpolis-client" }
+sandpolis-deploy = { path = "../sandpolis-deploy", optional = true }
+sandpolis-probe = { path = "../sandpolis-probe", optional = true }
 sandpolis-power = { path = "../sandpolis-power", optional = true }
 sandpolis-sysinfo = { path = "../sandpolis-sysinfo", optional = true }
 sandpolis-package = { path = "../sandpolis-package", optional = true }
@@ -63,39 +59,42 @@ openraft = { git = "https://github.com/databendlabs/openraft", optional = true, 
 # Instances
 server = [
   "dep:openraft",
-  "sandpolis-server/server",
   "sandpolis-desktop?/server",
   "sandpolis-filesystem?/server",
+  "sandpolis-group/server",
+  "sandpolis-location?/server",
+  "sandpolis-package?/server",
+  "sandpolis-power?/server",
+  "sandpolis-server/server",
   "sandpolis-shell?/server",
   "sandpolis-sysinfo?/server",
-  "sandpolis-power?/server",
-  "sandpolis-package?/server",
+  "sandpolis-user/server",
 ]
 agent = [
   "sandpolis-agent/agent",
   "sandpolis-desktop?/agent",
   "sandpolis-filesystem?/agent",
+  "sandpolis-package?/agent",
+  "sandpolis-power?/agent",
   "sandpolis-shell?/agent",
   "sandpolis-sysinfo?/agent",
-  "sandpolis-power?/agent",
-  "sandpolis-package?/agent",
 ]
-client = ["dep:sandpolis-client"]
+client = ["sandpolis-client/client"]
 
 # Layers
 layer-account = []
 layer-alert = []
-layer-deploy = []
+layer-deploy = ["dep:sandpolis-deploy"]
 layer-desktop = ["dep:sandpolis-desktop"]
 layer-filesystem = ["dep:sandpolis-filesystem"]
 layer-health = []
 layer-inventory = []
-layer-location = []
+layer-location = ["dep:sandpolis-location"]
 layer-logging = []
 layer-package = ["dep:sandpolis-package"]
 layer-shell = ["dep:sandpolis-shell"]
-layer-snapshot = []
-layer-probe = []
+layer-snapshot = ["dep:sandpolis-snapshot"]
+layer-probe = ["dep:sandpolis-probe"]
 layer-power = ["dep:sandpolis-power"]
 layer-sysinfo = ["dep:sandpolis-sysinfo"]
 layer-tunnel = []
@@ -125,11 +124,11 @@ client-gui = ["client"]
 client-tui = [
   "client",
   "dep:ratatui",
-  "sandpolis-client?/client-tui",
+  "sandpolis-client/client-tui",
   "sandpolis-desktop?/client-tui",
   "sandpolis-filesystem?/client-tui",
+  "sandpolis-package?/client-tui",
+  "sandpolis-power?/client-tui",
   "sandpolis-shell?/client-tui",
   "sandpolis-sysinfo?/client-tui",
-  "sandpolis-power?/client-tui",
-  "sandpolis-package?/client-tui",
 ]

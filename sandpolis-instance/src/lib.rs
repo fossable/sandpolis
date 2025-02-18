@@ -269,9 +269,20 @@ pub enum Layer {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Ord)]
 pub struct LayerVersion {
-    major: u32,
-    minor: u32,
-    patch: u32,
+    pub major: u32,
+    pub minor: u32,
+    pub patch: u32,
+    pub description: Option<String>,
+    pub rev: Option<String>,
+    pub build_time: Option<String>,
+}
+
+impl TryFrom<String> for LayerVersion {
+    type Error = anyhow::Error;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        todo!()
+    }
 }
 
 impl PartialOrd for LayerVersion {

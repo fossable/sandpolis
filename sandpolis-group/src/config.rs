@@ -5,6 +5,8 @@ use std::path::PathBuf;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct GroupConfig {
+    /// Path to authentication certificate which will be installed into the database.
+    /// Subsequent runs don't require this option.
     certificate: Option<PathBuf>,
 }
 

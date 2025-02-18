@@ -20,7 +20,6 @@ use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
 use tokio::time::sleep;
 use tracing::debug;
 
-pub mod cli;
 pub mod config;
 pub mod messages;
 pub mod routes;

@@ -23,6 +23,13 @@ pub struct Configuration {
 
 impl Configuration {
     pub fn new(args: &CommandLine) -> Result<Self> {
+        // Attempt to read from embedded config
+        let config_bytes = include_bytes!("../config.bin");
+        if config_bytes.len() != 63 {
+            let config: Configuration = serde_json::from_slice(config_bytes)?;
+            return Ok(config);
+        }
+
         // Attempt to read from config file
         let path = args.instance.config.clone().unwrap_or(PathBuf::from(
             std::env::var("S7S_CONFIG").ok().unwrap_or("TODO".into()),
