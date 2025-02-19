@@ -1,6 +1,5 @@
 use crate::oid::Oid;
 use anyhow::{anyhow, Result};
-use sandpolis_instance::InstanceData;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use sled::transaction::ConflictableTransactionError::Abort;
@@ -57,6 +56,7 @@ impl Database {
             data: if let Some(data) = db.get(&oid)? {
                 serde_cbor::from_slice::<T>(&data)?
             } else {
+                // TODO insert
                 T::default()
             },
             db,
@@ -70,10 +70,6 @@ impl Database {
     {
         let oid = oid.try_into().map_err(|_| anyhow!("Invalid OID"))?;
         todo!()
-    }
-
-    pub fn metadata(&self) -> Result<InstanceData> {
-        Ok(self.document("metadata")?.data)
     }
 }
 
@@ -173,6 +169,7 @@ impl<T: Serialize + DeserializeOwned + Default> Collection<T> {
             data: if let Some(data) = self.db.get(&oid)? {
                 serde_cbor::from_slice::<T>(&data)?
             } else {
+                // TODO insert
                 T::default()
             },
             oid,
@@ -223,6 +220,7 @@ impl<T: Serialize + DeserializeOwned> Document<T> {
                 serde_cbor::from_slice::<U>(&data)?
             } else {
                 trace!(oid = %oid, "Creating new document");
+                // TODO insert
                 U::default()
             },
             oid,

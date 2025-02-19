@@ -1,6 +1,6 @@
 use anyhow::Result;
 use sandpolis_database::Document;
-use sandpolis_instance::{ClusterId, Layer, LayerVersion};
+use sandpolis_instance::ClusterId;
 use sandpolis_network::NetworkLayer;
 use serde::{Deserialize, Serialize};
 

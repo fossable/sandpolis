@@ -5,10 +5,12 @@ use anyhow::Result;
 use config::GroupConfig;
 use regex::Regex;
 use sandpolis_database::{Collection, Document};
+use sandpolis_instance::{ClusterId, InstanceLayer};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::str::FromStr;
 use std::{ops::Deref, path::Path};
+use tracing::{debug, info};
 use validator::{Validate, ValidationErrors};
 use x509_parser::prelude::FromDer;
 use x509_parser::prelude::X509Certificate;
@@ -30,12 +32,19 @@ pub struct GroupLayer {
 }
 
 impl GroupLayer {
-    pub fn new(config: GroupConfig, mut data: Document<GroupLayerData>) -> Result<Self> {
+    pub fn new(
+        config: GroupConfig,
+        mut data: Document<GroupLayerData>,
+        instance: InstanceLayer,
+    ) -> Result<Self> {
+        let groups: Collection<GroupData> = data.collection("/groups")?;
+
         if let Some(new_cert) = config.certificate()? {
             if let Some(old_cert) = data.data.client.as_ref() {
                 // Only import if the given certificate is newer than the one already
                 // in the database.
                 if new_cert.creation_time()? > old_cert.creation_time()? {
+                    info!(path = %config.certificate.expect("a path was configured").display(), "Importing group certificate");
                     data.data.client = Some(new_cert);
                 }
             } else {
@@ -43,11 +52,30 @@ impl GroupLayer {
             }
         }
 
-        // TODO call default
-        Ok(Self {
-            groups: data.collection("/groups")?,
-            data,
-        })
+        // Create default group
+        if groups
+            .documents()
+            .filter_map(|group| group.ok())
+            .find(|group| *group.data.name == "default")
+            .is_none()
+        {
+            debug!("Creating default group");
+            let group = groups.insert_document(
+                "default",
+                GroupData {
+                    name: "default".parse().expect("valid group name"),
+                    owner: "admin".to_string(),
+                },
+            )?;
+
+            #[cfg(feature = "server")]
+            group.insert_document(
+                "ca",
+                GroupCaCert::new(instance.cluster_id, group.data.name.clone())?,
+            )?;
+        }
+
+        Ok(Self { groups, data })
     }
 }
 

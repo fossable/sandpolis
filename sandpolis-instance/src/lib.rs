@@ -1,6 +1,6 @@
-//! Instance layer
-
+use anyhow::Result;
 use clap::Parser;
+use sandpolis_database::Document;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{cmp::Ordering, fmt::Display, ops::Deref, path::PathBuf, str::FromStr};
 use strum::{EnumIter, IntoEnumIterator};
@@ -78,6 +78,7 @@ mod test_cluster_id {
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct InstanceId(u128);
 
+// TODO move to core crate?
 impl InstanceId {
     /// Generate a new instance ID for an instance of the given type(s).
     pub fn new(instance_types: &[InstanceType]) -> Self {
@@ -187,84 +188,37 @@ mod test_instance_id {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct InstanceData {
-    pub id: InstanceId,
+pub struct InstanceLayerData {
+    pub cluster_id: ClusterId,
+    pub instance_id: InstanceId,
     pub os_info: os_info::Info,
 }
 
-impl Default for InstanceData {
+impl Default for InstanceLayerData {
     fn default() -> Self {
         Self {
-            id: InstanceId::default(),
+            cluster_id: ClusterId::default(),
+            instance_id: InstanceId::default(),
             os_info: os_info::get(),
         }
     }
 }
 
-/// Layers are feature-sets that may be enabled on instances.
-#[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq, Hash)]
-pub enum Layer {
-    /// Manage accounts.
-    #[cfg(feature = "layer-account")]
-    Account,
+#[derive(Clone)]
+pub struct InstanceLayer {
+    pub data: Document<InstanceLayerData>,
+    pub instance_id: InstanceId,
+    pub cluster_id: ClusterId,
+}
 
-    Agent,
-
-    #[cfg(feature = "layer-alert")]
-    Alert,
-
-    Client,
-
-    /// Deploy agents directly over a protocol like SSH or via special deployer packages.
-    #[cfg(feature = "layer-deploy")]
-    Deploy,
-
-    /// Interact with Desktop environments.
-    #[cfg(feature = "layer-desktop")]
-    Desktop,
-    /// Mount and manipulate filesystems.
-    #[cfg(feature = "layer-filesystem")]
-    Filesystem,
-
-    #[cfg(feature = "layer-health")]
-    Health,
-
-    /// View system information.
-    #[cfg(feature = "layer-inventory")]
-    Inventory,
-
-    #[cfg(feature = "layer-location")]
-    Location,
-
-    /// Aggregate and view logs.
-    #[cfg(feature = "layer-logging")]
-    Logging,
-
-    /// Support for connecting to instances in the Sandpolis network and sending
-    /// messages back and forth.
-    Network,
-
-    #[cfg(feature = "layer-package")]
-    Package,
-    /// Support for probe devices which do not run agent software. Instead they
-    /// connect through a "gateway" instance over a well known protocol.
-    #[cfg(feature = "layer-probe")]
-    Probe,
-    Server,
-
-    /// Interact with shell prompts / snippets.
-    #[cfg(feature = "layer-shell")]
-    Shell,
-
-    #[cfg(feature = "layer-snapshot")]
-    Snapshot,
-
-    #[cfg(feature = "layer-sysinfo")]
-    Sysinfo,
-
-    /// Establish persistent or ephemeral tunnels between instances.
-    #[cfg(feature = "layer-tunnel")]
-    Tunnel,
+impl InstanceLayer {
+    pub fn new(data: Document<InstanceLayerData>) -> Result<Self> {
+        Ok(Self {
+            instance_id: data.document("/instance_id")?.data,
+            cluster_id: data.document("/cluster_id")?.data,
+            data,
+        })
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Ord)]

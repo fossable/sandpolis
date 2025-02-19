@@ -7,7 +7,7 @@ use std::path::PathBuf;
 pub struct GroupConfig {
     /// Path to authentication certificate which will be installed into the database.
     /// Subsequent runs don't require this option.
-    certificate: Option<PathBuf>,
+    pub certificate: Option<PathBuf>,
 }
 
 impl GroupConfig {

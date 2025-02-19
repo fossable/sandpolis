@@ -43,33 +43,6 @@ use tower::Layer;
 use tracing::debug;
 use x509_parser::prelude::{FromDer, X509Certificate};
 
-impl super::GroupLayer {
-    /// Create the default group if it doesn't exist.
-    pub fn create_default(self, cluster_id: ClusterId) -> Result<Self> {
-        // Create the default group if it doesn't exist
-        if self
-            .groups
-            .documents()
-            .filter_map(|group| group.ok())
-            .find(|group| *group.data.name == "default")
-            .is_none()
-        {
-            debug!("Creating default group");
-            let group = self.groups.insert_document(
-                "default",
-                GroupData {
-                    name: "default".parse().expect("valid group name"),
-                    owner: "admin".to_string(),
-                },
-            )?;
-
-            group.insert_document("ca", GroupCaCert::new(cluster_id, group.data.name.clone())?)?;
-        }
-
-        Ok(self)
-    }
-}
-
 impl super::GroupCaCert {
     /// Generate a new group CA certificate.
     pub fn new(cluster_id: ClusterId, name: GroupName) -> Result<Self> {
@@ -127,6 +100,7 @@ impl super::GroupCaCert {
         // Generate the certificate signed by the CA
         let cert = cert_params.signed_by(&keypair, &self.ca()?, &KeyPair::from_pem(&self.key)?)?;
 
+        debug!(cert = ?cert.params(), "Generated new group client certificate");
         Ok(GroupClientCert {
             ca: self.ca()?.pem(),
             cert: cert.pem(),
@@ -157,6 +131,7 @@ impl super::GroupCaCert {
         // Generate the certificate signed by the CA
         let cert = cert_params.signed_by(&keypair, &self.ca()?, &KeyPair::from_pem(&self.key)?)?;
 
+        debug!(cert = ?cert.params(), "Generated new group server certificate");
         Ok(GroupServerCert {
             cert: cert.pem(),
             key: keypair.serialize_pem(),
@@ -167,12 +142,39 @@ impl super::GroupCaCert {
 #[cfg(test)]
 mod test_group_ca {
     use super::*;
+    use openssl::{
+        pkey::PKey,
+        ssl::{SslContextBuilder, SslStream, SslVerifyMode},
+        x509::X509,
+    };
+    use std::net::{TcpListener, TcpStream};
 
     #[test]
     fn test_generate() -> Result<()> {
         let ca = GroupCaCert::new(ClusterId::default(), "default".parse()?)?;
         let client = ca.client_cert()?;
-        let server = ca.server_cert(InstanceId::new_server());
+        let server = ca.server_cert(InstanceId::new_server())?;
+
+        let mut server_context = SslContextBuilder::new(SslMethod::tls())?;
+        server_context.set_verify(SslVerifyMode::PEER);
+        server_context.set_certificate(X509::from_pem(server.cert.as_bytes()))?;
+        server_context.set_private_key(PKey::from_pem(server.key.as_bytes()))?;
+        let server_context = server_context.build();
+
+        // Start temporary server and listen for one connection
+        thread::spawn(move || {
+            let listener = TcpListener::bind("127.0.0.1:9999").unwrap();
+            for stream in listener.incoming() {
+                let ssl = SslStream::new(server_context, stream.unwrap()).unwrap();
+                ssl.do_handshake().unwrap();
+                break;
+            }
+        });
+
+        // Make connection
+        let stream = TcpStream::connect("127.0.0.1:9999")?;
+        let ssl = SslStream::new(client_context, stream)?;
+        ssl.do_handshake()?;
 
         Ok(())
     }
@@ -208,7 +210,7 @@ impl GroupAcceptor {
                 .load_private_key(PrivateKeyDer::from_pem_slice(&ca.data.key.as_bytes())?)?;
 
             sni_resolver.add(
-                "test", //&group.data.name,
+                &group.data.name,
                 rustls::sign::CertifiedKey::new(
                     vec![pem::parse(&ca.data.cert)?.into_contents().try_into()?],
                     private_key,

@@ -16,38 +16,39 @@ tempfile = "3.15.0"
 
 [dependencies]
 anyhow = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-tokio = { workspace = true }
-tokio-stream = { workspace = true }
-clap = { workspace = true }
-futures = { workspace = true }
-rustls = { workspace = true }
-tracing = { workspace = true }
-axum = { workspace = true }
 axum-macros = { workspace = true }
 axum-server = { workspace = true }
+axum = { workspace = true }
+clap = { workspace = true }
+futures = { workspace = true }
 ratatui = { workspace = true, optional = true }
-sandpolis-macros = { path = "../sandpolis-macros" }
-sandpolis-network = { path = "../sandpolis-network" }
-sandpolis-instance = { path = "../sandpolis-instance" }
-sandpolis-group = { path = "../sandpolis-group" }
-sandpolis-user = { path = "../sandpolis-user" }
-sandpolis-database = { path = "../sandpolis-database" }
-sandpolis-server = { path = "../sandpolis-server" }
+rustls = { workspace = true }
 sandpolis-agent = { path = "../sandpolis-agent" }
 sandpolis-client = { path = "../sandpolis-client" }
+sandpolis-database = { path = "../sandpolis-database" }
 sandpolis-deploy = { path = "../sandpolis-deploy", optional = true }
-sandpolis-probe = { path = "../sandpolis-probe", optional = true }
-sandpolis-power = { path = "../sandpolis-power", optional = true }
-sandpolis-sysinfo = { path = "../sandpolis-sysinfo", optional = true }
-sandpolis-package = { path = "../sandpolis-package", optional = true }
 sandpolis-desktop = { path = "../sandpolis-desktop", optional = true }
-sandpolis-location = { path = "../sandpolis-location", optional = true }
-sandpolis-snapshot = { path = "../sandpolis-snapshot", optional = true }
 sandpolis-filesystem = { path = "../sandpolis-filesystem", optional = true }
+sandpolis-group = { path = "../sandpolis-group" }
+sandpolis-instance = { path = "../sandpolis-instance" }
+sandpolis-location = { path = "../sandpolis-location", optional = true }
+sandpolis-macros = { path = "../sandpolis-macros" }
+sandpolis-network = { path = "../sandpolis-network" }
+sandpolis-package = { path = "../sandpolis-package", optional = true }
+sandpolis-power = { path = "../sandpolis-power", optional = true }
+sandpolis-probe = { path = "../sandpolis-probe", optional = true }
+sandpolis-server = { path = "../sandpolis-server" }
 sandpolis-shell = { path = "../sandpolis-shell", optional = true }
+sandpolis-snapshot = { path = "../sandpolis-snapshot", optional = true }
+sandpolis-sysinfo = { path = "../sandpolis-sysinfo", optional = true }
+sandpolis-user = { path = "../sandpolis-user" }
+serde_json = { workspace = true }
+serde = { workspace = true }
+strum = { workspace = true }
+tokio-stream = { workspace = true }
+tokio = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tracing = { workspace = true }
 
 # Server dependencies
 openraft = { git = "https://github.com/databendlabs/openraft", optional = true, features = [
