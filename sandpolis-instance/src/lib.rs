@@ -82,6 +82,10 @@ pub struct InstanceId(u128);
 impl InstanceId {
     /// Generate a new instance ID for an instance of the given type(s).
     pub fn new(instance_types: &[InstanceType]) -> Self {
+        if instance_types.len() == 0 {
+            panic!("No instance type given");
+        }
+
         // Reverse the UUID to make visual comparison easier (dispersing the prefixes
         // makes it easier to tell two UUIDs apart).
         let mut uuid = Uuid::now_v7().to_u128_le();
@@ -118,7 +122,7 @@ impl InstanceId {
 
 impl Default for InstanceId {
     fn default() -> Self {
-        InstanceId::new(&[
+        Self::new(&[
             #[cfg(feature = "server")]
             InstanceType::Server,
             #[cfg(feature = "client")]
@@ -183,6 +187,8 @@ mod test_instance_id {
         ])
         .is_type(InstanceType::Agent));
         assert!(InstanceId::new(&[InstanceType::Agent]).is_type(InstanceType::Agent));
+        assert!(InstanceId::new(&[InstanceType::Server]).is_type(InstanceType::Server));
+        assert!(InstanceId::new(&[InstanceType::Client]).is_type(InstanceType::Client));
         assert!(!InstanceId::new(&[InstanceType::Server]).is_type(InstanceType::Agent));
     }
 }

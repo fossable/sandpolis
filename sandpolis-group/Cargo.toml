@@ -34,6 +34,7 @@ sandpolis-database = { path = "../sandpolis-database" }
 [dev-dependencies]
 # Used to test certificate authentication with a different backend
 openssl = "0.10.71"
+tempfile = "3.17.0"
 
 [features]
 server = ["dep:rcgen", "dep:rustls-pki-types"]

@@ -124,7 +124,7 @@ impl super::GroupCaCert {
             .push(ExtendedKeyUsagePurpose::ServerAuth);
         cert_params.not_before = OffsetDateTime::now_utc();
         cert_params.subject_alt_names = vec![SanType::DnsName(
-            format!("{}.{server_id}", self.name).try_into()?,
+            format!("{server_id}.{}", self.name).try_into()?,
         )];
         // TODO not_after of 1 year
 
@@ -142,30 +142,52 @@ impl super::GroupCaCert {
 #[cfg(test)]
 mod test_group_ca {
     use super::*;
+    use io::Write;
     use openssl::{
+        ec::EcKey,
         pkey::PKey,
-        ssl::{SslContextBuilder, SslStream, SslVerifyMode},
+        rsa::Rsa,
+        ssl::{
+            Ssl, SslAcceptor, SslConnector, SslContextBuilder, SslMethod, SslMode, SslStream,
+            SslVerifyMode,
+        },
         x509::X509,
     };
     use std::net::{TcpListener, TcpStream};
 
     #[test]
-    fn test_generate() -> Result<()> {
+    fn test_generate_and_authenticate() -> Result<()> {
         let ca = GroupCaCert::new(ClusterId::default(), "default".parse()?)?;
         let client = ca.client_cert()?;
         let server = ca.server_cert(InstanceId::new_server())?;
 
-        let mut server_context = SslContextBuilder::new(SslMethod::tls())?;
+        // Write CA cert to temp file
+        let mut ca_file = tempfile::NamedTempFile::new()?;
+        ca_file.write_all(ca.cert.as_bytes())?;
+
+        let mut server_context = SslAcceptor::mozilla_intermediate_v5(SslMethod::tls_server())?;
         server_context.set_verify(SslVerifyMode::PEER);
-        server_context.set_certificate(X509::from_pem(server.cert.as_bytes()))?;
-        server_context.set_private_key(PKey::from_pem(server.key.as_bytes()))?;
+        server_context.set_ca_file(&ca_file);
+        server_context.set_certificate(&&X509::from_pem(server.cert.as_bytes())?)?;
+        server_context.set_private_key(&&PKey::from_ec_key(EcKey::private_key_from_pem(
+            server.key.as_bytes(),
+        )?)?)?;
         let server_context = server_context.build();
 
+        let mut client_context = SslConnector::builder(SslMethod::tls_client())?;
+        client_context.set_verify(SslVerifyMode::PEER);
+        client_context.set_ca_file(&ca_file);
+        client_context.set_certificate(&&X509::from_pem(client.cert.as_bytes())?)?;
+        client_context.set_private_key(&&PKey::from_ec_key(EcKey::private_key_from_pem(
+            client.key.as_bytes(),
+        )?)?)?;
+        let client_context = client_context.build();
+
         // Start temporary server and listen for one connection
-        thread::spawn(move || {
+        std::thread::spawn(move || {
             let listener = TcpListener::bind("127.0.0.1:9999").unwrap();
             for stream in listener.incoming() {
-                let ssl = SslStream::new(server_context, stream.unwrap()).unwrap();
+                let mut ssl = server_context.accept(stream.unwrap()).unwrap();
                 ssl.do_handshake().unwrap();
                 break;
             }
@@ -173,7 +195,7 @@ mod test_group_ca {
 
         // Make connection
         let stream = TcpStream::connect("127.0.0.1:9999")?;
-        let ssl = SslStream::new(client_context, stream)?;
+        let mut ssl = client_context.connect(&server.subject_name()?, stream)?;
         ssl.do_handshake()?;
 
         Ok(())
@@ -190,10 +212,7 @@ pub struct GroupAcceptor(RustlsAcceptor);
 
 impl GroupAcceptor {
     pub fn new(groups: Collection<GroupData>) -> Result<Self> {
-        // TODO add all groups to the cert store
         let mut roots = RootCertStore::empty();
-
-        // TODO add server certs
         let mut sni_resolver = ResolvesServerCertUsingSni::new();
 
         let config = ServerConfig::builder();
@@ -201,18 +220,20 @@ impl GroupAcceptor {
         for group in groups.documents() {
             let group = group?;
             let ca: Document<GroupCaCert> = group.get_document("ca")?.unwrap();
+            let server: Document<GroupServerCert> = group.get_document("server")?.unwrap();
 
             roots.add(pem::parse(&ca.data.cert)?.into_contents().try_into()?)?;
 
             let private_key = config
                 .crypto_provider()
                 .key_provider
-                .load_private_key(PrivateKeyDer::from_pem_slice(&ca.data.key.as_bytes())?)?;
+                .load_private_key(PrivateKeyDer::from_pem_slice(&server.data.key.as_bytes())?)?;
 
+            println!("{}", server.data.subject_name()?);
             sni_resolver.add(
-                &group.data.name,
+                &server.data.subject_name()?,
                 rustls::sign::CertifiedKey::new(
-                    vec![pem::parse(&ca.data.cert)?.into_contents().try_into()?],
+                    vec![pem::parse(&server.data.cert)?.into_contents().try_into()?],
                     private_key,
                 ),
             )?;

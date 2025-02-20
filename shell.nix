@@ -20,6 +20,7 @@ mkShell rec {
     wayland
     fuse3
     systemd
+    openssl
   ];
   LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
 }

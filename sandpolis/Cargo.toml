@@ -70,9 +70,11 @@ server = [
   "sandpolis-shell?/server",
   "sandpolis-sysinfo?/server",
   "sandpolis-user/server",
+  "sandpolis-instance/server",
 ]
 agent = [
   "sandpolis-agent/agent",
+  "sandpolis-instance/agent",
   "sandpolis-desktop?/agent",
   "sandpolis-filesystem?/agent",
   "sandpolis-package?/agent",
@@ -80,7 +82,7 @@ agent = [
   "sandpolis-shell?/agent",
   "sandpolis-sysinfo?/agent",
 ]
-client = ["sandpolis-client/client"]
+client = ["sandpolis-client/client", "sandpolis-instance/client"]
 
 # Layers
 layer-account = []

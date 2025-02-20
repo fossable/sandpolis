@@ -12,8 +12,8 @@ use std::str::FromStr;
 use std::{ops::Deref, path::Path};
 use tracing::{debug, info};
 use validator::{Validate, ValidationErrors};
-use x509_parser::prelude::FromDer;
-use x509_parser::prelude::X509Certificate;
+use x509_parser::prelude::{FromDer, GeneralName};
+use x509_parser::prelude::{ParsedExtension, X509Certificate};
 
 pub mod config;
 pub mod messages;
@@ -69,10 +69,13 @@ impl GroupLayer {
             )?;
 
             #[cfg(feature = "server")]
-            group.insert_document(
+            let ca = group.insert_document(
                 "ca",
                 GroupCaCert::new(instance.cluster_id, group.data.name.clone())?,
             )?;
+
+            #[cfg(feature = "server")]
+            group.insert_document("server", ca.data.server_cert(instance.instance_id)?)?;
         }
 
         Ok(Self { groups, data })
@@ -156,9 +159,34 @@ pub struct GroupCaCert {
     pub key: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GroupServerCert {
     pub cert: String,
     pub key: String,
+}
+
+impl GroupServerCert {
+    pub fn subject_name(&self) -> Result<String> {
+        let pem = pem::parse(&self.cert.as_bytes())?;
+        for ext in X509Certificate::from_der(pem.contents())?
+            .1
+            .iter_extensions()
+        {
+            match ext.parsed_extension() {
+                ParsedExtension::SubjectAlternativeName(san) => {
+                    for name in &san.general_names {
+                        match name {
+                            GeneralName::DNSName(s) => return Ok(s.to_string()),
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        todo!()
+    }
 }
 
 /// A _client_ certificate (not as in "client" instance) used to authenticate with

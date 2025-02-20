@@ -30,8 +30,13 @@ jobs:
 
       - uses: actions-rs/cargo@v1
         with:
+          command: test
+          args: --target ${{ matrix.target }} --all-features
+
+      - uses: actions-rs/cargo@v1
+        with:
           command: build
-          args: --bin sandpolis --target ${{ matrix.target }} --all-features
+          args: --bin sandpolis --target ${{ matrix.target }} --all-features --release
 
       - uses: actions/upload-artifact@v4
         with:

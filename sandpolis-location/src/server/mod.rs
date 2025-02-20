@@ -12,7 +12,7 @@ pub enum LocationService {
     KeyCdn,
 }
 
-pub trait Locator {
+pub(crate) trait Locator {
     // TODO configurable field set?
     async fn query(&self, ip: &str) -> Result<Option<LocationData>>;
 }

@@ -42,6 +42,7 @@ pub enum Commands {
 impl Commands {
     pub fn dispatch(&self) -> Result<ExitCode> {
         match self {
+            #[cfg(feature = "server")]
             Commands::GenerateCert { group, output } => todo!(),
             Commands::InstallCert {} => todo!(),
             Commands::About => todo!(),

@@ -7800,6 +7800,7 @@ dependencies = [
  "sandpolis-instance",
  "serde",
  "serde_json",
+ "tempfile",
  "time",
  "tokio",
  "tokio-rustls",
