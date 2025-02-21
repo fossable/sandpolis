@@ -233,8 +233,8 @@ pub struct LayerVersion {
     pub minor: u32,
     pub patch: u32,
     pub description: Option<String>,
-    pub rev: Option<String>,
-    pub build_time: Option<String>,
+    // pub rev: Option<String>,
+    // pub build_time: Option<String>,
 }
 
 impl TryFrom<String> for LayerVersion {

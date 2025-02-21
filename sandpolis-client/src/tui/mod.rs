@@ -9,7 +9,7 @@ use tokio_stream::StreamExt;
 /// Renders a widget for testing/rapid iteration.
 pub async fn test_widget<W>(widget: W) -> Result<()>
 where
-    W: Widget + WidgetRef,
+    W: WidgetRef,
 {
     color_eyre::install()?;
     let mut terminal = ratatui::init();

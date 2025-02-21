@@ -1,7 +1,10 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
 use axum_macros::FromRef;
 use config::Configuration;
 use sandpolis_database::Database;
+use sandpolis_instance::LayerVersion;
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
@@ -70,7 +73,9 @@ impl InstanceState {
 }
 
 /// Layers are feature-sets that may be enabled on instances.
-#[derive(Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq, Hash)]
+#[derive(
+    Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq, Hash, strum::Display,
+)]
 pub enum Layer {
     /// Manage accounts.
     #[cfg(feature = "layer-account")]
@@ -97,6 +102,7 @@ pub enum Layer {
     #[cfg(feature = "layer-health")]
     Health,
 
+    // Instance?
     /// View system information.
     #[cfg(feature = "layer-inventory")]
     Inventory,
@@ -133,4 +139,27 @@ pub enum Layer {
     /// Establish persistent or ephemeral tunnels between instances.
     #[cfg(feature = "layer-tunnel")]
     Tunnel,
+}
+
+macro_rules! layer_version {
+    ($l:tt) => {
+        LayerVersion {
+            major: $l::built_info::PKG_VERSION_MAJOR.parse().unwrap(),
+            minor: $l::built_info::PKG_VERSION_MINOR.parse().unwrap(),
+            patch: $l::built_info::PKG_VERSION_PATCH.parse().unwrap(),
+            description: if $l::built_info::PKG_DESCRIPTION != "" {
+                Some($l::built_info::PKG_DESCRIPTION.to_string())
+            } else {
+                None
+            },
+        }
+    };
+}
+
+// TODO make this const
+pub fn layers() -> HashMap<Layer, LayerVersion> {
+    HashMap::from([
+        #[cfg(feature = "layer-shell")]
+        (Layer::Shell, layer_version!(sandpolis_shell)),
+    ])
 }

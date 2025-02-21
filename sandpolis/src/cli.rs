@@ -28,8 +28,8 @@ pub enum Commands {
         group: String, // TODO GroupName
 
         /// Output file path
-        #[clap(long, default_value = "./endpoint.json")]
-        output: PathBuf,
+        #[clap(long)]
+        output: Option<PathBuf>,
     },
 
     // TODO no command
@@ -43,9 +43,26 @@ impl Commands {
     pub fn dispatch(&self) -> Result<ExitCode> {
         match self {
             #[cfg(feature = "server")]
-            Commands::GenerateCert { group, output } => todo!(),
+            Commands::GenerateCert { group, output } => {
+                // let groups: Collection<GroupData> = db.collection("/groups")?;
+                // let g = groups.get_document(&group)?.expect("the group exists");
+                // let ca: Document<GroupCaCert> = g.get_document("ca")?.expect("the CA exists");
+
+                // let cert = ca.data.client_cert()?;
+
+                // info!(path = %output.display(), "Writing endpoint certificate");
+                // let mut output = File::create(output)?;
+                // output.write_all(&serde_json::to_vec(&cert)?)?;
+                todo!()
+            }
             Commands::InstallCert {} => todo!(),
-            Commands::About => todo!(),
+            Commands::About => {
+                println!();
+                for (layer, version) in crate::layers().iter() {
+                    println!("{layer}");
+                }
+            }
         }
+        Ok(ExitCode::SUCCESS)
     }
 }

@@ -18,6 +18,6 @@ async fn main() -> Result<()> {
             },
         },
     };
-    sandpolis_client::tui::test_widget(widget).await.unwrap();
+    sandpolis_client::tui::test_widget(&widget).await.unwrap();
     Ok(())
 }

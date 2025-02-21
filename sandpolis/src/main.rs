@@ -69,23 +69,9 @@ async fn main() -> Result<ExitCode> {
     // Load instance database
     let db = Database::new(&config.database.storage)?;
 
-    // Dispatch subcommands
-    match args.command {
-        #[cfg(feature = "server")]
-        Some(Commands::GenerateCert { group, output }) => {
-            let groups: Collection<GroupData> = db.collection("/groups")?;
-            let g = groups.get_document(&group)?.expect("the group exists");
-            let ca: Document<GroupCaCert> = g.get_document("ca")?.expect("the CA exists");
-
-            let cert = ca.data.client_cert()?;
-
-            info!(path = %output.display(), "Writing endpoint certificate");
-            let mut output = File::create(output)?;
-            output.write_all(&serde_json::to_vec(&cert)?)?;
-
-            return Ok(ExitCode::SUCCESS);
-        }
-        _ => (),
+    // Dispatch subcommand if one was given
+    if let Some(command) = args.command {
+        return Ok(command.dispatch()?);
     }
 
     // Load state

@@ -3,12 +3,11 @@ import android.app.Service;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.Manifest;
-import android.content.Context;
 import androidx.core.app.ServiceCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
-import android.app.ServiceInfo;
-import android.os.ForegroundServiceStartNotAllowedException;
+import android.content.pm.ServiceInfo;
+import android.app.ForegroundServiceStartNotAllowedException;
 
 public class AgentService extends Service {
 

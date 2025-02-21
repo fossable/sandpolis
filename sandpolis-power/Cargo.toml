@@ -17,7 +17,7 @@ sandpolis-database = { path = "../sandpolis-database" }
 
 [features]
 agent = ["dep:axum", "dep:axum-macros"]
-client = []
+client = ["sandpolis-instance/client"]
 client-gui = ["client"]
 client-tui = ["client", "dep:ratatui", "sandpolis-client/client-tui"]
 server = []
