@@ -42,7 +42,7 @@ axum = { version = "0.8.0", features = ["ws", "json"] }
 base64 = "0.22.1"
 cached = "0.54.0"
 chrono = { version = "0.4.39", features = ["serde"] }
-clap = { version = "4.4.7", features = ["derive", "string"] }
+clap = { version = "4.5.30", features = ["derive", "string"] }
 colored = "3.0.0"
 futures = "0.3.30"
 futures-util = "0.3.31"
