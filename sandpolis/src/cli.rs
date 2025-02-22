@@ -1,8 +1,11 @@
 use anyhow::Result;
 use clap::Parser;
 use clap::Subcommand;
+use colored::Colorize;
 use std::path::PathBuf;
 use std::process::ExitCode;
+
+use crate::config::Configuration;
 
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about, long_about = None)]
@@ -40,7 +43,7 @@ pub enum Commands {
 }
 
 impl Commands {
-    pub fn dispatch(&self) -> Result<ExitCode> {
+    pub fn dispatch(&self, config: &Configuration) -> Result<ExitCode> {
         match self {
             #[cfg(feature = "server")]
             Commands::GenerateCert { group, output } => {
@@ -57,9 +60,15 @@ impl Commands {
             }
             Commands::InstallCert {} => todo!(),
             Commands::About => {
-                println!();
+                for line in fossable::sandpolis_word() {
+                    println!("{line}");
+                }
+                println!("{} {}", "Layer".bold(), "Version".bold());
                 for (layer, version) in crate::layers().iter() {
-                    println!("{layer}");
+                    println!(
+                        "{layer} {}.{}.{}",
+                        version.major, version.minor, version.patch
+                    );
                 }
             }
         }

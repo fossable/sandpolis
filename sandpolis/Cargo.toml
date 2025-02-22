@@ -20,6 +20,8 @@ axum-macros = { workspace = true }
 axum-server = { workspace = true }
 axum = { workspace = true }
 clap = { workspace = true }
+colored = { workspace = true }
+fossable = "0.1.2"
 futures = { workspace = true }
 ratatui = { workspace = true, optional = true }
 rustls = { workspace = true }

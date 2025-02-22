@@ -1,23 +1,14 @@
-use anyhow::bail;
-use anyhow::Context;
 use anyhow::Result;
 use axum::routing::{any, get, post};
 use axum::Router;
 use clap::Parser;
+use colored::Colorize;
 use sandpolis::cli::CommandLine;
-use sandpolis::cli::Commands;
 use sandpolis::config::Configuration;
 use sandpolis::InstanceState;
-use sandpolis_database::Collection;
 use sandpolis_database::Database;
-use sandpolis_database::Document;
-use sandpolis_group::{GroupCaCert, GroupData};
-use sandpolis_network::ServerAddress;
-use sandpolis_network::{ConnectionCooldown, ServerConnection};
-use std::fs::File;
-use std::io::Write;
+use sandpolis_instance::InstanceType;
 use std::process::ExitCode;
-use std::time::Duration;
 use tokio::task::JoinSet;
 use tracing::debug;
 use tracing::info;
@@ -51,15 +42,29 @@ async fn main() -> Result<ExitCode> {
         )
         .init();
 
-    info!(
-        version = sandpolis::built_info::PKG_VERSION,
-        build_time = sandpolis::built_info::BUILT_TIME_UTC,
-        "Initializing Sandpolis"
-    );
-
     // Load config
     let config = Configuration::new(&args)?;
     debug!(config = ?config, "Loaded configuration");
+
+    // Dispatch subcommand if one was given
+    if let Some(command) = args.command {
+        return Ok(command.dispatch(&config)?);
+    }
+
+    info!(
+        version = sandpolis::built_info::PKG_VERSION,
+        build_time = sandpolis::built_info::BUILT_TIME_UTC,
+        "Starting Sandpolis {}",
+        Vec::<&str>::from([
+            #[cfg(feature = "server")]
+            &*"server".color(InstanceType::Server.color()),
+            #[cfg(feature = "client")]
+            &*"client".color(InstanceType::Client.color()),
+            #[cfg(feature = "agent")]
+            &*"agent".color(InstanceType::Agent.color()),
+        ])
+        .join(" + ")
+    );
 
     // Get ready to do some cryptography
     rustls::crypto::aws_lc_rs::default_provider()
@@ -69,15 +74,9 @@ async fn main() -> Result<ExitCode> {
     // Load instance database
     let db = Database::new(&config.database.storage)?;
 
-    // Dispatch subcommand if one was given
-    if let Some(command) = args.command {
-        return Ok(command.dispatch()?);
-    }
-
     // Load state
     let state = InstanceState::new(config.clone(), db).await?;
 
-    // Prepare to launch instances
     let mut tasks = JoinSet::new();
 
     #[cfg(feature = "server")]

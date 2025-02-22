@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use colored::Color;
 use sandpolis_database::Document;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{cmp::Ordering, fmt::Display, ops::Deref, path::PathBuf, str::FromStr};
@@ -158,11 +159,20 @@ pub enum InstanceType {
 
 impl InstanceType {
     /// Each instance type has an identifier.
-    const fn mask(&self) -> u8 {
+    pub const fn mask(&self) -> u8 {
         match self {
             InstanceType::Agent => 0b00000001,
             InstanceType::Client => 0b00000010,
             InstanceType::Server => 0b00000100,
+        }
+    }
+
+    /// Each instance type has an associated color.
+    pub const fn color(&self) -> Color {
+        match self {
+            InstanceType::Agent => Color::Cyan,
+            InstanceType::Client => Color::Green,
+            InstanceType::Server => Color::Magenta,
         }
     }
 }

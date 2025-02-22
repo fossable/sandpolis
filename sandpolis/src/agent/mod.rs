@@ -38,7 +38,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             any(sandpolis_filesystem::agent::routes::session),
         )
         .route(
-            "/shell/delete",
+            "/filesystem/delete",
             post(sandpolis_filesystem::agent::routes::delete),
         );
 

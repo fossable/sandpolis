@@ -6,5 +6,5 @@ COPY . .
 RUN cd sandpolis && cargo build --release --features agent
 
 FROM alpine:3.21
-COPY --from=builder /build/sandpolis/target/release/sandpolis /bin/sandpolis
+COPY --from=builder /build/target/release/sandpolis /bin/sandpolis
 ENTRYPOINT [ "/bin/sandpolis" ]
