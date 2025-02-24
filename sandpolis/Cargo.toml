@@ -1,12 +1,12 @@
 [package]
 authors = ["Tyler Cook"]
 description = "Ultimate remote monitoring and management"
-edition = "2021"
+edition = "2024"
 license = "AGPL-3.0-only"
 name = "sandpolis"
 repository = "https://github.com/fossable/sandpolis"
-rust-version = "1.74"
-version = "0.0.1"
+rust-version = "1.85"
+version = "8.0.0"
 
 [build-dependencies]
 built = { version = "0.7", features = ["git2", "chrono", "semver"] }

@@ -1,7 +1,7 @@
 [package]
 name = "sandpolis-mobile"
 version = "0.0.1"
-edition = "2021"
+edition = "2024"
 publish = false
 
 [lib]
@@ -10,5 +10,4 @@ crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
 bevy = { version = "0.15.1" }
-sandpolis = { path = "../sandpolis", features = ["client", "agent"]}
-
+sandpolis = { path = "../sandpolis", features = ["client", "agent"] }

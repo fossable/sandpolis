@@ -40,6 +40,21 @@ pub enum Commands {
 
     /// Show versions of all installed layers
     About,
+
+    /// Run a server instance
+    #[cfg(feature = "server")]
+    #[cfg(any(feature = "agent", feature = "client"))]
+    Server,
+
+    /// Run a client instance
+    #[cfg(feature = "client")]
+    #[cfg(any(feature = "agent", feature = "server"))]
+    Client,
+
+    /// Run an agent instance
+    #[cfg(feature = "agent")]
+    #[cfg(any(feature = "server", feature = "client"))]
+    Agent,
 }
 
 impl Commands {
@@ -71,6 +86,15 @@ impl Commands {
                     );
                 }
             }
+            #[cfg(feature = "server")]
+            #[cfg(any(feature = "agent", feature = "client"))]
+            Commands::Server => todo!(),
+            #[cfg(feature = "client")]
+            #[cfg(any(feature = "agent", feature = "server"))]
+            Commands::Client => todo!(),
+            #[cfg(feature = "agent")]
+            #[cfg(any(feature = "server", feature = "client"))]
+            Commands::Agent => todo!(),
         }
         Ok(ExitCode::SUCCESS)
     }
