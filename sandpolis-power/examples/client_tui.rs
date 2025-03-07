@@ -1,10 +1,9 @@
-use std::sync::Arc;
-
 use anyhow::Result;
 use sandpolis_database::TemporaryDatabase;
 use sandpolis_instance::InstanceId;
 use sandpolis_network::NetworkLayer;
-use sandpolis_power::{client::tui::PowerWidget, PowerLayer};
+use sandpolis_power::{PowerLayer, client::tui::PowerWidget};
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<()> {

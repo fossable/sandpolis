@@ -1,11 +1,11 @@
 use anyhow::Result;
-use axum::routing::{any, get, post};
 use axum::Router;
+use axum::routing::{any, get, post};
 use clap::Parser;
 use colored::Colorize;
+use sandpolis::InstanceState;
 use sandpolis::cli::CommandLine;
 use sandpolis::config::Configuration;
-use sandpolis::InstanceState;
 use sandpolis_database::Database;
 use sandpolis_instance::InstanceType;
 use std::process::ExitCode;
@@ -77,7 +77,7 @@ async fn main() -> Result<ExitCode> {
     // Load state
     let state = InstanceState::new(config.clone(), db).await?;
 
-    let mut tasks = JoinSet::new();
+    let mut tasks: JoinSet<()> = JoinSet::new();
 
     #[cfg(feature = "server")]
     {
@@ -98,7 +98,7 @@ async fn main() -> Result<ExitCode> {
     {
         let app: Router<InstanceState> = Router::new().route("/versions", get(routes::versions));
 
-        // Check command line preference
+        // Check command line preference if both are enabled
         #[cfg(all(feature = "client-gui", feature = "client-tui"))]
         {
             if args.client.gui {
@@ -108,14 +108,16 @@ async fn main() -> Result<ExitCode> {
             }
         }
 
-        // #[cfg(feature = "client-tui")]
-        // client::tui::main(config, state).await.unwrap();
+        #[cfg(feature = "client-tui")]
+        #[cfg(not(feature = "client-gui"))]
+        client::tui::main(config, state).await.unwrap();
     }
 
     // If this was a client, don't hold up the user by waiting for server/agent
-    if !cfg!(feature = "client") {
+    #[cfg(not(feature = "client"))]
+    {
         while let Some(result) = tasks.join_next().await {
-            let _ = result??;
+            let _ = result?;
         }
     }
 

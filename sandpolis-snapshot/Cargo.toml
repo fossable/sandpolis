@@ -5,13 +5,13 @@ edition = "2024"
 
 [dependencies]
 anyhow = { workspace = true }
-tokio = { workspace = true }
+tokio = { workspace = true, optional = true }
 serde = { workspace = true }
 uuid = { workspace = true }
 qcow = { version = "1.2.0", optional = true }
 sandpolis-instance = { path = "../sandpolis-instance" }
 
 [features]
-server = ["dep:qcow"]
+server = ["dep:qcow", "dep:tokio"]
 agent-boot = []
 agent = []

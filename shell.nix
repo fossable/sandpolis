@@ -3,7 +3,7 @@
 with pkgs;
 
 mkShell rec {
-  nativeBuildInputs = [ pkg-config cargo rustc rust-analyzer rustfmt clippy ];
+  nativeBuildInputs = [ pkg-config ];
   buildInputs = [
     udev
     cmake

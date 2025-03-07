@@ -1,7 +1,7 @@
 //! # Boot Agent
 //!
-//! The boot agent is a special type of agent instance that runs as a custom UEFI
-//! application rather than on a host's OS.
+//! The boot agent is a special type of agent instance that runs as a custom
+//! UEFI application rather than on a host's OS.
 //!
 //! ## Instance Configuration
 //!
@@ -22,9 +22,9 @@
 //!
 //! ## Snapshot Plugin
 //!
-//! The boot agent is able to create and apply _consistent_ filesystem snapshots to
-//! any partition. This is because no partitions are in use while the boot agent is
-//! running.
+//! The boot agent is able to create and apply _consistent_ filesystem snapshots
+//! to any partition. This is because no partitions are in use while the boot
+//! agent is running.
 //!
 //! ## Installation
 //!
@@ -82,13 +82,4 @@ fn main() -> uefi::prelude::Status {
 #[cfg(not(target_os = "none"))]
 fn main() {
     panic!();
-}
-
-/// Use Rng protocol for getrandom.
-#[no_mangle]
-unsafe extern "Rust" fn __getrandom_v03_custom(
-    dest: *mut u8,
-    len: usize,
-) -> Result<(), getrandom::Error> {
-    todo!()
 }

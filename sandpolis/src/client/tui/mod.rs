@@ -1,36 +1,42 @@
 use anyhow::Result;
 use ratatui::{
+    DefaultTerminal, Frame,
     crossterm::event::{Event, EventStream, KeyCode, KeyEventKind},
     layout::{Constraint, Layout},
     style::Stylize,
     text::Line,
     widgets::WidgetRef,
-    DefaultTerminal, Frame,
 };
-use sandpolis::{config::Configuration, InstanceState};
+use sandpolis::{InstanceState, config::Configuration};
+use server_list::ServerListWidget;
 use std::time::Duration;
 use tokio_stream::StreamExt;
+
+mod server_list;
+
+// #[derive(Debug)]
+struct App {
+    fps: f32,
+    should_quit: bool,
+    server_list: ServerListWidget,
+    // Layers
+    // #[cfg(feature = "layer-power")]
+    // power: sandpolis_power::client::tui::PowerWidget,
+}
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let terminal = ratatui::init();
     let app_result = App {
         fps: config.client.fps as f32,
         should_quit: false,
-        #[cfg(feature = "layer-power")]
-        power: todo!(),
+        server_list: ServerListWidget::new(),
+        // #[cfg(feature = "layer-power")]
+        // power: todo!(),
     }
     .run(terminal)
     .await;
     ratatui::restore();
     app_result
-}
-
-// #[derive(Debug)]
-struct App {
-    fps: f32,
-    should_quit: bool,
-    #[cfg(feature = "layer-power")]
-    power: sandpolis_power::client::tui::PowerWidget,
 }
 
 impl App {
@@ -72,5 +78,4 @@ impl App {
     }
 }
 
-struct ServerListWidget;
 struct AgentListWidget;
