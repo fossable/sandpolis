@@ -1,13 +1,16 @@
 use anyhow::Result;
 use sandpolis_database::Document;
 use sandpolis_instance::ClusterId;
-use sandpolis_network::NetworkLayer;
+use sandpolis_network::{NetworkLayer, ServerAddress};
 use serde::{Deserialize, Serialize};
 
 pub mod config;
 
 #[cfg(feature = "server")]
 pub mod server;
+
+#[cfg(feature = "client")]
+pub mod client;
 
 pub mod messages;
 
@@ -17,24 +20,24 @@ pub struct ServerLayerData {}
 #[derive(Clone)]
 pub struct ServerLayer {
     pub data: Document<ServerLayerData>,
+    #[cfg(feature = "server")]
     pub banner: Document<ServerBannerData>,
     pub network: NetworkLayer,
 }
 
 impl ServerLayer {
     pub fn new(data: Document<ServerLayerData>, network: NetworkLayer) -> Result<Self> {
-        let banner = if let Some(document) = data.get_document("/banner")? {
-            document
-        } else {
-            // Load banner from another server if there is one
-            // TODO
-
-            // Create a new banner
-            data.document("/banner")?
-        };
-
         Ok(Self {
-            banner,
+            #[cfg(feature = "server")]
+            banner: if let Some(document) = data.get_document("/banner")? {
+                document
+            } else {
+                // Load banner from another server if there is one
+                // TODO
+
+                // Create a new banner
+                data.document("/banner")?
+            },
             data,
             network,
         })

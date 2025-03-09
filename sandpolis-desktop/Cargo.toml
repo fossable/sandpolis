@@ -12,7 +12,7 @@ anyhow = { workspace = true }
 #   "linux-pkg-config",
 # ] }
 enigo = { version = "0.3.0", optional = true }
-ratatui-image = { version = "4.2.0", optional = true }
+ratatui-image = { workspace = true, optional = true }
 tracing = { workspace = true }
 
 [features]

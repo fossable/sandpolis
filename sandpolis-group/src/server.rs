@@ -5,10 +5,10 @@ use super::GroupClientCert;
 use super::GroupData;
 use super::GroupName;
 use super::GroupServerCert;
-use anyhow::bail;
 use anyhow::Result;
+use anyhow::bail;
 use axum::{
-    extract::Request, middleware::AddExtension, middleware::Next, response::Response, Extension,
+    Extension, extract::Request, middleware::AddExtension, middleware::Next, response::Response,
 };
 use axum_server::tls_rustls::RustlsConfig;
 use axum_server::{accept::Accept, tls_rustls::RustlsAcceptor};
@@ -22,13 +22,13 @@ use rcgen::ExtendedKeyUsagePurpose;
 use rcgen::IsCa;
 use rcgen::KeyPair;
 use rcgen::SanType;
-use rustls::server::ResolvesServerCertUsingSni;
-use rustls::server::WebPkiClientVerifier;
 use rustls::RootCertStore;
 use rustls::ServerConfig;
-use rustls_pki_types::pem::PemObject;
+use rustls::server::ResolvesServerCertUsingSni;
+use rustls::server::WebPkiClientVerifier;
 use rustls_pki_types::CertificateDer;
 use rustls_pki_types::PrivateKeyDer;
+use rustls_pki_types::pem::PemObject;
 use sandpolis_database::Collection;
 use sandpolis_database::Document;
 use sandpolis_instance::ClusterId;
@@ -36,6 +36,8 @@ use sandpolis_instance::InstanceId;
 use sandpolis_instance::InstanceType;
 use std::io;
 use std::sync::Arc;
+use tempfile::TempDir;
+use tempfile::tempdir;
 use time::OffsetDateTime;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_rustls::server::TlsStream;
@@ -311,4 +313,11 @@ pub async fn auth_middleware(
     }
 
     Ok(next.run(request).await)
+}
+
+/// Generate group certificates to a temporary directory for testing purposes.
+pub fn generate_test_group() -> Result<TempDir> {
+    let tmp = tempdir()?;
+
+    Ok(tmp)
 }

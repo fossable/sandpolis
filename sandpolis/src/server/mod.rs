@@ -1,9 +1,9 @@
+use crate::{InstanceState, config::Configuration};
 use anyhow::{Context, Result};
 use axum::{
-    routing::{get, post},
     Router,
+    routing::{get, post},
 };
-use sandpolis::{config::Configuration, InstanceState};
 use tracing::info;
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {

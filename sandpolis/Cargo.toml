@@ -24,6 +24,7 @@ colored = { workspace = true }
 fossable = "0.1.2"
 futures = { workspace = true }
 ratatui = { workspace = true, optional = true }
+ratatui-image = { workspace = true, optional = true }
 rustls = { workspace = true }
 sandpolis-agent = { path = "../sandpolis-agent" }
 sandpolis-client = { path = "../sandpolis-client" }
@@ -84,7 +85,11 @@ agent = [
   "sandpolis-shell?/agent",
   "sandpolis-sysinfo?/agent",
 ]
-client = ["sandpolis-client/client", "sandpolis-instance/client"]
+client = [
+  "sandpolis-server/client",
+  "sandpolis-client/client",
+  "sandpolis-instance/client",
+]
 
 # Layers
 layer-account = []
@@ -129,6 +134,7 @@ client-gui = ["client"]
 client-tui = [
   "client",
   "dep:ratatui",
+  "dep:ratatui-image",
   "sandpolis-client/client-tui",
   "sandpolis-desktop?/client-tui",
   "sandpolis-filesystem?/client-tui",
@@ -137,3 +143,7 @@ client-tui = [
   "sandpolis-shell?/client-tui",
   "sandpolis-sysinfo?/client-tui",
 ]
+
+[[example]]
+name = "client_tui_server_list"
+required-features = ["client-tui", "server"]

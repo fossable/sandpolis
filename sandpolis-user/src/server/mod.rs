@@ -1,15 +1,15 @@
 use anyhow::Result;
 use axum::{
-    extract::FromRequestParts,
-    http::{request::Parts, StatusCode},
-    routing::{get, post},
     RequestPartsExt, Router,
+    extract::FromRequestParts,
+    http::{StatusCode, request::Parts},
+    routing::{get, post},
 };
 use axum_extra::{
-    headers::{authorization::Bearer, Authorization},
     TypedHeader,
+    headers::{Authorization, authorization::Bearer},
 };
-use jsonwebtoken::{decode, DecodingKey, EncodingKey, Validation};
+use jsonwebtoken::{DecodingKey, EncodingKey, Validation, decode};
 use rand::Rng;
 use ring::pbkdf2;
 use serde::{Deserialize, Serialize};
@@ -50,7 +50,7 @@ impl UserLayer {
             )?;
 
             let default = "test"; // TODO hash
-                                  // TODO transaction
+            // TODO transaction
             user.insert_document("password", PasswordData::new(&default))?;
             info!(username = "admin", password = %default, "Created default admin user");
         }
@@ -67,7 +67,7 @@ struct ServerKey {
 
 impl ServerKey {
     fn new() -> Self {
-        let secret = rand::thread_rng().gen::<[u8; 32]>().to_vec();
+        let secret = rand::rng().random::<[u8; 32]>().to_vec();
         Self {
             encoding: EncodingKey::from_secret(&secret),
             decoding: DecodingKey::from_secret(&secret),
@@ -96,7 +96,7 @@ impl PasswordData {
     pub fn new(password: &str) -> Self {
         let mut data = PasswordData {
             iterations: 15000,
-            salt: rand::thread_rng().gen::<[u8; 32]>().to_vec(),
+            salt: rand::rng().random::<[u8; 32]>().to_vec(),
             hash: vec![0u8; ring::digest::SHA256_OUTPUT_LEN],
             totp_secret: None,
         };
@@ -114,7 +114,7 @@ impl PasswordData {
     pub fn new_with_totp(username: &str, password: &str) -> Result<Self> {
         let mut data = PasswordData {
             iterations: 15000,
-            salt: rand::thread_rng().gen::<[u8; 32]>().to_vec(),
+            salt: rand::rng().random::<[u8; 32]>().to_vec(),
             hash: Vec::new(),
             totp_secret: Some(
                 TOTP::new(

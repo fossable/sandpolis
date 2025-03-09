@@ -10,6 +10,16 @@ use strum::EnumIter;
 
 pub mod cli;
 pub mod config;
+pub mod routes;
+
+#[cfg(feature = "server")]
+pub mod server;
+
+#[cfg(feature = "agent")]
+pub mod agent;
+
+#[cfg(feature = "client")]
+pub mod client;
 
 /// Build info
 pub mod built_info {
@@ -88,7 +98,8 @@ pub enum Layer {
 
     Client,
 
-    /// Deploy agents directly over a protocol like SSH or via special deployer packages.
+    /// Deploy agents directly over a protocol like SSH or via special deployer
+    /// packages.
     #[cfg(feature = "layer-deploy")]
     Deploy,
 

@@ -5,7 +5,12 @@ edition = "2024"
 
 [dependencies]
 anyhow = { workspace = true }
+validator = { workspace = true }
+serde = { workspace = true }
+sandpolis-instance = { path = "../sandpolis-instance" }
+sandpolis-database = { path = "../sandpolis-database" }
 
 [features]
 client = []
 server = []
+agent = []

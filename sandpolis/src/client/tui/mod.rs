@@ -1,3 +1,4 @@
+use crate::{InstanceState, config::Configuration};
 use anyhow::Result;
 use ratatui::{
     DefaultTerminal, Frame,
@@ -7,12 +8,11 @@ use ratatui::{
     text::Line,
     widgets::WidgetRef,
 };
-use sandpolis::{InstanceState, config::Configuration};
 use server_list::ServerListWidget;
 use std::time::Duration;
 use tokio_stream::StreamExt;
 
-mod server_list;
+pub mod server_list;
 
 // #[derive(Debug)]
 struct App {
@@ -29,7 +29,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let app_result = App {
         fps: config.client.fps as f32,
         should_quit: false,
-        server_list: ServerListWidget::new(),
+        server_list: ServerListWidget::new(state.server.clone()),
         // #[cfg(feature = "layer-power")]
         // power: todo!(),
     }

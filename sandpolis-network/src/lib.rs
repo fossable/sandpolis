@@ -1,6 +1,6 @@
+use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
-use anyhow::Result;
 use chrono::{DateTime, Utc};
 use config::NetworkLayerConfig;
 use futures::StreamExt;
@@ -113,10 +113,12 @@ pub struct ConnectionData {
     /// "Recent" write throughput in bytes/second
     write_throughput: u64,
 
-    /// Maximum read throughput in bytes/second since the connection was established
+    /// Maximum read throughput in bytes/second since the connection was
+    /// established
     read_throughput_max: u64,
 
-    /// Maximum write throughput in bytes/second since the connection was established
+    /// Maximum write throughput in bytes/second since the connection was
+    /// established
     write_throughput_max: u64,
 
     local_socket: SocketAddr,
@@ -142,8 +144,8 @@ pub struct AgentConnectionRequest {
     port: Option<u16>,
 }
 
-// Request that the recieving instance establish a new connection to the given host.
-// message RQ_CoordinateConnection {
+// Request that the recieving instance establish a new connection to the given
+// host. message RQ_CoordinateConnection {
 
 //     // The host IP address
 //     string host = 1;
@@ -166,8 +168,8 @@ pub struct ConnectionCooldown {
     /// Initial cooldown value
     pub initial: Duration,
 
-    /// Number of connection iterations required for the total cooldown to increase
-    /// by a factor of the initial cooldown.
+    /// Number of connection iterations required for the total cooldown to
+    /// increase by a factor of the initial cooldown.
     pub constant: Option<f64>,
 
     /// Maximum cooldown value
@@ -207,22 +209,24 @@ pub struct ServerConnectionData {}
 
 /// A connection to a server from any other instance (including another server).
 ///
-/// In continuous mode, the agent maintains its primary connection at all times. If
-/// the connection is lost, the agent will periodically attempt to reestablish the
-/// connection using the same parameters it used to establish the initial
-/// connection.
+/// In continuous mode, the agent maintains its primary connection at all times.
+/// If the connection is lost, the agent will periodically attempt to
+/// reestablish the connection using the same parameters it used to establish
+/// the initial connection.
 ///
-/// The connection mode can be changed on-the-fly by a user or scheduled to change
-/// automatically according to the time and day.
+/// The connection mode can be changed on-the-fly by a user or scheduled to
+/// change automatically according to the time and day.
 ///
-/// In polling mode, the agent intentionally closes the primary connection unless
-/// there exists an active stream. On a configurable schedule, the agent reconnects
-/// to a server, flushes any cached data, and checks for any new work items. After
-/// executing all available work items, the primary connection is closed again.
+/// In polling mode, the agent intentionally closes the primary connection
+/// unless there exists an active stream. On a configurable schedule, the agent
+/// reconnects to a server, flushes any cached data, and checks for any new work
+/// items. After executing all available work items, the primary connection is
+/// closed again.
 ///
-/// The agent may attempt a spontaneous connection outside of the regular schedule
-/// if an internal agent process triggers it.
+/// The agent may attempt a spontaneous connection outside of the regular
+/// schedule if an internal agent process triggers it.
 pub struct ServerConnection {
+    pub address: ServerAddress,
     group: GroupName,
     iterations: u64, // TODO Data?
     cooldown: ConnectionCooldown,
@@ -245,6 +249,7 @@ impl ServerConnection {
                 .resolve_to_addrs(&cert.name()?, &address.resolve()?)
                 .build()
                 .unwrap(),
+            address,
         })
     }
 
@@ -284,9 +289,9 @@ impl ServerConnection {
 /// exist: a global level and a local level.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum ServerStratum {
-    /// This server maintains data only for the agents that its directly connected
-    /// to. Local stratum (LS) servers connect to at most one GS server. LS servers
-    /// may not connect directly to each other.
+    /// This server maintains data only for the agents that its directly
+    /// connected to. Local stratum (LS) servers connect to at most one GS
+    /// server. LS servers may not connect directly to each other.
     ///
     /// LS servers are optional, but may be useful for on-premise installations
     /// where the server can continue operating even when the network goes down.

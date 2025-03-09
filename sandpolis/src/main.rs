@@ -14,8 +14,6 @@ use tracing::debug;
 use tracing::info;
 use tracing_subscriber::filter::LevelFilter;
 
-pub mod routes;
-
 #[tokio::main]
 async fn main() -> Result<ExitCode> {
     #[cfg(all(
@@ -123,12 +121,3 @@ async fn main() -> Result<ExitCode> {
 
     Ok(ExitCode::SUCCESS)
 }
-
-#[cfg(feature = "server")]
-pub mod server;
-
-#[cfg(feature = "agent")]
-pub mod agent;
-
-#[cfg(feature = "client")]
-pub mod client;
