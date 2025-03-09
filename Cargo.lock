@@ -8855,6 +8855,7 @@ dependencies = [
  "fossable",
  "futures",
  "openraft",
+ "rand 0.9.0",
  "ratatui",
  "ratatui-image",
  "rustls",

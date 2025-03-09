@@ -321,6 +321,14 @@ impl ServerAddress {
     pub const fn default_port() -> u16 {
         8768
     }
+
+    /// Whether the server is running on localhost.
+    pub fn is_localhost(&self) -> bool {
+        match self {
+            ServerAddress::Dns(dns) => dns == "localhost",
+            ServerAddress::Ip(ip) => ip.to_string().starts_with("127.0.0.1:"),
+        }
+    }
 }
 
 impl FromStr for ServerAddress {

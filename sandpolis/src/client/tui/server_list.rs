@@ -4,7 +4,10 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::Stylize,
     text::Text,
-    widgets::{Block, Borders, List, ListItem, ListState, StatefulWidget, Widget, WidgetRef},
+    widgets::{
+        Block, Borders, List, ListItem, ListState, StatefulWidget, StatefulWidgetRef, Widget,
+        WidgetRef,
+    },
 };
 use sandpolis_network::ServerAddress;
 use sandpolis_server::{ServerLayer, client::LoadServerBanner};
@@ -15,30 +18,30 @@ use tokio::{
 };
 
 pub struct ServerListWidget {
-    list_items: Arc<RwLock<Vec<ServerListItem>>>,
-    list_state: ListState,
+    state: Arc<RwLock<ServerListWidgetState>>,
     focused: bool,
     threads: JoinSet<()>,
 }
 
+struct ServerListWidgetState {
+    list_state: ListState,
+    list_items: Vec<ServerListItem>,
+}
+
 impl ServerListWidget {
     pub fn new(server_layer: ServerLayer) -> Self {
-        let list_items = Arc::new(RwLock::new(
-            server_layer
-                .network
-                .servers
-                .iter()
-                .map(|connection| {
-                    ServerListItem::new(server_layer.clone(), connection.address.clone())
-                })
-                .collect::<Vec<ServerListItem>>(),
-        ));
+        let mut list_items = server_layer
+            .network
+            .servers
+            .iter()
+            .map(|connection| ServerListItem::new(server_layer.clone(), connection.address.clone()))
+            .collect::<Vec<ServerListItem>>();
 
         // Add local server if one exists
         #[cfg(feature = "server")]
         {
-            list_items.write().unwrap().push(ServerListItem {
-                address: todo!(),
+            list_items.push(ServerListItem {
+                address: "127.0.0.1:8768".parse().unwrap(),
                 banner: RwLock::new(LoadServerBanner::Loaded(server_layer.banner.data.clone())),
                 // The banner is already loaded, so this channel will never be used
                 fetch_banner: RwLock::new(mpsc::channel(1).1),
@@ -46,15 +49,19 @@ impl ServerListWidget {
             });
         }
 
+        let state = Arc::new(RwLock::new(ServerListWidgetState {
+            list_items,
+            list_state: ListState::default(),
+        }));
+
         let mut threads = JoinSet::new();
         // for (i, item) in list_items.read().unwrap().iter().enumerate() {
-        //     let items_clone = list_items.clone();
+        //     let state_clone = state.clone();
         //     threads.spawn(async move { items_clone.read().unwrap()[i].run().await });
         // }
 
         Self {
-            list_items,
-            list_state: ListState::default(),
+            state,
             focused: true,
             threads,
         }
@@ -63,6 +70,7 @@ impl ServerListWidget {
 
 impl WidgetRef for &ServerListWidget {
     fn render_ref(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+        let mut state = self.state.write().unwrap();
         let outer_block = Block::default().borders(Borders::TOP).title("Servers");
 
         let layout = Layout::default()
@@ -74,12 +82,12 @@ impl WidgetRef for &ServerListWidget {
         let banner_area = layout[0];
         let list_area = layout[1];
 
-        // self.list_items
-        //     .read()
-        //     .unwrap()
-        //     .iter()
-        //     .collect::<List>()
-        //     .render(list_area, buf, &mut self.list_state);
+        StatefulWidget::render(
+            state.list_items.iter().collect::<List>(),
+            list_area,
+            buf,
+            &mut state.list_state,
+        );
     }
 }
 
@@ -125,7 +133,7 @@ impl ServerListItem {
 impl From<&ServerListItem> for ListItem<'_> {
     fn from(item: &ServerListItem) -> Self {
         let mut text = Text::default();
-        text.extend(["Item".blue(), "1".bold().red()]);
+        text.extend([format!("{:?}", item.address).blue(), "1".bold().red()]);
         ListItem::new(text)
     }
 }

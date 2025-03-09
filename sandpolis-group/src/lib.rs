@@ -1,5 +1,5 @@
-//! All connections to a server instance must be authenticated with a group using
-//! clientAuth certificates.
+//! All connections to a server instance must be authenticated with a group
+//! using clientAuth certificates.
 
 use anyhow::Result;
 use config::GroupConfig;
@@ -146,9 +146,11 @@ mod test_group_name {
         assert!("t".parse::<GroupName>().is_err());
         assert!("".parse::<GroupName>().is_err());
         assert!("test*".parse::<GroupName>().is_err());
-        assert!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-            .parse::<GroupName>()
-            .is_err());
+        assert!(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                .parse::<GroupName>()
+                .is_err()
+        );
     }
 }
 
@@ -189,8 +191,8 @@ impl GroupServerCert {
     }
 }
 
-/// A _client_ certificate (not as in "client" instance) used to authenticate with
-/// a server instance.
+/// A _client_ certificate (not as in "client" instance) used to authenticate
+/// with a server instance.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GroupClientCert {
     pub ca: String,
@@ -204,7 +206,17 @@ impl GroupClientCert {
     where
         P: AsRef<Path>,
     {
+        // TODO PEM instead of json
         Ok(serde_json::from_slice(&std::fs::read(path)?)?)
+    }
+
+    /// Write the certificate to a file.
+    pub fn write<P>(&self, path: P) -> Result<()>
+    where
+        P: AsRef<Path>,
+    {
+        std::fs::write(path, serde_json::to_vec(self)?)?;
+        Ok(())
     }
 
     pub fn ca(&self) -> Result<reqwest::Certificate> {

@@ -231,7 +231,6 @@ impl GroupAcceptor {
                 .key_provider
                 .load_private_key(PrivateKeyDer::from_pem_slice(&server.data.key.as_bytes())?)?;
 
-            println!("{}", server.data.subject_name()?);
             sni_resolver.add(
                 &server.data.subject_name()?,
                 rustls::sign::CertifiedKey::new(
@@ -313,11 +312,4 @@ pub async fn auth_middleware(
     }
 
     Ok(next.run(request).await)
-}
-
-/// Generate group certificates to a temporary directory for testing purposes.
-pub fn generate_test_group() -> Result<TempDir> {
-    let tmp = tempdir()?;
-
-    Ok(tmp)
 }

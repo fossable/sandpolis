@@ -11,9 +11,6 @@ version = "8.0.0"
 [build-dependencies]
 built = { version = "0.7", features = ["git2", "chrono", "semver"] }
 
-[dev-dependencies]
-tempfile = "3.15.0"
-
 [dependencies]
 anyhow = { workspace = true }
 axum-macros = { workspace = true }
@@ -23,8 +20,7 @@ clap = { workspace = true }
 colored = { workspace = true }
 fossable = "0.1.2"
 futures = { workspace = true }
-ratatui = { workspace = true, optional = true }
-ratatui-image = { workspace = true, optional = true }
+rand = { workspace = true }
 rustls = { workspace = true }
 sandpolis-agent = { path = "../sandpolis-agent" }
 sandpolis-client = { path = "../sandpolis-client" }
@@ -48,16 +44,21 @@ sandpolis-user = { path = "../sandpolis-user" }
 serde_json = { workspace = true }
 serde = { workspace = true }
 strum = { workspace = true }
+tempfile = { workspace = true }
 tokio-stream = { workspace = true }
 tokio = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing = { workspace = true }
 
-# Server dependencies
+# Server exclusive
 openraft = { git = "https://github.com/databendlabs/openraft", optional = true, features = [
   "serde",
   "type-alias",
 ] }
+
+# Client exclusive
+ratatui = { workspace = true, optional = true }
+ratatui-image = { workspace = true, optional = true }
 
 [features]
 # Instances

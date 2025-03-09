@@ -4,6 +4,13 @@ use axum::{
     Router,
     routing::{get, post},
 };
+use rand::Rng;
+use sandpolis_database::TemporaryDatabase;
+use sandpolis_group::GroupCaCert;
+use sandpolis_instance::{ClusterId, InstanceId};
+use std::path::PathBuf;
+use tempfile::TempDir;
+use tempfile::tempdir;
 use tracing::info;
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
@@ -40,4 +47,51 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         .context("binding socket")?;
 
     Ok(())
+}
+
+/// Holds randomized parameters for a test server.
+pub struct TestServer {
+    pub port: u16,
+    pub endpoint_cert: PathBuf,
+    certs: TempDir,
+    db: TemporaryDatabase,
+}
+
+/// Run a standalone server instance for testing.
+pub async fn test_server() -> Result<TestServer> {
+    // Get ready to do some cryptography
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .expect("crypto provider is available");
+
+    let cluster_id = ClusterId::default();
+    let instance_id = InstanceId::new_server();
+
+    let mut config = Configuration::default();
+
+    // Create temporary database
+    let db = TemporaryDatabase::new()?;
+
+    // Generate temporary certs
+    let certs = tempdir()?;
+    let ca_cert = GroupCaCert::new(cluster_id, "test".parse()?)?;
+    let server_cert = ca_cert.server_cert(instance_id)?;
+    let client_cert = ca_cert.client_cert()?;
+    client_cert.write(certs.path().join("client.cert"))?;
+
+    // Temporary listening port
+    let port: u16 = rand::rng().random_range(9000..9999);
+    config.server.listen = format!("127.0.0.1:{port}",).parse()?;
+
+    let state = InstanceState::new(config.clone(), db.db.clone()).await?;
+
+    // Spawn the server
+    tokio::spawn(async move { main(config, state).await });
+
+    Ok(TestServer {
+        port,
+        endpoint_cert: certs.path().join("client.cert"),
+        certs,
+        db,
+    })
 }
