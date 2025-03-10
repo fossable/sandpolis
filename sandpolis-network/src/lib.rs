@@ -14,6 +14,8 @@ use sandpolis_group::{GroupClientCert, GroupName};
 use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::{ts_seconds, ts_seconds_option};
+use std::fmt::Display;
+use std::fmt::Write;
 use std::net::ToSocketAddrs;
 use std::str::FromStr;
 use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
@@ -339,6 +341,15 @@ impl FromStr for ServerAddress {
             Ok(addr) => Ok(Self::Ip(addr)),
             // TODO regex
             Err(_) => Ok(Self::Dns(s.to_string())),
+        }
+    }
+}
+
+impl Display for ServerAddress {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ServerAddress::Dns(dns) => f.write_str(&dns),
+            ServerAddress::Ip(ip) => f.write_str(&ip.to_string()),
         }
     }
 }

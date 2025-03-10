@@ -130,7 +130,7 @@ default = [
 ]
 
 # Client features
-client-gui = ["client"]
+client-gui = ["client", "sandpolis-client/client-gui"]
 # client-gui-wayland = ["client-gui", "bevy/wayland"]
 client-tui = [
   "client",

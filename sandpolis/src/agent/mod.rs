@@ -1,9 +1,9 @@
+use crate::{InstanceState, config::Configuration};
 use anyhow::Result;
 use axum::{
-    routing::{any, get, post},
     Router,
+    routing::{any, get, post},
 };
-use sandpolis::{config::Configuration, InstanceState};
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let uds = tokio::net::UnixListener::bind(&config.agent.socket)?;

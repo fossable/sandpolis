@@ -1,6 +1,5 @@
-use std::{sync::Arc, sync::RwLock, time::Duration};
-
 use ratatui::{
+    crossterm::event::{Event, KeyCode, KeyEventKind},
     layout::{Constraint, Direction, Layout},
     style::Stylize,
     text::Text,
@@ -9,8 +8,11 @@ use ratatui::{
         WidgetRef,
     },
 };
+use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
+use sandpolis_client::tui::{EventHandler, Panel};
 use sandpolis_network::ServerAddress;
 use sandpolis_server::{ServerLayer, client::LoadServerBanner};
+use std::{sync::Arc, sync::RwLock, time::Duration};
 use tokio::{
     sync::mpsc::{self, Receiver},
     task::{JoinHandle, JoinSet},
@@ -26,6 +28,7 @@ pub struct ServerListWidget {
 struct ServerListWidgetState {
     list_state: ListState,
     list_items: Vec<ServerListItem>,
+    // default_banner_image: StatefulProtocol,
 }
 
 impl ServerListWidget {
@@ -52,6 +55,7 @@ impl ServerListWidget {
         let state = Arc::new(RwLock::new(ServerListWidgetState {
             list_items,
             list_state: ListState::default(),
+            // default_banner_image: todo!(),
         }));
 
         let mut threads = JoinSet::new();
@@ -80,10 +84,16 @@ impl WidgetRef for &ServerListWidget {
         outer_block.render(area, buf);
 
         let banner_area = layout[0];
+        StatefulWidget::render(StatefulImage::default(), banner_area, buf, todo!());
+
         let list_area = layout[1];
 
         StatefulWidget::render(
-            state.list_items.iter().collect::<List>(),
+            state
+                .list_items
+                .iter()
+                .collect::<List>()
+                .highlight_symbol(">>>"),
             list_area,
             buf,
             &mut state.list_state,
@@ -133,7 +143,31 @@ impl ServerListItem {
 impl From<&ServerListItem> for ListItem<'_> {
     fn from(item: &ServerListItem) -> Self {
         let mut text = Text::default();
-        text.extend([format!("{:?}", item.address).blue(), "1".bold().red()]);
+        text.extend([format!("{}", item.address).blue(), "1".bold().red()]);
         ListItem::new(text)
+    }
+}
+
+impl EventHandler for &ServerListWidget {
+    fn handle_event(&self, event: &Event) {
+        if let Event::Key(key) = event {
+            if key.kind == KeyEventKind::Press {
+                match key.code {
+                    KeyCode::Char('j') | KeyCode::Down => {
+                        self.state.write().unwrap().list_state.select_next();
+                    }
+                    KeyCode::Char('k') | KeyCode::Up => {
+                        self.state.write().unwrap().list_state.select_previous();
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+}
+
+impl Panel for ServerListWidget {
+    fn set_focus(&mut self, focused: bool) {
+        self.focused = focused;
     }
 }

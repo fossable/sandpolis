@@ -75,26 +75,27 @@ async fn main() -> Result<ExitCode> {
     // Load state
     let state = InstanceState::new(config.clone(), db).await?;
 
-    let mut tasks: JoinSet<()> = JoinSet::new();
+    let mut tasks: JoinSet<Result<()>> = JoinSet::new();
 
     #[cfg(feature = "server")]
     {
         let s = state.clone();
         let c = config.clone();
-        tasks.spawn(async move { server::main(c, s).await });
+        tasks.spawn(async move { sandpolis::server::main(c, s).await });
     }
 
     #[cfg(feature = "agent")]
     {
         let s = state.clone();
         let c = config.clone();
-        tasks.spawn(async move { agent::main(c, s).await });
+        tasks.spawn(async move { sandpolis::agent::main(c, s).await });
     }
 
     // The client must run on the main thread
     #[cfg(feature = "client")]
     {
-        let app: Router<InstanceState> = Router::new().route("/versions", get(routes::versions));
+        let app: Router<InstanceState> =
+            Router::new().route("/versions", get(sandpolis::routes::versions));
 
         // Check command line preference if both are enabled
         #[cfg(all(feature = "client-gui", feature = "client-tui"))]
@@ -102,13 +103,13 @@ async fn main() -> Result<ExitCode> {
             if args.client.gui {
                 todo!();
             } else if args.client.tui {
-                client::tui::main(config, state).await.unwrap();
+                sandpolis::client::tui::main(config, state).await.unwrap();
             }
         }
 
         #[cfg(feature = "client-tui")]
         #[cfg(not(feature = "client-gui"))]
-        client::tui::main(config, state).await.unwrap();
+        sandpolis::client::tui::main(config, state).await.unwrap();
     }
 
     // If this was a client, don't hold up the user by waiting for server/agent
