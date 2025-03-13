@@ -46,7 +46,7 @@ pub trait EventHandler {
     fn handle_event(&self, event: &Event);
 }
 
-pub trait Panel {
+pub trait Panel: WidgetRef + EventHandler {
     fn set_focus(&mut self, focused: bool);
 }
 

@@ -2,14 +2,15 @@ use crate::{InstanceState, config::Configuration};
 use anyhow::Result;
 use ratatui::{
     DefaultTerminal, Frame,
+    buffer::Buffer,
     crossterm::event::{Event, EventStream, KeyCode, KeyEventKind},
-    layout::{Constraint, Layout},
+    layout::{Constraint, Layout, Rect},
     style::Stylize,
     text::Line,
     widgets::WidgetRef,
 };
 use ratatui_image::picker::Picker;
-use sandpolis_client::tui::Message;
+use sandpolis_client::tui::{Message, Panel};
 use server_list::ServerListWidget;
 use std::time::Duration;
 use tokio::sync::broadcast::{self, Receiver, Sender};
@@ -23,8 +24,8 @@ struct App {
     graphics: Option<Picker>,
     fps: f32,
     should_quit: bool,
-    server_list: ServerListWidget,
     bus: (Sender<Message>, Receiver<Message>),
+    panels: PanelContainer,
     // Layers
     // #[cfg(feature = "layer-power")]
     // power: sandpolis_power::client::tui::PowerWidget,
@@ -37,7 +38,11 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         graphics: Picker::from_query_stdio().ok(),
         fps: config.client.fps as f32,
         should_quit: false,
-        server_list: ServerListWidget::new(state.server.clone()),
+        panels: PanelContainer {
+            panels: vec![Box::new(ServerListWidget::new(state.server.clone()))],
+            focused: 0,
+            left: 0,
+        },
         bus: broadcast::channel(16),
         // #[cfg(feature = "layer-power")]
         // power: todo!(),
@@ -63,19 +68,11 @@ impl App {
 
         while !self.should_quit {
             tokio::select! {
-                _ = interval.tick() => { terminal.draw(|frame| self.draw(frame))?; },
+                _ = interval.tick() => { terminal.draw(|frame| frame.render_widget_ref(&self.panels, frame.area()))?; },
                 Some(Ok(event)) = events.next() => self.handle_event(&event),
             }
         }
         Ok(())
-    }
-
-    fn draw(&self, frame: &mut Frame) {
-        let vertical = Layout::vertical([Constraint::Length(1), Constraint::Fill(1)]);
-        let [title_area, body_area] = vertical.areas(frame.area());
-        let title = Line::from("Ratatui async example").centered().bold();
-        frame.render_widget(title, title_area);
-        // frame.render_widget(&self.pull_requests, body_area);
     }
 
     fn handle_event(&mut self, event: &Event) {
@@ -92,4 +89,23 @@ impl App {
     }
 }
 
-struct AgentListWidget;
+struct PanelContainer {
+    panels: Vec<Box<dyn Panel>>,
+    /// Index of focused panel
+    focused: usize,
+    /// Index of leftmost panel
+    left: usize,
+}
+
+impl WidgetRef for &PanelContainer {
+    fn render_ref(&self, area: Rect, buf: &mut Buffer) {
+        let [left, right] =
+            Layout::horizontal([Constraint::Percentage(38), Constraint::Percentage(62)])
+                .areas(area);
+
+        self.panels
+            .get(self.left)
+            .expect("there's always a left panel")
+            .render_ref(left, buf);
+    }
+}

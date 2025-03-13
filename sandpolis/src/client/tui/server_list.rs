@@ -1,6 +1,7 @@
 use ratatui::{
+    buffer::Buffer,
     crossterm::event::{Event, KeyCode, KeyEventKind},
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     style::Stylize,
     text::Text,
     widgets::{
@@ -27,7 +28,7 @@ pub struct ServerListWidget {
 
 struct ServerListWidgetState {
     list_state: ListState,
-    list_items: Vec<ServerListItem>,
+    list_items: Vec<Arc<ServerListItem>>,
     // default_banner_image: StatefulProtocol,
 }
 
@@ -37,19 +38,24 @@ impl ServerListWidget {
             .network
             .servers
             .iter()
-            .map(|connection| ServerListItem::new(server_layer.clone(), connection.address.clone()))
-            .collect::<Vec<ServerListItem>>();
+            .map(|connection| {
+                Arc::new(ServerListItem::new(
+                    server_layer.clone(),
+                    connection.address.clone(),
+                ))
+            })
+            .collect::<Vec<Arc<ServerListItem>>>();
 
         // Add local server if one exists
         #[cfg(feature = "server")]
         {
-            list_items.push(ServerListItem {
+            list_items.push(Arc::new(ServerListItem {
                 address: "127.0.0.1:8768".parse().unwrap(),
                 banner: RwLock::new(LoadServerBanner::Loaded(server_layer.banner.data.clone())),
                 // The banner is already loaded, so this channel will never be used
                 fetch_banner: RwLock::new(mpsc::channel(1).1),
                 ping: RwLock::new(Some(0)),
-            });
+            }));
         }
 
         let state = Arc::new(RwLock::new(ServerListWidgetState {
@@ -72,8 +78,8 @@ impl ServerListWidget {
     }
 }
 
-impl WidgetRef for &ServerListWidget {
-    fn render_ref(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+impl WidgetRef for ServerListWidget {
+    fn render_ref(&self, area: Rect, buf: &mut Buffer) {
         let mut state = self.state.write().unwrap();
         let outer_block = Block::default().borders(Borders::TOP).title("Servers");
 
@@ -84,20 +90,20 @@ impl WidgetRef for &ServerListWidget {
         outer_block.render(area, buf);
 
         let banner_area = layout[0];
-        StatefulWidget::render(StatefulImage::default(), banner_area, buf, todo!());
+        // StatefulWidget::render(StatefulImage::default(), banner_area, buf, todo!());
 
         let list_area = layout[1];
 
-        StatefulWidget::render(
-            state
-                .list_items
-                .iter()
-                .collect::<List>()
-                .highlight_symbol(">>>"),
-            list_area,
-            buf,
-            &mut state.list_state,
-        );
+        // StatefulWidget::render(
+        //     state
+        //         .list_items
+        //         .iter()
+        //         .collect::<List>()
+        //         .highlight_symbol(">>>"),
+        //     list_area,
+        //     buf,
+        //     &mut state.list_state,
+        // );
     }
 }
 
@@ -148,7 +154,7 @@ impl From<&ServerListItem> for ListItem<'_> {
     }
 }
 
-impl EventHandler for &ServerListWidget {
+impl EventHandler for ServerListWidget {
     fn handle_event(&self, event: &Event) {
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {

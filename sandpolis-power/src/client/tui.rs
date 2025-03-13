@@ -1,6 +1,8 @@
 use crate::PowerLayer;
+use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::text::Text;
 use ratatui::widgets::{Block, Borders, Paragraph, Widget, WidgetRef};
+use sandpolis_client::tui::EventHandler;
 use sandpolis_instance::InstanceId;
 
 // #[derive(Debug)]
@@ -9,7 +11,7 @@ pub struct PowerWidget {
     pub power: PowerLayer,
 }
 
-impl WidgetRef for &PowerWidget {
+impl WidgetRef for PowerWidget {
     fn render_ref(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         // Create the widget's block
         let block = Block::default()
@@ -33,5 +35,19 @@ impl WidgetRef for &PowerWidget {
         let paragraph = Paragraph::new(Text::raw(format!("Power State: {}\n", "state")))
             .block(Block::default().borders(Borders::NONE));
         paragraph.render(area, buf);
+    }
+}
+
+impl EventHandler for PowerWidget {
+    fn handle_event(&self, event: &Event) {
+        if let Event::Key(key) = event {
+            if key.kind == KeyEventKind::Press {
+                match key.code {
+                    KeyCode::Char('j') | KeyCode::Down => {}
+                    KeyCode::Char('k') | KeyCode::Up => {}
+                    _ => {}
+                }
+            }
+        }
     }
 }
