@@ -16,7 +16,7 @@ sandpolis-network = { path = "../sandpolis-network" }
 sandpolis-agent = { path = "../sandpolis-agent", optional = true }
 
 [dev-dependencies]
-tempfile = "3.15.0"
+tempfile = "3.19.0"
 
 [features]
 agent = ["dep:sysinfo", "dep:axum", "dep:axum-macros", "dep:sandpolis-agent"]
