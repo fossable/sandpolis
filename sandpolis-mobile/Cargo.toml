@@ -1,8 +1,12 @@
 [package]
-name = "sandpolis-mobile"
-version = "0.0.1"
+description = "Virtual estate monitoring & management!"
 edition = "2024"
+license = "AGPL-3.0-only"
+name = "sandpolis-mobile"
 publish = false
+
+# This version doesn't mean anything because this crate is just a wrapper
+version = "0.0.1"
 
 [lib]
 name = "sandpolis_mobile"
@@ -10,4 +14,7 @@ crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
 bevy = { version = "0.15.1" }
-sandpolis = { path = "../sandpolis", features = ["client", "agent"] }
+sandpolis = { path = "../sandpolis", version = "8.0.0", features = [
+  "client",
+  "agent",
+] }

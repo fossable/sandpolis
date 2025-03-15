@@ -1,10 +1,12 @@
 [package]
+description = "Virtual estate monitoring & management!"
+edition = "2024"
+license = "AGPL-3.0-only"
 name = "sandpolis-tunnel"
 version = "0.0.1"
-edition = "2024"
 
 [dependencies]
 anyhow = { workspace = true }
 serde = { workspace = true }
-sandpolis-instance = { path = "../sandpolis-instance" }
-sandpolis-macros = { path = "../sandpolis-macros" }
+sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
+sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }

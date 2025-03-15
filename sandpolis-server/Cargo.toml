@@ -1,7 +1,9 @@
 [package]
+description = "Virtual estate monitoring & management!"
+edition = "2024"
+license = "AGPL-3.0-only"
 name = "sandpolis-server"
 version = "0.0.1"
-edition = "2024"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -12,9 +14,9 @@ serde_with = { workspace = true }
 serde_bytes = { workspace = true }
 axum = { workspace = true }
 axum-macros = { workspace = true }
-sandpolis-instance = { path = "../sandpolis-instance" }
-sandpolis-database = { path = "../sandpolis-database" }
-sandpolis-network = { path = "../sandpolis-network" }
+sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
+sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
+sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
 
 [features]
 server = []

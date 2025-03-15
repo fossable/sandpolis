@@ -1,7 +1,9 @@
 [package]
+description = "Virtual estate monitoring & management!"
+edition = "2024"
+license = "AGPL-3.0-only"
 name = "sandpolis-bootagent"
 version = "0.0.1"
-edition = "2024"
 
 [dependencies]
 uefi = { version = "0.34.1", features = [ #"panic_handler"
@@ -27,4 +29,4 @@ embassy-net = { version = "0.6.0", features = [
   "proto-ipv6",
   "dns",
 ] }
-sandpolis-snapshot = { path = "../sandpolis-snapshot" }
+sandpolis-snapshot = { path = "../sandpolis-snapshot", version = "0.0.1" }

@@ -1,6 +1,8 @@
 [package]
+description = "Virtual estate monitoring & management!"
+edition = "2024"
+license = "AGPL-3.0-only"
 name = "sandpolis-logs"
 version = "0.0.1"
-edition = "2024"
 
 [dependencies]

@@ -1,6 +1,6 @@
 [package]
 authors = ["Tyler Cook"]
-description = "Ultimate remote monitoring and management"
+description = "Virtual estate monitoring & management!"
 edition = "2024"
 license = "AGPL-3.0-only"
 name = "sandpolis"
@@ -22,25 +22,25 @@ fossable = "0.1.2"
 futures = { workspace = true }
 rand = { workspace = true }
 rustls = { workspace = true }
-sandpolis-agent = { path = "../sandpolis-agent" }
-sandpolis-client = { path = "../sandpolis-client" }
-sandpolis-database = { path = "../sandpolis-database" }
-sandpolis-deploy = { path = "../sandpolis-deploy", optional = true }
-sandpolis-desktop = { path = "../sandpolis-desktop", optional = true }
-sandpolis-filesystem = { path = "../sandpolis-filesystem", optional = true }
-sandpolis-group = { path = "../sandpolis-group" }
-sandpolis-instance = { path = "../sandpolis-instance" }
-sandpolis-location = { path = "../sandpolis-location", optional = true }
-sandpolis-macros = { path = "../sandpolis-macros" }
-sandpolis-network = { path = "../sandpolis-network" }
-sandpolis-package = { path = "../sandpolis-package", optional = true }
-sandpolis-power = { path = "../sandpolis-power", optional = true }
-sandpolis-probe = { path = "../sandpolis-probe", optional = true }
-sandpolis-server = { path = "../sandpolis-server" }
-sandpolis-shell = { path = "../sandpolis-shell", optional = true }
-sandpolis-snapshot = { path = "../sandpolis-snapshot", optional = true }
-sandpolis-sysinfo = { path = "../sandpolis-sysinfo", optional = true }
-sandpolis-user = { path = "../sandpolis-user" }
+sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1" }
+sandpolis-client = { path = "../sandpolis-client", version = "0.0.1" }
+sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
+sandpolis-deploy = { path = "../sandpolis-deploy", version = "0.0.1", optional = true }
+sandpolis-desktop = { path = "../sandpolis-desktop", version = "0.0.1", optional = true }
+sandpolis-filesystem = { path = "../sandpolis-filesystem", version = "0.0.1", optional = true }
+sandpolis-group = { path = "../sandpolis-group", version = "0.0.1" }
+sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
+sandpolis-location = { path = "../sandpolis-location", version = "0.0.1", optional = true }
+sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
+sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
+sandpolis-package = { path = "../sandpolis-package", version = "0.0.1", optional = true }
+sandpolis-power = { path = "../sandpolis-power", version = "0.0.1", optional = true }
+sandpolis-probe = { path = "../sandpolis-probe", version = "0.0.1", optional = true }
+sandpolis-server = { path = "../sandpolis-server", version = "0.0.1" }
+sandpolis-shell = { path = "../sandpolis-shell", version = "0.0.1", optional = true }
+sandpolis-snapshot = { path = "../sandpolis-snapshot", version = "0.0.1", optional = true }
+sandpolis-sysinfo = { path = "../sandpolis-sysinfo", version = "0.0.1", optional = true }
+sandpolis-user = { path = "../sandpolis-user", version = "0.0.1" }
 serde_json = { workspace = true }
 serde = { workspace = true }
 strum = { workspace = true }

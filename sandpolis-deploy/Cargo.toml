@@ -1,14 +1,16 @@
 [package]
+description = "Virtual estate monitoring & management!"
+edition = "2024"
+license = "AGPL-3.0-only"
 name = "sandpolis-deploy"
 version = "0.0.1"
-edition = "2024"
 
 [dependencies]
 anyhow = { workspace = true }
 tracing = { workspace = true }
 os_info = { workspace = true }
 russh = { workspace = true, optional = true }
-sandpolis-group = { path = "../sandpolis-group" }
+sandpolis-group = { path = "../sandpolis-group", version = "0.0.1" }
 
 [features]
 agent = ["dep:russh"]

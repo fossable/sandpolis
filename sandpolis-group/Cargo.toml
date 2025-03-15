@@ -1,7 +1,9 @@
 [package]
+description = "Virtual estate monitoring & management!"
+edition = "2024"
+license = "AGPL-3.0-only"
 name = "sandpolis-group"
 version = "0.0.1"
-edition = "2024"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -29,8 +31,8 @@ x509-parser = { version = "0.17.0" }
 rustls-pki-types = { version = "1.10.1", optional = true }
 validator = { workspace = true }
 regex = { workspace = true }
-sandpolis-instance = { path = "../sandpolis-instance" }
-sandpolis-database = { path = "../sandpolis-database" }
+sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
+sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
 
 [dev-dependencies]
 # Used to test certificate authentication with a different backend
