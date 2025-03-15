@@ -152,6 +152,17 @@ pub enum Layer {
     Tunnel,
 }
 
+/// All user accounts are subject to a set of permissions controlling what
+/// server operations are authorized. The inital admin user has complete and
+/// irrevocable permissions. By default, additional user accounts are created
+/// without permissions and consequently are allowed to do almost nothing.
+pub enum InstancePermission {
+    #[cfg(feature = "layer-power")]
+    Power(sandpolis_power::PowerPermission),
+    #[cfg(feature = "layer-filesystem")]
+    Power(sandpolis_filesystem::FilesystemPermission),
+}
+
 macro_rules! layer_version {
     ($l:tt) => {
         LayerVersion {

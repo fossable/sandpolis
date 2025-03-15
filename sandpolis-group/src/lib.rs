@@ -83,9 +83,9 @@ impl GroupLayer {
 }
 
 /// A group is a set of clients and agents that can interact. Each group has a
-/// CA certificate that signs certificates used to connect to the server.
+/// global CA certificate that signs certificates used to connect to the server.
 ///
-/// All servers have a default group.
+/// All servers have a default group called "default".
 #[derive(Serialize, Deserialize, Validate, Debug, Clone)]
 pub struct GroupData {
     pub name: GroupName,
@@ -154,6 +154,7 @@ mod test_group_name {
     }
 }
 
+/// The group's global CA cert. These have a lifetime of 100 years.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GroupCaCert {
     pub name: GroupName,
@@ -161,6 +162,8 @@ pub struct GroupCaCert {
     pub key: String,
 }
 
+/// Each server in the cluster gets its own server certificate. These have a
+/// lifetime 1 year.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GroupServerCert {
     pub cert: String,
@@ -256,4 +259,13 @@ impl GroupClientCert {
 
         Ok(name)
     }
+}
+
+pub enum GroupPermission {
+    /// Right to create groups on the server
+    Create,
+    /// Right to view all groups on the server
+    List,
+    /// Right to delete any group
+    Delete,
 }

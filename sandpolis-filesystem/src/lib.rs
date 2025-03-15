@@ -1,5 +1,5 @@
 use anyhow::Result;
-use std::path::PathBuf;
+use sandpolis_group::GroupName;
 
 #[cfg(feature = "agent")]
 pub mod agent;
@@ -13,4 +13,10 @@ impl FilesystemLayer {
     pub fn new() -> Result<Self> {
         Ok(Self {})
     }
+}
+
+pub enum FilesystemPermission {
+    Read(Vec<GroupName>),
+    Write(Vec<GroupName>),
+    Mount(Vec<GroupName>),
 }

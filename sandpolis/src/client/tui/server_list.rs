@@ -10,15 +10,21 @@ use ratatui::{
     },
 };
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
-use sandpolis_client::tui::{EventHandler, Panel};
+use sandpolis_client::tui::{EventHandler, Panel, help::HelpWidget};
 use sandpolis_network::ServerAddress;
 use sandpolis_server::{ServerLayer, client::LoadServerBanner};
-use std::{sync::Arc, sync::RwLock, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+    time::Duration,
+};
 use tokio::{
     sync::mpsc::{self, Receiver},
     task::{JoinHandle, JoinSet},
     time::sleep,
 };
+
+use super::GRAPHICS;
 
 pub struct ServerListWidget {
     state: Arc<RwLock<ServerListWidgetState>>,
@@ -29,7 +35,7 @@ pub struct ServerListWidget {
 struct ServerListWidgetState {
     list_state: ListState,
     list_items: Vec<Arc<ServerListItem>>,
-    // default_banner_image: StatefulProtocol,
+    default_banner_image: Option<StatefulProtocol>,
 }
 
 impl ServerListWidget {
@@ -61,7 +67,14 @@ impl ServerListWidget {
         let state = Arc::new(RwLock::new(ServerListWidgetState {
             list_items,
             list_state: ListState::default(),
-            // default_banner_image: todo!(),
+            default_banner_image: GRAPHICS.map(|picker| {
+                picker.new_resize_protocol(
+                    image::io::Reader::open("~/Downloads/sandpolis-256.png")
+                        .unwrap()
+                        .decode()
+                        .unwrap(),
+                )
+            }),
         }));
 
         let mut threads = JoinSet::new();
@@ -81,18 +94,35 @@ impl ServerListWidget {
 impl WidgetRef for ServerListWidget {
     fn render_ref(&self, area: Rect, buf: &mut Buffer) {
         let mut state = self.state.write().unwrap();
-        let outer_block = Block::default().borders(Borders::TOP).title("Servers");
 
-        let layout = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
-            .split(outer_block.inner(area));
-        outer_block.render(area, buf);
+        let help_widget = HelpWidget {
+            keybindings: HashMap::from([
+                (KeyCode::Char('a'), "Add a new server".to_string()),
+                (KeyCode::Char('X'), "Remove server".to_string()),
+                (KeyCode::Right, "Login".to_string()),
+            ]),
+        };
 
-        let banner_area = layout[0];
-        // StatefulWidget::render(StatefulImage::default(), banner_area, buf, todo!());
+        let [banner_area, list_area, help_area] = Layout::vertical([
+            Constraint::Percentage(30),
+            Constraint::Percentage(70),
+            Constraint::Length(help_widget.height()),
+        ])
+        .areas(area);
 
-        let list_area = layout[1];
+        // Render banner
+        StatefulWidget::render(
+            StatefulImage::default(),
+            banner_area,
+            buf,
+            state.default_banner_image.as_mut().unwrap(),
+        );
+
+        // Render list
+        let list_block = Block::default()
+            .borders(Borders::ALL)
+            .title("Saved Servers");
+        list_block.render(area, buf);
 
         // StatefulWidget::render(
         //     state
@@ -100,10 +130,13 @@ impl WidgetRef for ServerListWidget {
         //         .iter()
         //         .collect::<List>()
         //         .highlight_symbol(">>>"),
-        //     list_area,
+        //     list_block.inner(list_area),
         //     buf,
         //     &mut state.list_state,
         // );
+
+        // Render help
+        help.render(area, buf);
     }
 }
 
@@ -155,7 +188,7 @@ impl From<&ServerListItem> for ListItem<'_> {
 }
 
 impl EventHandler for ServerListWidget {
-    fn handle_event(&self, event: &Event) {
+    fn handle_event(&mut self, event: &Event) {
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {
                 match key.code {

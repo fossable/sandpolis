@@ -1,4 +1,9 @@
-//! Enables custom agents called "deployers" to be built and deployed. Group certificates and configuration are embedded into the application.
+//! Enables custom agents called "deployers" to be built and deployed. Deployers
+//! install themselves on first execution. If an agent is already installed,
+//! the deployer overwrites the existing instance.
+//!
+//! Group certificates and configuration are embedded into the application for a
+//! seamless install.
 
 use sandpolis_group::GroupName;
 
@@ -20,8 +25,8 @@ pub struct DeployConfig {
     //     // One or more network targets
     //     repeated NetworkTarget target = 1;
 
-    //     // The maximum number of connection iterations to attempt. A value of 0 indicates unlimited.
-    //     int32 iteration_limit = 2;
+    //     // The maximum number of connection iterations to attempt. A value of 0 indicates
+    // unlimited.     int32 iteration_limit = 2;
 
     //     // The connection timeout in milliseconds
     //     int32 timeout = 3;
@@ -29,13 +34,13 @@ pub struct DeployConfig {
     //     // The time to wait after an unsuccessful connection attempt in milliseconds
     //     int32 cooldown = 4;
 
-    //     // The maximum cooldown value. A value less than or equal to the initial cooldown disables cooldown growth.
-    //     int32 cooldown_limit = 5;
+    //     // The maximum cooldown value. A value less than or equal to the initial cooldown
+    // disables cooldown growth.     int32 cooldown_limit = 5;
 
-    //     // The time in milliseconds required to increase the cooldown by one factor of its initial value. Set high to
-    //     // reduce the speed at which the maximum cooldown is reached. A value of 0 disables cooldown growth entirely.
-    //     double cooldown_constant = 6;
-    // }
+    //     // The time in milliseconds required to increase the cooldown by one factor of its
+    // initial value. Set high to     // reduce the speed at which the maximum cooldown is
+    // reached. A value of 0 disables cooldown growth entirely.     double cooldown_constant =
+    // 6; }
 
     // LoopConfig loop_config = 1;
 

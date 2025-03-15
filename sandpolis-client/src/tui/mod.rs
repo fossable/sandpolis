@@ -9,6 +9,8 @@ use ratatui::{
 use std::time::Duration;
 use tokio_stream::StreamExt;
 
+pub mod help;
+
 /// Renders a widget for testing/rapid iteration.
 pub async fn test_widget<W>(mut widget: W) -> Result<()>
 where
@@ -43,7 +45,7 @@ where
 }
 
 pub trait EventHandler {
-    fn handle_event(&self, event: &Event);
+    fn handle_event(&mut self, event: &Event);
 }
 
 pub trait Panel: WidgetRef + EventHandler {

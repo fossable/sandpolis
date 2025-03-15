@@ -59,6 +59,7 @@ openraft = { git = "https://github.com/databendlabs/openraft", optional = true, 
 # Client exclusive
 ratatui = { workspace = true, optional = true }
 ratatui-image = { workspace = true, optional = true }
+image = { workspace = true, optional = true }
 
 [features]
 # Instances
@@ -136,6 +137,7 @@ client-tui = [
   "client",
   "dep:ratatui",
   "dep:ratatui-image",
+  "dep:image",
   "sandpolis-client/client-tui",
   "sandpolis-desktop?/client-tui",
   "sandpolis-filesystem?/client-tui",

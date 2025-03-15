@@ -10,18 +10,19 @@ use ratatui::{
     widgets::WidgetRef,
 };
 use ratatui_image::picker::Picker;
-use sandpolis_client::tui::{Message, Panel};
+use sandpolis_client::tui::{EventHandler, Message, Panel};
 use server_list::ServerListWidget;
-use std::time::Duration;
+use std::{sync::LazyLock, time::Duration};
 use tokio::sync::broadcast::{self, Receiver, Sender};
 use tokio_stream::StreamExt;
 use tracing::debug;
 
 pub mod server_list;
 
+pub static GRAPHICS: LazyLock<Option<Picker>> = LazyLock::new(|| Picker::from_query_stdio().ok());
+
 // #[derive(Debug)]
 struct App {
-    graphics: Option<Picker>,
     fps: f32,
     should_quit: bool,
     bus: (Sender<Message>, Receiver<Message>),
@@ -33,9 +34,8 @@ struct App {
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let terminal = ratatui::init();
+
     let app_result = App {
-        // Query terminal graphics capabilities
-        graphics: Picker::from_query_stdio().ok(),
         fps: config.client.fps as f32,
         should_quit: false,
         panels: PanelContainer {
@@ -56,7 +56,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 impl App {
     pub async fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
         // TODO log output needs to stop going to stderr
-        if let Some(picker) = self.graphics.as_ref() {
+        // Query terminal graphics capabilities
+        if let Some(picker) = GRAPHICS.as_ref() {
             debug!(terminal_info = ?picker, "Detected terminal graphics capabilties");
         } else {
             debug!("No terminal graphics capabilties detected");
@@ -74,8 +75,13 @@ impl App {
         }
         Ok(())
     }
+}
 
+impl EventHandler for App {
     fn handle_event(&mut self, event: &Event) {
+        // First try the currently focused panel
+        self.panels.focused().handle_event(event);
+
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {
                 match key.code {
@@ -95,6 +101,18 @@ struct PanelContainer {
     focused: usize,
     /// Index of leftmost panel
     left: usize,
+}
+
+impl PanelContainer {
+    /// Add a new panel directly to the right of the currently focused panel
+    pub fn push(&mut self, panel: Box<dyn Panel>) {
+        self.panels.truncate(self.focused + 1);
+        self.panels.push(panel);
+    }
+
+    pub fn focused(&mut self) -> &mut Box<dyn Panel> {
+        self.panels.get_mut(self.focused).unwrap()
+    }
 }
 
 impl WidgetRef for &PanelContainer {

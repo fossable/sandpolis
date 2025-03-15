@@ -39,7 +39,7 @@ impl WidgetRef for PowerWidget {
 }
 
 impl EventHandler for PowerWidget {
-    fn handle_event(&self, event: &Event) {
+    fn handle_event(&mut self, event: &Event) {
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {
                 match key.code {

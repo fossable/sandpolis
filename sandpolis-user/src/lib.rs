@@ -1,12 +1,12 @@
 //! ## User sessions
 //!
-//! Once a user is logged in successfully, a session token (JWT) is returned with
-//! a lifetime of 20 minutes. If a client determines the user is not idle, the
-//! token can be automatically renewed.
+//! Once a user is logged in successfully, a session token (JWT) is returned
+//! with a lifetime of 20 minutes. If a client determines the user is not idle,
+//! the token can be automatically renewed.
 
 use std::{net::SocketAddr, ops::Deref, str::FromStr};
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use regex::Regex;
 use sandpolis_database::{Collection, Database, Document};
 use serde::{Deserialize, Serialize};
@@ -100,7 +100,14 @@ pub struct LoginAttempt {
     pub allowed: bool,
 }
 
-/// This password is "pre-hashed" and salted with the cluster ID to avoid _hash shucking_
-/// attacks. The server will hash and salt this value with a random value.
+/// This password is "pre-hashed" and salted with the cluster ID to avoid _hash
+/// shucking_ attacks. The server will hash and salt this value with a random
+/// value.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LoginPassword(pub String);
+
+pub enum UserPermission {
+    Create,
+    List,
+    Delete,
+}

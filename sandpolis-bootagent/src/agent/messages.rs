@@ -27,6 +27,9 @@ pub enum UninstallBootAgentResponse {
     AccessDenied,
 }
 
+/// Scan for installed boot agents.
+pub struct ScanBootAgentRequest {}
+
 // Response listing boot agent installations.
 //
 // Sources      : client, server

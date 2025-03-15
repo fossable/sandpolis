@@ -27,3 +27,8 @@ pub enum PowerAction {
     Poweroff,
     Reboot,
 }
+
+pub enum PowerPermission {
+    Poweroff(Vec<GroupName>),
+    Reboot(Vec<GroupName>),
+}
