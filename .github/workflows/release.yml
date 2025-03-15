@@ -1,0 +1,25 @@
+name: release
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  github:
+    runs-on: ubuntu-latest
+    if: "contains(github.event.head_commit.message, 'chore: release')"
+    steps:
+      - run: sudo apt-get update && sudo apt-get install -y libwayland-dev libasound2-dev libudev-dev libfuse3-dev
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: MarcoIeni/release-plz-action@v0.5
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
