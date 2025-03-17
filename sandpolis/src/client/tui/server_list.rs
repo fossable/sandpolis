@@ -1,41 +1,54 @@
+// TODO rename server_selection
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{Event, KeyCode, KeyEventKind},
     layout::{Constraint, Direction, Layout, Rect},
-    style::Stylize,
-    text::Text,
+    style::{Style, Stylize},
+    text::{Line, Text},
     widgets::{
         Block, Borders, List, ListItem, ListState, StatefulWidget, StatefulWidgetRef, Widget,
         WidgetRef,
     },
 };
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
-use sandpolis_client::tui::{EventHandler, Panel, help::HelpWidget};
+use sandpolis_client::tui::{EventHandler, MessageBus, Panel, help::HelpWidget};
 use sandpolis_network::ServerAddress;
 use sandpolis_server::{ServerLayer, client::LoadServerBanner};
 use std::{
-    collections::HashMap,
+    ops::Deref,
     sync::{Arc, RwLock},
     time::Duration,
 };
 use tokio::{
-    sync::mpsc::{self, Receiver},
+    sync::{
+        broadcast,
+        mpsc::{self, Receiver},
+    },
     task::{JoinHandle, JoinSet},
     time::sleep,
 };
+use tracing::debug;
+use tui_popup::{Popup, SizedWidgetRef};
 
 use super::GRAPHICS;
 
 pub struct ServerListWidget {
     state: Arc<RwLock<ServerListWidgetState>>,
     focused: bool,
-    threads: JoinSet<()>,
+    local: MessageBus<LocalMessage>,
 }
 
 struct ServerListWidgetState {
     list_state: ListState,
     list_items: Vec<Arc<ServerListItem>>,
     default_banner_image: Option<StatefulProtocol>,
+    mode: ServerListWidgetMode,
+}
+
+enum ServerListWidgetMode {
+    Normal,
+    Adding,
+    Selecting,
 }
 
 impl ServerListWidget {
@@ -69,24 +82,21 @@ impl ServerListWidget {
             list_state: ListState::default(),
             default_banner_image: GRAPHICS.map(|picker| {
                 picker.new_resize_protocol(
-                    image::io::Reader::open("~/Downloads/sandpolis-256.png")
+                    image::io::Reader::open("/home/cilki/Downloads/sandpolis-256.png")
                         .unwrap()
                         .decode()
                         .unwrap(),
                 )
             }),
+            mode: ServerListWidgetMode::Normal,
         }));
 
-        let mut threads = JoinSet::new();
-        // for (i, item) in list_items.read().unwrap().iter().enumerate() {
-        //     let state_clone = state.clone();
-        //     threads.spawn(async move { items_clone.read().unwrap()[i].run().await });
-        // }
+        let local = broadcast::channel(8);
 
         Self {
             state,
             focused: true,
-            threads,
+            local,
         }
     }
 }
@@ -96,19 +106,24 @@ impl WidgetRef for ServerListWidget {
         let mut state = self.state.write().unwrap();
 
         let help_widget = HelpWidget {
-            keybindings: HashMap::from([
+            keybindings: vec![
                 (KeyCode::Char('a'), "Add a new server".to_string()),
                 (KeyCode::Char('X'), "Remove server".to_string()),
                 (KeyCode::Right, "Login".to_string()),
-            ]),
+            ],
         };
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .title("Server Selection");
 
         let [banner_area, list_area, help_area] = Layout::vertical([
             Constraint::Percentage(30),
             Constraint::Percentage(70),
             Constraint::Length(help_widget.height()),
         ])
-        .areas(area);
+        .areas(block.inner(area));
+
+        block.render(area, buf);
 
         // Render banner
         StatefulWidget::render(
@@ -119,24 +134,31 @@ impl WidgetRef for ServerListWidget {
         );
 
         // Render list
-        let list_block = Block::default()
-            .borders(Borders::ALL)
-            .title("Saved Servers");
-        list_block.render(area, buf);
-
-        // StatefulWidget::render(
-        //     state
-        //         .list_items
-        //         .iter()
-        //         .collect::<List>()
-        //         .highlight_symbol(">>>"),
-        //     list_block.inner(list_area),
-        //     buf,
-        //     &mut state.list_state,
-        // );
+        StatefulWidget::render(
+            state
+                .list_items
+                .iter()
+                .map(|i| i.deref())
+                .collect::<List>()
+                .highlight_style(Style::new().white()),
+            list_area,
+            buf,
+            &mut state.list_state,
+        );
 
         // Render help
-        help.render(area, buf);
+        if self.focused {
+            help_widget.render(help_area, buf);
+        }
+
+        // Render dialog if we're in "add" mode
+        match state.mode {
+            ServerListWidgetMode::Adding => {
+                let popup = Popup::new(AddServerWidget {}).style(Style::new().white().on_blue());
+                popup.render(area, buf);
+            }
+            _ => (),
+        }
     }
 }
 
@@ -182,7 +204,19 @@ impl ServerListItem {
 impl From<&ServerListItem> for ListItem<'_> {
     fn from(item: &ServerListItem) -> Self {
         let mut text = Text::default();
-        text.extend([format!("{}", item.address).blue(), "1".bold().red()]);
+
+        // Add server name
+        text.extend([format!("{}", item.address).blue()]);
+
+        // Add online status
+        match &*item.banner.read().unwrap() {
+            LoadServerBanner::Loading => text.extend([format!("Loading").gray()]),
+            LoadServerBanner::Loaded(server_banner_data) => {
+                text.extend([format!("Online").green()])
+            }
+            LoadServerBanner::Inaccessible => text.extend([format!("Offline")]),
+            LoadServerBanner::Failed(error) => text.extend([format!("Error")]),
+        }
         ListItem::new(text)
     }
 }
@@ -191,14 +225,29 @@ impl EventHandler for ServerListWidget {
     fn handle_event(&mut self, event: &Event) {
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {
-                match key.code {
-                    KeyCode::Char('j') | KeyCode::Down => {
-                        self.state.write().unwrap().list_state.select_next();
-                    }
-                    KeyCode::Char('k') | KeyCode::Up => {
-                        self.state.write().unwrap().list_state.select_previous();
-                    }
-                    _ => {}
+                let mut state = self.state.write().unwrap();
+                match state.mode {
+                    ServerListWidgetMode::Normal => match key.code {
+                        KeyCode::Char('j') | KeyCode::Down => {
+                            state.list_state.select_next();
+                        }
+                        KeyCode::Char('k') | KeyCode::Up => {
+                            state.list_state.select_previous();
+                        }
+                        KeyCode::Char('a') => {
+                            state.mode = ServerListWidgetMode::Adding;
+                            debug!("Entering add server mode");
+                        }
+                        _ => {}
+                    },
+                    ServerListWidgetMode::Adding => match key.code {
+                        KeyCode::Esc => {
+                            state.mode = ServerListWidgetMode::Normal;
+                            debug!("Exiting add server mode");
+                        }
+                        _ => {}
+                    },
+                    _ => todo!(),
                 }
             }
         }
@@ -209,4 +258,28 @@ impl Panel for ServerListWidget {
     fn set_focus(&mut self, focused: bool) {
         self.focused = focused;
     }
+}
+
+#[derive(Debug)]
+struct AddServerWidget {}
+
+impl SizedWidgetRef for AddServerWidget {
+    fn width(&self) -> usize {
+        todo!()
+    }
+
+    fn height(&self) -> usize {
+        todo!()
+    }
+}
+
+impl WidgetRef for AddServerWidget {
+    fn render_ref(&self, area: Rect, buf: &mut Buffer) {
+        todo!()
+    }
+}
+
+#[derive(Clone)]
+enum LocalMessage {
+    ServerAdded,
 }

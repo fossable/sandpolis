@@ -8,6 +8,7 @@ use sandpolis::cli::CommandLine;
 use sandpolis::config::Configuration;
 use sandpolis_database::Database;
 use sandpolis_instance::InstanceType;
+use std::fs::OpenOptions;
 use std::process::ExitCode;
 use tokio::task::JoinSet;
 use tracing::debug;
@@ -26,6 +27,11 @@ async fn main() -> Result<ExitCode> {
     let args = CommandLine::parse();
 
     // Initialize logging for the instance
+    let log_file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("sandpolis.log")?;
+
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::builder()
@@ -38,6 +44,7 @@ async fn main() -> Result<ExitCode> {
                 })
                 .from_env()?,
         )
+        .with_writer(log_file)
         .init();
 
     // Load config

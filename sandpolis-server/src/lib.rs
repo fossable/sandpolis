@@ -62,4 +62,8 @@ pub struct ServerBannerData {
     /// An image to display on the login screen
     #[serde(with = "serde_bytes")]
     pub image: Option<Vec<u8>>, // TODO validate with image decoder
+
+    /// Whether users are required to provide a second authentication mechanism
+    /// on login
+    pub mfa: bool,
 }

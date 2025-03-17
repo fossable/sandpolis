@@ -160,7 +160,7 @@ pub enum InstancePermission {
     #[cfg(feature = "layer-power")]
     Power(sandpolis_power::PowerPermission),
     #[cfg(feature = "layer-filesystem")]
-    Power(sandpolis_filesystem::FilesystemPermission),
+    Filesystem(sandpolis_filesystem::FilesystemPermission),
 }
 
 macro_rules! layer_version {

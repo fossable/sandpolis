@@ -7,6 +7,7 @@ use ratatui::{
     widgets::{Widget, WidgetRef},
 };
 use std::time::Duration;
+use tokio::sync::broadcast::{Receiver, Sender};
 use tokio_stream::StreamExt;
 
 pub mod help;
@@ -57,3 +58,5 @@ pub enum Message {
     FocusChanged,
     ServerSelected,
 }
+
+pub type MessageBus<T> = (Sender<T>, Receiver<T>);

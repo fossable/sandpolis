@@ -1,5 +1,6 @@
 use anyhow::Result;
 use messages::{PowerRequest, PowerResponse};
+use sandpolis_group::GroupName;
 use sandpolis_instance::InstanceId;
 use sandpolis_network::NetworkLayer;
 use serde::{Deserialize, Serialize};

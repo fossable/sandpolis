@@ -56,10 +56,11 @@ openraft = { git = "https://github.com/databendlabs/openraft", optional = true, 
   "type-alias",
 ] }
 
-# Client exclusive
+# Terminal client exclusive
 ratatui = { workspace = true, optional = true }
 ratatui-image = { workspace = true, optional = true }
 image = { workspace = true, optional = true }
+tui-popup = "0.6.0"
 
 [features]
 # Instances
