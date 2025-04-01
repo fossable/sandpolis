@@ -6067,7 +6067,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc2f4eb4bc735547cfed7c0a4922cbd04a4655978c09b54f1f7b228750664c34"
 dependencies = [
  "cfg-if",
- "windows-targets 0.52.6",
+ "windows-targets 0.48.5",
 ]
 
 [[package]]
@@ -7108,7 +7108,7 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 [[package]]
 name = "openraft"
 version = "0.10.0"
-source = "git+https://github.com/databendlabs/openraft#07c74fd3e7e2cafec64c93a549d9d5d733faa1cb"
+source = "git+https://github.com/databendlabs/openraft#30f1ae675473682dd271be3804689fa5ea2702cf"
 dependencies = [
  "anyerror",
  "byte-unit",
@@ -7130,7 +7130,7 @@ dependencies = [
 [[package]]
 name = "openraft-macros"
 version = "0.10.0"
-source = "git+https://github.com/databendlabs/openraft#07c74fd3e7e2cafec64c93a549d9d5d733faa1cb"
+source = "git+https://github.com/databendlabs/openraft#30f1ae675473682dd271be3804689fa5ea2702cf"
 dependencies = [
  "chrono",
  "proc-macro2",
