@@ -13,7 +13,7 @@ name = "sandpolis_mobile"
 crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
-bevy = { version = "0.15.1" }
+bevy = { version = "0.16.0-rc.3" }
 sandpolis = { path = "../sandpolis", version = "8.0.0", features = [
   "client",
   "agent",
