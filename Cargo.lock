@@ -864,7 +864,7 @@ dependencies = [
  "bevy_transform 0.16.0",
  "bevy_utils 0.16.0",
  "blake3",
- "derive_more",
+ "derive_more 1.0.0",
  "downcast-rs 2.0.1",
  "either",
  "petgraph 0.7.1",
@@ -890,7 +890,7 @@ dependencies = [
  "bevy_utils 0.15.3",
  "console_error_panic_hook",
  "ctrlc",
- "derive_more",
+ "derive_more 1.0.0",
  "downcast-rs 1.2.1",
  "wasm-bindgen",
  "web-sys",
@@ -939,7 +939,7 @@ dependencies = [
  "bitflags 2.9.0",
  "blake3",
  "crossbeam-channel",
- "derive_more",
+ "derive_more 1.0.0",
  "disqualified",
  "downcast-rs 1.2.1",
  "either",
@@ -977,7 +977,7 @@ dependencies = [
  "bitflags 2.9.0",
  "blake3",
  "crossbeam-channel",
- "derive_more",
+ "derive_more 1.0.0",
  "disqualified",
  "downcast-rs 2.0.1",
  "either",
@@ -1047,7 +1047,7 @@ dependencies = [
  "bevy_math 0.15.1",
  "bevy_reflect 0.15.1",
  "bytemuck",
- "derive_more",
+ "derive_more 1.0.0",
  "encase",
  "serde",
  "wgpu-types 23.0.0",
@@ -1062,7 +1062,7 @@ dependencies = [
  "bevy_math 0.16.0",
  "bevy_reflect 0.16.0",
  "bytemuck",
- "derive_more",
+ "derive_more 1.0.0",
  "encase",
  "serde",
  "thiserror 2.0.12",
@@ -1103,7 +1103,7 @@ dependencies = [
  "bevy_utils 0.15.3",
  "bevy_window 0.15.1",
  "bitflags 2.9.0",
- "derive_more",
+ "derive_more 1.0.0",
  "nonmax",
  "radsort",
  "serde",
@@ -1208,7 +1208,7 @@ dependencies = [
  "bevy_utils 0.15.3",
  "bitflags 2.9.0",
  "concurrent-queue",
- "derive_more",
+ "derive_more 1.0.0",
  "disqualified",
  "fixedbitset 0.5.7",
  "nonmax",
@@ -1233,7 +1233,7 @@ dependencies = [
  "bitflags 2.9.0",
  "bumpalo",
  "concurrent-queue",
- "derive_more",
+ "derive_more 1.0.0",
  "disqualified",
  "fixedbitset 0.5.7",
  "indexmap 2.9.0",
@@ -1442,7 +1442,7 @@ dependencies = [
  "bevy_utils 0.15.3",
  "bitflags 2.9.0",
  "bytemuck",
- "derive_more",
+ "derive_more 1.0.0",
  "futures-lite",
  "image",
  "serde",
@@ -1489,7 +1489,7 @@ dependencies = [
  "bevy_math 0.15.1",
  "bevy_reflect 0.15.1",
  "bevy_utils 0.15.3",
- "derive_more",
+ "derive_more 1.0.0",
  "smol_str",
 ]
 
@@ -1505,7 +1505,7 @@ dependencies = [
  "bevy_platform",
  "bevy_reflect 0.16.0",
  "bevy_utils 0.16.0",
- "derive_more",
+ "derive_more 1.0.0",
  "log 0.4.27",
  "smol_str",
  "thiserror 2.0.12",
@@ -1668,7 +1668,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edec18d90e6bab27b5c6131ee03172ece75b7edd0abe4e482a26d6db906ec357"
 dependencies = [
  "bevy_reflect 0.15.1",
- "derive_more",
+ "derive_more 1.0.0",
  "glam",
  "itertools 0.13.0",
  "rand 0.8.5",
@@ -1685,7 +1685,7 @@ checksum = "f1a3a926d02dc501c6156a047510bdb538dcb1fa744eeba13c824b73ba88de55"
 dependencies = [
  "approx",
  "bevy_reflect 0.16.0",
- "derive_more",
+ "derive_more 1.0.0",
  "glam",
  "itertools 0.14.0",
  "libm",
@@ -1714,7 +1714,7 @@ dependencies = [
  "bevy_utils 0.15.3",
  "bitflags 2.9.0",
  "bytemuck",
- "derive_more",
+ "derive_more 1.0.0",
  "hexasphere",
  "serde",
  "wgpu 23.0.1",
@@ -1784,7 +1784,7 @@ dependencies = [
  "bevy_window 0.15.1",
  "bitflags 2.9.0",
  "bytemuck",
- "derive_more",
+ "derive_more 1.0.0",
  "fixedbitset 0.5.7",
  "nonmax",
  "radsort",
@@ -1815,7 +1815,7 @@ dependencies = [
  "bevy_window 0.16.0",
  "bitflags 2.9.0",
  "bytemuck",
- "derive_more",
+ "derive_more 1.0.0",
  "fixedbitset 0.5.7",
  "nonmax",
  "offset-allocator",
@@ -1926,7 +1926,7 @@ dependencies = [
  "bevy_ptr 0.15.3",
  "bevy_reflect_derive 0.15.1",
  "bevy_utils 0.15.3",
- "derive_more",
+ "derive_more 1.0.0",
  "disqualified",
  "downcast-rs 1.2.1",
  "erased-serde",
@@ -1948,7 +1948,7 @@ dependencies = [
  "bevy_ptr 0.16.0",
  "bevy_reflect_derive 0.16.0",
  "bevy_utils 0.16.0",
- "derive_more",
+ "derive_more 1.0.0",
  "disqualified",
  "downcast-rs 2.0.1",
  "erased-serde",
@@ -2018,7 +2018,7 @@ dependencies = [
  "bevy_window 0.15.1",
  "bytemuck",
  "codespan-reporting",
- "derive_more",
+ "derive_more 1.0.0",
  "downcast-rs 1.2.1",
  "encase",
  "futures-lite",
@@ -2064,7 +2064,7 @@ dependencies = [
  "bitflags 2.9.0",
  "bytemuck",
  "codespan-reporting",
- "derive_more",
+ "derive_more 1.0.0",
  "downcast-rs 2.0.1",
  "encase",
  "fixedbitset 0.5.7",
@@ -2127,7 +2127,7 @@ dependencies = [
  "bevy_render 0.15.1",
  "bevy_transform 0.15.1",
  "bevy_utils 0.15.3",
- "derive_more",
+ "derive_more 1.0.0",
  "serde",
  "uuid",
 ]
@@ -2147,7 +2147,7 @@ dependencies = [
  "bevy_render 0.16.0",
  "bevy_transform 0.16.0",
  "bevy_utils 0.16.0",
- "derive_more",
+ "derive_more 1.0.0",
  "serde",
  "thiserror 2.0.12",
  "uuid",
@@ -2175,7 +2175,7 @@ dependencies = [
  "bevy_window 0.15.1",
  "bitflags 2.9.0",
  "bytemuck",
- "derive_more",
+ "derive_more 1.0.0",
  "fixedbitset 0.5.7",
  "guillotiere",
  "nonmax",
@@ -2206,7 +2206,7 @@ dependencies = [
  "bevy_window 0.16.0",
  "bitflags 2.9.0",
  "bytemuck",
- "derive_more",
+ "derive_more 1.0.0",
  "fixedbitset 0.5.7",
  "nonmax",
  "radsort",
@@ -2285,7 +2285,7 @@ dependencies = [
  "cfg-if",
  "concurrent-queue",
  "crossbeam-queue",
- "derive_more",
+ "derive_more 1.0.0",
  "futures-channel",
  "futures-lite",
  "heapless",
@@ -2362,7 +2362,7 @@ dependencies = [
  "bevy_hierarchy",
  "bevy_math 0.15.1",
  "bevy_reflect 0.15.1",
- "derive_more",
+ "derive_more 1.0.0",
 ]
 
 [[package]]
@@ -2378,7 +2378,7 @@ dependencies = [
  "bevy_reflect 0.16.0",
  "bevy_tasks 0.16.0",
  "bevy_utils 0.16.0",
- "derive_more",
+ "derive_more 1.0.0",
  "serde",
  "thiserror 2.0.12",
 ]
@@ -2410,7 +2410,7 @@ dependencies = [
  "bevy_utils 0.16.0",
  "bevy_window 0.16.0",
  "bytemuck",
- "derive_more",
+ "derive_more 1.0.0",
  "nonmax",
  "smallvec",
  "taffy",
@@ -3222,6 +3222,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "convert_case"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb402b8d4c85569410425650ce3eddc7d698ed96d39a73f941b08fb63082f1e7"
+dependencies = [
+ "unicode-segmentation",
+]
+
+[[package]]
 name = "cookie"
 version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3502,10 +3511,28 @@ checksum = "829d955a0bb380ef178a640b91779e3987da38c9aea133b20614cfed8cdea9c6"
 dependencies = [
  "bitflags 2.9.0",
  "crossterm_winapi",
- "futures-core",
  "mio",
  "parking_lot 0.12.3",
  "rustix 0.38.44",
+ "signal-hook",
+ "signal-hook-mio",
+ "winapi",
+]
+
+[[package]]
+name = "crossterm"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8b9f2e4c67f833b660cdb0a3523065869fb35570177239812ed4c905aeff87b"
+dependencies = [
+ "bitflags 2.9.0",
+ "crossterm_winapi",
+ "derive_more 2.0.1",
+ "document-features",
+ "futures-core",
+ "mio",
+ "parking_lot 0.12.3",
+ "rustix 1.0.5",
  "signal-hook",
  "signal-hook-mio",
  "winapi",
@@ -3772,7 +3799,16 @@ version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
 dependencies = [
- "derive_more-impl",
+ "derive_more-impl 1.0.0",
+]
+
+[[package]]
+name = "derive_more"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "093242cf7570c207c83073cf82f79706fe7b8317e98620a47d5be7c3d8497678"
+dependencies = [
+ "derive_more-impl 2.0.1",
 ]
 
 [[package]]
@@ -3785,6 +3821,18 @@ dependencies = [
  "quote",
  "syn 2.0.100",
  "unicode-xid",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bda628edc44c4bb645fbe0f758797143e4e07926f7ebf4e9bdfbd3d2ce621df3"
+dependencies = [
+ "convert_case",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.100",
 ]
 
 [[package]]
@@ -6930,7 +6978,7 @@ dependencies = [
  "byte-unit",
  "chrono",
  "clap",
- "derive_more",
+ "derive_more 1.0.0",
  "futures",
  "maplit",
  "openraft-macros",
@@ -8028,7 +8076,7 @@ dependencies = [
  "bitflags 2.9.0",
  "cassowary",
  "compact_str",
- "crossterm",
+ "crossterm 0.28.1",
  "indoc",
  "instability",
  "itertools 0.13.0",
@@ -8066,7 +8114,7 @@ version = "0.1.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36224e9526a56d73f31456751b0e1db8587407ae9668cf9df0a6effd31b06385"
 dependencies = [
- "crossterm",
+ "crossterm 0.28.1",
  "instability",
  "ratatui-core",
 ]
@@ -8898,7 +8946,7 @@ dependencies = [
  "bevy_svg",
  "clap",
  "color-eyre",
- "crossterm",
+ "crossterm 0.29.0",
  "os_info",
  "passwords",
  "ratatui",
