@@ -19,9 +19,11 @@ use std::fmt::Write;
 use std::net::ToSocketAddrs;
 use std::str::FromStr;
 use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
+use tokio::sync::RwLock;
 use tokio::time::sleep;
 use tracing::debug;
 
+pub mod cli;
 pub mod config;
 pub mod messages;
 pub mod routes;
@@ -95,7 +97,15 @@ impl NetworkLayer {
     }
 
     /// Request the server to coordinate a direct connection to the given agent.
-    pub async fn direct_connect(&self, agent: InstanceId, port: Option<u16>) {}
+    pub async fn direct_connect(&self, agent: InstanceId, port: Option<u16>) {
+        todo!()
+    }
+
+    pub async fn run(&self) {
+        for server in self.servers.iter() {
+            server.run().await;
+        }
+    }
 }
 
 /// Convenience type to be used as return of request handler.
@@ -132,35 +142,6 @@ pub struct ConnectionData {
     #[serde(with = "ts_seconds_option")]
     disconnected: Option<DateTime<Utc>>,
 }
-
-/// Request the server for a new direct connection to an agent.
-// #[from = "client"]
-// #[to = "server"]
-#[derive(Serialize, Deserialize)]
-pub struct AgentConnectionRequest {
-    // The requested node
-    id: InstanceId,
-
-    // An optional listener port. If specified, the requested node will attempt
-    // a connection on this port. Otherwise, the server will coordinate the connection.
-    port: Option<u16>,
-}
-
-// Request that the recieving instance establish a new connection to the given
-// host. message RQ_CoordinateConnection {
-
-//     // The host IP address
-//     string host = 1;
-
-//     // The port
-//     int32 port = 2;
-
-//     // The transport protocol type
-//     string transport = 3;
-
-//     // The initial encryption key for the new connection.
-//     bytes encryption_key = 4;
-// }
 
 /// A direct connection to an agent from a client.
 pub struct AgentConnection {}
@@ -207,7 +188,9 @@ impl Default for ConnectionCooldown {
     }
 }
 
-pub struct ServerConnectionData {}
+pub struct ServerConnectionData {
+    iterations: u64,
+}
 
 /// A connection to a server from any other instance (including another server).
 ///
@@ -230,9 +213,9 @@ pub struct ServerConnectionData {}
 pub struct ServerConnection {
     pub address: ServerAddress,
     group: GroupName,
-    iterations: u64, // TODO Data?
     cooldown: ConnectionCooldown,
     pub client: reqwest::Client,
+    pub data: RwLock<ServerConnectionData>,
 }
 
 impl ServerConnection {
@@ -243,7 +226,7 @@ impl ServerConnection {
     ) -> Result<Self> {
         Ok(Self {
             group: cert.name()?,
-            iterations: 0,
+            data: RwLock::new(ServerConnectionData { iterations: 0 }),
             cooldown,
             client: ClientBuilder::new()
                 .add_root_certificate(cert.ca()?)
@@ -256,10 +239,10 @@ impl ServerConnection {
     }
 
     /// Run the connection routine forever.
-    pub async fn run(mut self) {
+    pub async fn run(&self) {
         loop {
-            if self.iterations > 0 {
-                sleep(self.cooldown.next(self.iterations)).await;
+            if self.data.read().await.iterations > 0 {
+                sleep(self.cooldown.next(self.data.read().await.iterations)).await;
             }
 
             debug!("Attempting server connection");
@@ -281,7 +264,7 @@ impl ServerConnection {
                 },
                 Err(e) => debug!(error = ?e, "Connection failed"),
             }
-            self.iterations += 1;
+            self.data.write().await.iterations += 1;
         }
     }
 }

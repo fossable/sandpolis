@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use colored::Color;
 use sandpolis_database::Document;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::{cmp::Ordering, fmt::Display, ops::Deref, path::PathBuf, str::FromStr};
 use strum::{EnumIter, IntoEnumIterator};
 use uuid::Uuid;
@@ -42,8 +42,8 @@ fn format_uuid(src: u128) -> [u8; 36] {
     dst
 }
 
-/// Shared ID across the entire cluster. This never changes throughout the cluster's
-/// lifetime.
+/// Shared ID across the entire cluster. This never changes throughout the
+/// cluster's lifetime.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ClusterId(u128);
 
@@ -145,15 +145,16 @@ impl Display for InstanceId {
     Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq, PartialOrd, Ord, Hash,
 )]
 pub enum InstanceType {
-    /// Runs continuously on hosts and responds to management requests from servers
-    /// and clients.
+    /// Runs continuously on hosts and responds to management requests from
+    /// servers and clients.
     Agent,
 
     /// User interface for managing instances in the Sandpolis network.
     Client,
 
-    /// Runs continously and coordinates interactions among instances in a Sandpolis
-    /// network. All networks include at least one server instance.
+    /// Runs continously and coordinates interactions among instances in a
+    /// Sandpolis network. All networks include at least one server
+    /// instance.
     Server,
 }
 
@@ -190,12 +191,14 @@ mod test_instance_id {
 
     #[test]
     fn test_types() {
-        assert!(InstanceId::new(&[
-            InstanceType::Agent,
-            InstanceType::Server,
-            InstanceType::Client
-        ])
-        .is_type(InstanceType::Agent));
+        assert!(
+            InstanceId::new(&[
+                InstanceType::Agent,
+                InstanceType::Server,
+                InstanceType::Client
+            ])
+            .is_type(InstanceType::Agent)
+        );
         assert!(InstanceId::new(&[InstanceType::Agent]).is_type(InstanceType::Agent));
         assert!(InstanceId::new(&[InstanceType::Server]).is_type(InstanceType::Server));
         assert!(InstanceId::new(&[InstanceType::Client]).is_type(InstanceType::Client));
@@ -283,7 +286,7 @@ where
     Self: Serialize + DeserializeOwned,
 {
     /// Override the config with values from the command line
-    fn override_cli(&mut self, args: C) {
+    fn override_cli(&mut self, args: &C) {
         // Default no-op
     }
 

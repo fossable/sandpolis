@@ -4,7 +4,7 @@ use axum::routing::{any, get, post};
 use clap::Parser;
 use colored::Colorize;
 use sandpolis::InstanceState;
-use sandpolis::cli::CommandLine;
+use sandpolis::cli::{CommandLine, Commands};
 use sandpolis::config::Configuration;
 use sandpolis_database::Database;
 use sandpolis_instance::InstanceType;
@@ -47,34 +47,49 @@ async fn main() -> Result<ExitCode> {
         .with_writer(log_file)
         .init();
 
+    // Get ready to do some cryptography
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .expect("crypto provider is available");
+
     // Load config
     let config = Configuration::new(&args)?;
     debug!(config = ?config, "Loaded configuration");
 
+    // Default to all compiled instance types
+    let run_instances = Vec::<&str>::from([
+        #[cfg(feature = "server")]
+        "server",
+        #[cfg(feature = "client")]
+        "client",
+        #[cfg(feature = "agent")]
+        "agent",
+    ]);
+
     // Dispatch subcommand if one was given
-    if let Some(command) = args.command {
-        return Ok(command.dispatch(&config)?);
+    match args.command {
+        #[cfg(feature = "agent")]
+        #[cfg(any(feature = "server", feature = "client"))]
+        Some(Commands::Agent) => run_instances = vec!["agent"],
+
+        #[cfg(feature = "client")]
+        #[cfg(any(feature = "agent", feature = "server"))]
+        Some(Commands::Client) => run_instances = vec!["client"],
+
+        #[cfg(feature = "server")]
+        #[cfg(any(feature = "agent", feature = "client"))]
+        Some(Commands::Server) => run_instances = vec!["server"],
+
+        Some(command) => return Ok(command.dispatch(&config)?),
+        None => (),
     }
 
     info!(
         version = sandpolis::built_info::PKG_VERSION,
         build_time = sandpolis::built_info::BUILT_TIME_UTC,
         "Starting Sandpolis {}",
-        Vec::<&str>::from([
-            #[cfg(feature = "server")]
-            &*"server".color(InstanceType::Server.color()),
-            #[cfg(feature = "client")]
-            &*"client".color(InstanceType::Client.color()),
-            #[cfg(feature = "agent")]
-            &*"agent".color(InstanceType::Agent.color()),
-        ])
-        .join(" + ")
+        run_instances.join(" + ")
     );
-
-    // Get ready to do some cryptography
-    rustls::crypto::aws_lc_rs::default_provider()
-        .install_default()
-        .expect("crypto provider is available");
 
     // Load instance database
     let db = Database::new(&config.database.storage)?;
@@ -85,14 +100,14 @@ async fn main() -> Result<ExitCode> {
     let mut tasks: JoinSet<Result<()>> = JoinSet::new();
 
     #[cfg(feature = "server")]
-    {
+    if run_instances.contains(&"server") {
         let s = state.clone();
         let c = config.clone();
         tasks.spawn(async move { sandpolis::server::main(c, s).await });
     }
 
     #[cfg(feature = "agent")]
-    {
+    if run_instances.contains(&"agent") {
         let s = state.clone();
         let c = config.clone();
         tasks.spawn(async move { sandpolis::agent::main(c, s).await });
@@ -100,7 +115,7 @@ async fn main() -> Result<ExitCode> {
 
     // The client must run on the main thread
     #[cfg(feature = "client")]
-    {
+    if run_instances.contains(&"client") {
         let app: Router<InstanceState> =
             Router::new().route("/versions", get(sandpolis::routes::versions));
 
@@ -120,8 +135,7 @@ async fn main() -> Result<ExitCode> {
     }
 
     // If this was a client, don't hold up the user by waiting for server/agent
-    #[cfg(not(feature = "client"))]
-    {
+    if !run_instances.contains(&"client") {
         while let Some(result) = tasks.join_next().await {
             let _ = result?;
         }

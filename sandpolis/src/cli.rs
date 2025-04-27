@@ -2,13 +2,21 @@ use anyhow::Result;
 use clap::Parser;
 use clap::Subcommand;
 use colored::Colorize;
+use sandpolis_database::Collection;
+use sandpolis_database::Database;
+use sandpolis_database::Document;
+use sandpolis_group::GroupCaCert;
+use sandpolis_group::GroupData;
+use sandpolis_group::GroupLayerData;
+use std::fs::File;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use tracing::info;
 
 use crate::config::Configuration;
 
 #[derive(Parser, Debug, Clone)]
-#[clap(author, version, about, long_about = None)]
+#[clap(author, version, about = "Test")]
 pub struct CommandLine {
     #[cfg(feature = "client")]
     #[clap(flatten)]
@@ -16,6 +24,9 @@ pub struct CommandLine {
 
     #[clap(flatten)]
     pub instance: sandpolis_instance::cli::InstanceCommandLine,
+
+    #[clap(flatten)]
+    pub network: sandpolis_network::cli::NetworkCommandLine,
 
     #[command(subcommand)]
     pub command: Option<Commands>,
@@ -62,16 +73,22 @@ impl Commands {
         match self {
             #[cfg(feature = "server")]
             Commands::GenerateCert { group, output } => {
-                // let groups: Collection<GroupData> = db.collection("/groups")?;
-                // let g = groups.get_document(&group)?.expect("the group exists");
-                // let ca: Document<GroupCaCert> = g.get_document("ca")?.expect("the CA exists");
+                let db = Database::new(&config.database.storage)?;
 
-                // let cert = ca.data.client_cert()?;
+                let groups: Collection<GroupData> = db
+                    .document::<GroupLayerData>("/group")?
+                    .collection("/groups")?;
+                let g = groups.get_document(group)?.expect("the group exists");
+                let ca: Document<GroupCaCert> = g.get_document("ca")?.expect("the CA exists");
 
-                // info!(path = %output.display(), "Writing endpoint certificate");
-                // let mut output = File::create(output)?;
-                // output.write_all(&serde_json::to_vec(&cert)?)?;
-                todo!()
+                let cert = ca.data.client_cert()?;
+
+                if let Some(path) = output {
+                    info!(path = %path.display(), "Writing endpoint certificate");
+                    std::fs::write(path, &serde_json::to_vec(&cert)?)?;
+                } else {
+                    todo!()
+                }
             }
             Commands::InstallCert {} => todo!(),
             Commands::About => {
@@ -86,15 +103,7 @@ impl Commands {
                     );
                 }
             }
-            #[cfg(feature = "server")]
-            #[cfg(any(feature = "agent", feature = "client"))]
-            Commands::Server => todo!(),
-            #[cfg(feature = "client")]
-            #[cfg(any(feature = "agent", feature = "server"))]
-            Commands::Client => todo!(),
-            #[cfg(feature = "agent")]
-            #[cfg(any(feature = "server", feature = "client"))]
-            Commands::Agent => todo!(),
+            _ => panic!("Remaining commands are dispatched by caller"),
         }
         Ok(ExitCode::SUCCESS)
     }

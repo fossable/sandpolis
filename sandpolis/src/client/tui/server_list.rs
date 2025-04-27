@@ -29,6 +29,7 @@ use tokio::{
 };
 use tracing::debug;
 use tui_popup::{Popup, SizedWidgetRef};
+use tui_prompts::{TextPrompt, TextState};
 
 use super::GRAPHICS;
 
@@ -154,7 +155,8 @@ impl WidgetRef for ServerListWidget {
         // Render dialog if we're in "add" mode
         match state.mode {
             ServerListWidgetMode::Adding => {
-                let popup = Popup::new(AddServerWidget {}).style(Style::new().white().on_blue());
+                let popup =
+                    Popup::new(AddServerWidget::new()).style(Style::new().white().on_blue());
                 popup.render(area, buf);
             }
             _ => (),
@@ -261,21 +263,31 @@ impl Panel for ServerListWidget {
 }
 
 #[derive(Debug)]
-struct AddServerWidget {}
+struct AddServerWidget<'a> {
+    username_state: TextState<'a>,
+}
 
-impl SizedWidgetRef for AddServerWidget {
-    fn width(&self) -> usize {
-        todo!()
-    }
-
-    fn height(&self) -> usize {
-        todo!()
+impl AddServerWidget<'_> {
+    pub fn new() -> Self {
+        Self {
+            username_state: TextState::new(),
+        }
     }
 }
 
-impl WidgetRef for AddServerWidget {
+impl SizedWidgetRef for AddServerWidget<'_> {
+    fn width(&self) -> usize {
+        10
+    }
+
+    fn height(&self) -> usize {
+        10
+    }
+}
+
+impl WidgetRef for AddServerWidget<'_> {
     fn render_ref(&self, area: Rect, buf: &mut Buffer) {
-        todo!()
+        TextPrompt::from("Username").render(frame, username_area, &mut self.username_state);
     }
 }
 
