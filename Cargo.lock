@@ -7953,16 +7953,15 @@ dependencies = [
 
 [[package]]
 name = "rasn"
-version = "0.25.1"
+version = "0.26.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "433e096ac40c5aef6c385b46643dc004888db2559a573a70f846451c1bb5acbb"
+checksum = "2e2bea77f5bbe2c2b3e9b8b5523c04d8e0207c1e2f77978e648142fd01b94ecc"
 dependencies = [
  "bitvec",
  "bitvec-nom2",
  "bytes",
  "chrono",
  "either",
- "hashbrown 0.14.5",
  "nom",
  "num-bigint",
  "num-integer",
@@ -7976,9 +7975,9 @@ dependencies = [
 
 [[package]]
 name = "rasn-derive"
-version = "0.25.1"
+version = "0.26.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80d1137b96e35fd0486fa121f2cdb854df0ce6a3cc4ae622a93755e4459e675e"
+checksum = "e45100352c922e435ee01641a342ed640b7a8aa5b0f3ed40fa74915493cf6d62"
 dependencies = [
  "proc-macro2",
  "rasn-derive-impl",
@@ -7987,9 +7986,9 @@ dependencies = [
 
 [[package]]
 name = "rasn-derive-impl"
-version = "0.25.1"
+version = "0.26.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8424d952e29f917320d493a4ae2788dc81d4fc1e932424318c8285e459896b4d"
+checksum = "e2d536f473d43fca3ff182edca1a70a4c7af94f6a93f008b0ac055a82cfbdd9d"
 dependencies = [
  "either",
  "itertools 0.13.0",
@@ -8001,9 +8000,9 @@ dependencies = [
 
 [[package]]
 name = "rasn-smi"
-version = "0.25.1"
+version = "0.26.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c21e70e7a689151e377cc16704115fa9a7cdef03bea278a62abb1dc150c96905"
+checksum = "05b53b4d0ba5c34e0d4db56e6872eab1e60dd09816260990f867b7b4bcf5a424"
 dependencies = [
  "chrono",
  "rasn",
@@ -8011,9 +8010,9 @@ dependencies = [
 
 [[package]]
 name = "rasn-snmp"
-version = "0.25.1"
+version = "0.26.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8584f3f61fc10f53ce13a349e59deb98d8e09400b517b466c3a59349481e7b27"
+checksum = "e506311ae1b8a58b0d5ad535acceae783189aa0b0ef1d50b333ff0f4ce803cf2"
 dependencies = [
  "rasn",
  "rasn-smi",
@@ -12008,9 +12007,9 @@ checksum = "b9cc00251562a284751c9973bace760d86c0276c471b4be569fe6b068ee97a56"
 
 [[package]]
 name = "xml-no-std"
-version = "0.8.19"
+version = "0.8.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac4f451c779ea0b57e28c106c0fdafe9290038c97d26364aeb87617d2b78f698"
+checksum = "cd223bc94c615fc02bf2f4bbc22a4a9bfe489c2add3ec10b1038df3aca44cac7"
 
 [[package]]
 name = "xml-rs"
