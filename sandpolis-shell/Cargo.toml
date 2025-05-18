@@ -6,7 +6,7 @@ name = "sandpolis-shell"
 version = "0.0.1"
 
 [build-dependencies]
-built = { version = "0.7", features = ["git2", "chrono", "semver"] }
+built = { version = "0.8", features = ["git2", "chrono", "semver"] }
 
 [dependencies]
 anyhow = { workspace = true }

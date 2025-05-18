@@ -5,6 +5,9 @@ license = "AGPL-3.0-only"
 name = "sandpolis-account"
 version = "0.0.1"
 
+[build-dependencies]
+built = { version = "0.8", features = ["git2", "chrono", "semver"] }
+
 [dependencies]
 anyhow = { workspace = true }
 validator = { workspace = true }

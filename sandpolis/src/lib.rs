@@ -93,8 +93,8 @@ pub enum Layer {
 
     Agent,
 
-    #[cfg(feature = "layer-alert")]
-    Alert,
+    #[cfg(feature = "layer-audit")]
+    Audit,
 
     Client,
 
@@ -120,10 +120,6 @@ pub enum Layer {
 
     #[cfg(feature = "layer-location")]
     Location,
-
-    /// Aggregate and view logs.
-    #[cfg(feature = "layer-logging")]
-    Logging,
 
     /// Support for connecting to instances in the Sandpolis network and sending
     /// messages back and forth.

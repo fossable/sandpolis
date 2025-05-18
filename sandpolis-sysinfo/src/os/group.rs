@@ -1,4 +1,13 @@
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[native_model(id = 2, version = 1)]
+#[native_db]
 pub struct GroupData {
+    #[primary_key]
+    pub id: u32,
+
+    #[secondary_key]
+    pub instance_id: InstanceId,
+
     /// Unsigned int64 group ID
     pub gid: u64,
     /// Canonical local group name

@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use colored::Color;
+use native_db::ToKey;
 use sandpolis_database::Document;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::{cmp::Ordering, fmt::Display, ops::Deref, path::PathBuf, str::FromStr};
@@ -137,6 +138,16 @@ impl Default for InstanceId {
 impl Display for InstanceId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(std::str::from_utf8(&format_uuid(self.0)).unwrap())
+    }
+}
+
+impl ToKey for InstanceId {
+    fn to_key(&self) -> native_db::Key {
+        native_db::Key::new(self.0.to_be_bytes().to_vec())
+    }
+
+    fn key_names() -> Vec<String> {
+        vec!["InstanceId".to_string()]
     }
 }
 
