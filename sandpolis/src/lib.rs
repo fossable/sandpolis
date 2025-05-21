@@ -1,8 +1,9 @@
-use std::collections::HashMap;
+use std::{cell::LazyCell, collections::HashMap};
 
 use anyhow::Result;
 use axum_macros::FromRef;
 use config::Configuration;
+use native_db::Models;
 use sandpolis_database::Database;
 use sandpolis_instance::LayerVersion;
 use serde::{Deserialize, Serialize};
@@ -181,3 +182,14 @@ pub fn layers() -> HashMap<Layer, LayerVersion> {
         (Layer::Shell, layer_version!(sandpolis_shell)),
     ])
 }
+
+pub static MODELS: LazyCell<Models> = LazyCell::new(|| {
+    let mut models = Models::new();
+
+    #[cfg(feature = "layer-sysinfo")]
+    {
+        models.define::<sandpolis_sysinfo::os::OsData>().unwrap();
+    }
+
+    models
+});

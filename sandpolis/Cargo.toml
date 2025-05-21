@@ -20,6 +20,7 @@ clap = { workspace = true }
 colored = { workspace = true }
 fossable = "0.1.2"
 futures = { workspace = true }
+native_db = { workspace = true }
 rand = { workspace = true }
 rustls = { workspace = true }
 sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1" }

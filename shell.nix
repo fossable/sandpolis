@@ -12,6 +12,7 @@ mkShell rec {
     libyuv
     libvpx
     libclang
+    libgcc
     xorg.libX11
     xorg.libXcursor
     xorg.libXi

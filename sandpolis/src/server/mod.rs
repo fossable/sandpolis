@@ -5,7 +5,7 @@ use axum::{
     routing::{get, post},
 };
 use rand::Rng;
-use sandpolis_database::TemporaryDatabase;
+use sandpolis_database::Database;
 use sandpolis_group::GroupCaCert;
 use sandpolis_instance::{ClusterId, InstanceId};
 use std::path::PathBuf;
@@ -54,7 +54,7 @@ pub struct TestServer {
     pub port: u16,
     pub endpoint_cert: PathBuf,
     certs: TempDir,
-    db: TemporaryDatabase,
+    db: Database,
 }
 
 /// Run a standalone server instance for testing.
@@ -70,7 +70,7 @@ pub async fn test_server() -> Result<TestServer> {
     let mut config = Configuration::default();
 
     // Create temporary database
-    let db = TemporaryDatabase::new()?;
+    let db = Database::new_ephemeral()?;
 
     // Generate temporary certs
     let certs = tempdir()?;
@@ -83,7 +83,7 @@ pub async fn test_server() -> Result<TestServer> {
     let port: u16 = rand::rng().random_range(9000..9999);
     config.server.listen = format!("127.0.0.1:{port}",).parse()?;
 
-    let state = InstanceState::new(config.clone(), db.db.clone()).await?;
+    let state = InstanceState::new(config.clone(), db.clone()).await?;
 
     // Spawn the server
     tokio::spawn(async move { main(config, state).await });
