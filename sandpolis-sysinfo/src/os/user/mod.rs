@@ -4,6 +4,9 @@ use sandpolis_database::DbTimestamp;
 use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "agent")]
+pub mod agent;
+
 /// Information about an "operating-system" level user account.
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 #[native_model(id = 4, version = 1)]
@@ -30,5 +33,6 @@ pub struct UserData {
     #[secondary_key]
     pub uid: u64,
     /// Username
+    #[secondary_key]
     pub username: Option<String>,
 }

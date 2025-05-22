@@ -5,6 +5,7 @@ use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
 
 pub mod memory;
+pub mod mountpoint;
 pub mod network;
 pub mod process;
 pub mod user;
@@ -14,13 +15,13 @@ pub mod user;
 #[native_db]
 pub struct OsData {
     #[primary_key]
-    pub id: u32,
+    pub _id: u32,
 
     #[secondary_key]
-    pub instance_id: InstanceId,
+    pub _instance_id: InstanceId,
 
     #[secondary_key]
-    pub timestamp: DbTimestamp,
+    pub _timestamp: DbTimestamp,
 
     /// Distribution name
     pub name: String,
@@ -49,13 +50,13 @@ pub struct OsData {
 #[native_db]
 pub struct KernelModuleData {
     #[primary_key]
-    pub id: u32,
+    pub _id: u32,
 
     #[secondary_key]
-    pub instance_id: InstanceId,
+    pub _instance_id: InstanceId,
 
     #[secondary_key]
-    pub timestamp: DbTimestamp,
+    pub _timestamp: DbTimestamp,
 
     /// Module name
     #[secondary_key]

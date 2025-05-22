@@ -40,8 +40,13 @@ impl UserLayer {
     }
 }
 
-#[derive(Serialize, Deserialize, Validate, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Validate)]
+#[native_model(id = 12, version = 1)]
+#[native_db]
 pub struct UserData {
+    #[primary_key]
+    pub _id: u32,
+
     pub username: UserName,
 
     /// Whether the user is an admin
@@ -89,9 +94,17 @@ impl Validate for UserName {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[native_model(id = 13, version = 1)]
+#[native_db]
 pub struct LoginAttempt {
+    #[primary_key]
+    pub _id: u32,
+
+    /// When the login attempt occurred
     pub timestamp: u64,
+
+    pub username: UserName,
 
     /// Source address of the login attempt
     pub source: SocketAddr,

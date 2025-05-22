@@ -1,17 +1,14 @@
-use crate::oid::Oid;
 use anyhow::{Result, anyhow, bail};
 use chrono::{DateTime, Utc};
 use native_db::{Models, ToKey};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use sled::transaction::ConflictableTransactionError::Abort;
 use std::ops::Range;
 use std::path::Path;
 use std::{marker::PhantomData, sync::Arc};
 use tracing::{debug, trace};
 
 pub mod config;
-pub mod oid;
 
 pub struct DatabaseBuilder {
     models: &'static Models,
@@ -77,7 +74,56 @@ impl DatabaseBuilder {
 #[derive(Clone)]
 pub struct Database(Arc<Vec<(String, native_db::Database<'static>)>>);
 
-impl Database {}
+impl Database {
+    pub fn get<'a>(&'a self, group: impl ToString) -> Result<&'a native_db::Database<'static>> {
+        let name = group.to_string();
+        for (n, db) in self.0.iter() {
+            if name == *n {
+                return Ok(db);
+            }
+        }
+        bail!("Group not found");
+    }
+}
+
+#[cfg(test)]
+mod test_database {
+    use super::DatabaseBuilder;
+    use super::DbTimestamp;
+    use anyhow::Result;
+    use native_db::Models;
+    use native_db::*;
+    use native_model::{Model, native_model};
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    #[native_model(id = 5, version = 1)]
+    #[native_db]
+    pub struct TestData {
+        #[primary_key]
+        pub _id: u32,
+
+        #[secondary_key]
+        pub _timestamp: DbTimestamp,
+        #[secondary_key]
+        pub a: String,
+        #[secondary_key]
+        pub b: String,
+    }
+
+    #[test]
+    fn test_build_database() -> Result<()> {
+        let models = Box::leak(Box::new(Models::new()));
+        models.define::<TestData>().unwrap();
+
+        let db = DatabaseBuilder::new(models)
+            .add_ephemeral("default")?
+            .build();
+
+        let rw = db.get("default")?.rw_transaction();
+        Ok(())
+    }
+}
 
 // TODO Eq based only on inner?
 #[derive(Serialize, Deserialize, Eq, PartialEq, Debug, Clone, Hash)]

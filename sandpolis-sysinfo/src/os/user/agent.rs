@@ -1,8 +1,14 @@
+use super::UserData;
 use crate::agent::layer::agent::Collector;
 use crate::core::database::{Collection, Oid};
 use crate::core::layer::sysinfo::os::user::UserData;
 use anyhow::Result;
+use sandpolis_agent::Collector;
 use sysinfo::Users;
+
+pub struct UserCollector {
+    data: Document<UserData>,
+}
 
 impl Collector for Collection<UserData> {
     fn refresh(&mut self) -> Result<()> {
