@@ -1,13 +1,13 @@
 //! This layer enables account-level management.
 
-use sandpolis_database::Collection;
+use sandpolis_database::DataView;
 use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 pub struct AccountLayer {
-    accounts: Collection<Account>,
-    links: Collection<AccountLink>,
+    accounts: DataView<AccountData>,
+    links: DataView<AccountLinkData>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -28,7 +28,7 @@ impl Default for AccountValue {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Account {
+pub struct AccountData {
     service: Option<String>,
     username: Option<String>,
     email: Option<String>,
@@ -40,7 +40,7 @@ pub struct Account {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct AccountLink {
+pub struct AccountLinkData {
     r#type: AccountLinkType,
     incoming: AccountId,
     outgoing: AccountId,

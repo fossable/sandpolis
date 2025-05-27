@@ -8975,6 +8975,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "sandpolis-core"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "colored",
+ "native_db",
+ "native_model",
+ "regex",
+ "serde",
+ "strum 0.27.1",
+ "uuid",
+ "validator",
+]
+
+[[package]]
 name = "sandpolis-database"
 version = "0.0.1"
 dependencies = [
@@ -8983,6 +8998,8 @@ dependencies = [
  "clap",
  "native_db",
  "native_model",
+ "sandpolis-core",
+ "sandpolis-macros",
  "serde",
  "serde_cbor",
  "tempfile",
@@ -9067,6 +9084,7 @@ dependencies = [
  "native_db",
  "native_model",
  "os_info",
+ "sandpolis-core",
  "sandpolis-database",
  "serde",
  "strum 0.27.1",

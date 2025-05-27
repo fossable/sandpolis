@@ -19,8 +19,9 @@ active development.
 
 Virtual/digital estate is an all-encompassing term that generally refers to all
 of the (non-physical) assets in your possession. Some of them may be entirely
-virtual, like accounts on _github.com_. Others have a physical component as
-well, like a server in your closet, Raspberry Pi, or laptop.
+virtual and controlled by a corporation, like accounts on _github.com_. Others
+have a physical component as well, like a server in your closet, Raspberry Pi,
+or laptop.
 
 All of these entities are part of your _virtual estate_ and are often
 intricately connected in various ways. As an example, you might have an SSH key
@@ -136,6 +137,17 @@ Provides an interactive remote shell.
 ```sh
 cargo install sandpolis
 ```
+
+As an added benefit for this installation method, you can customize exactly what
+features you need. For example, to build with support for remote desktop and
+nothing else:
+
+```sh
+cargo install sandpolis --no-default-features --features layer-desktop
+```
+
+As a result, your installation artifacts will be smaller and will be unable to
+perform any excluded functionality.
 
 </details>
 

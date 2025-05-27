@@ -25,9 +25,9 @@ pub struct UserLayerData {}
 
 #[derive(Clone)]
 pub struct UserLayer {
-    pub data: Document<UserLayerData>,
+    pub data: DataView<UserLayerData>,
     #[cfg(feature = "server")]
-    pub users: Collection<UserData>,
+    pub users: DataView<UserData>,
 }
 
 impl UserLayer {

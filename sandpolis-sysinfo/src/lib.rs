@@ -17,6 +17,8 @@ pub struct SysinfoLayer {
     pub data: Document<SysinfoLayerData>,
     #[cfg(feature = "agent")]
     pub memory: Arc<os::memory::agent::MemoryMonitor>,
+    #[cfg(feature = "agent")]
+    pub users: Arc<os::user::agent::UserCollector>,
 }
 
 impl SysinfoLayer {

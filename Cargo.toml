@@ -10,6 +10,7 @@ members = [
   "sandpolis-audit",
   "sandpolis-bootagent",
   "sandpolis-client",
+  "sandpolis-core",
   "sandpolis-database",
   "sandpolis-deploy",
   "sandpolis-desktop",

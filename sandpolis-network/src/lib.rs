@@ -111,36 +111,41 @@ impl NetworkLayer {
 /// Convenience type to be used as return of request handler.
 pub type RequestResult<T> = Result<axum::Json<T>, axum::Json<T>>;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[native_model(id = 14, version = 1)]
+#[native_db]
 pub struct ConnectionData {
+    #[primary_key]
+    pub _id: u32,
+
+    #[secondary_key]
+    pub _instance_id: InstanceId,
+
+    #[secondary_key]
+    pub _timestamp: DbTimestamp,
+
+    pub remote_instance: InstanceId,
+
     /// Total number of bytes read since the connection was established
-    read_bytes: u64,
+    pub read_bytes: u64,
 
     /// Total number of bytes written since the connection was established
-    write_bytes: u64,
+    pub write_bytes: u64,
 
     /// "Recent" read throughput in bytes/second
-    read_throughput: u64,
+    pub read_throughput: u64,
 
     /// "Recent" write throughput in bytes/second
-    write_throughput: u64,
+    pub write_throughput: u64,
 
-    /// Maximum read throughput in bytes/second since the connection was
-    /// established
-    read_throughput_max: u64,
-
-    /// Maximum write throughput in bytes/second since the connection was
-    /// established
-    write_throughput_max: u64,
-
-    local_socket: SocketAddr,
-    remote_socket: SocketAddr,
+    pub local_socket: SocketAddr,
+    pub remote_socket: SocketAddr,
 
     #[serde(with = "ts_seconds")]
-    established: DateTime<Utc>,
+    pub established: DateTime<Utc>,
 
     #[serde(with = "ts_seconds_option")]
-    disconnected: Option<DateTime<Utc>>,
+    pub disconnected: Option<DateTime<Utc>>,
 }
 
 /// A direct connection to an agent from a client.

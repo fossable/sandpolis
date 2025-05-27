@@ -15,3 +15,5 @@ tracing = { workspace = true }
 tempfile = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
+sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
+sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }

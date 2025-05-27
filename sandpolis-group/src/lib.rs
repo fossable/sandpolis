@@ -4,7 +4,7 @@
 use anyhow::Result;
 use config::GroupConfig;
 use regex::Regex;
-use sandpolis_database::{Collection, Document};
+use sandpolis_database::DataView;
 use sandpolis_instance::{ClusterId, InstanceLayer};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -27,15 +27,15 @@ pub struct GroupLayerData {
 
 #[derive(Clone)]
 pub struct GroupLayer {
-    pub data: Document<GroupLayerData>,
-    pub groups: Collection<GroupData>,
+    pub data: DataView<GroupLayerData>,
+    pub groups: DataView<GroupData>,
 }
 
 impl GroupLayer {
     pub fn new(
         config: GroupConfig,
         mut data: Document<GroupLayerData>,
-        instance: InstanceLayer,
+        instance_layer: InstanceLayer,
     ) -> Result<Self> {
         let groups: Collection<GroupData> = data.collection("/groups")?;
 
@@ -71,11 +71,18 @@ impl GroupLayer {
             #[cfg(feature = "server")]
             let ca = group.insert_document(
                 "ca",
-                GroupCaCert::new(instance.cluster_id, group.data.name.clone())?,
+                GroupCaCert::new(
+                    instance_layer.data.value().cluster_id,
+                    group.data.name.clone(),
+                )?,
             )?;
 
             #[cfg(feature = "server")]
-            group.insert_document("server", ca.data.server_cert(instance.instance_id)?)?;
+            group.insert_document(
+                "server",
+                ca.data
+                    .server_cert(instance_layer.data.value().instance_id)?,
+            )?;
         }
 
         Ok(Self { groups, data })
@@ -90,68 +97,6 @@ impl GroupLayer {
 pub struct GroupData {
     pub name: GroupName,
     pub owner: String,
-}
-
-/// Groups have unique names and are shared across the entire cluster. Group
-/// names cannot be changed after they are created.
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct GroupName(String);
-
-impl Display for GroupName {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
-impl Deref for GroupName {
-    type Target = String;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl FromStr for GroupName {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        let name = GroupName(s.to_string());
-        name.validate()?;
-        Ok(name)
-    }
-}
-
-impl Validate for GroupName {
-    fn validate(&self) -> Result<(), ValidationErrors> {
-        if Regex::new("^[a-z0-9]{4,32}$").unwrap().is_match(&self.0) {
-            Ok(())
-        } else {
-            Err(ValidationErrors::new())
-        }
-    }
-}
-
-#[cfg(test)]
-mod test_group_name {
-    use super::*;
-
-    #[test]
-    fn test_valid() {
-        assert!("test".parse::<GroupName>().is_ok());
-        assert!("default".parse::<GroupName>().is_ok());
-    }
-
-    #[test]
-    fn test_invalid() {
-        assert!("t".parse::<GroupName>().is_err());
-        assert!("".parse::<GroupName>().is_err());
-        assert!("test*".parse::<GroupName>().is_err());
-        assert!(
-            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-                .parse::<GroupName>()
-                .is_err()
-        );
-    }
 }
 
 /// The group's global CA cert. These have a lifetime of 100 years.

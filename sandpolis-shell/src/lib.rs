@@ -1,4 +1,5 @@
 use anyhow::Result;
+use sandpolis_database::{DataView, GroupDatabase};
 use sandpolis_macros::{Delta, StreamEvent};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf};
@@ -13,11 +14,19 @@ pub mod built_info {
 }
 
 #[derive(Clone)]
-pub struct ShellLayer {}
+pub struct ShellLayer {
+    sessions_data: DataView<ShellSessionData>,
+    #[cfg(feature = "agent")]
+    sessions: Vec<ShellSession>,
+}
 
 impl ShellLayer {
-    pub fn new() -> Result<Self> {
-        Ok(Self {})
+    pub fn new(db: GroupDatabase) -> Result<Self> {
+        Ok(Self {
+            sessions_data: db.view(),
+            #[cfg(feature = "agent")]
+            sessions: Vec::new(),
+        })
     }
 }
 
@@ -45,8 +54,19 @@ pub enum ShellType {
     Zsh,
 }
 
-#[derive(Serialize, Deserialize, Clone, Delta)]
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[native_model(id = 16, version = 1)]
+#[native_db]
 pub struct ShellSessionData {
+    #[primary_key]
+    pub _id: u32,
+
+    #[secondary_key]
+    pub _instance_id: InstanceId,
+
+    #[secondary_key]
+    pub _timestamp: DbTimestamp,
+
     pub shell_type: ShellType,
 
     /// Path to the shell's executable
