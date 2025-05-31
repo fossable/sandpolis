@@ -6972,8 +6972,9 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "openraft"
-version = "0.10.0"
-source = "git+https://github.com/databendlabs/openraft#8b21d7e5e80e0dbfa2a74962af4573eea42f4985"
+version = "0.9.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cbaeb68eb89f273a47b845f1654ed70be799577a990639136f32decbb1782c26"
 dependencies = [
  "anyerror",
  "byte-unit",
@@ -6983,7 +6984,7 @@ dependencies = [
  "futures",
  "maplit",
  "openraft-macros",
- "rand 0.9.1",
+ "rand 0.8.5",
  "serde",
  "thiserror 1.0.69",
  "tokio",
@@ -6994,8 +6995,9 @@ dependencies = [
 
 [[package]]
 name = "openraft-macros"
-version = "0.10.0"
-source = "git+https://github.com/databendlabs/openraft#8b21d7e5e80e0dbfa2a74962af4573eea42f4985"
+version = "0.9.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da0976e3223aacad0eb3d192505297a36a57b3940cbd9d50f9b64cdf18055c7c"
 dependencies = [
  "chrono",
  "proc-macro2",
@@ -8865,7 +8867,6 @@ dependencies = [
  "futures",
  "image",
  "native_db",
- "openraft",
  "rand 0.9.1",
  "ratatui",
  "ratatui-image",
@@ -8998,12 +8999,14 @@ dependencies = [
  "clap",
  "native_db",
  "native_model",
+ "redb 2.5.0",
  "sandpolis-core",
  "sandpolis-macros",
  "serde",
  "serde_cbor",
  "tempfile",
  "tracing",
+ "validator",
 ]
 
 [[package]]
@@ -9053,6 +9056,8 @@ dependencies = [
  "axum-server",
  "clap",
  "futures-util",
+ "native_db",
+ "native_model",
  "openssl",
  "pem",
  "rcgen",
@@ -9060,8 +9065,10 @@ dependencies = [
  "reqwest",
  "rustls",
  "rustls-pki-types",
+ "sandpolis-core",
  "sandpolis-database",
  "sandpolis-instance",
+ "sandpolis-macros",
  "serde",
  "serde_json",
  "tempfile",
@@ -9086,6 +9093,7 @@ dependencies = [
  "os_info",
  "sandpolis-core",
  "sandpolis-database",
+ "sandpolis-macros",
  "serde",
  "strum 0.27.1",
  "tracing",
@@ -9130,6 +9138,7 @@ dependencies = [
  "chrono",
  "clap",
  "futures",
+ "openraft",
  "reqwest",
  "reqwest-websocket",
  "sandpolis-database",
@@ -9137,6 +9146,7 @@ dependencies = [
  "sandpolis-instance",
  "serde",
  "serde_cbor",
+ "serde_json",
  "serde_with",
  "tokio",
  "tracing",
@@ -9178,6 +9188,7 @@ dependencies = [
  "ipmi-rs",
  "rasn-snmp",
  "russh",
+ "sandpolis-core",
  "sandpolis-instance",
  "vnc",
  "wol-rs",
@@ -9209,6 +9220,7 @@ dependencies = [
  "axum-macros",
  "built 0.8.0",
  "futures",
+ "regex",
  "sandpolis-agent",
  "sandpolis-database",
  "sandpolis-macros",

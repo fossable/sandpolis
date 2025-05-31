@@ -11,6 +11,7 @@ built = { version = "0.8", features = ["git2", "chrono", "semver"] }
 [dependencies]
 anyhow = { workspace = true }
 tracing = { workspace = true }
+regex = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }

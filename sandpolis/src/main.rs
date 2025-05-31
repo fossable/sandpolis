@@ -91,11 +91,12 @@ async fn main() -> Result<ExitCode> {
         run_instances.join(" + ")
     );
 
-    // Load instance database
-    let db = Database::new(&config.database.storage)?;
-
     // Load state
-    let state = InstanceState::new(config.clone(), db).await?;
+    let state = InstanceState::new(
+        config.clone(),
+        DatabaseLayer::new(&config.database.storage)?,
+    )
+    .await?;
 
     let mut tasks: JoinSet<Result<()>> = JoinSet::new();
 

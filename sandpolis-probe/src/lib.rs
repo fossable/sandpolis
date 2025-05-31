@@ -1,6 +1,7 @@
-//! This layer extends management functionality out to agent-less "probe" devices.
+//! This layer extends management functionality out to agent-less "probe"
+//! devices.
 
-use sandpolis_instance::InstanceId;
+use sandpolis_core::InstanceId;
 
 // An enumeration of all available communicator types.
 pub enum ProbeType {

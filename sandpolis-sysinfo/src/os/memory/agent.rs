@@ -1,22 +1,26 @@
 use super::MemoryData;
 use anyhow::Result;
+use native_db::Database;
 use sandpolis_agent::Collector;
 use sandpolis_database::Document;
+use std::sync::Arc;
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 use tracing::trace;
 
 pub struct MemoryMonitor {
-    data: Document<MemoryData>,
+    db: Arc<Database<'static>>,
     system: System,
+    data: Option<MemoryData>,
 }
 
 impl MemoryMonitor {
-    pub fn new(data: Document<MemoryData>) -> Self {
+    pub fn new(db: Arc<Database<'static>>) -> Self {
         Self {
-            data,
+            db,
             system: System::new_with_specifics(
                 RefreshKind::nothing().with_memory(MemoryRefreshKind::everything()),
             ),
+            data: None,
         }
     }
 }
@@ -24,17 +28,33 @@ impl MemoryMonitor {
 impl Collector for MemoryMonitor {
     fn refresh(&mut self) -> Result<()> {
         self.system.refresh_memory();
-        self.data.mutate(|data| {
-            data.total = self.system.total_memory();
-            data.free = self.system.free_memory();
-            data.swap_free = self.system.free_swap();
-            data.swap_total = self.system.total_swap();
 
-            trace!(data = ?data, "Polled memory info");
-            Ok(())
-        });
+        let next: MemoryData = (&self.system).into();
+        trace!(next = ?next, "Polled memory info");
+
+        if let Some(previous) = self.data.as_ref() {
+            if *previous != next {
+                self.data = Some(next.clone());
+
+                let rw = self.db.rw_transaction()?;
+                rw.insert(next)?;
+                rw.commit()?;
+            }
+        }
 
         Ok(())
+    }
+}
+
+impl From<&System> for MemoryData {
+    fn from(value: &System) -> Self {
+        Self {
+            total: value.total_memory(),
+            free: value.free_memory(),
+            swap_total: value.total_swap(),
+            swap_free: value.free_swap(),
+            ..Default::default()
+        }
     }
 }
 

@@ -26,6 +26,7 @@ use tracing::debug;
 pub mod cli;
 pub mod config;
 pub mod messages;
+pub mod raft;
 pub mod routes;
 pub mod stream;
 
@@ -285,6 +286,9 @@ pub enum ServerStratum {
     ///
     /// LS servers are optional, but may be useful for on-premise installations
     /// where the server can continue operating even when the network goes down.
+    ///
+    /// In raft terminology, LS servers are "learners" and don't participate in
+    /// leader voting.
     Local,
 
     /// This server maintains a complete copy of all data in the cluster. Global

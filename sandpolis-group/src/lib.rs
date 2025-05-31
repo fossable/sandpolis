@@ -3,9 +3,13 @@
 
 use anyhow::Result;
 use config::GroupConfig;
+use native_db::*;
+use native_model::{Model, native_model};
 use regex::Regex;
-use sandpolis_database::DataView;
-use sandpolis_instance::{ClusterId, InstanceLayer};
+use sandpolis_core::{ClusterId, GroupName};
+use sandpolis_database::{Data, DataIdentifier, DataView, DatabaseLayer};
+use sandpolis_instance::InstanceLayer;
+use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::str::FromStr;
@@ -20,24 +24,28 @@ pub mod messages;
 #[cfg(feature = "server")]
 pub mod server;
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default, Data)]
+#[native_model(id = 17, version = 1)]
+#[native_db]
 pub struct GroupLayerData {
+    #[primary_key]
+    pub _id: DataIdentifier,
+
     pub client: Option<GroupClientCert>,
 }
 
 #[derive(Clone)]
 pub struct GroupLayer {
-    pub data: DataView<GroupLayerData>,
-    pub groups: DataView<GroupData>,
+    database: DatabaseLayer,
 }
 
 impl GroupLayer {
     pub fn new(
         config: GroupConfig,
-        mut data: Document<GroupLayerData>,
-        instance_layer: InstanceLayer,
+        database: DatabaseLayer,
+        instance: InstanceLayer,
     ) -> Result<Self> {
-        let groups: Collection<GroupData> = data.collection("/groups")?;
+        let groups: DataView<GroupData> = data.collection("/groups")?;
 
         if let Some(new_cert) = config.certificate()? {
             if let Some(old_cert) = data.data.client.as_ref() {
@@ -93,8 +101,13 @@ impl GroupLayer {
 /// global CA certificate that signs certificates used to connect to the server.
 ///
 /// All servers have a default group called "default".
-#[derive(Serialize, Deserialize, Validate, Debug, Clone)]
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, Data)]
+#[native_model(id = 18, version = 1)]
+#[native_db]
 pub struct GroupData {
+    #[primary_key]
+    pub _id: DataIdentifier,
+
     pub name: GroupName,
     pub owner: String,
 }

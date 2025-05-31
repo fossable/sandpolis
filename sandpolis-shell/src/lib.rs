@@ -1,5 +1,5 @@
 use anyhow::Result;
-use sandpolis_database::{DataView, GroupDatabase};
+use sandpolis_database::{DataView, DatabaseLayer, GroupDatabase};
 use sandpolis_macros::{Delta, StreamEvent};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf};
@@ -15,15 +15,15 @@ pub mod built_info {
 
 #[derive(Clone)]
 pub struct ShellLayer {
-    sessions_data: DataView<ShellSessionData>,
+    database: DatabaseLayer,
     #[cfg(feature = "agent")]
     sessions: Vec<ShellSession>,
 }
 
 impl ShellLayer {
-    pub fn new(db: GroupDatabase) -> Result<Self> {
+    pub fn new(database: DatabaseLayer) -> Result<Self> {
         Ok(Self {
-            sessions_data: db.view(),
+            database,
             #[cfg(feature = "agent")]
             sessions: Vec::new(),
         })

@@ -1,14 +1,19 @@
+use std::process::Stdio;
+
 use anyhow::Result;
 use axum::extract::ws::{Message, WebSocket};
 use futures::{SinkExt, StreamExt};
+use regex::Regex;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     process::{Child, Command},
 };
-use tracing::debug;
+use tracing::{debug, trace};
 
-use super::messages::{ShellSessionOutputEvent, ShellSessionRequest};
+use crate::DiscoveredShell;
+
 use super::ShellSessionData;
+use super::messages::{ShellSessionOutputEvent, ShellSessionRequest};
 use sandpolis_database::Document;
 
 pub mod routes;
@@ -107,5 +112,32 @@ impl Drop for ShellSession {
         self.process.kill(); // TODO await
 
         // self.data.update(ShellSessionDelta::ended);
+    }
+}
+
+impl DiscoveredShell {
+    pub async fn scan() -> Result<Vec<DiscoveredShell>> {
+        let mut shells = Vec::new();
+
+        // Search for bash
+        match Command::new("bash").arg("--version").output().await {
+            Ok(output) => match String::from_utf8(output.stdout) {
+                Ok(stdout) => {
+                    if let Some(m) =
+                        Regex::new(r"version ([1-9]+\.[0-9]+\.[0-9]+\S*)")?.captures(&output)
+                    {
+                        shells.push(DiscoveredShell {
+                            shell_type: ShellType::Bash,
+                            location: todo!(),
+                            version: todo!(),
+                        })
+                    }
+                }
+                Err(_) => todo!(),
+            },
+            Err(_) => trace!("Bash shell not found"),
+        };
+
+        Ok(shells)
     }
 }

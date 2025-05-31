@@ -12,6 +12,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 axum = { workspace = true }
 axum-server = { workspace = true }
+native_db = { workspace = true }
+native_model = { workspace = true }
 futures-util = { workspace = true }
 rustls = { workspace = true }
 tempfile = { workspace = true }
@@ -33,6 +35,8 @@ validator = { workspace = true }
 regex = { workspace = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
+sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
+sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 
 [dev-dependencies]
 # Used to test certificate authentication with a different backend

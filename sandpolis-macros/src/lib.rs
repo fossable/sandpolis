@@ -22,7 +22,7 @@ pub fn derive_event(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_derive(Data)]
-pub fn derive_delta(input: TokenStream) -> TokenStream {
+pub fn derive_data(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let struct_name = &input.ident;
@@ -30,6 +30,30 @@ pub fn derive_delta(input: TokenStream) -> TokenStream {
         impl Data for #struct_name {
             fn id(&self) -> DataIdentifier {
                 self._id
+            }
+
+            fn set_id(&mut self, id: DataIdentifier) {
+                self._id = id;
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+#[proc_macro_derive(HistoricalData)]
+pub fn derive_historical_data(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    let struct_name = &input.ident;
+    let expanded = quote! {
+        impl Data for #struct_name {
+            fn timestamp(&self) -> DbTimestamp {
+                self._timestamp
+            }
+
+            fn set_timestamp(&mut self, timestamp: DbTimestamp) {
+                self._timestamp = timestamp;
             }
         }
     };

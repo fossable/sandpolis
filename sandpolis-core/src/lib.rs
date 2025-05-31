@@ -218,7 +218,7 @@ mod test_instance_id {
 
 /// Groups have unique names and are shared across the entire cluster. Group
 /// names cannot be changed after they are created.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GroupName(String);
 
 impl Display for GroupName {
