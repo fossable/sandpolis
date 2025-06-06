@@ -1,7 +1,7 @@
 use native_db::*;
 use native_model::{Model, native_model};
+use sandpolis_core::InstanceId;
 use sandpolis_database::DbTimestamp;
-use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]

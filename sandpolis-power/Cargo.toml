@@ -17,6 +17,7 @@ sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1" }
 sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
 sandpolis-group = { path = "../sandpolis-group", version = "0.0.1" }
+sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 
 [features]
 agent = ["dep:axum", "dep:axum-macros"]

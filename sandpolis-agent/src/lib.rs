@@ -1,5 +1,5 @@
 use anyhow::Result;
-use sandpolis_database::Document;
+use sandpolis_database::DatabaseLayer;
 use serde::{Deserialize, Serialize};
 
 pub mod config;
@@ -10,19 +10,19 @@ pub mod agent;
 pub mod messages;
 
 #[derive(Serialize, Deserialize, Default, Clone)]
-pub struct AgentLayerData;
+pub struct AgentLayerData {}
 
 #[derive(Clone)]
 pub struct AgentLayer {
-    pub data: Document<AgentLayerData>,
+    database: DatabaseLayer,
     #[cfg(feature = "agent")]
     pub scheduler: tokio_cron_scheduler::JobScheduler,
 }
 
 impl AgentLayer {
-    pub async fn new(data: Document<AgentLayerData>) -> Result<Self> {
+    pub async fn new(database: DatabaseLayer) -> Result<Self> {
         Ok(Self {
-            data,
+            database,
             #[cfg(feature = "agent")]
             scheduler: tokio_cron_scheduler::JobScheduler::new().await?,
         })

@@ -1,9 +1,7 @@
-use std::net::SocketAddr;
-
+use sandpolis_core::InstanceId;
 use sandpolis_macros::StreamEvent;
 use serde::{Deserialize, Serialize};
-
-use sandpolis_instance::InstanceId;
+use std::net::SocketAddr;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct TunnelStreamData {

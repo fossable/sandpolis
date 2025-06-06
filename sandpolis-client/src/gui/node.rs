@@ -5,8 +5,7 @@ use bevy_rapier2d::{
     geometry::{Collider, Restitution},
 };
 use bevy_svg::prelude::Svg2d;
-
-use sandpolis_instance::InstanceId;
+use sandpolis_core::InstanceId;
 
 #[derive(Bundle)]
 pub struct Node {
@@ -45,7 +44,8 @@ pub fn get_os_image(os_type: os_info::Type) -> String {
     .to_string()
 }
 
-/// A `WindowStack` is a set of collapsible Windows that are rendered below a node.
+/// A `WindowStack` is a set of collapsible Windows that are rendered below a
+/// node.
 #[derive(Component, Clone, Debug)]
 pub struct WindowStack {}
 

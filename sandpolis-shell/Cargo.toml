@@ -17,6 +17,7 @@ tokio = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 axum = { workspace = true }
 axum-macros = { workspace = true }
+sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
 sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }

@@ -26,7 +26,7 @@ pub struct InstanceLayerData {
 impl Default for InstanceLayerData {
     fn default() -> Self {
         Self {
-            _id: 1,
+            _id: DataIdentifier::default(),
             cluster_id: ClusterId::default(),
             instance_id: InstanceId::default(),
             os_info: os_info::get(),
@@ -36,7 +36,7 @@ impl Default for InstanceLayerData {
 
 #[derive(Clone)]
 pub struct InstanceLayer {
-    database: DatabaseLayer,
+    data: Watch<InstanceLayerData>,
     pub instance_id: InstanceId,
     pub cluster_id: ClusterId,
 }

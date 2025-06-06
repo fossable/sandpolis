@@ -1,5 +1,5 @@
 use anyhow::Result;
-use sandpolis_database::Document;
+use sandpolis_database::DatabaseLayer;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -14,7 +14,7 @@ pub struct SysinfoLayerData {}
 
 #[derive(Clone)]
 pub struct SysinfoLayer {
-    pub data: Document<SysinfoLayerData>,
+    database: DatabaseLayer,
     #[cfg(feature = "agent")]
     pub memory: Arc<os::memory::agent::MemoryMonitor>,
     #[cfg(feature = "agent")]
@@ -22,13 +22,15 @@ pub struct SysinfoLayer {
 }
 
 impl SysinfoLayer {
-    pub fn new(data: Document<SysinfoLayerData>) -> Result<Self> {
+    pub fn new(database: DatabaseLayer) -> Result<Self> {
         Ok(Self {
             #[cfg(feature = "agent")]
             memory: Arc::new(os::memory::agent::MemoryMonitor::new(
                 data.document("/memory")?,
             )),
-            data,
+            #[cfg(feature = "agent")]
+            users: Arc::new(os::user::agent::UserCollector::new()),
+            database,
         })
     }
 }

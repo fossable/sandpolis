@@ -42,39 +42,25 @@ pub struct GroupLayer {
 impl GroupLayer {
     pub fn new(
         config: GroupConfig,
-        database: DatabaseLayer,
+        mut database: DatabaseLayer,
         instance: InstanceLayer,
     ) -> Result<Self> {
-        let groups: DataView<GroupData> = data.collection("/groups")?;
-
-        if let Some(new_cert) = config.certificate()? {
-            if let Some(old_cert) = data.data.client.as_ref() {
-                // Only import if the given certificate is newer than the one already
-                // in the database.
-                if new_cert.creation_time()? > old_cert.creation_time()? {
-                    info!(path = %config.certificate.expect("a path was configured").display(), "Importing group certificate");
-                    data.data.client = Some(new_cert);
-                }
-            } else {
-                data.data.client = Some(new_cert);
-            }
-        }
-
-        // Create default group
-        if groups
-            .documents()
-            .filter_map(|group| group.ok())
-            .find(|group| *group.data.name == "default")
-            .is_none()
-        {
+        // Create default group if it doesn't exist
+        if database.get(Some("default".parse()?)).is_err() {
             debug!("Creating default group");
-            let group = groups.insert_document(
-                "default",
-                GroupData {
-                    name: "default".parse().expect("valid group name"),
+            let db = database.get(None)?;
+            let rw = db.rw_transaction()?;
+            if rw
+                .get()
+                .secondary::<GroupData>(GroupDataKey::name, "default".parse::<GroupName>()?)?
+                .is_none()
+            {
+                rw.insert(GroupData {
                     owner: "admin".to_string(),
-                },
-            )?;
+                    ..Default::default()
+                });
+                rw.commit()?;
+            }
 
             #[cfg(feature = "server")]
             let ca = group.insert_document(
@@ -93,7 +79,31 @@ impl GroupLayer {
             )?;
         }
 
-        Ok(Self { groups, data })
+        // Load all group databases
+        let db = database.get(None)?;
+        let r = db.r_transaction()?;
+        for group in r.scan().primary::<GroupData>()?.all()? {
+            let group = group?;
+            database.add_group(group.name);
+        }
+
+        // Update client cert if possible
+        if let Some(new_cert) = config.certificate()? {
+            if let Some(group) = r
+                .get()
+                .secondary::<GroupData>(GroupDataKey::name, new_cert.name()?)?
+            {
+                // Only import if the given certificate is newer than the one
+                // already in the database.
+                // if new_cert.creation_time()? > old_cert.creation_time()? {
+                //     info!(path = %config.certificate.expect("a path was
+                // configured").display(), "Importing group certificate");
+                //     data.data.client = Some(new_cert);
+                // }
+            }
+        }
+
+        Ok(Self { database })
     }
 }
 
@@ -101,13 +111,14 @@ impl GroupLayer {
 /// global CA certificate that signs certificates used to connect to the server.
 ///
 /// All servers have a default group called "default".
-#[derive(Serialize, Deserialize, Validate, Debug, Clone, Data)]
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, Default, Data)]
 #[native_model(id = 18, version = 1)]
 #[native_db]
 pub struct GroupData {
     #[primary_key]
     pub _id: DataIdentifier,
 
+    #[secondary_key(unique)]
     pub name: GroupName,
     pub owner: String,
 }

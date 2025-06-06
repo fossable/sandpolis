@@ -1,4 +1,4 @@
-use sandpolis_instance::InstanceId;
+use sandpolis_core::InstanceId;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

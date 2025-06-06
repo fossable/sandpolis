@@ -30,7 +30,7 @@ impl ShellLayer {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum ShellType {
     /// Busybox shell
     Ash,

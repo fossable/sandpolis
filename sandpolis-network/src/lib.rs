@@ -6,12 +6,15 @@ use config::NetworkLayerConfig;
 use futures::StreamExt;
 use messages::PingRequest;
 use messages::PingResponse;
+use native_db::*;
+use native_model::{Model, native_model};
 use reqwest::ClientBuilder;
 use reqwest_websocket::RequestBuilderExt;
-use sandpolis_database::Document;
+use sandpolis_core::{GroupName, InstanceId};
+use sandpolis_database::DatabaseLayer;
+use sandpolis_database::DbTimestamp;
+use sandpolis_group::GroupClientCert;
 use sandpolis_group::GroupLayer;
-use sandpolis_group::{GroupClientCert, GroupName};
-use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::{ts_seconds, ts_seconds_option};
 use std::fmt::Display;
@@ -26,9 +29,11 @@ use tracing::debug;
 pub mod cli;
 pub mod config;
 pub mod messages;
-pub mod raft;
 pub mod routes;
 pub mod stream;
+
+#[cfg(feature = "server")]
+pub mod server;
 
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct NetworkLayerData {
@@ -37,14 +42,14 @@ pub struct NetworkLayerData {
 
 #[derive(Clone)]
 pub struct NetworkLayer {
-    pub data: Document<NetworkLayerData>,
+    database: DatabaseLayer,
     pub servers: Arc<Vec<ServerConnection>>,
 }
 
 impl NetworkLayer {
     pub fn new(
         config: NetworkLayerConfig,
-        data: Document<NetworkLayerData>,
+        database: DatabaseLayer,
         group: GroupLayer,
     ) -> Result<Self> {
         let cert = if config.servers.is_none() {
@@ -56,11 +61,12 @@ impl NetworkLayer {
         } else {
             // Make sure we have a clientAuth cert
             Some(
-                group
-                    .data
-                    .data
-                    .client
-                    .ok_or(anyhow!("No group certificate found"))?,
+                // group
+                //     .data
+                //     .data
+                //     .client
+                //     .ok_or(anyhow!("No group certificate found"))?,
+                todo!(),
             )
         };
 
@@ -74,13 +80,14 @@ impl NetworkLayer {
                     .map(|address| {
                         ServerConnection::new(
                             address.to_owned(),
-                            data.data.server_cooldown.clone(),
+                            // data.data.server_cooldown.clone(),
+                            todo!(),
                             cert.clone().ok_or(anyhow!(""))?,
                         )
                     })
                     .collect::<Result<Vec<ServerConnection>>>()?,
             ),
-            data,
+            database,
         })
     }
 

@@ -1,6 +1,5 @@
 use anyhow::Result;
-use sandpolis_database::TemporaryDatabase;
-use sandpolis_instance::InstanceId;
+use sandpolis_core::InstanceId;
 use sandpolis_network::NetworkLayer;
 use sandpolis_power::{PowerLayer, client::tui::PowerWidget};
 use std::sync::Arc;

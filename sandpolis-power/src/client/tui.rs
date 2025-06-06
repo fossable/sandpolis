@@ -3,7 +3,7 @@ use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::text::Text;
 use ratatui::widgets::{Block, Borders, Paragraph, Widget, WidgetRef};
 use sandpolis_client::tui::EventHandler;
-use sandpolis_instance::InstanceId;
+use sandpolis_core::InstanceId;
 
 // #[derive(Debug)]
 pub struct PowerWidget {

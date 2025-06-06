@@ -15,6 +15,7 @@ notify = { version = "8.0.0", optional = true }
 tracing = { workspace = true }
 sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
 sandpolis-group = { path = "../sandpolis-group", version = "0.0.1" }
+sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 
 [features]
 agent = ["dep:notify"]

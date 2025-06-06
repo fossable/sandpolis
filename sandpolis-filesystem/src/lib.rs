@@ -1,5 +1,5 @@
 use anyhow::Result;
-use sandpolis_group::GroupName;
+use sandpolis_core::GroupName;
 
 #[cfg(feature = "agent")]
 pub mod agent;

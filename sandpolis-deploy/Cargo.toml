@@ -10,6 +10,7 @@ anyhow = { workspace = true }
 tracing = { workspace = true }
 os_info = { workspace = true }
 russh = { workspace = true, optional = true }
+sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 sandpolis-group = { path = "../sandpolis-group", version = "0.0.1" }
 
 [features]

@@ -1,4 +1,5 @@
 #![feature(iterator_try_collect)]
+#![feature(lock_value_accessors)]
 
 use crate::config::DatabaseConfig;
 use anyhow::{Result, anyhow, bail};
@@ -7,14 +8,13 @@ use native_db::db_type::{KeyDefinition, KeyOptions, ToKeyDefinition};
 use native_db::transaction::RTransaction;
 use native_db::transaction::query::SecondaryScanIterator;
 use native_db::{Key, Models, ToInput, ToKey};
-use redb::ReadOnlyTable;
 use sandpolis_core::{GroupName, InstanceId};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::ops::Range;
 use std::path::Path;
-use std::sync::RwLock;
 use std::sync::atomic::AtomicU64;
+use std::sync::{RwLock, RwLockReadGuard};
 use std::{marker::PhantomData, sync::Arc};
 use tracing::instrument::WithSubscriber;
 use tracing::{debug, trace};
@@ -48,30 +48,25 @@ impl DatabaseLayer {
     }
 
     /// Load or create a new database for the given group.
-    pub fn add_group(&mut self, name: GroupName) -> Result<()> {
+    pub fn add_group(&mut self, name: GroupName) -> Result<Arc<native_db::Database<'static>>> {
         // Check for duplicates
         let mut inner = self.inner.write().unwrap();
         if inner.contains_key(&Some(name.clone())) {
             bail!("Duplicate group");
         }
 
-        if let Some(path) = self.config.get_storage_dir()? {
+        let db = if let Some(path) = self.config.get_storage_dir()? {
             let path = path.join(format!("{name}.db"));
-            debug!(group = %name, path = %path.display(), "Initializing persistent group database");
 
-            inner.insert(
-                Some(name),
-                Arc::new(native_db::Builder::new().create(self.models, path)?),
-            );
+            debug!(group = %name, path = %path.display(), "Initializing persistent group database");
+            Arc::new(native_db::Builder::new().create(self.models, path)?)
         } else {
             debug!(group = %name, "Initializing ephemeral group database");
-            inner.insert(
-                Some(name),
-                Arc::new(native_db::Builder::new().create_in_memory(self.models)?),
-            );
-        }
+            Arc::new(native_db::Builder::new().create_in_memory(self.models)?)
+        };
+        inner.insert(Some(name), db.clone());
 
-        Ok(())
+        Ok(db)
     }
 
     pub fn get(&self, name: Option<GroupName>) -> Result<Arc<native_db::Database<'static>>> {
@@ -86,7 +81,7 @@ impl DatabaseLayer {
 /// `Data` is what's stored in a database!
 pub trait Data
 where
-    Self: ToInput + Default + Clone,
+    Self: ToInput + Default + Clone + PartialEq,
 {
     fn id(&self) -> DataIdentifier;
     fn set_id(&mut self, id: DataIdentifier);
@@ -130,53 +125,6 @@ where
     fn instance_id(&self) -> InstanceId;
 }
 
-#[cfg(test)]
-mod test_database {
-    use super::*;
-    use anyhow::Result;
-    use native_db::Models;
-    use native_db::*;
-    use native_model::{Model, native_model};
-    use sandpolis_macros::{Data, HistoricalData};
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default, Data)]
-    #[native_model(id = 5, version = 1)]
-    #[native_db]
-    pub struct TestData {
-        #[primary_key]
-        pub _id: DataIdentifier,
-
-        #[secondary_key]
-        pub _timestamp: DbTimestamp,
-        #[secondary_key]
-        pub a: String,
-        #[secondary_key]
-        pub b: String,
-    }
-
-    #[test]
-    fn test_build_database() -> Result<()> {
-        let models = Box::leak(Box::new(Models::new()));
-        models.define::<TestData>().unwrap();
-
-        let databases = DatabaseBuilder::new(models)
-            .add_ephemeral("default".parse()?)?
-            .build();
-
-        let db = databases.get("default".parse()?)?;
-        let view: DataView<TestData> = db.view();
-
-        for i in 1..10 {
-            view.initialize(|item| {
-                item.a = format!("test {i}");
-            })?;
-        }
-
-        Ok(())
-    }
-}
-
 // TODO Eq based only on inner?
 #[derive(Serialize, Deserialize, Eq, PartialEq, Debug, Clone, Copy, Hash)]
 pub enum DbTimestamp {
@@ -215,72 +163,152 @@ pub type DataExpiration = DateTime<Utc>;
 /// Maintains a real-time cache of persistent objects in the database of
 /// type `T`.
 #[derive(Clone)]
-pub struct DataView<T>
+pub struct Watch<T>
 where
     T: Data,
 {
     db: Arc<native_db::Database<'static>>,
-    cache: Arc<RwLock<BTreeMap<DataIdentifier, T>>>,
+    cache: Arc<RwLock<T>>,
     watch_id: u64,
-    next_id: Arc<AtomicU64>,
 }
 
-impl<T: Data> DataView<T> {
-    pub fn new(db: Arc<native_db::Database<'static>>) -> Result<Self> {
-        let (channel, watch_id) = db.watch().scan().primary().all::<T>()?;
+impl<T: Data> Watch<T> {
+    /// Create a new `DataCache` when there's only one row in the database.
+    pub fn singleton(db: Arc<native_db::Database<'static>>) -> Result<Self> {
+        let r = db.r_transaction()?;
+        let mut rows: Vec<T> = r.scan().primary()?.all()?.try_collect()?;
+
+        let item = if rows.len() > 1 {
+            bail!("Too many rows");
+        } else if rows.len() == 1 {
+            let first = rows.pop().unwrap();
+
+            // Populate empty table
+            let rw = db.rw_transaction()?;
+            rw.insert(first.clone())?;
+            rw.commit()?;
+            first
+        } else {
+            T::default()
+        };
+
+        let (channel, watch_id) = db.watch().get().primary::<T>(item.id())?;
 
         Ok(Self {
-            cache: Arc::new(RwLock::new(BTreeMap::new())),
+            cache: Arc::new(RwLock::new(item)),
             watch_id,
-            next_id: Arc::new(AtomicU64::new(
-                // TODO correct table
-                db.redb_stats()?.primary_tables[0].n_entries.unwrap(),
-            )),
             db,
         })
     }
+
+    pub fn read(&self) -> RwLockReadGuard<'_, T> {
+        self.cache.read().unwrap()
+    }
 }
 
-impl<T: Data> DataView<T> {
-    pub fn initialize<I>(&self, initializer: I) -> Result<()>
-    where
-        I: Fn(&mut T),
-    {
-        let mut row = T::default();
-        row.set_id(
-            self.next_id
-                .fetch_add(1, std::sync::atomic::Ordering::Relaxed),
-        );
-        initializer(&mut row);
-
-        let rw = self.db.rw_transaction().unwrap();
-        rw.insert(row.clone())?;
-        self.cache.write().unwrap().insert(row.id(), row);
-        Ok(())
-    }
-
-    // TODO use a cell instead of mut self
-    pub fn update<F>(&mut self, id: DataIdentifier, mutator: F) -> Result<()>
+impl<T: Data> Watch<T> {
+    pub fn update<F>(&self, mutator: F) -> Result<()>
     where
         F: Fn(&mut T) -> Result<()>,
     {
-        // let mut new_value = self.value.clone();
-        // mutator(&mut new_value)?;
-        // let rw = self.db.rw_transaction()?;
-        // rw.upsert(new_value.clone())?;
-        // rw.commit()?;
+        let cache = self.cache.read().unwrap();
+        let mut next = cache.clone();
+        mutator(&mut next)?;
 
-        // self.value = new_value;
+        if next != *cache {
+            let rw = self.db.rw_transaction()?;
+            rw.upsert(next.clone())?;
+            rw.commit()?;
+
+            drop(cache);
+
+            self.cache.set(next).unwrap();
+        }
+
         Ok(())
     }
 }
 
-impl<T: HistoricalData> DataView<T> {
-    pub fn history(&self, id: DataIdentifier, range: Range<DbTimestamp>) -> Result<Vec<T>> {
+impl<T: HistoricalData> Watch<T> {
+    pub fn history(&self, range: Range<DbTimestamp>) -> Result<Vec<T>> {
         let r = self.db.r_transaction()?;
         Ok(r.scan()
             .secondary(T::timestamp_key())?
             .range(range)?
             .try_collect()?)
+    }
+}
+
+#[cfg(test)]
+mod test_database {
+    use super::*;
+    use anyhow::Result;
+    use native_db::Models;
+    use native_db::*;
+    use native_model::{Model, native_model};
+    use sandpolis_macros::{Data, HistoricalData};
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default, Data)]
+    #[native_model(id = 5, version = 1)]
+    #[native_db]
+    pub struct TestData {
+        #[primary_key]
+        pub _id: DataIdentifier,
+
+        #[secondary_key]
+        pub a: String,
+        #[secondary_key]
+        pub b: String,
+    }
+
+    #[test]
+    fn test_build_database() -> Result<()> {
+        let models = Box::leak(Box::new(Models::new()));
+        models.define::<TestData>().unwrap();
+
+        let mut database = DatabaseLayer::new(
+            DatabaseConfig {
+                storage: None,
+                ephemeral: true,
+            },
+            models,
+        )?;
+        database.add_group("default".parse()?)?;
+
+        let db = database.get(Some("default".parse()?))?;
+        let watch: Watch<TestData> = Watch::singleton(db.clone())?;
+
+        // Update data a bunch of times
+        for i in 1..10 {
+            watch.update(|data| {
+                data.a = format!("test {i}");
+                Ok(())
+            })?;
+        }
+
+        // Database should reflect "test 9"
+        {
+            let r = db.r_transaction()?;
+            let items: Vec<TestData> = r.scan().primary()?.all()?.try_collect()?;
+            assert_eq!(items.len(), 1);
+            assert_eq!(items[0].a, "test 9");
+        }
+
+        // Change it in the database
+        {
+            let rw = db.rw_transaction()?;
+            rw.upsert(TestData {
+                _id: watch.read()._id,
+                a: "test 10".into(),
+                b: "".into(),
+            })?;
+            rw.commit()?;
+        }
+
+        // Watch should reflect "test 10"
+        assert_eq!(watch.read().a, "test 10");
+
+        Ok(())
     }
 }

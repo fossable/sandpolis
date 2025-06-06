@@ -5,7 +5,7 @@
 //! Group certificates and configuration are embedded into the application for a
 //! seamless install.
 
-use sandpolis_group::GroupName;
+use sandpolis_core::GroupName;
 
 pub enum SshCredentials {
     Password(String),

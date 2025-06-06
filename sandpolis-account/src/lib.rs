@@ -1,13 +1,12 @@
 //! This layer enables account-level management.
 
-use sandpolis_database::DataView;
-use sandpolis_instance::InstanceId;
+use sandpolis_core::InstanceId;
+use sandpolis_database::DatabaseLayer;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 pub struct AccountLayer {
-    accounts: DataView<AccountData>,
-    links: DataView<AccountLinkData>,
+    database: DatabaseLayer,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -77,6 +76,7 @@ impl Validate for Compromisability {
 
 impl AccountLinkType {
     pub fn compromisability(&self) -> Compromisability {
+        // Weights are relative
         match self {
             AccountLinkType::CommonUsername(_) => Compromisability(0.05),
             AccountLinkType::CommonEmail(_) => Compromisability(0.10),

@@ -221,6 +221,12 @@ mod test_instance_id {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GroupName(String);
 
+impl Default for GroupName {
+    fn default() -> Self {
+        Self("default".into())
+    }
+}
+
 impl Display for GroupName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.0)
@@ -252,6 +258,16 @@ impl Validate for GroupName {
         } else {
             Err(ValidationErrors::new())
         }
+    }
+}
+
+impl ToKey for GroupName {
+    fn to_key(&self) -> native_db::Key {
+        native_db::Key::new(self.0.as_bytes().to_vec())
+    }
+
+    fn key_names() -> Vec<String> {
+        vec!["GroupName".to_string()]
     }
 }
 

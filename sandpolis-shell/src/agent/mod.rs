@@ -141,3 +141,12 @@ impl DiscoveredShell {
         Ok(shells)
     }
 }
+
+#[cfg(test)]
+mod test_discovered_shell {
+    #[test]
+    pub fn test_scan() {
+        // Assume at least one shell is available
+        assert!(super::DiscoveredShell::scan().unwrap().len() > 0);
+    }
+}

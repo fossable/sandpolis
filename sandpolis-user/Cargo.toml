@@ -10,6 +10,8 @@ anyhow = { workspace = true }
 serde = { workspace = true }
 base64 = { workspace = true }
 rand = { workspace = true }
+native_db = { workspace = true }
+native_model = { workspace = true }
 ring = { workspace = true }
 axum = { workspace = true }
 axum-macros = { workspace = true }
@@ -27,6 +29,7 @@ sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
 sandpolis-server = { path = "../sandpolis-server", version = "0.0.1", optional = true }
+sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 
 [features]
 server = [

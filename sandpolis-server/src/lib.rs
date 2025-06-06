@@ -1,6 +1,6 @@
 use anyhow::Result;
-use sandpolis_database::Document;
-use sandpolis_instance::ClusterId;
+use sandpolis_core::ClusterId;
+use sandpolis_database::DatabaseLayer;
 use sandpolis_network::{NetworkLayer, ServerAddress};
 use serde::{Deserialize, Serialize};
 
@@ -19,14 +19,14 @@ pub struct ServerLayerData {}
 
 #[derive(Clone)]
 pub struct ServerLayer {
-    pub data: Document<ServerLayerData>,
+    database: DatabaseLayer,
     #[cfg(feature = "server")]
     pub banner: Document<ServerBannerData>,
     pub network: NetworkLayer,
 }
 
 impl ServerLayer {
-    pub fn new(data: Document<ServerLayerData>, network: NetworkLayer) -> Result<Self> {
+    pub fn new(database: DatabaseLayer, network: NetworkLayer) -> Result<Self> {
         Ok(Self {
             #[cfg(feature = "server")]
             banner: if let Some(document) = data.get_document("/banner")? {
@@ -38,7 +38,7 @@ impl ServerLayer {
                 // Create a new banner
                 data.document("/banner")?
             },
-            data,
+            database,
             network,
         })
     }

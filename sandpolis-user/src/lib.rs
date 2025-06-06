@@ -4,12 +4,13 @@
 //! with a lifetime of 20 minutes. If a client determines the user is not idle,
 //! the token can be automatically renewed.
 
-use std::{net::SocketAddr, ops::Deref, str::FromStr};
-
 use anyhow::{Result, bail};
+use native_db::*;
+use native_model::{Model, native_model};
 use regex::Regex;
-use sandpolis_database::{Collection, Database, Document};
+use sandpolis_database::DatabaseLayer;
 use serde::{Deserialize, Serialize};
+use std::{net::SocketAddr, ops::Deref, str::FromStr};
 use validator::{Validate, ValidationErrors};
 
 #[cfg(feature = "client")]
@@ -25,17 +26,17 @@ pub struct UserLayerData {}
 
 #[derive(Clone)]
 pub struct UserLayer {
-    pub data: DataView<UserLayerData>,
+    pub database: DatabaseLayer,
     #[cfg(feature = "server")]
     pub users: DataView<UserData>,
 }
 
 impl UserLayer {
-    pub fn new(data: Document<UserLayerData>) -> Result<Self> {
+    pub fn new(database: DatabaseLayer) -> Result<Self> {
         Ok(Self {
             #[cfg(feature = "server")]
             users: data.collection("/users")?,
-            data,
+            database,
         })
     }
 }
@@ -63,7 +64,7 @@ pub struct UserData {
 }
 
 /// A user's username is forever unchangable.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct UserName(String);
 
 impl Deref for UserName {
