@@ -1,6 +1,9 @@
 use anyhow::Result;
-use sandpolis_database::{DataView, DatabaseLayer, GroupDatabase};
-use sandpolis_macros::{Delta, StreamEvent};
+use native_db::*;
+use native_model::{Model, native_model};
+use sandpolis_core::InstanceId;
+use sandpolis_database::{DataIdentifier, DatabaseLayer, DbTimestamp};
+use sandpolis_macros::{Data, StreamEvent};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf};
 
@@ -30,7 +33,7 @@ impl ShellLayer {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
 pub enum ShellType {
     /// Busybox shell
     Ash,
@@ -59,7 +62,7 @@ pub enum ShellType {
 #[native_db]
 pub struct ShellSessionData {
     #[primary_key]
-    pub _id: u32,
+    pub _id: DataIdentifier,
 
     #[secondary_key]
     pub _instance_id: InstanceId,

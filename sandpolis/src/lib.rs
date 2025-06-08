@@ -1,12 +1,11 @@
-use std::{cell::LazyCell, collections::HashMap};
-
 use anyhow::Result;
 use axum_macros::FromRef;
 use config::Configuration;
 use native_db::Models;
-use sandpolis_database::{Database, DatabaseLayer};
+use sandpolis_database::DatabaseLayer;
 use sandpolis_instance::LayerVersion;
 use serde::{Deserialize, Serialize};
+use std::{cell::LazyCell, collections::HashMap};
 use strum::EnumIter;
 
 pub mod cli;
@@ -264,18 +263,20 @@ pub static MODELS: LazyCell<Models> = LazyCell::new(|| {
     #[cfg(feature = "layer-sysinfo")]
     {
         m.define::<sandpolis_sysinfo::SysinfoLayerData>().unwrap();
-        m.define::<sandpolis_sysinfo::hardware::DisplayData>()
+        m.define::<sandpolis_sysinfo::hardware::display::DisplayData>()
             .unwrap();
-        m.define::<sandpolis_sysinfo::hardware::FirmwareData>()
+        m.define::<sandpolis_sysinfo::hardware::firmware::FirmwareData>()
             .unwrap();
-        m.define::<sandpolis_sysinfo::hardware::MemoryData>()
+        m.define::<sandpolis_sysinfo::hardware::memory::MemoryData>()
             .unwrap();
-        m.define::<sandpolis_sysinfo::hardware::BatteryData>()
+        m.define::<sandpolis_sysinfo::hardware::battery::BatteryData>()
             .unwrap();
         m.define::<sandpolis_sysinfo::os::OsData>().unwrap();
-        m.define::<sandpolis_sysinfo::os::UserData>().unwrap();
-        m.define::<sandpolis_sysinfo::os::GroupData>().unwrap();
-        m.define::<sandpolis_sysinfo::os::MountpointData>().unwrap();
+        m.define::<sandpolis_sysinfo::os::user::UserData>().unwrap();
+        m.define::<sandpolis_sysinfo::os::user::GroupData>()
+            .unwrap();
+        m.define::<sandpolis_sysinfo::os::mountpoint::MountpointData>()
+            .unwrap();
         m.define::<sandpolis_sysinfo::os::process::ProcessData>()
             .unwrap();
         m.define::<sandpolis_sysinfo::os::memory::MemoryData>()

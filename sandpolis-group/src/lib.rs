@@ -7,7 +7,7 @@ use native_db::*;
 use native_model::{Model, native_model};
 use regex::Regex;
 use sandpolis_core::{ClusterId, GroupName};
-use sandpolis_database::{Data, DataIdentifier, DataView, DatabaseLayer};
+use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Watch};
 use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
@@ -24,7 +24,7 @@ pub mod messages;
 #[cfg(feature = "server")]
 pub mod server;
 
-#[derive(Serialize, Deserialize, Clone, Default, Data)]
+#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Eq, Data)]
 #[native_model(id = 17, version = 1)]
 #[native_db]
 pub struct GroupLayerData {
@@ -36,19 +36,19 @@ pub struct GroupLayerData {
 
 #[derive(Clone)]
 pub struct GroupLayer {
-    database: DatabaseLayer,
+    data: Watch<GroupLayerData>,
 }
 
 impl GroupLayer {
-    pub fn new(
+    pub async fn new(
         config: GroupConfig,
         mut database: DatabaseLayer,
         instance: InstanceLayer,
     ) -> Result<Self> {
         // Create default group if it doesn't exist
-        if database.get(Some("default".parse()?)).is_err() {
+        if database.get(Some("default".parse()?)).await.is_err() {
             debug!("Creating default group");
-            let db = database.get(None)?;
+            let db = database.get(None).await?;
             let rw = db.rw_transaction()?;
             if rw
                 .get()
@@ -80,7 +80,7 @@ impl GroupLayer {
         }
 
         // Load all group databases
-        let db = database.get(None)?;
+        let db = database.get(None).await?;
         let r = db.r_transaction()?;
         for group in r.scan().primary::<GroupData>()?.all()? {
             let group = group?;
@@ -103,7 +103,9 @@ impl GroupLayer {
             }
         }
 
-        Ok(Self { database })
+        Ok(Self {
+            data: Watch::singleton(db)?,
+        })
     }
 }
 
@@ -111,7 +113,7 @@ impl GroupLayer {
 /// global CA certificate that signs certificates used to connect to the server.
 ///
 /// All servers have a default group called "default".
-#[derive(Serialize, Deserialize, Validate, Debug, Clone, Default, Data)]
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, Default, PartialEq, Eq, Data)]
 #[native_model(id = 18, version = 1)]
 #[native_db]
 pub struct GroupData {
@@ -165,7 +167,7 @@ impl GroupServerCert {
 
 /// A _client_ certificate (not as in "client" instance) used to authenticate
 /// with a server instance.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct GroupClientCert {
     pub ca: String,
     pub cert: String,

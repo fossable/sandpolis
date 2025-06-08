@@ -17,4 +17,6 @@ serde_cbor = { workspace = true }
 serde = { workspace = true }
 tempfile = { workspace = true }
 tracing = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
 validator = { workspace = true }

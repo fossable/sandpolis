@@ -10,18 +10,20 @@ built = { version = "0.8", features = ["git2", "chrono", "semver"] }
 
 [dependencies]
 anyhow = { workspace = true }
-tracing = { workspace = true }
-regex = { workspace = true }
-serde = { workspace = true }
-tokio = { workspace = true, optional = true }
-futures = { workspace = true, optional = true }
-axum = { workspace = true }
 axum-macros = { workspace = true }
+axum = { workspace = true }
+futures = { workspace = true, optional = true }
+native_db = { workspace = true }
+native_model = { workspace = true }
+regex = { workspace = true }
+sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1", optional = true }
 sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
+sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
-sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
-sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1", optional = true }
+serde = { workspace = true }
+tokio = { workspace = true, optional = true }
+tracing = { workspace = true }
 tui-term = { version = "0.2.0", optional = true }
 
 [features]

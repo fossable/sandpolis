@@ -7,6 +7,7 @@ use chrono::{DateTime, Utc};
 use native_db::db_type::{KeyDefinition, KeyOptions, ToKeyDefinition};
 use native_db::transaction::RTransaction;
 use native_db::transaction::query::SecondaryScanIterator;
+use native_db::watch::Event;
 use native_db::{Key, Models, ToInput, ToKey};
 use sandpolis_core::{GroupName, InstanceId};
 use serde::{Deserialize, Serialize};
@@ -14,8 +15,9 @@ use std::collections::{BTreeMap, HashMap};
 use std::ops::Range;
 use std::path::Path;
 use std::sync::atomic::AtomicU64;
-use std::sync::{RwLock, RwLockReadGuard};
 use std::{marker::PhantomData, sync::Arc};
+use tokio::sync::{RwLock, RwLockReadGuard};
+use tokio_util::sync::CancellationToken;
 use tracing::instrument::WithSubscriber;
 use tracing::{debug, trace};
 
@@ -48,9 +50,12 @@ impl DatabaseLayer {
     }
 
     /// Load or create a new database for the given group.
-    pub fn add_group(&mut self, name: GroupName) -> Result<Arc<native_db::Database<'static>>> {
+    pub async fn add_group(
+        &mut self,
+        name: GroupName,
+    ) -> Result<Arc<native_db::Database<'static>>> {
         // Check for duplicates
-        let mut inner = self.inner.write().unwrap();
+        let mut inner = self.inner.write().await;
         if inner.contains_key(&Some(name.clone())) {
             bail!("Duplicate group");
         }
@@ -69,8 +74,8 @@ impl DatabaseLayer {
         Ok(db)
     }
 
-    pub fn get(&self, name: Option<GroupName>) -> Result<Arc<native_db::Database<'static>>> {
-        let inner = self.inner.read().unwrap();
+    pub async fn get(&self, name: Option<GroupName>) -> Result<Arc<native_db::Database<'static>>> {
+        let inner = self.inner.read().await;
         if let Some(db) = inner.get(&name) {
             return Ok(db.clone());
         }
@@ -81,7 +86,7 @@ impl DatabaseLayer {
 /// `Data` is what's stored in a database!
 pub trait Data
 where
-    Self: ToInput + Default + Clone + PartialEq,
+    Self: ToInput + Default + Clone + PartialEq + Send + Sync,
 {
     fn id(&self) -> DataIdentifier;
     fn set_id(&mut self, id: DataIdentifier);
@@ -160,6 +165,8 @@ impl ToKey for DbTimestamp {
 pub type DataIdentifier = u64;
 pub type DataExpiration = DateTime<Utc>;
 
+// TODO rename Resident?
+
 /// Maintains a real-time cache of persistent objects in the database of
 /// type `T`.
 #[derive(Clone)]
@@ -169,11 +176,23 @@ where
 {
     db: Arc<native_db::Database<'static>>,
     cache: Arc<RwLock<T>>,
+
+    /// Used to stop the database from sending updates
     watch_id: u64,
+
+    /// Allows the background update thread to be stopped
+    cancel_token: CancellationToken,
 }
 
-impl<T: Data> Watch<T> {
-    /// Create a new `DataCache` when there's only one row in the database.
+impl<T: Data> Drop for Watch<T> {
+    fn drop(&mut self) {
+        self.cancel_token.cancel();
+        self.db.unwatch(self.watch_id).unwrap();
+    }
+}
+
+impl<T: Data + 'static> Watch<T> {
+    /// Create a new `Watch` when there's only one row in the database.
     pub fn singleton(db: Arc<native_db::Database<'static>>) -> Result<Self> {
         let r = db.r_transaction()?;
         let mut rows: Vec<T> = r.scan().primary()?.all()?.try_collect()?;
@@ -192,26 +211,61 @@ impl<T: Data> Watch<T> {
             T::default()
         };
 
-        let (channel, watch_id) = db.watch().get().primary::<T>(item.id())?;
+        let (mut channel, watch_id) = db.watch().get().primary::<T>(item.id())?;
+
+        let cancel_token = CancellationToken::new();
+        let token = cancel_token.clone();
+
+        let cache = Arc::new(RwLock::new(item));
+
+        tokio::spawn({
+            let cache_clone = Arc::clone(&cache);
+            async move {
+                loop {
+                    tokio::select! {
+                        _ = token.cancelled() => {
+                            break;
+                        }
+                        event = channel.recv() => match event {
+                            Some(event) => match event {
+                                Event::Insert(data) => {}
+                                Event::Update(data) => match data.inner_new() {
+                                    Ok(d) => {
+                                        let mut c = cache_clone.write().await;
+                                        *c = d;
+                                    },
+                                    Err(_) => {},
+                                }
+                                Event::Delete(data) => {}
+                            }
+                            None => {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         Ok(Self {
-            cache: Arc::new(RwLock::new(item)),
+            cache,
             watch_id,
+            cancel_token,
             db,
         })
     }
 
-    pub fn read(&self) -> RwLockReadGuard<'_, T> {
-        self.cache.read().unwrap()
+    pub async fn read(&self) -> RwLockReadGuard<'_, T> {
+        self.cache.read().await
     }
 }
 
 impl<T: Data> Watch<T> {
-    pub fn update<F>(&self, mutator: F) -> Result<()>
+    pub async fn update<F>(&self, mutator: F) -> Result<()>
     where
         F: Fn(&mut T) -> Result<()>,
     {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().await;
         let mut next = cache.clone();
         mutator(&mut next)?;
 
@@ -222,7 +276,8 @@ impl<T: Data> Watch<T> {
 
             drop(cache);
 
-            self.cache.set(next).unwrap();
+            let mut cache = self.cache.write().await;
+            *cache = next;
         }
 
         Ok(())
@@ -248,6 +303,7 @@ mod test_database {
     use native_model::{Model, native_model};
     use sandpolis_macros::{Data, HistoricalData};
     use serde::{Deserialize, Serialize};
+    use tokio::time::{Duration, sleep};
 
     #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default, Data)]
     #[native_model(id = 5, version = 1)]
@@ -262,8 +318,8 @@ mod test_database {
         pub b: String,
     }
 
-    #[test]
-    fn test_build_database() -> Result<()> {
+    #[tokio::test]
+    async fn test_build_database() -> Result<()> {
         let models = Box::leak(Box::new(Models::new()));
         models.define::<TestData>().unwrap();
 
@@ -274,17 +330,19 @@ mod test_database {
             },
             models,
         )?;
-        database.add_group("default".parse()?)?;
+        database.add_group("default".parse()?).await?;
 
-        let db = database.get(Some("default".parse()?))?;
+        let db = database.get(Some("default".parse()?)).await?;
         let watch: Watch<TestData> = Watch::singleton(db.clone())?;
 
         // Update data a bunch of times
         for i in 1..10 {
-            watch.update(|data| {
-                data.a = format!("test {i}");
-                Ok(())
-            })?;
+            watch
+                .update(|data| {
+                    data.a = format!("test {i}");
+                    Ok(())
+                })
+                .await?;
         }
 
         // Database should reflect "test 9"
@@ -299,16 +357,39 @@ mod test_database {
         {
             let rw = db.rw_transaction()?;
             rw.upsert(TestData {
-                _id: watch.read()._id,
+                _id: watch.read().await._id,
                 a: "test 10".into(),
                 b: "".into(),
             })?;
             rw.commit()?;
         }
 
-        // Watch should reflect "test 10"
-        assert_eq!(watch.read().a, "test 10");
+        // Watch should reflect "test 10" after a while
+        sleep(Duration::from_secs(1)).await;
+        assert_eq!(watch.read().await.a, "test 10");
 
         Ok(())
+    }
+}
+
+#[derive(Clone)]
+pub struct TimeResVec<T>
+where
+    T: HistoricalData,
+{
+    db: Arc<native_db::Database<'static>>,
+    cache: Arc<RwLock<T>>,
+
+    /// Used to stop the database from sending updates
+    watch_id: u64,
+
+    /// Allows the background update thread to be stopped
+    cancel_token: CancellationToken,
+}
+
+impl<T: HistoricalData> Drop for TimeResVec<T> {
+    fn drop(&mut self) {
+        self.cancel_token.cancel();
+        self.db.unwatch(self.watch_id).unwrap();
     }
 }

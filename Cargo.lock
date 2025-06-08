@@ -6326,6 +6326,7 @@ dependencies = [
  "serde",
  "skeptic",
  "thiserror 2.0.12",
+ "tokio",
 ]
 
 [[package]]
@@ -8869,6 +8870,7 @@ dependencies = [
  "ratatui",
  "ratatui-image",
  "rustls",
+ "sandpolis-account",
  "sandpolis-agent",
  "sandpolis-audit",
  "sandpolis-client",
@@ -9005,6 +9007,8 @@ dependencies = [
  "serde",
  "serde_cbor",
  "tempfile",
+ "tokio",
+ "tokio-util",
  "tracing",
  "validator",
 ]
@@ -9229,6 +9233,8 @@ dependencies = [
  "axum-macros",
  "built 0.8.0",
  "futures",
+ "native_db",
+ "native_model",
  "regex",
  "sandpolis-agent",
  "sandpolis-core",

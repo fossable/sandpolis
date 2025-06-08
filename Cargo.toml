@@ -47,7 +47,7 @@ colored = "3.0.0"
 futures = "0.3.30"
 futures-util = "0.3.31"
 image = "0.25.5"
-native_db = { git = "https://github.com/cilki/native_db" }
+native_db = { git = "https://github.com/cilki/native_db", features = ["tokio"] }
 native_model = "0.6.1"
 os_info = "3.8.2"
 pem = "3.0.4"
@@ -66,6 +66,7 @@ tempfile = "3.17.0"
 time = { version = "0.3.37" }
 tokio-rustls = "0.26.0"
 tokio = { version = "1.42.0", features = ["full"] }
+tokio-util = "0.7.15"
 tokio-stream = "0.1.17"
 tower = "0.5.2"
 tracing = "0.1.40"

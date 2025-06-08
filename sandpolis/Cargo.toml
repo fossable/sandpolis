@@ -24,6 +24,7 @@ native_db = { workspace = true }
 rand = { workspace = true }
 rustls = { workspace = true }
 sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1" }
+sandpolis-account = { path = "../sandpolis-account", version = "0.0.1", optional = true }
 sandpolis-audit = { path = "../sandpolis-audit", version = "0.0.1", optional = true }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1" }
 sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
@@ -91,7 +92,7 @@ client = [
 ]
 
 # Layers
-layer-account = []
+layer-account = ["dep:sandpolis-account"]
 layer-audit = ["dep:sandpolis-audit"]
 layer-deploy = ["dep:sandpolis-deploy"]
 layer-desktop = ["dep:sandpolis-desktop"]

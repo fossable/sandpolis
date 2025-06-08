@@ -1,9 +1,15 @@
+use native_db::*;
+use native_model::{Model, native_model};
+use sandpolis_core::InstanceId;
+use sandpolis_database::{DataIdentifier, DbTimestamp};
+use serde::{Deserialize, Serialize};
+
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 #[native_model(id = 9, version = 1)]
 #[native_db]
 pub struct FirmwareData {
     #[primary_key]
-    pub _id: u32,
+    pub _id: DataIdentifier,
 
     #[secondary_key]
     pub _instance_id: InstanceId,
@@ -13,16 +19,16 @@ pub struct FirmwareData {
 
     /// null
     pub name: String,
-    /// The BIOS manufacturer title
+    /// Firmware manufacturer title
     pub manufacturer: String,
-    /// The BIOS description
+    /// Firmware description
     pub description: String,
-    /// The BIOS version number
+    /// Firmware version number
     pub version: String,
-    /// The BIOS revision number
+    /// Firmware revision number
     pub revision: String,
-    /// The BIOS release date
+    /// Firmware release date
     pub release_date: String,
-    /// Whether the BIOS supports UEFI mode
+    /// Whether the firmware supports UEFI mode
     pub uefi: bool,
 }

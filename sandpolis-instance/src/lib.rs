@@ -4,10 +4,10 @@ use native_db::ToKey;
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::{ClusterId, InstanceId};
-use sandpolis_database::{Data, DataIdentifier, DatabaseLayer};
+use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Watch};
 use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
-use std::cmp::Ordering;
+use std::{cmp::Ordering, ops::Deref};
 
 pub mod cli;
 
@@ -42,22 +42,13 @@ pub struct InstanceLayer {
 }
 
 impl InstanceLayer {
-    pub fn new(database: DatabaseLayer) -> Result<Self> {
-        let db = database.get(None)?;
-        let r = db.r_transaction()?;
-        let instance_id = if let Some(data) = r.get().primary::<InstanceLayerData>(1)? {
-            data.instance_id
-        } else {
-            let rw = db.rw_transaction()?;
-            rw.insert(InstanceLayerData::default())?;
-            rw.commit()?;
-            todo!()
-        };
+    pub async fn new(database: DatabaseLayer) -> Result<Self> {
+        let data: Watch<InstanceLayerData> = Watch::singleton(database.get(None).await?)?;
 
         Ok(Self {
-            database,
-            instance_id,
-            cluster_id: todo!(),
+            instance_id: { data.read().await.instance_id },
+            cluster_id: { data.read().await.cluster_id },
+            data,
         })
     }
 }
