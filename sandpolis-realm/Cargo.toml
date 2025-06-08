@@ -2,7 +2,7 @@
 description = "Virtual estate monitoring & management!"
 edition = "2024"
 license = "AGPL-3.0-only"
-name = "sandpolis-group"
+name = "sandpolis-realm"
 version = "0.0.1"
 
 [dependencies]

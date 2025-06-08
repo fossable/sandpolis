@@ -32,7 +32,7 @@ sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
 sandpolis-deploy = { path = "../sandpolis-deploy", version = "0.0.1", optional = true }
 sandpolis-desktop = { path = "../sandpolis-desktop", version = "0.0.1", optional = true }
 sandpolis-filesystem = { path = "../sandpolis-filesystem", version = "0.0.1", optional = true }
-sandpolis-group = { path = "../sandpolis-group", version = "0.0.1" }
+sandpolis-realm = { path = "../sandpolis-realm", version = "0.0.1" }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-location = { path = "../sandpolis-location", version = "0.0.1", optional = true }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
@@ -66,7 +66,7 @@ tui-prompts = { workspace = true, optional = true }
 server = [
   "sandpolis-desktop?/server",
   "sandpolis-filesystem?/server",
-  "sandpolis-group/server",
+  "sandpolis-realm/server",
   "sandpolis-location?/server",
   "sandpolis-package?/server",
   "sandpolis-power?/server",

@@ -216,24 +216,24 @@ mod test_instance_id {
     }
 }
 
-/// Groups have unique names and are shared across the entire cluster. Group
+/// Realms have unique names and are shared across the entire cluster. Realm
 /// names cannot be changed after they are created.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct GroupName(String);
+pub struct RealmName(String);
 
-impl Default for GroupName {
+impl Default for RealmName {
     fn default() -> Self {
         Self("default".into())
     }
 }
 
-impl Display for GroupName {
+impl Display for RealmName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.0)
     }
 }
 
-impl Deref for GroupName {
+impl Deref for RealmName {
     type Target = String;
 
     fn deref(&self) -> &Self::Target {
@@ -241,17 +241,17 @@ impl Deref for GroupName {
     }
 }
 
-impl FromStr for GroupName {
+impl FromStr for RealmName {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let name = GroupName(s.to_string());
+        let name = RealmName(s.to_string());
         name.validate()?;
         Ok(name)
     }
 }
 
-impl Validate for GroupName {
+impl Validate for RealmName {
     fn validate(&self) -> Result<(), ValidationErrors> {
         if Regex::new("^[a-z0-9]{4,32}$").unwrap().is_match(&self.0) {
             Ok(())
@@ -261,36 +261,36 @@ impl Validate for GroupName {
     }
 }
 
-impl ToKey for GroupName {
+impl ToKey for RealmName {
     fn to_key(&self) -> native_db::Key {
         native_db::Key::new(self.0.as_bytes().to_vec())
     }
 
     fn key_names() -> Vec<String> {
-        vec!["GroupName".to_string()]
+        vec!["RealmName".to_string()]
     }
 }
 
 #[cfg(test)]
-mod test_group_name {
+mod test_realm_name {
     use super::*;
 
     #[test]
     fn test_valid() {
-        assert!("test".parse::<GroupName>().is_ok());
-        assert!("1default".parse::<GroupName>().is_ok());
-        assert!("default".parse::<GroupName>().is_ok());
-        assert!("default99".parse::<GroupName>().is_ok());
+        assert!("test".parse::<RealmName>().is_ok());
+        assert!("1default".parse::<RealmName>().is_ok());
+        assert!("default".parse::<RealmName>().is_ok());
+        assert!("default99".parse::<RealmName>().is_ok());
     }
 
     #[test]
     fn test_invalid() {
-        assert!("t".parse::<GroupName>().is_err());
-        assert!("".parse::<GroupName>().is_err());
-        assert!("test*".parse::<GroupName>().is_err());
+        assert!("t".parse::<RealmName>().is_err());
+        assert!("".parse::<RealmName>().is_err());
+        assert!("test*".parse::<RealmName>().is_err());
         assert!(
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-                .parse::<GroupName>()
+                .parse::<RealmName>()
                 .is_err()
         );
     }

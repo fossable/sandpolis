@@ -1,6 +1,6 @@
 use anyhow::Result;
 use messages::{PowerRequest, PowerResponse};
-use sandpolis_core::GroupName;
+use sandpolis_core::RealmName;
 use sandpolis_core::InstanceId;
 use sandpolis_network::NetworkLayer;
 use serde::{Deserialize, Serialize};
@@ -30,6 +30,6 @@ pub enum PowerAction {
 }
 
 pub enum PowerPermission {
-    Poweroff(Vec<GroupName>),
-    Reboot(Vec<GroupName>),
+    Poweroff(Vec<RealmName>),
+    Reboot(Vec<RealmName>),
 }

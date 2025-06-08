@@ -16,7 +16,7 @@ pub struct Configuration {
     #[cfg(feature = "client")]
     pub client: sandpolis_client::config::ClientLayerConfig,
     pub database: sandpolis_database::config::DatabaseConfig,
-    pub group: sandpolis_group::config::GroupConfig,
+    pub realm: sandpolis_realm::config::RealmConfig,
     #[cfg(feature = "layer-location")]
     pub location: sandpolis_location::config::LocationConfig,
     pub network: sandpolis_network::config::NetworkLayerConfig,

@@ -3,9 +3,9 @@ use clap::Parser;
 use clap::Subcommand;
 use colored::Colorize;
 use sandpolis_database::DatabaseLayer;
-use sandpolis_group::GroupCaCert;
-use sandpolis_group::GroupData;
-use sandpolis_group::GroupLayerData;
+use sandpolis_realm::RealmCaCert;
+use sandpolis_realm::RealmData;
+use sandpolis_realm::RealmLayerData;
 use std::fs::File;
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -33,11 +33,11 @@ pub struct CommandLine {
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     #[cfg(feature = "server")]
-    /// Generate a new endpoint certificate signed by the group CA
+    /// Generate a new endpoint certificate signed by the realm CA
     GenerateCert {
-        /// Group to generate the certificate for
+        /// Realm to generate the certificate for
         #[clap(long, default_value = "default")]
-        group: String, // TODO GroupName
+        realm: String, // TODO RealmName
 
         /// Output file path
         #[clap(long)]
@@ -70,14 +70,14 @@ impl Commands {
     pub fn dispatch(&self, config: &Configuration) -> Result<ExitCode> {
         match self {
             #[cfg(feature = "server")]
-            Commands::GenerateCert { group, output } => {
+            Commands::GenerateCert { realm, output } => {
                 let db = Database::new(&config.database.storage)?;
 
-                let groups: Collection<GroupData> = db
-                    .document::<GroupLayerData>("/group")?
-                    .collection("/groups")?;
-                let g = groups.get_document(group)?.expect("the group exists");
-                let ca: Document<GroupCaCert> = g.get_document("ca")?.expect("the CA exists");
+                let realms: Collection<RealmData> = db
+                    .document::<RealmLayerData>("/realm")?
+                    .collection("/realms")?;
+                let g = realms.get_document(realm)?.expect("the realm exists");
+                let ca: Document<RealmCaCert> = g.get_document("ca")?.expect("the CA exists");
 
                 let cert = ca.data.client_cert()?;
 

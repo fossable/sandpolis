@@ -2,10 +2,10 @@
 //! install themselves on first execution. If an agent is already installed,
 //! the deployer overwrites the existing instance.
 //!
-//! Group certificates and configuration are embedded into the application for a
+//! Realm certificates and configuration are embedded into the application for a
 //! seamless install.
 
-use sandpolis_core::GroupName;
+use sandpolis_core::RealmName;
 
 pub enum SshCredentials {
     Password(String),
@@ -19,7 +19,7 @@ pub enum DeployTarget {
 }
 
 pub struct DeployConfig {
-    group: GroupName,
+    realm: RealmName,
     // message LoopConfig {
 
     //     // One or more network targets
@@ -60,7 +60,7 @@ pub struct DeployConfig {
     // bool memory = 14;
 }
 
-// Request to build an agent for the given group.
+// Request to build an agent for the given realm.
 pub struct BuildAgentRequest(DeployConfig);
 
 enum BuildDeployerResponse {

@@ -28,7 +28,7 @@ use sandpolis_network::RequestResult;
 #[axum_macros::debug_handler]
 pub async fn login(
     state: State<UserLayer>,
-    // Extension(_): Extension<GroupName>,
+    // Extension(_): Extension<RealmName>,
     extract::Json(request): extract::Json<LoginRequest>,
 ) -> RequestResult<LoginResponse> {
     let user: Document<UserData> = match state.users.get_document(&request.username) {
@@ -103,7 +103,7 @@ pub async fn login(
 #[axum_macros::debug_handler]
 pub async fn create_user(
     state: State<UserLayer>,
-    // Extension(_): Extension<GroupName>,
+    // Extension(_): Extension<RealmName>,
     claims: Claims,
     extract::Json(request): extract::Json<CreateUserRequest>,
 ) -> RequestResult<CreateUserResponse> {
@@ -141,7 +141,7 @@ pub async fn create_user(
 #[axum_macros::debug_handler]
 pub async fn get_users(
     state: State<UserLayer>,
-    // Extension(_): Extension<GroupName>,
+    // Extension(_): Extension<RealmName>,
     claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
 ) -> RequestResult<GetUsersResponse> {

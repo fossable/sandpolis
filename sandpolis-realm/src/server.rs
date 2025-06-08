@@ -1,10 +1,10 @@
 //! Server implementation
 
-use super::GroupCaCert;
-use super::GroupClientCert;
-use super::GroupData;
-use super::GroupName;
-use super::GroupServerCert;
+use super::RealmCaCert;
+use super::RealmClientCert;
+use super::RealmData;
+use super::RealmName;
+use super::RealmServerCert;
 use anyhow::Result;
 use anyhow::bail;
 use axum::{
@@ -32,8 +32,6 @@ use rustls_pki_types::pem::PemObject;
 use sandpolis_core::ClusterId;
 use sandpolis_core::InstanceId;
 use sandpolis_core::InstanceType;
-use sandpolis_database::Collection;
-use sandpolis_database::Document;
 use std::io;
 use std::sync::Arc;
 use tempfile::TempDir;
@@ -45,9 +43,9 @@ use tower::Layer;
 use tracing::debug;
 use x509_parser::prelude::{FromDer, X509Certificate};
 
-impl super::GroupCaCert {
-    /// Generate a new group CA certificate.
-    pub fn new(cluster_id: ClusterId, name: GroupName) -> Result<Self> {
+impl super::RealmCaCert {
+    /// Generate a new realm CA certificate.
+    pub fn new(cluster_id: ClusterId, name: RealmName) -> Result<Self> {
         // Generate key
         let keypair = KeyPair::generate()?;
 
@@ -66,7 +64,7 @@ impl super::GroupCaCert {
         // Generate the certificate
         let cert = cert_params.self_signed(&keypair)?;
 
-        debug!(cert = ?cert.params(), "Generated new group CA certificate");
+        debug!(cert = ?cert.params(), "Generated new realm CA certificate");
         Ok(Self {
             name,
             cert: cert.pem(),
@@ -83,8 +81,8 @@ impl super::GroupCaCert {
         .self_signed(&KeyPair::from_pem(&self.key)?)?)
     }
 
-    /// Generate a new _clientAuth_ certificate signed by the group's CA.
-    pub fn client_cert(&self) -> Result<GroupClientCert> {
+    /// Generate a new _clientAuth_ certificate signed by the realm's CA.
+    pub fn client_cert(&self) -> Result<RealmClientCert> {
         // Generate key
         let keypair = KeyPair::generate()?;
 
@@ -102,16 +100,16 @@ impl super::GroupCaCert {
         // Generate the certificate signed by the CA
         let cert = cert_params.signed_by(&keypair, &self.ca()?, &KeyPair::from_pem(&self.key)?)?;
 
-        debug!(cert = ?cert.params(), "Generated new group client certificate");
-        Ok(GroupClientCert {
+        debug!(cert = ?cert.params(), "Generated new realm client certificate");
+        Ok(RealmClientCert {
             ca: self.ca()?.pem(),
             cert: cert.pem(),
             key: keypair.serialize_pem(),
         })
     }
 
-    /// Generate a new _serverAuth_ certificate signed by the group's CA.
-    pub fn server_cert(&self, server_id: InstanceId) -> Result<GroupServerCert> {
+    /// Generate a new _serverAuth_ certificate signed by the realm's CA.
+    pub fn server_cert(&self, server_id: InstanceId) -> Result<RealmServerCert> {
         if !server_id.is_type(InstanceType::Server) {
             bail!("A server ID is required");
         }
@@ -133,8 +131,8 @@ impl super::GroupCaCert {
         // Generate the certificate signed by the CA
         let cert = cert_params.signed_by(&keypair, &self.ca()?, &KeyPair::from_pem(&self.key)?)?;
 
-        debug!(cert = ?cert.params(), "Generated new group server certificate");
-        Ok(GroupServerCert {
+        debug!(cert = ?cert.params(), "Generated new realm server certificate");
+        Ok(RealmServerCert {
             cert: cert.pem(),
             key: keypair.serialize_pem(),
         })
@@ -142,7 +140,7 @@ impl super::GroupCaCert {
 }
 
 #[cfg(test)]
-mod test_group_ca {
+mod test_realm_ca {
     use super::*;
     use io::Write;
     use openssl::{
@@ -159,7 +157,7 @@ mod test_group_ca {
 
     #[test]
     fn test_generate_and_authenticate() -> Result<()> {
-        let ca = GroupCaCert::new(ClusterId::default(), "default".parse()?)?;
+        let ca = RealmCaCert::new(ClusterId::default(), "default".parse()?)?;
         let client = ca.client_cert()?;
         let server = ca.server_cert(InstanceId::new_server())?;
 
@@ -210,19 +208,19 @@ pub struct TlsData {
 }
 
 #[derive(Debug, Clone)]
-pub struct GroupAcceptor(RustlsAcceptor);
+pub struct RealmAcceptor(RustlsAcceptor);
 
-impl GroupAcceptor {
-    pub fn new(groups: Collection<GroupData>) -> Result<Self> {
+impl RealmAcceptor {
+    pub fn new(realms: Collection<RealmData>) -> Result<Self> {
         let mut roots = RootCertStore::empty();
         let mut sni_resolver = ResolvesServerCertUsingSni::new();
 
         let config = ServerConfig::builder();
 
-        for group in groups.documents() {
-            let group = group?;
-            let ca: Document<GroupCaCert> = group.get_document("ca")?.unwrap();
-            let server: Document<GroupServerCert> = group.get_document("server")?.unwrap();
+        for realm in realms.documents() {
+            let realm = realm?;
+            let ca: Document<RealmCaCert> = realm.get_document("ca")?.unwrap();
+            let server: Document<RealmServerCert> = realm.get_document("server")?.unwrap();
 
             roots.add(pem::parse(&ca.data.cert)?.into_contents().try_into()?)?;
 
@@ -254,7 +252,7 @@ impl GroupAcceptor {
         ))))
     }
 }
-impl<I, S> Accept<I, S> for GroupAcceptor
+impl<I, S> Accept<I, S> for RealmAcceptor
 where
     I: AsyncRead + AsyncWrite + Unpin + Send + 'static,
     S: Send + 'static,
@@ -306,7 +304,7 @@ pub async fn auth_middleware(
         // Pass authentication to routes
         request
             .extensions_mut()
-            .insert(cn.parse::<GroupName>().map_err(|_| "Invalid group name")?);
+            .insert(cn.parse::<RealmName>().map_err(|_| "Invalid realm name")?);
     } else {
         return Err("missing client certificate");
     }

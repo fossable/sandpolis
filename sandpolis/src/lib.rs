@@ -35,7 +35,7 @@ pub struct InstanceState {
     pub desktop: sandpolis_desktop::DesktopLayer,
     #[cfg(feature = "layer-filesystem")]
     pub filesystem: sandpolis_filesystem::FilesystemLayer,
-    pub group: sandpolis_group::GroupLayer,
+    pub realm: sandpolis_realm::RealmLayer,
     pub instance: sandpolis_instance::InstanceLayer,
     pub network: sandpolis_network::NetworkLayer,
     #[cfg(feature = "layer-package")]
@@ -58,12 +58,12 @@ impl InstanceState {
 
         let instance = sandpolis_instance::InstanceLayer::new(database.clone()).await?;
 
-        let group =
-            sandpolis_group::GroupLayer::new(config.group, database.clone(), instance.clone())
+        let realm =
+            sandpolis_realm::RealmLayer::new(config.realm, database.clone(), instance.clone())
                 .await?;
 
         let network =
-            sandpolis_network::NetworkLayer::new(config.network, database.clone(), group.clone())
+            sandpolis_network::NetworkLayer::new(config.network, database.clone(), realm.clone())
                 .await?;
 
         let user = sandpolis_user::UserLayer::new(database.clone())?;
@@ -120,7 +120,7 @@ impl InstanceState {
             agent,
             server,
             network,
-            group,
+            realm,
             instance,
         })
     }
@@ -237,10 +237,10 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         //     .unwrap();
     }
 
-    // Group layer
+    // Realm layer
     {
-        m.define::<sandpolis_group::GroupLayerData>().unwrap();
-        m.define::<sandpolis_group::GroupData>().unwrap();
+        m.define::<sandpolis_realm::RealmLayerData>().unwrap();
+        m.define::<sandpolis_realm::RealmData>().unwrap();
     }
 
     // Instance layer
@@ -277,7 +277,7 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
             .unwrap();
         m.define::<sandpolis_sysinfo::os::OsData>().unwrap();
         m.define::<sandpolis_sysinfo::os::user::UserData>().unwrap();
-        m.define::<sandpolis_sysinfo::os::group::GroupData>()
+        m.define::<sandpolis_sysinfo::os::realm::RealmData>()
             .unwrap();
         m.define::<sandpolis_sysinfo::os::mountpoint::MountpointData>()
             .unwrap();

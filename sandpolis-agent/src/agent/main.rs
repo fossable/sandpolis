@@ -148,7 +148,7 @@ use tracing::info;
 
 use crate::core::database::{Database, Document};
 use crate::core::layer::network::{ConnectionCooldown, ServerConnection};
-use crate::core::layer::server::group::GroupClientCert;
+use crate::core::layer::server::realm::RealmClientCert;
 use crate::core::layer::server::ServerAddress;
 use crate::CommandLine;
 
@@ -195,9 +195,9 @@ pub async fn main(args: CommandLine) -> Result<()> {
     };
 
     // Import certificate if it's newer than the one in the database
-    let cert_db: Option<Document<GroupClientCert>> = state.agent.data.get_document("/cert")?;
+    let cert_db: Option<Document<RealmClientCert>> = state.agent.data.get_document("/cert")?;
     let cert = if let Some(path) = args.certificate {
-        let cert_fs = GroupClientCert::read(path)?;
+        let cert_fs = RealmClientCert::read(path)?;
 
         match cert_db {
             Some(cert_db) => {

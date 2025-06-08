@@ -6,7 +6,7 @@ use axum::{
 };
 use rand::Rng;
 use sandpolis_database::Database;
-use sandpolis_group::GroupCaCert;
+use sandpolis_realm::RealmCaCert;
 use sandpolis_instance::{ClusterId, InstanceId};
 use std::path::PathBuf;
 use tempfile::TempDir;
@@ -34,13 +34,13 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     // TODO from_fn_with_state for IP blocking
     let app = app.route_layer(axum::middleware::from_fn(
-        sandpolis_group::server::auth_middleware,
+        sandpolis_realm::server::auth_middleware,
     ));
 
     info!(listener = ?config.server.listen, "Starting server listener");
     axum_server::bind(config.server.listen)
-        .acceptor(sandpolis_group::server::GroupAcceptor::new(
-            state.group.groups.clone(),
+        .acceptor(sandpolis_realm::server::RealmAcceptor::new(
+            state.realm.realms.clone(),
         )?)
         .serve(app.with_state(state).into_make_service())
         .await
@@ -74,7 +74,7 @@ pub async fn test_server() -> Result<TestServer> {
 
     // Generate temporary certs
     let certs = tempdir()?;
-    let ca_cert = GroupCaCert::new(cluster_id, "test".parse()?)?;
+    let ca_cert = RealmCaCert::new(cluster_id, "test".parse()?)?;
     let server_cert = ca_cert.server_cert(instance_id)?;
     let client_cert = ca_cert.client_cert()?;
     client_cert.write(certs.path().join("client.cert"))?;

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use sandpolis_core::GroupName;
+use sandpolis_core::RealmName;
 
 #[cfg(feature = "agent")]
 pub mod agent;
@@ -16,7 +16,7 @@ impl FilesystemLayer {
 }
 
 pub enum FilesystemPermission {
-    Read(Vec<GroupName>),
-    Write(Vec<GroupName>),
-    Mount(Vec<GroupName>),
+    Read(Vec<RealmName>),
+    Write(Vec<RealmName>),
+    Mount(Vec<RealmName>),
 }

@@ -10,14 +10,14 @@ use native_db::*;
 use native_model::{Model, native_model};
 use reqwest::ClientBuilder;
 use reqwest_websocket::RequestBuilderExt;
-use sandpolis_core::{GroupName, InstanceId};
+use sandpolis_core::{RealmName, InstanceId};
 use sandpolis_database::Data;
 use sandpolis_database::DataIdentifier;
 use sandpolis_database::DatabaseLayer;
 use sandpolis_database::DbTimestamp;
 use sandpolis_database::Watch;
-use sandpolis_group::GroupClientCert;
-use sandpolis_group::GroupLayer;
+use sandpolis_realm::RealmClientCert;
+use sandpolis_realm::RealmLayer;
 use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::{ts_seconds, ts_seconds_option};
@@ -59,7 +59,7 @@ impl NetworkLayer {
     pub async fn new(
         config: NetworkLayerConfig,
         database: DatabaseLayer,
-        group: GroupLayer,
+        realm: RealmLayer,
     ) -> Result<Self> {
         let cert = if config.servers.is_none() {
             if cfg!(feature = "agent") {
@@ -70,11 +70,11 @@ impl NetworkLayer {
         } else {
             // Make sure we have a clientAuth cert
             Some(
-                // group
+                // realm
                 //     .data
                 //     .data
                 //     .client
-                //     .ok_or(anyhow!("No group certificate found"))?,
+                //     .ok_or(anyhow!("No realm certificate found"))?,
                 todo!(),
             )
         };
@@ -234,7 +234,7 @@ pub struct ServerConnectionData {
 /// schedule if an internal agent process triggers it.
 pub struct ServerConnection {
     pub address: ServerAddress,
-    group: GroupName,
+    realm: RealmName,
     cooldown: ConnectionCooldown,
     pub client: reqwest::Client,
     pub data: RwLock<ServerConnectionData>,
@@ -244,10 +244,10 @@ impl ServerConnection {
     pub fn new(
         address: ServerAddress,
         cooldown: ConnectionCooldown,
-        cert: GroupClientCert,
+        cert: RealmClientCert,
     ) -> Result<Self> {
         Ok(Self {
-            group: cert.name()?,
+            realm: cert.name()?,
             data: RwLock::new(ServerConnectionData { iterations: 0 }),
             cooldown,
             client: ClientBuilder::new()
@@ -270,8 +270,8 @@ impl ServerConnection {
             debug!("Attempting server connection");
             match self
                 .client
-                .get(format!("wss://{}/", self.group))
-                .header("Host", &*self.group)
+                .get(format!("wss://{}/", self.realm))
+                .header("Host", &*self.realm)
                 .upgrade()
                 .send()
                 .await

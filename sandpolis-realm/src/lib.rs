@@ -1,12 +1,12 @@
-//! All connections to a server instance must be authenticated with a group
+//! All connections to a server instance must be authenticated with a realm
 //! using clientAuth certificates.
 
 use anyhow::Result;
-use config::GroupConfig;
+use config::RealmConfig;
 use native_db::*;
 use native_model::{Model, native_model};
 use regex::Regex;
-use sandpolis_core::{ClusterId, GroupName};
+use sandpolis_core::{ClusterId, RealmName};
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Watch};
 use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::Data;
@@ -27,35 +27,35 @@ pub mod server;
 #[derive(Serialize, Deserialize, Clone, Default, PartialEq, Eq, Data)]
 #[native_model(id = 17, version = 1)]
 #[native_db]
-pub struct GroupLayerData {
+pub struct RealmLayerData {
     #[primary_key]
     pub _id: DataIdentifier,
 
-    pub client: Option<GroupClientCert>,
+    pub client: Option<RealmClientCert>,
 }
 
 #[derive(Clone)]
-pub struct GroupLayer {
-    data: Watch<GroupLayerData>,
+pub struct RealmLayer {
+    data: Watch<RealmLayerData>,
 }
 
-impl GroupLayer {
+impl RealmLayer {
     pub async fn new(
-        config: GroupConfig,
+        config: RealmConfig,
         mut database: DatabaseLayer,
         instance: InstanceLayer,
     ) -> Result<Self> {
-        // Create default group if it doesn't exist
+        // Create default realm if it doesn't exist
         if database.get(Some("default".parse()?)).await.is_err() {
-            debug!("Creating default group");
+            debug!("Creating default realm");
             let db = database.get(None).await?;
             let rw = db.rw_transaction()?;
             if rw
                 .get()
-                .secondary::<GroupData>(GroupDataKey::name, "default".parse::<GroupName>()?)?
+                .secondary::<RealmData>(RealmDataKey::name, "default".parse::<RealmName>()?)?
                 .is_none()
             {
-                rw.insert(GroupData {
+                rw.insert(RealmData {
                     owner: "admin".to_string(),
                     ..Default::default()
                 });
@@ -63,41 +63,41 @@ impl GroupLayer {
             }
 
             #[cfg(feature = "server")]
-            let ca = group.insert_document(
+            let ca = realm.insert_document(
                 "ca",
-                GroupCaCert::new(
+                RealmCaCert::new(
                     instance_layer.data.value().cluster_id,
-                    group.data.name.clone(),
+                    realm.data.name.clone(),
                 )?,
             )?;
 
             #[cfg(feature = "server")]
-            group.insert_document(
+            realm.insert_document(
                 "server",
                 ca.data
                     .server_cert(instance_layer.data.value().instance_id)?,
             )?;
         }
 
-        // Load all group databases
+        // Load all realm databases
         let db = database.get(None).await?;
         let r = db.r_transaction()?;
-        for group in r.scan().primary::<GroupData>()?.all()? {
-            let group = group?;
-            database.add_group(group.name);
+        for realm in r.scan().primary::<RealmData>()?.all()? {
+            let realm = realm?;
+            database.add_realm(realm.name);
         }
 
         // Update client cert if possible
         if let Some(new_cert) = config.certificate()? {
-            if let Some(group) = r
+            if let Some(realm) = r
                 .get()
-                .secondary::<GroupData>(GroupDataKey::name, new_cert.name()?)?
+                .secondary::<RealmData>(RealmDataKey::name, new_cert.name()?)?
             {
                 // Only import if the given certificate is newer than the one
                 // already in the database.
                 // if new_cert.creation_time()? > old_cert.creation_time()? {
                 //     info!(path = %config.certificate.expect("a path was
-                // configured").display(), "Importing group certificate");
+                // configured").display(), "Importing realm certificate");
                 //     data.data.client = Some(new_cert);
                 // }
             }
@@ -109,26 +109,26 @@ impl GroupLayer {
     }
 }
 
-/// A group is a set of clients and agents that can interact. Each group has a
+/// A realm is a set of clients and agents that can interact. Each realm has a
 /// global CA certificate that signs certificates used to connect to the server.
 ///
-/// All servers have a default group called "default".
+/// All servers have a default realm called "default".
 #[derive(Serialize, Deserialize, Validate, Debug, Clone, Default, PartialEq, Eq, Data)]
 #[native_model(id = 18, version = 1)]
 #[native_db]
-pub struct GroupData {
+pub struct RealmData {
     #[primary_key]
     pub _id: DataIdentifier,
 
     #[secondary_key(unique)]
-    pub name: GroupName,
+    pub name: RealmName,
     pub owner: String,
 }
 
-/// The group's global CA cert. These have a lifetime of 100 years.
+/// The realm's global CA cert. These have a lifetime of 100 years.
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GroupCaCert {
-    pub name: GroupName,
+pub struct RealmCaCert {
+    pub name: RealmName,
     pub cert: String,
     pub key: String,
 }
@@ -136,12 +136,12 @@ pub struct GroupCaCert {
 /// Each server in the cluster gets its own server certificate. These have a
 /// lifetime 1 year.
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GroupServerCert {
+pub struct RealmServerCert {
     pub cert: String,
     pub key: String,
 }
 
-impl GroupServerCert {
+impl RealmServerCert {
     pub fn subject_name(&self) -> Result<String> {
         let pem = pem::parse(&self.cert.as_bytes())?;
         for ext in X509Certificate::from_der(pem.contents())?
@@ -168,13 +168,13 @@ impl GroupServerCert {
 /// A _client_ certificate (not as in "client" instance) used to authenticate
 /// with a server instance.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct GroupClientCert {
+pub struct RealmClientCert {
     pub ca: String,
     pub cert: String,
     pub key: String,
 }
 
-impl GroupClientCert {
+impl RealmClientCert {
     /// Read the certificate from a file.
     pub fn read<P>(path: P) -> Result<Self>
     where
@@ -215,7 +215,7 @@ impl GroupClientCert {
             .timestamp())
     }
 
-    pub fn name(&self) -> Result<GroupName> {
+    pub fn name(&self) -> Result<RealmName> {
         let pem = pem::parse(&self.cert.as_bytes())?;
         let name = X509Certificate::from_der(pem.contents())?
             .1
@@ -232,11 +232,11 @@ impl GroupClientCert {
     }
 }
 
-pub enum GroupPermission {
-    /// Right to create groups on the server
+pub enum RealmPermission {
+    /// Right to create realms on the server
     Create,
-    /// Right to view all groups on the server
+    /// Right to view all realms on the server
     List,
-    /// Right to delete any group
+    /// Right to delete any realm
     Delete,
 }

@@ -9,7 +9,7 @@ use native_db::transaction::RTransaction;
 use native_db::transaction::query::SecondaryScanIterator;
 use native_db::watch::Event;
 use native_db::{Key, Models, ToInput, ToKey};
-use sandpolis_core::{GroupName, InstanceId};
+use sandpolis_core::{RealmName, InstanceId};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::ops::Range;
@@ -27,7 +27,7 @@ pub mod config;
 pub struct DatabaseLayer {
     config: DatabaseConfig,
     models: &'static Models,
-    inner: Arc<RwLock<HashMap<Option<GroupName>, Arc<native_db::Database<'static>>>>>,
+    inner: Arc<RwLock<HashMap<Option<RealmName>, Arc<native_db::Database<'static>>>>>,
 }
 
 impl DatabaseLayer {
@@ -49,24 +49,24 @@ impl DatabaseLayer {
         })
     }
 
-    /// Load or create a new database for the given group.
-    pub async fn add_group(
+    /// Load or create a new database for the given realm.
+    pub async fn add_realm(
         &mut self,
-        name: GroupName,
+        name: RealmName,
     ) -> Result<Arc<native_db::Database<'static>>> {
         // Check for duplicates
         let mut inner = self.inner.write().await;
         if inner.contains_key(&Some(name.clone())) {
-            bail!("Duplicate group");
+            bail!("Duplicate realm");
         }
 
         let db = if let Some(path) = self.config.get_storage_dir()? {
             let path = path.join(format!("{name}.db"));
 
-            debug!(group = %name, path = %path.display(), "Initializing persistent group database");
+            debug!(realm = %name, path = %path.display(), "Initializing persistent realm database");
             Arc::new(native_db::Builder::new().create(self.models, path)?)
         } else {
-            debug!(group = %name, "Initializing ephemeral group database");
+            debug!(realm = %name, "Initializing ephemeral realm database");
             Arc::new(native_db::Builder::new().create_in_memory(self.models)?)
         };
         inner.insert(Some(name), db.clone());
@@ -74,12 +74,12 @@ impl DatabaseLayer {
         Ok(db)
     }
 
-    pub async fn get(&self, name: Option<GroupName>) -> Result<Arc<native_db::Database<'static>>> {
+    pub async fn get(&self, name: Option<RealmName>) -> Result<Arc<native_db::Database<'static>>> {
         let inner = self.inner.read().await;
         if let Some(db) = inner.get(&name) {
             return Ok(db.clone());
         }
-        bail!("Group not found");
+        bail!("Realm not found");
     }
 }
 
@@ -330,7 +330,7 @@ mod test_database {
             },
             models,
         )?;
-        database.add_group("default".parse()?).await?;
+        database.add_realm("default".parse()?).await?;
 
         let db = database.get(Some("default".parse()?)).await?;
         let watch: Watch<TestData> = Watch::singleton(db.clone())?;

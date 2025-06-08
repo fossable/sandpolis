@@ -1,7 +1,7 @@
 use anyhow::Result;
 use sandpolis::{client::tui::server_list::ServerListWidget, server::test_server};
 use sandpolis_database::TemporaryDatabase;
-use sandpolis_group::{GroupLayer, config::GroupConfig};
+use sandpolis_realm::{RealmLayer, config::RealmConfig};
 use sandpolis_instance::{InstanceId, InstanceLayer};
 use sandpolis_network::{NetworkLayer, config::NetworkLayerConfig};
 use sandpolis_server::ServerLayer;
@@ -22,11 +22,11 @@ async fn main() -> Result<()> {
                 poll: None,
             },
             temp_db.db.document("/network")?,
-            GroupLayer::new(
-                GroupConfig {
+            RealmLayer::new(
+                RealmConfig {
                     certificate: Some(test_server.endpoint_cert),
                 },
-                temp_db.db.document("/group")?,
+                temp_db.db.document("/realm")?,
                 InstanceLayer::new(temp_db.db.document("/instance")?)?,
             )?,
         )?,

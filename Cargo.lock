@@ -8879,7 +8879,6 @@ dependencies = [
  "sandpolis-deploy",
  "sandpolis-desktop",
  "sandpolis-filesystem",
- "sandpolis-group",
  "sandpolis-instance",
  "sandpolis-location",
  "sandpolis-macros",
@@ -8887,6 +8886,7 @@ dependencies = [
  "sandpolis-package",
  "sandpolis-power",
  "sandpolis-probe",
+ "sandpolis-realm",
  "sandpolis-server",
  "sandpolis-shell",
  "sandpolis-snapshot",
@@ -9027,8 +9027,8 @@ dependencies = [
  "os_info",
  "russh",
  "sandpolis-core",
- "sandpolis-group",
  "sandpolis-macros",
+ "sandpolis-realm",
  "tracing",
 ]
 
@@ -9056,44 +9056,10 @@ dependencies = [
  "fuser",
  "notify",
  "sandpolis-core",
- "sandpolis-group",
  "sandpolis-network",
+ "sandpolis-realm",
  "serde",
  "tracing",
-]
-
-[[package]]
-name = "sandpolis-group"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "axum",
- "axum-server",
- "clap",
- "futures-util",
- "native_db",
- "native_model",
- "openssl",
- "pem",
- "rcgen",
- "regex",
- "reqwest",
- "rustls",
- "rustls-pki-types",
- "sandpolis-core",
- "sandpolis-database",
- "sandpolis-instance",
- "sandpolis-macros",
- "serde",
- "serde_json",
- "tempfile",
- "time",
- "tokio",
- "tokio-rustls",
- "tower",
- "tracing",
- "validator",
- "x509-parser 0.17.0",
 ]
 
 [[package]]
@@ -9160,9 +9126,9 @@ dependencies = [
  "reqwest-websocket",
  "sandpolis-core",
  "sandpolis-database",
- "sandpolis-group",
  "sandpolis-instance",
  "sandpolis-macros",
+ "sandpolis-realm",
  "serde",
  "serde_cbor",
  "serde_json",
@@ -9197,9 +9163,9 @@ dependencies = [
  "sandpolis-client",
  "sandpolis-core",
  "sandpolis-database",
- "sandpolis-group",
  "sandpolis-instance",
  "sandpolis-network",
+ "sandpolis-realm",
  "serde",
  "tokio",
 ]
@@ -9217,6 +9183,40 @@ dependencies = [
  "sandpolis-instance",
  "vnc",
  "wol-rs",
+]
+
+[[package]]
+name = "sandpolis-realm"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "axum",
+ "axum-server",
+ "clap",
+ "futures-util",
+ "native_db",
+ "native_model",
+ "openssl",
+ "pem",
+ "rcgen",
+ "regex",
+ "reqwest",
+ "rustls",
+ "rustls-pki-types",
+ "sandpolis-core",
+ "sandpolis-database",
+ "sandpolis-instance",
+ "sandpolis-macros",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "time",
+ "tokio",
+ "tokio-rustls",
+ "tower",
+ "tracing",
+ "validator",
+ "x509-parser 0.17.0",
 ]
 
 [[package]]
