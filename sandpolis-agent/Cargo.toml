@@ -15,6 +15,7 @@ tokio-cron-scheduler = { version = "0.14.0", optional = true }
 sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
 sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
 sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
+sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 
 [features]
 agent = ["dep:tokio-cron-scheduler"]

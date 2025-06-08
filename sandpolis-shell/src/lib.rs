@@ -2,7 +2,7 @@ use anyhow::Result;
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::InstanceId;
-use sandpolis_database::{DataIdentifier, DatabaseLayer, DbTimestamp};
+use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, DbTimestamp};
 use sandpolis_macros::{Data, StreamEvent};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf};
@@ -24,7 +24,7 @@ pub struct ShellLayer {
 }
 
 impl ShellLayer {
-    pub fn new(database: DatabaseLayer) -> Result<Self> {
+    pub async fn new(database: DatabaseLayer) -> Result<Self> {
         Ok(Self {
             database,
             #[cfg(feature = "agent")]
@@ -57,7 +57,7 @@ pub enum ShellType {
     Zsh,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
 #[native_model(id = 16, version = 1)]
 #[native_db]
 pub struct ShellSessionData {

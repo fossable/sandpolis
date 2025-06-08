@@ -10,6 +10,7 @@
 //! schemes such as LUKS and on filesystems that don't natively support
 //! snapshots.
 
+use anyhow::Result;
 use sandpolis_core::InstanceId;
 use uuid::Uuid;
 
@@ -23,7 +24,14 @@ pub mod config;
 
 pub(crate) mod messages;
 
+#[derive(Clone)]
 pub struct SnapshotLayer {}
+
+impl SnapshotLayer {
+    pub async fn new() -> Result<Self> {
+        Ok(Self {})
+    }
+}
 
 /// ## Create Snapshot
 ///

@@ -20,6 +20,7 @@ sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1", optional = true }
+sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 
 [dev-dependencies]
 tempfile = "3.15.0"

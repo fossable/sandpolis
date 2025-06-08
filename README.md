@@ -23,11 +23,11 @@ virtual and controlled by a corporation, like accounts on _github.com_. Others
 have a physical component as well, like a server in your closet, Raspberry Pi,
 or laptop.
 
-All of these entities are part of your _virtual estate_ and are often
-intricately connected in various ways. As an example, you might have an SSH key
-or API token on your machine that grants access to repositories (a kind of
-digital asset) on Github. And suppose your machine also has an authorized key
-installed that allows access from another machine:
+All of these entities are part of your _virtual estate_ and are intricately
+connected in various ways. As an example, you might have an SSH key or API token
+on your machine that grants access to repositories (a kind of digital asset) on
+Github. And suppose your machine also has an authorized key installed that
+allows access from another machine:
 
 ```
 ┌──────────┐  SSH Key  ┌──────────┐  API Token  ┌───────────────────┐
@@ -37,18 +37,18 @@ installed that allows access from another machine:
                                                 └───────────────────┘
 ```
 
-If you care about those repos, then Sandpolis can map out an attack surface that
-includes both `Machine A` and `Machine B`. If `Machine A` happens to have a weak
-password or one that's shared with another website, then the attack surface is
-consequently expanded with appropriate probabilities.
+If those private repos are worth protecting, then Sandpolis can map out an
+attack surface that includes both `Machine A` and `Machine B`. If `Machine A`
+happens to have a weak password or one that's shared with another website, then
+the attack surface is consequently expanded with appropriate probabilities.
 
 Mapping these relationships automatically is possible because Sandpolis runs an
-agent on `Machine A` and `Machine B` (and has API access to Github).
+agent on `Machine A` and `Machine B`.
 
 ## Security Warning
 
 Sandpolis is an extremely high-value attack target as it provides management
-access to your virtual estate. To compensate, strong security measures are
+capabilities on your virtual estate. To compensate, strong security measures are
 available:
 
 - All connections to a server use mTLS and require a valid client certificate.
@@ -87,7 +87,7 @@ Models online/offline accounts and their relationships to agent instances.
 Enables higher-order analysis of virtual estate like attack surface mapping and
 compromise tracing.
 
-### Alert
+### Audit
 
 Triggers user notifications when certain events are detected in the Sandpolis
 network. For example, if a user's status is currently _AWAY_, an unexpected SSH
@@ -100,13 +100,11 @@ Provides access to remote desktop capabilities.
 ### Filesystem
 
 Provides read/write access to agent filesystems. The Sandpolis client can also
-mount an agent's filesystem.
-
-### Logging
+mount an agent's filesystem with FUSE.
 
 ### Package
 
-Integrates with package managers to monitor package versions.
+Integrates with package managers to monitor software versions.
 
 ### Probe
 
@@ -119,11 +117,16 @@ the gateway instance remains online).
 
 ### Shell
 
-Provides an interactive remote shell.
+Provides an interactive remote shell. Also stores customizable shell "snippets"
+that can be executed on a schedule.
 
 ### Tunnel
 
-### User
+Establishes a permanent or ephemeral TCP tunnel between arbitrary instances.
+
+### Snapshot
+
+Create and apply _cold snapshots_ via a boot agent.
 
 ## Installation
 
@@ -163,9 +166,9 @@ perform any excluded functionality.
 ```yml
 # Docker compose
 services:
-	sandpolis-server:
-		image: sandpolis/server
-		restart: unless-stopped
+  sandpolis-server:
+    image: sandpolis/server
+    restart: unless-stopped
 ```
 
 #### Install client from DockerHub

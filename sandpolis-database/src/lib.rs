@@ -86,7 +86,7 @@ impl DatabaseLayer {
 /// `Data` is what's stored in a database!
 pub trait Data
 where
-    Self: ToInput + Default + Clone + PartialEq + Send + Sync,
+    Self: ToInput + Clone + PartialEq + Send + Sync,
 {
     fn id(&self) -> DataIdentifier;
     fn set_id(&mut self, id: DataIdentifier);
@@ -191,7 +191,7 @@ impl<T: Data> Drop for Watch<T> {
     }
 }
 
-impl<T: Data + 'static> Watch<T> {
+impl<T: Data + Default + 'static> Watch<T> {
     /// Create a new `Watch` when there's only one row in the database.
     pub fn singleton(db: Arc<native_db::Database<'static>>) -> Result<Self> {
         let r = db.r_transaction()?;

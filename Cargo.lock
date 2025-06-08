@@ -8874,6 +8874,7 @@ dependencies = [
  "sandpolis-agent",
  "sandpolis-audit",
  "sandpolis-client",
+ "sandpolis-core",
  "sandpolis-database",
  "sandpolis-deploy",
  "sandpolis-desktop",
@@ -8909,9 +8910,12 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "built 0.8.0",
+ "native_db",
+ "native_model",
  "sandpolis-core",
  "sandpolis-database",
  "sandpolis-instance",
+ "sandpolis-macros",
  "serde",
  "validator",
 ]
@@ -8926,6 +8930,7 @@ dependencies = [
  "clap",
  "sandpolis-core",
  "sandpolis-database",
+ "sandpolis-macros",
  "sandpolis-network",
  "serde",
  "tokio-cron-scheduler",
@@ -8942,6 +8947,7 @@ dependencies = [
  "sandpolis-core",
  "sandpolis-database",
  "sandpolis-instance",
+ "sandpolis-macros",
  "serde",
 ]
 
@@ -9022,6 +9028,7 @@ dependencies = [
  "russh",
  "sandpolis-core",
  "sandpolis-group",
+ "sandpolis-macros",
  "tracing",
 ]
 
@@ -9155,6 +9162,7 @@ dependencies = [
  "sandpolis-database",
  "sandpolis-group",
  "sandpolis-instance",
+ "sandpolis-macros",
  "serde",
  "serde_cbor",
  "serde_json",
@@ -9169,6 +9177,11 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "axum",
+ "native_db",
+ "native_model",
+ "sandpolis-core",
+ "sandpolis-database",
+ "sandpolis-macros",
  "serde",
  "tracing",
 ]
@@ -9214,9 +9227,12 @@ dependencies = [
  "axum",
  "axum-macros",
  "clap",
+ "native_db",
+ "native_model",
  "sandpolis-core",
  "sandpolis-database",
  "sandpolis-instance",
+ "sandpolis-macros",
  "sandpolis-network",
  "serde",
  "serde_bytes",
@@ -9274,6 +9290,7 @@ dependencies = [
  "sandpolis-core",
  "sandpolis-database",
  "sandpolis-instance",
+ "sandpolis-macros",
  "sandpolis-network",
  "serde",
  "sysinfo 0.35.0",
@@ -9311,6 +9328,7 @@ dependencies = [
  "sandpolis-core",
  "sandpolis-database",
  "sandpolis-instance",
+ "sandpolis-macros",
  "sandpolis-network",
  "sandpolis-server",
  "serde",

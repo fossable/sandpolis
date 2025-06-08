@@ -1,4 +1,8 @@
 use anyhow::Result;
+use native_db::*;
+use native_model::{Model, native_model};
+use sandpolis_database::{Data, DataIdentifier};
+use sandpolis_macros::Data;
 
 // message RQ_InstallOrUpgradePackages {
 //     repeated string package = 1;
@@ -20,7 +24,7 @@ pub mod agent;
 pub struct PackageLayer {}
 
 impl PackageLayer {
-    pub fn new() -> Result<Self> {
+    pub async fn new() -> Result<Self> {
         Ok(Self {})
     }
 }
@@ -29,15 +33,20 @@ pub fn pacman() {}
 
 // pub fn packages_iter() -> impl Iterator<Item = Package> {}
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum PackageManager {
     Pacman,
     Apt,
     Nix,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
+#[native_model(id = 20, version = 1)]
+#[native_db]
 pub struct PackageManagerData {
+    #[primary_key]
+    pub _id: DataIdentifier,
+
     /// Type of package manager
     pub manager: PackageManager,
 
@@ -48,8 +57,13 @@ pub struct PackageManagerData {
     pub cached_packages: Option<u64>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
+#[native_model(id = 21, version = 1)]
+#[native_db]
 pub struct PackageData {
+    #[primary_key]
+    pub _id: DataIdentifier,
+
     /// Canonical name/identifier
     pub name: String,
 
@@ -89,7 +103,8 @@ pub struct PackageData {
     /// File contents of the package
     pub files: Option<Vec<String>>,
 
-    /// Whether the package was explicitly installed or installed as a dependency of another package
+    /// Whether the package was explicitly installed or installed as a
+    /// dependency of another package
     pub explicit: Option<bool>,
 
     /// Licenses under which the package is distributed

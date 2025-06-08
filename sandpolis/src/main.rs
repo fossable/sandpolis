@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use axum::Router;
 use axum::routing::{any, get, post};
 use clap::Parser;
@@ -7,7 +7,7 @@ use sandpolis::InstanceState;
 use sandpolis::cli::{CommandLine, Commands};
 use sandpolis::config::Configuration;
 use sandpolis_core::InstanceType;
-use sandpolis_database::Database;
+use sandpolis_database::DatabaseLayer;
 use std::fs::OpenOptions;
 use std::process::ExitCode;
 use tokio::task::JoinSet;
@@ -94,7 +94,7 @@ async fn main() -> Result<ExitCode> {
     // Load state
     let state = InstanceState::new(
         config.clone(),
-        DatabaseLayer::new(&config.database.storage)?,
+        DatabaseLayer::new(config.database.clone(), &*sandpolis::MODELS)?,
     )
     .await?;
 

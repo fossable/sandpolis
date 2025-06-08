@@ -5,7 +5,7 @@ use native_db::Models;
 use sandpolis_database::DatabaseLayer;
 use sandpolis_instance::LayerVersion;
 use serde::{Deserialize, Serialize};
-use std::{cell::LazyCell, collections::HashMap};
+use std::{cell::LazyCell, collections::HashMap, sync::LazyLock};
 use strum::EnumIter;
 
 pub mod cli;
@@ -53,24 +53,27 @@ pub struct InstanceState {
 }
 
 impl InstanceState {
-    pub async fn new(config: Configuration, db: DatabaseLayer) -> Result<Self> {
+    pub async fn new(config: Configuration, database: DatabaseLayer) -> Result<Self> {
         // Create all the configured layers, starting with the most foundational
 
-        let instance = sandpolis_instance::InstanceLayer::new(db.clone())?;
+        let instance = sandpolis_instance::InstanceLayer::new(database.clone()).await?;
 
-        let group = sandpolis_group::GroupLayer::new(config.group, db.clone(), instance.clone())?;
+        let group =
+            sandpolis_group::GroupLayer::new(config.group, database.clone(), instance.clone())
+                .await?;
 
         let network =
-            sandpolis_network::NetworkLayer::new(config.network, db.clone(), group.clone())?;
+            sandpolis_network::NetworkLayer::new(config.network, database.clone(), group.clone())
+                .await?;
 
-        let user = sandpolis_user::UserLayer::new(db.clone())?;
+        let user = sandpolis_user::UserLayer::new(database.clone())?;
 
-        let agent = sandpolis_agent::AgentLayer::new(db.clone()).await?;
+        let agent = sandpolis_agent::AgentLayer::new(database.clone()).await?;
 
-        let server = sandpolis_server::ServerLayer::new(db.clone(), network.clone())?;
+        let server = sandpolis_server::ServerLayer::new(database.clone(), network.clone())?;
 
         #[cfg(feature = "layer-package")]
-        let package = sandpolis_package::PackageLayer::new()?;
+        let package = sandpolis_package::PackageLayer::new().await?;
 
         #[cfg(feature = "layer-power")]
         let power = sandpolis_power::PowerLayer {
@@ -78,22 +81,23 @@ impl InstanceState {
         };
 
         #[cfg(feature = "layer-shell")]
-        let shell = sandpolis_shell::ShellLayer::new(db.clone())?;
+        let shell = sandpolis_shell::ShellLayer::new(database.clone()).await?;
 
         #[cfg(feature = "layer-sysinfo")]
-        let sysinfo = sandpolis_sysinfo::SysinfoLayer::new(db.clone())?;
+        let sysinfo =
+            sandpolis_sysinfo::SysinfoLayer::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "layer-filesystem")]
-        let filesystem = sandpolis_filesystem::FilesystemLayer::new()?;
+        let filesystem = sandpolis_filesystem::FilesystemLayer::new().await?;
 
         #[cfg(feature = "layer-desktop")]
-        let desktop = sandpolis_desktop::DesktopLayer::new()?;
-
-        #[cfg(feature = "layer-snapshot")]
-        let desktop = sandpolis_snapshot::SnapshotLayer::new()?;
+        let desktop = sandpolis_desktop::DesktopLayer::new().await?;
 
         #[cfg(feature = "layer-account")]
-        let account = sandpolis_account::AccountLayer::new()?;
+        let account = sandpolis_account::AccountLayer::new().await?;
+
+        #[cfg(feature = "layer-snapshot")]
+        let snapshot = sandpolis_snapshot::SnapshotLayer::new().await?;
 
         Ok(Self {
             #[cfg(feature = "layer-package")]
@@ -222,15 +226,15 @@ pub fn layers() -> HashMap<Layer, LayerVersion> {
     ])
 }
 
-pub static MODELS: LazyCell<Models> = LazyCell::new(|| {
+pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     let mut m = Models::new();
 
     // Network layer
     {
         m.define::<sandpolis_network::NetworkLayerData>().unwrap();
         m.define::<sandpolis_network::ConnectionData>().unwrap();
-        m.define::<sandpolis_network::ServerConnectionData>()
-            .unwrap();
+        // m.define::<sandpolis_network::ServerConnectionData>()
+        //     .unwrap();
     }
 
     // Group layer
@@ -273,7 +277,7 @@ pub static MODELS: LazyCell<Models> = LazyCell::new(|| {
             .unwrap();
         m.define::<sandpolis_sysinfo::os::OsData>().unwrap();
         m.define::<sandpolis_sysinfo::os::user::UserData>().unwrap();
-        m.define::<sandpolis_sysinfo::os::user::GroupData>()
+        m.define::<sandpolis_sysinfo::os::group::GroupData>()
             .unwrap();
         m.define::<sandpolis_sysinfo::os::mountpoint::MountpointData>()
             .unwrap();

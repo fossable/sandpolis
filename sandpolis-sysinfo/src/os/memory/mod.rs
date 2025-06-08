@@ -1,12 +1,13 @@
 use native_db::*;
 use native_model::{Model, native_model};
-use sandpolis_database::DataIdentifier;
+use sandpolis_database::{Data, DataIdentifier};
+use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "agent")]
 pub mod agent;
 
-#[derive(Clone, Serialize, Deserialize, Default, Debug, PartialEq, Eq)]
+#[derive(Clone, Serialize, Deserialize, Default, Debug, PartialEq, Data)]
 #[native_model(id = 18, version = 1)]
 #[native_db]
 pub struct MemoryData {

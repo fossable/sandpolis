@@ -4,6 +4,7 @@ use sandpolis_core::InstanceId;
 use sandpolis_database::DbTimestamp;
 use serde::{Deserialize, Serialize};
 
+pub mod group;
 pub mod memory;
 pub mod mountpoint;
 pub mod network;

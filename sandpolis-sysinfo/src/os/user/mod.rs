@@ -1,19 +1,20 @@
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::InstanceId;
-use sandpolis_database::DbTimestamp;
+use sandpolis_database::{Data, DataIdentifier, DbTimestamp};
+use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "agent")]
 pub mod agent;
 
 /// Information about an "operating-system" level user account.
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
 #[native_model(id = 4, version = 1)]
 #[native_db]
 pub struct UserData {
     #[primary_key]
-    pub _id: u32,
+    pub _id: DataIdentifier,
 
     #[secondary_key]
     pub _instance_id: InstanceId,

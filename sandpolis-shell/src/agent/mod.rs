@@ -1,26 +1,23 @@
-use std::process::Stdio;
-
+use super::ShellSessionData;
+use super::messages::{ShellSessionOutputEvent, ShellSessionRequest};
+use crate::DiscoveredShell;
 use anyhow::Result;
 use axum::extract::ws::{Message, WebSocket};
 use futures::{SinkExt, StreamExt};
 use regex::Regex;
+use sandpolis_database::{Document, Watch};
+use std::process::Stdio;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     process::{Child, Command},
 };
 use tracing::{debug, trace};
 
-use crate::DiscoveredShell;
-
-use super::ShellSessionData;
-use super::messages::{ShellSessionOutputEvent, ShellSessionRequest};
-use sandpolis_database::Document;
-
 pub mod routes;
 
 pub struct ShellSession {
     // pub id: StreamId,
-    pub data: Document<ShellSessionData>,
+    pub data: Watch<ShellSessionData>,
     pub process: Child,
 }
 

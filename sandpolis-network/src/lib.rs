@@ -11,10 +11,14 @@ use native_model::{Model, native_model};
 use reqwest::ClientBuilder;
 use reqwest_websocket::RequestBuilderExt;
 use sandpolis_core::{GroupName, InstanceId};
+use sandpolis_database::Data;
+use sandpolis_database::DataIdentifier;
 use sandpolis_database::DatabaseLayer;
 use sandpolis_database::DbTimestamp;
+use sandpolis_database::Watch;
 use sandpolis_group::GroupClientCert;
 use sandpolis_group::GroupLayer;
+use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::{ts_seconds, ts_seconds_option};
 use std::fmt::Display;
@@ -35,19 +39,24 @@ pub mod stream;
 #[cfg(feature = "server")]
 pub mod server;
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Data)]
+#[native_model(id = 27, version = 1)]
+#[native_db]
 pub struct NetworkLayerData {
+    #[primary_key]
+    pub _id: DataIdentifier,
+
     server_cooldown: ConnectionCooldown,
 }
 
 #[derive(Clone)]
 pub struct NetworkLayer {
-    database: DatabaseLayer,
+    data: Watch<NetworkLayerData>,
     pub servers: Arc<Vec<ServerConnection>>,
 }
 
 impl NetworkLayer {
-    pub fn new(
+    pub async fn new(
         config: NetworkLayerConfig,
         database: DatabaseLayer,
         group: GroupLayer,
@@ -87,7 +96,7 @@ impl NetworkLayer {
                     })
                     .collect::<Result<Vec<ServerConnection>>>()?,
             ),
-            database,
+            data: Watch::singleton(database.get(None).await?)?,
         })
     }
 
@@ -119,12 +128,12 @@ impl NetworkLayer {
 /// Convenience type to be used as return of request handler.
 pub type RequestResult<T> = Result<axum::Json<T>, axum::Json<T>>;
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
 #[native_model(id = 14, version = 1)]
 #[native_db]
 pub struct ConnectionData {
     #[primary_key]
-    pub _id: u32,
+    pub _id: DataIdentifier,
 
     #[secondary_key]
     pub _instance_id: InstanceId,
@@ -159,7 +168,7 @@ pub struct ConnectionData {
 /// A direct connection to an agent from a client.
 pub struct AgentConnection {}
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct ConnectionCooldown {
     /// Initial cooldown value
     pub initial: Duration,

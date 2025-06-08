@@ -1,12 +1,19 @@
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+use native_db::*;
+use native_model::{Model, native_model};
+use sandpolis_core::InstanceId;
+use sandpolis_database::{Data, DataIdentifier, DbTimestamp};
+use sandpolis_macros::Data;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
 #[native_model(id = 2, version = 1)]
 #[native_db]
 pub struct GroupData {
     #[primary_key]
-    pub id: u32,
+    pub _id: DataIdentifier,
 
     #[secondary_key]
-    pub instance_id: InstanceId,
+    pub _instance_id: InstanceId,
 
     /// Unsigned int64 group ID
     pub gid: u64,

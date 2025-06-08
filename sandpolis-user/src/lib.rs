@@ -8,7 +8,8 @@ use anyhow::{Result, bail};
 use native_db::*;
 use native_model::{Model, native_model};
 use regex::Regex;
-use sandpolis_database::DatabaseLayer;
+use sandpolis_database::{Data, DataIdentifier, DatabaseLayer};
+use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, ops::Deref, str::FromStr};
 use validator::{Validate, ValidationErrors};
@@ -21,8 +22,13 @@ pub mod server;
 
 pub mod messages;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct UserLayerData {}
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default, Data)]
+#[native_model(id = 22, version = 1)]
+#[native_db]
+pub struct UserLayerData {
+    #[primary_key]
+    pub _id: DataIdentifier,
+}
 
 #[derive(Clone)]
 pub struct UserLayer {
@@ -41,12 +47,12 @@ impl UserLayer {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Validate)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Validate, Data)]
 #[native_model(id = 12, version = 1)]
 #[native_db]
 pub struct UserData {
     #[primary_key]
-    pub _id: u32,
+    pub _id: DataIdentifier,
 
     pub username: UserName,
 
@@ -100,7 +106,7 @@ impl Validate for UserName {
 #[native_db]
 pub struct LoginAttempt {
     #[primary_key]
-    pub _id: u32,
+    pub _id: DataIdentifier,
 
     /// When the login attempt occurred
     pub timestamp: u64,

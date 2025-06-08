@@ -1,4 +1,17 @@
+use native_db::*;
+use native_model::{Model, native_model};
+use sandpolis_core::InstanceId;
+use sandpolis_database::{Data, DataIdentifier, DbTimestamp};
+use sandpolis_macros::Data;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
+#[native_model(id = 24, version = 1)]
+#[native_db]
 pub struct ProcessData {
+    #[primary_key]
+    pub _id: DataIdentifier,
+
     /// null
     pub name: String,
     /// null

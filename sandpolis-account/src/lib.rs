@@ -1,12 +1,31 @@
 //! This layer enables account-level management.
 
+use anyhow::Result;
+use native_db::*;
+use native_model::{Model, native_model};
 use sandpolis_core::InstanceId;
-use sandpolis_database::DatabaseLayer;
+use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Watch};
+use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
+#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Debug, Data)]
+#[native_model(id = 27, version = 1)]
+#[native_db]
+pub struct AccountLayerData {
+    #[primary_key]
+    pub _id: DataIdentifier,
+}
+
+#[derive(Clone)]
 pub struct AccountLayer {
     database: DatabaseLayer,
+}
+
+impl AccountLayer {
+    pub async fn new() -> Result<Self> {
+        Ok(Self { database: todo!() })
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

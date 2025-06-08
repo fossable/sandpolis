@@ -1,3 +1,4 @@
+use anyhow::Result;
 use axum::Router;
 
 pub(crate) mod messages;
@@ -10,5 +11,11 @@ pub mod client;
 
 #[derive(Clone)]
 pub struct DesktopLayer {}
+
+impl DesktopLayer {
+    pub async fn new() -> Result<Self> {
+        Ok(Self {})
+    }
+}
 
 // TODO agent lists available desktops for db

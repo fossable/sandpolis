@@ -1,6 +1,11 @@
 use anyhow::Result;
+use native_db::*;
+use native_model::{Model, native_model};
 use sandpolis_core::ClusterId;
-use sandpolis_database::DatabaseLayer;
+#[cfg(feature = "server")]
+use sandpolis_database::Watch;
+use sandpolis_database::{Data, DataIdentifier, DatabaseLayer};
+use sandpolis_macros::Data;
 use sandpolis_network::{NetworkLayer, ServerAddress};
 use serde::{Deserialize, Serialize};
 
@@ -14,14 +19,18 @@ pub mod client;
 
 pub mod messages;
 
-#[derive(Serialize, Deserialize, Clone, Default)]
-pub struct ServerLayerData {}
+#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Debug, Data)]
+#[native_model(id = 25, version = 1)]
+#[native_db]
+pub struct ServerLayerData {
+    #[primary_key]
+    pub _id: DataIdentifier,
+}
 
 #[derive(Clone)]
 pub struct ServerLayer {
-    database: DatabaseLayer,
     #[cfg(feature = "server")]
-    pub banner: Document<ServerBannerData>,
+    pub banner: Watch<ServerBannerData>,
     pub network: NetworkLayer,
 }
 
@@ -38,7 +47,6 @@ impl ServerLayer {
                 // Create a new banner
                 data.document("/banner")?
             },
-            database,
             network,
         })
     }
@@ -48,7 +56,7 @@ impl ServerLayer {
     }
 }
 
-/// Response bearing the server's banner
+/// Contains information about the server useful for prospective logins
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct ServerBannerData {
     pub cluster_id: ClusterId,

@@ -10,7 +10,7 @@ pub mod messages;
 pub struct FilesystemLayer {}
 
 impl FilesystemLayer {
-    pub fn new() -> Result<Self> {
+    pub async fn new() -> Result<Self> {
         Ok(Self {})
     }
 }

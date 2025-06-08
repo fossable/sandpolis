@@ -1,10 +1,11 @@
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::InstanceId;
-use sandpolis_database::{DataIdentifier, DbTimestamp};
+use sandpolis_database::{Data, DataIdentifier, DbTimestamp};
+use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
 #[native_model(id = 6, version = 1)]
 #[native_db]
 pub struct MemoryData {
