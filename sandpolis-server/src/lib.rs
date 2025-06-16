@@ -3,7 +3,7 @@ use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::ClusterId;
 #[cfg(feature = "server")]
-use sandpolis_database::Watch;
+use sandpolis_database::Resident;
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer};
 use sandpolis_macros::Data;
 use sandpolis_network::{NetworkLayer, ServerAddress};
@@ -30,7 +30,7 @@ pub struct ServerLayerData {
 #[derive(Clone)]
 pub struct ServerLayer {
     #[cfg(feature = "server")]
-    pub banner: Watch<ServerBannerData>,
+    pub banner: Resident<ServerBannerData>,
     pub network: NetworkLayer,
 }
 
@@ -74,4 +74,18 @@ pub struct ServerBannerData {
     /// Whether users are required to provide a second authentication mechanism
     /// on login
     pub mfa: bool,
+}
+
+/// A group is a collection of instances within the same realm.
+#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Debug, Data)]
+#[native_model(id = 26, version = 1)]
+#[native_db]
+pub struct GroupData {
+    #[primary_key]
+    pub _id: DataIdentifier,
+
+    #[secondary_key(unique)]
+    pub name: String,
+
+    pub members: Vec<InstanceId>,
 }

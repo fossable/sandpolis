@@ -4,15 +4,15 @@
 use crate::config::DatabaseConfig;
 use anyhow::{Result, anyhow, bail};
 use chrono::{DateTime, Utc};
-use native_db::db_type::{KeyDefinition, KeyOptions, ToKeyDefinition};
+use native_db::db_type::{KeyDefinition, KeyEntry, KeyOptions, ToKeyDefinition};
 use native_db::transaction::RTransaction;
 use native_db::transaction::query::SecondaryScanIterator;
 use native_db::watch::Event;
 use native_db::{Key, Models, ToInput, ToKey};
-use sandpolis_core::{RealmName, InstanceId};
+use sandpolis_core::{InstanceId, RealmName};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
-use std::ops::Range;
+use std::ops::{Range, RangeFrom};
 use std::path::Path;
 use std::sync::atomic::AtomicU64;
 use std::{marker::PhantomData, sync::Arc};
@@ -83,6 +83,10 @@ impl DatabaseLayer {
     }
 }
 
+// TODO if we define update, etc on these traits and pass in the db as a
+// parameter, we can use dynamic dispatch to handle different impl for versioned
+// Data instead of separate helper struct
+
 /// `Data` is what's stored in a database!
 pub trait Data
 where
@@ -114,7 +118,8 @@ where
     }
 }
 
-/// `Data` that expires and will be removed from the database.
+/// `Data` that expires and will be removed from the database after a certain
+/// time.
 pub trait ExpiringData
 where
     Self: Data,
@@ -165,12 +170,10 @@ impl ToKey for DbTimestamp {
 pub type DataIdentifier = u64;
 pub type DataExpiration = DateTime<Utc>;
 
-// TODO rename Resident?
-
 /// Maintains a real-time cache of persistent objects in the database of
 /// type `T`.
 #[derive(Clone)]
-pub struct Watch<T>
+pub struct Resident<T>
 where
     T: Data,
 {
@@ -184,14 +187,14 @@ where
     cancel_token: CancellationToken,
 }
 
-impl<T: Data> Drop for Watch<T> {
+impl<T: Data> Drop for Resident<T> {
     fn drop(&mut self) {
         self.cancel_token.cancel();
         self.db.unwatch(self.watch_id).unwrap();
     }
 }
 
-impl<T: Data + Default + 'static> Watch<T> {
+impl<T: Data + Default + 'static> Resident<T> {
     /// Create a new `Watch` when there's only one row in the database.
     pub fn singleton(db: Arc<native_db::Database<'static>>) -> Result<Self> {
         let r = db.r_transaction()?;
@@ -260,7 +263,7 @@ impl<T: Data + Default + 'static> Watch<T> {
     }
 }
 
-impl<T: Data> Watch<T> {
+impl<T: Data> Resident<T> {
     pub async fn update<F>(&self, mutator: F) -> Result<()>
     where
         F: Fn(&mut T) -> Result<()>,
@@ -284,18 +287,32 @@ impl<T: Data> Watch<T> {
     }
 }
 
-impl<T: HistoricalData> Watch<T> {
-    pub fn history(&self, range: Range<DbTimestamp>) -> Result<Vec<T>> {
+impl<T: HistoricalData> Resident<T> {
+    pub async fn history(&self, range: RangeFrom<DbTimestamp>) -> Result<Vec<T>> {
+        // Get values of all secondary keys
+        let mut secondary_keys = (*self.cache.read().await).native_db_secondary_keys();
+
+        // Remove timestamp because we're going to set that one manually
+        secondary_keys.retain(|key_def, _| *key_def != T::timestamp_key());
+
         let r = self.db.r_transaction()?;
-        Ok(r.scan()
-            .secondary(T::timestamp_key())?
-            .range(range)?
-            .try_collect()?)
+
+        // TODO use the most restrictive condition first for performance
+        let mut it = r.scan().secondary(T::timestamp_key())?.range(range)?;
+
+        for (key_def, key) in secondary_keys.into_iter() {
+            it = it.and(r.scan().secondary(key_def)?.equal(match key {
+                KeyEntry::Default(key) => key,
+                KeyEntry::Optional(key) => key.unwrap(), // TODO
+            })?);
+        }
+
+        Ok(it.try_collect()?)
     }
 }
 
 #[cfg(test)]
-mod test_database {
+mod test_resident {
     use super::*;
     use anyhow::Result;
     use native_db::Models;
@@ -318,6 +335,21 @@ mod test_database {
         pub b: String,
     }
 
+    #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default, Data, HistoricalData)]
+    #[native_model(id = 6, version = 1)]
+    #[native_db]
+    pub struct TestHistoryData {
+        #[primary_key]
+        pub _id: DataIdentifier,
+
+        #[secondary_key]
+        pub _timestamp: DbTimestamp,
+
+        #[secondary_key]
+        pub a: String,
+        pub b: String,
+    }
+
     #[tokio::test]
     async fn test_build_database() -> Result<()> {
         let models = Box::leak(Box::new(Models::new()));
@@ -333,7 +365,7 @@ mod test_database {
         database.add_realm("default".parse()?).await?;
 
         let db = database.get(Some("default".parse()?)).await?;
-        let watch: Watch<TestData> = Watch::singleton(db.clone())?;
+        let watch: Resident<TestData> = Resident::singleton(db.clone())?;
 
         // Update data a bunch of times
         for i in 1..10 {
@@ -370,15 +402,62 @@ mod test_database {
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn test_historical_data() -> Result<()> {
+        let models = Box::leak(Box::new(Models::new()));
+        models.define::<TestHistoryData>().unwrap();
+
+        let mut database = DatabaseLayer::new(
+            DatabaseConfig {
+                storage: None,
+                ephemeral: true,
+            },
+            models,
+        )?;
+
+        let db = database.get(None).await?;
+        let watch: Resident<TestHistoryData> = Resident::singleton(db.clone())?;
+
+        // Update data a bunch of times
+        for i in 1..10 {
+            watch
+                .update(|data| {
+                    data.b = format!("test {i}");
+                    Ok(())
+                })
+                .await?;
+        }
+
+        // Database should have 10 items
+        {
+            let r = db.r_transaction()?;
+            let items: Vec<TestHistoryData> = r.scan().primary()?.all()?.try_collect()?;
+            assert_eq!(items.len(), 10);
+        }
+
+        // Check history
+        {
+            assert_eq!(
+                watch
+                    .history(DbTimestamp::Latest(DateTime::default())..)
+                    .await?
+                    .len(),
+                0
+            );
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Clone)]
-pub struct TimeResVec<T>
+pub struct ResidentVec<T>
 where
-    T: HistoricalData,
+    T: Data,
 {
     db: Arc<native_db::Database<'static>>,
-    cache: Arc<RwLock<T>>,
+    cache: Arc<RwLock<Vec<Resident<T>>>>,
 
     /// Used to stop the database from sending updates
     watch_id: u64,
@@ -387,9 +466,15 @@ where
     cancel_token: CancellationToken,
 }
 
-impl<T: HistoricalData> Drop for TimeResVec<T> {
+impl<T: Data> Drop for ResidentVec<T> {
     fn drop(&mut self) {
         self.cancel_token.cancel();
         self.db.unwatch(self.watch_id).unwrap();
+    }
+}
+
+impl<T: Data> ResidentVec<T> {
+    pub fn is_detached(&self) -> bool {
+        false
     }
 }

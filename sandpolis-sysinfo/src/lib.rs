@@ -1,7 +1,7 @@
 use anyhow::Result;
 use native_db::*;
 use native_model::{Model, native_model};
-use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Watch};
+use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
 use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,7 @@ pub struct SysinfoLayerData {
 
 #[derive(Clone)]
 pub struct SysinfoLayer {
-    data: Watch<SysinfoLayerData>,
+    data: Resident<SysinfoLayerData>,
     #[cfg(feature = "agent")]
     pub memory: Arc<os::memory::agent::MemoryMonitor>,
     #[cfg(feature = "agent")]
@@ -41,7 +41,7 @@ impl SysinfoLayer {
             users: Arc::new(os::user::agent::UserCollector::new(
                 database.get(None).await?,
             )),
-            data: Watch::singleton(database.get(None).await?)?,
+            data: Resident::singleton(database.get(None).await?)?,
         })
     }
 }

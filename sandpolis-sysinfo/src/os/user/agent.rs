@@ -6,19 +6,19 @@ use crate::os::user::UserDataKey;
 use anyhow::Result;
 use native_db::Database;
 use sandpolis_agent::Collector;
-use sandpolis_database::{DataView, DbTimestamp, GroupDatabase};
+use sandpolis_database::{DataView, DbTimestamp, GroupDatabase, ResidentVec};
 use sysinfo::Users;
 
 pub struct UserCollector {
-    db: Database<'static>,
+    data: ResidentVec<UserData>,
     users: Users,
 }
 
 impl UserCollector {
-    pub fn new(db: Database<'static>) -> Self {
+    pub fn new(data: ResidentVec<UserData>) -> Self {
         Self {
             users: Users::new(),
-            db,
+            data,
         }
     }
 }
@@ -32,11 +32,11 @@ impl Collector for UserCollector {
             let db_users: Vec<UserData> = r
                 .scan()
                 .secondary(UserDataKey::_timestamp)?
-                .range(DbTimestamp::Latest(0)..=DbTimestamp::Latest(0))?
+                .equal(DbTimestamp::Latest(0))?
                 .and(
                     r.scan()
                         .secondary(UserDataKey::uid)?
-                        .range(**user.id() as u64..=**user.id() as u64)?,
+                        .equal(**user.id() as u64)?,
                 )
                 .try_collect()?;
 

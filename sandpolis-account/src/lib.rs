@@ -1,10 +1,12 @@
-//! This layer enables account-level management.
+// doc_comment! {
+//     include_str!("../README.md")
+// }
 
 use anyhow::Result;
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::InstanceId;
-use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Watch};
+use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
 use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
 use validator::Validate;

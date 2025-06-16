@@ -1,8 +1,6 @@
-//! ## User sessions
-//!
-//! Once a user is logged in successfully, a session token (JWT) is returned
-//! with a lifetime of 20 minutes. If a client determines the user is not idle,
-//! the token can be automatically renewed.
+// doc_comment! {
+//     include_str!("../README.md")
+// }
 
 use anyhow::{Result, bail};
 use native_db::*;

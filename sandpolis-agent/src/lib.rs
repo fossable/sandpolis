@@ -1,3 +1,7 @@
+// doc_comment! {
+//     include_str!("../README.md")
+// }
+
 use anyhow::Result;
 use sandpolis_database::DatabaseLayer;
 use serde::{Deserialize, Serialize};

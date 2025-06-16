@@ -5,7 +5,7 @@ use anyhow::Result;
 use axum::extract::ws::{Message, WebSocket};
 use futures::{SinkExt, StreamExt};
 use regex::Regex;
-use sandpolis_database::{Document, Watch};
+use sandpolis_database::{Document, Resident};
 use std::process::Stdio;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -17,7 +17,7 @@ pub mod routes;
 
 pub struct ShellSession {
     // pub id: StreamId,
-    pub data: Watch<ShellSessionData>,
+    pub data: Resident<ShellSessionData>,
     pub process: Child,
 }
 
@@ -121,7 +121,7 @@ impl DiscoveredShell {
             Ok(output) => match String::from_utf8(output.stdout) {
                 Ok(stdout) => {
                     if let Some(m) =
-                        Regex::new(r"version ([1-9]+\.[0-9]+\.[0-9]+\S*)")?.captures(&output)
+                        Regex::new(r"version ([1-9]+\.[0-9]+\.[0-9]+\S*)")?.captures(&stdout)
                     {
                         shells.push(DiscoveredShell {
                             shell_type: ShellType::Bash,

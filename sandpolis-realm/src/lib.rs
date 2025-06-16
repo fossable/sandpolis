@@ -1,5 +1,6 @@
-//! All connections to a server instance must be authenticated with a realm
-//! using clientAuth certificates.
+// doc_comment! {
+//     include_str!("../README.md")
+// }
 
 use anyhow::Result;
 use config::RealmConfig;
@@ -7,7 +8,7 @@ use native_db::*;
 use native_model::{Model, native_model};
 use regex::Regex;
 use sandpolis_core::{ClusterId, RealmName};
-use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Watch};
+use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
 use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
@@ -36,7 +37,7 @@ pub struct RealmLayerData {
 
 #[derive(Clone)]
 pub struct RealmLayer {
-    data: Watch<RealmLayerData>,
+    data: Resident<RealmLayerData>,
 }
 
 impl RealmLayer {
@@ -104,7 +105,7 @@ impl RealmLayer {
         }
 
         Ok(Self {
-            data: Watch::singleton(db)?,
+            data: Resident::singleton(db)?,
         })
     }
 }

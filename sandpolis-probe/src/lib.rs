@@ -1,5 +1,6 @@
-//! This layer extends management functionality out to agent-less "probe"
-//! devices.
+// doc_comment! {
+//     include_str!("../README.md")
+// }
 
 use sandpolis_core::InstanceId;
 

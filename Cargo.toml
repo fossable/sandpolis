@@ -80,10 +80,10 @@ reqwest = { version = "0.12.5", default-features = false, features = [
   "rustls-tls",
   "charset",
 ] }
-reqwest-websocket = "0.4.4"
+reqwest-websocket = "0.5.0"
 
 # Client exclusive
 ratatui = { version = "0.29.0", features = ["unstable"] }
-ratatui-image = { version = "5.0.0" }
+ratatui-image = { version = "8.0.1" }
 tui-popup = { version = "0.6.0" }
 tui-prompts = { version = "0.6.0-alpha.0" }

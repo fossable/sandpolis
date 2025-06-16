@@ -17,4 +17,4 @@ sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 [features]
 server = ["dep:qcow", "dep:tokio"]
 agent-boot = []
-agent = []
+agent = ["dep:tokio"]

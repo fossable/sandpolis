@@ -10,15 +10,15 @@ use native_db::*;
 use native_model::{Model, native_model};
 use reqwest::ClientBuilder;
 use reqwest_websocket::RequestBuilderExt;
-use sandpolis_core::{RealmName, InstanceId};
+use sandpolis_core::{InstanceId, RealmName};
 use sandpolis_database::Data;
 use sandpolis_database::DataIdentifier;
 use sandpolis_database::DatabaseLayer;
 use sandpolis_database::DbTimestamp;
-use sandpolis_database::Watch;
+use sandpolis_database::Resident;
+use sandpolis_macros::Data;
 use sandpolis_realm::RealmClientCert;
 use sandpolis_realm::RealmLayer;
-use sandpolis_macros::Data;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::{ts_seconds, ts_seconds_option};
 use std::fmt::Display;
@@ -51,7 +51,7 @@ pub struct NetworkLayerData {
 
 #[derive(Clone)]
 pub struct NetworkLayer {
-    data: Watch<NetworkLayerData>,
+    data: Resident<NetworkLayerData>,
     pub servers: Arc<Vec<ServerConnection>>,
 }
 
@@ -96,7 +96,7 @@ impl NetworkLayer {
                     })
                     .collect::<Result<Vec<ServerConnection>>>()?,
             ),
-            data: Watch::singleton(database.get(None).await?)?,
+            data: Resident::singleton(database.get(None).await?)?,
         })
     }
 
