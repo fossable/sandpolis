@@ -1,19 +1,14 @@
-use native_db::*;
-use native_model::{Model, native_model};
+use native_db::ToKey;
+use native_model::Model;
 use sandpolis_database::{Data, DataIdentifier};
-use sandpolis_macros::Data;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "agent")]
 pub mod agent;
 
-#[derive(Clone, Serialize, Deserialize, Default, Debug, PartialEq, Data)]
-#[native_model(id = 18, version = 1)]
-#[native_db]
+#[data]
 pub struct MemoryData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     /// The amount of physical RAM in bytes
     pub total: u64,
     /// The amount of physical RAM, in bytes, left unused by the system

@@ -1,4 +1,5 @@
-use crate::{LoginPassword, UserData, UserName};
+use crate::{LoginPassword, UserData};
+use sandpolis_core::UserName;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 

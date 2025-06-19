@@ -277,7 +277,7 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
             .unwrap();
         m.define::<sandpolis_sysinfo::os::OsData>().unwrap();
         m.define::<sandpolis_sysinfo::os::user::UserData>().unwrap();
-        m.define::<sandpolis_sysinfo::os::realm::RealmData>()
+        m.define::<sandpolis_sysinfo::os::group::GroupData>()
             .unwrap();
         m.define::<sandpolis_sysinfo::os::mountpoint::MountpointData>()
             .unwrap();

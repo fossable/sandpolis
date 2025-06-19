@@ -1,8 +1,9 @@
 use anyhow::Result;
-use native_db::*;
-use native_model::{Model, native_model};
+use native_db::ToKey;
+use native_model::Model;
 use sandpolis_database::{Data, DataIdentifier};
-use sandpolis_macros::Data;
+use sandpolis_macros::data;
+use serde::{Deserialize, Serialize};
 
 // message RQ_InstallOrUpgradePackages {
 //     repeated string package = 1;
@@ -14,8 +15,6 @@ use sandpolis_macros::Data;
 
 // message RQ_RefreshPackages {
 // }
-
-use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "agent")]
 pub mod agent;
@@ -33,20 +32,17 @@ pub fn pacman() {}
 
 // pub fn packages_iter() -> impl Iterator<Item = Package> {}
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 pub enum PackageManager {
     Pacman,
     Apt,
     Nix,
+    #[default]
+    Unknown,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
-#[native_model(id = 20, version = 1)]
-#[native_db]
+#[data]
 pub struct PackageManagerData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     /// Type of package manager
     pub manager: PackageManager,
 
@@ -57,13 +53,8 @@ pub struct PackageManagerData {
     pub cached_packages: Option<u64>,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
-#[native_model(id = 21, version = 1)]
-#[native_db]
+#[data]
 pub struct PackageData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     /// Canonical name/identifier
     pub name: String,
 

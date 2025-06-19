@@ -4,13 +4,13 @@
 
 use anyhow::Result;
 use config::RealmConfig;
-use native_db::*;
-use native_model::{Model, native_model};
+use native_db::ToKey;
+use native_model::Model;
 use regex::Regex;
-use sandpolis_core::{ClusterId, RealmName};
+use sandpolis_core::{ClusterId, RealmName, UserName};
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
 use sandpolis_instance::InstanceLayer;
-use sandpolis_macros::Data;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::str::FromStr;
@@ -25,13 +25,8 @@ pub mod messages;
 #[cfg(feature = "server")]
 pub mod server;
 
-#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Eq, Data)]
-#[native_model(id = 17, version = 1)]
-#[native_db]
+#[data]
 pub struct RealmLayerData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     pub client: Option<RealmClientCert>,
 }
 
@@ -56,10 +51,7 @@ impl RealmLayer {
                 .secondary::<RealmData>(RealmDataKey::name, "default".parse::<RealmName>()?)?
                 .is_none()
             {
-                rw.insert(RealmData {
-                    owner: "admin".to_string(),
-                    ..Default::default()
-                });
+                rw.insert(RealmData::default());
                 rw.commit()?;
             }
 
@@ -114,16 +106,12 @@ impl RealmLayer {
 /// global CA certificate that signs certificates used to connect to the server.
 ///
 /// All servers have a default realm called "default".
-#[derive(Serialize, Deserialize, Validate, Debug, Clone, Default, PartialEq, Eq, Data)]
-#[native_model(id = 18, version = 1)]
-#[native_db]
+#[derive(Validate)]
+#[data]
 pub struct RealmData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     #[secondary_key(unique)]
     pub name: RealmName,
-    pub owner: String,
+    pub owner: UserName,
 }
 
 /// The realm's global CA cert. These have a lifetime of 100 years.

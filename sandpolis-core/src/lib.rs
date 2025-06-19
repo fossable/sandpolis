@@ -295,3 +295,41 @@ mod test_realm_name {
         );
     }
 }
+
+/// A user's username is forever unchangable.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct UserName(String);
+
+impl Deref for UserName {
+    type Target = String;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl FromStr for UserName {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let name = UserName(s.to_string());
+        name.validate()?;
+        Ok(name)
+    }
+}
+
+impl Validate for UserName {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        if Regex::new("^[a-z0-9]{4,32}$").unwrap().is_match(&self.0) {
+            Ok(())
+        } else {
+            Err(ValidationErrors::new())
+        }
+    }
+}
+
+impl Default for UserName {
+    fn default() -> Self {
+        UserName("admin".to_string())
+    }
+}

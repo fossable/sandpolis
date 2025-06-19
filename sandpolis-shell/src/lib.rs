@@ -3,7 +3,7 @@ use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::InstanceId;
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, DbTimestamp};
-use sandpolis_macros::{Data, StreamEvent};
+use sandpolis_macros::{StreamEvent, data};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf};
 
@@ -33,7 +33,7 @@ impl ShellLayer {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug, Default)]
 pub enum ShellType {
     /// Busybox shell
     Ash,
@@ -46,34 +46,31 @@ pub enum ShellType {
     /// C shell
     Csh,
     Dash,
-    /// Fish shell
+    /// Fish shell (https://fishshell.com)
     Fish,
     /// Korn shell
     Ksh,
     Powershell,
     /// Generic POSIX shell
     Sh,
+
+    /// We couldn't figure out the shell type
+    #[default]
+    Unknown,
+
     /// Z shell
     Zsh,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
-#[native_model(id = 16, version = 1)]
-#[native_db]
+#[data]
 pub struct ShellSessionData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     #[secondary_key]
     pub _instance_id: InstanceId,
-
-    #[secondary_key]
-    pub _timestamp: DbTimestamp,
 
     pub shell_type: ShellType,
 
     /// Path to the shell's executable
-    pub shell: PathBuf,
+    pub shell: Option<PathBuf>,
 
     pub started: Option<u64>,
 

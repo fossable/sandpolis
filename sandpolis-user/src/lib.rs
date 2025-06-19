@@ -3,11 +3,12 @@
 // }
 
 use anyhow::{Result, bail};
-use native_db::*;
-use native_model::{Model, native_model};
+use native_db::ToKey;
+use native_model::Model;
 use regex::Regex;
+use sandpolis_core::UserName;
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer};
-use sandpolis_macros::Data;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, ops::Deref, str::FromStr};
 use validator::{Validate, ValidationErrors};
@@ -20,13 +21,8 @@ pub mod server;
 
 pub mod messages;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default, Data)]
-#[native_model(id = 22, version = 1)]
-#[native_db]
-pub struct UserLayerData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-}
+#[data]
+pub struct UserLayerData {}
 
 #[derive(Clone)]
 pub struct UserLayer {
@@ -45,13 +41,9 @@ impl UserLayer {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Validate, Data)]
-#[native_model(id = 12, version = 1)]
-#[native_db]
+#[derive(Validate)]
+#[data]
 pub struct UserData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     pub username: UserName,
 
     /// Whether the user is an admin
@@ -67,52 +59,15 @@ pub struct UserData {
     pub expiration: Option<i64>,
 }
 
-/// A user's username is forever unchangable.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct UserName(String);
-
-impl Deref for UserName {
-    type Target = String;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl FromStr for UserName {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        let name = UserName(s.to_string());
-        name.validate()?;
-        Ok(name)
-    }
-}
-
-impl Validate for UserName {
-    fn validate(&self) -> Result<(), ValidationErrors> {
-        if Regex::new("^[a-z0-9]{4,32}$").unwrap().is_match(&self.0) {
-            Ok(())
-        } else {
-            Err(ValidationErrors::new())
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-#[native_model(id = 13, version = 1)]
-#[native_db]
+#[data]
 pub struct LoginAttempt {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     /// When the login attempt occurred
     pub timestamp: u64,
 
     pub username: UserName,
 
     /// Source address of the login attempt
-    pub source: SocketAddr,
+    pub source: Option<SocketAddr>,
 
     /// Whether the login attempt was successful
     pub allowed: bool,

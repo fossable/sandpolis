@@ -1,9 +1,9 @@
 use anyhow::Result;
-use native_db::*;
-use native_model::{Model, native_model};
+use native_db::ToKey;
+use native_model::Model;
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
 use sandpolis_instance::InstanceLayer;
-use sandpolis_macros::Data;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -13,13 +13,8 @@ pub mod agent;
 pub mod hardware;
 pub mod os;
 
-#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Debug, Data)]
-#[native_model(id = 26, version = 1)]
-#[native_db]
-pub struct SysinfoLayerData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-}
+#[data]
+pub struct SysinfoLayerData {}
 
 #[derive(Clone)]
 pub struct SysinfoLayer {

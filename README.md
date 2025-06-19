@@ -8,8 +8,8 @@
 
 <hr>
 
-`sandpolis` is a **virtual estate monitoring/management tool** (VEM²) under
-active development.
+`sandpolis` is a **virtual estate manager** (VEM) for people with too many
+computers.
 
 <p align="center">
 	<img src="https://raw.githubusercontent.com/fossable/sandpolis/master/.github/images/overview.png" />
@@ -42,14 +42,40 @@ attack surface that includes both `Machine A` and `Machine B`. If `Machine A`
 happens to have a weak password or one that's shared with another website, then
 the attack surface is consequently expanded with appropriate probabilities.
 
-Mapping these relationships automatically is possible because Sandpolis runs an
-agent on `Machine A` and `Machine B`.
+### Why sovereignty over your virtual estate is important
+
+With virtual estates, it's not always clear who is in control of what and
+exactly how much control they have.
+
+Control is usually divided among multiple parties. For example, control of your
+Github repos is shared between you and Github Inc (and probably Microsoft too).
+Control of your physical iPhone is shared between you and Apple (with Apple
+argubly having the majority). Control of your password manager is hopefully not
+shared with anyone.
+
+While it's impossible to know exactly what percentage of control we have over
+our virtual estates, it definitely seems to be trending down. People are willing
+to give up control for features and convenience, and they didn't seem to notice
+the tradeoff.
+
+If we don't prioritize control of our virtual estates, we might eventually lose
+it altogether. Imagine an alternate reality where all we have are thin clients!
+
+Sandpolis is a tool designed to help realize as much sovereignty over your
+virtual estate as possible. It provides total control over the devices you own
+(via a local agent process) and visualizes how those devices interact with parts
+of your virtual estate that you don't directly own (such as cloud services).
+
+There's no going back to the level of computing sovereignty we had before the
+Internet, but we don't want the opposite extreme either. We want a healthy
+medium of _partial sovereignty_ where people are aware and accepting of the
+control tradeoffs they are making.
 
 ## Security Warning
 
-Sandpolis is an extremely high-value attack target as it provides management
-capabilities on your virtual estate. To compensate, strong security measures are
-available:
+The Sandpolis server is an extremely high-value attack target as it provides
+management capabilities over your virtual estate. To compensate, strong security
+measures are available:
 
 - All connections to a server use mTLS and require a valid client certificate.
   The server automatically rotates these certificates periodically, but the
@@ -60,15 +86,20 @@ available:
 - User permissions restrict what users are able to do and on what instances.
 
 Even with several layers of strong authentication, there's always risk that the
-Sandpolis server can be compromised. If the risks of introducing a "single point
-of compromise" outweigh the convenience of having a unified management
-interface, then **don't use Sandpolis**.
+server can be compromised. If the risks of introducing a _single point of
+compromise_ outweigh the convenience of having a unified management interface,
+then **you don't have to use Sandpolis**.
 
 You can choose how much trust you allocate to the Sandpolis network. For
 example, agents can optionally run in _read only_ mode which still provides
 useful monitoring information, but prohibits all write operations (including
 agent updates). This can significantly mitigate potential damage in the event of
 server compromise.
+
+## How it works
+
+Sandpolis runs an agent on your devices and allows you to interact with them
+from a client application.
 
 ## Layers
 

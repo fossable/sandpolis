@@ -1,37 +1,20 @@
 use anyhow::Result;
 use clap::Parser;
 use native_db::ToKey;
-use native_db::*;
-use native_model::{Model, native_model};
+use native_model::Model;
 use sandpolis_core::{ClusterId, InstanceId};
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
-use sandpolis_macros::Data;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::{cmp::Ordering, ops::Deref};
 
 pub mod cli;
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Data)]
-#[native_model(id = 15, version = 1)]
-#[native_db]
+#[data]
 pub struct InstanceLayerData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     pub cluster_id: ClusterId,
     pub instance_id: InstanceId,
     pub os_info: os_info::Info,
-}
-
-impl Default for InstanceLayerData {
-    fn default() -> Self {
-        Self {
-            _id: DataIdentifier::default(),
-            cluster_id: ClusterId::default(),
-            instance_id: InstanceId::default(),
-            os_info: os_info::get(),
-        }
-    }
 }
 
 #[derive(Clone)]

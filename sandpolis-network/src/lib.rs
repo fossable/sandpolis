@@ -6,8 +6,8 @@ use config::NetworkLayerConfig;
 use futures::StreamExt;
 use messages::PingRequest;
 use messages::PingResponse;
-use native_db::*;
-use native_model::{Model, native_model};
+use native_db::ToKey;
+use native_model::Model;
 use reqwest::ClientBuilder;
 use reqwest_websocket::RequestBuilderExt;
 use sandpolis_core::{InstanceId, RealmName};
@@ -16,7 +16,7 @@ use sandpolis_database::DataIdentifier;
 use sandpolis_database::DatabaseLayer;
 use sandpolis_database::DbTimestamp;
 use sandpolis_database::Resident;
-use sandpolis_macros::Data;
+use sandpolis_macros::data;
 use sandpolis_realm::RealmClientCert;
 use sandpolis_realm::RealmLayer;
 use serde::{Deserialize, Serialize};
@@ -39,13 +39,8 @@ pub mod stream;
 #[cfg(feature = "server")]
 pub mod server;
 
-#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Data)]
-#[native_model(id = 27, version = 1)]
-#[native_db]
+#[data]
 pub struct NetworkLayerData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     server_cooldown: ConnectionCooldown,
 }
 
@@ -128,18 +123,10 @@ impl NetworkLayer {
 /// Convenience type to be used as return of request handler.
 pub type RequestResult<T> = Result<axum::Json<T>, axum::Json<T>>;
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
-#[native_model(id = 14, version = 1)]
-#[native_db]
+#[data(history)]
 pub struct ConnectionData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     #[secondary_key]
     pub _instance_id: InstanceId,
-
-    #[secondary_key]
-    pub _timestamp: DbTimestamp,
 
     pub remote_instance: InstanceId,
 
@@ -155,8 +142,8 @@ pub struct ConnectionData {
     /// "Recent" write throughput in bytes/second
     pub write_throughput: u64,
 
-    pub local_socket: SocketAddr,
-    pub remote_socket: SocketAddr,
+    pub local_socket: Option<SocketAddr>,
+    pub remote_socket: Option<SocketAddr>,
 
     #[serde(with = "ts_seconds")]
     pub established: DateTime<Utc>,
@@ -168,7 +155,7 @@ pub struct ConnectionData {
 /// A direct connection to an agent from a client.
 pub struct AgentConnection {}
 
-#[derive(Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ConnectionCooldown {
     /// Initial cooldown value
     pub initial: Duration,

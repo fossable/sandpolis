@@ -1,11 +1,9 @@
 use anyhow::Result;
-use native_db::*;
-use native_model::{Model, native_model};
-use sandpolis_core::ClusterId;
-#[cfg(feature = "server")]
-use sandpolis_database::Resident;
-use sandpolis_database::{Data, DataIdentifier, DatabaseLayer};
-use sandpolis_macros::Data;
+use native_db::ToKey;
+use native_model::Model;
+use sandpolis_core::{ClusterId, InstanceId};
+use sandpolis_database::{DataIdentifier, DatabaseLayer, Resident};
+use sandpolis_macros::data;
 use sandpolis_network::{NetworkLayer, ServerAddress};
 use serde::{Deserialize, Serialize};
 
@@ -19,13 +17,8 @@ pub mod client;
 
 pub mod messages;
 
-#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Debug, Data)]
-#[native_model(id = 25, version = 1)]
-#[native_db]
-pub struct ServerLayerData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-}
+#[data]
+pub struct ServerLayerData {}
 
 #[derive(Clone)]
 pub struct ServerLayer {
@@ -77,13 +70,8 @@ pub struct ServerBannerData {
 }
 
 /// A group is a collection of instances within the same realm.
-#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Debug, Data)]
-#[native_model(id = 26, version = 1)]
-#[native_db]
+#[data]
 pub struct GroupData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     #[secondary_key(unique)]
     pub name: String,
 

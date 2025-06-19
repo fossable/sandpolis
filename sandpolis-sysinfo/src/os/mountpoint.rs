@@ -1,22 +1,14 @@
-use native_db::*;
-use native_model::{Model, native_model};
+use native_db::ToKey;
+use native_model::Model;
 use sandpolis_core::InstanceId;
 use sandpolis_database::{Data, DataIdentifier, DbTimestamp};
-use sandpolis_macros::Data;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Data)]
-#[native_model(id = 11, version = 1)]
-#[native_db]
+#[data(history)]
 pub struct MountpointData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     #[secondary_key]
     pub _instance_id: InstanceId,
-
-    #[secondary_key]
-    pub _timestamp: DbTimestamp,
 
     /// Whether the mountpoint is actually mounted. This could be false for
     /// unmounted /etc/fstab entries for example.

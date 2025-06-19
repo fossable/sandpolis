@@ -1,21 +1,14 @@
-use native_db::*;
-use native_model::{Model, native_model};
+use native_db::ToKey;
+use native_model::Model;
 use sandpolis_core::InstanceId;
 use sandpolis_database::{DataIdentifier, DbTimestamp};
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-#[native_model(id = 5, version = 1)]
-#[native_db]
+#[data(history)]
 pub struct NetworkInterfaceData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     #[secondary_key]
     pub _instance_id: InstanceId,
-
-    #[secondary_key]
-    pub _timestamp: DbTimestamp,
 
     /// The interface's name
     #[secondary_key]

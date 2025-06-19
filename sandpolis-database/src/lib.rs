@@ -90,10 +90,10 @@ impl DatabaseLayer {
 /// `Data` is what's stored in a database!
 pub trait Data
 where
-    Self: ToInput + Clone + PartialEq + Send + Sync,
+    Self: ToInput + Clone + PartialEq + Send + Sync + Default,
 {
     fn id(&self) -> DataIdentifier;
-    fn set_id(&mut self, id: DataIdentifier);
+    // fn set_id(&mut self, id: DataIdentifier);
 }
 
 /// `Data` that maintains a history of its value over time.
@@ -102,7 +102,7 @@ where
     Self: Data,
 {
     fn timestamp(&self) -> DbTimestamp;
-    fn set_timestamp(&self, timestamp: DbTimestamp);
+    // fn set_timestamp(&self, timestamp: DbTimestamp);
 
     fn timestamp_key() -> KeyDefinition<KeyOptions> {
         KeyDefinition::new(
@@ -194,7 +194,7 @@ impl<T: Data> Drop for Resident<T> {
     }
 }
 
-impl<T: Data + Default + 'static> Resident<T> {
+impl<T: Data + 'static> Resident<T> {
     /// Create a new `Watch` when there's only one row in the database.
     pub fn singleton(db: Arc<native_db::Database<'static>>) -> Result<Self> {
         let r = db.r_transaction()?;
@@ -298,16 +298,17 @@ impl<T: HistoricalData> Resident<T> {
         let r = self.db.r_transaction()?;
 
         // TODO use the most restrictive condition first for performance
-        let mut it = r.scan().secondary(T::timestamp_key())?.range(range)?;
+        // let mut it = r.scan().secondary(T::timestamp_key())?.range(range)?;
 
-        for (key_def, key) in secondary_keys.into_iter() {
-            it = it.and(r.scan().secondary(key_def)?.equal(match key {
-                KeyEntry::Default(key) => key,
-                KeyEntry::Optional(key) => key.unwrap(), // TODO
-            })?);
-        }
+        // for (key_def, key) in secondary_keys.into_iter() {
+        //     it = it.and(r.scan().secondary(key_def)?.equal(match key {
+        //         KeyEntry::Default(key) => key,
+        //         KeyEntry::Optional(key) => key.unwrap(), // TODO
+        //     })?);
+        // }
 
-        Ok(it.try_collect()?)
+        // Ok(it.try_collect()?)
+        todo!()
     }
 }
 
@@ -318,33 +319,20 @@ mod test_resident {
     use native_db::Models;
     use native_db::*;
     use native_model::{Model, native_model};
-    use sandpolis_macros::{Data, HistoricalData};
+    use sandpolis_macros::{Data, HistoricalData, data};
     use serde::{Deserialize, Serialize};
     use tokio::time::{Duration, sleep};
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default, Data)]
-    #[native_model(id = 5, version = 1)]
-    #[native_db]
+    #[data]
     pub struct TestData {
-        #[primary_key]
-        pub _id: DataIdentifier,
-
         #[secondary_key]
         pub a: String,
         #[secondary_key]
         pub b: String,
     }
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default, Data, HistoricalData)]
-    #[native_model(id = 6, version = 1)]
-    #[native_db]
+    #[data(history)]
     pub struct TestHistoryData {
-        #[primary_key]
-        pub _id: DataIdentifier,
-
-        #[secondary_key]
-        pub _timestamp: DbTimestamp,
-
         #[secondary_key]
         pub a: String,
         pub b: String,

@@ -1,7 +1,8 @@
-use native_db::*;
-use native_model::{Model, native_model};
+use native_db::ToKey;
+use native_model::Model;
 use sandpolis_core::InstanceId;
 use sandpolis_database::DbTimestamp;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 
 pub mod group;
@@ -11,27 +12,19 @@ pub mod network;
 pub mod process;
 pub mod user;
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-#[native_model(id = 1, version = 1)]
-#[native_db]
+#[data(history)]
 pub struct OsData {
-    #[primary_key]
-    pub _id: u32,
-
     #[secondary_key]
     pub _instance_id: InstanceId,
-
-    #[secondary_key]
-    pub _timestamp: DbTimestamp,
 
     /// Distribution name
     pub name: String,
     /// The operating system's family
-    pub family: os_info::Type,
+    pub family: Option<os_info::Type>,
     /// The operating system's manufacturer
     pub manufacturer: String,
     /// The operating system's register width in bits
-    pub bitness: os_info::Bitness,
+    pub bitness: Option<os_info::Bitness>,
     /// The operating system's primary version
     pub version: String,
     /// Major release version
@@ -46,18 +39,10 @@ pub struct OsData {
     pub arch: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-#[native_model(id = 3, version = 1)]
-#[native_db]
+#[data(history)]
 pub struct KernelModuleData {
-    #[primary_key]
-    pub _id: u32,
-
     #[secondary_key]
     pub _instance_id: InstanceId,
-
-    #[secondary_key]
-    pub _timestamp: DbTimestamp,
 
     /// Module name
     #[secondary_key]
