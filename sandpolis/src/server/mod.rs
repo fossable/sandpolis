@@ -6,8 +6,8 @@ use axum::{
 };
 use rand::Rng;
 use sandpolis_database::Database;
-use sandpolis_realm::RealmCaCert;
 use sandpolis_instance::{ClusterId, InstanceId};
+use sandpolis_realm::RealmClusterCert;
 use std::path::PathBuf;
 use tempfile::TempDir;
 use tempfile::tempdir;
@@ -74,7 +74,7 @@ pub async fn test_server() -> Result<TestServer> {
 
     // Generate temporary certs
     let certs = tempdir()?;
-    let ca_cert = RealmCaCert::new(cluster_id, "test".parse()?)?;
+    let ca_cert = RealmClusterCert::new(cluster_id, "test".parse()?)?;
     let server_cert = ca_cert.server_cert(instance_id)?;
     let client_cert = ca_cert.client_cert()?;
     client_cert.write(certs.path().join("client.cert"))?;

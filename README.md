@@ -47,11 +47,17 @@ the attack surface is consequently expanded with appropriate probabilities.
 With virtual estates, it's not always clear who is in control of what and
 exactly how much control they have.
 
-Control is usually divided among multiple parties. For example, control of your
-Github repos is shared between you and Github Inc (and probably Microsoft too).
-Control of your physical iPhone is shared between you and Apple (with Apple
-argubly having the majority). Control of your password manager is hopefully not
-shared with anyone.
+Control is usually divided among multiple parties. Some examples:
+
+- Control of your Github repos (a digital asset) is shared between you, Github
+  Inc, and probably Microsoft too.
+
+- Control of your iPhone (a physical asset) is shared between you and Apple.
+  Arguably, Apple has more control of it than you do.
+
+- Control of your password manager (a digital asset) is hopefully not shared
+  with anyone. SaaS password managers have some minimal level of control even
+  with proper encryption.
 
 While it's impossible to know exactly what percentage of control we have over
 our virtual estates, it definitely seems to be trending down. People are willing
@@ -99,7 +105,8 @@ server compromise.
 ## How it works
 
 Sandpolis runs an agent on your devices and allows you to interact with them
-from a client application.
+from a client application. A server mediates client/agent communication and
+stores historical data about instances in the network.
 
 ## Layers
 

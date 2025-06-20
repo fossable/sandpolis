@@ -2,8 +2,10 @@ use anyhow::Result;
 use clap::Parser;
 use clap::Subcommand;
 use colored::Colorize;
+#[cfg(feature = "server")]
+use sandpolis_core::RealmName;
 use sandpolis_database::DatabaseLayer;
-use sandpolis_realm::RealmCaCert;
+use sandpolis_realm::RealmClusterCert;
 use sandpolis_realm::RealmData;
 use sandpolis_realm::RealmLayerData;
 use std::fs::File;
@@ -33,13 +35,24 @@ pub struct CommandLine {
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     #[cfg(feature = "server")]
-    /// Generate a new endpoint certificate signed by the realm CA
-    GenerateCert {
-        /// Realm to generate the certificate for
+    /// Generate a new realm certificate for use with a client instance
+    NewClientCert {
+        /// Name of a realm that exists on the server
         #[clap(long, default_value = "default")]
-        realm: String, // TODO RealmName
+        realm: RealmName,
 
-        /// Output file path
+        /// Output file path or none for STDOUT
+        #[clap(long)]
+        output: Option<PathBuf>,
+    },
+
+    /// Generate a new realm certificate for use with an agent instance
+    NewAgentCert {
+        /// Name of a realm that exists on the server
+        #[clap(long, default_value = "default")]
+        realm: RealmName,
+
+        /// Output file path or none for STDOUT
         #[clap(long)]
         output: Option<PathBuf>,
     },
@@ -70,14 +83,14 @@ impl Commands {
     pub fn dispatch(&self, config: &Configuration) -> Result<ExitCode> {
         match self {
             #[cfg(feature = "server")]
-            Commands::GenerateCert { realm, output } => {
+            Commands::NewClientCert { realm, output } => {
                 let db = Database::new(&config.database.storage)?;
 
                 let realms: Collection<RealmData> = db
                     .document::<RealmLayerData>("/realm")?
                     .collection("/realms")?;
                 let g = realms.get_document(realm)?.expect("the realm exists");
-                let ca: Document<RealmCaCert> = g.get_document("ca")?.expect("the CA exists");
+                let ca: Document<RealmClusterCert> = g.get_document("ca")?.expect("the CA exists");
 
                 let cert = ca.data.client_cert()?;
 

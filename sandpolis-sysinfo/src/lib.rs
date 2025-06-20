@@ -29,9 +29,9 @@ impl SysinfoLayer {
     pub async fn new(database: DatabaseLayer, instance: InstanceLayer) -> Result<Self> {
         Ok(Self {
             #[cfg(feature = "agent")]
-            memory: Arc::new(os::memory::agent::MemoryMonitor::new(
-                data.document("/memory")?,
-            )),
+            memory: Arc::new(os::memory::agent::MemoryMonitor::new(Resident::singleton(
+                database.get(None).await?,
+            )?)),
             #[cfg(feature = "agent")]
             users: Arc::new(os::user::agent::UserCollector::new(
                 database.get(None).await?,

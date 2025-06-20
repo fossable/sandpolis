@@ -20,7 +20,7 @@ pub mod built_info {
 pub struct ShellLayer {
     database: DatabaseLayer,
     #[cfg(feature = "agent")]
-    sessions: Vec<ShellSession>,
+    sessions: Vec<crate::agent::ShellSession>,
 }
 
 impl ShellLayer {

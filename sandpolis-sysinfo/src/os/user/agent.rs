@@ -1,12 +1,9 @@
 use super::UserData;
-use crate::agent::layer::agent::Collector;
-use crate::core::database::{Collection, Oid};
-use crate::core::layer::sysinfo::os::user::UserData;
 use crate::os::user::UserDataKey;
 use anyhow::Result;
 use native_db::Database;
 use sandpolis_agent::Collector;
-use sandpolis_database::{DataView, DbTimestamp, GroupDatabase, ResidentVec};
+use sandpolis_database::{DbTimestamp, ResidentVec};
 use sysinfo::Users;
 
 pub struct UserCollector {

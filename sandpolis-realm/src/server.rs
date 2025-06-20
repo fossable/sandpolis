@@ -1,11 +1,10 @@
-//! Server implementation
-
-use super::RealmCaCert;
 use super::RealmClientCert;
+use super::RealmClusterCert;
 use super::RealmData;
 use super::RealmName;
 use super::RealmServerCert;
 use anyhow::Result;
+use anyhow::anyhow;
 use anyhow::bail;
 use axum::{
     Extension, extract::Request, middleware::AddExtension, middleware::Next, response::Response,
@@ -36,6 +35,7 @@ use std::io;
 use std::sync::Arc;
 use tempfile::TempDir;
 use tempfile::tempdir;
+use time::Duration;
 use time::OffsetDateTime;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_rustls::server::TlsStream;
@@ -43,7 +43,7 @@ use tower::Layer;
 use tracing::debug;
 use x509_parser::prelude::{FromDer, X509Certificate};
 
-impl super::RealmCaCert {
+impl super::RealmClusterCert {
     /// Generate a new realm CA certificate.
     pub fn new(cluster_id: ClusterId, name: RealmName) -> Result<Self> {
         // Generate key
@@ -53,6 +53,7 @@ impl super::RealmCaCert {
         let mut cert_params = CertificateParams::default();
         cert_params.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
         cert_params.not_before = OffsetDateTime::now_utc();
+        cert_params.not_after = OffsetDateTime::now_utc().saturating_add(Duration::days(36780));
         cert_params.subject_alt_names = vec![SanType::DnsName(cluster_id.to_string().try_into()?)];
 
         // TODO still needed?
@@ -68,7 +69,7 @@ impl super::RealmCaCert {
         Ok(Self {
             name,
             cert: cert.pem(),
-            key: keypair.serialize_pem(),
+            key: Some(keypair.serialize_pem()),
         })
     }
 
@@ -78,10 +79,12 @@ impl super::RealmCaCert {
         Ok(CertificateParams::from_ca_cert_der(
             &pem::parse(&self.cert)?.into_contents().try_into()?,
         )?
-        .self_signed(&KeyPair::from_pem(&self.key)?)?)
+        .self_signed(&KeyPair::from_pem(
+            &self.key.ok_or_else(|| anyhow!("No key"))?,
+        )?)?)
     }
 
-    /// Generate a new _clientAuth_ certificate signed by the realm's CA.
+    /// Generate a new realm certificate for client instances.
     pub fn client_cert(&self) -> Result<RealmClientCert> {
         // Generate key
         let keypair = KeyPair::generate()?;
@@ -92,10 +95,10 @@ impl super::RealmCaCert {
             .extended_key_usages
             .push(ExtendedKeyUsagePurpose::ClientAuth);
         cert_params.not_before = OffsetDateTime::now_utc();
+        cert_params.not_after = OffsetDateTime::now_utc().saturating_add(Duration::days(365));
         cert_params
             .distinguished_name
             .push(DnType::CommonName, &*self.name);
-        // TODO not_after of 1 month
 
         // Generate the certificate signed by the CA
         let cert = cert_params.signed_by(&keypair, &self.ca()?, &KeyPair::from_pem(&self.key)?)?;
@@ -104,11 +107,11 @@ impl super::RealmCaCert {
         Ok(RealmClientCert {
             ca: self.ca()?.pem(),
             cert: cert.pem(),
-            key: keypair.serialize_pem(),
+            key: Some(keypair.serialize_pem()),
         })
     }
 
-    /// Generate a new _serverAuth_ certificate signed by the realm's CA.
+    /// Generate a new realm certificate for server instances.
     pub fn server_cert(&self, server_id: InstanceId) -> Result<RealmServerCert> {
         if !server_id.is_type(InstanceType::Server) {
             bail!("A server ID is required");
@@ -123,18 +126,22 @@ impl super::RealmCaCert {
             .extended_key_usages
             .push(ExtendedKeyUsagePurpose::ServerAuth);
         cert_params.not_before = OffsetDateTime::now_utc();
+        cert_params.not_after = OffsetDateTime::now_utc().saturating_add(Duration::days(365));
         cert_params.subject_alt_names = vec![SanType::DnsName(
             format!("{server_id}.{}", self.name).try_into()?,
         )];
-        // TODO not_after of 1 year
 
         // Generate the certificate signed by the CA
-        let cert = cert_params.signed_by(&keypair, &self.ca()?, &KeyPair::from_pem(&self.key)?)?;
+        let cert = cert_params.signed_by(
+            &keypair,
+            &self.ca()?,
+            &KeyPair::from_pem(&self.key.ok_or_else(|| anyhow!("No key"))?)?,
+        )?;
 
         debug!(cert = ?cert.params(), "Generated new realm server certificate");
         Ok(RealmServerCert {
             cert: cert.pem(),
-            key: keypair.serialize_pem(),
+            key: Some(keypair.serialize_pem()),
         })
     }
 }
@@ -157,7 +164,7 @@ mod test_realm_ca {
 
     #[test]
     fn test_generate_and_authenticate() -> Result<()> {
-        let ca = RealmCaCert::new(ClusterId::default(), "default".parse()?)?;
+        let ca = RealmClusterCert::new(ClusterId::default(), "default".parse()?)?;
         let client = ca.client_cert()?;
         let server = ca.server_cert(InstanceId::new_server())?;
 
@@ -207,38 +214,53 @@ pub struct TlsData {
     peer_certificates: Option<Vec<CertificateDer<'static>>>,
 }
 
+/// Accepts TLS connections with realm certificates.
 #[derive(Debug, Clone)]
 pub struct RealmAcceptor(RustlsAcceptor);
 
 impl RealmAcceptor {
-    pub fn new(realms: Collection<RealmData>) -> Result<Self> {
+    pub fn new(realms: Vec<RealmData>) -> Result<Self> {
         let mut roots = RootCertStore::empty();
         let mut sni_resolver = ResolvesServerCertUsingSni::new();
 
         let config = ServerConfig::builder();
 
-        for realm in realms.documents() {
-            let realm = realm?;
-            let ca: Document<RealmCaCert> = realm.get_document("ca")?.unwrap();
-            let server: Document<RealmServerCert> = realm.get_document("server")?.unwrap();
+        for realm in realms {
+            // Add cluster cert as a CA cert to the root store
+            {
+                let cluster_cert: &RealmClusterCert = realm
+                    .cluster_cert
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("No cluster cert")?);
 
-            roots.add(pem::parse(&ca.data.cert)?.into_contents().try_into()?)?;
+                roots.add(pem::parse(&cluster_cert.cert)?.into_contents().try_into()?)?;
+            }
 
-            let private_key = config
-                .crypto_provider()
-                .key_provider
-                .load_private_key(PrivateKeyDer::from_pem_slice(&server.data.key.as_bytes())?)?;
+            // Add server cert to the SNI resolver
+            {
+                let server_cert: Document<RealmServerCert> = realm.get_document("server")?.unwrap();
+                let private_key = config.crypto_provider().key_provider.load_private_key(
+                    PrivateKeyDer::from_pem_slice(
+                        &server_cert
+                            .data
+                            .key
+                            .ok_or_else(|| anyhow!("No server key")?)
+                            .as_bytes(),
+                    )?,
+                )?;
 
-            sni_resolver.add(
-                &server.data.subject_name()?,
-                rustls::sign::CertifiedKey::new(
-                    vec![pem::parse(&server.data.cert)?.into_contents().try_into()?],
-                    private_key,
-                ),
-            )?;
-
-            // TODO
-            break;
+                sni_resolver.add(
+                    &server_cert.data.subject_name()?,
+                    rustls::sign::CertifiedKey::new(
+                        vec![
+                            pem::parse(&server_cert.data.cert)?
+                                .into_contents()
+                                .try_into()?,
+                        ],
+                        private_key,
+                    ),
+                )?;
+            }
         }
 
         Ok(Self(RustlsAcceptor::new(RustlsConfig::from_config(

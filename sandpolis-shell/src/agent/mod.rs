@@ -1,11 +1,11 @@
 use super::ShellSessionData;
 use super::messages::{ShellSessionOutputEvent, ShellSessionRequest};
-use crate::DiscoveredShell;
+use crate::{DiscoveredShell, ShellType};
 use anyhow::Result;
 use axum::extract::ws::{Message, WebSocket};
 use futures::{SinkExt, StreamExt};
 use regex::Regex;
-use sandpolis_database::{Document, Resident};
+use sandpolis_database::Resident;
 use std::process::Stdio;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},

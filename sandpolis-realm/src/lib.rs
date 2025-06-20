@@ -44,21 +44,14 @@ impl RealmLayer {
         // Create default realm if it doesn't exist
         if database.get(Some("default".parse()?)).await.is_err() {
             debug!("Creating default realm");
-            let db = database.get(None).await?;
-            let rw = db.rw_transaction()?;
-            if rw
-                .get()
-                .secondary::<RealmData>(RealmDataKey::name, "default".parse::<RealmName>()?)?
-                .is_none()
-            {
-                rw.insert(RealmData::default());
-                rw.commit()?;
-            }
+            let db = database.get(Some("default".parse()?)).await?;
+
+            let default_realm = RealmData::default();
 
             #[cfg(feature = "server")]
             let ca = realm.insert_document(
                 "ca",
-                RealmCaCert::new(
+                RealmClusterCert::new(
                     instance_layer.data.value().cluster_id,
                     realm.data.name.clone(),
                 )?,
@@ -70,6 +63,12 @@ impl RealmLayer {
                 ca.data
                     .server_cert(instance_layer.data.value().instance_id)?,
             )?;
+
+            {
+                let rw = db.rw_transaction()?;
+                rw.insert(default_realm);
+                rw.commit()?;
+            }
         }
 
         // Load all realm databases
@@ -112,22 +111,27 @@ pub struct RealmData {
     #[secondary_key(unique)]
     pub name: RealmName,
     pub owner: UserName,
+
+    pub cluster_cert: Option<RealmClusterCert>,
 }
 
-/// The realm's global CA cert. These have a lifetime of 100 years.
-#[derive(Serialize, Deserialize, Debug)]
-pub struct RealmCaCert {
+/// The realm's global CA certificate.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct RealmClusterCert {
     pub name: RealmName,
+    /// PEM-encoded certificate
     pub cert: String,
-    pub key: String,
+    /// PEM-encoded key
+    pub key: Option<String>,
 }
 
-/// Each server in the cluster gets its own server certificate. These have a
-/// lifetime 1 year.
-#[derive(Serialize, Deserialize, Debug)]
+/// Each server in the cluster gets its own server certificate.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct RealmServerCert {
+    /// PEM-encoded certificate
     pub cert: String,
-    pub key: String,
+    /// PEM-encoded key
+    pub key: Option<String>,
 }
 
 impl RealmServerCert {
@@ -154,13 +158,13 @@ impl RealmServerCert {
     }
 }
 
-/// A _client_ certificate (not as in "client" instance) used to authenticate
-/// with a server instance.
+/// Realm certificate for client instances that can authenticate with a server
+/// instance against a particular realm.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct RealmClientCert {
     pub ca: String,
     pub cert: String,
-    pub key: String,
+    pub key: Option<String>,
 }
 
 impl RealmClientCert {
@@ -190,7 +194,7 @@ impl RealmClientCert {
         // Combine cert and key together
         let mut bundle = Vec::new();
         bundle.extend_from_slice(&self.cert.as_bytes());
-        bundle.extend_from_slice(&self.key.as_bytes());
+        bundle.extend_from_slice(&self.key.ok_or_else(|| anyhow!("No key"))?.as_bytes());
         Ok(reqwest::Identity::from_pem(&bundle)?)
     }
 
@@ -221,8 +225,17 @@ impl RealmClientCert {
     }
 }
 
+/// Realm certificate for agent instances that can authenticate with a server
+/// instance against a particular realm.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct RealmAgentCert {
+    pub ca: String,
+    pub cert: String,
+    pub key: String,
+}
+
 pub enum RealmPermission {
-    /// Right to create realms on the server
+    /// Right to create new realms on the server
     Create,
     /// Right to view all realms on the server
     List,
