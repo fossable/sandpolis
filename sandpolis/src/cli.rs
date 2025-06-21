@@ -2,7 +2,6 @@ use anyhow::Result;
 use clap::Parser;
 use clap::Subcommand;
 use colored::Colorize;
-#[cfg(feature = "server")]
 use sandpolis_core::RealmName;
 use sandpolis_database::DatabaseLayer;
 use sandpolis_realm::RealmClusterCert;
@@ -46,6 +45,7 @@ pub enum Commands {
         output: Option<PathBuf>,
     },
 
+    #[cfg(feature = "server")]
     /// Generate a new realm certificate for use with an agent instance
     NewAgentCert {
         /// Name of a realm that exists on the server

@@ -223,6 +223,9 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
 /// Hash a struct name to obtain the unique id
 fn struct_name_to_id(name: &str) -> u32 {
     let mut hasher = DefaultHasher::new();
+    std::env::var("CARGO_PKG_NAME")
+        .expect("Crate name not found")
+        .hash(&mut hasher);
     name.hash(&mut hasher);
     (hasher.finish() & 0xFFFF_FFFF) as u32
 }

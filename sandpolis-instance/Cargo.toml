@@ -21,6 +21,6 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 
 [features]
-agent = []
-client = []
-server = []
+agent = ["sandpolis-core/agent"]
+client = ["sandpolis-core/client"]
+server = ["sandpolis-core/server"]

@@ -178,7 +178,7 @@ where
     T: Data,
 {
     db: Arc<native_db::Database<'static>>,
-    cache: Arc<RwLock<T>>,
+    inner: Arc<RwLock<T>>,
 
     /// Used to stop the database from sending updates
     watch_id: u64,
@@ -251,7 +251,7 @@ impl<T: Data + 'static> Resident<T> {
         });
 
         Ok(Self {
-            cache,
+            inner: cache,
             watch_id,
             cancel_token,
             db,
@@ -259,7 +259,11 @@ impl<T: Data + 'static> Resident<T> {
     }
 
     pub async fn read(&self) -> RwLockReadGuard<'_, T> {
-        self.cache.read().await
+        self.inner.read().await
+    }
+
+    pub async fn write(&self) -> RwLockWriteGuard<'_, T> {
+        self.inner.write().await
     }
 }
 
@@ -268,7 +272,7 @@ impl<T: Data> Resident<T> {
     where
         F: Fn(&mut T) -> Result<()>,
     {
-        let cache = self.cache.read().await;
+        let cache = self.inner.read().await;
         let mut next = cache.clone();
         mutator(&mut next)?;
 
@@ -279,7 +283,7 @@ impl<T: Data> Resident<T> {
 
             drop(cache);
 
-            let mut cache = self.cache.write().await;
+            let mut cache = self.inner.write().await;
             *cache = next;
         }
 
@@ -290,7 +294,7 @@ impl<T: Data> Resident<T> {
 impl<T: HistoricalData> Resident<T> {
     pub async fn history(&self, range: RangeFrom<DbTimestamp>) -> Result<Vec<T>> {
         // Get values of all secondary keys
-        let mut secondary_keys = (*self.cache.read().await).native_db_secondary_keys();
+        let mut secondary_keys = (*self.inner.read().await).native_db_secondary_keys();
 
         // Remove timestamp because we're going to set that one manually
         secondary_keys.retain(|key_def, _| *key_def != T::timestamp_key());
@@ -445,7 +449,7 @@ where
     T: Data,
 {
     db: Arc<native_db::Database<'static>>,
-    cache: Arc<RwLock<Vec<Resident<T>>>>,
+    inner: Arc<RwLock<Vec<Resident<T>>>>,
 
     /// Used to stop the database from sending updates
     watch_id: u64,
@@ -464,5 +468,13 @@ impl<T: Data> Drop for ResidentVec<T> {
 impl<T: Data> ResidentVec<T> {
     pub fn is_detached(&self) -> bool {
         false
+    }
+
+    pub async fn read(&self) -> RwLockReadGuard<'_, Vec<Resident<T>>> {
+        self.inner.read().await
+    }
+
+    pub async fn write(&self) -> RwLockWriteGuard<'_, Vec<Resident<T>>> {
+        self.inner.write().await
     }
 }

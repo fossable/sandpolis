@@ -15,13 +15,8 @@ Entries in the database (uncreatively called `Data`) are defined by Rust
 structs:
 
 ```rs
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Data)]
-#[native_model(id = 15, version = 1)]
-#[native_db]
+#[data]
 pub struct ExampleData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     pub value: u32,
 }
 ```

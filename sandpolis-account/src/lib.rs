@@ -7,17 +7,12 @@ use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::InstanceId;
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
-use sandpolis_macros::Data;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Debug, Data)]
-#[native_model(id = 27, version = 1)]
-#[native_db]
-pub struct AccountLayerData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-}
+#[data]
+pub struct AccountLayerData {}
 
 #[derive(Clone)]
 pub struct AccountLayer {
@@ -25,8 +20,8 @@ pub struct AccountLayer {
 }
 
 impl AccountLayer {
-    pub async fn new() -> Result<Self> {
-        Ok(Self { database: todo!() })
+    pub async fn new(database: DatabaseLayer) -> Result<Self> {
+        Ok(Self { database })
     }
 }
 

@@ -35,7 +35,7 @@ impl AgentLayer {
 
 /// Polls data periodically.
 pub trait Collector {
-    fn refresh(&mut self) -> Result<()>;
+    async fn refresh(&mut self) -> Result<()>;
     //start
     //stop
 }

@@ -7,7 +7,8 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "agent")]
 pub mod agent;
 
-#[data]
+// TODO id conflict
+#[data(id = 1000)]
 pub struct MemoryData {
     /// The amount of physical RAM in bytes
     pub total: u64,

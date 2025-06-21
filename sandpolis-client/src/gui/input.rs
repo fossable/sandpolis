@@ -1,3 +1,5 @@
+use super::{CurrentLayer, ZoomLevel};
+use crate::core::layer::Layer;
 use bevy::{
     input::{
         gestures::RotationGesture,
@@ -6,12 +8,7 @@ use bevy::{
     },
     prelude::*,
 };
-use bevy_egui::EguiContexts;
 use std::ops::Range;
-
-use crate::core::layer::Layer;
-
-use super::{CurrentLayer, ZoomLevel};
 
 #[derive(Resource)]
 pub struct MousePressed(pub bool);
@@ -127,7 +124,7 @@ pub fn handle_camera(
 
 /// Show a help window with keyboard shortcuts.
 pub fn handle_keymap(
-    mut contexts: EguiContexts,
+    // mut contexts: EguiContexts,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut windows: Query<&mut Window>,
 ) {
@@ -135,30 +132,30 @@ pub fn handle_keymap(
         let window_size = windows.single_mut().size();
 
         // TODO separate window for layers and highlight active (HUD)
-        egui::Window::new("Keyboard shortcuts")
-            .id(egui::Id::new("keymap"))
-            .pivot(egui::Align2::CENTER_CENTER)
-            .resizable(false)
-            .movable(false)
-            .collapsible(false)
-            .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y / 2.0))
-            .show(contexts.ctx_mut(), |ui| {
-                ui.label("W  -  Pan camera upwards");
-                ui.label("A  -  Pan camera upwards");
-                ui.label("S  -  Pan camera upwards");
-                ui.label("D  -  Pan camera upwards");
-                ui.label(">  -  Next layer");
-                ui.label("<  -  Previous layer");
-                ui.label("M  -  Meta layer");
-                ui.label("F  -  Filesystem layer");
-            });
+        // egui::Window::new("Keyboard shortcuts")
+        //     .id(egui::Id::new("keymap"))
+        //     .pivot(egui::Align2::CENTER_CENTER)
+        //     .resizable(false)
+        //     .movable(false)
+        //     .collapsible(false)
+        //     .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y /
+        // 2.0))     .show(contexts.ctx_mut(), |ui| {
+        //         ui.label("W  -  Pan camera upwards");
+        //         ui.label("A  -  Pan camera upwards");
+        //         ui.label("S  -  Pan camera upwards");
+        //         ui.label("D  -  Pan camera upwards");
+        //         ui.label(">  -  Next layer");
+        //         ui.label("<  -  Previous layer");
+        //         ui.label("M  -  Meta layer");
+        //         ui.label("F  -  Filesystem layer");
+        //     });
     }
 }
 
 /// Switch to another layer from keypress
 pub fn handle_layer_change(
     commands: Commands,
-    mut contexts: EguiContexts,
+    // mut contexts: EguiContexts,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut current_layer: ResMut<CurrentLayer>,
     time: Res<Time>,
@@ -187,16 +184,16 @@ pub fn handle_layer_change(
     if !timer.tick(time.delta()).finished() {
         let window_size = windows.single_mut().size();
         // TODO util
-        egui::Window::new("Current layer")
-            .id(egui::Id::new("current_layer"))
-            .pivot(egui::Align2::CENTER_CENTER)
-            .resizable(false)
-            .movable(false)
-            .collapsible(false)
-            .title_bar(false)
-            .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y - 30.0))
-            .show(contexts.ctx_mut(), |ui| {
-                ui.label(format!("{:?}", **current_layer));
-            });
+        // egui::Window::new("Current layer")
+        //     .id(egui::Id::new("current_layer"))
+        //     .pivot(egui::Align2::CENTER_CENTER)
+        //     .resizable(false)
+        //     .movable(false)
+        //     .collapsible(false)
+        //     .title_bar(false)
+        //     .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y -
+        // 30.0))     .show(contexts.ctx_mut(), |ui| {
+        //         ui.label(format!("{:?}", **current_layer));
+        //     });
     }
 }

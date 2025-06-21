@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_egui::EguiContexts;
 use bevy_rapier2d::{
     dynamics::RigidBody,
     geometry::{Collider, Restitution},
@@ -51,7 +50,7 @@ pub struct WindowStack {}
 
 pub fn handle_window_stacks(
     commands: Commands,
-    mut contexts: EguiContexts,
+    // mut contexts: EguiContexts,
     mut nodes: Query<(&mut Transform, (&InstanceId, &WindowStack)), With<InstanceId>>,
     mut windows: Query<&mut Window>,
     cameras: Query<&Transform, (With<Camera2d>, Without<InstanceId>)>,
@@ -59,17 +58,17 @@ pub fn handle_window_stacks(
     let window_size = windows.single_mut().size();
     let camera_transform = cameras.single();
 
-    for (transform, (id, window_stack)) in nodes.iter_mut() {
-        egui::Window::new("Hello")
-            .movable(false)
-            .resizable(false)
-            .pivot(egui::Align2::CENTER_TOP)
-            .current_pos(egui::Pos2::new(
-                window_size.x / 2.0 + transform.translation.x - camera_transform.translation.x,
-                window_size.y / 2.0 + transform.translation.y + camera_transform.translation.y,
-            ))
-            .show(contexts.ctx_mut(), |ui| {
-                ui.label("world");
-            });
-    }
+    // for (transform, (id, window_stack)) in nodes.iter_mut() {
+    //     egui::Window::new("Hello")
+    //         .movable(false)
+    //         .resizable(false)
+    //         .pivot(egui::Align2::CENTER_TOP)
+    //         .current_pos(egui::Pos2::new(
+    //             window_size.x / 2.0 + transform.translation.x -
+    // camera_transform.translation.x,             window_size.y / 2.0 +
+    // transform.translation.y + camera_transform.translation.y,         ))
+    //         .show(contexts.ctx_mut(), |ui| {
+    //             ui.label("world");
+    //         });
+    // }
 }

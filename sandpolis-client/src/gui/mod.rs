@@ -23,7 +23,7 @@ pub struct CurrentLayer(Layer);
 pub struct ZoomLevel(f32);
 
 /// Initialize and start rendering the UI.
-pub async fn main(args: CommandLine) -> Result<()> {
+pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let mut app = App::new();
     app.add_plugins(
         DefaultPlugins
@@ -82,7 +82,7 @@ fn setup(
     mut rapier_config: Query<&mut RapierConfiguration>,
     asset_server: Res<AssetServer>,
     db: Res<Database>,
-    contexts: EguiContexts,
+    // contexts: EguiContexts,
 ) {
     for mut rapier_config in &mut rapier_config {
         rapier_config.gravity = Vec2::ZERO;

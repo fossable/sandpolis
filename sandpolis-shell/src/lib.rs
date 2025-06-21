@@ -5,7 +5,9 @@ use sandpolis_core::InstanceId;
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, DbTimestamp};
 use sandpolis_macros::{StreamEvent, data};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use std::{collections::HashMap, path::PathBuf};
+use tokio::sync::Mutex;
 
 #[cfg(feature = "agent")]
 pub mod agent;
@@ -20,7 +22,7 @@ pub mod built_info {
 pub struct ShellLayer {
     database: DatabaseLayer,
     #[cfg(feature = "agent")]
-    sessions: Vec<crate::agent::ShellSession>,
+    sessions: Arc<Mutex<Vec<crate::agent::ShellSession>>>,
 }
 
 impl ShellLayer {
@@ -28,7 +30,7 @@ impl ShellLayer {
         Ok(Self {
             database,
             #[cfg(feature = "agent")]
-            sessions: Vec::new(),
+            sessions: Arc::new(Mutex::new(Vec::new())),
         })
     }
 }
@@ -48,7 +50,7 @@ pub enum ShellType {
     Dash,
     /// Fish shell (https://fishshell.com)
     Fish,
-    /// Korn shell
+    /// Korn shell (http://kornshell.com)
     Ksh,
     Powershell,
     /// Generic POSIX shell

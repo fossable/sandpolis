@@ -3,16 +3,23 @@
 // }
 
 use anyhow::Result;
+use anyhow::anyhow;
+use anyhow::bail;
 use config::RealmConfig;
 use native_db::ToKey;
 use native_model::Model;
+use pem::Pem;
+use pem::encode;
 use regex::Regex;
 use sandpolis_core::{ClusterId, RealmName, UserName};
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
 use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::fmt::Display;
+use std::fs::File;
+use std::io::Write;
 use std::str::FromStr;
 use std::{ops::Deref, path::Path};
 use tracing::{debug, info};
@@ -41,42 +48,41 @@ impl RealmLayer {
         mut database: DatabaseLayer,
         instance: InstanceLayer,
     ) -> Result<Self> {
-        // Create default realm if it doesn't exist
-        if database.get(Some("default".parse()?)).await.is_err() {
-            debug!("Creating default realm");
-            let db = database.get(Some("default".parse()?)).await?;
-
-            let default_realm = RealmData::default();
-
-            #[cfg(feature = "server")]
-            let ca = realm.insert_document(
-                "ca",
-                RealmClusterCert::new(
-                    instance_layer.data.value().cluster_id,
-                    realm.data.name.clone(),
-                )?,
-            )?;
-
-            #[cfg(feature = "server")]
-            realm.insert_document(
-                "server",
-                ca.data
-                    .server_cert(instance_layer.data.value().instance_id)?,
-            )?;
-
-            {
-                let rw = db.rw_transaction()?;
-                rw.insert(default_realm);
-                rw.commit()?;
-            }
-        }
-
         // Load all realm databases
         let db = database.get(None).await?;
         let r = db.r_transaction()?;
         for realm in r.scan().primary::<RealmData>()?.all()? {
             let realm = realm?;
-            database.add_realm(realm.name);
+            database.add_realm(realm.name).await?;
+        }
+
+        // Create default realm if it doesn't exist
+        if database.get(Some(RealmName::default())).await.is_err() {
+            debug!("Creating default realm");
+            let realm_db = database.add_realm(RealmName::default()).await?;
+
+            let default_realm = RealmData::default();
+
+            #[cfg(feature = "server")]
+            {
+                let cluster_cert = RealmClusterCert::new(
+                    instance_layer.data.value().cluster_id,
+                    RealmName::default(),
+                )?;
+                let server_cert =
+                    cluster_cert.server_cert(instance_layer.data.value().instance_id)?;
+
+                let rw = realm_db.rw_transaction()?;
+                rw.insert(cluster_cert)?;
+                rw.insert(server_cert)?;
+                rw.commit()?;
+            }
+
+            {
+                let rw = db.rw_transaction()?;
+                rw.insert(default_realm)?;
+                rw.commit()?;
+            }
         }
 
         // Update client cert if possible
@@ -111,32 +117,26 @@ pub struct RealmData {
     #[secondary_key(unique)]
     pub name: RealmName,
     pub owner: UserName,
-
-    pub cluster_cert: Option<RealmClusterCert>,
 }
 
 /// The realm's global CA certificate.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[data]
 pub struct RealmClusterCert {
     pub name: RealmName,
-    /// PEM-encoded certificate
-    pub cert: String,
-    /// PEM-encoded key
-    pub key: Option<String>,
+    pub cert: Vec<u8>,
+    pub key: Option<Vec<u8>>,
 }
 
 /// Each server in the cluster gets its own server certificate.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[data]
 pub struct RealmServerCert {
-    /// PEM-encoded certificate
-    pub cert: String,
-    /// PEM-encoded key
-    pub key: Option<String>,
+    pub cert: Vec<u8>,
+    pub key: Option<Vec<u8>>,
 }
 
 impl RealmServerCert {
     pub fn subject_name(&self) -> Result<String> {
-        let pem = pem::parse(&self.cert.as_bytes())?;
+        let pem = pem::parse(&self.cert)?;
         for ext in X509Certificate::from_der(pem.contents())?
             .1
             .iter_extensions()
@@ -160,11 +160,11 @@ impl RealmServerCert {
 
 /// Realm certificate for client instances that can authenticate with a server
 /// instance against a particular realm.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[data]
 pub struct RealmClientCert {
-    pub ca: String,
-    pub cert: String,
-    pub key: Option<String>,
+    pub ca: Vec<u8>,
+    pub cert: Vec<u8>,
+    pub key: Option<Vec<u8>>,
 }
 
 impl RealmClientCert {
@@ -173,8 +173,42 @@ impl RealmClientCert {
     where
         P: AsRef<Path>,
     {
-        // TODO PEM instead of json
-        Ok(serde_json::from_slice(&std::fs::read(path)?)?)
+        let mut cert = Self::default();
+        let file = pem::parse_many(&std::fs::read(path)?)?;
+
+        if file.len() < 2 || file.len() > 3 {
+            bail!("Invalid realm certificate");
+        }
+
+        // Duplicates are not allowed
+        if file
+            .iter()
+            .map(|item| item.tag())
+            .collect::<HashSet<_>>()
+            .len()
+            != file.len()
+        {
+            bail!("Invalid realm certificate");
+        }
+
+        for item in file {
+            match item.tag() {
+                "CLUSTER CERTIFICATE" => {
+                    cert.ca = item.into_contents();
+                }
+                "CLIENT CERTIFICATE" => {
+                    cert.cert = item.into_contents();
+                }
+                "CLIENT KEY" => {
+                    cert.key = Some(item.into_contents());
+                }
+                _ => bail!("Invalid realm certificate"),
+            }
+        }
+
+        assert!(!cert.ca.is_empty());
+        assert!(!cert.cert.is_empty());
+        Ok(cert)
     }
 
     /// Write the certificate to a file.
@@ -182,25 +216,32 @@ impl RealmClientCert {
     where
         P: AsRef<Path>,
     {
-        std::fs::write(path, serde_json::to_vec(self)?)?;
+        let mut file = File::create(path)?;
+
+        file.write_all(encode(&Pem::new("CLUSTER CERTIFICATE", self.ca.clone())).as_bytes())?;
+        file.write_all(encode(&Pem::new("CLIENT CERTIFICATE", self.cert.clone())).as_bytes())?;
+
+        if let Some(key) = self.key.clone() {
+            file.write_all(encode(&Pem::new("CLIENT KEY", key)).as_bytes())?;
+        }
         Ok(())
     }
 
     pub fn ca(&self) -> Result<reqwest::Certificate> {
-        Ok(reqwest::Certificate::from_pem(self.ca.as_bytes())?)
+        Ok(reqwest::Certificate::from_pem(&self.ca)?)
     }
 
     pub fn identity(&self) -> Result<reqwest::Identity> {
         // Combine cert and key together
         let mut bundle = Vec::new();
-        bundle.extend_from_slice(&self.cert.as_bytes());
-        bundle.extend_from_slice(&self.key.ok_or_else(|| anyhow!("No key"))?.as_bytes());
+        bundle.extend_from_slice(&self.cert);
+        bundle.extend_from_slice(self.key.as_ref().ok_or_else(|| anyhow!("No key"))?);
         Ok(reqwest::Identity::from_pem(&bundle)?)
     }
 
     /// Return when the certificate was generated.
     pub fn creation_time(&self) -> Result<i64> {
-        let pem = pem::parse(&self.cert.as_bytes())?;
+        let pem = pem::parse(&self.cert)?;
         Ok(X509Certificate::from_der(pem.contents())?
             .1
             .validity
@@ -209,7 +250,7 @@ impl RealmClientCert {
     }
 
     pub fn name(&self) -> Result<RealmName> {
-        let pem = pem::parse(&self.cert.as_bytes())?;
+        let pem = pem::parse(&self.cert)?;
         let name = X509Certificate::from_der(pem.contents())?
             .1
             .subject()
@@ -225,13 +266,35 @@ impl RealmClientCert {
     }
 }
 
+#[cfg(test)]
+mod test_client_cert {
+    use super::RealmClientCert;
+
+    #[test]
+    fn test_read_write() -> Result<()> {
+        let mut temp_file = tempfile::NamedTempFile::new()?;
+
+        let cert = RealmClientCert {
+            ca: "doesn't have to be a valid cert".bytes(),
+            cert: "doesn't have to be a valid cert".bytes(),
+            key: Some("doesn't have to be a valid key".bytes()),
+            _id: 0,
+        };
+
+        cert.write(temp_file.path())?;
+
+        assert_eq!(cert, RealmClientCert::read(temp_file.path())?);
+        Ok(())
+    }
+}
+
 /// Realm certificate for agent instances that can authenticate with a server
 /// instance against a particular realm.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[data]
 pub struct RealmAgentCert {
-    pub ca: String,
-    pub cert: String,
-    pub key: String,
+    pub ca: Vec<u8>,
+    pub cert: Vec<u8>,
+    pub key: Option<Vec<u8>>,
 }
 
 pub enum RealmPermission {

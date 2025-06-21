@@ -94,7 +94,7 @@ impl InstanceState {
         let desktop = sandpolis_desktop::DesktopLayer::new().await?;
 
         #[cfg(feature = "layer-account")]
-        let account = sandpolis_account::AccountLayer::new().await?;
+        let account = sandpolis_account::AccountLayer::new(database.clone()).await?;
 
         #[cfg(feature = "layer-snapshot")]
         let snapshot = sandpolis_snapshot::SnapshotLayer::new().await?;

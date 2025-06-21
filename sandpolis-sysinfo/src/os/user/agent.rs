@@ -21,10 +21,18 @@ impl UserCollector {
 }
 
 impl Collector for UserCollector {
-    fn refresh(&mut self) -> Result<()> {
+    async fn refresh(&mut self) -> Result<()> {
         self.users.refresh();
+        trace!(info = ?self.users, "Polled user info");
 
+        let resident_users = self.data.write().await;
+
+        // Update or add any new users
         for user in self.users.list() {
+            match resident_users.iter().find(|u| u.uid == **user.id()) {
+                Some(u) => u.update(),
+                None => {}
+            }
             let r = self.db.r_transaction()?;
             let db_users: Vec<UserData> = r
                 .scan()
@@ -44,6 +52,8 @@ impl Collector for UserCollector {
                 Ok(())
             });
         }
+
+        // Remove old users
         Ok(())
     }
 }
