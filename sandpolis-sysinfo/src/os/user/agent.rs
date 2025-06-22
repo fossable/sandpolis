@@ -3,19 +3,19 @@ use crate::os::user::UserDataKey;
 use anyhow::Result;
 use native_db::Database;
 use sandpolis_agent::Collector;
-use sandpolis_database::{DbTimestamp, ResidentVec};
+use sandpolis_database::{DbTimestamp, RealmDatabase, ResidentVec};
 use sysinfo::Users;
 
 pub struct UserCollector {
-    data: ResidentVec<UserData>,
+    db: RealmDatabase,
     users: Users,
 }
 
 impl UserCollector {
-    pub fn new(data: ResidentVec<UserData>) -> Self {
+    pub fn new(db: RealmDatabase) -> Self {
         Self {
             users: Users::new(),
-            data,
+            db,
         }
     }
 }
@@ -25,7 +25,11 @@ impl Collector for UserCollector {
         self.users.refresh();
         trace!(info = ?self.users, "Polled user info");
 
-        let resident_users = self.data.write().await;
+        let users: ResidentVec<UserData> = self
+            .db
+            .query()
+            .equal(UserDataKey::uid, **user.id() as u64)
+            .latest();
 
         // Update or add any new users
         for user in self.users.list() {

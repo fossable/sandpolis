@@ -4,19 +4,19 @@
 use crate::config::DatabaseConfig;
 use anyhow::{Result, anyhow, bail};
 use chrono::{DateTime, Utc};
-use native_db::db_type::{KeyDefinition, KeyEntry, KeyOptions, ToKeyDefinition};
+use native_db::db_type::{KeyDefinition, KeyEntry, KeyOptions, KeyRange, ToKeyDefinition};
 use native_db::transaction::RTransaction;
-use native_db::transaction::query::SecondaryScanIterator;
+use native_db::transaction::query::{SecondaryScan, SecondaryScanIterator};
 use native_db::watch::Event;
 use native_db::{Key, Models, ToInput, ToKey};
 use sandpolis_core::{InstanceId, RealmName};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
-use std::ops::{Range, RangeFrom};
+use std::ops::{Range, RangeBounds, RangeFrom};
 use std::path::Path;
 use std::sync::atomic::AtomicU64;
 use std::{marker::PhantomData, sync::Arc};
-use tokio::sync::{RwLock, RwLockReadGuard};
+use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use tokio_util::sync::CancellationToken;
 use tracing::instrument::WithSubscriber;
 use tracing::{debug, trace};
@@ -27,59 +27,78 @@ pub mod config;
 pub struct DatabaseLayer {
     config: DatabaseConfig,
     models: &'static Models,
-    inner: Arc<RwLock<HashMap<Option<RealmName>, Arc<native_db::Database<'static>>>>>,
+    inner: Arc<RwLock<HashMap<RealmName, RealmDatabase>>>,
 }
 
 impl DatabaseLayer {
     pub fn new(config: DatabaseConfig, models: &'static Models) -> Result<Self> {
-        let system = if let Some(path) = config.get_storage_dir()? {
-            let path = path.join("system.db");
-            debug!(path = %path.display(), "Initializing persistent system database");
+        let default = if let Some(path) = config.get_storage_dir()? {
+            let path = path.join("default.db");
 
-            Arc::new(native_db::Builder::new().create(models, path)?)
+            debug!(path = %path.display(), "Initializing persistent default database");
+            native_db::Builder::new().create(models, path)?
         } else {
-            debug!("Initializing ephemeral system database");
-            Arc::new(native_db::Builder::new().create_in_memory(models)?)
+            debug!("Initializing ephemeral default database");
+            native_db::Builder::new().create_in_memory(models)?
         };
 
         Ok(Self {
             config,
             models,
-            inner: Arc::new(RwLock::new(HashMap::from([(None, system)]))),
+            inner: Arc::new(RwLock::new(HashMap::from([(
+                RealmName::default(),
+                RealmDatabase::new(default),
+            )]))),
         })
     }
 
-    /// Load or create a new database for the given realm.
-    pub async fn add_realm(
-        &mut self,
-        name: RealmName,
-    ) -> Result<Arc<native_db::Database<'static>>> {
-        // Check for duplicates
-        let mut inner = self.inner.write().await;
-        if inner.contains_key(&Some(name.clone())) {
-            bail!("Duplicate realm");
+    /// Get a `RealmDatabase` for the given realm.
+    pub async fn realm(&mut self, name: RealmName) -> Result<Arc<RealmDatabase>> {
+        {
+            let inner = self.inner.read().await;
+            if let Some(db) = inner.get(&name) {
+                return Ok(db.clone());
+            }
         }
+
+        let mut inner = self.inner.write().await;
 
         let db = if let Some(path) = self.config.get_storage_dir()? {
             let path = path.join(format!("{name}.db"));
 
             debug!(realm = %name, path = %path.display(), "Initializing persistent realm database");
-            Arc::new(native_db::Builder::new().create(self.models, path)?)
+            Arc::new(RealmDatabase::new(
+                native_db::Builder::new().create(self.models, path)?,
+            ))
         } else {
             debug!(realm = %name, "Initializing ephemeral realm database");
-            Arc::new(native_db::Builder::new().create_in_memory(self.models)?)
+            Arc::new(RealmDatabase::new(
+                native_db::Builder::new().create_in_memory(self.models)?,
+            ))
         };
-        inner.insert(Some(name), db.clone());
+        inner.insert(name, db.clone());
 
         Ok(db)
     }
+}
 
-    pub async fn get(&self, name: Option<RealmName>) -> Result<Arc<native_db::Database<'static>>> {
-        let inner = self.inner.read().await;
-        if let Some(db) = inner.get(&name) {
-            return Ok(db.clone());
+/// Database containing all `Data` for a particular realm.
+#[derive(Clone)]
+pub struct RealmDatabase(Arc<native_db::Database<'static>>);
+
+impl RealmDatabase {
+    fn new(inner: native_db::Database<'static>) -> Self {
+        Self(Arc::new(inner))
+    }
+
+    pub fn singleton() {}
+
+    pub fn query<T: Data>(&self) -> ResidentVecBuilder<T> {
+        ResidentVecBuilder {
+            db: self.0.clone(),
+            _phantom: PhantomData,
+            conditions: Vec::new(),
         }
-        bail!("Realm not found");
     }
 }
 
@@ -180,17 +199,21 @@ where
     db: Arc<native_db::Database<'static>>,
     inner: Arc<RwLock<T>>,
 
-    /// Used to stop the database from sending updates
-    watch_id: u64,
-
-    /// Allows the background update thread to be stopped
-    cancel_token: CancellationToken,
+    watch: Option<(u64, CancellationToken)>,
 }
 
 impl<T: Data> Drop for Resident<T> {
     fn drop(&mut self) {
-        self.cancel_token.cancel();
-        self.db.unwatch(self.watch_id).unwrap();
+        if let Some((watch_id, token)) = self.watch.as_ref() {
+            token.cancel();
+            self.db.unwatch(*watch_id).unwrap();
+        }
+    }
+}
+
+impl<T: Data> Resident<T> {
+    pub fn detached(value: T) -> Result<Self> {
+        todo!()
     }
 }
 
@@ -252,9 +275,8 @@ impl<T: Data + 'static> Resident<T> {
 
         Ok(Self {
             inner: cache,
-            watch_id,
-            cancel_token,
             db,
+            watch: Some((watch_id, cancel_token)),
         })
     }
 
@@ -451,30 +473,134 @@ where
     db: Arc<native_db::Database<'static>>,
     inner: Arc<RwLock<Vec<Resident<T>>>>,
 
-    /// Used to stop the database from sending updates
-    watch_id: u64,
-
-    /// Allows the background update thread to be stopped
-    cancel_token: CancellationToken,
+    watch: Option<(u64, CancellationToken)>,
 }
 
 impl<T: Data> Drop for ResidentVec<T> {
     fn drop(&mut self) {
-        self.cancel_token.cancel();
-        self.db.unwatch(self.watch_id).unwrap();
+        if let Some((watch_id, token)) = self.watch.as_ref() {
+            token.cancel();
+            self.db.unwatch(*watch_id).unwrap();
+        }
     }
 }
 
 impl<T: Data> ResidentVec<T> {
     pub fn is_detached(&self) -> bool {
-        false
+        self.watch.is_none()
     }
 
-    pub async fn read(&self) -> RwLockReadGuard<'_, Vec<Resident<T>>> {
-        self.inner.read().await
+    /// Create a new detached `ResidentVec` which will not receive any updates
+    /// after its created.
+    fn detached(db: Arc<native_db::Database<'static>>, conditions: Vec<Condition>) -> Result<Self> {
+        let r = db.r_transaction()?;
+        let scan = r.scan();
+
+        // We have to store these temporarily until we collect()
+        let mut scans = Vec::new();
+
+        Ok(Self {
+            inner: Arc::new(RwLock::new(
+                conditions
+                    .into_iter()
+                    .map(|condition| match condition {
+                        Condition::Equal { key, value } => {
+                            let scan = scan.secondary(key).unwrap();
+                            let it = {
+                                let it_ref = scan.equal(value).unwrap();
+                                it_ref
+                            };
+                            scans.push(scan);
+                            it
+                        }
+                        Condition::Range { key, value } => {
+                            todo!()
+                        }
+                    })
+                    .reduce(|x, y| x.and(y))
+                    .unwrap()
+                    .map(|item| item.map(|i| Resident::detached(i).unwrap()))
+                    .try_collect()?,
+            )),
+            watch: None,
+            db,
+        })
+    }
+}
+
+// Replicate some of the Vec API
+impl<T: Data> ResidentVec<T> {
+    /// Returns the number of elements in the vector, also referred to
+    /// as its 'length'.
+    pub async fn len(&self) -> usize {
+        self.inner.read().await.len()
     }
 
-    pub async fn write(&self) -> RwLockWriteGuard<'_, Vec<Resident<T>>> {
-        self.inner.write().await
+    /// Appends an element to the back of a collection.
+    pub async fn push(&self, value: T) -> Result<()> {
+        // TODO check id collision?
+        if self.watch.is_some() {
+            // Insert and let watcher update `inner`
+            let rw = self.db.rw_transaction()?;
+            rw.insert(value)?;
+            rw.commit()?;
+
+            // TODO wait for update?
+        } else {
+            // Detached, so simple append
+            self.inner.write().await.push(Resident::detached(value)?);
+        }
+
+        Ok(())
     }
+}
+
+enum Condition {
+    Equal {
+        key: KeyDefinition<KeyOptions>,
+        value: Key,
+    },
+    Range {
+        key: KeyDefinition<KeyOptions>,
+        value: KeyRange,
+    },
+}
+
+pub struct ResidentVecBuilder<T>
+where
+    T: Data,
+{
+    db: Arc<native_db::Database<'static>>,
+    _phantom: PhantomData<T>,
+    conditions: Vec<Condition>,
+}
+
+impl<T: Data> ResidentVecBuilder<T> {
+    pub fn equal(mut self, key: impl ToKeyDefinition<KeyOptions>, value: impl ToKey) -> Self {
+        self.conditions.push(Condition::Equal {
+            key: key.key_definition(),
+            value: value.to_key(),
+        });
+        self
+    }
+    pub fn range<R: RangeBounds<impl ToKey>>(
+        mut self,
+        key: impl ToKeyDefinition<KeyOptions>,
+        value: R,
+    ) -> Self {
+        self.conditions.push(Condition::Range {
+            key: key.key_definition(),
+            value: KeyRange::new(value),
+        });
+        self
+    }
+
+    pub fn current(mut self) -> Result<ResidentVec<T>> {
+        ResidentVec::detached(self.db, self.conditions)
+    }
+}
+
+impl<T: HistoricalData> ResidentVecBuilder<T> {
+    pub fn latest(mut self) {}
+    pub fn previous(mut self) {}
 }

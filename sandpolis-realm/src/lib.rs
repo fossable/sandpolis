@@ -49,7 +49,7 @@ impl RealmLayer {
         instance: InstanceLayer,
     ) -> Result<Self> {
         // Load all realm databases
-        let db = database.get(None).await?;
+        let db = database.get(None).await?; // TODO default realm
         let r = db.r_transaction()?;
         for realm in r.scan().primary::<RealmData>()?.all()? {
             let realm = realm?;
@@ -110,7 +110,8 @@ impl RealmLayer {
 /// A realm is a set of clients and agents that can interact. Each realm has a
 /// global CA certificate that signs certificates used to connect to the server.
 ///
-/// All servers have a default realm called "default".
+/// All servers have a default realm called "default". All `RealmData` entries
+/// are stored in the default realm.
 #[derive(Validate)]
 #[data]
 pub struct RealmData {
