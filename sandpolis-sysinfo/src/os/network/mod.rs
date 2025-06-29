@@ -5,7 +5,7 @@ use sandpolis_database::{Data, DataIdentifier, DbTimestamp};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 
-#[data]
+#[data(instance)]
 pub struct NetworkData {
     /// The host's hostname
     pub hostname: String,

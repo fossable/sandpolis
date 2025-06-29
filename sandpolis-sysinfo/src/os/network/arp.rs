@@ -1,3 +1,4 @@
+#[data(instance)]
 pub struct ArpEntryData {
     /// IPv4 address target
     pub address: String,

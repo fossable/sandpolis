@@ -1,3 +1,4 @@
+#[data(instance)]
 pub struct UsbDeviceData {
     /// null
     pub name: String,

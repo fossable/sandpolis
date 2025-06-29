@@ -294,6 +294,7 @@ pub enum ServerStratum {
     /// leader voting.
     Local,
 
+    // TODO only one?
     /// This server maintains a complete copy of all data in the cluster. Global
     /// stratum (GS) servers connect to every other GS server (fully-connected)
     /// for data replication and leader election.
@@ -347,4 +348,9 @@ impl Display for ServerAddress {
             ServerAddress::Ip(ip) => f.write_str(&ip.to_string()),
         }
     }
+}
+
+/// Unidirectional share of `Data` between two instances.
+pub struct ShareData {
+    // transfer_ownership: bool
 }

@@ -218,7 +218,7 @@ mod test_instance_id {
 
 /// Realms have unique names and are shared across the entire cluster. Realm
 /// names cannot be changed after they are created.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct RealmName(String);
 
 impl Default for RealmName {

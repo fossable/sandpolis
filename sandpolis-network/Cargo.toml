@@ -27,11 +27,7 @@ serde_with = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
-openraft = { git = "https://github.com/databendlabs/openraft", optional = true, features = [
-  "serde",
-  "type-alias",
-] }
 
 [features]
 agent = []
-server = ["dep:openraft"]
+server = []

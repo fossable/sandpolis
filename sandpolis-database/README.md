@@ -21,7 +21,7 @@ pub struct ExampleData {
 }
 ```
 
-In the database, `Data` structs are stored as key-value pairs.
+In the database, `Data` are stored as key-value pairs.
 
 #### Resident `Data`
 
@@ -30,3 +30,5 @@ There are two types to simplify this:
 
 - `Resident`
 - `ResidentVec`
+
+#### `Data` ownership

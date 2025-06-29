@@ -1,10 +1,9 @@
 use proc_macro::TokenStream;
-use proc_macro2::Span;
 use quote::quote;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use syn::{
-    self, DeriveInput, Field, Fields, Ident, ItemStruct, LitInt, Path, Token,
-    meta::ParseNestedMeta, parse::Parser, parse_macro_input,
+    self, DeriveInput, Field, Fields, ItemStruct, LitInt, Path, meta::ParseNestedMeta,
+    parse::Parser, parse_macro_input,
 };
 
 #[proc_macro_derive(StreamEvent)]
@@ -28,7 +27,33 @@ pub fn derive_event(input: TokenStream) -> TokenStream {
 
 #[proc_macro_derive(Data)]
 pub fn derive_data(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
+    let input = parse_macro_input!(input as ItemStruct);
+
+    let expiration = if input
+        .fields
+        .iter()
+        .find(|field| {
+            field
+                .ident
+                .as_ref()
+                .map(|i| i.to_string())
+                .unwrap_or_default()
+                == "_expiration"
+        })
+        .is_some()
+    {
+        quote! {
+            fn expiration(&self) -> Option<sandpolis_database::DataExpiration> {
+                Some(self._expiration)
+            }
+        }
+    } else {
+        quote! {
+            fn expiration(&self) -> Option<sandpolis_database::DataExpiration> {
+                None
+            }
+        }
+    };
 
     let struct_name = &input.ident;
     let expanded = quote! {
@@ -37,6 +62,11 @@ pub fn derive_data(input: TokenStream) -> TokenStream {
                 self._id
             }
 
+            fn revision(&self) -> sandpolis_database::DataRevision {
+                self._revision
+            }
+
+            #expiration
         }
     };
 
@@ -46,7 +76,8 @@ pub fn derive_data(input: TokenStream) -> TokenStream {
 #[derive(Default)]
 struct DataAttributes {
     // Our attributes
-    expire: bool,
+    temporal: bool,
+    instance: bool,
 
     // Wrapper for: https://github.com/vincent-herlemont/native_model/blob/084a81809d3d82bba731ae930eafb56aae3537bc/native_model_macro/src/lib.rs#L19
     pub(crate) id: Option<LitInt>,
@@ -80,7 +111,10 @@ impl DataAttributes {
         } else {
             panic!(
                 "Unknown attribute: {}",
-                meta.path.get_ident().unwrap().to_string()
+                meta.path
+                    .get_ident()
+                    .map(|i| i.to_string())
+                    .unwrap_or_default()
             );
         }
         Ok(())
@@ -98,15 +132,6 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut item_struct = parse_macro_input!(input as ItemStruct);
     let struct_name = item_struct.ident.to_string();
 
-    // Get id or compute from struct name
-    let id: u32 = attrs
-        .id
-        .map(|v| v.base10_parse().expect("Failed to parse model version"))
-        .unwrap_or(struct_name_to_id(&struct_name));
-
-    // Get version that was passed in or default to 1
-    let version = attrs.version.unwrap_or(LitInt::new("1", Span::call_site()));
-
     if let Fields::Named(ref mut fields) = item_struct.fields {
         // Add id field
         fields.named.push(
@@ -119,18 +144,19 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
                 .expect("Failed to parse _id field"),
         );
 
-        // Add timestamp field
-        if attrs.temporal {
-            fields.named.push(
-                Field::parse_named
-                    .parse2(quote! {
-                        /// Creation timestamp
-                        #[secondary_key]
-                        pub _timestamp: sandpolis_database::DbTimestamp
-                    })
-                    .expect("Failed to parse _timestamp field"),
-            );
+        // Add generation field
+        fields.named.push(
+            Field::parse_named
+                .parse2(quote! {
+                    /// Revision
+                    #[secondary_key]
+                    pub _revision: sandpolis_database::DataRevision
+                })
+                .expect("Failed to parse _revision field"),
+        );
 
+        // Add expiration field
+        if attrs.temporal {
             fields.named.push(
                 Field::parse_named
                     .parse2(quote! {
@@ -143,7 +169,7 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         // Add instance id field
-        if attrs.expire {
+        if attrs.instance {
             fields.named.push(
                 Field::parse_named
                     .parse2(quote! {
@@ -156,21 +182,44 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     }
 
-    // At minimum, the Data trait is required
-    let mut data_derive_macros = quote!(sandpolis_macros::Data);
+    // Process args for native_model
+    let mut model_args = quote!();
 
-    if attrs.temporal {
-        data_derive_macros.extend(quote! { , sandpolis_macros::HistoricalData });
+    if let Some(id) = attrs.id.as_ref() {
+        // Pass through
+        model_args.extend(quote! { id = #id });
+    } else {
+        // Default
+        let id = struct_name_to_id(&struct_name);
+        model_args.extend(quote! { id = #id });
     }
 
-    if attrs.instance {
-        data_derive_macros.extend(quote! { , sandpolis_macros::InstanceData });
+    if let Some(version) = attrs.version.as_ref() {
+        // Pass through
+        model_args.extend(quote! { , version = #version });
+    } else {
+        // Default
+        model_args.extend(quote! { , version = 1 });
     }
 
-    // TODO pass remaining if they are present
+    if let Some(with) = attrs.with.as_ref() {
+        // Pass through
+        model_args.extend(quote! { , with = #with });
+    }
+
+    if let Some(from) = attrs.from.as_ref() {
+        // Pass through
+        model_args.extend(quote! { , from = #from });
+    }
+
+    // if let Some(try_from) = attrs.try_from.as_ref() {
+    //     // Pass through
+    //     model_args.extend(quote! { , try_from = #try_from });
+    // }
+
     let tokens = quote! {
-        #[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Default, #data_derive_macros)]
-        #[native_model::native_model(id = #id, version = #version)]
+        #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, Debug, Default, sandpolis_macros::Data)]
+        #[native_model::native_model(#model_args)]
         #[native_db::native_db]
         #item_struct
     };
@@ -181,6 +230,8 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
 /// Hash a struct name to obtain the unique id
 fn struct_name_to_id(name: &str) -> u32 {
     let mut hasher = DefaultHasher::new();
+
+    // Include crate name to allow structs with the same name in different layers
     std::env::var("CARGO_PKG_NAME")
         .expect("Crate name not found")
         .hash(&mut hasher);
