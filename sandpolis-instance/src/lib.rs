@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use native_db::ToKey;
 use native_model::Model;
-use sandpolis_core::{ClusterId, InstanceId};
+use sandpolis_core::{ClusterId, InstanceId, RealmName};
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
@@ -26,7 +26,8 @@ pub struct InstanceLayer {
 
 impl InstanceLayer {
     pub async fn new(database: DatabaseLayer) -> Result<Self> {
-        let data: Resident<InstanceLayerData> = Resident::singleton(database.get(None).await?)?;
+        let data: Resident<InstanceLayerData> =
+            database.realm(RealmName::default()).await?.resident(())?;
 
         Ok(Self {
             instance_id: { data.read().await.instance_id },

@@ -9,8 +9,6 @@ use bevy::{
     window::{AppLifecycle, WindowMode},
 };
 use bevy_rapier2d::prelude::*;
-use sandpolis_database::Database;
-use sandpolis_instance::Layer;
 
 pub mod input;
 pub mod node;
@@ -22,6 +20,7 @@ pub struct CurrentLayer(Layer);
 #[derive(Resource, Deref, DerefMut)]
 pub struct ZoomLevel(f32);
 
+// TODO move to main crate
 /// Initialize and start rendering the UI.
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let mut app = App::new();

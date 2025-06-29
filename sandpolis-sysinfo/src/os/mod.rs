@@ -1,7 +1,6 @@
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::InstanceId;
-use sandpolis_database::DbTimestamp;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 
@@ -12,7 +11,7 @@ pub mod network;
 pub mod process;
 pub mod user;
 
-#[data(history)]
+#[data(temporal)]
 pub struct OsData {
     #[secondary_key]
     pub _instance_id: InstanceId,
@@ -39,7 +38,7 @@ pub struct OsData {
     pub arch: String,
 }
 
-#[data(history)]
+#[data(temporal)]
 pub struct KernelModuleData {
     #[secondary_key]
     pub _instance_id: InstanceId,

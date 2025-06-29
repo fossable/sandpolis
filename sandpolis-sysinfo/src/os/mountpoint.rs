@@ -1,11 +1,11 @@
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::InstanceId;
-use sandpolis_database::{Data, DataIdentifier, DbTimestamp};
+use sandpolis_database::{Data, DataIdentifier};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 
-#[data(history)]
+#[data(temporal)]
 pub struct MountpointData {
     #[secondary_key]
     pub _instance_id: InstanceId,

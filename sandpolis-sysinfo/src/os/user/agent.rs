@@ -3,7 +3,7 @@ use crate::os::user::UserDataKey;
 use anyhow::Result;
 use native_db::Database;
 use sandpolis_agent::Collector;
-use sandpolis_database::{DbTimestamp, RealmDatabase, ResidentVec};
+use sandpolis_database::{DataRevision, RealmDatabase, ResidentVec};
 use sysinfo::Users;
 
 pub struct UserCollector {
@@ -41,7 +41,7 @@ impl Collector for UserCollector {
             let db_users: Vec<UserData> = r
                 .scan()
                 .secondary(UserDataKey::_timestamp)?
-                .equal(DbTimestamp::Latest(0))?
+                .equal(DataRevision::latest())?
                 .and(
                     r.scan()
                         .secondary(UserDataKey::uid)?

@@ -1,21 +1,14 @@
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::InstanceId;
-use sandpolis_database::{DataIdentifier, DbTimestamp};
+use sandpolis_database::DataIdentifier;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-#[native_model(id = 8, version = 1)]
-#[native_db]
+#[data(temporal)]
 pub struct DisplayData {
-    #[primary_key]
-    pub _id: DataIdentifier,
-
     #[secondary_key]
     pub _instance_id: InstanceId,
-
-    #[secondary_key]
-    pub _timestamp: DbTimestamp,
 
     /// The display's name
     #[secondary_key]

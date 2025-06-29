@@ -1,7 +1,7 @@
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::InstanceId;
-use sandpolis_database::{DataIdentifier, DbTimestamp};
+use sandpolis_database::DataIdentifier;
 use serde::{Deserialize, Serialize};
 
 #[data(instance)]

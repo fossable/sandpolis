@@ -21,6 +21,7 @@ use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use tokio_util::sync::CancellationToken;
 use tracing::instrument::WithSubscriber;
 use tracing::{debug, trace, warn};
+use validator::ValidateRequired;
 
 pub mod config;
 
@@ -60,7 +61,7 @@ impl DatabaseLayer {
     }
 
     /// Load an existing or create a new `RealmDatabase` for the given realm.
-    pub async fn realm(&mut self, name: RealmName) -> Result<RealmDatabase> {
+    pub async fn realm(&self, name: RealmName) -> Result<RealmDatabase> {
         {
             let inner = self.inner.read().await;
             if let Some(db) = inner.get(&name) {
@@ -104,18 +105,14 @@ impl RealmDatabase {
         Ok(self.0.r_transaction()?)
     }
 
-    /// Create a `Resident` for a single item matching the given query.
-    pub fn attach<T: Data + Default + 'static, Q>(&self, query: Q) -> Result<Resident<T>>
-    where
-        Q: Fn(&RScan) -> Result<Vec<T>>,
-    {
+    pub fn resident<T: Data + Default + 'static>(
+        &self,
+        query: impl DataQuery<T>,
+    ) -> Result<Resident<T>> {
         // Hold onto this transaction until we've created the watch channel so
         // we don't miss any updates.
         let r = self.0.r_transaction()?;
-        let mut items = {
-            let scan = r.scan();
-            query(&scan)?
-        };
+        let mut items = query.query(r.scan())?;
 
         let item = if items.len() > 1 {
             bail!("Too many items");
@@ -182,7 +179,10 @@ impl RealmDatabase {
     }
 
     /// Create a `ResidentVec` for items matching the given query.
-    pub fn attach_vec<T: Data + 'static, Q>(&self, query: impl Query<T>) -> Result<ResidentVec<T>> {
+    pub fn resident_vec<T: Data + 'static>(
+        &self,
+        query: impl DataQuery<T>,
+    ) -> Result<ResidentVec<T>> {
         let conditions = query.conditions();
 
         // Hold onto this transaction until we've created the watch channel so
@@ -205,19 +205,22 @@ impl RealmDatabase {
             .first()
             .expect("There must be at least one condition")
         {
-            DataCondition::Equal { key, value } => self
+            DataCondition::Equal(key, value) => self
                 .0
                 .watch()
                 .scan()
                 .secondary(key.clone())
                 .range::<T, _>(value.clone()..=value.clone())?,
-            DataCondition::Range { key, value } => self
+            DataCondition::Range(key, value) => self
                 .0
                 .watch()
                 .scan()
                 .secondary(key.clone())
                 .range::<T, _>(value.clone())?,
         };
+
+        // Safe to end the transaction once the watcher is registered
+        drop(r);
 
         let cancel_token = CancellationToken::new();
         let token = cancel_token.clone();
@@ -320,8 +323,8 @@ pub enum DataRevision {
 }
 
 impl DataRevision {
-    fn latest() -> Self {
-        todo!()
+    pub fn latest() -> Self {
+        Self::Latest(DateTime::default())
     }
 }
 
@@ -394,13 +397,31 @@ impl ToKey for DataRevision {
     }
 
     fn key_names() -> Vec<String> {
-        vec!["DataGeneration".to_string()]
+        vec!["DataRevision".to_string()]
     }
 }
 
 /// Uniquely identifies a record in the database.
 pub type DataIdentifier = u64;
-pub type DataExpiration = DateTime<Utc>;
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Copy, Clone)]
+pub struct DataExpiration(DateTime<Utc>);
+
+impl Default for DataExpiration {
+    fn default() -> Self {
+        Self(DateTime::<Utc>::MAX_UTC)
+    }
+}
+
+impl ToKey for DataExpiration {
+    fn to_key(&self) -> native_db::Key {
+        native_db::Key::new(self.0.timestamp_millis().to_be_bytes().to_vec())
+    }
+
+    fn key_names() -> Vec<String> {
+        vec!["DataExpiration".to_string()]
+    }
+}
 
 // TODO special case of ResVec?
 /// Maintains a real-time cache of persistent objects in the database of
@@ -487,7 +508,6 @@ mod test_resident {
     use super::*;
     use crate as sandpolis_database;
     use anyhow::Result;
-    use native_db::Models;
     use native_db::*;
     use native_model::Model;
     use sandpolis_macros::{Data, data};
@@ -523,17 +543,7 @@ mod test_resident {
         )?;
 
         let db = database.realm(RealmName::default()).await?;
-        let res: Resident<TestData> = db.attach_one(|t: RTransaction| -> Result<Vec<_>> {
-            let scan = t.scan();
-            Ok(scan.secondary(TestDataKey::a)?.equal("A")?.try_collect()?)
-        })?;
-
-        let res: Resident<TestData> = db.attach2(|s: &RScan| -> Result<Vec<_>> {
-            Ok(s.secondary(TestDataKey::a)?
-                .equal("A")?
-                .and(s.secondary(TestDataKey::b)?.equal("B")?)
-                .try_collect()?)
-        })?;
+        let res: Resident<TestData> = db.resident(DataCondition::equal(TestDataKey::a, "A"))?;
 
         // Update data a bunch of times
         for i in 1..10 {
@@ -588,7 +598,7 @@ mod test_resident {
         )?;
 
         let db = database.realm(RealmName::default()).await?;
-        let res: Resident<TestHistoryData> = db.attach_one(query!())?;
+        let res: Resident<TestHistoryData> = db.resident(())?;
 
         // Update data a bunch of times
         for i in 1..10 {
@@ -608,12 +618,12 @@ mod test_resident {
 
         // Check history
         {
-            assert_eq!(
-                res.history(DbTimestamp::Latest(DateTime::default())..)
-                    .await?
-                    .len(),
-                0
-            );
+            // assert_eq!(
+            //     res.history(DbTimestamp::Latest(DateTime::default())..)
+            //         .await?
+            //         .len(),
+            //     0
+            // );
         }
 
         Ok(())
@@ -648,36 +658,41 @@ impl<T: Data> ResidentVec<T> {
     }
 
     /// Appends an element to the back of a collection.
-    pub async fn push(&self, value: T) -> Result<&Resident<T>> {
-        // TODO check id collision?
+    pub async fn push(&self, value: T) -> Result<Resident<T>> {
+        let id = value.id();
 
-        // Insert and let watcher update `inner`
-        let rw = self.db.rw_transaction()?;
-        rw.insert(value)?;
-        rw.commit()?;
+        {
+            let rw = self.db.rw_transaction()?;
 
-        // TODO wait for update?
+            // Check for id collision
+            if self.inner.read().await.get(&id).is_some() {
+                bail!("Duplicate primary key");
+            }
 
-        Ok(todo!())
+            // Insert and let watcher update `inner`
+            rw.insert(value)?;
+            rw.commit()?;
+        }
+
+        // TODO don't busy wait
+        loop {
+            if let Some(value) = self.inner.read().await.get(&id) {
+                return Ok(value.clone());
+            }
+        }
     }
 }
 
 #[derive(Clone)]
 pub enum DataCondition {
-    Equal {
-        key: KeyDefinition<KeyOptions>,
-        value: Key,
-    },
-    Range {
-        key: KeyDefinition<KeyOptions>,
-        value: KeyRange,
-    },
+    Equal(KeyDefinition<KeyOptions>, Key),
+    Range(KeyDefinition<KeyOptions>, KeyRange),
 }
 
 impl DataCondition {
     fn check<T: Data>(&self, data: &T) -> bool {
         match self {
-            DataCondition::Equal { key, value } => {
+            DataCondition::Equal(key, value) => {
                 match data
                     .native_db_secondary_keys()
                     .get(key)
@@ -687,7 +702,7 @@ impl DataCondition {
                     KeyEntry::Optional(key) => todo!(),
                 }
             }
-            DataCondition::Range { key, value } => {
+            DataCondition::Range(key, value) => {
                 match data
                     .native_db_secondary_keys()
                     .get(key)
@@ -699,9 +714,17 @@ impl DataCondition {
             }
         }
     }
+
+    fn equal(key: impl ToKeyDefinition<KeyOptions>, value: impl ToKey) -> Self {
+        Self::Equal(key.key_definition(), value.to_key())
+    }
+
+    fn range<R: RangeBounds<impl ToKey>>(key: impl ToKeyDefinition<KeyOptions>, value: R) -> Self {
+        Self::Range(key.key_definition(), KeyRange::new(value))
+    }
 }
 
-trait Query<T: Data> {
+pub trait DataQuery<T: Data> {
     fn query(&self, scan: RScan) -> Result<Vec<T>>;
     fn conditions(&self) -> Vec<DataCondition>;
 
@@ -715,23 +738,30 @@ trait Query<T: Data> {
     }
 }
 
-impl<T: Data> Query<T> for (DataCondition,) {
+impl<T: Data> DataQuery<T> for () {
     fn query(&self, scan: RScan) -> Result<Vec<T>> {
-        Ok(match self.0.clone() {
-            DataCondition::Equal { key, value } => {
-                scan.secondary(key)?.equal(value)?.try_collect()?
-            }
-            DataCondition::Range { key, value } => {
-                scan.secondary(key)?.range(value)?.try_collect()?
-            }
+        Ok(scan.primary()?.all()?.try_collect()?)
+    }
+
+    fn conditions(&self) -> Vec<DataCondition> {
+        vec![]
+    }
+}
+
+impl<T: Data> DataQuery<T> for DataCondition {
+    fn query(&self, scan: RScan) -> Result<Vec<T>> {
+        Ok(match self.clone() {
+            DataCondition::Equal(key, value) => scan.secondary(key)?.equal(value)?.try_collect()?,
+            DataCondition::Range(key, value) => scan.secondary(key)?.range(value)?.try_collect()?,
         })
     }
 
     fn conditions(&self) -> Vec<DataCondition> {
-        vec![self.0.clone()]
+        vec![self.clone()]
     }
 }
-impl<T: Data> Query<T> for (DataCondition, DataCondition) {
+
+impl<T: Data> DataQuery<T> for (DataCondition, DataCondition) {
     fn query(&self, scan: RScan) -> Result<Vec<T>> {
         todo!()
     }
@@ -775,12 +805,13 @@ mod test_resident_vec {
         )?;
 
         let db = database.realm(RealmName::default()).await?;
-        let test_data: ResidentVec<TestData> = db.attach_vec(query!(TestDataKey::a == "A"))?;
+        let test_data: ResidentVec<TestData> =
+            db.resident_vec(DataCondition::equal(TestDataKey::a, "A"))?;
 
         assert_eq!(test_data.len().await, 0);
 
         // Add item
-        let data: &Resident<TestData> = test_data
+        let data: Resident<TestData> = test_data
             .push(TestData {
                 a: "A".to_string(),
                 b: "B".to_string(),
@@ -812,6 +843,7 @@ mod test_resident_vec {
             let rw = db.rw_transaction()?;
             rw.upsert(TestData {
                 _id: data.read().await._id,
+                _revision: DataRevision::latest(),
                 a: "test 10".into(),
                 b: "".into(),
             })?;

@@ -2,7 +2,7 @@ use anyhow::Result;
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::InstanceId;
-use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, DbTimestamp};
+use sandpolis_database::{Data, DataIdentifier, DatabaseLayer};
 use sandpolis_macros::{StreamEvent, data};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

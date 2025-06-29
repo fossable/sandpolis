@@ -5548,7 +5548,6 @@ dependencies = [
 [[package]]
 name = "native_db"
 version = "0.8.1"
-source = "git+https://github.com/cilki/native_db#5f3762d05959b09e3533964dab0eb1426fb3a16a"
 dependencies = [
  "native_db_macro",
  "native_model",
@@ -5564,7 +5563,6 @@ dependencies = [
 [[package]]
 name = "native_db_macro"
 version = "0.8.1"
-source = "git+https://github.com/cilki/native_db#5f3762d05959b09e3533964dab0eb1426fb3a16a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5573,9 +5571,9 @@ dependencies = [
 
 [[package]]
 name = "native_model"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7050d759e3da6673361dddda4f4a743492279dd2c6484a21fbee0a8278620df0"
+checksum = "50622b3adb2f3f2b8d6fddc8b030db343680c7fa7f24222a3be89e4cd725365e"
 dependencies = [
  "anyhow",
  "bincode",
@@ -5588,9 +5586,9 @@ dependencies = [
 
 [[package]]
 name = "native_model_macro"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1577a0bebf5ed1754e240baf5d9b1845f51e598b20600aa894f55e11cd20cc6c"
+checksum = "907e09bdd2fceb72bcd9b2e950c0bcb58e09d63d4ec5d6dbfa905537bbda068e"
 dependencies = [
  "proc-macro2",
  "quote",

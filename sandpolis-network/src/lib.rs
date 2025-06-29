@@ -14,7 +14,6 @@ use sandpolis_core::{InstanceId, RealmName};
 use sandpolis_database::Data;
 use sandpolis_database::DataIdentifier;
 use sandpolis_database::DatabaseLayer;
-use sandpolis_database::DbTimestamp;
 use sandpolis_database::Resident;
 use sandpolis_macros::data;
 use sandpolis_realm::RealmClientCert;
@@ -123,7 +122,7 @@ impl NetworkLayer {
 /// Convenience type to be used as return of request handler.
 pub type RequestResult<T> = Result<axum::Json<T>, axum::Json<T>>;
 
-#[data(history)]
+#[data(temporal)]
 pub struct ConnectionData {
     #[secondary_key]
     pub _instance_id: InstanceId,

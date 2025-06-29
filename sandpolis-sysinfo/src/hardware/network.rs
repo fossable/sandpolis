@@ -1,11 +1,11 @@
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::InstanceId;
-use sandpolis_database::{DataIdentifier, DbTimestamp};
+use sandpolis_database::DataIdentifier;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 
-#[data(history)]
+#[data(temporal)]
 pub struct NetworkInterfaceData {
     #[secondary_key]
     pub _instance_id: InstanceId,

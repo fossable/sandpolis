@@ -1,35 +1,18 @@
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_core::InstanceId;
-use sandpolis_database::DbTimestamp;
-use serde::{Deserialize, Serialize};
+use sandpolis_macros::data;
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-#[native_model(id = 2, version = 1)]
-#[native_db]
+#[data]
 pub struct SignatureDetectionData {
-    #[primary_key]
-    pub id: u32,
-
     #[secondary_key]
     pub instance_id: InstanceId,
-
-    #[secondary_key]
-    pub timestamp: DbTimestamp,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-#[native_model(id = 4, version = 1)]
-#[native_db]
+#[data]
 pub struct EventDetectionData {
-    #[primary_key]
-    pub id: u32,
-
     #[secondary_key]
     pub instance_id: InstanceId,
-
-    #[secondary_key]
-    pub timestamp: DbTimestamp,
 }
 
 /// Indicates the degree to which the user is currently participating in their

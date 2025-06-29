@@ -13,12 +13,13 @@ Users can become members of a realm with an associated set of permissions.
 
 ### Default realm
 
-All users are members of a special realm called _default_.
+All users are members of a special realm called _default_. The default realm
+cannot be removed.
 
 ### Realm authentication
 
-All connections to a server instance must be authenticated with a realm using a
-TLS certificate.
+All connections to a server instance must be authenticated with a TLS
+certificate for a particular realm.
 
 There are four types of certificate:
 
@@ -36,6 +37,8 @@ the cluster.
 
 This certificate is used to authenticate with servers as a client instance. The
 server verifies the client certificate was issued by the cluster certificate.
+
+Clients must also login as a user which provides them their permissions.
 
 #### Realm agent certificate
 
