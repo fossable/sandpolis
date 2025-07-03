@@ -41,7 +41,7 @@ impl Collector for UserCollector {
             let db_users: Vec<UserData> = r
                 .scan()
                 .secondary(UserDataKey::_timestamp)?
-                .equal(DataRevision::latest())?
+                .equal(DataRevision::default())?
                 .and(
                     r.scan()
                         .secondary(UserDataKey::uid)?

@@ -62,8 +62,20 @@ pub fn derive_data(input: TokenStream) -> TokenStream {
                 self._id
             }
 
+            fn set_id(&mut self, id: sandpolis_database::DataIdentifier) {
+                self._id = id;
+            }
+
             fn revision(&self) -> sandpolis_database::DataRevision {
                 self._revision
+            }
+
+            fn set_revision(&mut self, revision: sandpolis_database::DataRevision) {
+                self._revision = revision;
+            }
+
+            fn creation(&self) -> sandpolis_database::DataCreation {
+                self._creation
             }
 
             #expiration
@@ -144,7 +156,7 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
                 .expect("Failed to parse _id field"),
         );
 
-        // Add generation field
+        // Add revision field
         fields.named.push(
             Field::parse_named
                 .parse2(quote! {
@@ -153,6 +165,17 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
                     pub _revision: sandpolis_database::DataRevision
                 })
                 .expect("Failed to parse _revision field"),
+        );
+
+        // Add creation field
+        fields.named.push(
+            Field::parse_named
+                .parse2(quote! {
+                    /// Creation timestamp
+                    #[secondary_key]
+                    pub _creation: sandpolis_database::DataCreation
+                })
+                .expect("Failed to parse _creation field"),
         );
 
         // Add expiration field
