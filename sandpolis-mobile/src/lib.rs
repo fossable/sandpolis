@@ -14,15 +14,15 @@ pub fn main() {
         .build()
         .unwrap()
         .block_on(async {
+            // Set initial configuration
+            let config = Configuration::default();
+
             // Load state
             let state = InstanceState::new(
                 config.clone(),
-                DatabaseLayer::new(config.database.clone(), &*sandpolis::MODELS)?,
+                DatabaseLayer::new(config.database.clone(), &*sandpolis::MODELS).unwrap(),
             )
             .await?;
-
-            // Set initial configuration
-            let config = Configuration::default();
 
             sandpolis::client::gui::main(config, state).await.unwrap();
         });
