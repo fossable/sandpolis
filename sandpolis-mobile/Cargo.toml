@@ -10,7 +10,7 @@ version = "0.0.1"
 
 [lib]
 name = "sandpolis_mobile"
-crate-type = ["staticlib", "cdylib"]
+crate-type = ["lib", "cdylib"]
 
 [dependencies]
 bevy = { version = "0.16" }

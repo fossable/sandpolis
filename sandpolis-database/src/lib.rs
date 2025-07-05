@@ -1,5 +1,4 @@
 #![feature(iterator_try_collect)]
-#![feature(lock_value_accessors)]
 
 use crate::config::DatabaseConfig;
 use anyhow::{Result, bail};

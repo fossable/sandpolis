@@ -24,7 +24,7 @@ jobs:
         with:
           fetch-tags: true
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@nightly
         with:
           targets: ${{ matrix.target }}
 
@@ -59,7 +59,7 @@ jobs:
         with:
           fetch-tags: true
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@nightly
         with:
           targets: ${{ matrix.target }}
 
