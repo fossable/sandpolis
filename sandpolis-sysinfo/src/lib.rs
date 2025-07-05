@@ -1,6 +1,7 @@
 use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
+use sandpolis_core::RealmName;
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
 use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::data;
@@ -34,9 +35,9 @@ impl SysinfoLayer {
             )?)),
             #[cfg(feature = "agent")]
             users: Arc::new(os::user::agent::UserCollector::new(
-                database.get(None).await?,
+                database.realm(RealmName::default()).await?,
             )),
-            data: Resident::singleton(database.get(None).await?)?,
+            data: database.realm(RealmName::default()).await?.resident(())?,
         })
     }
 }

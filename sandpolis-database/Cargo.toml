@@ -11,14 +11,15 @@ chrono = { workspace = true }
 clap = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
+rand = { workspace = true }
 sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 serde_cbor = { workspace = true }
 serde = { workspace = true }
 tempfile = { workspace = true }
-tracing = { workspace = true }
-tokio = { workspace = true }
 tokio-util = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
 validator = { workspace = true }
 
 [dev-dependencies]

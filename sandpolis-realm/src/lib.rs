@@ -12,6 +12,7 @@ use pem::Pem;
 use pem::encode;
 use regex::Regex;
 use sandpolis_core::{ClusterId, RealmName, UserName};
+use sandpolis_database::ResidentVec;
 use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
 use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::data;
@@ -40,6 +41,7 @@ pub struct RealmLayerData {
 #[derive(Clone)]
 pub struct RealmLayer {
     data: Resident<RealmLayerData>,
+    realms: ResidentVec<RealmData>,
 }
 
 impl RealmLayer {
@@ -48,61 +50,45 @@ impl RealmLayer {
         mut database: DatabaseLayer,
         instance: InstanceLayer,
     ) -> Result<Self> {
-        // Load all realm databases
-        let db = database.get(None).await?; // TODO default realm
-        let r = db.r_transaction()?;
-        for realm in r.scan().primary::<RealmData>()?.all()? {
-            let realm = realm?;
-            database.add_realm(realm.name).await?;
-        }
+        let default_realm = database.realm(RealmName::default()).await?;
+        let realms: ResidentVec<RealmData> = default_realm.resident_vec(())?;
 
-        // Create default realm if it doesn't exist
-        if database.get(Some(RealmName::default())).await.is_err() {
-            debug!("Creating default realm");
-            let realm_db = database.add_realm(RealmName::default()).await?;
+        // Preload all realm databases
+        // TODO
 
-            let default_realm = RealmData::default();
+        #[cfg(feature = "server")]
+        {
+            let cluster_cert = RealmClusterCert::new(
+                instance_layer.data.value().cluster_id,
+                RealmName::default(),
+            )?;
+            let server_cert = cluster_cert.server_cert(instance_layer.data.value().instance_id)?;
 
-            #[cfg(feature = "server")]
-            {
-                let cluster_cert = RealmClusterCert::new(
-                    instance_layer.data.value().cluster_id,
-                    RealmName::default(),
-                )?;
-                let server_cert =
-                    cluster_cert.server_cert(instance_layer.data.value().instance_id)?;
-
-                let rw = realm_db.rw_transaction()?;
-                rw.insert(cluster_cert)?;
-                rw.insert(server_cert)?;
-                rw.commit()?;
-            }
-
-            {
-                let rw = db.rw_transaction()?;
-                rw.insert(default_realm)?;
-                rw.commit()?;
-            }
+            let rw = realm_db.rw_transaction()?;
+            rw.insert(cluster_cert)?;
+            rw.insert(server_cert)?;
+            rw.commit()?;
         }
 
         // Update client cert if possible
-        if let Some(new_cert) = config.certificate()? {
-            if let Some(realm) = r
-                .get()
-                .secondary::<RealmData>(RealmDataKey::name, new_cert.name()?)?
-            {
-                // Only import if the given certificate is newer than the one
-                // already in the database.
-                // if new_cert.creation_time()? > old_cert.creation_time()? {
-                //     info!(path = %config.certificate.expect("a path was
-                // configured").display(), "Importing realm certificate");
-                //     data.data.client = Some(new_cert);
-                // }
-            }
-        }
+        // if let Some(new_cert) = config.certificate()? {
+        //     if let Some(realm) = r
+        //         .get()
+        //         .secondary::<RealmData>(RealmDataKey::name, new_cert.name()?)?
+        //     {
+        //         // Only import if the given certificate is newer than the one
+        //         // already in the database.
+        //         // if new_cert.creation_time()? > old_cert.creation_time()? {
+        //         //     info!(path = %config.certificate.expect("a path was
+        //         // configured").display(), "Importing realm certificate");
+        //         //     data.data.client = Some(new_cert);
+        //         // }
+        //     }
+        // }
 
         Ok(Self {
-            data: Resident::singleton(db)?,
+            data: default_realm.resident(())?,
+            realms,
         })
     }
 }
@@ -111,7 +97,7 @@ impl RealmLayer {
 /// global CA certificate that signs certificates used to connect to the server.
 ///
 /// All servers have a default realm called "default". All `RealmData` entries
-/// are stored in the default realm.
+/// are stored within this realm.
 #[derive(Validate)]
 #[data]
 pub struct RealmData {

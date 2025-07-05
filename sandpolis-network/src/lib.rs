@@ -90,7 +90,7 @@ impl NetworkLayer {
                     })
                     .collect::<Result<Vec<ServerConnection>>>()?,
             ),
-            data: Resident::singleton(database.get(None).await?)?,
+            data: database.realm(RealmName::default()).await?.resident(())?,
         })
     }
 

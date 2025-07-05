@@ -9,6 +9,7 @@ use native_db::transaction::query::{RScan, SecondaryScan, SecondaryScanIterator}
 use native_db::transaction::{RTransaction, RwTransaction};
 use native_db::watch::Event;
 use native_db::{Key, Models, ToInput, ToKey};
+use rand::prelude::*;
 use sandpolis_core::{InstanceId, RealmName};
 use serde::de::Visitor;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -128,11 +129,16 @@ impl RealmDatabase {
 
         // Setup watcher so we get updates
         let (mut channel, watch_id) = if item.expiration().is_none() {
-            // Watch the primary ID if this isn't temporal data because it can't change
+            // Watch exact primary ID because it can't change
             self.0.watch().get().primary::<T>(item.id())?
         } else {
-            // Otherwise, watch the secondary ID
-            todo!()
+            // Otherwise, watch the upper half of the primary ID which is the same for all
+            // revisions
+            self.0
+                .watch()
+                .scan()
+                .primary()
+                .range::<T, _>(item.id() & 0x0000_0000..=item.id() | 0xFFFF_FFFF)?
         };
 
         // Safe to end the transaction once the watcher is registered
@@ -210,55 +216,24 @@ impl RealmDatabase {
         // Safe to end the transaction once the watcher is registered
         drop(r);
 
-        let cancel_token = CancellationToken::new();
-        let token = cancel_token.clone();
-
-        let inner = Arc::new(RwLock::new(inner));
-        let db_clone = self.0.clone();
+        let token = CancellationToken::new();
+        let resident = ResidentVec {
+            inner: Arc::new(RwLock::new(inner)),
+            db: self.0.clone(),
+            watch: (watch_id, token.clone()),
+            conditions,
+        };
+        let resident_clone = resident.clone();
 
         tokio::spawn({
-            let inner_clone = Arc::clone(&inner);
             async move {
-                'next_event: loop {
+                loop {
                     tokio::select! {
                         _ = token.cancelled() => {
                             break;
                         }
                         event = channel.recv() => match event {
-                            Some(event) => match event {
-                                Event::Insert(data) => match data.inner::<T>() {
-                                    Ok(d) => {
-                                        // The first condition should be satified because that's the watcher's condition
-                                        assert!(conditions.first().expect("There must be at least one condition").check(&d));
-
-                                        // Make sure the remaining conditions are satisfied
-                                        for condition in conditions.iter().skip(1) {
-                                            if !condition.check(&d) {
-                                                continue 'next_event;
-                                            }
-                                        }
-
-                                        let mut c = inner_clone.write().await;
-                                        (*c).insert(d.id(), Resident { db: db_clone.clone(), inner: Arc::new(RwLock::new(d)), watch: None });
-                                    },
-                                    Err(_) => {},
-                                }
-                                Event::Update(data) => match data.inner_new::<T>() {
-                                    Ok(d) => {
-                                        let c = inner_clone.write().await;
-                                        match (*c).get(&d.id()) {
-                                            Some(r) => {
-                                                let mut r = r.inner.write().await;
-                                                *r = d;
-                                            },
-                                            // Got an update before insert?
-                                            None => todo!(),
-                                        }
-                                    },
-                                    Err(_) => {},
-                                }
-                                Event::Delete(_) => warn!("Deleting a singleton is undefined"),
-                            }
+                            Some(event) => resident_clone.handle_event(event).await,
                             None => {
                                 break;
                             }
@@ -268,11 +243,7 @@ impl RealmDatabase {
             }
         });
 
-        Ok(ResidentVec {
-            inner,
-            db: self.0.clone(),
-            watch: (watch_id, cancel_token),
-        })
+        Ok(resident)
     }
 }
 
@@ -426,8 +397,9 @@ impl ToKey for DataRevision {
     }
 }
 
-/// Uniquely identifies a record in the database.
-pub type DataIdentifier = u64;
+/// Uniquely identifies a record in the database. All revisions of the same
+/// `Data` share the upper 4 bytes of this value.
+pub type DataIdentifier = u64; // TODO tuple struct
 
 /// When some `Data` will expire and no longer be returnable by queries.
 /// Eventually it will be removed from the database altogether.
@@ -454,6 +426,14 @@ impl ToKey for DataExpiration {
 /// tracked for individual `Data` because revisions handle that.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub struct DataCreation(DateTime<Utc>);
+
+impl DataCreation {
+    pub fn all() -> impl RangeBounds<Self> {
+        trace!("{:?}", Self(DateTime::<Utc>::MIN_UTC).to_key());
+        trace!("{:?}", Self(DateTime::<Utc>::MAX_UTC).to_key());
+        Self(DateTime::<Utc>::MIN_UTC)..=Self(DateTime::<Utc>::MAX_UTC)
+    }
+}
 
 impl Default for DataCreation {
     fn default() -> Self {
@@ -502,6 +482,7 @@ impl<T: Data + 'static> Resident<T> {
     }
 
     async fn handle_event(&self, event: Event) {
+        trace!(event = ?event, "Handling event");
         match event {
             Event::Insert(data) => {}
             Event::Update(data) => match data.inner_new() {
@@ -522,61 +503,60 @@ impl<T: Data> Resident<T> {
     where
         F: Fn(&mut T) -> Result<()>,
     {
-        let mut inner = self.inner.write().await;
-        let mut next = inner.clone();
+        let mut previous = self.inner.write().await;
+        let mut next = previous.clone();
         mutator(&mut next)?;
 
-        if next == *inner {
+        if next == *previous {
             trace!("Update did not change state");
             return Ok(());
         }
-        assert_eq!(next.id(), inner.id(), "Primary key changed");
+        assert_eq!(next.id(), previous.id(), "Primary key changed");
 
         // Bump revisions
         next.set_revision(next.revision() + 1);
-        inner.set_revision(DataRevision::Previous(next.revision().into()));
+        previous.set_revision(DataRevision::Previous(next.revision().into()));
 
         trace!(next = ?next, "Updated");
 
         let rw = self.db.rw_transaction()?;
 
-        if inner.expiration().is_some() {
-            // New id
-            next.set_id(DataIdentifier::default());
+        if previous.expiration().is_some() {
+            // Derive new id from the previous
+            next.set_id(
+                (previous.id() & 0x0000_0000) | (0xFFFF_FFFF & rand::rng().random::<u64>()),
+            );
 
             rw.insert(next.clone())?;
-            rw.upsert(inner.clone())?;
+            rw.upsert(previous.clone())?;
         } else {
             rw.upsert(next.clone())?;
         }
 
         rw.commit()?;
 
-        *inner = next;
+        *previous = next;
         Ok(())
     }
 
-    pub async fn history(&self, range: RangeFrom<DataRevision>) -> Result<Vec<T>> {
-        // Get values of all secondary keys
-        let mut secondary_keys = (*self.inner.read().await).native_db_secondary_keys();
-
-        // Remove generation because we're going to set that one manually
-        secondary_keys.retain(|key_def, _| *key_def != T::revision_key());
+    pub async fn history(&self, range: impl RangeBounds<DataCreation>) -> Result<Vec<T>> {
+        let revision_id = self.inner.read().await.id() & 0x0000_0000;
 
         let r = self.db.r_transaction()?;
 
-        // TODO use the most restrictive condition first for performance
-        // let mut it = r.scan().secondary(T::timestamp_key())?.range(range)?;
+        // TODO .and_secondary instead of fully deserializing
+        let items: Vec<T> = r
+            .scan()
+            .secondary(T::creation_key())?
+            .range(range)?
+            .try_collect()?;
 
-        // for (key_def, key) in secondary_keys.into_iter() {
-        //     it = it.and(r.scan().secondary(key_def)?.equal(match key {
-        //         KeyEntry::Default(key) => key,
-        //         KeyEntry::Optional(key) => key.unwrap(), // TODO
-        //     })?);
-        // }
+        trace!("{} items", items.len());
 
-        // Ok(it.try_collect()?)
-        todo!()
+        Ok(items
+            .into_iter()
+            .filter(|item| (item.id() & 0x0000_0000) == revision_id)
+            .collect())
     }
 }
 
@@ -588,7 +568,6 @@ mod test_resident {
     use native_db::*;
     use native_model::Model;
     use sandpolis_macros::{Data, data};
-    use serde::{Deserialize, Serialize};
     use tokio::time::{Duration, sleep};
 
     #[data]
@@ -664,6 +643,7 @@ mod test_resident {
     }
 
     #[tokio::test]
+    #[test_log::test]
     async fn test_temporal_data() -> Result<()> {
         let models = Box::leak(Box::new(Models::new()));
         models.define::<TestHistoryData>().unwrap();
@@ -697,12 +677,9 @@ mod test_resident {
 
         // Check history
         {
-            // assert_eq!(
-            //     res.history(DbTimestamp::Latest(DateTime::default())..)
-            //         .await?
-            //         .len(),
-            //     0
-            // );
+            trace!("{:?}", DataCreation::all().start_bound());
+            trace!("{:?}", DataCreation::all().end_bound());
+            assert_eq!(res.history(DataCreation::all()).await?.len(), 10);
         }
 
         Ok(())
@@ -716,6 +693,7 @@ where
 {
     db: Arc<native_db::Database<'static>>,
     inner: Arc<RwLock<BTreeMap<DataIdentifier, Resident<T>>>>,
+    conditions: Vec<DataCondition>,
 
     watch: (u64, CancellationToken),
 }
@@ -725,6 +703,58 @@ impl<T: Data> Drop for ResidentVec<T> {
         let (watch_id, token) = &self.watch;
         token.cancel();
         self.db.unwatch(*watch_id).unwrap();
+    }
+}
+
+impl<T: Data> ResidentVec<T> {
+    async fn handle_event(&self, event: Event) {
+        trace!(event = ?event, "Handling event");
+        match event {
+            Event::Insert(data) => match data.inner::<T>() {
+                Ok(d) => {
+                    // The first condition should be satified because that's the watcher's condition
+                    assert!(
+                        self.conditions
+                            .first()
+                            .expect("There must be at least one condition")
+                            .check(&d)
+                    );
+
+                    // Make sure the remaining conditions are satisfied
+                    for condition in self.conditions.iter().skip(1) {
+                        if !condition.check(&d) {
+                            return;
+                        }
+                    }
+
+                    let mut c = self.inner.write().await;
+                    (*c).insert(
+                        d.id(),
+                        Resident {
+                            db: self.db.clone(),
+                            inner: Arc::new(RwLock::new(d)),
+                            watch: None,
+                        },
+                    );
+                }
+                Err(_) => {}
+            },
+            Event::Update(data) => match data.inner_new::<T>() {
+                Ok(d) => {
+                    let c = self.inner.write().await;
+                    match (*c).get(&d.id()) {
+                        Some(r) => {
+                            let mut r = r.inner.write().await;
+                            *r = d;
+                        }
+                        // Got an update before insert?
+                        None => todo!(),
+                    }
+                }
+                Err(_) => {}
+            },
+            Event::Delete(_) => warn!("Deleting a singleton is undefined"),
+        }
     }
 }
 
@@ -884,11 +914,12 @@ mod test_resident_vec {
     }
 
     #[tokio::test]
+    #[test_log::test]
     async fn test_nonhistorical() -> Result<()> {
         let models = Box::leak(Box::new(Models::new()));
         models.define::<TestData>().unwrap();
 
-        let mut database = DatabaseLayer::new(
+        let database = DatabaseLayer::new(
             DatabaseConfig {
                 storage: None,
                 ephemeral: true,
@@ -898,7 +929,7 @@ mod test_resident_vec {
 
         let db = database.realm(RealmName::default()).await?;
         let test_data: ResidentVec<TestData> =
-            db.resident_vec(DataCondition::equal(TestDataKey::a, "A"))?;
+            db.resident_vec(DataCondition::equal(TestDataKey::b, "B"))?;
 
         assert_eq!(test_data.len().await, 0);
 
@@ -938,7 +969,7 @@ mod test_resident_vec {
                 _revision: DataRevision::default(),
                 _creation: DataCreation::default(),
                 a: "test 10".into(),
-                b: "".into(),
+                b: "B".into(),
             })?;
             rw.commit()?;
         }
