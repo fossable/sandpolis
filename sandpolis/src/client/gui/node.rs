@@ -55,8 +55,8 @@ pub fn handle_window_stacks(
     mut windows: Query<&mut Window>,
     cameras: Query<&Transform, (With<Camera2d>, Without<InstanceId>)>,
 ) {
-    let window_size = windows.single_mut().size();
-    let camera_transform = cameras.single();
+    // let window_size = windows.single_mut().size();
+    // let camera_transform = cameras.single();
 
     // for (transform, (id, window_stack)) in nodes.iter_mut() {
     //     egui::Window::new("Hello")

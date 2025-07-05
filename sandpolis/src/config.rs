@@ -6,6 +6,7 @@ use std::{fs::File, path::PathBuf};
 use tracing::debug;
 
 /// Application's global config.
+#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Configuration {
     /// Whether overrides from environment variables or the command line are

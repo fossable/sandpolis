@@ -1,5 +1,5 @@
 use super::{CurrentLayer, ZoomLevel};
-use crate::core::layer::Layer;
+use crate::Layer;
 use bevy::{
     input::{
         gestures::RotationGesture,
@@ -24,14 +24,14 @@ pub fn touch_camera(
     mut last_position: Local<Option<Vec2>>,
     mut rotations: EventReader<RotationGesture>,
 ) {
-    let window = windows.single();
+    let window = windows.single().unwrap();
 
     for touch in touches.read() {
         if touch.phase == TouchPhase::Started {
             *last_position = None;
         }
         if let Some(last_position) = *last_position {
-            let mut transform = camera.single_mut();
+            let mut transform = camera.single_mut().unwrap();
             *transform = Transform::from_xyz(
                 transform.translation.x
                     + (touch.position.x - last_position.x) / window.width() * 5.0,
@@ -45,7 +45,7 @@ pub fn touch_camera(
     }
     // Rotation gestures only work on iOS
     for rotation in rotations.read() {
-        let mut transform = camera.single_mut();
+        let mut transform = camera.single_mut().unwrap();
         let forward = transform.forward();
         transform.rotate_axis(forward, rotation.0 / 10.0);
     }
@@ -129,7 +129,7 @@ pub fn handle_keymap(
     mut windows: Query<&mut Window>,
 ) {
     if keyboard_input.pressed(KeyCode::KeyK) {
-        let window_size = windows.single_mut().size();
+        let window_size = windows.single_mut().unwrap().size();
 
         // TODO separate window for layers and highlight active (HUD)
         // egui::Window::new("Keyboard shortcuts")
@@ -182,7 +182,7 @@ pub fn handle_layer_change(
 
     // Now show the current layer for a few seconds
     if !timer.tick(time.delta()).finished() {
-        let window_size = windows.single_mut().size();
+        let window_size = windows.single_mut().unwrap().size();
         // TODO util
         // egui::Window::new("Current layer")
         //     .id(egui::Id::new("current_layer"))

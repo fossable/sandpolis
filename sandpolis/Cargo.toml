@@ -21,6 +21,7 @@ colored = { workspace = true }
 fossable = "0.1.2"
 futures = { workspace = true }
 native_db = { workspace = true }
+os_info = { workspace = true }
 rand = { workspace = true }
 rustls = { workspace = true }
 sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1" }
@@ -60,6 +61,11 @@ ratatui-image = { workspace = true, optional = true }
 image = { workspace = true, optional = true }
 tui-popup = { workspace = true, optional = true }
 tui-prompts = { workspace = true, optional = true }
+
+# GUI client exclusive
+bevy = { workspace = true, optional = true }
+bevy_svg = { workspace = true, optional = true, features = ["2d"] }
+bevy_rapier2d = { workspace = true, optional = true }
 
 [features]
 # Instances
@@ -130,7 +136,20 @@ default = [
 ]
 
 # Client features
-client-gui = ["client", "sandpolis-client/client-gui"]
+client-gui = [
+  "client",
+  "dep:bevy",
+  "dep:bevy_svg",
+  "dep:bevy_rapier2d",
+  "sandpolis-core/client-gui",
+  "sandpolis-client/client-gui",
+  "sandpolis-desktop?/client-gui",
+  "sandpolis-filesystem?/client-gui",
+  "sandpolis-package?/client-gui",
+  "sandpolis-power?/client-gui",
+  "sandpolis-shell?/client-gui",
+  "sandpolis-sysinfo?/client-gui",
+]
 # client-gui-wayland = ["client-gui", "bevy/wayland"]
 client-tui = [
   "client",

@@ -84,8 +84,13 @@ reqwest = { version = "0.12.5", default-features = false, features = [
 ] }
 reqwest-websocket = "0.5.0"
 
-# Client exclusive
+# Terminal client exclusive
 ratatui = { version = "0.29.0", features = ["unstable"] }
 ratatui-image = { version = "8.0.1" }
 tui-popup = { version = "0.6.0" }
 tui-prompts = { version = "0.6.0-alpha.0" }
+
+# GUI client exclusive
+bevy = { version = "0.16.1" }
+bevy_svg = { version = "0.16.0-rc1", features = ["2d"] }
+bevy_rapier2d = { version = "0.30.0" }

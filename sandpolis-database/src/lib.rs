@@ -211,22 +211,21 @@ impl RealmDatabase {
         }
 
         // Ideally choose the most restrictive condition for the watcher
-        let (mut channel, watch_id) = match conditions
-            .first()
-            .expect("There must be at least one condition")
-        {
-            DataCondition::Equal(key, value) => self
+        let (mut channel, watch_id) = match conditions.first() {
+            Some(DataCondition::Equal(key, value)) => self
                 .0
                 .watch()
                 .scan()
                 .secondary(key.clone())
                 .range::<T, _>(value.clone()..=value.clone())?,
-            DataCondition::Range(key, value) => self
+            Some(DataCondition::Range(key, value)) => self
                 .0
                 .watch()
                 .scan()
                 .secondary(key.clone())
                 .range::<T, _>(value.clone())?,
+            // TODO only latest revisions
+            None => self.0.watch().scan().primary().all::<T>()?,
         };
 
         // Safe to end the transaction once the watcher is registered

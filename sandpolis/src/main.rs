@@ -127,7 +127,7 @@ async fn main() -> Result<ExitCode> {
         #[cfg(all(feature = "client-gui", feature = "client-tui"))]
         {
             if args.client.gui {
-                todo!();
+                sandpolis::client::gui::main(config, state).await.unwrap();
             } else if args.client.tui {
                 sandpolis::client::tui::main(config, state).await.unwrap();
             }
@@ -136,6 +136,10 @@ async fn main() -> Result<ExitCode> {
         #[cfg(feature = "client-tui")]
         #[cfg(not(feature = "client-gui"))]
         sandpolis::client::tui::main(config, state).await.unwrap();
+
+        #[cfg(feature = "client-gui")]
+        #[cfg(not(feature = "client-tui"))]
+        sandpolis::client::gui::main(config, state).await.unwrap();
     }
 
     // If this was a client, don't hold up the user by waiting for server/agent

@@ -77,6 +77,7 @@ mod test_cluster_id {
 
 /// All instances are identified by a unique 128-bit string that's generated on
 /// first start. This identifier is reused for all subsequent runs.
+#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Component))]
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct InstanceId(u128);
 

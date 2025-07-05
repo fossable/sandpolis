@@ -26,6 +26,7 @@ pub mod built_info {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
 }
 
+#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 #[derive(Clone, FromRef)]
 pub struct InstanceState {
     #[cfg(feature = "layer-account")]

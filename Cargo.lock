@@ -8051,6 +8051,9 @@ dependencies = [
  "axum",
  "axum-macros",
  "axum-server",
+ "bevy",
+ "bevy_rapier2d",
+ "bevy_svg",
  "built 0.7.7",
  "clap",
  "colored",
@@ -8058,6 +8061,7 @@ dependencies = [
  "futures",
  "image",
  "native_db",
+ "os_info",
  "rand 0.9.1",
  "ratatui",
  "ratatui-image",
@@ -8181,6 +8185,7 @@ name = "sandpolis-core"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "bevy",
  "colored",
  "native_db",
  "native_model",
@@ -8232,6 +8237,7 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "axum",
+ "bevy",
  "enigo",
  "ratatui-image",
  "sandpolis-core",
