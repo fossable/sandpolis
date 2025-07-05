@@ -13,8 +13,11 @@ name = "sandpolis_mobile"
 crate-type = ["lib", "cdylib"]
 
 [dependencies]
-bevy = { version = "0.16" }
+bevy = { workspace = true }
+rustls = { workspace = true }
+tokio = { workspace = true }
 sandpolis = { path = "../sandpolis", version = "8.0.0", features = [
   "client",
   "agent",
 ] }
+sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }

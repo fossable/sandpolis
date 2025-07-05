@@ -8306,7 +8306,10 @@ name = "sandpolis-mobile"
 version = "0.0.1"
 dependencies = [
  "bevy",
+ "rustls",
  "sandpolis",
+ "sandpolis-database",
+ "tokio",
 ]
 
 [[package]]
