@@ -1,7 +1,6 @@
 use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
-use sandpolis_database::{Data, DataIdentifier};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 

@@ -5568,6 +5568,7 @@ dependencies = [
 [[package]]
 name = "native_db"
 version = "0.8.1"
+source = "git+https://github.com/vincent-herlemont/native_db#82498d431fcb2aba522319551560895d5ced7020"
 dependencies = [
  "native_db_macro",
  "native_model",
@@ -5583,6 +5584,7 @@ dependencies = [
 [[package]]
 name = "native_db_macro"
 version = "0.8.1"
+source = "git+https://github.com/vincent-herlemont/native_db#82498d431fcb2aba522319551560895d5ced7020"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -8486,6 +8488,8 @@ dependencies = [
  "serde",
  "sysinfo 0.35.2",
  "tempfile",
+ "test-log",
+ "tokio",
  "tracing",
 ]
 

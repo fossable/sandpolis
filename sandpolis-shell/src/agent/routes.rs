@@ -7,13 +7,13 @@ use axum::{
 use sandpolis_network::RequestResult;
 use std::time::Duration;
 use tokio::{
-    process::{Child, Command},
+    process::Command,
     time::timeout,
 };
 
 use super::ShellSession;
 use crate::messages::{
-    ShellExecuteRequest, ShellExecuteResponse, ShellSessionOutputEvent, ShellSessionRequest,
+    ShellExecuteRequest, ShellExecuteResponse, ShellSessionRequest,
 };
 
 #[axum_macros::debug_handler]

@@ -1,5 +1,4 @@
 use anyhow::Result;
-use axum::Router;
 
 pub(crate) mod messages;
 

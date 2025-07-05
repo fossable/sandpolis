@@ -68,20 +68,20 @@ impl super::RealmClusterCert {
         debug!(cert = ?cert.params(), "Generated new realm CA certificate");
         Ok(Self {
             name,
-            cert: cert.pem(),
-            key: Some(keypair.serialize_pem()),
+            cert: cert.der().to_vec(),
+            key: Some(keypair.serialize_der()),
+            ..Default::default()
         })
     }
 
     pub fn ca(&self) -> Result<Certificate> {
         // TODO https://github.com/rustls/rcgen/issues/274
 
-        Ok(CertificateParams::from_ca_cert_der(
-            &pem::parse(&self.cert)?.into_contents().try_into()?,
-        )?
-        .self_signed(&KeyPair::from_pem(
-            &self.key.ok_or_else(|| anyhow!("No key"))?,
-        )?)?)
+        Ok(
+            CertificateParams::from_ca_cert_der(&self.cert.clone().try_into()?)?.self_signed(
+                &KeyPair::try_from(self.key.clone().ok_or_else(|| anyhow!("No key"))?)?,
+            )?,
+        )
     }
 
     /// Generate a new realm certificate for client instances.
@@ -101,13 +101,18 @@ impl super::RealmClusterCert {
             .push(DnType::CommonName, &*self.name);
 
         // Generate the certificate signed by the CA
-        let cert = cert_params.signed_by(&keypair, &self.ca()?, &KeyPair::from_pem(&self.key)?)?;
+        let cert = cert_params.signed_by(
+            &keypair,
+            &self.ca()?,
+            &KeyPair::try_from(self.key.clone().ok_or_else(|| anyhow!("No key"))?)?,
+        )?;
 
         debug!(cert = ?cert.params(), "Generated new realm client certificate");
         Ok(RealmClientCert {
-            ca: self.ca()?.pem(),
-            cert: cert.pem(),
-            key: Some(keypair.serialize_pem()),
+            ca: self.ca()?.der().to_vec(),
+            cert: cert.der().to_vec(),
+            key: Some(keypair.serialize_der()),
+            ..Default::default()
         })
     }
 
@@ -135,13 +140,14 @@ impl super::RealmClusterCert {
         let cert = cert_params.signed_by(
             &keypair,
             &self.ca()?,
-            &KeyPair::from_pem(&self.key.ok_or_else(|| anyhow!("No key"))?)?,
+            &KeyPair::try_from(self.key.clone().ok_or_else(|| anyhow!("No key"))?)?,
         )?;
 
         debug!(cert = ?cert.params(), "Generated new realm server certificate");
         Ok(RealmServerCert {
-            cert: cert.pem(),
-            key: Some(keypair.serialize_pem()),
+            cert: cert.der().to_vec(),
+            key: Some(keypair.serialize_der()),
+            ..Default::default()
         })
     }
 }
@@ -170,23 +176,23 @@ mod test_realm_ca {
 
         // Write CA cert to temp file
         let mut ca_file = tempfile::NamedTempFile::new()?;
-        ca_file.write_all(ca.cert.as_bytes())?;
+        ca_file.write_all(&ca.cert)?;
 
         let mut server_context = SslAcceptor::mozilla_intermediate_v5(SslMethod::tls_server())?;
         server_context.set_verify(SslVerifyMode::PEER);
         server_context.set_ca_file(&ca_file);
-        server_context.set_certificate(&&X509::from_pem(server.cert.as_bytes())?)?;
-        server_context.set_private_key(&&PKey::from_ec_key(EcKey::private_key_from_pem(
-            server.key.as_bytes(),
+        server_context.set_certificate(&&X509::from_der(&server.cert)?)?;
+        server_context.set_private_key(&&PKey::from_ec_key(EcKey::private_key_from_der(
+            server.key.as_ref().unwrap(),
         )?)?)?;
         let server_context = server_context.build();
 
         let mut client_context = SslConnector::builder(SslMethod::tls_client())?;
         client_context.set_verify(SslVerifyMode::PEER);
         client_context.set_ca_file(&ca_file);
-        client_context.set_certificate(&&X509::from_pem(client.cert.as_bytes())?)?;
+        client_context.set_certificate(&&X509::from_der(&client.cert)?)?;
         client_context.set_private_key(&&PKey::from_ec_key(EcKey::private_key_from_pem(
-            client.key.as_bytes(),
+            client.key.as_ref().unwrap(),
         )?)?)?;
         let client_context = client_context.build();
 

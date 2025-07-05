@@ -1,22 +1,21 @@
 use super::UserData;
-use crate::os::user::UserDataKey;
 use anyhow::Result;
-use native_db::Database;
 use sandpolis_agent::Collector;
-use sandpolis_database::{DataRevision, RealmDatabase, ResidentVec};
-use sysinfo::Users;
+use sandpolis_database::{RealmDatabase, ResidentVec};
+use sysinfo::{User, Users};
+use tracing::trace;
 
 pub struct UserCollector {
-    db: RealmDatabase,
+    data: ResidentVec<UserData>,
     users: Users,
 }
 
 impl UserCollector {
-    pub fn new(db: RealmDatabase) -> Self {
-        Self {
+    pub fn new(db: RealmDatabase) -> Result<Self> {
+        Ok(Self {
             users: Users::new(),
-            db,
-        }
+            data: db.resident_vec(())?,
+        })
     }
 }
 
@@ -25,39 +24,32 @@ impl Collector for UserCollector {
         self.users.refresh();
         trace!(info = ?self.users, "Polled user info");
 
-        let users: ResidentVec<UserData> = self
-            .db
-            .query()
-            .equal(UserDataKey::uid, **user.id() as u64)
-            .latest();
-
         // Update or add any new users
-        for user in self.users.list() {
-            match resident_users.iter().find(|u| u.uid == **user.id()) {
-                Some(u) => u.update(),
-                None => {}
+        'next_user: for user in self.users.list() {
+            for resident_user in self.data.iter().await {
+                if resident_user.read().await.uid == **user.id() {
+                    resident_user.update(|u| {
+                        u.gid = *user.group_id();
+                        u.username = Some(user.name().to_string());
+                        Ok(())
+                    });
+                    continue 'next_user;
+                }
             }
-            let r = self.db.r_transaction()?;
-            let db_users: Vec<UserData> = r
-                .scan()
-                .secondary(UserDataKey::_timestamp)?
-                .equal(DataRevision::default())?
-                .and(
-                    r.scan()
-                        .secondary(UserDataKey::uid)?
-                        .equal(**user.id() as u64)?,
-                )
-                .try_collect()?;
-
-            self.document(**user.id())?.mutate(|data| {
-                data.uid = **user.id() as u64;
-                data.gid = *user.group_id() as u64;
-                data.username = Some(user.name().to_string());
-                Ok(())
-            });
+            self.data.push(user.into()).await?;
         }
 
         // Remove old users
+        // TODO
         Ok(())
+    }
+}
+
+impl From<&User> for UserData {
+    fn from(value: &User) -> Self {
+        Self {
+            uid: **value.id(),
+            ..Default::default()
+        }
     }
 }

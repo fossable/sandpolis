@@ -1,9 +1,7 @@
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::InstanceId;
-use sandpolis_database::DataIdentifier;
 use sandpolis_macros::data;
-use serde::{Deserialize, Serialize};
 
 /// A generic sensor in the system.
 #[data(temporal)]

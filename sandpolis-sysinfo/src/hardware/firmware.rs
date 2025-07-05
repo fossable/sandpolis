@@ -1,9 +1,6 @@
 use native_db::*;
-use native_model::{Model, native_model};
-use sandpolis_core::InstanceId;
-use sandpolis_database::DataIdentifier;
+use native_model::Model;
 use sandpolis_macros::data;
-use serde::{Deserialize, Serialize};
 
 #[data(instance)]
 pub struct FirmwareData {

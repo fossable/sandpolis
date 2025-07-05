@@ -2,27 +2,24 @@
 #![feature(lock_value_accessors)]
 
 use crate::config::DatabaseConfig;
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Result, bail};
 use chrono::{DateTime, Utc};
 use native_db::db_type::{KeyDefinition, KeyEntry, KeyOptions, KeyRange, ToKeyDefinition};
-use native_db::transaction::query::{RScan, SecondaryScan, SecondaryScanIterator};
+use native_db::transaction::query::RScan;
 use native_db::transaction::{RTransaction, RwTransaction};
 use native_db::watch::Event;
 use native_db::{Key, Models, ToInput, ToKey};
 use rand::prelude::*;
-use sandpolis_core::{InstanceId, RealmName};
+use sandpolis_core::RealmName;
 use serde::de::Visitor;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::{BTreeMap, HashMap};
-use std::ops::{Add, Range, RangeBounds, RangeFrom};
-use std::path::Path;
-use std::sync::atomic::AtomicU64;
-use std::{marker::PhantomData, sync::Arc};
-use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::collections::BTreeMap;
+use std::collections::btree_map::IntoValues;
+use std::ops::{Add, RangeBounds};
+use std::sync::Arc;
+use tokio::sync::{RwLock, RwLockReadGuard};
 use tokio_util::sync::CancellationToken;
-use tracing::instrument::WithSubscriber;
 use tracing::{debug, trace, warn};
-use validator::ValidateRequired;
 
 pub mod config;
 
@@ -85,6 +82,25 @@ impl DatabaseLayer {
 
         Ok(db)
     }
+}
+
+/// Create an in-memory database for testing.
+#[macro_export]
+macro_rules! test_db {
+    ($($model:ident),+) => {{
+        let models = Box::leak(Box::new(native_db::Models::new()));
+        $(
+            models.define::<$model>().unwrap();
+        ),+
+
+        sandpolis_database::DatabaseLayer::new(
+            sandpolis_database::config::DatabaseConfig {
+                storage: None,
+                ephemeral: true,
+            },
+            models,
+        )?
+    }}
 }
 
 /// Database handle containing all `Data` for a particular realm.
@@ -588,16 +604,7 @@ mod test_resident {
     #[tokio::test]
     #[test_log::test]
     async fn test_data() -> Result<()> {
-        let models = Box::leak(Box::new(Models::new()));
-        models.define::<TestData>().unwrap();
-
-        let mut database = DatabaseLayer::new(
-            DatabaseConfig {
-                storage: None,
-                ephemeral: true,
-            },
-            models,
-        )?;
+        let database = test_db!(TestData);
 
         let db = database.realm(RealmName::default()).await?;
         let res: Resident<TestData> = db.resident(DataCondition::equal(TestDataKey::a, "A"))?;
@@ -645,16 +652,7 @@ mod test_resident {
     #[tokio::test]
     #[test_log::test]
     async fn test_temporal_data() -> Result<()> {
-        let models = Box::leak(Box::new(Models::new()));
-        models.define::<TestHistoryData>().unwrap();
-
-        let database = DatabaseLayer::new(
-            DatabaseConfig {
-                storage: None,
-                ephemeral: true,
-            },
-            models,
-        )?;
+        let database = test_db!(TestData);
 
         let db = database.realm(RealmName::default()).await?;
         let res: Resident<TestHistoryData> = db.resident(())?;
@@ -790,6 +788,10 @@ impl<T: Data> ResidentVec<T> {
             }
         }
     }
+
+    pub async fn iter(&self) -> IntoValues<DataIdentifier, Resident<T>> {
+        self.inner.read().await.clone().into_values()
+    }
 }
 
 #[derive(Clone)]
@@ -916,16 +918,7 @@ mod test_resident_vec {
     #[tokio::test]
     #[test_log::test]
     async fn test_nonhistorical() -> Result<()> {
-        let models = Box::leak(Box::new(Models::new()));
-        models.define::<TestData>().unwrap();
-
-        let database = DatabaseLayer::new(
-            DatabaseConfig {
-                storage: None,
-                ephemeral: true,
-            },
-            models,
-        )?;
+        let database = test_db!(TestData);
 
         let db = database.realm(RealmName::default()).await?;
         let test_data: ResidentVec<TestData> =

@@ -6,7 +6,6 @@ use axum::extract::ws::{Message, WebSocket};
 use futures::{SinkExt, StreamExt};
 use regex::Regex;
 use sandpolis_database::Resident;
-use std::process::Stdio;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     process::{Child, Command},

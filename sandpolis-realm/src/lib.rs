@@ -10,21 +10,16 @@ use native_db::ToKey;
 use native_model::Model;
 use pem::Pem;
 use pem::encode;
-use regex::Regex;
-use sandpolis_core::{ClusterId, RealmName, UserName};
+use sandpolis_core::{RealmName, UserName};
 use sandpolis_database::ResidentVec;
-use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
+use sandpolis_database::{DatabaseLayer, Resident};
 use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::data;
-use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::fmt::Display;
 use std::fs::File;
 use std::io::Write;
-use std::str::FromStr;
-use std::{ops::Deref, path::Path};
-use tracing::{debug, info};
-use validator::{Validate, ValidationErrors};
+use std::path::Path;
+use validator::Validate;
 use x509_parser::prelude::{FromDer, GeneralName};
 use x509_parser::prelude::{ParsedExtension, X509Certificate};
 
@@ -47,7 +42,7 @@ pub struct RealmLayer {
 impl RealmLayer {
     pub async fn new(
         config: RealmConfig,
-        mut database: DatabaseLayer,
+        database: DatabaseLayer,
         instance: InstanceLayer,
     ) -> Result<Self> {
         let default_realm = database.realm(RealmName::default()).await?;

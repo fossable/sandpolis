@@ -1,9 +1,7 @@
 use super::MemoryData;
 use anyhow::Result;
-use native_db::Database;
 use sandpolis_agent::Collector;
-use sandpolis_database::Resident;
-use std::sync::Arc;
+use sandpolis_database::{RealmDatabase, Resident};
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 use tracing::trace;
 
@@ -13,13 +11,13 @@ pub struct MemoryMonitor {
 }
 
 impl MemoryMonitor {
-    pub fn new(data: Resident<MemoryData>) -> Self {
-        Self {
+    pub fn new(db: RealmDatabase) -> Result<Self> {
+        Ok(Self {
             system: System::new_with_specifics(
                 RefreshKind::nothing().with_memory(MemoryRefreshKind::everything()),
             ),
-            data,
-        }
+            data: db.resident(())?,
+        })
     }
 }
 
@@ -44,19 +42,19 @@ impl Collector for MemoryMonitor {
 
 #[cfg(test)]
 mod tests {
-    use anyhow::Result;
-    use sandpolis_agent::Collector;
-    use sandpolis_database::Database;
+    use super::*;
+    use sandpolis_core::RealmName;
+    use sandpolis_database::{DatabaseLayer, test_db};
 
-    #[test]
-    fn test_memory_monitor() -> Result<()> {
-        let db_path = tempfile::tempdir()?;
-        let db = Database::new(db_path)?;
+    #[tokio::test]
+    #[test_log::test]
+    async fn test_memory_monitor() -> Result<()> {
+        let database: DatabaseLayer = test_db!(MemoryData);
 
-        let mut monitor = super::MemoryMonitor::new(db.document("/test")?);
-        monitor.refresh()?;
+        let mut monitor = MemoryMonitor::new(database.realm(RealmName::default()).await?)?;
+        monitor.refresh().await?;
 
-        assert!(monitor.data.data.total > 0);
+        assert!(monitor.data.read().await.total > 0);
         Ok(())
     }
 }

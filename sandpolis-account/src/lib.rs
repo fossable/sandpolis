@@ -4,9 +4,9 @@
 
 use anyhow::Result;
 use native_db::*;
-use native_model::{Model, native_model};
+use native_model::Model;
 use sandpolis_core::InstanceId;
-use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
+use sandpolis_database::DatabaseLayer;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use validator::Validate;

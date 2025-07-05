@@ -34,9 +34,8 @@
 //!
 //! Direct streams cannot be multicast.
 
-use anyhow::Result;
 use axum::extract::ws::Message;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 pub fn event_to_message<T>(event: &T) -> Message
 where

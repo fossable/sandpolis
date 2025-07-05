@@ -56,8 +56,8 @@ Control is usually divided among multiple parties. Some examples:
   Arguably, Apple has more control of it than you do.
 
 - Control of your password manager (a digital asset) is hopefully not shared
-  with anyone. SaaS password managers have some minimal level of control even
-  with proper encryption.
+  with anyone. SaaS password managers maintain a minimal level of control even
+  with proper end-to-end encryption.
 
 While it's impossible to know exactly what percentage of control we have over
 our virtual estates, it definitely seems to be trending down. People are willing

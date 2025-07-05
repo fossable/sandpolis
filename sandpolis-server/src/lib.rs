@@ -2,9 +2,9 @@ use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::{ClusterId, InstanceId};
-use sandpolis_database::{DataIdentifier, DatabaseLayer, Resident};
+use sandpolis_database::DatabaseLayer;
 use sandpolis_macros::data;
-use sandpolis_network::{NetworkLayer, ServerAddress};
+use sandpolis_network::NetworkLayer;
 use serde::{Deserialize, Serialize};
 
 pub mod config;

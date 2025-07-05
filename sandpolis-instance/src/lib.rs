@@ -3,10 +3,10 @@ use clap::Parser;
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::{ClusterId, InstanceId, RealmName};
-use sandpolis_database::{Data, DataIdentifier, DatabaseLayer, Resident};
+use sandpolis_database::{DatabaseLayer, Resident};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
-use std::{cmp::Ordering, ops::Deref};
+use std::cmp::Ordering;
 
 pub mod cli;
 

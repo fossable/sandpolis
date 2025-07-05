@@ -1,9 +1,7 @@
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::InstanceId;
-use sandpolis_database::{Data, DataIdentifier};
 use sandpolis_macros::data;
-use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "agent")]
 pub mod agent;
@@ -19,12 +17,12 @@ pub struct UserData {
     /// Home directory
     pub directory: Option<String>,
     /// Group ID
-    pub gid: u64,
+    pub gid: u32,
     /// The user's default shell
     pub shell: Option<String>,
     /// User ID
     #[secondary_key]
-    pub uid: u64,
+    pub uid: u32,
     /// Username
     #[secondary_key]
     pub username: Option<String>,

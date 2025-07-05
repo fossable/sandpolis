@@ -2,7 +2,6 @@ use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::InstanceId;
 use sandpolis_macros::data;
-use serde::{Deserialize, Serialize};
 
 pub mod group;
 pub mod memory;

@@ -11,8 +11,6 @@ use native_model::Model;
 use reqwest::ClientBuilder;
 use reqwest_websocket::RequestBuilderExt;
 use sandpolis_core::{InstanceId, RealmName};
-use sandpolis_database::Data;
-use sandpolis_database::DataIdentifier;
 use sandpolis_database::DatabaseLayer;
 use sandpolis_database::Resident;
 use sandpolis_macros::data;
@@ -349,7 +347,8 @@ impl Display for ServerAddress {
     }
 }
 
-/// Unidirectional share of `Data` between two instances.
+/// Unidirectional share of `Data` between two instances. Use creation date to
+/// "catch up" on missed data.
 pub struct ShareData {
     // transfer_ownership: bool
 }

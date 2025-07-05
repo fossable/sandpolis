@@ -1,9 +1,7 @@
 use native_db::*;
-use native_model::{Model, native_model};
+use native_model::Model;
 use sandpolis_core::InstanceId;
-use sandpolis_database::DataIdentifier;
 use sandpolis_macros::data;
-use serde::{Deserialize, Serialize};
 
 #[data(temporal)]
 pub struct DisplayData {

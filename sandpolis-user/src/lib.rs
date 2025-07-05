@@ -2,16 +2,15 @@
 //     include_str!("../README.md")
 // }
 
-use anyhow::{Result, bail};
+use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
-use regex::Regex;
 use sandpolis_core::UserName;
-use sandpolis_database::{Data, DataIdentifier, DatabaseLayer};
+use sandpolis_database::{Data, DatabaseLayer};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
-use std::{net::SocketAddr, ops::Deref, str::FromStr};
-use validator::{Validate, ValidationErrors};
+use std::net::SocketAddr;
+use validator::Validate;
 
 #[cfg(feature = "client")]
 pub mod client;
