@@ -1,3 +1,5 @@
+#![feature(iterator_try_collect)]
+
 use anyhow::Result;
 use axum_macros::FromRef;
 use config::Configuration;
@@ -254,7 +256,7 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_user::UserLayerData>().unwrap();
         m.define::<sandpolis_user::UserData>().unwrap();
         #[cfg(feature = "server")]
-        m.define::<sandpolis_user::PasswordData>().unwrap();
+        m.define::<sandpolis_user::server::PasswordData>().unwrap();
     }
 
     // Server layer

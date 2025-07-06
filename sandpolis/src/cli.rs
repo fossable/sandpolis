@@ -1,10 +1,13 @@
+use crate::config::Configuration;
 use anyhow::Result;
+use anyhow::bail;
 use clap::Parser;
 use clap::Subcommand;
 use colored::Colorize;
+use sandpolis_core::RealmName;
+use std::path::PathBuf;
 use std::process::ExitCode;
-
-use crate::config::Configuration;
+use tracing::info;
 
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about = "Test")]
@@ -72,23 +75,32 @@ pub enum Commands {
 }
 
 impl Commands {
-    pub fn dispatch(&self, config: &Configuration) -> Result<ExitCode> {
+    pub async fn dispatch(self, config: &Configuration) -> Result<ExitCode> {
         match self {
             #[cfg(feature = "server")]
             Commands::NewClientCert { realm, output } => {
-                let db = Database::new(&config.database.storage)?;
+                use sandpolis_realm::RealmClusterCert;
 
-                let realms: Collection<RealmData> = db
-                    .document::<RealmLayerData>("/realm")?
-                    .collection("/realms")?;
-                let g = realms.get_document(realm)?.expect("the realm exists");
-                let ca: Document<RealmClusterCert> = g.get_document("ca")?.expect("the CA exists");
+                let database = sandpolis_database::DatabaseLayer::new(
+                    config.database.clone(),
+                    &crate::MODELS,
+                )?;
 
-                let cert = ca.data.client_cert()?;
+                let db = database.realm(realm.parse()?).await?;
+                let r = db.r_transaction()?;
+
+                let cluster_certs: Vec<RealmClusterCert> =
+                    r.scan().primary()?.all()?.try_collect()?;
+
+                let Some(cluster_cert) = cluster_certs.first() else {
+                    bail!("No cluster cert found");
+                };
+
+                let client_cert = cluster_cert.client_cert()?;
 
                 if let Some(path) = output {
                     info!(path = %path.display(), "Writing endpoint certificate");
-                    std::fs::write(path, &serde_json::to_vec(&cert)?)?;
+                    std::fs::write(path, &serde_json::to_vec(&client_cert)?)?;
                 } else {
                     todo!()
                 }

@@ -80,7 +80,7 @@ async fn main() -> Result<ExitCode> {
         #[cfg(any(feature = "agent", feature = "client"))]
         Some(Commands::Server) => run_instances = vec!["server"],
 
-        Some(command) => return Ok(command.dispatch(&config)?),
+        Some(command) => return Ok(command.dispatch(&config).await?),
         None => (),
     }
 

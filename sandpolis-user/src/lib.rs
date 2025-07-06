@@ -5,6 +5,7 @@
 // }
 
 use anyhow::Result;
+use anyhow::bail;
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::RealmName;
@@ -44,6 +45,17 @@ impl UserLayer {
                 .resident_vec(())?,
             database,
         })
+    }
+
+    // TODO better users.find
+    pub async fn user(&self, username: &UserName) -> Result<UserData> {
+        let user = for user in self.users.iter().await {
+            if user.read().await.username == *username {
+                return Ok(user.read().await.clone());
+            }
+        };
+
+        bail!("User not found");
     }
 }
 

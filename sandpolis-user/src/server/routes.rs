@@ -33,13 +33,7 @@ pub async fn login(
         .validate()
         .map_err(|_| Json(LoginResponse::Invalid))?;
 
-    let Some(user) = state
-        .users
-        .stream()
-        .await
-        .find(async |user| user.read().await.username == request.username)
-        .await
-    else {
+    let Ok(user) = state.user(&request.username).await else {
         debug!(username = %request.username, "User does not exist");
         return Err(Json(LoginResponse::Denied));
     };
@@ -78,12 +72,12 @@ pub async fn login(
     }
 
     let claims = Claims {
-        sub: user.read().await.username.to_string(),
+        sub: user.username.to_string(),
         exp: (SystemTime::now() + Duration::from_secs(3600))
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_secs() as usize,
-        admin: user.read().await.admin,
+        admin: user.admin,
     };
 
     info!(claims = ?claims, "Login succeeded");
