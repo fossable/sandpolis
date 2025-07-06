@@ -67,11 +67,11 @@ impl InstanceState {
             sandpolis_network::NetworkLayer::new(config.network, database.clone(), realm.clone())
                 .await?;
 
-        let user = sandpolis_user::UserLayer::new(database.clone())?;
+        let user = sandpolis_user::UserLayer::new(database.clone()).await?;
 
         let agent = sandpolis_agent::AgentLayer::new(database.clone()).await?;
 
-        let server = sandpolis_server::ServerLayer::new(database.clone(), network.clone())?;
+        let server = sandpolis_server::ServerLayer::new(database.clone(), network.clone()).await?;
 
         #[cfg(feature = "layer-package")]
         let package = sandpolis_package::PackageLayer::new().await?;

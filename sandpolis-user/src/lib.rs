@@ -6,6 +6,7 @@ use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::UserName;
+use sandpolis_database::ResidentVec;
 use sandpolis_database::{Data, DatabaseLayer};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
@@ -27,14 +28,17 @@ pub struct UserLayerData {}
 pub struct UserLayer {
     pub database: DatabaseLayer,
     #[cfg(feature = "server")]
-    pub users: DataView<UserData>,
+    pub users: ResidentVec<UserData>,
 }
 
 impl UserLayer {
-    pub fn new(database: DatabaseLayer) -> Result<Self> {
+    pub async fn new(database: DatabaseLayer) -> Result<Self> {
         Ok(Self {
             #[cfg(feature = "server")]
-            users: data.collection("/users")?,
+            users: database
+                .realm(RealmName::default())
+                .await?
+                .resident_vec(())?,
             database,
         })
     }

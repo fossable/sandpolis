@@ -824,11 +824,14 @@ impl DataCondition {
         }
     }
 
-    fn equal(key: impl ToKeyDefinition<KeyOptions>, value: impl ToKey) -> Self {
+    pub fn equal(key: impl ToKeyDefinition<KeyOptions>, value: impl ToKey) -> Self {
         Self::Equal(key.key_definition(), value.to_key())
     }
 
-    fn range<R: RangeBounds<impl ToKey>>(key: impl ToKeyDefinition<KeyOptions>, value: R) -> Self {
+    pub fn range<R: RangeBounds<impl ToKey>>(
+        key: impl ToKeyDefinition<KeyOptions>,
+        value: R,
+    ) -> Self {
         Self::Range(key.key_definition(), KeyRange::new(value))
     }
 }

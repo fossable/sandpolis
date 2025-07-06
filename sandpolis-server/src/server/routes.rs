@@ -1,12 +1,8 @@
+use crate::ServerLayer;
 use crate::messages::GetBannerRequest;
 use crate::messages::GetBannerResponse;
-use crate::ServerLayer;
 use axum::extract;
-use axum::{
-    extract::State,
-    routing::{get, post},
-    Json, Router,
-};
+use axum::{Json, Router, extract::State};
 use sandpolis_network::RequestResult;
 
 /// Return a "banner" containing server metadata.
@@ -15,5 +11,7 @@ pub async fn banner(
     state: State<ServerLayer>,
     extract::Json(_): extract::Json<GetBannerRequest>,
 ) -> RequestResult<GetBannerResponse> {
-    Ok(Json(GetBannerResponse::Ok(state.banner.data.clone())))
+    Ok(Json(GetBannerResponse::Ok(
+        state.banner.read().await.clone(),
+    )))
 }

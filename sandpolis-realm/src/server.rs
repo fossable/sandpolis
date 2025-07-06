@@ -1,3 +1,6 @@
+use crate::RealmLayer;
+use crate::RealmServerCertKey;
+
 use super::RealmClientCert;
 use super::RealmClusterCert;
 use super::RealmData;
@@ -31,16 +34,18 @@ use rustls_pki_types::pem::PemObject;
 use sandpolis_core::ClusterId;
 use sandpolis_core::InstanceId;
 use sandpolis_core::InstanceType;
+use sandpolis_database::DataCondition;
+use sandpolis_database::Resident;
+use sandpolis_instance::InstanceLayer;
 use std::io;
 use std::sync::Arc;
-use tempfile::TempDir;
-use tempfile::tempdir;
 use time::Duration;
 use time::OffsetDateTime;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_rustls::server::TlsStream;
 use tower::Layer;
 use tracing::debug;
+use tracing::trace;
 use x509_parser::prelude::{FromDer, X509Certificate};
 
 impl super::RealmClusterCert {
@@ -225,44 +230,46 @@ pub struct TlsData {
 pub struct RealmAcceptor(RustlsAcceptor);
 
 impl RealmAcceptor {
-    pub fn new(realms: Vec<RealmData>) -> Result<Self> {
+    pub async fn new(instance_layer: InstanceLayer, realm_layer: RealmLayer) -> Result<Self> {
         let mut roots = RootCertStore::empty();
         let mut sni_resolver = ResolvesServerCertUsingSni::new();
 
         let config = ServerConfig::builder();
 
-        for realm in realms {
+        for realm in realm_layer.realms.iter().await {
+            let realm = realm.read().await;
+            let db = realm_layer.realm(realm.name.clone()).await?;
+            trace!(name = *realm.name, "Registering realm with server acceptor");
+
             // Add cluster cert as a CA cert to the root store
             {
-                let cluster_cert: &RealmClusterCert = realm
-                    .cluster_cert
-                    .as_ref()
-                    .ok_or_else(|| anyhow!("No cluster cert")?);
+                let cluster_cert: Resident<RealmClusterCert> = db.resident(())?;
 
-                roots.add(pem::parse(&cluster_cert.cert)?.into_contents().try_into()?)?;
+                roots.add(cluster_cert.read().await.cert.clone().try_into()?)?;
             }
 
             // Add server cert to the SNI resolver
             {
-                let server_cert: Document<RealmServerCert> = realm.get_document("server")?.unwrap();
+                let server_cert: Resident<RealmServerCert> = db.resident(DataCondition::equal(
+                    RealmServerCertKey::_instance_id,
+                    instance_layer.instance_id,
+                ))?;
+
                 let private_key = config.crypto_provider().key_provider.load_private_key(
-                    PrivateKeyDer::from_pem_slice(
-                        &server_cert
-                            .data
-                            .key
-                            .ok_or_else(|| anyhow!("No server key")?)
-                            .as_bytes(),
-                    )?,
+                    server_cert
+                        .read()
+                        .await
+                        .key
+                        .clone()
+                        .ok_or_else(|| anyhow!("No server key"))?
+                        .try_into()
+                        .map_err(|_| anyhow!("Failed to parse key"))?,
                 )?;
 
                 sni_resolver.add(
-                    &server_cert.data.subject_name()?,
+                    &server_cert.read().await.subject_name()?,
                     rustls::sign::CertifiedKey::new(
-                        vec![
-                            pem::parse(&server_cert.data.cert)?
-                                .into_contents()
-                                .try_into()?,
-                        ],
+                        vec![server_cert.read().await.cert.clone().try_into()?],
                         private_key,
                     ),
                 )?;

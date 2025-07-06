@@ -19,7 +19,9 @@ sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 
 [features]
 agent = ["dep:notify"]
-client = ["dep:fuser"]
+client = [
+  #"dep:fuser"
+]
 client-gui = ["client"]
 client-tui = ["client"]
 server = []

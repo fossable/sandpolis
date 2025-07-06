@@ -40,7 +40,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     info!(listener = ?config.server.listen, "Starting server listener");
     axum_server::bind(config.server.listen)
         .acceptor(sandpolis_realm::server::RealmAcceptor::new(
-            state.realm.realms.clone(),
+            state.instance.clone(),
+            state.realm.clone(),
         )?)
         .serve(app.with_state(state).into_make_service())
         .await

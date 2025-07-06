@@ -11,6 +11,7 @@ use native_model::Model;
 use pem::Pem;
 use pem::encode;
 use sandpolis_core::{RealmName, UserName};
+use sandpolis_database::RealmDatabase;
 use sandpolis_database::ResidentVec;
 use sandpolis_database::{DatabaseLayer, Resident};
 use sandpolis_instance::InstanceLayer;
@@ -35,8 +36,9 @@ pub struct RealmLayerData {
 
 #[derive(Clone)]
 pub struct RealmLayer {
+    database: DatabaseLayer,
     data: Resident<RealmLayerData>,
-    realms: ResidentVec<RealmData>,
+    pub realms: ResidentVec<RealmData>,
 }
 
 impl RealmLayer {
@@ -53,16 +55,15 @@ impl RealmLayer {
 
         #[cfg(feature = "server")]
         {
-            let cluster_cert = RealmClusterCert::new(
-                instance_layer.data.value().cluster_id,
-                RealmName::default(),
-            )?;
-            let server_cert = cluster_cert.server_cert(instance_layer.data.value().instance_id)?;
+            // let cluster_cert =
+            //     RealmClusterCert::new(instance.data.value().cluster_id,
+            // RealmName::default())?; let server_cert =
+            // cluster_cert.server_cert(instance.data.value().instance_id)?;
 
-            let rw = realm_db.rw_transaction()?;
-            rw.insert(cluster_cert)?;
-            rw.insert(server_cert)?;
-            rw.commit()?;
+            // let rw = realm_db.rw_transaction()?;
+            // rw.insert(cluster_cert)?;
+            // rw.insert(server_cert)?;
+            // rw.commit()?;
         }
 
         // Update client cert if possible
@@ -82,9 +83,20 @@ impl RealmLayer {
         // }
 
         Ok(Self {
+            database,
             data: default_realm.resident(())?,
             realms,
         })
+    }
+
+    pub async fn realm(&self, name: RealmName) -> Result<RealmDatabase> {
+        // Don't allow this method to create realms that don't already exist
+        for realm in self.realms.iter().await {
+            if realm.read().await.name == name {
+                return Ok(self.database.realm(name).await?);
+            }
+        }
+        bail!("Realm does not exist");
     }
 }
 
@@ -110,7 +122,7 @@ pub struct RealmClusterCert {
 }
 
 /// Each server in the cluster gets its own server certificate.
-#[data]
+#[data(instance)]
 pub struct RealmServerCert {
     pub cert: Vec<u8>,
     pub key: Option<Vec<u8>>,
@@ -250,17 +262,17 @@ impl RealmClientCert {
 
 #[cfg(test)]
 mod test_client_cert {
-    use super::RealmClientCert;
+    use super::*;
 
     #[test]
     fn test_read_write() -> Result<()> {
         let mut temp_file = tempfile::NamedTempFile::new()?;
 
         let cert = RealmClientCert {
-            ca: "doesn't have to be a valid cert".bytes(),
-            cert: "doesn't have to be a valid cert".bytes(),
-            key: Some("doesn't have to be a valid key".bytes()),
-            _id: 0,
+            ca: "doesn't have to be a valid cert".as_bytes().to_vec(),
+            cert: "doesn't have to be a valid cert".as_bytes().to_vec(),
+            key: Some("doesn't have to be a valid key".as_bytes().to_vec()),
+            ..Default::default()
         };
 
         cert.write(temp_file.path())?;

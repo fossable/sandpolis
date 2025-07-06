@@ -1,8 +1,11 @@
 use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
+#[cfg(feature = "server")]
+use sandpolis_core::RealmName;
 use sandpolis_core::{ClusterId, InstanceId};
 use sandpolis_database::DatabaseLayer;
+use sandpolis_database::Resident;
 use sandpolis_macros::data;
 use sandpolis_network::NetworkLayer;
 use serde::{Deserialize, Serialize};
@@ -28,18 +31,10 @@ pub struct ServerLayer {
 }
 
 impl ServerLayer {
-    pub fn new(database: DatabaseLayer, network: NetworkLayer) -> Result<Self> {
+    pub async fn new(database: DatabaseLayer, network: NetworkLayer) -> Result<Self> {
         Ok(Self {
             #[cfg(feature = "server")]
-            banner: if let Some(document) = data.get_document("/banner")? {
-                document
-            } else {
-                // Load banner from another server if there is one
-                // TODO
-
-                // Create a new banner
-                data.document("/banner")?
-            },
+            banner: database.realm(RealmName::default()).await?.resident(())?,
             network,
         })
     }
@@ -50,7 +45,7 @@ impl ServerLayer {
 }
 
 /// Contains information about the server useful for prospective logins
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[data]
 pub struct ServerBannerData {
     pub cluster_id: ClusterId,
 
