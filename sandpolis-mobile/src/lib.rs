@@ -22,7 +22,8 @@ pub fn main() {
                 config.clone(),
                 DatabaseLayer::new(config.database.clone(), &*sandpolis::MODELS).unwrap(),
             )
-            .await?;
+            .await
+            .unwrap();
 
             sandpolis::client::gui::main(config, state).await.unwrap();
         });

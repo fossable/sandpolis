@@ -3,7 +3,7 @@ use colored::Color;
 use native_db::ToKey;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
+use std::fmt::{Display, Write};
 use std::ops::Deref;
 use std::str::FromStr;
 use strum::{EnumIter, IntoEnumIterator};
@@ -332,5 +332,21 @@ impl Validate for UserName {
 impl Default for UserName {
     fn default() -> Self {
         UserName("admin".to_string())
+    }
+}
+
+impl Display for UserName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl ToKey for UserName {
+    fn to_key(&self) -> native_db::Key {
+        native_db::Key::new(self.0.as_bytes().to_vec())
+    }
+
+    fn key_names() -> Vec<String> {
+        vec!["UserName".to_string()]
     }
 }

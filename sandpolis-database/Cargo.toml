@@ -9,6 +9,7 @@ version = "0.0.1"
 anyhow = { workspace = true }
 chrono = { workspace = true }
 clap = { workspace = true }
+futures = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
 rand = { workspace = true }

@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use axum::{
     RequestPartsExt, Router,
     extract::FromRequestParts,
@@ -10,8 +10,14 @@ use axum_extra::{
     headers::{Authorization, authorization::Bearer},
 };
 use jsonwebtoken::{DecodingKey, EncodingKey, Validation, decode};
+use native_db::ToKey;
+use native_model::Model;
+use passwords::PasswordGenerator;
 use rand::Rng;
 use ring::pbkdf2;
+use sandpolis_core::{RealmName, UserName};
+use sandpolis_database::DataRevision;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 use std::{
@@ -27,38 +33,9 @@ use super::UserLayer;
 
 pub mod routes;
 
-impl UserLayer {
-    /// Create an admin user if one doesn't exist already. The password will be
-    /// emitted in the server log.
-    pub fn create_admin(&self) -> Result<()> {
-        if self
-            .users
-            .documents()
-            .filter_map(|user| user.ok())
-            .find(|user| user.data.admin)
-            .is_none()
-        {
-            let user = self.users.insert_document(
-                "admin",
-                UserData {
-                    username: "admin".parse()?,
-                    admin: true,
-                    email: None,
-                    phone: None,
-                    expiration: None,
-                },
-            )?;
-
-            let default = "test"; // TODO hash
-            // TODO transaction
-            user.insert_document("password", PasswordData::new(&default))?;
-            info!(username = "admin", password = %default, "Created default admin user");
-        }
-        Ok(())
-    }
-}
-
 static KEY: LazyLock<ServerKey> = LazyLock::new(|| ServerKey::new());
+
+static USER_PASSWORD_HASH_ITERATIONS: NonZeroU32 = NonZeroU32::new(15000).unwrap();
 
 struct ServerKey {
     encoding: EncodingKey,
@@ -75,8 +52,13 @@ impl ServerKey {
     }
 }
 
-#[derive(Serialize, Deserialize, Validate, Clone)]
+#[derive(Validate)]
+#[data(temporal)]
 pub struct PasswordData {
+    /// User that this password belongs to
+    #[secondary_key]
+    pub user: UserName,
+
     /// Number of rounds to use when hashing password
     #[validate(range(min = 4284, max = 200000))]
     pub iterations: u32,
@@ -91,31 +73,111 @@ pub struct PasswordData {
     pub totp_secret: Option<String>,
 }
 
-impl PasswordData {
+impl UserLayer {
+    /// Create an admin user if one doesn't exist already. The password will be
+    /// emitted in the server log if created.
+    pub async fn try_create_admin(&self) -> Result<()> {
+        for user in self.users.iter().await {
+            if user.read().await.admin {
+                return Ok(());
+            }
+        }
+
+        self.users
+            .push(UserData {
+                username: "admin".parse()?,
+                admin: true,
+                email: None,
+                phone: None,
+                expiration: None,
+                ..Default::default()
+            })
+            .await?;
+
+        // Generate a default password
+        let password = PasswordGenerator::new()
+            .length(8)
+            .numbers(true)
+            .lowercase_letters(true)
+            .uppercase_letters(true)
+            .symbols(true)
+            .spaces(true)
+            .exclude_similar_characters(true)
+            .strict(false)
+            .generate_one()
+            .unwrap();
+
+        self.new_password("admin".parse()?, &password).await?;
+        info!(username = "admin", password = %password, "Created default admin user");
+        Ok(())
+    }
+
     /// Create a new password without a TOTP.
-    pub fn new(password: &str) -> Self {
-        let mut data = PasswordData {
-            iterations: 15000,
-            salt: rand::rng().random::<[u8; 32]>().to_vec(),
-            hash: vec![0u8; ring::digest::SHA256_OUTPUT_LEN],
-            totp_secret: None,
-        };
+    pub async fn new_password(&self, user: UserName, password: &str) -> Result<PasswordData> {
+        // Precondition: user exists
+        // TODO
+
+        // Precondition: no password exists for this user yet
+        // TODO
+
+        let salt = rand::rng().random::<[u8; 32]>().to_vec();
+        let mut hash = Vec::new();
+
         pbkdf2::derive(
             pbkdf2::PBKDF2_HMAC_SHA256,
-            NonZeroU32::new(data.iterations).expect("nonzero"),
-            &data.salt,
+            USER_PASSWORD_HASH_ITERATIONS,
+            &salt,
             password.as_bytes(),
-            &mut data.hash,
+            &mut hash,
         );
-        data
+
+        let db = self.database.realm(RealmName::default()).await?;
+        let rw = db.rw_transaction()?;
+
+        let password = PasswordData {
+            user,
+            iterations: USER_PASSWORD_HASH_ITERATIONS.get(),
+            salt,
+            hash,
+            totp_secret: None,
+            ..Default::default()
+        };
+        rw.insert(password.clone())?;
+        rw.commit()?;
+
+        Ok(password)
     }
 
     /// Create a new password with a TOTP.
-    pub fn new_with_totp(username: &str, password: &str) -> Result<Self> {
-        let mut data = PasswordData {
-            iterations: 15000,
-            salt: rand::rng().random::<[u8; 32]>().to_vec(),
-            hash: Vec::new(),
+    pub async fn new_password_with_totp(
+        &self,
+        user: UserName,
+        password: &str,
+    ) -> Result<PasswordData> {
+        // Precondition: user exists
+        // TODO
+
+        // Precondition: no password exists for this user yet
+        // TODO
+
+        let salt = rand::rng().random::<[u8; 32]>().to_vec();
+        let mut hash = Vec::new();
+
+        pbkdf2::derive(
+            pbkdf2::PBKDF2_HMAC_SHA256,
+            USER_PASSWORD_HASH_ITERATIONS,
+            &salt,
+            password.as_bytes(),
+            &mut hash,
+        );
+
+        let db = self.database.realm(RealmName::default()).await?;
+        let rw = db.rw_transaction()?;
+
+        let password = PasswordData {
+            iterations: USER_PASSWORD_HASH_ITERATIONS.get(),
+            salt,
+            hash,
             totp_secret: Some(
                 TOTP::new(
                     totp_rs::Algorithm::SHA1,
@@ -124,29 +186,43 @@ impl PasswordData {
                     30,
                     Secret::default().to_bytes()?,
                     Some("Sandpolis".to_string()),
-                    username.to_string(),
+                    user.to_string(),
                 )?
                 .get_url(),
             ),
+            user,
+            ..Default::default()
         };
-        pbkdf2::derive(
-            pbkdf2::PBKDF2_HMAC_SHA256,
-            NonZeroU32::new(data.iterations).expect("nonzero"),
-            &data.salt,
-            password.as_bytes(),
-            &mut data.hash,
-        );
-        Ok(data)
+        rw.insert(password.clone())?;
+        rw.commit()?;
+
+        Ok(password)
+    }
+
+    pub async fn password(&self, user: UserName) -> Result<PasswordData> {
+        let db = self.database.realm(RealmName::default()).await?;
+        let r = db.r_transaction()?;
+
+        let passwords: Vec<PasswordData> = r
+            .scan()
+            .secondary(PasswordDataKey::user)?
+            .equal(user)?
+            .and(
+                r.scan()
+                    .secondary(PasswordDataKey::_revision)?
+                    .equal(DataRevision::Latest(0))?,
+            )
+            .try_collect()?;
+
+        if passwords.len() != 1 {
+            bail!("Failed to get password");
+        }
+
+        Ok(passwords[0].to_owned())
     }
 }
 
 impl Display for PasswordData {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
-    }
-}
-
-impl Debug for PasswordData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PasswordData")
             .field("iterations", &self.iterations)

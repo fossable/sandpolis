@@ -12,6 +12,7 @@ axum = { workspace = true }
 chrono = { workspace = true }
 clap = { workspace = true }
 futures = { workspace = true }
+futures-util = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
 reqwest-websocket = { workspace = true }
@@ -27,6 +28,7 @@ serde_with = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
+validator = { workspace = true }
 
 [features]
 agent = []

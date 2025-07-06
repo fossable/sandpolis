@@ -395,15 +395,12 @@ impl Default for DataRevision {
 
 impl ToKey for DataRevision {
     fn to_key(&self) -> native_db::Key {
-        native_db::Key::new(
-            match self {
-                DataRevision::Latest(v) => *v,
-                // Previous values are stored as negative so we can tell the difference
-                DataRevision::Previous(v) => -v,
-            }
-            .to_be_bytes()
-            .to_vec(),
-        )
+        match self {
+            DataRevision::Latest(v) => *v,
+            // Previous values are stored as negative so we can tell the difference
+            DataRevision::Previous(v) => -v,
+        }
+        .to_key()
     }
 
     fn key_names() -> Vec<String> {
@@ -428,7 +425,7 @@ impl Default for DataExpiration {
 
 impl ToKey for DataExpiration {
     fn to_key(&self) -> native_db::Key {
-        native_db::Key::new(self.0.timestamp_millis().to_be_bytes().to_vec())
+        self.0.timestamp_millis().to_key()
     }
 
     fn key_names() -> Vec<String> {
@@ -457,7 +454,7 @@ impl Default for DataCreation {
 
 impl ToKey for DataCreation {
     fn to_key(&self) -> native_db::Key {
-        native_db::Key::new(self.0.timestamp_millis().to_be_bytes().to_vec())
+        self.0.timestamp_millis().to_key()
     }
 
     fn key_names() -> Vec<String> {
@@ -650,7 +647,7 @@ mod test_resident {
     #[tokio::test]
     #[test_log::test]
     async fn test_temporal_data() -> Result<()> {
-        let database = test_db!(TestData);
+        let database = test_db!(TestHistoryData);
 
         let db = database.realm(RealmName::default()).await?;
         let res: Resident<TestHistoryData> = db.resident(())?;
@@ -673,8 +670,6 @@ mod test_resident {
 
         // Check history
         {
-            trace!("{:?}", DataCreation::all().start_bound());
-            trace!("{:?}", DataCreation::all().end_bound());
             assert_eq!(res.history(DataCreation::all()).await?.len(), 10);
         }
 
@@ -789,6 +784,10 @@ impl<T: Data> ResidentVec<T> {
 
     pub async fn iter(&self) -> IntoValues<DataIdentifier, Resident<T>> {
         self.inner.read().await.clone().into_values()
+    }
+
+    pub async fn stream(&self) -> futures::stream::Iter<IntoValues<DataIdentifier, Resident<T>>> {
+        futures::stream::iter(self.inner.read().await.clone().into_values())
     }
 }
 

@@ -12,7 +12,7 @@ serde = { workspace = true }
 tokio = { workspace = true }
 tokio-stream = { workspace = true }
 clap = { workspace = true }
-passwords = { version = "3.1.16", optional = true, features = [
+passwords = { workspace = true, optional = true, features = [
   "common-password",
 ] }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }

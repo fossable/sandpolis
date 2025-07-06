@@ -9,9 +9,13 @@ version = "0.0.1"
 anyhow = { workspace = true }
 serde = { workspace = true }
 base64 = { workspace = true }
+futures = { workspace = true }
 rand = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
+passwords = { workspace = true, optional = true, features = [
+  "common-password",
+] }
 ring = { workspace = true }
 axum = { workspace = true }
 axum-macros = { workspace = true }
@@ -39,5 +43,6 @@ server = [
   "dep:argon2",
   "dep:jsonwebtoken",
   "dep:sandpolis-server",
+  "dep:passwords",
 ]
 client = ["dep:totp-rs", "totp-rs?/qr", "dep:argon2"]

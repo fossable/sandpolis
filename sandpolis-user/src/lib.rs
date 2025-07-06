@@ -1,3 +1,5 @@
+#![feature(iterator_try_collect)]
+
 // doc_comment! {
 //     include_str!("../README.md")
 // }
@@ -5,6 +7,7 @@
 use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
+use sandpolis_core::RealmName;
 use sandpolis_core::UserName;
 use sandpolis_database::ResidentVec;
 use sandpolis_database::{Data, DatabaseLayer};

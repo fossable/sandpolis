@@ -1,10 +1,21 @@
+use crate::{UserData, server::Claims};
+use crate::{UserLayer, server::KEY};
+use crate::{
+    messages::{
+        CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
+        LoginResponse,
+    },
+    server::PasswordData,
+};
 use anyhow::Result;
 use axum::{
-    extract::{self, State},
     Json,
+    extract::{self, State},
 };
-use jsonwebtoken::{encode, Header};
+use futures::stream::StreamExt;
+use jsonwebtoken::{Header, encode};
 use ring::pbkdf2;
+use sandpolis_network::RequestResult;
 use std::{
     num::NonZeroU32,
     time::{Duration, SystemTime},
@@ -13,50 +24,33 @@ use totp_rs::TOTP;
 use tracing::{debug, error, info};
 use validator::Validate;
 
-use crate::{
-    messages::{
-        CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
-        LoginResponse,
-    },
-    server::PasswordData,
-};
-use crate::{server::Claims, UserData};
-use crate::{server::KEY, UserLayer};
-use sandpolis_database::Document;
-use sandpolis_network::RequestResult;
-
 #[axum_macros::debug_handler]
 pub async fn login(
     state: State<UserLayer>,
-    // Extension(_): Extension<RealmName>,
     extract::Json(request): extract::Json<LoginRequest>,
 ) -> RequestResult<LoginResponse> {
-    let user: Document<UserData> = match state.users.get_document(&request.username) {
-        Ok(Some(user)) => user,
-        Ok(None) => {
-            debug!(username = %request.username, "User does not exist");
-            return Err(Json(LoginResponse::Denied));
-        }
-        _ => {
-            error!("Failed to get user");
-            return Err(Json(LoginResponse::Invalid));
-        }
+    request
+        .validate()
+        .map_err(|_| Json(LoginResponse::Invalid))?;
+
+    let Some(user) = state
+        .users
+        .stream()
+        .await
+        .find(async |user| user.read().await.username == request.username)
+        .await
+    else {
+        debug!(username = %request.username, "User does not exist");
+        return Err(Json(LoginResponse::Denied));
     };
 
-    let password: Document<PasswordData> = match user.get_document("password") {
-        Ok(Some(password)) => password,
-        Ok(None) => {
-            error!("Password does not exist");
-            return Err(Json(LoginResponse::Denied));
-        }
-        _ => {
-            error!("Failed to get user password");
-            return Err(Json(LoginResponse::Invalid));
-        }
+    let Ok(password) = state.password(request.username.clone()).await else {
+        error!("Failed to get user password");
+        return Err(Json(LoginResponse::Invalid));
     };
 
     // Check TOTP token if there is one
-    if let Some(totp_url) = password.data.totp_secret {
+    if let Some(totp_url) = password.totp_secret.as_ref() {
         if request.totp_token.unwrap_or(String::new())
             != TOTP::from_url(totp_url)
                 .unwrap()
@@ -72,10 +66,10 @@ pub async fn login(
     // TODO argon2
     if pbkdf2::verify(
         pbkdf2::PBKDF2_HMAC_SHA256,
-        NonZeroU32::new(password.data.iterations).unwrap_or(NonZeroU32::new(1).unwrap()),
-        &password.data.salt,
+        NonZeroU32::new(password.iterations).unwrap_or(NonZeroU32::new(1).unwrap()),
+        &password.salt,
         request.password.0.as_bytes(),
-        &password.data.hash,
+        &password.hash,
     )
     .is_err()
     {
@@ -84,12 +78,12 @@ pub async fn login(
     }
 
     let claims = Claims {
-        sub: user.data.username.to_string(),
+        sub: user.read().await.username.to_string(),
         exp: (SystemTime::now() + Duration::from_secs(3600))
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_secs() as usize,
-        admin: user.data.admin,
+        admin: user.read().await.admin,
     };
 
     info!(claims = ?claims, "Login succeeded");
@@ -99,17 +93,14 @@ pub async fn login(
     )))
 }
 
-/// Create a new user account that can be logged in from a client instance.
+/// Create a new user
 #[axum_macros::debug_handler]
 pub async fn create_user(
     state: State<UserLayer>,
-    // Extension(_): Extension<RealmName>,
     claims: Claims,
     extract::Json(request): extract::Json<CreateUserRequest>,
 ) -> RequestResult<CreateUserResponse> {
-    // Validate user data
     request
-        .data
         .validate()
         .map_err(|_| Json(CreateUserResponse::InvalidUser))?;
 
@@ -118,19 +109,24 @@ pub async fn create_user(
         return Err(Json(CreateUserResponse::Failed));
     }
 
+    // Create new password
     let password = if request.totp {
-        PasswordData::new_with_totp(&request.data.username, &request.password)
+        state
+            .new_password_with_totp(request.data.username.clone(), &request.password)
+            .await
             .map_err(|_| Json(CreateUserResponse::Failed))?
     } else {
-        PasswordData::new(&request.password)
+        state
+            .new_password(request.data.username.clone(), &request.password)
+            .await
+            .map_err(|_| Json(CreateUserResponse::Failed))?
     };
 
-    let user = state
+    // Add new user
+    state
         .users
-        .insert_document(&request.data.username.to_string(), request.data)
-        .map_err(|_| Json(CreateUserResponse::Failed))?;
-
-    user.insert_document("password", password.clone())
+        .push(request.data)
+        .await
         .map_err(|_| Json(CreateUserResponse::Failed))?;
 
     Ok(Json(CreateUserResponse::Ok {
@@ -141,16 +137,16 @@ pub async fn create_user(
 #[axum_macros::debug_handler]
 pub async fn get_users(
     state: State<UserLayer>,
-    // Extension(_): Extension<RealmName>,
     claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
 ) -> RequestResult<GetUsersResponse> {
     if let Some(username) = request.username {
-        match state.users.get_document(&*username) {
-            Ok(Some(user)) => return Ok(Json(GetUsersResponse::Ok(vec![user.data]))),
-            Ok(None) => return Ok(Json(GetUsersResponse::Ok(Vec::new()))),
-            Err(_) => todo!(),
-        }
+        // match state.users.get_document(&*username) {
+        //     Ok(Some(user)) => return
+        // Ok(Json(GetUsersResponse::Ok(vec![user.data]))),     Ok(None)
+        // => return Ok(Json(GetUsersResponse::Ok(Vec::new()))),
+        //     Err(_) => todo!(),
+        // }
     }
 
     todo!()

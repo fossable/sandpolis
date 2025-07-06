@@ -6,6 +6,7 @@ use validator::Validate;
 /// Create a new user account.
 #[derive(Serialize, Deserialize, Validate)]
 pub struct CreateUserRequest {
+    // TODO inline
     pub data: UserData,
 
     /// Password as unsalted hash
@@ -41,7 +42,7 @@ pub enum GetUsersResponse {
 }
 
 /// Update an existing user account.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Validate)]
 pub struct UpdateUserRequest {
     /// User to edit
     pub username: UserName,
@@ -68,10 +69,10 @@ pub enum UpdateUserResponse {
 }
 
 /// Request a login from the server
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Validate)]
 pub struct LoginRequest {
     /// User to login as
-    pub username: String,
+    pub username: UserName,
 
     /// Pre-hashed password
     pub password: LoginPassword,
