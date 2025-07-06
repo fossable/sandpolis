@@ -1,8 +1,8 @@
+use crate::NetworkLayer;
 use axum::Json;
-use axum::Router;
-use axum::extract;
 use axum::extract::State;
-use axum::routing::post;
+use axum::middleware::Next;
+use axum::response::Response;
 
 /// Refuse requests from IP addresses on a configurable block-list (even if they
 /// can authenticate).

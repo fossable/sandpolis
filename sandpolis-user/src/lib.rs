@@ -46,17 +46,6 @@ impl UserLayer {
             database,
         })
     }
-
-    // TODO better users.find
-    pub async fn user(&self, username: &UserName) -> Result<UserData> {
-        let user = for user in self.users.iter().await {
-            if user.read().await.username == *username {
-                return Ok(user.read().await.clone());
-            }
-        };
-
-        bail!("User not found");
-    }
 }
 
 #[derive(Validate)]

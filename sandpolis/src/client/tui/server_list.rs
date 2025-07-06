@@ -71,7 +71,7 @@ impl ServerListWidget {
         {
             list_items.push(Arc::new(ServerListItem {
                 address: "127.0.0.1:8768".parse().unwrap(),
-                banner: RwLock::new(LoadServerBanner::Loaded(server_layer.banner.data.clone())),
+                banner: RwLock::new(LoadServerBanner::Loaded(server_layer.banner.read().clone())),
                 // The banner is already loaded, so this channel will never be used
                 fetch_banner: RwLock::new(mpsc::channel(1).1),
                 ping: RwLock::new(Some(0)),
