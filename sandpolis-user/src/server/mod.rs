@@ -76,9 +76,9 @@ pub struct PasswordData {
 impl UserLayer {
     // TODO better users.find
     pub async fn user(&self, username: &UserName) -> Result<UserData> {
-        let user = for user in self.users.iter().await {
-            if user.read().await.username == *username {
-                return Ok(user.read().await.clone());
+        let user = for user in self.users.iter() {
+            if user.read().username == *username {
+                return Ok(user.read().clone());
             }
         };
 
@@ -88,22 +88,20 @@ impl UserLayer {
     /// Create an admin user if one doesn't exist already. The password will be
     /// emitted in the server log if created.
     pub async fn try_create_admin(&self) -> Result<()> {
-        for user in self.users.iter().await {
-            if user.read().await.admin {
+        for user in self.users.iter() {
+            if user.read().admin {
                 return Ok(());
             }
         }
 
-        self.users
-            .push(UserData {
-                username: "admin".parse()?,
-                admin: true,
-                email: None,
-                phone: None,
-                expiration: None,
-                ..Default::default()
-            })
-            .await?;
+        self.users.push(UserData {
+            username: "admin".parse()?,
+            admin: true,
+            email: None,
+            phone: None,
+            expiration: None,
+            ..Default::default()
+        })?;
 
         // Generate a default password
         let password = PasswordGenerator::new()
@@ -142,7 +140,7 @@ impl UserLayer {
             &mut hash,
         );
 
-        let db = self.database.realm(RealmName::default()).await?;
+        let db = self.database.realm(RealmName::default())?;
         let rw = db.rw_transaction()?;
 
         let password = PasswordData {
@@ -182,7 +180,7 @@ impl UserLayer {
             &mut hash,
         );
 
-        let db = self.database.realm(RealmName::default()).await?;
+        let db = self.database.realm(RealmName::default())?;
         let rw = db.rw_transaction()?;
 
         let password = PasswordData {
@@ -211,7 +209,7 @@ impl UserLayer {
     }
 
     pub async fn password(&self, user: UserName) -> Result<PasswordData> {
-        let db = self.database.realm(RealmName::default()).await?;
+        let db = self.database.realm(RealmName::default())?;
         let r = db.r_transaction()?;
 
         let passwords: Vec<PasswordData> = r

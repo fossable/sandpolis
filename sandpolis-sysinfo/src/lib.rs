@@ -30,13 +30,13 @@ impl SysinfoLayer {
         Ok(Self {
             #[cfg(feature = "agent")]
             memory: Arc::new(os::memory::agent::MemoryMonitor::new(
-                database.realm(RealmName::default()).await?,
+                database.realm(RealmName::default())?,
             )?),
             #[cfg(feature = "agent")]
             users: Arc::new(os::user::agent::UserCollector::new(
-                database.realm(RealmName::default()).await?,
+                database.realm(RealmName::default())?,
             )?),
-            data: database.realm(RealmName::default()).await?.resident(())?,
+            data: database.realm(RealmName::default())?.resident(())?,
         })
     }
 }

@@ -39,10 +39,7 @@ impl UserLayer {
     pub async fn new(database: DatabaseLayer) -> Result<Self> {
         Ok(Self {
             #[cfg(feature = "server")]
-            users: database
-                .realm(RealmName::default())
-                .await?
-                .resident_vec(())?,
+            users: database.realm(RealmName::default())?.resident_vec(())?,
             database,
         })
     }

@@ -26,15 +26,13 @@ impl Collector for MemoryMonitor {
         self.system.refresh_memory();
         trace!(info = ?self.system, "Polled memory info");
 
-        self.data
-            .update(|data| {
-                data.total = self.system.total_memory();
-                data.free = self.system.free_memory();
-                data.swap_total = self.system.total_swap();
-                data.swap_free = self.system.free_swap();
-                Ok(())
-            })
-            .await?;
+        self.data.update(|data| {
+            data.total = self.system.total_memory();
+            data.free = self.system.free_memory();
+            data.swap_total = self.system.total_swap();
+            data.swap_free = self.system.free_swap();
+            Ok(())
+        })?;
 
         Ok(())
     }
@@ -51,10 +49,10 @@ mod tests {
     async fn test_memory_monitor() -> Result<()> {
         let database: DatabaseLayer = test_db!(MemoryData);
 
-        let mut monitor = MemoryMonitor::new(database.realm(RealmName::default()).await?)?;
+        let mut monitor = MemoryMonitor::new(database.realm(RealmName::default())?)?;
         monitor.refresh().await?;
 
-        assert!(monitor.data.read().await.total > 0);
+        assert!(monitor.data.read().total > 0);
         Ok(())
     }
 }

@@ -1,15 +1,22 @@
+import android.app.ForegroundServiceStartNotAllowedException;
 import android.app.Notification;
 import android.app.Service;
+import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
-import android.Manifest;
-import androidx.core.app.ServiceCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
 import android.content.pm.ServiceInfo;
-import android.app.ForegroundServiceStartNotAllowedException;
+import android.Manifest;
+import android.os.Build;
+import android.os.IBinder;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
+import androidx.core.content.ContextCompat;
 
 public class AgentService extends Service {
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 
     private void startForeground() {
         // Before starting the service as foreground check that the app has the

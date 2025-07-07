@@ -120,7 +120,6 @@ pub async fn create_user(
     state
         .users
         .push(request.data)
-        .await
         .map_err(|_| Json(CreateUserResponse::Failed))?;
 
     Ok(Json(CreateUserResponse::Ok {

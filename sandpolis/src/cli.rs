@@ -86,7 +86,7 @@ impl Commands {
                     &crate::MODELS,
                 )?;
 
-                let db = database.realm(realm.parse()?).await?;
+                let db = database.realm(realm.parse()?)?;
                 let r = db.r_transaction()?;
 
                 let cluster_certs: Vec<RealmClusterCert> =

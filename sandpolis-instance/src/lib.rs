@@ -27,11 +27,11 @@ pub struct InstanceLayer {
 impl InstanceLayer {
     pub async fn new(database: DatabaseLayer) -> Result<Self> {
         let data: Resident<InstanceLayerData> =
-            database.realm(RealmName::default()).await?.resident(())?;
+            database.realm(RealmName::default())?.resident(())?;
 
         Ok(Self {
-            instance_id: { data.read().await.instance_id },
-            cluster_id: { data.read().await.cluster_id },
+            instance_id: { data.read().instance_id },
+            cluster_id: { data.read().cluster_id },
             data,
         })
     }

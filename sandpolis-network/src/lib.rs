@@ -87,7 +87,7 @@ impl NetworkLayer {
                     })
                     .collect::<Result<Vec<ServerConnection>>>()?,
             ),
-            data: database.realm(RealmName::default()).await?.resident(())?,
+            data: database.realm(RealmName::default())?.resident(())?,
         })
     }
 

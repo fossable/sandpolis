@@ -11,7 +11,5 @@ pub async fn banner(
     state: State<ServerLayer>,
     extract::Json(_): extract::Json<GetBannerRequest>,
 ) -> RequestResult<GetBannerResponse> {
-    Ok(Json(GetBannerResponse::Ok(
-        state.banner.read().await.clone(),
-    )))
+    Ok(Json(GetBannerResponse::Ok(state.banner.read().clone())))
 }

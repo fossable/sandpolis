@@ -47,7 +47,7 @@ impl RealmLayer {
         database: DatabaseLayer,
         instance: InstanceLayer,
     ) -> Result<Self> {
-        let default_realm = database.realm(RealmName::default()).await?;
+        let default_realm = database.realm(RealmName::default())?;
         let realms: ResidentVec<RealmData> = default_realm.resident_vec(())?;
 
         // Preload all realm databases
@@ -89,11 +89,11 @@ impl RealmLayer {
         })
     }
 
-    pub async fn realm(&self, name: RealmName) -> Result<RealmDatabase> {
+    pub fn realm(&self, name: RealmName) -> Result<RealmDatabase> {
         // Don't allow this method to create realms that don't already exist
-        for realm in self.realms.iter().await {
-            if realm.read().await.name == name {
-                return Ok(self.database.realm(name).await?);
+        for realm in self.realms.iter() {
+            if realm.read().name == name {
+                return Ok(self.database.realm(name)?);
             }
         }
         bail!("Realm does not exist");

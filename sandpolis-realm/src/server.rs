@@ -236,16 +236,16 @@ impl RealmAcceptor {
 
         let config = ServerConfig::builder();
 
-        for realm in realm_layer.realms.iter().await {
-            let realm = realm.read().await;
-            let db = realm_layer.realm(realm.name.clone()).await?;
+        for realm in realm_layer.realms.iter() {
+            let realm = realm.read();
+            let db = realm_layer.realm(realm.name.clone())?;
             trace!(name = *realm.name, "Registering realm with server acceptor");
 
             // Add cluster cert as a CA cert to the root store
             {
                 let cluster_cert: Resident<RealmClusterCert> = db.resident(())?;
 
-                roots.add(cluster_cert.read().await.cert.clone().try_into()?)?;
+                roots.add(cluster_cert.read().cert.clone().try_into()?)?;
             }
 
             // Add server cert to the SNI resolver
@@ -258,7 +258,6 @@ impl RealmAcceptor {
                 let private_key = config.crypto_provider().key_provider.load_private_key(
                     server_cert
                         .read()
-                        .await
                         .key
                         .clone()
                         .ok_or_else(|| anyhow!("No server key"))?
@@ -267,9 +266,9 @@ impl RealmAcceptor {
                 )?;
 
                 sni_resolver.add(
-                    &server_cert.read().await.subject_name()?,
+                    &server_cert.read().subject_name()?,
                     rustls::sign::CertifiedKey::new(
-                        vec![server_cert.read().await.cert.clone().try_into()?],
+                        vec![server_cert.read().cert.clone().try_into()?],
                         private_key,
                     ),
                 )?;

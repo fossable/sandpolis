@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 use std::collections::btree_map::IntoValues;
 use std::ops::{Add, RangeBounds};
 use std::sync::Arc;
-use tokio::sync::{RwLock, RwLockReadGuard};
+use std::sync::{RwLock, RwLockReadGuard};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace, warn};
 
@@ -58,15 +58,15 @@ impl DatabaseLayer {
     }
 
     /// Load an existing or create a new `RealmDatabase` for the given realm.
-    pub async fn realm(&self, name: RealmName) -> Result<RealmDatabase> {
+    pub fn realm(&self, name: RealmName) -> Result<RealmDatabase> {
         {
-            let inner = self.inner.read().await;
+            let inner = self.inner.read().unwrap();
             if let Some(db) = inner.get(&name) {
                 return Ok(db.clone());
             }
         }
 
-        let mut inner = self.inner.write().await;
+        let mut inner = self.inner.write().unwrap();
 
         let db = if let Some(path) = self.config.get_storage_dir()? {
             let path = path.join(format!("{name}.db"));
@@ -175,7 +175,7 @@ impl RealmDatabase {
                             break;
                         }
                         event = channel.recv() => match event {
-                            Some(event) => resident_clone.handle_event(event).await,
+                            Some(event) => resident_clone.handle_event(event),
                             None => break,
 
                         }
@@ -247,7 +247,7 @@ impl RealmDatabase {
                             break;
                         }
                         event = channel.recv() => match event {
-                            Some(event) => resident_clone.handle_event(event).await,
+                            Some(event) => resident_clone.handle_event(event),
                             None => {
                                 break;
                             }
@@ -487,19 +487,19 @@ impl<T: Data> Drop for Resident<T> {
     }
 }
 
-impl<T: Data + 'static> Resident<T> {
-    pub async fn read(&self) -> RwLockReadGuard<'_, T> {
-        self.inner.read().await
+impl<T: Data> Resident<T> {
+    pub fn read(&self) -> RwLockReadGuard<'_, T> {
+        self.inner.read().unwrap()
     }
 
-    async fn handle_event(&self, event: Event) {
+    fn handle_event(&self, event: Event) {
         trace!(event = ?event, "Handling event");
         match event {
             Event::Insert(data) => {}
             Event::Update(data) => match data.inner_new() {
                 Ok(d) => {
                     // TODO check revision and discard updates from `update`
-                    let mut c = self.inner.write().await;
+                    let mut c = self.inner.write().unwrap();
                     *c = d;
                 }
                 Err(_) => {}
@@ -510,11 +510,11 @@ impl<T: Data + 'static> Resident<T> {
 }
 
 impl<T: Data> Resident<T> {
-    pub async fn update<F>(&self, mutator: F) -> Result<()>
+    pub fn update<F>(&self, mutator: F) -> Result<()>
     where
         F: Fn(&mut T) -> Result<()>,
     {
-        let mut previous = self.inner.write().await;
+        let mut previous = self.inner.write().unwrap();
         let mut next = previous.clone();
         mutator(&mut next)?;
 
@@ -550,8 +550,8 @@ impl<T: Data> Resident<T> {
         Ok(())
     }
 
-    pub async fn history(&self, range: impl RangeBounds<DataCreation>) -> Result<Vec<T>> {
-        let revision_id = self.inner.read().await.id() & 0x0000_0000;
+    pub fn history(&self, range: impl RangeBounds<DataCreation>) -> Result<Vec<T>> {
+        let revision_id = self.read().id() & 0x0000_0000;
 
         let r = self.db.r_transaction()?;
 
@@ -614,7 +614,7 @@ mod test_resident {
         }
 
         // Resident should reflect "test 9"
-        assert_eq!(res.read().await.a, "test 9");
+        assert_eq!(res.read().a, "test 9");
 
         // Database should reflect "test 9"
         {
@@ -628,7 +628,7 @@ mod test_resident {
         {
             let rw = db.rw_transaction()?;
             rw.upsert(TestData {
-                _id: res.read().await._id,
+                _id: res.read()._id,
                 _revision: DataRevision::default(),
                 _creation: DataCreation::default(),
                 a: "test 10".into(),
@@ -639,7 +639,7 @@ mod test_resident {
 
         // Watch should reflect "test 10" after a while
         sleep(Duration::from_secs(1)).await;
-        assert_eq!(res.read().await.a, "test 10");
+        assert_eq!(res.read().a, "test 10");
 
         Ok(())
     }
@@ -698,7 +698,7 @@ impl<T: Data> Drop for ResidentVec<T> {
 }
 
 impl<T: Data> ResidentVec<T> {
-    async fn handle_event(&self, event: Event) {
+    fn handle_event(&self, event: Event) {
         trace!(event = ?event, "Handling event");
         match event {
             Event::Insert(data) => match data.inner::<T>() {
@@ -718,7 +718,7 @@ impl<T: Data> ResidentVec<T> {
                         }
                     }
 
-                    let mut c = self.inner.write().await;
+                    let mut c = self.inner.write().unwrap();
                     (*c).insert(
                         d.id(),
                         Resident {
@@ -732,10 +732,10 @@ impl<T: Data> ResidentVec<T> {
             },
             Event::Update(data) => match data.inner_new::<T>() {
                 Ok(d) => {
-                    let c = self.inner.write().await;
+                    let c = self.inner.write().unwrap();
                     match (*c).get(&d.id()) {
                         Some(r) => {
-                            let mut r = r.inner.write().await;
+                            let mut r = r.inner.write().unwrap();
                             *r = d;
                         }
                         // Got an update before insert?
@@ -753,19 +753,19 @@ impl<T: Data> ResidentVec<T> {
 impl<T: Data> ResidentVec<T> {
     /// Returns the number of elements in the vector, also referred to
     /// as its 'length'.
-    pub async fn len(&self) -> usize {
-        self.inner.read().await.len()
+    pub fn len(&self) -> usize {
+        self.inner.read().unwrap().len()
     }
 
     /// Appends an element to the back of a collection.
-    pub async fn push(&self, value: T) -> Result<Resident<T>> {
+    pub fn push(&self, value: T) -> Result<Resident<T>> {
         let id = value.id();
 
         {
             let rw = self.db.rw_transaction()?;
 
             // Check for id collision
-            if self.inner.read().await.get(&id).is_some() {
+            if self.inner.read().unwrap().get(&id).is_some() {
                 bail!("Duplicate primary key");
             }
 
@@ -776,18 +776,18 @@ impl<T: Data> ResidentVec<T> {
 
         // TODO don't busy wait
         loop {
-            if let Some(value) = self.inner.read().await.get(&id) {
+            if let Some(value) = self.inner.read().unwrap().get(&id) {
                 return Ok(value.clone());
             }
         }
     }
 
-    pub async fn iter(&self) -> IntoValues<DataIdentifier, Resident<T>> {
-        self.inner.read().await.clone().into_values()
+    pub fn iter(&self) -> IntoValues<DataIdentifier, Resident<T>> {
+        self.inner.read().unwrap().clone().into_values()
     }
 
-    pub async fn stream(&self) -> futures::stream::Iter<IntoValues<DataIdentifier, Resident<T>>> {
-        futures::stream::iter(self.inner.read().await.clone().into_values())
+    pub fn stream(&self) -> futures::stream::Iter<IntoValues<DataIdentifier, Resident<T>>> {
+        futures::stream::iter(self.inner.read().unwrap().clone().into_values())
     }
 }
 
@@ -958,7 +958,7 @@ mod test_resident_vec {
         {
             let rw = db.rw_transaction()?;
             rw.upsert(TestData {
-                _id: data.read().await._id,
+                _id: data.read()._id,
                 _revision: DataRevision::default(),
                 _creation: DataCreation::default(),
                 a: "test 10".into(),
@@ -969,7 +969,7 @@ mod test_resident_vec {
 
         // Should reflect "test 10" after a while
         sleep(Duration::from_secs(1)).await;
-        assert_eq!(data.read().await.a, "test 10");
+        assert_eq!(data.read().a, "test 10");
 
         Ok(())
     }

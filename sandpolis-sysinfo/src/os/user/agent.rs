@@ -26,8 +26,8 @@ impl Collector for UserCollector {
 
         // Update or add any new users
         'next_user: for user in self.users.list() {
-            for resident_user in self.data.iter().await {
-                if resident_user.read().await.uid == **user.id() {
+            for resident_user in self.data.iter() {
+                if resident_user.read().uid == **user.id() {
                     resident_user.update(|u| {
                         u.gid = *user.group_id();
                         u.username = Some(user.name().to_string());
@@ -36,7 +36,7 @@ impl Collector for UserCollector {
                     continue 'next_user;
                 }
             }
-            self.data.push(user.into()).await?;
+            self.data.push(user.into())?;
         }
 
         // Remove old users

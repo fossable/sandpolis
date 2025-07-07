@@ -34,7 +34,7 @@ impl ServerLayer {
     pub async fn new(database: DatabaseLayer, network: NetworkLayer) -> Result<Self> {
         Ok(Self {
             #[cfg(feature = "server")]
-            banner: database.realm(RealmName::default()).await?.resident(())?,
+            banner: database.realm(RealmName::default())?.resident(())?,
             network,
         })
     }
