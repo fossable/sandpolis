@@ -1,6 +1,6 @@
 use crate::cli::CommandLine;
 use anyhow::{Result, bail};
-use sandpolis_instance::OverridableConfig;
+use sandpolis_core::LayerConfig;
 use serde::{Deserialize, Serialize};
 use std::{fs::File, path::PathBuf};
 use tracing::debug;
@@ -77,6 +77,7 @@ impl Configuration {
 
         // Handle overrides
         if !config.disable_overrides {
+            config.database.override_cli(&args.database);
             config.network.override_cli(&args.network);
         }
 

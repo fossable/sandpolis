@@ -1,5 +1,4 @@
 use anyhow::Result;
-use clap::Parser;
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::{ClusterId, InstanceId, RealmName};
@@ -72,23 +71,5 @@ impl PartialOrd for LayerVersion {
         } else {
             Some(Ordering::Equal)
         }
-    }
-}
-
-/// A config fragment that can take overrides from the command line or from
-/// the process environment.
-pub trait OverridableConfig<C>
-where
-    C: Parser,
-    Self: Serialize + DeserializeOwned,
-{
-    /// Override the config with values from the command line
-    fn override_cli(&mut self, args: &C) {
-        // Default no-op
-    }
-
-    /// Override the config with values from the environment
-    fn override_env(&mut self) {
-        // Default no-op
     }
 }

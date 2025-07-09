@@ -20,6 +20,7 @@ use std::sync::{RwLock, RwLockReadGuard};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace, warn};
 
+pub mod cli;
 pub mod config;
 
 /// This layer manages separate databases for each realm.
@@ -37,6 +38,8 @@ pub struct DatabaseLayer {
 impl DatabaseLayer {
     /// Create a new `DatabaseLayer` initialized with the default realm.
     pub fn new(config: DatabaseConfig, models: &'static Models) -> Result<Self> {
+        debug!("Initializing database layer");
+
         let default = if let Some(path) = config.get_storage_dir()? {
             let path = path.join("default.db");
 
@@ -149,11 +152,10 @@ impl RealmDatabase {
         } else {
             // Otherwise, watch the upper half of the primary ID which is the same for all
             // revisions
-            self.0
-                .watch()
-                .scan()
-                .primary()
-                .range::<T, _>(item.id() & 0x0000_0000..=item.id() | 0xFFFF_FFFF)?
+            self.0.watch().scan().primary().range::<T, _>(
+                DataIdentifier((item.id().revision_id() as u64) << 32)
+                    ..=DataIdentifier(((item.id().revision_id() as u64) << 32) | 0xFFFF_FFFF),
+            )?
         };
 
         // Safe to end the transaction once the watcher is registered
@@ -410,7 +412,36 @@ impl ToKey for DataRevision {
 
 /// Uniquely identifies a record in the database. All revisions of the same
 /// `Data` share the upper 4 bytes of this value.
-pub type DataIdentifier = u64; // TODO tuple struct
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Copy, Clone, PartialOrd, Ord)]
+pub struct DataIdentifier(u64);
+
+impl Default for DataIdentifier {
+    fn default() -> Self {
+        Self(rand::rng().next_u64())
+    }
+}
+
+impl ToKey for DataIdentifier {
+    fn to_key(&self) -> native_db::Key {
+        self.0.to_key()
+    }
+
+    fn key_names() -> Vec<String> {
+        vec!["DataIdentifier".to_string()]
+    }
+}
+
+impl DataIdentifier {
+    /// Create a new `DataIdentifier` for a revision based on this one.
+    fn new_revision(&self) -> Self {
+        Self((self.0 & 0x0000_0000) | (0xFFFF_FFFF & rand::rng().next_u64()))
+    }
+
+    /// Get the portion of the `DataIdentifier` shared across all revisions
+    fn revision_id(&self) -> u32 {
+        ((self.0 >> 32) & 0xFFFF_FFFF) as u32
+    }
+}
 
 /// When some `Data` will expire and no longer be returnable by queries.
 /// Eventually it will be removed from the database altogether.
@@ -534,9 +565,7 @@ impl<T: Data> Resident<T> {
 
         if previous.expiration().is_some() {
             // Derive new id from the previous
-            next.set_id(
-                (previous.id() & 0x0000_0000) | (0xFFFF_FFFF & rand::rng().random::<u64>()),
-            );
+            next.set_id(previous.id().new_revision());
 
             rw.insert(next.clone())?;
             rw.upsert(previous.clone())?;
@@ -551,7 +580,7 @@ impl<T: Data> Resident<T> {
     }
 
     pub fn history(&self, range: impl RangeBounds<DataCreation>) -> Result<Vec<T>> {
-        let revision_id = self.read().id() & 0x0000_0000;
+        let revision_id = self.read().id().revision_id();
 
         let r = self.db.r_transaction()?;
 
@@ -566,7 +595,7 @@ impl<T: Data> Resident<T> {
 
         Ok(items
             .into_iter()
-            .filter(|item| (item.id() & 0x0000_0000) == revision_id)
+            .filter(|item| item.id().revision_id() == revision_id)
             .collect())
     }
 }
@@ -601,7 +630,7 @@ mod test_resident {
     async fn test_data() -> Result<()> {
         let database = test_db!(TestData);
 
-        let db = database.realm(RealmName::default()).await?;
+        let db = database.realm(RealmName::default())?;
         let res: Resident<TestData> = db.resident(DataCondition::equal(TestDataKey::a, "A"))?;
 
         // Update data a bunch of times
@@ -609,8 +638,7 @@ mod test_resident {
             res.update(|data| {
                 data.a = format!("test {i}");
                 Ok(())
-            })
-            .await?;
+            })?;
         }
 
         // Resident should reflect "test 9"
@@ -649,7 +677,7 @@ mod test_resident {
     async fn test_temporal_data() -> Result<()> {
         let database = test_db!(TestHistoryData);
 
-        let db = database.realm(RealmName::default()).await?;
+        let db = database.realm(RealmName::default())?;
         let res: Resident<TestHistoryData> = db.resident(())?;
 
         // Update data a bunch of times
@@ -657,8 +685,7 @@ mod test_resident {
             res.update(|data| {
                 data.b = format!("test {i}");
                 Ok(())
-            })
-            .await?;
+            })?;
         }
 
         // Database should have 10 items
@@ -670,7 +697,7 @@ mod test_resident {
 
         // Check history
         {
-            assert_eq!(res.history(DataCreation::all()).await?.len(), 10);
+            assert_eq!(res.history(DataCreation::all())?.len(), 10);
         }
 
         Ok(())
@@ -707,8 +734,8 @@ impl<T: Data> ResidentVec<T> {
                     assert!(
                         self.conditions
                             .first()
-                            .expect("There must be at least one condition")
-                            .check(&d)
+                            .map(|condition| condition.check(&d))
+                            .unwrap_or(true)
                     );
 
                     // Make sure the remaining conditions are satisfied
@@ -920,30 +947,27 @@ mod test_resident_vec {
     async fn test_nonhistorical() -> Result<()> {
         let database = test_db!(TestData);
 
-        let db = database.realm(RealmName::default()).await?;
+        let db = database.realm(RealmName::default())?;
         let test_data: ResidentVec<TestData> =
             db.resident_vec(DataCondition::equal(TestDataKey::b, "B"))?;
 
-        assert_eq!(test_data.len().await, 0);
+        assert_eq!(test_data.len(), 0);
 
         // Add item
-        let data: Resident<TestData> = test_data
-            .push(TestData {
-                a: "A".to_string(),
-                b: "B".to_string(),
-                ..Default::default()
-            })
-            .await?;
+        let data: Resident<TestData> = test_data.push(TestData {
+            a: "A".to_string(),
+            b: "B".to_string(),
+            ..Default::default()
+        })?;
 
-        assert_eq!(test_data.len().await, 1);
+        assert_eq!(test_data.len(), 1);
 
         // Update a bunch of times
         for i in 1..10 {
             data.update(|d| {
                 d.a = format!("test {i}");
                 Ok(())
-            })
-            .await?;
+            })?;
         }
 
         // Database should reflect "test 9"

@@ -1,5 +1,5 @@
 use crate::{ServerAddress, cli::NetworkCommandLine};
-use sandpolis_instance::OverridableConfig;
+use sandpolis_core::LayerConfig;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
@@ -17,7 +17,7 @@ pub struct NetworkLayerConfig {
     pub poll: Option<String>,
 }
 
-impl OverridableConfig<NetworkCommandLine> for NetworkLayerConfig {
+impl LayerConfig<NetworkCommandLine> for NetworkLayerConfig {
     fn override_env(&mut self) {
         match std::env::var("S7S_SERVER") {
             Ok(server) => {

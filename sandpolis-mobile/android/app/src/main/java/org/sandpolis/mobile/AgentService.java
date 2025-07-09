@@ -42,12 +42,12 @@ public class AgentService extends Service {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 type = ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA;
             }
-            ServiceCompat.startForeground(
-                    /* service = */ this,
-                    /* id = */ 100, // Cannot be 0
-                    /* notification = */ notification,
-                    /* foregroundServiceType = */ type
-            );
+            // ServiceCompat.startForeground(
+            //         /* service = */ this,
+            //         /* id = */ 100, // Cannot be 0
+            //         /* notification = */ notification,
+            //         /* foregroundServiceType = */ type
+            // );
         } catch (Exception e) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                     e instanceof ForegroundServiceStartNotAllowedException

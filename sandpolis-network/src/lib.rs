@@ -52,6 +52,8 @@ impl NetworkLayer {
         database: DatabaseLayer,
         realm: RealmLayer,
     ) -> Result<Self> {
+        debug!("Initializing network layer");
+
         let cert = if config.servers.is_none() {
             if cfg!(feature = "agent") {
                 bail!("No servers given")

@@ -1,8 +1,9 @@
 use anyhow::Result;
+use clap::Parser;
 use colored::Color;
 use native_db::ToKey;
 use regex::Regex;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::fmt::{Display, Write};
 use std::ops::Deref;
 use std::str::FromStr;
@@ -348,5 +349,23 @@ impl ToKey for UserName {
 
     fn key_names() -> Vec<String> {
         vec!["UserName".to_string()]
+    }
+}
+
+/// A config fragment that can take overrides from the command line or from
+/// the process environment.
+pub trait LayerConfig<C>
+where
+    C: Parser,
+    Self: Serialize + DeserializeOwned,
+{
+    /// Override the config with values from the command line
+    fn override_cli(&mut self, args: &C) {
+        // Default no-op
+    }
+
+    /// Override the config with values from the environment
+    fn override_env(&mut self) {
+        // Default no-op
     }
 }

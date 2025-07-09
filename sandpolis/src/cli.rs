@@ -22,6 +22,9 @@ pub struct CommandLine {
     #[clap(flatten)]
     pub network: sandpolis_network::cli::NetworkCommandLine,
 
+    #[clap(flatten)]
+    pub database: sandpolis_database::cli::DatabaseCommandLine,
+
     #[command(subcommand)]
     pub command: Option<Commands>,
 }

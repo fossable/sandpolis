@@ -1,3 +1,4 @@
+use crate::RealmAgentCert;
 use crate::RealmLayer;
 use crate::RealmServerCertKey;
 
@@ -29,8 +30,6 @@ use rustls::ServerConfig;
 use rustls::server::ResolvesServerCertUsingSni;
 use rustls::server::WebPkiClientVerifier;
 use rustls_pki_types::CertificateDer;
-use rustls_pki_types::PrivateKeyDer;
-use rustls_pki_types::pem::PemObject;
 use sandpolis_core::ClusterId;
 use sandpolis_core::InstanceId;
 use sandpolis_core::InstanceType;
@@ -89,6 +88,46 @@ impl super::RealmClusterCert {
         )
     }
 
+    /// Generate a new realm certificate for agent instances.
+    pub fn agent_cert(&self) -> Result<RealmAgentCert> {
+        // Generate key
+        let keypair = KeyPair::generate()?;
+
+        // Generate certificate
+        let mut cert_params = CertificateParams::default();
+        cert_params
+            .extended_key_usages
+            .push(ExtendedKeyUsagePurpose::ClientAuth);
+        cert_params
+            .extended_key_usages
+            .push(ExtendedKeyUsagePurpose::Other(vec![
+                1,
+                1,
+                1,
+                InstanceType::Agent.mask() as u64, // TODO auth middleware must check this
+            ]));
+        cert_params.not_before = OffsetDateTime::now_utc();
+        cert_params.not_after = OffsetDateTime::now_utc().saturating_add(Duration::days(365));
+        cert_params
+            .distinguished_name
+            .push(DnType::CommonName, &*self.name);
+
+        // Generate the certificate signed by the CA
+        let cert = cert_params.signed_by(
+            &keypair,
+            &self.ca()?,
+            &KeyPair::try_from(self.key.clone().ok_or_else(|| anyhow!("No key"))?)?,
+        )?;
+
+        debug!(cert = ?cert.params(), "Generated new realm agent certificate");
+        Ok(RealmAgentCert {
+            ca: self.ca()?.der().to_vec(),
+            cert: cert.der().to_vec(),
+            key: Some(keypair.serialize_der()),
+            ..Default::default()
+        })
+    }
+
     /// Generate a new realm certificate for client instances.
     pub fn client_cert(&self) -> Result<RealmClientCert> {
         // Generate key
@@ -99,6 +138,14 @@ impl super::RealmClusterCert {
         cert_params
             .extended_key_usages
             .push(ExtendedKeyUsagePurpose::ClientAuth);
+        cert_params
+            .extended_key_usages
+            .push(ExtendedKeyUsagePurpose::Other(vec![
+                1,
+                1,
+                1,
+                InstanceType::Client.mask() as u64, // TODO auth middleware must check this
+            ]));
         cert_params.not_before = OffsetDateTime::now_utc();
         cert_params.not_after = OffsetDateTime::now_utc().saturating_add(Duration::days(365));
         cert_params
@@ -152,6 +199,7 @@ impl super::RealmClusterCert {
         Ok(RealmServerCert {
             cert: cert.der().to_vec(),
             key: Some(keypair.serialize_der()),
+            _instance_id: server_id,
             ..Default::default()
         })
     }
@@ -164,11 +212,7 @@ mod test_realm_ca {
     use openssl::{
         ec::EcKey,
         pkey::PKey,
-        rsa::Rsa,
-        ssl::{
-            Ssl, SslAcceptor, SslConnector, SslContextBuilder, SslMethod, SslMode, SslStream,
-            SslVerifyMode,
-        },
+        ssl::{SslAcceptor, SslConnector, SslMethod, SslVerifyMode},
         x509::X509,
     };
     use std::net::{TcpListener, TcpStream};
@@ -185,7 +229,7 @@ mod test_realm_ca {
 
         let mut server_context = SslAcceptor::mozilla_intermediate_v5(SslMethod::tls_server())?;
         server_context.set_verify(SslVerifyMode::PEER);
-        server_context.set_ca_file(&ca_file);
+        server_context.set_ca_file(&ca_file)?;
         server_context.set_certificate(&&X509::from_der(&server.cert)?)?;
         server_context.set_private_key(&&PKey::from_ec_key(EcKey::private_key_from_der(
             server.key.as_ref().unwrap(),
@@ -194,7 +238,7 @@ mod test_realm_ca {
 
         let mut client_context = SslConnector::builder(SslMethod::tls_client())?;
         client_context.set_verify(SslVerifyMode::PEER);
-        client_context.set_ca_file(&ca_file);
+        client_context.set_ca_file(&ca_file)?;
         client_context.set_certificate(&&X509::from_der(&client.cert)?)?;
         client_context.set_private_key(&&PKey::from_ec_key(EcKey::private_key_from_pem(
             client.key.as_ref().unwrap(),
@@ -250,6 +294,7 @@ impl RealmAcceptor {
 
             // Add server cert to the SNI resolver
             {
+                // TODO don't allow default
                 let server_cert: Resident<RealmServerCert> = db.resident(DataCondition::equal(
                     RealmServerCertKey::_instance_id,
                     instance_layer.instance_id,

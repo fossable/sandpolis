@@ -1,7 +1,11 @@
 use anyhow::{Result, bail};
+use sandpolis_core::LayerConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use tracing::trace;
 use validator::Validate;
+
+use crate::cli::DatabaseCommandLine;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DatabaseConfig {
@@ -28,6 +32,16 @@ impl Default for DatabaseConfig {
             // TODO platform specific
             storage: Some("/tmp".into()),
             ephemeral: false,
+        }
+    }
+}
+
+impl LayerConfig<DatabaseCommandLine> for DatabaseConfig {
+    fn override_cli(&mut self, args: &DatabaseCommandLine) {
+        if args.ephemeral {
+            trace!("Overriding ephemeral flag from CLI");
+            self.ephemeral = true;
+            self.storage = None;
         }
     }
 }

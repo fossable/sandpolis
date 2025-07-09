@@ -1,3 +1,5 @@
+#![feature(iterator_try_collect)]
+
 // doc_comment! {
 //     include_str!("../README.md")
 // }
@@ -20,6 +22,8 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use tracing::debug;
+use tracing::info;
 use validator::Validate;
 use x509_parser::prelude::{FromDer, GeneralName};
 use x509_parser::prelude::{ParsedExtension, X509Certificate};
@@ -47,23 +51,62 @@ impl RealmLayer {
         database: DatabaseLayer,
         instance: InstanceLayer,
     ) -> Result<Self> {
+        debug!("Initializing realm layer");
+
         let default_realm = database.realm(RealmName::default())?;
+
+        // These records have to be stored in the default realm so we know what
+        // other realms exist.
         let realms: ResidentVec<RealmData> = default_realm.resident_vec(())?;
+
+        if realms.len() == 0 {
+            realms.push(RealmData::default())?;
+        }
 
         // Preload all realm databases
         // TODO
 
         #[cfg(feature = "server")]
         {
-            // let cluster_cert =
-            //     RealmClusterCert::new(instance.data.value().cluster_id,
-            // RealmName::default())?; let server_cert =
-            // cluster_cert.server_cert(instance.data.value().instance_id)?;
+            for realm in realms.iter() {
+                let realm_db = database.realm(realm.read().name.clone())?;
 
-            // let rw = realm_db.rw_transaction()?;
-            // rw.insert(cluster_cert)?;
-            // rw.insert(server_cert)?;
-            // rw.commit()?;
+                let rw = realm_db.rw_transaction()?;
+                let mut cluster_certs: Vec<RealmClusterCert> =
+                    rw.scan().primary()?.all()?.try_collect()?;
+
+                // TODO only GS
+                if cluster_certs.len() == 0 {
+                    cluster_certs.push(RealmClusterCert::new(
+                        instance.cluster_id,
+                        realm.read().name.clone(),
+                    )?);
+                    rw.insert(cluster_certs[0].clone())?;
+
+                    // Write certs in development mode to make testing easier
+                    #[cfg(debug_assertions)]
+                    {
+                        let client_cert = cluster_certs[0].client_cert()?;
+                        client_cert.write("/tmp/client.pem")?;
+                        info!("Wrote client cert to: /tmp/client.pem");
+
+                        let agent_cert = cluster_certs[0].agent_cert()?;
+                        client_cert.write("/tmp/agent.pem")?;
+                        info!("Wrote agent cert to: /tmp/agent.pem");
+                    }
+                }
+
+                // Get or create server cert
+                let mut server_certs: Vec<RealmServerCert> =
+                    rw.scan().primary()?.all()?.try_collect()?;
+
+                if server_certs.len() == 0 {
+                    server_certs.push(cluster_certs[0].server_cert(instance.instance_id)?);
+                    rw.insert(server_certs[0].clone())?;
+                }
+
+                rw.commit()?;
+            }
         }
 
         // Update client cert if possible
@@ -130,11 +173,7 @@ pub struct RealmServerCert {
 
 impl RealmServerCert {
     pub fn subject_name(&self) -> Result<String> {
-        let pem = pem::parse(&self.cert)?;
-        for ext in X509Certificate::from_der(pem.contents())?
-            .1
-            .iter_extensions()
-        {
+        for ext in X509Certificate::from_der(&self.cert)?.1.iter_extensions() {
             match ext.parsed_extension() {
                 ParsedExtension::SubjectAlternativeName(san) => {
                     for name in &san.general_names {
@@ -235,8 +274,7 @@ impl RealmClientCert {
 
     /// Return when the certificate was generated.
     pub fn creation_time(&self) -> Result<i64> {
-        let pem = pem::parse(&self.cert)?;
-        Ok(X509Certificate::from_der(pem.contents())?
+        Ok(X509Certificate::from_der(&self.cert)?
             .1
             .validity
             .not_before
@@ -244,8 +282,7 @@ impl RealmClientCert {
     }
 
     pub fn name(&self) -> Result<RealmName> {
-        let pem = pem::parse(&self.cert)?;
-        let name = X509Certificate::from_der(pem.contents())?
+        let name = X509Certificate::from_der(&self.cert)?
             .1
             .subject()
             .iter_common_name()

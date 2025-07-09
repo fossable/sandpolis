@@ -54,7 +54,7 @@ async fn main() -> Result<ExitCode> {
 
     // Load config
     let config = Configuration::new(&args)?;
-    debug!(config = ?config, "Loaded configuration");
+    debug!(config = ?config, "Instance configuration");
 
     // Default to all compiled instance types
     let run_instances = Vec::<&str>::from([
@@ -145,7 +145,7 @@ async fn main() -> Result<ExitCode> {
     // If this was a client, don't hold up the user by waiting for server/agent
     if !run_instances.contains(&"client") {
         while let Some(result) = tasks.join_next().await {
-            let _ = result?;
+            let _ = result??;
         }
     }
 

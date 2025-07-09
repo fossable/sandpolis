@@ -8186,6 +8186,7 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "bevy",
+ "clap",
  "colored",
  "native_db",
  "native_model",
