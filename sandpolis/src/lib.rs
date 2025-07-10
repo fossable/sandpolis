@@ -165,9 +165,6 @@ pub enum Layer {
     #[cfg(feature = "layer-inventory")]
     Inventory,
 
-    #[cfg(feature = "layer-location")]
-    Location,
-
     /// Support for connecting to instances in the Sandpolis network and sending
     /// messages back and forth.
     Network,

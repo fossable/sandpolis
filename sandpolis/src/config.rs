@@ -1,5 +1,5 @@
 use crate::cli::CommandLine;
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use sandpolis_core::LayerConfig;
 use serde::{Deserialize, Serialize};
 use std::{fs::File, path::PathBuf};
@@ -9,18 +9,20 @@ use tracing::debug;
 #[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Configuration {
-    /// Whether overrides from environment variables or the command line are
-    /// allowed
-    pub disable_overrides: bool,
     #[cfg(feature = "agent")]
     pub agent: sandpolis_agent::config::AgentLayerConfig,
     #[cfg(feature = "client")]
     pub client: sandpolis_client::config::ClientLayerConfig,
     pub database: sandpolis_database::config::DatabaseConfig,
-    pub realm: sandpolis_realm::config::RealmConfig,
-    #[cfg(feature = "layer-location")]
-    pub location: sandpolis_location::config::LocationConfig,
+    /// Whether a local control socket will be spawned. This socket allows
+    /// modification to the running process, so misconfiguring the file
+    /// permissions on it may be a security risk.
+    pub disable_control_socket: bool,
+    /// Whether overrides from environment variables or the command line are
+    /// allowed
+    pub disable_overrides: bool,
     pub network: sandpolis_network::config::NetworkLayerConfig,
+    pub realm: sandpolis_realm::config::RealmConfig,
     #[cfg(feature = "server")]
     pub server: sandpolis_server::config::ServerLayerConfig,
     #[cfg(feature = "layer-snapshot")]

@@ -12,7 +12,7 @@ use ratatui::{
 };
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
 use sandpolis_client::tui::{EventHandler, MessageBus, Panel, help::HelpWidget};
-use sandpolis_network::ServerAddress;
+use sandpolis_network::ServerUrl;
 use sandpolis_server::{ServerLayer, client::LoadServerBanner};
 use std::{
     ops::Deref,
@@ -165,14 +165,14 @@ impl WidgetRef for ServerListWidget {
 }
 
 struct ServerListItem {
-    address: ServerAddress,
+    address: ServerUrl,
     banner: RwLock<LoadServerBanner>,
     fetch_banner: RwLock<Receiver<LoadServerBanner>>,
     ping: RwLock<Option<u32>>,
 }
 
 impl ServerListItem {
-    fn new(server_layer: ServerLayer, address: ServerAddress) -> Self {
+    fn new(server_layer: ServerLayer, address: ServerUrl) -> Self {
         Self {
             banner: RwLock::new(LoadServerBanner::Loading),
             fetch_banner: RwLock::new(server_layer.fetch_banner(&address)),

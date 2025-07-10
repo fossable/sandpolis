@@ -1,4 +1,4 @@
-use sandpolis_network::ServerAddress;
+use sandpolis_network::ServerUrl;
 use serde::Deserialize;
 use serde::Serialize;
 use std::net::IpAddr;
@@ -10,8 +10,12 @@ pub struct ServerLayerConfig {
     /// Server listen address:port
     pub listen: SocketAddr,
 
-    /// Run as a local stratum (LS) server instead of in the global stratum (GS).
+    /// Run as a local stratum (LS) server instead of in the global stratum
+    /// (GS).
     pub local: bool,
+
+    /// Service to use for resolving IP location info
+    pub service: crate::server::LocationService,
 }
 
 impl Default for ServerLayerConfig {
@@ -19,9 +23,10 @@ impl Default for ServerLayerConfig {
         Self {
             listen: SocketAddr::new(
                 IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
-                ServerAddress::default_port(),
+                ServerUrl::default_port(),
             ),
             local: false,
+            service: crate::server::LocationService::default(),
         }
     }
 }

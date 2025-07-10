@@ -35,7 +35,6 @@ sandpolis-desktop = { path = "../sandpolis-desktop", version = "0.0.1", optional
 sandpolis-filesystem = { path = "../sandpolis-filesystem", version = "0.0.1", optional = true }
 sandpolis-realm = { path = "../sandpolis-realm", version = "0.0.1" }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
-sandpolis-location = { path = "../sandpolis-location", version = "0.0.1", optional = true }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
 sandpolis-package = { path = "../sandpolis-package", version = "0.0.1", optional = true }
@@ -73,7 +72,6 @@ server = [
   "sandpolis-desktop?/server",
   "sandpolis-filesystem?/server",
   "sandpolis-realm/server",
-  "sandpolis-location?/server",
   "sandpolis-package?/server",
   "sandpolis-power?/server",
   "sandpolis-server/server",
@@ -105,9 +103,7 @@ layer-deploy = ["dep:sandpolis-deploy"]
 layer-desktop = ["dep:sandpolis-desktop"]
 layer-filesystem = ["dep:sandpolis-filesystem"]
 layer-health = []
-layer-inventory = []
-layer-location = ["dep:sandpolis-location"]
-layer-logging = []
+layer-inventory = []                            # TODO consolidate package and sysinfo layers
 layer-package = ["dep:sandpolis-package"]
 layer-shell = ["dep:sandpolis-shell"]
 layer-snapshot = ["dep:sandpolis-snapshot"]
@@ -124,8 +120,6 @@ default = [
   "layer-desktop",
   "layer-filesystem",
   "layer-inventory",
-  "layer-location",
-  "layer-logging",
   "layer-package",
   "layer-power",
   "layer-probe",

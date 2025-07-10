@@ -1,3 +1,4 @@
+use anyhow::Context;
 use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
@@ -19,6 +20,7 @@ use sandpolis_realm::RealmLayer;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::{ts_seconds, ts_seconds_option};
 use std::fmt::Display;
+use std::fmt::Write;
 use std::net::ToSocketAddrs;
 use std::str::FromStr;
 use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
@@ -37,61 +39,40 @@ pub mod server;
 
 #[data]
 pub struct NetworkLayerData {
-    server_cooldown: ConnectionCooldown,
+    server_cooldown: DynamicRetry,
 }
 
 #[derive(Clone)]
 pub struct NetworkLayer {
     data: Resident<NetworkLayerData>,
-    pub servers: Arc<Vec<ServerConnection>>,
+
+    /// Outbound connections
+    outbound: Arc<RwLock<Vec<Arc<Connection>>>>,
 }
 
 impl NetworkLayer {
     pub async fn new(
         config: NetworkLayerConfig,
         database: DatabaseLayer,
-        realm: RealmLayer,
+        realms: RealmLayer,
     ) -> Result<Self> {
         debug!("Initializing network layer");
 
-        let cert = if config.servers.is_none() {
-            if cfg!(feature = "agent") {
-                bail!("No servers given")
-            } else {
-                None
-            }
-        } else {
-            // Make sure we have a clientAuth cert
-            Some(
-                // realm
-                //     .data
-                //     .data
-                //     .client
-                //     .ok_or(anyhow!("No realm certificate found"))?,
-                todo!(),
-            )
+        let network = Self {
+            outbound: Arc::new(RwLock::new(Vec::new())),
+            data: database.realm(RealmName::default())?.resident(())?,
         };
 
-        Ok(Self {
-            servers: Arc::new(
-                config
-                    .servers
-                    .as_ref()
-                    .unwrap_or(&Vec::new())
-                    .into_iter()
-                    .map(|address| {
-                        ServerConnection::new(
-                            address.to_owned(),
-                            // data.data.server_cooldown.clone(),
-                            todo!(),
-                            cert.clone().ok_or(anyhow!(""))?,
-                        )
-                    })
-                    .collect::<Result<Vec<ServerConnection>>>()?,
-            ),
-            data: database.realm(RealmName::default())?.resident(())?,
-        })
+        for server_url in config.servers.clone().unwrap_or_default() {
+            realms
+                .realm(server_url.realm.clone())
+                .context("Realm does not exist")?;
+        }
+
+        Ok(network)
     }
+
+    pub fn direct_or_server(&self, id: InstanceId) {}
 
     /// Send a message to the given instance and measure the time/path it took.
     pub async fn ping(&self, id: InstanceId) -> Result<PingResponse> {
@@ -106,15 +87,35 @@ impl NetworkLayer {
         todo!()
     }
 
-    /// Request the server to coordinate a direct connection to the given agent.
-    pub async fn direct_connect(&self, agent: InstanceId, port: Option<u16>) {
-        todo!()
-    }
-
     pub async fn run(&self) {
+        // TODO run "wait for cmd"
         for server in self.servers.iter() {
             server.run().await;
         }
+    }
+
+    /// Request the server to coordinate a direct connection to the given agent.
+    pub async fn connect_client_agent(&self, agent: InstanceId, port: Option<u16>) {
+        todo!()
+    }
+
+    pub fn connect_client_server(
+        address: ServerUrl,
+        cooldown: DynamicRetry,
+        cert: RealmClientCert,
+    ) -> Result<Self> {
+        Ok(Self {
+            realm: cert.name()?,
+            data: RwLock::new(ServerConnectionData { iterations: 0 }),
+            cooldown,
+            client: ClientBuilder::new()
+                .add_root_certificate(cert.ca()?)
+                .identity(cert.identity()?)
+                .resolve_to_addrs(&cert.name()?, &address.resolve()?)
+                .build()
+                .unwrap(),
+            address,
+        })
     }
 }
 
@@ -128,7 +129,7 @@ pub struct ConnectionData {
 
     pub remote_instance: InstanceId,
 
-    /// Total number of bytes read since the connection was established
+    /// Application-level bytes read since the connection was established
     pub read_bytes: u64,
 
     /// Total number of bytes written since the connection was established
@@ -143,6 +144,8 @@ pub struct ConnectionData {
     pub local_socket: Option<SocketAddr>,
     pub remote_socket: Option<SocketAddr>,
 
+    pub strategy: ConnectionStrategy,
+
     #[serde(with = "ts_seconds")]
     pub established: DateTime<Utc>,
 
@@ -150,53 +153,92 @@ pub struct ConnectionData {
     pub disconnected: Option<DateTime<Utc>>,
 }
 
-/// A direct connection to an agent from a client.
-pub struct AgentConnection {}
+pub struct Connection {
+    client: RwLock<reqwest::Client>,
+    pub data: Resident<ConnectionData>,
+}
 
+impl Connection {
+    async fn request(&self, body: impl Serialize) -> Result<()> {
+        // Serialize request and record bytes
+        let body = serde_json::to_vec(&body)?;
+
+        match self.data.read().strategy {
+            ConnectionStrategy::Continuous => todo!(),
+            ConnectionStrategy::Polling { schedule, timeout } => todo!(),
+        }
+        Ok(())
+    }
+}
+
+pub struct InboundConnection {}
+
+/// How long to wait to retry after an unsuccessful connection attempt.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
-pub struct ConnectionCooldown {
+pub struct DynamicRetry {
     /// Initial cooldown value
     pub initial: Duration,
 
-    /// Number of connection iterations required for the total cooldown to
+    /// Number of retries required for the total cooldown to
     /// increase by a factor of the initial cooldown.
     pub constant: Option<f64>,
 
     /// Maximum cooldown value
     pub limit: Option<Duration>,
+
+    pub iteration: u32,
 }
 
-impl ConnectionCooldown {
-    fn next(&self, iteration: u64) -> Duration {
+impl Iterator for DynamicRetry {
+    type Item = Duration;
+
+    fn next(&mut self) -> Option<Self::Item> {
         let value = match self.constant {
             Some(constant) => Duration::from_millis(
                 ((self.initial.as_millis() as f64)
-                    * (self.initial.as_millis() as f64).powf(iteration as f64 / constant))
+                    * (self.initial.as_millis() as f64).powf(self.iteration as f64 / constant))
                     as u64,
             ),
             None => self.initial,
         };
 
-        // Apply maximum limit
-        match self.limit {
+        self.iteration += 1;
+
+        Some(match self.limit {
+            // Apply maximum limit
             Some(limit) => min(value, limit),
             None => value,
-        }
+        })
     }
 }
 
-impl Default for ConnectionCooldown {
+impl Default for DynamicRetry {
     fn default() -> Self {
         Self {
             initial: Duration::from_millis(4000),
             constant: None,
             limit: None,
+            iteration: 0,
         }
     }
 }
 
-pub struct ServerConnectionData {
-    iterations: u64,
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Default)]
+pub enum ConnectionStrategy {
+    /// The connection will never intentionally disconnect. This is best when
+    /// latency is important.
+    #[default]
+    Continuous,
+
+    /// The connection will intentionally disconnect. This is best when latency
+    /// is not important.
+    Polling {
+        ///  
+        schedule: Duration,
+
+        /// How long the connection will stay alive
+        timeout: Duration,
+    },
 }
 
 /// A connection to a server from any other instance (including another server).
@@ -218,38 +260,19 @@ pub struct ServerConnectionData {
 /// The agent may attempt a spontaneous connection outside of the regular
 /// schedule if an internal agent process triggers it.
 pub struct ServerConnection {
-    pub address: ServerAddress,
+    pub address: ServerUrl,
     realm: RealmName,
-    cooldown: ConnectionCooldown,
+    cooldown: DynamicRetry,
     pub client: reqwest::Client,
-    pub data: RwLock<ServerConnectionData>,
+    pub data: Resident<ConnectionData>,
 }
 
 impl ServerConnection {
-    pub fn new(
-        address: ServerAddress,
-        cooldown: ConnectionCooldown,
-        cert: RealmClientCert,
-    ) -> Result<Self> {
-        Ok(Self {
-            realm: cert.name()?,
-            data: RwLock::new(ServerConnectionData { iterations: 0 }),
-            cooldown,
-            client: ClientBuilder::new()
-                .add_root_certificate(cert.ca()?)
-                .identity(cert.identity()?)
-                .resolve_to_addrs(&cert.name()?, &address.resolve()?)
-                .build()
-                .unwrap(),
-            address,
-        })
-    }
-
     /// Run the connection routine forever.
     pub async fn run(&self) {
         loop {
-            if self.data.read().await.iterations > 0 {
-                sleep(self.cooldown.next(self.data.read().await.iterations)).await;
+            if self.data.read().iterations > 0 {
+                sleep(self.cooldown.next(self.data.read().iterations)).await;
             }
 
             debug!("Attempting server connection");
@@ -299,18 +322,30 @@ pub enum ServerStratum {
     Global,
 }
 
+/// Locates a server instance over the network. These have a format like:
+///
+/// ```
+/// https://example.com:8768/default
+/// ```
+///
+/// With default information omitted, the URL can be as simple as:
+///
+/// ```
+/// https://example.com
+/// ```
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum ServerAddress {
-    Dns(String),
-    Ip(SocketAddr),
+pub struct ServerUrl {
+    host: String,
+    port: u16,
+    realm: RealmName,
 }
 
-impl ServerAddress {
+impl ServerUrl {
+    /// Resolve the URL into IP addresses.
     pub fn resolve(&self) -> Result<Vec<SocketAddr>> {
-        match self {
-            Self::Dns(name) => Ok(name.to_socket_addrs()?.collect()),
-            Self::Ip(socket_addr) => Ok(vec![socket_addr.clone()]),
-        }
+        Ok(format!("{}:{}", &self.host, &self.port)
+            .to_socket_addrs()?
+            .collect())
     }
 
     /// Official server port: <https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=8768>
@@ -318,33 +353,70 @@ impl ServerAddress {
         8768
     }
 
-    /// Whether the server is running on localhost.
+    /// Whether the URL points to localhost.
     pub fn is_localhost(&self) -> bool {
-        match self {
-            ServerAddress::Dns(dns) => dns == "localhost",
-            ServerAddress::Ip(ip) => ip.to_string().starts_with("127.0.0.1:"),
+        if self.host == "localhost" {
+            return true;
         }
+
+        if let Ok(addr) = self.host.parse::<SocketAddr>() {
+            return addr.ip().is_loopback();
+        }
+
+        return false;
     }
 }
 
-impl FromStr for ServerAddress {
+impl FromStr for ServerUrl {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        match s.parse::<SocketAddr>() {
-            Ok(addr) => Ok(Self::Ip(addr)),
-            // TODO regex
-            Err(_) => Ok(Self::Dns(s.to_string())),
-        }
+        let s = match s.strip_prefix("https://") {
+            Some(s) => s,
+            None => s,
+        };
+
+        let (s, realm) = match s.split_once("/") {
+            Some((s, realm)) => (s, realm.parse()?),
+            None => (s, RealmName::default()),
+        };
+
+        let (host, port) = match s.split_once(":") {
+            Some((s, port)) => (s, port.parse()?),
+            None => (s, ServerUrl::default_port()),
+        };
+
+        Ok(match host.parse::<SocketAddr>() {
+            Ok(_) => Self {
+                host: host.to_string(),
+                port,
+                realm,
+            },
+            Err(_) => Self {
+                // TODO regex
+                host: host.to_string(),
+                port,
+                realm,
+            },
+        })
     }
 }
 
-impl Display for ServerAddress {
+impl Display for ServerUrl {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ServerAddress::Dns(dns) => f.write_str(&dns),
-            ServerAddress::Ip(ip) => f.write_str(&ip.to_string()),
+        f.write_str("https://")?;
+        f.write_str(&self.host)?;
+
+        if self.port != ServerUrl::default_port() {
+            f.write_str(":")?;
+            f.write_str(&format!("{}", &self.port))?;
         }
+
+        if self.realm != RealmName::default() {
+            f.write_str("/")?;
+            f.write_str(&self.realm.to_string())?;
+        }
+        Ok(())
     }
 }
 

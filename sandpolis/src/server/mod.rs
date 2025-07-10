@@ -37,7 +37,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     ));
 
     info!(listener = ?config.server.listen, "Starting server listener");
-    axum_server::bind(config.server.listen)
+    let main_handle = axum_server::bind(config.server.listen)
         .acceptor(
             sandpolis_realm::server::RealmAcceptor::new(
                 state.instance.clone(),
@@ -45,10 +45,24 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             )
             .await?,
         )
-        .serve(app.with_state(state).into_make_service())
-        .await
-        .context("binding socket")?;
+        .serve(app.with_state(state).into_make_service());
 
+    if !config.disable_control_socket {
+        let uds = tokio::net::UnixListener::bind(&config.agent.socket)?;
+        let control_handle = tokio::spawn(async move {
+            axum::serve(uds, app.with_state(state).into_make_service()).await
+        });
+        tokio::select! {
+            result = main_handle => {
+                result?;
+            }
+            _ = control_handle => {
+                bail!("Failed to run local socket server");
+            }
+        };
+    } else {
+        main_handle.await?;
+    }
     Ok(())
 }
 

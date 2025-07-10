@@ -17,7 +17,6 @@ members = [
   "sandpolis-filesystem",
   "sandpolis-realm",
   "sandpolis-instance",
-  "sandpolis-location",
   "sandpolis-macros",
   "sandpolis-mobile",
   "sandpolis-network",

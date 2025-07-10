@@ -1,4 +1,4 @@
-use crate::{ServerAddress, cli::NetworkCommandLine};
+use crate::{ServerUrl, cli::NetworkCommandLine};
 use sandpolis_core::LayerConfig;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
@@ -10,7 +10,7 @@ pub struct NetworkLayerConfig {
     /// For GS servers, connections will be established to all given values at
     /// the same time. For LS servers, agents, and clients, only one connection
     /// can be maintained at a time.
-    pub servers: Option<Vec<ServerAddress>>,
+    pub servers: Option<Vec<ServerUrl>>,
 
     /// Instead of maintaining a persistent connection, poll the server on this
     /// cron expression

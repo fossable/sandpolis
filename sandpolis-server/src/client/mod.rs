@@ -1,5 +1,5 @@
 use anyhow::Error;
-use sandpolis_network::ServerAddress;
+use sandpolis_network::ServerUrl;
 use tokio::sync::mpsc::{self, Receiver};
 
 use crate::{ServerBannerData, ServerLayer};
@@ -21,7 +21,7 @@ pub enum LoadServerBanner {
 }
 
 impl ServerLayer {
-    pub fn fetch_banner(&self, server: &ServerAddress) -> Receiver<LoadServerBanner> {
+    pub fn fetch_banner(&self, server: &ServerUrl) -> Receiver<LoadServerBanner> {
         let (tx, rx) = mpsc::channel(5);
 
         rx

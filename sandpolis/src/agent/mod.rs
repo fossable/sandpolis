@@ -7,7 +7,6 @@ use axum::{
 use tracing::info;
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
-    let uds = tokio::net::UnixListener::bind(&config.agent.socket)?;
     let app: Router<InstanceState> = Router::new().route("/versions", get(crate::routes::versions));
 
     // Agent layer routes
@@ -59,18 +58,20 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     let network = state.network.clone();
 
-    info!("Starting agent listener");
-    let handle =
-        tokio::spawn(
-            async move { axum::serve(uds, app.with_state(state).into_make_service()).await },
-        );
-
-    tokio::select! {
-        _ = network.run() => {
-            bail!("Failed to run connection routines");
-        }
-        _ = handle => {
-            bail!("Failed to run local socket server");
-        }
-    };
+    if !config.disable_control_socket {
+        info!(path = %config.agent.socket.display(), "Starting agent control socket");
+        let uds = tokio::net::UnixListener::bind(&config.agent.socket)?;
+        let handle = tokio::spawn(async move {
+            axum::serve(uds, app.with_state(state).into_make_service()).await
+        });
+        tokio::select! {
+            _ = network.run() => {
+                bail!("Failed to run connection routines");
+            }
+            result = handle => {
+                result?;
+            }
+        };
+    } else {
+    }
 }

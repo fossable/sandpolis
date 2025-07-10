@@ -10,6 +10,7 @@ anyhow = { workspace = true }
 axum-macros = { workspace = true }
 axum = { workspace = true }
 clap = { workspace = true }
+reqwest = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
 sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }

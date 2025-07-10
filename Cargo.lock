@@ -8076,7 +8076,6 @@ dependencies = [
  "sandpolis-desktop",
  "sandpolis-filesystem",
  "sandpolis-instance",
- "sandpolis-location",
  "sandpolis-macros",
  "sandpolis-network",
  "sandpolis-package",
@@ -8284,17 +8283,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sandpolis-location"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "reqwest",
- "serde",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "sandpolis-macros"
 version = "0.0.1"
 dependencies = [
@@ -8435,6 +8423,7 @@ dependencies = [
  "clap",
  "native_db",
  "native_model",
+ "reqwest",
  "sandpolis-core",
  "sandpolis-database",
  "sandpolis-instance",
