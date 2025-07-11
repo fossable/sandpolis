@@ -2693,6 +2693,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "790eea4361631c5e7d22598ecd5723ff611904e3344ce8720784c93e3d83d40b"
 
 [[package]]
+name = "cron"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5877d3fbf742507b66bc2a1945106bd30dd8504019d596901ddd012a4dd01740"
+dependencies = [
+ "chrono",
+ "once_cell",
+ "serde",
+ "winnow 0.6.26",
+]
+
+[[package]]
 name = "croner"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8311,6 +8323,7 @@ dependencies = [
  "axum-macros",
  "chrono",
  "clap",
+ "cron",
  "futures",
  "futures-util",
  "native_db",
@@ -8327,7 +8340,9 @@ dependencies = [
  "serde_json",
  "serde_with",
  "tokio",
+ "tokio-util",
  "tracing",
+ "url",
  "validator",
 ]
 
@@ -9547,7 +9562,7 @@ dependencies = [
  "serde",
  "serde_spanned",
  "toml_datetime",
- "winnow",
+ "winnow 0.7.11",
 ]
 
 [[package]]
@@ -9998,6 +10013,7 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]
@@ -11089,6 +11105,15 @@ dependencies = [
  "x11-dl",
  "x11rb",
  "xkbcommon-dl",
+]
+
+[[package]]
+name = "winnow"
+version = "0.6.26"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e90edd2ac1aa278a5c4599b1d89cf03074b610800f866d4026dc199d7929a28"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]

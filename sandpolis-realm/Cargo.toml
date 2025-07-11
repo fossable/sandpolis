@@ -44,3 +44,5 @@ openssl = "0.10.71"
 
 [features]
 server = ["dep:rcgen", "dep:rustls-pki-types"]
+client = []
+agent = []

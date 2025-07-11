@@ -141,6 +141,42 @@ impl RealmLayer {
         }
         bail!("Realm does not exist");
     }
+
+    #[cfg(feature = "client")]
+    pub fn find_client_cert(&self, realm: RealmName) -> Result<RealmClientCert> {
+        let db = self.realm(realm.clone())?;
+        let r = db.r_transaction()?;
+
+        {
+            let certs: Vec<RealmClientCert> = r.scan().primary()?.all()?.try_collect()?;
+
+            for cert in certs {
+                if cert.name()? == realm {
+                    return Ok(cert);
+                }
+            }
+
+            bail!("Failed to find cert");
+        }
+    }
+
+    #[cfg(feature = "agent")]
+    pub fn find_agent_cert(&self, realm: RealmName) -> Result<RealmAgentCert> {
+        let db = self.realm(realm.clone())?;
+        let r = db.r_transaction()?;
+
+        {
+            let certs: Vec<RealmAgentCert> = r.scan().primary()?.all()?.try_collect()?;
+
+            for cert in certs {
+                // if cert.name()? == realm {
+                //     return Ok(cert);
+                // }
+            }
+
+            bail!("Failed to find cert");
+        }
+    }
 }
 
 /// A realm is a set of clients and agents that can interact. Each realm has a

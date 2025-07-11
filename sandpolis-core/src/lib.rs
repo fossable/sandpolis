@@ -112,6 +112,18 @@ impl InstanceId {
         self.0 & instance_type.mask() as u128 > 0
     }
 
+    pub fn is_server(&self) -> bool {
+        self.is_type(InstanceType::Server)
+    }
+
+    pub fn is_client(&self) -> bool {
+        self.is_type(InstanceType::Client)
+    }
+
+    pub fn is_agent(&self) -> bool {
+        self.is_type(InstanceType::Agent)
+    }
+
     /// Return the instance types encoded in this UUID.
     pub fn types(&self) -> Vec<InstanceType> {
         InstanceType::iter().filter(|t| self.is_type(*t)).collect()
@@ -193,28 +205,157 @@ impl InstanceType {
 #[cfg(test)]
 mod test_instance_id {
     use super::*;
+
     #[test]
-    fn test_display() {
+    fn test_new_single_types() {
+        let agent_id = InstanceId::new(&[InstanceType::Agent]);
+        assert!(agent_id.is_agent());
+        assert!(!agent_id.is_server());
+        assert!(!agent_id.is_client());
+
+        let server_id = InstanceId::new(&[InstanceType::Server]);
+        assert!(!server_id.is_agent());
+        assert!(server_id.is_server());
+        assert!(!server_id.is_client());
+
+        let client_id = InstanceId::new(&[InstanceType::Client]);
+        assert!(!client_id.is_agent());
+        assert!(!client_id.is_server());
+        assert!(client_id.is_client());
+    }
+
+    #[test]
+    fn test_new_multiple_types() {
+        let multi_id = InstanceId::new(&[InstanceType::Agent, InstanceType::Server]);
+        assert!(multi_id.is_agent());
+        assert!(multi_id.is_server());
+        assert!(!multi_id.is_client());
+
+        let all_types_id = InstanceId::new(&[
+            InstanceType::Agent,
+            InstanceType::Server,
+            InstanceType::Client,
+        ]);
+        assert!(all_types_id.is_agent());
+        assert!(all_types_id.is_server());
+        assert!(all_types_id.is_client());
+    }
+
+    #[test]
+    fn test_new_server_convenience() {
+        let server_id = InstanceId::new_server();
+        assert!(server_id.is_server());
+        assert!(!server_id.is_agent());
+        assert!(!server_id.is_client());
+    }
+
+    #[test]
+    fn test_types_method() {
+        let agent_id = InstanceId::new(&[InstanceType::Agent]);
+        let types = agent_id.types();
+        assert_eq!(types.len(), 1);
+        assert!(types.contains(&InstanceType::Agent));
+
+        let multi_id = InstanceId::new(&[InstanceType::Agent, InstanceType::Server]);
+        let types = multi_id.types();
+        assert_eq!(types.len(), 2);
+        assert!(types.contains(&InstanceType::Agent));
+        assert!(types.contains(&InstanceType::Server));
+        assert!(!types.contains(&InstanceType::Client));
+    }
+
+    #[test]
+    fn test_display_format() {
+        let id = InstanceId(0x123456789ABCDEF0FEDCBA0987654321);
+        let display_str = id.to_string();
+
+        // Should be 36 characters (32 hex + 4 hyphens)
+        assert_eq!(display_str.len(), 36);
+
+        // Should contain hyphens in the right positions
+        assert_eq!(display_str.chars().nth(8), Some('-'));
+        assert_eq!(display_str.chars().nth(13), Some('-'));
+        assert_eq!(display_str.chars().nth(18), Some('-'));
+        assert_eq!(display_str.chars().nth(23), Some('-'));
+
+        // Should be all lowercase hex
+        assert!(
+            display_str
+                .chars()
+                .all(|c| c.is_ascii_hexdigit() || c == '-')
+        );
+        assert!(display_str.chars().all(|c| !c.is_ascii_uppercase()));
+    }
+
+    #[test]
+    fn test_type_masks() {
+        // Test that the type masks work correctly
+        let agent_id = InstanceId::new(&[InstanceType::Agent]);
+        let server_id = InstanceId::new(&[InstanceType::Server]);
+        let client_id = InstanceId::new(&[InstanceType::Client]);
+
+        // Check that the masks are applied correctly
         assert_eq!(
-            InstanceId::new(&[InstanceType::Agent]).to_string().len(),
-            36
+            agent_id.0 & InstanceType::Agent.mask() as u128,
+            InstanceType::Agent.mask() as u128
+        );
+        assert_eq!(
+            server_id.0 & InstanceType::Server.mask() as u128,
+            InstanceType::Server.mask() as u128
+        );
+        assert_eq!(
+            client_id.0 & InstanceType::Client.mask() as u128,
+            InstanceType::Client.mask() as u128
+        );
+
+        // Check that other masks are not set
+        assert_eq!(agent_id.0 & InstanceType::Server.mask() as u128, 0);
+        assert_eq!(agent_id.0 & InstanceType::Client.mask() as u128, 0);
+    }
+
+    #[test]
+    fn test_multiple_type_masks() {
+        let multi_id = InstanceId::new(&[InstanceType::Agent, InstanceType::Server]);
+
+        // Should have both Agent and Server bits set
+        assert_eq!(
+            multi_id.0 & InstanceType::Agent.mask() as u128,
+            InstanceType::Agent.mask() as u128
+        );
+        assert_eq!(
+            multi_id.0 & InstanceType::Server.mask() as u128,
+            InstanceType::Server.mask() as u128
+        );
+
+        // Should not have Client bit set
+        assert_eq!(multi_id.0 & InstanceType::Client.mask() as u128, 0);
+    }
+
+    #[test]
+    fn test_mask_bitwise_operations() {
+        // Test that the masks are properly distinct
+        assert_ne!(InstanceType::Agent.mask(), InstanceType::Server.mask());
+        assert_ne!(InstanceType::Agent.mask(), InstanceType::Client.mask());
+        assert_ne!(InstanceType::Server.mask(), InstanceType::Client.mask());
+
+        // Test that combining masks works
+        let combined = InstanceType::Agent.mask() | InstanceType::Server.mask();
+        assert_ne!(combined, InstanceType::Agent.mask());
+        assert_ne!(combined, InstanceType::Server.mask());
+        assert_eq!(
+            combined & InstanceType::Agent.mask(),
+            InstanceType::Agent.mask()
+        );
+        assert_eq!(
+            combined & InstanceType::Server.mask(),
+            InstanceType::Server.mask()
         );
     }
 
     #[test]
-    fn test_types() {
-        assert!(
-            InstanceId::new(&[
-                InstanceType::Agent,
-                InstanceType::Server,
-                InstanceType::Client
-            ])
-            .is_type(InstanceType::Agent)
-        );
-        assert!(InstanceId::new(&[InstanceType::Agent]).is_type(InstanceType::Agent));
-        assert!(InstanceId::new(&[InstanceType::Server]).is_type(InstanceType::Server));
-        assert!(InstanceId::new(&[InstanceType::Client]).is_type(InstanceType::Client));
-        assert!(!InstanceId::new(&[InstanceType::Server]).is_type(InstanceType::Agent));
+    #[should_panic(expected = "No instance type given")]
+    fn test_new_empty_types_panics() {
+        InstanceId::new(&[]);
     }
 }
 
@@ -349,6 +490,135 @@ impl ToKey for UserName {
 
     fn key_names() -> Vec<String> {
         vec!["UserName".to_string()]
+    }
+}
+
+#[cfg(test)]
+mod test_user_name {
+    use super::*;
+
+    #[test]
+    fn test_valid_usernames() {
+        assert!("test".parse::<UserName>().is_ok());
+        assert!("admin".parse::<UserName>().is_ok());
+        assert!("user123".parse::<UserName>().is_ok());
+        assert!("1234".parse::<UserName>().is_ok());
+        assert!("abcd".parse::<UserName>().is_ok());
+        assert!("user0".parse::<UserName>().is_ok());
+        assert!("0user".parse::<UserName>().is_ok());
+        assert!(
+            "longusername1234567890123456789012"
+                .parse::<UserName>()
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn test_invalid_usernames() {
+        // Too short
+        assert!("a".parse::<UserName>().is_err());
+        assert!("ab".parse::<UserName>().is_err());
+        assert!("abc".parse::<UserName>().is_err());
+        assert!("".parse::<UserName>().is_err());
+
+        // Too long
+        assert!(
+            "verylongusernamethatexceedsthemaximumlengthallowed"
+                .parse::<UserName>()
+                .is_err()
+        );
+        assert!("a".repeat(33).parse::<UserName>().is_err());
+
+        // Invalid characters
+        assert!("user-name".parse::<UserName>().is_err());
+        assert!("user_name".parse::<UserName>().is_err());
+        assert!("user.name".parse::<UserName>().is_err());
+        assert!("user@name".parse::<UserName>().is_err());
+        assert!("user name".parse::<UserName>().is_err());
+        assert!("User".parse::<UserName>().is_err());
+        assert!("USER".parse::<UserName>().is_err());
+        assert!("user!".parse::<UserName>().is_err());
+        assert!("user#".parse::<UserName>().is_err());
+        assert!("user$".parse::<UserName>().is_err());
+        assert!("user%".parse::<UserName>().is_err());
+        assert!("user^".parse::<UserName>().is_err());
+        assert!("user&".parse::<UserName>().is_err());
+        assert!("user*".parse::<UserName>().is_err());
+        assert!("user(".parse::<UserName>().is_err());
+        assert!("user)".parse::<UserName>().is_err());
+        assert!("user+".parse::<UserName>().is_err());
+        assert!("user=".parse::<UserName>().is_err());
+        assert!("user[".parse::<UserName>().is_err());
+        assert!("user]".parse::<UserName>().is_err());
+        assert!("user{".parse::<UserName>().is_err());
+        assert!("user}".parse::<UserName>().is_err());
+        assert!("user|".parse::<UserName>().is_err());
+        assert!("user\\".parse::<UserName>().is_err());
+        assert!("user:".parse::<UserName>().is_err());
+        assert!("user;".parse::<UserName>().is_err());
+        assert!("user\"".parse::<UserName>().is_err());
+        assert!("user'".parse::<UserName>().is_err());
+        assert!("user<".parse::<UserName>().is_err());
+        assert!("user>".parse::<UserName>().is_err());
+        assert!("user,".parse::<UserName>().is_err());
+        assert!("user?".parse::<UserName>().is_err());
+        assert!("user/".parse::<UserName>().is_err());
+        assert!("user~".parse::<UserName>().is_err());
+        assert!("user`".parse::<UserName>().is_err());
+    }
+
+    #[test]
+    fn test_boundary_lengths() {
+        // Exactly 4 characters (minimum)
+        assert!("test".parse::<UserName>().is_ok());
+        assert!("1234".parse::<UserName>().is_ok());
+        assert!("abcd".parse::<UserName>().is_ok());
+
+        // Exactly 32 characters (maximum)
+        let max_length = "a".repeat(32);
+        assert_eq!(max_length.len(), 32);
+        assert!(max_length.parse::<UserName>().is_ok());
+
+        // Just over 32 characters
+        let over_max = "a".repeat(33);
+        assert_eq!(over_max.len(), 33);
+        assert!(over_max.parse::<UserName>().is_err());
+
+        // Just under 4 characters
+        assert!("abc".parse::<UserName>().is_err());
+    }
+
+    #[test]
+    fn test_default() {
+        let default_username = UserName::default();
+        assert_eq!(default_username.to_string(), "admin");
+        assert_eq!(*default_username, "admin");
+    }
+
+    #[test]
+    fn test_display() {
+        let username = UserName("testuser".to_string());
+        assert_eq!(username.to_string(), "testuser");
+        assert_eq!(format!("{}", username), "testuser");
+    }
+
+    #[test]
+    fn test_deref() {
+        let username = UserName("testuser".to_string());
+        assert_eq!(username.len(), 8);
+        assert_eq!(username.chars().count(), 8);
+        assert!(username.starts_with("test"));
+        assert!(username.ends_with("user"));
+    }
+
+    #[test]
+    fn test_equality() {
+        let username1 = UserName("testuser".to_string());
+        let username2 = UserName("testuser".to_string());
+        let username3 = UserName("different".to_string());
+
+        assert_eq!(username1, username2);
+        assert_ne!(username1, username3);
     }
 }
 
