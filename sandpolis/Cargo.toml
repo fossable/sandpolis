@@ -71,29 +71,34 @@ bevy_rapier2d = { workspace = true, optional = true }
 server = [
   "sandpolis-desktop?/server",
   "sandpolis-filesystem?/server",
-  "sandpolis-realm/server",
+  "sandpolis-instance/server",
+  "sandpolis-network/server",
   "sandpolis-package?/server",
   "sandpolis-power?/server",
+  "sandpolis-realm/server",
   "sandpolis-server/server",
   "sandpolis-shell?/server",
   "sandpolis-sysinfo?/server",
   "sandpolis-user/server",
-  "sandpolis-instance/server",
 ]
 agent = [
   "sandpolis-agent/agent",
-  "sandpolis-instance/agent",
   "sandpolis-desktop?/agent",
   "sandpolis-filesystem?/agent",
+  "sandpolis-instance/agent",
+  "sandpolis-network/agent",
   "sandpolis-package?/agent",
   "sandpolis-power?/agent",
+  "sandpolis-realm/agent",
   "sandpolis-shell?/agent",
   "sandpolis-sysinfo?/agent",
 ]
 client = [
-  "sandpolis-server/client",
   "sandpolis-client/client",
   "sandpolis-instance/client",
+  "sandpolis-network/client",
+  "sandpolis-realm/client",
+  "sandpolis-server/client",
 ]
 
 # Layers

@@ -12,6 +12,7 @@ use native_db::ToKey;
 use native_model::Model;
 use pem::Pem;
 use pem::encode;
+use sandpolis_core::InstanceType;
 use sandpolis_core::{RealmName, UserName};
 use sandpolis_database::RealmDatabase;
 use sandpolis_database::ResidentVec;
@@ -24,10 +25,12 @@ use std::io::Write;
 use std::path::Path;
 use tracing::debug;
 use tracing::info;
-use validator::Validate;
+use validator::{Validate, ValidationError, ValidationErrors};
+use x509_parser::asn1_rs::Oid;
 use x509_parser::prelude::{FromDer, GeneralName};
 use x509_parser::prelude::{ParsedExtension, X509Certificate};
 
+pub mod cli;
 pub mod config;
 pub mod messages;
 #[cfg(feature = "server")]
@@ -63,9 +66,6 @@ impl RealmLayer {
             realms.push(RealmData::default())?;
         }
 
-        // Preload all realm databases
-        // TODO
-
         #[cfg(feature = "server")]
         {
             for realm in realms.iter() {
@@ -91,7 +91,7 @@ impl RealmLayer {
                         info!("Wrote client cert to: /tmp/client.pem");
 
                         let agent_cert = cluster_certs[0].agent_cert()?;
-                        client_cert.write("/tmp/agent.pem")?;
+                        agent_cert.write("/tmp/agent.pem")?;
                         info!("Wrote agent cert to: /tmp/agent.pem");
                     }
                 }
@@ -109,21 +109,48 @@ impl RealmLayer {
             }
         }
 
-        // Update client cert if possible
-        // if let Some(new_cert) = config.certificate()? {
-        //     if let Some(realm) = r
-        //         .get()
-        //         .secondary::<RealmData>(RealmDataKey::name, new_cert.name()?)?
-        //     {
-        //         // Only import if the given certificate is newer than the one
-        //         // already in the database.
-        //         // if new_cert.creation_time()? > old_cert.creation_time()? {
-        //         //     info!(path = %config.certificate.expect("a path was
-        //         // configured").display(), "Importing realm certificate");
-        //         //     data.data.client = Some(new_cert);
-        //         // }
-        //     }
-        // }
+        // Import configured certs if newer than what we have in the database
+        #[cfg(feature = "agent")]
+        for path in config.agent_certs.as_ref().unwrap_or(&Vec::new()) {
+            let new_cert = RealmAgentCert::read(&path)?;
+
+            let db = database.realm(new_cert.name()?)?;
+            let old_cert: Resident<RealmAgentCert> = db.resident(())?;
+
+            // Only import if the given certificate is newer than the one
+            // already in the database.
+            if new_cert.creation_time()? > old_cert.read().creation_time()? {
+                info!(path = %path.display(), "Importing realm certificate");
+                // TODO update without each field
+                old_cert.update(|old_cert| {
+                    old_cert.cert = new_cert.cert.clone();
+                    old_cert.ca = new_cert.ca.clone();
+                    old_cert.key = new_cert.key.clone();
+                    Ok(())
+                })?;
+            }
+        }
+
+        #[cfg(feature = "client")]
+        for path in config.client_certs.as_ref().unwrap_or(&Vec::new()) {
+            let new_cert = RealmClientCert::read(&path)?;
+
+            let db = database.realm(new_cert.name()?)?;
+            let old_cert: Resident<RealmClientCert> = db.resident(())?;
+
+            // Only import if the given certificate is newer than the one
+            // already in the database.
+            if new_cert.creation_time()? > old_cert.read().creation_time()? {
+                info!(path = %path.display(), "Importing realm certificate");
+                // TODO update without each field
+                old_cert.update(|old_cert| {
+                    old_cert.cert = new_cert.cert.clone();
+                    old_cert.ca = new_cert.ca.clone();
+                    old_cert.key = new_cert.key.clone();
+                    Ok(())
+                })?;
+            }
+        }
 
         Ok(Self {
             database,
@@ -169,9 +196,9 @@ impl RealmLayer {
             let certs: Vec<RealmAgentCert> = r.scan().primary()?.all()?.try_collect()?;
 
             for cert in certs {
-                // if cert.name()? == realm {
-                //     return Ok(cert);
-                // }
+                if cert.name()? == realm {
+                    return Ok(cert);
+                }
             }
 
             bail!("Failed to find cert");
@@ -236,6 +263,60 @@ pub struct RealmClientCert {
     pub key: Option<Vec<u8>>,
 }
 
+impl Validate for RealmClientCert {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        let mut errors = ValidationErrors::new();
+
+        // Parse the certificate
+        let cert = match X509Certificate::from_der(&self.cert) {
+            Ok((_, cert)) => cert,
+            Err(_) => {
+                errors.add(
+                    "cert",
+                    ValidationError::new("Invalid X.509 certificate format"),
+                );
+                return Err(errors);
+            }
+        };
+
+        // Validate extended key usage for clientAuth
+        let mut client_auth = false;
+        let mut client_realm = false;
+        for ext in cert.iter_extensions() {
+            if let ParsedExtension::ExtendedKeyUsage(eku) = ext.parsed_extension() {
+                if eku.client_auth {
+                    client_auth = true;
+                }
+                if eku
+                    .other
+                    .contains(&Oid::from(&[1, 1, 1, InstanceType::Client.mask() as u64]).unwrap())
+                {
+                    client_realm = true;
+                }
+            }
+        }
+
+        if !client_realm {
+            errors.add(
+                "cert",
+                ValidationError::new("Certificate must have client extended key usage"),
+            );
+        }
+        if !client_auth {
+            errors.add(
+                "cert",
+                ValidationError::new("Certificate must have clientAuth extended key usage"),
+            );
+        }
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
+    }
+}
+
 impl RealmClientCert {
     /// Read the certificate from a file.
     pub fn read<P>(path: P) -> Result<Self>
@@ -277,6 +358,8 @@ impl RealmClientCert {
 
         assert!(!cert.ca.is_empty());
         assert!(!cert.cert.is_empty());
+
+        cert.validate()?;
         Ok(cert)
     }
 
@@ -362,6 +445,159 @@ pub struct RealmAgentCert {
     pub ca: Vec<u8>,
     pub cert: Vec<u8>,
     pub key: Option<Vec<u8>>,
+}
+
+impl Validate for RealmAgentCert {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        let mut errors = ValidationErrors::new();
+
+        // Parse the certificate
+        let cert = match X509Certificate::from_der(&self.cert) {
+            Ok((_, cert)) => cert,
+            Err(_) => {
+                errors.add(
+                    "cert",
+                    ValidationError::new("Invalid X.509 certificate format"),
+                );
+                return Err(errors);
+            }
+        };
+
+        // Validate extended key usage for clientAuth
+        let mut client_auth = false;
+        let mut agent_realm = false;
+        for ext in cert.iter_extensions() {
+            if let ParsedExtension::ExtendedKeyUsage(eku) = ext.parsed_extension() {
+                if eku.client_auth {
+                    client_auth = true;
+                }
+                if eku
+                    .other
+                    .contains(&Oid::from(&[1, 1, 1, InstanceType::Agent.mask() as u64]).unwrap())
+                {
+                    agent_realm = true;
+                }
+            }
+        }
+
+        if !agent_realm {
+            errors.add(
+                "cert",
+                ValidationError::new("Certificate must have agent extended key usage"),
+            );
+        }
+        if !client_auth {
+            errors.add(
+                "cert",
+                ValidationError::new("Certificate must have clientAuth extended key usage"),
+            );
+        }
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
+    }
+}
+
+impl RealmAgentCert {
+    /// Read the certificate from a file.
+    pub fn read<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        let mut cert = Self::default();
+        let file = pem::parse_many(&std::fs::read(path)?)?;
+
+        if file.len() < 2 || file.len() > 3 {
+            bail!("Invalid realm certificate");
+        }
+
+        // Duplicates are not allowed
+        if file
+            .iter()
+            .map(|item| item.tag())
+            .collect::<HashSet<_>>()
+            .len()
+            != file.len()
+        {
+            bail!("Invalid realm certificate");
+        }
+
+        for item in file {
+            match item.tag() {
+                "CLUSTER CERTIFICATE" => {
+                    cert.ca = item.into_contents();
+                }
+                "AGENT CERTIFICATE" => {
+                    cert.cert = item.into_contents();
+                }
+                "AGENT KEY" => {
+                    cert.key = Some(item.into_contents());
+                }
+                _ => bail!("Invalid realm certificate"),
+            }
+        }
+
+        assert!(!cert.ca.is_empty());
+        assert!(!cert.cert.is_empty());
+
+        cert.validate()?;
+        Ok(cert)
+    }
+
+    /// Write the certificate to a file.
+    pub fn write<P>(&self, path: P) -> Result<()>
+    where
+        P: AsRef<Path>,
+    {
+        let mut file = File::create(path)?;
+
+        file.write_all(encode(&Pem::new("CLUSTER CERTIFICATE", self.ca.clone())).as_bytes())?;
+        file.write_all(encode(&Pem::new("AGENT CERTIFICATE", self.cert.clone())).as_bytes())?;
+
+        if let Some(key) = self.key.clone() {
+            file.write_all(encode(&Pem::new("AGENT KEY", key)).as_bytes())?;
+        }
+        Ok(())
+    }
+
+    pub fn ca(&self) -> Result<reqwest::Certificate> {
+        Ok(reqwest::Certificate::from_pem(&self.ca)?)
+    }
+
+    pub fn identity(&self) -> Result<reqwest::Identity> {
+        // Combine cert and key together
+        let mut bundle = Vec::new();
+        bundle.extend_from_slice(&self.cert);
+        bundle.extend_from_slice(self.key.as_ref().ok_or_else(|| anyhow!("No key"))?);
+        Ok(reqwest::Identity::from_pem(&bundle)?)
+    }
+
+    /// Return when the certificate was generated.
+    pub fn creation_time(&self) -> Result<i64> {
+        Ok(X509Certificate::from_der(&self.cert)?
+            .1
+            .validity
+            .not_before
+            .timestamp())
+    }
+
+    pub fn name(&self) -> Result<RealmName> {
+        let name = X509Certificate::from_der(&self.cert)?
+            .1
+            .subject()
+            .iter_common_name()
+            .next()
+            .ok_or_else(|| anyhow::anyhow!("no common name"))?
+            .to_owned()
+            .as_str()
+            .map_err(|_| anyhow::anyhow!("invalid common name"))?
+            .parse()?;
+
+        Ok(name)
+    }
 }
 
 pub enum RealmPermission {

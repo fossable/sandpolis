@@ -1,5 +1,5 @@
 use crate::{InstanceState, config::Configuration};
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use axum::{
     Router,
     routing::{get, post},
@@ -45,19 +45,27 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             )
             .await?,
         )
-        .serve(app.with_state(state).into_make_service());
+        .serve(app.clone().with_state(state.clone()).into_make_service());
 
-    if !config.disable_control_socket {
-        let uds = tokio::net::UnixListener::bind(&config.agent.socket)?;
+    if let Some(socket_directory) = &config.instance.socket_directory {
+        config.instance.clear_socket_path("server.sock")?;
+
+        info!(
+            socket = format!("{}/server.sock", socket_directory.display()),
+            "Starting admin socket"
+        );
+        let uds =
+            tokio::net::UnixListener::bind(&format!("{}/server.sock", socket_directory.display()))?;
         let control_handle = tokio::spawn(async move {
+            // TODO should admin socket get separate app and state?
             axum::serve(uds, app.with_state(state).into_make_service()).await
         });
         tokio::select! {
             result = main_handle => {
                 result?;
             }
-            _ = control_handle => {
-                bail!("Failed to run local socket server");
+            result = control_handle => {
+                result??;
             }
         };
     } else {

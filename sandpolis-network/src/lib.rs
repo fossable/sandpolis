@@ -71,10 +71,10 @@ impl NetworkLayer {
             realms: realms.clone(),
         };
 
+        // Initiate connections to configured servers before we return
+        #[cfg(any(feature = "agent", feature = "client"))] // Temporary
         for server_url in config.servers.clone().unwrap_or_default() {
-            realms
-                .realm(server_url.realm.clone())
-                .context("Realm does not exist")?;
+            network.connect_server(server_url).await?;
         }
 
         Ok(network)
@@ -117,13 +117,14 @@ impl NetworkLayer {
         todo!()
     }
 
+    #[cfg(any(feature = "agent", feature = "client"))] // Temporary
     pub async fn connect_server(&self, url: ServerUrl) -> Result<OutboundConnection> {
         // Locate the realm certificate
         #[cfg(feature = "client")]
         let cert = self.realms.find_client_cert(url.realm.clone())?;
 
-        // #[cfg(feature = "agent")]
-        // let cert = self.realms.find_agent_cert(url.realm.clone())?;
+        #[cfg(feature = "agent")]
+        let cert = self.realms.find_agent_cert(url.realm.clone())?;
 
         let client_builder = || -> Result<reqwest::Client> {
             Ok(ClientBuilder::new()
@@ -212,7 +213,7 @@ impl OutboundConnection {
         // Serialize request and record bytes
         let body = serde_json::to_vec(&body)?;
 
-        match self.data.read().strategy {
+        match &self.strategy {
             ConnectionStrategy::Continuous => todo!(),
             ConnectionStrategy::Polling { schedule, timeout } => {
                 // Get the next scheduled time from the cron schedule

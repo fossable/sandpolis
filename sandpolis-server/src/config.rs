@@ -15,7 +15,8 @@ pub struct ServerLayerConfig {
     pub local: bool,
 
     /// Service to use for resolving IP location info
-    pub service: crate::server::LocationService,
+    #[cfg(feature = "server")]
+    pub service: crate::location::server::LocationService,
 }
 
 impl Default for ServerLayerConfig {
@@ -26,7 +27,8 @@ impl Default for ServerLayerConfig {
                 ServerUrl::default_port(),
             ),
             local: false,
-            service: crate::server::LocationService::default(),
+            #[cfg(feature = "server")]
+            service: crate::location::server::LocationService::default(),
         }
     }
 }

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::cmp::Ordering;
 
 pub mod cli;
+pub mod config;
 
 #[data]
 pub struct InstanceLayerData {

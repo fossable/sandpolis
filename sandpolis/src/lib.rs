@@ -244,6 +244,7 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_realm::RealmClusterCert>().unwrap();
         m.define::<sandpolis_realm::RealmServerCert>().unwrap();
         m.define::<sandpolis_realm::RealmClientCert>().unwrap();
+        m.define::<sandpolis_realm::RealmAgentCert>().unwrap();
     }
 
     // Instance layer

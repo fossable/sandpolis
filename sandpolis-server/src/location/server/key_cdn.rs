@@ -71,6 +71,7 @@ impl From<Response> for LocationData {
             region: value.region_name,
             region_code: value.region_code,
             timezone: value.timezone,
+            ..Default::default()
         }
     }
 }

@@ -57,7 +57,8 @@ struct Response {
     isp: Option<String>,
     /// Organization name
     org: Option<String>,
-    /// AS number and organization, separated by space (RIR). Empty for IP blocks not being announced in BGP tables.
+    /// AS number and organization, separated by space (RIR). Empty for IP
+    /// blocks not being announced in BGP tables.
     r#as: Option<String>,
     /// AS name (RIR). Empty for IP blocks not being announced in BGP tables.
     asname: Option<String>,
@@ -90,6 +91,7 @@ impl From<Response> for LocationData {
             region: value.regionName,
             region_code: value.region,
             timezone: value.timezone,
+            ..Default::default()
         }
     }
 }

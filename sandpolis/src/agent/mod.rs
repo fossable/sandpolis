@@ -58,20 +58,24 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     let network = state.network.clone();
 
-    if !config.disable_control_socket {
-        info!(path = %config.agent.socket.display(), "Starting agent control socket");
-        let uds = tokio::net::UnixListener::bind(&config.agent.socket)?;
+    if let Some(socket_directory) = &config.instance.socket_directory {
+        config.instance.clear_socket_path("agent.sock")?;
+        info!(
+            socket = format!("{}/server.sock", socket_directory.display()),
+            "Starting admin socket"
+        );
+
+        let uds =
+            tokio::net::UnixListener::bind(&format!("{}/server.sock", socket_directory.display()))?;
         let handle = tokio::spawn(async move {
             axum::serve(uds, app.with_state(state).into_make_service()).await
         });
         tokio::select! {
-            _ = network.run() => {
-                bail!("Failed to run connection routines");
-            }
             result = handle => {
                 result?;
             }
         };
     } else {
     }
+    Ok(())
 }

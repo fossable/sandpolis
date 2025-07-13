@@ -1,16 +1,38 @@
-use sandpolis_core::RealmName;
+use sandpolis_core::{LayerConfig, RealmName};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+use crate::cli::RealmCommandLine;
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RealmConfig {
-    /// Path to authentication certificate which will be installed into the
-    /// database. Subsequent runs don't require this option.
-    pub certificate: Option<PathBuf>,
+    /// Path to realm certificate which will be installed into the
+    /// database.
+    pub agent_certs: Option<Vec<PathBuf>>,
+
+    /// Path to realm certificate which will be installed into the
+    /// database.
+    pub client_certs: Option<Vec<PathBuf>>,
 
     /// Force the following realms to exist
     pub static_realms: Option<Vec<RealmName>>,
 
     /// Whether new realms can be created
     pub lock_realms: Option<bool>,
+}
+
+impl LayerConfig<RealmCommandLine> for RealmConfig {
+    fn override_cli(&mut self, args: &RealmCommandLine) {
+        if let Some(agent_cert) = &args.agent_cert {
+            let mut agent_certs = self.agent_certs.clone().unwrap_or_default();
+            agent_certs.push(agent_cert.clone());
+            self.agent_certs = Some(agent_certs);
+        }
+
+        if let Some(client_cert) = &args.client_cert {
+            let mut client_certs = self.client_certs.clone().unwrap_or_default();
+            client_certs.push(client_cert.clone());
+            self.client_certs = Some(client_certs);
+        }
+    }
 }

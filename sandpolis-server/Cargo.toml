@@ -22,6 +22,7 @@ serde_bytes = { workspace = true }
 serde_with = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
+tracing = { workspace = true }
 
 [features]
 server = []

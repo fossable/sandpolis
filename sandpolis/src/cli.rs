@@ -25,6 +25,9 @@ pub struct CommandLine {
     #[clap(flatten)]
     pub database: sandpolis_database::cli::DatabaseCommandLine,
 
+    #[clap(flatten)]
+    pub realm: sandpolis_realm::cli::RealmCommandLine,
+
     #[command(subcommand)]
     pub command: Option<Commands>,
 }

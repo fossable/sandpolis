@@ -1,5 +1,5 @@
 use crate::cli::CommandLine;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use sandpolis_core::LayerConfig;
 use serde::{Deserialize, Serialize};
 use std::{fs::File, path::PathBuf};
@@ -14,13 +14,10 @@ pub struct Configuration {
     #[cfg(feature = "client")]
     pub client: sandpolis_client::config::ClientLayerConfig,
     pub database: sandpolis_database::config::DatabaseConfig,
-    /// Whether a local control socket will be spawned. This socket allows
-    /// modification to the running process, so misconfiguring the file
-    /// permissions on it may be a security risk.
-    pub disable_control_socket: bool,
     /// Whether overrides from environment variables or the command line are
     /// allowed
     pub disable_overrides: bool,
+    pub instance: sandpolis_instance::config::InstanceConfig,
     pub network: sandpolis_network::config::NetworkLayerConfig,
     pub realm: sandpolis_realm::config::RealmConfig,
     #[cfg(feature = "server")]
@@ -77,10 +74,12 @@ impl Configuration {
             }
         };
 
-        // Handle overrides
+        // Handle overrides if allowed
         if !config.disable_overrides {
+            config.instance.override_cli(&args.instance);
             config.database.override_cli(&args.database);
             config.network.override_cli(&args.network);
+            config.realm.override_cli(&args.realm);
         }
 
         Ok(config)

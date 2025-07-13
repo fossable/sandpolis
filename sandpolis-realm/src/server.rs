@@ -182,6 +182,11 @@ impl super::RealmClusterCert {
         cert_params
             .extended_key_usages
             .push(ExtendedKeyUsagePurpose::ServerAuth);
+
+        // Can also do client auth when connecting to other servers
+        cert_params
+            .extended_key_usages
+            .push(ExtendedKeyUsagePurpose::ClientAuth);
         cert_params.not_before = OffsetDateTime::now_utc();
         cert_params.not_after = OffsetDateTime::now_utc().saturating_add(Duration::days(365));
         cert_params.subject_alt_names = vec![SanType::DnsName(
