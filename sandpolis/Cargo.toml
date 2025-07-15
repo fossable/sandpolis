@@ -59,7 +59,6 @@ ratatui = { workspace = true, optional = true }
 ratatui-image = { workspace = true, optional = true }
 image = { workspace = true, optional = true }
 tui-popup = { workspace = true, optional = true }
-tui-prompts = { workspace = true, optional = true }
 
 # GUI client exclusive
 bevy = { workspace = true, optional = true }
@@ -156,7 +155,6 @@ client-tui = [
   "dep:ratatui-image",
   "dep:image",
   "dep:tui-popup",
-  "dep:tui-prompts",
   "sandpolis-client/client-tui",
   "sandpolis-desktop?/client-tui",
   "sandpolis-filesystem?/client-tui",

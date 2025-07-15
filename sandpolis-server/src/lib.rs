@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
@@ -8,7 +10,8 @@ use sandpolis_database::DatabaseLayer;
 use sandpolis_database::Resident;
 use sandpolis_macros::data;
 use sandpolis_network::NetworkLayer;
-use serde::{Deserialize, Serialize};
+use sandpolis_network::OutboundConnection;
+use sandpolis_network::ServerUrl;
 
 #[cfg(feature = "client")]
 pub mod client;
@@ -37,7 +40,18 @@ impl ServerLayer {
         })
     }
 
+    /// Get all server connections.
+    pub fn server_connections(&self) -> Vec<Arc<OutboundConnection>> {
+        let mut connections = self.network.outbound.read().unwrap().clone();
+        connections.retain(|connection| connection.data.read().remote_instance.is_server());
+        connections
+    }
+
     pub fn get_banner() -> Result<ServerBannerData> {
+        todo!()
+    }
+
+    pub fn add_server(&self, server_url: ServerUrl) -> Result<()> {
         todo!()
     }
 }

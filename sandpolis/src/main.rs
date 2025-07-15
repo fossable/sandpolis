@@ -1,12 +1,8 @@
 use anyhow::{Result, bail};
-use axum::Router;
-use axum::routing::{any, get, post};
 use clap::Parser;
-use colored::Colorize;
 use sandpolis::InstanceState;
-use sandpolis::cli::{CommandLine, Commands};
+use sandpolis::cli::CommandLine;
 use sandpolis::config::Configuration;
-use sandpolis_core::InstanceType;
 use sandpolis_database::DatabaseLayer;
 use std::fs::OpenOptions;
 use std::process::ExitCode;
@@ -44,7 +40,7 @@ async fn main() -> Result<ExitCode> {
                 })
                 .from_env()?,
         )
-        .with_writer(log_file)
+        // .with_writer(log_file)
         .init();
 
     // Get ready to do some cryptography
@@ -57,7 +53,7 @@ async fn main() -> Result<ExitCode> {
     debug!(config = ?config, "Instance configuration");
 
     // Default to all compiled instance types
-    let run_instances = Vec::<&str>::from([
+    let mut run_instances = Vec::<&str>::from([
         #[cfg(feature = "server")]
         "server",
         #[cfg(feature = "client")]

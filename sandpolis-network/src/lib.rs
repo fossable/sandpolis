@@ -49,7 +49,7 @@ pub struct NetworkLayer {
     data: Resident<NetworkLayerData>,
 
     /// Outbound connections
-    outbound: Arc<RwLock<Vec<Arc<OutboundConnection>>>>,
+    pub outbound: Arc<RwLock<Vec<Arc<OutboundConnection>>>>,
 
     realms: RealmLayer,
 
@@ -74,7 +74,7 @@ impl NetworkLayer {
         // Initiate connections to configured servers before we return
         #[cfg(any(feature = "agent", feature = "client"))] // Temporary
         for server_url in config.servers.clone().unwrap_or_default() {
-            network.connect_server(server_url).await?;
+            network.connect_server(server_url)?;
         }
 
         Ok(network)
@@ -113,12 +113,12 @@ impl NetworkLayer {
     }
 
     /// Request the server to coordinate a direct connection to the given agent.
-    pub async fn connect_agent(&self, agent: InstanceId, port: Option<u16>) {
+    pub fn connect_agent(&self, agent: InstanceId, port: Option<u16>) {
         todo!()
     }
 
     #[cfg(any(feature = "agent", feature = "client"))] // Temporary
-    pub async fn connect_server(&self, url: ServerUrl) -> Result<OutboundConnection> {
+    pub fn connect_server(&self, url: ServerUrl) -> Result<OutboundConnection> {
         // Locate the realm certificate
         #[cfg(feature = "client")]
         let cert = self.realms.find_client_cert(url.realm.clone())?;
@@ -208,6 +208,11 @@ impl Drop for OutboundConnection {
 }
 
 impl OutboundConnection {
+    /// Get the remote address of this connection.
+    pub fn address(&self) -> Option<SocketAddr> {
+        self.data.read().remote_socket
+    }
+
     pub async fn get(&self) {}
     pub async fn request(&self, body: impl Serialize) -> Result<()> {
         // Serialize request and record bytes
