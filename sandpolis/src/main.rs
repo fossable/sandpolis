@@ -1,7 +1,8 @@
 use anyhow::{Result, bail};
+use axum::{Router, routing::get};
 use clap::Parser;
 use sandpolis::InstanceState;
-use sandpolis::cli::CommandLine;
+use sandpolis::cli::{CommandLine, Commands};
 use sandpolis::config::Configuration;
 use sandpolis_database::DatabaseLayer;
 use std::fs::OpenOptions;

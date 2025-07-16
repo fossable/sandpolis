@@ -16,12 +16,27 @@ tracing = { workspace = true }
 sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
 sandpolis-realm = { path = "../sandpolis-realm", version = "0.0.1" }
 sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
+sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
+ratatui = { workspace = true, optional = true }
+chrono = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true }
+color-eyre = { version = "0.6.3", optional = true }
 
 [features]
 agent = ["dep:notify"]
-client = [
-  #"dep:fuser"
-]
+client = ["dep:fuser"]
 client-gui = ["client"]
-client-tui = ["client"]
+client-tui = [
+  "client",
+  "dep:ratatui",
+  "dep:sandpolis-client",
+  "dep:chrono",
+  "dep:tokio",
+  "dep:color-eyre",
+  "sandpolis-client/client-tui",
+]
 server = []
+
+[[example]]
+name = "client_tui"
+required-features = ["client-tui"]

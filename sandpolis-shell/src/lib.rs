@@ -11,7 +11,10 @@ use tokio::sync::Mutex;
 
 #[cfg(feature = "agent")]
 pub mod agent;
+#[cfg(feature = "client")]
+pub mod client;
 pub mod messages;
+pub mod shell;
 
 /// Build info
 pub mod built_info {
