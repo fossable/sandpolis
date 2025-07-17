@@ -13,6 +13,12 @@ pub struct PingResponse {
     pub from: Option<Box<PingResponse>>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct PollRequest;
+
+#[derive(Serialize, Deserialize)]
+pub struct PollResponse(Vec<u8>);
+
 /// Request the server for a new direct connection to an agent.
 #[cfg(any(feature = "server", feature = "client"))]
 #[derive(Serialize, Deserialize)]

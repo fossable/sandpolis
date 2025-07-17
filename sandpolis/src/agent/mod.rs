@@ -61,7 +61,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     if let Some(socket_directory) = &config.instance.socket_directory {
         config.instance.clear_socket_path("agent.sock")?;
         info!(
-            socket = format!("{}/server.sock", socket_directory.display()),
+            socket = format!("{}/agent.sock", socket_directory.display()),
             "Starting admin socket"
         );
 

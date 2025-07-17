@@ -118,7 +118,9 @@ impl NetworkLayer {
     }
 
     #[cfg(any(feature = "agent", feature = "client"))] // Temporary
-    pub fn connect_server(&self, url: ServerUrl) -> Result<OutboundConnection> {
+    pub fn connect_server(&self, url: ServerUrl) -> Result<()> {
+        debug!(url = %url, "Configuring server connection");
+
         // Locate the realm certificate
         #[cfg(feature = "client")]
         let cert = self.realms.find_client_cert(url.realm.clone())?;
@@ -152,12 +154,22 @@ impl NetworkLayer {
                         _ = token.cancelled() => {
                             break;
                         }
+                        response = connection
+                            .client
+                            .read()
+                            .unwrap()
+                            .as_ref()
+                            .unwrap()
+                            .post(format!("https://{}/poll", cert.name().unwrap()))
+                            .send() => {
+                            }
+
                     }
                 }
             }
         });
 
-        Ok(connection)
+        Ok(())
     }
 }
 

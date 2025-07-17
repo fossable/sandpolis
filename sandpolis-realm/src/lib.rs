@@ -115,19 +115,21 @@ impl RealmLayer {
             let new_cert = RealmAgentCert::read(&path)?;
 
             let db = database.realm(new_cert.name()?)?;
-            let old_cert: Resident<RealmAgentCert> = db.resident(())?;
+            let rw = db.rw_transaction()?;
+            let certs: Vec<RealmAgentCert> = rw.scan().primary()?.all()?.try_collect()?;
 
             // Only import if the given certificate is newer than the one
             // already in the database.
-            if new_cert.creation_time()? > old_cert.read().creation_time()? {
-                info!(path = %path.display(), "Importing realm certificate");
-                // TODO update without each field
-                old_cert.update(|old_cert| {
-                    old_cert.cert = new_cert.cert.clone();
-                    old_cert.ca = new_cert.ca.clone();
-                    old_cert.key = new_cert.key.clone();
-                    Ok(())
-                })?;
+            if let Some(old_cert) = certs.iter().find(|c| c.name().ok() == new_cert.name().ok()) {
+                if new_cert.creation_time()? > old_cert.creation_time()? {
+                    info!(path = %path.display(), "Importing updated realm certificate");
+                    rw.upsert(new_cert)?;
+                    rw.commit()?;
+                }
+            } else {
+                info!(path = %path.display(), "Importing new realm certificate");
+                rw.insert(new_cert)?;
+                rw.commit()?;
             }
         }
 
@@ -136,19 +138,21 @@ impl RealmLayer {
             let new_cert = RealmClientCert::read(&path)?;
 
             let db = database.realm(new_cert.name()?)?;
-            let old_cert: Resident<RealmClientCert> = db.resident(())?;
+            let rw = db.rw_transaction()?;
+            let certs: Vec<RealmClientCert> = rw.scan().primary()?.all()?.try_collect()?;
 
             // Only import if the given certificate is newer than the one
             // already in the database.
-            if new_cert.creation_time()? > old_cert.read().creation_time()? {
-                info!(path = %path.display(), "Importing realm certificate");
-                // TODO update without each field
-                old_cert.update(|old_cert| {
-                    old_cert.cert = new_cert.cert.clone();
-                    old_cert.ca = new_cert.ca.clone();
-                    old_cert.key = new_cert.key.clone();
-                    Ok(())
-                })?;
+            if let Some(old_cert) = certs.iter().find(|c| c.name().ok() == new_cert.name().ok()) {
+                if new_cert.creation_time()? > old_cert.creation_time()? {
+                    info!(path = %path.display(), "Importing updated realm certificate");
+                    rw.upsert(new_cert)?;
+                    rw.commit()?;
+                }
+            } else {
+                info!(path = %path.display(), "Importing new realm certificate");
+                rw.insert(new_cert)?;
+                rw.commit()?;
             }
         }
 
@@ -386,8 +390,14 @@ impl RealmClientCert {
     pub fn identity(&self) -> Result<reqwest::Identity> {
         // Combine cert and key together
         let mut bundle = Vec::new();
-        bundle.extend_from_slice(&self.cert);
-        bundle.extend_from_slice(self.key.as_ref().ok_or_else(|| anyhow!("No key"))?);
+        bundle.extend_from_slice(encode(&Pem::new("CERTIFICATE", self.cert.clone())).as_bytes());
+        bundle.extend_from_slice(
+            encode(&Pem::new(
+                "PRIVATE KEY",
+                self.key.as_ref().ok_or_else(|| anyhow!("No key"))?.clone(),
+            ))
+            .as_bytes(),
+        );
         Ok(reqwest::Identity::from_pem(&bundle)?)
     }
 
@@ -450,6 +460,8 @@ pub struct RealmAgentCert {
 impl Validate for RealmAgentCert {
     fn validate(&self) -> Result<(), ValidationErrors> {
         let mut errors = ValidationErrors::new();
+
+        // TODO check .name()
 
         // Parse the certificate
         let cert = match X509Certificate::from_der(&self.cert) {
@@ -570,8 +582,14 @@ impl RealmAgentCert {
     pub fn identity(&self) -> Result<reqwest::Identity> {
         // Combine cert and key together
         let mut bundle = Vec::new();
-        bundle.extend_from_slice(&self.cert);
-        bundle.extend_from_slice(self.key.as_ref().ok_or_else(|| anyhow!("No key"))?);
+        bundle.extend_from_slice(encode(&Pem::new("CERTIFICATE", self.cert.clone())).as_bytes());
+        bundle.extend_from_slice(
+            encode(&Pem::new(
+                "PRIVATE KEY",
+                self.key.as_ref().ok_or_else(|| anyhow!("No key"))?.clone(),
+            ))
+            .as_bytes(),
+        );
         Ok(reqwest::Identity::from_pem(&bundle)?)
     }
 
