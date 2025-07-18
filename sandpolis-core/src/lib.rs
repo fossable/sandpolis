@@ -67,6 +67,15 @@ impl Default for ClusterId {
     }
 }
 
+impl FromStr for ClusterId {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let uuid = Uuid::parse_str(s)?;
+        Ok(ClusterId(uuid.to_u128_le()))
+    }
+}
+
 #[cfg(test)]
 mod test_cluster_id {
     use super::*;

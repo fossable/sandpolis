@@ -10,6 +10,7 @@ use sandpolis_realm::RealmClusterCert;
 use std::path::PathBuf;
 use tempfile::TempDir;
 use tempfile::tempdir;
+use tower_http::trace::TraceLayer;
 use tracing::info;
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
@@ -35,6 +36,9 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let app = app.route_layer(axum::middleware::from_fn(
         sandpolis_realm::server::auth_middleware,
     ));
+
+    // Tracing support for Axum
+    let app = app.layer(TraceLayer::new_for_http());
 
     info!(listener = ?config.server.listen, "Starting server listener");
     let main_handle = axum_server::bind(config.server.listen)

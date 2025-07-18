@@ -51,6 +51,7 @@ strum = { workspace = true }
 tempfile = { workspace = true }
 tokio-stream = { workspace = true }
 tokio = { workspace = true }
+tower-http = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing = { workspace = true }
 

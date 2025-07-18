@@ -1,5 +1,6 @@
 #![feature(iterator_try_collect)]
 
+use crate::messages::{PollRequest, PollResponse};
 use anyhow::Context;
 use anyhow::Result;
 use anyhow::anyhow;
@@ -13,21 +14,24 @@ use messages::PingResponse;
 use native_db::ToKey;
 use native_model::Model;
 use reqwest::ClientBuilder;
+use reqwest::Method;
 use reqwest_websocket::RequestBuilderExt;
+use sandpolis_core::ClusterId;
 use sandpolis_core::{InstanceId, RealmName};
 use sandpolis_database::DatabaseLayer;
 use sandpolis_database::Resident;
 use sandpolis_macros::data;
 use sandpolis_realm::RealmLayer;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::{ts_seconds, ts_seconds_option};
 use std::fmt::Display;
-use std::fmt::Write;
 use std::net::IpAddr;
 use std::net::ToSocketAddrs;
 use std::str::FromStr;
 use std::sync::RwLock;
 use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
+use tokio::time::sleep;
 use tokio_util::sync::CancellationToken;
 use tracing::debug;
 use url::Url;
@@ -107,8 +111,7 @@ impl NetworkLayer {
             .or_else(|| self.find_server())
             .ok_or(anyhow!("Failed to find suitable connection"))?;
 
-        // let response: PingResponse = connection.get("/ping", PingRequest { id
-        // }).await?;
+        let response: PingResponse = connection.get("/ping", PingRequest { id }).await?;
         todo!()
     }
 
@@ -132,19 +135,24 @@ impl NetworkLayer {
             Ok(ClientBuilder::new()
                 .add_root_certificate(cert.ca()?)
                 .identity(cert.identity()?)
-                .resolve_to_addrs(&cert.name()?, &url.resolve()?)
+                .resolve_to_addrs(
+                    &format!("{}.{}", cert.cluster_id()?, &cert.name()?),
+                    &url.resolve()?,
+                )
                 .build()
                 .unwrap())
         };
 
         let token = CancellationToken::new();
 
-        let connection = OutboundConnection {
+        let mut connection = OutboundConnection {
             strategy: ConnectionStrategy::Continuous,
-            client: RwLock::new(Some(client_builder()?)),
+            client: tokio::sync::RwLock::new(Some(client_builder()?)),
             data: self.database.realm(url.realm)?.resident(())?,
             retry: url.retry,
             cancel: token.clone(),
+            realm: cert.name()?,
+            cluster_id: cert.cluster_id()?,
         };
 
         tokio::spawn({
@@ -154,16 +162,20 @@ impl NetworkLayer {
                         _ = token.cancelled() => {
                             break;
                         }
-                        response = connection
-                            .client
-                            .read()
-                            .unwrap()
-                            .as_ref()
-                            .unwrap()
-                            .post(format!("https://{}/poll", cert.name().unwrap()))
-                            .send() => {
-                            }
+                        response = connection.get::<PollResponse>("poll", PollRequest) => {
+                            match response {
+                                Ok(poll_response) => {
+                                    // Pass command to admin socket
 
+                                },
+                                Err(e) => {
+                                    debug!(error = %e, "Poll request failed");
+                                    // Wait before retrying
+                                    let retry = &mut connection.retry;
+                                    sleep(retry.next().unwrap()).await;
+                                },
+                            }
+                        }
                     }
                 }
             }
@@ -181,6 +193,7 @@ pub struct ConnectionData {
     #[secondary_key]
     pub _instance_id: InstanceId,
 
+    // TODO option before it's figured out
     pub remote_instance: InstanceId,
 
     /// Application-level bytes read since the connection was established
@@ -206,11 +219,13 @@ pub struct ConnectionData {
 }
 
 pub struct OutboundConnection {
-    client: RwLock<Option<reqwest::Client>>,
+    client: tokio::sync::RwLock<Option<reqwest::Client>>,
     pub strategy: ConnectionStrategy,
     pub data: Resident<ConnectionData>,
     pub retry: RetryWait,
     pub cancel: CancellationToken,
+    pub realm: RealmName,
+    pub cluster_id: ClusterId,
 }
 
 impl Drop for OutboundConnection {
@@ -225,13 +240,42 @@ impl OutboundConnection {
         self.data.read().remote_socket
     }
 
-    pub async fn get(&self) {}
-    pub async fn request(&self, body: impl Serialize) -> Result<()> {
+    pub async fn get<Response>(&self, endpoint: &str, body: impl Serialize) -> Result<Response>
+    where
+        Response: DeserializeOwned,
+    {
+        self.request(Method::GET, endpoint, body).await
+    }
+
+    pub async fn request<Response>(
+        &self,
+        method: Method,
+        endpoint: &str,
+        body: impl Serialize,
+    ) -> Result<Response>
+    where
+        Response: DeserializeOwned,
+    {
         // Serialize request and record bytes
         let body = serde_json::to_vec(&body)?;
 
         match &self.strategy {
-            ConnectionStrategy::Continuous => todo!(),
+            ConnectionStrategy::Continuous => {
+                debug!(endpoint = %endpoint, "Sending request");
+                let guard = self.client.read().await;
+                let client = guard.as_ref().unwrap();
+
+                Ok(client
+                    .request(
+                        method,
+                        format!("https://{}.{}/{endpoint}", self.cluster_id, self.realm),
+                    )
+                    .body(body)
+                    .send()
+                    .await?
+                    .json()
+                    .await?)
+            }
             ConnectionStrategy::Polling { schedule, timeout } => {
                 // Get the next scheduled time from the cron schedule
                 let next_time = schedule.upcoming(chrono::Utc).next();
@@ -242,7 +286,6 @@ impl OutboundConnection {
                 )
             }
         }
-        Ok(())
     }
 }
 

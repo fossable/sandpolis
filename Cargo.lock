@@ -7945,6 +7945,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "tokio-stream",
+ "tower-http",
  "tracing",
  "tracing-subscriber",
  "tui-popup",
@@ -9466,6 +9467,7 @@ dependencies = [
  "tower",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]

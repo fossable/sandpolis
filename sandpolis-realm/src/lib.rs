@@ -12,6 +12,7 @@ use native_db::ToKey;
 use native_model::Model;
 use pem::Pem;
 use pem::encode;
+use sandpolis_core::ClusterId;
 use sandpolis_core::InstanceType;
 use sandpolis_core::{RealmName, UserName};
 use sandpolis_database::RealmDatabase;
@@ -231,6 +232,26 @@ pub struct RealmClusterCert {
     pub key: Option<Vec<u8>>,
 }
 
+impl RealmClusterCert {
+    pub fn cluster_id(&self) -> Result<ClusterId> {
+        for ext in X509Certificate::from_der(&self.cert)?.1.iter_extensions() {
+            match ext.parsed_extension() {
+                ParsedExtension::SubjectAlternativeName(san) => {
+                    for name in &san.general_names {
+                        match name {
+                            GeneralName::DNSName(s) => return Ok(s.parse::<ClusterId>()?),
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        bail!("Subject name not found");
+    }
+}
+
 /// Each server in the cluster gets its own server certificate.
 #[data(instance)]
 pub struct RealmServerCert {
@@ -254,7 +275,7 @@ impl RealmServerCert {
             }
         }
 
-        todo!()
+        bail!("Subject name not found");
     }
 }
 
@@ -322,6 +343,24 @@ impl Validate for RealmClientCert {
 }
 
 impl RealmClientCert {
+    pub fn cluster_id(&self) -> Result<ClusterId> {
+        for ext in X509Certificate::from_der(&self.ca)?.1.iter_extensions() {
+            match ext.parsed_extension() {
+                ParsedExtension::SubjectAlternativeName(san) => {
+                    for name in &san.general_names {
+                        match name {
+                            GeneralName::DNSName(s) => return Ok(s.parse::<ClusterId>()?),
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        bail!("Subject name not found");
+    }
+
     /// Read the certificate from a file.
     pub fn read<P>(path: P) -> Result<Self>
     where
@@ -514,6 +553,24 @@ impl Validate for RealmAgentCert {
 }
 
 impl RealmAgentCert {
+    pub fn cluster_id(&self) -> Result<ClusterId> {
+        for ext in X509Certificate::from_der(&self.ca)?.1.iter_extensions() {
+            match ext.parsed_extension() {
+                ParsedExtension::SubjectAlternativeName(san) => {
+                    for name in &san.general_names {
+                        match name {
+                            GeneralName::DNSName(s) => return Ok(s.parse::<ClusterId>()?),
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        bail!("Subject name not found");
+    }
+
     /// Read the certificate from a file.
     pub fn read<P>(path: P) -> Result<Self>
     where
@@ -576,7 +633,7 @@ impl RealmAgentCert {
     }
 
     pub fn ca(&self) -> Result<reqwest::Certificate> {
-        Ok(reqwest::Certificate::from_pem(&self.ca)?)
+        Ok(reqwest::Certificate::from_der(&self.ca)?)
     }
 
     pub fn identity(&self) -> Result<reqwest::Identity> {

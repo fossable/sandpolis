@@ -66,7 +66,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         );
 
         let uds =
-            tokio::net::UnixListener::bind(&format!("{}/server.sock", socket_directory.display()))?;
+            tokio::net::UnixListener::bind(&format!("{}/agent.sock", socket_directory.display()))?;
         let handle = tokio::spawn(async move {
             axum::serve(uds, app.with_state(state).into_make_service()).await
         });

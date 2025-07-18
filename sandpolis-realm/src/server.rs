@@ -60,12 +60,6 @@ impl super::RealmClusterCert {
         cert_params.not_after = OffsetDateTime::now_utc().saturating_add(Duration::days(36780));
         cert_params.subject_alt_names = vec![SanType::DnsName(cluster_id.to_string().try_into()?)];
 
-        // TODO still needed?
-        cert_params.distinguished_name = DistinguishedName::new();
-        cert_params
-            .distinguished_name
-            .push(DnType::CommonName, cluster_id.to_string());
-
         // Generate the certificate
         let cert = cert_params.self_signed(&keypair)?;
 
@@ -183,6 +177,8 @@ impl super::RealmClusterCert {
             .extended_key_usages
             .push(ExtendedKeyUsagePurpose::ServerAuth);
 
+        // TODO add server id?
+
         // Can also do client auth when connecting to other servers
         cert_params
             .extended_key_usages
@@ -190,7 +186,7 @@ impl super::RealmClusterCert {
         cert_params.not_before = OffsetDateTime::now_utc();
         cert_params.not_after = OffsetDateTime::now_utc().saturating_add(Duration::days(365));
         cert_params.subject_alt_names = vec![SanType::DnsName(
-            format!("{server_id}.{}", self.name).try_into()?,
+            format!("{}.{}", self.cluster_id()?, self.name).try_into()?,
         )];
 
         // Generate the certificate signed by the CA
@@ -220,6 +216,7 @@ mod test_realm_ca {
         ssl::{SslAcceptor, SslConnector, SslMethod, SslVerifyMode},
         x509::X509,
     };
+    use pem::{Pem, encode};
     use std::net::{TcpListener, TcpStream};
 
     #[test]
@@ -230,40 +227,45 @@ mod test_realm_ca {
 
         // Write CA cert to temp file
         let mut ca_file = tempfile::NamedTempFile::new()?;
-        ca_file.write_all(&ca.cert)?;
+        ca_file.write_all(encode(&Pem::new("CERTIFICATE", ca.cert)).as_bytes())?;
 
         let mut server_context = SslAcceptor::mozilla_intermediate_v5(SslMethod::tls_server())?;
         server_context.set_verify(SslVerifyMode::PEER);
         server_context.set_ca_file(&ca_file)?;
         server_context.set_certificate(&&X509::from_der(&server.cert)?)?;
-        server_context.set_private_key(&&PKey::from_ec_key(EcKey::private_key_from_der(
-            server.key.as_ref().unwrap(),
-        )?)?)?;
+        server_context
+            .set_private_key(&&PKey::private_key_from_der(server.key.as_ref().unwrap())?)?;
         let server_context = server_context.build();
 
         let mut client_context = SslConnector::builder(SslMethod::tls_client())?;
         client_context.set_verify(SslVerifyMode::PEER);
         client_context.set_ca_file(&ca_file)?;
         client_context.set_certificate(&&X509::from_der(&client.cert)?)?;
-        client_context.set_private_key(&&PKey::from_ec_key(EcKey::private_key_from_pem(
-            client.key.as_ref().unwrap(),
-        )?)?)?;
+        client_context
+            .set_private_key(&&PKey::private_key_from_der(client.key.as_ref().unwrap())?)?;
         let client_context = client_context.build();
 
         // Start temporary server and listen for one connection
-        std::thread::spawn(move || {
-            let listener = TcpListener::bind("127.0.0.1:9999").unwrap();
+        let server_handle = std::thread::spawn(move || -> Result<()> {
+            let listener = TcpListener::bind("127.0.0.1:9999")?;
             for stream in listener.incoming() {
-                let mut ssl = server_context.accept(stream.unwrap()).unwrap();
-                ssl.do_handshake().unwrap();
+                let mut ssl = server_context.accept(stream?)?;
+                ssl.do_handshake()?;
                 break;
             }
+            Ok(())
         });
+
+        // Give server time to start
+        std::thread::sleep(std::time::Duration::from_millis(100));
 
         // Make connection
         let stream = TcpStream::connect("127.0.0.1:9999")?;
         let mut ssl = client_context.connect(&server.subject_name()?, stream)?;
         ssl.do_handshake()?;
+
+        // Wait for server thread to complete
+        server_handle.join().unwrap()?;
 
         Ok(())
     }
@@ -315,8 +317,11 @@ impl RealmAcceptor {
                         .map_err(|_| anyhow!("Failed to parse key"))?,
                 )?;
 
+                let subject_name = server_cert.read().subject_name()?;
+
+                trace!(subject_name = %subject_name, "Adding SNI resolver");
                 sni_resolver.add(
-                    &server_cert.read().subject_name()?,
+                    &subject_name,
                     rustls::sign::CertifiedKey::new(
                         vec![server_cert.read().cert.clone().try_into()?],
                         private_key,
@@ -349,7 +354,13 @@ where
         let acceptor = self.0.clone();
 
         Box::pin(async move {
-            let (stream, service) = acceptor.accept(stream, service).await?;
+            let (stream, service) = match acceptor.accept(stream, service).await {
+                Ok(result) => result,
+                Err(e) => {
+                    debug!("TLS accept failed: {}", e);
+                    return Err(e);
+                }
+            };
             let server_conn = stream.get_ref().1;
             let tls_data = TlsData {
                 peer_certificates: server_conn.peer_certificates().map(From::from),
