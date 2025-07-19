@@ -12,20 +12,21 @@ pub mod agent;
 
 pub mod hardware;
 pub mod os;
+pub mod package;
 
 #[data]
-pub struct SysinfoLayerData {}
+pub struct InventoryLayerData {}
 
 #[derive(Clone)]
-pub struct SysinfoLayer {
-    data: Resident<SysinfoLayerData>,
+pub struct InventoryLayer {
+    data: Resident<InventoryLayerData>,
     #[cfg(feature = "agent")]
     pub memory: Arc<os::memory::agent::MemoryMonitor>,
     #[cfg(feature = "agent")]
     pub users: Arc<os::user::agent::UserCollector>,
 }
 
-impl SysinfoLayer {
+impl InventoryLayer {
     pub async fn new(database: DatabaseLayer, instance: InstanceLayer) -> Result<Self> {
         Ok(Self {
             #[cfg(feature = "agent")]
@@ -39,4 +40,6 @@ impl SysinfoLayer {
             data: database.realm(RealmName::default())?.resident(())?,
         })
     }
+
+    pub fn pacman() {}
 }

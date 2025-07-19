@@ -1,4 +1,3 @@
-use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_macros::data;
@@ -17,17 +16,6 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "agent")]
 pub mod agent;
-
-#[derive(Clone)]
-pub struct PackageLayer {}
-
-impl PackageLayer {
-    pub async fn new() -> Result<Self> {
-        Ok(Self {})
-    }
-}
-
-pub fn pacman() {}
 
 // pub fn packages_iter() -> impl Iterator<Item = Package> {}
 

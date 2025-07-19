@@ -42,11 +42,11 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             post(sandpolis_filesystem::agent::routes::delete),
         );
 
-    // Package layer routes
-    #[cfg(feature = "layer-package")]
+    // Inventory layer routes
+    #[cfg(feature = "layer-inventory")]
     let app = app.nest(
-        "/layer/package",
-        sandpolis_package::PackageLayer::agent_routes(),
+        "/layer/inventory",
+        sandpolis_inventory::agent::routes(),
     );
 
     // Desktop layer routes

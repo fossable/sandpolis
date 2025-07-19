@@ -41,8 +41,8 @@ pub struct InstanceState {
     pub realm: sandpolis_realm::RealmLayer,
     pub instance: sandpolis_instance::InstanceLayer,
     pub network: sandpolis_network::NetworkLayer,
-    #[cfg(feature = "layer-package")]
-    pub package: sandpolis_package::PackageLayer,
+    #[cfg(feature = "layer-inventory")]
+    pub inventory: sandpolis_inventory::InventoryLayer,
     #[cfg(feature = "layer-power")]
     pub power: sandpolis_power::PowerLayer,
     pub server: sandpolis_server::ServerLayer,
@@ -50,8 +50,6 @@ pub struct InstanceState {
     pub shell: sandpolis_shell::ShellLayer,
     #[cfg(feature = "layer-snapshot")]
     pub snapshot: sandpolis_snapshot::SnapshotLayer,
-    #[cfg(feature = "layer-sysinfo")]
-    pub sysinfo: sandpolis_sysinfo::SysinfoLayer,
     pub user: sandpolis_user::UserLayer,
 }
 
@@ -75,8 +73,8 @@ impl InstanceState {
 
         let server = sandpolis_server::ServerLayer::new(database.clone(), network.clone()).await?;
 
-        #[cfg(feature = "layer-package")]
-        let package = sandpolis_package::PackageLayer::new().await?;
+        #[cfg(feature = "layer-inventory")]
+        let inventory = sandpolis_inventory::InventoryLayer::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "layer-power")]
         let power = sandpolis_power::PowerLayer {
@@ -86,9 +84,6 @@ impl InstanceState {
         #[cfg(feature = "layer-shell")]
         let shell = sandpolis_shell::ShellLayer::new(database.clone()).await?;
 
-        #[cfg(feature = "layer-sysinfo")]
-        let sysinfo =
-            sandpolis_sysinfo::SysinfoLayer::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "layer-filesystem")]
         let filesystem = sandpolis_filesystem::FilesystemLayer::new().await?;
@@ -103,14 +98,12 @@ impl InstanceState {
         let snapshot = sandpolis_snapshot::SnapshotLayer::new().await?;
 
         Ok(Self {
-            #[cfg(feature = "layer-package")]
-            package,
+            #[cfg(feature = "layer-inventory")]
+            inventory,
             #[cfg(feature = "layer-power")]
             power,
             #[cfg(feature = "layer-shell")]
             shell,
-            #[cfg(feature = "layer-sysinfo")]
-            sysinfo,
             #[cfg(feature = "layer-filesystem")]
             filesystem,
             #[cfg(feature = "layer-desktop")]
@@ -168,9 +161,6 @@ pub enum Layer {
     /// Support for connecting to instances in the Sandpolis network and sending
     /// messages back and forth.
     Network,
-
-    #[cfg(feature = "layer-package")]
-    Package,
     /// Support for probe devices which do not run agent software. Instead they
     /// connect through a "gateway" instance over a well known protocol.
     #[cfg(feature = "layer-probe")]
@@ -184,8 +174,6 @@ pub enum Layer {
     #[cfg(feature = "layer-snapshot")]
     Snapshot,
 
-    #[cfg(feature = "layer-sysinfo")]
-    Sysinfo,
 
     /// Establish persistent or ephemeral tunnels between instances.
     #[cfg(feature = "layer-tunnel")]
@@ -267,33 +255,6 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_server::ServerBannerData>().unwrap();
     }
 
-    // Sysinfo layer
-    #[cfg(feature = "layer-sysinfo")]
-    {
-        m.define::<sandpolis_sysinfo::SysinfoLayerData>().unwrap();
-        m.define::<sandpolis_sysinfo::hardware::display::DisplayData>()
-            .unwrap();
-        m.define::<sandpolis_sysinfo::hardware::firmware::FirmwareData>()
-            .unwrap();
-        m.define::<sandpolis_sysinfo::hardware::memory::MemoryData>()
-            .unwrap();
-        m.define::<sandpolis_sysinfo::hardware::battery::BatteryData>()
-            .unwrap();
-        m.define::<sandpolis_sysinfo::os::OsData>().unwrap();
-        m.define::<sandpolis_sysinfo::os::user::UserData>().unwrap();
-        m.define::<sandpolis_sysinfo::os::group::GroupData>()
-            .unwrap();
-        m.define::<sandpolis_sysinfo::os::mountpoint::MountpointData>()
-            .unwrap();
-        m.define::<sandpolis_sysinfo::os::process::ProcessData>()
-            .unwrap();
-        m.define::<sandpolis_sysinfo::os::memory::MemoryData>()
-            .unwrap();
-        m.define::<sandpolis_sysinfo::os::network::NetworkData>()
-            .unwrap();
-        m.define::<sandpolis_sysinfo::os::KernelModuleData>()
-            .unwrap();
-    }
 
     // Shell layer
     #[cfg(feature = "layer-shell")]
@@ -307,11 +268,36 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_account::AccountLayerData>().unwrap();
     }
 
-    // Package layer
-    #[cfg(feature = "layer-package")]
+    // Inventory layer
+    #[cfg(feature = "layer-inventory")]
     {
-        m.define::<sandpolis_package::PackageManagerData>().unwrap();
-        m.define::<sandpolis_package::PackageData>().unwrap();
+        m.define::<sandpolis_inventory::InventoryLayerData>().unwrap();
+        m.define::<sandpolis_inventory::hardware::display::DisplayData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::hardware::firmware::FirmwareData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::hardware::memory::MemoryData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::hardware::battery::BatteryData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::os::OsData>().unwrap();
+        m.define::<sandpolis_inventory::os::user::UserData>().unwrap();
+        m.define::<sandpolis_inventory::os::group::GroupData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::os::mountpoint::MountpointData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::os::process::ProcessData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::os::memory::MemoryData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::os::network::NetworkData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::os::KernelModuleData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::package::PackageManagerData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::package::PackageData>()
+            .unwrap();
     }
 
     m

@@ -7928,16 +7928,15 @@ dependencies = [
  "sandpolis-desktop",
  "sandpolis-filesystem",
  "sandpolis-instance",
+ "sandpolis-inventory",
  "sandpolis-macros",
  "sandpolis-network",
- "sandpolis-package",
  "sandpolis-power",
  "sandpolis-probe",
  "sandpolis-realm",
  "sandpolis-server",
  "sandpolis-shell",
  "sandpolis-snapshot",
- "sandpolis-sysinfo",
  "sandpolis-user",
  "serde",
  "serde_json",
@@ -8143,6 +8142,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "sandpolis-inventory"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "axum",
+ "axum-macros",
+ "native_db",
+ "native_model",
+ "os_info",
+ "sandpolis-agent",
+ "sandpolis-core",
+ "sandpolis-database",
+ "sandpolis-instance",
+ "sandpolis-macros",
+ "sandpolis-network",
+ "serde",
+ "sysinfo 0.36.0",
+ "tempfile",
+ "test-log",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "sandpolis-macros"
 version = "0.0.1"
 dependencies = [
@@ -8192,21 +8215,6 @@ dependencies = [
  "tracing",
  "url",
  "validator",
-]
-
-[[package]]
-name = "sandpolis-package"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "axum",
- "native_db",
- "native_model",
- "sandpolis-core",
- "sandpolis-database",
- "sandpolis-macros",
- "serde",
- "tracing",
 ]
 
 [[package]]
@@ -8336,30 +8344,6 @@ dependencies = [
  "serde",
  "tokio",
  "uuid",
-]
-
-[[package]]
-name = "sandpolis-sysinfo"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "axum",
- "axum-macros",
- "native_db",
- "native_model",
- "os_info",
- "sandpolis-agent",
- "sandpolis-core",
- "sandpolis-database",
- "sandpolis-instance",
- "sandpolis-macros",
- "sandpolis-network",
- "serde",
- "sysinfo 0.36.0",
- "tempfile",
- "test-log",
- "tokio",
- "tracing",
 ]
 
 [[package]]
