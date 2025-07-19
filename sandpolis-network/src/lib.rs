@@ -45,6 +45,9 @@ pub mod stream;
 #[cfg(feature = "server")]
 pub mod server;
 
+#[cfg(feature = "bootagent")]
+pub mod bootagent;
+
 #[data]
 pub struct NetworkLayerData {}
 

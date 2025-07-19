@@ -8,8 +8,8 @@ version = "0.0.1"
 [dependencies]
 anyhow = { workspace = true }
 bevy = { workspace = true, optional = true }
-clap = { workspace = true }
-colored = { workspace = true }
+clap = { workspace = true, optional = true }
+colored = { workspace = true, optional = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
 regex = { workspace = true }
@@ -19,7 +19,9 @@ uuid = { workspace = true }
 validator = { workspace = true }
 
 [features]
+default = ["dep:clap", "dep:colored"]
 server = []
+bootagent = []
 agent = []
 client = []
 client-gui = ["client", "dep:bevy"]

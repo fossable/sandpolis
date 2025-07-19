@@ -1,6 +1,4 @@
 use anyhow::Result;
-use clap::Parser;
-use colored::Color;
 use native_db::ToKey;
 use regex::Regex;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
@@ -202,11 +200,11 @@ impl InstanceType {
     }
 
     /// Each instance type has an associated color.
-    pub const fn color(&self) -> Color {
+    pub const fn color(&self) -> colored::Color {
         match self {
-            InstanceType::Agent => Color::Cyan,
-            InstanceType::Client => Color::Green,
-            InstanceType::Server => Color::Magenta,
+            InstanceType::Agent => colored::Color::Cyan,
+            InstanceType::Client => colored::Color::Green,
+            InstanceType::Server => colored::Color::Magenta,
         }
     }
 }
@@ -632,10 +630,11 @@ mod test_user_name {
 }
 
 /// A config fragment that can take overrides from the command line or from
-/// the process environment.
+/// environment variables.
+#[cfg(feature = "default")]
 pub trait LayerConfig<C>
 where
-    C: Parser,
+    C: clap::Parser,
     Self: Serialize + DeserializeOwned,
 {
     /// Override the config with values from the command line

@@ -1,15 +1,15 @@
+use image::{DynamicImage, ImageBuffer, RgbaImage};
+use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Style};
-use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget, WidgetRef};
 use ratatui::text::{Line, Span, Text};
-use ratatui::buffer::Buffer;
+use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget, WidgetRef};
 use ratatui_image::{Resize, StatefulImage, protocol::StatefulProtocol};
 use sandpolis_client::tui::EventHandler;
 use sandpolis_core::InstanceId;
-use std::path::PathBuf;
 use std::collections::VecDeque;
-use image::{DynamicImage, ImageBuffer, RgbaImage};
+use std::path::PathBuf;
 
 pub struct DesktopFrame {
     pub image: DynamicImage,
@@ -23,14 +23,18 @@ impl DesktopFrame {
             .ok_or("Failed to create image buffer from raw data")?;
         let rgba_image = RgbaImage::from(image_buffer);
         let dynamic_image = DynamicImage::ImageRgba8(rgba_image);
-        
+
         Ok(Self {
             image: dynamic_image,
             timestamp: std::time::Instant::now(),
         })
     }
 
-    pub fn from_rgb(data: Vec<u8>, width: u32, height: u32) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn from_rgb(
+        data: Vec<u8>,
+        width: u32,
+        height: u32,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         // Convert RGB to RGBA
         let mut rgba_data = Vec::with_capacity(data.len() * 4 / 3);
         for chunk in data.chunks(3) {
@@ -39,7 +43,7 @@ impl DesktopFrame {
                 rgba_data.push(255); // Alpha channel
             }
         }
-        
+
         Self::new(rgba_data, width, height)
     }
 
@@ -100,7 +104,7 @@ impl DesktopViewerWidget {
         self.frames.clear();
         self.current_frame = None;
         self.frame_count = 0;
-        
+
         // Reinitialize image state if needed
         if self.image_state.is_none() {
             self.image_state = ratatui_image::picker::Picker::from_termios()
@@ -132,7 +136,7 @@ impl DesktopViewerWidget {
 
         // Store the current frame
         self.current_frame = Some(frame);
-        
+
         // Add to frame buffer
         if let Some(current) = &self.current_frame {
             self.frames.push_back(DesktopFrame {
@@ -140,7 +144,7 @@ impl DesktopViewerWidget {
                 timestamp: current.timestamp,
             });
         }
-        
+
         // Keep only the last N frames
         while self.frames.len() > self.max_frames {
             self.frames.pop_front();
@@ -173,14 +177,18 @@ impl DesktopViewerWidget {
     fn render_frame_with_ratatui_image(&mut self, area: Rect, buf: &mut ratatui::buffer::Buffer) {
         if let (Some(frame), Some(image_state)) = (&self.current_frame, &mut self.image_state) {
             // Create StatefulImage widget with the current frame
-            let image_widget = StatefulImage::new(None);
-            
+            let image_widget = StatefulImage::new();
+
             // Render the image using ratatui-image with sixel support
             match image_widget.render_ref(area, buf, image_state.as_mut()) {
                 Ok(_) => {
                     // Try to display the current frame
                     if let Err(e) = image_state.as_mut().set_image(&frame.image) {
-                        self.render_error_message(area, buf, &format!("Image display error: {}", e));
+                        self.render_error_message(
+                            area,
+                            buf,
+                            &format!("Image display error: {}", e),
+                        );
                     }
                 }
                 Err(e) => {
@@ -198,12 +206,8 @@ impl DesktopViewerWidget {
 
     fn render_error_message(&self, area: Rect, buf: &mut ratatui::buffer::Buffer, message: &str) {
         let error_text = vec![
-            Line::from(vec![
-                Span::styled("Error", Style::default().fg(Color::Red)),
-            ]),
-            Line::from(vec![
-                Span::raw(message),
-            ]),
+            Line::from(vec![Span::styled("Error", Style::default().fg(Color::Red))]),
+            Line::from(vec![Span::raw(message)]),
         ];
 
         let paragraph = Paragraph::new(Text::from(error_text));
@@ -212,16 +216,13 @@ impl DesktopViewerWidget {
 
     fn render_info_message(&self, area: Rect, buf: &mut ratatui::buffer::Buffer, message: &str) {
         let info_text = vec![
-            Line::from(vec![
-                Span::styled("Desktop Viewer", Style::default().fg(Color::Yellow)),
-            ]),
-            Line::from(vec![
-                Span::raw(message),
-            ]),
+            Line::from(vec![Span::styled(
+                "Desktop Viewer",
+                Style::default().fg(Color::Yellow),
+            )]),
+            Line::from(vec![Span::raw(message)]),
             Line::from(""),
-            Line::from(vec![
-                Span::raw(format!("Zoom: {:.1}x", self.zoom_level)),
-            ]),
+            Line::from(vec![Span::raw(format!("Zoom: {:.1}x", self.zoom_level))]),
         ];
 
         let paragraph = Paragraph::new(Text::from(info_text));
@@ -234,28 +235,28 @@ impl DesktopViewerWidget {
         }
 
         let stats_text = vec![
-            Line::from(vec![
-                Span::styled("Desktop Stats", Style::default().fg(Color::Yellow)),
-            ]),
-            Line::from(vec![
-                Span::raw(format!("FPS: {}", self.fps_counter)),
-            ]),
-            Line::from(vec![
-                Span::raw(format!("Frames buffered: {}", self.frames.len())),
-            ]),
-            Line::from(vec![
-                Span::raw(format!("Zoom: {:.1}x", self.zoom_level)),
-            ]),
-            Line::from(vec![
-                Span::raw(format!("Pan: ({}, {})", self.pan_x, self.pan_y)),
-            ]),
+            Line::from(vec![Span::styled(
+                "Desktop Stats",
+                Style::default().fg(Color::Yellow),
+            )]),
+            Line::from(vec![Span::raw(format!("FPS: {}", self.fps_counter))]),
+            Line::from(vec![Span::raw(format!(
+                "Frames buffered: {}",
+                self.frames.len()
+            ))]),
+            Line::from(vec![Span::raw(format!("Zoom: {:.1}x", self.zoom_level))]),
+            Line::from(vec![Span::raw(format!(
+                "Pan: ({}, {})",
+                self.pan_x, self.pan_y
+            ))]),
         ];
 
-        let stats_paragraph = Paragraph::new(Text::from(stats_text))
-            .block(Block::default()
+        let stats_paragraph = Paragraph::new(Text::from(stats_text)).block(
+            Block::default()
                 .title("Stats")
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Cyan)));
+                .border_style(Style::default().fg(Color::Cyan)),
+        );
 
         // Render in top-right corner
         let stats_area = Rect {
@@ -276,8 +277,8 @@ impl Widget for DesktopViewerWidget {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Min(3),     // Viewer area
-                Constraint::Length(3),  // Status bar
+                Constraint::Min(3),    // Viewer area
+                Constraint::Length(3), // Status bar
             ])
             .split(area);
 
@@ -302,12 +303,10 @@ impl Widget for DesktopViewerWidget {
         self.render_stats(chunks[0], buf);
 
         // Render status bar
-        let mut status_lines = vec![
-            Line::from(vec![
-                Span::styled("Status: ", Style::default().fg(Color::Yellow)),
-                Span::raw(&self.status_message),
-            ]),
-        ];
+        let mut status_lines = vec![Line::from(vec![
+            Span::styled("Status: ", Style::default().fg(Color::Yellow)),
+            Span::raw(&self.status_message),
+        ])];
 
         if self.connected {
             status_lines.push(Line::from(vec![
@@ -321,11 +320,12 @@ impl Widget for DesktopViewerWidget {
             ]));
         }
 
-        let status_paragraph = Paragraph::new(Text::from(status_lines))
-            .block(Block::default()
+        let status_paragraph = Paragraph::new(Text::from(status_lines)).block(
+            Block::default()
                 .title("Status")
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Blue)));
+                .border_style(Style::default().fg(Color::Blue)),
+        );
 
         status_paragraph.render(chunks[1], buf);
     }
@@ -339,7 +339,7 @@ impl EventHandler for DesktopViewerWidget {
                     KeyCode::Char(' ') => {
                         if !self.connected {
                             self.connect();
-                            
+
                             // Simulate adding a test frame with proper error handling
                             let test_data = vec![128u8; 1920 * 1080 * 4]; // RGBA data
                             match DesktopFrame::new(test_data, 1920, 1080) {
@@ -347,7 +347,8 @@ impl EventHandler for DesktopViewerWidget {
                                     self.add_frame(test_frame);
                                 }
                                 Err(e) => {
-                                    self.status_message = format!("Failed to create test frame: {}", e);
+                                    self.status_message =
+                                        format!("Failed to create test frame: {}", e);
                                 }
                             }
                         } else {
@@ -482,20 +483,24 @@ impl WidgetRef for DesktopSettingsWidget {
 
         // Create a centered popup
         let popup_area = centered_rect(50, 40, area);
-        
+
         // Clear the area
         Clear.render(popup_area, buf);
 
         let options = [
             format!("FPS: {}", self.capture_fps),
             format!("Quality: {}%", self.capture_quality),
-            format!("Show Cursor: {}", if self.show_cursor { "Yes" } else { "No" }),
+            format!(
+                "Show Cursor: {}",
+                if self.show_cursor { "Yes" } else { "No" }
+            ),
         ];
 
         let mut lines = vec![
-            Line::from(vec![
-                Span::styled("Desktop Capture Settings", Style::default().fg(Color::Yellow)),
-            ]),
+            Line::from(vec![Span::styled(
+                "Desktop Capture Settings",
+                Style::default().fg(Color::Yellow),
+            )]),
             Line::from(""),
         ];
 
@@ -506,9 +511,10 @@ impl WidgetRef for DesktopSettingsWidget {
                 Style::default()
             };
 
-            lines.push(Line::from(vec![
-                Span::styled(format!("  {}", option), style),
-            ]));
+            lines.push(Line::from(vec![Span::styled(
+                format!("  {}", option),
+                style,
+            )]));
         }
 
         lines.push(Line::from(""));
@@ -517,11 +523,12 @@ impl WidgetRef for DesktopSettingsWidget {
             Span::raw("Up/Down Navigate, Left/Right Adjust, Enter Apply, Esc Cancel"),
         ]));
 
-        let paragraph = Paragraph::new(Text::from(lines))
-            .block(Block::default()
+        let paragraph = Paragraph::new(Text::from(lines)).block(
+            Block::default()
                 .title("Settings")
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Green)));
+                .border_style(Style::default().fg(Color::Green)),
+        );
 
         paragraph.render(popup_area, buf);
     }

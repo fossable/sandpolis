@@ -1,2 +1,6 @@
 [target.x86_64-unknown-uefi]
 rustflags = ['--cfg', 'getrandom_backend="efi_rng"']
+
+[env]
+# Ring needs optimization for fortify source
+CFLAGS = "-O2"

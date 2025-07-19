@@ -55,9 +55,8 @@ passwords = { version = "3.1.16" }
 pem = "3.0.4"
 rand = "0.9.0"
 regex = "1.11.1"
-ring = "0.17.8"
 russh = { version = "0.52.0" }
-rustls = "0.23.21"
+rustls = { version = "0.23.21", default-features = false }
 serde_bytes = "0.11.15"
 serde_cbor = "0.11.2"
 serde_json = "1.0.134"
@@ -73,6 +72,7 @@ tokio-stream = "0.1.17"
 tower = "0.5.2"
 tower-http = { version = "0.6.1", features = ["trace"] }
 tracing = "0.1.40"
+uefi = { version = "0.35.0", features = ["alloc"] }
 url = { version = "2.5.4", features = ["serde"] }
 uuid = { version = "1.15.1", features = ["v7", "serde", "rng-getrandom"] }
 validator = { version = "0.20", features = ["derive"] }
@@ -94,3 +94,21 @@ tui-popup = { version = "0.6.0" }
 bevy = { version = "0.16.1" }
 bevy_svg = { version = "0.16.0-rc1", features = ["2d"] }
 bevy_rapier2d = { version = "0.30.0" }
+
+# Bootagent
+smoltcp = { version = "0.12", default-features = false, features = [
+  "log",
+  "medium-ethernet",
+  "proto-ipv4",
+  "proto-ipv6",
+  "socket-tcp",
+  "socket-udp",
+  "socket-dns",
+  "socket-dhcpv4",
+] }
+
+# https://github.com/briansmith/ring/issues/2341
+ring = { version = "0.17.8", default-features = false, features = ["alloc"] }
+
+[patch.crates-io]
+ring = { git = "https://github.com/oligamiq/ring", rev = "b22d577" }

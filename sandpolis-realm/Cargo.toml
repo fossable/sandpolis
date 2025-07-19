@@ -10,19 +10,19 @@ anyhow = { workspace = true }
 clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-axum = { workspace = true }
-axum-server = { workspace = true }
+axum = { workspace = true, optional = true }
+axum-server = { workspace = true, optional = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
 futures-util = { workspace = true }
 rustls = { workspace = true }
 tempfile = { workspace = true }
 time = { workspace = true }
-tokio-rustls = { workspace = true }
-tokio = { workspace = true }
-tower = { workspace = true }
+tokio-rustls = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true }
+tower = { workspace = true, optional = true }
 tracing = { workspace = true }
-reqwest = { workspace = true }
+reqwest = { workspace = true, optional = true }
 pem = { workspace = true }
 rcgen = { version = "0.13.1", optional = true, features = [
   "crypto",
@@ -34,7 +34,7 @@ rustls-pki-types = { version = "1.10.1", optional = true }
 validator = { workspace = true }
 regex = { workspace = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
-sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
+sandpolis-database = { path = "../sandpolis-database", version = "0.0.1", optional = true }
 sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 
@@ -43,6 +43,17 @@ sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 openssl = "0.10.71"
 
 [features]
-server = ["dep:rcgen", "dep:rustls-pki-types", "sandpolis-core/server"]
-client = ["sandpolis-core/client"]
-agent = ["sandpolis-core/agent"]
+default = ["dep:sandpolis-database"]
+agent = ["sandpolis-core/agent", "dep:reqwest"]
+bootagent = []
+client = ["sandpolis-core/client", "dep:reqwest"]
+server = [
+  "dep:rcgen",
+  "dep:rustls-pki-types",
+  "sandpolis-core/server",
+  "dep:tokio",
+  "dep:tokio-rustls",
+  "dep:tower",
+  "dep:axum",
+  "dep:axum-server",
+]

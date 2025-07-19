@@ -10,6 +10,7 @@ use std::cmp::Ordering;
 pub mod cli;
 pub mod config;
 
+#[cfg(feature = "default")]
 #[data]
 pub struct InstanceLayerData {
     pub cluster_id: ClusterId,
@@ -19,12 +20,14 @@ pub struct InstanceLayerData {
 
 #[derive(Clone)]
 pub struct InstanceLayer {
+    #[cfg(feature = "default")]
     data: Resident<InstanceLayerData>,
     pub instance_id: InstanceId,
     pub cluster_id: ClusterId,
 }
 
 impl InstanceLayer {
+    #[cfg(feature = "default")]
     pub async fn new(database: DatabaseLayer) -> Result<Self> {
         let data: Resident<InstanceLayerData> =
             database.realm(RealmName::default())?.resident(())?;
@@ -33,6 +36,14 @@ impl InstanceLayer {
             instance_id: { data.read().instance_id },
             cluster_id: { data.read().cluster_id },
             data,
+        })
+    }
+
+    #[cfg(not(feature = "default"))]
+    pub fn new(cluster_id: ClusterId, instance_id: InstanceId) -> Result<Self> {
+        Ok(Self {
+            instance_id,
+            cluster_id,
         })
     }
 }

@@ -10,3 +10,47 @@ isn't suitable for high-availability systems.
 
 Snapshots are block-based which means they work with software encryption schemes
 such as LUKS and on filesystems that don't natively support snapshots.
+
+## Installation
+
+| Architecture | ESP Path                |
+| ------------ | ----------------------- |
+| X86_64       | `/EFI/Boot/S7Sx64.efi`  |
+| AArch64      | `/EFI/Boot/S7Saa64.efi` |
+
+### Boot Wait
+
+```
+ ┌────────────────────────────────────────────────┐
+ │                                                │
+ │              ┌──────────────────┐              │
+ │              │      Image       │              │
+ │              │                  │              │
+ │              └──────────────────┘              │
+ │                                                │
+ │                Current Status                  │
+ │                                                │
+ │                                                │
+ │                                                │
+ └────────────────────────────────────────────────┘
+```
+
+### Snapshot Operation
+
+During a snapshot operation, the bootagent displays a visualization of what
+blocks have been transferred.
+
+```
+ ┌────────────────────────────────────────────────┐
+ │:Block:Visualizer:::::::::::::::::::::::::::::::│
+ │::::::::::::::::::::::::::::::::::::::::::::::::│
+ │::::::::::::::┌──────────────────┐::::::::::::::│
+ │::::::::::::::│      Image       │::::::::::::::│
+ │::::::::::::::├──────────────────┤::::::::::::::│
+ │::::::::::::::│ Transfer Stats   │::::::::::::::│
+ │::::::::::::::│                  │::::::::::::::│
+ │::::::::::::::└──────────────────┘::::::::::::::│
+ │::::::::::::::::::::::::::::::::::::::::::::::::│
+ │::::::::::::::::::::::::::::::::::::::::::::::::│
+ └────────────────────────────────────────────────┘
+```

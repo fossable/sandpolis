@@ -422,10 +422,12 @@ impl RealmClientCert {
         Ok(())
     }
 
+    #[cfg(feature = "client")]
     pub fn ca(&self) -> Result<reqwest::Certificate> {
         Ok(reqwest::Certificate::from_pem(&self.ca)?)
     }
 
+    #[cfg(feature = "client")]
     pub fn identity(&self) -> Result<reqwest::Identity> {
         // Combine cert and key together
         let mut bundle = Vec::new();
@@ -632,10 +634,12 @@ impl RealmAgentCert {
         Ok(())
     }
 
+    #[cfg(feature = "agent")]
     pub fn ca(&self) -> Result<reqwest::Certificate> {
         Ok(reqwest::Certificate::from_der(&self.ca)?)
     }
 
+    #[cfg(feature = "agent")]
     pub fn identity(&self) -> Result<reqwest::Identity> {
         // Combine cert and key together
         let mut bundle = Vec::new();

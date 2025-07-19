@@ -367,6 +367,8 @@ where
             };
             let service = Extension(tls_data).layer(service);
 
+            // TODO check for revoked certificates
+
             Ok((stream, service))
         })
     }
