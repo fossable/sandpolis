@@ -74,7 +74,8 @@ impl InstanceState {
         let server = sandpolis_server::ServerLayer::new(database.clone(), network.clone()).await?;
 
         #[cfg(feature = "layer-inventory")]
-        let inventory = sandpolis_inventory::InventoryLayer::new(database.clone(), instance.clone()).await?;
+        let inventory =
+            sandpolis_inventory::InventoryLayer::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "layer-power")]
         let power = sandpolis_power::PowerLayer {
@@ -83,7 +84,6 @@ impl InstanceState {
 
         #[cfg(feature = "layer-shell")]
         let shell = sandpolis_shell::ShellLayer::new(database.clone()).await?;
-
 
         #[cfg(feature = "layer-filesystem")]
         let filesystem = sandpolis_filesystem::FilesystemLayer::new().await?;
@@ -174,7 +174,6 @@ pub enum Layer {
     #[cfg(feature = "layer-snapshot")]
     Snapshot,
 
-
     /// Establish persistent or ephemeral tunnels between instances.
     #[cfg(feature = "layer-tunnel")]
     Tunnel,
@@ -253,8 +252,10 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_server::ServerLayerData>().unwrap();
         #[cfg(feature = "server")]
         m.define::<sandpolis_server::ServerBannerData>().unwrap();
+        #[cfg(feature = "client")]
+        m.define::<sandpolis_server::client::SavedServerData>()
+            .unwrap();
     }
-
 
     // Shell layer
     #[cfg(feature = "layer-shell")]
@@ -271,7 +272,8 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     // Inventory layer
     #[cfg(feature = "layer-inventory")]
     {
-        m.define::<sandpolis_inventory::InventoryLayerData>().unwrap();
+        m.define::<sandpolis_inventory::InventoryLayerData>()
+            .unwrap();
         m.define::<sandpolis_inventory::hardware::display::DisplayData>()
             .unwrap();
         m.define::<sandpolis_inventory::hardware::firmware::FirmwareData>()
@@ -281,7 +283,8 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_inventory::hardware::battery::BatteryData>()
             .unwrap();
         m.define::<sandpolis_inventory::os::OsData>().unwrap();
-        m.define::<sandpolis_inventory::os::user::UserData>().unwrap();
+        m.define::<sandpolis_inventory::os::user::UserData>()
+            .unwrap();
         m.define::<sandpolis_inventory::os::group::GroupData>()
             .unwrap();
         m.define::<sandpolis_inventory::os::mountpoint::MountpointData>()

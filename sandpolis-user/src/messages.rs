@@ -1,4 +1,6 @@
-use crate::{LoginPassword, UserData};
+use std::time::Duration;
+
+use crate::{ClientAuthToken, LoginPassword, UserData};
 use sandpolis_core::UserName;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -79,12 +81,15 @@ pub struct LoginRequest {
 
     /// Time-based One-Time Password token
     pub totp_token: Option<String>,
+
+    /// How long the returned auth token should live
+    pub lifetime: Option<Duration>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub enum LoginResponse {
     /// The login was successful and returned a session token
-    Ok(String),
+    Ok(ClientAuthToken),
 
     /// The request was invalid
     Invalid,

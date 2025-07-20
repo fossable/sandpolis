@@ -13,7 +13,7 @@ pub mod agent;
 
 pub mod messages;
 
-#[derive(Serialize, Deserialize, Default, Clone)]
+#[derive(Default)]
 pub struct AgentLayerData {}
 
 #[derive(Clone)]

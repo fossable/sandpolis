@@ -32,7 +32,6 @@ validator = { workspace = true }
 sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
-sandpolis-server = { path = "../sandpolis-server", version = "0.0.1", optional = true }
 sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 
@@ -42,7 +41,6 @@ server = [
   "totp-rs?/gen_secret",
   "dep:argon2",
   "dep:jsonwebtoken",
-  "dep:sandpolis-server",
   "dep:passwords",
 ]
 client = ["dep:totp-rs", "totp-rs?/qr", "dep:argon2"]

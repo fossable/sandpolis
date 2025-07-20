@@ -1,13 +1,16 @@
 use super::LoginPassword;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
 };
 use base64::prelude::*;
 use sandpolis_instance::ClusterId;
 
 impl LoginPassword {
+    /// When creating a `LoginPassword`, the cluster id is used as the initial
+    /// salt to ensure the same password in different clusters has different
+    /// initial hashes.
     pub fn new(cluster_id: ClusterId, plaintext: &str) -> Result<Self> {
         let salt = SaltString::from_b64(&BASE64_STANDARD_NO_PAD.encode(cluster_id.as_bytes()))
             .map_err(|err| anyhow!(""))?;

@@ -7740,6 +7740,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tui-popup",
+ "validator",
 ]
 
 [[package]]
@@ -7823,6 +7824,7 @@ dependencies = [
  "serde",
  "tokio",
  "tokio-stream",
+ "tui-popup",
 ]
 
 [[package]]
@@ -8097,6 +8099,7 @@ dependencies = [
  "sandpolis-instance",
  "sandpolis-macros",
  "sandpolis-network",
+ "sandpolis-user",
  "serde",
  "serde_bytes",
  "serde_with",
@@ -8177,7 +8180,6 @@ dependencies = [
  "sandpolis-instance",
  "sandpolis-macros",
  "sandpolis-network",
- "sandpolis-server",
  "serde",
  "totp-rs",
  "tracing",

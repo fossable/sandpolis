@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[data]
+#[derive(Default)]
 pub struct AccountLayerData {}
 
 #[derive(Clone)]

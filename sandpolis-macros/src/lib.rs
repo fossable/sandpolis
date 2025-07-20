@@ -241,7 +241,7 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
     // }
 
     let tokens = quote! {
-        #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, Debug, Default, sandpolis_macros::Data)]
+        #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, Debug, sandpolis_macros::Data)]
         #[native_model::native_model(#model_args)]
         #[native_db::native_db]
         #item_struct

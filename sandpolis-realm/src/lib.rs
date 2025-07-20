@@ -38,6 +38,7 @@ pub mod messages;
 pub mod server;
 
 #[data]
+#[derive(Default)]
 pub struct RealmLayerData {
     pub client: Option<RealmClientCert>,
 }
@@ -216,8 +217,8 @@ impl RealmLayer {
 ///
 /// All servers have a default realm called "default". All `RealmData` entries
 /// are stored within this realm.
-#[derive(Validate)]
 #[data]
+#[derive(Default, Validate)]
 pub struct RealmData {
     #[secondary_key(unique)]
     pub name: RealmName,
@@ -282,6 +283,7 @@ impl RealmServerCert {
 /// Realm certificate for client instances that can authenticate with a server
 /// instance against a particular realm.
 #[data]
+#[derive(Default)]
 pub struct RealmClientCert {
     pub ca: Vec<u8>,
     pub cert: Vec<u8>,
@@ -492,6 +494,7 @@ mod test_client_cert {
 /// Realm certificate for agent instances that can authenticate with a server
 /// instance against a particular realm.
 #[data]
+#[derive(Default)]
 pub struct RealmAgentCert {
     pub ca: Vec<u8>,
     pub cert: Vec<u8>,

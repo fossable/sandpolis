@@ -7,8 +7,13 @@ use sandpolis_core::InstanceId;
 
 // #[derive(Debug)]
 pub struct PowerWidget {
-    pub instance: InstanceId,
-    pub power: PowerLayer,
+    pub power_layer: PowerLayer,
+}
+
+impl PowerWidget {
+    pub fn new(power_layer: PowerLayer) -> Self {
+        PowerWidget { power_layer }
+    }
 }
 
 impl WidgetRef for PowerWidget {

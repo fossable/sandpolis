@@ -28,22 +28,22 @@ use totp_rs::{Secret, TOTP};
 use tracing::info;
 use validator::Validate;
 
+use crate::ClientAuthToken;
+
 use super::UserData;
 use super::UserLayer;
 
 pub mod routes;
 
-static KEY: LazyLock<ServerKey> = LazyLock::new(|| ServerKey::new());
-
 static USER_PASSWORD_HASH_ITERATIONS: NonZeroU32 = NonZeroU32::new(15000).unwrap();
 
-struct ServerKey {
+pub struct ServerKey {
     encoding: EncodingKey,
     decoding: DecodingKey,
 }
 
-impl ServerKey {
-    fn new() -> Self {
+impl Default for ServerKey {
+    fn default() -> Self {
         let secret = rand::rng().random::<[u8; 32]>().to_vec();
         Self {
             encoding: EncodingKey::from_secret(&secret),
@@ -228,6 +228,14 @@ impl UserLayer {
         }
 
         Ok(passwords[0].to_owned())
+    }
+
+    pub fn new_token(&self, claims: Claims) -> Result<ClientAuthToken> {
+        Ok(jsonwebtoken::encode(
+            &jsonwebtoken::Header::default(),
+            &claims,
+            &self.data.read().server_key.encoding,
+        )?)
     }
 }
 

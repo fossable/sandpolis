@@ -266,7 +266,7 @@ impl RealmDatabase {
 /// `Data` are rows in a database.
 pub trait Data
 where
-    Self: ToInput + Clone + PartialEq + Send + Sync + Default + std::fmt::Debug,
+    Self: ToInput + Clone + PartialEq + Send + Sync + std::fmt::Debug,
 {
     /// Get the unique identifier for this particular `Data`.
     fn id(&self) -> DataIdentifier;

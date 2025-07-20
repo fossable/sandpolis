@@ -1,4 +1,5 @@
 // TODO rename server_selection
+use anyhow::Result;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{Event, KeyCode, KeyEventKind},
@@ -10,9 +11,11 @@ use ratatui::{
     },
 };
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
-use sandpolis_client::tui::{EventHandler, MessageBus, Panel, help::HelpWidget};
+use sandpolis_client::tui::{EventHandler, Panel, help::HelpWidget, loading::LoadingWidget};
+use sandpolis_core::UserName;
 use sandpolis_network::ServerUrl;
 use sandpolis_server::{ServerLayer, client::LoadServerBanner};
+use sandpolis_user::{ClientAuthToken, LoginPassword, messages::LoginRequest};
 use std::{
     ops::Deref,
     sync::{Arc, RwLock},
@@ -24,13 +27,13 @@ use tokio::{
 };
 use tracing::debug;
 use tui_popup::{Popup, SizedWidgetRef};
+use validator::Validate;
 
 use super::GRAPHICS;
 
 pub struct ServerListWidget {
     state: Arc<RwLock<ServerListWidgetState>>,
     focused: bool,
-    local: MessageBus<LocalMessage>,
     server_layer: ServerLayer,
 }
 
@@ -45,20 +48,26 @@ struct ServerListWidgetState {
 enum ServerListWidgetMode {
     Normal,
     Adding,
+    /// While we're trying to login
+    AddingLogin,
     Selecting,
 }
 
 impl ServerListWidget {
     pub fn new(server_layer: ServerLayer) -> Self {
         let mut list_items = server_layer
-            .server_connections()
+            .servers
             .iter()
-            .filter_map(|connection| {
-                connection.address().map(|addr| {
-                    Arc::new(ServerListItem::new(
-                        server_layer.clone(),
-                        addr.to_string().parse().unwrap(),
-                    ))
+            .map(|server_data| {
+                Arc::new({
+                    let server_layer = server_layer.clone();
+                    let address = server_data.read().address.clone();
+                    ServerListItem {
+                        banner: RwLock::new(LoadServerBanner::Loading),
+                        fetch_banner: RwLock::new(server_layer.fetch_banner(&address)),
+                        ping: RwLock::new(None),
+                        address,
+                    }
                 })
             })
             .collect::<Vec<Arc<ServerListItem>>>();
@@ -87,15 +96,12 @@ impl ServerListWidget {
                 )
             }),
             mode: ServerListWidgetMode::Normal,
-            add_server_widget: AddServerWidget::new(),
+            add_server_widget: AddServerWidget::default(),
         }));
-
-        let local = broadcast::channel(8);
 
         Self {
             state,
             focused: true,
-            local,
             server_layer,
         }
     }
@@ -151,10 +157,16 @@ impl WidgetRef for ServerListWidget {
             help_widget.render(help_area, buf);
         }
 
-        // Render dialog if we're in "add" mode
         match state.mode {
+            // Render dialog if we're in "add" mode
             ServerListWidgetMode::Adding => {
                 let popup = Popup::new(state.add_server_widget.clone());
+                popup.render(area, buf);
+            }
+            // Render loading dialog during login
+            ServerListWidgetMode::AddingLogin => {
+                let loading_widget = LoadingWidget::new("Connecting to server...");
+                let popup = Popup::new(loading_widget);
                 popup.render(area, buf);
             }
             _ => (),
@@ -170,15 +182,6 @@ struct ServerListItem {
 }
 
 impl ServerListItem {
-    fn new(server_layer: ServerLayer, address: ServerUrl) -> Self {
-        Self {
-            banner: RwLock::new(LoadServerBanner::Loading),
-            fetch_banner: RwLock::new(server_layer.fetch_banner(&address)),
-            ping: RwLock::new(None),
-            address,
-        }
-    }
-
     async fn run(&self) {
         loop {
             match *self.banner.read().unwrap() {
@@ -240,10 +243,18 @@ impl EventHandler for ServerListWidget {
                         }
                         _ => {}
                     },
+                    ServerListWidgetMode::AddingLogin => match key.code {
+                        KeyCode::Esc => {
+                            state.mode = ServerListWidgetMode::Normal;
+                            state.add_server_widget = AddServerWidget::default(); // Reset form
+                            debug!("Exiting add server mode");
+                        }
+                        _ => {}
+                    },
                     ServerListWidgetMode::Adding => match key.code {
                         KeyCode::Esc => {
                             state.mode = ServerListWidgetMode::Normal;
-                            state.add_server_widget = AddServerWidget::new(); // Reset form
+                            state.add_server_widget = AddServerWidget::default(); // Reset form
                             debug!("Exiting add server mode");
                         }
                         KeyCode::Tab => {
@@ -253,18 +264,29 @@ impl EventHandler for ServerListWidget {
                             state.add_server_widget.prev_field();
                         }
                         KeyCode::Enter => {
-                            if let Some(form_data) = state.add_server_widget.get_form_data() {
-                                debug!(
-                                    "Adding server: {} with username: {} (TOTP: {})",
-                                    form_data.server_url,
-                                    form_data.username,
-                                    form_data.totp.is_some()
-                                );
+                            if let Ok(form_data) = state.add_server_widget.get_form_data() {
+                                state.mode = ServerListWidgetMode::AddingLogin;
 
-                                self.server_layer.add_server(form_data.server_url);
+                                let state = self.state.clone();
+                                tokio::spawn(async move {
+                                    state.write().unwrap().add_server_widget =
+                                        AddServerWidget::default(); // Reset login form
 
-                                state.mode = ServerListWidgetMode::Normal;
-                                state.add_server_widget = AddServerWidget::new(); // Reset form
+                                    // TODO get cluster id and server id
+
+                                    self.server_layer.login(
+                                        todo!(),
+                                        LoginRequest {
+                                            username: form_data.username,
+                                            password: LoginPassword::new(
+                                                todo!(),
+                                                &form_data.password,
+                                            ),
+                                            totp_token: form_data.totp,
+                                            lifetime: Some(Duration::new(1, 0)),
+                                        },
+                                    );
+                                });
                             }
                         }
                         KeyCode::Backspace => {
@@ -297,7 +319,7 @@ impl Panel for ServerListWidget {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct AddServerWidget {
     server_url: String,
     username: String,
@@ -307,8 +329,9 @@ struct AddServerWidget {
     cursor_position: usize,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 enum FormField {
+    #[default]
     ServerUrl,
     Username,
     Password,
@@ -316,17 +339,6 @@ enum FormField {
 }
 
 impl AddServerWidget {
-    pub fn new() -> Self {
-        Self {
-            server_url: String::new(),
-            username: String::new(),
-            password: String::new(),
-            totp: String::new(),
-            focused_field: FormField::ServerUrl,
-            cursor_position: 0,
-        }
-    }
-
     fn next_field(&mut self) {
         self.focused_field = match self.focused_field {
             FormField::ServerUrl => FormField::Username,
@@ -497,34 +509,29 @@ impl AddServerWidget {
         errors
     }
 
-    fn get_form_data(&self) -> Option<ServerFormData> {
-        if self.is_valid() {
-            if let Ok(server_url) = self.validate_server_url() {
-                Some(ServerFormData {
-                    server_url,
-                    username: self.username.trim().to_string(),
-                    password: self.password.clone(),
-                    totp: if self.totp.trim().is_empty() {
-                        None
-                    } else {
-                        Some(self.totp.trim().to_string())
-                    },
-                })
-            } else {
+    fn get_form_data(&self) -> Result<ServerFormData> {
+        let data = ServerFormData {
+            server_url: self.server_url.parse()?,
+            username: self.username.parse()?,
+            password: self.password.clone(),
+            totp: if self.totp.is_empty() {
                 None
-            }
-        } else {
-            None
-        }
+            } else {
+                Some(self.totp.to_string())
+            },
+        };
+        data.validate()?;
+
+        Ok(data)
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Validate)]
 struct ServerFormData {
-    server_url: ServerUrl,
-    username: String,
     password: String,
+    server_url: ServerUrl,
     totp: Option<String>,
+    username: UserName,
 }
 
 impl SizedWidgetRef for AddServerWidget {
@@ -681,9 +688,4 @@ impl AddServerWidget {
             .style(style)
             .render(chunks[1], buf);
     }
-}
-
-#[derive(Clone)]
-enum LocalMessage {
-    ServerAdded,
 }

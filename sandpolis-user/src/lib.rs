@@ -10,26 +10,31 @@ use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::RealmName;
 use sandpolis_core::UserName;
+use sandpolis_database::Resident;
 use sandpolis_database::ResidentVec;
 use sandpolis_database::{Data, DatabaseLayer};
 use sandpolis_macros::data;
+use sandpolis_network::ServerUrl;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use validator::Validate;
 
 #[cfg(feature = "client")]
 pub mod client;
-
+pub mod messages;
 #[cfg(feature = "server")]
 pub mod server;
 
-pub mod messages;
-
 #[data]
-pub struct UserLayerData {}
+#[derive(Default)]
+pub struct UserLayerData {
+    #[cfg(feature = "server")]
+    server_key: server::ServerKey,
+}
 
 #[derive(Clone)]
 pub struct UserLayer {
+    pub data: Resident<UserLayerData>,
     pub database: DatabaseLayer,
     #[cfg(feature = "server")]
     pub users: ResidentVec<UserData>,
@@ -38,6 +43,7 @@ pub struct UserLayer {
 impl UserLayer {
     pub async fn new(database: DatabaseLayer) -> Result<Self> {
         Ok(Self {
+            data: database.realm(RealmName::default())?.resident(())?,
             #[cfg(feature = "server")]
             users: database.realm(RealmName::default())?.resident_vec(())?,
             database,
@@ -64,7 +70,7 @@ pub struct UserData {
 }
 
 #[data]
-pub struct LoginAttempt {
+pub struct LoginAttemptData {
     /// When the login attempt occurred
     pub timestamp: u64,
 
@@ -88,3 +94,6 @@ pub enum UserPermission {
     List,
     Delete,
 }
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct ClientAuthToken(pub String);

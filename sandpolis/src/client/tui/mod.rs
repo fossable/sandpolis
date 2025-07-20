@@ -10,7 +10,7 @@ use ratatui::{
     widgets::WidgetRef,
 };
 use ratatui_image::picker::Picker;
-use sandpolis_client::tui::{EventHandler, Message, Panel};
+use sandpolis_client::tui::{EventHandler, Panel};
 use server_list::ServerListWidget;
 use std::{sync::LazyLock, time::Duration};
 use tokio::sync::broadcast::{self, Receiver, Sender};
@@ -25,11 +25,10 @@ pub static GRAPHICS: LazyLock<Option<Picker>> = LazyLock::new(|| Picker::from_qu
 struct App {
     fps: f32,
     should_quit: bool,
-    bus: (Sender<Message>, Receiver<Message>),
     panels: PanelContainer,
     // Layers
-    // #[cfg(feature = "layer-power")]
-    // power: sandpolis_power::client::tui::PowerWidget,
+    #[cfg(feature = "layer-power")]
+    power: sandpolis_power::client::tui::PowerWidget,
 }
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
@@ -43,9 +42,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             focused: 0,
             left: 0,
         },
-        bus: broadcast::channel(16),
-        // #[cfg(feature = "layer-power")]
-        // power: todo!(),
+        #[cfg(feature = "layer-power")]
+        power: sandpolis_power::client::tui::PowerWidget::new(state.power.clone()),
     }
     .run(terminal)
     .await;

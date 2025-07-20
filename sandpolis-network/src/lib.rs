@@ -49,6 +49,7 @@ pub mod server;
 pub mod bootagent;
 
 #[data]
+#[derive(Default)]
 pub struct NetworkLayerData {}
 
 #[derive(Clone)]
@@ -192,6 +193,7 @@ impl NetworkLayer {
 pub type RequestResult<T> = Result<axum::Json<T>, axum::Json<T>>;
 
 #[data(temporal)]
+#[derive(Default)]
 pub struct ConnectionData {
     #[secondary_key]
     pub _instance_id: InstanceId,
@@ -248,6 +250,13 @@ impl OutboundConnection {
         Response: DeserializeOwned,
     {
         self.request(Method::GET, endpoint, body).await
+    }
+
+    pub async fn post<Response>(&self, endpoint: &str, body: impl Serialize) -> Result<Response>
+    where
+        Response: DeserializeOwned,
+    {
+        self.request(Method::POST, endpoint, body).await
     }
 
     pub async fn request<Response>(
@@ -432,7 +441,7 @@ pub enum ServerStratum {
 /// ```
 /// https://example.com
 /// ```
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct ServerUrl {
     host: String,
     port: u16,

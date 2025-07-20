@@ -43,6 +43,10 @@ pub async fn login(
         return Err(Json(LoginResponse::Invalid));
     };
 
+    // Check that requested token lifetime is within valid range
+    // TODO
+    let lifetime = request.lifetime.unwrap_or(Duration::from_days(1));
+
     // Check TOTP token if there is one
     if let Some(totp_url) = password.totp_secret.as_ref() {
         if request.totp_token.unwrap_or(String::new())
@@ -73,7 +77,7 @@ pub async fn login(
 
     let claims = Claims {
         sub: user.username.to_string(),
-        exp: (SystemTime::now() + Duration::from_secs(3600))
+        exp: (SystemTime::now() + lifetime)
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_secs() as usize,
@@ -82,7 +86,8 @@ pub async fn login(
 
     info!(claims = ?claims, "Login succeeded");
     Ok(Json(LoginResponse::Ok(
-        encode(&Header::default(), &claims, &KEY.encoding)
+        state
+            .new_token(claims)
             .map_err(|_| Json(LoginResponse::Denied))?,
     )))
 }

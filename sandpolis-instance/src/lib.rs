@@ -12,6 +12,7 @@ pub mod config;
 
 #[cfg(feature = "default")]
 #[data]
+#[derive(Default)]
 pub struct InstanceLayerData {
     pub cluster_id: ClusterId,
     pub instance_id: InstanceId,

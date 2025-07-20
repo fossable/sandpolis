@@ -15,6 +15,7 @@ pub mod os;
 pub mod package;
 
 #[data]
+#[derive(Default)]
 pub struct InventoryLayerData {}
 
 #[derive(Clone)]

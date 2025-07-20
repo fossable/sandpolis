@@ -27,8 +27,15 @@ bevy_rapier2d = { workspace = true, optional = true }
 ratatui = { workspace = true, optional = true }
 color-eyre = { version = "0.6.3", optional = true }
 crossterm = { version = "0.28.1", optional = true, features = ["event-stream"] }
+tui-popup = { workspace = true, optional = true }
 
 [features]
 client = ["dep:passwords"]
 client-gui = ["client", "dep:bevy", "dep:bevy_svg", "dep:bevy_rapier2d"]
-client-tui = ["client", "dep:ratatui", "dep:color-eyre", "dep:crossterm"]
+client-tui = [
+  "client",
+  "dep:ratatui",
+  "dep:color-eyre",
+  "dep:crossterm",
+  "dep:tui-popup",
+]

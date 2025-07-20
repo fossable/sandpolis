@@ -1,17 +1,19 @@
-use std::sync::Arc;
-
-use anyhow::Result;
+use anyhow::{Result, bail};
 use native_db::ToKey;
 use native_model::Model;
-#[cfg(feature = "server")]
 use sandpolis_core::RealmName;
 use sandpolis_core::{ClusterId, InstanceId};
 use sandpolis_database::DatabaseLayer;
 use sandpolis_database::Resident;
+use sandpolis_database::ResidentVec;
 use sandpolis_macros::data;
 use sandpolis_network::NetworkLayer;
 use sandpolis_network::OutboundConnection;
 use sandpolis_network::ServerUrl;
+use sandpolis_user::ClientAuthToken;
+use sandpolis_user::messages::{LoginRequest, LoginResponse};
+use std::sync::Arc;
+use std::time::Duration;
 
 #[cfg(feature = "client")]
 pub mod client;
@@ -22,6 +24,7 @@ pub mod messages;
 pub mod server;
 
 #[data]
+#[derive(Default)]
 pub struct ServerLayerData {}
 
 #[derive(Clone)]
@@ -29,6 +32,8 @@ pub struct ServerLayer {
     #[cfg(feature = "server")]
     pub banner: Resident<ServerBannerData>,
     pub network: NetworkLayer,
+    #[cfg(feature = "client")]
+    pub servers: ResidentVec<client::SavedServerData>,
 }
 
 impl ServerLayer {
@@ -37,6 +42,8 @@ impl ServerLayer {
             #[cfg(feature = "server")]
             banner: database.realm(RealmName::default())?.resident(())?,
             network,
+            #[cfg(feature = "client")]
+            servers: database.realm(RealmName::default())?.resident_vec(())?,
         })
     }
 
@@ -51,8 +58,16 @@ impl ServerLayer {
         todo!()
     }
 
-    pub fn add_server(&self, server_url: ServerUrl) -> Result<()> {
-        todo!()
+    pub async fn login(
+        &self,
+        server_id: InstanceId,
+        request: LoginRequest,
+    ) -> Result<LoginResponse> {
+        let Some(connection) = self.network.find_instance(server_id) else {
+            bail!("No server connection")
+        };
+
+        Ok(connection.post("/login", request).await?)
     }
 }
 

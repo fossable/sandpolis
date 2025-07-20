@@ -4,8 +4,10 @@ use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span, Text};
+use ratatui::prelude::StatefulWidget;
 use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget, WidgetRef};
-use ratatui_image::{Resize, StatefulImage, protocol::StatefulProtocol};
+use ratatui_image::{StatefulImage, protocol::{StatefulProtocol, StatefulProtocolType, halfblocks::Halfblocks, ImageSource}, FontSize};
+use image::Rgba;
 use sandpolis_client::tui::EventHandler;
 use sandpolis_core::InstanceId;
 use std::collections::VecDeque;
@@ -76,9 +78,18 @@ pub struct DesktopViewerWidget {
 impl DesktopViewerWidget {
     pub fn new(instance: InstanceId) -> Self {
         // Initialize with sixel protocol for terminal graphics
-        let image_state = ratatui_image::picker::Picker::from_termios()
+        let image_state = ratatui_image::picker::Picker::from_query_stdio()
             .ok()
-            .and_then(|picker| picker.new_resize_protocol(Resize::Fit(None)));
+            .and_then(|picker| {
+                let font_size = picker.font_size();
+                // Create a dummy image for initialization
+                let dummy_image = image::DynamicImage::new_rgba8(1, 1);
+                Some(StatefulProtocol::new(
+                    ImageSource::new(dummy_image, (font_size.0, font_size.1), Rgba([0, 0, 0, 255])),
+                    (font_size.0, font_size.1),
+                    StatefulProtocolType::Halfblocks(Halfblocks::default()),
+                ))
+            });
 
         Self {
             instance,
@@ -107,9 +118,17 @@ impl DesktopViewerWidget {
 
         // Reinitialize image state if needed
         if self.image_state.is_none() {
-            self.image_state = ratatui_image::picker::Picker::from_termios()
+            self.image_state = ratatui_image::picker::Picker::from_query_stdio()
                 .ok()
-                .and_then(|picker| picker.new_resize_protocol(Resize::Fit(None)));
+                .and_then(|picker| {
+                    let font_size = picker.font_size();
+                    let dummy_image = image::DynamicImage::new_rgba8(1, 1);
+                    Some(StatefulProtocol::new(
+                        ImageSource::new(dummy_image, (font_size.0, font_size.1), Rgba([0, 0, 0, 255])),
+                        (font_size.0, font_size.1),
+                        StatefulProtocolType::Halfblocks(Halfblocks::default()),
+                    ))
+                });
         }
     }
 
@@ -176,31 +195,22 @@ impl DesktopViewerWidget {
 
     fn render_frame_with_ratatui_image(&mut self, area: Rect, buf: &mut ratatui::buffer::Buffer) {
         if let (Some(frame), Some(image_state)) = (&self.current_frame, &mut self.image_state) {
-            // Create StatefulImage widget with the current frame
-            let image_widget = StatefulImage::new();
+            // Update the protocol state with the current frame image
+            *image_state = StatefulProtocol::new(
+                ImageSource::new(frame.image.clone(), (8, 16), Rgba([0, 0, 0, 255])),
+                (8, 16),
+                StatefulProtocolType::Halfblocks(Halfblocks::default()),
+            );
 
-            // Render the image using ratatui-image with sixel support
-            match image_widget.render_ref(area, buf, image_state.as_mut()) {
-                Ok(_) => {
-                    // Try to display the current frame
-                    if let Err(e) = image_state.as_mut().set_image(&frame.image) {
-                        self.render_error_message(
-                            area,
-                            buf,
-                            &format!("Image display error: {}", e),
-                        );
-                    }
-                }
-                Err(e) => {
-                    self.render_error_message(area, buf, &format!("Render error: {}", e));
-                }
-            }
+            // Create StatefulImage widget and render
+            let image_widget = StatefulImage::new();
+            image_widget.render(area, buf, image_state);
         } else if self.current_frame.is_none() {
             // No frame available
             self.render_info_message(area, buf, "Waiting for desktop capture...");
         } else {
-            // No image state (sixel not supported)
-            self.render_error_message(area, buf, "Sixel graphics not supported in this terminal");
+            // No image state (graphics not supported)
+            self.render_error_message(area, buf, "Image display not supported in this terminal");
         }
     }
 

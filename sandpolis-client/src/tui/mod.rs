@@ -7,10 +7,10 @@ use ratatui::{
     widgets::{Widget, WidgetRef},
 };
 use std::time::Duration;
-use tokio::sync::broadcast::{Receiver, Sender};
 use tokio_stream::StreamExt;
 
 pub mod help;
+pub mod loading;
 
 /// Renders a widget for testing/rapid iteration.
 pub async fn test_widget<W>(mut widget: W) -> Result<()>
@@ -52,11 +52,3 @@ pub trait EventHandler {
 pub trait Panel: WidgetRef + EventHandler {
     fn set_focus(&mut self, focused: bool);
 }
-
-#[derive(Clone, Debug)]
-pub enum Message {
-    FocusChanged,
-    ServerSelected,
-}
-
-pub type MessageBus<T> = (Sender<T>, Receiver<T>);
