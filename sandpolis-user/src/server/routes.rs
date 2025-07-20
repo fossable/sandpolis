@@ -76,12 +76,13 @@ pub async fn login(
     }
 
     let claims = Claims {
-        sub: user.username.to_string(),
+        sub: user.username.clone(),
         exp: (SystemTime::now() + lifetime)
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_secs() as usize,
         admin: user.admin,
+        realm: realm.0,
     };
 
     info!(claims = ?claims, "Login succeeded");

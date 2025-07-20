@@ -14,7 +14,7 @@ use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
 use sandpolis_client::tui::{EventHandler, Panel, help::HelpWidget, loading::LoadingWidget};
 use sandpolis_core::UserName;
 use sandpolis_network::ServerUrl;
-use sandpolis_server::{ServerLayer, client::LoadServerBanner};
+use sandpolis_server::ServerLayer;
 use sandpolis_user::{ClientAuthToken, LoginPassword, messages::LoginRequest};
 use std::{
     ops::Deref,
@@ -63,8 +63,7 @@ impl ServerListWidget {
                     let server_layer = server_layer.clone();
                     let address = server_data.read().address.clone();
                     ServerListItem {
-                        banner: RwLock::new(LoadServerBanner::Loading),
-                        fetch_banner: RwLock::new(server_layer.fetch_banner(&address)),
+                        status: RwLock::new(ServerListItemStatus::Unknown),
                         ping: RwLock::new(None),
                         address,
                     }
@@ -77,9 +76,7 @@ impl ServerListWidget {
         {
             list_items.push(Arc::new(ServerListItem {
                 address: "127.0.0.1:8768".parse().unwrap(),
-                banner: RwLock::new(LoadServerBanner::Loaded(server_layer.banner.read().clone())),
-                // The banner is already loaded, so this channel will never be used
-                fetch_banner: RwLock::new(tokio::sync::mpsc::channel(1).1),
+                status: RwLock::new(LoadServerBanner::Ok),
                 ping: RwLock::new(Some(0)),
             }));
         }
@@ -174,27 +171,32 @@ impl WidgetRef for ServerListWidget {
     }
 }
 
+enum ServerListItemStatus {
+    Unknown,
+    Loading,
+    LoginFailed,
+    ConnectionFailed,
+    /// Some other kind of failure
+    Failed,
+    Ok,
+}
+
 struct ServerListItem {
     address: ServerUrl,
-    banner: RwLock<LoadServerBanner>,
-    fetch_banner: RwLock<Receiver<LoadServerBanner>>,
+    status: RwLock<ServerListItemStatus>,
     ping: RwLock<Option<u32>>,
 }
 
 impl ServerListItem {
     async fn run(&self) {
         loop {
-            match *self.banner.read().unwrap() {
-                LoadServerBanner::Loading => {
-                    if let Some(progress) = self.fetch_banner.write().unwrap().recv().await {
-                        *self.banner.write().unwrap() = progress;
-                    }
-                }
-                LoadServerBanner::Loaded(_) => {
+            match *self.status.read().unwrap() {
+                ServerListItemStatus::Loading => {}
+                ServerListItemStatus::Ok => {
                     sleep(Duration::from_secs(3)).await;
                     // TODO ping
                 }
-                LoadServerBanner::Inaccessible => {
+                ServerListItemStatus::ConnectionFailed => {
                     sleep(Duration::from_secs(3)).await;
                     // TODO try again
                 }
@@ -212,13 +214,13 @@ impl From<&ServerListItem> for ListItem<'_> {
         text.extend([format!("{}", item.address).blue()]);
 
         // Add online status
-        match &*item.banner.read().unwrap() {
-            LoadServerBanner::Loading => text.extend([format!("Loading").gray()]),
-            LoadServerBanner::Loaded(server_banner_data) => {
-                text.extend([format!("Online").green()])
-            }
-            LoadServerBanner::Inaccessible => text.extend([format!("Offline")]),
-            LoadServerBanner::Failed(error) => text.extend([format!("Error")]),
+        match &*item.status.read().unwrap() {
+            ServerListItemStatus::Loading => text.extend([format!("Loading").gray()]),
+            ServerListItemStatus::Ok => text.extend([format!("Online").green()]),
+            ServerListItemStatus::ConnectionFailed => text.extend([format!("Offline")]),
+            ServerListItemStatus::Failed => text.extend([format!("Error").red()]),
+            ServerListItemStatus::Unknown => todo!(),
+            ServerListItemStatus::LoginFailed => text.extend([format!("Login failed").red()]),
         }
         ListItem::new(text)
     }
@@ -267,25 +269,26 @@ impl EventHandler for ServerListWidget {
                             if let Ok(form_data) = state.add_server_widget.get_form_data() {
                                 state.mode = ServerListWidgetMode::AddingLogin;
 
+                                let server_layer = self.server_layer.clone();
                                 let state = self.state.clone();
+
                                 tokio::spawn(async move {
                                     state.write().unwrap().add_server_widget =
                                         AddServerWidget::default(); // Reset login form
 
-                                    // TODO get cluster id and server id
-
-                                    self.server_layer.login(
-                                        todo!(),
-                                        LoginRequest {
+                                    if let Ok(connection) =
+                                        server_layer.connect(form_data.server_url).await
+                                    {
+                                        connection.login(LoginRequest {
                                             username: form_data.username,
                                             password: LoginPassword::new(
-                                                todo!(),
+                                                connection.inner.cluster_id,
                                                 &form_data.password,
                                             ),
                                             totp_token: form_data.totp,
                                             lifetime: Some(Duration::new(1, 0)),
-                                        },
-                                    );
+                                        });
+                                    }
                                 });
                             }
                         }
@@ -435,39 +438,6 @@ impl AddServerWidget {
         }
     }
 
-    fn is_valid(&self) -> bool {
-        !self.server_url.trim().is_empty()
-            && !self.username.trim().is_empty()
-            && !self.password.trim().is_empty()
-            && self.validate_server_url().is_ok()
-            && self.validate_totp().is_ok()
-    }
-
-    fn validate_server_url(&self) -> Result<ServerUrl, String> {
-        let url_str = self.server_url.trim();
-        if url_str.is_empty() {
-            return Err("Server URL cannot be empty".to_string());
-        }
-
-        // Try to parse as ServerUrl
-        match url_str.parse::<ServerUrl>() {
-            Ok(url) => Ok(url),
-            Err(_) => {
-                // If parsing fails, try to add default scheme and port
-                let url_with_defaults = if !url_str.contains("://") {
-                    format!("https://{}", url_str)
-                } else {
-                    url_str.to_string()
-                };
-
-                match url_with_defaults.parse::<ServerUrl>() {
-                    Ok(url) => Ok(url),
-                    Err(_) => Err("Invalid server URL format".to_string()),
-                }
-            }
-        }
-    }
-
     fn validate_totp(&self) -> Result<(), String> {
         let totp_str = self.totp.trim();
         if totp_str.is_empty() {
@@ -490,11 +460,11 @@ impl AddServerWidget {
 
         if self.server_url.trim().is_empty() {
             errors.push("Server URL is required".to_string());
-        } else if let Err(err) = self.validate_server_url() {
-            errors.push(err);
+        } else if let Err(err) = self.server_url.parse::<ServerUrl>() {
+            errors.push("Invalid server URL".to_string());
         }
 
-        if self.username.trim().is_empty() {
+        if self.username.parse::<UserName>().is_err() {
             errors.push("Username is required".to_string());
         }
 
@@ -597,7 +567,7 @@ impl WidgetRef for AddServerWidget {
 
         // Render instructions or validation errors
         let errors = self.get_validation_errors();
-        let text = if self.is_valid() {
+        let text = if self.get_form_data().is_ok() {
             Line::from("Enter: Connect  •  Esc: Cancel  •  Tab: Next Field").gray()
         } else if !errors.is_empty() {
             Line::from(format!("Errors: {}", errors.join(", "))).red()

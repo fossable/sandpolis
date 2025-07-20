@@ -125,7 +125,7 @@ impl NetworkLayer {
     }
 
     #[cfg(any(feature = "agent", feature = "client"))] // Temporary
-    pub fn connect_server(&self, url: ServerUrl) -> Result<()> {
+    pub fn connect_server(&self, url: ServerUrl) -> Result<OutboundConnection> {
         debug!(url = %url, "Configuring server connection");
 
         // Locate the realm certificate
@@ -149,15 +149,16 @@ impl NetworkLayer {
 
         let token = CancellationToken::new();
 
-        let mut connection = OutboundConnection {
+        let connection = OutboundConnection {
             strategy: ConnectionStrategy::Continuous,
-            client: tokio::sync::RwLock::new(Some(client_builder()?)),
+            client: Arc::new(tokio::sync::RwLock::new(Some(client_builder()?))),
             data: self.database.realm(url.realm)?.resident(())?,
-            retry: url.retry,
+            retry: Arc::new(RwLock::new(url.retry)),
             cancel: token.clone(),
             realm: cert.name()?,
             cluster_id: cert.cluster_id()?,
         };
+        let connection_clone = connection.clone();
 
         tokio::spawn({
             async move {
@@ -175,8 +176,8 @@ impl NetworkLayer {
                                 Err(e) => {
                                     debug!(error = %e, "Poll request failed");
                                     // Wait before retrying
-                                    let retry = &mut connection.retry;
-                                    sleep(retry.next().unwrap()).await;
+                                    let timeout = {connection.retry.write().unwrap().next().unwrap()};
+                                    sleep(timeout).await;
                                 },
                             }
                         }
@@ -185,7 +186,7 @@ impl NetworkLayer {
             }
         });
 
-        Ok(())
+        Ok(connection_clone)
     }
 }
 
@@ -223,11 +224,12 @@ pub struct ConnectionData {
     pub disconnected: Option<DateTime<Utc>>,
 }
 
+#[derive(Clone)]
 pub struct OutboundConnection {
-    client: tokio::sync::RwLock<Option<reqwest::Client>>,
+    client: Arc<tokio::sync::RwLock<Option<reqwest::Client>>>,
     pub strategy: ConnectionStrategy,
     pub data: Resident<ConnectionData>,
-    pub retry: RetryWait,
+    pub retry: Arc<RwLock<RetryWait>>,
     pub cancel: CancellationToken,
     pub realm: RealmName,
     pub cluster_id: ClusterId,

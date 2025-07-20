@@ -39,10 +39,10 @@ axum-server = { version = "0.7.1", features = ["tls-rustls"] }
 axum = { version = "0.8.0", features = ["ws", "json"] }
 base64 = "0.22.1"
 cached = "0.54.0"
-cron = { version = "0.15.0", features = ["serde"] }
 chrono = { version = "0.4.39", features = ["serde"] }
 clap = { version = "4.4.7", features = ["derive", "string"] }
 colored = "3.0.0"
+cron = { version = "0.15.0", features = ["serde"] }
 futures = "0.3.30"
 futures-util = "0.3.31"
 image = "0.25.5"
@@ -53,6 +53,7 @@ native_model = "0.6.1"
 os_info = "3.8.2"
 passwords = { version = "3.1.16" }
 pem = "3.0.4"
+png = "0.17.16"
 rand = "0.9.0"
 regex = "1.11.1"
 russh = { version = "0.52.0" }
@@ -66,9 +67,9 @@ strum = { version = "0.27.0", features = ["derive"] }
 tempfile = "3.17.0"
 time = { version = "0.3.37" }
 tokio-rustls = "0.26.0"
-tokio = { version = "1.46.0", features = ["full"] }
-tokio-util = "0.7.15"
 tokio-stream = "0.1.17"
+tokio-util = "0.7.15"
+tokio = { version = "1.46.0", features = ["full"] }
 tower = "0.5.2"
 tower-http = { version = "0.6.1", features = ["trace"] }
 tracing = "0.1.40"

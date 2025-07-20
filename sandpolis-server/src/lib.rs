@@ -1,3 +1,4 @@
+use crate::messages::{GetBannerRequest, GetBannerResponse};
 use anyhow::{Result, bail};
 use native_db::ToKey;
 use native_model::Model;
@@ -12,8 +13,12 @@ use sandpolis_network::OutboundConnection;
 use sandpolis_network::ServerUrl;
 use sandpolis_user::ClientAuthToken;
 use sandpolis_user::messages::{LoginRequest, LoginResponse};
+use serde::{Deserialize, Serialize};
+use serde_with::DeserializeFromStr;
 use std::sync::Arc;
 use std::time::Duration;
+use tracing::debug;
+use validator::Validate;
 
 #[cfg(feature = "client")]
 pub mod client;
@@ -30,7 +35,7 @@ pub struct ServerLayerData {}
 #[derive(Clone)]
 pub struct ServerLayer {
     #[cfg(feature = "server")]
-    pub banner: Resident<ServerBannerData>,
+    pub banner: Resident<server::ServerBannerData>,
     pub network: NetworkLayer,
     #[cfg(feature = "client")]
     pub servers: ResidentVec<client::SavedServerData>,
@@ -54,28 +59,34 @@ impl ServerLayer {
         connections
     }
 
-    pub fn get_banner() -> Result<ServerBannerData> {
-        todo!()
-    }
+    pub async fn connect(&self, url: ServerUrl) -> Result<ServerConnection> {
+        let inner = self.network.connect_server(url)?;
 
-    pub async fn login(
-        &self,
-        server_id: InstanceId,
-        request: LoginRequest,
-    ) -> Result<LoginResponse> {
-        let Some(connection) = self.network.find_instance(server_id) else {
-            bail!("No server connection")
-        };
+        // Fetch banner before we return a complete connection
+        let response: GetBannerResponse = inner
+            .get(
+                "/server/banner",
+                GetBannerRequest {
+                    #[cfg(feature = "client-gui")]
+                    include_image: true,
+                    #[cfg(not(feature = "client-gui"))]
+                    include_image: false,
+                },
+            )
+            .await?;
 
-        Ok(connection.post("/login", request).await?)
+        debug!(banner = ?response.0, "Fetched server banner");
+
+        Ok(ServerConnection {
+            inner,
+            banner: response.0,
+        })
     }
 }
 
 /// Contains information about the server useful for prospective logins
-#[data]
-pub struct ServerBannerData {
-    pub cluster_id: ClusterId,
-
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ServerBanner {
     /// Indicates that only admin users will be allowed to login
     pub maintenance: bool,
 
@@ -84,11 +95,38 @@ pub struct ServerBannerData {
 
     /// An image to display on the login screen
     #[serde(with = "serde_bytes")]
-    pub image: Option<Vec<u8>>, // TODO validate with image decoder
+    pub image: Option<Vec<u8>>,
 
     /// Whether users are required to provide a second authentication mechanism
     /// on login
     pub mfa: bool,
+}
+
+impl Validate for ServerBanner {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        if let Some(image_data) = &self.image {
+            // Validate PNG format using png crate
+            let cursor = std::io::Cursor::new(image_data);
+            let decoder = png::Decoder::new(cursor);
+
+            if decoder.read_info().is_err() {
+                return Err(validator::ValidationErrors::new());
+            }
+        }
+
+        Ok(())
+    }
+}
+
+pub struct ServerConnection {
+    pub inner: OutboundConnection,
+    pub banner: ServerBanner,
+}
+
+impl ServerConnection {
+    pub async fn login(&self, request: LoginRequest) -> Result<LoginResponse> {
+        Ok(self.inner.post("/login", request).await?)
+    }
 }
 
 /// A group is a collection of instances within the same realm.

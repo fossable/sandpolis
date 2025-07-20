@@ -6,6 +6,10 @@
 
 use anyhow::Result;
 use anyhow::bail;
+#[cfg(feature = "server")]
+use jsonwebtoken::DecodingKey;
+#[cfg(feature = "server")]
+use jsonwebtoken::EncodingKey;
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::RealmName;
@@ -16,6 +20,7 @@ use sandpolis_database::{Data, DatabaseLayer};
 use sandpolis_macros::data;
 use sandpolis_network::ServerUrl;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use validator::Validate;
 
@@ -27,10 +32,7 @@ pub mod server;
 
 #[data]
 #[derive(Default)]
-pub struct UserLayerData {
-    #[cfg(feature = "server")]
-    server_key: server::ServerKey,
-}
+pub struct UserLayerData {}
 
 #[derive(Clone)]
 pub struct UserLayer {
@@ -38,6 +40,9 @@ pub struct UserLayer {
     pub database: DatabaseLayer,
     #[cfg(feature = "server")]
     pub users: ResidentVec<UserData>,
+
+    #[cfg(feature = "server")]
+    pub jwt_keys: HashMap<RealmName, (EncodingKey, DecodingKey)>,
 }
 
 impl UserLayer {
@@ -46,6 +51,37 @@ impl UserLayer {
             data: database.realm(RealmName::default())?.resident(())?,
             #[cfg(feature = "server")]
             users: database.realm(RealmName::default())?.resident_vec(())?,
+            #[cfg(feature = "server")]
+            jwt_keys: {
+                let mut jwt_keys = HashMap::new();
+                // TODO all realms
+                let db = database.realm(RealmName::default())?;
+                let rw = db.rw_transaction()?;
+                let secrets: Vec<server::ServerJwtSecret> =
+                    rw.scan().primary()?.all()?.try_collect()?;
+
+                assert!(secrets.len() <= 1);
+                let secret = if secrets.len() == 0 {
+                    // Time to generate
+                    let secret = server::ServerJwtSecret::default();
+                    rw.insert(secret.clone())?;
+                    rw.commit()?;
+
+                    secret
+                } else {
+                    secrets[0]
+                };
+
+                jwt_keys.insert(
+                    RealmName::default(),
+                    (
+                        EncodingKey::from_secret(&secret.value),
+                        DecodingKey::from_secret(&secret.value),
+                    ),
+                );
+
+                jwt_keys
+            },
             database,
         })
     }

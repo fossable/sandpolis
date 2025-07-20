@@ -227,6 +227,7 @@ pub struct RealmData {
 
 /// The realm's global CA certificate.
 #[data]
+#[derive(Default)]
 pub struct RealmClusterCert {
     pub name: RealmName,
     pub cert: Vec<u8>,
@@ -255,6 +256,7 @@ impl RealmClusterCert {
 
 /// Each server in the cluster gets its own server certificate.
 #[data(instance)]
+#[derive(Default)]
 pub struct RealmServerCert {
     pub cert: Vec<u8>,
     pub key: Option<Vec<u8>>,

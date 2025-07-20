@@ -10,9 +10,10 @@ anyhow = { workspace = true }
 axum-macros = { workspace = true }
 axum = { workspace = true }
 clap = { workspace = true }
-reqwest = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
+png = { workspace = true }
+reqwest = { workspace = true }
 sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
@@ -24,8 +25,11 @@ serde_with = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
+validator = { workspace = true }
 
 [features]
 server = []
 client = []
 agent = []
+client-tui = ["client"]
+client-gui = ["client"]

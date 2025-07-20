@@ -7,23 +7,23 @@ version = "0.0.1"
 
 [dependencies]
 anyhow = { workspace = true }
-clap = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-axum = { workspace = true, optional = true }
 axum-server = { workspace = true, optional = true }
+axum = { workspace = true, optional = true }
+clap = { workspace = true }
+futures-util = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
-futures-util = { workspace = true }
+pem = { workspace = true }
+reqwest = { workspace = true, optional = true }
 rustls = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true }
 tempfile = { workspace = true }
 time = { workspace = true }
 tokio-rustls = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true }
 tower = { workspace = true, optional = true }
 tracing = { workspace = true }
-reqwest = { workspace = true, optional = true }
-pem = { workspace = true }
 rcgen = { version = "0.13.1", optional = true, features = [
   "crypto",
   "pem",

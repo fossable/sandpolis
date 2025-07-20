@@ -1,4 +1,4 @@
-use crate::{ServerBannerData, ServerLayer};
+use crate::{ServerBanner, ServerLayer};
 use anyhow::Error;
 use native_db::ToKey;
 use native_model::Model;
@@ -14,28 +14,4 @@ pub struct SavedServerData {
     pub address: ServerUrl,
     pub token: ClientAuthToken,
     pub user: UserName,
-}
-
-#[derive(Default)]
-pub enum LoadServerBanner {
-    /// Currently attempting to connect
-    #[default]
-    Loading,
-
-    /// Server banner was fetched successfully
-    Loaded(ServerBannerData),
-
-    /// Server instance could not be reached
-    Inaccessible,
-
-    /// Generally failed to fetch server banner
-    Failed(Error),
-}
-
-impl ServerLayer {
-    pub fn fetch_banner(&self, server: &ServerUrl) -> Receiver<LoadServerBanner> {
-        let (tx, rx) = mpsc::channel(5);
-
-        rx
-    }
 }

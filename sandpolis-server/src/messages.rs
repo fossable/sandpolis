@@ -1,4 +1,4 @@
-use crate::ServerBannerData;
+use crate::ServerBanner;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -8,6 +8,4 @@ pub struct GetBannerRequest {
 }
 
 #[derive(Serialize, Deserialize)]
-pub enum GetBannerResponse {
-    Ok(ServerBannerData),
-}
+pub struct GetBannerResponse(pub ServerBanner);

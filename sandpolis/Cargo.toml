@@ -97,6 +97,7 @@ client = [
   "sandpolis-network/client",
   "sandpolis-realm/client",
   "sandpolis-server/client",
+  "sandpolis-user/client",
 ]
 
 # Layers

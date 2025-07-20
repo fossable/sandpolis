@@ -8093,6 +8093,7 @@ dependencies = [
  "clap",
  "native_db",
  "native_model",
+ "png",
  "reqwest",
  "sandpolis-core",
  "sandpolis-database",
@@ -8105,6 +8106,7 @@ dependencies = [
  "serde_with",
  "tokio",
  "tracing",
+ "validator",
 ]
 
 [[package]]
@@ -8180,6 +8182,7 @@ dependencies = [
  "sandpolis-instance",
  "sandpolis-macros",
  "sandpolis-network",
+ "sandpolis-realm",
  "serde",
  "totp-rs",
  "tracing",

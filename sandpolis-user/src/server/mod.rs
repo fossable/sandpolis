@@ -37,17 +37,17 @@ pub mod routes;
 
 static USER_PASSWORD_HASH_ITERATIONS: NonZeroU32 = NonZeroU32::new(15000).unwrap();
 
-pub struct ServerKey {
-    encoding: EncodingKey,
-    decoding: DecodingKey,
+#[data]
+pub struct ServerJwtSecret {
+    #[serde(with = "serde_bytes")]
+    pub value: [u8; 32],
 }
 
-impl Default for ServerKey {
+impl Default for ServerJwtSecret {
     fn default() -> Self {
-        let secret = rand::rng().random::<[u8; 32]>().to_vec();
         Self {
-            encoding: EncodingKey::from_secret(&secret),
-            decoding: DecodingKey::from_secret(&secret),
+            value: rand::rng().random::<[u8; 32]>(),
+            ..Default::default()
         }
     }
 }
@@ -231,11 +231,15 @@ impl UserLayer {
     }
 
     pub fn new_token(&self, claims: Claims) -> Result<ClientAuthToken> {
-        Ok(jsonwebtoken::encode(
+        Ok(ClientAuthToken(jsonwebtoken::encode(
             &jsonwebtoken::Header::default(),
             &claims,
-            &self.data.read().server_key.encoding,
-        )?)
+            &self
+                .jwt_keys
+                .get(&claims.realm)
+                .ok_or(anyhow!("Realm not found"))?
+                .0,
+        )?))
     }
 }
 
@@ -251,22 +255,28 @@ impl Display for PasswordData {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     /// Username
-    sub: String,
+    sub: UserName,
 
     /// Claim expiration
     exp: usize,
 
     /// Whether the user is an admin
     admin: bool,
+
+    /// Realm in which these claims exist
+    realm: RealmName,
 }
 
 impl<S> FromRequestParts<S> for Claims
 where
-    S: Send + Sync,
+    S: UserLayer,
 {
     type Rejection = StatusCode;
 
-    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &UserLayer,
+    ) -> Result<Self, Self::Rejection> {
         // Extract the token from the authorization header
         let TypedHeader(Authorization(bearer)) = parts
             .extract::<TypedHeader<Authorization<Bearer>>>()
