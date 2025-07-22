@@ -428,7 +428,7 @@ impl RealmClientCert {
 
     #[cfg(feature = "client")]
     pub fn ca(&self) -> Result<reqwest::Certificate> {
-        Ok(reqwest::Certificate::from_pem(&self.ca)?)
+        Ok(reqwest::Certificate::from_der(&self.ca)?)
     }
 
     #[cfg(feature = "client")]

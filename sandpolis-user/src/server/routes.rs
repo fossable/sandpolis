@@ -1,5 +1,5 @@
+use crate::UserLayer;
 use crate::{UserData, server::Claims};
-use crate::{UserLayer, server::KEY};
 use crate::{
     messages::{
         CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
@@ -12,9 +12,11 @@ use axum::{
     Json,
     extract::{self, State},
 };
+use axum_extra::TypedHeader;
 use futures::stream::StreamExt;
 use jsonwebtoken::{Header, encode};
 use ring::pbkdf2;
+use sandpolis_core::RealmName;
 use sandpolis_network::RequestResult;
 use std::{
     num::NonZeroU32,
@@ -27,6 +29,7 @@ use validator::Validate;
 #[axum_macros::debug_handler]
 pub async fn login(
     state: State<UserLayer>,
+    TypedHeader(realm): TypedHeader<RealmName>,
     extract::Json(request): extract::Json<LoginRequest>,
 ) -> RequestResult<LoginResponse> {
     request
@@ -45,7 +48,7 @@ pub async fn login(
 
     // Check that requested token lifetime is within valid range
     // TODO
-    let lifetime = request.lifetime.unwrap_or(Duration::from_days(1));
+    let lifetime = request.lifetime.unwrap_or(Duration::new(1, 0));
 
     // Check TOTP token if there is one
     if let Some(totp_url) = password.totp_secret.as_ref() {
@@ -82,7 +85,7 @@ pub async fn login(
             .unwrap()
             .as_secs() as usize,
         admin: user.admin,
-        realm: realm.0,
+        realm,
     };
 
     info!(claims = ?claims, "Login succeeded");

@@ -83,7 +83,7 @@ impl EventHandler for App {
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {
                 match key.code {
-                    KeyCode::Char('q') | KeyCode::Esc => self.should_quit = true,
+                    KeyCode::Char('q') => self.should_quit = true,
                     // KeyCode::Char('j') | KeyCode::Down => self.pull_requests.scroll_down(),
                     // KeyCode::Char('k') | KeyCode::Up => self.pull_requests.scroll_up(),
                     _ => {}

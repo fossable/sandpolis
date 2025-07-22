@@ -245,13 +245,17 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_user::UserData>().unwrap();
         #[cfg(feature = "server")]
         m.define::<sandpolis_user::server::PasswordData>().unwrap();
+        #[cfg(feature = "server")]
+        m.define::<sandpolis_user::server::ServerJwtSecret>()
+            .unwrap();
     }
 
     // Server layer
     {
         m.define::<sandpolis_server::ServerLayerData>().unwrap();
         #[cfg(feature = "server")]
-        m.define::<sandpolis_server::ServerBannerData>().unwrap();
+        m.define::<sandpolis_server::server::ServerBannerData>()
+            .unwrap();
         #[cfg(feature = "client")]
         m.define::<sandpolis_server::client::SavedServerData>()
             .unwrap();

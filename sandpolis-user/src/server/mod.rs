@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow, bail};
 use axum::{
     RequestPartsExt, Router,
     extract::FromRequestParts,
@@ -38,13 +38,14 @@ pub mod routes;
 static USER_PASSWORD_HASH_ITERATIONS: NonZeroU32 = NonZeroU32::new(15000).unwrap();
 
 #[data]
+#[derive(Default)]
 pub struct ServerJwtSecret {
     #[serde(with = "serde_bytes")]
     pub value: [u8; 32],
 }
 
-impl Default for ServerJwtSecret {
-    fn default() -> Self {
+impl ServerJwtSecret {
+    pub fn new() -> Self {
         Self {
             value: rand::rng().random::<[u8; 32]>(),
             ..Default::default()
@@ -52,8 +53,8 @@ impl Default for ServerJwtSecret {
     }
 }
 
-#[derive(Validate)]
 #[data(temporal)]
+#[derive(Validate, Default)]
 pub struct PasswordData {
     /// User that this password belongs to
     #[secondary_key]
@@ -267,10 +268,7 @@ pub struct Claims {
     realm: RealmName,
 }
 
-impl<S> FromRequestParts<S> for Claims
-where
-    S: UserLayer,
-{
+impl FromRequestParts<UserLayer> for Claims {
     type Rejection = StatusCode;
 
     async fn from_request_parts(
@@ -283,8 +281,19 @@ where
             .await
             .map_err(|_| StatusCode::BAD_REQUEST)?;
 
-        let token_data = decode::<Claims>(bearer.token(), &KEY.decoding, &Validation::default())
-            .map_err(|_| StatusCode::FORBIDDEN)?;
+        // TODO if we can get this from parts.extentions provided by `auth_middleware`,
+        // then we won't need to send the header at all.
+        let TypedHeader(realm) = parts
+            .extract::<TypedHeader<RealmName>>()
+            .await
+            .map_err(|_| StatusCode::BAD_REQUEST)?;
+
+        let token_data = decode::<Claims>(
+            bearer.token(),
+            &state.jwt_keys.get(&realm).ok_or(StatusCode::BAD_REQUEST)?.1,
+            &Validation::default(),
+        )
+        .map_err(|_| StatusCode::FORBIDDEN)?;
 
         Ok(token_data.claims)
     }

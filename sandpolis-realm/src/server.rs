@@ -14,7 +14,6 @@ use axum::{
 use axum_server::tls_rustls::RustlsConfig;
 use axum_server::{accept::Accept, tls_rustls::RustlsAcceptor};
 use futures_util::future::BoxFuture;
-use headers::{self, Header, HeaderName, HeaderValue};
 use rcgen::BasicConstraints;
 use rcgen::Certificate;
 use rcgen::CertificateParams;

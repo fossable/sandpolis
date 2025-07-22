@@ -5,6 +5,7 @@ use anyhow::Context;
 use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
+use axum::http::HeaderValue;
 use chrono::{DateTime, Utc};
 use config::NetworkLayerConfig;
 use cron::Schedule;
@@ -15,6 +16,7 @@ use native_db::ToKey;
 use native_model::Model;
 use reqwest::ClientBuilder;
 use reqwest::Method;
+use reqwest::header::CONTENT_TYPE;
 use reqwest_websocket::RequestBuilderExt;
 use sandpolis_core::ClusterId;
 use sandpolis_core::{InstanceId, RealmName};
@@ -174,9 +176,9 @@ impl NetworkLayer {
 
                                 },
                                 Err(e) => {
-                                    debug!(error = %e, "Poll request failed");
                                     // Wait before retrying
                                     let timeout = {connection.retry.write().unwrap().next().unwrap()};
+                                    debug!(error = %e, waiting = ?timeout, "Poll request failed");
                                     sleep(timeout).await;
                                 },
                             }
@@ -284,6 +286,8 @@ impl OutboundConnection {
                         method,
                         format!("https://{}.{}/{endpoint}", self.cluster_id, self.realm),
                     )
+                    .header(CONTENT_TYPE, HeaderValue::from_static("application/json"))
+                    .header("x-realm", self.realm.to_string())
                     .body(body)
                     .send()
                     .await?

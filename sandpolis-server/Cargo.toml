@@ -28,8 +28,8 @@ tracing = { workspace = true }
 validator = { workspace = true }
 
 [features]
-server = []
-client = []
-agent = []
+server = ["sandpolis-network/server"]
+client = ["sandpolis-network/client"]
+agent = ["sandpolis-network/agent"]
 client-tui = ["client"]
 client-gui = ["client"]

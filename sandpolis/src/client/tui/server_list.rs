@@ -43,6 +43,7 @@ struct ServerListWidgetState {
     default_banner_image: Option<StatefulProtocol>,
     mode: ServerListWidgetMode,
     add_server_widget: AddServerWidget,
+    loading_widget: LoadingWidget,
 }
 
 enum ServerListWidgetMode {
@@ -94,6 +95,7 @@ impl ServerListWidget {
             }),
             mode: ServerListWidgetMode::Normal,
             add_server_widget: AddServerWidget::default(),
+            loading_widget: LoadingWidget::new("Connecting to server..."),
         }));
 
         Self {
@@ -162,8 +164,8 @@ impl WidgetRef for ServerListWidget {
             }
             // Render loading dialog during login
             ServerListWidgetMode::AddingLogin => {
-                let loading_widget = LoadingWidget::new("Connecting to server...");
-                let popup = Popup::new(loading_widget);
+                state.loading_widget.update_animation();
+                let popup = Popup::new(state.loading_widget.clone());
                 popup.render(area, buf);
             }
             _ => (),
@@ -279,15 +281,26 @@ impl EventHandler for ServerListWidget {
                                     if let Ok(connection) =
                                         server_layer.connect(form_data.server_url).await
                                     {
-                                        connection.login(LoginRequest {
-                                            username: form_data.username,
-                                            password: LoginPassword::new(
-                                                connection.inner.cluster_id,
-                                                &form_data.password,
-                                            ),
-                                            totp_token: form_data.totp,
-                                            lifetime: Some(Duration::new(1, 0)),
-                                        });
+                                        if let Ok(response) = connection
+                                            .login(LoginRequest {
+                                                username: form_data.username,
+                                                password: LoginPassword::new(
+                                                    connection.inner.cluster_id,
+                                                    &form_data.password,
+                                                ),
+                                                totp_token: form_data.totp,
+                                                lifetime: Some(Duration::new(1, 0)),
+                                            })
+                                            .await
+                                        {
+                                        } else {
+                                            // TODO show login failed dialog
+                                            state.write().unwrap().mode =
+                                                ServerListWidgetMode::Normal;
+                                        }
+                                    } else {
+                                        // TODO show connection failed dialog
+                                        state.write().unwrap().mode = ServerListWidgetMode::Normal;
                                     }
                                 });
                             }

@@ -6,6 +6,7 @@ use sandpolis_macros::data;
 pub mod server;
 
 #[data(instance, temporal)]
+#[derive(Default)]
 pub struct LocationData {
     /// The AS name
     pub as_name: Option<String>,

@@ -4,8 +4,9 @@ use ratatui::{
     prelude::*,
     style::{Style, Stylize},
     text::Line,
-    widgets::{Block, Borders, Paragraph, WidgetRef},
+    widgets::{Block, Borders, Paragraph, Widget, WidgetRef},
 };
+use std::time::{Duration, Instant};
 use tui_popup::SizedWidgetRef;
 
 #[derive(Debug, Clone)]
@@ -13,6 +14,8 @@ pub struct LoadingWidget {
     message: String,
     spinner_chars: Vec<char>,
     current_frame: usize,
+    last_update: Instant,
+    frame_duration: Duration,
 }
 
 impl LoadingWidget {
@@ -21,15 +24,29 @@ impl LoadingWidget {
             message: message.to_string(),
             spinner_chars: vec!['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
             current_frame: 0,
+            last_update: Instant::now(),
+            frame_duration: Duration::from_millis(100), // 10 FPS animation
         }
     }
 
     pub fn next_frame(&mut self) {
         self.current_frame = (self.current_frame + 1) % self.spinner_chars.len();
+        self.last_update = Instant::now();
+    }
+
+    pub fn update_animation(&mut self) {
+        let now = Instant::now();
+        if now.duration_since(self.last_update) >= self.frame_duration {
+            self.next_frame();
+        }
     }
 
     fn get_spinner_char(&self) -> char {
-        self.spinner_chars[self.current_frame]
+        // Calculate current frame based on elapsed time for automatic animation
+        let elapsed = Instant::now().duration_since(self.last_update);
+        let additional_frames = (elapsed.as_millis() / self.frame_duration.as_millis()) as usize;
+        let current_frame = (self.current_frame + additional_frames) % self.spinner_chars.len();
+        self.spinner_chars[current_frame]
     }
 }
 

@@ -22,6 +22,7 @@ use sandpolis_network::ServerUrl;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
+use tracing::debug;
 use validator::Validate;
 
 #[cfg(feature = "client")]
@@ -47,7 +48,8 @@ pub struct UserLayer {
 
 impl UserLayer {
     pub async fn new(database: DatabaseLayer) -> Result<Self> {
-        Ok(Self {
+        debug!("Initializing user layer");
+        let user_layer = Self {
             data: database.realm(RealmName::default())?.resident(())?,
             #[cfg(feature = "server")]
             users: database.realm(RealmName::default())?.resident_vec(())?,
@@ -63,13 +65,15 @@ impl UserLayer {
                 assert!(secrets.len() <= 1);
                 let secret = if secrets.len() == 0 {
                     // Time to generate
-                    let secret = server::ServerJwtSecret::default();
+                    debug!("Generating new JWT secrets");
+
+                    let secret = server::ServerJwtSecret::new();
                     rw.insert(secret.clone())?;
                     rw.commit()?;
 
                     secret
                 } else {
-                    secrets[0]
+                    secrets[0].clone()
                 };
 
                 jwt_keys.insert(
@@ -83,12 +87,17 @@ impl UserLayer {
                 jwt_keys
             },
             database,
-        })
+        };
+
+        #[cfg(feature = "server")]
+        user_layer.try_create_admin().await?;
+
+        Ok(user_layer)
     }
 }
 
-#[derive(Validate)]
 #[data]
+#[derive(Validate, Default)]
 pub struct UserData {
     pub username: UserName,
 

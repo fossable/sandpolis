@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::DeserializeFromStr;
 use std::sync::Arc;
 use std::time::Duration;
-use tracing::debug;
+use tracing::{debug, info};
 use validator::Validate;
 
 #[cfg(feature = "client")]
@@ -59,13 +59,16 @@ impl ServerLayer {
         connections
     }
 
+    #[cfg(any(feature = "agent", feature = "client"))] // Temporary
     pub async fn connect(&self, url: ServerUrl) -> Result<ServerConnection> {
         let inner = self.network.connect_server(url)?;
+
+        debug!("Fetching server banner");
 
         // Fetch banner before we return a complete connection
         let response: GetBannerResponse = inner
             .get(
-                "/server/banner",
+                "server/banner",
                 GetBannerRequest {
                     #[cfg(feature = "client-gui")]
                     include_image: true,
@@ -85,7 +88,7 @@ impl ServerLayer {
 }
 
 /// Contains information about the server useful for prospective logins
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 pub struct ServerBanner {
     /// Indicates that only admin users will be allowed to login
     pub maintenance: bool,
@@ -125,7 +128,17 @@ pub struct ServerConnection {
 
 impl ServerConnection {
     pub async fn login(&self, request: LoginRequest) -> Result<LoginResponse> {
-        Ok(self.inner.post("/login", request).await?)
+        // TODO span username
+        debug!(username = %request.username, "Attempting login");
+
+        let result = self.inner.post("user/login", request).await;
+        match result {
+            Ok(LoginResponse::Ok(_)) => {
+                info!("Login succeeded");
+            }
+            _ => {}
+        }
+        result
     }
 }
 
