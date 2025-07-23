@@ -115,12 +115,12 @@ pub async fn create_user(
     // Create new password
     let password = if request.totp {
         state
-            .new_password_with_totp(request.data.username.clone(), &request.password)
+            .new_password_with_totp(request.data.username.clone(), request.password)
             .await
             .map_err(|_| Json(CreateUserResponse::Failed))?
     } else {
         state
-            .new_password(request.data.username.clone(), &request.password)
+            .new_password(request.data.username.clone(), request.password)
             .await
             .map_err(|_| Json(CreateUserResponse::Failed))?
     };

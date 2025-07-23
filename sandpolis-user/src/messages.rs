@@ -12,7 +12,7 @@ pub struct CreateUserRequest {
     pub data: UserData,
 
     /// Password as unsalted hash
-    pub password: String,
+    pub password: LoginPassword,
 
     /// Whether a TOTP secret should be generated
     pub totp: bool,

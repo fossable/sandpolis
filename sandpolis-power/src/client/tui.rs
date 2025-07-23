@@ -44,15 +44,20 @@ impl WidgetRef for PowerWidget {
 }
 
 impl EventHandler for PowerWidget {
-    fn handle_event(&mut self, event: &Event) {
+    fn handle_event(&mut self, event: Event) -> Option<Event> {
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {
                 match key.code {
-                    KeyCode::Char('j') | KeyCode::Down => {}
-                    KeyCode::Char('k') | KeyCode::Up => {}
+                    KeyCode::Char('j') | KeyCode::Down => {
+                        return None;
+                    }
+                    KeyCode::Char('k') | KeyCode::Up => {
+                        return None;
+                    }
                     _ => {}
                 }
             }
         }
+        Some(event)
     }
 }

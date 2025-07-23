@@ -229,7 +229,7 @@ impl From<&ServerListItem> for ListItem<'_> {
 }
 
 impl EventHandler for ServerListWidget {
-    fn handle_event(&mut self, event: &Event) {
+    fn handle_event(&mut self, event: Event) -> Option<Event> {
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {
                 let mut state = self.state.write().unwrap();
@@ -237,13 +237,16 @@ impl EventHandler for ServerListWidget {
                     ServerListWidgetMode::Normal => match key.code {
                         KeyCode::Char('j') | KeyCode::Down => {
                             state.list_state.select_next();
+                            return None;
                         }
                         KeyCode::Char('k') | KeyCode::Up => {
                             state.list_state.select_previous();
+                            return None;
                         }
                         KeyCode::Char('a') => {
                             state.mode = ServerListWidgetMode::Adding;
                             debug!("Entering add server mode");
+                            return None;
                         }
                         _ => {}
                     },
@@ -252,6 +255,7 @@ impl EventHandler for ServerListWidget {
                             state.mode = ServerListWidgetMode::Normal;
                             state.add_server_widget = AddServerWidget::default(); // Reset form
                             debug!("Exiting add server mode");
+                            return None;
                         }
                         _ => {}
                     },
@@ -260,12 +264,15 @@ impl EventHandler for ServerListWidget {
                             state.mode = ServerListWidgetMode::Normal;
                             state.add_server_widget = AddServerWidget::default(); // Reset form
                             debug!("Exiting add server mode");
+                            return None;
                         }
                         KeyCode::Tab => {
                             state.add_server_widget.next_field();
+                            return None;
                         }
                         KeyCode::BackTab => {
                             state.add_server_widget.prev_field();
+                            return None;
                         }
                         KeyCode::Enter => {
                             if let Ok(form_data) = state.add_server_widget.get_form_data() {
@@ -304,21 +311,27 @@ impl EventHandler for ServerListWidget {
                                     }
                                 });
                             }
+                            return None;
                         }
                         KeyCode::Backspace => {
                             state.add_server_widget.handle_backspace();
+                            return None;
                         }
                         KeyCode::Delete => {
                             state.add_server_widget.handle_delete();
+                            return None;
                         }
                         KeyCode::Left => {
                             state.add_server_widget.move_cursor_left();
+                            return None;
                         }
                         KeyCode::Right => {
                             state.add_server_widget.move_cursor_right();
+                            return None;
                         }
                         KeyCode::Char(ch) => {
                             state.add_server_widget.handle_char_input(ch);
+                            return None;
                         }
                         _ => {}
                     },
@@ -326,6 +339,7 @@ impl EventHandler for ServerListWidget {
                 }
             }
         }
+        Some(event)
     }
 }
 

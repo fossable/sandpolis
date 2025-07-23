@@ -24,25 +24,26 @@ async fn main() -> Result<ExitCode> {
     let args = CommandLine::parse();
 
     // Initialize logging for the instance
-    let log_file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open("sandpolis.log")?;
+    let subscriber = tracing_subscriber::fmt().with_env_filter(
+        tracing_subscriber::EnvFilter::builder()
+            .with_default_directive(if args.instance.trace {
+                LevelFilter::TRACE.into()
+            } else if args.instance.debug {
+                LevelFilter::DEBUG.into()
+            } else {
+                LevelFilter::INFO.into()
+            })
+            .from_env()?,
+    );
 
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::builder()
-                .with_default_directive(if args.instance.trace {
-                    LevelFilter::TRACE.into()
-                } else if args.instance.debug {
-                    LevelFilter::DEBUG.into()
-                } else {
-                    LevelFilter::INFO.into()
-                })
-                .from_env()?,
-        )
-        // .with_writer(log_file)
-        .init();
+    #[cfg(feature = "client-tui")]
+    let subscriber = subscriber.with_writer(
+        OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open("sandpolis.log")?,
+    );
+    subscriber.init();
 
     // Get ready to do some cryptography
     rustls::crypto::aws_lc_rs::default_provider()

@@ -1,13 +1,16 @@
+use image::Rgba;
 use image::{DynamicImage, ImageBuffer, RgbaImage};
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::prelude::StatefulWidget;
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span, Text};
-use ratatui::prelude::StatefulWidget;
 use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget, WidgetRef};
-use ratatui_image::{StatefulImage, protocol::{StatefulProtocol, StatefulProtocolType, halfblocks::Halfblocks, ImageSource}, FontSize};
-use image::Rgba;
+use ratatui_image::{
+    FontSize, StatefulImage,
+    protocol::{ImageSource, StatefulProtocol, StatefulProtocolType, halfblocks::Halfblocks},
+};
 use sandpolis_client::tui::EventHandler;
 use sandpolis_core::InstanceId;
 use std::collections::VecDeque;
@@ -85,7 +88,11 @@ impl DesktopViewerWidget {
                 // Create a dummy image for initialization
                 let dummy_image = image::DynamicImage::new_rgba8(1, 1);
                 Some(StatefulProtocol::new(
-                    ImageSource::new(dummy_image, (font_size.0, font_size.1), Rgba([0, 0, 0, 255])),
+                    ImageSource::new(
+                        dummy_image,
+                        (font_size.0, font_size.1),
+                        Rgba([0, 0, 0, 255]),
+                    ),
                     (font_size.0, font_size.1),
                     StatefulProtocolType::Halfblocks(Halfblocks::default()),
                 ))
@@ -124,7 +131,11 @@ impl DesktopViewerWidget {
                     let font_size = picker.font_size();
                     let dummy_image = image::DynamicImage::new_rgba8(1, 1);
                     Some(StatefulProtocol::new(
-                        ImageSource::new(dummy_image, (font_size.0, font_size.1), Rgba([0, 0, 0, 255])),
+                        ImageSource::new(
+                            dummy_image,
+                            (font_size.0, font_size.1),
+                            Rgba([0, 0, 0, 255]),
+                        ),
                         (font_size.0, font_size.1),
                         StatefulProtocolType::Halfblocks(Halfblocks::default()),
                     ))
@@ -342,7 +353,7 @@ impl Widget for DesktopViewerWidget {
 }
 
 impl EventHandler for DesktopViewerWidget {
-    fn handle_event(&mut self, event: &Event) {
+    fn handle_event(&mut self, event: Event) -> Option<Event> {
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {
                 match key.code {
@@ -364,46 +375,55 @@ impl EventHandler for DesktopViewerWidget {
                         } else {
                             self.disconnect();
                         }
+                        return None;
                     }
                     KeyCode::Char('+') | KeyCode::Char('=') => {
                         if self.connected {
                             self.zoom_in();
                         }
+                        return None;
                     }
                     KeyCode::Char('-') => {
                         if self.connected {
                             self.zoom_out();
                         }
+                        return None;
                     }
                     KeyCode::Char('0') => {
                         if self.connected {
                             self.reset_view();
                         }
+                        return None;
                     }
                     KeyCode::Char('s') | KeyCode::Char('S') => {
                         if self.connected {
                             self.toggle_stats();
                         }
+                        return None;
                     }
                     KeyCode::Up => {
                         if self.connected {
                             self.pan(0, -10);
                         }
+                        return None;
                     }
                     KeyCode::Down => {
                         if self.connected {
                             self.pan(0, 10);
                         }
+                        return None;
                     }
                     KeyCode::Left => {
                         if self.connected {
                             self.pan(-10, 0);
                         }
+                        return None;
                     }
                     KeyCode::Right => {
                         if self.connected {
                             self.pan(10, 0);
                         }
+                        return None;
                     }
                     KeyCode::Char('q') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         // This should be handled by the parent application
@@ -415,6 +435,8 @@ impl EventHandler for DesktopViewerWidget {
             // Handle terminal resize - could adjust frame rendering accordingly
             self.status_message = format!("Terminal resized to {}x{}", width, height);
         }
+
+        Some(event)
     }
 }
 
@@ -545,9 +567,9 @@ impl WidgetRef for DesktopSettingsWidget {
 }
 
 impl EventHandler for DesktopSettingsWidget {
-    fn handle_event(&mut self, event: &Event) {
+    fn handle_event(&mut self, event: Event) -> Option<Event> {
         if !self.show_settings {
-            return;
+            return Some(event);
         }
 
         if let Event::Key(key) = event {
@@ -555,26 +577,33 @@ impl EventHandler for DesktopSettingsWidget {
                 match key.code {
                     KeyCode::Up | KeyCode::Char('k') => {
                         self.select_previous();
+                        return None;
                     }
                     KeyCode::Down | KeyCode::Char('j') => {
                         self.select_next();
+                        return None;
                     }
                     KeyCode::Left | KeyCode::Char('h') => {
                         self.adjust_value(false);
+                        return None;
                     }
                     KeyCode::Right | KeyCode::Char('l') => {
                         self.adjust_value(true);
+                        return None;
                     }
                     KeyCode::Enter => {
                         self.hide();
+                        return None;
                     }
                     KeyCode::Esc => {
                         self.hide();
+                        return None;
                     }
                     _ => {}
                 }
             }
         }
+        Some(event)
     }
 }
 

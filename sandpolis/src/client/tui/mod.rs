@@ -68,7 +68,9 @@ impl App {
         while !self.should_quit {
             tokio::select! {
                 _ = interval.tick() => { terminal.draw(|frame| frame.render_widget_ref(&self.panels, frame.area()))?; },
-                Some(Ok(event)) = events.next() => self.handle_event(&event),
+                Some(Ok(event)) = events.next() => {
+                    self.handle_event(event);
+                },
             }
         }
         Ok(())
@@ -76,20 +78,23 @@ impl App {
 }
 
 impl EventHandler for App {
-    fn handle_event(&mut self, event: &Event) {
+    fn handle_event(&mut self, event: Event) -> Option<Event> {
         // First try the currently focused panel
-        self.panels.focused().handle_event(event);
-
-        if let Event::Key(key) = event {
-            if key.kind == KeyEventKind::Press {
-                match key.code {
-                    KeyCode::Char('q') => self.should_quit = true,
-                    // KeyCode::Char('j') | KeyCode::Down => self.pull_requests.scroll_down(),
-                    // KeyCode::Char('k') | KeyCode::Up => self.pull_requests.scroll_up(),
-                    _ => {}
+        if let Some(event) = self.panels.focused().handle_event(event) {
+            if let Event::Key(key) = event {
+                if key.kind == KeyEventKind::Press {
+                    match key.code {
+                        KeyCode::Char('q') => self.should_quit = true,
+                        // KeyCode::Char('j') | KeyCode::Down => self.pull_requests.scroll_down(),
+                        // KeyCode::Char('k') | KeyCode::Up => self.pull_requests.scroll_up(),
+                        _ => {}
+                    }
                 }
             }
         }
+
+        // Nothing escapes from the root handler
+        None
     }
 }
 

@@ -14,7 +14,7 @@ use native_db::ToKey;
 use native_model::Model;
 use passwords::PasswordGenerator;
 use rand::Rng;
-use ring::pbkdf2;
+use ring::{digest::SHA256_OUTPUT_LEN, pbkdf2};
 use sandpolis_core::{RealmName, UserName};
 use sandpolis_database::DataRevision;
 use sandpolis_macros::data;
@@ -28,7 +28,7 @@ use totp_rs::{Secret, TOTP};
 use tracing::info;
 use validator::Validate;
 
-use crate::ClientAuthToken;
+use crate::{ClientAuthToken, LoginPassword};
 
 use super::UserData;
 use super::UserLayer;
@@ -110,20 +110,28 @@ impl UserLayer {
             .numbers(true)
             .lowercase_letters(true)
             .uppercase_letters(true)
-            .symbols(true)
-            .spaces(true)
+            .symbols(false)
+            .spaces(false)
             .exclude_similar_characters(true)
             .strict(false)
             .generate_one()
             .unwrap();
 
-        self.new_password("admin".parse()?, &password).await?;
+        self.new_password(
+            "admin".parse()?,
+            LoginPassword::new(self.instance.cluster_id, &password),
+        )
+        .await?;
         info!(username = "admin", password = %password, "Created default admin user");
         Ok(())
     }
 
     /// Create a new password without a TOTP.
-    pub async fn new_password(&self, user: UserName, password: &str) -> Result<PasswordData> {
+    pub async fn new_password(
+        &self,
+        user: UserName,
+        password: LoginPassword,
+    ) -> Result<PasswordData> {
         // Precondition: user exists
         // TODO
 
@@ -131,13 +139,13 @@ impl UserLayer {
         // TODO
 
         let salt = rand::rng().random::<[u8; 32]>().to_vec();
-        let mut hash = Vec::new();
+        let mut hash = [0u8; SHA256_OUTPUT_LEN];
 
         pbkdf2::derive(
             pbkdf2::PBKDF2_HMAC_SHA256,
             USER_PASSWORD_HASH_ITERATIONS,
             &salt,
-            password.as_bytes(),
+            password.0.as_bytes(),
             &mut hash,
         );
 
@@ -148,7 +156,7 @@ impl UserLayer {
             user,
             iterations: USER_PASSWORD_HASH_ITERATIONS.get(),
             salt,
-            hash,
+            hash: hash.to_vec(),
             totp_secret: None,
             ..Default::default()
         };
@@ -162,7 +170,7 @@ impl UserLayer {
     pub async fn new_password_with_totp(
         &self,
         user: UserName,
-        password: &str,
+        password: LoginPassword,
     ) -> Result<PasswordData> {
         // Precondition: user exists
         // TODO
@@ -177,7 +185,7 @@ impl UserLayer {
             pbkdf2::PBKDF2_HMAC_SHA256,
             USER_PASSWORD_HASH_ITERATIONS,
             &salt,
-            password.as_bytes(),
+            password.0.as_bytes(),
             &mut hash,
         );
 
@@ -217,15 +225,17 @@ impl UserLayer {
             .scan()
             .secondary(PasswordDataKey::user)?
             .equal(user)?
-            .and(
-                r.scan()
-                    .secondary(PasswordDataKey::_revision)?
-                    .equal(DataRevision::Latest(0))?,
-            )
+            // .and(
+            //     r.scan()
+            //         .secondary(PasswordDataKey::_revision)?
+            //         .equal(DataRevision::Latest(0))?,
+            // )
             .try_collect()?;
 
-        if passwords.len() != 1 {
-            bail!("Failed to get password");
+        if passwords.len() == 0 {
+            bail!("Password not found");
+        } else if passwords.len() > 1 {
+            bail!("Too many passwords found");
         }
 
         Ok(passwords[0].to_owned())

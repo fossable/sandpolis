@@ -38,7 +38,7 @@ where
                         }
                     }
                 }
-                widget.handle_event(&event); },
+                widget.handle_event(event); },
         }
     }
     ratatui::restore();
@@ -46,7 +46,7 @@ where
 }
 
 pub trait EventHandler {
-    fn handle_event(&mut self, event: &Event);
+    fn handle_event(&mut self, event: Event) -> Option<Event>;
 }
 
 pub trait Panel: WidgetRef + EventHandler {

@@ -4,21 +4,23 @@
 //     include_str!("../README.md")
 // }
 
-use anyhow::Result;
 use anyhow::bail;
-#[cfg(feature = "server")]
-use jsonwebtoken::DecodingKey;
-#[cfg(feature = "server")]
-use jsonwebtoken::EncodingKey;
+use anyhow::{Result, anyhow};
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
+};
+use base64::prelude::*;
 use native_db::ToKey;
 use native_model::Model;
+use sandpolis_core::ClusterId;
 use sandpolis_core::RealmName;
 use sandpolis_core::UserName;
 use sandpolis_database::Resident;
 use sandpolis_database::ResidentVec;
 use sandpolis_database::{Data, DatabaseLayer};
+use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::data;
-use sandpolis_network::ServerUrl;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -38,18 +40,20 @@ pub struct UserLayerData {}
 #[derive(Clone)]
 pub struct UserLayer {
     pub data: Resident<UserLayerData>,
+    pub instance: InstanceLayer,
     pub database: DatabaseLayer,
     #[cfg(feature = "server")]
     pub users: ResidentVec<UserData>,
 
     #[cfg(feature = "server")]
-    pub jwt_keys: HashMap<RealmName, (EncodingKey, DecodingKey)>,
+    pub jwt_keys: HashMap<RealmName, (jsonwebtoken::EncodingKey, jsonwebtoken::DecodingKey)>,
 }
 
 impl UserLayer {
-    pub async fn new(database: DatabaseLayer) -> Result<Self> {
+    pub async fn new(instance: InstanceLayer, database: DatabaseLayer) -> Result<Self> {
         debug!("Initializing user layer");
         let user_layer = Self {
+            instance,
             data: database.realm(RealmName::default())?.resident(())?,
             #[cfg(feature = "server")]
             users: database.realm(RealmName::default())?.resident_vec(())?,
@@ -79,8 +83,8 @@ impl UserLayer {
                 jwt_keys.insert(
                     RealmName::default(),
                     (
-                        EncodingKey::from_secret(&secret.value),
-                        DecodingKey::from_secret(&secret.value),
+                        jsonwebtoken::EncodingKey::from_secret(&secret.value),
+                        jsonwebtoken::DecodingKey::from_secret(&secret.value),
                     ),
                 );
 
@@ -133,6 +137,25 @@ pub struct LoginAttemptData {
 /// value.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LoginPassword(pub String);
+
+impl LoginPassword {
+    /// When creating a `LoginPassword`, the cluster id is used as the initial
+    /// salt to ensure the same password in different clusters has different
+    /// initial hashes.
+    #[cfg(any(feature = "client", feature = "server"))]
+    pub fn new(cluster_id: ClusterId, plaintext: &str) -> Self {
+        let h = Argon2::default()
+            .hash_password(
+                plaintext.as_bytes(),
+                &SaltString::from_b64(&BASE64_STANDARD_NO_PAD.encode(cluster_id.as_bytes()))
+                    .expect("Cluster ID is always base64-able"),
+            )
+            .expect("Salt is base64")
+            .to_string();
+
+        Self(h)
+    }
+}
 
 pub enum UserPermission {
     Create,

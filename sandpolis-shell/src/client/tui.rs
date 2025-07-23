@@ -1,4 +1,5 @@
 use crate::ShellLayer;
+use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Style};
@@ -6,7 +7,6 @@ use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget, WidgetRef};
 use sandpolis_client::tui::EventHandler;
 use sandpolis_core::InstanceId;
-use ratatui::buffer::Buffer;
 use std::path::PathBuf;
 use tui_term::widget::PseudoTerminal;
 
@@ -164,7 +164,7 @@ impl WidgetRef for ShellTerminalWidget {
 }
 
 impl EventHandler for ShellTerminalWidget {
-    fn handle_event(&mut self, event: &Event) {
+    fn handle_event(&mut self, event: Event) -> Option<Event> {
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {
                 match key.code {
@@ -177,14 +177,17 @@ impl EventHandler for ShellTerminalWidget {
                             self.send_input(&input);
                             self.input_buffer.clear();
                         }
+                        return None;
                     }
                     KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         if self.connected {
                             self.disconnect();
                         }
+                        return None;
                     }
                     KeyCode::Char('q') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         // This should be handled by the parent application
+                        return None;
                     }
                     KeyCode::Char(c) => {
                         if self.connected {
@@ -192,6 +195,7 @@ impl EventHandler for ShellTerminalWidget {
                             // Send character immediately for real-time feedback
                             self.send_input(&c.to_string());
                         }
+                        return None;
                     }
                     KeyCode::Backspace => {
                         if self.connected && !self.input_buffer.is_empty() {
@@ -199,6 +203,7 @@ impl EventHandler for ShellTerminalWidget {
                             // Send backspace sequence
                             self.parser.process(b"\x08 \x08");
                         }
+                        return None;
                     }
                     KeyCode::Tab => {
                         if self.connected {
@@ -206,14 +211,16 @@ impl EventHandler for ShellTerminalWidget {
                             self.input_buffer.push('\t');
                             self.send_input("\t");
                         }
+                        return None;
                     }
                     _ => {}
                 }
             }
         } else if let Event::Resize(width, height) = event {
             // Handle terminal resize
-            self.resize(*width, *height);
+            self.resize(width, height);
         }
+        Some(event)
     }
 }
 
@@ -325,9 +332,9 @@ impl WidgetRef for ShellSelectorWidget {
 }
 
 impl EventHandler for ShellSelectorWidget {
-    fn handle_event(&mut self, event: &Event) {
+    fn handle_event(&mut self, event: Event) -> Option<Event> {
         if !self.show_selector {
-            return;
+            return Some(event);
         }
 
         if let Event::Key(key) = event {
@@ -335,20 +342,25 @@ impl EventHandler for ShellSelectorWidget {
                 match key.code {
                     KeyCode::Up | KeyCode::Char('k') => {
                         self.select_previous();
+                        return None;
                     }
                     KeyCode::Down | KeyCode::Char('j') => {
                         self.select_next();
+                        return None;
                     }
                     KeyCode::Enter => {
                         self.hide();
+                        return None;
                     }
                     KeyCode::Esc => {
                         self.hide();
+                        return None;
                     }
                     _ => {}
                 }
             }
         }
+        Some(event)
     }
 }
 

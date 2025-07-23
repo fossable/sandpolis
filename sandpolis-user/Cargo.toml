@@ -46,3 +46,4 @@ server = [
   "dep:passwords",
 ]
 client = ["dep:totp-rs", "totp-rs?/qr", "dep:argon2"]
+agent = []

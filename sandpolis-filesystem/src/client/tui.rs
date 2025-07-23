@@ -3,12 +3,12 @@ use chrono::{DateTime, Local};
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
-use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Widget, WidgetRef};
 use ratatui::text::{Line, Span, Text};
+use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Widget, WidgetRef};
 use sandpolis_client::tui::EventHandler;
 use sandpolis_core::InstanceId;
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 /// Represents a filesystem entry with metadata
@@ -26,12 +26,16 @@ impl FileEntry {
     fn from_path(path: &Path) -> Option<Self> {
         let metadata = fs::metadata(path).ok()?;
         let name = path.file_name()?.to_string_lossy().to_string();
-        
+
         Some(FileEntry {
             name,
             path: path.to_path_buf(),
             is_directory: metadata.is_dir(),
-            size: if metadata.is_file() { Some(metadata.len()) } else { None },
+            size: if metadata.is_file() {
+                Some(metadata.len())
+            } else {
+                None
+            },
             modified: metadata.modified().ok(),
             permissions: Self::format_permissions(&metadata),
         })
@@ -127,9 +131,14 @@ pub enum ViewMode {
 }
 
 impl FilesystemViewerWidget {
-    pub fn new(instance: InstanceId, filesystem: FilesystemLayer, initial_path: Option<PathBuf>) -> Self {
-        let current_path = initial_path.unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from("/")));
-        
+    pub fn new(
+        instance: InstanceId,
+        filesystem: FilesystemLayer,
+        initial_path: Option<PathBuf>,
+    ) -> Self {
+        let current_path = initial_path
+            .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from("/")));
+
         let mut widget = Self {
             instance,
             filesystem,
@@ -142,7 +151,7 @@ impl FilesystemViewerWidget {
             status_message: "Ready".to_string(),
             view_mode: ViewMode::Detailed,
         };
-        
+
         widget.refresh_directory();
         widget
     }
@@ -154,7 +163,7 @@ impl FilesystemViewerWidget {
                 self.entries = entries;
                 self.sort_entries();
                 self.status_message = format!("Loaded {} items", self.entries.len());
-                
+
                 // Reset selection to first item
                 if !self.entries.is_empty() {
                     self.list_state.select(Some(0));
@@ -173,7 +182,7 @@ impl FilesystemViewerWidget {
     /// Load directory contents
     fn load_directory(&self, path: &Path) -> Result<Vec<FileEntry>, std::io::Error> {
         let mut entries = Vec::new();
-        
+
         // Add parent directory entry if not at root
         if path.parent().is_some() {
             let parent_entry = FileEntry {
@@ -191,7 +200,7 @@ impl FilesystemViewerWidget {
         for entry in fs::read_dir(path)? {
             let entry = entry?;
             let file_name = entry.file_name().to_string_lossy().to_string();
-            
+
             // Skip hidden files if not showing them
             if !self.show_hidden && file_name.starts_with('.') {
                 continue;
@@ -340,9 +349,9 @@ impl WidgetRef for FilesystemViewerWidget {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(3),  // Header
-                Constraint::Min(5),     // File list
-                Constraint::Length(3),  // Status bar
+                Constraint::Length(3), // Header
+                Constraint::Min(5),    // File list
+                Constraint::Length(3), // Status bar
             ])
             .split(area);
 
@@ -362,7 +371,7 @@ impl FilesystemViewerWidget {
         let current_path_display = self.current_path.display().to_string();
         let sort_indicator = match self.sort_by {
             SortBy::Name => "Name",
-            SortBy::Size => "Size", 
+            SortBy::Size => "Size",
             SortBy::Modified => "Modified",
             SortBy::Type => "Type",
         };
@@ -385,62 +394,55 @@ impl FilesystemViewerWidget {
             ]),
         ];
 
-        let header = Paragraph::new(Text::from(header_text))
-            .block(Block::default()
+        let header = Paragraph::new(Text::from(header_text)).block(
+            Block::default()
                 .title("Filesystem Viewer")
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Green)));
+                .border_style(Style::default().fg(Color::Green)),
+        );
 
         header.render(area, buf);
     }
 
     fn render_file_list(&self, area: Rect, buf: &mut ratatui::buffer::Buffer) {
-        let items: Vec<ListItem> = self.entries
+        let items: Vec<ListItem> = self
+            .entries
             .iter()
             .map(|entry| {
                 let style = if entry.is_directory {
-                    Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)
+                    Style::default()
+                        .fg(Color::Blue)
+                        .add_modifier(Modifier::BOLD)
                 } else {
                     Style::default()
                 };
 
                 let line = match self.view_mode {
-                    ViewMode::List => {
-                        Line::from(vec![
-                            Span::styled(
-                                format!("{}{}", 
-                                    if entry.is_directory { "📁 " } else { "📄 " },
-                                    entry.name
-                                ),
-                                style
-                            )
-                        ])
-                    }
-                    ViewMode::Detailed => {
-                        Line::from(vec![
-                            Span::styled(
-                                format!("{:<30}", entry.name),
-                                style
-                            ),
-                            Span::styled(
-                                format!("{:>10}", entry.format_size()),
-                                Style::default().fg(Color::Gray)
-                            ),
-                            Span::raw("  "),
-                            Span::styled(
-                                format!("{:>16}", entry.format_modified()),
-                                Style::default().fg(Color::Gray)
-                            ),
-                            if let Some(perms) = &entry.permissions {
-                                Span::styled(
-                                    format!("  {}", perms),
-                                    Style::default().fg(Color::Gray)
-                                )
-                            } else {
-                                Span::raw("")
-                            },
-                        ])
-                    }
+                    ViewMode::List => Line::from(vec![Span::styled(
+                        format!(
+                            "{}{}",
+                            if entry.is_directory { "📁 " } else { "📄 " },
+                            entry.name
+                        ),
+                        style,
+                    )]),
+                    ViewMode::Detailed => Line::from(vec![
+                        Span::styled(format!("{:<30}", entry.name), style),
+                        Span::styled(
+                            format!("{:>10}", entry.format_size()),
+                            Style::default().fg(Color::Gray),
+                        ),
+                        Span::raw("  "),
+                        Span::styled(
+                            format!("{:>16}", entry.format_modified()),
+                            Style::default().fg(Color::Gray),
+                        ),
+                        if let Some(perms) = &entry.permissions {
+                            Span::styled(format!("  {}", perms), Style::default().fg(Color::Gray))
+                        } else {
+                            Span::raw("")
+                        },
+                    ]),
                 };
 
                 ListItem::new(line)
@@ -448,9 +450,11 @@ impl FilesystemViewerWidget {
             .collect();
 
         let list = List::new(items)
-            .block(Block::default()
-                .title(format!("Contents ({} items)", self.entries.len()))
-                .borders(Borders::ALL))
+            .block(
+                Block::default()
+                    .title(format!("Contents ({} items)", self.entries.len()))
+                    .borders(Borders::ALL),
+            )
             .highlight_style(Style::default().bg(Color::DarkGray))
             .highlight_symbol(">> ");
 
@@ -473,70 +477,83 @@ impl FilesystemViewerWidget {
                 Span::styled("Status: ", Style::default().fg(Color::Yellow)),
                 Span::raw(&self.status_message),
             ]),
-            Line::from(vec![
-                Span::raw(&selected_info),
-            ]),
+            Line::from(vec![Span::raw(&selected_info)]),
             Line::from(vec![
                 Span::styled("Controls: ", Style::default().fg(Color::Cyan)),
-                Span::raw("↑/↓ Navigate, Enter Open, Backspace Up, H Toggle Hidden, S Sort, V View Mode"),
+                Span::raw(
+                    "↑/↓ Navigate, Enter Open, Backspace Up, H Toggle Hidden, S Sort, V View Mode",
+                ),
             ]),
         ];
 
-        let status = Paragraph::new(Text::from(status_text))
-            .block(Block::default()
+        let status = Paragraph::new(Text::from(status_text)).block(
+            Block::default()
                 .title("Status")
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Blue)));
+                .border_style(Style::default().fg(Color::Blue)),
+        );
 
         status.render(area, buf);
     }
 }
 
 impl EventHandler for FilesystemViewerWidget {
-    fn handle_event(&mut self, event: &Event) {
+    fn handle_event(&mut self, event: Event) -> Option<Event> {
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {
                 match key.code {
                     KeyCode::Up | KeyCode::Char('k') => {
                         self.select_previous();
+                        return None;
                     }
                     KeyCode::Down | KeyCode::Char('j') => {
                         self.select_next();
+                        return None;
                     }
                     KeyCode::Enter => {
                         self.navigate_to_selected();
+                        return None;
                     }
                     KeyCode::Backspace => {
                         self.navigate_up();
+                        return None;
                     }
                     KeyCode::Char('h') | KeyCode::Char('H') => {
                         self.toggle_hidden();
+                        return None;
                     }
                     KeyCode::Char('s') | KeyCode::Char('S') => {
                         self.cycle_sort();
+                        return None;
                     }
                     KeyCode::Char('r') | KeyCode::Char('R') => {
                         self.toggle_sort_direction();
+                        return None;
                     }
                     KeyCode::Char('v') | KeyCode::Char('V') => {
                         self.toggle_view_mode();
+                        return None;
                     }
                     KeyCode::Char('5') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         self.refresh_directory();
+                        return None;
                     }
                     KeyCode::Home => {
                         if !self.entries.is_empty() {
                             self.list_state.select(Some(0));
                         }
+                        return None;
                     }
                     KeyCode::End => {
                         if !self.entries.is_empty() {
                             self.list_state.select(Some(self.entries.len() - 1));
                         }
+                        return None;
                     }
                     _ => {}
                 }
             }
         }
+        Some(event)
     }
 }
