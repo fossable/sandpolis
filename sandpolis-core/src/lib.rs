@@ -7,14 +7,18 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::fmt::{Display, Write};
 use std::ops::Deref;
 use std::str::FromStr;
+use std::sync::LazyLock;
 use strum::{EnumIter, IntoEnumIterator};
 use uuid::Uuid;
 use validator::{Validate, ValidationErrors};
 
+static REALM_NAME_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new("^[a-z0-9]{4,32}$").unwrap());
+static USER_NAME_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new("^[a-z0-9]{4,32}$").unwrap());
+
 /// Format a UUID in the usual "lowercase hex encoded with hyphens" style.
 #[inline]
 fn format_uuid(src: u128) -> [u8; 36] {
-    let src: [u8; 16] = src.to_be_bytes();
+    let src: [u8; 16] = src.to_le_bytes();
     let lut = [
         b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'a', b'b', b'c', b'd', b'e',
         b'f',
@@ -405,7 +409,7 @@ impl FromStr for RealmName {
 
 impl Validate for RealmName {
     fn validate(&self) -> Result<(), ValidationErrors> {
-        if Regex::new("^[a-z0-9]{4,32}$").unwrap().is_match(&self.0) {
+        if REALM_NAME_REGEX.is_match(&self.0) {
             Ok(())
         } else {
             Err(ValidationErrors::new())
@@ -502,7 +506,7 @@ impl FromStr for UserName {
 
 impl Validate for UserName {
     fn validate(&self) -> Result<(), ValidationErrors> {
-        if Regex::new("^[a-z0-9]{4,32}$").unwrap().is_match(&self.0) {
+        if USER_NAME_REGEX.is_match(&self.0) {
             Ok(())
         } else {
             Err(ValidationErrors::new())

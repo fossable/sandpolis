@@ -179,7 +179,7 @@ impl UserLayer {
         // TODO
 
         let salt = rand::rng().random::<[u8; 32]>().to_vec();
-        let mut hash = Vec::new();
+        let mut hash = [0u8; SHA256_OUTPUT_LEN];
 
         pbkdf2::derive(
             pbkdf2::PBKDF2_HMAC_SHA256,
@@ -195,7 +195,7 @@ impl UserLayer {
         let password = PasswordData {
             iterations: USER_PASSWORD_HASH_ITERATIONS.get(),
             salt,
-            hash,
+            hash: hash.to_vec(),
             totp_secret: Some(
                 TOTP::new(
                     totp_rs::Algorithm::SHA1,

@@ -17,6 +17,10 @@ passwords = { workspace = true, optional = true, features = [
 ] }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
+sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
+sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
+native_db = { workspace = true, optional = true }
+native_model = { workspace = true, optional = true }
 
 # GUI dependencies
 bevy = { workspace = true, optional = true }
@@ -38,4 +42,6 @@ client-tui = [
   "dep:color-eyre",
   "dep:crossterm",
   "dep:tui-popup",
+  "dep:native_db",
+  "dep:native_model",
 ]

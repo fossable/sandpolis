@@ -1,5 +1,5 @@
 use crate::{ServerBanner, ServerLayer};
-use anyhow::Error;
+use anyhow::{Error, Result};
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::UserName;
@@ -14,4 +14,11 @@ pub struct SavedServerData {
     pub address: ServerUrl,
     pub token: ClientAuthToken,
     pub user: UserName,
+}
+
+impl super::ServerLayer {
+    pub fn save_server(&self, data: SavedServerData) -> Result<()> {
+        self.servers.push(data)?;
+        Ok(())
+    }
 }

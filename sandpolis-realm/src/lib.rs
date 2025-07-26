@@ -476,19 +476,47 @@ mod test_client_cert {
     use super::*;
 
     #[test]
+    #[cfg(feature = "server")]
     fn test_read_write() -> Result<()> {
-        let mut temp_file = tempfile::NamedTempFile::new()?;
+        let cluster_id = sandpolis_core::ClusterId::default();
+        let ca = RealmClusterCert::new(cluster_id, "default".parse()?)?;
+        let original_cert = ca.client_cert()?;
 
-        let cert = RealmClientCert {
-            ca: "doesn't have to be a valid cert".as_bytes().to_vec(),
-            cert: "doesn't have to be a valid cert".as_bytes().to_vec(),
-            key: Some("doesn't have to be a valid key".as_bytes().to_vec()),
-            ..Default::default()
-        };
+        let temp_file = tempfile::NamedTempFile::new()?;
+        original_cert.write(temp_file.path())?;
 
-        cert.write(temp_file.path())?;
+        let read_cert = RealmClientCert::read(temp_file.path())?;
 
-        assert_eq!(cert, RealmClientCert::read(temp_file.path())?);
+        assert_eq!(original_cert.ca, read_cert.ca);
+        assert_eq!(original_cert.cert, read_cert.cert);
+        assert_eq!(original_cert.key, read_cert.key);
+        assert_eq!(original_cert.cluster_id()?, cluster_id);
+        assert_eq!(read_cert.cluster_id()?, cluster_id);
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test_agent_cert {
+    use super::*;
+
+    #[test]
+    #[cfg(feature = "server")]
+    fn test_read_write() -> Result<()> {
+        let cluster_id = sandpolis_core::ClusterId::default();
+        let ca = RealmClusterCert::new(cluster_id, "default".parse()?)?;
+        let original_cert = ca.agent_cert()?;
+
+        let temp_file = tempfile::NamedTempFile::new()?;
+        original_cert.write(temp_file.path())?;
+
+        let read_cert = RealmAgentCert::read(temp_file.path())?;
+
+        assert_eq!(original_cert.ca, read_cert.ca);
+        assert_eq!(original_cert.cert, read_cert.cert);
+        assert_eq!(original_cert.key, read_cert.key);
+        assert_eq!(original_cert.cluster_id()?, cluster_id);
+        assert_eq!(read_cert.cluster_id()?, cluster_id);
         Ok(())
     }
 }
