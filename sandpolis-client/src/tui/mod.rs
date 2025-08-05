@@ -11,6 +11,7 @@ use tokio_stream::StreamExt;
 
 pub mod help;
 pub mod loading;
+pub mod resident_vec;
 
 /// Renders a widget for testing/rapid iteration.
 pub async fn test_widget<W>(mut widget: W) -> Result<()>

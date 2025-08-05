@@ -38,7 +38,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         fps: config.client.fps as f32,
         should_quit: false,
         panels: PanelContainer {
-            panels: vec![Box::new(ServerListWidget::new(state.server.clone()))],
+            panels: vec![Box::new(ServerListWidget::new(state.server.clone())?)],
             focused: 0,
             left: 0,
         },

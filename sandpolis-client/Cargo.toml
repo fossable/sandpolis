@@ -45,3 +45,7 @@ client-tui = [
   "dep:native_db",
   "dep:native_model",
 ]
+
+[[example]]
+name = "resident_vec"
+required-features = ["client-tui"]

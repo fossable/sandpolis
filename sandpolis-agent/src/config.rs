@@ -5,7 +5,10 @@ use serde::Serialize;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AgentLayerConfig {
-    /// Prohibits all write operations
+    /// Prohibits the agent from all write operations (including self upgrades).
+    ///
+    /// This optional security feature is intended to mitigate the risk of a
+    /// compromised server affecting agents.
     pub read_only: bool,
 
     /// Read config options from the environment

@@ -33,7 +33,7 @@ async fn main() -> Result<()> {
             )?,
         )
         .await?,
-    );
+    )?;
     sandpolis_client::tui::test_widget(widget).await.unwrap();
     Ok(())
 }

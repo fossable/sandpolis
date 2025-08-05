@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 use std::collections::btree_map::IntoValues;
 use std::ops::{Add, RangeBounds};
 use std::sync::Arc;
-use std::sync::{RwLock, RwLockReadGuard};
+use std::sync::{Mutex, RwLock, RwLockReadGuard};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace, warn};
 
@@ -238,6 +238,7 @@ impl RealmDatabase {
             db: self.0.clone(),
             watch: (watch_id, token.clone()),
             conditions,
+            listeners: Arc::new(Mutex::new(Vec::new())),
         };
         let resident_clone = resident.clone();
 
@@ -611,6 +612,7 @@ mod test_resident {
     use tokio::time::{Duration, sleep};
 
     #[data]
+    #[derive(Default)]
     pub struct TestData {
         #[secondary_key]
         pub a: String,
@@ -619,6 +621,7 @@ mod test_resident {
     }
 
     #[data(temporal)]
+    #[derive(Default)]
     pub struct TestHistoryData {
         #[secondary_key]
         pub a: String,
@@ -704,6 +707,33 @@ mod test_resident {
     }
 }
 
+/// Events that can occur on a ResidentVec
+#[derive(Clone)]
+pub enum ResidentVecEvent<T>
+where
+    T: Data,
+{
+    /// A new entry was added
+    Added(Resident<T>),
+    /// An existing entry was updated  
+    Updated(Resident<T>),
+    /// An entry was removed
+    Removed(DataIdentifier),
+}
+
+impl<T: Data> std::fmt::Debug for ResidentVecEvent<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ResidentVecEvent::Added(_) => f.debug_tuple("Added").field(&"<Resident>").finish(),
+            ResidentVecEvent::Updated(_) => f.debug_tuple("Updated").field(&"<Resident>").finish(),
+            ResidentVecEvent::Removed(id) => f.debug_tuple("Removed").field(id).finish(),
+        }
+    }
+}
+
+/// Type alias for listener functions
+pub type ResidentVecListener<T> = Arc<dyn Fn(ResidentVecEvent<T>) + Send + Sync>;
+
 #[derive(Clone)]
 pub struct ResidentVec<T>
 where
@@ -712,6 +742,7 @@ where
     db: Arc<native_db::Database<'static>>,
     inner: Arc<RwLock<BTreeMap<DataIdentifier, Resident<T>>>>,
     conditions: Vec<DataCondition>,
+    listeners: Arc<Mutex<Vec<ResidentVecListener<T>>>>,
 
     watch: (u64, CancellationToken),
 }
@@ -725,45 +756,62 @@ impl<T: Data> Drop for ResidentVec<T> {
 }
 
 impl<T: Data> ResidentVec<T> {
+    fn notify_listeners(&self, event: ResidentVecEvent<T>) {
+        if let Ok(listeners) = self.listeners.lock() {
+            for listener in listeners.iter() {
+                listener(event.clone());
+            }
+        }
+    }
+
     fn handle_event(&self, event: Event) {
         trace!(event = ?event, "Handling event");
         match event {
-            Event::Insert(data) => match data.inner::<T>() {
-                Ok(d) => {
+            Event::Insert(insert) => match insert.inner::<T>() {
+                Ok(data) => {
                     // The first condition should be satified because that's the watcher's condition
                     assert!(
                         self.conditions
                             .first()
-                            .map(|condition| condition.check(&d))
+                            .map(|condition| condition.check(&data))
                             .unwrap_or(true)
                     );
 
                     // Make sure the remaining conditions are satisfied
                     for condition in self.conditions.iter().skip(1) {
-                        if !condition.check(&d) {
+                        if !condition.check(&data) {
                             return;
                         }
                     }
 
+                    // TODO discard if revision isn't newer
+
+                    let resident = Resident {
+                        db: self.db.clone(),
+                        inner: Arc::new(RwLock::new(data)),
+                        watch: None,
+                    };
+
                     let mut c = self.inner.write().unwrap();
-                    (*c).insert(
-                        d.id(),
-                        Resident {
-                            db: self.db.clone(),
-                            inner: Arc::new(RwLock::new(d)),
-                            watch: None,
-                        },
-                    );
+                    (*c).insert(resident.inner.read().unwrap().id(), resident.clone());
+                    drop(c);
+
+                    // Notify listeners
+                    self.notify_listeners(ResidentVecEvent::Added(resident));
                 }
                 Err(_) => {}
             },
-            Event::Update(data) => match data.inner_new::<T>() {
-                Ok(d) => {
+            Event::Update(insert) => match insert.inner_new::<T>() {
+                Ok(data) => {
                     let c = self.inner.write().unwrap();
-                    match (*c).get(&d.id()) {
+                    match (*c).get(&data.id()) {
                         Some(r) => {
-                            let mut r = r.inner.write().unwrap();
-                            *r = d;
+                            let mut r_inner = r.inner.write().unwrap();
+                            *r_inner = data;
+                            drop(r_inner);
+
+                            // Notify listeners
+                            self.notify_listeners(ResidentVecEvent::Updated(r.clone()));
                         }
                         // Got an update before insert?
                         None => todo!(),
@@ -787,6 +835,11 @@ impl<T: Data> ResidentVec<T> {
     /// Appends an element to the back of a collection.
     pub fn push(&self, value: T) -> Result<Resident<T>> {
         let id = value.id();
+        let resident = Resident {
+            db: self.db.clone(),
+            inner: Arc::new(RwLock::new(value.clone())),
+            watch: None,
+        };
 
         {
             let rw = self.db.rw_transaction()?;
@@ -796,17 +849,15 @@ impl<T: Data> ResidentVec<T> {
                 bail!("Duplicate primary key");
             }
 
-            // Insert and let watcher update `inner`
+            // Watcher should ignore by revision
+            let mut inner = self.inner.write().unwrap();
+            (*inner).insert(id, resident.clone());
+
             rw.insert(value)?;
             rw.commit()?;
         }
 
-        // TODO don't busy wait
-        loop {
-            if let Some(value) = self.inner.read().unwrap().get(&id) {
-                return Ok(value.clone());
-            }
-        }
+        Ok(resident)
     }
 
     pub fn iter(&self) -> IntoValues<DataIdentifier, Resident<T>> {
@@ -815,6 +866,17 @@ impl<T: Data> ResidentVec<T> {
 
     pub fn stream(&self) -> futures::stream::Iter<IntoValues<DataIdentifier, Resident<T>>> {
         futures::stream::iter(self.inner.read().unwrap().clone().into_values())
+    }
+
+    /// Register a listener that will be called when entries are added, removed,
+    /// or updated.
+    pub fn listen<F>(&self, listener: F)
+    where
+        F: Fn(ResidentVecEvent<T>) + Send + Sync + 'static,
+    {
+        if let Ok(mut listeners) = self.listeners.lock() {
+            listeners.push(Arc::new(listener));
+        }
     }
 }
 
@@ -935,6 +997,7 @@ mod test_resident_vec {
     use tokio::time::{Duration, sleep};
 
     #[data]
+    #[derive(Default)]
     pub struct TestData {
         #[secondary_key]
         pub a: String,
@@ -994,6 +1057,73 @@ mod test_resident_vec {
         // Should reflect "test 10" after a while
         sleep(Duration::from_secs(1)).await;
         assert_eq!(data.read().a, "test 10");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[test_log::test]
+    async fn test_resident_vec_listen() -> Result<()> {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let database = test_db!(TestData);
+        let db = database.realm(RealmName::default())?;
+        let resident_vec: ResidentVec<TestData> = db.resident_vec(())?;
+
+        let add_count = Arc::new(AtomicUsize::new(0));
+        let update_count = Arc::new(AtomicUsize::new(0));
+
+        let add_count_clone = add_count.clone();
+        let update_count_clone = update_count.clone();
+
+        // Register a listener
+        resident_vec.listen(move |event| {
+            match event {
+                ResidentVecEvent::Added(_) => {
+                    add_count_clone.fetch_add(1, Ordering::SeqCst);
+                }
+                ResidentVecEvent::Updated(_) => {
+                    update_count_clone.fetch_add(1, Ordering::SeqCst);
+                }
+                ResidentVecEvent::Removed(_) => {
+                    // Not implemented in current code
+                }
+            }
+        });
+
+        // Add some data
+        let resident1 = resident_vec.push(TestData {
+            a: "test1".to_string(),
+            b: "value1".to_string(),
+            ..Default::default()
+        })?;
+
+        let resident2 = resident_vec.push(TestData {
+            a: "test2".to_string(),
+            b: "value2".to_string(),
+            ..Default::default()
+        })?;
+
+        // Give a moment for events to propagate
+        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+
+        // Update some data
+        resident1.update(|data| {
+            data.b = "updated_value1".to_string();
+            Ok(())
+        })?;
+
+        resident2.update(|data| {
+            data.b = "updated_value2".to_string();
+            Ok(())
+        })?;
+
+        // Give a moment for events to propagate
+        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+
+        // Check that listeners were called
+        assert_eq!(add_count.load(Ordering::SeqCst), 2);
+        assert_eq!(update_count.load(Ordering::SeqCst), 2);
 
         Ok(())
     }

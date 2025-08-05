@@ -11,11 +11,15 @@ use ratatui::{
     },
 };
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
-use sandpolis_client::tui::{EventHandler, Panel, help::HelpWidget, loading::LoadingWidget};
+use sandpolis_client::tui::{EventHandler, Panel, help::HelpWidget, loading::LoadingWidget, resident_vec::ResidentVecWidget};
 use sandpolis_core::UserName;
+use sandpolis_database::{DataCreation, DataIdentifier, Resident, ResidentVecEvent};
 use sandpolis_network::ServerUrl;
-use sandpolis_server::ServerLayer;
-use sandpolis_user::{ClientAuthToken, LoginPassword, messages::LoginRequest};
+use sandpolis_server::{ServerLayer, client::SavedServerData};
+use sandpolis_user::{
+    ClientAuthToken, LoginPassword,
+    messages::{LoginRequest, LoginResponse},
+};
 use std::{
     ops::Deref,
     sync::{Arc, RwLock},
@@ -35,56 +39,59 @@ pub struct ServerListWidget {
     state: Arc<RwLock<ServerListWidgetState>>,
     focused: bool,
     server_layer: ServerLayer,
+    server_list_widget: Arc<RwLock<ResidentVecWidget<SavedServerData>>>,
 }
 
 struct ServerListWidgetState {
-    list_state: ListState,
-    list_items: Vec<Arc<ServerListItem>>,
     default_banner_image: Option<StatefulProtocol>,
     mode: ServerListWidgetMode,
     add_server_widget: AddServerWidget,
     loading_widget: LoadingWidget,
+    help_widget: HelpWidget,
 }
 
 enum ServerListWidgetMode {
     Normal,
     Adding,
     /// While we're trying to login
-    AddingLogin,
+    TryingLogin,
     Selecting,
 }
 
 impl ServerListWidget {
-    pub fn new(server_layer: ServerLayer) -> Self {
-        let mut list_items = server_layer
-            .servers
-            .iter()
-            .map(|server_data| {
-                Arc::new({
-                    let server_layer = server_layer.clone();
-                    let address = server_data.read().address.clone();
-                    ServerListItem {
-                        status: RwLock::new(ServerListItemStatus::Unknown),
-                        ping: RwLock::new(None),
-                        address,
-                    }
-                })
+    pub fn new(server_layer: ServerLayer) -> anyhow::Result<Self> {
+        let server_list_widget = ResidentVecWidget::builder(server_layer.servers.clone())
+            .title("Server Selection")
+            .item_renderer(|server_resident| {
+                let server_data = server_resident.read();
+                let server_item = ServerListItem {
+                    address: server_data.address.clone(),
+                    status: RwLock::new(ServerListItemStatus::Unknown),
+                    ping: RwLock::new(None),
+                };
+                ListItem::from(&server_item)
             })
-            .collect::<Vec<Arc<ServerListItem>>>();
-
-        // Add local server if one exists
-        #[cfg(feature = "server")]
-        {
-            list_items.push(Arc::new(ServerListItem {
-                address: "127.0.0.1:8768".parse().unwrap(),
-                status: RwLock::new(LoadServerBanner::Ok),
-                ping: RwLock::new(Some(0)),
-            }));
-        }
+            .event_handler(|event, list| {
+                if let Event::Key(key) = event {
+                    if key.kind == KeyEventKind::Press {
+                        match key.code {
+                            KeyCode::Char('j') | KeyCode::Down => {
+                                list.select_next();
+                                return None;
+                            }
+                            KeyCode::Char('k') | KeyCode::Up => {
+                                list.select_previous();
+                                return None;
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                Some(event)
+            })
+            .build()?;
 
         let state = Arc::new(RwLock::new(ServerListWidgetState {
-            list_items,
-            list_state: ListState::default(),
             default_banner_image: GRAPHICS.as_ref().map(|picker| {
                 picker.new_resize_protocol(
                     image::ImageReader::open("/home/cilki/Downloads/sandpolis-256.png")
@@ -96,13 +103,19 @@ impl ServerListWidget {
             mode: ServerListWidgetMode::Normal,
             add_server_widget: AddServerWidget::default(),
             loading_widget: LoadingWidget::new("Connecting to server..."),
+            help_widget: HelpWidget::new(vec![
+                (KeyCode::Char('a'), "Add a new server".to_string()),
+                (KeyCode::Char('X'), "Remove server".to_string()),
+                (KeyCode::Right, "Login".to_string()),
+            ]),
         }));
 
-        Self {
+        Ok(Self {
             state,
             focused: true,
             server_layer,
-        }
+            server_list_widget: Arc::new(RwLock::new(server_list_widget)),
+        })
     }
 }
 
@@ -110,13 +123,6 @@ impl WidgetRef for ServerListWidget {
     fn render_ref(&self, area: Rect, buf: &mut Buffer) {
         let mut state = self.state.write().unwrap();
 
-        let help_widget = HelpWidget {
-            keybindings: vec![
-                (KeyCode::Char('a'), "Add a new server".to_string()),
-                (KeyCode::Char('X'), "Remove server".to_string()),
-                (KeyCode::Right, "Login".to_string()),
-            ],
-        };
         let block = Block::default()
             .borders(Borders::ALL)
             .title("Server Selection");
@@ -124,36 +130,34 @@ impl WidgetRef for ServerListWidget {
         let [banner_area, list_area, help_area] = Layout::vertical([
             Constraint::Percentage(30),
             Constraint::Percentage(70),
-            Constraint::Length(help_widget.height()),
+            Constraint::Length(state.help_widget.height()),
         ])
         .areas(block.inner(area));
 
         block.render(area, buf);
 
         // Render banner
-        StatefulWidget::render(
-            StatefulImage::default(),
-            banner_area,
-            buf,
-            state.default_banner_image.as_mut().unwrap(),
-        );
+        if let Some(ref mut banner_image) = state.default_banner_image {
+            StatefulWidget::render(
+                StatefulImage::default(),
+                banner_area,
+                buf,
+                banner_image,
+            );
+        }
 
-        // Render list
-        StatefulWidget::render(
-            state
-                .list_items
-                .iter()
-                .map(|i| i.deref())
-                .collect::<List>()
-                .highlight_style(Style::new().white()),
-            list_area,
-            buf,
-            &mut state.list_state,
-        );
+        // Drop the lock before rendering the list widget to avoid deadlock
+        drop(state);
+
+        // Render server list using ResidentVecWidget
+        self.server_list_widget.read().unwrap().render_ref(list_area, buf);
+
+        // Re-acquire lock for remaining rendering
+        let mut state = self.state.write().unwrap();
 
         // Render help
         if self.focused {
-            help_widget.render(help_area, buf);
+            state.help_widget.render_ref(help_area, buf);
         }
 
         match state.mode {
@@ -163,7 +167,7 @@ impl WidgetRef for ServerListWidget {
                 popup.render(area, buf);
             }
             // Render loading dialog during login
-            ServerListWidgetMode::AddingLogin => {
+            ServerListWidgetMode::TryingLogin => {
                 state.loading_widget.update_animation();
                 let popup = Popup::new(state.loading_widget.clone());
                 popup.render(area, buf);
@@ -221,7 +225,7 @@ impl From<&ServerListItem> for ListItem<'_> {
             ServerListItemStatus::Ok => text.extend([format!("Online").green()]),
             ServerListItemStatus::ConnectionFailed => text.extend([format!("Offline")]),
             ServerListItemStatus::Failed => text.extend([format!("Error").red()]),
-            ServerListItemStatus::Unknown => todo!(),
+            ServerListItemStatus::Unknown => text.extend([format!("Unknown").gray()]),
             ServerListItemStatus::LoginFailed => text.extend([format!("Login failed").red()]),
         }
         ListItem::new(text)
@@ -230,27 +234,32 @@ impl From<&ServerListItem> for ListItem<'_> {
 
 impl EventHandler for ServerListWidget {
     fn handle_event(&mut self, event: Event) -> Option<Event> {
+        // Let help widget handle event first (it never consumes)
+        let mut state = self.state.write().unwrap();
+
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {
-                let mut state = self.state.write().unwrap();
                 match state.mode {
-                    ServerListWidgetMode::Normal => match key.code {
-                        KeyCode::Char('j') | KeyCode::Down => {
-                            state.list_state.select_next();
-                            return None;
+                    ServerListWidgetMode::Normal => {
+                        state.help_widget.handle_event(event.clone())?;
+
+                        match key.code {
+                            KeyCode::Char('a') => {
+                                state.mode = ServerListWidgetMode::Adding;
+                                debug!("Entering add server mode");
+                                return None;
+                            }
+                            _ => {
+                                // Delegate navigation events to the ResidentVecWidget
+                                drop(state);
+                                if let Some(unhandled_event) = self.server_list_widget.write().unwrap().handle_event(event) {
+                                    return Some(unhandled_event);
+                                }
+                                return None;
+                            }
                         }
-                        KeyCode::Char('k') | KeyCode::Up => {
-                            state.list_state.select_previous();
-                            return None;
-                        }
-                        KeyCode::Char('a') => {
-                            state.mode = ServerListWidgetMode::Adding;
-                            debug!("Entering add server mode");
-                            return None;
-                        }
-                        _ => {}
-                    },
-                    ServerListWidgetMode::AddingLogin => match key.code {
+                    }
+                    ServerListWidgetMode::TryingLogin => match key.code {
                         KeyCode::Esc => {
                             state.mode = ServerListWidgetMode::Normal;
                             state.add_server_widget = AddServerWidget::default(); // Reset form
@@ -276,7 +285,7 @@ impl EventHandler for ServerListWidget {
                         }
                         KeyCode::Enter => {
                             if let Ok(form_data) = state.add_server_widget.get_form_data() {
-                                state.mode = ServerListWidgetMode::AddingLogin;
+                                state.mode = ServerListWidgetMode::TryingLogin;
 
                                 let server_layer = self.server_layer.clone();
                                 let state = self.state.clone();
@@ -286,11 +295,11 @@ impl EventHandler for ServerListWidget {
                                         AddServerWidget::default(); // Reset login form
 
                                     if let Ok(connection) =
-                                        server_layer.connect(form_data.server_url).await
+                                        server_layer.connect(form_data.server_url.clone()).await
                                     {
-                                        if let Ok(response) = connection
+                                        if let Ok(LoginResponse::Ok(client_auth_token)) = connection
                                             .login(LoginRequest {
-                                                username: form_data.username,
+                                                username: form_data.username.clone(),
                                                 password: LoginPassword::new(
                                                     connection.inner.cluster_id,
                                                     &form_data.password,
@@ -300,6 +309,20 @@ impl EventHandler for ServerListWidget {
                                             })
                                             .await
                                         {
+                                            server_layer
+                                                .save_server(SavedServerData {
+                                                    address: form_data.server_url,
+                                                    token: client_auth_token,
+                                                    user: form_data.username,
+                                                    // TODO this sucks
+                                                    _id: DataIdentifier::default(),
+                                                    _revision:
+                                                        sandpolis_database::DataRevision::Latest(0),
+                                                    _creation: DataCreation::default(),
+                                                })
+                                                .unwrap();
+                                            state.write().unwrap().mode =
+                                                ServerListWidgetMode::Normal;
                                         } else {
                                             // TODO show login failed dialog
                                             state.write().unwrap().mode =
@@ -346,6 +369,7 @@ impl EventHandler for ServerListWidget {
 impl Panel for ServerListWidget {
     fn set_focus(&mut self, focused: bool) {
         self.focused = focused;
+        self.server_list_widget.write().unwrap().set_focus(focused);
     }
 }
 
