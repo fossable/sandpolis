@@ -1,7 +1,7 @@
 [package]
 description = "Virtual estate monitoring & management!"
 edition = "2024"
-license = "AGPL-3.0-only"
+license = "Unlicense"
 name = "sandpolis-shell"
 version = "0.0.1"
 
@@ -34,4 +34,10 @@ agent = ["dep:futures", "dep:sandpolis-agent"]
 server = []
 client = []
 client-gui = ["client"]
-client-tui = ["client", "dep:tui-term", "dep:ratatui", "dep:sandpolis-client", "sandpolis-client/client-tui"]
+client-tui = [
+  "client",
+  "dep:tui-term",
+  "dep:ratatui",
+  "dep:sandpolis-client",
+  "sandpolis-client/client-tui",
+]

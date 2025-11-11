@@ -2,7 +2,7 @@
 authors = ["Tyler Cook"]
 description = "Virtual estate monitoring & management!"
 edition = "2024"
-license = "AGPL-3.0-only"
+license = "Unlicense"
 name = "sandpolis"
 repository = "https://github.com/fossable/sandpolis"
 rust-version = "1.85"
