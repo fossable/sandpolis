@@ -3,6 +3,7 @@ use anyhow::{Error, Result};
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::UserName;
+use sandpolis_database::DataIdentifier;
 use sandpolis_macros::data;
 use sandpolis_network::ServerUrl;
 use sandpolis_user::ClientAuthToken;
@@ -19,6 +20,11 @@ pub struct SavedServerData {
 impl super::ServerLayer {
     pub fn save_server(&self, data: SavedServerData) -> Result<()> {
         self.servers.push(data)?;
+        Ok(())
+    }
+
+    pub fn remove_server(&self, id: DataIdentifier) -> Result<()> {
+        self.servers.remove(id)?;
         Ok(())
     }
 }

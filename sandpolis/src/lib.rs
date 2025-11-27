@@ -1,5 +1,3 @@
-#![feature(iterator_try_collect)]
-
 use anyhow::Result;
 use axum_macros::FromRef;
 use config::Configuration;

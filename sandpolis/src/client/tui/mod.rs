@@ -17,6 +17,7 @@ use tokio::sync::broadcast::{self, Receiver, Sender};
 use tokio_stream::StreamExt;
 use tracing::debug;
 
+pub mod agent_list;
 pub mod server_list;
 
 pub static GRAPHICS: LazyLock<Option<Picker>> = LazyLock::new(|| Picker::from_query_stdio().ok());
@@ -124,9 +125,15 @@ impl WidgetRef for &PanelContainer {
             Layout::horizontal([Constraint::Percentage(38), Constraint::Percentage(62)])
                 .areas(area);
 
+        // Render left panel
         self.panels
             .get(self.left)
             .expect("there's always a left panel")
             .render_ref(left, buf);
+
+        // Render right panel if there is one
+        if let Some(right_panel) = self.panels.get(self.left + 1) {
+            right_panel.render_ref(right, buf);
+        }
     }
 }

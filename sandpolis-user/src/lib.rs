@@ -1,5 +1,3 @@
-#![feature(iterator_try_collect)]
-
 // doc_comment! {
 //     include_str!("../README.md")
 // }
@@ -64,7 +62,7 @@ impl UserLayer {
                 let db = database.realm(RealmName::default())?;
                 let rw = db.rw_transaction()?;
                 let secrets: Vec<server::ServerJwtSecret> =
-                    rw.scan().primary()?.all()?.try_collect()?;
+                    rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
                 assert!(secrets.len() <= 1);
                 let secret = if secrets.len() == 0 {

@@ -95,7 +95,7 @@ impl Commands {
                 let r = db.r_transaction()?;
 
                 let cluster_certs: Vec<RealmClusterCert> =
-                    r.scan().primary()?.all()?.try_collect()?;
+                    r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
                 let Some(cluster_cert) = cluster_certs.first() else {
                     bail!("No cluster cert found");

@@ -1,5 +1,3 @@
-#![feature(iterator_try_collect)]
-
 use crate::messages::{PollRequest, PollResponse};
 use anyhow::Context;
 use anyhow::Result;

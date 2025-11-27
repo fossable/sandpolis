@@ -1,5 +1,3 @@
-#![feature(iterator_try_collect)]
-
 use crate::config::DatabaseConfig;
 use anyhow::{Result, bail};
 use chrono::{DateTime, Utc};
@@ -590,7 +588,7 @@ impl<T: Data> Resident<T> {
             .scan()
             .secondary(T::creation_key())?
             .range(range)?
-            .try_collect()?;
+            .collect::<Result<Vec<_>, _>>()?;
 
         trace!("{} items", items.len());
 
@@ -650,7 +648,7 @@ mod test_resident {
         // Database should reflect "test 9"
         {
             let r = db.r_transaction()?;
-            let items: Vec<TestData> = r.scan().primary()?.all()?.try_collect()?;
+            let items: Vec<TestData> = r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
             assert_eq!(items.len(), 1);
             assert_eq!(items[0].a, "test 9");
         }
@@ -683,7 +681,7 @@ mod test_resident {
         let db = database.realm(RealmName::default())?;
         let res: Resident<TestHistoryData> = db.resident(())?;
 
-        // Update data a bunch of times
+        // Update data 9 times
         for i in 1..10 {
             res.update(|data| {
                 data.b = format!("test {i}");
@@ -694,7 +692,8 @@ mod test_resident {
         // Database should have 10 items
         {
             let r = db.r_transaction()?;
-            let items: Vec<TestHistoryData> = r.scan().primary()?.all()?.try_collect()?;
+            let items: Vec<TestHistoryData> =
+                r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
             assert_eq!(items.len(), 10);
         }
 
@@ -852,12 +851,42 @@ impl<T: Data> ResidentVec<T> {
             // Watcher should ignore by revision
             let mut inner = self.inner.write().unwrap();
             (*inner).insert(id, resident.clone());
+            drop(inner);
 
             rw.insert(value)?;
             rw.commit()?;
         }
 
+        // Notify listeners immediately
+        self.notify_listeners(ResidentVecEvent::Added(resident.clone()));
+
         Ok(resident)
+    }
+
+    /// Removes an element from the collection by its ID.
+    pub fn remove(&self, id: DataIdentifier) -> Result<()> {
+        {
+            let rw = self.db.rw_transaction()?;
+
+            // Check if the item exists and get it before removing
+            let mut inner = self.inner.write().unwrap();
+            let resident = inner.remove(&id);
+            drop(inner);
+
+            if let Some(resident) = resident {
+                // Remove from database
+                let data = resident.inner.read().unwrap().clone();
+                rw.remove(data)?;
+                rw.commit()?;
+            } else {
+                bail!("Item not found");
+            }
+        }
+
+        // Notify listeners immediately
+        self.notify_listeners(ResidentVecEvent::Removed(id));
+
+        Ok(())
     }
 
     pub fn iter(&self) -> IntoValues<DataIdentifier, Resident<T>> {
@@ -941,11 +970,14 @@ pub trait DataQuery<T: Data> {
 macro_rules! collect_conditions {
     ($scan:ident, $condition:ident, $($conditions:ident),*) => {
         match condition.clone() {
-            DataCondition::Equal(key, value) => scan.secondary(key)?.equal(value)?.try_collect()?,
+            DataCondition::Equal(key, value) => scan
+                .secondary(key)?
+                .equal(value)?
+                .collect::<Result<Vec<_>, _>>()?,
             DataCondition::Range(key, value) => {
                 let secondary = scan.secondary(key)?;
                 let it = secondary.range(value)?;
-                it.try_collect()?
+                it.collect::<Result<Vec<_>, _>>()?
             }
         }
     };
@@ -953,7 +985,7 @@ macro_rules! collect_conditions {
 
 impl<T: Data> DataQuery<T> for () {
     fn query(&self, scan: RScan) -> Result<Vec<T>> {
-        Ok(scan.primary()?.all()?.try_collect()?)
+        Ok(scan.primary()?.all()?.collect::<Result<Vec<_>, _>>()?)
     }
 
     fn conditions(&self) -> Vec<DataCondition> {
@@ -964,8 +996,14 @@ impl<T: Data> DataQuery<T> for () {
 impl<T: Data> DataQuery<T> for DataCondition {
     fn query(&self, scan: RScan) -> Result<Vec<T>> {
         Ok(match self.clone() {
-            DataCondition::Equal(key, value) => scan.secondary(key)?.equal(value)?.try_collect()?,
-            DataCondition::Range(key, value) => scan.secondary(key)?.range(value)?.try_collect()?,
+            DataCondition::Equal(key, value) => scan
+                .secondary(key)?
+                .equal(value)?
+                .collect::<Result<Vec<_>, _>>()?,
+            DataCondition::Range(key, value) => scan
+                .secondary(key)?
+                .range(value)?
+                .collect::<Result<Vec<_>, _>>()?,
         })
     }
 
@@ -1036,7 +1074,7 @@ mod test_resident_vec {
         // Database should reflect "test 9"
         {
             let r = db.r_transaction()?;
-            let items: Vec<TestData> = r.scan().primary()?.all()?.try_collect()?;
+            let items: Vec<TestData> = r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
             assert_eq!(items.len(), 1);
             assert_eq!(items[0].a, "test 9");
         }

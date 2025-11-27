@@ -1,5 +1,3 @@
-#![feature(iterator_try_collect)]
-
 // doc_comment! {
 //     include_str!("../README.md")
 // }
@@ -75,7 +73,7 @@ impl RealmLayer {
 
                 let rw = realm_db.rw_transaction()?;
                 let mut cluster_certs: Vec<RealmClusterCert> =
-                    rw.scan().primary()?.all()?.try_collect()?;
+                    rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
                 // TODO only GS
                 if cluster_certs.len() == 0 {
@@ -100,7 +98,7 @@ impl RealmLayer {
 
                 // Get or create server cert
                 let mut server_certs: Vec<RealmServerCert> =
-                    rw.scan().primary()?.all()?.try_collect()?;
+                    rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
                 if server_certs.len() == 0 {
                     server_certs.push(cluster_certs[0].server_cert(instance.instance_id)?);
@@ -118,7 +116,7 @@ impl RealmLayer {
 
             let db = database.realm(new_cert.name()?)?;
             let rw = db.rw_transaction()?;
-            let certs: Vec<RealmAgentCert> = rw.scan().primary()?.all()?.try_collect()?;
+            let certs: Vec<RealmAgentCert> = rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
             // Only import if the given certificate is newer than the one
             // already in the database.
@@ -141,7 +139,7 @@ impl RealmLayer {
 
             let db = database.realm(new_cert.name()?)?;
             let rw = db.rw_transaction()?;
-            let certs: Vec<RealmClientCert> = rw.scan().primary()?.all()?.try_collect()?;
+            let certs: Vec<RealmClientCert> = rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
             // Only import if the given certificate is newer than the one
             // already in the database.
@@ -181,7 +179,7 @@ impl RealmLayer {
         let r = db.r_transaction()?;
 
         {
-            let certs: Vec<RealmClientCert> = r.scan().primary()?.all()?.try_collect()?;
+            let certs: Vec<RealmClientCert> = r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
             for cert in certs {
                 if cert.name()? == realm {
@@ -199,7 +197,7 @@ impl RealmLayer {
         let r = db.r_transaction()?;
 
         {
-            let certs: Vec<RealmAgentCert> = r.scan().primary()?.all()?.try_collect()?;
+            let certs: Vec<RealmAgentCert> = r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
             for cert in certs {
                 if cert.name()? == realm {

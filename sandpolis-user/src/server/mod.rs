@@ -230,7 +230,7 @@ impl UserLayer {
             //         .secondary(PasswordDataKey::_revision)?
             //         .equal(DataRevision::Latest(0))?,
             // )
-            .try_collect()?;
+            .collect::<Result<Vec<_>, _>>()?;
 
         if passwords.len() == 0 {
             bail!("Password not found");

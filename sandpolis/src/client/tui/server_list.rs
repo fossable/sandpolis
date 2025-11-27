@@ -3,7 +3,7 @@ use anyhow::Result;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{Event, KeyCode, KeyEventKind},
-    layout::{Constraint, Layout, Rect},
+    layout::{Alignment, Constraint, Layout, Rect},
     style::{Style, Stylize},
     text::{Line, Text},
     widgets::{
@@ -13,7 +13,7 @@ use ratatui::{
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
 use sandpolis_client::tui::{EventHandler, Panel, help::HelpWidget, loading::LoadingWidget, resident_vec::ResidentVecWidget};
 use sandpolis_core::UserName;
-use sandpolis_database::{DataCreation, DataIdentifier, Resident, ResidentVecEvent};
+use sandpolis_database::{Data, DataCreation, DataIdentifier, Resident, ResidentVecEvent};
 use sandpolis_network::ServerUrl;
 use sandpolis_server::{ServerLayer, client::SavedServerData};
 use sandpolis_user::{
@@ -55,6 +55,8 @@ enum ServerListWidgetMode {
     Adding,
     /// While we're trying to login
     TryingLogin,
+    /// Successfully connected to a server
+    Connected,
     Selecting,
 }
 
@@ -149,8 +151,25 @@ impl WidgetRef for ServerListWidget {
         // Drop the lock before rendering the list widget to avoid deadlock
         drop(state);
 
-        // Render server list using ResidentVecWidget
-        self.server_list_widget.read().unwrap().render_ref(list_area, buf);
+        // Check if the list is empty and render instructions
+        let server_list_widget = self.server_list_widget.read().unwrap();
+        if server_list_widget.is_empty() {
+            // Render empty state instructions in the list area
+            let empty_message = vec![
+                Line::from(""),
+                Line::from("No servers configured").gray(),
+                Line::from(""),
+                Line::from("Press 'a' to add a new server").cyan(),
+            ];
+
+            Paragraph::new(empty_message)
+                .alignment(Alignment::Center)
+                .render(list_area, buf);
+        } else {
+            // Render server list using ResidentVecWidget
+            server_list_widget.render_ref(list_area, buf);
+        }
+        drop(server_list_widget);
 
         // Re-acquire lock for remaining rendering
         let mut state = self.state.write().unwrap();
@@ -164,13 +183,47 @@ impl WidgetRef for ServerListWidget {
             // Render dialog if we're in "add" mode
             ServerListWidgetMode::Adding => {
                 let popup = Popup::new(state.add_server_widget.clone());
-                popup.render(area, buf);
+                // Use the full buffer area to center the popup on the entire screen
+                popup.render(buf.area, buf);
             }
             // Render loading dialog during login
             ServerListWidgetMode::TryingLogin => {
                 state.loading_widget.update_animation();
                 let popup = Popup::new(state.loading_widget.clone());
-                popup.render(area, buf);
+                // Use the full buffer area to center the popup on the entire screen
+                popup.render(buf.area, buf);
+            }
+            // Show connected state
+            ServerListWidgetMode::Connected => {
+                // Display a simple message that we're connected
+                let message = vec![
+                    Line::from(""),
+                    Line::from("Successfully connected!").green(),
+                    Line::from(""),
+                    Line::from("Agent management coming soon...").gray(),
+                    Line::from(""),
+                    Line::from("Press Esc to return").cyan(),
+                ];
+
+                Paragraph::new(message)
+                    .alignment(Alignment::Center)
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title("Connected")
+                            .style(Style::default().white()),
+                    )
+                    .render(
+                        ratatui::layout::Layout::default()
+                            .direction(ratatui::layout::Direction::Vertical)
+                            .constraints([
+                                ratatui::layout::Constraint::Percentage(30),
+                                ratatui::layout::Constraint::Percentage(40),
+                                ratatui::layout::Constraint::Percentage(30),
+                            ])
+                            .split(buf.area)[1],
+                        buf,
+                    );
             }
             _ => (),
         }
@@ -249,6 +302,52 @@ impl EventHandler for ServerListWidget {
                                 debug!("Entering add server mode");
                                 return None;
                             }
+                            KeyCode::Char('X') => {
+                                // Remove the currently selected server
+                                drop(state);
+                                let server_list_widget = self.server_list_widget.read().unwrap();
+                                if let Some(selected_server) = server_list_widget.selected() {
+                                    let server_id = selected_server.read().id();
+                                    drop(server_list_widget);
+
+                                    debug!(server_id = ?server_id, "Removing server");
+                                    if let Err(e) = self.server_layer.remove_server(server_id) {
+                                        debug!(error = %e, "Failed to remove server");
+                                    }
+                                }
+                                return None;
+                            }
+                            KeyCode::Right => {
+                                // Login to the currently selected server
+                                let server_list_widget = self.server_list_widget.read().unwrap();
+                                if let Some(selected_server) = server_list_widget.selected() {
+                                    let server_data = selected_server.read().clone();
+                                    drop(server_list_widget);
+                                    state.mode = ServerListWidgetMode::TryingLogin;
+                                    drop(state);
+
+                                    let server_layer = self.server_layer.clone();
+                                    let state_clone = self.state.clone();
+
+                                    debug!(address = %server_data.address, "Connecting to server");
+
+                                    tokio::spawn(async move {
+                                        match server_layer.connect(server_data.address.clone()).await {
+                                            Ok(connection) => {
+                                                debug!("Connected successfully, attempting authentication with saved token");
+                                                // TODO: Use the saved token to authenticate
+                                                // For now, just transition to Connected state
+                                                state_clone.write().unwrap().mode = ServerListWidgetMode::Connected;
+                                            }
+                                            Err(e) => {
+                                                debug!(error = %e, "Failed to connect to server");
+                                                state_clone.write().unwrap().mode = ServerListWidgetMode::Normal;
+                                            }
+                                        }
+                                    });
+                                }
+                                return None;
+                            }
                             _ => {
                                 // Delegate navigation events to the ResidentVecWidget
                                 drop(state);
@@ -294,43 +393,63 @@ impl EventHandler for ServerListWidget {
                                     state.write().unwrap().add_server_widget =
                                         AddServerWidget::default(); // Reset login form
 
-                                    if let Ok(connection) =
-                                        server_layer.connect(form_data.server_url.clone()).await
-                                    {
-                                        if let Ok(LoginResponse::Ok(client_auth_token)) = connection
-                                            .login(LoginRequest {
-                                                username: form_data.username.clone(),
-                                                password: LoginPassword::new(
-                                                    connection.inner.cluster_id,
-                                                    &form_data.password,
-                                                ),
-                                                totp_token: form_data.totp,
-                                                lifetime: Some(Duration::new(1, 0)),
-                                            })
-                                            .await
-                                        {
-                                            server_layer
-                                                .save_server(SavedServerData {
-                                                    address: form_data.server_url,
-                                                    token: client_auth_token,
-                                                    user: form_data.username,
-                                                    // TODO this sucks
-                                                    _id: DataIdentifier::default(),
-                                                    _revision:
-                                                        sandpolis_database::DataRevision::Latest(0),
-                                                    _creation: DataCreation::default(),
+                                    match server_layer.connect(form_data.server_url.clone()).await {
+                                        Ok(connection) => {
+                                            match connection
+                                                .login(LoginRequest {
+                                                    username: form_data.username.clone(),
+                                                    password: LoginPassword::new(
+                                                        connection.inner.cluster_id,
+                                                        &form_data.password,
+                                                    ),
+                                                    totp_token: form_data.totp,
+                                                    lifetime: Some(Duration::new(1, 0)),
                                                 })
-                                                .unwrap();
-                                            state.write().unwrap().mode =
-                                                ServerListWidgetMode::Normal;
-                                        } else {
-                                            // TODO show login failed dialog
-                                            state.write().unwrap().mode =
-                                                ServerListWidgetMode::Normal;
+                                                .await
+                                            {
+                                                Ok(LoginResponse::Ok(client_auth_token)) => {
+                                                    debug!("Login successful, saving server");
+                                                    match server_layer.save_server(SavedServerData {
+                                                        address: form_data.server_url,
+                                                        token: client_auth_token,
+                                                        user: form_data.username,
+                                                        // TODO this sucks
+                                                        _id: DataIdentifier::default(),
+                                                        _revision:
+                                                            sandpolis_database::DataRevision::Latest(
+                                                                0,
+                                                            ),
+                                                        _creation: DataCreation::default(),
+                                                    }) {
+                                                        Ok(_) => {
+                                                            debug!("Server saved successfully");
+                                                            state.write().unwrap().mode =
+                                                                ServerListWidgetMode::Normal;
+                                                        }
+                                                        Err(e) => {
+                                                            debug!(
+                                                                error = %e,
+                                                                "Failed to save server"
+                                                            );
+                                                            // TODO show error dialog
+                                                            state.write().unwrap().mode =
+                                                                ServerListWidgetMode::Normal;
+                                                        }
+                                                    }
+                                                }
+                                                _ => {
+                                                    debug!("Login failed");
+                                                    // TODO show login failed dialog
+                                                    state.write().unwrap().mode =
+                                                        ServerListWidgetMode::Normal;
+                                                }
+                                            }
                                         }
-                                    } else {
-                                        // TODO show connection failed dialog
-                                        state.write().unwrap().mode = ServerListWidgetMode::Normal;
+                                        Err(e) => {
+                                            debug!(error = %e, "Connection failed");
+                                            // TODO show connection failed dialog
+                                            state.write().unwrap().mode = ServerListWidgetMode::Normal;
+                                        }
                                     }
                                 });
                             }
