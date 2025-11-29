@@ -49,7 +49,8 @@
 
         # Minimal init script to launch the agent
         initScript = pkgs.writeScript "init" ''
-          #!${pkgs.busybox}/bin/sh
+          #!/bin/busybox sh
+
           set -e
 
           # Create busybox symlinks
@@ -66,8 +67,7 @@
           # Set up networking (lo interface)
           ip link set lo up
 
-          # Launch the Sandpolis agent
-          echo "Starting Sandpolis agent..."
+          # Launch the agent
           exec /sbin/sandpolis
         '';
 
@@ -84,18 +84,21 @@
               {
                 object = initScript;
                 symlink = "/init";
+                mode = "0755";
               }
 
               # Include the Sandpolis agent
               {
-                object = sandpolis-agent;
+                object = "${sandpolis-agent}/bin/sandpolis";
                 symlink = "/sbin/sandpolis";
+                mode = "0755";
               }
 
               # Include busybox for shell utilities
               {
-                object = pkgs.busybox;
+                object = "${pkgs.busybox}/bin/busybox";
                 symlink = "/bin/busybox";
+                mode = "0755";
               }
             ];
           };
@@ -115,6 +118,10 @@
 
           buildCommand = ''
             mkdir -p $out
+
+            # List initramfs contents for debugging
+            echo "Initramfs contents:"
+            zcat ${initramfs}/initrd | ${pkgs.cpio}/bin/cpio -itv
 
             # Use ukify to create the UKI
             ${pkgs.systemdUkify}/bin/ukify build \
@@ -176,6 +183,41 @@
           '';
         };
 
+        # Run scripts for QEMU testing
+        run-x86_64 = pkgs.writeShellScriptBin "run-x86_64" ''
+          # Set up ESP directory structure in temp directory
+          ESP_DIR=$(mktemp -d)
+          mkdir -p $ESP_DIR/EFI/Boot
+          cp result/sandpolis.efi $ESP_DIR/EFI/Boot/BootX64.efi
+
+          qemu-system-x86_64 \
+            -nodefaults --enable-kvm -m 256M -machine q35 -smp 4 \
+            -drive if=pflash,format=raw,file=${pkgs.OVMF.fd}/FV/OVMF_CODE.fd,readonly=on \
+            -drive if=pflash,format=raw,file=${pkgs.OVMF.fd}/FV/OVMF_VARS.fd,readonly=on \
+            -drive format=raw,file=fat:rw:$ESP_DIR \
+            -netdev user,id=user.0 -device rtl8139,netdev=user.0 \
+            -serial stdio -device isa-debug-exit,iobase=0xf4,iosize=0x04 -vga std
+
+          rm -rf $ESP_DIR
+        '';
+
+        run-aarch64 = pkgs.writeShellScriptBin "run-aarch64" ''
+          # Set up ESP directory structure in temp directory
+          ESP_DIR=$(mktemp -d)
+          mkdir -p $ESP_DIR/EFI/Boot
+          cp result/sandpolis.efi $ESP_DIR/EFI/Boot/BootAA64.efi
+
+          qemu-system-aarch64 \
+            -nodefaults --enable-kvm -m 256M -machine virt -cpu cortex-a72 -smp 4 \
+            -drive if=pflash,format=raw,file=${pkgs.OVMF.fd}/FV/OVMF_CODE.fd,readonly=on \
+            -drive if=pflash,format=raw,file=${pkgs.OVMF.fd}/FV/OVMF_VARS.fd,readonly=on \
+            -drive format=raw,file=fat:rw:$ESP_DIR \
+            -netdev user,id=user.0 -device rtl8139,netdev=user.0 \
+            -serial stdio -device isa-debug-exit,iobase=0xf4,iosize=0x04 -vga std
+
+          rm -rf $ESP_DIR
+        '';
+
       in {
         packages = {
           default = sandpolis-uki;
@@ -201,7 +243,11 @@
 
             # Testing/debugging tools
             pkgs.qemu
-            pkgs.ovmf
+            pkgs.OVMF
+
+            # Run scripts
+            run-x86_64
+            run-aarch64
           ];
 
           shellHook = ''
@@ -212,7 +258,8 @@
             echo "  nix build .#sandpolis-agent - Build just the agent binary"
             echo ""
             echo "Test with QEMU:"
-            echo "  qemu-system-x86_64 -enable-kvm -m 2G -bios ${pkgs.OVMF.fd}/FV/OVMF.fd -drive format=raw,file=result/sandpolis.iso"
+            echo "  run-x86_64   - Run with QEMU x86_64"
+            echo "  run-aarch64  - Run with QEMU aarch64"
           '';
         };
       });

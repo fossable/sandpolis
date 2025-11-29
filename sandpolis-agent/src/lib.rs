@@ -13,6 +13,8 @@ pub mod agent;
 
 pub mod messages;
 
+pub mod uefi;
+
 #[derive(Default)]
 pub struct AgentLayerData {}
 
