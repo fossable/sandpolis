@@ -26,7 +26,6 @@ members = [
   "sandpolis-shell",
   "sandpolis-snapshot",
   "sandpolis-tunnel",
-  "sandpolis-uki",
   "sandpolis-user",
 ]
 

@@ -49,8 +49,11 @@
 
         # Minimal init script to launch the agent
         initScript = pkgs.writeScript "init" ''
-          #!/bin/sh
+          #!${pkgs.busybox}/bin/sh
           set -e
+
+          # Create busybox symlinks
+          /bin/busybox --install -s /bin
 
           # Mount essential filesystems
           mount -t proc proc /proc
@@ -68,60 +71,33 @@
           exec /sbin/sandpolis
         '';
 
-        # Create initramfs with dracut
+        # Create initramfs with makeInitrd
         buildInitramfs = kernel:
-          pkgs.stdenv.mkDerivation {
+          pkgs.makeInitrd {
             name = "sandpolis-initramfs";
 
-            nativeBuildInputs = [ pkgs.dracut pkgs.cpio pkgs.findutils ];
+            # Use gzip compression (standard for initramfs)
+            compressor = "gzip";
 
-            buildCommand = ''
-              mkdir -p $out
+            contents = [
+              # Include the init script at /init
+              {
+                object = initScript;
+                symlink = "/init";
+              }
 
-              # Create a minimal root filesystem structure
-              mkdir -p rootfs/{bin,sbin,dev,proc,sys,tmp,run,var,lib,lib64,etc}
+              # Include the Sandpolis agent
+              {
+                object = sandpolis-agent;
+                symlink = "/sbin/sandpolis";
+              }
 
-              # Copy the agent binary
-              cp ${sandpolis-agent}/bin/sandpolis rootfs/sbin/sandpolis
-              chmod +x rootfs/sbin/sandpolis
-
-              # Copy the init script
-              cp ${initScript} rootfs/init
-              chmod +x rootfs/init
-
-              # Copy required shared libraries
-              mkdir -p rootfs/lib/x86_64-linux-gnu 2>/dev/null || true
-              mkdir -p rootfs/lib/aarch64-linux-gnu 2>/dev/null || true
-
-              # Find and copy all required shared libraries
-              for lib in $(ldd ${sandpolis-agent}/bin/sandpolis | grep -o '/nix/store/[^ ]*'); do
-                if [ -f "$lib" ]; then
-                  cp -L "$lib" rootfs/lib/ 2>/dev/null || \
-                  cp -L "$lib" rootfs/lib64/ 2>/dev/null || true
-                fi
-              done
-
-              # Copy essential busybox for shell commands in init
-              cp ${pkgs.busybox}/bin/busybox rootfs/bin/sh
-              ln -s sh rootfs/bin/mount
-              ln -s sh rootfs/bin/ip
-              ln -s sh rootfs/bin/mkdir
-              ln -s sh rootfs/bin/echo
-              ln -s sh rootfs/bin/exec
-
-              # Create the initramfs with dracut
-              ${pkgs.dracut}/bin/dracut \
-                --force \
-                --no-hostonly \
-                --no-hostonly-cmdline \
-                --kmoddir ${kernel}/lib/modules \
-                --kver "${kernel.version}" \
-                --include rootfs / \
-                --no-compress \
-                $out/initramfs.img
-
-              echo "Initramfs created at $out/initramfs.img"
-            '';
+              # Include busybox for shell utilities
+              {
+                object = pkgs.busybox;
+                symlink = "/bin/busybox";
+              }
+            ];
           };
 
         kernel = pkgs.linuxPackages_latest.kernel;
@@ -133,17 +109,20 @@
           name = "sandpolis-uki";
 
           nativeBuildInputs = [
-            pkgs.systemd # provides ukify
+            pkgs.systemdUkify # provides ukify
             pkgs.binutils
           ];
 
           buildCommand = ''
             mkdir -p $out
 
-            # Use systemd's ukify to create the UKI
-            ${pkgs.systemd}/lib/systemd/ukify build \
+            # Use ukify to create the UKI
+            ${pkgs.systemdUkify}/bin/ukify build \
               --linux=${kernel}/bzImage \
-              --initrd=${initramfs}/initramfs.img \
+              --initrd=${initramfs}/initrd \
+              --os-release='NAME="Sandpolis"
+            ID=sandpolis
+            VERSION="0.1.0"' \
               --cmdline="console=ttyS0 console=tty0 quiet" \
               --output=$out/sandpolis.efi
 
@@ -219,7 +198,6 @@
             pkgs.cmake
             pkgs.openssl
             pkgs.systemd
-            pkgs.dracut
 
             # Testing/debugging tools
             pkgs.qemu
