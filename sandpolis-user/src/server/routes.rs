@@ -15,13 +15,10 @@ use axum::{
 use axum_extra::TypedHeader;
 use futures::stream::StreamExt;
 use jsonwebtoken::{Header, encode};
-use ring::pbkdf2;
+use aws_lc_rs::pbkdf2;
 use sandpolis_core::RealmName;
 use sandpolis_network::RequestResult;
-use std::{
-    num::NonZeroU32,
-    time::{Duration, SystemTime},
-};
+use std::time::{Duration, SystemTime};
 use totp_rs::TOTP;
 use tracing::{debug, error, info};
 use validator::Validate;
@@ -67,7 +64,7 @@ pub async fn login(
     // TODO argon2
     if pbkdf2::verify(
         pbkdf2::PBKDF2_HMAC_SHA256,
-        NonZeroU32::new(password.iterations).unwrap_or(NonZeroU32::new(1).unwrap()),
+        password.iterations,
         &password.salt,
         request.password.0.as_bytes(),
         &password.hash,

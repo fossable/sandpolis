@@ -45,7 +45,6 @@ openssl = "0.10.71"
 [features]
 default = ["dep:sandpolis-database"]
 agent = ["sandpolis-core/agent", "dep:reqwest"]
-bootagent = []
 client = ["sandpolis-core/client", "dep:reqwest"]
 server = [
   "dep:rcgen",

@@ -9,7 +9,6 @@ version = "0.0.1"
 uefi = { workspace = true }
 getrandom = { version = "0.3.1" }
 rustls = { workspace = true, features = ["ring", "tls12"] }
-ring = { workspace = true }
 serde = { workspace = true }
 sandpolis-snapshot = { path = "../sandpolis-snapshot", version = "0.0.1", default-features = false }
 sandpolis-realm = { path = "../sandpolis-realm", version = "0.0.1", default-features = false }

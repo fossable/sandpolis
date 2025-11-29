@@ -23,6 +23,5 @@ uuid = { workspace = true }
 [features]
 default = ["dep:sandpolis-database", "dep:clap", "dep:colored", "dep:os_info"]
 agent = ["sandpolis-core/agent"]
-bootagent = []
 client = ["sandpolis-core/client"]
 server = ["sandpolis-core/server"]

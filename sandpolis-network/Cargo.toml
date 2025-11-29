@@ -26,12 +26,10 @@ sandpolis-realm = { path = "../sandpolis-realm", version = "0.0.1" }
 serde_cbor = { workspace = true }
 serde_json = { workspace = true }
 serde_with = { workspace = true }
-smoltcp = { workspace = true, optional = true }
 serde = { workspace = true }
 tokio-util = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true }
 tracing = { workspace = true }
-uefi = { workspace = true, optional = true }
 url = { workspace = true }
 validator = { workspace = true }
 
@@ -45,6 +43,5 @@ default = [
   "dep:axum",
 ]
 agent = ["sandpolis-realm/agent"]
-bootagent = ["sandpolis-realm/bootagent", "dep:uefi", "dep:smoltcp"]
 server = ["sandpolis-realm/server"]
 client = ["sandpolis-realm/client"]

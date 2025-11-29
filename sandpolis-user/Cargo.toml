@@ -16,7 +16,7 @@ native_model = { workspace = true }
 passwords = { workspace = true, optional = true, features = [
   "common-password",
 ] }
-ring = { workspace = true }
+aws-lc-rs = { workspace = true }
 axum = { workspace = true }
 axum-macros = { workspace = true }
 axum-extra = { workspace = true }

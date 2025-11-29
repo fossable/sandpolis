@@ -22,7 +22,6 @@ validator = { workspace = true }
 [features]
 default = ["dep:clap", "dep:colored"]
 server = ["dep:headers"]
-bootagent = []
 agent = []
 client = []
 client-gui = ["client", "dep:bevy"]

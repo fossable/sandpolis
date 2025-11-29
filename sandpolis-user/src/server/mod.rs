@@ -14,8 +14,10 @@ use native_db::ToKey;
 use native_model::Model;
 use passwords::PasswordGenerator;
 use rand::Rng;
-use ring::{digest::SHA256_OUTPUT_LEN, pbkdf2};
+use aws_lc_rs::pbkdf2;
 use sandpolis_core::{RealmName, UserName};
+
+const SHA256_OUTPUT_LEN: usize = 32;
 use sandpolis_database::DataRevision;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
@@ -143,7 +145,7 @@ impl UserLayer {
 
         pbkdf2::derive(
             pbkdf2::PBKDF2_HMAC_SHA256,
-            USER_PASSWORD_HASH_ITERATIONS,
+            USER_PASSWORD_HASH_ITERATIONS.get(),
             &salt,
             password.0.as_bytes(),
             &mut hash,
@@ -183,7 +185,7 @@ impl UserLayer {
 
         pbkdf2::derive(
             pbkdf2::PBKDF2_HMAC_SHA256,
-            USER_PASSWORD_HASH_ITERATIONS,
+            USER_PASSWORD_HASH_ITERATIONS.get(),
             &salt,
             password.0.as_bytes(),
             &mut hash,
