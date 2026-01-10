@@ -1,6 +1,7 @@
 use super::{CurrentLayer, ZoomLevel};
 use crate::Layer;
 use bevy::{
+    ecs::event::EventReader,
     input::{
         gestures::RotationGesture,
         mouse::{MouseButtonInput, MouseMotion, MouseWheel},

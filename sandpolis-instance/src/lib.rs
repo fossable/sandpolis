@@ -49,7 +49,7 @@ impl InstanceLayer {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Ord)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct LayerVersion {
     pub major: u32,
     pub minor: u32,
@@ -69,20 +69,26 @@ impl TryFrom<String> for LayerVersion {
 
 impl PartialOrd for LayerVersion {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for LayerVersion {
+    fn cmp(&self, other: &Self) -> Ordering {
         if self.major > other.major {
-            Some(Ordering::Greater)
+            Ordering::Greater
         } else if self.major < other.major {
-            Some(Ordering::Less)
+            Ordering::Less
         } else if self.minor > other.minor {
-            Some(Ordering::Greater)
+            Ordering::Greater
         } else if self.minor < other.minor {
-            Some(Ordering::Less)
+            Ordering::Less
         } else if self.patch > other.patch {
-            Some(Ordering::Greater)
+            Ordering::Greater
         } else if self.patch < other.patch {
-            Some(Ordering::Less)
+            Ordering::Less
         } else {
-            Some(Ordering::Equal)
+            Ordering::Equal
         }
     }
 }

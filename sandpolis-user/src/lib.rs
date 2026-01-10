@@ -7,7 +7,7 @@ use anyhow::{Result, anyhow};
 #[cfg(any(feature = "client", feature = "server"))]
 use argon2::{
     Argon2,
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
 };
 use base64::prelude::*;
 use native_db::ToKey;

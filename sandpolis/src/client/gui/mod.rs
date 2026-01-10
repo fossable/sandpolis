@@ -8,6 +8,7 @@ use crate::{InstanceState, config::Configuration};
 use anyhow::Result;
 use bevy::{
     color::palettes::basic::*,
+    ecs::event::EventReader,
     prelude::*,
     window::{AppLifecycle, WindowMode},
 };
@@ -138,7 +139,7 @@ fn handle_lifetime(
     mut lifecycle_events: EventReader<AppLifecycle>,
     music_controller: Query<&AudioSink>,
 ) {
-    let Ok(music_controller) = music_controller.get_single() else {
+    let Ok(music_controller) = music_controller.single() else {
         return;
     };
 

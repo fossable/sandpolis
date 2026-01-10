@@ -1,5 +1,4 @@
 use super::PackageData;
-use super::PackageLayer;
 use anyhow::{bail, Result};
 use axum::Router;
 use std::path::PathBuf;
@@ -53,14 +52,5 @@ pub(crate) trait PackageManager {
     /// Upgrade the given packages to the latest available version.
     async fn upgrade(packages: Vec<String>) -> Result<()> {
         bail!("Not implemented");
-    }
-}
-
-impl PackageLayer {
-    pub fn agent_routes<S>() -> Router<S>
-    where
-        S: Clone + Send + Sync + 'static,
-    {
-        Router::new()
     }
 }

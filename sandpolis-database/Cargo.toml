@@ -25,6 +25,11 @@ validator = { workspace = true }
 
 [dev-dependencies]
 test-log = { version = "0.2.18", features = ["trace"] }
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+
+[[bench]]
+name = "database_bench"
+harness = false
 
 [features]
 agent = ["sandpolis-core/agent"]
