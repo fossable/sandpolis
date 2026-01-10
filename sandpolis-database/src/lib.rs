@@ -113,12 +113,12 @@ impl RealmDatabase {
     }
 
     /// Direct access to a new read-write transaction.
-    pub fn rw_transaction(&self) -> Result<RwTransaction> {
+    pub fn rw_transaction(&self) -> Result<RwTransaction<'_>> {
         Ok(self.0.rw_transaction()?)
     }
 
     /// Direct access to a new read-only transaction.
-    pub fn r_transaction(&self) -> Result<RTransaction> {
+    pub fn r_transaction(&self) -> Result<RTransaction<'_>> {
         Ok(self.0.r_transaction()?)
     }
 
@@ -544,21 +544,18 @@ impl<T: Data> Resident<T> {
         trace!(event = ?event, "Handling event");
         match event {
             Event::Insert(_data) => {}
-            Event::Update(data) => match data.inner_new::<T>() {
-                Ok(d) => {
-                    let mut c = self.inner.write().unwrap();
-                    // Only accept updates with newer or equal revisions (last write wins)
-                    if d.revision() >= c.revision() {
-                        *c = d;
-                    } else {
-                        trace!(
-                            incoming_rev = ?d.revision(),
-                            current_rev = ?c.revision(),
-                            "Discarding update with older revision"
-                        );
-                    }
+            Event::Update(data) => if let Ok(d) = data.inner_new::<T>() {
+                let mut c = self.inner.write().unwrap();
+                // Only accept updates with newer or equal revisions (last write wins)
+                if d.revision() >= c.revision() {
+                    *c = d;
+                } else {
+                    trace!(
+                        incoming_rev = ?d.revision(),
+                        current_rev = ?c.revision(),
+                        "Discarding update with older revision"
+                    );
                 }
-                Err(_) => {}
             },
             Event::Delete(_) => warn!("Deleting a singleton is undefined"),
         }
@@ -792,114 +789,105 @@ impl<T: Data> ResidentVec<T> {
     fn handle_event(&self, event: Event) {
         trace!(event = ?event, "Handling event");
         match event {
-            Event::Insert(insert) => match insert.inner::<T>() {
-                Ok(data) => {
-                    // The first condition should be satified because that's the watcher's condition
-                    assert!(
-                        self.conditions
-                            .first()
-                            .map(|condition| condition.check(&data))
-                            .unwrap_or(true)
-                    );
+            Event::Insert(insert) => if let Ok(data) = insert.inner::<T>() {
+                // The first condition should be satified because that's the watcher's condition
+                assert!(
+                    self.conditions
+                        .first()
+                        .map(|condition| condition.check(&data))
+                        .unwrap_or(true)
+                );
 
-                    // Make sure the remaining conditions are satisfied
-                    for condition in self.conditions.iter().skip(1) {
-                        if !condition.check(&data) {
-                            return;
-                        }
-                    }
-
-                    let data_id = data.id();
-                    let mut c = self.inner.write().unwrap();
-
-                    // Check if this item already exists (inserted by push())
-                    if let Some(existing) = (*c).get(&data_id) {
-                        // If it exists and has the same revision, skip notification AND update
-                        // (push() already notified listeners and inserted the Resident)
-                        if existing.read().revision() == data.revision() {
-                            trace!(
-                                id = ?data_id,
-                                revision = ?data.revision(),
-                                "Skipping duplicate insert"
-                            );
-                            return;
-                        } else {
-                            // Different revision - this shouldn't happen for Insert events
-                            warn!(
-                                existing_rev = ?existing.read().revision(),
-                                new_rev = ?data.revision(),
-                                "Insert event for existing item with different revision"
-                            );
-                        }
-                    }
-
-                    let resident = Resident {
-                        db: self.db.clone(),
-                        inner: Arc::new(RwLock::new(data)),
-                        watch: None,
-                    };
-
-                    (*c).insert(data_id, resident.clone());
-                    drop(c);
-
-                    // Notify listeners
-                    self.notify_listeners(ResidentVecEvent::Added(resident));
-                }
-                Err(_) => {}
-            },
-            Event::Update(insert) => match insert.inner_new::<T>() {
-                Ok(data) => {
-                    let c = self.inner.write().unwrap();
-                    match (*c).get(&data.id()) {
-                        Some(r) => {
-                            let mut r_inner = r.inner.write().unwrap();
-                            // Only accept updates with newer or equal revisions
-                            if data.revision() >= r_inner.revision() {
-                                trace!(
-                                    incoming_rev = ?data.revision(),
-                                    current_rev = ?r_inner.revision(),
-                                    new_value = ?data,
-                                    "Applying update to ResidentVec item"
-                                );
-                                *r_inner = data;
-                                drop(r_inner);
-
-                                // Notify listeners
-                                self.notify_listeners(ResidentVecEvent::Updated(r.clone()));
-                            } else {
-                                trace!(
-                                    incoming_rev = ?data.revision(),
-                                    current_rev = ?r_inner.revision(),
-                                    "Discarding update with older revision"
-                                );
-                            }
-                        }
-                        // Got an update before insert?
-                        None => todo!(),
+                // Make sure the remaining conditions are satisfied
+                for condition in self.conditions.iter().skip(1) {
+                    if !condition.check(&data) {
+                        return;
                     }
                 }
-                Err(_) => {}
-            },
-            Event::Delete(delete) => match delete.inner::<T>() {
-                Ok(data) => {
-                    let data_id = data.id();
-                    let mut c = self.inner.write().unwrap();
-                    if let Some(_removed) = (*c).remove(&data_id) {
+
+                let data_id = data.id();
+                let mut c = self.inner.write().unwrap();
+
+                // Check if this item already exists (inserted by push())
+                if let Some(existing) = (*c).get(&data_id) {
+                    // If it exists and has the same revision, skip notification AND update
+                    // (push() already notified listeners and inserted the Resident)
+                    if existing.read().revision() == data.revision() {
                         trace!(
                             id = ?data_id,
-                            "Removing item from ResidentVec (from watcher)"
+                            revision = ?data.revision(),
+                            "Skipping duplicate insert"
                         );
-                        drop(c);
-                        // Notify listeners
-                        self.notify_listeners(ResidentVecEvent::Removed(data_id));
+                        return;
                     } else {
-                        trace!(
-                            id = ?data_id,
-                            "Delete event for already-removed item (remove() was called directly)"
+                        // Different revision - this shouldn't happen for Insert events
+                        warn!(
+                            existing_rev = ?existing.read().revision(),
+                            new_rev = ?data.revision(),
+                            "Insert event for existing item with different revision"
                         );
                     }
                 }
-                Err(_) => {}
+
+                let resident = Resident {
+                    db: self.db.clone(),
+                    inner: Arc::new(RwLock::new(data)),
+                    watch: None,
+                };
+
+                (*c).insert(data_id, resident.clone());
+                drop(c);
+
+                // Notify listeners
+                self.notify_listeners(ResidentVecEvent::Added(resident));
+            },
+            Event::Update(insert) => if let Ok(data) = insert.inner_new::<T>() {
+                let c = self.inner.write().unwrap();
+                match (*c).get(&data.id()) {
+                    Some(r) => {
+                        let mut r_inner = r.inner.write().unwrap();
+                        // Only accept updates with newer or equal revisions
+                        if data.revision() >= r_inner.revision() {
+                            trace!(
+                                incoming_rev = ?data.revision(),
+                                current_rev = ?r_inner.revision(),
+                                new_value = ?data,
+                                "Applying update to ResidentVec item"
+                            );
+                            *r_inner = data;
+                            drop(r_inner);
+
+                            // Notify listeners
+                            self.notify_listeners(ResidentVecEvent::Updated(r.clone()));
+                        } else {
+                            trace!(
+                                incoming_rev = ?data.revision(),
+                                current_rev = ?r_inner.revision(),
+                                "Discarding update with older revision"
+                            );
+                        }
+                    }
+                    // Got an update before insert?
+                    None => todo!(),
+                }
+            },
+            Event::Delete(delete) => if let Ok(data) = delete.inner::<T>() {
+                let data_id = data.id();
+                let mut c = self.inner.write().unwrap();
+                if let Some(_removed) = (*c).remove(&data_id) {
+                    trace!(
+                        id = ?data_id,
+                        "Removing item from ResidentVec (from watcher)"
+                    );
+                    drop(c);
+                    // Notify listeners
+                    self.notify_listeners(ResidentVecEvent::Removed(data_id));
+                } else {
+                    trace!(
+                        id = ?data_id,
+                        "Delete event for already-removed item (remove() was called directly)"
+                    );
+                }
             },
         }
     }
@@ -1044,7 +1032,7 @@ pub trait DataQuery<T: Data> {
                 return false;
             }
         }
-        return true;
+        true
     }
 }
 
@@ -1340,13 +1328,16 @@ mod test_resident_vec {
         }
 
         // Query with range on secondary key 'a'
-        let resident_vec: ResidentVec<TestData> =
-            db.resident_vec(DataCondition::range(TestDataKey::a, "bbb".to_string()..="ccc".to_string()))?;
+        let resident_vec: ResidentVec<TestData> = db.resident_vec(DataCondition::range(
+            TestDataKey::a,
+            "bbb".to_string()..="ccc".to_string(),
+        ))?;
 
         // Should get items with a="bbb" and a="ccc"
         assert_eq!(resident_vec.len(), 2);
 
-        let items: Vec<_> = resident_vec.iter()
+        let items: Vec<_> = resident_vec
+            .iter()
             .map(|r| r.read().a.clone())
             .collect::<Vec<_>>();
 
@@ -1493,4 +1484,3 @@ mod test_resident_vec {
         Ok(())
     }
 }
-

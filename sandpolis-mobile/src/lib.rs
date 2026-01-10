@@ -1,5 +1,5 @@
 use bevy::prelude::bevy_main;
-use sandpolis::{InstanceState, cli::CommandLine, config::Configuration};
+use sandpolis::{InstanceState, config::Configuration};
 use sandpolis_database::DatabaseLayer;
 
 #[bevy_main]
@@ -20,7 +20,7 @@ pub fn main() {
             // Load state
             let state = InstanceState::new(
                 config.clone(),
-                DatabaseLayer::new(config.database.clone(), &*sandpolis::MODELS).unwrap(),
+                DatabaseLayer::new(config.database.clone(), &sandpolis::MODELS).unwrap(),
             )
             .await
             .unwrap();

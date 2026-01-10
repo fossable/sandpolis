@@ -1,22 +1,18 @@
 use crate::messages::{GetBannerRequest, GetBannerResponse};
-use anyhow::{Result, bail};
+use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_core::RealmName;
-use sandpolis_core::{ClusterId, InstanceId};
+use sandpolis_core::InstanceId;
 use sandpolis_database::DatabaseLayer;
-use sandpolis_database::Resident;
 use sandpolis_database::ResidentVec;
 use sandpolis_macros::data;
 use sandpolis_network::NetworkLayer;
 use sandpolis_network::OutboundConnection;
 use sandpolis_network::ServerUrl;
-use sandpolis_user::ClientAuthToken;
 use sandpolis_user::messages::{LoginRequest, LoginResponse};
 use serde::{Deserialize, Serialize};
-use serde_with::DeserializeFromStr;
 use std::sync::Arc;
-use std::time::Duration;
 use tracing::{debug, info};
 use validator::Validate;
 
@@ -132,11 +128,8 @@ impl ServerConnection {
         debug!(username = %request.username, "Attempting login");
 
         let result = self.inner.post("user/login", request).await;
-        match result {
-            Ok(LoginResponse::Ok(_)) => {
-                info!("Login succeeded");
-            }
-            _ => {}
+        if let Ok(LoginResponse::Ok(_)) = result {
+            info!("Login succeeded");
         }
         result
     }

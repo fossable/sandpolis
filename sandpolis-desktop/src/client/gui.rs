@@ -5,7 +5,7 @@ pub fn handle_layer(
     commands: Commands,
     // mut contexts: EguiContexts,
     mut nodes: Query<(&mut Transform, &InstanceId), With<InstanceId>>,
-    mut windows: Query<&mut Window>,
+    windows: Query<&mut Window>,
     cameras: Query<&Transform, (With<Camera2d>, Without<InstanceId>)>,
 ) {
     // let window_size = windows.single_mut().size();

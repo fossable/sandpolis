@@ -112,11 +112,12 @@ impl RealmLayer {
         // Import configured certs if newer than what we have in the database
         #[cfg(feature = "agent")]
         for path in config.agent_certs.as_ref().unwrap_or(&Vec::new()) {
-            let new_cert = RealmAgentCert::read(&path)?;
+            let new_cert = RealmAgentCert::read(path)?;
 
             let db = database.realm(new_cert.name()?)?;
             let rw = db.rw_transaction()?;
-            let certs: Vec<RealmAgentCert> = rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+            let certs: Vec<RealmAgentCert> =
+                rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
             // Only import if the given certificate is newer than the one
             // already in the database.
@@ -135,11 +136,12 @@ impl RealmLayer {
 
         #[cfg(feature = "client")]
         for path in config.client_certs.as_ref().unwrap_or(&Vec::new()) {
-            let new_cert = RealmClientCert::read(&path)?;
+            let new_cert = RealmClientCert::read(path)?;
 
             let db = database.realm(new_cert.name()?)?;
             let rw = db.rw_transaction()?;
-            let certs: Vec<RealmClientCert> = rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+            let certs: Vec<RealmClientCert> =
+                rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
             // Only import if the given certificate is newer than the one
             // already in the database.
@@ -167,7 +169,7 @@ impl RealmLayer {
         // Don't allow this method to create realms that don't already exist
         for realm in self.realms.iter() {
             if realm.read().name == name {
-                return Ok(self.database.realm(name)?);
+                return self.database.realm(name);
             }
         }
         bail!("Realm does not exist");
@@ -179,7 +181,8 @@ impl RealmLayer {
         let r = db.r_transaction()?;
 
         {
-            let certs: Vec<RealmClientCert> = r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+            let certs: Vec<RealmClientCert> =
+                r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
             for cert in certs {
                 if cert.name()? == realm {
@@ -197,7 +200,8 @@ impl RealmLayer {
         let r = db.r_transaction()?;
 
         {
-            let certs: Vec<RealmAgentCert> = r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+            let certs: Vec<RealmAgentCert> =
+                r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
             for cert in certs {
                 if cert.name()? == realm {
@@ -235,16 +239,10 @@ pub struct RealmClusterCert {
 impl RealmClusterCert {
     pub fn cluster_id(&self) -> Result<ClusterId> {
         for ext in X509Certificate::from_der(&self.cert)?.1.iter_extensions() {
-            match ext.parsed_extension() {
-                ParsedExtension::SubjectAlternativeName(san) => {
-                    for name in &san.general_names {
-                        match name {
-                            GeneralName::DNSName(s) => return Ok(s.parse::<ClusterId>()?),
-                            _ => {}
-                        }
-                    }
+            if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
+                for name in &san.general_names {
+                    if let GeneralName::DNSName(s) = name { return s.parse::<ClusterId>() }
                 }
-                _ => {}
             }
         }
 
@@ -263,16 +261,10 @@ pub struct RealmServerCert {
 impl RealmServerCert {
     pub fn subject_name(&self) -> Result<String> {
         for ext in X509Certificate::from_der(&self.cert)?.1.iter_extensions() {
-            match ext.parsed_extension() {
-                ParsedExtension::SubjectAlternativeName(san) => {
-                    for name in &san.general_names {
-                        match name {
-                            GeneralName::DNSName(s) => return Ok(s.to_string()),
-                            _ => {}
-                        }
-                    }
+            if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
+                for name in &san.general_names {
+                    if let GeneralName::DNSName(s) = name { return Ok(s.to_string()) }
                 }
-                _ => {}
             }
         }
 
@@ -347,16 +339,10 @@ impl Validate for RealmClientCert {
 impl RealmClientCert {
     pub fn cluster_id(&self) -> Result<ClusterId> {
         for ext in X509Certificate::from_der(&self.ca)?.1.iter_extensions() {
-            match ext.parsed_extension() {
-                ParsedExtension::SubjectAlternativeName(san) => {
-                    for name in &san.general_names {
-                        match name {
-                            GeneralName::DNSName(s) => return Ok(s.parse::<ClusterId>()?),
-                            _ => {}
-                        }
-                    }
+            if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
+                for name in &san.general_names {
+                    if let GeneralName::DNSName(s) = name { return s.parse::<ClusterId>() }
                 }
-                _ => {}
             }
         }
 
@@ -588,16 +574,10 @@ impl Validate for RealmAgentCert {
 impl RealmAgentCert {
     pub fn cluster_id(&self) -> Result<ClusterId> {
         for ext in X509Certificate::from_der(&self.ca)?.1.iter_extensions() {
-            match ext.parsed_extension() {
-                ParsedExtension::SubjectAlternativeName(san) => {
-                    for name in &san.general_names {
-                        match name {
-                            GeneralName::DNSName(s) => return Ok(s.parse::<ClusterId>()?),
-                            _ => {}
-                        }
-                    }
+            if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
+                for name in &san.general_names {
+                    if let GeneralName::DNSName(s) = name { return s.parse::<ClusterId>() }
                 }
-                _ => {}
             }
         }
 

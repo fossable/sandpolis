@@ -1,9 +1,12 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
-use sandpolis_database::{self as sandpolis_database, config, DatabaseLayer, Resident, ResidentVec, DataCondition, Data, DataCreation};
-use sandpolis_macros::data;
-use sandpolis_core::RealmName;
+use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
 use native_db::*;
 use native_model::{Model, native_model};
+use sandpolis_core::RealmName;
+use sandpolis_database::{
+    self as sandpolis_database, Data, DataCondition, DataCreation, DatabaseLayer, Resident,
+    ResidentVec, config,
+};
+use sandpolis_macros::data;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -66,10 +69,14 @@ fn bench_resident_update(c: &mut Criterion) {
             let db = database.realm(RealmName::default()).unwrap();
             let resident: Resident<BenchData> = db.resident(()).unwrap();
 
-            black_box(resident.update(|data| {
-                data.value = 42;
-                Ok(())
-            }).unwrap());
+            black_box(
+                resident
+                    .update(|data| {
+                        data.value = 42;
+                        Ok(())
+                    })
+                    .unwrap(),
+            );
         });
     });
 }
@@ -88,10 +95,12 @@ fn bench_resident_sequential_updates(c: &mut Criterion) {
                 let resident: Resident<BenchData> = db.resident(()).unwrap();
 
                 for i in 0..count {
-                    resident.update(|data| {
-                        data.value = i;
-                        Ok(())
-                    }).unwrap();
+                    resident
+                        .update(|data| {
+                            data.value = i;
+                            Ok(())
+                        })
+                        .unwrap();
                 }
             });
         });
@@ -147,12 +156,14 @@ fn bench_resident_vec_push(c: &mut Criterion) {
                 let resident_vec: ResidentVec<BenchData> = db.resident_vec(()).unwrap();
 
                 for i in 0..count {
-                    resident_vec.push(BenchData {
-                        name: format!("item_{}", i),
-                        value: i,
-                        data: vec![0u8; 100],
-                        ..Default::default()
-                    }).unwrap();
+                    resident_vec
+                        .push(BenchData {
+                            name: format!("item_{}", i),
+                            value: i,
+                            data: vec![0u8; 100],
+                            ..Default::default()
+                        })
+                        .unwrap();
                 }
             });
         });
@@ -176,12 +187,14 @@ fn bench_resident_vec_remove(c: &mut Criterion) {
                 // Setup: push items
                 let mut ids = vec![];
                 for i in 0..count {
-                    let r = resident_vec.push(BenchData {
-                        name: format!("item_{}", i),
-                        value: i,
-                        data: vec![0u8; 100],
-                        ..Default::default()
-                    }).unwrap();
+                    let r = resident_vec
+                        .push(BenchData {
+                            name: format!("item_{}", i),
+                            value: i,
+                            data: vec![0u8; 100],
+                            ..Default::default()
+                        })
+                        .unwrap();
                     ids.push(r.read().id());
                 }
 
@@ -204,55 +217,73 @@ fn bench_query_operations(c: &mut Criterion) {
 
     for dataset_size in [100, 1000, 5000].iter() {
         group.throughput(Throughput::Elements(*dataset_size as u64));
-        group.bench_with_input(BenchmarkId::new("equal", dataset_size), dataset_size, |b, &size| {
-            b.to_async(&runtime).iter(|| async move {
-                let database = create_test_db();
-                let db = database.realm(RealmName::default()).unwrap();
+        group.bench_with_input(
+            BenchmarkId::new("equal", dataset_size),
+            dataset_size,
+            |b, &size| {
+                b.to_async(&runtime).iter(|| async move {
+                    let database = create_test_db();
+                    let db = database.realm(RealmName::default()).unwrap();
 
-                // Setup: insert test data
-                {
-                    let rw = db.rw_transaction().unwrap();
-                    for i in 0..size {
-                        rw.insert(BenchData {
-                            name: format!("item_{}", i % 10),
-                            value: i,
-                            data: vec![0u8; 100],
-                            ..Default::default()
-                        }).unwrap();
+                    // Setup: insert test data
+                    {
+                        let rw = db.rw_transaction().unwrap();
+                        for i in 0..size {
+                            rw.insert(BenchData {
+                                name: format!("item_{}", i % 10),
+                                value: i,
+                                data: vec![0u8; 100],
+                                ..Default::default()
+                            })
+                            .unwrap();
+                        }
+                        rw.commit().unwrap();
                     }
-                    rw.commit().unwrap();
-                }
 
-                // Benchmark: query with equal condition
-                let _resident_vec: ResidentVec<BenchData> =
-                    db.resident_vec(DataCondition::equal(BenchDataKey::name, "item_5".to_string())).unwrap();
-            });
-        });
+                    // Benchmark: query with equal condition
+                    let _resident_vec: ResidentVec<BenchData> = db
+                        .resident_vec(DataCondition::equal(
+                            BenchDataKey::name,
+                            "item_5".to_string(),
+                        ))
+                        .unwrap();
+                });
+            },
+        );
 
-        group.bench_with_input(BenchmarkId::new("range", dataset_size), dataset_size, |b, &size| {
-            b.to_async(&runtime).iter(|| async move {
-                let database = create_test_db();
-                let db = database.realm(RealmName::default()).unwrap();
+        group.bench_with_input(
+            BenchmarkId::new("range", dataset_size),
+            dataset_size,
+            |b, &size| {
+                b.to_async(&runtime).iter(|| async move {
+                    let database = create_test_db();
+                    let db = database.realm(RealmName::default()).unwrap();
 
-                // Setup: insert test data
-                {
-                    let rw = db.rw_transaction().unwrap();
-                    for i in 0..size {
-                        rw.insert(BenchData {
-                            name: format!("item_{:04}", i),
-                            value: i,
-                            data: vec![0u8; 100],
-                            ..Default::default()
-                        }).unwrap();
+                    // Setup: insert test data
+                    {
+                        let rw = db.rw_transaction().unwrap();
+                        for i in 0..size {
+                            rw.insert(BenchData {
+                                name: format!("item_{:04}", i),
+                                value: i,
+                                data: vec![0u8; 100],
+                                ..Default::default()
+                            })
+                            .unwrap();
+                        }
+                        rw.commit().unwrap();
                     }
-                    rw.commit().unwrap();
-                }
 
-                // Benchmark: query with range condition
-                let _resident_vec: ResidentVec<BenchData> =
-                    db.resident_vec(DataCondition::range(BenchDataKey::name, "item_0100".to_string()..="item_0200".to_string())).unwrap();
-            });
-        });
+                    // Benchmark: query with range condition
+                    let _resident_vec: ResidentVec<BenchData> = db
+                        .resident_vec(DataCondition::range(
+                            BenchDataKey::name,
+                            "item_0100".to_string()..="item_0200".to_string(),
+                        ))
+                        .unwrap();
+                });
+            },
+        );
     }
     group.finish();
 }
@@ -263,33 +294,39 @@ fn bench_listener_overhead(c: &mut Criterion) {
     let mut group = c.benchmark_group("listener_overhead");
 
     for listener_count in [0, 1, 5, 10].iter() {
-        group.bench_with_input(BenchmarkId::from_parameter(listener_count), listener_count, |b, &count| {
-            b.to_async(&runtime).iter(|| async move {
-                let database = create_test_db();
-                let db = database.realm(RealmName::default()).unwrap();
-                let resident_vec: ResidentVec<BenchData> = db.resident_vec(()).unwrap();
+        group.bench_with_input(
+            BenchmarkId::from_parameter(listener_count),
+            listener_count,
+            |b, &count| {
+                b.to_async(&runtime).iter(|| async move {
+                    let database = create_test_db();
+                    let db = database.realm(RealmName::default()).unwrap();
+                    let resident_vec: ResidentVec<BenchData> = db.resident_vec(()).unwrap();
 
-                // Setup: register listeners
-                for _ in 0..count {
-                    let counter = Arc::new(AtomicUsize::new(0));
-                    resident_vec.listen(move |_event| {
-                        counter.fetch_add(1, Ordering::SeqCst);
-                    });
-                }
+                    // Setup: register listeners
+                    for _ in 0..count {
+                        let counter = Arc::new(AtomicUsize::new(0));
+                        resident_vec.listen(move |_event| {
+                            counter.fetch_add(1, Ordering::SeqCst);
+                        });
+                    }
 
-                // Benchmark: push with listeners active
-                for i in 0..10 {
-                    resident_vec.push(BenchData {
-                        name: format!("item_{}", i),
-                        value: i,
-                        data: vec![0u8; 100],
-                        ..Default::default()
-                    }).unwrap();
-                }
+                    // Benchmark: push with listeners active
+                    for i in 0..10 {
+                        resident_vec
+                            .push(BenchData {
+                                name: format!("item_{}", i),
+                                value: i,
+                                data: vec![0u8; 100],
+                                ..Default::default()
+                            })
+                            .unwrap();
+                    }
 
-                tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-            });
-        });
+                    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+                });
+            },
+        );
     }
     group.finish();
 }
@@ -301,24 +338,30 @@ fn bench_temporal_data(c: &mut Criterion) {
 
     for revision_count in [10, 50, 100].iter() {
         group.throughput(Throughput::Elements(*revision_count as u64));
-        group.bench_with_input(BenchmarkId::from_parameter(revision_count), revision_count, |b, &count| {
-            b.to_async(&runtime).iter(|| async move {
-                let database = create_test_db();
-                let db = database.realm(RealmName::default()).unwrap();
-                let resident: Resident<BenchTemporalData> = db.resident(()).unwrap();
+        group.bench_with_input(
+            BenchmarkId::from_parameter(revision_count),
+            revision_count,
+            |b, &count| {
+                b.to_async(&runtime).iter(|| async move {
+                    let database = create_test_db();
+                    let db = database.realm(RealmName::default()).unwrap();
+                    let resident: Resident<BenchTemporalData> = db.resident(()).unwrap();
 
-                // Create multiple revisions
-                for i in 0..count {
-                    resident.update(|data| {
-                        data.value = i;
-                        Ok(())
-                    }).unwrap();
-                }
+                    // Create multiple revisions
+                    for i in 0..count {
+                        resident
+                            .update(|data| {
+                                data.value = i;
+                                Ok(())
+                            })
+                            .unwrap();
+                    }
 
-                // Query history
-                let _history = resident.history(DataCreation::all()).unwrap();
-            });
-        });
+                    // Query history
+                    let _history = resident.history(DataCreation::all()).unwrap();
+                });
+            },
+        );
     }
     group.finish();
 }
@@ -330,22 +373,28 @@ fn bench_data_size_impact(c: &mut Criterion) {
 
     for data_size in [100, 1000, 10000].iter() {
         group.throughput(Throughput::Bytes(*data_size as u64));
-        group.bench_with_input(BenchmarkId::from_parameter(data_size), data_size, |b, &size| {
-            b.to_async(&runtime).iter(|| async move {
-                let database = create_test_db();
-                let db = database.realm(RealmName::default()).unwrap();
-                let resident_vec: ResidentVec<BenchData> = db.resident_vec(()).unwrap();
+        group.bench_with_input(
+            BenchmarkId::from_parameter(data_size),
+            data_size,
+            |b, &size| {
+                b.to_async(&runtime).iter(|| async move {
+                    let database = create_test_db();
+                    let db = database.realm(RealmName::default()).unwrap();
+                    let resident_vec: ResidentVec<BenchData> = db.resident_vec(()).unwrap();
 
-                for i in 0..10 {
-                    resident_vec.push(BenchData {
-                        name: format!("item_{}", i),
-                        value: i,
-                        data: vec![0u8; size],
-                        ..Default::default()
-                    }).unwrap();
-                }
-            });
-        });
+                    for i in 0..10 {
+                        resident_vec
+                            .push(BenchData {
+                                name: format!("item_{}", i),
+                                value: i,
+                                data: vec![0u8; size],
+                                ..Default::default()
+                            })
+                            .unwrap();
+                    }
+                });
+            },
+        );
     }
     group.finish();
 }
@@ -357,23 +406,28 @@ fn bench_transaction_throughput(c: &mut Criterion) {
 
     for batch_size in [1, 10, 100].iter() {
         group.throughput(Throughput::Elements(*batch_size as u64));
-        group.bench_with_input(BenchmarkId::from_parameter(batch_size), batch_size, |b, &size| {
-            b.to_async(&runtime).iter(|| async move {
-                let database = create_test_db();
-                let db = database.realm(RealmName::default()).unwrap();
+        group.bench_with_input(
+            BenchmarkId::from_parameter(batch_size),
+            batch_size,
+            |b, &size| {
+                b.to_async(&runtime).iter(|| async move {
+                    let database = create_test_db();
+                    let db = database.realm(RealmName::default()).unwrap();
 
-                let rw = db.rw_transaction().unwrap();
-                for i in 0..size {
-                    rw.insert(BenchData {
-                        name: format!("item_{}", i),
-                        value: i,
-                        data: vec![0u8; 100],
-                        ..Default::default()
-                    }).unwrap();
-                }
-                rw.commit().unwrap();
-            });
-        });
+                    let rw = db.rw_transaction().unwrap();
+                    for i in 0..size {
+                        rw.insert(BenchData {
+                            name: format!("item_{}", i),
+                            value: i,
+                            data: vec![0u8; 100],
+                            ..Default::default()
+                        })
+                        .unwrap();
+                    }
+                    rw.commit().unwrap();
+                });
+            },
+        );
     }
     group.finish();
 }
@@ -390,10 +444,12 @@ fn bench_watcher_latency(c: &mut Criterion) {
 
             // Measure time from update to watcher processing
             let start = std::time::Instant::now();
-            resident.update(|data| {
-                data.value = 42;
-                Ok(())
-            }).unwrap();
+            resident
+                .update(|data| {
+                    data.value = 42;
+                    Ok(())
+                })
+                .unwrap();
 
             // Wait for watcher to process
             tokio::time::sleep(tokio::time::Duration::from_micros(100)).await;

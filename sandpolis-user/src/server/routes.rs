@@ -8,6 +8,7 @@ use crate::{
     server::PasswordData,
 };
 use anyhow::Result;
+use aws_lc_rs::pbkdf2;
 use axum::{
     Json,
     extract::{self, State},
@@ -15,7 +16,6 @@ use axum::{
 use axum_extra::TypedHeader;
 use futures::stream::StreamExt;
 use jsonwebtoken::{Header, encode};
-use aws_lc_rs::pbkdf2;
 use sandpolis_core::RealmName;
 use sandpolis_network::RequestResult;
 use std::time::{Duration, SystemTime};

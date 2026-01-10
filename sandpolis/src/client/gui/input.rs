@@ -62,7 +62,7 @@ pub fn handle_zoom(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut mouse_wheel_input: EventReader<MouseWheel>,
     mut zoom_level: ResMut<ZoomLevel>,
-    mut sprites: Query<&mut Sprite>,
+    mut camera_query: Query<&mut Projection, With<Camera2d>>,
 ) {
     let mut zoom_delta = 0.0;
     for mouse_wheel_event in mouse_wheel_input.read() {
@@ -73,11 +73,11 @@ pub fn handle_zoom(
         **zoom_level =
             (zoom_level.0 + zoom_delta).clamp(CAMERA_ZOOM_RANGE.start, CAMERA_ZOOM_RANGE.end);
 
-        for mut sprite in sprites.iter_mut() {
-            sprite.custom_size = Some(Vec2 {
-                x: zoom_level.0 * SPRITE_SIZE,
-                y: zoom_level.0 * SPRITE_SIZE,
-            });
+        // Update camera's orthographic projection scale
+        if let Ok(mut projection) = camera_query.single_mut() {
+            if let Projection::Orthographic(ortho) = projection.as_mut() {
+                ortho.scale = zoom_level.0;
+            }
         }
     }
 }

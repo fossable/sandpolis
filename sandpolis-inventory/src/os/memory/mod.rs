@@ -7,6 +7,7 @@ pub mod agent;
 
 // TODO id conflict
 #[data(id = 1000)]
+#[derive(Default)]
 pub struct MemoryData {
     /// The amount of physical RAM in bytes
     pub total: u64,
@@ -30,21 +31,3 @@ pub struct MemoryData {
     pub swap_free: u64,
 }
 
-impl Default for MemoryData {
-    fn default() -> Self {
-        Self {
-            total: 0,
-            free: 0,
-            file_buffers: 0,
-            cached: 0,
-            swap_cached: 0,
-            active: 0,
-            inactive: 0,
-            swap_total: 0,
-            swap_free: 0,
-            _id: Default::default(),
-            _revision: Default::default(),
-            _creation: Default::default(),
-        }
-    }
-}

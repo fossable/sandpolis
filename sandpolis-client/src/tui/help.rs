@@ -70,7 +70,7 @@ impl HelpWidget {
             // Worst case: assume very narrow terminal, so each keybinding might need its
             // own line This ensures we always get enough space
             (self.keybindings.len() as u16).min(3).max(1) // Cap at 3 lines but
-                                                          // ensure at least 1
+            // ensure at least 1
         }
     }
 

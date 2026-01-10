@@ -11,7 +11,9 @@ use ratatui::{
     },
 };
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
-use sandpolis_client::tui::{EventHandler, Panel, help::HelpWidget, loading::LoadingWidget, resident_vec::ResidentVecWidget};
+use sandpolis_client::tui::{
+    EventHandler, Panel, help::HelpWidget, loading::LoadingWidget, resident_vec::ResidentVecWidget,
+};
 use sandpolis_core::UserName;
 use sandpolis_database::{Data, DataCreation, DataIdentifier, Resident, ResidentVecEvent};
 use sandpolis_network::ServerUrl;
@@ -140,12 +142,7 @@ impl WidgetRef for ServerListWidget {
 
         // Render banner
         if let Some(ref mut banner_image) = state.default_banner_image {
-            StatefulWidget::render(
-                StatefulImage::default(),
-                banner_area,
-                buf,
-                banner_image,
-            );
+            StatefulWidget::render(StatefulImage::default(), banner_area, buf, banner_image);
         }
 
         // Drop the lock before rendering the list widget to avoid deadlock
@@ -332,16 +329,23 @@ impl EventHandler for ServerListWidget {
                                     debug!(address = %server_data.address, "Connecting to server");
 
                                     tokio::spawn(async move {
-                                        match server_layer.connect(server_data.address.clone()).await {
+                                        match server_layer
+                                            .connect(server_data.address.clone())
+                                            .await
+                                        {
                                             Ok(connection) => {
-                                                debug!("Connected successfully, attempting authentication with saved token");
+                                                debug!(
+                                                    "Connected successfully, attempting authentication with saved token"
+                                                );
                                                 // TODO: Use the saved token to authenticate
                                                 // For now, just transition to Connected state
-                                                state_clone.write().unwrap().mode = ServerListWidgetMode::Connected;
+                                                state_clone.write().unwrap().mode =
+                                                    ServerListWidgetMode::Connected;
                                             }
                                             Err(e) => {
                                                 debug!(error = %e, "Failed to connect to server");
-                                                state_clone.write().unwrap().mode = ServerListWidgetMode::Normal;
+                                                state_clone.write().unwrap().mode =
+                                                    ServerListWidgetMode::Normal;
                                             }
                                         }
                                     });
@@ -351,7 +355,9 @@ impl EventHandler for ServerListWidget {
                             _ => {
                                 // Delegate navigation events to the ResidentVecWidget
                                 drop(state);
-                                if let Some(unhandled_event) = self.server_list_widget.write().unwrap().handle_event(event) {
+                                if let Some(unhandled_event) =
+                                    self.server_list_widget.write().unwrap().handle_event(event)
+                                {
                                     return Some(unhandled_event);
                                 }
                                 return None;
@@ -448,7 +454,8 @@ impl EventHandler for ServerListWidget {
                                         Err(e) => {
                                             debug!(error = %e, "Connection failed");
                                             // TODO show connection failed dialog
-                                            state.write().unwrap().mode = ServerListWidgetMode::Normal;
+                                            state.write().unwrap().mode =
+                                                ServerListWidgetMode::Normal;
                                         }
                                     }
                                 });

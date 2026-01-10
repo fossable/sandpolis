@@ -1,9 +1,9 @@
+use crate::PowerLayer;
 use crate::messages::PowerRequest;
 use crate::messages::PowerResponse;
-use crate::PowerLayer;
+use axum::Json;
 use axum::extract;
 use axum::extract::State;
-use axum::Json;
 
 /// Modify the agent's current power state (shutdown, reboot, etc).
 #[axum_macros::debug_handler]

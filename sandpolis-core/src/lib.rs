@@ -12,7 +12,8 @@ use strum::{EnumIter, IntoEnumIterator};
 use uuid::Uuid;
 use validator::{Validate, ValidationErrors};
 
-static REALM_NAME_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new("^[a-z0-9]{4,32}$").unwrap());
+static REALM_NAME_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new("^[a-z0-9]{4,32}$").unwrap());
 static USER_NAME_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new("^[a-z0-9]{4,32}$").unwrap());
 
 /// Format a UUID in the usual "lowercase hex encoded with hyphens" style.
@@ -98,7 +99,7 @@ pub struct InstanceId(u128);
 impl InstanceId {
     /// Generate a new instance ID for an instance of the given type(s).
     pub fn new(instance_types: &[InstanceType]) -> Self {
-        if instance_types.len() == 0 {
+        if instance_types.is_empty() {
             panic!("No instance type given");
         }
 

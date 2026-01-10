@@ -1,6 +1,7 @@
+use super::components::NodeEntity;
 use bevy::prelude::*;
 use bevy_rapier2d::{
-    dynamics::RigidBody,
+    dynamics::{Damping, ExternalForce, RigidBody, Velocity},
     geometry::{Collider, Restitution},
 };
 use bevy_svg::prelude::Svg2d;
@@ -9,10 +10,15 @@ use sandpolis_core::InstanceId;
 #[derive(Bundle)]
 pub struct Node {
     pub id: InstanceId,
+    pub node_entity: NodeEntity,
     pub collider: Collider,
     pub rigid_body: RigidBody,
+    pub velocity: Velocity,
+    pub external_force: ExternalForce,
+    pub damping: Damping,
     pub svg: Svg2d,
     pub restitution: Restitution,
+    pub transform: Transform,
 }
 
 pub fn spawn_node(
@@ -21,24 +27,45 @@ pub fn spawn_node(
     instance_id: InstanceId,
     os_type: os_info::Type,
 ) {
+    // Random initial position for new nodes
+    let x = (rand::random::<f32>() - 0.5) * 500.0;
+    let y = (rand::random::<f32>() - 0.5) * 500.0;
+
     commands.spawn(Node {
         id: instance_id,
+        node_entity: NodeEntity { instance_id },
         collider: Collider::ball(50.0),
         rigid_body: RigidBody::Dynamic,
+        velocity: Velocity::zero(),
+        external_force: ExternalForce::default(),
+        damping: Damping {
+            linear_damping: 0.0,  // Layout system will handle damping
+            angular_damping: 1.0, // Prevent rotation
+        },
         restitution: Restitution::coefficient(0.7),
         svg: Svg2d(asset_server.load(get_os_image(os_type))),
+        transform: Transform::from_xyz(x, y, 0.0),
     });
 }
 
 pub fn get_os_image(os_type: os_info::Type) -> String {
     match os_type {
-        // Additional versions
-        os_info::Type::Android => todo!(),
-        // Additional versions
-        os_info::Type::Macos => todo!(),
-        // Additional versions
-        os_info::Type::Windows => todo!(),
-        _ => format!("os/{}.svg", os_type.to_string()),
+        os_info::Type::Android => "os/Android.svg",
+        os_info::Type::Macos => "os/macOS.svg",
+        os_info::Type::Windows => "os/Windows.svg",
+        os_info::Type::Arch => "os/Arch Linux.svg",
+        os_info::Type::NixOS => "os/NixOS.svg",
+        // Check if SUSE exists in the enum, otherwise fallback
+        // Note: os_info::Type enum may not have SLES
+        _ => {
+            // Try to match based on string representation
+            let os_str = os_type.to_string();
+            if os_str.contains("SUSE") {
+                "os/SUSE Linux Enterprise Server.svg"
+            } else {
+                "os/Unknown.svg"
+            }
+        }
     }
     .to_string()
 }
@@ -51,8 +78,8 @@ pub struct WindowStack {}
 pub fn handle_window_stacks(
     commands: Commands,
     // mut contexts: EguiContexts,
-    mut nodes: Query<(&mut Transform, (&InstanceId, &WindowStack)), With<InstanceId>>,
-    mut windows: Query<&mut Window>,
+    nodes: Query<(&mut Transform, (&InstanceId, &WindowStack)), With<InstanceId>>,
+    windows: Query<&mut Window>,
     cameras: Query<&Transform, (With<Camera2d>, Without<InstanceId>)>,
 ) {
     // let window_size = windows.single_mut().size();

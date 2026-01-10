@@ -93,7 +93,7 @@ impl ShellSession {
             },
             rv_b = (&mut stdin_task) => {
                 match rv_b {
-                    Ok(b) => todo!(),
+                    Ok(_) => todo!(),
                     Err(b) => todo!()
                 }
                 stdout_task.abort();

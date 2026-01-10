@@ -1,8 +1,6 @@
 use crate::messages::{PollRequest, PollResponse};
-use anyhow::Context;
 use anyhow::Result;
 use anyhow::anyhow;
-use anyhow::bail;
 use axum::http::HeaderValue;
 use chrono::{DateTime, Utc};
 use config::NetworkLayerConfig;
@@ -15,7 +13,6 @@ use native_model::Model;
 use reqwest::ClientBuilder;
 use reqwest::Method;
 use reqwest::header::CONTENT_TYPE;
-use reqwest_websocket::RequestBuilderExt;
 use sandpolis_core::ClusterId;
 use sandpolis_core::{InstanceId, RealmName};
 use sandpolis_database::DatabaseLayer;

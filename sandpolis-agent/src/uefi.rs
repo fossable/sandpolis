@@ -73,7 +73,8 @@ impl UefiVariable {
     /// * `data` - The variable data as a byte vector
     /// * `attributes` - The variable attributes as u32
     pub fn get(&self) -> Result<(Vec<u8>, u32)> {
-        let var_path = PathBuf::from(EFIVARS_PATH).join(format!("{}-{}", self.name(), self.vendor_guid()));
+        let var_path =
+            PathBuf::from(EFIVARS_PATH).join(format!("{}-{}", self.name(), self.vendor_guid()));
 
         let raw_data = fs::read(&var_path)
             .with_context(|| format!("Failed to read UEFI variable: {}", var_path.display()))?;
@@ -98,7 +99,8 @@ impl UefiVariable {
     /// # Note
     /// This requires root privileges and the efivarfs to be mounted read-write.
     pub fn set(&self, attributes: u32, data: &[u8]) -> Result<()> {
-        let var_path = PathBuf::from(EFIVARS_PATH).join(format!("{}-{}", self.name(), self.vendor_guid()));
+        let var_path =
+            PathBuf::from(EFIVARS_PATH).join(format!("{}-{}", self.name(), self.vendor_guid()));
 
         // Construct the data with attributes header
         let mut raw_data = Vec::with_capacity(4 + data.len());
@@ -116,8 +118,7 @@ impl UefiVariable {
     /// # Returns
     /// A vector of UefiVariable instances for each available variable.
     pub fn list() -> Result<Vec<UefiVariable>> {
-        let entries = fs::read_dir(EFIVARS_PATH)
-            .context("Failed to read efivars directory")?;
+        let entries = fs::read_dir(EFIVARS_PATH).context("Failed to read efivars directory")?;
 
         let mut variables = Vec::new();
 
@@ -127,8 +128,8 @@ impl UefiVariable {
             let filename_str = filename.to_string_lossy();
 
             // Parse filename format: "VariableName-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-            if let Some(dash_pos) = filename_str.rfind('-') {
-                if dash_pos >= 36 {
+            if let Some(dash_pos) = filename_str.rfind('-')
+                && dash_pos >= 36 {
                     let guid_start = dash_pos - 35;
                     let name = filename_str[..guid_start - 1].to_string();
                     let guid = filename_str[guid_start..].to_string();
@@ -151,18 +152,26 @@ impl UefiVariable {
                                 if let Ok(num) = u16::from_str_radix(&n[4..], 16) {
                                     UefiVariable::BootEntry(num)
                                 } else {
-                                    UefiVariable::Other { name, vendor_guid: guid }
+                                    UefiVariable::Other {
+                                        name,
+                                        vendor_guid: guid,
+                                    }
                                 }
                             }
-                            _ => UefiVariable::Other { name, vendor_guid: guid },
+                            _ => UefiVariable::Other {
+                                name,
+                                vendor_guid: guid,
+                            },
                         }
                     } else {
-                        UefiVariable::Other { name, vendor_guid: guid }
+                        UefiVariable::Other {
+                            name,
+                            vendor_guid: guid,
+                        }
                     };
 
                     variables.push(var);
                 }
-            }
         }
 
         Ok(variables)

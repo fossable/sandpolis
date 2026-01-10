@@ -1,4 +1,5 @@
 use anyhow::{Result, anyhow, bail};
+use aws_lc_rs::pbkdf2;
 use axum::{
     RequestPartsExt, Router,
     extract::FromRequestParts,
@@ -14,7 +15,6 @@ use native_db::ToKey;
 use native_model::Model;
 use passwords::PasswordGenerator;
 use rand::Rng;
-use aws_lc_rs::pbkdf2;
 use sandpolis_core::{RealmName, UserName};
 
 const SHA256_OUTPUT_LEN: usize = 32;

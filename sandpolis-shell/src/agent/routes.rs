@@ -1,20 +1,15 @@
 use anyhow::Result;
 use axum::{
+    Json,
     extract::{self, ws::WebSocketUpgrade},
     http::StatusCode,
-    Json,
 };
 use sandpolis_network::RequestResult;
 use std::time::Duration;
-use tokio::{
-    process::Command,
-    time::timeout,
-};
+use tokio::{process::Command, time::timeout};
 
 use super::ShellSession;
-use crate::messages::{
-    ShellExecuteRequest, ShellExecuteResponse, ShellSessionRequest,
-};
+use crate::messages::{ShellExecuteRequest, ShellExecuteResponse, ShellSessionRequest};
 
 #[axum_macros::debug_handler]
 pub async fn session(

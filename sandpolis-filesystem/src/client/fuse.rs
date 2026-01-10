@@ -1,12 +1,12 @@
 use anyhow::Result;
 use fuser::{
     FileAttr, FileType, Filesystem, MountOption, ReplyAttr, ReplyData, ReplyDirectory, ReplyEntry,
-    Request, TimeOrNow,
+    Request,
 };
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 
 const TTL: Duration = Duration::from_secs(1);
 const ROOT_INO: u64 = 1;
@@ -60,7 +60,7 @@ impl FuseNode {
             attr: FileAttr {
                 ino,
                 size,
-                blocks: (size + 511) / 512,
+                blocks: size.div_ceil(512),
                 atime: ts,
                 mtime: ts,
                 ctime: ts,
@@ -114,11 +114,10 @@ impl SandpolisFilesystem {
 
     fn add_child(&self, parent_ino: u64, child_ino: u64) {
         let mut nodes = self.nodes.lock().unwrap();
-        if let Some(parent) = nodes.get_mut(&parent_ino) {
-            if !parent.children.contains(&child_ino) {
+        if let Some(parent) = nodes.get_mut(&parent_ino)
+            && !parent.children.contains(&child_ino) {
                 parent.children.push(child_ino);
             }
-        }
     }
 
     pub fn add_file<P: AsRef<str>>(&self, path: P, data: Vec<u8>) -> Result<u64> {
@@ -176,12 +175,11 @@ impl Filesystem for SandpolisFilesystem {
     fn lookup(&mut self, _req: &Request, parent: u64, name: &OsStr, reply: ReplyEntry) {
         if let Some(parent_node) = self.get_node(parent) {
             for &child_ino in &parent_node.children {
-                if let Some(child_node) = self.get_node(child_ino) {
-                    if child_node.name == name.to_string_lossy() {
+                if let Some(child_node) = self.get_node(child_ino)
+                    && child_node.name == name.to_string_lossy() {
                         reply.entry(&TTL, &child_node.attr, 0);
                         return;
                     }
-                }
             }
         }
         reply.error(2);

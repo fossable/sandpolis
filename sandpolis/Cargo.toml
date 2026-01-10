@@ -63,6 +63,7 @@ tui-popup = { workspace = true, optional = true }
 
 # GUI client exclusive
 bevy = { workspace = true, optional = true }
+bevy_egui = { workspace = true, optional = true }
 bevy_svg = { workspace = true, optional = true, features = ["2d"] }
 bevy_rapier2d = { workspace = true, optional = true }
 
@@ -133,6 +134,7 @@ default = [
 client-gui = [
   "client",
   "dep:bevy",
+  "dep:bevy_egui",
   "dep:bevy_svg",
   "dep:bevy_rapier2d",
   "sandpolis-core/client-gui",
@@ -161,3 +163,27 @@ client-tui = [
 [[example]]
 name = "client_tui_server_list"
 required-features = ["client-tui", "server"]
+
+[[example]]
+name = "client_gui_basic"
+required-features = ["client-gui"]
+
+[[example]]
+name = "client_gui_layout"
+required-features = ["client-gui"]
+
+[[example]]
+name = "client_gui_filesystem"
+required-features = ["client-gui", "layer-filesystem"]
+
+[[example]]
+name = "client_gui_network"
+required-features = ["client-gui"]
+
+[[example]]
+name = "client_gui_activity"
+required-features = ["client-gui"]
+
+[[example]]
+name = "client_gui_controllers"
+required-features = ["client-gui"]

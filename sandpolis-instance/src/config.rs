@@ -28,8 +28,8 @@ impl InstanceConfig {
             .expect("Socket directory is defined if you're calling me");
 
         // If the socket directory doesn't exist, create it
-        if !std::fs::exists(&socket_directory)? {
-            std::fs::create_dir_all(&socket_directory)?;
+        if !std::fs::exists(socket_directory)? {
+            std::fs::create_dir_all(socket_directory)?;
         }
 
         let socket = socket_directory.join(filename);

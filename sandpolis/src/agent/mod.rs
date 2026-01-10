@@ -1,5 +1,5 @@
 use crate::{InstanceState, config::Configuration};
-use anyhow::{Result, bail};
+use anyhow::Result;
 use axum::{
     Router,
     routing::{any, get, post},
@@ -44,10 +44,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     // Inventory layer routes
     #[cfg(feature = "layer-inventory")]
-    let app = app.nest(
-        "/layer/inventory",
-        sandpolis_inventory::agent::routes(),
-    );
+    let app = app.nest("/layer/inventory", sandpolis_inventory::agent::routes());
 
     // Desktop layer routes
     #[cfg(feature = "layer-desktop")]
@@ -66,7 +63,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         );
 
         let uds =
-            tokio::net::UnixListener::bind(&format!("{}/agent.sock", socket_directory.display()))?;
+            tokio::net::UnixListener::bind(format!("{}/agent.sock", socket_directory.display()))?;
         let handle = tokio::spawn(async move {
             axum::serve(uds, app.with_state(state).into_make_service()).await
         });
@@ -75,7 +72,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
                 result?;
             }
         };
-    } else {
-    }
+    } 
     Ok(())
 }

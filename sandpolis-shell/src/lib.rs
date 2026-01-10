@@ -5,8 +5,8 @@ use sandpolis_core::InstanceId;
 use sandpolis_database::DatabaseLayer;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 #[cfg(feature = "agent")]

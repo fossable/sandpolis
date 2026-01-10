@@ -4,7 +4,6 @@
 
 use anyhow::Result;
 use sandpolis_database::DatabaseLayer;
-use serde::{Deserialize, Serialize};
 
 pub mod config;
 

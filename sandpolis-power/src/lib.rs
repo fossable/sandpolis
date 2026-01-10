@@ -1,7 +1,7 @@
 use anyhow::Result;
 use messages::{PowerRequest, PowerResponse};
-use sandpolis_core::RealmName;
 use sandpolis_core::InstanceId;
+use sandpolis_core::RealmName;
 use sandpolis_network::NetworkLayer;
 use serde::{Deserialize, Serialize};
 

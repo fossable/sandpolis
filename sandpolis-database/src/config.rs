@@ -56,18 +56,16 @@ impl DatabaseConfig {
                 bail!("Storage directory must be a directory");
             }
             Ok(Some(path))
+        } else if self.ephemeral {
+            Ok(None)
         } else {
-            if self.ephemeral {
-                Ok(None)
-            } else {
-                let path = Self::default().storage.unwrap();
-                if !std::fs::exists(&path)? {
-                    std::fs::create_dir_all(&path)?;
-                } else if !std::fs::metadata(&path)?.is_dir() {
-                    bail!("Storage directory must be a directory");
-                }
-                Ok(Some(path))
+            let path = Self::default().storage.unwrap();
+            if !std::fs::exists(&path)? {
+                std::fs::create_dir_all(&path)?;
+            } else if !std::fs::metadata(&path)?.is_dir() {
+                bail!("Storage directory must be a directory");
             }
+            Ok(Some(path))
         }
     }
 }

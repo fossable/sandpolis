@@ -2,12 +2,11 @@
 //     include_str!("../README.md")
 // }
 
-use anyhow::bail;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 #[cfg(any(feature = "client", feature = "server"))]
 use argon2::{
     Argon2,
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{PasswordHasher, SaltString},
 };
 use base64::prelude::*;
 use native_db::ToKey;
@@ -16,12 +15,10 @@ use sandpolis_core::ClusterId;
 use sandpolis_core::RealmName;
 use sandpolis_core::UserName;
 use sandpolis_database::Resident;
-use sandpolis_database::ResidentVec;
 use sandpolis_database::{Data, DatabaseLayer};
 use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::net::SocketAddr;
 use tracing::debug;
 use validator::Validate;

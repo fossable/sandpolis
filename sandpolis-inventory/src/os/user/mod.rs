@@ -8,6 +8,7 @@ pub mod agent;
 
 /// Information about an "operating-system" level user account.
 #[data]
+#[derive(Default)]
 pub struct UserData {
     #[secondary_key]
     pub _instance_id: InstanceId,
@@ -28,19 +29,3 @@ pub struct UserData {
     pub username: Option<String>,
 }
 
-impl Default for UserData {
-    fn default() -> Self {
-        Self {
-            _instance_id: Default::default(),
-            description: None,
-            directory: None,
-            gid: 0,
-            shell: None,
-            uid: 0,
-            username: None,
-            _id: Default::default(),
-            _revision: Default::default(),
-            _creation: Default::default(),
-        }
-    }
-}

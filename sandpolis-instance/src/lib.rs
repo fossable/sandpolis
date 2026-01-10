@@ -4,7 +4,7 @@ use native_model::Model;
 use sandpolis_core::{ClusterId, InstanceId, RealmName};
 use sandpolis_database::{DatabaseLayer, Resident};
 use sandpolis_macros::data;
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
 pub mod cli;

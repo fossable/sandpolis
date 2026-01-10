@@ -1,5 +1,5 @@
-use anyhow::{anyhow, Result};
-use base64::{engine::general_purpose, Engine as _};
+use anyhow::{Result, anyhow};
+use base64::{Engine as _, engine::general_purpose};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -23,21 +23,27 @@ pub struct Shell {
 impl Shell {
     fn known_paths() -> HashMap<&'static str, HashSet<ShellCapability>> {
         let mut paths = HashMap::new();
-        
+
         // Bash
         paths.insert("/bin/bash", [ShellCapability::Bash].into());
-        
+
         // Windows CMD
         paths.insert("C:/Windows/System32/cmd.exe", [ShellCapability::Cmd].into());
-        
+
         // PowerShell
         paths.insert("/usr/bin/pwsh", [ShellCapability::Pwsh].into());
-        paths.insert("C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", [ShellCapability::Pwsh].into());
-        paths.insert("C:/Windows/SysWOW64/WindowsPowerShell/v1.0/powershell.exe", [ShellCapability::Pwsh].into());
-        
+        paths.insert(
+            "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+            [ShellCapability::Pwsh].into(),
+        );
+        paths.insert(
+            "C:/Windows/SysWOW64/WindowsPowerShell/v1.0/powershell.exe",
+            [ShellCapability::Pwsh].into(),
+        );
+
         // ZSH
         paths.insert("/usr/bin/zsh", [ShellCapability::Zsh].into());
-        
+
         paths
     }
 
@@ -61,52 +67,48 @@ impl Shell {
         let mut version = None;
 
         // Check version output
-        if let Ok(output) = Command::new(&executable).arg("--version").output() {
-            if output.status.success() {
+        if let Ok(output) = Command::new(&executable).arg("--version").output()
+            && output.status.success() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
-                
+
                 if stdout.starts_with("zsh") {
                     capabilities.insert(ShellCapability::Zsh);
                     capabilities.insert(ShellCapability::Bash);
                     capabilities.insert(ShellCapability::Sh);
                 }
-                
+
                 if stdout.starts_with("GNU bash,") {
                     capabilities.insert(ShellCapability::Bash);
                     capabilities.insert(ShellCapability::Sh);
                 }
-                
+
                 // Extract version if possible
                 version = Some(stdout.lines().next().unwrap_or("").to_string());
             }
-        }
 
         // Check help output if we need more information
-        if capabilities.is_empty() {
-            if let Ok(output) = Command::new(&executable).arg("--help").output() {
-                if output.status.success() {
+        if capabilities.is_empty()
+            && let Ok(output) = Command::new(&executable).arg("--help").output()
+                && output.status.success() {
                     let stdout = String::from_utf8_lossy(&output.stdout);
-                    
+
                     if stdout.starts_with("Usage: zsh") {
                         capabilities.insert(ShellCapability::Zsh);
                         capabilities.insert(ShellCapability::Bash);
                         capabilities.insert(ShellCapability::Sh);
                     }
-                    
+
                     if stdout.starts_with("GNU bash,") {
                         capabilities.insert(ShellCapability::Bash);
                         capabilities.insert(ShellCapability::Sh);
                     }
                 }
-            }
-        }
 
         // If still no capabilities found, try to infer from known paths
-        if capabilities.is_empty() {
-            if let Some(known_caps) = Self::known_paths().get(executable.to_str().unwrap_or("")) {
+        if capabilities.is_empty()
+            && let Some(known_caps) = Self::known_paths().get(executable.to_str().unwrap_or("")) {
                 capabilities = known_caps.clone();
             }
-        }
 
         Ok(Shell {
             executable,
@@ -121,15 +123,17 @@ impl Shell {
         if self.capabilities.contains(&ShellCapability::Sh) {
             // Use base64 encoding for POSIX shells to handle special characters
             let encoded_command = general_purpose::STANDARD.encode(command.as_bytes());
-            cmd.arg("-c")
-               .arg(format!("echo {} | base64 --decode | {}", 
-                          encoded_command, 
-                          self.executable.display()));
+            cmd.arg("-c").arg(format!(
+                "echo {} | base64 --decode | {}",
+                encoded_command,
+                self.executable.display()
+            ));
         } else if self.capabilities.contains(&ShellCapability::Cmd) {
             cmd.arg("/C").arg(command);
         } else if self.capabilities.contains(&ShellCapability::Pwsh) {
             // PowerShell expects UTF-16LE for encoded commands
-            let utf16_bytes: Vec<u8> = command.encode_utf16()
+            let utf16_bytes: Vec<u8> = command
+                .encode_utf16()
                 .flat_map(|u| u.to_le_bytes().to_vec())
                 .collect();
             let encoded_command = general_purpose::STANDARD.encode(&utf16_bytes);
@@ -162,14 +166,15 @@ impl Shell {
                 false
             }
         }
-        
+
         #[cfg(windows)]
         {
             // On Windows, check if it's a .exe, .cmd, .bat file or if it exists
             path.extension()
                 .and_then(|ext| ext.to_str())
                 .map(|ext| matches!(ext.to_lowercase().as_str(), "exe" | "cmd" | "bat" | "ps1"))
-                .unwrap_or(false) || path.exists()
+                .unwrap_or(false)
+                || path.exists()
         }
     }
 }

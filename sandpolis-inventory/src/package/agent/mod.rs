@@ -1,6 +1,5 @@
 use super::PackageData;
-use anyhow::{bail, Result};
-use axum::Router;
+use anyhow::{Result, bail};
 use std::path::PathBuf;
 
 pub(crate) trait PackageManager {

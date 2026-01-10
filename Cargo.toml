@@ -92,5 +92,6 @@ tui-popup = { version = "0.6.0" }
 
 # GUI client exclusive
 bevy = { version = "0.17.3" }
+bevy_egui = { version = "0.38.1" }
 bevy_svg = { version = "0.17.1", features = ["2d"] }
 bevy_rapier2d = { version = "0.32.0" }

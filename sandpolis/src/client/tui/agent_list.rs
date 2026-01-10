@@ -47,9 +47,7 @@ impl WidgetRef for AgentListWidget {
     fn render_ref(&self, area: Rect, buf: &mut Buffer) {
         let state = self.state.read().unwrap();
 
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .title("Agent List");
+        let block = Block::default().borders(Borders::ALL).title("Agent List");
 
         let [list_area, help_area] = Layout::vertical([
             Constraint::Min(1),
