@@ -1,6 +1,6 @@
 use self::{
     components::{DatabaseUpdateChannel, LayerIndicatorState, MinimapViewport, WorldView},
-    input::{LayerChangeTimer, MousePressed},
+    input::{HelpScreenState, LayerChangeTimer, MousePressed},
     node::spawn_node,
 };
 #[cfg(feature = "layer-desktop")]
@@ -13,7 +13,7 @@ use bevy::{
     prelude::*,
     window::{AppLifecycle, WindowMode},
 };
-use bevy_egui::EguiPlugin;
+use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 use bevy_rapier2d::prelude::*;
 
 pub mod activity;
@@ -22,6 +22,7 @@ pub mod controller;
 pub mod drag;
 pub mod edges;
 pub mod input;
+pub mod layer_switcher;
 pub mod layer_ui;
 pub mod layer_visuals;
 pub mod layout;
@@ -30,6 +31,7 @@ pub mod minimap;
 pub mod node;
 pub mod preview;
 pub mod queries;
+pub mod responsive;
 
 /// Only one layer can be selected at a time.
 #[derive(Resource, Deref, DerefMut, Debug)]
@@ -85,6 +87,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(layout::LayoutState::default())
     .insert_resource(drag::DragState::default())
     .insert_resource(controller::NodeControllerState::default())
+    .insert_resource(layer_switcher::LayerSwitcherState::default())
+    .insert_resource(HelpScreenState::default())
     .insert_resource(state)
     .insert_resource(config)
     .insert_resource(MousePressed(false))
@@ -95,10 +99,11 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             // Input handling
             self::input::handle_zoom,
             self::input::handle_camera,
-            self::input::handle_keymap,
             self::input::handle_layer_change,
             button_handler,
             handle_lifetime,
+            // Responsive UI updates
+            responsive::update_responsive_ui,
         ),
     )
     .add_systems(
@@ -122,24 +127,34 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         ),
     )
     .add_systems(
-        PostUpdate,
+        EguiPrimaryContextPass,
         (
-            // UI rendering
+            // UI rendering with egui
             minimap::render_minimap,
             layer_ui::render_layer_indicator,
+            layer_switcher::render_layer_switcher_button,
+            layer_switcher::render_layer_switcher_panel,
             preview::render_node_previews,
+            edges::render_edge_labels,
+            controller::render_node_controller,
+            self::input::handle_keymap,
+        ),
+    )
+    .add_systems(
+        PostUpdate,
+        (
+            // Non-egui systems
+            layer_switcher::handle_layer_switcher_toggle,
             preview::toggle_node_preview_visibility,
             // Edge systems
             edges::render_edges,
             edges::update_edges_for_layer,
             edges::update_edge_visibility,
-            edges::render_edge_labels,
             // Layer visuals
             layer_visuals::update_node_svgs_for_layer,
             layer_visuals::update_node_colors_for_layer,
             // Controller systems
             controller::handle_node_click,
-            controller::render_node_controller,
             controller::close_controller_on_layer_change,
             // Database updates
             process_database_updates,
@@ -194,11 +209,19 @@ fn setup(
     if let Ok(instances) = queries::query_all_instances(&state) {
         for instance_id in instances {
             if let Ok(metadata) = queries::query_instance_metadata(&state, instance_id) {
+                // Spawn local instance at center, others at random positions
+                let position = if metadata.instance_id == state.instance.instance_id {
+                    Some(Vec3::ZERO) // Center of screen
+                } else {
+                    None // Random position
+                };
+
                 spawn_node(
                     &asset_server,
                     &mut commands,
                     metadata.instance_id,
                     metadata.os_type,
+                    position,
                 );
             }
         }
@@ -216,13 +239,14 @@ fn process_database_updates(
     while let Ok(update) = update_channel.receiver.try_recv() {
         match update {
             components::DatabaseUpdate::InstanceAdded(instance_id) => {
-                // Spawn new node
+                // Spawn new node at random position
                 if let Ok(metadata) = queries::query_instance_metadata(&state, instance_id) {
                     spawn_node(
                         &asset_server,
                         &mut commands,
                         metadata.instance_id,
                         metadata.os_type,
+                        None, // Random position for dynamically added nodes
                     );
                 }
             }

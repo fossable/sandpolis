@@ -6,7 +6,7 @@ use bevy_egui::{EguiContexts, egui};
 pub fn render_minimap(
     mut contexts: EguiContexts,
     minimap_viewport: Res<MinimapViewport>,
-    camera_query: Query<&Transform, (With<Camera2d>, With<WorldView>)>,
+    camera_query: Query<(&Transform, &Projection), (With<Camera2d>, With<WorldView>)>,
     node_query: Query<&Transform, (With<NodeEntity>, Without<Camera2d>)>,
     windows: Query<&Window>,
 ) {
@@ -40,39 +40,43 @@ pub fn render_minimap(
                 egui::Color32::from_rgba_unmultiplied(20, 20, 20, 200),
             );
 
-            // Calculate bounds of all nodes to determine minimap scale
-            let mut min_x = f32::MAX;
-            let mut max_x = f32::MIN;
-            let mut min_y = f32::MAX;
-            let mut max_y = f32::MIN;
+            // Get camera position and viewport size
+            let (camera_pos, viewport_half_size) = if let Ok((camera_transform, projection)) = camera_query.single() {
+                let cam_pos = camera_transform.translation.truncate();
+                let half_size = if let Projection::Orthographic(ortho) = projection {
+                    Vec2::new(
+                        ortho.area.width() * ortho.scale / 2.0,
+                        ortho.area.height() * ortho.scale / 2.0,
+                    )
+                } else {
+                    Vec2::new(window_size.x / 2.0, window_size.y / 2.0)
+                };
+                (cam_pos, half_size)
+            } else {
+                (Vec2::ZERO, Vec2::new(window_size.x / 2.0, window_size.y / 2.0))
+            };
 
-            for transform in node_query.iter() {
-                let pos = transform.translation;
-                min_x = min_x.min(pos.x);
-                max_x = max_x.max(pos.x);
-                min_y = min_y.min(pos.y);
-                max_y = max_y.max(pos.y);
-            }
+            // Use a fixed world area for the minimap to prevent scale changes when panning
+            // This ensures the viewport rectangle size only changes with zoom
+            let fixed_world_size: f32 = 2000.0; // Fixed world units shown in minimap
+            let min_x = -fixed_world_size;
+            let max_x = fixed_world_size;
+            let min_y = -fixed_world_size;
+            let max_y = fixed_world_size;
 
-            // Add padding
-            let padding = 100.0;
-            min_x -= padding;
-            max_x += padding;
-            min_y -= padding;
-            max_y += padding;
+            let world_width: f32 = max_x - min_x;
+            let world_height: f32 = max_y - min_y;
 
-            let world_width = max_x - min_x;
-            let world_height = max_y - min_y;
-
-            // Calculate scale to fit all nodes in minimap
-            let scale_x = minimap_viewport.width / world_width.max(1.0);
-            let scale_y = minimap_viewport.height / world_height.max(1.0);
-            let scale = scale_x.min(scale_y) * 0.9; // 0.9 for some margin
+            // Calculate scale to fit all content in minimap
+            let scale_x = minimap_viewport.width / world_width.max(1.0_f32);
+            let scale_y = minimap_viewport.height / world_height.max(1.0_f32);
+            let scale = scale_x.min(scale_y) * 0.9_f32; // 0.9 for some margin
 
             // Helper to convert world coords to minimap coords
+            // Note: Bevy's Y axis points up, but screen Y points down
             let world_to_minimap = |world_pos: Vec2| -> egui::Pos2 {
                 let x = (world_pos.x - min_x) * scale;
-                let y = (world_pos.y - min_y) * scale;
+                let y = (max_y - world_pos.y) * scale; // Flip Y axis
                 egui::Pos2::new(rect.min.x + x, rect.min.y + y)
             };
 
@@ -89,23 +93,23 @@ pub fn render_minimap(
             }
 
             // Draw camera viewport rectangle
-            if let Ok(camera_transform) = camera_query.single() {
-                let camera_pos = camera_transform.translation.truncate();
+            // Use the calculated camera position and viewport size from earlier
+            let top_left = world_to_minimap(Vec2::new(
+                camera_pos.x - viewport_half_size.x,
+                camera_pos.y + viewport_half_size.y, // Y is flipped
+            ));
+            let bottom_right = world_to_minimap(Vec2::new(
+                camera_pos.x + viewport_half_size.x,
+                camera_pos.y - viewport_half_size.y, // Y is flipped
+            ));
 
-                // Approximate viewport size (this is simplified - actual viewport depends on zoom)
-                let viewport_half_size = Vec2::new(400.0, 300.0);
+            let viewport_rect = egui::Rect::from_min_max(top_left, bottom_right);
 
-                let top_left = world_to_minimap(camera_pos - viewport_half_size);
-                let bottom_right = world_to_minimap(camera_pos + viewport_half_size);
-
-                let viewport_rect = egui::Rect::from_min_max(top_left, bottom_right);
-
-                ui.painter().rect_stroke(
-                    viewport_rect,
-                    egui::Rounding::ZERO,
-                    egui::Stroke::new(1.0, egui::Color32::from_rgb(255, 200, 0)),
-                    egui::epaint::StrokeKind::Middle,
-                );
-            }
+            ui.painter().rect_stroke(
+                viewport_rect,
+                egui::Rounding::ZERO,
+                egui::Stroke::new(2.0, egui::Color32::from_rgb(255, 200, 0)),
+                egui::epaint::StrokeKind::Middle,
+            );
         });
 }

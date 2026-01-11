@@ -26,10 +26,17 @@ pub fn spawn_node(
     commands: &mut Commands,
     instance_id: InstanceId,
     os_type: os_info::Type,
+    position: Option<Vec3>,
 ) {
-    // Random initial position for new nodes
-    let x = (rand::random::<f32>() - 0.5) * 500.0;
-    let y = (rand::random::<f32>() - 0.5) * 500.0;
+    // Use provided position or generate random position for new nodes
+    let (x, y) = if let Some(pos) = position {
+        (pos.x, pos.y)
+    } else {
+        (
+            (rand::random::<f32>() - 0.5) * 500.0,
+            (rand::random::<f32>() - 0.5) * 500.0,
+        )
+    };
 
     commands.spawn(Node {
         id: instance_id,

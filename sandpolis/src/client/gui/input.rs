@@ -9,6 +9,7 @@ use bevy::{
     },
     prelude::*,
 };
+use bevy_egui::{EguiContexts, egui};
 use std::ops::Range;
 
 #[derive(Resource)]
@@ -16,6 +17,17 @@ pub struct MousePressed(pub bool);
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct LayerChangeTimer(pub Timer);
+
+#[derive(Resource)]
+pub struct HelpScreenState {
+    pub show: bool,
+}
+
+impl Default for HelpScreenState {
+    fn default() -> Self {
+        Self { show: false }
+    }
+}
 
 // #[cfg(target_os = "android")]
 pub fn touch_camera(
@@ -58,11 +70,12 @@ const CAMERA_ZOOM_RANGE: Range<f32> = 0.5..2.0;
 const SPRITE_SIZE: f32 = 32.0;
 
 /// Handle zooming using the mouse wheel or keyboard.
+/// Zooms toward the center of the screen by adjusting the orthographic projection scale.
 pub fn handle_zoom(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut mouse_wheel_input: EventReader<MouseWheel>,
     mut zoom_level: ResMut<ZoomLevel>,
-    mut camera_query: Query<&mut Projection, With<Camera2d>>,
+    mut camera_query: Query<(&mut Projection, &Transform), With<Camera2d>>,
 ) {
     let mut zoom_delta = 0.0;
     for mouse_wheel_event in mouse_wheel_input.read() {
@@ -70,15 +83,18 @@ pub fn handle_zoom(
     }
 
     if zoom_delta != 0.0 {
-        **zoom_level =
+        let new_zoom =
             (zoom_level.0 + zoom_delta).clamp(CAMERA_ZOOM_RANGE.start, CAMERA_ZOOM_RANGE.end);
 
         // Update camera's orthographic projection scale
-        if let Ok(mut projection) = camera_query.single_mut() {
+        // Since we're not adjusting camera position, this naturally zooms toward the center
+        if let Ok((mut projection, _transform)) = camera_query.single_mut() {
             if let Projection::Orthographic(ortho) = projection.as_mut() {
-                ortho.scale = zoom_level.0;
+                ortho.scale = new_zoom;
             }
         }
+
+        **zoom_level = new_zoom;
     }
 }
 
@@ -125,32 +141,66 @@ pub fn handle_camera(
 
 /// Show a help window with keyboard shortcuts.
 pub fn handle_keymap(
-    // mut contexts: EguiContexts,
+    mut contexts: EguiContexts,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut windows: Query<&mut Window>,
+    mut help_state: ResMut<HelpScreenState>,
+    windows: Query<&Window>,
 ) {
-    if keyboard_input.pressed(KeyCode::KeyK) {
-        let window_size = windows.single_mut().unwrap().size();
-
-        // TODO separate window for layers and highlight active (HUD)
-        // egui::Window::new("Keyboard shortcuts")
-        //     .id(egui::Id::new("keymap"))
-        //     .pivot(egui::Align2::CENTER_CENTER)
-        //     .resizable(false)
-        //     .movable(false)
-        //     .collapsible(false)
-        //     .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y /
-        // 2.0))     .show(contexts.ctx_mut(), |ui| {
-        //         ui.label("W  -  Pan camera upwards");
-        //         ui.label("A  -  Pan camera upwards");
-        //         ui.label("S  -  Pan camera upwards");
-        //         ui.label("D  -  Pan camera upwards");
-        //         ui.label(">  -  Next layer");
-        //         ui.label("<  -  Previous layer");
-        //         ui.label("M  -  Meta layer");
-        //         ui.label("F  -  Filesystem layer");
-        //     });
+    // Toggle help screen with 'H' key
+    if keyboard_input.just_pressed(KeyCode::KeyH) {
+        help_state.show = !help_state.show;
     }
+
+    if !help_state.show {
+        return;
+    }
+
+    let Ok(window) = windows.single() else {
+        return;
+    };
+    let window_size = Vec2::new(window.width(), window.height());
+
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
+
+    egui::Window::new("Keyboard Shortcuts")
+        .id(egui::Id::new("keymap"))
+        .pivot(egui::Align2::CENTER_CENTER)
+        .resizable(false)
+        .movable(false)
+        .collapsible(false)
+        .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y / 2.0))
+        .show(ctx, |ui| {
+            ui.heading("Camera Controls");
+            ui.separator();
+            ui.label("Arrow Keys     Pan camera");
+            ui.label("Mouse Drag     Pan camera");
+            ui.label("Mouse Wheel    Zoom in/out");
+            ui.add_space(8.0);
+
+            ui.heading("Layer Switching");
+            ui.separator();
+            ui.label("Click Layer    Open layer switcher");
+            #[cfg(feature = "layer-filesystem")]
+            ui.label("F              Filesystem layer");
+            #[cfg(feature = "layer-desktop")]
+            ui.label("D              Desktop layer");
+            ui.add_space(8.0);
+
+            ui.heading("UI Controls");
+            ui.separator();
+            ui.label("P              Toggle node previews");
+            ui.label("H              Toggle this help screen");
+            ui.label("Click node     Select and open controller");
+            ui.label("Drag node      Move node position");
+            ui.add_space(8.0);
+
+            ui.separator();
+            if ui.button("Close (H)").clicked() {
+                help_state.show = false;
+            }
+        });
 }
 
 /// Switch to another layer from keypress

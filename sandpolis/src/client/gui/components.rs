@@ -34,6 +34,28 @@ pub struct MinimapViewport {
     pub bottom_right_offset: Vec2, // Offset from bottom-right corner
 }
 
+impl MinimapViewport {
+    /// Create responsive minimap viewport based on window size
+    pub fn from_window_size(window_width: f32, window_height: f32) -> Self {
+        // For mobile screens (< 800px width), use smaller minimap
+        let is_mobile = window_width < 800.0;
+
+        if is_mobile {
+            Self {
+                width: (window_width * 0.25).max(120.0),
+                height: (window_height * 0.15).max(90.0),
+                bottom_right_offset: Vec2::new(5.0, 5.0),
+            }
+        } else {
+            Self {
+                width: 200.0,
+                height: 150.0,
+                bottom_right_offset: Vec2::new(10.0, 10.0),
+            }
+        }
+    }
+}
+
 impl Default for MinimapViewport {
     fn default() -> Self {
         Self {

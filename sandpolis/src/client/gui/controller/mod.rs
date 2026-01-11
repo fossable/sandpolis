@@ -18,6 +18,24 @@ pub struct NodeControllerState {
     pub window_size: Vec2,
 }
 
+impl NodeControllerState {
+    /// Get responsive controller dimensions based on window size
+    pub fn get_controller_dimensions(window_width: f32, window_height: f32) -> (f32, f32) {
+        // For mobile screens (< 800px width), use full screen with padding
+        let is_mobile = window_width < 800.0;
+
+        if is_mobile {
+            // Use 95% of screen with minimum padding
+            let width = (window_width * 0.95).max(280.0);
+            let height = (window_height * 0.80).max(400.0);
+            (width, height)
+        } else {
+            // Desktop: fixed size
+            (600.0, 400.0)
+        }
+    }
+}
+
 /// Types of controllers available
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
 pub enum ControllerType {
@@ -154,9 +172,11 @@ pub fn render_node_controller(
 
     let window_size = Vec2::new(window.width(), window.height());
 
+    // Get responsive controller dimensions
+    let (controller_width, controller_height) =
+        NodeControllerState::get_controller_dimensions(window_size.x, window_size.y);
+
     // Center the controller window
-    let controller_width = 600.0;
-    let controller_height = 400.0;
     let controller_pos = egui::Pos2::new(
         (window_size.x - controller_width) / 2.0,
         (window_size.y - controller_height) / 2.0,

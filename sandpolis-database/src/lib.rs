@@ -842,7 +842,7 @@ impl<T: Data> ResidentVec<T> {
                 self.notify_listeners(ResidentVecEvent::Added(resident));
             },
             Event::Update(insert) => if let Ok(data) = insert.inner_new::<T>() {
-                let c = self.inner.write().unwrap();
+                let mut c = self.inner.write().unwrap();
                 match (*c).get(&data.id()) {
                     Some(r) => {
                         let mut r_inner = r.inner.write().unwrap();
@@ -867,8 +867,26 @@ impl<T: Data> ResidentVec<T> {
                             );
                         }
                     }
-                    // Got an update before insert?
-                    None => todo!(),
+                    // Got an update before insert - treat as initial insert
+                    None => {
+                        trace!(
+                            id = ?data.id(),
+                            revision = ?data.revision(),
+                            "Got update before insert, treating as initial insert"
+                        );
+                        let data_id = data.id();
+                        let resident = Resident {
+                            db: self.db.clone(),
+                            inner: Arc::new(RwLock::new(data)),
+                            watch: None,
+                        };
+
+                        (*c).insert(data_id, resident.clone());
+                        drop(c);
+
+                        // Notify listeners as an addition
+                        self.notify_listeners(ResidentVecEvent::Added(resident));
+                    }
                 }
             },
             Event::Delete(delete) => if let Ok(data) = delete.inner::<T>() {
@@ -994,7 +1012,8 @@ impl DataCondition {
                     .expect("This key should exist")
                 {
                     KeyEntry::Default(key) => *key == *value,
-                    KeyEntry::Optional(key) => todo!(),
+                    KeyEntry::Optional(Some(key)) => *key == *value,
+                    KeyEntry::Optional(None) => false, // None never equals any value
                 }
             }
             DataCondition::Range(key, value) => {
@@ -1004,7 +1023,8 @@ impl DataCondition {
                     .expect("This key should exist")
                 {
                     KeyEntry::Default(key) => value.contains(key),
-                    KeyEntry::Optional(key) => todo!(),
+                    KeyEntry::Optional(Some(key)) => value.contains(key),
+                    KeyEntry::Optional(None) => false, // None is not in any range
                 }
             }
         }
@@ -1083,7 +1103,15 @@ impl<T: Data> DataQuery<T> for DataCondition {
 
 impl<T: Data> DataQuery<T> for (DataCondition, DataCondition) {
     fn query(&self, scan: RScan) -> Result<Vec<T>> {
-        todo!()
+        // For compound queries, we need to:
+        // 1. Execute a query for the first condition
+        // 2. Filter results by the second condition in memory
+        // This is necessary because native_db doesn't support compound secondary key queries
+        let items = self.0.query(scan)?;
+        Ok(items
+            .into_iter()
+            .filter(|item| self.1.check(item))
+            .collect())
     }
 
     fn conditions(&self) -> Vec<DataCondition> {

@@ -1,17 +1,20 @@
 use super::{
     CurrentLayer,
     components::{LayerIndicatorState, MinimapViewport},
+    layer_switcher::LayerSwitcherState,
 };
 use crate::Layer;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 
 /// Render the layer indicator above the minimap
-/// Shows the currently active layer for a few seconds after switching
+/// Shows the currently active layer permanently with fade in/fade out on layer changes
+/// Clicking the indicator opens the layer switcher
 pub fn render_layer_indicator(
     mut contexts: EguiContexts,
     current_layer: Res<CurrentLayer>,
     mut indicator_state: ResMut<LayerIndicatorState>,
+    mut switcher_state: ResMut<LayerSwitcherState>,
     minimap_viewport: Res<MinimapViewport>,
     time: Res<Time>,
     windows: Query<&Window>,
@@ -24,39 +27,67 @@ pub fn render_layer_indicator(
         indicator_state.show_timer.reset();
     }
 
-    // Only show if timer hasn't finished
-    if !indicator_state.show_timer.just_finished() {
-        let Ok(window) = windows.single() else {
-            return;
-        };
-        let window_size = Vec2::new(window.width(), window.height());
+    let Ok(window) = windows.single() else {
+        return;
+    };
+    let window_size = Vec2::new(window.width(), window.height());
 
-        // Position above minimap
-        let indicator_pos = egui::Pos2::new(
-            window_size.x - minimap_viewport.width - minimap_viewport.bottom_right_offset.x,
-            window_size.y - minimap_viewport.height - minimap_viewport.bottom_right_offset.y - 40.0, // 40 pixels above minimap
-        );
+    // Calculate fade animation based on timer
+    let elapsed = indicator_state.show_timer.elapsed_secs();
 
-        let Ok(ctx) = contexts.ctx_mut() else {
-            return;
-        };
+    // Fade in: 0.0 to 1.0 over first 0.4 seconds when layer changes
+    let fade_in_duration = 0.4;
+    let alpha = if elapsed < fade_in_duration {
+        (elapsed / fade_in_duration).min(1.0)
+    } else {
+        1.0 // Stay fully visible after fade in completes
+    };
 
-        egui::Window::new("Layer Indicator")
-            .title_bar(false)
-            .resizable(false)
-            .movable(false)
-            .fixed_pos(indicator_pos)
-            .show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    ui.label(egui::RichText::new("Layer:").size(14.0));
-                    ui.label(
-                        egui::RichText::new(format!("{:?}", *current_layer))
-                            .size(16.0)
-                            .color(egui::Color32::from_rgb(100, 200, 255)),
-                    );
-                });
-            });
-    }
+    // Position above minimap (static position, no jiggling)
+    let indicator_pos = egui::Pos2::new(
+        window_size.x - minimap_viewport.width - minimap_viewport.bottom_right_offset.x,
+        window_size.y - minimap_viewport.height - minimap_viewport.bottom_right_offset.y - 40.0,
+    );
+
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
+
+    egui::Window::new("Layer Indicator")
+        .title_bar(false)
+        .resizable(false)
+        .movable(false)
+        .fixed_pos(indicator_pos)
+        .frame(egui::Frame::none())
+        .show(ctx, |ui| {
+            // Custom styled button with gradient-like appearance
+            let button_alpha = (alpha * 200.0) as u8;
+            let text_alpha = (alpha * 255.0) as u8;
+
+            let response = ui.add(
+                egui::Button::new(
+                    egui::RichText::new(format!("▶ {:?}", *current_layer))
+                        .size(16.0)
+                        .color(egui::Color32::from_rgba_premultiplied(220, 240, 255, text_alpha))
+                )
+                .fill(egui::Color32::from_rgba_unmultiplied(30, 50, 70, button_alpha))
+                .stroke(egui::Stroke::new(
+                    1.5,
+                    egui::Color32::from_rgba_unmultiplied(80, 140, 200, text_alpha),
+                ))
+                .rounding(6.0)
+                .min_size(egui::vec2(140.0, 32.0))
+            );
+
+            if response.clicked() {
+                switcher_state.show = !switcher_state.show;
+            }
+
+            // Show hover hint
+            if response.hovered() {
+                response.on_hover_text("Click to switch layers");
+            }
+        });
 }
 
 /// Get a display-friendly name for a layer

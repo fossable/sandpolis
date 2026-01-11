@@ -12,6 +12,24 @@ pub struct NodePreview {
     pub height: f32,
 }
 
+impl NodePreview {
+    /// Create responsive preview based on window size
+    pub fn from_window_size(window_width: f32, window_height: f32) -> Self {
+        // For mobile screens (< 800px width), use smaller preview
+        let is_mobile = window_width < 800.0;
+
+        if is_mobile {
+            Self {
+                show: true,
+                width: (window_width * 0.35).clamp(140.0, 180.0),
+                height: (window_height * 0.12).clamp(70.0, 90.0),
+            }
+        } else {
+            Self::default()
+        }
+    }
+}
+
 impl Default for NodePreview {
     fn default() -> Self {
         Self {
@@ -51,8 +69,6 @@ pub fn render_node_previews(
         if !preview.show {
             continue;
         }
-
-        let world_pos = transform.translation.truncate();
 
         // Convert world position to screen position
         let Ok(viewport_pos) = camera.world_to_viewport(camera_transform, transform.translation)
