@@ -8,6 +8,7 @@ pub struct InstanceMetadata {
     pub instance_id: InstanceId,
     pub os_type: os_info::Type,
     pub hostname: Option<String>,
+    pub is_server: bool,
 }
 
 /// Network edge between two instances
@@ -38,6 +39,7 @@ pub fn query_instance_metadata(_state: &InstanceState, id: InstanceId) -> Result
         instance_id: id,
         os_type: os_info.os_type(),
         hostname: None, // TODO: Get hostname from database or gethostname crate
+        is_server: id.is_server(),
     })
 }
 

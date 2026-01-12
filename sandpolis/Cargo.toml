@@ -66,8 +66,10 @@ bevy = { workspace = true, optional = true }
 bevy_egui = { workspace = true, optional = true }
 bevy_svg = { workspace = true, optional = true, features = ["2d"] }
 bevy_rapier2d = { workspace = true, optional = true }
+bevy_stl = { workspace = true, optional = true }
 egui-file-dialog = { workspace = true, optional = true }
 egui_console = { workspace = true, optional = true }
+egui_extras = { workspace = true, optional = true }
 
 [features]
 # Instances
@@ -139,8 +141,10 @@ client-gui = [
   "dep:bevy_egui",
   "dep:bevy_svg",
   "dep:bevy_rapier2d",
+  "dep:bevy_stl",
   "dep:egui-file-dialog",
   "dep:egui_console",
+  "dep:egui_extras",
   "sandpolis-core/client-gui",
   "sandpolis-client/client-gui",
   "sandpolis-desktop?/client-gui",
@@ -170,10 +174,6 @@ required-features = ["client-tui", "server"]
 
 [[example]]
 name = "client_gui_basic"
-required-features = ["client-gui"]
-
-[[example]]
-name = "client_gui_layout"
 required-features = ["client-gui"]
 
 [[example]]

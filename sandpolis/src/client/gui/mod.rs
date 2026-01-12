@@ -1,7 +1,9 @@
 use self::{
-    components::{DatabaseUpdateChannel, LayerIndicatorState, MinimapViewport, WorldView},
-    input::{HelpScreenState, LayerChangeTimer, MousePressed},
+    components::{DatabaseUpdateChannel, DatabaseUpdateSender, LayerIndicatorState, MinimapViewport, WorldView, SelectionSet},
+    input::{HelpScreenState, LayerChangeTimer, LoginDialogState, MousePressed},
     node::spawn_node,
+    about::AboutScreenState,
+    theme::CurrentTheme,
 };
 #[cfg(feature = "layer-desktop")]
 use crate::Layer;
@@ -16,6 +18,7 @@ use bevy::{
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 use bevy_rapier2d::prelude::*;
 
+pub mod about;
 pub mod activity;
 pub mod components;
 pub mod controller;
@@ -27,11 +30,13 @@ pub mod layer_ui;
 pub mod layer_visuals;
 pub mod layout;
 pub mod listeners;
+pub mod login;
 pub mod minimap;
 pub mod node;
 pub mod preview;
 pub mod queries;
 pub mod responsive;
+pub mod theme;
 
 /// Only one layer can be selected at a time.
 #[derive(Resource, Deref, DerefMut, Debug)]
@@ -47,16 +52,22 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     // Spawn background task for database listeners
     let state_clone = state.clone();
+    let db_update_tx_clone = db_update_tx.clone();
     tokio::spawn(async move {
-        listeners::setup_all_listeners(state_clone, db_update_tx).await;
+        listeners::setup_all_listeners(state_clone, db_update_tx_clone).await;
     });
 
     let mut app = App::new();
+
     app.add_plugins(
         DefaultPlugins
+            .set(AssetPlugin {
+                file_path: "../sandpolis-client/assets".to_string(),
+                ..default()
+            })
             .set(WindowPlugin {
                 primary_window: Some(Window {
-                    resizable: false,
+                    resizable: true,
                     mode: if cfg!(target_os = "android") {
                         WindowMode::BorderlessFullscreen(MonitorSelection::Current)
                     } else {
@@ -74,6 +85,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
     .add_plugins(RapierDebugRenderPlugin::default())
     .add_plugins(bevy_svg::prelude::SvgPlugin)
+    .add_plugins(bevy_stl::StlPlugin)
     .add_plugins(EguiPlugin::default())
     .insert_resource(CurrentLayer(Layer::Desktop))
     .insert_resource(ZoomLevel(1.0))
@@ -83,19 +95,31 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(DatabaseUpdateChannel {
         receiver: db_update_rx,
     })
+    .insert_resource(DatabaseUpdateSender {
+        sender: db_update_tx.clone(),
+    })
     .insert_resource(layout::LayoutConfig::default())
     .insert_resource(layout::LayoutState::default())
     .insert_resource(drag::DragState::default())
     .insert_resource(controller::NodeControllerState::default())
     .insert_resource(layer_switcher::LayerSwitcherState::default())
     .insert_resource(HelpScreenState::default())
+    .insert_resource(LoginDialogState::default())
+    .insert_resource(login::LoginOperation::default())
+    .insert_resource(SelectionSet::default())
+    .insert_resource(AboutScreenState::default())
+    .insert_resource(CurrentTheme::default())
     .insert_resource(state)
     .insert_resource(config)
     .insert_resource(MousePressed(false))
     .add_systems(Startup, setup)
+    .add_systems(Startup, install_egui_loaders)
+    .add_systems(Startup, theme::initialize_theme)
     .add_systems(
         Update,
         (
+            // Theme system (runs first to ensure theme is applied)
+            theme::apply_theme_to_egui,
             // Input handling
             self::input::handle_zoom,
             self::input::handle_camera,
@@ -104,11 +128,22 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             handle_lifetime,
             // Responsive UI updates
             responsive::update_responsive_ui,
+            // Login systems
+            login::check_saved_servers,
+            login::handle_login_phase1,
+            login::handle_login_phase2,
+            // About screen systems
+            about::handle_about_toggle,
+            about::spawn_about_logo,
+            about::rotate_about_logo,
         ),
     )
     .add_systems(
         Update,
         (
+            // Selection systems (must run before drag)
+            drag::handle_node_selection,
+            drag::update_selection_visuals,
             // Drag systems
             drag::start_node_drag,
             drag::update_node_drag,
@@ -137,6 +172,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             preview::render_node_previews,
             edges::render_edge_labels,
             controller::render_node_controller,
+            drag::render_selection_ui,
+            about::render_about_screen,
             self::input::handle_keymap,
         ),
     )
@@ -153,8 +190,10 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             // Layer visuals
             layer_visuals::update_node_svgs_for_layer,
             layer_visuals::update_node_colors_for_layer,
+            // Node SVG scaling - MUST run after update_node_svgs_for_layer
+            node::scale_node_svgs.after(layer_visuals::update_node_svgs_for_layer),
             // Controller systems
-            controller::handle_node_click,
+            controller::handle_node_double_click,
             controller::close_controller_on_layer_change,
             // Database updates
             process_database_updates,
@@ -182,6 +221,13 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     app.run();
     Ok(())
+}
+
+/// Install egui image loaders for SVG support (runs once at startup)
+fn install_egui_loaders(mut contexts: bevy_egui::EguiContexts) {
+    if let Ok(ctx) = contexts.ctx_mut() {
+        egui_extras::install_image_loaders(ctx);
+    }
 }
 
 fn setup(
@@ -221,6 +267,7 @@ fn setup(
                     &mut commands,
                     metadata.instance_id,
                     metadata.os_type,
+                    metadata.is_server,
                     position,
                 );
             }
@@ -246,6 +293,7 @@ fn process_database_updates(
                         &mut commands,
                         metadata.instance_id,
                         metadata.os_type,
+                        metadata.is_server,
                         None, // Random position for dynamically added nodes
                     );
                 }

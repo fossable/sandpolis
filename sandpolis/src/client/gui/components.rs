@@ -101,3 +101,19 @@ pub enum DatabaseUpdate {
 pub struct DatabaseUpdateChannel {
     pub receiver: mpsc::UnboundedReceiver<DatabaseUpdate>,
 }
+
+/// Resource containing channel sender for database updates
+#[derive(Resource, Clone)]
+pub struct DatabaseUpdateSender {
+    pub sender: mpsc::UnboundedSender<DatabaseUpdate>,
+}
+
+/// Marker component for selected nodes
+#[derive(Component)]
+pub struct Selected;
+
+/// Resource tracking all currently selected nodes
+#[derive(Resource, Default)]
+pub struct SelectionSet {
+    pub selected_nodes: Vec<InstanceId>,
+}

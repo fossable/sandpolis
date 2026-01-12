@@ -82,7 +82,8 @@ impl ControllerType {
 }
 
 /// Detect double-click on nodes to open controller
-pub fn handle_node_click(
+pub fn handle_node_double_click(
+    mut contexts: EguiContexts,
     mouse_button: Res<ButtonInput<MouseButton>>,
     time: Res<Time>,
     windows: Query<&Window>,
@@ -92,6 +93,14 @@ pub fn handle_node_click(
     mut controller_state: ResMut<NodeControllerState>,
     mut last_click: Local<(f32, Option<InstanceId>)>, // (time, entity)
 ) {
+    // Don't handle clicks if egui wants the input
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
+    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() {
+        return;
+    }
+
     if !mouse_button.just_pressed(MouseButton::Left) {
         return;
     }

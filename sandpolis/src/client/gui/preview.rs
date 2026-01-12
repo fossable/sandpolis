@@ -222,9 +222,18 @@ fn render_preview_content(
 
 /// Toggle NodePreview visibility based on user input
 pub fn toggle_node_preview_visibility(
+    mut contexts: bevy_egui::EguiContexts,
     keyboard: Res<ButtonInput<KeyCode>>,
     mut node_query: Query<&mut NodePreview>,
 ) {
+    // Don't handle hotkey if egui wants keyboard input
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
+    if ctx.wants_keyboard_input() {
+        return;
+    }
+
     // Press 'P' to toggle preview visibility
     if keyboard.just_pressed(KeyCode::KeyP) {
         for mut preview in node_query.iter_mut() {

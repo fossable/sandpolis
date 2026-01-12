@@ -1,25 +1,49 @@
 use super::components::NodeEntity;
+use super::node::{NeedsScaling, NodeSvg};
 use super::queries;
 use crate::{InstanceState, Layer};
 use bevy::prelude::*;
-use bevy_svg::prelude::Svg2d;
+use bevy_svg::prelude::{Origin, Svg2d};
 
-/// Update node SVG images when layer changes
+/// Update node SVG images when layer changes or for newly spawned nodes
 pub fn update_node_svgs_for_layer(
+    mut commands: Commands,
     current_layer: Res<super::CurrentLayer>,
     asset_server: Res<AssetServer>,
     state: Res<InstanceState>,
-    mut node_query: Query<(&NodeEntity, &mut Svg2d)>,
+    node_query: Query<(Entity, &NodeEntity)>,
+    children_query: Query<&Children>,
+    svg_query: Query<Entity, With<NodeSvg>>,
+    mut has_run: Local<bool>,
 ) {
-    // Only update when layer actually changes
-    if !current_layer.is_changed() {
+    // Run when layer changes OR on first execution (to initialize newly spawned nodes)
+    let should_run = current_layer.is_changed() || !*has_run;
+
+    if !should_run {
         return;
     }
 
+    // Mark that we've run at least once
+    *has_run = true;
+
     // Update each node's SVG based on current layer
-    for (node_entity, mut svg) in node_query.iter_mut() {
+    for (entity, node_entity) in node_query.iter() {
         let svg_path = get_layer_svg_path(&current_layer, &state, node_entity.instance_id);
-        *svg = Svg2d(asset_server.load(svg_path));
+
+        // Find the SVG child entity
+        if let Ok(children) = children_query.get(entity) {
+            for &child in children {
+                if svg_query.contains(child) {
+                    // Update the SVG child
+                    commands.entity(child).insert((
+                        Svg2d(asset_server.load(svg_path.clone())),
+                        Origin::Center,
+                        NeedsScaling,
+                    ));
+                    break;
+                }
+            }
+        }
     }
 }
 

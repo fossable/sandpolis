@@ -4,8 +4,15 @@ use bevy_rapier2d::{
     dynamics::{Damping, ExternalForce, RigidBody, Velocity},
     geometry::{Collider, Restitution},
 };
-use bevy_svg::prelude::Svg2d;
+use bevy_svg::prelude::{Origin, Svg, Svg2d};
 use sandpolis_core::InstanceId;
+
+/// The desired visual diameter for all nodes
+const NODE_VISUAL_DIAMETER: f32 = 100.0;
+
+/// Marker component to indicate this node's SVG needs scaling
+#[derive(Component)]
+pub struct NeedsScaling;
 
 #[derive(Bundle)]
 pub struct Node {
@@ -16,16 +23,20 @@ pub struct Node {
     pub velocity: Velocity,
     pub external_force: ExternalForce,
     pub damping: Damping,
-    pub svg: Svg2d,
     pub restitution: Restitution,
     pub transform: Transform,
 }
+
+/// Marker component for the SVG child entity
+#[derive(Component)]
+pub struct NodeSvg;
 
 pub fn spawn_node(
     asset_server: &AssetServer,
     commands: &mut Commands,
     instance_id: InstanceId,
     os_type: os_info::Type,
+    is_server: bool,
     position: Option<Vec3>,
 ) {
     // Use provided position or generate random position for new nodes
@@ -38,20 +49,37 @@ pub fn spawn_node(
         )
     };
 
-    commands.spawn(Node {
-        id: instance_id,
-        node_entity: NodeEntity { instance_id },
-        collider: Collider::ball(50.0),
-        rigid_body: RigidBody::Dynamic,
-        velocity: Velocity::zero(),
-        external_force: ExternalForce::default(),
-        damping: Damping {
-            linear_damping: 0.0,  // Layout system will handle damping
-            angular_damping: 1.0, // Prevent rotation
+    // Start with a placeholder/default SVG that will be replaced by layer system
+    // This ensures the correct SVG is loaded based on the current layer
+    let svg_path = "network/agent.svg".to_string();
+
+    // Spawn parent node with physics components
+    let node_entity = commands.spawn((
+        Node {
+            id: instance_id,
+            node_entity: NodeEntity { instance_id },
+            collider: Collider::ball(50.0),
+            rigid_body: RigidBody::Dynamic,
+            velocity: Velocity::zero(),
+            external_force: ExternalForce::default(),
+            damping: Damping {
+                linear_damping: 0.0,  // Layout system will handle damping
+                angular_damping: 1.0, // Prevent rotation
+            },
+            restitution: Restitution::coefficient(0.7),
+            transform: Transform::from_xyz(x, y, 0.0),
         },
-        restitution: Restitution::coefficient(0.7),
-        svg: Svg2d(asset_server.load(get_os_image(os_type))),
-        transform: Transform::from_xyz(x, y, 0.0),
+    )).id();
+
+    // Spawn SVG as a child entity
+    commands.entity(node_entity).with_children(|parent| {
+        parent.spawn((
+            Svg2d(asset_server.load(svg_path)),
+            Origin::Center,
+            Transform::default(),
+            NodeSvg,
+            NeedsScaling,
+        ));
     });
 }
 
@@ -81,6 +109,47 @@ pub fn get_os_image(os_type: os_info::Type) -> String {
 /// node.
 #[derive(Component, Clone, Debug)]
 pub struct WindowStack {}
+
+/// System to scale SVGs to a uniform size once they're loaded
+pub fn scale_node_svgs(
+    mut commands: Commands,
+    svg_assets: Res<Assets<Svg>>,
+    mut nodes_needing_scale: Query<(Entity, &Svg2d, &mut Transform), (With<NeedsScaling>, With<NodeSvg>)>,
+) {
+    for (entity, svg_handle, mut transform) in nodes_needing_scale.iter_mut() {
+        // Check if the SVG asset is loaded
+        if let Some(svg) = svg_assets.get(&svg_handle.0) {
+            // Get the SVG's natural dimensions
+            let svg_size = svg.size;
+
+            // Calculate scale for both dimensions to fit within NODE_VISUAL_DIAMETER
+            // while maintaining aspect ratio
+            let max_dimension = svg_size.x.max(svg_size.y);
+
+            if max_dimension > 0.0 {
+                // Scale to fit the largest dimension within NODE_VISUAL_DIAMETER
+                // This ensures the entire SVG (including non-square ones) stays within bounds
+                let scale = NODE_VISUAL_DIAMETER / max_dimension;
+
+                // Apply uniform scale to maintain aspect ratio
+                transform.scale = Vec3::splat(scale);
+
+                // Calculate the scaled size
+                let scaled_size = svg_size * scale;
+
+                // Since Origin::Center doesn't seem to work, manually offset the child transform
+                // SVGs render from top-left, so to center it we need to shift it:
+                // - Left by half the width (negative x)
+                // - Up by half the height (positive y in Bevy's coordinate system)
+                transform.translation.x = -scaled_size.x / 2.0;
+                transform.translation.y = scaled_size.y / 2.0;
+
+                // Remove the NeedsScaling marker since we're done
+                commands.entity(entity).remove::<NeedsScaling>();
+            }
+        }
+    }
+}
 
 pub fn handle_window_stacks(
     commands: Commands,
