@@ -8,6 +8,7 @@ use bevy_egui::{egui, EguiContexts};
 pub struct LayerSwitcherState {
     pub show: bool,
     pub available_layers: Vec<Layer>,
+    pub search_query: String,
 }
 
 impl Default for LayerSwitcherState {
@@ -15,6 +16,7 @@ impl Default for LayerSwitcherState {
         Self {
             show: false,
             available_layers: get_available_layers(),
+            search_query: String::new(),
         }
     }
 }
@@ -112,6 +114,7 @@ pub fn render_layer_switcher_panel(
     mut current_layer: ResMut<CurrentLayer>,
     mut switcher_state: ResMut<LayerSwitcherState>,
     windows: Query<&Window>,
+    keyboard: Res<ButtonInput<KeyCode>>,
 ) {
     if !switcher_state.show {
         return;
@@ -155,38 +158,72 @@ pub fn render_layer_switcher_panel(
             ui.heading("Available Layers");
             ui.separator();
 
+            // Search input
+            ui.horizontal(|ui| {
+                ui.label("🔍");
+                let text_edit = egui::TextEdit::singleline(&mut switcher_state.search_query)
+                    .hint_text("Search layers...")
+                    .desired_width(panel_width - 70.0);
+
+                let response = ui.add(text_edit);
+
+                // Auto-focus the search box when the picker opens
+                if switcher_state.is_changed() && switcher_state.show {
+                    response.request_focus();
+                }
+            });
+
+            ui.add_space(8.0);
+
             // Clone available layers to avoid borrow issues
             let available_layers = switcher_state.available_layers.clone();
+            let search_query = switcher_state.search_query.to_lowercase();
             let mut should_close = false;
             let mut selected_layer: Option<Layer> = None;
+
+            // Filter layers based on search query
+            let filtered_layers: Vec<_> = available_layers
+                .iter()
+                .filter(|layer| {
+                    if search_query.is_empty() {
+                        true
+                    } else {
+                        format!("{:?}", layer).to_lowercase().contains(&search_query)
+                    }
+                })
+                .collect();
 
             egui::ScrollArea::vertical().show(ui, |ui| {
                 let button_height = if is_mobile { 50.0 } else { 40.0 };
 
-                for layer in &available_layers {
-                    let is_current = **current_layer == *layer;
+                if filtered_layers.is_empty() {
+                    ui.label("No matching layers found");
+                } else {
+                    for layer in &filtered_layers {
+                        let is_current = **current_layer == **layer;
 
-                    let button_text = egui::RichText::new(format!(
-                        "{} {:?}",
-                        get_layer_icon(layer),
-                        layer
-                    ))
-                    .size(if is_mobile { 18.0 } else { 16.0 });
+                        let button_text = egui::RichText::new(format!(
+                            "{} {:?}",
+                            get_layer_icon(layer),
+                            layer
+                        ))
+                        .size(if is_mobile { 18.0 } else { 16.0 });
 
-                    let button = egui::Button::new(button_text)
-                        .fill(if is_current {
-                            egui::Color32::from_rgb(60, 120, 180)
-                        } else {
-                            egui::Color32::from_gray(40)
-                        })
-                        .min_size(egui::vec2(panel_width - 40.0, button_height));
+                        let button = egui::Button::new(button_text)
+                            .fill(if is_current {
+                                egui::Color32::from_rgb(60, 120, 180)
+                            } else {
+                                egui::Color32::from_gray(40)
+                            })
+                            .min_size(egui::vec2(panel_width - 40.0, button_height));
 
-                    if ui.add(button).clicked() && !is_current {
-                        selected_layer = Some(*layer);
-                        should_close = true;
+                        if ui.add(button).clicked() && !is_current {
+                            selected_layer = Some(**layer);
+                            should_close = true;
+                        }
+
+                        ui.add_space(if is_mobile { 8.0 } else { 4.0 });
                     }
-
-                    ui.add_space(if is_mobile { 8.0 } else { 4.0 });
                 }
             });
 
@@ -196,11 +233,12 @@ pub fn render_layer_switcher_panel(
             }
             if should_close {
                 switcher_state.show = false;
+                switcher_state.search_query.clear();
             }
 
             ui.separator();
 
-            // Close button at bottom
+            // Close button at bottom and hint text
             ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
                 if ui
                     .add_sized(
@@ -212,17 +250,45 @@ pub fn render_layer_switcher_panel(
                     .clicked()
                 {
                     switcher_state.show = false;
+                    switcher_state.search_query.clear();
                 }
+
+                ui.add_space(4.0);
+                ui.label(
+                    egui::RichText::new("Use arrow keys to navigate or type to search")
+                        .size(12.0)
+                        .color(egui::Color32::from_gray(150))
+                );
             });
         });
+
+    // Handle Escape key to close the picker
+    if !ctx.wants_keyboard_input() && keyboard.just_pressed(KeyCode::Escape) {
+        switcher_state.show = false;
+        switcher_state.search_query.clear();
+    }
 }
 
 /// Handle keyboard shortcut to toggle layer switcher
-/// Note: This function is kept for potential future keyboard shortcuts
-/// The layer switcher is now opened by clicking the layer indicator
 pub fn handle_layer_switcher_toggle(
-    _keyboard: Res<ButtonInput<KeyCode>>,
-    _switcher_state: ResMut<LayerSwitcherState>,
+    mut contexts: EguiContexts,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut switcher_state: ResMut<LayerSwitcherState>,
 ) {
-    // L keybinding removed - layer switcher now opens via layer indicator click
+    // Don't handle if egui wants keyboard input
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
+    if ctx.wants_keyboard_input() {
+        return;
+    }
+
+    // Toggle layer switcher with L key
+    if keyboard.just_pressed(KeyCode::KeyL) {
+        switcher_state.show = !switcher_state.show;
+        // Clear search query when opening
+        if switcher_state.show {
+            switcher_state.search_query.clear();
+        }
+    }
 }

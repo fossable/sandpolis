@@ -59,6 +59,7 @@ pub fn render_edges(
             // Color based on layer
             let color = match edge.layer {
                 Layer::Network => Color::srgb(0.3, 0.8, 1.0),    // Cyan
+                #[cfg(feature = "layer-filesystem")]
                 Layer::Filesystem => Color::srgb(0.3, 1.0, 0.3), // Green
                 Layer::Desktop => Color::srgb(1.0, 0.5, 0.3),    // Orange
                 _ => Color::srgb(0.6, 0.6, 0.6),                 // Gray
@@ -101,6 +102,7 @@ pub fn update_edges_for_layer(
                 }
             }
         }
+        #[cfg(feature = "layer-filesystem")]
         Layer::Filesystem => {
             // TODO: Query filesystem connections (file transfer paths)
             // For now, no edges

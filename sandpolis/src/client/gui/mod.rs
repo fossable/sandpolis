@@ -1,8 +1,11 @@
 use self::{
-    components::{DatabaseUpdateChannel, DatabaseUpdateSender, LayerIndicatorState, MinimapViewport, WorldView, SelectionSet},
+    about::AboutScreenState,
+    components::{
+        DatabaseUpdateChannel, DatabaseUpdateSender, LayerIndicatorState, MinimapViewport,
+        SelectionSet, WorldView,
+    },
     input::{HelpScreenState, LayerChangeTimer, LoginDialogState, MousePressed},
     node::spawn_node,
-    about::AboutScreenState,
     theme::CurrentTheme,
 };
 #[cfg(feature = "layer-desktop")]
@@ -33,6 +36,7 @@ pub mod listeners;
 pub mod login;
 pub mod minimap;
 pub mod node;
+pub mod node_picker;
 pub mod preview;
 pub mod queries;
 pub mod responsive;
@@ -103,6 +107,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(drag::DragState::default())
     .insert_resource(controller::NodeControllerState::default())
     .insert_resource(layer_switcher::LayerSwitcherState::default())
+    .insert_resource(node_picker::NodePickerState::default())
     .insert_resource(HelpScreenState::default())
     .insert_resource(LoginDialogState::default())
     .insert_resource(login::LoginOperation::default())
@@ -123,7 +128,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             // Input handling
             self::input::handle_zoom,
             self::input::handle_camera,
-            self::input::handle_layer_change,
+            layer_switcher::handle_layer_switcher_toggle,
+            node_picker::handle_node_picker_toggle,
             button_handler,
             handle_lifetime,
             // Responsive UI updates
@@ -169,6 +175,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             layer_ui::render_layer_indicator,
             layer_switcher::render_layer_switcher_button,
             layer_switcher::render_layer_switcher_panel,
+            node_picker::render_node_picker_panel,
             preview::render_node_previews,
             edges::render_edge_labels,
             controller::render_node_controller,
@@ -181,7 +188,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         PostUpdate,
         (
             // Non-egui systems
-            layer_switcher::handle_layer_switcher_toggle,
             preview::toggle_node_preview_visibility,
             // Edge systems
             edges::render_edges,
