@@ -65,38 +65,104 @@ impl Default for LoginDialogState {
     }
 }
 
-// #[cfg(target_os = "android")]
-pub fn touch_camera(
+/// Handle touch input for panning on mobile devices
+#[cfg(target_os = "android")]
+pub fn handle_touch_camera(
+    mut contexts: EguiContexts,
     windows: Query<&Window>,
     mut touches: EventReader<TouchInput>,
-    mut camera: Query<&mut Transform, With<Camera3d>>,
+    mut camera: Query<&mut Transform, With<Camera2d>>,
     mut last_position: Local<Option<Vec2>>,
-    mut rotations: EventReader<RotationGesture>,
 ) {
-    let window = windows.single().unwrap();
+    // Don't handle touch if egui wants the input
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
+    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() {
+        touches.clear();
+        *last_position = None;
+        return;
+    }
+
+    let Ok(window) = windows.single() else {
+        return;
+    };
 
     for touch in touches.read() {
         if touch.phase == TouchPhase::Started {
             *last_position = None;
         }
-        if let Some(last_position) = *last_position {
-            let mut transform = camera.single_mut().unwrap();
-            *transform = Transform::from_xyz(
-                transform.translation.x
-                    + (touch.position.x - last_position.x) / window.width() * 5.0,
-                transform.translation.y,
-                transform.translation.z
-                    + (touch.position.y - last_position.y) / window.height() * 5.0,
-            )
-            .looking_at(Vec3::ZERO, Vec3::Y);
+        if let Some(last_pos) = *last_position {
+            if let Ok(mut transform) = camera.single_mut() {
+                // Calculate displacement in screen space
+                let displacement = touch.position - last_pos;
+                // Apply panning (negative Y because screen coords are flipped)
+                transform.translation -= Vec3::new(displacement.x, -displacement.y, 0.0);
+            }
         }
         *last_position = Some(touch.position);
     }
-    // Rotation gestures only work on iOS
-    for rotation in rotations.read() {
-        let mut transform = camera.single_mut().unwrap();
-        let forward = transform.forward();
-        transform.rotate_axis(forward, rotation.0 / 10.0);
+}
+
+/// Handle pinch-to-zoom gestures on mobile devices using two-finger touch
+#[cfg(target_os = "android")]
+pub fn handle_touch_zoom(
+    mut contexts: EguiContexts,
+    mut touches: EventReader<TouchInput>,
+    mut zoom_level: ResMut<ZoomLevel>,
+    mut camera_query: Query<&mut Projection, With<Camera2d>>,
+    mut touch_positions: Local<std::collections::HashMap<u64, Vec2>>,
+    mut last_distance: Local<Option<f32>>,
+) {
+    // Don't handle zoom if egui wants the input
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
+    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() {
+        touches.clear();
+        touch_positions.clear();
+        *last_distance = None;
+        return;
+    }
+
+    // Update touch positions
+    for touch in touches.read() {
+        match touch.phase {
+            TouchPhase::Started | TouchPhase::Moved => {
+                touch_positions.insert(touch.id, touch.position);
+            }
+            TouchPhase::Ended | TouchPhase::Canceled => {
+                touch_positions.remove(&touch.id);
+                if touch_positions.len() < 2 {
+                    *last_distance = None;
+                }
+            }
+        }
+    }
+
+    // Only process zoom if we have exactly 2 touches
+    if touch_positions.len() == 2 {
+        let positions: Vec<Vec2> = touch_positions.values().copied().collect();
+        let current_distance = positions[0].distance(positions[1]);
+
+        if let Some(prev_distance) = *last_distance {
+            // Calculate zoom factor based on distance change
+            let distance_ratio = current_distance / prev_distance;
+            let zoom_factor = 1.0 / distance_ratio;
+            let new_zoom = (zoom_level.0 * zoom_factor).clamp(CAMERA_ZOOM_RANGE.start, CAMERA_ZOOM_RANGE.end);
+
+            if let Ok(mut projection) = camera_query.single_mut() {
+                if let Projection::Orthographic(ortho) = projection.as_mut() {
+                    ortho.scale = new_zoom;
+                }
+            }
+
+            **zoom_level = new_zoom;
+        }
+
+        *last_distance = Some(current_distance);
+    } else {
+        *last_distance = None;
     }
 }
 

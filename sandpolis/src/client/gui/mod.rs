@@ -125,9 +125,16 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         (
             // Theme system (runs first to ensure theme is applied)
             theme::apply_theme_to_egui,
-            // Input handling
+            // Input handling (desktop)
+            #[cfg(not(target_os = "android"))]
             self::input::handle_zoom,
+            #[cfg(not(target_os = "android"))]
             self::input::handle_camera,
+            // Input handling (mobile)
+            #[cfg(target_os = "android")]
+            self::input::handle_touch_camera,
+            #[cfg(target_os = "android")]
+            self::input::handle_touch_zoom,
             layer_switcher::handle_layer_switcher_toggle,
             node_picker::handle_node_picker_toggle,
             button_handler,

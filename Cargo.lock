@@ -9755,6 +9755,8 @@ name = "sandpolis-mobile"
 version = "0.0.1"
 dependencies = [
  "bevy",
+ "jni",
+ "ndk-context",
  "rustls",
  "sandpolis",
  "sandpolis-database",

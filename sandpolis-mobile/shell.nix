@@ -70,11 +70,11 @@ EOF
     echo ""
     echo "To build APK:"
     echo "  # Debug build:"
-    echo "  cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build"
+    echo "  cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --link-libcxx-shared"
     echo "  cd android && ./gradlew assembleDebug"
     echo ""
     echo "  # Release build:"
-    echo "  cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --release"
+    echo "  cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --release --link-libcxx-shared"
     echo "  cd android && ./gradlew assembleRelease"
     echo ""
     echo "APK output: android/app/build/outputs/apk/"
@@ -85,8 +85,8 @@ EOF
 #   nix-shell                    Enter development environment
 #
 # Build APK:
-#   Debug:   cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build && cd android && ./gradlew assembleDebug
-#   Release: cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --release && cd android && ./gradlew assembleRelease
+#   Debug:   cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --link-libcxx-shared && cd android && ./gradlew assembleDebug
+#   Release: cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --release --link-libcxx-shared && cd android && ./gradlew assembleRelease
 #
 # To add debugging tools, include in buildInputs:
 #   - platform-tools (for adb, fastboot)
