@@ -17,6 +17,7 @@ use sandpolis_core::ClusterId;
 use sandpolis_core::{InstanceId, RealmName};
 use sandpolis_database::DatabaseLayer;
 use sandpolis_database::Resident;
+use sandpolis_database::ResidentVec;
 use sandpolis_macros::data;
 use sandpolis_realm::RealmLayer;
 use serde::de::DeserializeOwned;
@@ -53,6 +54,9 @@ pub struct NetworkLayer {
     /// Outbound connections
     pub outbound: Arc<RwLock<Vec<Arc<OutboundConnection>>>>,
 
+    /// All connections tracked in the database
+    pub connections: ResidentVec<ConnectionData>,
+
     realms: RealmLayer,
 
     database: DatabaseLayer,
@@ -66,9 +70,11 @@ impl NetworkLayer {
     ) -> Result<Self> {
         debug!("Initializing network layer");
 
+        let realm = database.realm(RealmName::default())?;
         let network = Self {
             outbound: Arc::new(RwLock::new(Vec::new())),
-            data: database.realm(RealmName::default())?.resident(())?,
+            data: realm.resident(())?,
+            connections: realm.resident_vec(())?,
             database,
             realms: realms.clone(),
         };

@@ -14,11 +14,14 @@ use native_model::Model;
 use sandpolis_core::ClusterId;
 use sandpolis_core::RealmName;
 use sandpolis_core::UserName;
-use sandpolis_database::Resident;
-use sandpolis_database::{Data, DatabaseLayer};
+use sandpolis_database::{DatabaseLayer, Resident};
+#[cfg(feature = "server")]
+use sandpolis_database::ResidentVec;
 use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use tracing::debug;
 use validator::Validate;

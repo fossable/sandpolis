@@ -4022,7 +4022,9 @@ dependencies = [
 
 [[package]]
 name = "egui_console"
-version = "0.2.0"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee8b5d61e35971881f66cfa50e6a5273f5850f41c9e4e1578f8d056eeb0f785c"
 dependencies = [
  "eframe",
  "egui",
@@ -9486,6 +9488,7 @@ dependencies = [
  "built 0.7.7",
  "clap",
  "colored",
+ "eframe",
  "egui-file-dialog",
  "egui_console",
  "egui_extras",

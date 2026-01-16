@@ -35,8 +35,8 @@ pub fn spawn_node(
     asset_server: &AssetServer,
     commands: &mut Commands,
     instance_id: InstanceId,
-    os_type: os_info::Type,
-    is_server: bool,
+    _os_type: os_info::Type,
+    _is_server: bool,
     position: Option<Vec3>,
 ) {
     // Use provided position or generate random position for new nodes
@@ -105,11 +105,6 @@ pub fn get_os_image(os_type: os_info::Type) -> String {
     .to_string()
 }
 
-/// A `WindowStack` is a set of collapsible Windows that are rendered below a
-/// node.
-#[derive(Component, Clone, Debug)]
-pub struct WindowStack {}
-
 /// System to scale SVGs to a uniform size once they're loaded
 pub fn scale_node_svgs(
     mut commands: Commands,
@@ -149,29 +144,4 @@ pub fn scale_node_svgs(
             }
         }
     }
-}
-
-pub fn handle_window_stacks(
-    commands: Commands,
-    // mut contexts: EguiContexts,
-    nodes: Query<(&mut Transform, (&InstanceId, &WindowStack)), With<InstanceId>>,
-    windows: Query<&mut Window>,
-    cameras: Query<&Transform, (With<Camera2d>, Without<InstanceId>)>,
-) {
-    // let window_size = windows.single_mut().size();
-    // let camera_transform = cameras.single();
-
-    // for (transform, (id, window_stack)) in nodes.iter_mut() {
-    //     egui::Window::new("Hello")
-    //         .movable(false)
-    //         .resizable(false)
-    //         .pivot(egui::Align2::CENTER_TOP)
-    //         .current_pos(egui::Pos2::new(
-    //             window_size.x / 2.0 + transform.translation.x -
-    // camera_transform.translation.x,             window_size.y / 2.0 +
-    // transform.translation.y + camera_transform.translation.y,         ))
-    //         .show(contexts.ctx_mut(), |ui| {
-    //             ui.label("world");
-    //         });
-    // }
 }

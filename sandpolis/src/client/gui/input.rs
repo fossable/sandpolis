@@ -1,14 +1,12 @@
-use super::{CurrentLayer, ZoomLevel};
-use crate::Layer;
+use super::ZoomLevel;
 use bevy::{
-    ecs::event::EventReader,
     input::{
-        gestures::RotationGesture,
         mouse::{MouseButtonInput, MouseMotion, MouseWheel},
-        touch::TouchPhase,
     },
     prelude::*,
 };
+#[cfg(target_os = "android")]
+use bevy::input::touch::TouchPhase;
 use bevy_egui::{EguiContexts, egui};
 use std::ops::Range;
 
@@ -174,7 +172,6 @@ const CAMERA_ZOOM_RANGE: Range<f32> = 0.5..2.0;
 /// Zooms toward the center of the screen by adjusting the orthographic projection scale.
 pub fn handle_zoom(
     mut contexts: EguiContexts,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut mouse_wheel_input: EventReader<MouseWheel>,
     mut zoom_level: ResMut<ZoomLevel>,
     mut camera_query: Query<(&mut Projection, &Transform), With<Camera2d>>,
@@ -520,9 +517,10 @@ pub fn handle_keymap(
 
             ui.heading("UI Controls");
             ui.separator();
-            ui.label("A              Toggle about screen");
             ui.label("L              Toggle login dialog");
+            ui.label("N              Toggle node picker");
             ui.label("P              Toggle node previews");
+            ui.label("T              Toggle theme picker");
             ui.label("H              Toggle this help screen");
             ui.label("Click node     Select and open controller");
             ui.label("Drag node      Move node position");

@@ -5,6 +5,9 @@ use native_model::Model;
 use sandpolis_core::RealmName;
 use sandpolis_core::InstanceId;
 use sandpolis_database::DatabaseLayer;
+#[cfg(feature = "server")]
+use sandpolis_database::Resident;
+#[cfg(feature = "client")]
 use sandpolis_database::ResidentVec;
 use sandpolis_macros::data;
 use sandpolis_network::NetworkLayer;

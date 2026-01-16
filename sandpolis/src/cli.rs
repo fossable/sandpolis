@@ -3,7 +3,13 @@ use anyhow::Result;
 use clap::Parser;
 use clap::Subcommand;
 use colored::Colorize;
+#[cfg(feature = "server")]
+use sandpolis_core::RealmName;
+#[cfg(feature = "server")]
+use std::path::PathBuf;
 use std::process::ExitCode;
+#[cfg(feature = "server")]
+use tracing::info;
 
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about = "Test")]
@@ -95,7 +101,7 @@ impl Commands {
                     r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
                 let Some(cluster_cert) = cluster_certs.first() else {
-                    bail!("No cluster cert found");
+                    return Err(anyhow::anyhow!("No cluster cert found"));
                 };
 
                 let client_cert = cluster_cert.client_cert()?;

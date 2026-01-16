@@ -49,7 +49,7 @@ pub fn query_instance_metadata(_state: &InstanceState, id: InstanceId) -> Result
 
 /// Query network topology (edges between instances)
 /// Returns list of connections for the current layer
-pub fn query_network_topology(state: &InstanceState) -> Result<Vec<NetworkEdge>> {
+pub fn query_network_topology(_state: &InstanceState) -> Result<Vec<NetworkEdge>> {
     // TODO: Query database for connections
     // For now, return empty (no edges)
     Ok(vec![])

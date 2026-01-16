@@ -2,6 +2,7 @@ use super::{
     CurrentLayer,
     components::{LayerIndicatorState, MinimapViewport},
     layer_switcher::LayerSwitcherState,
+    about::{AboutScreenState, register_logo_click},
 };
 use crate::Layer;
 use bevy::prelude::*;
@@ -61,6 +62,7 @@ pub fn render_layer_indicator(
     current_layer: Res<CurrentLayer>,
     mut indicator_state: ResMut<LayerIndicatorState>,
     mut switcher_state: ResMut<LayerSwitcherState>,
+    mut about_state: ResMut<AboutScreenState>,
     minimap_viewport: Res<MinimapViewport>,
     time: Res<Time>,
     windows: Query<&Window>,
@@ -104,7 +106,7 @@ pub fn render_layer_indicator(
         .resizable(false)
         .movable(false)
         .fixed_pos(indicator_pos)
-        .frame(egui::Frame::none())
+        .frame(egui::Frame::NONE)
         .show(ctx, |ui| {
             // Custom styled button with gradient-like appearance
             let button_alpha = (alpha * 200.0) as u8;
@@ -140,7 +142,7 @@ pub fn render_layer_indicator(
                         1.5,
                         egui::Color32::from_rgba_unmultiplied(80, 140, 200, text_alpha),
                     ))
-                    .rounding(6.0)
+                    .corner_radius(6.0)
                     .min_size(egui::vec2(button_width - icon_size.x - 8.0, 32.0))
                 );
 
@@ -148,6 +150,10 @@ pub fn render_layer_indicator(
             }).inner;
 
             if response.clicked() {
+                // Easter egg: Triple-click to open about screen
+                register_logo_click(&mut about_state);
+
+                // Normal behavior: Open layer switcher
                 switcher_state.show = !switcher_state.show;
             }
 

@@ -104,7 +104,7 @@ pub fn spawn_transfer_activity_lines(
 pub fn update_activity_line_positions(
     mut activity_query: Query<(&ActivityLine, &mut Transform)>,
     node_query: Query<(&Transform, &NodeEntity), Without<ActivityLine>>,
-    time: Res<Time>,
+    _time: Res<Time>,
 ) {
     // Build map of instance IDs to positions
     let mut positions = std::collections::HashMap::new();

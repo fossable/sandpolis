@@ -145,7 +145,7 @@ impl UserLayer {
 
         pbkdf2::derive(
             pbkdf2::PBKDF2_HMAC_SHA256,
-            USER_PASSWORD_HASH_ITERATIONS.get(),
+            USER_PASSWORD_HASH_ITERATIONS,
             &salt,
             password.0.as_bytes(),
             &mut hash,
@@ -185,7 +185,7 @@ impl UserLayer {
 
         pbkdf2::derive(
             pbkdf2::PBKDF2_HMAC_SHA256,
-            USER_PASSWORD_HASH_ITERATIONS.get(),
+            USER_PASSWORD_HASH_ITERATIONS,
             &salt,
             password.0.as_bytes(),
             &mut hash,

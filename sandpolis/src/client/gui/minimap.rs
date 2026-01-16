@@ -36,7 +36,7 @@ pub fn render_minimap(
             let rect = ui.available_rect_before_wrap();
             ui.painter().rect_filled(
                 rect,
-                egui::Rounding::ZERO,
+                egui::CornerRadius::ZERO,
                 egui::Color32::from_rgba_unmultiplied(20, 20, 20, 200),
             );
 
@@ -107,7 +107,7 @@ pub fn render_minimap(
 
             ui.painter().rect_stroke(
                 viewport_rect,
-                egui::Rounding::ZERO,
+                egui::CornerRadius::ZERO,
                 egui::Stroke::new(2.0, egui::Color32::from_rgb(255, 200, 0)),
                 egui::epaint::StrokeKind::Middle,
             );

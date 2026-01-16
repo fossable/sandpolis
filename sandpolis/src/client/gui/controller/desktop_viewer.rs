@@ -16,7 +16,7 @@ pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId)
 
     ui.painter().rect_filled(
         rect,
-        egui::Rounding::ZERO,
+        egui::CornerRadius::ZERO,
         egui::Color32::from_rgb(30, 30, 30),
     );
 

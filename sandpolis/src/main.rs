@@ -1,11 +1,10 @@
-use anyhow::{Result, bail};
+use anyhow::Result;
 use axum::{Router, routing::get};
 use clap::Parser;
 use sandpolis::InstanceState;
 use sandpolis::cli::{CommandLine, Commands};
 use sandpolis::config::Configuration;
 use sandpolis_database::DatabaseLayer;
-use std::fs::OpenOptions;
 use std::process::ExitCode;
 use tokio::task::JoinSet;
 use tracing::debug;
@@ -118,7 +117,7 @@ async fn main() -> Result<ExitCode> {
         #[cfg(not(any(feature = "client-gui", feature = "client-tui")))]
         compile_error!("Missing client-gui or client-tui features");
 
-        let app: Router<InstanceState> =
+        let _app: Router<InstanceState> =
             Router::new().route("/versions", get(sandpolis::routes::versions));
 
         // Check command line preference if both are enabled

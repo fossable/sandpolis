@@ -64,7 +64,7 @@ pub async fn login(
     // TODO argon2
     if pbkdf2::verify(
         pbkdf2::PBKDF2_HMAC_SHA256,
-        password.iterations,
+        std::num::NonZero::new(password.iterations).unwrap(),
         &password.salt,
         request.password.0.as_bytes(),
         &password.hash,

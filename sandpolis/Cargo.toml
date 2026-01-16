@@ -71,6 +71,9 @@ egui-file-dialog = { workspace = true, optional = true }
 egui_console = { workspace = true, optional = true }
 egui_extras = { workspace = true, optional = true }
 
+[dev-dependencies]
+eframe = { workspace = true }
+
 [features]
 # Instances
 server = [
@@ -190,4 +193,8 @@ required-features = ["client-gui"]
 
 [[example]]
 name = "client_gui_controllers"
+required-features = ["client-gui"]
+
+[[example]]
+name = "client_gui_instance_preview"
 required-features = ["client-gui"]

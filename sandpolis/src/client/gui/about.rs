@@ -1,10 +1,24 @@
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
+use std::time::{Duration, Instant};
 
 /// Resource to track about screen state
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct AboutScreenState {
     pub show: bool,
+    /// Tracks clicks on the layer indicator for Easter egg
+    pub logo_click_count: u8,
+    pub last_logo_click: Option<Instant>,
+}
+
+impl Default for AboutScreenState {
+    fn default() -> Self {
+        Self {
+            show: false,
+            logo_click_count: 0,
+            last_logo_click: None,
+        }
+    }
 }
 
 /// Marker component for the 3D logo entity
@@ -15,23 +29,47 @@ pub struct AboutLogo;
 #[derive(Component)]
 pub struct AboutCamera;
 
-/// System to handle toggling the about screen with 'A' key
-pub fn handle_about_toggle(
-    mut contexts: EguiContexts,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut about_state: ResMut<AboutScreenState>,
-) {
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
+/// Easter egg: Check if the click sequence has timed out
+/// Returns true if we should reset the counter
+fn should_reset_clicks(last_click: Option<Instant>) -> bool {
+    if let Some(last) = last_click {
+        last.elapsed() > Duration::from_secs(2)
+    } else {
+        false
+    }
+}
 
-    // Don't toggle if egui wants keyboard input (e.g., typing in text fields)
-    if ctx.wants_keyboard_input() {
-        return;
+/// System to handle the Easter egg for opening about screen
+/// Easter egg: Triple-click on the layer indicator within 2 seconds
+pub fn handle_about_easter_egg(mut about_state: ResMut<AboutScreenState>) {
+    // Reset click counter if too much time has passed
+    if should_reset_clicks(about_state.last_logo_click) {
+        about_state.logo_click_count = 0;
+        about_state.last_logo_click = None;
+    }
+}
+
+/// Call this from the layer indicator when it's clicked
+pub fn register_logo_click(about_state: &mut AboutScreenState) {
+    let now = Instant::now();
+
+    // Reset if the last click was too long ago
+    if should_reset_clicks(about_state.last_logo_click) {
+        about_state.logo_click_count = 0;
     }
 
-    if keyboard_input.just_pressed(KeyCode::KeyA) {
+    about_state.logo_click_count += 1;
+    about_state.last_logo_click = Some(now);
+
+    // Easter egg activated! Open about screen on 3rd click
+    if about_state.logo_click_count >= 3 {
         about_state.show = !about_state.show;
+        about_state.logo_click_count = 0;
+        about_state.last_logo_click = None;
+
+        if about_state.show {
+            info!("🥚 Easter egg activated! About screen opened.");
+        }
     }
 }
 
@@ -42,7 +80,6 @@ pub fn spawn_about_logo(
     logo_query: Query<Entity, With<AboutLogo>>,
     camera_query: Query<Entity, With<AboutCamera>>,
     asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Only proceed if state just changed
@@ -116,7 +153,7 @@ pub fn rotate_about_logo(time: Res<Time>, mut logo_query: Query<&mut Transform, 
 /// System to render the about screen UI with egui
 pub fn render_about_screen(
     mut contexts: EguiContexts,
-    about_state: Res<AboutScreenState>,
+    mut about_state: ResMut<AboutScreenState>,
     windows: Query<&Window>,
 ) {
     if !about_state.show {
@@ -182,8 +219,10 @@ pub fn render_about_screen(
                 ui.add_space(16.0);
 
                 // Close button
-                if ui.button("Close (A)").clicked() {
-                    // Button click will be handled by the toggle system
+                if ui.button("Close").clicked() {
+                    about_state.show = false;
+                    about_state.logo_click_count = 0;
+                    about_state.last_logo_click = None;
                 }
             });
         });

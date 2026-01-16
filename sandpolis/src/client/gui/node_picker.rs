@@ -1,4 +1,4 @@
-use super::{components::NodeEntity, WorldView};
+use super::WorldView;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 use sandpolis_core::InstanceId;

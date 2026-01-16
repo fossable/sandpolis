@@ -37,7 +37,7 @@ impl NodeControllerState {
 }
 
 /// Types of controllers available
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum ControllerType {
     #[default]
     None,

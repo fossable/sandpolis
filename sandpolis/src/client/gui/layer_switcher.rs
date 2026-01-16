@@ -115,6 +115,7 @@ pub fn render_layer_switcher_panel(
     mut switcher_state: ResMut<LayerSwitcherState>,
     windows: Query<&Window>,
     keyboard: Res<ButtonInput<KeyCode>>,
+    mouse: Res<ButtonInput<MouseButton>>,
 ) {
     if !switcher_state.show {
         return;
@@ -149,7 +150,9 @@ pub fn render_layer_switcher_panel(
         (window_size.y - panel_height) / 2.0,
     );
 
-    egui::Window::new("Select Layer")
+    let mut panel_hovered = false;
+
+    let response = egui::Window::new("Select Layer")
         .fixed_pos(panel_pos)
         .fixed_size([panel_width, panel_height])
         .collapsible(false)
@@ -158,22 +161,24 @@ pub fn render_layer_switcher_panel(
             ui.heading("Available Layers");
             ui.separator();
 
-            // Search input
-            ui.horizontal(|ui| {
-                ui.label("🔍");
-                let text_edit = egui::TextEdit::singleline(&mut switcher_state.search_query)
-                    .hint_text("Search layers...")
-                    .desired_width(panel_width - 70.0);
+            // Search input (desktop only)
+            if !is_mobile {
+                ui.horizontal(|ui| {
+                    ui.label("🔍");
+                    let text_edit = egui::TextEdit::singleline(&mut switcher_state.search_query)
+                        .hint_text("Search layers...")
+                        .desired_width(panel_width - 70.0);
 
-                let response = ui.add(text_edit);
+                    let response = ui.add(text_edit);
 
-                // Auto-focus the search box when the picker opens
-                if switcher_state.is_changed() && switcher_state.show {
-                    response.request_focus();
-                }
-            });
+                    // Auto-focus the search box when the picker opens
+                    if switcher_state.is_changed() && switcher_state.show {
+                        response.request_focus();
+                    }
+                });
 
-            ui.add_space(8.0);
+                ui.add_space(8.0);
+            }
 
             // Clone available layers to avoid borrow issues
             let available_layers = switcher_state.available_layers.clone();
@@ -236,34 +241,32 @@ pub fn render_layer_switcher_panel(
                 switcher_state.search_query.clear();
             }
 
-            ui.separator();
-
-            // Close button at bottom and hint text
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
-                if ui
-                    .add_sized(
-                        [panel_width - 40.0, if is_mobile { 45.0 } else { 35.0 }],
-                        egui::Button::new(
-                            egui::RichText::new("Close").size(if is_mobile { 18.0 } else { 16.0 }),
-                        ),
-                    )
-                    .clicked()
-                {
-                    switcher_state.show = false;
-                    switcher_state.search_query.clear();
-                }
-
-                ui.add_space(4.0);
-                ui.label(
-                    egui::RichText::new("Use arrow keys to navigate or type to search")
-                        .size(12.0)
-                        .color(egui::Color32::from_gray(150))
-                );
-            });
+            // Hint text at bottom (desktop only)
+            if !is_mobile {
+                ui.separator();
+                ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                    ui.label(
+                        egui::RichText::new("Press Esc to close or type to search")
+                            .size(12.0)
+                            .color(egui::Color32::from_gray(150))
+                    );
+                });
+            }
         });
 
-    // Handle Escape key to close the picker
+    // Track if the panel was hovered
+    if let Some(inner_response) = response {
+        panel_hovered = inner_response.response.hovered();
+    }
+
+    // Handle Escape key to close the picker (desktop)
     if !ctx.wants_keyboard_input() && keyboard.just_pressed(KeyCode::Escape) {
+        switcher_state.show = false;
+        switcher_state.search_query.clear();
+    }
+
+    // Handle touch/click outside to close (mobile)
+    if is_mobile && mouse.just_pressed(MouseButton::Left) && !panel_hovered {
         switcher_state.show = false;
         switcher_state.search_query.clear();
     }

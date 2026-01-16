@@ -6,7 +6,7 @@ use self::{
     },
     input::{HelpScreenState, LayerChangeTimer, LoginDialogState, MousePressed},
     node::spawn_node,
-    theme::CurrentTheme,
+    theme::{CurrentTheme, ThemePickerState},
 };
 #[cfg(feature = "layer-desktop")]
 use crate::Layer;
@@ -14,7 +14,6 @@ use crate::{InstanceState, config::Configuration};
 use anyhow::Result;
 use bevy::{
     color::palettes::basic::*,
-    ecs::event::EventReader,
     prelude::*,
     window::{AppLifecycle, WindowMode},
 };
@@ -114,6 +113,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(SelectionSet::default())
     .insert_resource(AboutScreenState::default())
     .insert_resource(CurrentTheme::default())
+    .insert_resource(ThemePickerState::default())
     .insert_resource(state)
     .insert_resource(config)
     .insert_resource(MousePressed(false))
@@ -137,6 +137,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             self::input::handle_touch_zoom,
             layer_switcher::handle_layer_switcher_toggle,
             node_picker::handle_node_picker_toggle,
+            theme::handle_theme_picker_toggle,
             button_handler,
             handle_lifetime,
             // Responsive UI updates
@@ -146,7 +147,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             login::handle_login_phase1,
             login::handle_login_phase2,
             // About screen systems
-            about::handle_about_toggle,
+            about::handle_about_easter_egg,
             about::spawn_about_logo,
             about::rotate_about_logo,
         ),
@@ -188,6 +189,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             controller::render_node_controller,
             drag::render_selection_ui,
             about::render_about_screen,
+            theme::render_theme_picker,
             self::input::handle_keymap,
         ),
     )
@@ -294,6 +296,7 @@ fn process_database_updates(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     state: Res<InstanceState>,
+    node_query: Query<(Entity, &components::NodeEntity)>,
 ) {
     // Process all pending updates
     while let Ok(update) = update_channel.receiver.try_recv() {
@@ -311,9 +314,15 @@ fn process_database_updates(
                     );
                 }
             }
-            components::DatabaseUpdate::InstanceRemoved(_instance_id) => {
-                // TODO: Despawn node entity
-                // Need to query for entity with matching instance_id and despawn it
+            components::DatabaseUpdate::InstanceRemoved(instance_id) => {
+                // Despawn node entity matching the instance_id
+                for (entity, node_entity) in node_query.iter() {
+                    if node_entity.instance_id == instance_id {
+                        commands.entity(entity).despawn();
+                        info!("Despawned node for removed instance: {}", instance_id);
+                        break;
+                    }
+                }
             }
             components::DatabaseUpdate::NetworkTopologyChanged => {
                 // Edges will be rebuilt by update_edges_for_layer system
@@ -364,38 +373,3 @@ fn handle_lifetime(
         }
     }
 }
-
-// #[derive(Component)]
-// pub struct ConnectionTask(pub Task<()>);
-
-// pub fn prepare_connection_tasks(
-//     args: Res<CommandLine>,
-//     pool: Res<AsyncComputeTaskPool>,
-//     mut commands: Commands,
-// ) {
-//     while let Some(key) = queue.queue.pop() {
-//         if let Some(entity) = chunks.entity(key) {
-//             let task = pool.spawn(async move {
-//                 // TODO no references
-//                 // Create server connection(s)
-//                 for server in args.server.unwrap_or(Vec::new()) {
-//                     state.db.add_server(&server, "test", "test").await?;
-//                 }
-//             });
-
-//             cmds.entity(entity).insert(ConnectionTask { 0: task });
-//         }
-//     }
-// }
-
-// pub fn apply_connection_tasks(
-//     mut query: Query<(Entity, &mut ConnectionTask)>,
-//     mut commands: Commands,
-// ) {
-//     query.for_each_mut(|(entity, mut task)| {
-//         if futures::block_on(futures::poll_once(&mut task.0)) {
-//             cmds.entity(entity).remove::<GenTask>();
-//         }
-//         return;
-//     });
-// }

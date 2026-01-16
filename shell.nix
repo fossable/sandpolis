@@ -19,6 +19,7 @@ mkShell rec {
     xorg.libXi
     xorg.libXrandr
     libxkbcommon
+    libGL
     wayland
     fuse3
     systemd

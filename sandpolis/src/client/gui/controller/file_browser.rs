@@ -1,5 +1,5 @@
 use bevy_egui::egui;
-use egui_file_dialog::{FileDialog, DialogState};
+use egui_file_dialog::FileDialog;
 use sandpolis_core::InstanceId;
 use crate::InstanceState;
 use crate::client::gui::queries;
@@ -24,7 +24,6 @@ impl Default for FileBrowserState {
 /// Render file browser controller using egui-file-dialog
 pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId) {
     let state_id = egui::Id::new(format!("file_browser_{}", instance_id));
-    let dialog_id = egui::Id::new(format!("file_dialog_{}", instance_id));
 
     let mut browser_state = ui.data_mut(|d| {
         d.get_persisted::<FileBrowserState>(state_id)
