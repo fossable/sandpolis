@@ -1,4 +1,4 @@
-use crate::Layer;
+use sandpolis_core::Layer;
 use axum::Json;
 use sandpolis_instance::LayerVersion;
 use sandpolis_network::RequestResult;

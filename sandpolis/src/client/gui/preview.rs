@@ -1,6 +1,6 @@
 use super::queries;
 use super::{CurrentLayer, components::NodeEntity, controller::{NodeControllerState, ControllerType}};
-use crate::Layer;
+use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_core::InstanceId;
@@ -174,16 +174,12 @@ pub fn render_node_previews(
 
 /// Get layer-specific icon path for the left circular icon
 pub fn get_layer_icon(layer: &Layer) -> &'static str {
-    match layer {
-        #[cfg(feature = "layer-filesystem")]
-        Layer::Filesystem => "📁",
-        #[cfg(feature = "layer-shell")]
-        Layer::Shell => "💻",
-        #[cfg(feature = "layer-inventory")]
-        Layer::Inventory => "📊",
-        #[cfg(feature = "layer-desktop")]
-        Layer::Desktop => "🖥",
-        Layer::Network => "🌐",
+    match layer.name() {
+        "Filesystem" => "📁",
+        "Shell" => "💻",
+        "Inventory" => "📊",
+        "Desktop" => "🖥",
+        "Network" => "🌐",
         _ => "📦",
     }
 }
@@ -198,9 +194,9 @@ pub fn get_hostname(instance_id: InstanceId) -> String {
 
 /// Get layer-specific bottom line details
 pub fn get_layer_details(layer: &Layer, network_layer: &sandpolis_network::NetworkLayer, instance_id: InstanceId) -> String {
-    match layer {
+    match layer.name() {
         #[cfg(feature = "layer-filesystem")]
-        Layer::Filesystem => {
+        "Filesystem" => {
             if let Ok(usage) = queries::query_filesystem_usage(instance_id) {
                 let used_gb = usage.used as f64 / 1_000_000_000.0;
                 let total_gb = usage.total as f64 / 1_000_000_000.0;
@@ -215,7 +211,7 @@ pub fn get_layer_details(layer: &Layer, network_layer: &sandpolis_network::Netwo
             }
         }
 
-        Layer::Network => {
+        "Network" => {
             if let Ok(stats) = queries::query_network_stats(network_layer, instance_id) {
                 if let Some(latency) = stats.latency_ms {
                     format!("Latency: {} ms", latency)
@@ -228,7 +224,7 @@ pub fn get_layer_details(layer: &Layer, network_layer: &sandpolis_network::Netwo
         }
 
         #[cfg(feature = "layer-inventory")]
-        Layer::Inventory => {
+        "Inventory" => {
             if let Ok(mem) = queries::query_memory_stats(instance_id) {
                 let percent = if mem.total > 0 {
                     (mem.used as f64 / mem.total as f64) * 100.0
@@ -242,7 +238,7 @@ pub fn get_layer_details(layer: &Layer, network_layer: &sandpolis_network::Netwo
         }
 
         #[cfg(feature = "layer-shell")]
-        Layer::Shell => {
+        "Shell" => {
             if let Ok(sessions) = queries::query_shell_sessions(instance_id) {
                 let active_count = sessions.iter().filter(|s| s.active).count();
                 format!("{} session{}, {} active",
@@ -256,7 +252,7 @@ pub fn get_layer_details(layer: &Layer, network_layer: &sandpolis_network::Netwo
         }
 
         #[cfg(feature = "layer-desktop")]
-        Layer::Desktop => {
+        "Desktop" => {
             if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
                 format!("OS: {:?}", metadata.os_type)
             } else {
@@ -264,7 +260,7 @@ pub fn get_layer_details(layer: &Layer, network_layer: &sandpolis_network::Netwo
             }
         }
 
-        _ => format!("Layer: {:?}", layer),
+        _ => format!("Layer: {}", layer),
     }
 }
 

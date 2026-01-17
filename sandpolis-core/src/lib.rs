@@ -666,6 +666,70 @@ mod test_user_name {
     }
 }
 
+/// A layer represents a functional area of Sandpolis (e.g., filesystem, shell, network).
+/// Layers are registered at runtime using the `inventory` crate.
+#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct Layer(pub String);
+
+impl Layer {
+    /// Create a new layer with the given name.
+    pub const fn new(name: String) -> Self {
+        Self(name)
+    }
+
+    /// Get the layer name.
+    pub fn name(&self) -> &str {
+        &self.0
+    }
+
+    /// Iterate over all registered layers.
+    pub fn registered() -> impl Iterator<Item = &'static Layer> {
+        inventory::iter::<Layer>()
+    }
+}
+
+impl std::fmt::Display for Layer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::ops::Deref for Layer {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<&str> for Layer {
+    fn from(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
+impl From<String> for Layer {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
+
+impl PartialEq<str> for Layer {
+    fn eq(&self, other: &str) -> bool {
+        self.0 == other
+    }
+}
+
+impl PartialEq<&str> for Layer {
+    fn eq(&self, other: &&str) -> bool {
+        self.0 == *other
+    }
+}
+
+// Register Layer with inventory for runtime collection
+inventory::collect!(Layer);
+
 /// A config fragment that can take overrides from the command line or from
 /// environment variables.
 #[cfg(feature = "default")]

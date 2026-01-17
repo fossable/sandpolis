@@ -1,7 +1,7 @@
 use super::components::NodeEntity;
 use super::node::{NeedsScaling, NodeSvg};
 use super::queries;
-use crate::Layer;
+use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_svg::prelude::{Origin, Svg2d};
 
@@ -53,9 +53,9 @@ fn get_layer_svg_path(
     instance_layer: &sandpolis_instance::InstanceLayer,
     instance_id: sandpolis_core::InstanceId,
 ) -> &'static str {
-    match layer {
+    match layer.name() {
         #[cfg(feature = "layer-filesystem")]
-        Layer::Filesystem => {
+        "Filesystem" => {
             // Show OS-specific icons for filesystem layer
             if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
                 super::node::get_os_image(metadata.os_type)
@@ -64,7 +64,7 @@ fn get_layer_svg_path(
             }
         }
 
-        Layer::Network => {
+        "Network" => {
             // Distinguish between servers and agents
             // TODO: Query instance type from database
             // For now, use the local instance as reference
@@ -76,7 +76,7 @@ fn get_layer_svg_path(
         }
 
         #[cfg(feature = "layer-desktop")]
-        Layer::Desktop => {
+        "Desktop" => {
             // Show desktop environment icons
             // TODO: Query desktop environment from database
             // For now, default to generic desktop icon
@@ -84,7 +84,7 @@ fn get_layer_svg_path(
         }
 
         #[cfg(feature = "layer-inventory")]
-        Layer::Inventory => {
+        "Inventory" => {
             // Show hardware type icons (server, desktop, laptop, mobile)
             // TODO: Query hardware type from database
             if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
@@ -100,7 +100,7 @@ fn get_layer_svg_path(
         }
 
         #[cfg(feature = "layer-shell")]
-        Layer::Shell => {
+        "Shell" => {
             // Show terminal icon
             "shell/terminal.svg"
         }
@@ -140,8 +140,8 @@ fn get_layer_color_tint(
     network_layer: &sandpolis_network::NetworkLayer,
     instance_id: sandpolis_core::InstanceId,
 ) -> Color {
-    match layer {
-        Layer::Network => {
+    match layer.name() {
+        "Network" => {
             // Color based on connection latency
             if let Ok(stats) = queries::query_network_stats(network_layer, instance_id) {
                 if let Some(latency) = stats.latency_ms {
@@ -161,7 +161,7 @@ fn get_layer_color_tint(
         }
 
         #[cfg(feature = "layer-filesystem")]
-        Layer::Filesystem => {
+        "Filesystem" => {
             // Color based on disk usage
             if let Ok(usage) = queries::query_filesystem_usage(instance_id) {
                 let percent = if usage.total > 0 {
@@ -183,7 +183,7 @@ fn get_layer_color_tint(
         }
 
         #[cfg(feature = "layer-inventory")]
-        Layer::Inventory => {
+        "Inventory" => {
             // Color based on memory usage
             if let Ok(mem) = queries::query_memory_stats(instance_id) {
                 let percent = if mem.total > 0 {

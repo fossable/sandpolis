@@ -8,8 +8,7 @@ use self::{
     node::spawn_node,
     theme::{CurrentTheme, ThemePickerState},
 };
-#[cfg(feature = "layer-desktop")]
-use crate::Layer;
+use sandpolis_core::Layer;
 use crate::{InstanceState, config::Configuration};
 use anyhow::Result;
 use bevy::{
@@ -54,10 +53,10 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let (db_update_tx, db_update_rx) = tokio::sync::mpsc::unbounded_channel();
 
     // Spawn background task for database listeners
-    let state_clone = state.clone();
+    let network = state.network.clone();
     let db_update_tx_clone = db_update_tx.clone();
     tokio::spawn(async move {
-        listeners::setup_all_listeners(state_clone, db_update_tx_clone).await;
+        listeners::setup_all_listeners(network, db_update_tx_clone).await;
     });
 
     let mut app = App::new();
@@ -90,7 +89,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .add_plugins(bevy_svg::prelude::SvgPlugin)
     .add_plugins(bevy_stl::StlPlugin)
     .add_plugins(EguiPlugin::default())
-    .insert_resource(CurrentLayer(Layer::Desktop))
+    .insert_resource(CurrentLayer(Layer::from("Desktop")))
     .insert_resource(ZoomLevel(1.0))
     .insert_resource(LayerChangeTimer(Timer::from_seconds(3.0, TimerMode::Once)))
     .insert_resource(MinimapViewport::default())
@@ -234,7 +233,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     app.add_systems(
         Update,
         sandpolis_desktop::client::gui::handle_layer
-            .run_if(|current_layer: Res<CurrentLayer>| **current_layer == Layer::Desktop),
+            .run_if(|current_layer: Res<CurrentLayer>| **current_layer == "Desktop"),
     );
 
     app.run();

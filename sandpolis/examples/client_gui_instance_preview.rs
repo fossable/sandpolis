@@ -11,10 +11,10 @@
 ///   LAYER=Shell cargo run --example client_gui_instance_preview --features client-gui
 ///   LAYER=Inventory cargo run --example client_gui_instance_preview --features client-gui
 use eframe::egui;
-use sandpolis::{Layer, InstanceState, config::Configuration, MODELS};
+use sandpolis::{InstanceState, config::Configuration, MODELS};
 use sandpolis::client::gui::preview::render_preview_content;
 use sandpolis::client::gui::controller::NodeControllerState;
-use sandpolis_core::InstanceId;
+use sandpolis_core::{InstanceId, Layer};
 use sandpolis_database::{DatabaseLayer, config::DatabaseConfig};
 use std::env;
 
@@ -26,8 +26,8 @@ async fn main() -> eframe::Result<()> {
     // Read configuration from environment
     let layer = env::var("LAYER")
         .ok()
-        .and_then(|s| parse_layer(&s))
-        .unwrap_or(Layer::Network);
+        .map(|s| Layer::from(s.as_str()))
+        .unwrap_or_else(|| Layer::from("Network"));
 
     // Create minimal configuration
     let config = Configuration::default();
@@ -62,20 +62,6 @@ async fn main() -> eframe::Result<()> {
     )
 }
 
-fn parse_layer(s: &str) -> Option<Layer> {
-    match s {
-        "Network" => Some(Layer::Network),
-        #[cfg(feature = "layer-filesystem")]
-        "Filesystem" => Some(Layer::Filesystem),
-        #[cfg(feature = "layer-inventory")]
-        "Inventory" => Some(Layer::Inventory),
-        #[cfg(feature = "layer-shell")]
-        "Shell" => Some(Layer::Shell),
-        #[cfg(feature = "layer-desktop")]
-        "Desktop" => Some(Layer::Desktop),
-        _ => None,
-    }
-}
 
 struct NodePreviewTestApp {
     layer: Layer,

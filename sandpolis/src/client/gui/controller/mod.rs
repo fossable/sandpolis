@@ -1,5 +1,5 @@
 use super::{CurrentLayer, components::NodeEntity};
-use crate::Layer;
+use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_core::InstanceId;
@@ -51,18 +51,18 @@ pub enum ControllerType {
 impl ControllerType {
     /// Get the controller type for a given layer
     pub fn from_layer(layer: &Layer) -> Self {
-        match layer {
+        match layer.name() {
             #[cfg(feature = "layer-filesystem")]
-            Layer::Filesystem => ControllerType::FileBrowser,
+            "Filesystem" => ControllerType::FileBrowser,
 
             #[cfg(feature = "layer-shell")]
-            Layer::Shell => ControllerType::Terminal,
+            "Shell" => ControllerType::Terminal,
 
             #[cfg(feature = "layer-inventory")]
-            Layer::Inventory => ControllerType::SystemInfo,
+            "Inventory" => ControllerType::SystemInfo,
 
             #[cfg(feature = "layer-desktop")]
-            Layer::Desktop => ControllerType::DesktopViewer,
+            "Desktop" => ControllerType::DesktopViewer,
 
             _ => ControllerType::SystemInfo, // Default fallback
         }

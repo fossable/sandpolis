@@ -6,7 +6,6 @@ use sandpolis_database::DatabaseLayer;
 use sandpolis_instance::LayerVersion;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::LazyLock};
-use strum::EnumIter;
 
 pub mod cli;
 pub mod config;
@@ -120,62 +119,6 @@ impl InstanceState {
     }
 }
 
-/// Layers are feature-sets that may be enabled on instances.
-#[derive(
-    Serialize, Deserialize, Clone, Copy, EnumIter, Debug, PartialEq, Eq, Hash, strum::Display,
-)]
-pub enum Layer {
-    /// Manage accounts.
-    #[cfg(feature = "layer-account")]
-    Account,
-
-    Agent,
-
-    #[cfg(feature = "layer-audit")]
-    Audit,
-
-    Client,
-
-    /// Deploy agents directly over a protocol like SSH or via special deployer
-    /// packages.
-    #[cfg(feature = "layer-deploy")]
-    Deploy,
-
-    /// Interact with Desktop environments.
-    #[cfg(feature = "layer-desktop")]
-    Desktop,
-    /// Mount and manipulate filesystems.
-    #[cfg(feature = "layer-filesystem")]
-    Filesystem,
-
-    #[cfg(feature = "layer-health")]
-    Health,
-
-    // Instance?
-    /// View system information.
-    #[cfg(feature = "layer-inventory")]
-    Inventory,
-
-    /// Support for connecting to instances in the Sandpolis network and sending
-    /// messages back and forth.
-    Network,
-    /// Support for probe devices which do not run agent software. Instead they
-    /// connect through a "gateway" instance over a well known protocol.
-    #[cfg(feature = "layer-probe")]
-    Probe,
-    Server,
-
-    /// Interact with shell prompts / snippets.
-    #[cfg(feature = "layer-shell")]
-    Shell,
-
-    #[cfg(feature = "layer-snapshot")]
-    Snapshot,
-
-    /// Establish persistent or ephemeral tunnels between instances.
-    #[cfg(feature = "layer-tunnel")]
-    Tunnel,
-}
 
 /// All user accounts are subject to a set of permissions controlling what
 /// server operations are authorized. The inital admin user has complete and
@@ -204,10 +147,10 @@ macro_rules! layer_version {
 }
 
 // TODO make this const
-pub fn layers() -> HashMap<Layer, LayerVersion> {
+pub fn layers() -> HashMap<sandpolis_core::Layer, LayerVersion> {
     HashMap::from([
         #[cfg(feature = "layer-shell")]
-        (Layer::Shell, layer_version!(sandpolis_shell)),
+        (sandpolis_core::Layer::from("shell"), layer_version!(sandpolis_shell)),
     ])
 }
 

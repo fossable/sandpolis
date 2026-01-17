@@ -9616,6 +9616,7 @@ dependencies = [
  "clap",
  "colored",
  "headers",
+ "inventory",
  "native_db",
  "native_model",
  "regex",

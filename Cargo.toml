@@ -76,6 +76,7 @@ tracing = "0.1.40"
 url = { version = "2.5.4", features = ["serde"] }
 uuid = { version = "1.15.1", features = ["v7", "serde", "rng-getrandom"] }
 validator = { version = "0.20", features = ["derive"] }
+inventory = "0.3"
 reqwest = { version = "0.12.5", default-features = false, features = [
   "stream",
   "cookies",

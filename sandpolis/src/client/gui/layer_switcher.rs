@@ -1,5 +1,5 @@
 use super::CurrentLayer;
-use crate::Layer;
+use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 
@@ -24,77 +24,67 @@ impl Default for LayerSwitcherState {
 /// Get list of available layers based on enabled features
 fn get_available_layers() -> Vec<Layer> {
     let mut layers = vec![
-        Layer::Agent,
-        Layer::Client,
-        Layer::Network,
-        Layer::Server,
+        Layer::from("Agent"),
+        Layer::from("Client"),
+        Layer::from("Network"),
+        Layer::from("Server"),
     ];
 
     #[cfg(feature = "layer-account")]
-    layers.push(Layer::Account);
+    layers.push(Layer::from("Account"));
 
     #[cfg(feature = "layer-audit")]
-    layers.push(Layer::Audit);
+    layers.push(Layer::from("Audit"));
 
     #[cfg(feature = "layer-deploy")]
-    layers.push(Layer::Deploy);
+    layers.push(Layer::from("Deploy"));
 
     #[cfg(feature = "layer-desktop")]
-    layers.push(Layer::Desktop);
+    layers.push(Layer::from("Desktop"));
 
     #[cfg(feature = "layer-filesystem")]
-    layers.push(Layer::Filesystem);
+    layers.push(Layer::from("Filesystem"));
 
     #[cfg(feature = "layer-health")]
-    layers.push(Layer::Health);
+    layers.push(Layer::from("Health"));
 
     #[cfg(feature = "layer-inventory")]
-    layers.push(Layer::Inventory);
+    layers.push(Layer::from("Inventory"));
 
     #[cfg(feature = "layer-probe")]
-    layers.push(Layer::Probe);
+    layers.push(Layer::from("Probe"));
 
     #[cfg(feature = "layer-shell")]
-    layers.push(Layer::Shell);
+    layers.push(Layer::from("Shell"));
 
     #[cfg(feature = "layer-snapshot")]
-    layers.push(Layer::Snapshot);
+    layers.push(Layer::from("Snapshot"));
 
     #[cfg(feature = "layer-tunnel")]
-    layers.push(Layer::Tunnel);
+    layers.push(Layer::from("Tunnel"));
 
     layers
 }
 
 /// Get emoji icon for a layer
 fn get_layer_icon(layer: &Layer) -> &'static str {
-    match layer {
-        #[cfg(feature = "layer-account")]
-        Layer::Account => "👤",
-        Layer::Agent => "🤖",
-        #[cfg(feature = "layer-audit")]
-        Layer::Audit => "📋",
-        Layer::Client => "💻",
-        #[cfg(feature = "layer-deploy")]
-        Layer::Deploy => "🚀",
-        #[cfg(feature = "layer-desktop")]
-        Layer::Desktop => "🖥️",
-        #[cfg(feature = "layer-filesystem")]
-        Layer::Filesystem => "📁",
-        #[cfg(feature = "layer-health")]
-        Layer::Health => "❤️",
-        #[cfg(feature = "layer-inventory")]
-        Layer::Inventory => "📦",
-        Layer::Network => "🌐",
-        #[cfg(feature = "layer-probe")]
-        Layer::Probe => "🔍",
-        Layer::Server => "🖧",
-        #[cfg(feature = "layer-shell")]
-        Layer::Shell => "⌨️",
-        #[cfg(feature = "layer-snapshot")]
-        Layer::Snapshot => "📸",
-        #[cfg(feature = "layer-tunnel")]
-        Layer::Tunnel => "🔐",
+    match layer.name() {
+        "Account" => "👤",
+        "Agent" => "🤖",
+        "Audit" => "📋",
+        "Client" => "💻",
+        "Deploy" => "🚀",
+        "Desktop" => "🖥️",
+        "Filesystem" => "📁",
+        "Health" => "❤️",
+        "Inventory" => "📦",
+        "Network" => "🌐",
+        "Probe" => "🔍",
+        "Server" => "🖧",
+        "Shell" => "⌨️",
+        "Snapshot" => "📸",
+        "Tunnel" => "🔐",
+        _ => "❓",
     }
 }
 
@@ -223,7 +213,7 @@ pub fn render_layer_switcher_panel(
                             .min_size(egui::vec2(panel_width - 40.0, button_height));
 
                         if ui.add(button).clicked() && !is_current {
-                            selected_layer = Some(**layer);
+                            selected_layer = Some((*layer).clone());
                             should_close = true;
                         }
 

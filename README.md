@@ -135,6 +135,10 @@ login from that user (anywhere in the network) will fire an urgent alert.
 
 Provides access to remote desktop capabilities.
 
+### Deploy
+
+Support for deploying agents via SSH.
+
 ### Filesystem
 
 Provides read/write access to agent filesystems. The Sandpolis client can also
@@ -147,8 +151,8 @@ Integrates with package managers to monitor software versions.
 ### Probe
 
 Probes are managable from the Sandpolis network, but don't run agent software.
-Instead, a remote Sandpolis agent instance connects to probes over a standard
-protocol like SSH, SNMP, Docker, etc.
+Instead, a "gateway" agent instance connects to probes over a standard protocol
+like SSH, SNMP, Docker, etc.
 
 You can interact with probes almost as if they were regular agents (as long as
 the gateway instance remains online).

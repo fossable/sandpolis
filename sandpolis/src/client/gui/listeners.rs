@@ -1,15 +1,15 @@
 use super::components::DatabaseUpdate;
-use crate::InstanceState;
+use sandpolis_network::NetworkLayer;
 use tokio::sync::mpsc;
 use sandpolis_database::ResidentVecEvent;
 
 /// Set up all resident listeners to forward database updates to Bevy
 /// This runs in a background tokio task and sends updates through the channel
-pub async fn setup_all_listeners(state: InstanceState, tx: mpsc::UnboundedSender<DatabaseUpdate>) {
+pub async fn setup_all_listeners(network: NetworkLayer, tx: mpsc::UnboundedSender<DatabaseUpdate>) {
     // Listen for connection changes in the network layer
     // Each connection represents an instance in the network
     let tx_connections = tx.clone();
-    state.network.connections.listen(move |event| {
+    network.connections.listen(move |event| {
         match event {
             ResidentVecEvent::Added(connection) => {
                 let instance_id = connection.read().remote_instance;

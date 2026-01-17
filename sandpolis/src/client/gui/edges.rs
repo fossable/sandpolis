@@ -3,7 +3,7 @@ use super::{
     components::{NodeEntity, WorldView},
     queries,
 };
-use crate::Layer;
+use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_core::InstanceId;
@@ -53,12 +53,11 @@ pub fn render_edges(
         };
 
         // Color based on layer
-        let color = match edge.layer {
-            Layer::Network => Color::srgb(0.3, 0.8, 1.0),    // Cyan
-            #[cfg(feature = "layer-filesystem")]
-            Layer::Filesystem => Color::srgb(0.3, 1.0, 0.3), // Green
-            Layer::Desktop => Color::srgb(1.0, 0.5, 0.3),    // Orange
-            _ => Color::srgb(0.6, 0.6, 0.6),                 // Gray
+        let color = match edge.layer.name() {
+            "Network" => Color::srgb(0.3, 0.8, 1.0),    // Cyan
+            "Filesystem" => Color::srgb(0.3, 1.0, 0.3), // Green
+            "Desktop" => Color::srgb(1.0, 0.5, 0.3),    // Orange
+            _ => Color::srgb(0.6, 0.6, 0.6),            // Gray
         };
 
         gizmos.line_2d(from, to, color);
@@ -84,25 +83,24 @@ pub fn update_edges_for_layer(
     }
 
     // Query database for edges relevant to current layer
-    match **current_layer {
-        Layer::Network => {
+    match current_layer.name() {
+        "Network" => {
             // Query network topology from database
             if let Ok(network_edges) = queries::query_network_topology(&network_layer) {
                 for net_edge in network_edges {
                     commands.spawn(Edge {
                         from: net_edge.from,
                         to: net_edge.to,
-                        layer: Layer::Network,
+                        layer: Layer::from("Network"),
                     });
                 }
             }
         }
-        #[cfg(feature = "layer-filesystem")]
-        Layer::Filesystem => {
+        "Filesystem" => {
             // TODO: Query filesystem connections (file transfer paths)
             // For now, no edges
         }
-        Layer::Desktop => {
+        "Desktop" => {
             // TODO: Query desktop streaming connections
             // For now, no edges
         }
@@ -136,7 +134,7 @@ pub fn render_edge_labels(
     camera_query: Query<(&Camera, &GlobalTransform), With<WorldView>>,
 ) {
     // Only show labels on Network layer
-    if **current_layer != Layer::Network {
+    if **current_layer != "Network" {
         return;
     }
 
@@ -156,7 +154,7 @@ pub fn render_edge_labels(
 
     // Render label for each edge
     for edge in edge_query.iter() {
-        if edge.layer != Layer::Network {
+        if edge.layer != "Network" {
             continue;
         }
 

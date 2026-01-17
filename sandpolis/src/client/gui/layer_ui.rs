@@ -4,39 +4,29 @@ use super::{
     layer_switcher::LayerSwitcherState,
     about::{AboutScreenState, register_logo_click},
 };
-use crate::Layer;
+use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 
 /// Get the SVG file URI for a layer
 fn get_layer_svg_uri(layer: &Layer) -> String {
-    let relative_path = match layer {
-        #[cfg(feature = "layer-account")]
-        Layer::Account => "layers/Account.svg",
-        Layer::Agent => "layers/Network.svg",
-        #[cfg(feature = "layer-audit")]
-        Layer::Audit => "layers/Audit.svg",
-        Layer::Client => "layers/Network.svg",
-        #[cfg(feature = "layer-deploy")]
-        Layer::Deploy => "layers/Deploy.svg",
-        #[cfg(feature = "layer-desktop")]
-        Layer::Desktop => "layers/Desktop.svg",
-        #[cfg(feature = "layer-filesystem")]
-        Layer::Filesystem => "layers/Filesystem.svg",
-        #[cfg(feature = "layer-health")]
-        Layer::Health => "layers/Health.svg",
-        #[cfg(feature = "layer-inventory")]
-        Layer::Inventory => "layers/Inventory.svg",
-        Layer::Network => "layers/Network.svg",
-        #[cfg(feature = "layer-probe")]
-        Layer::Probe => "layers/Probe.svg",
-        Layer::Server => "layers/Network.svg",
-        #[cfg(feature = "layer-shell")]
-        Layer::Shell => "layers/Shell.svg",
-        #[cfg(feature = "layer-snapshot")]
-        Layer::Snapshot => "layers/Snapshot.svg",
-        #[cfg(feature = "layer-tunnel")]
-        Layer::Tunnel => "layers/Tunnel.svg",
+    let relative_path = match layer.name() {
+        "Account" => "layers/Account.svg",
+        "Agent" => "layers/Network.svg",
+        "Audit" => "layers/Audit.svg",
+        "Client" => "layers/Network.svg",
+        "Deploy" => "layers/Deploy.svg",
+        "Desktop" => "layers/Desktop.svg",
+        "Filesystem" => "layers/Filesystem.svg",
+        "Health" => "layers/Health.svg",
+        "Inventory" => "layers/Inventory.svg",
+        "Network" => "layers/Network.svg",
+        "Probe" => "layers/Probe.svg",
+        "Server" => "layers/Network.svg",
+        "Shell" => "layers/Shell.svg",
+        "Snapshot" => "layers/Snapshot.svg",
+        "Tunnel" => "layers/Tunnel.svg",
+        _ => "layers/Network.svg",
     };
 
     // Use file:// URI with absolute path from current working directory
@@ -163,65 +153,28 @@ pub fn render_layer_indicator(
 }
 
 /// Get a display-friendly name for a layer
-pub fn layer_display_name(layer: &Layer) -> &'static str {
-    match layer {
-        #[cfg(feature = "layer-account")]
-        Layer::Account => "Account",
-        Layer::Agent => "Agent",
-        #[cfg(feature = "layer-audit")]
-        Layer::Audit => "Audit",
-        Layer::Client => "Client",
-        #[cfg(feature = "layer-deploy")]
-        Layer::Deploy => "Deploy",
-        #[cfg(feature = "layer-desktop")]
-        Layer::Desktop => "Desktop",
-        #[cfg(feature = "layer-filesystem")]
-        Layer::Filesystem => "Filesystem",
-        #[cfg(feature = "layer-health")]
-        Layer::Health => "Health",
-        #[cfg(feature = "layer-inventory")]
-        Layer::Inventory => "Inventory",
-        Layer::Network => "Network",
-        #[cfg(feature = "layer-probe")]
-        Layer::Probe => "Probe",
-        Layer::Server => "Server",
-        #[cfg(feature = "layer-shell")]
-        Layer::Shell => "Shell",
-        #[cfg(feature = "layer-snapshot")]
-        Layer::Snapshot => "Snapshot",
-        #[cfg(feature = "layer-tunnel")]
-        Layer::Tunnel => "Tunnel",
-    }
+pub fn layer_display_name(layer: &Layer) -> &str {
+    layer.name()
 }
 
 /// Get an icon/emoji for a layer
 pub fn get_layer_icon(layer: &Layer) -> &'static str {
-    match layer {
-        #[cfg(feature = "layer-account")]
-        Layer::Account => "👤",
-        Layer::Agent => "🤖",
-        #[cfg(feature = "layer-audit")]
-        Layer::Audit => "🔍",
-        Layer::Client => "💻",
-        #[cfg(feature = "layer-deploy")]
-        Layer::Deploy => "🚀",
-        #[cfg(feature = "layer-desktop")]
-        Layer::Desktop => "🖥️",
-        #[cfg(feature = "layer-filesystem")]
-        Layer::Filesystem => "📁",
-        #[cfg(feature = "layer-health")]
-        Layer::Health => "❤️",
-        #[cfg(feature = "layer-inventory")]
-        Layer::Inventory => "📦",
-        Layer::Network => "🌐",
-        #[cfg(feature = "layer-probe")]
-        Layer::Probe => "📡",
-        Layer::Server => "🖧",
-        #[cfg(feature = "layer-shell")]
-        Layer::Shell => "⌨️",
-        #[cfg(feature = "layer-snapshot")]
-        Layer::Snapshot => "📸",
-        #[cfg(feature = "layer-tunnel")]
-        Layer::Tunnel => "🔗",
+    match layer.name() {
+        "Account" => "👤",
+        "Agent" => "🤖",
+        "Audit" => "🔍",
+        "Client" => "💻",
+        "Deploy" => "🚀",
+        "Desktop" => "🖥️",
+        "Filesystem" => "📁",
+        "Health" => "❤️",
+        "Inventory" => "📦",
+        "Network" => "🌐",
+        "Probe" => "📡",
+        "Server" => "🖧",
+        "Shell" => "⌨️",
+        "Snapshot" => "📸",
+        "Tunnel" => "🔗",
+        _ => "❓",
     }
 }

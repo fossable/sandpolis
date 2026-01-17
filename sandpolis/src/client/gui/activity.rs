@@ -175,10 +175,8 @@ pub fn spawn_network_activity_lines(
     existing_activities: Query<&ActivityLine>,
     current_layer: Res<super::CurrentLayer>,
 ) {
-    use crate::Layer;
-
     // Only spawn on Network layer
-    if **current_layer != Layer::Network {
+    if **current_layer != "Network" {
         return;
     }
 
@@ -221,26 +219,24 @@ pub fn cleanup_layer_activity_lines(
     activity_query: Query<(Entity, &ActivityLine)>,
     current_layer: Res<super::CurrentLayer>,
 ) {
-    use crate::Layer;
-
     // Only keep activity lines relevant to current layer
     for (entity, activity) in activity_query.iter() {
         let should_keep = match activity.activity_type {
             ActivityType::FileTransfer => {
                 #[cfg(feature = "layer-filesystem")]
                 {
-                    **current_layer == Layer::Filesystem
+                    **current_layer == "Filesystem"
                 }
                 #[cfg(not(feature = "layer-filesystem"))]
                 {
                     false
                 }
             }
-            ActivityType::NetworkTraffic => **current_layer == Layer::Network,
+            ActivityType::NetworkTraffic => **current_layer == "Network",
             ActivityType::ShellCommand => {
                 #[cfg(feature = "layer-shell")]
                 {
-                    **current_layer == Layer::Shell
+                    **current_layer == "Shell"
                 }
                 #[cfg(not(feature = "layer-shell"))]
                 {
@@ -250,7 +246,7 @@ pub fn cleanup_layer_activity_lines(
             ActivityType::DesktopStream => {
                 #[cfg(feature = "layer-desktop")]
                 {
-                    **current_layer == Layer::Desktop
+                    **current_layer == "Desktop"
                 }
                 #[cfg(not(feature = "layer-desktop"))]
                 {

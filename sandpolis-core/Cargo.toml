@@ -11,6 +11,7 @@ bevy = { workspace = true, optional = true }
 clap = { workspace = true, optional = true }
 colored = { workspace = true, optional = true }
 headers = { workspace = true, optional = true }
+inventory = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
 regex = { workspace = true }
