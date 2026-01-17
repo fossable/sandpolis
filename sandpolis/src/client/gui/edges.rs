@@ -78,8 +78,8 @@ pub fn update_edges_for_layer(
     edge_query: Query<(Entity, &Edge)>,
     state: Res<InstanceState>,
 ) {
-    // Only update when layer changes
-    if !current_layer.is_changed() || current_layer.is_added() {
+    // Only update when layer changes or is first added
+    if !current_layer.is_changed() && !current_layer.is_added() {
         return;
     }
 

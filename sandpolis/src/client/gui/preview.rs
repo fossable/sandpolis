@@ -118,8 +118,12 @@ pub fn render_node_previews(
         // Always create the window (to allow egui to properly manage its lifecycle)
         // but use .open() to control visibility
         let mut open = should_show;
-        egui::Window::new(format!("Preview_{}", node_entity.instance_id))
-            .id(egui::Id::new(format!("preview_{}", node_entity.instance_id)))
+
+        // Use a unique ID that combines "preview" with the actual instance_id value
+        let window_id = egui::Id::new("preview_window").with(node_entity.instance_id.to_string());
+
+        egui::Window::new(format!("##preview_{}", node_entity.instance_id)) // Hidden title with unique suffix
+            .id(window_id)
             .title_bar(false)
             .resizable(false)
             .movable(false)
@@ -249,8 +253,10 @@ pub fn render_preview_content(
     let layer_icon = get_layer_icon(current_layer);
     let layer_details = get_layer_details(current_layer, state, instance_id);
 
-    // Use a horizontal layout for the main content
-    ui.horizontal(|ui| {
+    // Push unique ID scope to prevent collisions between multiple preview windows
+    ui.push_id(instance_id.to_string(), |ui| {
+        // Use a horizontal layout for the main content
+        ui.horizontal(|ui| {
         // Left side: Circular icon area (60x60 pixels)
         ui.vertical(|ui| {
             ui.set_width(60.0);
@@ -353,6 +359,7 @@ pub fn render_preview_content(
             if response.hovered() {
                 response.on_hover_text(format!("Open {} controller", ControllerType::from_layer(current_layer).display_name()));
             }
+        });
         });
     });
 }

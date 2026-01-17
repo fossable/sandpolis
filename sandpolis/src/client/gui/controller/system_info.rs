@@ -5,11 +5,13 @@ use crate::client::gui::queries;
 
 /// Render system information controller
 pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId) {
-    egui::ScrollArea::vertical()
-        .max_height(350.0)
-        .show(ui, |ui| {
-            // Hardware Information Section
-            ui.collapsing("Hardware", |ui| {
+    // Push unique ID scope to prevent collisions with collapsing headers
+    ui.push_id(instance_id.to_string(), |ui| {
+        egui::ScrollArea::vertical()
+            .max_height(350.0)
+            .show(ui, |ui| {
+                // Hardware Information Section
+                ui.collapsing("Hardware", |ui| {
                 if let Ok(info) = queries::query_hardware_info(state, instance_id) {
                     ui.label(egui::RichText::new("CPU").strong());
                     if let Some(cpu_model) = info.cpu_model {
@@ -119,4 +121,5 @@ pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId)
                 }
             });
         });
+    });
 }

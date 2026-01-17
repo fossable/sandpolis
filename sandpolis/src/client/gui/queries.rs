@@ -25,9 +25,17 @@ pub struct NetworkEdge {
 /// Query all instances from the database
 /// This is the initial query run on startup to spawn all nodes
 pub fn query_all_instances(state: &InstanceState) -> Result<Vec<InstanceId>> {
-    // TODO: Query the database for all instances
-    // For now, return just the local instance
-    Ok(vec![state.instance.instance_id])
+    let mut instance_ids = vec![state.instance.instance_id];
+
+    // Get all connections and extract unique remote instance IDs
+    for connection in state.network.connections.iter() {
+        let conn = connection.read();
+        if !instance_ids.contains(&conn.remote_instance) {
+            instance_ids.push(conn.remote_instance);
+        }
+    }
+
+    Ok(instance_ids)
 }
 
 /// Query metadata for a specific instance
@@ -49,10 +57,20 @@ pub fn query_instance_metadata(_state: &InstanceState, id: InstanceId) -> Result
 
 /// Query network topology (edges between instances)
 /// Returns list of connections for the current layer
-pub fn query_network_topology(_state: &InstanceState) -> Result<Vec<NetworkEdge>> {
-    // TODO: Query database for connections
-    // For now, return empty (no edges)
-    Ok(vec![])
+pub fn query_network_topology(state: &InstanceState) -> Result<Vec<NetworkEdge>> {
+    let mut edges = Vec::new();
+
+    // Get all connections and build edges
+    for connection in state.network.connections.iter() {
+        let conn = connection.read();
+        // Create edge from local instance to remote instance
+        edges.push(NetworkEdge {
+            from: conn._instance_id,
+            to: conn.remote_instance,
+        });
+    }
+
+    Ok(edges)
 }
 
 /// Network statistics for an instance
