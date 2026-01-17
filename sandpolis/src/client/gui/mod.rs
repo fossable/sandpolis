@@ -4,7 +4,7 @@ use self::{
         DatabaseUpdateChannel, DatabaseUpdateSender, LayerIndicatorState, MinimapViewport,
         SelectionSet, WorldView,
     },
-    input::{HelpScreenState, LayerChangeTimer, LoginDialogState, MousePressed},
+    input::{HelpScreenState, LayerChangeTimer, LoginDialogState, MousePressed, PanningState},
     node::spawn_node,
     theme::{CurrentTheme, ThemePickerState},
 };
@@ -117,6 +117,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(state)
     .insert_resource(config)
     .insert_resource(MousePressed(false))
+    .insert_resource(PanningState::default())
     .add_systems(Startup, setup)
     .add_systems(Startup, install_egui_loaders)
     .add_systems(Startup, theme::initialize_theme)

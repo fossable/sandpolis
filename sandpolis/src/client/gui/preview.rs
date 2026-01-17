@@ -51,7 +51,7 @@ pub fn render_node_previews(
     node_query: Query<(&Transform, &NodeEntity, Option<&NodePreview>)>,
     windows: Query<&Window>,
 ) {
-    let Ok(_window) = windows.single() else {
+    let Ok(window) = windows.single() else {
         return;
     };
 
@@ -70,48 +70,72 @@ pub fn render_node_previews(
         1.0
     };
 
+    // Get window dimensions for bounds checking
+    let window_width = window.width();
+    let window_height = window.height();
+
     // Render preview for each node
     for (transform, node_entity, preview_opt) in node_query.iter() {
-        // Skip if preview is disabled
+        // Get preview settings
         let default_preview = NodePreview::default();
         let preview = preview_opt.unwrap_or(&default_preview);
-        if !preview.show {
-            continue;
+
+        // Always try to convert world position to screen position
+        // This helps us determine if the node is on-screen or off-screen
+        let viewport_result = camera.world_to_viewport(camera_transform, transform.translation);
+
+        // Determine if we should show the preview
+        let mut should_show = preview.show;
+        let mut preview_pos = egui::Pos2::ZERO;
+
+        if let Ok(viewport_pos) = viewport_result {
+            // Calculate the node's visual radius in screen space
+            let node_radius_screen = 50.0 / camera_scale;
+
+            // Check if the node is actually visible in the viewport
+            // Add some margin to account for the node's size and preview
+            let margin = node_radius_screen + preview.height + 20.0;
+            let is_node_visible = viewport_pos.x >= -margin
+                && viewport_pos.x <= window_width + margin
+                && viewport_pos.y >= -margin
+                && viewport_pos.y <= window_height + margin;
+
+            // Only show if preview is enabled AND node is visible
+            should_show = should_show && is_node_visible;
+
+            if should_show {
+                // Position preview below the node with a constant distance from the bottom edge
+                preview_pos = egui::Pos2::new(
+                    viewport_pos.x - preview.width / 2.0,
+                    viewport_pos.y + node_radius_screen + 10.0,
+                );
+            }
+        } else {
+            // world_to_viewport failed - node is definitely off-screen
+            should_show = false;
         }
 
-        // Convert world position to screen position
-        let Ok(viewport_pos) = camera.world_to_viewport(camera_transform, transform.translation)
-        else {
-            continue;
-        };
-
-        // Calculate the node's visual radius in screen space
-        // NODE_VISUAL_DIAMETER is 100.0 (from node.rs), so radius is 50.0
-        // Scale it inversely with camera scale (lower scale = more zoom in = larger on screen)
-        let node_radius_screen = 50.0 / camera_scale;
-
-        // Position preview below the node with a constant distance from the bottom edge
-        // Add a small gap (10.0 pixels) between node bottom and preview top
-        let preview_pos = egui::Pos2::new(
-            viewport_pos.x - preview.width / 2.0,
-            viewport_pos.y + node_radius_screen + 10.0,
-        );
-
-        // Render layer-specific content with new 4-part layout
+        // Always create the window (to allow egui to properly manage its lifecycle)
+        // but use .open() to control visibility
+        let mut open = should_show;
         egui::Window::new(format!("Preview_{}", node_entity.instance_id))
+            .id(egui::Id::new(format!("preview_{}", node_entity.instance_id)))
             .title_bar(false)
             .resizable(false)
             .movable(false)
+            .open(&mut open)
             .fixed_pos(preview_pos)
             .fixed_size([preview.width, preview.height])
             .show(ctx, |ui| {
-                render_preview_content(
-                    ui,
-                    &current_layer,
-                    &state,
-                    &mut controller_state,
-                    node_entity.instance_id,
-                );
+                if should_show {
+                    render_preview_content(
+                        ui,
+                        &current_layer,
+                        &state,
+                        &mut controller_state,
+                        node_entity.instance_id,
+                    );
+                }
             });
     }
 }

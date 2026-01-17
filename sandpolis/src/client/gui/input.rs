@@ -13,6 +13,12 @@ use std::ops::Range;
 #[derive(Resource)]
 pub struct MousePressed(pub bool);
 
+#[derive(Resource, Default)]
+pub struct PanningState {
+    /// Whether we're actively panning (started panning and haven't released yet)
+    pub is_panning: bool,
+}
+
 #[derive(Resource, Deref, DerefMut)]
 pub struct LayerChangeTimer(pub Timer);
 
@@ -175,12 +181,30 @@ pub fn handle_zoom(
     mut mouse_wheel_input: EventReader<MouseWheel>,
     mut zoom_level: ResMut<ZoomLevel>,
     mut camera_query: Query<(&mut Projection, &Transform), With<Camera2d>>,
+    controller_state: Res<super::controller::NodeControllerState>,
 ) {
-    // Don't handle zoom if egui wants the input
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
-    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() {
+
+    // Check if we're hovering over a controller window (which may have scrollable content)
+    // Controller windows have expandable_node set
+    let over_controller = controller_state.expanded_node.is_some() && ctx.is_pointer_over_area();
+
+    // Allow zoom if:
+    // 1. Not over any egui area, OR
+    // 2. Over a preview window (not a controller)
+    // Preview windows are identified by having is_pointer_over_area() true but not being the controller
+    let should_handle_zoom = if ctx.is_pointer_over_area() {
+        // We're over some egui area
+        // Only block zoom if we're over the controller window specifically
+        !over_controller
+    } else {
+        // Not over any egui area - always handle zoom
+        true
+    };
+
+    if !should_handle_zoom {
         // Clear the events so they don't accumulate
         mouse_wheel_input.clear();
         return;
@@ -214,7 +238,9 @@ pub fn handle_camera(
     mut mouse_button_events: EventReader<MouseButtonInput>,
     mut mouse_motion_events: EventReader<MouseMotion>,
     mut mouse_pressed: ResMut<MousePressed>,
+    mut panning_state: ResMut<PanningState>,
     mut cameras: Query<&mut Transform, With<Camera2d>>,
+    drag_state: Res<super::drag::DragState>,
 ) {
     // Don't handle camera movement if egui wants the input
     let Ok(ctx) = contexts.ctx_mut() else {
@@ -241,28 +267,42 @@ pub fn handle_camera(
             }
         }
 
-        // Handle mouse events only if egui doesn't want them
-        if !egui_wants_pointer {
-            // Store left-pressed state in the MousePressed resource
-            for button_event in mouse_button_events.read() {
-                if button_event.button != MouseButton::Left {
-                    continue;
-                }
-                *mouse_pressed = MousePressed(button_event.state.is_pressed());
+        // Process mouse button events
+        for button_event in mouse_button_events.read() {
+            if button_event.button != MouseButton::Left {
+                continue;
             }
 
-            if mouse_pressed.0 {
-                let displacement = mouse_motion_events
-                    .read()
-                    .fold(Vec2::ZERO, |acc, mouse_motion| acc + mouse_motion.delta);
-                camera_transform.translation -= Vec3::new(displacement.x, -displacement.y, 0.0);
-            }
-        } else {
-            // If egui wants pointer, clear mouse events and reset pressed state
-            mouse_button_events.clear();
-            mouse_motion_events.clear();
-            if mouse_pressed.0 {
+            if button_event.state.is_pressed() {
+                // Mouse button pressed
+                if !egui_wants_pointer {
+                    // Only set pressed if egui doesn't want it initially
+                    *mouse_pressed = MousePressed(true);
+                }
+            } else {
+                // Mouse button released - always clear panning state
                 *mouse_pressed = MousePressed(false);
+                panning_state.is_panning = false;
+            }
+        }
+
+        // Handle mouse motion for panning
+        let motion_delta = mouse_motion_events
+            .read()
+            .fold(Vec2::ZERO, |acc, mouse_motion| acc + mouse_motion.delta);
+
+        if motion_delta != Vec2::ZERO {
+            // Check if we should start or continue panning
+            if mouse_pressed.0 && drag_state.dragging_entity.is_none() {
+                if !panning_state.is_panning && !egui_wants_pointer {
+                    // Start panning (mouse is pressed, not over egui initially, and not dragging a node)
+                    panning_state.is_panning = true;
+                }
+
+                // Continue panning once started, even if pointer crosses over egui
+                if panning_state.is_panning {
+                    camera_transform.translation -= Vec3::new(motion_delta.x, -motion_delta.y, 0.0);
+                }
             }
         }
     }
