@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64"
+     xmlns="http://www.w3.org/2000/svg">
+  <!-- Endpoints -->
+  <rect x="4" y="20" width="12" height="24" rx="2"
+        fill="#ECEFF1"
+        stroke="#607D8B" stroke-width="2"/>
+  <rect x="48" y="20" width="12" height="24" rx="2"
+        fill="#ECEFF1"
+        stroke="#607D8B" stroke-width="2"/>
+
+  <!-- Tunnel -->
+  <rect x="16" y="26" width="32" height="12" rx="6"
+        fill="#E3F2FD"
+        stroke="#1E88E5" stroke-width="2"/>
+</svg>

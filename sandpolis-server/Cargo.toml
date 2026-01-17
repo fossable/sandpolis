@@ -9,6 +9,7 @@ version = "0.0.1"
 anyhow = { workspace = true }
 axum-macros = { workspace = true }
 axum = { workspace = true }
+bevy = { workspace = true, optional = true }
 clap = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
@@ -32,4 +33,4 @@ server = ["sandpolis-network/server"]
 client = ["sandpolis-network/client"]
 agent = ["sandpolis-network/agent"]
 client-tui = ["client"]
-client-gui = ["client"]
+client-gui = ["client", "dep:bevy"]

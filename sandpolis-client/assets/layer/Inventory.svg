@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Computer chip/hardware icon -->
+  <rect x="16" y="16" width="32" height="32" rx="2" fill="#34495e" stroke="#2c3e50" stroke-width="2"/>
+
+  <!-- Chip pins on sides -->
+  <rect x="10" y="20" width="6" height="3" fill="#95a5a6"/>
+  <rect x="10" y="26" width="6" height="3" fill="#95a5a6"/>
+  <rect x="10" y="32" width="6" height="3" fill="#95a5a6"/>
+  <rect x="10" y="38" width="6" height="3" fill="#95a5a6"/>
+
+  <rect x="48" y="20" width="6" height="3" fill="#95a5a6"/>
+  <rect x="48" y="26" width="6" height="3" fill="#95a5a6"/>
+  <rect x="48" y="32" width="6" height="3" fill="#95a5a6"/>
+  <rect x="48" y="38" width="6" height="3" fill="#95a5a6"/>
+
+  <!-- Center chip detail -->
+  <rect x="22" y="22" width="20" height="20" fill="#7f8c8d"/>
+  <circle cx="32" cy="32" r="6" fill="#e74c3c"/>
+</svg>

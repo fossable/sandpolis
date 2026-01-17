@@ -7,6 +7,7 @@ version = "0.0.1"
 
 [dependencies]
 anyhow = { workspace = true }
+bevy = { workspace = true, optional = true }
 clap = { workspace = true, optional = true }
 colored = { workspace = true, optional = true }
 native_db = { workspace = true }
@@ -25,3 +26,4 @@ default = ["dep:sandpolis-database", "dep:clap", "dep:colored", "dep:os_info"]
 agent = ["sandpolis-core/agent"]
 client = ["sandpolis-core/client"]
 server = ["sandpolis-core/server"]
+client-gui = ["dep:bevy"]

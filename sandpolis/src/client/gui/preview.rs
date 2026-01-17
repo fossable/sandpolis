@@ -1,9 +1,13 @@
 use super::queries;
 use super::{CurrentLayer, components::NodeEntity, controller::{NodeControllerState, ControllerType}};
-use crate::{InstanceState, Layer};
+use crate::Layer;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_core::InstanceId;
+
+/// Zoom threshold above which the minimal preview is shown.
+/// At zoom level 1.0, preview is full. Above this value (more zoomed out), preview becomes minimal.
+const MINIMAL_PREVIEW_ZOOM_THRESHOLD: f32 = 1.2;
 
 /// Component tracking NodePreview state for each node
 #[derive(Component)]
@@ -45,7 +49,7 @@ impl Default for NodePreview {
 pub fn render_node_previews(
     mut contexts: EguiContexts,
     current_layer: Res<CurrentLayer>,
-    state: Res<InstanceState>,
+    network_layer: Res<sandpolis_network::NetworkLayer>,
     mut controller_state: ResMut<NodeControllerState>,
     camera_query: Query<(&Camera, &GlobalTransform, &Projection), With<super::components::WorldView>>,
     node_query: Query<(&Transform, &NodeEntity, Option<&NodePreview>)>,
@@ -74,11 +78,25 @@ pub fn render_node_previews(
     let window_width = window.width();
     let window_height = window.height();
 
+    // Determine if we should use minimal preview based on zoom level
+    let use_minimal = camera_scale > MINIMAL_PREVIEW_ZOOM_THRESHOLD;
+
+    // Minimal preview dimensions
+    const MINIMAL_WIDTH: f32 = 150.0;
+    const MINIMAL_HEIGHT: f32 = 44.0;
+
     // Render preview for each node
     for (transform, node_entity, preview_opt) in node_query.iter() {
         // Get preview settings
         let default_preview = NodePreview::default();
         let preview = preview_opt.unwrap_or(&default_preview);
+
+        // Choose dimensions based on zoom level
+        let (preview_width, preview_height) = if use_minimal {
+            (MINIMAL_WIDTH, MINIMAL_HEIGHT)
+        } else {
+            (preview.width, preview.height)
+        };
 
         // Always try to convert world position to screen position
         // This helps us determine if the node is on-screen or off-screen
@@ -94,7 +112,7 @@ pub fn render_node_previews(
 
             // Check if the node is actually visible in the viewport
             // Add some margin to account for the node's size and preview
-            let margin = node_radius_screen + preview.height + 20.0;
+            let margin = node_radius_screen + preview_height + 20.0;
             let is_node_visible = viewport_pos.x >= -margin
                 && viewport_pos.x <= window_width + margin
                 && viewport_pos.y >= -margin
@@ -106,7 +124,7 @@ pub fn render_node_previews(
             if should_show {
                 // Position preview below the node with a constant distance from the bottom edge
                 preview_pos = egui::Pos2::new(
-                    viewport_pos.x - preview.width / 2.0,
+                    viewport_pos.x - preview_width / 2.0,
                     viewport_pos.y + node_radius_screen + 10.0,
                 );
             }
@@ -119,26 +137,36 @@ pub fn render_node_previews(
         // but use .open() to control visibility
         let mut open = should_show;
 
-        // Use a unique ID that combines "preview" with the actual instance_id value
-        let window_id = egui::Id::new("preview_window").with(node_entity.instance_id.to_string());
+        // Use a unique ID with Hash instead of allocating String
+        let window_id = egui::Id::new("preview_window").with(node_entity.instance_id);
 
-        egui::Window::new(format!("##preview_{}", node_entity.instance_id)) // Hidden title with unique suffix
+        egui::Window::new("##preview") // Hidden title (ID makes it unique)
             .id(window_id)
             .title_bar(false)
             .resizable(false)
             .movable(false)
             .open(&mut open)
             .fixed_pos(preview_pos)
-            .fixed_size([preview.width, preview.height])
+            .fixed_size([preview_width, preview_height])
             .show(ctx, |ui| {
                 if should_show {
-                    render_preview_content(
-                        ui,
-                        &current_layer,
-                        &state,
-                        &mut controller_state,
-                        node_entity.instance_id,
-                    );
+                    if use_minimal {
+                        render_minimal_preview_content(
+                            ui,
+                            &current_layer,
+                            &network_layer,
+                            &mut controller_state,
+                            node_entity.instance_id,
+                        );
+                    } else {
+                        render_preview_content(
+                            ui,
+                            &current_layer,
+                            &network_layer,
+                            &mut controller_state,
+                            node_entity.instance_id,
+                        );
+                    }
                 }
             });
     }
@@ -161,19 +189,19 @@ pub fn get_layer_icon(layer: &Layer) -> &'static str {
 }
 
 /// Get hostname for an instance
-pub fn get_hostname(state: &InstanceState, instance_id: InstanceId) -> String {
-    queries::query_instance_metadata(state, instance_id)
+pub fn get_hostname(instance_id: InstanceId) -> String {
+    queries::query_instance_metadata(instance_id)
         .ok()
         .and_then(|m| m.hostname)
         .unwrap_or_else(|| format!("Node {}", instance_id))
 }
 
 /// Get layer-specific bottom line details
-pub fn get_layer_details(layer: &Layer, state: &InstanceState, instance_id: InstanceId) -> String {
+pub fn get_layer_details(layer: &Layer, network_layer: &sandpolis_network::NetworkLayer, instance_id: InstanceId) -> String {
     match layer {
         #[cfg(feature = "layer-filesystem")]
         Layer::Filesystem => {
-            if let Ok(usage) = queries::query_filesystem_usage(state, instance_id) {
+            if let Ok(usage) = queries::query_filesystem_usage(instance_id) {
                 let used_gb = usage.used as f64 / 1_000_000_000.0;
                 let total_gb = usage.total as f64 / 1_000_000_000.0;
                 if total_gb > 0.0 {
@@ -188,7 +216,7 @@ pub fn get_layer_details(layer: &Layer, state: &InstanceState, instance_id: Inst
         }
 
         Layer::Network => {
-            if let Ok(stats) = queries::query_network_stats(state, instance_id) {
+            if let Ok(stats) = queries::query_network_stats(network_layer, instance_id) {
                 if let Some(latency) = stats.latency_ms {
                     format!("Latency: {} ms", latency)
                 } else {
@@ -201,7 +229,7 @@ pub fn get_layer_details(layer: &Layer, state: &InstanceState, instance_id: Inst
 
         #[cfg(feature = "layer-inventory")]
         Layer::Inventory => {
-            if let Ok(mem) = queries::query_memory_stats(state, instance_id) {
+            if let Ok(mem) = queries::query_memory_stats(instance_id) {
                 let percent = if mem.total > 0 {
                     (mem.used as f64 / mem.total as f64) * 100.0
                 } else {
@@ -215,7 +243,7 @@ pub fn get_layer_details(layer: &Layer, state: &InstanceState, instance_id: Inst
 
         #[cfg(feature = "layer-shell")]
         Layer::Shell => {
-            if let Ok(sessions) = queries::query_shell_sessions(state, instance_id) {
+            if let Ok(sessions) = queries::query_shell_sessions(instance_id) {
                 let active_count = sessions.iter().filter(|s| s.active).count();
                 format!("{} session{}, {} active",
                     sessions.len(),
@@ -229,7 +257,7 @@ pub fn get_layer_details(layer: &Layer, state: &InstanceState, instance_id: Inst
 
         #[cfg(feature = "layer-desktop")]
         Layer::Desktop => {
-            if let Ok(metadata) = queries::query_instance_metadata(state, instance_id) {
+            if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
                 format!("OS: {:?}", metadata.os_type)
             } else {
                 "No desktop data".to_string()
@@ -244,14 +272,14 @@ pub fn get_layer_details(layer: &Layer, state: &InstanceState, instance_id: Inst
 pub fn render_preview_content(
     ui: &mut egui::Ui,
     current_layer: &Layer,
-    state: &InstanceState,
+    network_layer: &sandpolis_network::NetworkLayer,
     controller_state: &mut NodeControllerState,
     instance_id: InstanceId,
 ) {
     // Get data for the preview
-    let hostname = get_hostname(state, instance_id);
+    let hostname = get_hostname(instance_id);
     let layer_icon = get_layer_icon(current_layer);
-    let layer_details = get_layer_details(current_layer, state, instance_id);
+    let layer_details = get_layer_details(current_layer, network_layer, instance_id);
 
     // Push unique ID scope to prevent collisions between multiple preview windows
     ui.push_id(instance_id.to_string(), |ui| {
@@ -360,6 +388,117 @@ pub fn render_preview_content(
                 response.on_hover_text(format!("Open {} controller", ControllerType::from_layer(current_layer).display_name()));
             }
         });
+        });
+    });
+}
+
+/// Render a minimal preview showing just the layer icon and hostname
+/// Used when zoomed out to reduce visual clutter
+fn render_minimal_preview_content(
+    ui: &mut egui::Ui,
+    current_layer: &Layer,
+    network_layer: &sandpolis_network::NetworkLayer,
+    controller_state: &mut NodeControllerState,
+    instance_id: InstanceId,
+) {
+    let _ = network_layer; // May be used in future for network stats
+    let hostname = get_hostname(instance_id);
+    let layer_icon = get_layer_icon(current_layer);
+
+    // Push unique ID scope to prevent collisions between multiple preview windows
+    ui.push_id(instance_id.to_string(), |ui| {
+        ui.horizontal(|ui| {
+            // Small circular icon (36x36)
+            ui.vertical(|ui| {
+                ui.set_width(36.0);
+                ui.set_height(36.0);
+
+                let (rect, _response) = ui.allocate_exact_size(
+                    egui::vec2(36.0, 36.0),
+                    egui::Sense::hover()
+                );
+
+                // Draw circle background
+                let center = rect.center();
+                let radius = 16.0;
+                ui.painter().circle_filled(
+                    center,
+                    radius,
+                    ui.visuals().widgets.inactive.bg_fill,
+                );
+
+                // Draw icon
+                ui.painter().text(
+                    center,
+                    egui::Align2::CENTER_CENTER,
+                    layer_icon,
+                    egui::FontId::proportional(18.0),
+                    ui.visuals().text_color(),
+                );
+            });
+
+            ui.add_space(4.0);
+
+            // Hostname only (truncated if needed)
+            ui.vertical(|ui| {
+                ui.set_height(36.0);
+                ui.set_width(80.0);
+
+                ui.add_space(8.0);
+
+                // Truncate hostname if too long
+                let display_name = if hostname.len() > 12 {
+                    format!("{}...", &hostname[..9])
+                } else {
+                    hostname.clone()
+                };
+
+                ui.label(
+                    egui::RichText::new(&display_name)
+                        .strong()
+                        .size(11.0)
+                );
+            });
+
+            // Small clickable arrow button
+            ui.vertical(|ui| {
+                ui.set_width(24.0);
+                ui.set_height(36.0);
+
+                ui.add_space(6.0);
+
+                let button_size = egui::vec2(24.0, 24.0);
+                let (rect, response) = ui.allocate_exact_size(button_size, egui::Sense::click());
+
+                let bg_color = if response.clicked() {
+                    ui.visuals().widgets.active.bg_fill
+                } else if response.hovered() {
+                    ui.visuals().widgets.hovered.bg_fill
+                } else {
+                    ui.visuals().widgets.inactive.bg_fill
+                };
+
+                let center = rect.center();
+                let radius = 10.0;
+                ui.painter().circle_filled(center, radius, bg_color);
+
+                ui.painter().text(
+                    center,
+                    egui::Align2::CENTER_CENTER,
+                    "→",
+                    egui::FontId::proportional(14.0),
+                    ui.visuals().text_color(),
+                );
+
+                if response.clicked() {
+                    controller_state.expanded_node = Some(instance_id);
+                    controller_state.controller_type = ControllerType::from_layer(current_layer);
+                }
+
+                if response.hovered() {
+                    response.on_hover_text(format!("Open {} controller", ControllerType::from_layer(current_layer).display_name()));
+                }
+            });
         });
     });
 }

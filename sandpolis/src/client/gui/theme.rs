@@ -45,19 +45,10 @@ impl ThemePreset {
 
 /// Resource that tracks the current active theme
 /// This can be updated at runtime to switch themes dynamically
-#[derive(Resource, Debug, Clone)]
+#[derive(Resource, Debug, Clone, Default)]
 pub struct CurrentTheme {
     pub preset: ThemePreset,
     pub custom_visuals: Option<egui::Visuals>,
-}
-
-impl Default for CurrentTheme {
-    fn default() -> Self {
-        Self {
-            preset: ThemePreset::default(),
-            custom_visuals: None,
-        }
-    }
 }
 
 impl CurrentTheme {

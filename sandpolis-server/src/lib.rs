@@ -32,6 +32,7 @@ pub mod server;
 pub struct ServerLayerData {}
 
 #[derive(Clone)]
+#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 pub struct ServerLayer {
     #[cfg(feature = "server")]
     pub banner: Resident<server::ServerBannerData>,

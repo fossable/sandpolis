@@ -72,6 +72,7 @@ egui_console = { workspace = true, optional = true }
 egui_extras = { workspace = true, optional = true }
 
 [dev-dependencies]
+# For running egui components as examples for testing
 eframe = { workspace = true }
 
 [features]
@@ -152,8 +153,11 @@ client-gui = [
   "sandpolis-client/client-gui",
   "sandpolis-desktop?/client-gui",
   "sandpolis-filesystem?/client-gui",
+  "sandpolis-instance/client-gui",
   "sandpolis-inventory?/client-gui",
+  "sandpolis-network/client-gui",
   "sandpolis-power?/client-gui",
+  "sandpolis-server/client-gui",
   "sandpolis-shell?/client-gui",
 ]
 # client-gui-wayland = ["client-gui", "bevy/wayland"]

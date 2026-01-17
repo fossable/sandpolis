@@ -1,6 +1,7 @@
-use crate::InstanceState;
 use anyhow::Result;
 use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceLayer;
+use sandpolis_network::NetworkLayer;
 
 /// Instance metadata returned from database queries
 #[derive(Clone, Debug)]
@@ -24,11 +25,14 @@ pub struct NetworkEdge {
 
 /// Query all instances from the database
 /// This is the initial query run on startup to spawn all nodes
-pub fn query_all_instances(state: &InstanceState) -> Result<Vec<InstanceId>> {
-    let mut instance_ids = vec![state.instance.instance_id];
+pub fn query_all_instances(
+    instance_layer: &InstanceLayer,
+    network_layer: &NetworkLayer,
+) -> Result<Vec<InstanceId>> {
+    let mut instance_ids = vec![instance_layer.instance_id];
 
     // Get all connections and extract unique remote instance IDs
-    for connection in state.network.connections.iter() {
+    for connection in network_layer.connections.iter() {
         let conn = connection.read();
         if !instance_ids.contains(&conn.remote_instance) {
             instance_ids.push(conn.remote_instance);
@@ -39,7 +43,7 @@ pub fn query_all_instances(state: &InstanceState) -> Result<Vec<InstanceId>> {
 }
 
 /// Query metadata for a specific instance
-pub fn query_instance_metadata(_state: &InstanceState, id: InstanceId) -> Result<InstanceMetadata> {
+pub fn query_instance_metadata(id: InstanceId) -> Result<InstanceMetadata> {
     // TODO: Query instance data from database
     // For now, return current system's OS info
     let os_info = os_info::get();
@@ -57,11 +61,11 @@ pub fn query_instance_metadata(_state: &InstanceState, id: InstanceId) -> Result
 
 /// Query network topology (edges between instances)
 /// Returns list of connections for the current layer
-pub fn query_network_topology(state: &InstanceState) -> Result<Vec<NetworkEdge>> {
+pub fn query_network_topology(network_layer: &NetworkLayer) -> Result<Vec<NetworkEdge>> {
     let mut edges = Vec::new();
 
     // Get all connections and build edges
-    for connection in state.network.connections.iter() {
+    for connection in network_layer.connections.iter() {
         let conn = connection.read();
         // Create edge from local instance to remote instance
         edges.push(NetworkEdge {
@@ -81,7 +85,7 @@ pub struct NetworkStats {
 }
 
 /// Query network stats for a specific instance
-pub fn query_network_stats(_state: &InstanceState, _id: InstanceId) -> Result<NetworkStats> {
+pub fn query_network_stats(_network_layer: &NetworkLayer, _id: InstanceId) -> Result<NetworkStats> {
     // TODO: Query from network resident
     Ok(NetworkStats {
         latency_ms: None,
@@ -102,7 +106,7 @@ pub struct FilesystemUsage {
 }
 
 /// Query filesystem usage for an instance
-pub fn query_filesystem_usage(_state: &InstanceState, _id: InstanceId) -> Result<FilesystemUsage> {
+pub fn query_filesystem_usage(_id: InstanceId) -> Result<FilesystemUsage> {
     // TODO: Query from filesystem resident
     Ok(FilesystemUsage {
         total: 0,
@@ -121,7 +125,6 @@ pub struct FileEntry {
 
 /// Query directory contents
 pub fn query_directory_contents(
-    _state: &InstanceState,
     _id: InstanceId,
     _path: &std::path::Path,
 ) -> Result<Vec<FileEntry>> {
@@ -142,7 +145,7 @@ pub struct HardwareInfo {
 }
 
 /// Query hardware info for an instance
-pub fn query_hardware_info(_state: &InstanceState, _id: InstanceId) -> Result<HardwareInfo> {
+pub fn query_hardware_info(_id: InstanceId) -> Result<HardwareInfo> {
     // TODO: Query from inventory resident
     Ok(HardwareInfo {
         cpu_model: None,
@@ -160,7 +163,7 @@ pub struct MemoryStats {
 }
 
 /// Query memory stats for an instance
-pub fn query_memory_stats(_state: &InstanceState, _id: InstanceId) -> Result<MemoryStats> {
+pub fn query_memory_stats(_id: InstanceId) -> Result<MemoryStats> {
     // TODO: Query from inventory resident
     Ok(MemoryStats {
         total: 0,
@@ -181,13 +184,13 @@ pub struct ShellSession {
 }
 
 /// Query shell sessions for an instance
-pub fn query_shell_sessions(_state: &InstanceState, _id: InstanceId) -> Result<Vec<ShellSession>> {
+pub fn query_shell_sessions(_id: InstanceId) -> Result<Vec<ShellSession>> {
     // TODO: Query from shell layer
     Ok(vec![])
 }
 
 /// Query output for a specific shell session
-pub fn query_session_output(_state: &InstanceState, _session_id: &str) -> Result<String> {
+pub fn query_session_output(_session_id: &str) -> Result<String> {
     // TODO: Query from shell layer
     Ok(String::new())
 }
@@ -205,7 +208,7 @@ pub struct Package {
 }
 
 /// Query packages for an instance
-pub fn query_packages(_state: &InstanceState, _id: InstanceId) -> Result<Vec<Package>> {
+pub fn query_packages(_id: InstanceId) -> Result<Vec<Package>> {
     // TODO: Query from package layer
     Ok(vec![])
 }
@@ -224,7 +227,7 @@ pub struct FileTransfer {
 }
 
 /// Query active file transfers
-pub fn query_active_transfers(_state: &InstanceState) -> Result<Vec<FileTransfer>> {
+pub fn query_active_transfers() -> Result<Vec<FileTransfer>> {
     // TODO: Query from filesystem layer
     Ok(vec![])
 }

@@ -41,6 +41,7 @@ async fn main() -> eframe::Result<()> {
     // Create instance state
     let state = InstanceState::new(config.clone(), database).await.unwrap();
     let instance_id = state.instance.instance_id;
+    let network_layer = state.network.clone();
 
     println!("Testing node controller with:");
     println!("  Controller: {:?}", controller);
@@ -56,7 +57,7 @@ async fn main() -> eframe::Result<()> {
     eframe::run_native(
         "Node Controller Test",
         options,
-        Box::new(move |_cc| Ok(Box::new(NodeControllerTestApp::new(controller, instance_id, state)))),
+        Box::new(move |_cc| Ok(Box::new(NodeControllerTestApp::new(controller, instance_id, network_layer)))),
     )
 }
 
@@ -74,15 +75,15 @@ fn parse_controller(s: &str) -> Option<ControllerType> {
 struct NodeControllerTestApp {
     controller_type: ControllerType,
     instance_id: InstanceId,
-    state: InstanceState,
+    network_layer: sandpolis_network::NetworkLayer,
 }
 
 impl NodeControllerTestApp {
-    fn new(controller_type: ControllerType, instance_id: InstanceId, state: InstanceState) -> Self {
+    fn new(controller_type: ControllerType, instance_id: InstanceId, network_layer: sandpolis_network::NetworkLayer) -> Self {
         Self {
             controller_type,
             instance_id,
-            state,
+            network_layer,
         }
     }
 }
@@ -114,7 +115,6 @@ impl eframe::App for NodeControllerTestApp {
                             #[cfg(feature = "layer-filesystem")]
                             sandpolis::client::gui::controller::file_browser::render(
                                 ui,
-                                &self.state,
                                 self.instance_id,
                             );
                             #[cfg(not(feature = "layer-filesystem"))]
@@ -124,7 +124,6 @@ impl eframe::App for NodeControllerTestApp {
                             #[cfg(feature = "layer-shell")]
                             sandpolis::client::gui::controller::terminal::render(
                                 ui,
-                                &self.state,
                                 self.instance_id,
                             );
                             #[cfg(not(feature = "layer-shell"))]
@@ -134,7 +133,7 @@ impl eframe::App for NodeControllerTestApp {
                             #[cfg(feature = "layer-inventory")]
                             sandpolis::client::gui::controller::system_info::render(
                                 ui,
-                                &self.state,
+                                &self.network_layer,
                                 self.instance_id,
                             );
                             #[cfg(not(feature = "layer-inventory"))]
@@ -143,7 +142,6 @@ impl eframe::App for NodeControllerTestApp {
                         ControllerType::PackageManager => {
                             sandpolis::client::gui::controller::package_manager::render(
                                 ui,
-                                &self.state,
                                 self.instance_id,
                             );
                         }
@@ -151,7 +149,6 @@ impl eframe::App for NodeControllerTestApp {
                             #[cfg(feature = "layer-desktop")]
                             sandpolis::client::gui::controller::desktop_viewer::render(
                                 ui,
-                                &self.state,
                                 self.instance_id,
                             );
                             #[cfg(not(feature = "layer-desktop"))]

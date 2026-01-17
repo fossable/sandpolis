@@ -42,6 +42,7 @@ async fn main() -> eframe::Result<()> {
     // Create instance state
     let state = InstanceState::new(config.clone(), database).await.unwrap();
     let instance_id = state.instance.instance_id;
+    let network_layer = state.network.clone();
 
     println!("Testing node preview with:");
     println!("  Layer: {:?}", layer);
@@ -57,7 +58,7 @@ async fn main() -> eframe::Result<()> {
     eframe::run_native(
         "Node Preview Test",
         options,
-        Box::new(move |_cc| Ok(Box::new(NodePreviewTestApp::new(layer, instance_id, state)))),
+        Box::new(move |_cc| Ok(Box::new(NodePreviewTestApp::new(layer, instance_id, network_layer)))),
     )
 }
 
@@ -79,16 +80,16 @@ fn parse_layer(s: &str) -> Option<Layer> {
 struct NodePreviewTestApp {
     layer: Layer,
     instance_id: InstanceId,
-    state: InstanceState,
+    network_layer: sandpolis_network::NetworkLayer,
     controller_state: NodeControllerState,
 }
 
 impl NodePreviewTestApp {
-    fn new(layer: Layer, instance_id: InstanceId, state: InstanceState) -> Self {
+    fn new(layer: Layer, instance_id: InstanceId, network_layer: sandpolis_network::NetworkLayer) -> Self {
         Self {
             layer,
             instance_id,
-            state,
+            network_layer,
             controller_state: NodeControllerState::default(),
         }
     }
@@ -118,7 +119,7 @@ impl eframe::App for NodePreviewTestApp {
                     render_preview_content(
                         ui,
                         &self.layer,
-                        &self.state,
+                        &self.network_layer,
                         &mut self.controller_state,
                         self.instance_id,
                     );

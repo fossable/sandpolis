@@ -1,5 +1,5 @@
 use super::{CurrentLayer, components::NodeEntity};
-use crate::{InstanceState, Layer};
+use crate::Layer;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_core::InstanceId;
@@ -160,7 +160,7 @@ pub fn handle_node_double_click(
 pub fn render_node_controller(
     mut contexts: EguiContexts,
     mut controller_state: ResMut<NodeControllerState>,
-    state: Res<InstanceState>,
+    network_layer: Res<sandpolis_network::NetworkLayer>,
     windows: Query<&Window>,
 ) {
     let Some(instance_id) = controller_state.expanded_node else {
@@ -216,28 +216,28 @@ pub fn render_node_controller(
             match controller_state.controller_type {
                 ControllerType::FileBrowser => {
                     #[cfg(feature = "layer-filesystem")]
-                    file_browser::render(ui, &state, instance_id);
+                    file_browser::render(ui, instance_id);
                     #[cfg(not(feature = "layer-filesystem"))]
                     ui.label("Filesystem layer not enabled");
                 }
                 ControllerType::Terminal => {
                     #[cfg(feature = "layer-shell")]
-                    terminal::render(ui, &state, instance_id);
+                    terminal::render(ui, instance_id);
                     #[cfg(not(feature = "layer-shell"))]
                     ui.label("Shell layer not enabled");
                 }
                 ControllerType::SystemInfo => {
                     #[cfg(feature = "layer-inventory")]
-                    system_info::render(ui, &state, instance_id);
+                    system_info::render(ui, &network_layer, instance_id);
                     #[cfg(not(feature = "layer-inventory"))]
                     ui.label("Inventory layer not enabled");
                 }
                 ControllerType::PackageManager => {
-                    package_manager::render(ui, &state, instance_id);
+                    package_manager::render(ui, instance_id);
                 }
                 ControllerType::DesktopViewer => {
                     #[cfg(feature = "layer-desktop")]
-                    desktop_viewer::render(ui, &state, instance_id);
+                    desktop_viewer::render(ui, instance_id);
                     #[cfg(not(feature = "layer-desktop"))]
                     ui.label("Desktop layer not enabled");
                 }

@@ -1,10 +1,9 @@
 use bevy_egui::egui;
 use sandpolis_core::InstanceId;
-use crate::InstanceState;
 use crate::client::gui::queries;
 
 /// Render desktop viewer controller
-pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId) {
+pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
     // Desktop stream placeholder
     ui.label(egui::RichText::new("Desktop Stream").size(16.0).strong());
 
@@ -48,7 +47,7 @@ pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId)
     ui.separator();
 
     // Desktop information
-    if let Ok(metadata) = queries::query_instance_metadata(state, instance_id) {
+    if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
         ui.label(format!("OS: {:?}", metadata.os_type));
         if let Some(hostname) = metadata.hostname {
             ui.label(format!("Hostname: {}", hostname));

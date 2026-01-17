@@ -83,26 +83,17 @@ pub fn spawn_node(
     });
 }
 
-pub fn get_os_image(os_type: os_info::Type) -> String {
+pub fn get_os_image(os_type: os_info::Type) -> &'static str {
     match os_type {
         os_info::Type::Android => "os/Android.svg",
         os_info::Type::Macos => "os/macOS.svg",
         os_info::Type::Windows => "os/Windows.svg",
         os_info::Type::Arch => "os/Arch Linux.svg",
         os_info::Type::NixOS => "os/NixOS.svg",
-        // Check if SUSE exists in the enum, otherwise fallback
-        // Note: os_info::Type enum may not have SLES
-        _ => {
-            // Try to match based on string representation
-            let os_str = os_type.to_string();
-            if os_str.contains("SUSE") {
-                "os/SUSE Linux Enterprise Server.svg"
-            } else {
-                "os/Unknown.svg"
-            }
-        }
+        os_info::Type::SUSE => "os/SUSE Linux Enterprise Server.svg",
+        os_info::Type::openSUSE => "os/SUSE Linux Enterprise Server.svg",
+        _ => "os/Unknown.svg",
     }
-    .to_string()
 }
 
 /// System to scale SVGs to a uniform size once they're loaded

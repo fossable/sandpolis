@@ -114,7 +114,9 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(AboutScreenState::default())
     .insert_resource(CurrentTheme::default())
     .insert_resource(ThemePickerState::default())
-    .insert_resource(state)
+    .insert_resource(state.instance.clone())
+    .insert_resource(state.network.clone())
+    .insert_resource(state.server.clone())
     .insert_resource(config)
     .insert_resource(MousePressed(false))
     .insert_resource(PanningState::default())
@@ -250,7 +252,8 @@ fn setup(
     mut commands: Commands,
     mut rapier_config: Query<&mut RapierConfiguration>,
     asset_server: Res<AssetServer>,
-    state: Res<InstanceState>,
+    instance_layer: Res<sandpolis_instance::InstanceLayer>,
+    network_layer: Res<sandpolis_network::NetworkLayer>,
 ) {
     // Set zero gravity for floating nodes
     for mut rapier_config in &mut rapier_config {
@@ -268,11 +271,11 @@ fn setup(
     ));
 
     // Query database for initial instances and spawn nodes
-    if let Ok(instances) = queries::query_all_instances(&state) {
+    if let Ok(instances) = queries::query_all_instances(&instance_layer, &network_layer) {
         for instance_id in instances {
-            if let Ok(metadata) = queries::query_instance_metadata(&state, instance_id) {
+            if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
                 // Spawn local instance at center, others at random positions
-                let position = if metadata.instance_id == state.instance.instance_id {
+                let position = if metadata.instance_id == instance_layer.instance_id {
                     Some(Vec3::ZERO) // Center of screen
                 } else {
                     None // Random position
@@ -296,7 +299,6 @@ fn process_database_updates(
     mut update_channel: ResMut<DatabaseUpdateChannel>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    state: Res<InstanceState>,
     node_query: Query<(Entity, &components::NodeEntity)>,
 ) {
     // Process all pending updates
@@ -304,7 +306,7 @@ fn process_database_updates(
         match update {
             components::DatabaseUpdate::InstanceAdded(instance_id) => {
                 // Spawn new node at random position
-                if let Ok(metadata) = queries::query_instance_metadata(&state, instance_id) {
+                if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
                     spawn_node(
                         &asset_server,
                         &mut commands,
@@ -359,7 +361,7 @@ fn button_handler(
 // Pause audio when app goes into background and resume when it returns.
 // This is handled by the OS on iOS, but not on Android.
 fn handle_lifetime(
-    mut lifecycle_events: EventReader<AppLifecycle>,
+    mut lifecycle_events: MessageReader<AppLifecycle>,
     music_controller: Query<&AudioSink>,
 ) {
     let Ok(music_controller) = music_controller.single() else {

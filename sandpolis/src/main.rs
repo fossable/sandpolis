@@ -2,7 +2,7 @@ use anyhow::Result;
 use axum::{Router, routing::get};
 use clap::Parser;
 use sandpolis::InstanceState;
-use sandpolis::cli::{CommandLine, Commands};
+use sandpolis::cli::CommandLine;
 use sandpolis::config::Configuration;
 use sandpolis_database::DatabaseLayer;
 use std::process::ExitCode;
@@ -54,6 +54,7 @@ async fn main() -> Result<ExitCode> {
     debug!(config = ?config, "Instance configuration");
 
     // Default to all compiled instance types
+    #[allow(unused_mut)]
     let mut run_instances = Vec::<&str>::from([
         #[cfg(feature = "server")]
         "server",
@@ -64,6 +65,8 @@ async fn main() -> Result<ExitCode> {
     ]);
 
     // Dispatch subcommand if one was given
+    #[allow(unused_imports)]
+    use sandpolis::cli::Commands;
     match args.command {
         #[cfg(feature = "agent")]
         #[cfg(any(feature = "server", feature = "client"))]
@@ -77,7 +80,7 @@ async fn main() -> Result<ExitCode> {
         #[cfg(any(feature = "agent", feature = "client"))]
         Some(Commands::Server) => run_instances = vec!["server"],
 
-        Some(command) => return Ok(command.dispatch(&config).await?),
+        Some(command) => return command.dispatch(&config).await,
         None => (),
     }
 
@@ -91,7 +94,7 @@ async fn main() -> Result<ExitCode> {
     // Load state
     let state = InstanceState::new(
         config.clone(),
-        DatabaseLayer::new(config.database.clone(), &*sandpolis::MODELS)?,
+        DatabaseLayer::new(config.database.clone(), &sandpolis::MODELS)?,
     )
     .await?;
 
@@ -142,7 +145,7 @@ async fn main() -> Result<ExitCode> {
     // If this was a client, don't hold up the user by waiting for server/agent
     if !run_instances.contains(&"client") {
         while let Some(result) = tasks.join_next().await {
-            let _ = result??;
+            result??;
         }
     }
 

@@ -9706,6 +9706,7 @@ name = "sandpolis-instance"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "bevy",
  "clap",
  "colored",
  "native_db",
@@ -9773,6 +9774,7 @@ dependencies = [
  "anyhow",
  "axum",
  "axum-macros",
+ "bevy",
  "chrono",
  "clap",
  "cron",
@@ -9872,6 +9874,7 @@ dependencies = [
  "anyhow",
  "axum",
  "axum-macros",
+ "bevy",
  "clap",
  "native_db",
  "native_model",

@@ -1,10 +1,10 @@
 { pkgs ? import <nixpkgs> {
-    config.allowUnfree = true;
-    overlays = [
-      (import (builtins.fetchTarball "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"))
-    ];
-  }
-}:
+  config.allowUnfree = true;
+  overlays = [
+    (import (builtins.fetchTarball
+      "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"))
+  ];
+} }:
 
 with pkgs;
 
@@ -14,10 +14,10 @@ let
 
   android-sdk = android-nixpkgs.sdk (sdkPkgs:
     with sdkPkgs; [
-      cmdline-tools-latest   # SDK manager
-      build-tools-34-0-0     # Required by gradle
-      platforms-android-34   # API 34 for compilation
-      ndk-26-1-10909125      # Native compilation for Rust
+      cmdline-tools-latest # SDK manager
+      build-tools-34-0-0 # Required by gradle
+      platforms-android-34 # API 34 for compilation
+      ndk-26-1-10909125 # Native compilation for Rust
     ]);
 
   # Rust toolchain with Android targets
@@ -29,14 +29,14 @@ let
 in mkShell {
   buildInputs = [
     android-sdk
-    jdk17        # Required by gradle
-    gradle       # APK assembly
-    cargo-ndk    # Builds Rust for Android targets
+    jdk17 # Required by gradle
+    gradle # APK assembly
+    cargo-ndk # Builds Rust for Android targets
     rust-android # Rust with Android targets
-    cmake        # Required by aws-lc-sys for crypto
-    pkg-config   # Required for library detection
-    zlib         # System zlib to avoid NDK build issues
-    clang        # Host C compiler for build scripts
+    cmake # Required by aws-lc-sys for crypto
+    pkg-config # Required for library detection
+    zlib # System zlib to avoid NDK build issues
+    clang # Host C compiler for build scripts
     llvmPackages.bintools # Host linker
   ];
 
@@ -50,22 +50,22 @@ in mkShell {
   ZLIB_SYS_STATIC = "0";
   PKG_CONFIG_ALLOW_CROSS = "1";
 
-  GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/share/android-sdk/build-tools/34.0.0/aapt2";
+  GRADLE_OPTS =
+    "-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/share/android-sdk/build-tools/34.0.0/aapt2";
 
   shellHook = ''
     # Generate local.properties with Nix store paths
-    cat > android/local.properties <<EOF
-sdk.dir=$ANDROID_SDK_ROOT
-ndk.dir=$ANDROID_NDK_ROOT
-EOF
+    cat <<-EOF > android/local.properties 
+      sdk.dir=$ANDROID_SDK_ROOT
+      ndk.dir=$ANDROID_NDK_ROOT
+    EOF
 
     # Set host compilers for build scripts (before cargo-ndk overrides them)
     export CC_x86_64_unknown_linux_gnu=${pkgs.clang}/bin/clang
     export CXX_x86_64_unknown_linux_gnu=${pkgs.clang}/bin/clang++
     export AR_x86_64_unknown_linux_gnu=${pkgs.llvmPackages.bintools}/bin/ar
 
-    # Welcome message with build instructions
-    echo "Android build environment ready"
+    echo "Don't enter this shell from the parent's development shell!"
     echo "Rust version: $(rustc --version)"
     echo ""
     echo "To build APK:"
@@ -81,14 +81,3 @@ EOF
   '';
 }
 
-# Usage:
-#   nix-shell                    Enter development environment
-#
-# Build APK:
-#   Debug:   cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --link-libcxx-shared && cd android && ./gradlew assembleDebug
-#   Release: cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --release --link-libcxx-shared && cd android && ./gradlew assembleRelease
-#
-# To add debugging tools, include in buildInputs:
-#   - platform-tools (for adb, fastboot)
-#   - emulator (for Android Virtual Device)
-#   - android-studio (for GUI development)

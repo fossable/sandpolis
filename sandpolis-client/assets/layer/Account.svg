@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- User profile icon -->
+  <circle cx="32" cy="24" r="10" fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
+
+  <!-- Body/shoulders -->
+  <path d="M16 52 Q16 38, 32 38 Q48 38, 48 52 L48 56 L16 56 Z" fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
+
+  <!-- Badge/ID card border -->
+  <rect x="10" y="10" width="44" height="44" rx="4" fill="none" stroke="#3498db" stroke-width="2" stroke-dasharray="4,4"/>
+</svg>

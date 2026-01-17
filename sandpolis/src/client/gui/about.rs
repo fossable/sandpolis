@@ -3,22 +3,12 @@ use bevy_egui::{EguiContexts, egui};
 use std::time::{Duration, Instant};
 
 /// Resource to track about screen state
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct AboutScreenState {
     pub show: bool,
     /// Tracks clicks on the layer indicator for Easter egg
     pub logo_click_count: u8,
     pub last_logo_click: Option<Instant>,
-}
-
-impl Default for AboutScreenState {
-    fn default() -> Self {
-        Self {
-            show: false,
-            logo_click_count: 0,
-            last_logo_click: None,
-        }
-    }
 }
 
 /// Marker component for the 3D logo entity

@@ -3,10 +3,11 @@ use super::{
     components::{NodeEntity, WorldView},
     queries,
 };
-use crate::{InstanceState, Layer};
+use crate::Layer;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_core::InstanceId;
+use std::collections::HashMap;
 
 /// Component representing an edge between two nodes
 #[derive(Component)]
@@ -31,42 +32,36 @@ pub fn render_edges(
     node_query: Query<(&Transform, &NodeEntity)>,
     current_layer: Res<CurrentLayer>,
 ) {
+    // Build position lookup map once per frame - O(N) instead of O(N*M)
+    let node_positions: HashMap<InstanceId, Vec2> = node_query
+        .iter()
+        .map(|(transform, node)| (node.instance_id, transform.translation.truncate()))
+        .collect();
+
     for edge in edge_query.iter() {
         // Only render edges for the current layer
         if edge.layer != **current_layer {
             continue;
         }
 
-        // Find the positions of the from and to nodes
-        let mut from_pos: Option<Vec2> = None;
-        let mut to_pos: Option<Vec2> = None;
+        // O(1) lookup instead of O(N) iteration
+        let Some(&from) = node_positions.get(&edge.from) else {
+            continue;
+        };
+        let Some(&to) = node_positions.get(&edge.to) else {
+            continue;
+        };
 
-        for (transform, node_entity) in node_query.iter() {
-            if node_entity.instance_id == edge.from {
-                from_pos = Some(transform.translation.truncate());
-            } else if node_entity.instance_id == edge.to {
-                to_pos = Some(transform.translation.truncate());
-            }
+        // Color based on layer
+        let color = match edge.layer {
+            Layer::Network => Color::srgb(0.3, 0.8, 1.0),    // Cyan
+            #[cfg(feature = "layer-filesystem")]
+            Layer::Filesystem => Color::srgb(0.3, 1.0, 0.3), // Green
+            Layer::Desktop => Color::srgb(1.0, 0.5, 0.3),    // Orange
+            _ => Color::srgb(0.6, 0.6, 0.6),                 // Gray
+        };
 
-            // Early exit if we found both
-            if from_pos.is_some() && to_pos.is_some() {
-                break;
-            }
-        }
-
-        // Draw line if we found both nodes
-        if let (Some(from), Some(to)) = (from_pos, to_pos) {
-            // Color based on layer
-            let color = match edge.layer {
-                Layer::Network => Color::srgb(0.3, 0.8, 1.0),    // Cyan
-                #[cfg(feature = "layer-filesystem")]
-                Layer::Filesystem => Color::srgb(0.3, 1.0, 0.3), // Green
-                Layer::Desktop => Color::srgb(1.0, 0.5, 0.3),    // Orange
-                _ => Color::srgb(0.6, 0.6, 0.6),                 // Gray
-            };
-
-            gizmos.line_2d(from, to, color);
-        }
+        gizmos.line_2d(from, to, color);
     }
 }
 
@@ -76,7 +71,7 @@ pub fn update_edges_for_layer(
     mut commands: Commands,
     current_layer: Res<CurrentLayer>,
     edge_query: Query<(Entity, &Edge)>,
-    state: Res<InstanceState>,
+    network_layer: Res<sandpolis_network::NetworkLayer>,
 ) {
     // Only update when layer changes or is first added
     if !current_layer.is_changed() && !current_layer.is_added() {
@@ -92,7 +87,7 @@ pub fn update_edges_for_layer(
     match **current_layer {
         Layer::Network => {
             // Query network topology from database
-            if let Ok(network_edges) = queries::query_network_topology(&state) {
+            if let Ok(network_edges) = queries::query_network_topology(&network_layer) {
                 for net_edge in network_edges {
                     commands.spawn(Edge {
                         from: net_edge.from,
@@ -135,7 +130,7 @@ pub fn update_edge_visibility(
 pub fn render_edge_labels(
     mut contexts: EguiContexts,
     current_layer: Res<CurrentLayer>,
-    state: Res<InstanceState>,
+    network_layer: Res<sandpolis_network::NetworkLayer>,
     edge_query: Query<&Edge>,
     node_query: Query<(&Transform, &NodeEntity)>,
     camera_query: Query<(&Camera, &GlobalTransform), With<WorldView>>,
@@ -153,32 +148,23 @@ pub fn render_edge_labels(
         return;
     };
 
+    // Build position lookup map once - O(N) instead of O(N*M)
+    let node_positions: HashMap<InstanceId, Vec3> = node_query
+        .iter()
+        .map(|(transform, node)| (node.instance_id, transform.translation))
+        .collect();
+
     // Render label for each edge
     for edge in edge_query.iter() {
         if edge.layer != Layer::Network {
             continue;
         }
 
-        // Find node positions
-        let mut from_pos: Option<Vec3> = None;
-        let mut to_pos: Option<Vec3> = None;
-
-        for (transform, node_entity) in node_query.iter() {
-            if node_entity.instance_id == edge.from {
-                from_pos = Some(transform.translation);
-            } else if node_entity.instance_id == edge.to {
-                to_pos = Some(transform.translation);
-            }
-
-            if from_pos.is_some() && to_pos.is_some() {
-                break;
-            }
-        }
-
-        let Some(from) = from_pos else {
+        // O(1) lookup instead of O(N) iteration
+        let Some(&from) = node_positions.get(&edge.from) else {
             continue;
         };
-        let Some(to) = to_pos else {
+        let Some(&to) = node_positions.get(&edge.to) else {
             continue;
         };
 
@@ -191,34 +177,32 @@ pub fn render_edge_labels(
         };
 
         // Query network stats for this edge
-        let label_text = if let Ok(stats) = queries::query_network_stats(&state, edge.to) {
-            let mut parts = Vec::new();
-
-            if let Some(latency) = stats.latency_ms {
-                parts.push(format!("{}ms", latency));
-            }
-
-            if let Some(throughput) = stats.throughput_bps {
-                let mbps = throughput as f64 / 1_000_000.0;
-                parts.push(format!("{:.1}Mbps", mbps));
-            }
-
-            if parts.is_empty() {
-                continue;
-            }
-
-            parts.join(" | ")
-        } else {
+        let Ok(stats) = queries::query_network_stats(&network_layer, edge.to) else {
             continue;
         };
 
-        // Render label at midpoint
+        // Build label text
+        let label_text = match (stats.latency_ms, stats.throughput_bps) {
+            (Some(latency), Some(throughput)) => {
+                let mbps = throughput as f64 / 1_000_000.0;
+                format!("{}ms | {:.1}Mbps", latency, mbps)
+            }
+            (Some(latency), None) => format!("{}ms", latency),
+            (None, Some(throughput)) => {
+                let mbps = throughput as f64 / 1_000_000.0;
+                format!("{:.1}Mbps", mbps)
+            }
+            (None, None) => continue,
+        };
+
+        // Render label at midpoint - use Hash-based ID instead of format string
         let label_pos = egui::Pos2::new(screen_pos.x, screen_pos.y);
 
-        egui::Area::new(egui::Id::new(format!(
-            "edge_label_{}_{}",
-            edge.from, edge.to
-        )))
+        egui::Area::new(
+            egui::Id::new("edge_label")
+                .with(edge.from)
+                .with(edge.to),
+        )
         .fixed_pos(label_pos)
         .show(ctx, |ui| {
             ui.label(

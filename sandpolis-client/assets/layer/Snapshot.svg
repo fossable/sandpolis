@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Camera icon -->
+  <rect x="12" y="20" width="40" height="28" rx="4" fill="#34495e" stroke="#2c3e50" stroke-width="2"/>
+
+  <!-- Camera lens -->
+  <circle cx="32" cy="34" r="10" fill="#7f8c8d" stroke="#2c3e50" stroke-width="2"/>
+  <circle cx="32" cy="34" r="6" fill="#3498db"/>
+
+  <!-- Viewfinder -->
+  <rect x="44" y="24" width="4" height="4" rx="1" fill="#e74c3c"/>
+
+  <!-- Camera top -->
+  <rect x="24" y="16" width="16" height="6" rx="2" fill="#2c3e50"/>
+</svg>

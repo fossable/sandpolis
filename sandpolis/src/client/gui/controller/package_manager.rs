@@ -1,6 +1,5 @@
 use bevy_egui::egui;
 use sandpolis_core::InstanceId;
-use crate::InstanceState;
 use crate::client::gui::queries;
 
 #[derive(Default, Clone, serde::Serialize, serde::Deserialize)]
@@ -9,7 +8,7 @@ pub struct PackageManagerState {
     pub selected_package: Option<String>,
 }
 
-pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId) {
+pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
     let state_id = egui::Id::new(format!("pm_{}", instance_id));
     let mut pm_state = ui.data_mut(|d| d.get_persisted::<PackageManagerState>(state_id).unwrap_or_default());
 
@@ -22,7 +21,7 @@ pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId)
     ui.separator();
     ui.label("Installed Packages:");
     egui::ScrollArea::vertical().max_height(250.0).show(ui, |ui| {
-        match queries::query_packages(state, instance_id) {
+        match queries::query_packages(instance_id) {
             Ok(packages) => {
                 if packages.is_empty() {
                     ui.label("No packages found");
@@ -41,10 +40,10 @@ pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId)
 
     ui.separator();
     ui.horizontal(|ui| {
-        if ui.button("Install").clicked() {}
+        let _ = ui.button("Install");
         let has_selection = pm_state.selected_package.is_some();
-        if ui.add_enabled(has_selection, egui::Button::new("Update")).clicked() {}
-        if ui.add_enabled(has_selection, egui::Button::new("Remove")).clicked() {}
+        let _ = ui.add_enabled(has_selection, egui::Button::new("Update"));
+        let _ = ui.add_enabled(has_selection, egui::Button::new("Remove"));
     });
 
     ui.data_mut(|d| d.insert_persisted(state_id, pm_state));

@@ -9,6 +9,7 @@ version = "0.0.1"
 anyhow = { workspace = true }
 axum-macros = { workspace = true }
 axum = { workspace = true, optional = true }
+bevy = { workspace = true, optional = true }
 chrono = { workspace = true }
 clap = { workspace = true }
 cron = { workspace = true }
@@ -45,3 +46,4 @@ default = [
 agent = ["sandpolis-realm/agent"]
 server = ["sandpolis-realm/server"]
 client = ["sandpolis-realm/client"]
+client-gui = ["dep:bevy"]

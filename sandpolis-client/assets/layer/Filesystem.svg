@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Folder icon -->
+  <path d="M8 16 L28 16 L32 20 L56 20 L56 52 L8 52 Z" fill="#ffd966" stroke="#f4b400" stroke-width="2"/>
+  <path d="M8 20 L8 52 L56 52 L56 20" fill="#ffe599"/>
+
+  <!-- File lines inside -->
+  <line x1="16" y1="30" x2="48" y2="30" stroke="#f4b400" stroke-width="2"/>
+  <line x1="16" y1="38" x2="40" y2="38" stroke="#f4b400" stroke-width="2"/>
+  <line x1="16" y1="46" x2="44" y2="46" stroke="#f4b400" stroke-width="2"/>
+</svg>

@@ -163,9 +163,14 @@ pub fn check_stabilization(
         return;
     }
 
-    // Calculate average velocity magnitude
-    let total_velocity: f32 = nodes.iter().map(|v| v.linvel.length()).sum();
-    let avg_velocity = total_velocity / nodes.iter().count() as f32;
+    // Calculate average velocity magnitude in single pass
+    let mut total_velocity: f32 = 0.0;
+    let mut count: u32 = 0;
+    for v in nodes.iter() {
+        total_velocity += v.linvel.length();
+        count += 1;
+    }
+    let avg_velocity = total_velocity / count as f32;
 
     // Check if below stability threshold
     if avg_velocity < config.stability_threshold {

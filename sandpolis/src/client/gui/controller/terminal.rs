@@ -1,11 +1,10 @@
 use bevy_egui::egui;
 use egui_console::{ConsoleWindow, ConsoleBuilder, ConsoleEvent};
 use sandpolis_core::InstanceId;
-use crate::InstanceState;
 use crate::client::gui::queries;
 
 /// Per-instance terminal state stored in egui memory
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Default)]
 pub struct TerminalState {
     pub session_id: Option<String>,
     #[serde(skip)]
@@ -21,17 +20,8 @@ impl Clone for TerminalState {
     }
 }
 
-impl Default for TerminalState {
-    fn default() -> Self {
-        Self {
-            session_id: None,
-            console: None,
-        }
-    }
-}
-
 /// Render terminal controller with egui_console
-pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId) {
+pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
     let state_id = egui::Id::new(format!("terminal_{}", instance_id));
 
     let mut terminal_state = ui.data_mut(|d| {
@@ -42,7 +32,7 @@ pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId)
     // Session management header
     ui.horizontal(|ui| {
         ui.label("🖥️ Shell Session:");
-        if let Ok(sessions) = queries::query_shell_sessions(state, instance_id) {
+        if let Ok(sessions) = queries::query_shell_sessions(instance_id) {
             if sessions.is_empty() {
                 ui.label("No active sessions");
                 if ui.button("➕ Create Session").clicked() {

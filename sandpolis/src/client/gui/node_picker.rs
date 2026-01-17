@@ -4,21 +4,11 @@ use bevy_egui::{egui, EguiContexts};
 use sandpolis_core::InstanceId;
 
 /// Resource to track node picker UI state
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct NodePickerState {
     pub show: bool,
     pub search_query: String,
     pub selected_index: usize,
-}
-
-impl Default for NodePickerState {
-    fn default() -> Self {
-        Self {
-            show: false,
-            search_query: String::new(),
-            selected_index: 0,
-        }
-    }
 }
 
 /// Cached node information for display
@@ -143,12 +133,13 @@ pub fn render_node_picker_panel(
                 }
 
                 // Handle Enter key to select highlighted node
-                if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                    if !filtered_nodes.is_empty() {
-                        let selected_node = &filtered_nodes[picker_state.selected_index];
-                        target_node = Some((selected_node.entity, selected_node.instance_id));
-                        should_close = true;
-                    }
+                if response.lost_focus()
+                    && ui.input(|i| i.key_pressed(egui::Key::Enter))
+                    && !filtered_nodes.is_empty()
+                {
+                    let selected_node = &filtered_nodes[picker_state.selected_index];
+                    target_node = Some((selected_node.entity, selected_node.instance_id));
+                    should_close = true;
                 }
             });
 
@@ -228,17 +219,17 @@ pub fn render_node_picker_panel(
         });
 
     // Center camera on selected node
-    if let Some((target_entity, target_id)) = target_node {
-        if let (Ok(mut camera_transform), Ok(node_transform)) = (
+    if let Some((target_entity, target_id)) = target_node
+        && let (Ok(mut camera_transform), Ok(node_transform)) = (
             camera_query.single_mut(),
             node_transforms.get(target_entity),
-        ) {
-            // Move camera to center on the node (preserve Z coordinate)
-            camera_transform.translation.x = node_transform.translation.x;
-            camera_transform.translation.y = node_transform.translation.y;
+        )
+    {
+        // Move camera to center on the node (preserve Z coordinate)
+        camera_transform.translation.x = node_transform.translation.x;
+        camera_transform.translation.y = node_transform.translation.y;
 
-            info!("Centered camera on node: {}", target_id);
-        }
+        info!("Centered camera on node: {}", target_id);
     }
 
     if should_close {

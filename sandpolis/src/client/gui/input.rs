@@ -22,18 +22,12 @@ pub struct PanningState {
 #[derive(Resource, Deref, DerefMut)]
 pub struct LayerChangeTimer(pub Timer);
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct HelpScreenState {
     pub show: bool,
 }
 
-impl Default for HelpScreenState {
-    fn default() -> Self {
-        Self { show: false }
-    }
-}
-
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct LoginDialogState {
     pub show: bool,
     pub phase: LoginPhase,
@@ -54,27 +48,12 @@ pub enum LoginPhase {
     },
 }
 
-impl Default for LoginDialogState {
-    fn default() -> Self {
-        Self {
-            show: false,
-            phase: LoginPhase::default(),
-            server_address: String::new(),
-            username: String::new(),
-            password: String::new(),
-            otp: String::new(),
-            error_message: None,
-            loading: false,
-        }
-    }
-}
-
 /// Handle touch input for panning on mobile devices
 #[cfg(target_os = "android")]
 pub fn handle_touch_camera(
     mut contexts: EguiContexts,
     windows: Query<&Window>,
-    mut touches: EventReader<TouchInput>,
+    mut touches: MessageReader<TouchInput>,
     mut camera: Query<&mut Transform, With<Camera2d>>,
     mut last_position: Local<Option<Vec2>>,
 ) {
@@ -112,7 +91,7 @@ pub fn handle_touch_camera(
 #[cfg(target_os = "android")]
 pub fn handle_touch_zoom(
     mut contexts: EguiContexts,
-    mut touches: EventReader<TouchInput>,
+    mut touches: MessageReader<TouchInput>,
     mut zoom_level: ResMut<ZoomLevel>,
     mut camera_query: Query<&mut Projection, With<Camera2d>>,
     mut touch_positions: Local<std::collections::HashMap<u64, Vec2>>,
@@ -178,7 +157,7 @@ const CAMERA_ZOOM_RANGE: Range<f32> = 0.5..2.0;
 /// Zooms toward the center of the screen by adjusting the orthographic projection scale.
 pub fn handle_zoom(
     mut contexts: EguiContexts,
-    mut mouse_wheel_input: EventReader<MouseWheel>,
+    mut mouse_wheel_input: MessageReader<MouseWheel>,
     mut zoom_level: ResMut<ZoomLevel>,
     mut camera_query: Query<(&mut Projection, &Transform), With<Camera2d>>,
     controller_state: Res<super::controller::NodeControllerState>,
@@ -221,10 +200,10 @@ pub fn handle_zoom(
 
         // Update camera's orthographic projection scale
         // Since we're not adjusting camera position, this naturally zooms toward the center
-        if let Ok((mut projection, _transform)) = camera_query.single_mut() {
-            if let Projection::Orthographic(ortho) = projection.as_mut() {
-                ortho.scale = new_zoom;
-            }
+        if let Ok((mut projection, _transform)) = camera_query.single_mut()
+            && let Projection::Orthographic(ortho) = projection.as_mut()
+        {
+            ortho.scale = new_zoom;
         }
 
         **zoom_level = new_zoom;
@@ -235,8 +214,8 @@ pub fn handle_zoom(
 pub fn handle_camera(
     mut contexts: EguiContexts,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut mouse_button_events: EventReader<MouseButtonInput>,
-    mut mouse_motion_events: EventReader<MouseMotion>,
+    mut mouse_button_events: MessageReader<MouseButtonInput>,
+    mut mouse_motion_events: MessageReader<MouseMotion>,
     mut mouse_pressed: ResMut<MousePressed>,
     mut panning_state: ResMut<PanningState>,
     mut cameras: Query<&mut Transform, With<Camera2d>>,

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Magnifying glass examining document -->
+  <rect x="12" y="12" width="28" height="38" rx="2" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="2"/>
+
+  <!-- Document lines -->
+  <line x1="16" y1="20" x2="36" y2="20" stroke="#7f8c8d" stroke-width="2"/>
+  <line x1="16" y1="26" x2="36" y2="26" stroke="#7f8c8d" stroke-width="2"/>
+  <line x1="16" y1="32" x2="32" y2="32" stroke="#7f8c8d" stroke-width="2"/>
+
+  <!-- Magnifying glass -->
+  <circle cx="42" cy="38" r="10" fill="none" stroke="#3498db" stroke-width="3"/>
+  <line x1="48" y1="44" x2="54" y2="50" stroke="#3498db" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Checkmark inside glass -->
+  <path d="M38 38 L40 40 L46 34" fill="none" stroke="#27ae60" stroke-width="2" stroke-linecap="round"/>
+</svg>

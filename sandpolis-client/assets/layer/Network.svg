@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Network topology icon with connected nodes -->
+  <circle cx="32" cy="16" r="8" fill="#4a9eff" stroke="#2080ff" stroke-width="2"/>
+  <circle cx="16" cy="48" r="8" fill="#4a9eff" stroke="#2080ff" stroke-width="2"/>
+  <circle cx="48" cy="48" r="8" fill="#4a9eff" stroke="#2080ff" stroke-width="2"/>
+
+  <!-- Connection lines -->
+  <line x1="32" y1="24" x2="16" y2="40" stroke="#2080ff" stroke-width="3"/>
+  <line x1="32" y1="24" x2="48" y2="40" stroke="#2080ff" stroke-width="3"/>
+  <line x1="24" y1="48" x2="40" y2="48" stroke="#2080ff" stroke-width="3"/>
+</svg>

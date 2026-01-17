@@ -1,7 +1,7 @@
 use super::components::NodeEntity;
 use super::node::{NeedsScaling, NodeSvg};
 use super::queries;
-use crate::{InstanceState, Layer};
+use crate::Layer;
 use bevy::prelude::*;
 use bevy_svg::prelude::{Origin, Svg2d};
 
@@ -10,7 +10,7 @@ pub fn update_node_svgs_for_layer(
     mut commands: Commands,
     current_layer: Res<super::CurrentLayer>,
     asset_server: Res<AssetServer>,
-    state: Res<InstanceState>,
+    instance_layer: Res<sandpolis_instance::InstanceLayer>,
     node_query: Query<(Entity, &NodeEntity)>,
     children_query: Query<&Children>,
     svg_query: Query<Entity, With<NodeSvg>>,
@@ -28,7 +28,7 @@ pub fn update_node_svgs_for_layer(
 
     // Update each node's SVG based on current layer
     for (entity, node_entity) in node_query.iter() {
-        let svg_path = get_layer_svg_path(&current_layer, &state, node_entity.instance_id);
+        let svg_path = get_layer_svg_path(&current_layer, &instance_layer, node_entity.instance_id);
 
         // Find the SVG child entity
         if let Ok(children) = children_query.get(entity) {
@@ -36,7 +36,7 @@ pub fn update_node_svgs_for_layer(
                 if svg_query.contains(child) {
                     // Update the SVG child
                     commands.entity(child).insert((
-                        Svg2d(asset_server.load(svg_path.clone())),
+                        Svg2d(asset_server.load(svg_path)),
                         Origin::Center,
                         NeedsScaling,
                     ));
@@ -50,17 +50,17 @@ pub fn update_node_svgs_for_layer(
 /// Get the appropriate SVG path for a node based on the current layer
 fn get_layer_svg_path(
     layer: &Layer,
-    state: &InstanceState,
+    instance_layer: &sandpolis_instance::InstanceLayer,
     instance_id: sandpolis_core::InstanceId,
-) -> String {
+) -> &'static str {
     match layer {
         #[cfg(feature = "layer-filesystem")]
         Layer::Filesystem => {
             // Show OS-specific icons for filesystem layer
-            if let Ok(metadata) = queries::query_instance_metadata(state, instance_id) {
+            if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
                 super::node::get_os_image(metadata.os_type)
             } else {
-                "os/Unknown.svg".to_string()
+                "os/Unknown.svg"
             }
         }
 
@@ -68,10 +68,10 @@ fn get_layer_svg_path(
             // Distinguish between servers and agents
             // TODO: Query instance type from database
             // For now, use the local instance as reference
-            if instance_id == state.instance.instance_id {
-                "network/agent.svg".to_string()
+            if instance_id == instance_layer.instance_id {
+                "network/agent.svg"
             } else {
-                "network/server.svg".to_string()
+                "network/server.svg"
             }
         }
 
@@ -80,39 +80,37 @@ fn get_layer_svg_path(
             // Show desktop environment icons
             // TODO: Query desktop environment from database
             // For now, default to generic desktop icon
-            "desktop/generic.svg".to_string()
+            "desktop/generic.svg"
         }
 
         #[cfg(feature = "layer-inventory")]
         Layer::Inventory => {
             // Show hardware type icons (server, desktop, laptop, mobile)
             // TODO: Query hardware type from database
-            if let Ok(metadata) = queries::query_instance_metadata(state, instance_id) {
+            if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
                 // Use OS type as proxy for device type
                 match metadata.os_type {
-                    os_info::Type::Android => "inventory/mobile.svg".to_string(),
-                    os_info::Type::Windows | os_info::Type::Macos => {
-                        "inventory/desktop.svg".to_string()
-                    }
-                    _ => "inventory/server.svg".to_string(),
+                    os_info::Type::Android => "inventory/mobile.svg",
+                    os_info::Type::Windows | os_info::Type::Macos => "inventory/desktop.svg",
+                    _ => "inventory/server.svg",
                 }
             } else {
-                "inventory/server.svg".to_string()
+                "inventory/server.svg"
             }
         }
 
         #[cfg(feature = "layer-shell")]
         Layer::Shell => {
             // Show terminal icon
-            "shell/terminal.svg".to_string()
+            "shell/terminal.svg"
         }
 
         _ => {
             // Default to OS icons for other layers
-            if let Ok(metadata) = queries::query_instance_metadata(state, instance_id) {
+            if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
                 super::node::get_os_image(metadata.os_type)
             } else {
-                "os/Unknown.svg".to_string()
+                "os/Unknown.svg"
             }
         }
     }
@@ -121,7 +119,7 @@ fn get_layer_svg_path(
 /// Update node colors based on layer-specific states
 pub fn update_node_colors_for_layer(
     current_layer: Res<super::CurrentLayer>,
-    state: Res<InstanceState>,
+    network_layer: Res<sandpolis_network::NetworkLayer>,
     mut node_query: Query<(&NodeEntity, &mut Sprite)>,
 ) {
     // Only update when layer changes
@@ -131,7 +129,7 @@ pub fn update_node_colors_for_layer(
 
     for (node_entity, mut sprite) in node_query.iter_mut() {
         // Get layer-specific color tint
-        let color = get_layer_color_tint(&current_layer, &state, node_entity.instance_id);
+        let color = get_layer_color_tint(&current_layer, &network_layer, node_entity.instance_id);
         sprite.color = color;
     }
 }
@@ -139,13 +137,13 @@ pub fn update_node_colors_for_layer(
 /// Get color tint for a node based on layer and state
 fn get_layer_color_tint(
     layer: &Layer,
-    state: &InstanceState,
+    network_layer: &sandpolis_network::NetworkLayer,
     instance_id: sandpolis_core::InstanceId,
 ) -> Color {
     match layer {
         Layer::Network => {
             // Color based on connection latency
-            if let Ok(stats) = queries::query_network_stats(state, instance_id) {
+            if let Ok(stats) = queries::query_network_stats(network_layer, instance_id) {
                 if let Some(latency) = stats.latency_ms {
                     if latency < 50 {
                         Color::srgb(0.7, 1.0, 0.7) // Green - good connection
@@ -165,7 +163,7 @@ fn get_layer_color_tint(
         #[cfg(feature = "layer-filesystem")]
         Layer::Filesystem => {
             // Color based on disk usage
-            if let Ok(usage) = queries::query_filesystem_usage(state, instance_id) {
+            if let Ok(usage) = queries::query_filesystem_usage(instance_id) {
                 let percent = if usage.total > 0 {
                     (usage.used as f64 / usage.total as f64) * 100.0
                 } else {
@@ -187,7 +185,7 @@ fn get_layer_color_tint(
         #[cfg(feature = "layer-inventory")]
         Layer::Inventory => {
             // Color based on memory usage
-            if let Ok(mem) = queries::query_memory_stats(state, instance_id) {
+            if let Ok(mem) = queries::query_memory_stats(instance_id) {
                 let percent = if mem.total > 0 {
                     (mem.used as f64 / mem.total as f64) * 100.0
                 } else {

@@ -59,11 +59,10 @@ pub struct ActivityLineBundle {
 /// Spawn activity lines for active file transfers
 pub fn spawn_transfer_activity_lines(
     mut commands: Commands,
-    state: Res<crate::InstanceState>,
     existing_activities: Query<&ActivityLine>,
 ) {
     // Query database for active transfers
-    let Ok(transfers) = super::queries::query_active_transfers(&state) else {
+    let Ok(transfers) = super::queries::query_active_transfers() else {
         return;
     };
 
@@ -145,10 +144,9 @@ pub fn animate_activity_lines(mut activity_query: Query<&mut ActivityLine>, time
 pub fn despawn_completed_activity_lines(
     mut commands: Commands,
     activity_query: Query<(Entity, &ActivityLine)>,
-    state: Res<crate::InstanceState>,
 ) {
     // Get list of active transfers
-    let Ok(active_transfers) = super::queries::query_active_transfers(&state) else {
+    let Ok(active_transfers) = super::queries::query_active_transfers() else {
         return;
     };
 

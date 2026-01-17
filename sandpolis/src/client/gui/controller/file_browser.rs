@@ -1,7 +1,6 @@
 use bevy_egui::egui;
 use egui_file_dialog::FileDialog;
 use sandpolis_core::InstanceId;
-use crate::InstanceState;
 use crate::client::gui::queries;
 use std::path::PathBuf;
 
@@ -22,7 +21,7 @@ impl Default for FileBrowserState {
 }
 
 /// Render file browser controller using egui-file-dialog
-pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId) {
+pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
     let state_id = egui::Id::new(format!("file_browser_{}", instance_id));
 
     let mut browser_state = ui.data_mut(|d| {
@@ -57,7 +56,7 @@ pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId)
         .max_height(200.0)
         .show(ui, |ui| {
             let path = PathBuf::from(&browser_state.current_path);
-            match queries::query_directory_contents(state, instance_id, &path) {
+            match queries::query_directory_contents(instance_id, &path) {
                 Ok(entries) => {
                     if entries.is_empty() {
                         ui.label("(Empty directory)");
@@ -158,7 +157,7 @@ pub fn render(ui: &mut egui::Ui, state: &InstanceState, instance_id: InstanceId)
     ui.separator();
 
     // Filesystem usage stats
-    if let Ok(usage) = queries::query_filesystem_usage(state, instance_id) {
+    if let Ok(usage) = queries::query_filesystem_usage(instance_id) {
         let used_gb = usage.used as f64 / 1_000_000_000.0;
         let total_gb = usage.total as f64 / 1_000_000_000.0;
         let percent = if usage.total > 0 {

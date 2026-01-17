@@ -131,7 +131,7 @@ pub fn render_layer_indicator(
                 );
 
                 // Button with layer name - adjust width to account for icon
-                let button_response = ui.add(
+                ui.add(
                     egui::Button::new(
                         egui::RichText::new(layer_name)
                             .size(16.0)
@@ -144,9 +144,7 @@ pub fn render_layer_indicator(
                     ))
                     .corner_radius(6.0)
                     .min_size(egui::vec2(button_width - icon_size.x - 8.0, 32.0))
-                );
-
-                button_response
+                )
             }).inner;
 
             if response.clicked() {

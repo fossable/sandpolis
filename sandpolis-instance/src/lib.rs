@@ -20,6 +20,7 @@ pub struct InstanceLayerData {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 pub struct InstanceLayer {
     #[cfg(feature = "default")]
     data: Resident<InstanceLayerData>,

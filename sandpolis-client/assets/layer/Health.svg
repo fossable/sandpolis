@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Heart rate / health monitor -->
+  <path d="M32 52 C18 42, 8 32, 8 22 C8 14, 14 10, 20 10 C24 10, 28 12, 32 16 C36 12, 40 10, 44 10 C50 10, 56 14, 56 22 C56 32, 46 42, 32 52" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+
+  <!-- EKG line overlay -->
+  <path d="M12 28 L18 28 L22 20 L26 36 L30 28 L34 28 L38 22 L42 32 L46 28 L52 28" fill="none" stroke="#ffffff" stroke-width="2"/>
+</svg>

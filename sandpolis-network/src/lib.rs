@@ -48,6 +48,7 @@ pub mod server;
 pub struct NetworkLayerData {}
 
 #[derive(Clone)]
+#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 pub struct NetworkLayer {
     data: Resident<NetworkLayerData>,
 

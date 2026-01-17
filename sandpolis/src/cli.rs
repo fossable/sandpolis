@@ -83,6 +83,7 @@ pub enum Commands {
 }
 
 impl Commands {
+    #[allow(unused_variables)]
     pub async fn dispatch(self, config: &Configuration) -> Result<ExitCode> {
         match self {
             #[cfg(feature = "server")]
