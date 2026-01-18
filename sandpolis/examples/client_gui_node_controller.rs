@@ -11,10 +11,10 @@
 ///   CONTROLLER=Terminal cargo run --example client_gui_node_controller --features client-gui
 ///   CONTROLLER=SystemInfo cargo run --example client_gui_node_controller --features client-gui
 use eframe::egui;
-use sandpolis::{InstanceState, config::Configuration, MODELS};
 use sandpolis::client::gui::controller::ControllerType;
-use sandpolis::client::gui::get_extension_for_layer;
-use sandpolis_core::{InstanceId, Layer};
+use sandpolis::client::gui::layer_ext::get_extension_for_layer;
+use sandpolis::{InstanceState, MODELS, config::Configuration};
+use sandpolis_core::{InstanceId, LayerName};
 use sandpolis_database::{DatabaseLayer, config::DatabaseConfig};
 use std::env;
 
@@ -57,7 +57,12 @@ async fn main() -> eframe::Result<()> {
     eframe::run_native(
         "Node Controller Test",
         options,
-        Box::new(move |_cc| Ok(Box::new(NodeControllerTestApp::new(controller, instance_id)))),
+        Box::new(move |_cc| {
+            Ok(Box::new(NodeControllerTestApp::new(
+                controller,
+                instance_id,
+            )))
+        }),
     )
 }
 
@@ -85,14 +90,14 @@ impl NodeControllerTestApp {
         }
     }
 
-    fn get_layer_for_controller(&self) -> Layer {
+    fn get_layer_for_controller(&self) -> LayerName {
         match self.controller_type {
-            ControllerType::FileBrowser => Layer::from("Filesystem"),
-            ControllerType::Terminal => Layer::from("Shell"),
-            ControllerType::SystemInfo => Layer::from("Inventory"),
-            ControllerType::PackageManager => Layer::from("Inventory"),
-            ControllerType::DesktopViewer => Layer::from("Desktop"),
-            ControllerType::None => Layer::from("Network"),
+            ControllerType::FileBrowser => LayerName::from("Filesystem"),
+            ControllerType::Terminal => LayerName::from("Shell"),
+            ControllerType::SystemInfo => LayerName::from("Inventory"),
+            ControllerType::PackageManager => LayerName::from("Inventory"),
+            ControllerType::DesktopViewer => LayerName::from("Desktop"),
+            ControllerType::None => LayerName::from("Network"),
         }
     }
 }

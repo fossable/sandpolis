@@ -119,7 +119,6 @@ impl InstanceState {
     }
 }
 
-
 /// All user accounts are subject to a set of permissions controlling what
 /// server operations are authorized. The inital admin user has complete and
 /// irrevocable permissions. By default, additional user accounts are created
@@ -147,10 +146,13 @@ macro_rules! layer_version {
 }
 
 // TODO make this const
-pub fn layers() -> HashMap<sandpolis_core::Layer, LayerVersion> {
+pub fn layers() -> HashMap<sandpolis_core::LayerName, LayerVersion> {
     HashMap::from([
         #[cfg(feature = "layer-shell")]
-        (sandpolis_core::Layer::from("shell"), layer_version!(sandpolis_shell)),
+        (
+            sandpolis_core::LayerName::from("shell"),
+            layer_version!(sandpolis_shell),
+        ),
     ])
 }
 

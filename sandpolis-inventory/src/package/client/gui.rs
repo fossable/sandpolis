@@ -18,7 +18,9 @@ pub fn handle_layer(
 
     for (transform, id) in nodes.iter_mut() {
         // let package_manager_info: PackageManagerInfo = todo!();
+        let window_id = egui::Id::new("inventory_window").with(*id);
         egui::Window::new("Hello")
+            .id(window_id)
             .movable(false)
             .resizable(false)
             .pivot(egui::Align2::CENTER_TOP)

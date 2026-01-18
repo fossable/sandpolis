@@ -1,4 +1,5 @@
-use crate::gui::{NodeEntity, edges::Edge};
+use crate::gui::edges::Edge;
+use crate::gui::node::NodeEntity;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 

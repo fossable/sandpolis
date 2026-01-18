@@ -1,14 +1,14 @@
-use crate::gui::NodeEntity;
-use crate::gui::node::{NeedsScaling, NodeSvg};
+use crate::gui::input::CurrentLayer;
+use crate::gui::node::{NeedsScaling, NodeEntity, NodeSvg};
 use crate::gui::queries;
-use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_svg::prelude::{Origin, Svg2d};
+use sandpolis_core::LayerName;
 
 /// Update node SVG images when layer changes or for newly spawned nodes
 pub fn update_node_svgs_for_layer(
     mut commands: Commands,
-    current_layer: Res<super::CurrentLayer>,
+    current_layer: Res<CurrentLayer>,
     asset_server: Res<AssetServer>,
     instance_layer: Res<sandpolis_instance::InstanceLayer>,
     node_query: Query<(Entity, &NodeEntity)>,
@@ -28,7 +28,8 @@ pub fn update_node_svgs_for_layer(
 
     // Update each node's SVG based on current layer
     for (entity, node_entity) in node_query.iter() {
-        let svg_path = get_layer_svg_path(&current_layer, &*instance_layer, node_entity.instance_id);
+        let svg_path =
+            get_layer_svg_path(&current_layer, &*instance_layer, node_entity.instance_id);
 
         // Find the SVG child entity
         if let Ok(children) = children_query.get(entity) {
@@ -49,7 +50,7 @@ pub fn update_node_svgs_for_layer(
 
 /// Get the appropriate SVG path for a node based on the current layer
 fn get_layer_svg_path(
-    layer: &Layer,
+    layer: &LayerName,
     instance_layer: &sandpolis_instance::InstanceLayer,
     instance_id: sandpolis_core::InstanceId,
 ) -> &'static str {
@@ -118,7 +119,7 @@ fn get_layer_svg_path(
 
 /// Update node colors based on layer-specific states
 pub fn update_node_colors_for_layer(
-    current_layer: Res<super::CurrentLayer>,
+    current_layer: Res<CurrentLayer>,
     network_layer: Res<sandpolis_network::NetworkLayer>,
     mut node_query: Query<(&NodeEntity, &mut Sprite)>,
 ) {
@@ -136,7 +137,7 @@ pub fn update_node_colors_for_layer(
 
 /// Get color tint for a node based on layer and state
 fn get_layer_color_tint(
-    layer: &Layer,
+    layer: &LayerName,
     network_layer: &sandpolis_network::NetworkLayer,
     instance_id: sandpolis_core::InstanceId,
 ) -> Color {

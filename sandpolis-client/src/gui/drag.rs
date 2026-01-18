@@ -1,8 +1,15 @@
-use crate::gui::{NodeEntity, WorldView, Selected, SelectionSet};
+use crate::gui::node::{NodeEntity, Selected, WorldView};
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{EguiContexts, egui};
 use bevy_rapier2d::prelude::*;
+use sandpolis_core::InstanceId;
+
+/// Resource tracking all currently selected nodes.
+#[derive(Resource, Default)]
+pub struct SelectionSet {
+    pub selected_nodes: Vec<InstanceId>,
+}
 
 /// Tracks the current drag operation
 #[derive(Resource, Default)]
@@ -92,7 +99,10 @@ pub fn handle_node_selection(
             // Single-select mode: clear all selections and select only this node
             // First, clear all existing selections
             for (entity, _, node_entity) in node_query.iter() {
-                if selection_set.selected_nodes.contains(&node_entity.instance_id) {
+                if selection_set
+                    .selected_nodes
+                    .contains(&node_entity.instance_id)
+                {
                     commands.entity(entity).remove::<Selected>();
                 }
             }
@@ -105,7 +115,10 @@ pub fn handle_node_selection(
     } else if !ctrl_pressed {
         // Clicked empty space without Ctrl: clear all selections
         for (entity, _, node_entity) in node_query.iter() {
-            if selection_set.selected_nodes.contains(&node_entity.instance_id) {
+            if selection_set
+                .selected_nodes
+                .contains(&node_entity.instance_id)
+            {
                 commands.entity(entity).remove::<Selected>();
             }
         }
@@ -270,11 +283,11 @@ pub fn update_selection_visuals(
             commands.entity(node_entity).with_children(|parent| {
                 parent.spawn((
                     Mesh2d(meshes.add(ring)),
-                    MeshMaterial2d(materials.add(ColorMaterial::from(Color::srgba(0.3, 0.8, 1.0, 0.6)))),
+                    MeshMaterial2d(
+                        materials.add(ColorMaterial::from(Color::srgba(0.3, 0.8, 1.0, 0.6))),
+                    ),
                     Transform::from_xyz(0.0, 0.0, -0.1), // Behind the node
-                    SelectionRing {
-                        node_entity,
-                    },
+                    SelectionRing { node_entity },
                 ));
             });
         }
@@ -311,7 +324,10 @@ pub fn render_selection_ui(
         .fixed_pos(egui::Pos2::new(window_size.x - 120.0, 10.0))
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.label(format!("📌 {} nodes selected", selection_set.selected_nodes.len()));
+                ui.label(format!(
+                    "📌 {} nodes selected",
+                    selection_set.selected_nodes.len()
+                ));
             });
         });
 }

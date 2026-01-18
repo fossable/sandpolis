@@ -2,8 +2,8 @@ use crate::messages::{GetBannerRequest, GetBannerResponse};
 use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
-use sandpolis_core::RealmName;
 use sandpolis_core::InstanceId;
+use sandpolis_core::RealmName;
 use sandpolis_database::DatabaseLayer;
 #[cfg(feature = "server")]
 use sandpolis_database::Resident;

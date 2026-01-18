@@ -1,7 +1,4 @@
-// Re-export all GUI types and systems from sandpolis-client
-pub use sandpolis_client::gui::*;
-
-use crate::{config::Configuration, InstanceState};
+use crate::{InstanceState, config::Configuration};
 use anyhow::Result;
 use bevy::{
     app::PluginGroup,
@@ -9,19 +6,79 @@ use bevy::{
     color::palettes::basic::{BLUE, GRAY, WHITE},
     ecs::schedule::IntoScheduleConfigs,
     prelude::{
-        default, info, App, AssetPlugin, AssetServer, AudioSink, BackgroundColor, Button, Camera2d,
-        Changed, Commands, DefaultPlugins, Entity, Interaction, MessageReader, MonitorSelection,
-        PostUpdate, Query, Res, ResMut, Startup, Timer, TimerMode, Update, Vec2, Vec3, Window,
-        WindowPlugin, With,
+        App, AssetPlugin, AssetServer, AudioSink, BackgroundColor, Button, Camera2d, Changed,
+        Commands, DefaultPlugins, Entity, Interaction, MessageReader, MonitorSelection, PostUpdate,
+        Query, Res, ResMut, Startup, Timer, TimerMode, Update, Vec2, Vec3, Window, WindowPlugin,
+        With, default, info,
     },
     window::{AppLifecycle, WindowMode},
 };
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
-use bevy_rapier2d::prelude::{NoUserData, RapierConfiguration, RapierDebugRenderPlugin, RapierPhysicsPlugin};
-use sandpolis_core::Layer;
-// Explicit imports to avoid ambiguity with bevy::prelude::*
-#[allow(unused_imports)]
-pub use sandpolis_client::gui::{LayoutConfig, LayoutState};
+use bevy_rapier2d::prelude::{
+    NoUserData, RapierConfiguration, RapierDebugRenderPlugin, RapierPhysicsPlugin,
+};
+use sandpolis_core::LayerName;
+
+// Import GUI types from sandpolis-client submodules
+use sandpolis_client::gui::about::{
+    AboutScreenState, handle_about_easter_egg, render_about_screen, rotate_about_logo,
+    spawn_about_logo,
+};
+use sandpolis_client::gui::activity::{
+    animate_activity_lines, cleanup_layer_activity_lines, despawn_completed_activity_lines,
+    spawn_network_activity_lines, spawn_transfer_activity_lines, update_activity_line_positions,
+};
+use sandpolis_client::gui::controller::{
+    NodeControllerState, close_controller_on_layer_change, handle_node_double_click,
+    render_node_controller,
+};
+use sandpolis_client::gui::drag::{
+    DragState, SelectionSet, disable_forces_while_dragging, handle_node_selection,
+    render_selection_ui, start_node_drag, stop_node_drag, update_node_drag,
+    update_selection_visuals,
+};
+use sandpolis_client::gui::edges::{
+    render_edge_labels, render_edges, update_edge_visibility, update_edges_for_layer,
+};
+use sandpolis_client::gui::input::{
+    CurrentLayer, HelpScreenState, LayerChangeTimer, LoginDialogState, MousePressed, PanningState,
+    ZoomLevel, handle_camera, handle_keymap, handle_zoom,
+};
+use sandpolis_client::gui::layer_picker::{
+    LayerPickerState, handle_layer_picker_toggle, render_layer_picker_button,
+    render_layer_picker_panel,
+};
+use sandpolis_client::gui::layer_ui::{LayerIndicatorState, render_layer_indicator};
+use sandpolis_client::gui::layer_visuals::{
+    update_node_colors_for_layer, update_node_svgs_for_layer,
+};
+use sandpolis_client::gui::layout::{
+    LayoutConfig, LayoutState, apply_damping, apply_repulsion_forces, apply_spring_forces,
+    check_stabilization,
+};
+use sandpolis_client::gui::listeners::{
+    DatabaseUpdate, DatabaseUpdateChannel, DatabaseUpdateSender, setup_all_listeners,
+};
+use sandpolis_client::gui::login::{
+    LoginOperation, check_saved_servers, handle_login_phase1, handle_login_phase2,
+};
+use sandpolis_client::gui::minimap::{MinimapViewport, render_minimap};
+use sandpolis_client::gui::node::{NodeEntity, WorldView, scale_node_svgs, spawn_node};
+use sandpolis_client::gui::node_picker::{
+    NodePickerState, handle_node_picker_toggle, render_node_picker_panel,
+};
+use sandpolis_client::gui::preview::{render_node_previews, toggle_node_preview_visibility};
+use sandpolis_client::gui::queries::{query_all_instances, query_instance_metadata};
+use sandpolis_client::gui::responsive::update_responsive_ui;
+use sandpolis_client::gui::theme::{
+    CurrentTheme, ThemePickerState, apply_theme_to_egui, handle_theme_picker_toggle,
+    initialize_theme, render_theme_picker,
+};
+
+// Re-export submodules for external access
+pub use sandpolis_client::gui::controller;
+pub use sandpolis_client::gui::layer_ext;
+pub use sandpolis_client::gui::preview;
 
 /// Initialize and start rendering the UI.
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
@@ -65,7 +122,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .add_plugins(bevy_svg::prelude::SvgPlugin)
     .add_plugins(bevy_stl::StlPlugin)
     .add_plugins(EguiPlugin::default())
-    .insert_resource(CurrentLayer(Layer::from("Desktop")))
+    .insert_resource(CurrentLayer(LayerName::from("Desktop")))
     .insert_resource(ZoomLevel(1.0))
     .insert_resource(LayerChangeTimer(Timer::from_seconds(3.0, TimerMode::Once)))
     .insert_resource(MinimapViewport::default())
@@ -80,7 +137,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(LayoutState::default())
     .insert_resource(DragState::default())
     .insert_resource(NodeControllerState::default())
-    .insert_resource(LayerSwitcherState::default())
+    .insert_resource(LayerPickerState::default())
     .insert_resource(NodePickerState::default())
     .insert_resource(HelpScreenState::default())
     .insert_resource(LoginDialogState::default())
@@ -113,7 +170,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             sandpolis_client::gui::input::handle_touch_camera,
             #[cfg(target_os = "android")]
             sandpolis_client::gui::input::handle_touch_zoom,
-            handle_layer_switcher_toggle,
+            handle_layer_picker_toggle,
             handle_node_picker_toggle,
             handle_theme_picker_toggle,
             button_handler,
@@ -159,8 +216,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             // UI rendering with egui
             render_minimap,
             render_layer_indicator,
-            render_layer_switcher_button,
-            render_layer_switcher_panel,
+            render_layer_picker_button,
+            render_layer_picker_panel,
             render_node_picker_panel,
             render_node_previews,
             render_edge_labels,

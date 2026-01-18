@@ -1,12 +1,10 @@
-use crate::gui::{
-    CurrentLayer,
-    NodeEntity, WorldView,
-    queries,
-};
-use sandpolis_core::Layer;
+use crate::gui::input::CurrentLayer;
+use crate::gui::node::{NodeEntity, WorldView};
+use crate::gui::queries;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_core::InstanceId;
+use sandpolis_core::LayerName;
 use std::collections::HashMap;
 
 /// Component representing an edge between two nodes
@@ -14,7 +12,7 @@ use std::collections::HashMap;
 pub struct Edge {
     pub from: InstanceId,
     pub to: InstanceId,
-    pub layer: Layer,
+    pub layer: LayerName,
 }
 
 /// Component for edge labels (network stats, etc.)
@@ -91,7 +89,7 @@ pub fn update_edges_for_layer(
                     commands.spawn(Edge {
                         from: net_edge.from,
                         to: net_edge.to,
-                        layer: Layer::from("Network"),
+                        layer: LayerName::from("Network"),
                     });
                 }
             }
@@ -196,19 +194,15 @@ pub fn render_edge_labels(
         // Render label at midpoint - use Hash-based ID instead of format string
         let label_pos = egui::Pos2::new(screen_pos.x, screen_pos.y);
 
-        egui::Area::new(
-            egui::Id::new("edge_label")
-                .with(edge.from)
-                .with(edge.to),
-        )
-        .fixed_pos(label_pos)
-        .show(ctx, |ui| {
-            ui.label(
-                egui::RichText::new(label_text)
-                    .size(10.0)
-                    .background_color(egui::Color32::from_rgba_unmultiplied(0, 0, 0, 150))
-                    .color(egui::Color32::WHITE),
-            );
-        });
+        egui::Area::new(egui::Id::new("edge_label").with(edge.from).with(edge.to))
+            .fixed_pos(label_pos)
+            .show(ctx, |ui| {
+                ui.label(
+                    egui::RichText::new(label_text)
+                        .size(10.0)
+                        .background_color(egui::Color32::from_rgba_unmultiplied(0, 0, 0, 150))
+                        .color(egui::Color32::WHITE),
+                );
+            });
     }
 }

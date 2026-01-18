@@ -1,11 +1,11 @@
-use crate::gui::{DatabaseUpdate, DatabaseUpdateSender};
 use crate::gui::input::{LoginDialogState, LoginPhase};
+use crate::gui::listeners::{DatabaseUpdate, DatabaseUpdateSender};
 use bevy::prelude::*;
 use sandpolis_database::{DataCreation, DataIdentifier};
 use sandpolis_network::ServerUrl;
 use sandpolis_server::client::SavedServerData;
-use sandpolis_user::messages::{LoginRequest, LoginResponse};
 use sandpolis_user::LoginPassword;
+use sandpolis_user::messages::{LoginRequest, LoginResponse};
 use std::str::FromStr;
 use std::time::Duration;
 use tracing::{debug, error, info};
@@ -191,7 +191,10 @@ pub fn handle_login_phase2(
                     }
 
                     // Notify the UI to spawn a new server node
-                    if let Err(e) = db_update_sender.sender.send(DatabaseUpdate::InstanceAdded(server_instance_id)) {
+                    if let Err(e) = db_update_sender
+                        .sender
+                        .send(DatabaseUpdate::InstanceAdded(server_instance_id))
+                    {
                         error!(error = %e, "Failed to send InstanceAdded event");
                     }
 

@@ -1,7 +1,36 @@
-use crate::gui::DatabaseUpdate;
+use bevy::prelude::*;
+use sandpolis_core::InstanceId;
+use sandpolis_database::ResidentVecEvent;
 use sandpolis_network::NetworkLayer;
 use tokio::sync::mpsc;
-use sandpolis_database::ResidentVecEvent;
+
+/// Database update events from resident listeners.
+#[derive(Clone, Debug)]
+pub enum DatabaseUpdate {
+    InstanceAdded(InstanceId),
+    InstanceRemoved(InstanceId),
+    FilesystemChanged(InstanceId, std::path::PathBuf),
+    NetworkTopologyChanged,
+    InventoryUpdated(InstanceId),
+    ShellOutput(String, Vec<u8>), // session_id, output
+    PackagesChanged(InstanceId),
+    DesktopEvent(InstanceId),
+    TransferStarted(InstanceId, InstanceId, String), // from, to, filename
+    TransferProgress(InstanceId, InstanceId, f32),
+    TransferCompleted(InstanceId, InstanceId),
+}
+
+/// Resource containing channel receiver for database updates.
+#[derive(Resource)]
+pub struct DatabaseUpdateChannel {
+    pub receiver: mpsc::UnboundedReceiver<DatabaseUpdate>,
+}
+
+/// Resource containing channel sender for database updates.
+#[derive(Resource, Clone)]
+pub struct DatabaseUpdateSender {
+    pub sender: mpsc::UnboundedSender<DatabaseUpdate>,
+}
 
 /// Set up all resident listeners to forward database updates to Bevy
 /// This runs in a background tokio task and sends updates through the channel

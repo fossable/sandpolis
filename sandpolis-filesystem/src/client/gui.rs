@@ -5,10 +5,10 @@
 use bevy::prelude::*;
 use bevy_egui::egui;
 use egui_file_dialog::FileDialog;
-use sandpolis_core::{InstanceId, Layer};
+use sandpolis_core::{InstanceId, LayerName};
 use std::path::PathBuf;
 
-use sandpolis_client::gui::{ActivityTypeInfo, LayerGuiExtension};
+use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
 
 /// Per-instance file browser state stored in egui memory.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
@@ -116,7 +116,7 @@ pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
                         ui.label("(Empty directory)");
                     } else {
                         // Table header
-                        egui::Grid::new("file_grid")
+                        egui::Grid::new(egui::Id::new("file_grid").with(instance_id))
                             .striped(true)
                             .spacing([10.0, 4.0])
                             .show(ui, |ui| {
@@ -127,7 +127,8 @@ pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
 
                                 for entry in entries {
                                     let icon = if entry.is_dir { "D" } else { "F" };
-                                    let is_selected = browser_state.selected_files.contains(&entry.name);
+                                    let is_selected =
+                                        browser_state.selected_files.contains(&entry.name);
 
                                     let label_text = format!("{} {}", icon, entry.name);
                                     let response = ui.selectable_label(is_selected, label_text);
@@ -137,14 +138,19 @@ pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
                                             // Navigate into directory
                                             let mut new_path = path.clone();
                                             new_path.push(&entry.name);
-                                            browser_state.current_path = new_path.display().to_string();
+                                            browser_state.current_path =
+                                                new_path.display().to_string();
                                             browser_state.selected_files.clear();
                                         } else {
                                             // Toggle file selection
                                             if is_selected {
-                                                browser_state.selected_files.retain(|f| f != &entry.name);
+                                                browser_state
+                                                    .selected_files
+                                                    .retain(|f| f != &entry.name);
                                             } else {
-                                                browser_state.selected_files.push(entry.name.clone());
+                                                browser_state
+                                                    .selected_files
+                                                    .push(entry.name.clone());
                                             }
                                         }
                                     }
@@ -175,7 +181,10 @@ pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
     ui.horizontal(|ui| {
         let has_selection = !browser_state.selected_files.is_empty();
 
-        if ui.add_enabled(has_selection, egui::Button::new("Download")).clicked() {
+        if ui
+            .add_enabled(has_selection, egui::Button::new("Download"))
+            .clicked()
+        {
             // Open file dialog for download destination
             file_dialog.pick_directory();
         }
@@ -185,7 +194,8 @@ pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
             file_dialog.pick_file();
         }
 
-        if ui.add_enabled(has_selection, egui::Button::new("Delete"))
+        if ui
+            .add_enabled(has_selection, egui::Button::new("Delete"))
             .on_hover_text("Delete selected files")
             .clicked()
         {
@@ -220,10 +230,12 @@ pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
             0.0
         };
 
-        ui.label(format!("Disk Usage: {:.1} GB / {:.1} GB ({:.1}%)", used_gb, total_gb, percent));
+        ui.label(format!(
+            "Disk Usage: {:.1} GB / {:.1} GB ({:.1}%)",
+            used_gb, total_gb, percent
+        ));
 
-        let progress_bar = egui::ProgressBar::new(percent as f32 / 100.0)
-            .show_percentage();
+        let progress_bar = egui::ProgressBar::new(percent as f32 / 100.0).show_percentage();
         ui.add(progress_bar);
     }
 
@@ -235,9 +247,14 @@ pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
 pub struct FilesystemGuiExtension;
 
 impl LayerGuiExtension for FilesystemGuiExtension {
-    fn layer(&self) -> &Layer {
-        static LAYER: std::sync::LazyLock<Layer> = std::sync::LazyLock::new(|| Layer::from("Filesystem"));
+    fn layer(&self) -> &LayerName {
+        static LAYER: std::sync::LazyLock<LayerName> =
+            std::sync::LazyLock::new(|| LayerName::from("Filesystem"));
         &LAYER
+    }
+
+    fn description(&self) -> &'static str {
+        "Browse and manage remote filesystems"
     }
 
     fn render_controller(&self, ui: &mut egui::Ui, instance_id: InstanceId) {
@@ -299,14 +316,12 @@ impl LayerGuiExtension for FilesystemGuiExtension {
     }
 
     fn activity_types(&self) -> Vec<ActivityTypeInfo> {
-        vec![
-            ActivityTypeInfo {
-                id: "file_transfer",
-                name: "File Transfer",
-                color: Color::srgb(0.3, 0.8, 0.3),
-                size: 8.0,
-            }
-        ]
+        vec![ActivityTypeInfo {
+            id: "file_transfer",
+            name: "File Transfer",
+            color: Color::srgb(0.3, 0.8, 0.3),
+            size: 8.0,
+        }]
     }
 }
 

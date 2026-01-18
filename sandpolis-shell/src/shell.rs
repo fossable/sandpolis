@@ -68,47 +68,50 @@ impl Shell {
 
         // Check version output
         if let Ok(output) = Command::new(&executable).arg("--version").output()
-            && output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout);
+            && output.status.success()
+        {
+            let stdout = String::from_utf8_lossy(&output.stdout);
 
-                if stdout.starts_with("zsh") {
-                    capabilities.insert(ShellCapability::Zsh);
-                    capabilities.insert(ShellCapability::Bash);
-                    capabilities.insert(ShellCapability::Sh);
-                }
-
-                if stdout.starts_with("GNU bash,") {
-                    capabilities.insert(ShellCapability::Bash);
-                    capabilities.insert(ShellCapability::Sh);
-                }
-
-                // Extract version if possible
-                version = Some(stdout.lines().next().unwrap_or("").to_string());
+            if stdout.starts_with("zsh") {
+                capabilities.insert(ShellCapability::Zsh);
+                capabilities.insert(ShellCapability::Bash);
+                capabilities.insert(ShellCapability::Sh);
             }
+
+            if stdout.starts_with("GNU bash,") {
+                capabilities.insert(ShellCapability::Bash);
+                capabilities.insert(ShellCapability::Sh);
+            }
+
+            // Extract version if possible
+            version = Some(stdout.lines().next().unwrap_or("").to_string());
+        }
 
         // Check help output if we need more information
         if capabilities.is_empty()
             && let Ok(output) = Command::new(&executable).arg("--help").output()
-                && output.status.success() {
-                    let stdout = String::from_utf8_lossy(&output.stdout);
+            && output.status.success()
+        {
+            let stdout = String::from_utf8_lossy(&output.stdout);
 
-                    if stdout.starts_with("Usage: zsh") {
-                        capabilities.insert(ShellCapability::Zsh);
-                        capabilities.insert(ShellCapability::Bash);
-                        capabilities.insert(ShellCapability::Sh);
-                    }
+            if stdout.starts_with("Usage: zsh") {
+                capabilities.insert(ShellCapability::Zsh);
+                capabilities.insert(ShellCapability::Bash);
+                capabilities.insert(ShellCapability::Sh);
+            }
 
-                    if stdout.starts_with("GNU bash,") {
-                        capabilities.insert(ShellCapability::Bash);
-                        capabilities.insert(ShellCapability::Sh);
-                    }
-                }
+            if stdout.starts_with("GNU bash,") {
+                capabilities.insert(ShellCapability::Bash);
+                capabilities.insert(ShellCapability::Sh);
+            }
+        }
 
         // If still no capabilities found, try to infer from known paths
         if capabilities.is_empty()
-            && let Some(known_caps) = Self::known_paths().get(executable.to_str().unwrap_or("")) {
-                capabilities = known_caps.clone();
-            }
+            && let Some(known_caps) = Self::known_paths().get(executable.to_str().unwrap_or(""))
+        {
+            capabilities = known_caps.clone();
+        }
 
         Ok(Shell {
             executable,

@@ -1,4 +1,3 @@
-use crate::gui::NodeEntity;
 use bevy::prelude::*;
 use bevy_rapier2d::{
     dynamics::{Damping, ExternalForce, RigidBody, Velocity},
@@ -6,6 +5,20 @@ use bevy_rapier2d::{
 };
 use bevy_svg::prelude::{Origin, Svg, Svg2d};
 use sandpolis_core::InstanceId;
+
+/// Marker component for the main world view camera.
+#[derive(Component)]
+pub struct WorldView;
+
+/// Component that marks an entity as representing an instance node.
+#[derive(Component)]
+pub struct NodeEntity {
+    pub instance_id: InstanceId,
+}
+
+/// Marker component for selected nodes.
+#[derive(Component)]
+pub struct Selected;
 
 /// The desired visual diameter for all nodes
 const NODE_VISUAL_DIAMETER: f32 = 100.0;
@@ -54,8 +67,8 @@ pub fn spawn_node(
     let svg_path = "network/agent.svg".to_string();
 
     // Spawn parent node with physics components
-    let node_entity = commands.spawn((
-        Node {
+    let node_entity = commands
+        .spawn((Node {
             id: instance_id,
             node_entity: NodeEntity { instance_id },
             collider: Collider::ball(50.0),
@@ -68,8 +81,8 @@ pub fn spawn_node(
             },
             restitution: Restitution::coefficient(0.7),
             transform: Transform::from_xyz(x, y, 0.0),
-        },
-    )).id();
+        },))
+        .id();
 
     // Spawn SVG as a child entity
     commands.entity(node_entity).with_children(|parent| {
@@ -100,7 +113,10 @@ pub fn get_os_image(os_type: os_info::Type) -> &'static str {
 pub fn scale_node_svgs(
     mut commands: Commands,
     svg_assets: Res<Assets<Svg>>,
-    mut nodes_needing_scale: Query<(Entity, &Svg2d, &mut Transform), (With<NeedsScaling>, With<NodeSvg>)>,
+    mut nodes_needing_scale: Query<
+        (Entity, &Svg2d, &mut Transform),
+        (With<NeedsScaling>, With<NodeSvg>),
+    >,
 ) {
     for (entity, svg_handle, mut transform) in nodes_needing_scale.iter_mut() {
         // Check if the SVG asset is loaded

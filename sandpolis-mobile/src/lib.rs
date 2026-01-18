@@ -16,19 +16,14 @@ fn get_android_files_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
     let context = unsafe { jni::objects::JObject::from_raw(ctx.context().cast()) };
 
     // Call getFilesDir() on the context
-    let files_dir = env.call_method(
-        context,
-        "getFilesDir",
-        "()Ljava/io/File;",
-        &[]
-    )?;
+    let files_dir = env.call_method(context, "getFilesDir", "()Ljava/io/File;", &[])?;
 
     // Call getAbsolutePath() on the File object
     let path = env.call_method(
         files_dir.l()?,
         "getAbsolutePath",
         "()Ljava/lang/String;",
-        &[]
+        &[],
     )?;
 
     // Convert Java String to Rust String

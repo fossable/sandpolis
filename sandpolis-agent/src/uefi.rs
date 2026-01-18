@@ -129,49 +129,50 @@ impl UefiVariable {
 
             // Parse filename format: "VariableName-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
             if let Some(dash_pos) = filename_str.rfind('-')
-                && dash_pos >= 36 {
-                    let guid_start = dash_pos - 35;
-                    let name = filename_str[..guid_start - 1].to_string();
-                    let guid = filename_str[guid_start..].to_string();
+                && dash_pos >= 36
+            {
+                let guid_start = dash_pos - 35;
+                let name = filename_str[..guid_start - 1].to_string();
+                let guid = filename_str[guid_start..].to_string();
 
-                    // Try to match known variables
-                    let var = if guid == EFI_GLOBAL_VARIABLE_GUID {
-                        match name.as_str() {
-                            "BootOrder" => UefiVariable::BootOrder,
-                            "BootCurrent" => UefiVariable::BootCurrent,
-                            "BootNext" => UefiVariable::BootNext,
-                            "BootOptionSupport" => UefiVariable::BootOptionSupport,
-                            "Timeout" => UefiVariable::Timeout,
-                            "SecureBoot" => UefiVariable::SecureBoot,
-                            "SetupMode" => UefiVariable::SetupMode,
-                            "PK" => UefiVariable::PlatformKey,
-                            "KEK" => UefiVariable::KeyExchangeKey,
-                            "db" => UefiVariable::SignatureDatabase,
-                            "dbx" => UefiVariable::ForbiddenSignatureDatabase,
-                            n if n.starts_with("Boot") && n.len() == 8 => {
-                                if let Ok(num) = u16::from_str_radix(&n[4..], 16) {
-                                    UefiVariable::BootEntry(num)
-                                } else {
-                                    UefiVariable::Other {
-                                        name,
-                                        vendor_guid: guid,
-                                    }
+                // Try to match known variables
+                let var = if guid == EFI_GLOBAL_VARIABLE_GUID {
+                    match name.as_str() {
+                        "BootOrder" => UefiVariable::BootOrder,
+                        "BootCurrent" => UefiVariable::BootCurrent,
+                        "BootNext" => UefiVariable::BootNext,
+                        "BootOptionSupport" => UefiVariable::BootOptionSupport,
+                        "Timeout" => UefiVariable::Timeout,
+                        "SecureBoot" => UefiVariable::SecureBoot,
+                        "SetupMode" => UefiVariable::SetupMode,
+                        "PK" => UefiVariable::PlatformKey,
+                        "KEK" => UefiVariable::KeyExchangeKey,
+                        "db" => UefiVariable::SignatureDatabase,
+                        "dbx" => UefiVariable::ForbiddenSignatureDatabase,
+                        n if n.starts_with("Boot") && n.len() == 8 => {
+                            if let Ok(num) = u16::from_str_radix(&n[4..], 16) {
+                                UefiVariable::BootEntry(num)
+                            } else {
+                                UefiVariable::Other {
+                                    name,
+                                    vendor_guid: guid,
                                 }
                             }
-                            _ => UefiVariable::Other {
-                                name,
-                                vendor_guid: guid,
-                            },
                         }
-                    } else {
-                        UefiVariable::Other {
+                        _ => UefiVariable::Other {
                             name,
                             vendor_guid: guid,
-                        }
-                    };
+                        },
+                    }
+                } else {
+                    UefiVariable::Other {
+                        name,
+                        vendor_guid: guid,
+                    }
+                };
 
-                    variables.push(var);
-                }
+                variables.push(var);
+            }
         }
 
         Ok(variables)

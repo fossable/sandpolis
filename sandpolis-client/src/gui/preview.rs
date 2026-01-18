@@ -1,10 +1,11 @@
+use crate::gui::controller::{ControllerType, NodeControllerState};
+use crate::gui::input::CurrentLayer;
+use crate::gui::node::{NodeEntity, WorldView};
 use crate::gui::queries;
-use crate::gui::{CurrentLayer, NodeEntity, controller::{NodeControllerState, ControllerType}};
-use crate::gui::WorldView;
-use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_core::InstanceId;
+use sandpolis_core::LayerName;
 
 /// Zoom threshold above which the minimal preview is shown.
 /// At zoom level 1.0, preview is full. Above this value (more zoomed out), preview becomes minimal.
@@ -134,47 +135,45 @@ pub fn render_node_previews(
             should_show = false;
         }
 
-        // Always create the window (to allow egui to properly manage its lifecycle)
-        // but use .open() to control visibility
-        let mut open = should_show;
+        // Skip rendering if the preview shouldn't be shown
+        if !should_show {
+            continue;
+        }
 
-        // Use a unique ID with Hash instead of allocating String
-        let window_id = egui::Id::new("preview_window").with(node_entity.instance_id);
+        // Use instance_id's string representation directly as the window name for uniqueness
+        // This ensures each window has a completely unique ID
+        let window_name = format!("##preview_{}", node_entity.instance_id);
 
-        egui::Window::new("##preview") // Hidden title (ID makes it unique)
-            .id(window_id)
+        egui::Window::new(&window_name)
             .title_bar(false)
             .resizable(false)
             .movable(false)
-            .open(&mut open)
             .fixed_pos(preview_pos)
             .fixed_size([preview_width, preview_height])
             .show(ctx, |ui| {
-                if should_show {
-                    if use_minimal {
-                        render_minimal_preview_content(
-                            ui,
-                            &current_layer,
-                            &network_layer,
-                            &mut controller_state,
-                            node_entity.instance_id,
-                        );
-                    } else {
-                        render_preview_content(
-                            ui,
-                            &current_layer,
-                            &network_layer,
-                            &mut controller_state,
-                            node_entity.instance_id,
-                        );
-                    }
+                if use_minimal {
+                    render_minimal_preview_content(
+                        ui,
+                        &current_layer,
+                        &network_layer,
+                        &mut controller_state,
+                        node_entity.instance_id,
+                    );
+                } else {
+                    render_preview_content(
+                        ui,
+                        &current_layer,
+                        &network_layer,
+                        &mut controller_state,
+                        node_entity.instance_id,
+                    );
                 }
             });
     }
 }
 
 /// Get layer-specific icon path for the left circular icon
-pub fn get_layer_icon(layer: &Layer) -> &'static str {
+pub fn get_layer_icon(layer: &LayerName) -> &'static str {
     match layer.name() {
         "Filesystem" => "📁",
         "Shell" => "💻",
@@ -194,7 +193,11 @@ pub fn get_hostname(instance_id: InstanceId) -> String {
 }
 
 /// Get layer-specific bottom line details
-pub fn get_layer_details(layer: &Layer, network_layer: &sandpolis_network::NetworkLayer, instance_id: InstanceId) -> String {
+pub fn get_layer_details(
+    layer: &LayerName,
+    network_layer: &sandpolis_network::NetworkLayer,
+    instance_id: InstanceId,
+) -> String {
     match layer.name() {
         #[cfg(feature = "layer-filesystem")]
         "Filesystem" => {
@@ -242,7 +245,8 @@ pub fn get_layer_details(layer: &Layer, network_layer: &sandpolis_network::Netwo
         "Shell" => {
             if let Ok(sessions) = queries::query_shell_sessions(instance_id) {
                 let active_count = sessions.iter().filter(|s| s.active).count();
-                format!("{} session{}, {} active",
+                format!(
+                    "{} session{}, {} active",
                     sessions.len(),
                     if sessions.len() == 1 { "" } else { "s" },
                     active_count
@@ -268,7 +272,7 @@ pub fn get_layer_details(layer: &Layer, network_layer: &sandpolis_network::Netwo
 /// Render the new 4-part preview layout
 pub fn render_preview_content(
     ui: &mut egui::Ui,
-    current_layer: &Layer,
+    current_layer: &LayerName,
     network_layer: &sandpolis_network::NetworkLayer,
     controller_state: &mut NodeControllerState,
     instance_id: InstanceId,
@@ -278,29 +282,22 @@ pub fn render_preview_content(
     let layer_icon = get_layer_icon(current_layer);
     let layer_details = get_layer_details(current_layer, network_layer, instance_id);
 
-    // Push unique ID scope to prevent collisions between multiple preview windows
-    ui.push_id(instance_id.to_string(), |ui| {
-        // Use a horizontal layout for the main content
-        ui.horizontal(|ui| {
+    // Use a horizontal layout for the main content
+    ui.horizontal(|ui| {
         // Left side: Circular icon area (60x60 pixels)
         ui.vertical(|ui| {
             ui.set_width(60.0);
             ui.set_height(60.0);
 
-            // Create circular background
-            let (rect, _response) = ui.allocate_exact_size(
-                egui::vec2(60.0, 60.0),
-                egui::Sense::hover()
-            );
+            // Create circular background with unique ID
+            let (rect, _response) =
+                ui.allocate_exact_size(egui::vec2(60.0, 60.0), egui::Sense::hover());
 
             // Draw circle background
             let center = rect.center();
             let radius = 28.0;
-            ui.painter().circle_filled(
-                center,
-                radius,
-                ui.visuals().widgets.inactive.bg_fill,
-            );
+            ui.painter()
+                .circle_filled(center, radius, ui.visuals().widgets.inactive.bg_fill);
 
             // Draw icon text centered in circle
             ui.painter().text(
@@ -320,11 +317,7 @@ pub fn render_preview_content(
             ui.set_width(160.0);
 
             // Top line: Hostname
-            ui.label(
-                egui::RichText::new(&hostname)
-                    .strong()
-                    .size(14.0)
-            );
+            ui.label(egui::RichText::new(&hostname).strong().size(14.0));
 
             ui.add_space(4.0);
 
@@ -332,7 +325,7 @@ pub fn render_preview_content(
             ui.label(
                 egui::RichText::new(&layer_details)
                     .size(11.0)
-                    .color(ui.visuals().weak_text_color())
+                    .color(ui.visuals().weak_text_color()),
             );
         });
 
@@ -377,14 +370,19 @@ pub fn render_preview_content(
             if response.clicked() {
                 controller_state.expanded_node = Some(instance_id);
                 controller_state.controller_type = ControllerType::from_layer(current_layer);
-                info!("Opening {:?} controller for {}", controller_state.controller_type, instance_id);
+                info!(
+                    "Opening {:?} controller for {}",
+                    controller_state.controller_type, instance_id
+                );
             }
 
             // Show tooltip on hover
             if response.hovered() {
-                response.on_hover_text(format!("Open {} controller", ControllerType::from_layer(current_layer).display_name()));
+                response.on_hover_text(format!(
+                    "Open {} controller",
+                    ControllerType::from_layer(current_layer).display_name()
+                ));
             }
-        });
         });
     });
 }
@@ -393,7 +391,7 @@ pub fn render_preview_content(
 /// Used when zoomed out to reduce visual clutter
 fn render_minimal_preview_content(
     ui: &mut egui::Ui,
-    current_layer: &Layer,
+    current_layer: &LayerName,
     network_layer: &sandpolis_network::NetworkLayer,
     controller_state: &mut NodeControllerState,
     instance_id: InstanceId,
@@ -402,100 +400,91 @@ fn render_minimal_preview_content(
     let hostname = get_hostname(instance_id);
     let layer_icon = get_layer_icon(current_layer);
 
-    // Push unique ID scope to prevent collisions between multiple preview windows
-    ui.push_id(instance_id.to_string(), |ui| {
-        ui.horizontal(|ui| {
-            // Small circular icon (36x36)
-            ui.vertical(|ui| {
-                ui.set_width(36.0);
-                ui.set_height(36.0);
+    ui.horizontal(|ui| {
+        // Small circular icon (36x36)
+        ui.vertical(|ui| {
+            ui.set_width(36.0);
+            ui.set_height(36.0);
 
-                let (rect, _response) = ui.allocate_exact_size(
-                    egui::vec2(36.0, 36.0),
-                    egui::Sense::hover()
-                );
+            let (rect, _response) =
+                ui.allocate_exact_size(egui::vec2(36.0, 36.0), egui::Sense::hover());
 
-                // Draw circle background
-                let center = rect.center();
-                let radius = 16.0;
-                ui.painter().circle_filled(
-                    center,
-                    radius,
-                    ui.visuals().widgets.inactive.bg_fill,
-                );
+            // Draw circle background
+            let center = rect.center();
+            let radius = 16.0;
+            ui.painter()
+                .circle_filled(center, radius, ui.visuals().widgets.inactive.bg_fill);
 
-                // Draw icon
-                ui.painter().text(
-                    center,
-                    egui::Align2::CENTER_CENTER,
-                    layer_icon,
-                    egui::FontId::proportional(18.0),
-                    ui.visuals().text_color(),
-                );
-            });
+            // Draw icon
+            ui.painter().text(
+                center,
+                egui::Align2::CENTER_CENTER,
+                layer_icon,
+                egui::FontId::proportional(18.0),
+                ui.visuals().text_color(),
+            );
+        });
 
-            ui.add_space(4.0);
+        ui.add_space(4.0);
 
-            // Hostname only (truncated if needed)
-            ui.vertical(|ui| {
-                ui.set_height(36.0);
-                ui.set_width(80.0);
+        // Hostname only (truncated if needed)
+        ui.vertical(|ui| {
+            ui.set_height(36.0);
+            ui.set_width(80.0);
 
-                ui.add_space(8.0);
+            ui.add_space(8.0);
 
-                // Truncate hostname if too long
-                let display_name = if hostname.len() > 12 {
-                    format!("{}...", &hostname[..9])
-                } else {
-                    hostname.clone()
-                };
+            // Truncate hostname if too long
+            let display_name = if hostname.len() > 12 {
+                format!("{}...", &hostname[..9])
+            } else {
+                hostname.clone()
+            };
 
-                ui.label(
-                    egui::RichText::new(&display_name)
-                        .strong()
-                        .size(11.0)
-                );
-            });
+            ui.label(egui::RichText::new(&display_name).strong().size(11.0));
+        });
 
-            // Small clickable arrow button
-            ui.vertical(|ui| {
-                ui.set_width(24.0);
-                ui.set_height(36.0);
+        // Small clickable arrow button
+        ui.vertical(|ui| {
+            ui.set_width(24.0);
+            ui.set_height(36.0);
 
-                ui.add_space(6.0);
+            ui.add_space(6.0);
 
-                let button_size = egui::vec2(24.0, 24.0);
-                let (rect, response) = ui.allocate_exact_size(button_size, egui::Sense::click());
+            let button_size = egui::vec2(24.0, 24.0);
+            let (rect, response) = ui.allocate_exact_size(button_size, egui::Sense::click());
 
-                let bg_color = if response.clicked() {
-                    ui.visuals().widgets.active.bg_fill
-                } else if response.hovered() {
-                    ui.visuals().widgets.hovered.bg_fill
-                } else {
-                    ui.visuals().widgets.inactive.bg_fill
-                };
+            let bg_color = if response.clicked() {
+                ui.visuals().widgets.active.bg_fill
+            } else if response.hovered() {
+                ui.visuals().widgets.hovered.bg_fill
+            } else {
+                ui.visuals().widgets.inactive.bg_fill
+            };
 
-                let center = rect.center();
-                let radius = 10.0;
-                ui.painter().circle_filled(center, radius, bg_color);
+            let center = rect.center();
+            let radius = 10.0;
+            ui.painter().circle_filled(center, radius, bg_color);
 
-                ui.painter().text(
-                    center,
-                    egui::Align2::CENTER_CENTER,
-                    "→",
-                    egui::FontId::proportional(14.0),
-                    ui.visuals().text_color(),
-                );
+            ui.painter().text(
+                center,
+                egui::Align2::CENTER_CENTER,
+                "→",
+                egui::FontId::proportional(14.0),
+                ui.visuals().text_color(),
+            );
 
-                if response.clicked() {
-                    controller_state.expanded_node = Some(instance_id);
-                    controller_state.controller_type = ControllerType::from_layer(current_layer);
-                }
+            if response.clicked() {
+                controller_state.expanded_node = Some(instance_id);
+                controller_state.controller_type = ControllerType::from_layer(current_layer);
+            }
 
-                if response.hovered() {
-                    response.on_hover_text(format!("Open {} controller", ControllerType::from_layer(current_layer).display_name()));
-                }
-            });
+            if response.hovered() {
+                response.on_hover_text(format!(
+                    "Open {} controller",
+                    ControllerType::from_layer(current_layer).display_name()
+                ));
+            }
         });
     });
 }

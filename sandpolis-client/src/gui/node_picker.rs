@@ -1,6 +1,6 @@
-use crate::gui::WorldView;
+use crate::gui::node::WorldView;
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts};
+use bevy_egui::{EguiContexts, egui};
 use sandpolis_core::InstanceId;
 
 /// Resource to track node picker UI state
@@ -21,11 +21,7 @@ struct NodeInfo {
 
 /// Get emoji for node type
 fn get_node_emoji(is_server: bool) -> &'static str {
-    if is_server {
-        "🖧"
-    } else {
-        "🤖"
-    }
+    if is_server { "🖧" } else { "🤖" }
 }
 
 /// Render node picker panel
@@ -76,7 +72,9 @@ pub fn render_node_picker_panel(
                 true
             } else {
                 // Search by instance ID or server/agent status
-                format!("{}", node.instance_id).to_lowercase().contains(&search_query)
+                format!("{}", node.instance_id)
+                    .to_lowercase()
+                    .contains(&search_query)
                     || (node.is_server && "server".contains(&search_query))
                     || (!node.is_server && "agent".contains(&search_query))
             }
@@ -172,8 +170,11 @@ pub fn render_node_picker_panel(
                             if node.is_server { "Server" } else { "Agent" }
                         );
 
-                        let button_text = egui::RichText::new(display_text)
-                            .size(if is_mobile { 16.0 } else { 14.0 });
+                        let button_text = egui::RichText::new(display_text).size(if is_mobile {
+                            16.0
+                        } else {
+                            14.0
+                        });
 
                         let button = egui::Button::new(button_text)
                             .fill(if is_selected {
@@ -200,9 +201,11 @@ pub fn render_node_picker_panel(
                 if ui
                     .add_sized(
                         [panel_width - 40.0, if is_mobile { 45.0 } else { 35.0 }],
-                        egui::Button::new(
-                            egui::RichText::new("Close").size(if is_mobile { 18.0 } else { 16.0 }),
-                        ),
+                        egui::Button::new(egui::RichText::new("Close").size(if is_mobile {
+                            18.0
+                        } else {
+                            16.0
+                        })),
                     )
                     .clicked()
                 {
@@ -248,7 +251,8 @@ pub fn render_node_picker_panel(
     // Handle arrow keys for navigation (when not typing)
     if !ctx.wants_keyboard_input() && !filtered_nodes.is_empty() {
         if keyboard.just_pressed(KeyCode::ArrowDown) {
-            picker_state.selected_index = (picker_state.selected_index + 1).min(filtered_nodes.len() - 1);
+            picker_state.selected_index =
+                (picker_state.selected_index + 1).min(filtered_nodes.len() - 1);
         }
         if keyboard.just_pressed(KeyCode::ArrowUp) {
             picker_state.selected_index = picker_state.selected_index.saturating_sub(1);

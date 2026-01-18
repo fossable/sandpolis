@@ -1,4 +1,6 @@
-use crate::gui::{NodeEntity, edges::Edge};
+use crate::gui::edges::Edge;
+use crate::gui::input::CurrentLayer;
+use crate::gui::node::NodeEntity;
 use bevy::prelude::*;
 use sandpolis_core::InstanceId;
 
@@ -173,7 +175,7 @@ pub fn spawn_network_activity_lines(
     mut commands: Commands,
     edges: Query<&Edge>,
     existing_activities: Query<&ActivityLine>,
-    current_layer: Res<super::CurrentLayer>,
+    current_layer: Res<CurrentLayer>,
 ) {
     // Only spawn on Network layer
     if **current_layer != "Network" {
@@ -217,7 +219,7 @@ pub fn spawn_network_activity_lines(
 pub fn cleanup_layer_activity_lines(
     mut commands: Commands,
     activity_query: Query<(Entity, &ActivityLine)>,
-    current_layer: Res<super::CurrentLayer>,
+    current_layer: Res<CurrentLayer>,
 ) {
     // Only keep activity lines relevant to current layer
     for (entity, activity) in activity_query.iter() {

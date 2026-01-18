@@ -55,6 +55,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     let network = state.network.clone();
 
+    // TODO remove the instance socket and just respond to websocket messages
     if let Some(socket_directory) = &config.instance.socket_directory {
         config.instance.clear_socket_path("agent.sock")?;
         info!(
@@ -72,6 +73,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
                 result?;
             }
         };
-    } 
+    }
     Ok(())
 }

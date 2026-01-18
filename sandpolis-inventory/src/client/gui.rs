@@ -4,9 +4,9 @@
 
 use bevy::prelude::*;
 use bevy_egui::egui;
-use sandpolis_core::{InstanceId, Layer};
+use sandpolis_core::{InstanceId, LayerName};
 
-use sandpolis_client::gui::{ActivityTypeInfo, LayerGuiExtension};
+use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
 
 /// Hardware information.
 #[derive(Clone, Debug, Default)]
@@ -92,7 +92,7 @@ pub fn query_packages(_id: InstanceId) -> anyhow::Result<Vec<PackageInfo>> {
 /// Render system information controller.
 pub fn render_system_info(ui: &mut egui::Ui, instance_id: InstanceId) {
     // Push unique ID scope to prevent collisions with collapsing headers
-    ui.push_id(instance_id.to_string(), |ui| {
+    ui.push_id(instance_id, |ui| {
         egui::ScrollArea::vertical()
             .max_height(350.0)
             .show(ui, |ui| {
@@ -224,8 +224,10 @@ pub struct PackageManagerState {
 /// Render package manager controller.
 pub fn render_package_manager(ui: &mut egui::Ui, instance_id: InstanceId) {
     let state_id = egui::Id::new(format!("pm_{}", instance_id));
-    let mut pm_state = ui
-        .data_mut(|d| d.get_persisted::<PackageManagerState>(state_id).unwrap_or_default());
+    let mut pm_state = ui.data_mut(|d| {
+        d.get_persisted::<PackageManagerState>(state_id)
+            .unwrap_or_default()
+    });
 
     ui.horizontal(|ui| {
         ui.label("Search:");
@@ -276,10 +278,14 @@ pub fn render_package_manager(ui: &mut egui::Ui, instance_id: InstanceId) {
 pub struct InventoryGuiExtension;
 
 impl LayerGuiExtension for InventoryGuiExtension {
-    fn layer(&self) -> &Layer {
-        static LAYER: std::sync::LazyLock<Layer> =
-            std::sync::LazyLock::new(|| Layer::from("Inventory"));
+    fn layer(&self) -> &LayerName {
+        static LAYER: std::sync::LazyLock<LayerName> =
+            std::sync::LazyLock::new(|| LayerName::from("Inventory"));
         &LAYER
+    }
+
+    fn description(&self) -> &'static str {
+        "Hardware and software inventory"
     }
 
     fn render_controller(&self, ui: &mut egui::Ui, instance_id: InstanceId) {
@@ -326,7 +332,10 @@ impl LayerGuiExtension for InventoryGuiExtension {
                 let used_gb = mem.used as f64 / 1_000_000_000.0;
                 let total_gb = mem.total as f64 / 1_000_000_000.0;
                 let percent = (mem.used as f64 / mem.total as f64) * 100.0;
-                format!("RAM: {:.1} GB / {:.1} GB ({:.0}%)", used_gb, total_gb, percent)
+                format!(
+                    "RAM: {:.1} GB / {:.1} GB ({:.0}%)",
+                    used_gb, total_gb, percent
+                )
             } else {
                 "No inventory data".to_string()
             }

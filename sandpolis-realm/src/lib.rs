@@ -241,7 +241,9 @@ impl RealmClusterCert {
         for ext in X509Certificate::from_der(&self.cert)?.1.iter_extensions() {
             if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
                 for name in &san.general_names {
-                    if let GeneralName::DNSName(s) = name { return s.parse::<ClusterId>() }
+                    if let GeneralName::DNSName(s) = name {
+                        return s.parse::<ClusterId>();
+                    }
                 }
             }
         }
@@ -263,7 +265,9 @@ impl RealmServerCert {
         for ext in X509Certificate::from_der(&self.cert)?.1.iter_extensions() {
             if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
                 for name in &san.general_names {
-                    if let GeneralName::DNSName(s) = name { return Ok(s.to_string()) }
+                    if let GeneralName::DNSName(s) = name {
+                        return Ok(s.to_string());
+                    }
                 }
             }
         }
@@ -341,7 +345,9 @@ impl RealmClientCert {
         for ext in X509Certificate::from_der(&self.ca)?.1.iter_extensions() {
             if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
                 for name in &san.general_names {
-                    if let GeneralName::DNSName(s) = name { return s.parse::<ClusterId>() }
+                    if let GeneralName::DNSName(s) = name {
+                        return s.parse::<ClusterId>();
+                    }
                 }
             }
         }
@@ -576,7 +582,9 @@ impl RealmAgentCert {
         for ext in X509Certificate::from_der(&self.ca)?.1.iter_extensions() {
             if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
                 for name in &san.general_names {
-                    if let GeneralName::DNSName(s) = name { return s.parse::<ClusterId>() }
+                    if let GeneralName::DNSName(s) = name {
+                        return s.parse::<ClusterId>();
+                    }
                 }
             }
         }

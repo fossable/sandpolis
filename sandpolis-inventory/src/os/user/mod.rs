@@ -28,4 +28,3 @@ pub struct UserData {
     #[secondary_key]
     pub username: Option<String>,
 }
-

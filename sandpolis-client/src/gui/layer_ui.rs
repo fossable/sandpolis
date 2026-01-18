@@ -1,15 +1,31 @@
-use crate::gui::{
-    CurrentLayer,
-    LayerIndicatorState, MinimapViewport,
-    layer_switcher::LayerSwitcherState,
-    AboutScreenState, register_logo_click,
-};
-use sandpolis_core::Layer;
+use crate::gui::about::{AboutScreenState, register_logo_click};
+use crate::gui::input::CurrentLayer;
+use crate::gui::layer_picker::LayerPickerState;
+use crate::gui::minimap::MinimapViewport;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
+use sandpolis_core::LayerName;
+
+/// Marker component for layer indicator UI.
+#[derive(Component)]
+pub struct LayerIndicator;
+
+/// Resource for layer indicator state.
+#[derive(Resource)]
+pub struct LayerIndicatorState {
+    pub show_timer: Timer, // Display for N seconds after layer change
+}
+
+impl Default for LayerIndicatorState {
+    fn default() -> Self {
+        Self {
+            show_timer: Timer::from_seconds(3.0, TimerMode::Once),
+        }
+    }
+}
 
 /// Get the SVG file URI for a layer
-fn get_layer_svg_uri(layer: &Layer) -> String {
+fn get_layer_svg_uri(layer: &LayerName) -> String {
     let relative_path = match layer.name() {
         "Account" => "layers/Account.svg",
         "Agent" => "layers/Network.svg",
@@ -31,9 +47,10 @@ fn get_layer_svg_uri(layer: &Layer) -> String {
 
     // Use file:// URI with absolute path from current working directory
     // The app runs from the sandpolis/ directory, assets are in ../sandpolis-client/assets
-    let current_dir = std::env::current_dir()
-        .unwrap_or_else(|_| std::path::PathBuf::from("."));
-    let asset_path = current_dir.join("../sandpolis-client/assets").join(relative_path);
+    let current_dir = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    let asset_path = current_dir
+        .join("../sandpolis-client/assets")
+        .join(relative_path);
 
     // Canonicalize to get absolute path and convert to file:// URI
     if let Ok(canonical) = asset_path.canonicalize() {
@@ -46,12 +63,12 @@ fn get_layer_svg_uri(layer: &Layer) -> String {
 
 /// Render the layer indicator above the minimap
 /// Shows the currently active layer permanently with fade in/fade out on layer changes
-/// Clicking the indicator opens the layer switcher
+/// Clicking the indicator opens the layer picker
 pub fn render_layer_indicator(
     mut contexts: EguiContexts,
     current_layer: Res<CurrentLayer>,
     mut indicator_state: ResMut<LayerIndicatorState>,
-    mut switcher_state: ResMut<LayerSwitcherState>,
+    mut picker_state: ResMut<LayerPickerState>,
     mut about_state: ResMut<AboutScreenState>,
     minimap_viewport: Res<MinimapViewport>,
     time: Res<Time>,
@@ -109,40 +126,43 @@ pub fn render_layer_indicator(
             let button_width = minimap_viewport.width;
 
             // Create horizontal layout with SVG icon and button
-            let response = ui.horizontal(|ui| {
-                ui.spacing_mut().item_spacing = egui::vec2(4.0, 0.0);
+            let response = ui
+                .horizontal(|ui| {
+                    ui.spacing_mut().item_spacing = egui::vec2(4.0, 0.0);
 
-                // SVG icon with size hint for proper rendering
-                let icon_size = egui::vec2(24.0, 24.0);
-                ui.add(
-                    egui::Image::new(svg_uri)
-                        .fit_to_exact_size(icon_size)
-                        .tint(egui::Color32::from_rgba_premultiplied(220, 240, 255, text_alpha))
-                );
+                    // SVG icon with size hint for proper rendering
+                    let icon_size = egui::vec2(24.0, 24.0);
+                    ui.add(egui::Image::new(svg_uri).fit_to_exact_size(icon_size).tint(
+                        egui::Color32::from_rgba_premultiplied(220, 240, 255, text_alpha),
+                    ));
 
-                // Button with layer name - adjust width to account for icon
-                ui.add(
-                    egui::Button::new(
-                        egui::RichText::new(layer_name)
-                            .size(16.0)
-                            .color(egui::Color32::from_rgba_premultiplied(220, 240, 255, text_alpha))
+                    // Button with layer name - adjust width to account for icon
+                    ui.add(
+                        egui::Button::new(egui::RichText::new(layer_name).size(16.0).color(
+                            egui::Color32::from_rgba_premultiplied(220, 240, 255, text_alpha),
+                        ))
+                        .fill(egui::Color32::from_rgba_unmultiplied(
+                            30,
+                            50,
+                            70,
+                            button_alpha,
+                        ))
+                        .stroke(egui::Stroke::new(
+                            1.5,
+                            egui::Color32::from_rgba_unmultiplied(80, 140, 200, text_alpha),
+                        ))
+                        .corner_radius(6.0)
+                        .min_size(egui::vec2(button_width - icon_size.x - 8.0, 32.0)),
                     )
-                    .fill(egui::Color32::from_rgba_unmultiplied(30, 50, 70, button_alpha))
-                    .stroke(egui::Stroke::new(
-                        1.5,
-                        egui::Color32::from_rgba_unmultiplied(80, 140, 200, text_alpha),
-                    ))
-                    .corner_radius(6.0)
-                    .min_size(egui::vec2(button_width - icon_size.x - 8.0, 32.0))
-                )
-            }).inner;
+                })
+                .inner;
 
             if response.clicked() {
                 // Easter egg: Triple-click to open about screen
                 register_logo_click(&mut about_state);
 
-                // Normal behavior: Open layer switcher
-                switcher_state.show = !switcher_state.show;
+                // Normal behavior: Open layer picker
+                picker_state.show = !picker_state.show;
             }
 
             // Show hover hint
@@ -153,12 +173,12 @@ pub fn render_layer_indicator(
 }
 
 /// Get a display-friendly name for a layer
-pub fn layer_display_name(layer: &Layer) -> &str {
+pub fn layer_display_name(layer: &LayerName) -> &str {
     layer.name()
 }
 
 /// Get an icon/emoji for a layer
-pub fn get_layer_icon(layer: &Layer) -> &'static str {
+pub fn get_layer_icon(layer: &LayerName) -> &'static str {
     match layer.name() {
         "Account" => "👤",
         "Agent" => "🤖",

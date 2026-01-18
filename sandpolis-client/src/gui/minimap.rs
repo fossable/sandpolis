@@ -1,6 +1,56 @@
-use crate::gui::{MinimapViewport, NodeEntity, WorldView};
+use crate::gui::node::{NodeEntity, WorldView};
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
+
+/// Component representing a minimap configuration.
+#[derive(Component)]
+pub struct Minimap {
+    pub zoom_factor: f32, // How much smaller the minimap view is (e.g., 0.1 for 10x zoom out)
+}
+
+/// Marker component for the minimap camera.
+#[derive(Component)]
+pub struct MinimapCamera;
+
+/// Resource controlling minimap viewport settings.
+#[derive(Resource)]
+pub struct MinimapViewport {
+    pub width: f32,
+    pub height: f32,
+    pub bottom_right_offset: Vec2, // Offset from bottom-right corner
+}
+
+impl MinimapViewport {
+    /// Create responsive minimap viewport based on window size.
+    pub fn from_window_size(window_width: f32, window_height: f32) -> Self {
+        // For mobile screens (< 800px width), use smaller minimap
+        let is_mobile = window_width < 800.0;
+
+        if is_mobile {
+            Self {
+                width: (window_width * 0.25).max(120.0),
+                height: (window_height * 0.15).max(90.0),
+                bottom_right_offset: Vec2::new(5.0, 5.0),
+            }
+        } else {
+            Self {
+                width: 200.0,
+                height: 150.0,
+                bottom_right_offset: Vec2::new(10.0, 10.0),
+            }
+        }
+    }
+}
+
+impl Default for MinimapViewport {
+    fn default() -> Self {
+        Self {
+            width: 200.0,
+            height: 150.0,
+            bottom_right_offset: Vec2::new(10.0, 10.0),
+        }
+    }
+}
 
 /// Render the minimap in the bottom-right corner using egui
 pub fn render_minimap(
@@ -41,20 +91,24 @@ pub fn render_minimap(
             );
 
             // Get camera position and viewport size
-            let (camera_pos, viewport_half_size) = if let Ok((camera_transform, projection)) = camera_query.single() {
-                let cam_pos = camera_transform.translation.truncate();
-                let half_size = if let Projection::Orthographic(ortho) = projection {
-                    Vec2::new(
-                        ortho.area.width() * ortho.scale / 2.0,
-                        ortho.area.height() * ortho.scale / 2.0,
-                    )
+            let (camera_pos, viewport_half_size) =
+                if let Ok((camera_transform, projection)) = camera_query.single() {
+                    let cam_pos = camera_transform.translation.truncate();
+                    let half_size = if let Projection::Orthographic(ortho) = projection {
+                        Vec2::new(
+                            ortho.area.width() * ortho.scale / 2.0,
+                            ortho.area.height() * ortho.scale / 2.0,
+                        )
+                    } else {
+                        Vec2::new(window_size.x / 2.0, window_size.y / 2.0)
+                    };
+                    (cam_pos, half_size)
                 } else {
-                    Vec2::new(window_size.x / 2.0, window_size.y / 2.0)
+                    (
+                        Vec2::ZERO,
+                        Vec2::new(window_size.x / 2.0, window_size.y / 2.0),
+                    )
                 };
-                (cam_pos, half_size)
-            } else {
-                (Vec2::ZERO, Vec2::new(window_size.x / 2.0, window_size.y / 2.0))
-            };
 
             // Use a fixed world area for the minimap to prevent scale changes when panning
             // This ensures the viewport rectangle size only changes with zoom

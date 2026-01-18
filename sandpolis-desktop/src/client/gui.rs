@@ -4,9 +4,9 @@
 
 use bevy::prelude::*;
 use bevy_egui::egui;
-use sandpolis_core::{InstanceId, Layer};
+use sandpolis_core::{InstanceId, LayerName};
 
-use sandpolis_client::gui::{ActivityTypeInfo, LayerGuiExtension};
+use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
 
 /// Instance metadata.
 #[derive(Clone, Debug, Default)]
@@ -87,10 +87,14 @@ pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
 pub struct DesktopGuiExtension;
 
 impl LayerGuiExtension for DesktopGuiExtension {
-    fn layer(&self) -> &Layer {
-        static LAYER: std::sync::LazyLock<Layer> =
-            std::sync::LazyLock::new(|| Layer::from("Desktop"));
+    fn layer(&self) -> &LayerName {
+        static LAYER: std::sync::LazyLock<LayerName> =
+            std::sync::LazyLock::new(|| LayerName::from("Desktop"));
         &LAYER
+    }
+
+    fn description(&self) -> &'static str {
+        "Remote desktop viewing and control"
     }
 
     fn render_controller(&self, ui: &mut egui::Ui, instance_id: InstanceId) {

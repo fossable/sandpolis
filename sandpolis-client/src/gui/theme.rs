@@ -232,7 +232,8 @@ fn high_contrast_theme() -> egui::Visuals {
     visuals.panel_fill = panel_bg;
 
     visuals.widgets.noninteractive.bg_fill = widget_bg;
-    visuals.widgets.noninteractive.bg_stroke = egui::Stroke::new(2.0, text_color.linear_multiply(0.3));
+    visuals.widgets.noninteractive.bg_stroke =
+        egui::Stroke::new(2.0, text_color.linear_multiply(0.3));
     visuals.widgets.noninteractive.fg_stroke = egui::Stroke::new(2.0, text_color);
 
     visuals.widgets.inactive.bg_fill = widget_bg;
@@ -265,10 +266,7 @@ pub struct ThemePickerState {
 
 /// System that applies the current theme to all egui contexts
 /// This runs every frame to ensure theme changes are applied immediately
-pub fn apply_theme_to_egui(
-    mut contexts: bevy_egui::EguiContexts,
-    theme: Res<CurrentTheme>,
-) {
+pub fn apply_theme_to_egui(mut contexts: bevy_egui::EguiContexts, theme: Res<CurrentTheme>) {
     // Only update if the theme has changed
     if !theme.is_changed() {
         return;
@@ -284,10 +282,7 @@ pub fn apply_theme_to_egui(
 
 /// System to initialize the theme on startup
 /// This ensures the theme is applied even on the first frame
-pub fn initialize_theme(
-    mut contexts: bevy_egui::EguiContexts,
-    theme: Res<CurrentTheme>,
-) {
+pub fn initialize_theme(mut contexts: bevy_egui::EguiContexts, theme: Res<CurrentTheme>) {
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
@@ -394,7 +389,10 @@ pub fn render_theme_picker(
                         } else {
                             ui.visuals().widgets.inactive.bg_fill
                         })
-                        .min_size(egui::vec2(panel_width - 80.0, if is_mobile { 50.0 } else { 40.0 }));
+                        .min_size(egui::vec2(
+                            panel_width - 80.0,
+                            if is_mobile { 50.0 } else { 40.0 },
+                        ));
 
                         if ui.add(button).clicked() {
                             theme.set_preset(*preset);
@@ -438,10 +436,11 @@ pub fn render_theme_picker(
                 if ui
                     .add_sized(
                         [panel_width - 40.0, if is_mobile { 45.0 } else { 35.0 }],
-                        egui::Button::new(
-                            egui::RichText::new("Close (T)")
-                                .size(if is_mobile { 18.0 } else { 16.0 }),
-                        ),
+                        egui::Button::new(egui::RichText::new("Close (T)").size(if is_mobile {
+                            18.0
+                        } else {
+                            16.0
+                        })),
                     )
                     .clicked()
                 {

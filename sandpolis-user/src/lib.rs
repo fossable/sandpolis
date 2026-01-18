@@ -14,9 +14,9 @@ use native_model::Model;
 use sandpolis_core::ClusterId;
 use sandpolis_core::RealmName;
 use sandpolis_core::UserName;
-use sandpolis_database::{DatabaseLayer, Resident};
 #[cfg(feature = "server")]
 use sandpolis_database::ResidentVec;
+use sandpolis_database::{DatabaseLayer, Resident};
 use sandpolis_instance::InstanceLayer;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};

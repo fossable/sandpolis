@@ -7,10 +7,9 @@
 /// - Desktop viewer for Desktop layer
 /// - Controller windows centered on screen
 /// - Close controllers when switching layers
-
 use anyhow::Result;
-use sandpolis::{config::Configuration, InstanceState, MODELS};
-use sandpolis_database::{config::DatabaseConfig, DatabaseLayer};
+use sandpolis::{InstanceState, MODELS, config::Configuration};
+use sandpolis_database::{DatabaseLayer, config::DatabaseConfig};
 
 #[tokio::main]
 async fn main() -> Result<()> {

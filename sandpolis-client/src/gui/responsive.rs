@@ -1,4 +1,4 @@
-use crate::gui::MinimapViewport;
+use crate::gui::minimap::MinimapViewport;
 use bevy::prelude::*;
 
 /// Update responsive UI elements when window is resized
@@ -10,7 +10,6 @@ pub fn update_responsive_ui(
         let window_size = Vec2::new(window.width(), window.height());
 
         // Update minimap viewport for new window size
-        *minimap_viewport =
-            MinimapViewport::from_window_size(window_size.x, window_size.y);
+        *minimap_viewport = MinimapViewport::from_window_size(window_size.x, window_size.y);
     }
 }

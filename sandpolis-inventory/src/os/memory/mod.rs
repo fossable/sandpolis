@@ -30,4 +30,3 @@ pub struct MemoryData {
     /// The total amount of swap free, in bytes
     pub swap_free: u64,
 }
-

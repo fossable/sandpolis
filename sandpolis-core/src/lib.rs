@@ -670,9 +670,9 @@ mod test_user_name {
 /// Layers are registered at runtime using the `inventory` crate.
 #[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct Layer(pub String);
+pub struct LayerName(pub String);
 
-impl Layer {
+impl LayerName {
     /// Create a new layer with the given name.
     pub const fn new(name: String) -> Self {
         Self(name)
@@ -684,18 +684,18 @@ impl Layer {
     }
 
     /// Iterate over all registered layers.
-    pub fn registered() -> impl Iterator<Item = &'static Layer> {
-        inventory::iter::<Layer>()
+    pub fn registered() -> impl Iterator<Item = &'static LayerName> {
+        inventory::iter::<LayerName>()
     }
 }
 
-impl std::fmt::Display for Layer {
+impl std::fmt::Display for LayerName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.0)
     }
 }
 
-impl std::ops::Deref for Layer {
+impl std::ops::Deref for LayerName {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
@@ -703,32 +703,32 @@ impl std::ops::Deref for Layer {
     }
 }
 
-impl From<&str> for Layer {
+impl From<&str> for LayerName {
     fn from(s: &str) -> Self {
         Self(s.to_string())
     }
 }
 
-impl From<String> for Layer {
+impl From<String> for LayerName {
     fn from(s: String) -> Self {
         Self(s)
     }
 }
 
-impl PartialEq<str> for Layer {
+impl PartialEq<str> for LayerName {
     fn eq(&self, other: &str) -> bool {
         self.0 == other
     }
 }
 
-impl PartialEq<&str> for Layer {
+impl PartialEq<&str> for LayerName {
     fn eq(&self, other: &&str) -> bool {
         self.0 == *other
     }
 }
 
 // Register Layer with inventory for runtime collection
-inventory::collect!(Layer);
+inventory::collect!(LayerName);
 
 /// A config fragment that can take overrides from the command line or from
 /// environment variables.

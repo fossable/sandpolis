@@ -115,9 +115,10 @@ impl SandpolisFilesystem {
     fn add_child(&self, parent_ino: u64, child_ino: u64) {
         let mut nodes = self.nodes.lock().unwrap();
         if let Some(parent) = nodes.get_mut(&parent_ino)
-            && !parent.children.contains(&child_ino) {
-                parent.children.push(child_ino);
-            }
+            && !parent.children.contains(&child_ino)
+        {
+            parent.children.push(child_ino);
+        }
     }
 
     pub fn add_file<P: AsRef<str>>(&self, path: P, data: Vec<u8>) -> Result<u64> {
@@ -176,10 +177,11 @@ impl Filesystem for SandpolisFilesystem {
         if let Some(parent_node) = self.get_node(parent) {
             for &child_ino in &parent_node.children {
                 if let Some(child_node) = self.get_node(child_ino)
-                    && child_node.name == name.to_string_lossy() {
-                        reply.entry(&TTL, &child_node.attr, 0);
-                        return;
-                    }
+                    && child_node.name == name.to_string_lossy()
+                {
+                    reply.entry(&TTL, &child_node.attr, 0);
+                    return;
+                }
             }
         }
         reply.error(2);

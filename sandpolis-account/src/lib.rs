@@ -34,10 +34,10 @@ pub struct AccountLinkId(u128);
 
 /// A subjective indicator of how serious a compromise of an `Account` would be.
 /// Accounts with higher ratings are more valuable than those with lower.
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[derive(Default)]
+#[derive(
+    Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default,
+)]
 pub struct AccountValue(i32);
-
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AccountData {

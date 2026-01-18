@@ -6,7 +6,7 @@
 
 use bevy::prelude::*;
 use bevy_egui::egui;
-use sandpolis_core::{InstanceId, Layer};
+use sandpolis_core::{InstanceId, LayerName};
 
 /// Trait for layer-specific GUI extensions.
 ///
@@ -14,7 +14,10 @@ use sandpolis_core::{InstanceId, Layer};
 /// which is then collected and used by the main GUI system.
 pub trait LayerGuiExtension: Send + Sync + 'static {
     /// Returns the layer this extension is for.
-    fn layer(&self) -> &Layer;
+    fn layer(&self) -> &LayerName;
+
+    /// Returns a brief description of what this layer provides.
+    fn description(&self) -> &'static str;
 
     /// Render the controller UI for this layer.
     ///
@@ -77,7 +80,7 @@ pub fn get_layer_extensions() -> impl Iterator<Item = &'static &'static dyn Laye
 }
 
 /// Find the layer extension for a specific layer.
-pub fn get_extension_for_layer(layer: &Layer) -> Option<&'static dyn LayerGuiExtension> {
+pub fn get_extension_for_layer(layer: &LayerName) -> Option<&'static dyn LayerGuiExtension> {
     get_layer_extensions()
         .find(|ext| ext.layer() == layer)
         .copied()

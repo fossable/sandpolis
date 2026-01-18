@@ -11,10 +11,10 @@
 ///   LAYER=Shell cargo run --example client_gui_instance_preview --features client-gui
 ///   LAYER=Inventory cargo run --example client_gui_instance_preview --features client-gui
 use eframe::egui;
-use sandpolis::{InstanceState, config::Configuration, MODELS};
-use sandpolis::client::gui::preview::render_preview_content;
 use sandpolis::client::gui::controller::NodeControllerState;
-use sandpolis_core::{InstanceId, Layer};
+use sandpolis::client::gui::preview::render_preview_content;
+use sandpolis::{InstanceState, MODELS, config::Configuration};
+use sandpolis_core::{InstanceId, LayerName};
 use sandpolis_database::{DatabaseLayer, config::DatabaseConfig};
 use std::env;
 
@@ -26,8 +26,8 @@ async fn main() -> eframe::Result<()> {
     // Read configuration from environment
     let layer = env::var("LAYER")
         .ok()
-        .map(|s| Layer::from(s.as_str()))
-        .unwrap_or_else(|| Layer::from("Network"));
+        .map(|s| LayerName::from(s.as_str()))
+        .unwrap_or_else(|| LayerName::from("Network"));
 
     // Create minimal configuration
     let config = Configuration::default();
@@ -58,20 +58,29 @@ async fn main() -> eframe::Result<()> {
     eframe::run_native(
         "Node Preview Test",
         options,
-        Box::new(move |_cc| Ok(Box::new(NodePreviewTestApp::new(layer, instance_id, network_layer)))),
+        Box::new(move |_cc| {
+            Ok(Box::new(NodePreviewTestApp::new(
+                layer,
+                instance_id,
+                network_layer,
+            )))
+        }),
     )
 }
 
-
 struct NodePreviewTestApp {
-    layer: Layer,
+    layer: LayerName,
     instance_id: InstanceId,
     network_layer: sandpolis_network::NetworkLayer,
     controller_state: NodeControllerState,
 }
 
 impl NodePreviewTestApp {
-    fn new(layer: Layer, instance_id: InstanceId, network_layer: sandpolis_network::NetworkLayer) -> Self {
+    fn new(
+        layer: LayerName,
+        instance_id: InstanceId,
+        network_layer: sandpolis_network::NetworkLayer,
+    ) -> Self {
         Self {
             layer,
             instance_id,

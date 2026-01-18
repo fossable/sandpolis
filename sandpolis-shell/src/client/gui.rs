@@ -5,9 +5,9 @@
 use bevy::prelude::*;
 use bevy_egui::egui;
 use egui_console::{ConsoleBuilder, ConsoleEvent, ConsoleWindow};
-use sandpolis_core::{InstanceId, Layer};
+use sandpolis_core::{InstanceId, LayerName};
 
-use sandpolis_client::gui::{ActivityTypeInfo, LayerGuiExtension};
+use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
 
 /// Per-instance terminal state stored in egui memory.
 #[derive(serde::Serialize, serde::Deserialize, Default)]
@@ -43,8 +43,10 @@ pub fn query_shell_sessions(_id: InstanceId) -> anyhow::Result<Vec<ShellSession>
 pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
     let state_id = egui::Id::new(format!("terminal_{}", instance_id));
 
-    let mut terminal_state = ui
-        .data_mut(|d| d.get_persisted::<TerminalState>(state_id).unwrap_or_default());
+    let mut terminal_state = ui.data_mut(|d| {
+        d.get_persisted::<TerminalState>(state_id)
+            .unwrap_or_default()
+    });
 
     // Session management header
     ui.horizontal(|ui| {
@@ -144,9 +146,14 @@ pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
 pub struct ShellGuiExtension;
 
 impl LayerGuiExtension for ShellGuiExtension {
-    fn layer(&self) -> &Layer {
-        static LAYER: std::sync::LazyLock<Layer> = std::sync::LazyLock::new(|| Layer::from("Shell"));
+    fn layer(&self) -> &LayerName {
+        static LAYER: std::sync::LazyLock<LayerName> =
+            std::sync::LazyLock::new(|| LayerName::from("Shell"));
         &LAYER
+    }
+
+    fn description(&self) -> &'static str {
+        "Remote shell access and command execution"
     }
 
     fn render_controller(&self, ui: &mut egui::Ui, instance_id: InstanceId) {

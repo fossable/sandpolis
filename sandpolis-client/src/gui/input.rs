@@ -1,14 +1,32 @@
-use crate::gui::ZoomLevel;
-use bevy::{
-    input::{
-        mouse::{MouseButtonInput, MouseMotion, MouseWheel},
-    },
-    prelude::*,
-};
 #[cfg(target_os = "android")]
 use bevy::input::touch::TouchPhase;
+use bevy::{
+    input::mouse::{MouseButtonInput, MouseMotion, MouseWheel},
+    prelude::*,
+};
 use bevy_egui::{EguiContexts, egui};
+use sandpolis_core::LayerName;
 use std::ops::Range;
+
+/// Only one layer can be selected at a time.
+#[derive(Resource, Deref, DerefMut, Debug)]
+pub struct CurrentLayer(pub LayerName);
+
+impl Default for CurrentLayer {
+    fn default() -> Self {
+        Self(LayerName::from("Network"))
+    }
+}
+
+/// Current zoom level for the camera.
+#[derive(Resource, Deref, DerefMut)]
+pub struct ZoomLevel(pub f32);
+
+impl Default for ZoomLevel {
+    fn default() -> Self {
+        Self(1.0)
+    }
+}
 
 #[derive(Resource)]
 pub struct MousePressed(pub bool);
@@ -132,7 +150,8 @@ pub fn handle_touch_zoom(
             // Calculate zoom factor based on distance change
             let distance_ratio = current_distance / prev_distance;
             let zoom_factor = 1.0 / distance_ratio;
-            let new_zoom = (zoom_level.0 * zoom_factor).clamp(CAMERA_ZOOM_RANGE.start, CAMERA_ZOOM_RANGE.end);
+            let new_zoom =
+                (zoom_level.0 * zoom_factor).clamp(CAMERA_ZOOM_RANGE.start, CAMERA_ZOOM_RANGE.end);
 
             if let Ok(mut projection) = camera_query.single_mut() {
                 if let Projection::Orthographic(ortho) = projection.as_mut() {
@@ -527,7 +546,7 @@ pub fn handle_keymap(
 
             ui.heading("Layer Switching");
             ui.separator();
-            ui.label("Click Layer    Open layer switcher");
+            ui.label("Click Layer    Open layer picker");
             #[cfg(feature = "layer-filesystem")]
             ui.label("F              Filesystem layer");
             #[cfg(feature = "layer-desktop")]

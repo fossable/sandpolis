@@ -4,11 +4,13 @@
 //! controller implementations are provided by the respective layer crates
 //! via the `LayerGuiExtension` trait.
 
-use crate::gui::{CurrentLayer, NodeEntity, WorldView, get_extension_for_layer};
-use sandpolis_core::Layer;
+use crate::gui::input::CurrentLayer;
+use crate::gui::layer_ext::get_extension_for_layer;
+use crate::gui::node::{NodeEntity, WorldView};
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_core::InstanceId;
+use sandpolis_core::LayerName;
 
 /// Resource tracking which node controller is currently open
 #[derive(Resource, Default)]
@@ -50,7 +52,7 @@ pub enum ControllerType {
 
 impl ControllerType {
     /// Get the controller type for a given layer
-    pub fn from_layer(layer: &Layer) -> Self {
+    pub fn from_layer(layer: &LayerName) -> Self {
         match layer.name() {
             "Filesystem" => ControllerType::FileBrowser,
             "Shell" => ControllerType::Terminal,
@@ -216,7 +218,10 @@ pub fn render_node_controller(
                 ext.render_controller(ui, instance_id);
             } else {
                 // Fallback for layers without GUI extension
-                ui.label(format!("No controller available for {} layer", current_layer.name()));
+                ui.label(format!(
+                    "No controller available for {} layer",
+                    current_layer.name()
+                ));
             }
         });
 }
