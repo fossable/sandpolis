@@ -1,4 +1,4 @@
-use super::components::MinimapViewport;
+use crate::gui::MinimapViewport;
 use bevy::prelude::*;
 
 /// Update responsive UI elements when window is resized

@@ -1,8 +1,8 @@
-use super::{
+use crate::gui::{
     CurrentLayer,
-    components::{LayerIndicatorState, MinimapViewport},
+    LayerIndicatorState, MinimapViewport,
     layer_switcher::LayerSwitcherState,
-    about::{AboutScreenState, register_logo_click},
+    AboutScreenState, register_logo_click,
 };
 use sandpolis_core::Layer;
 use bevy::prelude::*;

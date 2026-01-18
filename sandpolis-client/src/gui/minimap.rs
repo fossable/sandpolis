@@ -1,4 +1,4 @@
-use super::components::{MinimapViewport, NodeEntity, WorldView};
+use crate::gui::{MinimapViewport, NodeEntity, WorldView};
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 

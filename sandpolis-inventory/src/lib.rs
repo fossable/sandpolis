@@ -10,6 +10,9 @@ use std::sync::Arc;
 #[cfg(feature = "agent")]
 pub mod agent;
 
+#[cfg(feature = "client")]
+pub mod client;
+
 pub mod hardware;
 pub mod os;
 pub mod package;

@@ -1,4 +1,4 @@
-use super::components::NodeEntity;
+use crate::gui::NodeEntity;
 use bevy::prelude::*;
 use bevy_rapier2d::{
     dynamics::{Damping, ExternalForce, RigidBody, Velocity},

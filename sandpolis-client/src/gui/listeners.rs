@@ -1,4 +1,4 @@
-use super::components::DatabaseUpdate;
+use crate::gui::DatabaseUpdate;
 use sandpolis_network::NetworkLayer;
 use tokio::sync::mpsc;
 use sandpolis_database::ResidentVecEvent;

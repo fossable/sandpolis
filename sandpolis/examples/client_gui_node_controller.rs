@@ -13,7 +13,8 @@
 use eframe::egui;
 use sandpolis::{InstanceState, config::Configuration, MODELS};
 use sandpolis::client::gui::controller::ControllerType;
-use sandpolis_core::InstanceId;
+use sandpolis::client::gui::get_extension_for_layer;
+use sandpolis_core::{InstanceId, Layer};
 use sandpolis_database::{DatabaseLayer, config::DatabaseConfig};
 use std::env;
 
@@ -41,7 +42,6 @@ async fn main() -> eframe::Result<()> {
     // Create instance state
     let state = InstanceState::new(config.clone(), database).await.unwrap();
     let instance_id = state.instance.instance_id;
-    let network_layer = state.network.clone();
 
     println!("Testing node controller with:");
     println!("  Controller: {:?}", controller);
@@ -57,7 +57,7 @@ async fn main() -> eframe::Result<()> {
     eframe::run_native(
         "Node Controller Test",
         options,
-        Box::new(move |_cc| Ok(Box::new(NodeControllerTestApp::new(controller, instance_id, network_layer)))),
+        Box::new(move |_cc| Ok(Box::new(NodeControllerTestApp::new(controller, instance_id)))),
     )
 }
 
@@ -75,15 +75,24 @@ fn parse_controller(s: &str) -> Option<ControllerType> {
 struct NodeControllerTestApp {
     controller_type: ControllerType,
     instance_id: InstanceId,
-    network_layer: sandpolis_network::NetworkLayer,
 }
 
 impl NodeControllerTestApp {
-    fn new(controller_type: ControllerType, instance_id: InstanceId, network_layer: sandpolis_network::NetworkLayer) -> Self {
+    fn new(controller_type: ControllerType, instance_id: InstanceId) -> Self {
         Self {
             controller_type,
             instance_id,
-            network_layer,
+        }
+    }
+
+    fn get_layer_for_controller(&self) -> Layer {
+        match self.controller_type {
+            ControllerType::FileBrowser => Layer::from("Filesystem"),
+            ControllerType::Terminal => Layer::from("Shell"),
+            ControllerType::SystemInfo => Layer::from("Inventory"),
+            ControllerType::PackageManager => Layer::from("Inventory"),
+            ControllerType::DesktopViewer => Layer::from("Desktop"),
+            ControllerType::None => Layer::from("Network"),
         }
     }
 }
@@ -109,54 +118,13 @@ impl eframe::App for NodeControllerTestApp {
                     ui.set_width(600.0);
                     ui.set_height(400.0);
 
-                    // Call the actual render function with real state
-                    match self.controller_type {
-                        ControllerType::FileBrowser => {
-                            #[cfg(feature = "layer-filesystem")]
-                            sandpolis::client::gui::controller::file_browser::render(
-                                ui,
-                                self.instance_id,
-                            );
-                            #[cfg(not(feature = "layer-filesystem"))]
-                            ui.label("Filesystem layer not enabled");
-                        }
-                        ControllerType::Terminal => {
-                            #[cfg(feature = "layer-shell")]
-                            sandpolis::client::gui::controller::terminal::render(
-                                ui,
-                                self.instance_id,
-                            );
-                            #[cfg(not(feature = "layer-shell"))]
-                            ui.label("Shell layer not enabled");
-                        }
-                        ControllerType::SystemInfo => {
-                            #[cfg(feature = "layer-inventory")]
-                            sandpolis::client::gui::controller::system_info::render(
-                                ui,
-                                &self.network_layer,
-                                self.instance_id,
-                            );
-                            #[cfg(not(feature = "layer-inventory"))]
-                            ui.label("Inventory layer not enabled");
-                        }
-                        ControllerType::PackageManager => {
-                            sandpolis::client::gui::controller::package_manager::render(
-                                ui,
-                                self.instance_id,
-                            );
-                        }
-                        ControllerType::DesktopViewer => {
-                            #[cfg(feature = "layer-desktop")]
-                            sandpolis::client::gui::controller::desktop_viewer::render(
-                                ui,
-                                self.instance_id,
-                            );
-                            #[cfg(not(feature = "layer-desktop"))]
-                            ui.label("Desktop layer not enabled");
-                        }
-                        ControllerType::None => {
-                            ui.label("No controller selected");
-                        }
+                    // Use trait-based dispatching
+                    let layer = self.get_layer_for_controller();
+                    if let Some(extension) = get_extension_for_layer(&layer) {
+                        extension.render_controller(ui, self.instance_id);
+                    } else {
+                        ui.label(format!("No GUI extension registered for {} layer", layer.name()));
+                        ui.label("Make sure the layer crate is linked with the appropriate feature flag.");
                     }
                 });
         });

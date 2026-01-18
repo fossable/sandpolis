@@ -1,4 +1,4 @@
-use super::components::{NodeEntity, WorldView, Selected, SelectionSet};
+use crate::gui::{NodeEntity, WorldView, Selected, SelectionSet};
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{EguiContexts, egui};

@@ -22,10 +22,24 @@ chrono = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true }
 color-eyre = { version = "0.6.3", optional = true }
 
+# GUI dependencies
+bevy = { workspace = true, optional = true }
+bevy_egui = { workspace = true, optional = true }
+egui-file-dialog = { workspace = true, optional = true }
+inventory = { workspace = true, optional = true }
+
 [features]
 agent = ["dep:notify"]
 client = ["dep:fuser"]
-client-gui = ["client"]
+client-gui = [
+  "client",
+  "dep:bevy",
+  "dep:bevy_egui",
+  "dep:egui-file-dialog",
+  "dep:inventory",
+  "dep:sandpolis-client",
+  "sandpolis-client/client-gui",
+]
 client-tui = [
   "client",
   "dep:ratatui",

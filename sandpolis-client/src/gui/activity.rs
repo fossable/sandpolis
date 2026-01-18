@@ -1,4 +1,4 @@
-use super::{components::NodeEntity, edges::Edge};
+use crate::gui::{NodeEntity, edges::Edge};
 use bevy::prelude::*;
 use sandpolis_core::InstanceId;
 

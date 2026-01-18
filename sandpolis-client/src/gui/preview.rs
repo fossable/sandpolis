@@ -1,5 +1,6 @@
-use super::queries;
-use super::{CurrentLayer, components::NodeEntity, controller::{NodeControllerState, ControllerType}};
+use crate::gui::queries;
+use crate::gui::{CurrentLayer, NodeEntity, controller::{NodeControllerState, ControllerType}};
+use crate::gui::WorldView;
 use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
@@ -51,7 +52,7 @@ pub fn render_node_previews(
     current_layer: Res<CurrentLayer>,
     network_layer: Res<sandpolis_network::NetworkLayer>,
     mut controller_state: ResMut<NodeControllerState>,
-    camera_query: Query<(&Camera, &GlobalTransform, &Projection), With<super::components::WorldView>>,
+    camera_query: Query<(&Camera, &GlobalTransform, &Projection), With<WorldView>>,
     node_query: Query<(&Transform, &NodeEntity, Option<&NodePreview>)>,
     windows: Query<&Window>,
 ) {

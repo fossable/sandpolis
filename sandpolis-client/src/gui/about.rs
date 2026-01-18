@@ -1,26 +1,30 @@
+//! About screen with Easter egg activation.
+//!
+//! The about screen can be activated by triple-clicking on the layer indicator.
+
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use std::time::{Duration, Instant};
 
-/// Resource to track about screen state
+/// Resource to track about screen state.
 #[derive(Resource, Default)]
 pub struct AboutScreenState {
     pub show: bool,
-    /// Tracks clicks on the layer indicator for Easter egg
+    /// Tracks clicks on the layer indicator for Easter egg.
     pub logo_click_count: u8,
     pub last_logo_click: Option<Instant>,
 }
 
-/// Marker component for the 3D logo entity
+/// Marker component for the 3D logo entity.
 #[derive(Component)]
 pub struct AboutLogo;
 
-/// Marker component for the about screen's 3D camera
+/// Marker component for the about screen's 3D camera.
 #[derive(Component)]
 pub struct AboutCamera;
 
-/// Easter egg: Check if the click sequence has timed out
-/// Returns true if we should reset the counter
+/// Easter egg: Check if the click sequence has timed out.
+/// Returns true if we should reset the counter.
 fn should_reset_clicks(last_click: Option<Instant>) -> bool {
     if let Some(last) = last_click {
         last.elapsed() > Duration::from_secs(2)
@@ -29,8 +33,8 @@ fn should_reset_clicks(last_click: Option<Instant>) -> bool {
     }
 }
 
-/// System to handle the Easter egg for opening about screen
-/// Easter egg: Triple-click on the layer indicator within 2 seconds
+/// System to handle the Easter egg for opening about screen.
+/// Easter egg: Triple-click on the layer indicator within 2 seconds.
 pub fn handle_about_easter_egg(mut about_state: ResMut<AboutScreenState>) {
     // Reset click counter if too much time has passed
     if should_reset_clicks(about_state.last_logo_click) {
@@ -39,7 +43,7 @@ pub fn handle_about_easter_egg(mut about_state: ResMut<AboutScreenState>) {
     }
 }
 
-/// Call this from the layer indicator when it's clicked
+/// Call this from the layer indicator when it's clicked.
 pub fn register_logo_click(about_state: &mut AboutScreenState) {
     let now = Instant::now();
 
@@ -58,12 +62,12 @@ pub fn register_logo_click(about_state: &mut AboutScreenState) {
         about_state.last_logo_click = None;
 
         if about_state.show {
-            info!("🥚 Easter egg activated! About screen opened.");
+            info!("Easter egg activated! About screen opened.");
         }
     }
 }
 
-/// System to spawn the 3D logo when about screen is shown
+/// System to spawn the 3D logo when about screen is shown.
 pub fn spawn_about_logo(
     mut commands: Commands,
     about_state: Res<AboutScreenState>,
@@ -131,7 +135,7 @@ pub fn spawn_about_logo(
     }
 }
 
-/// System to rotate the logo slowly backwards
+/// System to rotate the logo slowly backwards.
 pub fn rotate_about_logo(time: Res<Time>, mut logo_query: Query<&mut Transform, With<AboutLogo>>) {
     for mut transform in logo_query.iter_mut() {
         // Rotate backwards (negative rotation around X axis) at a slow speed
@@ -140,7 +144,7 @@ pub fn rotate_about_logo(time: Res<Time>, mut logo_query: Query<&mut Transform, 
     }
 }
 
-/// System to render the about screen UI with egui
+/// System to render the about screen UI with egui.
 pub fn render_about_screen(
     mut contexts: EguiContexts,
     mut about_state: ResMut<AboutScreenState>,
@@ -172,7 +176,7 @@ pub fn render_about_screen(
                 // Space for the 3D logo rendering at the top
                 ui.add_space(320.0); // Height of the 3D viewport + padding
 
-                ui.heading("🏰 SANDPOLIS");
+                ui.heading("SANDPOLIS");
                 ui.add_space(8.0);
 
                 ui.label("Security & Systems Management Platform");

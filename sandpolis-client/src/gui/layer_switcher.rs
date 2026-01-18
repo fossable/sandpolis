@@ -1,4 +1,4 @@
-use super::CurrentLayer;
+use crate::gui::CurrentLayer;
 use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};

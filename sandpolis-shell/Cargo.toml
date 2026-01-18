@@ -29,11 +29,25 @@ tracing = { workspace = true }
 tui-term = { version = "0.2.0", optional = true }
 ratatui = { workspace = true, optional = true }
 
+# GUI dependencies
+bevy = { workspace = true, optional = true }
+bevy_egui = { workspace = true, optional = true }
+egui_console = { workspace = true, optional = true }
+inventory = { workspace = true, optional = true }
+
 [features]
 agent = ["dep:futures", "dep:sandpolis-agent"]
 server = []
 client = []
-client-gui = ["client"]
+client-gui = [
+  "client",
+  "dep:bevy",
+  "dep:bevy_egui",
+  "dep:egui_console",
+  "dep:inventory",
+  "dep:sandpolis-client",
+  "sandpolis-client/client-gui",
+]
 client-tui = [
   "client",
   "dep:tui-term",

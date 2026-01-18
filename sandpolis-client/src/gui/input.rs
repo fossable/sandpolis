@@ -1,4 +1,4 @@
-use super::ZoomLevel;
+use crate::gui::ZoomLevel;
 use bevy::{
     input::{
         mouse::{MouseButtonInput, MouseMotion, MouseWheel},

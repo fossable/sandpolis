@@ -1,6 +1,6 @@
-use super::{
+use crate::gui::{
     CurrentLayer,
-    components::{NodeEntity, WorldView},
+    NodeEntity, WorldView,
     queries,
 };
 use sandpolis_core::Layer;

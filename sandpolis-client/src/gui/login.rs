@@ -1,5 +1,5 @@
-use super::components::{DatabaseUpdate, DatabaseUpdateSender};
-use super::input::{LoginDialogState, LoginPhase};
+use crate::gui::{DatabaseUpdate, DatabaseUpdateSender};
+use crate::gui::input::{LoginDialogState, LoginPhase};
 use bevy::prelude::*;
 use sandpolis_database::{DataCreation, DataIdentifier};
 use sandpolis_network::ServerUrl;

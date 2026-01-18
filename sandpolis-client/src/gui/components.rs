@@ -1,32 +1,61 @@
+//! Core GUI component definitions.
+//!
+//! This module contains the shared Bevy components and resources used
+//! throughout the GUI system.
+
 use bevy::prelude::*;
-use sandpolis_core::InstanceId;
+use sandpolis_core::{InstanceId, Layer};
 use tokio::sync::mpsc;
 
-/// Marker component for the main world view camera
+/// Only one layer can be selected at a time.
+#[derive(Resource, Deref, DerefMut, Debug)]
+pub struct CurrentLayer(pub Layer);
+
+impl Default for CurrentLayer {
+    fn default() -> Self {
+        Self(Layer::from("Network"))
+    }
+}
+
+/// Current zoom level for the camera.
+#[derive(Resource, Deref, DerefMut)]
+pub struct ZoomLevel(pub f32);
+
+impl Default for ZoomLevel {
+    fn default() -> Self {
+        Self(1.0)
+    }
+}
+
+/// Marker component for the main world view camera.
 #[derive(Component)]
 pub struct WorldView;
 
-/// Component that marks an entity as representing an instance node
+/// Component that marks an entity as representing an instance node.
 #[derive(Component)]
 pub struct NodeEntity {
     pub instance_id: InstanceId,
 }
 
-/// Minimap configuration
+/// Marker component for selected nodes.
+#[derive(Component)]
+pub struct Selected;
+
+/// Component representing a minimap configuration.
 #[derive(Component)]
 pub struct Minimap {
     pub zoom_factor: f32, // How much smaller the minimap view is (e.g., 0.1 for 10x zoom out)
 }
 
-/// Marker component for the minimap camera
+/// Marker component for the minimap camera.
 #[derive(Component)]
 pub struct MinimapCamera;
 
-/// Marker component for layer indicator UI
+/// Marker component for layer indicator UI.
 #[derive(Component)]
 pub struct LayerIndicator;
 
-/// Resource controlling minimap viewport settings
+/// Resource controlling minimap viewport settings.
 #[derive(Resource)]
 pub struct MinimapViewport {
     pub width: f32,
@@ -35,7 +64,7 @@ pub struct MinimapViewport {
 }
 
 impl MinimapViewport {
-    /// Create responsive minimap viewport based on window size
+    /// Create responsive minimap viewport based on window size.
     pub fn from_window_size(window_width: f32, window_height: f32) -> Self {
         // For mobile screens (< 800px width), use smaller minimap
         let is_mobile = window_width < 800.0;
@@ -66,7 +95,7 @@ impl Default for MinimapViewport {
     }
 }
 
-/// Resource for layer indicator state
+/// Resource for layer indicator state.
 #[derive(Resource)]
 pub struct LayerIndicatorState {
     pub show_timer: Timer, // Display for N seconds after layer change
@@ -80,7 +109,7 @@ impl Default for LayerIndicatorState {
     }
 }
 
-/// Database update events from resident listeners
+/// Database update events from resident listeners.
 #[derive(Clone, Debug)]
 pub enum DatabaseUpdate {
     InstanceAdded(InstanceId),
@@ -96,23 +125,19 @@ pub enum DatabaseUpdate {
     TransferCompleted(InstanceId, InstanceId),
 }
 
-/// Resource containing channel receiver for database updates
+/// Resource containing channel receiver for database updates.
 #[derive(Resource)]
 pub struct DatabaseUpdateChannel {
     pub receiver: mpsc::UnboundedReceiver<DatabaseUpdate>,
 }
 
-/// Resource containing channel sender for database updates
+/// Resource containing channel sender for database updates.
 #[derive(Resource, Clone)]
 pub struct DatabaseUpdateSender {
     pub sender: mpsc::UnboundedSender<DatabaseUpdate>,
 }
 
-/// Marker component for selected nodes
-#[derive(Component)]
-pub struct Selected;
-
-/// Resource tracking all currently selected nodes
+/// Resource tracking all currently selected nodes.
 #[derive(Resource, Default)]
 pub struct SelectionSet {
     pub selected_nodes: Vec<InstanceId>,

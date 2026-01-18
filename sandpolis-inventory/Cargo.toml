@@ -22,6 +22,12 @@ sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1", optional = true }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
+sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
+
+# GUI dependencies
+bevy = { workspace = true, optional = true }
+bevy_egui = { workspace = true, optional = true }
+inventory = { workspace = true, optional = true }
 
 [dev-dependencies]
 tempfile = "3.15.0"
@@ -31,5 +37,12 @@ test-log = { version = "0.2.18", features = ["trace"] }
 agent = ["dep:sysinfo", "dep:axum", "dep:axum-macros", "dep:sandpolis-agent"]
 server = []
 client = []
-client-gui = ["client"]
+client-gui = [
+  "client",
+  "dep:bevy",
+  "dep:bevy_egui",
+  "dep:inventory",
+  "dep:sandpolis-client",
+  "sandpolis-client/client-gui",
+]
 client-tui = ["client"]

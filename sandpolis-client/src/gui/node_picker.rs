@@ -1,4 +1,4 @@
-use super::WorldView;
+use crate::gui::WorldView;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 use sandpolis_core::InstanceId;

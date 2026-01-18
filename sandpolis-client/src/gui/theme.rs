@@ -1,7 +1,11 @@
+//! Theme system for the Sandpolis GUI.
+//!
+//! Provides customizable color themes including dark, light, and high contrast options.
+
 use bevy::prelude::*;
 use bevy_egui::egui;
 
-/// Available theme presets for the application
+/// Available theme presets for the application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ThemePreset {
     #[default]
@@ -12,7 +16,7 @@ pub enum ThemePreset {
 }
 
 impl ThemePreset {
-    /// Get a human-readable name for the theme
+    /// Get a human-readable name for the theme.
     pub fn name(&self) -> &'static str {
         match self {
             ThemePreset::SandpolisDark => "Sandpolis Dark",
@@ -22,7 +26,7 @@ impl ThemePreset {
         }
     }
 
-    /// Get a description for the theme
+    /// Get a description for the theme.
     pub fn description(&self) -> &'static str {
         match self {
             ThemePreset::SandpolisDark => "Default dark theme with blue and purple accents",
@@ -32,7 +36,7 @@ impl ThemePreset {
         }
     }
 
-    /// Get all available theme presets
+    /// Get all available theme presets.
     pub fn all() -> &'static [ThemePreset] {
         &[
             ThemePreset::SandpolisDark,
@@ -43,8 +47,8 @@ impl ThemePreset {
     }
 }
 
-/// Resource that tracks the current active theme
-/// This can be updated at runtime to switch themes dynamically
+/// Resource that tracks the current active theme.
+/// This can be updated at runtime to switch themes dynamically.
 #[derive(Resource, Debug, Clone, Default)]
 pub struct CurrentTheme {
     pub preset: ThemePreset,
@@ -52,7 +56,7 @@ pub struct CurrentTheme {
 }
 
 impl CurrentTheme {
-    /// Get the egui visuals for the current theme
+    /// Get the egui visuals for the current theme.
     pub fn get_visuals(&self) -> egui::Visuals {
         if let Some(custom) = &self.custom_visuals {
             custom.clone()
@@ -61,19 +65,19 @@ impl CurrentTheme {
         }
     }
 
-    /// Set a new theme preset (will override custom visuals)
+    /// Set a new theme preset (will override custom visuals).
     pub fn set_preset(&mut self, preset: ThemePreset) {
         self.preset = preset;
         self.custom_visuals = None;
     }
 
-    /// Set fully custom visuals (will override preset)
+    /// Set fully custom visuals (will override preset).
     pub fn set_custom_visuals(&mut self, visuals: egui::Visuals) {
         self.custom_visuals = Some(visuals);
     }
 }
 
-/// Create egui visuals for a specific theme preset
+/// Create egui visuals for a specific theme preset.
 pub fn create_theme_visuals(preset: ThemePreset) -> egui::Visuals {
     match preset {
         ThemePreset::SandpolisDark => sandpolis_dark_theme(),
@@ -83,7 +87,7 @@ pub fn create_theme_visuals(preset: ThemePreset) -> egui::Visuals {
     }
 }
 
-/// Sandpolis dark theme with custom colors
+/// Sandpolis dark theme with custom colors.
 fn sandpolis_dark_theme() -> egui::Visuals {
     let mut visuals = egui::Visuals::dark();
 
@@ -145,7 +149,7 @@ fn sandpolis_dark_theme() -> egui::Visuals {
     visuals
 }
 
-/// Sandpolis light theme
+/// Sandpolis light theme.
 fn sandpolis_light_theme() -> egui::Visuals {
     let mut visuals = egui::Visuals::light();
 
@@ -201,7 +205,7 @@ fn sandpolis_light_theme() -> egui::Visuals {
     visuals
 }
 
-/// High contrast theme for accessibility
+/// High contrast theme for accessibility.
 fn high_contrast_theme() -> egui::Visuals {
     let mut visuals = egui::Visuals::dark();
 
@@ -253,6 +257,12 @@ fn high_contrast_theme() -> egui::Visuals {
     visuals
 }
 
+/// Resource to track theme picker UI state.
+#[derive(Resource, Default)]
+pub struct ThemePickerState {
+    pub show: bool,
+}
+
 /// System that applies the current theme to all egui contexts
 /// This runs every frame to ensure theme changes are applied immediately
 pub fn apply_theme_to_egui(
@@ -283,12 +293,6 @@ pub fn initialize_theme(
     };
 
     ctx.set_visuals(theme.get_visuals());
-}
-
-/// Resource to track theme picker UI state
-#[derive(Resource, Default)]
-pub struct ThemePickerState {
-    pub show: bool,
 }
 
 /// System to handle keyboard shortcut to toggle theme picker
@@ -359,7 +363,7 @@ pub fn render_theme_picker(
         .collapsible(false)
         .resizable(false)
         .show(ctx, |ui| {
-            ui.heading("🎨 Choose Your Theme");
+            ui.heading("Choose Your Theme");
             ui.separator();
             ui.add_space(8.0);
 
@@ -375,7 +379,7 @@ pub fn render_theme_picker(
                         ui.set_min_width(panel_width - 60.0);
 
                         let button_text = if is_current {
-                            format!("✓ {}", preset.name())
+                            format!("* {}", preset.name())
                         } else {
                             preset.name().to_string()
                         };
@@ -394,7 +398,7 @@ pub fn render_theme_picker(
 
                         if ui.add(button).clicked() {
                             theme.set_preset(*preset);
-                            info!("Theme changed to: {}", preset.name());
+                            tracing::info!("Theme changed to: {}", preset.name());
                         }
 
                         ui.add_space(4.0);

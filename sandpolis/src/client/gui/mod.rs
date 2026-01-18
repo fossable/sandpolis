@@ -1,51 +1,27 @@
-use self::{
-    about::AboutScreenState,
-    components::{
-        DatabaseUpdateChannel, DatabaseUpdateSender, LayerIndicatorState, MinimapViewport,
-        SelectionSet, WorldView,
-    },
-    input::{HelpScreenState, LayerChangeTimer, LoginDialogState, MousePressed, PanningState},
-    node::spawn_node,
-    theme::{CurrentTheme, ThemePickerState},
-};
-use sandpolis_core::Layer;
-use crate::{InstanceState, config::Configuration};
+// Re-export all GUI types and systems from sandpolis-client
+pub use sandpolis_client::gui::*;
+
+use crate::{config::Configuration, InstanceState};
 use anyhow::Result;
 use bevy::{
-    color::palettes::basic::*,
-    prelude::*,
+    app::PluginGroup,
+    audio::AudioSinkPlayback,
+    color::palettes::basic::{BLUE, GRAY, WHITE},
+    ecs::schedule::IntoScheduleConfigs,
+    prelude::{
+        default, info, App, AssetPlugin, AssetServer, AudioSink, BackgroundColor, Button, Camera2d,
+        Changed, Commands, DefaultPlugins, Entity, Interaction, MessageReader, MonitorSelection,
+        PostUpdate, Query, Res, ResMut, Startup, Timer, TimerMode, Update, Vec2, Vec3, Window,
+        WindowPlugin, With,
+    },
     window::{AppLifecycle, WindowMode},
 };
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
-use bevy_rapier2d::prelude::*;
-
-pub mod about;
-pub mod activity;
-pub mod components;
-pub mod controller;
-pub mod drag;
-pub mod edges;
-pub mod input;
-pub mod layer_switcher;
-pub mod layer_ui;
-pub mod layer_visuals;
-pub mod layout;
-pub mod listeners;
-pub mod login;
-pub mod minimap;
-pub mod node;
-pub mod node_picker;
-pub mod preview;
-pub mod queries;
-pub mod responsive;
-pub mod theme;
-
-/// Only one layer can be selected at a time.
-#[derive(Resource, Deref, DerefMut, Debug)]
-pub struct CurrentLayer(Layer);
-
-#[derive(Resource, Deref, DerefMut)]
-pub struct ZoomLevel(f32);
+use bevy_rapier2d::prelude::{NoUserData, RapierConfiguration, RapierDebugRenderPlugin, RapierPhysicsPlugin};
+use sandpolis_core::Layer;
+// Explicit imports to avoid ambiguity with bevy::prelude::*
+#[allow(unused_imports)]
+pub use sandpolis_client::gui::{LayoutConfig, LayoutState};
 
 /// Initialize and start rendering the UI.
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
@@ -56,7 +32,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let network = state.network.clone();
     let db_update_tx_clone = db_update_tx.clone();
     tokio::spawn(async move {
-        listeners::setup_all_listeners(network, db_update_tx_clone).await;
+        setup_all_listeners(network, db_update_tx_clone).await;
     });
 
     let mut app = App::new();
@@ -100,15 +76,15 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(DatabaseUpdateSender {
         sender: db_update_tx.clone(),
     })
-    .insert_resource(layout::LayoutConfig::default())
-    .insert_resource(layout::LayoutState::default())
-    .insert_resource(drag::DragState::default())
-    .insert_resource(controller::NodeControllerState::default())
-    .insert_resource(layer_switcher::LayerSwitcherState::default())
-    .insert_resource(node_picker::NodePickerState::default())
+    .insert_resource(LayoutConfig::default())
+    .insert_resource(LayoutState::default())
+    .insert_resource(DragState::default())
+    .insert_resource(NodeControllerState::default())
+    .insert_resource(LayerSwitcherState::default())
+    .insert_resource(NodePickerState::default())
     .insert_resource(HelpScreenState::default())
     .insert_resource(LoginDialogState::default())
-    .insert_resource(login::LoginOperation::default())
+    .insert_resource(LoginOperation::default())
     .insert_resource(SelectionSet::default())
     .insert_resource(AboutScreenState::default())
     .insert_resource(CurrentTheme::default())
@@ -121,97 +97,97 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(PanningState::default())
     .add_systems(Startup, setup)
     .add_systems(Startup, install_egui_loaders)
-    .add_systems(Startup, theme::initialize_theme)
+    .add_systems(Startup, initialize_theme)
     .add_systems(
         Update,
         (
             // Theme system (runs first to ensure theme is applied)
-            theme::apply_theme_to_egui,
+            apply_theme_to_egui,
             // Input handling (desktop)
             #[cfg(not(target_os = "android"))]
-            self::input::handle_zoom,
+            handle_zoom,
             #[cfg(not(target_os = "android"))]
-            self::input::handle_camera,
+            handle_camera,
             // Input handling (mobile)
             #[cfg(target_os = "android")]
-            self::input::handle_touch_camera,
+            sandpolis_client::gui::input::handle_touch_camera,
             #[cfg(target_os = "android")]
-            self::input::handle_touch_zoom,
-            layer_switcher::handle_layer_switcher_toggle,
-            node_picker::handle_node_picker_toggle,
-            theme::handle_theme_picker_toggle,
+            sandpolis_client::gui::input::handle_touch_zoom,
+            handle_layer_switcher_toggle,
+            handle_node_picker_toggle,
+            handle_theme_picker_toggle,
             button_handler,
             handle_lifetime,
             // Responsive UI updates
-            responsive::update_responsive_ui,
+            update_responsive_ui,
             // Login systems
-            login::check_saved_servers,
-            login::handle_login_phase1,
-            login::handle_login_phase2,
+            check_saved_servers,
+            handle_login_phase1,
+            handle_login_phase2,
             // About screen systems
-            about::handle_about_easter_egg,
-            about::spawn_about_logo,
-            about::rotate_about_logo,
+            handle_about_easter_egg,
+            spawn_about_logo,
+            rotate_about_logo,
         ),
     )
     .add_systems(
         Update,
         (
             // Selection systems (must run before drag)
-            drag::handle_node_selection,
-            drag::update_selection_visuals,
+            handle_node_selection,
+            update_selection_visuals,
             // Drag systems
-            drag::start_node_drag,
-            drag::update_node_drag,
-            drag::stop_node_drag,
-            drag::disable_forces_while_dragging,
+            start_node_drag,
+            update_node_drag,
+            stop_node_drag,
+            disable_forces_while_dragging,
         ),
     )
     .add_systems(
         Update,
         (
             // Layout systems
-            layout::apply_repulsion_forces,
-            layout::apply_spring_forces,
-            layout::apply_damping,
-            layout::check_stabilization,
+            apply_repulsion_forces,
+            apply_spring_forces,
+            apply_damping,
+            check_stabilization,
         ),
     )
     .add_systems(
         EguiPrimaryContextPass,
         (
             // UI rendering with egui
-            minimap::render_minimap,
-            layer_ui::render_layer_indicator,
-            layer_switcher::render_layer_switcher_button,
-            layer_switcher::render_layer_switcher_panel,
-            node_picker::render_node_picker_panel,
-            preview::render_node_previews,
-            edges::render_edge_labels,
-            controller::render_node_controller,
-            drag::render_selection_ui,
-            about::render_about_screen,
-            theme::render_theme_picker,
-            self::input::handle_keymap,
+            render_minimap,
+            render_layer_indicator,
+            render_layer_switcher_button,
+            render_layer_switcher_panel,
+            render_node_picker_panel,
+            render_node_previews,
+            render_edge_labels,
+            render_node_controller,
+            render_selection_ui,
+            render_about_screen,
+            render_theme_picker,
+            handle_keymap,
         ),
     )
     .add_systems(
         PostUpdate,
         (
             // Non-egui systems
-            preview::toggle_node_preview_visibility,
+            toggle_node_preview_visibility,
             // Edge systems
-            edges::render_edges,
-            edges::update_edges_for_layer,
-            edges::update_edge_visibility,
+            render_edges,
+            update_edges_for_layer,
+            update_edge_visibility,
             // Layer visuals
-            layer_visuals::update_node_svgs_for_layer,
-            layer_visuals::update_node_colors_for_layer,
+            update_node_svgs_for_layer,
+            update_node_colors_for_layer,
             // Node SVG scaling - MUST run after update_node_svgs_for_layer
-            node::scale_node_svgs.after(layer_visuals::update_node_svgs_for_layer),
+            scale_node_svgs.after(update_node_svgs_for_layer),
             // Controller systems
-            controller::handle_node_double_click,
-            controller::close_controller_on_layer_change,
+            handle_node_double_click,
+            close_controller_on_layer_change,
             // Database updates
             process_database_updates,
         ),
@@ -220,20 +196,13 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         Update,
         (
             // Activity line systems
-            activity::spawn_transfer_activity_lines,
-            activity::spawn_network_activity_lines,
-            activity::update_activity_line_positions,
-            activity::animate_activity_lines,
-            activity::despawn_completed_activity_lines,
-            activity::cleanup_layer_activity_lines,
+            spawn_transfer_activity_lines,
+            spawn_network_activity_lines,
+            update_activity_line_positions,
+            animate_activity_lines,
+            despawn_completed_activity_lines,
+            cleanup_layer_activity_lines,
         ),
-    );
-
-    #[cfg(feature = "layer-desktop")]
-    app.add_systems(
-        Update,
-        sandpolis_desktop::client::gui::handle_layer
-            .run_if(|current_layer: Res<CurrentLayer>| **current_layer == "Desktop"),
     );
 
     app.run();
@@ -270,9 +239,9 @@ fn setup(
     ));
 
     // Query database for initial instances and spawn nodes
-    if let Ok(instances) = queries::query_all_instances(&instance_layer, &network_layer) {
+    if let Ok(instances) = query_all_instances(&instance_layer, &network_layer) {
         for instance_id in instances {
-            if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
+            if let Ok(metadata) = query_instance_metadata(instance_id) {
                 // Spawn local instance at center, others at random positions
                 let position = if metadata.instance_id == instance_layer.instance_id {
                     Some(Vec3::ZERO) // Center of screen
@@ -298,14 +267,14 @@ fn process_database_updates(
     mut update_channel: ResMut<DatabaseUpdateChannel>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    node_query: Query<(Entity, &components::NodeEntity)>,
+    node_query: Query<(Entity, &NodeEntity)>,
 ) {
     // Process all pending updates
     while let Ok(update) = update_channel.receiver.try_recv() {
         match update {
-            components::DatabaseUpdate::InstanceAdded(instance_id) => {
+            DatabaseUpdate::InstanceAdded(instance_id) => {
                 // Spawn new node at random position
-                if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
+                if let Ok(metadata) = query_instance_metadata(instance_id) {
                     spawn_node(
                         &asset_server,
                         &mut commands,
@@ -316,7 +285,7 @@ fn process_database_updates(
                     );
                 }
             }
-            components::DatabaseUpdate::InstanceRemoved(instance_id) => {
+            DatabaseUpdate::InstanceRemoved(instance_id) => {
                 // Despawn node entity matching the instance_id
                 for (entity, node_entity) in node_query.iter() {
                     if node_entity.instance_id == instance_id {
@@ -326,7 +295,7 @@ fn process_database_updates(
                     }
                 }
             }
-            components::DatabaseUpdate::NetworkTopologyChanged => {
+            DatabaseUpdate::NetworkTopologyChanged => {
                 // Edges will be rebuilt by update_edges_for_layer system
             }
             _ => {

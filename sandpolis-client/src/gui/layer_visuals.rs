@@ -1,6 +1,6 @@
-use super::components::NodeEntity;
-use super::node::{NeedsScaling, NodeSvg};
-use super::queries;
+use crate::gui::NodeEntity;
+use crate::gui::node::{NeedsScaling, NodeSvg};
+use crate::gui::queries;
 use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_svg::prelude::{Origin, Svg2d};
@@ -28,7 +28,7 @@ pub fn update_node_svgs_for_layer(
 
     // Update each node's SVG based on current layer
     for (entity, node_entity) in node_query.iter() {
-        let svg_path = get_layer_svg_path(&current_layer, &instance_layer, node_entity.instance_id);
+        let svg_path = get_layer_svg_path(&current_layer, &*instance_layer, node_entity.instance_id);
 
         // Find the SVG child entity
         if let Ok(children) = children_query.get(entity) {

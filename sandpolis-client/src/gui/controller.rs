@@ -1,14 +1,14 @@
-use super::{CurrentLayer, components::NodeEntity};
+//! Node controller UI components.
+//!
+//! This module provides the core controller infrastructure. Layer-specific
+//! controller implementations are provided by the respective layer crates
+//! via the `LayerGuiExtension` trait.
+
+use crate::gui::{CurrentLayer, NodeEntity, WorldView, get_extension_for_layer};
 use sandpolis_core::Layer;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_core::InstanceId;
-
-pub mod file_browser;
-pub mod terminal;
-pub mod system_info;
-pub mod package_manager;
-pub mod desktop_viewer;
 
 /// Resource tracking which node controller is currently open
 #[derive(Resource, Default)]
@@ -52,18 +52,10 @@ impl ControllerType {
     /// Get the controller type for a given layer
     pub fn from_layer(layer: &Layer) -> Self {
         match layer.name() {
-            #[cfg(feature = "layer-filesystem")]
             "Filesystem" => ControllerType::FileBrowser,
-
-            #[cfg(feature = "layer-shell")]
             "Shell" => ControllerType::Terminal,
-
-            #[cfg(feature = "layer-inventory")]
             "Inventory" => ControllerType::SystemInfo,
-
-            #[cfg(feature = "layer-desktop")]
             "Desktop" => ControllerType::DesktopViewer,
-
             _ => ControllerType::SystemInfo, // Default fallback
         }
     }
@@ -87,7 +79,7 @@ pub fn handle_node_double_click(
     mouse_button: Res<ButtonInput<MouseButton>>,
     time: Res<Time>,
     windows: Query<&Window>,
-    camera_query: Query<(&Camera, &GlobalTransform), With<super::components::WorldView>>,
+    camera_query: Query<(&Camera, &GlobalTransform), With<WorldView>>,
     node_query: Query<(&Transform, &NodeEntity)>,
     current_layer: Res<CurrentLayer>,
     mut controller_state: ResMut<NodeControllerState>,
@@ -157,10 +149,14 @@ pub fn handle_node_double_click(
 }
 
 /// Render the node controller window
+///
+/// This function uses trait-based dispatching to render layer-specific
+/// controller content. Each layer crate provides its own implementation
+/// via the `LayerGuiExtension` trait.
 pub fn render_node_controller(
     mut contexts: EguiContexts,
     mut controller_state: ResMut<NodeControllerState>,
-    network_layer: Res<sandpolis_network::NetworkLayer>,
+    current_layer: Res<CurrentLayer>,
     windows: Query<&Window>,
 ) {
     let Some(instance_id) = controller_state.expanded_node else {
@@ -193,6 +189,9 @@ pub fn render_node_controller(
 
     controller_state.window_size = Vec2::new(controller_width, controller_height);
 
+    // Get the layer extension for rendering
+    let extension = get_extension_for_layer(&current_layer);
+
     egui::Window::new(controller_state.controller_type.display_name())
         .fixed_pos(controller_pos)
         .fixed_size([controller_width, controller_height])
@@ -212,36 +211,12 @@ pub fn render_node_controller(
 
             ui.separator();
 
-            // Render controller-specific content
-            match controller_state.controller_type {
-                ControllerType::FileBrowser => {
-                    #[cfg(feature = "layer-filesystem")]
-                    file_browser::render(ui, instance_id);
-                    #[cfg(not(feature = "layer-filesystem"))]
-                    ui.label("Filesystem layer not enabled");
-                }
-                ControllerType::Terminal => {
-                    #[cfg(feature = "layer-shell")]
-                    terminal::render(ui, instance_id);
-                    #[cfg(not(feature = "layer-shell"))]
-                    ui.label("Shell layer not enabled");
-                }
-                ControllerType::SystemInfo => {
-                    #[cfg(feature = "layer-inventory")]
-                    system_info::render(ui, &network_layer, instance_id);
-                    #[cfg(not(feature = "layer-inventory"))]
-                    ui.label("Inventory layer not enabled");
-                }
-                ControllerType::PackageManager => {
-                    package_manager::render(ui, instance_id);
-                }
-                ControllerType::DesktopViewer => {
-                    #[cfg(feature = "layer-desktop")]
-                    desktop_viewer::render(ui, instance_id);
-                    #[cfg(not(feature = "layer-desktop"))]
-                    ui.label("Desktop layer not enabled");
-                }
-                ControllerType::None => {}
+            // Render controller content via trait dispatch
+            if let Some(ext) = extension {
+                ext.render_controller(ui, instance_id);
+            } else {
+                // Fallback for layers without GUI extension
+                ui.label(format!("No controller available for {} layer", current_layer.name()));
             }
         });
 }
