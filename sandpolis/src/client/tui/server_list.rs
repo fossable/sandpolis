@@ -16,7 +16,7 @@ use sandpolis_client::tui::{
 };
 use sandpolis_core::UserName;
 use sandpolis_database::{Data, DataCreation, DataIdentifier, Resident, ResidentVecEvent};
-use sandpolis_network::ServerUrl;
+use sandpolis_server::ServerUrl;
 use sandpolis_server::{ServerLayer, client::SavedServerData};
 use sandpolis_user::{
     ClientAuthToken, LoginPassword,

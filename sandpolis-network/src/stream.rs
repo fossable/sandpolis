@@ -23,19 +23,38 @@
 //!
 //! Direct websocket connections can be coordinated only between a client and agent
 //! or between two agents.
-//!
-//! ### Stream Multicasting
-//!
-//! Stream sources can push events to more than one sink simultaneously. This is
-//! called multicasting and can save bandwidth in situations where multiple users
-//! request the same resource at the same time. For exmaple, if more than one user
-//! requests a desktop stream on an agent simultaneously, the agent only needs to
-//! produce the data once and the server will duplicate it.
-//!
-//! Direct streams cannot be multicast.
 
 use axum::extract::ws::Message;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+
+/// Unique identifier for a stream within an `InstanceConnection`.
+/// Upper 32 bits = type tag (hash of crate + struct name), lower 32 bits = random.
+pub type StreamId = u64;
+
+/// Extract the type tag from a stream ID.
+pub fn stream_type_tag(id: StreamId) -> u32 {
+    (id >> 32) as u32
+}
+
+/// Message that gets sent over an `InstanceConnection`.
+#[derive(Serialize, Deserialize)]
+pub struct StreamMessage {
+    pub stream_id: StreamId,
+    pub payload: Vec<u8>,
+}
+
+/// Implemented by stream types to generate unique IDs.
+/// Use `#[derive(Stream)]` from `sandpolis_macros` to implement this.
+pub trait Stream {
+    /// Generate a new unique stream ID for this stream type.
+    fn generate_id() -> StreamId;
+}
+
+/// Handles incoming messages for an active stream instance.
+pub trait StreamHandler: Send + Sync + 'static {
+    /// Called when the stream receives a message from the remote peer.
+    fn on_receive(&self, message: StreamMessage);
+}
 
 pub fn event_to_message<T>(event: &T) -> Message
 where
@@ -43,84 +62,3 @@ where
 {
     Message::Binary(axum::body::Bytes::from(serde_cbor::to_vec(&event).unwrap()))
 }
-
-pub enum DataStreamDirection {
-    Upstream,
-    Downstream,
-    Bidirectional,
-}
-
-pub struct DataStreamRequest {
-    pub permanent: bool,
-
-    // string oid = 3;
-    // repeated string whitelist = 4;
-    pub direction: DataStreamDirection,
-    pub update_period: Option<u64>,
-}
-
-enum DataStreamResponse {
-    Ok(u64),
-    Invalid,
-    Failed,
-}
-
-// message EV_STStreamData {
-
-//     enum ValueType {
-//         BYTES = 0;
-//         BYTES_ARRAY = 1;
-//         STRING = 2;
-//         STRING_ARRAY = 3;
-//         INTEGER = 4;
-//         INTEGER_ARRAY = 5;
-//         LONG = 6;
-//         LONG_ARRAY = 7;
-//         BOOLEAN = 8;
-//         BOOLEAN_ARRAY = 9;
-//         DOUBLE = 10;
-//         DOUBLE_ARRAY = 11;
-//         OS_TYPE = 12;
-//         OS_TYPE_ARRAY = 13;
-//         INSTANCE_TYPE = 14;
-//         INSTANCE_TYPE_ARRAY = 15;
-//         INSTANCE_FLAVOR = 16;
-//         INSTANCE_FLAVOR_ARRAY = 17;
-//     }
-
-//     // The object's relative OID
-//     string oid = 1;
-
-//     // Whether the object corresponding to the OID was removed
-//     bool removed = 2;
-
-//     // The attribute value type
-//     ValueType value_type = 3;
-
-//     // The timestamp associated with the attribute value
-//     int64 timestamp = 4;
-
-//     bytes           bytes          = 5;
-//     repeated bytes  bytes_array    = 6;
-//     string          string         = 7;
-//     repeated string string_array   = 8;
-//     int32           integer        = 9;
-//     repeated int32  integer_array  = 10;
-//     int64           long           = 11;
-//     repeated int64  long_array     = 12;
-//     bool            boolean        = 13;
-//     repeated bool   boolean_array  = 14;
-//     double          double         = 15;
-//     repeated double double_array   = 16;
-// }
-
-// message RQ_StopStream {
-
-//     // The stream ID of the stream to stop
-//     int32 id = 1;
-// }
-
-// enum RS_StopStream {
-//     STOP_STREAM_OK = 0;
-//     STOP_STREAM_INVALID = 1;
-// }

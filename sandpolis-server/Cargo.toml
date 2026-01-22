@@ -10,7 +10,9 @@ anyhow = { workspace = true }
 axum-macros = { workspace = true }
 axum = { workspace = true }
 bevy = { workspace = true, optional = true }
+chrono = { workspace = true }
 clap = { workspace = true }
+cron = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
 png = { workspace = true }
@@ -20,12 +22,16 @@ sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
+sandpolis-realm = { path = "../sandpolis-realm", version = "0.0.1" }
 sandpolis-user = { path = "../sandpolis-user", version = "0.0.1" }
 serde_bytes = { workspace = true }
+serde_json = { workspace = true }
 serde_with = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
+tokio-util = { workspace = true }
 tracing = { workspace = true }
+url = { workspace = true }
 validator = { workspace = true }
 
 [features]

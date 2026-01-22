@@ -1,4 +1,4 @@
-use sandpolis_network::ServerUrl;
+use crate::ServerUrl;
 use serde::Deserialize;
 use serde::Serialize;
 use std::net::IpAddr;

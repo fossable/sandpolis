@@ -2,7 +2,7 @@ use crate::gui::input::{LoginDialogState, LoginPhase};
 use crate::gui::listeners::{DatabaseUpdate, DatabaseUpdateSender};
 use bevy::prelude::*;
 use sandpolis_database::{DataCreation, DataIdentifier};
-use sandpolis_network::ServerUrl;
+use sandpolis_server::ServerUrl;
 use sandpolis_server::client::SavedServerData;
 use sandpolis_user::LoginPassword;
 use sandpolis_user::messages::{LoginRequest, LoginResponse};
@@ -145,12 +145,12 @@ pub fn handle_login_phase2(
                 .map_err(|e| format!("Connection failed: {}", e))?;
 
             // Get the server's instance ID from the connection
-            let server_instance_id = connection.inner.data.read().remote_instance;
+            let server_instance_id = connection.data.read().remote_instance;
 
             // Create login request with hashed password
             let login_request = LoginRequest {
                 username: username_clone.clone(),
-                password: LoginPassword::new(connection.inner.cluster_id, &password),
+                password: LoginPassword::new(connection.cluster_id, &password),
                 totp_token,
                 lifetime: Some(Duration::from_secs(86400)), // 24 hours
             };

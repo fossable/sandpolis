@@ -4,7 +4,7 @@ use native_model::Model;
 use sandpolis_core::UserName;
 use sandpolis_database::DataIdentifier;
 use sandpolis_macros::data;
-use sandpolis_network::ServerUrl;
+use crate::ServerUrl;
 use sandpolis_user::ClientAuthToken;
 
 /// Clients can save servers to make subsequent logins faster.

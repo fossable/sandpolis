@@ -1,26 +1,68 @@
+use super::ShellSession;
 use super::ShellSessionData;
 use super::messages::{ShellSessionOutputEvent, ShellSessionRequest};
+use crate::messages::{ShellExecuteRequest, ShellExecuteResponse, ShellSessionRequest};
 use crate::{DiscoveredShell, ShellType};
 use anyhow::Result;
 use axum::extract::ws::{Message, WebSocket};
+use axum::{
+    Json,
+    extract::{self, ws::WebSocketUpgrade},
+    http::StatusCode,
+};
 use futures::{SinkExt, StreamExt};
 use regex::Regex;
 use sandpolis_database::Resident;
+use sandpolis_network::RequestResult;
+use sandpolis_network::StreamSource;
+use std::time::Duration;
+use tokio::time::timeout;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     process::{Child, Command},
 };
 use tracing::{debug, trace};
 
-pub mod routes;
+/// Stream that executes a single command and then terminates.
+pub struct ShellExecuteStream;
 
-pub struct ShellSession {
+#[axum_macros::debug_handler]
+pub async fn execute(
+    // state: State<AppState>,
+    extract::Json(request): extract::Json<ShellExecuteRequest>,
+) -> RequestResult<ShellExecuteResponse> {
+    let mut cmd = Command::new(request.shell)
+        .spawn()
+        .map_err(|_| Json(ShellExecuteResponse::NotFound))?;
+
+    Ok(Json(if request.capture_output {
+        match timeout(Duration::from_secs(request.timeout), cmd.wait_with_output()).await {
+            Ok(output) => todo!(),
+            Err(_) => ShellExecuteResponse::Timeout,
+        }
+    } else {
+        match timeout(Duration::from_secs(request.timeout), cmd.wait()).await {
+            Ok(exit_status) => ShellExecuteResponse::Ok {
+                exit_code: exit_status
+                    .map_err(|_| Json(ShellExecuteResponse::Failed))?
+                    .code()
+                    .unwrap_or(-1),
+                duration: todo!(),
+                output: todo!(),
+            },
+            Err(_) => ShellExecuteResponse::Timeout,
+        }
+    }))
+}
+
+/// Stream that runs a bidirectional shell session.
+pub struct ShellSessionStream {
     // pub id: StreamId,
     pub data: Resident<ShellSessionData>,
     pub process: Child,
 }
 
-impl ShellSession {
+impl ShellSessionStream {
     pub fn new(mut request: ShellSessionRequest) -> Result<Self> {
         // Add a default for TERM
         if request.environment.get("TERM").is_none() {
@@ -102,7 +144,7 @@ impl ShellSession {
     }
 }
 
-impl Drop for ShellSession {
+impl Drop for ShellSessionStream {
     fn drop(&mut self) {
         debug!("Killing child process");
         self.process.kill(); // TODO await

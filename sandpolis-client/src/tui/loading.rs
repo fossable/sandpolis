@@ -1,13 +1,12 @@
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
-    prelude::*,
     style::{Style, Stylize},
     text::Line,
     widgets::{Block, Borders, Paragraph, Widget, WidgetRef},
 };
 use std::time::{Duration, Instant};
-use tui_popup::SizedWidgetRef;
+use tui_popup::KnownSize;
 
 #[derive(Debug, Clone)]
 pub struct LoadingWidget {
@@ -50,7 +49,7 @@ impl LoadingWidget {
     }
 }
 
-impl SizedWidgetRef for LoadingWidget {
+impl KnownSize for LoadingWidget {
     fn width(&self) -> usize {
         40
     }

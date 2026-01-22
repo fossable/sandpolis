@@ -89,7 +89,7 @@ reqwest-websocket = "0.5.0"
 # Terminal client exclusive
 ratatui = { version = "0.30.0", features = ["unstable"] }
 ratatui-image = { version = "8.0.1" }
-tui-popup = { version = "0.6.0" }
+tui-popup = { version = "0.7.2" }
 
 # GUI client exclusive
 bevy = { version = "0.17.3" }

@@ -1,7 +1,7 @@
 use crate::tui::EventHandler;
+use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::{
     buffer::Buffer,
-    crossterm::event::{Event, KeyCode, KeyEventKind},
     layout::{Constraint, Layout, Rect},
     style::{Color, Style, Stylize},
     text::{Line, Span, Text},
@@ -200,9 +200,11 @@ impl WidgetRef for HelpWidget {
 
         let help_text = Text::from(lines);
 
-        Paragraph::new(help_text)
-            .style(Style::default().bg(Color::Black))
-            .render_ref(area, buf);
+        ratatui::widgets::Widget::render(
+            Paragraph::new(help_text).style(Style::default().bg(Color::Black)),
+            area,
+            buf,
+        );
     }
 }
 

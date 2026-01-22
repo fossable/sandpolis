@@ -25,7 +25,7 @@ pub mod built_info {
 pub struct ShellLayer {
     database: DatabaseLayer,
     #[cfg(feature = "agent")]
-    sessions: Arc<Mutex<Vec<crate::agent::ShellSession>>>,
+    sessions: Arc<Mutex<Vec<crate::agent::ShellSessionStream>>>,
 }
 
 impl ShellLayer {

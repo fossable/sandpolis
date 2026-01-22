@@ -46,17 +46,24 @@ pub struct UserLayer {
 
     #[cfg(feature = "server")]
     pub jwt_keys: HashMap<RealmName, (jsonwebtoken::EncodingKey, jsonwebtoken::DecodingKey)>,
+
+    #[cfg(feature = "server")]
+    pub network: sandpolis_network::NetworkLayer,
 }
 
 impl UserLayer {
-    pub async fn new(instance: InstanceLayer, database: DatabaseLayer) -> Result<Self> {
+    #[cfg(feature = "server")]
+    pub async fn new(
+        instance: InstanceLayer,
+        database: DatabaseLayer,
+        network: sandpolis_network::NetworkLayer,
+    ) -> Result<Self> {
         debug!("Initializing user layer");
         let user_layer = Self {
             instance,
             data: database.realm(RealmName::default())?.resident(())?,
-            #[cfg(feature = "server")]
             users: database.realm(RealmName::default())?.resident_vec(())?,
-            #[cfg(feature = "server")]
+            network,
             jwt_keys: {
                 let mut jwt_keys = HashMap::new();
                 // TODO all realms

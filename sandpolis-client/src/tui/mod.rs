@@ -1,11 +1,6 @@
 use color_eyre::Result;
-use ratatui::{
-    crossterm::event::Event,
-    crossterm::event::EventStream,
-    crossterm::event::KeyCode,
-    crossterm::event::KeyEventKind,
-    widgets::{Widget, WidgetRef},
-};
+use crossterm::event::{Event, EventStream, KeyCode, KeyEventKind};
+use ratatui::widgets::WidgetRef;
 use std::time::Duration;
 use tokio_stream::StreamExt;
 
@@ -27,7 +22,7 @@ where
 
     while !should_quit {
         tokio::select! {
-            _ = interval.tick() => { terminal.draw(|frame| frame.render_widget(&widget, frame.area()))?; },
+            _ = interval.tick() => { terminal.draw(|frame| widget.render_ref(frame.area(), frame.buffer_mut()))?; },
             Some(Ok(event)) = events.next() => {
                 if let Event::Key(key) = event {
                     if key.kind == KeyEventKind::Press {

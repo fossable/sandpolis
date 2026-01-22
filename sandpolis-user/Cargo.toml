@@ -44,6 +44,7 @@ server = [
   "dep:argon2",
   "dep:jsonwebtoken",
   "dep:passwords",
+  "sandpolis-core/server",
 ]
 client = ["dep:totp-rs", "totp-rs?/qr", "dep:argon2"]
-agent = []
+agent = ["sandpolis-core/agent"]

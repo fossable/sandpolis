@@ -18,10 +18,13 @@ use rand::Rng;
 use sandpolis_core::{RealmName, UserName};
 
 const SHA256_OUTPUT_LEN: usize = 32;
+use axum::extract::{self, WebSocketUpgrade};
+use axum::extract::{Request, State};
+use axum::middleware::Next;
 use sandpolis_database::DataRevision;
 use sandpolis_macros::data;
+use sandpolis_network::{InstanceConnection, RequestResult};
 use serde::{Deserialize, Serialize};
-use std::sync::LazyLock;
 use std::{
     fmt::{Debug, Display},
     num::NonZeroU32,
@@ -268,16 +271,16 @@ impl Display for PasswordData {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     /// Username
-    sub: UserName,
+    pub sub: UserName,
 
     /// Claim expiration
-    exp: usize,
+    pub exp: usize,
 
     /// Whether the user is an admin
-    admin: bool,
+    pub admin: bool,
 
     /// Realm in which these claims exist
-    realm: RealmName,
+    pub realm: RealmName,
 }
 
 impl FromRequestParts<UserLayer> for Claims {
@@ -309,4 +312,19 @@ impl FromRequestParts<UserLayer> for Claims {
 
         Ok(token_data.claims)
     }
+}
+
+#[axum_macros::debug_handler]
+pub async fn connect(
+    State(state): State<UserLayer>,
+    claims: Claims,
+    ws: WebSocketUpgrade,
+) -> impl axum::response::IntoResponse {
+    let database = state.database.clone();
+    let realm = claims.realm.clone();
+    let cluster_id = state.instance.cluster_id;
+    ws.on_upgrade(move |socket| async move {
+        let data = database.realm(realm.clone()).unwrap().resident(()).unwrap();
+        InstanceConnection::websocket(socket, data, realm, cluster_id);
+    })
 }
