@@ -12,7 +12,7 @@
       let
         pkgs = import nixpkgs { inherit system; };
 
-        # Build the Sandpolis agent with only agent and layer-power features
+        # Build the Sandpolis agent
         sandpolis-agent = pkgs.rustPlatform.buildRustPackage {
           pname = "sandpolis-agent";
           version = "0.1.0";
@@ -35,7 +35,7 @@
           buildPhase = ''
             cargo build --package sandpolis --bin sandpolis --release \
               --no-default-features \
-              --features agent,layer-power
+              --features agent,layer-wake
           '';
 
           installPhase = ''

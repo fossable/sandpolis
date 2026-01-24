@@ -15,6 +15,7 @@ clap = { workspace = true }
 cron = { workspace = true }
 futures-util = { workspace = true }
 futures = { workspace = true }
+inventory = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
 rand = { workspace = true }

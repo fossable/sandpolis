@@ -8,7 +8,9 @@
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::future::Future;
+use std::sync::{Arc, RwLock};
 use tokio::sync::mpsc::Sender;
 
 /// Connections may have multiple streams running concurrently, so this identifier
@@ -33,6 +35,7 @@ pub struct StreamMessage {
     pub payload: Vec<u8>,
 }
 
+// TODO "Command"?
 /// Implemented by stream types to generate unique IDs.
 pub trait StreamRequester: StreamHandler {
     /// Use `#[derive(Stream)]` from `sandpolis_macros` to implement this.
@@ -50,7 +53,12 @@ pub trait StreamRequester: StreamHandler {
 }
 
 /// Responders are created on the first request message from a requester.
-pub trait StreamResponder: StreamHandler {}
+pub trait StreamResponder: StreamHandler {
+    /// Use `#[derive(StreamResponder)]` from `sandpolis_macros` to implement this.
+    fn tag() -> u32
+    where
+        Self: Sized;
+}
 
 /// Handle messages from the peer endpoint.
 pub trait StreamHandler: Send + Sync + 'static {
@@ -79,6 +87,174 @@ pub(crate) trait RawStreamHandler: Send + Sync + 'static {
         payload: &[u8],
         raw_sender: Sender<Vec<u8>>,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_>>;
+}
+
+/// Object-safe factory trait for creating responder instances.
+pub(crate) trait RawResponderFactory: Send + Sync + 'static {
+    fn create(&self) -> Arc<dyn RawStreamHandler>;
+}
+
+/// Typed wrapper for responder factories.
+struct ResponderFactory<R, F>
+where
+    R: StreamResponder + 'static,
+    R::Out: Send + 'static,
+    F: Fn() -> R + Send + Sync + 'static,
+{
+    factory: F,
+    _marker: std::marker::PhantomData<R>,
+}
+
+impl<R, F> RawResponderFactory for ResponderFactory<R, F>
+where
+    R: StreamResponder + 'static,
+    R::Out: Send + 'static,
+    F: Fn() -> R + Send + Sync + 'static,
+{
+    fn create(&self) -> Arc<dyn RawStreamHandler> {
+        Arc::new(StreamHandlerWrapper::new((self.factory)()))
+    }
+}
+
+/// Registry for managing active streams on a connection.
+///
+/// This is transport-agnostic and works with `StreamMessage` payloads.
+pub struct StreamRegistry {
+    streams: RwLock<HashMap<StreamId, (Arc<dyn RawStreamHandler>, Sender<Vec<u8>>)>>,
+    /// Factories for creating responders, keyed by type tag.
+    responder_factories: RwLock<HashMap<u32, Box<dyn RawResponderFactory>>>,
+    /// Sender for outgoing stream messages.
+    tx: Sender<StreamMessage>,
+}
+
+impl StreamRegistry {
+    pub fn new(tx: Sender<StreamMessage>) -> Self {
+        Self {
+            streams: RwLock::new(HashMap::new()),
+            responder_factories: RwLock::new(HashMap::new()),
+            tx,
+        }
+    }
+
+    /// Register a responder factory for a given stream type.
+    /// When an incoming message arrives for an unknown stream ID,
+    /// the factory will be used to create a new responder instance.
+    pub fn register_responder<R, F>(&self, factory: F)
+    where
+        R: StreamResponder + 'static,
+        R::Out: Send + 'static,
+        F: Fn() -> R + Send + Sync + 'static,
+    {
+        let tag = R::tag();
+        let boxed_factory: Box<dyn RawResponderFactory> = Box::new(ResponderFactory {
+            factory,
+            _marker: std::marker::PhantomData,
+        });
+        self.responder_factories
+            .write()
+            .unwrap()
+            .insert(tag, boxed_factory);
+    }
+
+    /// Handle an incoming `StreamMessage` by dispatching to the appropriate handler.
+    /// If no handler exists for the stream ID, attempt to create one using a
+    /// registered responder factory.
+    pub async fn dispatch(&self, message: StreamMessage) {
+        let handler_opt = {
+            let streams = self.streams.read().unwrap();
+            streams
+                .get(&message.stream_id)
+                .map(|(handler, response_tx)| (handler.clone(), response_tx.clone()))
+        };
+
+        if let Some((handler, response_tx)) = handler_opt {
+            handler.on_receive_raw(&message.payload, response_tx).await;
+        } else {
+            // No existing handler - try to create a responder from factory
+            let type_tag = message.stream_id.tag();
+            let factory_opt = {
+                let factories = self.responder_factories.read().unwrap();
+                factories.get(&type_tag).map(|f| f.create())
+            };
+
+            if let Some(handler) = factory_opt {
+                // Create channel for response messages from the handler
+                let (response_tx, mut response_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(32);
+
+                // Register the new responder
+                self.streams
+                    .write()
+                    .unwrap()
+                    .insert(message.stream_id, (handler.clone(), response_tx.clone()));
+
+                // Spawn task to forward response bytes as StreamMessages
+                let tx = self.tx.clone();
+                let stream_id = message.stream_id;
+                tokio::spawn(async move {
+                    while let Some(payload) = response_rx.recv().await {
+                        let msg = StreamMessage { stream_id, payload };
+                        if tx.send(msg).await.is_err() {
+                            break;
+                        }
+                    }
+                });
+
+                // Dispatch the message to the newly created handler
+                handler.on_receive_raw(&message.payload, response_tx).await;
+            }
+        }
+    }
+
+    /// Register a stream handler and return a sender for outbound messages.
+    pub fn register<S: StreamHandler + StreamRequester>(
+        &self,
+        handler: S,
+    ) -> (StreamId, Sender<StreamMessage>)
+    where
+        S::Out: Send + 'static,
+    {
+        let id = S::generate_id();
+
+        // Create channel for response messages from the handler
+        let (response_tx, mut response_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(32);
+
+        // Wrap the typed handler in the object-safe wrapper
+        let wrapped: Arc<dyn RawStreamHandler> = Arc::new(StreamHandlerWrapper::new(handler));
+        self.streams
+            .write()
+            .unwrap()
+            .insert(id, (wrapped, response_tx));
+
+        // Spawn task to forward response bytes as StreamMessages
+        let tx = self.tx.clone();
+        let stream_id = id;
+        tokio::spawn(async move {
+            while let Some(payload) = response_rx.recv().await {
+                let msg = StreamMessage { stream_id, payload };
+                if tx.send(msg).await.is_err() {
+                    break;
+                }
+            }
+        });
+
+        // Create channel for outgoing request messages from the caller
+        let tx2 = self.tx.clone();
+        let (msg_tx, mut msg_rx) = tokio::sync::mpsc::channel::<StreamMessage>(32);
+        tokio::spawn(async move {
+            while let Some(msg) = msg_rx.recv().await {
+                if tx2.send(msg).await.is_err() {
+                    break;
+                }
+            }
+        });
+
+        (id, msg_tx)
+    }
+
+    /// Remove a stream from the registry.
+    pub fn close(&self, stream_id: StreamId) {
+        self.streams.write().unwrap().remove(&stream_id);
+    }
 }
 
 /// Wrapper that adapts a typed `StreamHandler` to the object-safe `RawStreamHandler`.

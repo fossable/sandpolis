@@ -14,7 +14,8 @@ use axum::{
 use futures::{SinkExt, StreamExt};
 use regex::Regex;
 use sandpolis_database::Resident;
-use sandpolis_network::{RequestResult, StreamHandler};
+use sandpolis_macros::StreamResponder;
+use sandpolis_network::{RequestResult, StreamHandler, StreamResponder};
 use std::time::Duration;
 use tokio::sync::RwLock;
 use tokio::sync::mpsc::Sender;
@@ -26,6 +27,7 @@ use tokio::{
 use tracing::{debug, trace};
 
 /// Stream that executes a single command and then terminates.
+#[derive(StreamResponder)]
 pub struct ShellExecuteStreamResponder;
 
 impl StreamHandler for ShellExecuteStreamResponder {
@@ -60,6 +62,7 @@ impl StreamHandler for ShellExecuteStreamResponder {
 }
 
 /// Stream that runs a bidirectional shell session.
+#[derive(StreamResponder)]
 pub struct ShellSessionStreamResponder {
     // pub data: Resident<ShellSessionData>,
     pub process: RwLock<Option<Child>>,

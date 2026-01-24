@@ -4,7 +4,7 @@ use native_model::Model;
 use sandpolis_core::InstanceId;
 use sandpolis_database::DatabaseLayer;
 use sandpolis_macros::{StreamRequester, data};
-use sandpolis_network::StreamHandler;
+use sandpolis_network::{RegisterResponders, StreamHandler, StreamRegistry};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -42,6 +42,26 @@ impl ShellLayer {
         })
     }
 }
+
+/// Static handler for registering shell stream responders.
+#[cfg(feature = "agent")]
+pub struct ShellResponderRegistration;
+
+#[cfg(feature = "agent")]
+impl RegisterResponders for ShellResponderRegistration {
+    fn register_responders(&self, registry: &StreamRegistry) {
+        registry.register_responder(|| agent::ShellExecuteStreamResponder);
+        registry.register_responder(|| agent::ShellSessionStreamResponder {
+            process: tokio::sync::RwLock::new(None),
+            stdin: tokio::sync::RwLock::new(None),
+        });
+    }
+}
+
+#[cfg(feature = "agent")]
+inventory::submit!(sandpolis_network::ResponderRegistration(
+    &ShellResponderRegistration
+));
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug, Default)]
 pub enum ShellType {

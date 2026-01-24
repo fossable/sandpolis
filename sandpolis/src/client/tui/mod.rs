@@ -7,7 +7,7 @@ use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::Stylize,
     text::Line,
-    widgets::WidgetRef,
+    widgets::{FrameExt, WidgetRef},
 };
 use ratatui_image::picker::Picker;
 use sandpolis_client::tui::{EventHandler, Panel};
@@ -28,8 +28,8 @@ struct App {
     should_quit: bool,
     panels: PanelContainer,
     // Layers
-    #[cfg(feature = "layer-power")]
-    power: sandpolis_power::client::tui::PowerWidget,
+    #[cfg(feature = "layer-wake")]
+    wake: sandpolis_wake::client::tui::WakeWidget,
 }
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
@@ -43,8 +43,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             focused: 0,
             left: 0,
         },
-        #[cfg(feature = "layer-power")]
-        power: sandpolis_power::client::tui::PowerWidget::new(state.power.clone()),
+        #[cfg(feature = "layer-wake")]
+        wake: sandpolis_wake::client::tui::WakeWidget::new(state.wake.clone()),
     }
     .run(terminal)
     .await;

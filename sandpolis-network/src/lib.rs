@@ -14,15 +14,33 @@ use sandpolis_database::ResidentVec;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::{ts_seconds, ts_seconds_option};
-use std::collections::HashMap;
 use std::fmt::Display;
 use std::net::IpAddr;
 use std::net::ToSocketAddrs;
 use std::str::FromStr;
 use std::sync::RwLock;
 use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
-pub use stream::{StreamHandler, StreamRequester};
-use stream::{RawStreamHandler, StreamHandlerWrapper, StreamId, StreamMessage};
+pub use stream::{StreamHandler, StreamRegistry, StreamRequester, StreamResponder};
+use stream::{StreamId, StreamMessage};
+
+/// Trait for layers to register their stream responders on new connections.
+pub trait RegisterResponders: Send + Sync + 'static {
+    fn register_responders(&self, registry: &StreamRegistry);
+}
+
+/// Wrapper for collecting `RegisterResponders` implementations via inventory.
+pub struct ResponderRegistration(pub &'static dyn RegisterResponders);
+
+// SAFETY: The inner reference is 'static and the trait requires Send + Sync
+unsafe impl Send for ResponderRegistration {}
+unsafe impl Sync for ResponderRegistration {}
+
+inventory::collect!(ResponderRegistration);
+
+/// Returns an iterator over all registered responder handlers.
+pub fn collected_responders() -> impl Iterator<Item = &'static dyn RegisterResponders> {
+    inventory::iter::<ResponderRegistration>().map(|r| r.0)
+}
 use tokio_util::sync::CancellationToken;
 use tracing::debug;
 use url::Url;
@@ -116,7 +134,7 @@ pub struct InstanceConnection {
     pub realm: RealmName,
     pub cluster_id: ClusterId,
     pub cancel: CancellationToken,
-    streams: Arc<RwLock<HashMap<StreamId, (Arc<dyn RawStreamHandler>, tokio::sync::mpsc::Sender<Vec<u8>>)>>>,
+    pub streams: Arc<StreamRegistry>,
 }
 
 impl Drop for InstanceConnection {
@@ -127,19 +145,29 @@ impl Drop for InstanceConnection {
 
 impl InstanceConnection {
     /// Wrap a websocket with an `InstanceConnection`.
+    ///
+    /// The `handlers` slice contains layers that will register their stream
+    /// responders with the connection's stream registry.
     pub fn websocket(
         socket: WebSocket,
         data: Resident<ConnectionData>,
         realm: RealmName,
         cluster_id: ClusterId,
+        handlers: &[&dyn RegisterResponders],
     ) -> Arc<Self> {
         let (outgoing_tx, mut outgoing_rx) = tokio::sync::mpsc::channel::<Message>(32);
         let cancel = CancellationToken::new();
         let cancel_clone = cancel.clone();
 
-        let streams: Arc<RwLock<HashMap<StreamId, (Arc<dyn RawStreamHandler>, tokio::sync::mpsc::Sender<Vec<u8>>)>>> =
-            Arc::new(RwLock::new(HashMap::new()));
+        // Channel for the StreamRegistry to send outgoing StreamMessages
+        let (stream_tx, mut stream_rx) = tokio::sync::mpsc::channel::<StreamMessage>(32);
+        let streams = Arc::new(StreamRegistry::new(stream_tx));
         let streams_clone = streams.clone();
+
+        // Register responders from all handlers
+        for handler in handlers {
+            handler.register_responders(&streams);
+        }
 
         // Spawn task that owns the actual WebSocket
         tokio::spawn(async move {
@@ -153,20 +181,19 @@ impl InstanceConnection {
                             break;
                         }
                     }
+                    // Handle outgoing stream messages
+                    Some(msg) = stream_rx.recv() => {
+                        let data = serde_cbor::to_vec(&msg).unwrap();
+                        if ws_tx.send(Message::Binary(data.into())).await.is_err() {
+                            break;
+                        }
+                    }
                     // Handle incoming messages from websocket
                     msg = ws_rx.next() => {
                         match msg {
                             Some(Ok(Message::Binary(data))) => {
                                 if let Ok(message) = serde_cbor::from_slice::<StreamMessage>(&data) {
-                                    let handler_opt = {
-                                        let streams = streams_clone.read().unwrap();
-                                        streams.get(&message.stream_id).map(|(handler, response_tx)| {
-                                            (handler.clone(), response_tx.clone())
-                                        })
-                                    };
-                                    if let Some((handler, response_tx)) = handler_opt {
-                                        handler.on_receive_raw(&message.payload, response_tx).await;
-                                    }
+                                    streams_clone.dispatch(message).await;
                                 }
                             }
                             Some(Ok(_)) => {}
@@ -203,49 +230,12 @@ impl InstanceConnection {
     where
         S::Out: Send + 'static,
     {
-        let id = S::generate_id();
-
-        // Create channel for response messages from the handler
-        let (response_tx, mut response_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(32);
-
-        // Wrap the typed handler in the object-safe wrapper
-        let wrapped: Arc<dyn RawStreamHandler> = Arc::new(StreamHandlerWrapper::new(handler));
-        self.streams.write().unwrap().insert(id, (wrapped, response_tx));
-
-        // Spawn task to forward response bytes as StreamMessages through the WebSocket
-        let tx = self.tx.clone();
-        let stream_id = id;
-        tokio::spawn(async move {
-            while let Some(payload) = response_rx.recv().await {
-                let msg = StreamMessage {
-                    stream_id,
-                    payload,
-                };
-                let data = serde_cbor::to_vec(&msg).unwrap();
-                if tx.send(Message::Binary(data.into())).await.is_err() {
-                    break;
-                }
-            }
-        });
-
-        // Create channel for outgoing request messages from the caller
-        let tx2 = self.tx.clone();
-        let (msg_tx, mut msg_rx) = tokio::sync::mpsc::channel::<StreamMessage>(32);
-        tokio::spawn(async move {
-            while let Some(msg) = msg_rx.recv().await {
-                let data = serde_cbor::to_vec(&msg).unwrap();
-                if tx2.send(Message::Binary(data.into())).await.is_err() {
-                    break;
-                }
-            }
-        });
-
-        (id, msg_tx)
+        self.streams.register(handler)
     }
 
     /// Remove a stream (Drop handles cleanup on the handler).
     pub fn close_stream(&self, stream_id: StreamId) {
-        self.streams.write().unwrap().remove(&stream_id);
+        self.streams.close(stream_id);
     }
 
     /// Send a raw message to the remote peer.

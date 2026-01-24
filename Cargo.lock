@@ -2538,6 +2538,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5dd9dc738b7a8311c7ade152424974d8115f2cdad61e8dab8dac9f2362298510"
 
 [[package]]
+name = "by_address"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64fa3c856b712db6612c019f14756e64e4bcea13337a6b33b696333a9eaa2d06"
+
+[[package]]
 name = "bytecount"
 version = "0.6.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2668,12 +2674,6 @@ dependencies = [
  "serde",
  "serde_json",
 ]
-
-[[package]]
-name = "cassowary"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df8670b8c7b9dae1793364eafadf7239c40d669904660c5960d74cfd80b46a53"
 
 [[package]]
 name = "cast"
@@ -2945,20 +2945,6 @@ checksum = "ba5a308b75df32fe02788e748662718f03fde005016435c444eea572398219fd"
 dependencies = [
  "bytes",
  "memchr",
-]
-
-[[package]]
-name = "compact_str"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b79c4069c6cad78e2e0cdfcbd26275770669fb39fd308a752dc110e83b9af32"
-dependencies = [
- "castaway",
- "cfg-if",
- "itoa",
- "rustversion",
- "ryu",
- "static_assertions",
 ]
 
 [[package]]
@@ -3370,22 +3356,6 @@ name = "crossbeam-utils"
 version = "0.8.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
-
-[[package]]
-name = "crossterm"
-version = "0.28.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "829d955a0bb380ef178a640b91779e3987da38c9aea133b20614cfed8cdea9c6"
-dependencies = [
- "bitflags 2.10.0",
- "crossterm_winapi",
- "mio",
- "parking_lot",
- "rustix 0.38.44",
- "signal-hook",
- "signal-hook-mio",
- "winapi",
-]
 
 [[package]]
 name = "crossterm"
@@ -4410,6 +4380,12 @@ dependencies = [
  "bit-set 0.5.3",
  "regex",
 ]
+
+[[package]]
+name = "fast-srgb8"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd2e7510819d6fbf51a5545c8f922716ecfb14df168a3242f7d33e0239efe6a1"
 
 [[package]]
 name = "fastrand"
@@ -5636,9 +5612,13 @@ dependencies = [
 
 [[package]]
 name = "icy_sixel"
-version = "0.1.3"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccc0a9c4770bc47b0a933256a496cfb8b6531f753ea9bccb19c6dff0ff7273fc"
+checksum = "85518b9086bf01117761b90e7691c0ef3236fa8adfb1fb44dd248fe5f87215d5"
+dependencies = [
+ "quantette",
+ "thiserror 2.0.17",
+]
 
 [[package]]
 name = "ident_case"
@@ -6268,15 +6248,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fae87c125b03c1d2c0150c90365d7d6bcc53fb73a9acaef207d2d065860f062"
 dependencies = [
  "imgref",
-]
-
-[[package]]
-name = "lru"
-version = "0.12.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "234cf4f4a04dc1f57e24b96cc0cd600cf2af460d4161ac5ecdd0af8e1f3b2a38"
-dependencies = [
- "hashbrown 0.15.5",
 ]
 
 [[package]]
@@ -7678,6 +7649,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "palette"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4cbf71184cc5ecc2e4e1baccdb21026c20e5fc3dcf63028a086131b3ab00b6e6"
+dependencies = [
+ "bytemuck",
+ "fast-srgb8",
+ "libm",
+ "palette_derive",
+]
+
+[[package]]
+name = "palette_derive"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5030daf005bface118c096f510ffb781fc28f9ab6a32ab224d8631be6851d30"
+dependencies = [
+ "by_address",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.114",
+]
+
+[[package]]
 name = "parking"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8382,6 +8377,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "quantette"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c98fecda8b16396ff9adac67644a523dd1778c42b58606a29df5c31ca925d174"
+dependencies = [
+ "bitvec",
+ "bytemuck",
+ "image",
+ "libm",
+ "num-traits",
+ "ordered-float 5.1.0",
+ "palette",
+ "rand 0.9.2",
+ "rand_xoshiro",
+ "rayon",
+ "ref-cast",
+ "wide 0.8.3",
+]
+
+[[package]]
 name = "quick-error"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8559,6 +8574,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rand_xoshiro"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f703f4665700daf5512dcca5f43afa6af89f09db47fb56be587f80636bda2d41"
+dependencies = [
+ "rand_core 0.9.3",
+]
+
+[[package]]
 name = "random-pick"
 version = "1.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8601,7 +8625,7 @@ dependencies = [
  "simba",
  "static_assertions",
  "thiserror 2.0.17",
- "wide",
+ "wide 0.7.33",
 ]
 
 [[package]]
@@ -8673,27 +8697,6 @@ dependencies = [
 
 [[package]]
 name = "ratatui"
-version = "0.29.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eabd94c2f37801c20583fc49dd5cd6b0ba68c716787c2dd6ed18571e1e63117b"
-dependencies = [
- "bitflags 2.10.0",
- "cassowary",
- "compact_str 0.8.1",
- "crossterm 0.28.1",
- "indoc",
- "instability",
- "itertools 0.13.0",
- "lru 0.12.5",
- "paste",
- "strum 0.26.3",
- "unicode-segmentation",
- "unicode-truncate 1.1.0",
- "unicode-width 0.2.0",
-]
-
-[[package]]
-name = "ratatui"
 version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d1ce67fb8ba4446454d1c8dbaeda0557ff5e94d39d5e5ed7f10a65eb4c8266bc"
@@ -8714,16 +8717,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ef8dea09a92caaf73bff7adb70b76162e5937524058a7e5bff37869cbbec293"
 dependencies = [
  "bitflags 2.10.0",
- "compact_str 0.9.0",
+ "compact_str",
  "hashbrown 0.16.1",
  "indoc",
  "itertools 0.14.0",
  "kasuari",
- "lru 0.16.3",
- "strum 0.27.2",
+ "lru",
+ "strum",
  "thiserror 2.0.17",
  "unicode-segmentation",
- "unicode-truncate 2.0.0",
+ "unicode-truncate",
  "unicode-width 0.2.0",
 ]
 
@@ -8734,22 +8737,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "577c9b9f652b4c121fb25c6a391dd06406d3b092ba68827e6d2f09550edc54b3"
 dependencies = [
  "cfg-if",
- "crossterm 0.29.0",
+ "crossterm",
  "instability",
  "ratatui-core",
 ]
 
 [[package]]
 name = "ratatui-image"
-version = "8.1.1"
+version = "10.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ecc67e9f7d0ac69e0f712f58b1a9d5a04d8daeeb3628f4d6b67580abb88b7cb"
+checksum = "6dded7fbda607852f8530fd61de5335166302679364f99e3798848af7e0a37ef"
 dependencies = [
  "base64-simd",
  "icy_sixel",
  "image",
  "rand 0.8.5",
- "ratatui 0.29.0",
+ "ratatui",
  "rustix 0.38.44",
  "thiserror 1.0.69",
  "windows 0.58.0",
@@ -8799,7 +8802,7 @@ dependencies = [
  "itertools 0.14.0",
  "line-clipping",
  "ratatui-core",
- "strum 0.27.2",
+ "strum",
  "time",
  "unicode-segmentation",
  "unicode-width 0.2.0",
@@ -9455,6 +9458,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "safe_arch"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "629516c85c29fe757770fa03f2074cf1eac43d44c02a3de9fc2ef7b0e207dfdd"
+dependencies = [
+ "bytemuck",
+]
+
+[[package]]
 name = "salsa20"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9498,7 +9510,7 @@ dependencies = [
  "native_db",
  "os_info",
  "rand 0.9.2",
- "ratatui 0.30.0",
+ "ratatui",
  "ratatui-image",
  "rustls",
  "sandpolis-account",
@@ -9514,16 +9526,16 @@ dependencies = [
  "sandpolis-inventory",
  "sandpolis-macros",
  "sandpolis-network",
- "sandpolis-power",
  "sandpolis-probe",
  "sandpolis-realm",
  "sandpolis-server",
  "sandpolis-shell",
  "sandpolis-snapshot",
  "sandpolis-user",
+ "sandpolis-wake",
  "serde",
  "serde_json",
- "strum 0.27.2",
+ "strum",
  "tempfile",
  "tokio",
  "tokio-stream",
@@ -9593,7 +9605,7 @@ dependencies = [
  "bevy_svg",
  "clap",
  "color-eyre",
- "crossterm 0.29.0",
+ "crossterm",
  "egui-file-dialog",
  "egui_console",
  "egui_extras",
@@ -9603,7 +9615,7 @@ dependencies = [
  "os_info",
  "passwords",
  "rand 0.9.2",
- "ratatui 0.30.0",
+ "ratatui",
  "sandpolis-core",
  "sandpolis-database",
  "sandpolis-instance",
@@ -9632,7 +9644,7 @@ dependencies = [
  "native_model",
  "regex",
  "serde",
- "strum 0.27.2",
+ "strum",
  "uuid",
  "validator",
 ]
@@ -9685,7 +9697,7 @@ dependencies = [
  "enigo",
  "image",
  "inventory",
- "ratatui 0.30.0",
+ "ratatui",
  "ratatui-image",
  "sandpolis-client",
  "sandpolis-core",
@@ -9709,7 +9721,7 @@ dependencies = [
  "fuser",
  "inventory",
  "notify",
- "ratatui 0.30.0",
+ "ratatui",
  "sandpolis-client",
  "sandpolis-core",
  "sandpolis-network",
@@ -9734,7 +9746,7 @@ dependencies = [
  "sandpolis-database",
  "sandpolis-macros",
  "serde",
- "strum 0.27.2",
+ "strum",
  "tracing",
  "uuid",
 ]
@@ -9802,6 +9814,7 @@ dependencies = [
  "cron",
  "futures",
  "futures-util",
+ "inventory",
  "native_db",
  "native_model",
  "rand 0.9.2",
@@ -9821,24 +9834,6 @@ dependencies = [
  "tracing",
  "url",
  "validator",
-]
-
-[[package]]
-name = "sandpolis-power"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "axum",
- "axum-macros",
- "ratatui 0.30.0",
- "sandpolis-client",
- "sandpolis-core",
- "sandpolis-database",
- "sandpolis-instance",
- "sandpolis-network",
- "sandpolis-realm",
- "serde",
- "tokio",
 ]
 
 [[package]]
@@ -9939,7 +9934,7 @@ dependencies = [
  "inventory",
  "native_db",
  "native_model",
- "ratatui 0.30.0",
+ "ratatui",
  "regex",
  "sandpolis-agent",
  "sandpolis-client",
@@ -9989,6 +9984,7 @@ dependencies = [
  "axum-macros",
  "base64",
  "futures",
+ "inventory",
  "jsonwebtoken",
  "native_db",
  "native_model",
@@ -10006,6 +10002,24 @@ dependencies = [
  "totp-rs",
  "tracing",
  "validator",
+]
+
+[[package]]
+name = "sandpolis-wake"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "axum",
+ "axum-macros",
+ "ratatui",
+ "sandpolis-client",
+ "sandpolis-core",
+ "sandpolis-database",
+ "sandpolis-instance",
+ "sandpolis-network",
+ "sandpolis-realm",
+ "serde",
+ "tokio",
 ]
 
 [[package]]
@@ -10320,7 +10334,7 @@ dependencies = [
  "num-complex",
  "num-traits",
  "paste",
- "wide",
+ "wide 0.7.33",
 ]
 
 [[package]]
@@ -10637,33 +10651,11 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "strum"
-version = "0.26.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fec0f0aef304996cf250b31b5a10dee7980c85da9d759361292b8bca5a18f06"
-dependencies = [
- "strum_macros 0.26.4",
-]
-
-[[package]]
-name = "strum"
 version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af23d6f6c1a224baef9d3f61e287d2761385a5b88fdab4eb4c6f11aeb54c4bcf"
 dependencies = [
- "strum_macros 0.27.2",
-]
-
-[[package]]
-name = "strum_macros"
-version = "0.26.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c6bee85a5a24955dc440386795aa378cd9cf82acd5f764469152d2270e581be"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "rustversion",
- "syn 2.0.114",
+ "strum_macros",
 ]
 
 [[package]]
@@ -11562,17 +11554,6 @@ name = "unicode-segmentation"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6ccf251212114b54433ec949fd6a7841275f9ada20dddd2f29e9ceea4501493"
-
-[[package]]
-name = "unicode-truncate"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3644627a5af5fa321c95b9b235a72fd24cd29c648c2c379431e6628655627bf"
-dependencies = [
- "itertools 0.13.0",
- "unicode-segmentation",
- "unicode-width 0.1.14",
-]
 
 [[package]]
 name = "unicode-truncate"
@@ -12522,7 +12503,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ce5da8ecb62bcd8ec8b7ea19f69a51275e91299be594ea5cc6ef7819e16cd03"
 dependencies = [
  "bytemuck",
- "safe_arch",
+ "safe_arch 0.7.4",
+]
+
+[[package]]
+name = "wide"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13ca908d26e4786149c48efcf6c0ea09ab0e06d1fe3c17dc1b4b0f1ca4a7e788"
+dependencies = [
+ "bytemuck",
+ "safe_arch 0.9.3",
 ]
 
 [[package]]

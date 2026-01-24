@@ -1,4 +1,4 @@
-use crate::PowerLayer;
+use crate::WakeLayer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::text::Text;
 use ratatui::widgets::{Block, Borders, Paragraph, Widget, WidgetRef};
@@ -6,17 +6,17 @@ use sandpolis_client::tui::EventHandler;
 use sandpolis_core::InstanceId;
 
 // #[derive(Debug)]
-pub struct PowerWidget {
-    pub power_layer: PowerLayer,
+pub struct WakeWidget {
+    pub wake: WakeLayer,
 }
 
-impl PowerWidget {
-    pub fn new(power_layer: PowerLayer) -> Self {
-        PowerWidget { power_layer }
+impl WakeWidget {
+    pub fn new(wake: WakeLayer) -> Self {
+        WakeWidget { wake }
     }
 }
 
-impl WidgetRef for PowerWidget {
+impl WidgetRef for WakeWidget {
     fn render_ref(&self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         // Create the widget's block
         let block = Block::default()
@@ -43,7 +43,7 @@ impl WidgetRef for PowerWidget {
     }
 }
 
-impl EventHandler for PowerWidget {
+impl EventHandler for WakeWidget {
     fn handle_event(&mut self, event: Event) -> Option<Event> {
         if let Event::Key(key) = event {
             if key.kind == KeyEventKind::Press {

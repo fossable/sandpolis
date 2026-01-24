@@ -325,6 +325,9 @@ pub async fn connect(
     let cluster_id = state.instance.cluster_id;
     ws.on_upgrade(move |socket| async move {
         let data = database.realm(realm.clone()).unwrap().resident(()).unwrap();
-        InstanceConnection::websocket(socket, data, realm, cluster_id);
+        // Collect all registered responder handlers from inventory
+        let handlers: Vec<&dyn sandpolis_network::RegisterResponders> =
+            sandpolis_network::collected_responders().collect();
+        InstanceConnection::websocket(socket, data, realm, cluster_id, &handlers);
     })
 }

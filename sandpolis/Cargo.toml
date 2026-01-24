@@ -38,7 +38,7 @@ sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 sandpolis-network = { path = "../sandpolis-network", version = "0.0.1" }
 sandpolis-inventory = { path = "../sandpolis-inventory", version = "0.0.1", optional = true }
-sandpolis-power = { path = "../sandpolis-power", version = "0.0.1", optional = true }
+sandpolis-wake = { path = "../sandpolis-wake", version = "0.0.1", optional = true }
 sandpolis-probe = { path = "../sandpolis-probe", version = "0.0.1", optional = true }
 sandpolis-server = { path = "../sandpolis-server", version = "0.0.1" }
 sandpolis-shell = { path = "../sandpolis-shell", version = "0.0.1", optional = true }
@@ -83,7 +83,7 @@ server = [
   "sandpolis-instance/server",
   "sandpolis-network/server",
   "sandpolis-inventory?/server",
-  "sandpolis-power?/server",
+  "sandpolis-wake?/server",
   "sandpolis-realm/server",
   "sandpolis-server/server",
   "sandpolis-shell?/server",
@@ -96,7 +96,7 @@ agent = [
   "sandpolis-instance/agent",
   "sandpolis-network/agent",
   "sandpolis-inventory?/agent",
-  "sandpolis-power?/agent",
+  "sandpolis-wake?/agent",
   "sandpolis-realm/agent",
   "sandpolis-shell?/agent",
 ]
@@ -120,7 +120,7 @@ layer-inventory = ["dep:sandpolis-inventory"]
 layer-shell = ["dep:sandpolis-shell"]
 layer-snapshot = ["dep:sandpolis-snapshot"]
 layer-probe = ["dep:sandpolis-probe"]
-layer-power = ["dep:sandpolis-power"]
+layer-wake = ["dep:sandpolis-wake"]
 layer-tunnel = []
 
 # Enable all layers
@@ -131,7 +131,7 @@ default = [
   "layer-desktop",
   "layer-filesystem",
   "layer-inventory",
-  "layer-power",
+  "layer-wake",
   "layer-probe",
   "layer-shell",
   "layer-snapshot",
@@ -156,7 +156,7 @@ client-gui = [
   "sandpolis-instance/client-gui",
   "sandpolis-inventory?/client-gui",
   "sandpolis-network/client-gui",
-  "sandpolis-power?/client-gui",
+  "sandpolis-wake?/client-gui",
   "sandpolis-server/client-gui",
   "sandpolis-shell?/client-gui",
 ]
@@ -171,7 +171,7 @@ client-tui = [
   "sandpolis-desktop?/client-tui",
   "sandpolis-filesystem?/client-tui",
   "sandpolis-inventory?/client-tui",
-  "sandpolis-power?/client-tui",
+  "sandpolis-wake?/client-tui",
   "sandpolis-shell?/client-tui",
 ]
 

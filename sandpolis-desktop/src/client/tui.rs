@@ -3,10 +3,9 @@ use image::{DynamicImage, ImageBuffer, RgbaImage};
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::prelude::StatefulWidget;
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget, WidgetRef};
+use ratatui::widgets::{Block, Borders, Clear, Paragraph, StatefulWidget, Widget, WidgetRef};
 use ratatui_image::{
     FontSize, StatefulImage,
     protocol::{ImageSource, StatefulProtocol, StatefulProtocolType, halfblocks::Halfblocks},
@@ -214,8 +213,7 @@ impl DesktopViewerWidget {
             );
 
             // Create StatefulImage widget and render
-            let image_widget = StatefulImage::new();
-            image_widget.render(area, buf, image_state);
+            StatefulWidget::render(StatefulImage::default(), area, buf, image_state);
         } else if self.current_frame.is_none() {
             // No frame available
             self.render_info_message(area, buf, "Waiting for desktop capture...");

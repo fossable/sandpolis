@@ -36,7 +36,7 @@ egui_console = { workspace = true, optional = true }
 inventory = { workspace = true, optional = true }
 
 [features]
-agent = ["dep:futures", "dep:sandpolis-agent"]
+agent = ["dep:futures", "dep:sandpolis-agent", "dep:inventory"]
 server = []
 client = []
 client-gui = [

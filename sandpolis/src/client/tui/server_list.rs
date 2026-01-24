@@ -32,7 +32,7 @@ use tokio::{
     time::sleep,
 };
 use tracing::debug;
-use tui_popup::{Popup, SizedWidgetRef};
+use tui_popup::{KnownSize, Popup};
 use validator::Validate;
 
 use super::GRAPHICS;
@@ -681,13 +681,19 @@ struct ServerFormData {
     username: UserName,
 }
 
-impl SizedWidgetRef for AddServerWidget {
+impl KnownSize for AddServerWidget {
     fn width(&self) -> usize {
         60
     }
 
     fn height(&self) -> usize {
         12
+    }
+}
+
+impl Widget for AddServerWidget {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        self.render_ref(area, buf);
     }
 }
 

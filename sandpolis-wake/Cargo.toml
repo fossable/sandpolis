@@ -2,7 +2,7 @@
 description = "Virtual estate monitoring & management!"
 edition = "2024"
 license = "Unlicense"
-name = "sandpolis-power"
+name = "sandpolis-wake"
 version = "0.0.1"
 
 [dependencies]

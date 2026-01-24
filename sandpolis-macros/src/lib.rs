@@ -262,16 +262,47 @@ fn struct_name_to_id(name: &str) -> u32 {
     (hasher.finish() & 0xFFFF_FFFF) as u32
 }
 
-/// Derive macro that implements the `Stream` trait for a struct.
-/// Generates a unique 32-bit type tag based on crate name + struct name.
+/// Strip Requester/Responder suffix from stream type names so both ends
+/// of a stream produce the same tag.
+fn stream_type_name(name: &str) -> String {
+    name.trim_end_matches("Requester")
+        .trim_end_matches("Responder")
+        .to_string()
+}
+
+/// Derive macro that implements the `StreamRequester` trait for a struct.
+/// Generates a unique 32-bit type tag based on crate name + struct name
+/// (with Requester/Responder suffix stripped for matching).
 #[proc_macro_derive(StreamRequester)]
-pub fn derive_stream(input: TokenStream) -> TokenStream {
+pub fn derive_stream_requester(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
-    let type_tag = struct_name_to_id(&name.to_string());
+    let base_name = stream_type_name(&name.to_string());
+    let type_tag = struct_name_to_id(&base_name);
 
     let expanded = quote! {
         impl sandpolis_network::stream::StreamRequester for #name {
+            fn tag() -> u32 {
+                #type_tag
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+/// Derive macro that implements the `StreamResponder` trait for a struct.
+/// Generates a unique 32-bit type tag based on crate name + struct name
+/// (with Requester/Responder suffix stripped for matching).
+#[proc_macro_derive(StreamResponder)]
+pub fn derive_stream_responder(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+    let base_name = stream_type_name(&name.to_string());
+    let type_tag = struct_name_to_id(&base_name);
+
+    let expanded = quote! {
+        impl sandpolis_network::stream::StreamResponder for #name {
             fn tag() -> u32 {
                 #type_tag
             }

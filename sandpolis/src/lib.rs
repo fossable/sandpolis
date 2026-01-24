@@ -40,8 +40,8 @@ pub struct InstanceState {
     pub network: sandpolis_network::NetworkLayer,
     #[cfg(feature = "layer-inventory")]
     pub inventory: sandpolis_inventory::InventoryLayer,
-    #[cfg(feature = "layer-power")]
-    pub power: sandpolis_power::PowerLayer,
+    #[cfg(feature = "layer-wake")]
+    pub wake: sandpolis_wake::WakeLayer,
     pub server: sandpolis_server::ServerLayer,
     #[cfg(feature = "layer-shell")]
     pub shell: sandpolis_shell::ShellLayer,
@@ -60,22 +60,24 @@ impl InstanceState {
             sandpolis_realm::RealmLayer::new(config.realm, database.clone(), instance.clone())
                 .await?;
 
-        let network =
-            sandpolis_network::NetworkLayer::new(config.network, database.clone(), realm.clone())
-                .await?;
+        let network = sandpolis_network::NetworkLayer::new(database.clone()).await?;
 
-        let user = sandpolis_user::UserLayer::new(instance.clone(), database.clone()).await?;
+        let user =
+            sandpolis_user::UserLayer::new(instance.clone(), database.clone(), network.clone())
+                .await?;
 
         let agent = sandpolis_agent::AgentLayer::new(database.clone()).await?;
 
-        let server = sandpolis_server::ServerLayer::new(database.clone(), network.clone()).await?;
+        let server =
+            sandpolis_server::ServerLayer::new(database.clone(), network.clone(), realm.clone())
+                .await?;
 
         #[cfg(feature = "layer-inventory")]
         let inventory =
             sandpolis_inventory::InventoryLayer::new(database.clone(), instance.clone()).await?;
 
-        #[cfg(feature = "layer-power")]
-        let power = sandpolis_power::PowerLayer {
+        #[cfg(feature = "layer-wake")]
+        let wake = sandpolis_wake::WakeLayer {
             network: network.clone(),
         };
 
@@ -97,8 +99,8 @@ impl InstanceState {
         Ok(Self {
             #[cfg(feature = "layer-inventory")]
             inventory,
-            #[cfg(feature = "layer-power")]
-            power,
+            #[cfg(feature = "layer-wake")]
+            wake,
             #[cfg(feature = "layer-shell")]
             shell,
             #[cfg(feature = "layer-filesystem")]
@@ -124,8 +126,8 @@ impl InstanceState {
 /// irrevocable permissions. By default, additional user accounts are created
 /// without permissions and consequently are allowed to do almost nothing.
 pub enum InstancePermission {
-    #[cfg(feature = "layer-power")]
-    Power(sandpolis_power::PowerPermission),
+    #[cfg(feature = "layer-wake")]
+    Wake(sandpolis_wake::WakePermission),
     #[cfg(feature = "layer-filesystem")]
     Filesystem(sandpolis_filesystem::FilesystemPermission),
 }

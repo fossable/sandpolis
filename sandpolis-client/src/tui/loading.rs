@@ -59,6 +59,12 @@ impl KnownSize for LoadingWidget {
     }
 }
 
+impl Widget for LoadingWidget {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        self.render_ref(area, buf);
+    }
+}
+
 impl WidgetRef for LoadingWidget {
     fn render_ref(&self, area: Rect, buf: &mut Buffer) {
         let block = Block::default()

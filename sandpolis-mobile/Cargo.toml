@@ -22,7 +22,7 @@ sandpolis = { path = "../sandpolis", version = "8.0.0", default-features = false
   "agent",
   "layer-desktop",
   "layer-inventory",
-  "layer-power",
+  "layer-wake",
   "layer-shell",
 ] }
 sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
