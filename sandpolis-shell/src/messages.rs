@@ -1,5 +1,4 @@
 use super::ShellCommand;
-use sandpolis_macros::StreamEvent;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -17,9 +16,9 @@ pub struct ShellScheduleRequest {
     pub timeout: u64,
 }
 
-/// Request to execute a command in a shell.
+/// Request message for shell execute streams.
 #[derive(Serialize, Deserialize)]
-pub struct ShellExecuteRequest {
+pub struct ShellExecuteStreamRequest {
     /// Shell executable to use for request
     pub shell: PathBuf,
 
@@ -33,68 +32,64 @@ pub struct ShellExecuteRequest {
     pub capture_output: bool,
 }
 
-/// Response containing execution results.
+/// Response message for shell execute streams.
 #[derive(Serialize, Deserialize)]
-pub enum ShellExecuteResponse {
-    Ok {
+pub enum ShellExecuteStreamResponse {
+    Done {
         /// Process exit code
         exit_code: i32,
 
         /// Execution duration in seconds
         duration: f64,
-
+        // TODO cgroup-y info like max memory, cpu time, etc
+    },
+    Progress {
         /// Process output on all descriptors
         output: HashMap<i32, Vec<u8>>,
-        // TODO cgroup-y info like max memory, cpu time, etc
     },
     Failed,
     NotFound,
     Timeout,
 }
 
-/// Locate supported shells on the system.
+// TODO via database updates instead?
 #[derive(Serialize, Deserialize)]
 pub struct ShellListRequest;
 
-/// Start a new shell session
+/// Request message for shell session streams.
 #[derive(Serialize, Deserialize)]
-pub struct ShellSessionRequest {
-    /// Path to the shell executable
-    pub path: PathBuf,
+pub enum ShellSessionStreamRequest {
+    /// Requester wants to start the stream
+    Start {
+        /// Path to the shell executable
+        path: PathBuf,
 
-    // TODO request permissions
-    // Permission permission = 3;
-    /// Additional environment variables
-    pub environment: HashMap<String, String>,
+        // TODO request permissions
+        // Permission permission = 3;
+        /// Additional environment variables
+        environment: HashMap<String, String>,
 
-    /// Number of rows to request
-    pub rows: u32,
+        /// Number of rows to request
+        rows: u32,
 
-    /// Number of columns to request
-    pub cols: u32,
-}
+        /// Number of columns to request
+        cols: u32,
+    },
+    /// Requester has stdin data
+    Stdin { data: Vec<u8> },
+    /// Requester changed the size of the terminal
+    Resize {
+        /// Update the number of rows
+        rows: u32,
 
-#[derive(Serialize, Deserialize)]
-enum ShellSessionResponse {
-    Ok(u64),
-}
-
-/// Send standard-input or resizes to a shell session.
-#[derive(Serialize, Deserialize, Default)]
-pub struct ShellSessionInputEvent {
-    /// STDIN data
-    pub stdin: Option<Vec<u8>>,
-
-    /// Update the number of rows
-    pub rows: Option<u32>,
-
-    /// Update the number of columns
-    pub cols: Option<u32>,
+        /// Update the number of columns
+        cols: u32,
+    },
 }
 
 /// Event containing standard-output and standard-error.
-#[derive(Serialize, Deserialize, Default, StreamEvent)]
-pub struct ShellSessionOutputEvent {
+#[derive(Serialize, Deserialize)]
+pub struct ShellSessionStreamResponse {
     pub stdout: Vec<u8>,
     pub stderr: Vec<u8>,
 }

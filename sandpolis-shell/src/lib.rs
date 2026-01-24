@@ -3,11 +3,16 @@ use native_db::*;
 use native_model::Model;
 use sandpolis_core::InstanceId;
 use sandpolis_database::DatabaseLayer;
-use sandpolis_macros::data;
+use sandpolis_macros::{StreamRequester, data};
+use sandpolis_network::StreamHandler;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::mpsc::Sender;
+use tokio::sync::{Mutex, RwLock};
+
+use crate::messages::ShellExecuteStreamResponse;
 
 #[cfg(feature = "agent")]
 pub mod agent;
@@ -25,7 +30,7 @@ pub mod built_info {
 pub struct ShellLayer {
     database: DatabaseLayer,
     #[cfg(feature = "agent")]
-    sessions: Arc<Mutex<Vec<crate::agent::ShellSessionStream>>>,
+    sessions: Arc<Mutex<Vec<crate::agent::ShellSessionStreamResponder>>>,
 }
 
 impl ShellLayer {
@@ -119,4 +124,32 @@ pub struct DiscoveredShell {
 #[derive(Serialize, Deserialize)]
 pub struct ShellListResponse {
     pub shells: Vec<DiscoveredShell>,
+}
+
+#[derive(StreamRequester)]
+pub struct ShellExecuteStreamRequester {
+    exit_code: RwLock<Option<i32>>,
+    duration: RwLock<f64>,
+    output: HashMap<i32, Vec<u8>>,
+}
+
+impl StreamHandler for ShellExecuteStreamRequester {
+    type In = ShellExecuteStreamResponse;
+    type Out = ();
+
+    async fn on_message(&self, response: Self::In, _: Sender<Self::Out>) -> Result<()> {
+        match response {
+            ShellExecuteStreamResponse::Done {
+                exit_code,
+                duration,
+            } => {
+                *self.exit_code.write().await = Some(exit_code);
+            }
+            ShellExecuteStreamResponse::Progress { output } => todo!(),
+            ShellExecuteStreamResponse::Failed => todo!(),
+            ShellExecuteStreamResponse::NotFound => todo!(),
+            ShellExecuteStreamResponse::Timeout => todo!(),
+        }
+        Ok(())
+    }
 }

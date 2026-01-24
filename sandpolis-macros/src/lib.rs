@@ -264,16 +264,16 @@ fn struct_name_to_id(name: &str) -> u32 {
 
 /// Derive macro that implements the `Stream` trait for a struct.
 /// Generates a unique 32-bit type tag based on crate name + struct name.
-#[proc_macro_derive(Stream)]
+#[proc_macro_derive(StreamRequester)]
 pub fn derive_stream(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
     let type_tag = struct_name_to_id(&name.to_string());
 
     let expanded = quote! {
-        impl sandpolis_network::stream::Stream for #name {
-            fn generate_id() -> sandpolis_network::stream::StreamId {
-                ((#type_tag as u64) << 32) | (rand::random::<u32>() as u64)
+        impl sandpolis_network::stream::StreamRequester for #name {
+            fn tag() -> u32 {
+                #type_tag
             }
         }
     };

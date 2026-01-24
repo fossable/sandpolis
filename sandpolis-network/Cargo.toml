@@ -17,6 +17,7 @@ futures-util = { workspace = true }
 futures = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
+rand = { workspace = true }
 reqwest-websocket = { workspace = true, optional = true }
 reqwest = { workspace = true, optional = true }
 sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }

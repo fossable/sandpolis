@@ -21,7 +21,8 @@ use std::net::ToSocketAddrs;
 use std::str::FromStr;
 use std::sync::RwLock;
 use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
-use stream::{StreamHandler, StreamId, StreamMessage};
+pub use stream::{StreamHandler, StreamRequester};
+use stream::{RawStreamHandler, StreamHandlerWrapper, StreamId, StreamMessage};
 use tokio_util::sync::CancellationToken;
 use tracing::debug;
 use url::Url;
@@ -115,7 +116,7 @@ pub struct InstanceConnection {
     pub realm: RealmName,
     pub cluster_id: ClusterId,
     pub cancel: CancellationToken,
-    streams: Arc<RwLock<HashMap<StreamId, Arc<dyn StreamHandler>>>>,
+    streams: Arc<RwLock<HashMap<StreamId, (Arc<dyn RawStreamHandler>, tokio::sync::mpsc::Sender<Vec<u8>>)>>>,
 }
 
 impl Drop for InstanceConnection {
@@ -136,7 +137,7 @@ impl InstanceConnection {
         let cancel = CancellationToken::new();
         let cancel_clone = cancel.clone();
 
-        let streams: Arc<RwLock<HashMap<StreamId, Arc<dyn StreamHandler>>>> =
+        let streams: Arc<RwLock<HashMap<StreamId, (Arc<dyn RawStreamHandler>, tokio::sync::mpsc::Sender<Vec<u8>>)>>> =
             Arc::new(RwLock::new(HashMap::new()));
         let streams_clone = streams.clone();
 
@@ -157,9 +158,14 @@ impl InstanceConnection {
                         match msg {
                             Some(Ok(Message::Binary(data))) => {
                                 if let Ok(message) = serde_cbor::from_slice::<StreamMessage>(&data) {
-                                    let streams = streams_clone.read().unwrap();
-                                    if let Some(handler) = streams.get(&message.stream_id) {
-                                        handler.on_receive(message);
+                                    let handler_opt = {
+                                        let streams = streams_clone.read().unwrap();
+                                        streams.get(&message.stream_id).map(|(handler, response_tx)| {
+                                            (handler.clone(), response_tx.clone())
+                                        })
+                                    };
+                                    if let Some((handler, response_tx)) = handler_opt {
+                                        handler.on_receive_raw(&message.payload, response_tx).await;
                                     }
                                 }
                             }
@@ -190,20 +196,45 @@ impl InstanceConnection {
     }
 
     /// Register a stream handler and return a sender for outbound messages.
-    pub fn register_stream<S: stream::Stream>(
+    pub fn register_stream<S: stream::StreamHandler + stream::StreamRequester>(
         &self,
-        handler: Arc<dyn StreamHandler>,
-    ) -> (StreamId, tokio::sync::mpsc::Sender<StreamMessage>) {
+        handler: S,
+    ) -> (StreamId, tokio::sync::mpsc::Sender<StreamMessage>)
+    where
+        S::Out: Send + 'static,
+    {
         let id = S::generate_id();
-        self.streams.write().unwrap().insert(id, handler);
 
+        // Create channel for response messages from the handler
+        let (response_tx, mut response_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(32);
+
+        // Wrap the typed handler in the object-safe wrapper
+        let wrapped: Arc<dyn RawStreamHandler> = Arc::new(StreamHandlerWrapper::new(handler));
+        self.streams.write().unwrap().insert(id, (wrapped, response_tx));
+
+        // Spawn task to forward response bytes as StreamMessages through the WebSocket
         let tx = self.tx.clone();
-        let (msg_tx, mut msg_rx) = tokio::sync::mpsc::channel::<StreamMessage>(32);
+        let stream_id = id;
+        tokio::spawn(async move {
+            while let Some(payload) = response_rx.recv().await {
+                let msg = StreamMessage {
+                    stream_id,
+                    payload,
+                };
+                let data = serde_cbor::to_vec(&msg).unwrap();
+                if tx.send(Message::Binary(data.into())).await.is_err() {
+                    break;
+                }
+            }
+        });
 
+        // Create channel for outgoing request messages from the caller
+        let tx2 = self.tx.clone();
+        let (msg_tx, mut msg_rx) = tokio::sync::mpsc::channel::<StreamMessage>(32);
         tokio::spawn(async move {
             while let Some(msg) = msg_rx.recv().await {
                 let data = serde_cbor::to_vec(&msg).unwrap();
-                if tx.send(Message::Binary(data.into())).await.is_err() {
+                if tx2.send(Message::Binary(data.into())).await.is_err() {
                     break;
                 }
             }
@@ -225,7 +256,6 @@ impl InstanceConnection {
             .map_err(|_| anyhow!("Connection closed"))
     }
 }
-
 
 /// How long to wait to retry after an unsuccessful connection attempt.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -297,4 +327,3 @@ impl Default for RetryWait {
         }
     }
 }
-

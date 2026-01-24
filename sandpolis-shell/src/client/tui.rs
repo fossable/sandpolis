@@ -138,7 +138,7 @@ impl WidgetRef for ShellTerminalWidget {
 
         // Render the terminal content
         let terminal_widget = PseudoTerminal::new(self.parser.screen());
-        terminal_widget.render(terminal_inner, buf);
+        Widget::render(terminal_widget, terminal_inner, buf);
 
         // Render status bar
         let status_text = vec![
