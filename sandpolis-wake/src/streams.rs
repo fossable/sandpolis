@@ -1,8 +1,8 @@
 use crate::WakeAction;
 use crate::messages::{WakeRequest, WakeResponse};
 use anyhow::Result;
-use sandpolis_macros::StreamResponder;
-use sandpolis_network::StreamHandler;
+use sandpolis_macros::Stream;
+use sandpolis_network::StreamResponder;
 use serde::Deserialize;
 use serde::Serialize;
 use tokio::sync::mpsc::Sender;
@@ -24,10 +24,10 @@ pub enum WakeStreamResponse {
 }
 
 /// Modify the agent's current power state (shutdown, reboot, etc).
-#[derive(StreamResponder)]
+#[derive(Stream)]
 pub struct WakeStreamResponder;
 
-impl StreamHandler for WakeStreamResponder {
+impl StreamResponder for WakeStreamResponder {
     type In = WakeStreamRequest;
     type Out = WakeStreamResponse;
 

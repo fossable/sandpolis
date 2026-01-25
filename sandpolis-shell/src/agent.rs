@@ -11,11 +11,10 @@ use axum::{
     extract::{self, ws::WebSocketUpgrade},
     http::StatusCode,
 };
-use futures::{SinkExt, StreamExt};
 use regex::Regex;
 use sandpolis_database::Resident;
-use sandpolis_macros::StreamResponder;
-use sandpolis_network::{RequestResult, StreamHandler, StreamResponder};
+use sandpolis_macros::Stream;
+use sandpolis_network::StreamResponder;
 use std::time::Duration;
 use tokio::sync::RwLock;
 use tokio::sync::mpsc::Sender;
@@ -27,10 +26,10 @@ use tokio::{
 use tracing::{debug, trace};
 
 /// Stream that executes a single command and then terminates.
-#[derive(StreamResponder)]
+#[derive(Stream)]
 pub struct ShellExecuteStreamResponder;
 
-impl StreamHandler for ShellExecuteStreamResponder {
+impl StreamResponder for ShellExecuteStreamResponder {
     type In = ShellExecuteStreamRequest;
     type Out = ShellExecuteStreamResponse;
 
@@ -62,14 +61,14 @@ impl StreamHandler for ShellExecuteStreamResponder {
 }
 
 /// Stream that runs a bidirectional shell session.
-#[derive(StreamResponder)]
+#[derive(Stream)]
 pub struct ShellSessionStreamResponder {
     // pub data: Resident<ShellSessionData>,
     pub process: RwLock<Option<Child>>,
     pub stdin: RwLock<Option<tokio::process::ChildStdin>>,
 }
 
-impl StreamHandler for ShellSessionStreamResponder {
+impl StreamResponder for ShellSessionStreamResponder {
     type In = ShellSessionStreamRequest;
     type Out = ShellSessionStreamResponse;
 
@@ -212,23 +211,23 @@ mod test_shell_session {
 
         // Run on_message in a separate task since it blocks reading stdout
         let responder_clone = responder.clone();
-        let handle = tokio::spawn(async move {
-            responder_clone.on_message(request, tx).await
-        });
+        let handle = tokio::spawn(async move { responder_clone.on_message(request, tx).await });
 
         // Send a command via stdin
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
         let stdin_request = ShellSessionStreamRequest::Stdin {
             data: b"echo hello\nexit\n".to_vec(),
         };
-        responder.on_message(stdin_request, mpsc::channel(1).0).await.unwrap();
+        responder
+            .on_message(stdin_request, mpsc::channel(1).0)
+            .await
+            .unwrap();
 
         // Collect output
         let mut output = Vec::new();
-        while let Ok(response) = tokio::time::timeout(
-            tokio::time::Duration::from_secs(2),
-            rx.recv(),
-        ).await {
+        while let Ok(response) =
+            tokio::time::timeout(tokio::time::Duration::from_secs(2), rx.recv()).await
+        {
             match response {
                 Some(resp) => output.extend(resp.stdout),
                 None => break,
@@ -240,7 +239,11 @@ mod test_shell_session {
 
         // Verify we got some output containing "hello"
         let output_str = String::from_utf8_lossy(&output);
-        assert!(output_str.contains("hello"), "Expected 'hello' in output, got: {}", output_str);
+        assert!(
+            output_str.contains("hello"),
+            "Expected 'hello' in output, got: {}",
+            output_str
+        );
     }
 
     #[tokio::test]
@@ -270,9 +273,7 @@ mod test_shell_session {
         };
 
         let responder_clone = responder.clone();
-        let handle = tokio::spawn(async move {
-            responder_clone.on_message(request, tx).await
-        });
+        let handle = tokio::spawn(async move { responder_clone.on_message(request, tx).await });
 
         // Wait for shell to start
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
@@ -281,14 +282,16 @@ mod test_shell_session {
         let stdin_request = ShellSessionStreamRequest::Stdin {
             data: b"echo TERM=$TERM ROWS=$ROWS COLS=$COLS\nexit\n".to_vec(),
         };
-        responder.on_message(stdin_request, mpsc::channel(1).0).await.unwrap();
+        responder
+            .on_message(stdin_request, mpsc::channel(1).0)
+            .await
+            .unwrap();
 
         // Collect output
         let mut output = Vec::new();
-        while let Ok(response) = tokio::time::timeout(
-            tokio::time::Duration::from_secs(2),
-            rx.recv(),
-        ).await {
+        while let Ok(response) =
+            tokio::time::timeout(tokio::time::Duration::from_secs(2), rx.recv()).await
+        {
             match response {
                 Some(resp) => output.extend(resp.stdout),
                 None => break,
@@ -298,9 +301,21 @@ mod test_shell_session {
         let _ = handle.await;
 
         let output_str = String::from_utf8_lossy(&output);
-        assert!(output_str.contains("TERM=screen-256color"), "Expected default TERM, got: {}", output_str);
-        assert!(output_str.contains("ROWS=120"), "Expected default ROWS=120, got: {}", output_str);
-        assert!(output_str.contains("COLS=80"), "Expected default COLS=80, got: {}", output_str);
+        assert!(
+            output_str.contains("TERM=screen-256color"),
+            "Expected default TERM, got: {}",
+            output_str
+        );
+        assert!(
+            output_str.contains("ROWS=120"),
+            "Expected default ROWS=120, got: {}",
+            output_str
+        );
+        assert!(
+            output_str.contains("COLS=80"),
+            "Expected default COLS=80, got: {}",
+            output_str
+        );
     }
 
     #[tokio::test]
@@ -321,22 +336,22 @@ mod test_shell_session {
         };
 
         let responder_clone = responder.clone();
-        let handle = tokio::spawn(async move {
-            responder_clone.on_message(request, tx).await
-        });
+        let handle = tokio::spawn(async move { responder_clone.on_message(request, tx).await });
 
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
         let stdin_request = ShellSessionStreamRequest::Stdin {
             data: b"echo TERM=$TERM ROWS=$ROWS COLS=$COLS MY_VAR=$MY_VAR\nexit\n".to_vec(),
         };
-        responder.on_message(stdin_request, mpsc::channel(1).0).await.unwrap();
+        responder
+            .on_message(stdin_request, mpsc::channel(1).0)
+            .await
+            .unwrap();
 
         let mut output = Vec::new();
-        while let Ok(response) = tokio::time::timeout(
-            tokio::time::Duration::from_secs(2),
-            rx.recv(),
-        ).await {
+        while let Ok(response) =
+            tokio::time::timeout(tokio::time::Duration::from_secs(2), rx.recv()).await
+        {
             match response {
                 Some(resp) => output.extend(resp.stdout),
                 None => break,
@@ -347,11 +362,27 @@ mod test_shell_session {
 
         let output_str = String::from_utf8_lossy(&output);
         // Custom TERM should be preserved (not overwritten)
-        assert!(output_str.contains("TERM=xterm-256color"), "Expected custom TERM, got: {}", output_str);
+        assert!(
+            output_str.contains("TERM=xterm-256color"),
+            "Expected custom TERM, got: {}",
+            output_str
+        );
         // Custom rows/cols should be used
-        assert!(output_str.contains("ROWS=50"), "Expected ROWS=50, got: {}", output_str);
-        assert!(output_str.contains("COLS=100"), "Expected COLS=100, got: {}", output_str);
+        assert!(
+            output_str.contains("ROWS=50"),
+            "Expected ROWS=50, got: {}",
+            output_str
+        );
+        assert!(
+            output_str.contains("COLS=100"),
+            "Expected COLS=100, got: {}",
+            output_str
+        );
         // Custom env var should be passed through
-        assert!(output_str.contains("MY_VAR=custom_value"), "Expected MY_VAR=custom_value, got: {}", output_str);
+        assert!(
+            output_str.contains("MY_VAR=custom_value"),
+            "Expected MY_VAR=custom_value, got: {}",
+            output_str
+        );
     }
 }

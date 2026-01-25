@@ -1,4 +1,5 @@
-use crate::{InstanceConnection, NetworkLayer, RequestResult, StreamHandler};
+use crate::stream::Stream;
+use crate::{StreamRequester, StreamResponder};
 use anyhow::Result;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
@@ -16,11 +17,16 @@ pub struct PingStreamResponse {
     pong: PingValue,
 }
 
-/// Run application-level pings.
-// #[derive(StreamResponder)]
+/// Responds to incoming ping requests by echoing back the ping value.
 pub struct PingStreamResponder;
 
-impl StreamHandler for PingStreamResponder {
+impl Stream for PingStreamResponder {
+    fn tag() -> u32 {
+        0
+    }
+}
+
+impl StreamResponder for PingStreamResponder {
     type In = PingStreamRequest;
     type Out = PingStreamResponse;
 
@@ -32,17 +38,28 @@ impl StreamHandler for PingStreamResponder {
     }
 }
 
-// #[derive(StreamResponder)]
+/// Initiates ping requests and processes pong responses.
 pub struct PingStreamRequester {
     interval: Duration,
     results: RwLock<Vec<(PingValue, DateTime<Utc>, Option<f32>)>>,
 }
 
-impl StreamHandler for PingStreamRequester {
+impl Stream for PingStreamRequester {
+    fn tag() -> u32 {
+        0
+    }
+}
+
+impl StreamRequester for PingStreamRequester {
     type In = PingStreamResponse;
     type Out = PingStreamRequest;
 
-    async fn on_message(&self, request: Self::In, sender: Sender<Self::Out>) -> Result<()> {
+    async fn new(initial: Self::Out, tx: Sender<Self::Out>) -> Result<Self> {
+        tx.send(initial).await?;
+        todo!()
+    }
+
+    async fn on_message(&self, request: Self::In, tx: Sender<Self::Out>) -> Result<()> {
         Ok(())
     }
 }

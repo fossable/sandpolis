@@ -3,8 +3,8 @@ use native_db::*;
 use native_model::Model;
 use sandpolis_core::InstanceId;
 use sandpolis_database::DatabaseLayer;
-use sandpolis_macros::{StreamRequester, data};
-use sandpolis_network::{RegisterResponders, StreamHandler, StreamRegistry};
+use sandpolis_macros::{Stream, data};
+use sandpolis_network::{RegisterResponders, StreamRegistry, StreamRequester};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -12,7 +12,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc::Sender;
 use tokio::sync::{Mutex, RwLock};
 
-use crate::messages::ShellExecuteStreamResponse;
+use crate::messages::{ShellExecuteStreamRequest, ShellExecuteStreamResponse};
 
 #[cfg(feature = "agent")]
 pub mod agent;
@@ -146,16 +146,16 @@ pub struct ShellListResponse {
     pub shells: Vec<DiscoveredShell>,
 }
 
-#[derive(StreamRequester)]
+#[derive(Stream)]
 pub struct ShellExecuteStreamRequester {
     exit_code: RwLock<Option<i32>>,
-    duration: RwLock<f64>,
+    duration: RwLock<Option<f64>>,
     output: HashMap<i32, Vec<u8>>,
 }
 
-impl StreamHandler for ShellExecuteStreamRequester {
+impl StreamRequester for ShellExecuteStreamRequester {
     type In = ShellExecuteStreamResponse;
-    type Out = ();
+    type Out = ShellExecuteStreamRequest;
 
     async fn on_message(&self, response: Self::In, _: Sender<Self::Out>) -> Result<()> {
         match response {
@@ -171,5 +171,14 @@ impl StreamHandler for ShellExecuteStreamRequester {
             ShellExecuteStreamResponse::Timeout => todo!(),
         }
         Ok(())
+    }
+
+    async fn new(initial: Self::Out, tx: Sender<Self::Out>) -> Result<Self> {
+        tx.send(initial).await?;
+        Ok(Self {
+            exit_code: RwLock::new(None),
+            duration: RwLock::new(None),
+            output: HashMap::new(),
+        })
     }
 }

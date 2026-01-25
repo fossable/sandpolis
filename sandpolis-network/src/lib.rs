@@ -20,8 +20,8 @@ use std::net::ToSocketAddrs;
 use std::str::FromStr;
 use std::sync::RwLock;
 use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
-pub use stream::{StreamHandler, StreamRegistry, StreamRequester, StreamResponder};
 use stream::{StreamId, StreamMessage};
+pub use stream::{StreamRegistry, StreamRequester, StreamResponder};
 
 /// Trait for layers to register their stream responders on new connections.
 pub trait RegisterResponders: Send + Sync + 'static {
@@ -223,7 +223,7 @@ impl InstanceConnection {
     }
 
     /// Register a stream handler and return a sender for outbound messages.
-    pub fn register_stream<S: stream::StreamHandler + stream::StreamRequester>(
+    pub fn register_stream<S: stream::StreamRequester>(
         &self,
         handler: S,
     ) -> (StreamId, tokio::sync::mpsc::Sender<StreamMessage>)
