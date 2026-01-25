@@ -52,7 +52,6 @@ pub struct UserLayer {
 }
 
 impl UserLayer {
-    #[cfg(feature = "server")]
     pub async fn new(
         instance: InstanceLayer,
         database: DatabaseLayer,
@@ -62,8 +61,11 @@ impl UserLayer {
         let user_layer = Self {
             instance,
             data: database.realm(RealmName::default())?.resident(())?,
+            #[cfg(feature = "server")]
             users: database.realm(RealmName::default())?.resident_vec(())?,
+            #[cfg(feature = "server")]
             network,
+            #[cfg(feature = "server")]
             jwt_keys: {
                 let mut jwt_keys = HashMap::new();
                 // TODO all realms

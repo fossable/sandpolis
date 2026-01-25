@@ -5,6 +5,7 @@
 /// - System info for Inventory layer
 /// - Package manager
 /// - Desktop viewer for Desktop layer
+/// - Probe manager for Probe layer (NEW)
 /// - Controller windows centered on screen
 /// - Close controllers when switching layers
 use anyhow::Result;
@@ -32,6 +33,7 @@ async fn main() -> Result<()> {
     // - Shell sessions for terminal
     // - Hardware info for system info
     // - Installed packages for package manager
+    // - Registered probes for probe manager
 
     // Run the GUI
     // Instructions:
@@ -42,6 +44,8 @@ async fn main() -> Result<()> {
     //   * Shell layer -> Terminal
     //   * Inventory layer -> System Info
     //   * Desktop layer -> Desktop Viewer
+    //   * Probe layer -> Probe Manager (register SSH, RDP, IPMI, Docker, etc.)
     // - Click Close button to dismiss controller
+    // - Probe nodes appear as smaller nodes attached to their gateway
     sandpolis::client::gui::main(config, state).await
 }

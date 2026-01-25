@@ -181,14 +181,14 @@ impl WidgetRef for ServerListWidget {
             ServerListWidgetMode::Adding => {
                 let popup = Popup::new(state.add_server_widget.clone());
                 // Use the full buffer area to center the popup on the entire screen
-                popup.render(buf.area, buf);
+                Widget::render(popup, buf.area, buf);
             }
             // Render loading dialog during login
             ServerListWidgetMode::TryingLogin => {
                 state.loading_widget.update_animation();
                 let popup = Popup::new(state.loading_widget.clone());
                 // Use the full buffer area to center the popup on the entire screen
-                popup.render(buf.area, buf);
+                Widget::render(popup, buf.area, buf);
             }
             // Show connected state
             ServerListWidgetMode::Connected => {
@@ -405,7 +405,7 @@ impl EventHandler for ServerListWidget {
                                                 .login(LoginRequest {
                                                     username: form_data.username.clone(),
                                                     password: LoginPassword::new(
-                                                        connection.inner.cluster_id,
+                                                        connection.cluster_id,
                                                         &form_data.password,
                                                     ),
                                                     totp_token: form_data.totp,

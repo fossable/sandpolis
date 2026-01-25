@@ -156,6 +156,7 @@ client-gui = [
   "sandpolis-instance/client-gui",
   "sandpolis-inventory?/client-gui",
   "sandpolis-network/client-gui",
+  "sandpolis-probe?/client-gui",
   "sandpolis-wake?/client-gui",
   "sandpolis-server/client-gui",
   "sandpolis-shell?/client-gui",

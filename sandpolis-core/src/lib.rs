@@ -194,6 +194,8 @@ pub enum InstanceType {
     /// Sandpolis network. All networks include at least one server
     /// instance.
     Server,
+    // Probes are not technically instances, but they can connect to proper
+    // agents/server instances and appear like standalone instances.
 }
 
 impl InstanceType {

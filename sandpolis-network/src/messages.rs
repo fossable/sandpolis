@@ -1,24 +1,6 @@
 use sandpolis_core::InstanceId;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
-pub struct PingRequest {
-    pub id: InstanceId,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct PingResponse {
-    pub time: u64,
-    pub id: InstanceId,
-    pub from: Option<Box<PingResponse>>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct PollRequest;
-
-#[derive(Serialize, Deserialize)]
-pub struct PollResponse(Vec<u8>);
-
 /// Request the server for a new direct connection to an agent.
 #[cfg(any(feature = "server", feature = "client"))]
 #[derive(Serialize, Deserialize)]

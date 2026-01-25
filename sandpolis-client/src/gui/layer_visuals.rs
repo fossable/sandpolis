@@ -1,9 +1,10 @@
 use crate::gui::input::CurrentLayer;
+use crate::gui::layer_ext::get_extension_for_layer;
 use crate::gui::node::{NeedsScaling, NodeEntity, NodeSvg};
 use crate::gui::queries;
 use bevy::prelude::*;
 use bevy_svg::prelude::{Origin, Svg2d};
-use sandpolis_core::LayerName;
+use sandpolis_core::{InstanceType, LayerName};
 
 /// Update node SVG images when layer changes or for newly spawned nodes
 pub fn update_node_svgs_for_layer(
@@ -206,5 +207,73 @@ fn get_layer_color_tint(
         }
 
         _ => Color::WHITE, // No tint for other layers
+    }
+}
+
+/// Update node visibility based on the current layer's visible instance types.
+///
+/// Each layer can specify which instance types (Server, Agent, Client) should be
+/// visible when that layer is active. This system hides nodes that don't match
+/// the current layer's filter criteria.
+pub fn update_node_visibility_for_layer(
+    current_layer: Res<CurrentLayer>,
+    mut node_query: Query<(&NodeEntity, &mut Visibility)>,
+) {
+    // Only update when layer changes
+    if !current_layer.is_changed() {
+        return;
+    }
+
+    // Get the visible instance types for the current layer
+    let visible_types = get_visible_instance_types_for_layer(&current_layer);
+
+    for (node_entity, mut visibility) in node_query.iter_mut() {
+        let instance_id = node_entity.instance_id;
+
+        // Check if this node's instance type matches any of the visible types
+        let should_be_visible = visible_types.iter().any(|instance_type| {
+            instance_id.is_type(*instance_type)
+        });
+
+        *visibility = if should_be_visible {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
+    }
+}
+
+/// Get the visible instance types for a layer.
+///
+/// This checks if there's a LayerGuiExtension for the layer and uses its
+/// visible_instance_types() method. If no extension exists, falls back to
+/// default behavior based on layer name.
+fn get_visible_instance_types_for_layer(layer: &LayerName) -> &'static [InstanceType] {
+    // First, check if there's a registered extension for this layer
+    if let Some(ext) = get_extension_for_layer(layer) {
+        return ext.visible_instance_types();
+    }
+
+    // Fall back to default behavior based on layer name
+    match layer.name() {
+        // Network layer shows all instance types
+        "Network" => &[InstanceType::Server, InstanceType::Agent, InstanceType::Client],
+
+        // Agent-focused layers only show servers and agents
+        "Inventory" | "Filesystem" | "Shell" | "Desktop" | "Probe" => {
+            &[InstanceType::Server, InstanceType::Agent]
+        }
+
+        // Client layer only shows servers and clients
+        "Client" => &[InstanceType::Server, InstanceType::Client],
+
+        // Server layer only shows servers
+        "Server" => &[InstanceType::Server],
+
+        // Agent layer only shows servers and agents
+        "Agent" => &[InstanceType::Server, InstanceType::Agent],
+
+        // Default: show all
+        _ => &[InstanceType::Server, InstanceType::Agent, InstanceType::Client],
     }
 }

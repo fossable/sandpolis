@@ -6,7 +6,7 @@
 
 use bevy::prelude::*;
 use bevy_egui::egui;
-use sandpolis_core::{InstanceId, LayerName};
+use sandpolis_core::{InstanceId, InstanceType, LayerName};
 
 /// Trait for layer-specific GUI extensions.
 ///
@@ -55,6 +55,22 @@ pub trait LayerGuiExtension: Send + Sync + 'static {
     /// Register layer-specific Bevy systems.
     fn register_systems(&self, app: &mut App) {
         let _ = app;
+    }
+
+    /// Returns which instance types should be visible when this layer is active.
+    ///
+    /// By default, all instance types are visible. Layers can override this
+    /// to filter which nodes appear in the world view.
+    fn visible_instance_types(&self) -> &'static [InstanceType] {
+        &[InstanceType::Server, InstanceType::Agent, InstanceType::Client]
+    }
+
+    /// Returns whether probe nodes should be visible when this layer is active.
+    ///
+    /// Probes are special nodes that are attached to agents. By default, probes
+    /// are not visible. Only the Probe layer should return true.
+    fn show_probe_nodes(&self) -> bool {
+        false
     }
 }
 

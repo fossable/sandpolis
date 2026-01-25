@@ -48,7 +48,7 @@ use url::Url;
 pub mod cli;
 pub mod config;
 pub mod messages;
-pub mod routes;
+pub mod ping;
 pub mod stream;
 
 #[cfg(feature = "server")]

@@ -209,6 +209,11 @@ impl LayerGuiExtension for ShellGuiExtension {
             size: 6.0,
         }]
     }
+
+    fn visible_instance_types(&self) -> &'static [sandpolis_core::InstanceType] {
+        // Shell layer shows servers and agents (not clients)
+        &[sandpolis_core::InstanceType::Server, sandpolis_core::InstanceType::Agent]
+    }
 }
 
 /// Static instance of the shell GUI extension.

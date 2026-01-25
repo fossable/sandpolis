@@ -14,9 +14,7 @@ use bevy::{
     window::{AppLifecycle, WindowMode},
 };
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
-use bevy_rapier2d::prelude::{
-    NoUserData, RapierConfiguration, RapierDebugRenderPlugin, RapierPhysicsPlugin,
-};
+use bevy_rapier2d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use sandpolis_core::LayerName;
 
 // Import GUI types from sandpolis-client submodules
@@ -50,7 +48,7 @@ use sandpolis_client::gui::layer_picker::{
 };
 use sandpolis_client::gui::layer_ui::{LayerIndicatorState, render_layer_indicator};
 use sandpolis_client::gui::layer_visuals::{
-    update_node_colors_for_layer, update_node_svgs_for_layer,
+    update_node_colors_for_layer, update_node_svgs_for_layer, update_node_visibility_for_layer,
 };
 use sandpolis_client::gui::layout::{
     LayoutConfig, LayoutState, apply_damping, apply_repulsion_forces, apply_spring_forces,
@@ -118,7 +116,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             .disable::<bevy::log::LogPlugin>(),
     )
     .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-    .add_plugins(RapierDebugRenderPlugin::default())
+    // .add_plugins(RapierDebugRenderPlugin::default())
     .add_plugins(bevy_svg::prelude::SvgPlugin)
     .add_plugins(bevy_stl::StlPlugin)
     .add_plugins(EguiPlugin::default())
@@ -240,6 +238,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             // Layer visuals
             update_node_svgs_for_layer,
             update_node_colors_for_layer,
+            update_node_visibility_for_layer,
             // Node SVG scaling - MUST run after update_node_svgs_for_layer
             scale_node_svgs.after(update_node_svgs_for_layer),
             // Controller systems

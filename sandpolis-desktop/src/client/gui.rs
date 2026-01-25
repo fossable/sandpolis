@@ -142,6 +142,11 @@ impl LayerGuiExtension for DesktopGuiExtension {
             size: 10.0,
         }]
     }
+
+    fn visible_instance_types(&self) -> &'static [sandpolis_core::InstanceType] {
+        // Desktop layer shows servers and agents (not clients)
+        &[sandpolis_core::InstanceType::Server, sandpolis_core::InstanceType::Agent]
+    }
 }
 
 /// Static instance of the desktop GUI extension.
