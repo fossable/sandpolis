@@ -52,8 +52,8 @@ pub fn spawn_probe_node(
     probe: &RegisteredProbe,
     parent_position: Vec3,
 ) {
-    // Generate a unique instance ID for the probe (using probe_id as the basis)
-    let instance_id = InstanceId::from(probe.id);
+    // Use the gateway's instance ID for the node entity
+    let instance_id = probe.gateway;
 
     // Position probe nodes in an orbit around the parent
     // Use the probe ID to determine angle for consistent placement
@@ -173,7 +173,7 @@ pub fn update_probe_nodes(
     let db_probe_ids: std::collections::HashSet<u64> = all_probes.iter().map(|p| p.id).collect();
     for (entity, probe) in existing_probes.iter() {
         if !db_probe_ids.contains(&probe.probe_id) {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }

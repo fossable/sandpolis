@@ -4,14 +4,11 @@ use axum::extract;
 use axum::extract::State;
 use sandpolis_network::RequestResult;
 
-/// Uninstall the agent.
-#[axum_macros::debug_handler]
-pub async fn uninstall(
-    state: State<AgentLayer>,
-    extract::Json(request): extract::Json<UninstallRequest>,
-) -> RequestResult<UninstallResponse> {
-    todo!()
-}
+#[derive(Serialize, Deserialize)]
+pub struct UpdateRequest;
+
+#[derive(Serialize, Deserialize)]
+pub enum UpdateResponse {}
 
 /// Update the agent.
 #[axum_macros::debug_handler]

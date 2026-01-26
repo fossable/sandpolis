@@ -1,6 +1,6 @@
+use crate::banner::{GetBannerRequest, GetBannerResponse};
 use anyhow::{Result, anyhow};
 use axum::http::HeaderValue;
-use crate::messages::{GetBannerRequest, GetBannerResponse};
 use cron::Schedule;
 use native_db::ToKey;
 use native_model::Model;
@@ -27,14 +27,12 @@ use tracing::{debug, info};
 use url::Url;
 use validator::Validate;
 
+pub mod banner;
+pub mod cli;
 #[cfg(feature = "client")]
 pub mod client;
-pub mod cli;
 pub mod config;
 pub mod location;
-pub mod messages;
-#[cfg(feature = "server")]
-pub mod server;
 
 #[data]
 #[derive(Default)]
@@ -44,7 +42,7 @@ pub struct ServerLayerData {}
 #[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 pub struct ServerLayer {
     #[cfg(feature = "server")]
-    pub banner: Resident<server::ServerBannerData>,
+    pub banner: Resident<banner::ServerBannerData>,
     pub network: NetworkLayer,
     pub realms: RealmLayer,
     pub database: DatabaseLayer,

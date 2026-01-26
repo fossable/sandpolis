@@ -12,13 +12,12 @@ use std::sync::Arc;
 use tokio::sync::mpsc::Sender;
 use tokio::sync::{Mutex, RwLock};
 
-use crate::messages::{ShellExecuteStreamRequest, ShellExecuteStreamResponse};
+use crate::execute::{ShellExecuteStreamRequest, ShellExecuteStreamResponse};
 
-#[cfg(feature = "agent")]
-pub mod agent;
 #[cfg(feature = "client")]
 pub mod client;
-pub mod messages;
+pub mod execute;
+pub mod session;
 pub mod shell;
 
 /// Build info
@@ -30,7 +29,7 @@ pub mod built_info {
 pub struct ShellLayer {
     database: DatabaseLayer,
     #[cfg(feature = "agent")]
-    sessions: Arc<Mutex<Vec<crate::agent::ShellSessionStreamResponder>>>,
+    sessions: Arc<Mutex<Vec<crate::session::ShellSessionStreamResponder>>>,
 }
 
 impl ShellLayer {
@@ -50,8 +49,8 @@ pub struct ShellResponderRegistration;
 #[cfg(feature = "agent")]
 impl RegisterResponders for ShellResponderRegistration {
     fn register_responders(&self, registry: &StreamRegistry) {
-        registry.register_responder(|| agent::ShellExecuteStreamResponder);
-        registry.register_responder(|| agent::ShellSessionStreamResponder {
+        registry.register_responder(|| execute::ShellExecuteStreamResponder);
+        registry.register_responder(|| session::ShellSessionStreamResponder {
             process: tokio::sync::RwLock::new(None),
             stdin: tokio::sync::RwLock::new(None),
         });

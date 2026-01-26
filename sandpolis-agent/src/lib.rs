@@ -5,13 +5,8 @@
 use anyhow::Result;
 use sandpolis_database::DatabaseLayer;
 
+pub mod bootagent;
 pub mod config;
-
-#[cfg(feature = "agent")]
-pub mod agent;
-
-pub mod messages;
-
 pub mod uefi;
 
 #[derive(Default)]

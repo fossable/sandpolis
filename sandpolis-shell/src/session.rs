@@ -1,20 +1,12 @@
-use super::ShellSessionData;
-use crate::messages::{
-    ShellExecuteStreamRequest, ShellExecuteStreamResponse, ShellSessionStreamRequest,
-    ShellSessionStreamResponse,
-};
 use crate::{DiscoveredShell, ShellType};
 use anyhow::Result;
-use axum::extract::ws::{Message, WebSocket};
-use axum::{
-    Json,
-    extract::{self, ws::WebSocketUpgrade},
-    http::StatusCode,
-};
 use regex::Regex;
 use sandpolis_database::Resident;
 use sandpolis_macros::Stream;
 use sandpolis_network::StreamResponder;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::PathBuf;
 use std::time::Duration;
 use tokio::sync::RwLock;
 use tokio::sync::mpsc::Sender;
@@ -25,39 +17,42 @@ use tokio::{
 };
 use tracing::{debug, trace};
 
-/// Stream that executes a single command and then terminates.
-#[derive(Stream)]
-pub struct ShellExecuteStreamResponder;
+/// Request message for shell session streams.
+#[derive(Serialize, Deserialize)]
+pub enum ShellSessionStreamRequest {
+    /// Requester wants to start the stream
+    Start {
+        /// Path to the shell executable
+        path: PathBuf,
 
-impl StreamResponder for ShellExecuteStreamResponder {
-    type In = ShellExecuteStreamRequest;
-    type Out = ShellExecuteStreamResponse;
+        // TODO request permissions
+        // Permission permission = 3;
+        /// Additional environment variables
+        environment: HashMap<String, String>,
 
-    async fn on_message(&self, request: Self::In, sender: Sender<Self::Out>) -> Result<()> {
-        let mut cmd = Command::new(request.shell).spawn()?;
+        /// Number of rows to request
+        rows: u32,
 
-        if request.capture_output {
-            // TODO progress
-            match timeout(Duration::from_secs(request.timeout), cmd.wait_with_output()).await {
-                Ok(output) => todo!(),
-                Err(_) => sender.send(ShellExecuteStreamResponse::Timeout).await?,
-            }
-        } else {
-            match timeout(Duration::from_secs(request.timeout), cmd.wait()).await {
-                Ok(exit_status) => {
-                    sender
-                        .send(ShellExecuteStreamResponse::Done {
-                            exit_code: exit_status?.code().unwrap_or(-1),
-                            duration: todo!(),
-                        })
-                        .await?
-                }
-                Err(_) => sender.send(ShellExecuteStreamResponse::Timeout).await?,
-            }
-        }
+        /// Number of columns to request
+        cols: u32,
+    },
+    /// Requester has stdin data
+    Stdin { data: Vec<u8> },
+    /// Requester changed the size of the terminal
+    Resize {
+        /// Update the number of rows
+        rows: u32,
 
-        Ok(())
-    }
+        /// Update the number of columns
+        cols: u32,
+    },
+}
+
+/// Event containing standard-output and standard-error.
+#[derive(Serialize, Deserialize)]
+pub struct ShellSessionStreamResponse {
+    pub stdout: Vec<u8>,
+    pub stderr: Vec<u8>,
 }
 
 /// Stream that runs a bidirectional shell session.

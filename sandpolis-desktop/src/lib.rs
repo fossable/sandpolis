@@ -1,9 +1,7 @@
 use anyhow::Result;
 
-pub(crate) mod messages;
-
-#[cfg(feature = "agent")]
-pub mod agent;
+pub mod screenshot;
+pub mod session;
 
 #[cfg(feature = "client")]
 pub mod client;

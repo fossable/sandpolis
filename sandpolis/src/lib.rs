@@ -158,6 +158,7 @@ pub fn layers() -> HashMap<sandpolis_core::LayerName, LayerVersion> {
     ])
 }
 
+// TODO dynamic loading
 pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     let mut m = Models::new();
 
@@ -199,7 +200,7 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     {
         m.define::<sandpolis_server::ServerLayerData>().unwrap();
         #[cfg(feature = "server")]
-        m.define::<sandpolis_server::server::ServerBannerData>()
+        m.define::<sandpolis_server::banner::ServerBannerData>()
             .unwrap();
         #[cfg(feature = "client")]
         m.define::<sandpolis_server::client::SavedServerData>()

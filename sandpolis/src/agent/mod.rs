@@ -9,50 +9,6 @@ use tracing::info;
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let app: Router<InstanceState> = Router::new().route("/versions", get(crate::routes::versions));
 
-    // Agent layer routes
-    let app = app.route(
-        "/agent/uninstall",
-        post(sandpolis_agent::agent::routes::uninstall),
-    );
-
-    // Network layer routes
-    let app = app.route("/network/ping", get(sandpolis_network::routes::ping));
-
-    // Shell layer routes
-    #[cfg(feature = "layer-shell")]
-    let app = app
-        .route(
-            "/shell/session",
-            any(sandpolis_shell::agent::routes::session),
-        )
-        .route(
-            "/shell/execute",
-            post(sandpolis_shell::agent::routes::execute),
-        );
-
-    // Filesystem layer routes
-    #[cfg(feature = "layer-filesystem")]
-    let app = app
-        .route(
-            "/filesystem/session",
-            any(sandpolis_filesystem::agent::routes::session),
-        )
-        .route(
-            "/filesystem/delete",
-            post(sandpolis_filesystem::agent::routes::delete),
-        );
-
-    // Inventory layer routes
-    #[cfg(feature = "layer-inventory")]
-    let app = app.nest("/layer/inventory", sandpolis_inventory::agent::routes());
-
-    // Desktop layer routes
-    #[cfg(feature = "layer-desktop")]
-    let app = app.nest(
-        "/layer/desktop",
-        sandpolis_desktop::DesktopLayer::agent_routes(),
-    );
-
     let network = state.network.clone();
 
     // TODO remove the instance socket and just respond to websocket messages

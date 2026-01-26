@@ -1,3 +1,9 @@
+use crate::FilesystemLayer;
+use axum::extract::State;
+use axum::extract::{self, WebSocketUpgrade};
+use axum::http::StatusCode;
+use notify::Watcher;
+use sandpolis_network::RequestResult;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -102,4 +108,30 @@ pub struct FsDeleteRequest {
 pub enum FsDeleteResponse {
     Ok,
     PathNotFound,
+}
+
+struct FilesystemSession {
+    cwd: PathBuf,
+    watcher: Box<dyn Watcher>,
+}
+
+#[axum_macros::debug_handler]
+pub async fn session(
+    state: State<FilesystemLayer>,
+    ws: WebSocketUpgrade,
+    extract::Json(request): extract::Json<FsSessionRequest>,
+) -> Result<(), StatusCode> {
+    // let session = ShellSession::new(request).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // ws.on_upgrade(move |socket| session.run(socket));
+
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn delete(
+    state: State<FilesystemLayer>,
+    extract::Json(request): extract::Json<FsDeleteRequest>,
+) -> RequestResult<FsDeleteResponse> {
+    todo!()
 }

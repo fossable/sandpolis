@@ -19,18 +19,12 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let app: Router<InstanceState> = Router::new().route("/versions", get(crate::routes::versions));
 
     // Server layer
-    let app: Router<InstanceState> = app.route(
-        "/server/banner",
-        get(sandpolis_server::server::routes::banner),
-    );
+    let app: Router<InstanceState> =
+        app.route("/server/banner", get(sandpolis_server::banner::banner));
 
     // User layer
     let app: Router<InstanceState> =
         app.route("/user/login", post(sandpolis_user::server::routes::login));
-
-    // Network layer
-    let app: Router<InstanceState> =
-        app.route("/network/ping", get(sandpolis_network::routes::ping));
 
     // TODO from_fn_with_state for IP blocking
     let app = app.route_layer(axum::middleware::from_fn(

@@ -37,7 +37,7 @@ async fn main() -> Result<ExitCode> {
 
     #[cfg(feature = "client-tui")]
     let subscriber = subscriber.with_writer(
-        OpenOptions::new()
+        std::fs::OpenOptions::new()
             .append(true)
             .create(true)
             .open("sandpolis.log")?,
