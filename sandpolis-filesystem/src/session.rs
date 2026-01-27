@@ -2,7 +2,6 @@ use crate::FilesystemLayer;
 use axum::extract::State;
 use axum::extract::{self, WebSocketUpgrade};
 use axum::http::StatusCode;
-use notify::Watcher;
 use sandpolis_network::RequestResult;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -110,9 +109,10 @@ pub enum FsDeleteResponse {
     PathNotFound,
 }
 
-struct FilesystemSession {
+#[cfg(feature = "agent")]
+struct FsSessionStreamResponder {
     cwd: PathBuf,
-    watcher: Box<dyn Watcher>,
+    watcher: Box<dyn notify::Watcher>,
 }
 
 #[axum_macros::debug_handler]

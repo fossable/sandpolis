@@ -3,12 +3,9 @@ use anyhow::Result;
 use clap::Parser;
 use clap::Subcommand;
 use colored::Colorize;
-#[cfg(feature = "server")]
-use sandpolis_core::RealmName;
-#[cfg(feature = "server")]
+use sandpolis_realm::RealmName;
 use std::path::PathBuf;
 use std::process::ExitCode;
-#[cfg(feature = "server")]
 use tracing::info;
 
 #[derive(Parser, Debug, Clone)]

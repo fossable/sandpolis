@@ -6,14 +6,14 @@ use native_db::ToKey;
 use native_model::Model;
 use reqwest::header::CONTENT_TYPE;
 use reqwest::{ClientBuilder, Method};
-use sandpolis_core::{ClusterId, InstanceId, RealmName};
+use sandpolis_core::{ClusterId, InstanceId};
 use sandpolis_database::DatabaseLayer;
 use sandpolis_database::Resident;
-#[cfg(feature = "client")]
 use sandpolis_database::ResidentVec;
 use sandpolis_macros::data;
 use sandpolis_network::{ConnectionData, InstanceConnection, NetworkLayer, RetryWait};
 use sandpolis_realm::RealmLayer;
+use sandpolis_realm::RealmName;
 use sandpolis_user::messages::{LoginRequest, LoginResponse};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::fmt::Display;

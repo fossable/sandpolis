@@ -7,23 +7,73 @@ version = "0.0.1"
 
 [dependencies]
 anyhow = { workspace = true }
-bevy = { workspace = true, optional = true }
-clap = { workspace = true, optional = true }
-colored = { workspace = true, optional = true }
+axum-server = { workspace = true, optional = true }
+axum-macros = { workspace = true, optional = true }
+axum = { workspace = true, optional = true }
+bevy = { workspace = true, optional = true } # TODO avoid with newtypes?
+chrono = { workspace = true }
+clap = { workspace = true }
+cron = { workspace = true }
+colored = { workspace = true }
+futures-util = { workspace = true }
+futures = { workspace = true }
+inventory = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
-os_info = { workspace = true, optional = true }
-sandpolis-database = { path = "../sandpolis-database", version = "0.0.1", optional = true }
-sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
+os_info = { workspace = true }
+pem = { workspace = true }
+rand = { workspace = true }
+rcgen = { version = "0.13.1", optional = true, features = [
+  "crypto",
+  "pem",
+  "x509-parser",
+] }
+reqwest = { workspace = true, optional = true }
+reqwest-websocket = { workspace = true, optional = true }
+rustls-pki-types = { version = "1.10.1", optional = true }
+rustls = { workspace = true }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
+serde_cbor = { workspace = true }
+serde_json = { workspace = true }
+serde_with = { workspace = true }
 serde = { workspace = true }
 strum = { workspace = true }
+tempfile = { workspace = true }
+time = { workspace = true }
+tokio-rustls = { workspace = true, optional = true }
+tokio-util = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true, optional = true }
 tracing = { workspace = true }
+url = { workspace = true }
 uuid = { workspace = true }
+validator = { workspace = true }
+x509-parser = { version = "0.17.0" }
+
+[dev-dependencies]
+test-log = { version = "0.2.18", features = ["trace"] }
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+
+# Used to test certificate authentication with a different backend
+openssl = "0.10.71"
+
+
+[[bench]]
+name = "database_bench"
+harness = false
 
 [features]
-default = ["dep:sandpolis-database", "dep:clap", "dep:colored", "dep:os_info"]
-agent = ["sandpolis-core/agent"]
-client = ["sandpolis-core/client"]
-server = ["sandpolis-core/server"]
-client-gui = ["dep:bevy"]
+agent = ["dep:reqwest", "dep:reqwest-websocket"]
+client = ["dep:reqwest", "dep:reqwest-websocket"]
+server = [
+  "dep:rcgen",
+  "dep:rustls-pki-types",
+  "dep:tokio",
+  "dep:tokio-rustls",
+  "dep:tower",
+  "dep:axum",
+  "dep:axum-macros",
+  "dep:axum-server",
+
+]
+client-gui = ["client", "dep:bevy"]

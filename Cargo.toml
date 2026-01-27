@@ -9,8 +9,6 @@ members = [
   "sandpolis-agent",
   "sandpolis-audit",
   "sandpolis-client",
-  "sandpolis-core",
-  "sandpolis-database",
   "sandpolis-deploy",
   "sandpolis-desktop",
   "sandpolis-filesystem",
@@ -18,15 +16,12 @@ members = [
   "sandpolis-inventory",
   "sandpolis-macros",
   "sandpolis-mobile",
-  "sandpolis-network",
   "sandpolis-wake",
   "sandpolis-probe",
-  "sandpolis-realm",
   "sandpolis-server",
   "sandpolis-shell",
   "sandpolis-snapshot",
   "sandpolis-tunnel",
-  "sandpolis-user",
 ]
 
 [workspace.dependencies]

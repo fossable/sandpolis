@@ -2,7 +2,7 @@
 //     include_str!("../README.md")
 // }
 
-use sandpolis_core::RealmName;
+use sandpolis_realm::RealmName;
 
 pub enum SshCredentials {
     Password(String),

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use sandpolis_core::RealmName;
+use sandpolis_realm::RealmName;
 
 #[cfg(feature = "client")]
 pub mod client;

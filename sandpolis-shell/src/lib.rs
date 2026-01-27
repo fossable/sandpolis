@@ -1,6 +1,7 @@
 use anyhow::Result;
 use native_db::*;
 use native_model::Model;
+use regex::Regex;
 use sandpolis_core::InstanceId;
 use sandpolis_database::DatabaseLayer;
 use sandpolis_macros::{Stream, data};
@@ -9,8 +10,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tokio::process::Command;
 use tokio::sync::mpsc::Sender;
 use tokio::sync::{Mutex, RwLock};
+use tracing::trace;
 
 use crate::execute::{ShellExecuteStreamRequest, ShellExecuteStreamResponse};
 
@@ -139,45 +142,44 @@ pub struct DiscoveredShell {
     pub version: Option<String>,
 }
 
+impl DiscoveredShell {
+    pub async fn scan() -> Result<Vec<DiscoveredShell>> {
+        let mut shells = Vec::new();
+
+        // Search for bash
+        match Command::new("bash").arg("--version").output().await {
+            Ok(output) => match String::from_utf8(output.stdout) {
+                Ok(stdout) => {
+                    if let Some(m) =
+                        Regex::new(r"version ([1-9]+\.[0-9]+\.[0-9]+\S*)")?.captures(&stdout)
+                    {
+                        shells.push(DiscoveredShell {
+                            shell_type: ShellType::Bash,
+                            location: todo!(),
+                            version: todo!(),
+                        })
+                    }
+                }
+                Err(_) => todo!(),
+            },
+            Err(_) => trace!("Bash shell not found"),
+        };
+
+        Ok(shells)
+    }
+}
+
+#[cfg(test)]
+mod test_discovered_shell {
+    #[tokio::test]
+    pub async fn test_scan() {
+        // Assume at least one shell is available
+        assert!(super::DiscoveredShell::scan().await.unwrap().len() > 0);
+    }
+}
+
 /// Supported shell information.
 #[derive(Serialize, Deserialize)]
 pub struct ShellListResponse {
     pub shells: Vec<DiscoveredShell>,
-}
-
-#[derive(Stream)]
-pub struct ShellExecuteStreamRequester {
-    exit_code: RwLock<Option<i32>>,
-    duration: RwLock<Option<f64>>,
-    output: HashMap<i32, Vec<u8>>,
-}
-
-impl StreamRequester for ShellExecuteStreamRequester {
-    type In = ShellExecuteStreamResponse;
-    type Out = ShellExecuteStreamRequest;
-
-    async fn on_message(&self, response: Self::In, _: Sender<Self::Out>) -> Result<()> {
-        match response {
-            ShellExecuteStreamResponse::Done {
-                exit_code,
-                duration,
-            } => {
-                *self.exit_code.write().await = Some(exit_code);
-            }
-            ShellExecuteStreamResponse::Progress { output } => todo!(),
-            ShellExecuteStreamResponse::Failed => todo!(),
-            ShellExecuteStreamResponse::NotFound => todo!(),
-            ShellExecuteStreamResponse::Timeout => todo!(),
-        }
-        Ok(())
-    }
-
-    async fn new(initial: Self::Out, tx: Sender<Self::Out>) -> Result<Self> {
-        tx.send(initial).await?;
-        Ok(Self {
-            exit_code: RwLock::new(None),
-            duration: RwLock::new(None),
-            output: HashMap::new(),
-        })
-    }
 }

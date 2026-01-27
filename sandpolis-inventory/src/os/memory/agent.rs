@@ -41,8 +41,8 @@ impl Collector for MemoryMonitor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sandpolis_core::RealmName;
     use sandpolis_database::{DatabaseLayer, test_db};
+    use sandpolis_realm::RealmName;
 
     #[tokio::test]
     #[test_log::test]

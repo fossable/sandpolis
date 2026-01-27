@@ -354,9 +354,9 @@ mod tests {
     use native_db::ToKey;
     use native_model::Model;
     use ratatui::text::Text;
-    use sandpolis_core::RealmName;
     use sandpolis_database::{DataCreation, DataIdentifier, DataRevision, test_db};
     use sandpolis_macros::data;
+    use sandpolis_realm::RealmName;
 
     #[data]
     #[derive(Default)]

@@ -4,7 +4,7 @@ use anyhow::Result;
 use regex::Regex;
 use sandpolis_database::Resident;
 use sandpolis_macros::Stream;
-use sandpolis_network::StreamResponder;
+use sandpolis_network::{StreamRequester, StreamResponder};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -70,6 +70,43 @@ pub enum ShellExecuteStreamResponse {
 // TODO via database updates instead?
 #[derive(Serialize, Deserialize)]
 pub struct ShellListRequest;
+
+#[derive(Stream)]
+pub struct ShellExecuteStreamRequester {
+    exit_code: RwLock<Option<i32>>,
+    duration: RwLock<Option<f64>>,
+    output: HashMap<i32, Vec<u8>>,
+}
+
+impl StreamRequester for ShellExecuteStreamRequester {
+    type In = ShellExecuteStreamResponse;
+    type Out = ShellExecuteStreamRequest;
+
+    async fn on_message(&self, response: Self::In, _: Sender<Self::Out>) -> Result<()> {
+        match response {
+            ShellExecuteStreamResponse::Done {
+                exit_code,
+                duration,
+            } => {
+                *self.exit_code.write().await = Some(exit_code);
+            }
+            ShellExecuteStreamResponse::Progress { output } => todo!(),
+            ShellExecuteStreamResponse::Failed => todo!(),
+            ShellExecuteStreamResponse::NotFound => todo!(),
+            ShellExecuteStreamResponse::Timeout => todo!(),
+        }
+        Ok(())
+    }
+
+    async fn new(initial: Self::Out, tx: Sender<Self::Out>) -> Result<Self> {
+        tx.send(initial).await?;
+        Ok(Self {
+            exit_code: RwLock::new(None),
+            duration: RwLock::new(None),
+            output: HashMap::new(),
+        })
+    }
+}
 
 /// Stream that executes a single command and then terminates.
 #[derive(Stream)]

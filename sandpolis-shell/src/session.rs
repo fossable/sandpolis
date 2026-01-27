@@ -56,9 +56,8 @@ pub struct ShellSessionStreamResponse {
 }
 
 /// Stream that runs a bidirectional shell session.
-#[derive(Stream)]
+#[derive(Stream, Default)]
 pub struct ShellSessionStreamResponder {
-    // pub data: Resident<ShellSessionData>,
     pub process: RwLock<Option<Child>>,
     pub stdin: RwLock<Option<tokio::process::ChildStdin>>,
 }
@@ -140,42 +139,6 @@ impl Drop for ShellSessionStreamResponder {
     }
 }
 
-impl DiscoveredShell {
-    pub async fn scan() -> Result<Vec<DiscoveredShell>> {
-        let mut shells = Vec::new();
-
-        // Search for bash
-        match Command::new("bash").arg("--version").output().await {
-            Ok(output) => match String::from_utf8(output.stdout) {
-                Ok(stdout) => {
-                    if let Some(m) =
-                        Regex::new(r"version ([1-9]+\.[0-9]+\.[0-9]+\S*)")?.captures(&stdout)
-                    {
-                        shells.push(DiscoveredShell {
-                            shell_type: ShellType::Bash,
-                            location: todo!(),
-                            version: todo!(),
-                        })
-                    }
-                }
-                Err(_) => todo!(),
-            },
-            Err(_) => trace!("Bash shell not found"),
-        };
-
-        Ok(shells)
-    }
-}
-
-#[cfg(test)]
-mod test_discovered_shell {
-    #[tokio::test]
-    pub async fn test_scan() {
-        // Assume at least one shell is available
-        assert!(super::DiscoveredShell::scan().await.unwrap().len() > 0);
-    }
-}
-
 #[cfg(test)]
 mod test_shell_session {
     use super::*;
@@ -184,16 +147,9 @@ mod test_shell_session {
     use std::sync::Arc;
     use tokio::sync::mpsc;
 
-    fn create_responder() -> ShellSessionStreamResponder {
-        ShellSessionStreamResponder {
-            process: RwLock::new(None),
-            stdin: RwLock::new(None),
-        }
-    }
-
     #[tokio::test]
     async fn test_start_and_receive_output() {
-        let responder = Arc::new(create_responder());
+        let responder = Arc::new(ShellSessionStreamResponder::default());
         let (tx, mut rx) = mpsc::channel::<ShellSessionStreamResponse>(32);
 
         // Start a simple echo command
@@ -243,7 +199,7 @@ mod test_shell_session {
 
     #[tokio::test]
     async fn test_stdin_before_start_is_noop() {
-        let responder = create_responder();
+        let responder = ShellSessionStreamResponder::default();
         let (tx, _rx) = mpsc::channel::<ShellSessionStreamResponse>(32);
 
         // Sending stdin before starting should not panic
@@ -256,7 +212,7 @@ mod test_shell_session {
 
     #[tokio::test]
     async fn test_environment_defaults() {
-        let responder = Arc::new(create_responder());
+        let responder = Arc::new(ShellSessionStreamResponder::default());
         let (tx, mut rx) = mpsc::channel::<ShellSessionStreamResponse>(32);
 
         // Start with empty environment and zero rows/cols to test defaults
@@ -315,7 +271,7 @@ mod test_shell_session {
 
     #[tokio::test]
     async fn test_environment_custom_values() {
-        let responder = Arc::new(create_responder());
+        let responder = Arc::new(ShellSessionStreamResponder::default());
         let (tx, mut rx) = mpsc::channel::<ShellSessionStreamResponse>(32);
 
         // Start with custom environment

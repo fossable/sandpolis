@@ -1,6 +1,6 @@
 use crate::cli::CommandLine;
 use anyhow::{Result, bail};
-use sandpolis_core::LayerConfig;
+use sandpolis_instance::LayerConfig;
 use serde::{Deserialize, Serialize};
 use std::{fs::File, path::PathBuf};
 use tracing::debug;

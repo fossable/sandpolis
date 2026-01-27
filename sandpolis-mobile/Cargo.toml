@@ -25,7 +25,7 @@ sandpolis = { path = "../sandpolis", version = "8.0.0", default-features = false
   "layer-wake",
   "layer-shell",
 ] }
-sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
+sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 
 # Android-specific dependencies
 jni = "0.21"

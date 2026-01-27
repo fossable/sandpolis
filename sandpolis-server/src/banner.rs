@@ -25,6 +25,7 @@ pub struct GetBannerRequest {
 pub struct GetBannerResponse(pub ServerBanner);
 
 /// Return a "banner" containing server metadata.
+#[cfg(feature = "server")]
 #[axum_macros::debug_handler]
 pub async fn banner(
     state: State<ServerLayer>,

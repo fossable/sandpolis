@@ -16,12 +16,8 @@ passwords = { workspace = true, optional = true, features = [
   "common-password",
 ] }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
-sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
-sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
-sandpolis-network = { path = "../sandpolis-network", version = "0.0.1", optional = true }
 sandpolis-server = { path = "../sandpolis-server", version = "0.0.1", optional = true }
-sandpolis-user = { path = "../sandpolis-user", version = "0.0.1", optional = true }
 native_db = { workspace = true, optional = true }
 native_model = { workspace = true, optional = true }
 
@@ -57,14 +53,9 @@ client-gui = [
   "dep:egui_console",
   "dep:egui_extras",
   "dep:rand",
-  "dep:sandpolis-network",
   "dep:sandpolis-server",
-  "dep:sandpolis-user",
-  "sandpolis-core/client-gui",
   "sandpolis-instance/client-gui",
-  "sandpolis-network/client-gui",
   "sandpolis-server/client-gui",
-  "sandpolis-user/client",
 ]
 client-tui = [
   "client",

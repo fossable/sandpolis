@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Server rack representation -->
+  <defs>
+    <linearGradient id="serverGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a90e2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2c5aa0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Main server body -->
+  <rect x="8" y="8" width="48" height="48" rx="4" fill="url(#serverGradient)" stroke="#1a3a6a" stroke-width="2"/>
+
+  <!-- Server unit 1 (top) -->
+  <rect x="12" y="12" width="40" height="12" rx="2" fill="#2c5aa0" stroke="#1a3a6a" stroke-width="1.5"/>
+  <circle cx="16" cy="18" r="2" fill="#4ade80"/>
+  <circle cx="22" cy="18" r="2" fill="#4ade80"/>
+  <rect x="28" y="16" width="20" height="4" rx="1" fill="#1a3a6a"/>
+
+  <!-- Server unit 2 (middle) -->
+  <rect x="12" y="26" width="40" height="12" rx="2" fill="#2c5aa0" stroke="#1a3a6a" stroke-width="1.5"/>
+  <circle cx="16" cy="32" r="2" fill="#4ade80"/>
+  <circle cx="22" cy="32" r="2" fill="#4ade80"/>
+  <rect x="28" y="30" width="20" height="4" rx="1" fill="#1a3a6a"/>
+
+  <!-- Server unit 3 (bottom) -->
+  <rect x="12" y="40" width="40" height="12" rx="2" fill="#2c5aa0" stroke="#1a3a6a" stroke-width="1.5"/>
+  <circle cx="16" cy="46" r="2" fill="#4ade80"/>
+  <circle cx="22" cy="46" r="2" fill="#4ade80"/>
+  <rect x="28" y="44" width="20" height="4" rx="1" fill="#1a3a6a"/>
+
+  <!-- Network connection indicator -->
+  <circle cx="54" cy="54" r="6" fill="#4ade80" stroke="#1a3a6a" stroke-width="2"/>
+  <path d="M 52 54 L 54 56 L 58 52" stroke="#1a3a6a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

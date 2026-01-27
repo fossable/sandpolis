@@ -7,9 +7,10 @@
 /// - Force-directed graph layout
 use anyhow::Result;
 use sandpolis::{InstanceState, MODELS, config::Configuration};
-use sandpolis_core::{InstanceId, InstanceType, RealmName};
+use sandpolis_core::{InstanceId, InstanceType};
 use sandpolis_database::{DatabaseLayer, config::DatabaseConfig};
 use sandpolis_network::ConnectionData;
+use sandpolis_realm::RealmName;
 
 #[tokio::main]
 async fn main() -> Result<()> {

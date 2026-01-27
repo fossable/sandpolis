@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Agent/endpoint device representation -->
+  <defs>
+    <linearGradient id="agentGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6d28d9;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Monitor/device body -->
+  <rect x="10" y="14" width="44" height="32" rx="3" fill="url(#agentGradient)" stroke="#4c1d95" stroke-width="2"/>
+
+  <!-- Screen -->
+  <rect x="14" y="18" width="36" height="24" rx="2" fill="#1e1b4b" stroke="#4c1d95" stroke-width="1.5"/>
+
+  <!-- Screen content (signal/activity) -->
+  <path d="M 20 30 Q 25 26, 30 30 T 40 30" stroke="#8b5cf6" stroke-width="2" fill="none"/>
+  <path d="M 20 34 Q 25 30, 30 34 T 40 34" stroke="#a78bfa" stroke-width="2" fill="none"/>
+
+  <!-- Activity indicator -->
+  <circle cx="46" cy="22" r="2" fill="#4ade80"/>
+
+  <!-- Stand/base -->
+  <rect x="26" y="46" width="12" height="4" rx="1" fill="url(#agentGradient)" stroke="#4c1d95" stroke-width="1.5"/>
+  <rect x="20" y="50" width="24" height="3" rx="1.5" fill="url(#agentGradient)" stroke="#4c1d95" stroke-width="1.5"/>
+
+  <!-- Network connection indicator -->
+  <circle cx="54" cy="54" r="6" fill="#8b5cf6" stroke="#4c1d95" stroke-width="2"/>
+  <circle cx="54" cy="54" r="3" fill="#c4b5fd"/>
+</svg>

@@ -19,7 +19,6 @@ ratatui-image = { workspace = true, optional = true }
 image = { workspace = true, optional = true }
 bevy = { workspace = true, optional = true }
 tracing = { workspace = true }
-sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
 

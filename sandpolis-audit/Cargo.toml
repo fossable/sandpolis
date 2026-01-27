@@ -12,8 +12,6 @@ linux-audit-parser = "0.2.7"
 native_db = { workspace = true }
 native_model = { workspace = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
-sandpolis-database = { path = "../sandpolis-database", version = "0.0.1" }
-sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 
 [features]

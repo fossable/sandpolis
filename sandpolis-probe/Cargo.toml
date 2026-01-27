@@ -16,7 +16,6 @@ ipmi-rs = { version = "0.4.0", optional = true }
 rasn-snmp = { version = "0.26.6", optional = true }
 arp-toolkit = { version = "0.3.2", optional = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
-sandpolis-core = { path = "../sandpolis-core", version = "0.0.1" }
 
 # GUI dependencies
 bevy = { workspace = true, optional = true }
@@ -29,11 +28,11 @@ sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional =
 [features]
 agent = ["dep:rups", "dep:vnc", "dep:russh"]
 client-gui = [
-    "dep:bevy",
-    "dep:bevy_egui",
-    "dep:bevy_svg",
-    "dep:bevy_rapier2d",
-    "dep:inventory",
-    "dep:sandpolis-client",
-    "sandpolis-client/client-gui",
+  "dep:bevy",
+  "dep:bevy_egui",
+  "dep:bevy_svg",
+  "dep:bevy_rapier2d",
+  "dep:inventory",
+  "dep:sandpolis-client",
+  "sandpolis-client/client-gui",
 ]

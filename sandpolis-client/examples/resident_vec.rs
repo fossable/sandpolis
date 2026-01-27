@@ -7,9 +7,9 @@ use ratatui::{
     widgets::ListItem,
 };
 use sandpolis_client::tui::{Panel, selectable_list::ResidentVecWidget};
-use sandpolis_core::RealmName;
 use sandpolis_database::{DataCreation, DataIdentifier, DataRevision, test_db};
 use sandpolis_macros::data;
+use sandpolis_realm::RealmName;
 
 // Define a simple data structure for our list
 #[data]

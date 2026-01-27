@@ -9638,15 +9638,14 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "bevy",
- "clap",
  "colored",
- "headers",
  "inventory",
  "native_db",
  "native_model",
  "regex",
  "serde",
  "strum",
+ "tracing",
  "uuid",
  "validator",
 ]

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use sandpolis_core::InstanceId;
-use sandpolis_core::RealmName;
 use sandpolis_network::NetworkLayer;
+use sandpolis_realm::RealmName;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "client")]
