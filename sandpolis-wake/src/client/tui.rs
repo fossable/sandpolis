@@ -3,7 +3,7 @@ use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::text::Text;
 use ratatui::widgets::{Block, Borders, Paragraph, Widget, WidgetRef};
 use sandpolis_client::tui::EventHandler;
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 
 // #[derive(Debug)]
 pub struct WakeWidget {

@@ -1,7 +1,7 @@
 use super::UserData;
 use anyhow::Result;
 use sandpolis_agent::Collector;
-use sandpolis_database::{RealmDatabase, ResidentVec};
+use sandpolis_instance::database::{RealmDatabase, ResidentVec};
 use sysinfo::{User, Users};
 use tracing::trace;
 

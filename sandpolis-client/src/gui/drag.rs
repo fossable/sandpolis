@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{EguiContexts, egui};
 use bevy_rapier2d::prelude::*;
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 
 /// Resource tracking all currently selected nodes.
 #[derive(Resource, Default)]
@@ -65,7 +65,7 @@ pub fn handle_node_selection(
 
     // Check which node was clicked
     const CLICK_RADIUS: f32 = 50.0;
-    let mut clicked_node: Option<(Entity, sandpolis_core::InstanceId)> = None;
+    let mut clicked_node: Option<(Entity, sandpolis_instance::InstanceId)> = None;
 
     for (entity, transform, node_entity) in node_query.iter() {
         let node_pos = transform.translation.truncate();

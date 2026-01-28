@@ -2,10 +2,10 @@ use anyhow::Result;
 use native_db::*;
 use native_model::Model;
 use regex::Regex;
-use sandpolis_core::InstanceId;
-use sandpolis_database::DatabaseLayer;
+use sandpolis_instance::InstanceId;
+use sandpolis_instance::database::DatabaseLayer;
 use sandpolis_macros::{Stream, data};
-use sandpolis_network::{RegisterResponders, StreamRegistry, StreamRequester};
+use sandpolis_instance::network::{RegisterResponders, StreamRegistry, StreamRequester};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -61,7 +61,7 @@ impl RegisterResponders for ShellResponderRegistration {
 }
 
 #[cfg(feature = "agent")]
-inventory::submit!(sandpolis_network::ResponderRegistration(
+inventory::submit!(sandpolis_instance::network::ResponderRegistration(
     &ShellResponderRegistration
 ));
 

@@ -16,8 +16,8 @@ use axum::{
 use axum_extra::TypedHeader;
 use futures::stream::StreamExt;
 use jsonwebtoken::{Header, encode};
-use sandpolis_network::RequestResult;
-use sandpolis_realm::RealmName;
+use sandpolis_instance::network::RequestResult;
+use sandpolis_instance::realm::RealmName;
 use std::time::{Duration, SystemTime};
 use totp_rs::TOTP;
 use tracing::{debug, error, info};
@@ -91,62 +91,4 @@ pub async fn login(
             .new_token(claims)
             .map_err(|_| Json(LoginResponse::Denied))?,
     )))
-}
-
-/// Create a new user
-#[axum_macros::debug_handler]
-pub async fn create_user(
-    state: State<UserLayer>,
-    claims: Claims,
-    extract::Json(request): extract::Json<CreateUserRequest>,
-) -> RequestResult<CreateUserResponse> {
-    request
-        .validate()
-        .map_err(|_| Json(CreateUserResponse::InvalidUser))?;
-
-    // Only admins can create other admins
-    if request.data.admin && !claims.admin {
-        return Err(Json(CreateUserResponse::Failed));
-    }
-
-    // Create new password
-    let password = if request.totp {
-        state
-            .new_password_with_totp(request.data.username.clone(), request.password)
-            .await
-            .map_err(|_| Json(CreateUserResponse::Failed))?
-    } else {
-        state
-            .new_password(request.data.username.clone(), request.password)
-            .await
-            .map_err(|_| Json(CreateUserResponse::Failed))?
-    };
-
-    // Add new user
-    state
-        .users
-        .push(request.data)
-        .map_err(|_| Json(CreateUserResponse::Failed))?;
-
-    Ok(Json(CreateUserResponse::Ok {
-        totp_secret: password.totp_secret,
-    }))
-}
-
-#[axum_macros::debug_handler]
-pub async fn get_users(
-    state: State<UserLayer>,
-    claims: Claims,
-    extract::Json(request): extract::Json<GetUsersRequest>,
-) -> RequestResult<GetUsersResponse> {
-    if let Some(username) = request.username {
-        // match state.users.get_document(&*username) {
-        //     Ok(Some(user)) => return
-        // Ok(Json(GetUsersResponse::Ok(vec![user.data]))),     Ok(None)
-        // => return Ok(Json(GetUsersResponse::Ok(Vec::new()))),
-        //     Err(_) => todo!(),
-        // }
-    }
-
-    todo!()
 }

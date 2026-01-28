@@ -14,8 +14,8 @@ use eframe::egui;
 use sandpolis::client::gui::controller::ControllerType;
 use sandpolis::client::gui::layer_ext::get_extension_for_layer;
 use sandpolis::{InstanceState, MODELS, config::Configuration};
-use sandpolis_core::{InstanceId, LayerName};
-use sandpolis_database::{DatabaseLayer, config::DatabaseConfig};
+use sandpolis_instance::{InstanceId, LayerName};
+use sandpolis_instance::database::{DatabaseLayer, config::DatabaseConfig};
 use std::env;
 
 #[tokio::main]

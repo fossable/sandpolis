@@ -4,7 +4,7 @@ use crate::gui::node::{NeedsScaling, NodeEntity, NodeSvg};
 use crate::gui::queries;
 use bevy::prelude::*;
 use bevy_svg::prelude::{Origin, Svg2d};
-use sandpolis_core::{InstanceType, LayerName};
+use sandpolis_instance::{InstanceType, LayerName};
 
 /// Update node SVG images when layer changes or for newly spawned nodes
 pub fn update_node_svgs_for_layer(
@@ -53,7 +53,7 @@ pub fn update_node_svgs_for_layer(
 fn get_layer_svg_path(
     layer: &LayerName,
     instance_layer: &sandpolis_instance::InstanceLayer,
-    instance_id: sandpolis_core::InstanceId,
+    instance_id: sandpolis_instance::InstanceId,
 ) -> &'static str {
     match layer.name() {
         #[cfg(feature = "layer-filesystem")]
@@ -121,7 +121,7 @@ fn get_layer_svg_path(
 /// Update node colors based on layer-specific states
 pub fn update_node_colors_for_layer(
     current_layer: Res<CurrentLayer>,
-    network_layer: Res<sandpolis_network::NetworkLayer>,
+    network_layer: Res<sandpolis_instance::network::NetworkLayer>,
     mut node_query: Query<(&NodeEntity, &mut Sprite)>,
 ) {
     // Only update when layer changes
@@ -139,8 +139,8 @@ pub fn update_node_colors_for_layer(
 /// Get color tint for a node based on layer and state
 fn get_layer_color_tint(
     layer: &LayerName,
-    network_layer: &sandpolis_network::NetworkLayer,
-    instance_id: sandpolis_core::InstanceId,
+    network_layer: &sandpolis_instance::network::NetworkLayer,
+    instance_id: sandpolis_instance::InstanceId,
 ) -> Color {
     match layer.name() {
         "Network" => {

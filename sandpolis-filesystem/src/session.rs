@@ -2,7 +2,7 @@ use crate::FilesystemLayer;
 use axum::extract::State;
 use axum::extract::{self, WebSocketUpgrade};
 use axum::http::StatusCode;
-use sandpolis_network::RequestResult;
+use sandpolis_instance::network::RequestResult;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 

@@ -13,16 +13,18 @@ axum = { workspace = true, optional = true }
 bevy = { workspace = true, optional = true } # TODO avoid with newtypes?
 chrono = { workspace = true }
 clap = { workspace = true }
-cron = { workspace = true }
 colored = { workspace = true }
+cron = { workspace = true }
 futures-util = { workspace = true }
 futures = { workspace = true }
+headers = { workspace = true, optional = true }
 inventory = { workspace = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
 os_info = { workspace = true }
 pem = { workspace = true }
 rand = { workspace = true }
+regex = { workspace = true }
 rcgen = { version = "0.13.1", optional = true, features = [
   "crypto",
   "pem",
@@ -68,12 +70,12 @@ client = ["dep:reqwest", "dep:reqwest-websocket"]
 server = [
   "dep:rcgen",
   "dep:rustls-pki-types",
-  "dep:tokio",
   "dep:tokio-rustls",
   "dep:tower",
   "dep:axum",
   "dep:axum-macros",
   "dep:axum-server",
+  "dep:headers",
 
 ]
 client-gui = ["client", "dep:bevy"]

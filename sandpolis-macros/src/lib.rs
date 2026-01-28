@@ -17,7 +17,7 @@ pub fn derive_event(input: TokenStream) -> TokenStream {
         #[cfg(any(feature = "server", feature = "agent"))]
         impl Into<axum::extract::ws::Message> for #name {
             fn into(self) -> axum::extract::ws::Message {
-                sandpolis_network::stream::event_to_message(&self)
+                sandpolis_instance::network::stream::event_to_message(&self)
             }
         }
     };
@@ -43,13 +43,13 @@ pub fn derive_data(input: TokenStream) -> TokenStream {
         .is_some()
     {
         quote! {
-            fn expiration(&self) -> Option<sandpolis_database::DataExpiration> {
+            fn expiration(&self) -> Option<sandpolis_instance::database::DataExpiration> {
                 Some(self._expiration)
             }
         }
     } else {
         quote! {
-            fn expiration(&self) -> Option<sandpolis_database::DataExpiration> {
+            fn expiration(&self) -> Option<sandpolis_instance::database::DataExpiration> {
                 None
             }
         }
@@ -57,24 +57,24 @@ pub fn derive_data(input: TokenStream) -> TokenStream {
 
     let struct_name = &input.ident;
     let expanded = quote! {
-        impl sandpolis_database::Data for #struct_name {
-            fn id(&self) -> sandpolis_database::DataIdentifier {
+        impl sandpolis_instance::database::Data for #struct_name {
+            fn id(&self) -> sandpolis_instance::database::DataIdentifier {
                 self._id
             }
 
-            fn set_id(&mut self, id: sandpolis_database::DataIdentifier) {
+            fn set_id(&mut self, id: sandpolis_instance::database::DataIdentifier) {
                 self._id = id;
             }
 
-            fn revision(&self) -> sandpolis_database::DataRevision {
+            fn revision(&self) -> sandpolis_instance::database::DataRevision {
                 self._revision
             }
 
-            fn set_revision(&mut self, revision: sandpolis_database::DataRevision) {
+            fn set_revision(&mut self, revision: sandpolis_instance::database::DataRevision) {
                 self._revision = revision;
             }
 
-            fn creation(&self) -> sandpolis_database::DataCreation {
+            fn creation(&self) -> sandpolis_instance::database::DataCreation {
                 self._creation
             }
 
@@ -151,7 +151,7 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
                 .parse2(quote! {
                     /// Primary key
                     #[primary_key]
-                    pub _id: sandpolis_database::DataIdentifier
+                    pub _id: sandpolis_instance::database::DataIdentifier
                 })
                 .expect("Failed to parse _id field"),
         );
@@ -162,7 +162,7 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
                 .parse2(quote! {
                     /// Revision
                     #[secondary_key]
-                    pub _revision: sandpolis_database::DataRevision
+                    pub _revision: sandpolis_instance::database::DataRevision
                 })
                 .expect("Failed to parse _revision field"),
         );
@@ -173,7 +173,7 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
                 .parse2(quote! {
                     /// Creation timestamp
                     #[secondary_key]
-                    pub _creation: sandpolis_database::DataCreation
+                    pub _creation: sandpolis_instance::database::DataCreation
                 })
                 .expect("Failed to parse _creation field"),
         );
@@ -185,7 +185,7 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
                     .parse2(quote! {
                         /// Expiration timestamp
                         #[secondary_key]
-                        pub _expiration: sandpolis_database::DataExpiration
+                        pub _expiration: sandpolis_instance::database::DataExpiration
                     })
                     .expect("Failed to parse _expiration field"),
             );
@@ -198,7 +198,7 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
                     .parse2(quote! {
                         /// ID of instance associated with this data
                         #[secondary_key]
-                        pub _instance_id: sandpolis_core::InstanceId
+                        pub _instance_id: sandpolis_instance::InstanceId
                     })
                     .expect("Failed to parse _instance_id field"),
             );
@@ -275,7 +275,7 @@ pub fn derive_stream_requester(input: TokenStream) -> TokenStream {
     let type_tag = struct_name_to_id(&base_name);
 
     let expanded = quote! {
-        impl sandpolis_network::stream::Stream for #name {
+        impl sandpolis_instance::network::stream::Stream for #name {
             fn tag() -> u32 {
                 #type_tag
             }

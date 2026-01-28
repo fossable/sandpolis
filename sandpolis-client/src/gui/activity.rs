@@ -2,7 +2,7 @@ use crate::gui::edges::Edge;
 use crate::gui::input::CurrentLayer;
 use crate::gui::node::NodeEntity;
 use bevy::prelude::*;
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 
 /// Component for animated activity lines moving along edges
 #[derive(Component)]

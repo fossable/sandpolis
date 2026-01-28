@@ -11,7 +11,7 @@ use ratatui_image::{
     protocol::{ImageSource, StatefulProtocol, StatefulProtocolType, halfblocks::Halfblocks},
 };
 use sandpolis_client::tui::EventHandler;
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 use std::collections::VecDeque;
 use std::path::PathBuf;
 

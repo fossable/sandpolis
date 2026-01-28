@@ -1,6 +1,6 @@
 use bevy::prelude::bevy_main;
 use sandpolis::{InstanceState, config::Configuration};
-use sandpolis_database::DatabaseLayer;
+use sandpolis_instance::database::DatabaseLayer;
 use std::path::PathBuf;
 
 /// Get Android app's files directory using JNI

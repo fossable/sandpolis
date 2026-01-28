@@ -14,11 +14,11 @@ use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
 use sandpolis_client::tui::{
     EventHandler, Panel, help::HelpWidget, loading::LoadingWidget, resident_vec::ResidentVecWidget,
 };
-use sandpolis_core::UserName;
-use sandpolis_database::{Data, DataCreation, DataIdentifier, Resident, ResidentVecEvent};
+use sandpolis_server::user::UserName;
+use sandpolis_instance::database::{Data, DataCreation, DataIdentifier, Resident, ResidentVecEvent};
 use sandpolis_server::ServerUrl;
 use sandpolis_server::{ServerLayer, client::SavedServerData};
-use sandpolis_user::{
+use sandpolis_server::user::{
     ClientAuthToken, LoginPassword,
     messages::{LoginRequest, LoginResponse},
 };
@@ -422,7 +422,7 @@ impl EventHandler for ServerListWidget {
                                                         // TODO this sucks
                                                         _id: DataIdentifier::default(),
                                                         _revision:
-                                                            sandpolis_database::DataRevision::Latest(
+                                                            sandpolis_instance::database::DataRevision::Latest(
                                                                 0,
                                                             ),
                                                         _creation: DataCreation::default(),

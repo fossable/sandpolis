@@ -4,7 +4,7 @@
 //! to represent devices such as SSH hosts, IPMI-enabled servers, UPS devices,
 //! cameras, and more.
 
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
 
 pub mod docker;

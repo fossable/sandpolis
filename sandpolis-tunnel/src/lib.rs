@@ -1,4 +1,4 @@
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 use sandpolis_macros::StreamEvent;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;

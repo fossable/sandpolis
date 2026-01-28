@@ -6,15 +6,14 @@ use native_db::ToKey;
 use native_model::Model;
 use reqwest::header::CONTENT_TYPE;
 use reqwest::{ClientBuilder, Method};
-use sandpolis_core::{ClusterId, InstanceId};
-use sandpolis_database::DatabaseLayer;
-use sandpolis_database::Resident;
-use sandpolis_database::ResidentVec;
+use sandpolis_instance::database::DatabaseLayer;
+use sandpolis_instance::database::Resident;
+use sandpolis_instance::database::ResidentVec;
+use sandpolis_instance::network::{ConnectionData, InstanceConnection, NetworkLayer, RetryWait};
+use sandpolis_instance::realm::RealmLayer;
+use sandpolis_instance::realm::RealmName;
+use sandpolis_instance::{ClusterId, InstanceId};
 use sandpolis_macros::data;
-use sandpolis_network::{ConnectionData, InstanceConnection, NetworkLayer, RetryWait};
-use sandpolis_realm::RealmLayer;
-use sandpolis_realm::RealmName;
-use sandpolis_user::messages::{LoginRequest, LoginResponse};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::fmt::Display;
 use std::net::{IpAddr, SocketAddr, ToSocketAddrs};
@@ -33,6 +32,8 @@ pub mod cli;
 pub mod client;
 pub mod config;
 pub mod location;
+pub mod login;
+pub mod user;
 
 #[data]
 #[derive(Default)]

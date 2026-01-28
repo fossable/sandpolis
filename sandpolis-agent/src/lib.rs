@@ -3,7 +3,7 @@
 // }
 
 use anyhow::Result;
-use sandpolis_database::DatabaseLayer;
+use sandpolis_instance::database::DatabaseLayer;
 
 pub mod bootagent;
 pub mod config;

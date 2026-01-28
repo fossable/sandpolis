@@ -1,4 +1,4 @@
-use crate::cli::NetworkCommandLine;
+use sandpolis_instance::network::cli::NetworkCommandLine;
 use sandpolis_instance::LayerConfig;
 use serde::{Deserialize, Serialize};
 

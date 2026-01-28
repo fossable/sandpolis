@@ -4,7 +4,7 @@ use bevy_rapier2d::{
     geometry::{Collider, Restitution},
 };
 use bevy_svg::prelude::{Origin, Svg, Svg2d};
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 
 /// Marker component for the main world view camera.
 #[derive(Component)]

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use sandpolis_core::InstanceId;
-use sandpolis_database::ResidentVecEvent;
-use sandpolis_network::NetworkLayer;
+use sandpolis_instance::InstanceId;
+use sandpolis_instance::database::ResidentVecEvent;
+use sandpolis_instance::network::NetworkLayer;
 use tokio::sync::mpsc;
 
 /// Database update events from resident listeners.

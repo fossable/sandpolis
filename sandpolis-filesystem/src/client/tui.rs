@@ -6,7 +6,7 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Widget, WidgetRef};
 use sandpolis_client::tui::EventHandler;
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;

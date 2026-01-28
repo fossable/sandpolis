@@ -1,45 +1,116 @@
+use super::UserData;
+use super::UserLayer;
+use super::UserName;
+use crate::{ClientAuthToken, LoginPassword};
+use crate::{UserData, server::Claims};
+use crate::{
+    messages::{
+        CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
+        LoginResponse,
+    },
+    server::PasswordData,
+};
 use anyhow::{Result, anyhow, bail};
 use aws_lc_rs::pbkdf2;
+use axum::extract::{self, WebSocketUpgrade};
+use axum::extract::{Request, State};
+use axum::middleware::Next;
+use axum::{
+    Json,
+    extract::{self, State},
+};
 use axum::{
     RequestPartsExt, Router,
     extract::FromRequestParts,
     http::{StatusCode, request::Parts},
     routing::{get, post},
 };
+use axum_extra::TypedHeader;
 use axum_extra::{
     TypedHeader,
     headers::{Authorization, authorization::Bearer},
 };
+use futures::stream::StreamExt;
 use jsonwebtoken::{DecodingKey, EncodingKey, Validation, decode};
+use jsonwebtoken::{Header, encode};
 use native_db::ToKey;
 use native_model::Model;
 use passwords::PasswordGenerator;
 use rand::Rng;
-use sandpolis_realm::RealmName;
-use sandpolis_user::UserName;
-
-const SHA256_OUTPUT_LEN: usize = 32;
-use axum::extract::{self, WebSocketUpgrade};
-use axum::extract::{Request, State};
-use axum::middleware::Next;
-use sandpolis_database::DataRevision;
+use sandpolis_instance::database::DataRevision;
+use sandpolis_instance::network::RequestResult;
+use sandpolis_instance::network::{InstanceConnection, RequestResult};
+use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
-use sandpolis_network::{InstanceConnection, RequestResult};
 use serde::{Deserialize, Serialize};
+use std::time::{Duration, SystemTime};
 use std::{
     fmt::{Debug, Display},
     num::NonZeroU32,
 };
 use totp_rs::{Secret, TOTP};
-use tracing::info;
+use tracing::{debug, error, info};
 use validator::Validate;
 
-use crate::{ClientAuthToken, LoginPassword};
+const SHA256_OUTPUT_LEN: usize = 32;
 
-use super::UserData;
-use super::UserLayer;
+/// Create a new user
+#[axum_macros::debug_handler]
+pub async fn create_user(
+    state: State<UserLayer>,
+    claims: Claims,
+    extract::Json(request): extract::Json<CreateUserRequest>,
+) -> RequestResult<CreateUserResponse> {
+    request
+        .validate()
+        .map_err(|_| Json(CreateUserResponse::InvalidUser))?;
 
-pub mod routes;
+    // Only admins can create other admins
+    if request.data.admin && !claims.admin {
+        return Err(Json(CreateUserResponse::Failed));
+    }
+
+    // Create new password
+    let password = if request.totp {
+        state
+            .new_password_with_totp(request.data.username.clone(), request.password)
+            .await
+            .map_err(|_| Json(CreateUserResponse::Failed))?
+    } else {
+        state
+            .new_password(request.data.username.clone(), request.password)
+            .await
+            .map_err(|_| Json(CreateUserResponse::Failed))?
+    };
+
+    // Add new user
+    state
+        .users
+        .push(request.data)
+        .map_err(|_| Json(CreateUserResponse::Failed))?;
+
+    Ok(Json(CreateUserResponse::Ok {
+        totp_secret: password.totp_secret,
+    }))
+}
+
+#[axum_macros::debug_handler]
+pub async fn get_users(
+    state: State<UserLayer>,
+    claims: Claims,
+    extract::Json(request): extract::Json<GetUsersRequest>,
+) -> RequestResult<GetUsersResponse> {
+    if let Some(username) = request.username {
+        // match state.users.get_document(&*username) {
+        //     Ok(Some(user)) => return
+        // Ok(Json(GetUsersResponse::Ok(vec![user.data]))),     Ok(None)
+        // => return Ok(Json(GetUsersResponse::Ok(Vec::new()))),
+        //     Err(_) => todo!(),
+        // }
+    }
+
+    todo!()
+}
 
 static USER_PASSWORD_HASH_ITERATIONS: NonZeroU32 = NonZeroU32::new(15000).unwrap();
 
@@ -327,8 +398,8 @@ pub async fn connect(
     ws.on_upgrade(move |socket| async move {
         let data = database.realm(realm.clone()).unwrap().resident(()).unwrap();
         // Collect all registered responder handlers from inventory
-        let handlers: Vec<&dyn sandpolis_network::RegisterResponders> =
-            sandpolis_network::collected_responders().collect();
+        let handlers: Vec<&dyn sandpolis_instance::network::RegisterResponders> =
+            sandpolis_instance::network::collected_responders().collect();
         InstanceConnection::websocket(socket, data, realm, cluster_id, &handlers);
     })
 }

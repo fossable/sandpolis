@@ -5,7 +5,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_egui::{EguiContexts, egui};
-use sandpolis_core::LayerName;
+use sandpolis_instance::LayerName;
 use std::ops::Range;
 
 /// Only one layer can be selected at a time.

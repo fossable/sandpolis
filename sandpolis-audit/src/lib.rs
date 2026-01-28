@@ -1,6 +1,6 @@
 use native_db::*;
 use native_model::Model;
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 use sandpolis_macros::data;
 
 #[data]

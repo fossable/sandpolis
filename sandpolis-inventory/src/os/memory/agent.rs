@@ -1,7 +1,7 @@
 use super::MemoryData;
 use anyhow::Result;
 use sandpolis_agent::Collector;
-use sandpolis_database::{RealmDatabase, Resident};
+use sandpolis_instance::database::{RealmDatabase, Resident};
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 use tracing::trace;
 
@@ -41,8 +41,8 @@ impl Collector for MemoryMonitor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sandpolis_database::{DatabaseLayer, test_db};
-    use sandpolis_realm::RealmName;
+    use sandpolis_instance::database::{DatabaseLayer, test_db};
+    use sandpolis_instance::realm::RealmName;
 
     #[tokio::test]
     #[test_log::test]

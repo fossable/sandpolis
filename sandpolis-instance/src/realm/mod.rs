@@ -1,28 +1,30 @@
-// doc_comment! {
-//     include_str!("../README.md")
-// }
-
 use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
 use config::RealmConfig;
+#[cfg(feature = "server")]
+use headers::{Header, HeaderName, HeaderValue};
 use native_db::ToKey;
 use native_model::Model;
 use pem::Pem;
 use pem::encode;
-use sandpolis_core::ClusterId;
-use sandpolis_core::InstanceType;
-use sandpolis_database::RealmDatabase;
-use sandpolis_database::ResidentVec;
-use sandpolis_database::{DatabaseLayer, Resident};
+use regex::Regex;
+use sandpolis_instance::ClusterId;
 use sandpolis_instance::InstanceLayer;
+use sandpolis_instance::InstanceType;
+use sandpolis_instance::database::RealmDatabase;
+use sandpolis_instance::database::ResidentVec;
+use sandpolis_instance::database::{DatabaseLayer, Resident};
 use sandpolis_macros::data;
-use sandpolis_realm::RealmName;
-use sandpolis_user::UserName;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::fmt::Display;
 use std::fs::File;
 use std::io::Write;
+use std::ops::Deref;
 use std::path::Path;
+use std::str::FromStr;
+use std::sync::LazyLock;
 use tracing::debug;
 use tracing::info;
 use validator::{Validate, ValidationError, ValidationErrors};
@@ -338,7 +340,7 @@ impl RealmLayer {
 pub struct RealmData {
     #[secondary_key(unique)]
     pub name: RealmName,
-    pub owner: UserName,
+    pub owner: String,
 }
 
 /// The realm's global CA certificate.
@@ -582,7 +584,7 @@ mod test_client_cert {
     #[test]
     #[cfg(feature = "server")]
     fn test_read_write() -> Result<()> {
-        let cluster_id = sandpolis_core::ClusterId::default();
+        let cluster_id = sandpolis_instance::ClusterId::default();
         let ca = RealmClusterCert::new(cluster_id, "default".parse()?)?;
         let original_cert = ca.client_cert()?;
 
@@ -607,7 +609,7 @@ mod test_agent_cert {
     #[test]
     #[cfg(feature = "server")]
     fn test_read_write() -> Result<()> {
-        let cluster_id = sandpolis_core::ClusterId::default();
+        let cluster_id = sandpolis_instance::ClusterId::default();
         let ca = RealmClusterCert::new(cluster_id, "default".parse()?)?;
         let original_cert = ca.agent_cert()?;
 

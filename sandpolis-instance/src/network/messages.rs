@@ -1,4 +1,4 @@
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
 
 /// Request the server for a new direct connection to an agent.

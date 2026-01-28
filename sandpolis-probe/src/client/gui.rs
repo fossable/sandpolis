@@ -9,7 +9,7 @@ use bevy_rapier2d::geometry::{Collider, Restitution};
 use bevy_svg::prelude::{Origin, Svg2d};
 use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
 use sandpolis_client::gui::node::{NeedsScaling, NodeEntity, NodeSvg};
-use sandpolis_core::{InstanceId, LayerName};
+use sandpolis_instance::{InstanceId, LayerName};
 
 use crate::{
     DockerProbeConfig, HttpProbeConfig, IpmiProbeConfig, LibvirtProbeConfig, OnvifProbeConfig,
@@ -1129,9 +1129,9 @@ impl LayerGuiExtension for ProbeGuiExtension {
         );
     }
 
-    fn visible_instance_types(&self) -> &'static [sandpolis_core::InstanceType] {
+    fn visible_instance_types(&self) -> &'static [sandpolis_instance::InstanceType] {
         // Probe layer shows servers and agents (not clients)
-        &[sandpolis_core::InstanceType::Server, sandpolis_core::InstanceType::Agent]
+        &[sandpolis_instance::InstanceType::Server, sandpolis_instance::InstanceType::Agent]
     }
 
     fn show_probe_nodes(&self) -> bool {

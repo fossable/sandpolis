@@ -1,9 +1,9 @@
 use crate::{DiscoveredShell, ShellType};
 use anyhow::Result;
 use regex::Regex;
-use sandpolis_database::Resident;
+use sandpolis_instance::database::Resident;
 use sandpolis_macros::Stream;
-use sandpolis_network::StreamResponder;
+use sandpolis_instance::network::StreamResponder;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;

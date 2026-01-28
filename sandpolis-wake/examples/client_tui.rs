@@ -1,6 +1,6 @@
 use anyhow::Result;
-use sandpolis_core::InstanceId;
-use sandpolis_network::NetworkLayer;
+use sandpolis_instance::InstanceId;
+use sandpolis_instance::network::NetworkLayer;
 use sandpolis_wake::{WakeLayer, client::tui::WakeWidget};
 use std::sync::Arc;
 

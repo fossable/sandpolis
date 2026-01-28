@@ -5,7 +5,7 @@
 use bevy::prelude::*;
 use bevy_egui::egui;
 use egui_file_dialog::FileDialog;
-use sandpolis_core::{InstanceId, LayerName};
+use sandpolis_instance::{InstanceId, LayerName};
 use std::path::PathBuf;
 
 use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
@@ -324,9 +324,9 @@ impl LayerGuiExtension for FilesystemGuiExtension {
         }]
     }
 
-    fn visible_instance_types(&self) -> &'static [sandpolis_core::InstanceType] {
+    fn visible_instance_types(&self) -> &'static [sandpolis_instance::InstanceType] {
         // Filesystem layer shows servers and agents (not clients)
-        &[sandpolis_core::InstanceType::Server, sandpolis_core::InstanceType::Agent]
+        &[sandpolis_instance::InstanceType::Server, sandpolis_instance::InstanceType::Agent]
     }
 }
 

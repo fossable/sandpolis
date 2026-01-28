@@ -1,11 +1,11 @@
 use crate::gui::input::{LoginDialogState, LoginPhase};
 use crate::gui::listeners::{DatabaseUpdate, DatabaseUpdateSender};
 use bevy::prelude::*;
-use sandpolis_database::{DataCreation, DataIdentifier};
+use sandpolis_instance::database::{DataCreation, DataIdentifier};
 use sandpolis_server::ServerUrl;
 use sandpolis_server::client::SavedServerData;
-use sandpolis_user::LoginPassword;
-use sandpolis_user::messages::{LoginRequest, LoginResponse};
+use sandpolis_server::user::LoginPassword;
+use sandpolis_server::user::messages::{LoginRequest, LoginResponse};
 use std::str::FromStr;
 use std::time::Duration;
 use tracing::{debug, error, info};
@@ -22,9 +22,9 @@ pub struct LoginPhase1Handle {
 }
 
 pub struct LoginPhase2Handle {
-    pub task: bevy::tasks::Task<Result<(LoginResponse, sandpolis_core::InstanceId), String>>,
+    pub task: bevy::tasks::Task<Result<(LoginResponse, sandpolis_instance::InstanceId), String>>,
     pub server_url: ServerUrl,
-    pub username: sandpolis_core::UserName,
+    pub username: sandpolis_server::user::UserName,
 }
 
 /// System to handle phase 1: connecting to server and fetching banner
@@ -112,7 +112,7 @@ pub fn handle_login_phase2(
         };
 
         // Parse username
-        let username = match sandpolis_core::UserName::from_str(&login_state.username) {
+        let username = match sandpolis_server::user::UserName::from_str(&login_state.username) {
             Ok(u) => u,
             Err(e) => {
                 login_state.error_message = Some(format!("Invalid username: {}", e));
@@ -184,7 +184,7 @@ pub fn handle_login_phase2(
                         token: client_auth_token,
                         user: handle.username,
                         _id: DataIdentifier::default(),
-                        _revision: sandpolis_database::DataRevision::Latest(0),
+                        _revision: sandpolis_instance::database::DataRevision::Latest(0),
                         _creation: DataCreation::default(),
                     }) {
                         error!(error = %e, "Failed to save server");

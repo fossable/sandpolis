@@ -9,8 +9,8 @@ use crate::gui::layer_ext::get_extension_for_layer;
 use crate::gui::node::{NodeEntity, WorldView};
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
-use sandpolis_core::InstanceId;
-use sandpolis_core::LayerName;
+use sandpolis_instance::InstanceId;
+use sandpolis_instance::LayerName;
 
 /// Resource tracking which node controller is currently open
 #[derive(Resource, Default)]

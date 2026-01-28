@@ -4,7 +4,7 @@ use clap::Parser;
 use sandpolis::InstanceState;
 use sandpolis::cli::CommandLine;
 use sandpolis::config::Configuration;
-use sandpolis_database::DatabaseLayer;
+use sandpolis_instance::database::DatabaseLayer;
 use std::process::ExitCode;
 use tokio::task::JoinSet;
 use tracing::debug;

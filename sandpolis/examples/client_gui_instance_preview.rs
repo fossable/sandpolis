@@ -14,8 +14,8 @@ use eframe::egui;
 use sandpolis::client::gui::controller::NodeControllerState;
 use sandpolis::client::gui::preview::render_preview_content;
 use sandpolis::{InstanceState, MODELS, config::Configuration};
-use sandpolis_core::{InstanceId, LayerName};
-use sandpolis_database::{DatabaseLayer, config::DatabaseConfig};
+use sandpolis_instance::{InstanceId, LayerName};
+use sandpolis_instance::database::{DatabaseLayer, config::DatabaseConfig};
 use std::env;
 
 #[tokio::main]
@@ -71,7 +71,7 @@ async fn main() -> eframe::Result<()> {
 struct NodePreviewTestApp {
     layer: LayerName,
     instance_id: InstanceId,
-    network_layer: sandpolis_network::NetworkLayer,
+    network_layer: sandpolis_instance::network::NetworkLayer,
     controller_state: NodeControllerState,
 }
 
@@ -79,7 +79,7 @@ impl NodePreviewTestApp {
     fn new(
         layer: LayerName,
         instance_id: InstanceId,
-        network_layer: sandpolis_network::NetworkLayer,
+        network_layer: sandpolis_instance::network::NetworkLayer,
     ) -> Self {
         Self {
             layer,

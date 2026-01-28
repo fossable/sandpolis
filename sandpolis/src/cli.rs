@@ -3,7 +3,7 @@ use anyhow::Result;
 use clap::Parser;
 use clap::Subcommand;
 use colored::Colorize;
-use sandpolis_realm::RealmName;
+use sandpolis_instance::realm::RealmName;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use tracing::info;
@@ -19,13 +19,13 @@ pub struct CommandLine {
     pub instance: sandpolis_instance::cli::InstanceCommandLine,
 
     #[clap(flatten)]
-    pub network: sandpolis_network::cli::NetworkCommandLine,
+    pub network: sandpolis_instance::network::cli::NetworkCommandLine,
 
     #[clap(flatten)]
-    pub database: sandpolis_database::cli::DatabaseCommandLine,
+    pub database: sandpolis_instance::database::cli::DatabaseCommandLine,
 
     #[clap(flatten)]
-    pub realm: sandpolis_realm::cli::RealmCommandLine,
+    pub realm: sandpolis_instance::realm::cli::RealmCommandLine,
 
     #[command(subcommand)]
     pub command: Option<Commands>,
@@ -85,9 +85,9 @@ impl Commands {
         match self {
             #[cfg(feature = "server")]
             Commands::NewClientCert { realm, output } => {
-                use sandpolis_realm::RealmClusterCert;
+                use sandpolis_instance::realm::RealmClusterCert;
 
-                let database = sandpolis_database::DatabaseLayer::new(
+                let database = sandpolis_instance::database::DatabaseLayer::new(
                     config.database.clone(),
                     &crate::MODELS,
                 )?;

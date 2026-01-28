@@ -4,7 +4,7 @@ use crate::gui::layer_picker::LayerPickerState;
 use crate::gui::minimap::MinimapViewport;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
-use sandpolis_core::LayerName;
+use sandpolis_instance::LayerName;
 
 /// Marker component for layer indicator UI.
 #[derive(Component)]

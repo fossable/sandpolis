@@ -1,11 +1,10 @@
+use super::cli::DatabaseCommandLine;
 use anyhow::{Result, bail};
-use sandpolis_core::LayerConfig;
+use sandpolis_instance::LayerConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tracing::trace;
 use validator::Validate;
-
-use crate::cli::DatabaseCommandLine;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DatabaseConfig {

@@ -10,7 +10,7 @@
 /// - Close controllers when switching layers
 use anyhow::Result;
 use sandpolis::{InstanceState, MODELS, config::Configuration};
-use sandpolis_database::{DatabaseLayer, config::DatabaseConfig};
+use sandpolis_instance::database::{DatabaseLayer, config::DatabaseConfig};
 
 #[tokio::main]
 async fn main() -> Result<()> {

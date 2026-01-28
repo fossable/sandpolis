@@ -1,7 +1,4 @@
-// doc_comment! {
-//     include_str!("../README.md")
-// }
-
+use crate::{ClientAuthToken, LoginPassword, UserData};
 use anyhow::Result;
 #[cfg(any(feature = "client", feature = "server"))]
 use argon2::{
@@ -11,26 +8,88 @@ use argon2::{
 use base64::prelude::*;
 use native_db::ToKey;
 use native_model::Model;
-use sandpolis_core::ClusterId;
-use sandpolis_database::ResidentVec;
-use sandpolis_database::{DatabaseLayer, Resident};
+use sandpolis_instance::ClusterId;
 use sandpolis_instance::InstanceLayer;
+use sandpolis_instance::database::ResidentVec;
+use sandpolis_instance::database::{DatabaseLayer, Resident};
+use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
-use sandpolis_realm::RealmName;
-use sandpolis_user::UserName;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
+use std::time::Duration;
 use tracing::debug;
 use validator::Validate;
 
-#[cfg(feature = "client")]
-pub mod client;
-pub mod messages;
 #[cfg(feature = "server")]
 pub mod server;
 
 static USER_NAME_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new("^[a-z0-9]{4,32}$").unwrap());
+
+/// Create a new user account.
+#[derive(Serialize, Deserialize, Validate)]
+pub struct CreateUserRequest {
+    // TODO inline
+    pub data: UserData,
+
+    /// Password as unsalted hash
+    pub password: LoginPassword,
+
+    /// Whether a TOTP secret should be generated
+    pub totp: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum CreateUserResponse {
+    Ok {
+        /// TOTP secret URL
+        totp_secret: Option<String>,
+    },
+    Failed,
+    InvalidUser,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct GetUsersRequest {
+    /// Search by username prefix
+    pub username: Option<UserName>,
+
+    /// Search by email prefix
+    pub email: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum GetUsersResponse {
+    Ok(Vec<UserData>),
+    PermissionDenied,
+}
+
+/// Update an existing user account.
+#[derive(Serialize, Deserialize, Validate)]
+pub struct UpdateUserRequest {
+    /// User to edit
+    pub username: UserName,
+
+    /// New password
+    pub password: Option<String>,
+
+    /// New email
+    pub email: Option<String>,
+
+    /// New phone number
+    pub phone: Option<String>,
+
+    /// New expiration timestamp
+    pub expiration: Option<u64>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum UpdateUserResponse {
+    Ok,
+
+    /// The requested user does not exist
+    NotFound,
+}
 
 /// A user's username is forever unchangable.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -231,14 +290,14 @@ pub struct UserLayer {
     pub jwt_keys: HashMap<RealmName, (jsonwebtoken::EncodingKey, jsonwebtoken::DecodingKey)>,
 
     #[cfg(feature = "server")]
-    pub network: sandpolis_network::NetworkLayer,
+    pub network: sandpolis_instance::network::NetworkLayer,
 }
 
 impl UserLayer {
     pub async fn new(
         instance: InstanceLayer,
         database: DatabaseLayer,
-        network: sandpolis_network::NetworkLayer,
+        network: sandpolis_instance::network::NetworkLayer,
     ) -> Result<Self> {
         debug!("Initializing user layer");
         let user_layer = Self {
@@ -307,45 +366,6 @@ pub struct UserData {
     pub phone: Option<String>,
 
     pub expiration: Option<i64>,
-}
-
-#[data]
-pub struct LoginAttemptData {
-    /// When the login attempt occurred
-    pub timestamp: u64,
-
-    pub username: UserName,
-
-    /// Source address of the login attempt
-    pub source: Option<SocketAddr>,
-
-    /// Whether the login attempt was successful
-    pub allowed: bool,
-}
-
-/// This password is "pre-hashed" and salted with the cluster ID to avoid _hash
-/// shucking_ attacks. The server will hash and salt this value with a random
-/// value.
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct LoginPassword(pub String);
-
-impl LoginPassword {
-    /// When creating a `LoginPassword`, the cluster id is used as the initial
-    /// salt to ensure the same password in different clusters has different
-    /// initial hashes.
-    #[cfg(any(feature = "client", feature = "server"))]
-    pub fn new(cluster_id: ClusterId, plaintext: &str) -> Self {
-        let h = Argon2::default()
-            .hash_password(
-                plaintext.as_bytes(),
-                &SaltString::from_b64(&BASE64_STANDARD_NO_PAD.encode(cluster_id.as_bytes()))
-                    .expect("Cluster ID is always base64-able"),
-            )
-            .expect("Salt is base64")
-            .to_string();
-
-        Self(h)
-    }
 }
 
 pub enum UserPermission {

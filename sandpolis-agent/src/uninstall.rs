@@ -2,7 +2,7 @@ use crate::AgentLayer;
 use crate::messages::{UninstallRequest, UninstallResponse, UpdateRequest, UpdateResponse};
 use axum::extract;
 use axum::extract::State;
-use sandpolis_network::RequestResult;
+use sandpolis_instance::network::RequestResult;
 
 #[derive(Serialize, Deserialize)]
 pub struct UninstallRequest;

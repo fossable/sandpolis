@@ -1,8 +1,8 @@
-use sandpolis_realm::RealmName;
+use sandpolis_instance::realm::RealmName;
+use sandpolis_instance::realm::cli::RealmCommandLine;
+use sandpolis_instance::LayerConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-
-use crate::cli::RealmCommandLine;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RealmConfig {

@@ -5,7 +5,7 @@
 use bevy::prelude::*;
 use bevy_egui::egui;
 use egui_console::{ConsoleBuilder, ConsoleEvent, ConsoleWindow};
-use sandpolis_core::{InstanceId, LayerName};
+use sandpolis_instance::{InstanceId, LayerName};
 
 use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
 
@@ -210,9 +210,9 @@ impl LayerGuiExtension for ShellGuiExtension {
         }]
     }
 
-    fn visible_instance_types(&self) -> &'static [sandpolis_core::InstanceType] {
+    fn visible_instance_types(&self) -> &'static [sandpolis_instance::InstanceType] {
         // Shell layer shows servers and agents (not clients)
-        &[sandpolis_core::InstanceType::Server, sandpolis_core::InstanceType::Agent]
+        &[sandpolis_instance::InstanceType::Server, sandpolis_instance::InstanceType::Agent]
     }
 }
 

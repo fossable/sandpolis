@@ -6,7 +6,7 @@ use ratatui::{
     style::{Style, Stylize},
     widgets::{Block, Borders, List, ListItem, ListState, StatefulWidget, WidgetRef},
 };
-use sandpolis_database::{Data, Resident, ResidentVec, ResidentVecEvent};
+use sandpolis_instance::database::{Data, Resident, ResidentVec, ResidentVecEvent};
 use std::sync::{Arc, RwLock};
 
 use super::{EventHandler, Panel};
@@ -21,7 +21,7 @@ use super::{EventHandler, Panel};
 /// # Example
 /// ```rust
 /// use sandpolis_client::tui::SyncListWidget;
-/// use sandpolis_database::ResidentVec;
+/// use sandpolis_instance::database::ResidentVec;
 ///
 /// let resident_vec: ResidentVec<MyData> = db.resident_vec(())?;
 /// let list = SyncListWidget::builder(resident_vec)
@@ -354,9 +354,9 @@ mod tests {
     use native_db::ToKey;
     use native_model::Model;
     use ratatui::text::Text;
-    use sandpolis_database::{DataCreation, DataIdentifier, DataRevision, test_db};
+    use sandpolis_instance::database::{DataCreation, DataIdentifier, DataRevision, test_db};
     use sandpolis_macros::data;
-    use sandpolis_realm::RealmName;
+    use sandpolis_instance::realm::RealmName;
 
     #[data]
     #[derive(Default)]

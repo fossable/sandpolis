@@ -1,7 +1,7 @@
 use crate::gui::node::WorldView;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 
 /// Resource to track node picker UI state
 #[derive(Resource, Default)]

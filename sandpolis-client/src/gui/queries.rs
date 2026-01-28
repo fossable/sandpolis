@@ -1,7 +1,7 @@
 use anyhow::Result;
-use sandpolis_core::InstanceId;
+use sandpolis_instance::InstanceId;
 use sandpolis_instance::InstanceLayer;
-use sandpolis_network::NetworkLayer;
+use sandpolis_instance::network::NetworkLayer;
 
 /// Instance metadata returned from database queries
 #[derive(Clone, Debug)]

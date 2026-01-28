@@ -5,8 +5,8 @@ use axum::{
     routing::{get, post},
 };
 use rand::Rng;
-use sandpolis_core::{ClusterId, InstanceId};
-use sandpolis_realm::RealmClusterCert;
+use sandpolis_instance::{ClusterId, InstanceId};
+use sandpolis_instance::realm::RealmClusterCert;
 use std::path::PathBuf;
 use tempfile::TempDir;
 use tempfile::tempdir;
@@ -24,11 +24,11 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     // User layer
     let app: Router<InstanceState> =
-        app.route("/user/login", post(sandpolis_user::server::routes::login));
+        app.route("/user/login", post(sandpolis_server::user::server::routes::login));
 
     // TODO from_fn_with_state for IP blocking
     let app = app.route_layer(axum::middleware::from_fn(
-        sandpolis_realm::server::auth_middleware,
+        sandpolis_instance::realm::server::auth_middleware,
     ));
 
     // Tracing support for Axum
@@ -37,7 +37,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     info!(listener = ?config.server.listen, "Starting server listener");
     let main_handle = axum_server::bind(config.server.listen)
         .acceptor(
-            sandpolis_realm::server::RealmAcceptor::new(
+            sandpolis_instance::realm::server::RealmAcceptor::new(
                 state.instance.clone(),
                 state.realm.clone(),
             )
@@ -92,7 +92,7 @@ pub async fn test_server() -> Result<TestServer> {
     let mut config = Configuration::default();
 
     // Create temporary database
-    let database = sandpolis_database::DatabaseLayer::new(config.database.clone(), &crate::MODELS)?;
+    let database = sandpolis_instance::database::DatabaseLayer::new(config.database.clone(), &crate::MODELS)?;
 
     // Generate temporary certs
     let certs = tempdir()?;

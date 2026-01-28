@@ -13,13 +13,13 @@ pub struct Configuration {
     pub agent: sandpolis_agent::config::AgentLayerConfig,
     #[cfg(feature = "client")]
     pub client: sandpolis_client::config::ClientLayerConfig,
-    pub database: sandpolis_database::config::DatabaseConfig,
+    pub database: sandpolis_instance::database::config::DatabaseConfig,
     /// Whether overrides from environment variables or the command line are
     /// allowed
     pub disable_overrides: bool,
     pub instance: sandpolis_instance::config::InstanceConfig,
-    pub network: sandpolis_network::config::NetworkLayerConfig,
-    pub realm: sandpolis_realm::config::RealmConfig,
+    pub network: sandpolis_instance::network::config::NetworkLayerConfig,
+    pub realm: sandpolis_instance::realm::config::RealmConfig,
     #[cfg(feature = "server")]
     pub server: sandpolis_server::config::ServerLayerConfig,
     #[cfg(feature = "layer-snapshot")]

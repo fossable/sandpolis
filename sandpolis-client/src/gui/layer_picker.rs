@@ -2,7 +2,7 @@ use crate::gui::input::CurrentLayer;
 use crate::gui::layer_ext::{get_extension_for_layer, get_layer_extensions};
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
-use sandpolis_core::LayerName;
+use sandpolis_instance::LayerName;
 
 /// Resource to track layer picker UI state
 #[derive(Resource)]

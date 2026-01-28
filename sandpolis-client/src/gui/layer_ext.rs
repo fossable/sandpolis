@@ -6,7 +6,7 @@
 
 use bevy::prelude::*;
 use bevy_egui::egui;
-use sandpolis_core::{InstanceId, InstanceType, LayerName};
+use sandpolis_instance::{InstanceId, InstanceType, LayerName};
 
 /// Trait for layer-specific GUI extensions.
 ///

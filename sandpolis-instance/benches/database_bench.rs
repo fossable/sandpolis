@@ -1,12 +1,12 @@
 use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
 use native_db::*;
 use native_model::{Model, native_model};
-use sandpolis_database::{
-    self as sandpolis_database, Data, DataCondition, DataCreation, DatabaseLayer, Resident,
+use sandpolis_instance::database::{
+    self as sandpolis_instance::database, Data, DataCondition, DataCreation, DatabaseLayer, Resident,
     ResidentVec, config,
 };
 use sandpolis_macros::data;
-use sandpolis_realm::RealmName;
+use sandpolis_instance::realm::RealmName;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 

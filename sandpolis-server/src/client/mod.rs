@@ -1,11 +1,11 @@
+use crate::ServerUrl;
+use crate::user::ClientAuthToken;
+use crate::user::UserName;
 use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
-use sandpolis_core::UserName;
-use sandpolis_database::DataIdentifier;
+use sandpolis_instance::database::DataIdentifier;
 use sandpolis_macros::data;
-use crate::ServerUrl;
-use sandpolis_user::ClientAuthToken;
 
 /// Clients can save servers to make subsequent logins faster.
 #[data]

@@ -1,9 +1,9 @@
 use anyhow::Result;
 use sandpolis::{client::tui::server_list::ServerListWidget, server::test_server};
-use sandpolis_database::TemporaryDatabase;
+use sandpolis_instance::database::TemporaryDatabase;
 use sandpolis_instance::{InstanceId, InstanceLayer};
-use sandpolis_network::{NetworkLayer, config::NetworkLayerConfig};
-use sandpolis_realm::{RealmLayer, config::RealmConfig};
+use sandpolis_instance::network::{NetworkLayer, config::NetworkLayerConfig};
+use sandpolis_instance::realm::{RealmLayer, config::RealmConfig};
 use sandpolis_server::ServerLayer;
 use std::sync::Arc;
 

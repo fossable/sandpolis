@@ -3,8 +3,8 @@ use crate::gui::node::{NodeEntity, WorldView};
 use crate::gui::queries;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
-use sandpolis_core::InstanceId;
-use sandpolis_core::LayerName;
+use sandpolis_instance::InstanceId;
+use sandpolis_instance::LayerName;
 use std::collections::HashMap;
 
 /// Component representing an edge between two nodes
@@ -68,7 +68,7 @@ pub fn update_edges_for_layer(
     mut commands: Commands,
     current_layer: Res<CurrentLayer>,
     edge_query: Query<(Entity, &Edge)>,
-    network_layer: Res<sandpolis_network::NetworkLayer>,
+    network_layer: Res<sandpolis_instance::network::NetworkLayer>,
 ) {
     // Only update when layer changes or is first added
     if !current_layer.is_changed() && !current_layer.is_added() {
@@ -126,7 +126,7 @@ pub fn update_edge_visibility(
 pub fn render_edge_labels(
     mut contexts: EguiContexts,
     current_layer: Res<CurrentLayer>,
-    network_layer: Res<sandpolis_network::NetworkLayer>,
+    network_layer: Res<sandpolis_instance::network::NetworkLayer>,
     edge_query: Query<&Edge>,
     node_query: Query<(&Transform, &NodeEntity)>,
     camera_query: Query<(&Camera, &GlobalTransform), With<WorldView>>,

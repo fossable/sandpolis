@@ -1,23 +1,19 @@
 use anyhow::Result;
 use anyhow::anyhow;
+#[cfg(feature = "server")]
 use axum::extract::ws::{Message, WebSocket};
 use chrono::{DateTime, Utc};
-use cron::Schedule;
 use futures_util::{SinkExt, StreamExt};
 use native_db::ToKey;
 use native_model::Model;
-use sandpolis_core::{ClusterId, InstanceId};
-use sandpolis_database::DatabaseLayer;
-use sandpolis_database::Resident;
-use sandpolis_database::ResidentVec;
+use sandpolis_instance::database::DatabaseLayer;
+use sandpolis_instance::database::Resident;
+use sandpolis_instance::database::ResidentVec;
+use sandpolis_instance::realm::RealmName;
+use sandpolis_instance::{ClusterId, InstanceId};
 use sandpolis_macros::data;
-use sandpolis_realm::RealmName;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::{ts_seconds, ts_seconds_option};
-use std::fmt::Display;
-use std::net::IpAddr;
-use std::net::ToSocketAddrs;
-use std::str::FromStr;
 use std::sync::RwLock;
 use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
 use stream::{StreamId, StreamMessage};
@@ -50,9 +46,6 @@ pub mod config;
 pub mod messages;
 pub mod ping;
 pub mod stream;
-
-#[cfg(feature = "server")]
-pub mod server;
 
 #[data]
 #[derive(Default)]
@@ -89,6 +82,7 @@ impl NetworkLayer {
 }
 
 /// Convenience type to be used as return of request handler.
+#[cfg(feature = "server")]
 pub type RequestResult<T> = Result<axum::Json<T>, axum::Json<T>>;
 
 #[data(temporal)]

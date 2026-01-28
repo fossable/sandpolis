@@ -2,7 +2,7 @@ use crate::WakeAction;
 use crate::messages::{WakeRequest, WakeResponse};
 use anyhow::Result;
 use sandpolis_macros::Stream;
-use sandpolis_network::StreamResponder;
+use sandpolis_instance::network::StreamResponder;
 use serde::Deserialize;
 use serde::Serialize;
 use tokio::sync::mpsc::Sender;

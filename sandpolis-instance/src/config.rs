@@ -1,5 +1,5 @@
 use anyhow::Result;
-use sandpolis_core::LayerConfig;
+use sandpolis_instance::LayerConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tracing::debug;

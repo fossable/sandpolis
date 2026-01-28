@@ -4,8 +4,8 @@ use crate::gui::node::{NodeEntity, WorldView};
 use crate::gui::queries;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
-use sandpolis_core::InstanceId;
-use sandpolis_core::LayerName;
+use sandpolis_instance::InstanceId;
+use sandpolis_instance::LayerName;
 
 /// Zoom threshold above which the minimal preview is shown.
 /// At zoom level 1.0, preview is full. Above this value (more zoomed out), preview becomes minimal.
@@ -51,7 +51,7 @@ impl Default for NodePreview {
 pub fn render_node_previews(
     mut contexts: EguiContexts,
     current_layer: Res<CurrentLayer>,
-    network_layer: Res<sandpolis_network::NetworkLayer>,
+    network_layer: Res<sandpolis_instance::network::NetworkLayer>,
     mut controller_state: ResMut<NodeControllerState>,
     camera_query: Query<(&Camera, &GlobalTransform, &Projection), With<WorldView>>,
     node_query: Query<(&Transform, &NodeEntity, Option<&NodePreview>)>,
@@ -195,7 +195,7 @@ pub fn get_hostname(instance_id: InstanceId) -> String {
 /// Get layer-specific bottom line details
 pub fn get_layer_details(
     layer: &LayerName,
-    network_layer: &sandpolis_network::NetworkLayer,
+    network_layer: &sandpolis_instance::network::NetworkLayer,
     instance_id: InstanceId,
 ) -> String {
     match layer.name() {
@@ -273,7 +273,7 @@ pub fn get_layer_details(
 pub fn render_preview_content(
     ui: &mut egui::Ui,
     current_layer: &LayerName,
-    network_layer: &sandpolis_network::NetworkLayer,
+    network_layer: &sandpolis_instance::network::NetworkLayer,
     controller_state: &mut NodeControllerState,
     instance_id: InstanceId,
 ) {
@@ -392,7 +392,7 @@ pub fn render_preview_content(
 fn render_minimal_preview_content(
     ui: &mut egui::Ui,
     current_layer: &LayerName,
-    network_layer: &sandpolis_network::NetworkLayer,
+    network_layer: &sandpolis_instance::network::NetworkLayer,
     controller_state: &mut NodeControllerState,
     instance_id: InstanceId,
 ) {

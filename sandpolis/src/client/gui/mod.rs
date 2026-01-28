@@ -15,7 +15,7 @@ use bevy::{
 };
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 use bevy_rapier2d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
-use sandpolis_core::LayerName;
+use sandpolis_instance::LayerName;
 
 // Import GUI types from sandpolis-client submodules
 use sandpolis_client::gui::about::{
@@ -277,7 +277,7 @@ fn setup(
     mut rapier_config: Query<&mut RapierConfiguration>,
     asset_server: Res<AssetServer>,
     instance_layer: Res<sandpolis_instance::InstanceLayer>,
-    network_layer: Res<sandpolis_network::NetworkLayer>,
+    network_layer: Res<sandpolis_instance::network::NetworkLayer>,
 ) {
     // Set zero gravity for floating nodes
     for mut rapier_config in &mut rapier_config {

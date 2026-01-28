@@ -1,3 +1,5 @@
+use crate::database::config::DatabaseConfig;
+use crate::realm::RealmName;
 use anyhow::{Result, bail};
 use chrono::{DateTime, Utc};
 use native_db::db_type::{KeyDefinition, KeyEntry, KeyOptions, KeyRange, ToKeyDefinition};
@@ -15,6 +17,9 @@ use std::sync::Arc;
 use std::sync::{Mutex, RwLock, RwLockReadGuard};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace, warn};
+
+pub mod cli;
+pub mod config;
 
 /// This layer manages separate databases for each realm.
 #[derive(Clone)]
@@ -88,8 +93,8 @@ macro_rules! test_db {
             models.define::<$model>().unwrap();
         ),+
 
-        sandpolis_database::DatabaseLayer::new(
-            sandpolis_database::config::DatabaseConfig {
+        sandpolis_instance::database::DatabaseLayer::new(
+            sandpolis_instance::database::config::DatabaseConfig {
                 storage: None,
                 ephemeral: true,
             },
@@ -622,7 +627,7 @@ impl<T: Data> Resident<T> {
 #[cfg(test)]
 mod test_resident {
     use super::*;
-    use crate as sandpolis_database;
+    use super::*;
     use anyhow::Result;
     use native_db::*;
     use native_model::Model;
@@ -1125,7 +1130,7 @@ impl<T: Data> DataQuery<T> for (DataCondition, DataCondition) {
 #[cfg(test)]
 mod test_resident_vec {
     use super::*;
-    use crate as sandpolis_database;
+    use super::*;
     use anyhow::Result;
     use native_db::Models;
     use native_db::*;
@@ -1489,7 +1494,7 @@ mod test_resident_vec {
     #[tokio::test]
     #[test_log::test]
     async fn test_resident_history() -> Result<()> {
-        use crate::test_resident::TestHistoryData;
+        use super::test_resident::TestHistoryData;
 
         let database = test_db!(TestHistoryData);
         let db = database.realm(RealmName::default())?;

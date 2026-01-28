@@ -5,7 +5,7 @@ use axum::{Json, Router, extract::State};
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_macros::data;
-use sandpolis_network::RequestResult;
+use sandpolis_instance::network::RequestResult;
 use serde::Deserialize;
 use serde::Serialize;
 
