@@ -93,8 +93,8 @@ macro_rules! test_db {
             models.define::<$model>().unwrap();
         ),+
 
-        sandpolis_instance::database::DatabaseLayer::new(
-            sandpolis_instance::database::config::DatabaseConfig {
+        $crate::database::DatabaseLayer::new(
+            $crate::database::config::DatabaseConfig {
                 storage: None,
                 ephemeral: true,
             },

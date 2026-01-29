@@ -1,10 +1,10 @@
 use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
-use sandpolis_instance::database::{DatabaseLayer, Resident};
 use sandpolis_instance::InstanceLayer;
-use sandpolis_macros::data;
+use sandpolis_instance::database::{DatabaseLayer, Resident};
 use sandpolis_instance::realm::RealmName;
+use sandpolis_macros::data;
 use std::sync::Arc;
 
 #[cfg(feature = "agent")]

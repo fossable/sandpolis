@@ -1,6 +1,6 @@
-use sandpolis_instance::realm::RealmName;
-use sandpolis_instance::realm::cli::RealmCommandLine;
-use sandpolis_instance::LayerConfig;
+use crate::LayerConfig;
+use crate::realm::RealmName;
+use crate::realm::cli::RealmCommandLine;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 

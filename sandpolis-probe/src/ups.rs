@@ -166,10 +166,7 @@ mod client {
             .as_ref()
             .map(|creds| Auth::new(creds.username.clone(), Some(creds.password.clone())));
 
-        let rups_config = ConfigBuilder::new()
-            .with_host(host)
-            .with_auth(auth)
-            .build();
+        let rups_config = ConfigBuilder::new().with_host(host).with_auth(auth).build();
 
         Connection::new(&rups_config).map_err(|e| format!("{}", e))
     }
@@ -237,10 +234,10 @@ mod client {
                 .map(|var| (var.name().to_string(), var.value()))
                 .collect(),
             Err(rups::ClientError::Nut(rups::NutError::AccessDenied)) => {
-                return GetUpsStatusResponse::AuthenticationFailed
+                return GetUpsStatusResponse::AuthenticationFailed;
             }
             Err(rups::ClientError::Nut(rups::NutError::UnknownUps)) => {
-                return GetUpsStatusResponse::UpsNotFound
+                return GetUpsStatusResponse::UpsNotFound;
             }
             Err(e) => return GetUpsStatusResponse::ConnectionFailed(format!("{}", e)),
         };

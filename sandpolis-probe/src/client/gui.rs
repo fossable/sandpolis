@@ -57,7 +57,8 @@ pub fn spawn_probe_node(
 
     // Position probe nodes in an orbit around the parent
     // Use the probe ID to determine angle for consistent placement
-    let angle = (probe.id as f32 * 0.618033988749895 * std::f32::consts::TAU) % std::f32::consts::TAU;
+    let angle =
+        (probe.id as f32 * 0.618033988749895 * std::f32::consts::TAU) % std::f32::consts::TAU;
     let orbit_radius = 120.0; // Distance from parent node
     let x = parent_position.x + orbit_radius * angle.cos();
     let y = parent_position.y + orbit_radius * angle.sin();
@@ -889,7 +890,11 @@ fn render_probe_form_fields(ui: &mut egui::Ui, probe_type: ProbeType, form: &mut
                                 &form.auth_protocol
                             })
                             .show_ui(ui, |ui| {
-                                ui.selectable_value(&mut form.auth_protocol, "".to_string(), "None");
+                                ui.selectable_value(
+                                    &mut form.auth_protocol,
+                                    "".to_string(),
+                                    "None",
+                                );
                                 ui.selectable_value(
                                     &mut form.auth_protocol,
                                     "MD5".to_string(),
@@ -905,7 +910,9 @@ fn render_probe_form_fields(ui: &mut egui::Ui, probe_type: ProbeType, form: &mut
                     if !form.auth_protocol.is_empty() {
                         ui.horizontal(|ui| {
                             ui.label("Auth Password:");
-                            ui.add(egui::TextEdit::singleline(&mut form.auth_password).password(true));
+                            ui.add(
+                                egui::TextEdit::singleline(&mut form.auth_password).password(true),
+                            );
                         });
                     }
                     ui.horizontal(|ui| {
@@ -917,7 +924,11 @@ fn render_probe_form_fields(ui: &mut egui::Ui, probe_type: ProbeType, form: &mut
                                 &form.priv_protocol
                             })
                             .show_ui(ui, |ui| {
-                                ui.selectable_value(&mut form.priv_protocol, "".to_string(), "None");
+                                ui.selectable_value(
+                                    &mut form.priv_protocol,
+                                    "".to_string(),
+                                    "None",
+                                );
                                 ui.selectable_value(
                                     &mut form.priv_protocol,
                                     "AES".to_string(),
@@ -933,7 +944,9 @@ fn render_probe_form_fields(ui: &mut egui::Ui, probe_type: ProbeType, form: &mut
                     if !form.priv_protocol.is_empty() {
                         ui.horizontal(|ui| {
                             ui.label("Privacy Password:");
-                            ui.add(egui::TextEdit::singleline(&mut form.priv_password).password(true));
+                            ui.add(
+                                egui::TextEdit::singleline(&mut form.priv_password).password(true),
+                            );
                         });
                     }
                 }
@@ -1131,7 +1144,10 @@ impl LayerGuiExtension for ProbeGuiExtension {
 
     fn visible_instance_types(&self) -> &'static [sandpolis_instance::InstanceType] {
         // Probe layer shows servers and agents (not clients)
-        &[sandpolis_instance::InstanceType::Server, sandpolis_instance::InstanceType::Agent]
+        &[
+            sandpolis_instance::InstanceType::Server,
+            sandpolis_instance::InstanceType::Agent,
+        ]
     }
 
     fn show_probe_nodes(&self) -> bool {

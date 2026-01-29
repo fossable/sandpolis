@@ -5,8 +5,8 @@ use axum::{
     routing::{get, post},
 };
 use rand::Rng;
-use sandpolis_instance::{ClusterId, InstanceId};
 use sandpolis_instance::realm::RealmClusterCert;
+use sandpolis_instance::{ClusterId, InstanceId};
 use std::path::PathBuf;
 use tempfile::TempDir;
 use tempfile::tempdir;
@@ -14,17 +14,17 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
-    // TODO fallback routes from client to agent?
-
     let app: Router<InstanceState> = Router::new().route("/versions", get(crate::routes::versions));
 
     // Server layer
     let app: Router<InstanceState> =
-        app.route("/server/banner", get(sandpolis_server::banner::banner));
+        app.route("/server/banner", get(sandpolis_server::banner::get_banner));
 
     // User layer
-    let app: Router<InstanceState> =
-        app.route("/user/login", post(sandpolis_server::user::server::routes::login));
+    let app: Router<InstanceState> = app.route(
+        "/user/login",
+        post(sandpolis_server::login::server::post_login),
+    );
 
     // TODO from_fn_with_state for IP blocking
     let app = app.route_layer(axum::middleware::from_fn(
@@ -35,7 +35,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let app = app.layer(TraceLayer::new_for_http());
 
     info!(listener = ?config.server.listen, "Starting server listener");
-    let main_handle = axum_server::bind(config.server.listen)
+    axum_server::bind(config.server.listen)
         .acceptor(
             sandpolis_instance::realm::server::RealmAcceptor::new(
                 state.instance.clone(),
@@ -43,32 +43,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             )
             .await?,
         )
-        .serve(app.clone().with_state(state.clone()).into_make_service());
-
-    if let Some(socket_directory) = &config.instance.socket_directory {
-        config.instance.clear_socket_path("server.sock")?;
-
-        info!(
-            socket = format!("{}/server.sock", socket_directory.display()),
-            "Starting admin socket"
-        );
-        let uds =
-            tokio::net::UnixListener::bind(&format!("{}/server.sock", socket_directory.display()))?;
-        let control_handle = tokio::spawn(async move {
-            // TODO should admin socket get separate app and state?
-            axum::serve(uds, app.with_state(state).into_make_service()).await
-        });
-        tokio::select! {
-            result = main_handle => {
-                result?;
-            }
-            result = control_handle => {
-                result??;
-            }
-        };
-    } else {
-        main_handle.await?;
-    }
+        .serve(app.clone().with_state(state.clone()).into_make_service())
+        .await?;
     Ok(())
 }
 
@@ -92,7 +68,8 @@ pub async fn test_server() -> Result<TestServer> {
     let mut config = Configuration::default();
 
     // Create temporary database
-    let database = sandpolis_instance::database::DatabaseLayer::new(config.database.clone(), &crate::MODELS)?;
+    let database =
+        sandpolis_instance::database::DatabaseLayer::new(config.database.clone(), &crate::MODELS)?;
 
     // Generate temporary certs
     let certs = tempdir()?;

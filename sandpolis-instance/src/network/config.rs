@@ -1,5 +1,5 @@
-use sandpolis_instance::network::cli::NetworkCommandLine;
-use sandpolis_instance::LayerConfig;
+use crate::LayerConfig;
+use crate::network::cli::NetworkCommandLine;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

@@ -1,7 +1,18 @@
+use crate::user::ClientAuthToken;
 use crate::user::UserName;
-use crate::user::{ClientAuthToken, UserData};
+#[cfg(any(feature = "client", feature = "server"))]
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHasher, SaltString},
+};
+#[cfg(any(feature = "client", feature = "server"))]
+use base64::prelude::*;
+use native_db::ToKey;
+use native_model::Model;
 use sandpolis_instance::ClusterId;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
 use std::time::Duration;
 use validator::Validate;
 

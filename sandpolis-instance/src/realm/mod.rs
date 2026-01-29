@@ -1,3 +1,9 @@
+use crate::ClusterId;
+use crate::InstanceLayer;
+use crate::InstanceType;
+use crate::database::RealmDatabase;
+use crate::database::ResidentVec;
+use crate::database::{DatabaseLayer, Resident};
 use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
@@ -9,12 +15,6 @@ use native_model::Model;
 use pem::Pem;
 use pem::encode;
 use regex::Regex;
-use sandpolis_instance::ClusterId;
-use sandpolis_instance::InstanceLayer;
-use sandpolis_instance::InstanceType;
-use sandpolis_instance::database::RealmDatabase;
-use sandpolis_instance::database::ResidentVec;
-use sandpolis_instance::database::{DatabaseLayer, Resident};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -584,7 +584,7 @@ mod test_client_cert {
     #[test]
     #[cfg(feature = "server")]
     fn test_read_write() -> Result<()> {
-        let cluster_id = sandpolis_instance::ClusterId::default();
+        let cluster_id = crate::ClusterId::default();
         let ca = RealmClusterCert::new(cluster_id, "default".parse()?)?;
         let original_cert = ca.client_cert()?;
 
@@ -609,7 +609,7 @@ mod test_agent_cert {
     #[test]
     #[cfg(feature = "server")]
     fn test_read_write() -> Result<()> {
-        let cluster_id = sandpolis_instance::ClusterId::default();
+        let cluster_id = crate::ClusterId::default();
         let ca = RealmClusterCert::new(cluster_id, "default".parse()?)?;
         let original_cert = ca.agent_cert()?;
 

@@ -13,9 +13,6 @@ built = { version = "0.7", features = ["git2", "chrono", "semver"] }
 
 [dependencies]
 anyhow = { workspace = true }
-axum-macros = { workspace = true }
-axum-server = { workspace = true }
-axum = { workspace = true }
 clap = { workspace = true }
 colored = { workspace = true }
 fossable = "0.1.2"
@@ -50,6 +47,11 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing = { workspace = true }
 validator = { workspace = true }
 
+# Server exclusive
+axum-macros = { workspace = true, optional = true }
+axum-server = { workspace = true, optional = true }
+axum = { workspace = true, optional = true }
+
 # Terminal client exclusive
 ratatui = { workspace = true, optional = true }
 ratatui-image = { workspace = true, optional = true }
@@ -73,6 +75,9 @@ eframe = { workspace = true }
 [features]
 # Instances
 server = [
+  "dep:axum",
+  "dep:axum-server",
+  "dep:axum-macros",
   "sandpolis-desktop?/server",
   "sandpolis-filesystem?/server",
   "sandpolis-instance/server",

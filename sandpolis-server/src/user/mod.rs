@@ -1,4 +1,4 @@
-use crate::{ClientAuthToken, LoginPassword, UserData};
+use crate::login::LoginPassword;
 use anyhow::Result;
 #[cfg(any(feature = "client", feature = "server"))]
 use argon2::{
@@ -8,6 +8,7 @@ use argon2::{
 use base64::prelude::*;
 use native_db::ToKey;
 use native_model::Model;
+use regex::Regex;
 use sandpolis_instance::ClusterId;
 use sandpolis_instance::InstanceLayer;
 use sandpolis_instance::database::ResidentVec;
@@ -16,10 +17,14 @@ use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::net::SocketAddr;
+use std::ops::Deref;
+use std::str::FromStr;
+use std::sync::LazyLock;
 use std::time::Duration;
 use tracing::debug;
-use validator::Validate;
+use validator::{Validate, ValidationErrors};
 
 #[cfg(feature = "server")]
 pub mod server;

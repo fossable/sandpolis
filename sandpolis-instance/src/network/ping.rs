@@ -1,5 +1,5 @@
-use sandpolis_instance::network::stream::Stream;
-use sandpolis_instance::network::stream::{StreamRequester, StreamResponder};
+use crate::network::stream::Stream;
+use crate::network::stream::{StreamRequester, StreamResponder};
 use anyhow::Result;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};

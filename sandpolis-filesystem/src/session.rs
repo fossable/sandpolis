@@ -2,41 +2,52 @@ use crate::FilesystemLayer;
 use axum::extract::State;
 use axum::extract::{self, WebSocketUpgrade};
 use axum::http::StatusCode;
-use sandpolis_instance::network::RequestResult;
+use sandpolis_instance::network::{RequestResult, StreamResponder};
+use sandpolis_macros::Stream;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 /// Start a new stream that will receive filesystem updates.
 #[derive(Serialize, Deserialize)]
-pub struct FsSessionRequest {
-    /// The initial working directory
-    pub path: PathBuf,
+pub enum FsSessionRequest {
+    Init {
+        /// The initial working directory
+        path: PathBuf,
 
-    /// Compute MIME types (might be expensive)
-    pub mime_types: bool,
+        /// Compute MIME types (might be expensive)
+        mime_types: bool,
 
-    /// Explicitly request polling watcher
-    pub polling: bool,
+        /// Explicitly request polling watcher
+        polling: bool,
+    },
+    Mount {
+        /// The initial working directory
+        path: PathBuf,
+    },
+    /// Look up a directory entry by name and get its attributes.
+    FuseLookup {
+        /// Inode number of the parent directory.
+        parent: i32,
+
+        /// The name to look up
+        name: String,
+    },
+    /// Delete one or more files from the filesystem.
+    Delete {
+        /// Absolute paths to delete
+        targets: Vec<PathBuf>,
+
+        /// Whether to recursively delete directories
+        recursive: bool,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
 pub enum FsSessionResponse {
-    Ok(u64),
-    PathNotFound,
-}
-
-#[derive(Serialize, Deserialize)]
-pub enum FsSessionEvent {
     Created,
     Deleted,
     Modified,
     SetCwd,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct FsMountRequest {
-    /// The initial working directory
-    pub path: PathBuf,
 }
 
 // Updates to a directory stream.
@@ -81,57 +92,14 @@ pub struct FsMountRequest {
 //     repeated DirectoryEntry entry = 2;
 // }
 
-#[derive(Serialize, Deserialize)]
-pub enum FsMountEvent {
-    /// Look up a directory entry by name and get its attributes.
-    Lookup {
-        /// Inode number of the parent directory.
-        parent: i32,
-
-        /// The name to look up
-        name: String,
-    },
-}
-
-/// Delete one or more files from the filesystem.
-#[derive(Serialize, Deserialize)]
-pub struct FsDeleteRequest {
-    /// Absolute paths to delete
-    pub targets: Vec<PathBuf>,
-
-    /// Whether to recursively delete directories
-    pub recursive: bool,
-}
-
-#[derive(Serialize, Deserialize)]
-pub enum FsDeleteResponse {
-    Ok,
-    PathNotFound,
-}
-
 #[cfg(feature = "agent")]
+#[derive(Stream)]
 struct FsSessionStreamResponder {
     cwd: PathBuf,
     watcher: Box<dyn notify::Watcher>,
 }
 
-#[axum_macros::debug_handler]
-pub async fn session(
-    state: State<FilesystemLayer>,
-    ws: WebSocketUpgrade,
-    extract::Json(request): extract::Json<FsSessionRequest>,
-) -> Result<(), StatusCode> {
-    // let session = ShellSession::new(request).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // ws.on_upgrade(move |socket| session.run(socket));
-
-    Ok(())
-}
-
-#[axum_macros::debug_handler]
-pub async fn delete(
-    state: State<FilesystemLayer>,
-    extract::Json(request): extract::Json<FsDeleteRequest>,
-) -> RequestResult<FsDeleteResponse> {
-    todo!()
+impl StreamResponder for FsSessionStreamResponder {
+    type In = FsSessionRequest;
+    type Out = FsSessionResponse;
 }

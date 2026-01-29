@@ -62,7 +62,11 @@ pub trait LayerGuiExtension: Send + Sync + 'static {
     /// By default, all instance types are visible. Layers can override this
     /// to filter which nodes appear in the world view.
     fn visible_instance_types(&self) -> &'static [InstanceType] {
-        &[InstanceType::Server, InstanceType::Agent, InstanceType::Client]
+        &[
+            InstanceType::Server,
+            InstanceType::Agent,
+            InstanceType::Client,
+        ]
     }
 
     /// Returns whether probe nodes should be visible when this layer is active.

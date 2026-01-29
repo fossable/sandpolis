@@ -231,9 +231,9 @@ pub fn update_node_visibility_for_layer(
         let instance_id = node_entity.instance_id;
 
         // Check if this node's instance type matches any of the visible types
-        let should_be_visible = visible_types.iter().any(|instance_type| {
-            instance_id.is_type(*instance_type)
-        });
+        let should_be_visible = visible_types
+            .iter()
+            .any(|instance_type| instance_id.is_type(*instance_type));
 
         *visibility = if should_be_visible {
             Visibility::Inherited
@@ -257,7 +257,11 @@ fn get_visible_instance_types_for_layer(layer: &LayerName) -> &'static [Instance
     // Fall back to default behavior based on layer name
     match layer.name() {
         // Network layer shows all instance types
-        "Network" => &[InstanceType::Server, InstanceType::Agent, InstanceType::Client],
+        "Network" => &[
+            InstanceType::Server,
+            InstanceType::Agent,
+            InstanceType::Client,
+        ],
 
         // Agent-focused layers only show servers and agents
         "Inventory" | "Filesystem" | "Shell" | "Desktop" | "Probe" => {
@@ -274,6 +278,10 @@ fn get_visible_instance_types_for_layer(layer: &LayerName) -> &'static [Instance
         "Agent" => &[InstanceType::Server, InstanceType::Agent],
 
         // Default: show all
-        _ => &[InstanceType::Server, InstanceType::Agent, InstanceType::Client],
+        _ => &[
+            InstanceType::Server,
+            InstanceType::Agent,
+            InstanceType::Client,
+        ],
     }
 }

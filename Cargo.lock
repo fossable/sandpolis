@@ -9666,6 +9666,7 @@ dependencies = [
  "ratatui",
  "sandpolis-client",
  "sandpolis-instance",
+ "sandpolis-macros",
  "serde",
  "tokio",
  "tracing",

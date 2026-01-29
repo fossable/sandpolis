@@ -1,16 +1,13 @@
+use crate::database::DatabaseLayer;
+use crate::database::Resident;
+use crate::database::ResidentVec;
+use crate::realm::RealmName;
+use crate::{ClusterId, InstanceId};
 use anyhow::Result;
-use anyhow::anyhow;
-#[cfg(feature = "server")]
-use axum::extract::ws::{Message, WebSocket};
 use chrono::{DateTime, Utc};
 use futures_util::{SinkExt, StreamExt};
 use native_db::ToKey;
 use native_model::Model;
-use sandpolis_instance::database::DatabaseLayer;
-use sandpolis_instance::database::Resident;
-use sandpolis_instance::database::ResidentVec;
-use sandpolis_instance::realm::RealmName;
-use sandpolis_instance::{ClusterId, InstanceId};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use serde_with::chrono::serde::{ts_seconds, ts_seconds_option};
@@ -18,6 +15,8 @@ use std::sync::RwLock;
 use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
 use stream::{StreamId, StreamMessage};
 pub use stream::{StreamRegistry, StreamRequester, StreamResponder};
+use tokio_util::sync::CancellationToken;
+use tracing::debug;
 
 /// Trait for layers to register their stream responders on new connections.
 pub trait RegisterResponders: Send + Sync + 'static {
@@ -37,14 +36,13 @@ inventory::collect!(ResponderRegistration);
 pub fn collected_responders() -> impl Iterator<Item = &'static dyn RegisterResponders> {
     inventory::iter::<ResponderRegistration>().map(|r| r.0)
 }
-use tokio_util::sync::CancellationToken;
-use tracing::debug;
-use url::Url;
 
 pub mod cli;
 pub mod config;
 pub mod messages;
 pub mod ping;
+#[cfg(feature = "server")]
+pub mod server;
 pub mod stream;
 
 #[data]
@@ -123,7 +121,6 @@ pub struct ConnectionData {
 /// For the DTLS case, reliable/orderly delivery is not guaranteed which fits
 /// the use case of direct connections.
 pub struct InstanceConnection {
-    tx: tokio::sync::mpsc::Sender<Message>,
     pub data: Resident<ConnectionData>,
     pub realm: RealmName,
     pub cluster_id: ClusterId,
@@ -138,84 +135,6 @@ impl Drop for InstanceConnection {
 }
 
 impl InstanceConnection {
-    /// Wrap a websocket with an `InstanceConnection`.
-    ///
-    /// The `handlers` slice contains layers that will register their stream
-    /// responders with the connection's stream registry.
-    pub fn websocket(
-        socket: WebSocket,
-        data: Resident<ConnectionData>,
-        realm: RealmName,
-        cluster_id: ClusterId,
-        handlers: &[&dyn RegisterResponders],
-    ) -> Arc<Self> {
-        let (outgoing_tx, mut outgoing_rx) = tokio::sync::mpsc::channel::<Message>(32);
-        let cancel = CancellationToken::new();
-        let cancel_clone = cancel.clone();
-
-        // Channel for the StreamRegistry to send outgoing StreamMessages
-        let (stream_tx, mut stream_rx) = tokio::sync::mpsc::channel::<StreamMessage>(32);
-        let streams = Arc::new(StreamRegistry::new(stream_tx));
-        let streams_clone = streams.clone();
-
-        // Register responders from all handlers
-        for handler in handlers {
-            handler.register_responders(&streams);
-        }
-
-        // Spawn task that owns the actual WebSocket
-        tokio::spawn(async move {
-            let (mut ws_tx, mut ws_rx) = socket.split();
-
-            loop {
-                tokio::select! {
-                    // Handle outgoing messages to websocket
-                    Some(msg) = outgoing_rx.recv() => {
-                        if ws_tx.send(msg).await.is_err() {
-                            break;
-                        }
-                    }
-                    // Handle outgoing stream messages
-                    Some(msg) = stream_rx.recv() => {
-                        let data = serde_cbor::to_vec(&msg).unwrap();
-                        if ws_tx.send(Message::Binary(data.into())).await.is_err() {
-                            break;
-                        }
-                    }
-                    // Handle incoming messages from websocket
-                    msg = ws_rx.next() => {
-                        match msg {
-                            Some(Ok(Message::Binary(data))) => {
-                                if let Ok(message) = serde_cbor::from_slice::<StreamMessage>(&data) {
-                                    streams_clone.dispatch(message).await;
-                                }
-                            }
-                            Some(Ok(_)) => {}
-                            Some(Err(_)) | None => break,
-                        }
-                    }
-                    // Handle cancellation
-                    _ = cancel_clone.cancelled() => {
-                        break;
-                    }
-                }
-            }
-        });
-
-        Arc::new(Self {
-            tx: outgoing_tx,
-            data,
-            realm,
-            cluster_id,
-            cancel,
-            streams,
-        })
-    }
-
-    pub fn dtls() -> Arc<Self> {
-        todo!()
-    }
-
     /// Register a stream handler and return a sender for outbound messages.
     pub fn register_stream<S: stream::StreamRequester>(
         &self,
@@ -230,14 +149,6 @@ impl InstanceConnection {
     /// Remove a stream (Drop handles cleanup on the handler).
     pub fn close_stream(&self, stream_id: StreamId) {
         self.streams.close(stream_id);
-    }
-
-    /// Send a raw message to the remote peer.
-    pub async fn send(&self, msg: Message) -> Result<()> {
-        self.tx
-            .send(msg)
-            .await
-            .map_err(|_| anyhow!("Connection closed"))
     }
 }
 

@@ -78,4 +78,5 @@ server = [
   "dep:headers",
 
 ]
+bootagent = []
 client-gui = ["client", "dep:bevy"]

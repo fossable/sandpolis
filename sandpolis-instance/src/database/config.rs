@@ -1,6 +1,6 @@
 use super::cli::DatabaseCommandLine;
+use crate::LayerConfig;
 use anyhow::{Result, bail};
-use sandpolis_instance::LayerConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tracing::trace;

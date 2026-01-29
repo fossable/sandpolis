@@ -4,8 +4,8 @@ use axum::extract;
 use axum::{Json, Router, extract::State};
 use native_db::ToKey;
 use native_model::Model;
-use sandpolis_macros::data;
 use sandpolis_instance::network::RequestResult;
+use sandpolis_macros::data;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -27,7 +27,7 @@ pub struct GetBannerResponse(pub ServerBanner);
 /// Return a "banner" containing server metadata.
 #[cfg(feature = "server")]
 #[axum_macros::debug_handler]
-pub async fn banner(
+pub async fn get_banner(
     state: State<ServerLayer>,
     extract::Json(_): extract::Json<GetBannerRequest>,
 ) -> RequestResult<GetBannerResponse> {

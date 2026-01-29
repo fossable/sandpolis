@@ -359,7 +359,10 @@ impl LayerGuiExtension for InventoryGuiExtension {
 
     fn visible_instance_types(&self) -> &'static [sandpolis_instance::InstanceType] {
         // Inventory layer shows servers and agents (not clients)
-        &[sandpolis_instance::InstanceType::Server, sandpolis_instance::InstanceType::Agent]
+        &[
+            sandpolis_instance::InstanceType::Server,
+            sandpolis_instance::InstanceType::Agent,
+        ]
     }
 }
 

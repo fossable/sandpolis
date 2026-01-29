@@ -326,7 +326,10 @@ impl LayerGuiExtension for FilesystemGuiExtension {
 
     fn visible_instance_types(&self) -> &'static [sandpolis_instance::InstanceType] {
         // Filesystem layer shows servers and agents (not clients)
-        &[sandpolis_instance::InstanceType::Server, sandpolis_instance::InstanceType::Agent]
+        &[
+            sandpolis_instance::InstanceType::Server,
+            sandpolis_instance::InstanceType::Agent,
+        ]
     }
 }
 

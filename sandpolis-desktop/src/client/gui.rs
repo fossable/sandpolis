@@ -145,7 +145,10 @@ impl LayerGuiExtension for DesktopGuiExtension {
 
     fn visible_instance_types(&self) -> &'static [sandpolis_instance::InstanceType] {
         // Desktop layer shows servers and agents (not clients)
-        &[sandpolis_instance::InstanceType::Server, sandpolis_instance::InstanceType::Agent]
+        &[
+            sandpolis_instance::InstanceType::Server,
+            sandpolis_instance::InstanceType::Agent,
+        ]
     }
 }
 

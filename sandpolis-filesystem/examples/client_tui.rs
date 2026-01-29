@@ -1,6 +1,6 @@
 use anyhow::Result;
-use sandpolis_instance::InstanceId;
 use sandpolis_filesystem::{FilesystemLayer, client::tui::FilesystemViewerWidget};
+use sandpolis_instance::InstanceId;
 use std::env;
 use std::path::PathBuf;
 

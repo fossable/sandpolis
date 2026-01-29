@@ -1,20 +1,11 @@
-use crate::UserLayer;
-use crate::{UserData, server::Claims};
-use crate::{
-    messages::{
-        CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
-        LoginResponse,
-    },
-    server::PasswordData,
-};
+use super::{LoginRequest, LoginResponse};
+use crate::user::UserLayer;
+use crate::user::server::{Claims, PasswordData};
 use anyhow::Result;
 use aws_lc_rs::pbkdf2;
-use axum::{
-    Json,
-    extract::{self, State},
-};
+use axum::Json;
+use axum::extract::{self, State};
 use axum_extra::TypedHeader;
-use futures::stream::StreamExt;
 use jsonwebtoken::{Header, encode};
 use sandpolis_instance::network::RequestResult;
 use sandpolis_instance::realm::RealmName;
@@ -24,7 +15,7 @@ use tracing::{debug, error, info};
 use validator::Validate;
 
 #[axum_macros::debug_handler]
-pub async fn login(
+pub async fn post_login(
     state: State<UserLayer>,
     TypedHeader(realm): TypedHeader<RealmName>,
     extract::Json(request): extract::Json<LoginRequest>,

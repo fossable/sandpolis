@@ -1,5 +1,4 @@
 use sandpolis_instance::InstanceId;
-use sandpolis_macros::StreamEvent;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 
@@ -21,5 +20,5 @@ pub struct TunnelStreamData {
 }
 
 /// Raw data flowing through a tunnel
-#[derive(Serialize, Deserialize, StreamEvent)]
+#[derive(Serialize, Deserialize)]
 pub struct TunnelStreamEvent(Vec<u8>);

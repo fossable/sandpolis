@@ -8,8 +8,8 @@ use ratatui::{
 };
 use sandpolis_client::tui::{Panel, selectable_list::ResidentVecWidget};
 use sandpolis_instance::database::{DataCreation, DataIdentifier, DataRevision, test_db};
-use sandpolis_macros::data;
 use sandpolis_instance::realm::RealmName;
+use sandpolis_macros::data;
 
 // Define a simple data structure for our list
 #[data]

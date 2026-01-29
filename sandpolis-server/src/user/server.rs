@@ -1,53 +1,29 @@
-use super::UserData;
-use super::UserLayer;
-use super::UserName;
-use crate::{ClientAuthToken, LoginPassword};
-use crate::{UserData, server::Claims};
-use crate::{
-    messages::{
-        CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse, LoginRequest,
-        LoginResponse,
-    },
-    server::PasswordData,
+use super::{
+    ClientAuthToken, CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse,
+    UserData, UserLayer, UserName,
 };
+use crate::login::{LoginPassword, LoginRequest, LoginResponse};
 use anyhow::{Result, anyhow, bail};
 use aws_lc_rs::pbkdf2;
-use axum::extract::{self, WebSocketUpgrade};
-use axum::extract::{Request, State};
-use axum::middleware::Next;
-use axum::{
-    Json,
-    extract::{self, State},
-};
-use axum::{
-    RequestPartsExt, Router,
-    extract::FromRequestParts,
-    http::{StatusCode, request::Parts},
-    routing::{get, post},
-};
+use axum::extract::{self, FromRequestParts, State, WebSocketUpgrade};
+use axum::http::{StatusCode, request::Parts};
+use axum::routing::{get, post};
+use axum::{Json, RequestPartsExt, Router};
 use axum_extra::TypedHeader;
-use axum_extra::{
-    TypedHeader,
-    headers::{Authorization, authorization::Bearer},
-};
-use futures::stream::StreamExt;
-use jsonwebtoken::{DecodingKey, EncodingKey, Validation, decode};
-use jsonwebtoken::{Header, encode};
+use axum_extra::headers::{Authorization, authorization::Bearer};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use native_db::ToKey;
 use native_model::Model;
 use passwords::PasswordGenerator;
 use rand::Rng;
-use sandpolis_instance::database::DataRevision;
+use sandpolis_instance::network::InstanceConnection;
 use sandpolis_instance::network::RequestResult;
-use sandpolis_instance::network::{InstanceConnection, RequestResult};
 use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
+use std::fmt::{Debug, Display};
+use std::num::NonZeroU32;
 use std::time::{Duration, SystemTime};
-use std::{
-    fmt::{Debug, Display},
-    num::NonZeroU32,
-};
 use totp_rs::{Secret, TOTP};
 use tracing::{debug, error, info};
 use validator::Validate;

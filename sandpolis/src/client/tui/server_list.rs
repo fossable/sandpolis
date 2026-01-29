@@ -14,14 +14,14 @@ use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
 use sandpolis_client::tui::{
     EventHandler, Panel, help::HelpWidget, loading::LoadingWidget, resident_vec::ResidentVecWidget,
 };
-use sandpolis_server::user::UserName;
-use sandpolis_instance::database::{Data, DataCreation, DataIdentifier, Resident, ResidentVecEvent};
-use sandpolis_server::ServerUrl;
-use sandpolis_server::{ServerLayer, client::SavedServerData};
-use sandpolis_server::user::{
-    ClientAuthToken, LoginPassword,
-    messages::{LoginRequest, LoginResponse},
+use sandpolis_instance::database::{
+    Data, DataCreation, DataIdentifier, Resident, ResidentVecEvent,
 };
+use sandpolis_server::ServerUrl;
+use sandpolis_server::login::{LoginPassword, LoginRequest, LoginResponse};
+use sandpolis_server::user::ClientAuthToken;
+use sandpolis_server::user::UserName;
+use sandpolis_server::{ServerLayer, client::SavedServerData};
 use std::{
     ops::Deref,
     sync::{Arc, RwLock},

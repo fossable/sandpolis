@@ -2,8 +2,8 @@ use anyhow::Result;
 use axum_macros::FromRef;
 use config::Configuration;
 use native_db::Models;
-use sandpolis_instance::database::DatabaseLayer;
 use sandpolis_instance::LayerVersion;
+use sandpolis_instance::database::DatabaseLayer;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::LazyLock};
 
@@ -56,15 +56,21 @@ impl InstanceState {
 
         let instance = sandpolis_instance::InstanceLayer::new(database.clone()).await?;
 
-        let realm =
-            sandpolis_instance::realm::RealmLayer::new(config.realm, database.clone(), instance.clone())
-                .await?;
+        let realm = sandpolis_instance::realm::RealmLayer::new(
+            config.realm,
+            database.clone(),
+            instance.clone(),
+        )
+        .await?;
 
         let network = sandpolis_instance::network::NetworkLayer::new(database.clone()).await?;
 
-        let user =
-            sandpolis_server::user::UserLayer::new(instance.clone(), database.clone(), network.clone())
-                .await?;
+        let user = sandpolis_server::user::UserLayer::new(
+            instance.clone(),
+            database.clone(),
+            network.clone(),
+        )
+        .await?;
 
         let agent = sandpolis_agent::AgentLayer::new(database.clone()).await?;
 
@@ -164,20 +170,27 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
 
     // Network layer
     {
-        m.define::<sandpolis_instance::network::NetworkLayerData>().unwrap();
-        m.define::<sandpolis_instance::network::ConnectionData>().unwrap();
+        m.define::<sandpolis_instance::network::NetworkLayerData>()
+            .unwrap();
+        m.define::<sandpolis_instance::network::ConnectionData>()
+            .unwrap();
         // m.define::<sandpolis_instance::network::ServerConnectionData>()
         //     .unwrap();
     }
 
     // Realm layer
     {
-        m.define::<sandpolis_instance::realm::RealmLayerData>().unwrap();
+        m.define::<sandpolis_instance::realm::RealmLayerData>()
+            .unwrap();
         m.define::<sandpolis_instance::realm::RealmData>().unwrap();
-        m.define::<sandpolis_instance::realm::RealmClusterCert>().unwrap();
-        m.define::<sandpolis_instance::realm::RealmServerCert>().unwrap();
-        m.define::<sandpolis_instance::realm::RealmClientCert>().unwrap();
-        m.define::<sandpolis_instance::realm::RealmAgentCert>().unwrap();
+        m.define::<sandpolis_instance::realm::RealmClusterCert>()
+            .unwrap();
+        m.define::<sandpolis_instance::realm::RealmServerCert>()
+            .unwrap();
+        m.define::<sandpolis_instance::realm::RealmClientCert>()
+            .unwrap();
+        m.define::<sandpolis_instance::realm::RealmAgentCert>()
+            .unwrap();
     }
 
     // Instance layer
@@ -190,7 +203,8 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_server::user::UserLayerData>().unwrap();
         m.define::<sandpolis_server::user::UserData>().unwrap();
         #[cfg(feature = "server")]
-        m.define::<sandpolis_server::user::server::PasswordData>().unwrap();
+        m.define::<sandpolis_server::user::server::PasswordData>()
+            .unwrap();
         #[cfg(feature = "server")]
         m.define::<sandpolis_server::user::server::ServerJwtSecret>()
             .unwrap();
