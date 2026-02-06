@@ -1,10 +1,7 @@
-use crate::LayerConfig;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tracing::debug;
-
-use crate::cli::InstanceCommandLine;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct InstanceConfig {
@@ -41,13 +38,5 @@ impl InstanceConfig {
         }
 
         Ok(())
-    }
-}
-
-impl LayerConfig<InstanceCommandLine> for InstanceConfig {
-    fn override_cli(&mut self, args: &InstanceCommandLine) {
-        if args.no_admin_socket {
-            self.socket_directory = None;
-        }
     }
 }

@@ -7,6 +7,7 @@
 use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
 
+pub mod config;
 pub mod docker;
 pub mod http;
 pub mod ipmi;

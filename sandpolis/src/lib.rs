@@ -1,5 +1,4 @@
 use anyhow::Result;
-use axum_macros::FromRef;
 use config::Configuration;
 use native_db::Models;
 use sandpolis_instance::LayerVersion;
@@ -9,7 +8,6 @@ use std::{collections::HashMap, sync::LazyLock};
 
 pub mod cli;
 pub mod config;
-pub mod routes;
 
 #[cfg(feature = "server")]
 pub mod server;
@@ -26,7 +24,8 @@ pub mod built_info {
 }
 
 #[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
-#[derive(Clone, FromRef)]
+#[cfg_attr(feature = "server", derive(axum_macros::FromRef))]
+#[derive(Clone)]
 pub struct InstanceState {
     #[cfg(feature = "layer-account")]
     pub account: sandpolis_account::AccountLayer,

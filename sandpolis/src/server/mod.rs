@@ -14,7 +14,7 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
-    let app: Router<InstanceState> = Router::new().route("/versions", get(crate::routes::versions));
+    let app: Router<InstanceState> = Router::new();
 
     // Server layer
     let app: Router<InstanceState> =

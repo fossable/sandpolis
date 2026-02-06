@@ -1,9 +1,8 @@
-use super::cli::DatabaseCommandLine;
-use crate::LayerConfig;
 use anyhow::{Result, bail};
+use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use tracing::trace;
 use validator::Validate;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -13,6 +12,9 @@ pub struct DatabaseConfig {
 
     /// Don't persist any data
     pub ephemeral: bool,
+
+    /// Key that encrypts the entire database
+    pub key: DatabaseKey,
 }
 
 impl Validate for DatabaseConfig {
@@ -31,16 +33,7 @@ impl Default for DatabaseConfig {
             // TODO platform specific
             storage: Some("/tmp".into()),
             ephemeral: false,
-        }
-    }
-}
-
-impl LayerConfig<DatabaseCommandLine> for DatabaseConfig {
-    fn override_cli(&mut self, args: &DatabaseCommandLine) {
-        if args.ephemeral {
-            trace!("Overriding ephemeral flag from CLI");
-            self.ephemeral = true;
-            self.storage = None;
+            key: DatabaseKey::default(),
         }
     }
 }
@@ -66,5 +59,21 @@ impl DatabaseConfig {
             }
             Ok(Some(path))
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum DatabaseKey {
+    /// Just the unprotected database key.
+    Plaintext(String),
+    /// Run a command to get the database key.
+    Command(String),
+}
+
+impl Default for DatabaseKey {
+    fn default() -> Self {
+        // Generate a 256-bit cryptographically secure key
+        let key: [u8; 32] = rand::rng().random();
+        Self::Plaintext(BASE64.encode(key))
     }
 }

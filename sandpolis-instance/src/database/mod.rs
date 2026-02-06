@@ -97,6 +97,7 @@ macro_rules! test_db {
             $crate::database::config::DatabaseConfig {
                 storage: None,
                 ephemeral: true,
+                key: Default::default(),
             },
             models,
         )?

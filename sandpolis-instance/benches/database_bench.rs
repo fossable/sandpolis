@@ -2,7 +2,7 @@ use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, 
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_instance::database::{
-    self as sandpolis_instance::database, Data, DataCondition, DataCreation, DatabaseLayer, Resident,
+    Data, DataCondition, DataCreation, DatabaseLayer, Resident,
     ResidentVec, config,
 };
 use sandpolis_macros::data;
@@ -39,6 +39,7 @@ fn create_test_db() -> DatabaseLayer {
         config::DatabaseConfig {
             storage: None,
             ephemeral: true,
+            key: Default::default(),
         },
         models,
     )

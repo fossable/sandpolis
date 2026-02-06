@@ -516,20 +516,3 @@ impl Ord for LayerVersion {
     }
 }
 
-/// A config fragment that can take overrides from the command line or from
-/// environment variables.
-pub trait LayerConfig<C>
-where
-    C: clap::Parser,
-    Self: Serialize + DeserializeOwned,
-{
-    /// Override the config with values from the command line
-    fn override_cli(&mut self, args: &C) {
-        // Default no-op
-    }
-
-    /// Override the config with values from the environment
-    fn override_env(&mut self) {
-        // Default no-op
-    }
-}

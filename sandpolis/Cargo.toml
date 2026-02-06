@@ -15,8 +15,10 @@ built = { version = "0.7", features = ["git2", "chrono", "semver"] }
 anyhow = { workspace = true }
 clap = { workspace = true }
 colored = { workspace = true }
+dirs = "6"
 fossable = "0.1.2"
 futures = { workspace = true }
+ron = { workspace = true }
 native_db = { workspace = true }
 os_info = { workspace = true }
 rand = { workspace = true }

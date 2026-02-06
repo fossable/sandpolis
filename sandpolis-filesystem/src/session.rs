@@ -1,8 +1,4 @@
-use crate::FilesystemLayer;
-use axum::extract::State;
-use axum::extract::{self, WebSocketUpgrade};
-use axum::http::StatusCode;
-use sandpolis_instance::network::{RequestResult, StreamResponder};
+use sandpolis_instance::network::StreamResponder;
 use sandpolis_macros::Stream;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -96,7 +92,7 @@ pub enum FsSessionResponse {
 #[derive(Stream)]
 struct FsSessionStreamResponder {
     cwd: PathBuf,
-    watcher: Box<dyn notify::Watcher>,
+    watcher: notify::RecommendedWatcher,
 }
 
 impl StreamResponder for FsSessionStreamResponder {

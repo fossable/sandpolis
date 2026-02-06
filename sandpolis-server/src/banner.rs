@@ -1,9 +1,11 @@
 use crate::ServerBanner;
+#[cfg(feature = "server")]
 use crate::ServerLayer;
-use axum::extract;
-use axum::{Json, Router, extract::State};
+#[cfg(feature = "server")]
+use axum::{Json, extract, extract::State};
 use native_db::ToKey;
 use native_model::Model;
+#[cfg(feature = "server")]
 use sandpolis_instance::network::RequestResult;
 use sandpolis_macros::data;
 use serde::Deserialize;

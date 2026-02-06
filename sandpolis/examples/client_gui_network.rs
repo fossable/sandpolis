@@ -17,6 +17,7 @@ async fn main() -> Result<()> {
     let db_config = DatabaseConfig {
         storage: None,
         ephemeral: true,
+        key: Default::default(),
     };
     let database = DatabaseLayer::new(db_config, &*MODELS)?;
 

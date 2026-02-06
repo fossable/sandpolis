@@ -1,5 +1,3 @@
-use crate::LayerConfig;
-use crate::network::cli::NetworkCommandLine;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -16,10 +14,4 @@ pub struct NetworkLayerConfig {
     /// Use the interface with this MAC address.
     #[cfg(feature = "bootagent")]
     pub interface_mac: Option<String>,
-}
-
-impl LayerConfig<NetworkCommandLine> for NetworkLayerConfig {
-    fn override_env(&mut self) {}
-
-    fn override_cli(&mut self, _args: &NetworkCommandLine) {}
 }

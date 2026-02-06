@@ -1,26 +1,25 @@
 use crate::cli::CommandLine;
-use anyhow::{Result, bail};
-use sandpolis_instance::LayerConfig;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::{fs::File, path::PathBuf};
+use std::path::PathBuf;
 use tracing::debug;
 
 /// Application's global config.
 #[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Configuration {
+    /// Path to the config file (not serialized)
+    #[serde(skip)]
+    path: Option<PathBuf>,
+
     #[cfg(feature = "agent")]
     pub agent: sandpolis_agent::config::AgentLayerConfig,
     #[cfg(feature = "client")]
     pub client: sandpolis_client::config::ClientLayerConfig,
     pub database: sandpolis_instance::database::config::DatabaseConfig,
-    /// Whether overrides from environment variables or the command line are
-    /// allowed
-    pub disable_overrides: bool,
     pub instance: sandpolis_instance::config::InstanceConfig,
     pub network: sandpolis_instance::network::config::NetworkLayerConfig,
     pub realm: sandpolis_instance::realm::config::RealmConfig,
-    #[cfg(feature = "server")]
     pub server: sandpolis_server::config::ServerLayerConfig,
     #[cfg(feature = "layer-snapshot")]
     pub snapshot: sandpolis_snapshot::config::SnapshotConfig,
@@ -28,60 +27,68 @@ pub struct Configuration {
 
 impl Configuration {
     /// Default config file location
-    fn default_path() -> String {
+    fn default_path() -> PathBuf {
         if cfg!(target_os = "linux") {
-            "~/.config/sandpolis"
+            dirs::config_dir()
+                .unwrap_or_else(|| PathBuf::from("~/.config"))
+                .join("sandpolis.ron")
         } else {
-            panic!()
+            panic!("Unsupported platform")
         }
-        .into()
     }
 
     pub fn new(args: &CommandLine) -> Result<Self> {
-        // Attempt to read from embedded config
-        let embedded_config = include_bytes!("../config.bin");
-        let mut config: Configuration = if embedded_config.len()
-            != "Replace this file to embed a config in the application binary.\n".len()
+        // For agent instances, prefer the embedded config if present
+        #[cfg(feature = "agent")]
         {
-            let config: Configuration = serde_json::from_slice(embedded_config)?;
-            debug!(config = ?config, "Loading embedded configuration");
-            config
-        } else {
-            // Attempt to read from config file
-            let path = args.instance.config.clone().unwrap_or(PathBuf::from(
-                std::env::var("S7S_CONFIG")
-                    .ok()
-                    .unwrap_or(Configuration::default_path()),
-            ));
+            const EMBEDDED_CONFIG: &[u8] = include_bytes!("../config.ron");
+            const PLACEHOLDER: &[u8] =
+                b"// Replace this file to embed a config in the application binary.\n";
 
-            debug!(path = %path.display(), "Loading file configuration");
-            match File::open(&path) {
-                Ok(mut file) => match path
-                    .extension()
-                    .expect("config file has a file extension")
-                    .to_string_lossy()
-                    .to_string()
-                    .as_str()
-                {
-                    "json" => serde_json::from_reader(&mut file)?,
-                    _ => bail!("Unknown configuration file type"),
-                },
-                Err(error) => match error.kind() {
-                    std::io::ErrorKind::NotFound => Configuration::default(),
-                    std::io::ErrorKind::PermissionDenied => todo!(),
-                    _ => todo!(),
-                },
+            if EMBEDDED_CONFIG != PLACEHOLDER {
+                debug!("Loading embedded configuration");
+                let config: Configuration = ron::from_str(std::str::from_utf8(EMBEDDED_CONFIG)?)?;
+                return Ok(config);
             }
-        };
-
-        // Handle overrides if allowed
-        if !config.disable_overrides {
-            config.instance.override_cli(&args.instance);
-            config.database.override_cli(&args.database);
-            config.network.override_cli(&args.network);
-            config.realm.override_cli(&args.realm);
         }
 
+        let path = args
+            .instance
+            .config
+            .clone()
+            .or_else(|| std::env::var("S7S_CONFIG").ok().map(PathBuf::from))
+            .unwrap_or_else(Self::default_path);
+
+        debug!(path = %path.display(), "Loading configuration");
+
+        let mut config: Configuration = match std::fs::read_to_string(&path) {
+            Ok(contents) => ron::from_str(&contents)?,
+            Err(error) => match error.kind() {
+                std::io::ErrorKind::NotFound => {
+                    debug!("Config file not found, using defaults");
+                    Configuration::default()
+                }
+                _ => return Err(error.into()),
+            },
+        };
+
+        config.path = Some(path);
         Ok(config)
+    }
+
+    /// Write the configuration back to the file it was loaded from.
+    pub fn save(&self) -> Result<()> {
+        if let Some(path) = &self.path {
+            debug!(path = %path.display(), "Saving configuration");
+
+            // Create parent directories if needed
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+
+            let contents = ron::ser::to_string_pretty(self, ron::ser::PrettyConfig::default())?;
+            std::fs::write(path, contents)?;
+        }
+        Ok(())
     }
 }
