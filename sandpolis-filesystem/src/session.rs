@@ -95,6 +95,7 @@ struct FsSessionStreamResponder {
     watcher: notify::RecommendedWatcher,
 }
 
+#[cfg(feature = "agent")]
 impl StreamResponder for FsSessionStreamResponder {
     type In = FsSessionRequest;
     type Out = FsSessionResponse;

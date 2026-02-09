@@ -6,6 +6,8 @@
 
 use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
 
 pub mod config;
 pub mod docker;
@@ -23,6 +25,11 @@ pub mod wol;
 
 #[cfg(feature = "client-gui")]
 pub mod client;
+
+/// The probe layer manages probe registrations and streaming state.
+#[derive(Clone)]
+#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
+pub struct ProbeLayer {}
 
 /// An enumeration of all available probe types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

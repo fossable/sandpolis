@@ -116,9 +116,6 @@ async fn main() -> Result<ExitCode> {
     // The client must run on the main thread
     #[cfg(feature = "client")]
     if run_instances.contains(&"client") {
-        #[cfg(not(any(feature = "client-gui", feature = "client-tui")))]
-        compile_error!("Missing client-gui or client-tui features");
-
         // Check command line preference if both are enabled
         #[cfg(all(feature = "client-gui", feature = "client-tui"))]
         {

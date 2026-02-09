@@ -6,17 +6,16 @@ use sandpolis_instance::database::DatabaseLayer;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::LazyLock};
 
-pub mod cli;
-pub mod config;
-
-#[cfg(feature = "server")]
-pub mod server;
-
 #[cfg(feature = "agent")]
 pub mod agent;
-
+pub mod cli;
 #[cfg(feature = "client")]
 pub mod client;
+pub mod config;
+#[cfg(feature = "client")]
+pub mod lsp;
+#[cfg(feature = "server")]
+pub mod server;
 
 /// Build info
 pub mod built_info {
@@ -46,6 +45,8 @@ pub struct InstanceState {
     pub shell: sandpolis_shell::ShellLayer,
     #[cfg(feature = "layer-snapshot")]
     pub snapshot: sandpolis_snapshot::SnapshotLayer,
+    #[cfg(feature = "layer-probe")]
+    pub probe: sandpolis_probe::ProbeLayer,
     pub user: sandpolis_server::user::UserLayer,
 }
 
@@ -101,6 +102,9 @@ impl InstanceState {
         #[cfg(feature = "layer-snapshot")]
         let snapshot = sandpolis_snapshot::SnapshotLayer::new().await?;
 
+        #[cfg(feature = "layer-probe")]
+        let probe = sandpolis_probe::ProbeLayer::new();
+
         Ok(Self {
             #[cfg(feature = "layer-inventory")]
             inventory,
@@ -114,6 +118,8 @@ impl InstanceState {
             desktop,
             #[cfg(feature = "layer-snapshot")]
             snapshot,
+            #[cfg(feature = "layer-probe")]
+            probe,
             #[cfg(feature = "layer-account")]
             account,
             user,

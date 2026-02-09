@@ -10,6 +10,9 @@ version = "8.0.0"
 
 [build-dependencies]
 built = { version = "0.7", features = ["git2", "chrono", "semver"] }
+roniker = { workspace = true, features = ["analyze"] }
+serde_json = { workspace = true }
+walkdir = "2"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -45,6 +48,7 @@ tempfile = { workspace = true }
 tokio-stream = { workspace = true }
 tokio = { workspace = true }
 tower-http = { workspace = true }
+roniker = { workspace = true, optional = true, features = ["lsp"] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing = { workspace = true }
 validator = { workspace = true }
@@ -98,6 +102,7 @@ agent = [
   "sandpolis-shell?/agent",
 ]
 client = [
+  "dep:roniker",
   "sandpolis-client/client",
   "sandpolis-instance/client",
   "sandpolis-server/client",

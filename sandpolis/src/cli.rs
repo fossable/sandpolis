@@ -63,6 +63,10 @@ pub enum Commands {
     /// Show versions of all installed layers
     About,
 
+    /// Run the configuration LSP
+    #[cfg(feature = "client")]
+    Lsp,
+
     /// Run a server instance
     #[cfg(feature = "server")]
     #[cfg(any(feature = "agent", feature = "client"))]
@@ -83,6 +87,10 @@ impl Commands {
     #[allow(unused_variables)]
     pub async fn dispatch(self, config: &Configuration) -> Result<ExitCode> {
         match self {
+            #[cfg(feature = "client")]
+            Commands::Lsp => {
+                crate::lsp::run().await;
+            }
             #[cfg(feature = "server")]
             Commands::NewClientCert { realm, output } => {
                 use sandpolis_instance::realm::RealmClusterCert;
