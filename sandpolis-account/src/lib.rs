@@ -1,7 +1,3 @@
-// doc_comment! {
-//     include_str!("../README.md")
-// }
-
 use anyhow::Result;
 use native_db::*;
 use native_model::Model;
@@ -10,6 +6,8 @@ use sandpolis_instance::database::DatabaseLayer;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
+
+pub mod config;
 
 #[data]
 #[derive(Default)]

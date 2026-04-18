@@ -95,12 +95,12 @@ ratatui-image = { version = "10.0.4", default-features = false, features = [
 tui-popup = { version = "0.7.2" }
 
 # GUI client exclusive
-bevy = { version = "0.17.3" }
-bevy_egui = { version = "0.38.1" }
-bevy_svg = { version = "0.17.1", features = ["2d"] }
-bevy_rapier2d = { version = "0.32.0" }
-bevy_stl = { git = "https://github.com/nilclass/bevy_stl" }
+bevy = { version = "0.18.0" }
+bevy_egui = { version = "0.39.1" }
+bevy_svg = { version = "0.18.0", features = ["2d"] }
+bevy_rapier2d = { version = "0.33.0" }
+bevy_stl = { version = "0.18.0" }
 eframe = { version = "0.33" }
 egui-file-dialog = { version = "0.12.0" }
-egui_console = { version = "0.3.0" }
+egui_console = { version = "0.3.1" }
 egui_extras = { version = "0.33", features = ["svg"] }

@@ -20,9 +20,12 @@ pub struct Configuration {
     pub instance: sandpolis_instance::config::InstanceConfig,
     pub network: sandpolis_instance::network::config::NetworkLayerConfig,
     pub realm: sandpolis_instance::realm::config::RealmConfig,
+    #[cfg(feature = "server")]
     pub server: sandpolis_server::config::ServerLayerConfig,
     #[cfg(feature = "layer-snapshot")]
     pub snapshot: sandpolis_snapshot::config::SnapshotConfig,
+    #[cfg(feature = "layer-probe")]
+    pub probe: sandpolis_probe::config::ProbeLayerConfig,
 }
 
 impl Configuration {

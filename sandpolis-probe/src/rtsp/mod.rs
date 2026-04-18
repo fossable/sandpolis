@@ -1,5 +1,7 @@
 use anyhow::Result;
+#[cfg(any(feature = "agent", feature = "server"))]
 use retina::client::{SessionGroup, SetupOptions};
+#[cfg(any(feature = "agent", feature = "server"))]
 use retina::codec::CodecItem;
 use sandpolis_instance::network::StreamResponder;
 use sandpolis_macros::Stream;

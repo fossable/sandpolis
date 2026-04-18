@@ -8,8 +8,6 @@ use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
 use config::RealmConfig;
-#[cfg(feature = "server")]
-use headers::{Header, HeaderName, HeaderValue};
 use native_db::ToKey;
 use native_model::Model;
 use pem::Pem;
@@ -96,35 +94,6 @@ impl ToKey for RealmName {
     }
 }
 
-#[cfg(feature = "server")]
-impl Header for RealmName {
-    fn name() -> &'static HeaderName {
-        static NAME: HeaderName = HeaderName::from_static("x-realm");
-        &NAME
-    }
-
-    fn decode<'i, I>(values: &mut I) -> Result<Self, headers::Error>
-    where
-        I: Iterator<Item = &'i HeaderValue>,
-    {
-        Ok(values
-            .next()
-            .ok_or_else(headers::Error::invalid)?
-            .to_str()
-            .map_err(|_| headers::Error::invalid())?
-            .parse()
-            .map_err(|_| headers::Error::invalid())?)
-    }
-
-    fn encode<E>(&self, values: &mut E)
-    where
-        E: Extend<HeaderValue>,
-    {
-        values.extend(std::iter::once(
-            HeaderValue::from_str(&self.to_string()).expect("Realm names only allow ascii 32-127"),
-        ));
-    }
-}
 
 #[cfg(test)]
 mod test_realm_name {

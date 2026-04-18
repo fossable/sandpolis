@@ -4,7 +4,7 @@ use std::net::IpAddr;
 
 use crate::rtsp::RtspConfig;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct ProbeLayerConfig {
     devices: Vec<DeviceConfig>,
 }

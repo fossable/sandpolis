@@ -31,6 +31,12 @@ pub mod client;
 #[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 pub struct ProbeLayer {}
 
+impl ProbeLayer {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
 /// An enumeration of all available probe types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ProbeType {

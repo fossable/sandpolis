@@ -8,18 +8,14 @@ pub struct AgentLayerConfig {
     /// Prohibits the agent from all write operations (including self upgrades).
     ///
     /// This optional security feature is intended to mitigate the risk of a
-    /// compromised server affecting agents.
+    /// compromised server negatively impacting agents.
     pub read_only: bool,
-
-    /// Read config options from the environment
-    pub env_overrides: bool,
 }
 
 impl Default for AgentLayerConfig {
     fn default() -> Self {
         Self {
             read_only: false,
-            env_overrides: true,
         }
     }
 }
