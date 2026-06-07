@@ -8,5 +8,5 @@ pub async fn run() {
     )))
     .expect("Failed to deserialize RustAnalyzer");
 
-    roniker::serve(rust_analyzer).await;
+    roniker::serve(rust_analyzer, false).await;
 }

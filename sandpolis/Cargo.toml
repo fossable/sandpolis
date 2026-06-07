@@ -9,7 +9,7 @@ rust-version = "1.89"
 version = "8.0.0"
 
 [build-dependencies]
-built = { version = "0.7", features = ["git2", "chrono", "semver"] }
+built = { version = "0.8.1", features = ["git2", "chrono", "semver"] }
 roniker = { workspace = true, features = ["analyze"] }
 serde_json = { workspace = true }
 walkdir = "2"

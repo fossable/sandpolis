@@ -9,27 +9,16 @@ fn get_android_files_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
     use ndk_context::android_context;
 
     let ctx = android_context();
-    let vm = unsafe { JavaVM::from_raw(ctx.vm().cast()) }?;
-    let mut env = vm.attach_current_thread()?;
+    let vm = unsafe { JavaVM::from_raw(ctx.vm().cast()) };
 
-    // Get the Context object
-    let context = unsafe { jni::objects::JObject::from_raw(ctx.context().cast()) };
-
-    // Call getFilesDir() on the context
-    let files_dir = env.call_method(context, "getFilesDir", "()Ljava/io/File;", &[])?;
-
-    // Call getAbsolutePath() on the File object
-    let path = env.call_method(
-        files_dir.l()?,
-        "getAbsolutePath",
-        "()Ljava/lang/String;",
-        &[],
-    )?;
-
-    // Convert Java String to Rust String
-    let path_string: String = env.get_string(&path.l()?.into())?.into();
-
-    Ok(PathBuf::from(path_string))
+    vm.attach_current_thread(|env| {
+        let context = unsafe { jni::objects::JObject::from_raw(env, ctx.context().cast()) };
+        let files_dir = env.call_method(context, jni::jni_str!("getFilesDir"), jni::jni_sig!(() -> java.io.File), &[])?.l()?;
+        let path = env.call_method(files_dir, jni::jni_str!("getAbsolutePath"), jni::jni_sig!(() -> java.lang.String), &[])?.l()?;
+        let path_jstring = env.cast_local::<jni::objects::JString>(path)?;
+        let path_string: String = env.get_string(&path_jstring)?.into();
+        Ok(PathBuf::from(path_string))
+    })
 }
 
 #[bevy_main]

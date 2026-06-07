@@ -217,8 +217,8 @@ pub fn update_node_drag(
         transform.translation.y = target_position.y;
 
         // Zero out velocity while dragging to prevent physics interference
-        velocity.linvel = Vec2::ZERO;
-        velocity.angvel = 0.0;
+        velocity.linear = Vec2::ZERO;
+        velocity.angular = 0.0;
     }
 }
 

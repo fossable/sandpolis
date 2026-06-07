@@ -73,7 +73,8 @@ pub enum DatabaseKey {
 impl Default for DatabaseKey {
     fn default() -> Self {
         // Generate a 256-bit cryptographically secure key
-        let key: [u8; 32] = rand::rng().random();
+        let mut key = [0u8; 32];
+        rand::rng().fill_bytes(&mut key);
         Self::Plaintext(BASE64.encode(key))
     }
 }

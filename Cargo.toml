@@ -27,16 +27,16 @@ members = [
 [workspace.dependencies]
 anyhow = "1.0.100"
 aws-lc-rs = "1.12.1"
-axum-extra = { version = "0.10.0", features = ["typed-header"] }
+axum-extra = { version = "0.12.6", features = ["typed-header"] }
 axum-macros = "0.5.0"
-axum-server = { version = "0.7.1", features = ["tls-rustls"] }
+axum-server = { version = "0.8.0", features = ["tls-rustls"] }
 axum = { version = "0.8.8", features = ["ws", "json"] }
 base64 = "0.22.1"
 cached = "0.54.0"
 chrono = { version = "0.4.42", features = ["serde"] }
 clap = { version = "4.4.7", features = ["derive", "string"] }
 colored = "3.0.0"
-cron = { version = "0.15.0", features = ["serde"] }
+cron = { version = "0.16.0", features = ["serde"] }
 futures = "0.3.30"
 futures-util = "0.3.31"
 headers = "0.4.1"
@@ -49,11 +49,11 @@ native_model = "0.6.1"
 os_info = "3.8.2"
 passwords = { version = "3.1.16" }
 pem = "3.0.4"
-png = "0.17.16"
-rand = "0.9.0"
+png = "0.18.1"
+rand = "0.10.1"
 regex = "1.11.1"
 ron = "0.12.0"
-russh = { version = "0.52.0" }
+russh = { version = "0.61.2" }
 rustls = { version = "0.23.36", default-features = false, features = [
   "aws_lc_rs",
 ] }
@@ -62,7 +62,7 @@ serde_cbor = "0.11.2"
 serde_json = "1.0.134"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_with = { version = "3.12.0", features = ["chrono"] }
-strum = { version = "0.27.0", features = ["derive"] }
+strum = { version = "0.28.0", features = ["derive"] }
 tempfile = "3.17.0"
 time = { version = "0.3.37" }
 tokio-rustls = "0.26.0"
@@ -70,25 +70,25 @@ tokio-stream = "0.1.17"
 tokio-util = "0.7.15"
 tokio = { version = "1.49.0", features = ["full"] }
 tower = "0.5.2"
-roniker = "0.1.0"
+roniker = "0.3.0"
 tower-http = { version = "0.6.1", features = ["trace"] }
 tracing = "0.1.40"
 url = { version = "2.5.4", features = ["serde"] }
 uuid = { version = "1.15.1", features = ["v7", "serde", "rng-getrandom"] }
 validator = { version = "0.20", features = ["derive"] }
 inventory = "0.3"
-reqwest = { version = "0.12.5", default-features = false, features = [
+reqwest = { version = "0.13.4", default-features = false, features = [
   "stream",
   "cookies",
   "json",
-  "rustls-tls",
+  "rustls",
   "charset",
 ] }
-reqwest-websocket = "0.5.0"
+reqwest-websocket = "0.6.0"
 
 # Terminal client exclusive
 ratatui = { version = "0.30.0", features = ["unstable"] }
-ratatui-image = { version = "10.0.4", default-features = false, features = [
+ratatui-image = { version = "11.0.4", default-features = false, features = [
   "image-defaults",
   "crossterm",
 ] }
@@ -98,7 +98,7 @@ tui-popup = { version = "0.7.2" }
 bevy = { version = "0.18.0" }
 bevy_egui = { version = "0.39.1" }
 bevy_svg = { version = "0.18.0", features = ["2d"] }
-bevy_rapier2d = { version = "0.33.0" }
+bevy_rapier2d = { version = "0.34.0" }
 bevy_stl = { version = "0.18.0" }
 eframe = { version = "0.33" }
 egui-file-dialog = { version = "0.12.0" }

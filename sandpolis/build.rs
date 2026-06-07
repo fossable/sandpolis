@@ -12,7 +12,7 @@ fn main() {
 
     // Generate rust_analyzer.json for the LSP
     let workspace_root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("..");
-    let mut analyzer = roniker::RustAnalyzer::new("crate::config::Configuration");
+    let mut analyzer = roniker::RustAnalyzer::new();
 
     // Find and analyze all config.rs files in the workspace
     for entry in walkdir::WalkDir::new(&workspace_root)

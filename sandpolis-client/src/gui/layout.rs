@@ -148,8 +148,8 @@ pub fn apply_spring_forces(
 /// Apply velocity damping to stabilize the layout
 pub fn apply_damping(mut nodes: Query<&mut Velocity, With<NodeEntity>>, config: Res<LayoutConfig>) {
     for mut velocity in nodes.iter_mut() {
-        velocity.linvel *= config.damping;
-        velocity.angvel *= config.damping;
+        velocity.linear *= config.damping;
+        velocity.angular *= config.damping;
     }
 }
 
@@ -168,7 +168,7 @@ pub fn check_stabilization(
     let mut total_velocity: f32 = 0.0;
     let mut count: u32 = 0;
     for v in nodes.iter() {
-        total_velocity += v.linvel.length();
+        total_velocity += v.linear.length();
         count += 1;
     }
     let avg_velocity = total_velocity / count as f32;

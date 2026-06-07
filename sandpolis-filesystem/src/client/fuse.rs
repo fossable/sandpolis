@@ -1,7 +1,7 @@
 use anyhow::Result;
 use fuser::{
-    FileAttr, FileType, Filesystem, MountOption, ReplyAttr, ReplyData, ReplyDirectory, ReplyEntry,
-    Request,
+    Config, Errno, FileAttr, FileHandle, FileType, Filesystem, Generation, INodeNo, LockOwner,
+    MountOption, OpenFlags, ReplyAttr, ReplyData, ReplyDirectory, ReplyEntry, Request,
 };
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -29,7 +29,7 @@ impl FuseNode {
             parent,
             name,
             attr: FileAttr {
-                ino,
+                ino: INodeNo(ino),
                 size: 0,
                 blocks: 0,
                 atime: ts,
@@ -58,7 +58,7 @@ impl FuseNode {
             parent,
             name,
             attr: FileAttr {
-                ino,
+                ino: INodeNo(ino),
                 size,
                 blocks: size.div_ceil(512),
                 atime: ts,
@@ -99,12 +99,13 @@ impl SandpolisFilesystem {
     }
 
     pub fn mount<P: AsRef<std::path::Path>>(self, mountpoint: P) -> Result<()> {
-        let options = vec![
+        let mut config = Config::default();
+        config.mount_options = vec![
             MountOption::RO,
             MountOption::FSName("sandpolis".to_string()),
         ];
 
-        fuser::mount2(self, mountpoint, &options)?;
+        fuser::mount2(self, mountpoint, &config)?;
         Ok(())
     }
 
@@ -173,40 +174,40 @@ impl SandpolisFilesystem {
 }
 
 impl Filesystem for SandpolisFilesystem {
-    fn lookup(&mut self, _req: &Request, parent: u64, name: &OsStr, reply: ReplyEntry) {
-        if let Some(parent_node) = self.get_node(parent) {
+    fn lookup(&self, _req: &Request, parent: INodeNo, name: &OsStr, reply: ReplyEntry) {
+        if let Some(parent_node) = self.get_node(parent.0) {
             for &child_ino in &parent_node.children {
                 if let Some(child_node) = self.get_node(child_ino)
                     && child_node.name == name.to_string_lossy()
                 {
-                    reply.entry(&TTL, &child_node.attr, 0);
+                    reply.entry(&TTL, &child_node.attr, Generation(0));
                     return;
                 }
             }
         }
-        reply.error(2);
+        reply.error(Errno::ENOENT);
     }
 
-    fn getattr(&mut self, _req: &Request<'_>, ino: u64, fh: Option<u64>, reply: ReplyAttr) {
-        if let Some(node) = self.get_node(ino) {
+    fn getattr(&self, _req: &Request, ino: INodeNo, _fh: Option<FileHandle>, reply: ReplyAttr) {
+        if let Some(node) = self.get_node(ino.0) {
             reply.attr(&TTL, &node.attr);
         } else {
-            reply.error(2);
+            reply.error(Errno::ENOENT);
         }
     }
 
     fn read(
-        &mut self,
+        &self,
         _req: &Request,
-        ino: u64,
-        _fh: u64,
-        offset: i64,
+        ino: INodeNo,
+        _fh: FileHandle,
+        offset: u64,
         size: u32,
-        _flags: i32,
-        _lock: Option<u64>,
+        _flags: OpenFlags,
+        _lock_owner: Option<LockOwner>,
         reply: ReplyData,
     ) {
-        if let Some(node) = self.get_node(ino) {
+        if let Some(node) = self.get_node(ino.0) {
             if node.attr.kind == FileType::RegularFile {
                 let offset = offset as usize;
                 let size = size as usize;
@@ -218,29 +219,29 @@ impl Filesystem for SandpolisFilesystem {
                     reply.data(&[]);
                 }
             } else {
-                reply.error(21);
+                reply.error(Errno::EISDIR);
             }
         } else {
-            reply.error(2);
+            reply.error(Errno::ENOENT);
         }
     }
 
     fn readdir(
-        &mut self,
+        &self,
         _req: &Request,
-        ino: u64,
-        _fh: u64,
-        offset: i64,
+        ino: INodeNo,
+        _fh: FileHandle,
+        offset: u64,
         mut reply: ReplyDirectory,
     ) {
-        if let Some(node) = self.get_node(ino) {
+        if let Some(node) = self.get_node(ino.0) {
             if node.attr.kind != FileType::Directory {
-                reply.error(20);
+                reply.error(Errno::ENOTDIR);
                 return;
             }
 
             let mut entries = vec![
-                (ino, FileType::Directory, ".".to_string()),
+                (ino.0, FileType::Directory, ".".to_string()),
                 (node.parent, FileType::Directory, "..".to_string()),
             ];
 
@@ -251,13 +252,13 @@ impl Filesystem for SandpolisFilesystem {
             }
 
             for (i, (child_ino, kind, name)) in entries.iter().enumerate().skip(offset as usize) {
-                if reply.add(*child_ino, (i + 1) as i64, *kind, name) {
+                if reply.add(INodeNo(*child_ino), (i + 1) as u64, *kind, name) {
                     break;
                 }
             }
             reply.ok();
         } else {
-            reply.error(2);
+            reply.error(Errno::ENOENT);
         }
     }
 }

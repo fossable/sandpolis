@@ -19,7 +19,7 @@ clap = { workspace = true }
 cron = { workspace = true }
 futures = { workspace = true }
 inventory = { workspace = true }
-jsonwebtoken = { version = "9.3.0", optional = true }
+jsonwebtoken = { version = "10.4.0", optional = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
 passwords = { workspace = true, optional = true, features = [
