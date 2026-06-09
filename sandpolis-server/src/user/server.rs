@@ -15,7 +15,7 @@ use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode}
 use native_db::ToKey;
 use native_model::Model;
 use passwords::PasswordGenerator;
-use rand::Rng;
+use rand::RngExt;
 use sandpolis_instance::network::InstanceConnection;
 use sandpolis_instance::network::RequestResult;
 use sandpolis_instance::realm::RealmName;

@@ -7,8 +7,8 @@ use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Clear, Paragraph, StatefulWidget, Widget, WidgetRef};
 use ratatui_image::{
-    FontSize, StatefulImage,
-    protocol::{ImageSource, StatefulProtocol, StatefulProtocolType, halfblocks::Halfblocks},
+    StatefulImage,
+    protocol::{StatefulProtocol, StatefulProtocolType, halfblocks::Halfblocks},
 };
 use sandpolis_client::tui::EventHandler;
 use sandpolis_instance::InstanceId;
@@ -87,12 +87,9 @@ impl DesktopViewerWidget {
                 // Create a dummy image for initialization
                 let dummy_image = image::DynamicImage::new_rgba8(1, 1);
                 Some(StatefulProtocol::new(
-                    ImageSource::new(
-                        dummy_image,
-                        (font_size.0, font_size.1),
-                        Rgba([0, 0, 0, 255]),
-                    ),
-                    (font_size.0, font_size.1),
+                    dummy_image,
+                    font_size,
+                    Some(Rgba([0, 0, 0, 255])),
                     StatefulProtocolType::Halfblocks(Halfblocks::default()),
                 ))
             });
@@ -130,12 +127,9 @@ impl DesktopViewerWidget {
                     let font_size = picker.font_size();
                     let dummy_image = image::DynamicImage::new_rgba8(1, 1);
                     Some(StatefulProtocol::new(
-                        ImageSource::new(
-                            dummy_image,
-                            (font_size.0, font_size.1),
-                            Rgba([0, 0, 0, 255]),
-                        ),
-                        (font_size.0, font_size.1),
+                        dummy_image,
+                        font_size,
+                        Some(Rgba([0, 0, 0, 255])),
                         StatefulProtocolType::Halfblocks(Halfblocks::default()),
                     ))
                 });
@@ -207,8 +201,9 @@ impl DesktopViewerWidget {
         if let (Some(frame), Some(image_state)) = (&self.current_frame, &mut self.image_state) {
             // Update the protocol state with the current frame image
             *image_state = StatefulProtocol::new(
-                ImageSource::new(frame.image.clone(), (8, 16), Rgba([0, 0, 0, 255])),
-                (8, 16),
+                frame.image.clone(),
+                (8, 16).into(),
+                Some(Rgba([0, 0, 0, 255])),
                 StatefulProtocolType::Halfblocks(Halfblocks::default()),
             );
 

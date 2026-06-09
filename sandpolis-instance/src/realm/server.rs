@@ -21,11 +21,11 @@ use axum_server::tls_rustls::RustlsConfig;
 use axum_server::{accept::Accept, tls_rustls::RustlsAcceptor};
 use futures_util::future::BoxFuture;
 use rcgen::BasicConstraints;
-use rcgen::Certificate;
 use rcgen::CertificateParams;
 use rcgen::DnType;
 use rcgen::ExtendedKeyUsagePurpose;
 use rcgen::IsCa;
+use rcgen::Issuer;
 use rcgen::KeyPair;
 use rcgen::SanType;
 use rustls::RootCertStore;
@@ -61,7 +61,7 @@ impl super::RealmClusterCert {
         // Generate the certificate
         let cert = cert_params.self_signed(&keypair)?;
 
-        debug!(cert = ?cert.params(), "Generated new realm CA certificate");
+        debug!(cert = ?cert_params, "Generated new realm CA certificate");
         Ok(Self {
             name,
             cert: cert.der().to_vec(),
@@ -70,14 +70,11 @@ impl super::RealmClusterCert {
         })
     }
 
-    pub fn ca(&self) -> Result<Certificate> {
-        // TODO https://github.com/rustls/rcgen/issues/274
-
-        Ok(
-            CertificateParams::from_ca_cert_der(&self.cert.clone().try_into()?)?.self_signed(
-                &KeyPair::try_from(self.key.clone().ok_or_else(|| anyhow!("No key"))?)?,
-            )?,
-        )
+    pub fn ca(&self) -> Result<Issuer<'static, KeyPair>> {
+        Ok(Issuer::from_ca_cert_der(
+            &self.cert.clone().try_into()?,
+            KeyPair::try_from(self.key.clone().ok_or_else(|| anyhow!("No key"))?)?,
+        )?)
     }
 
     /// Generate a new realm certificate for agent instances.
@@ -105,15 +102,11 @@ impl super::RealmClusterCert {
             .push(DnType::CommonName, &*self.name);
 
         // Generate the certificate signed by the CA
-        let cert = cert_params.signed_by(
-            &keypair,
-            &self.ca()?,
-            &KeyPair::try_from(self.key.clone().ok_or_else(|| anyhow!("No key"))?)?,
-        )?;
+        let cert = cert_params.signed_by(&keypair, &self.ca()?)?;
 
-        debug!(cert = ?cert.params(), "Generated new realm agent certificate");
+        debug!(cert = ?cert_params, "Generated new realm agent certificate");
         Ok(RealmAgentCert {
-            ca: self.ca()?.der().to_vec(),
+            ca: self.cert.clone(),
             cert: cert.der().to_vec(),
             key: Some(keypair.serialize_der()),
             ..Default::default()
@@ -145,15 +138,11 @@ impl super::RealmClusterCert {
             .push(DnType::CommonName, &*self.name);
 
         // Generate the certificate signed by the CA
-        let cert = cert_params.signed_by(
-            &keypair,
-            &self.ca()?,
-            &KeyPair::try_from(self.key.clone().ok_or_else(|| anyhow!("No key"))?)?,
-        )?;
+        let cert = cert_params.signed_by(&keypair, &self.ca()?)?;
 
-        debug!(cert = ?cert.params(), "Generated new realm client certificate");
+        debug!(cert = ?cert_params, "Generated new realm client certificate");
         Ok(RealmClientCert {
-            ca: self.ca()?.der().to_vec(),
+            ca: self.cert.clone(),
             cert: cert.der().to_vec(),
             key: Some(keypair.serialize_der()),
             ..Default::default()
@@ -188,13 +177,9 @@ impl super::RealmClusterCert {
         )];
 
         // Generate the certificate signed by the CA
-        let cert = cert_params.signed_by(
-            &keypair,
-            &self.ca()?,
-            &KeyPair::try_from(self.key.clone().ok_or_else(|| anyhow!("No key"))?)?,
-        )?;
+        let cert = cert_params.signed_by(&keypair, &self.ca()?)?;
 
-        debug!(cert = ?cert.params(), "Generated new realm server certificate");
+        debug!(cert = ?cert_params, "Generated new realm server certificate");
         Ok(RealmServerCert {
             cert: cert.der().to_vec(),
             key: Some(keypair.serialize_der()),

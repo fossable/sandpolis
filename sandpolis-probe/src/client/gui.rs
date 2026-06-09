@@ -11,11 +11,12 @@ use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
 use sandpolis_client::gui::node::{NeedsScaling, NodeEntity, NodeSvg};
 use sandpolis_instance::{InstanceId, LayerName};
 
-use crate::{
+use crate::config::{
     DockerProbeConfig, HttpProbeConfig, IpmiProbeConfig, LibvirtProbeConfig, OnvifProbeConfig,
-    ProbeConfig, ProbeType, RdpProbeConfig, RegisteredProbe, RtspProbeConfig, SnmpProbeConfig,
-    SnmpVersion, SshProbeConfig, UpsProbeConfig, VncProbeConfig, WolProbeConfig,
+    RdpProbeConfig, RtspProbeConfig, SnmpProbeConfig, SnmpVersion, SshProbeConfig, UpsProbeConfig,
+    VncProbeConfig, WolProbeConfig,
 };
+use crate::{ProbeConfig, ProbeType, RegisteredProbe};
 
 /// Marker component for probe nodes (smaller nodes attached to agents).
 #[derive(Component)]

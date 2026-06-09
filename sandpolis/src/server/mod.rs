@@ -4,7 +4,7 @@ use axum::{
     Router,
     routing::{get, post},
 };
-use rand::Rng;
+use rand::RngExt;
 use sandpolis_instance::realm::RealmClusterCert;
 use sandpolis_instance::{ClusterId, InstanceId};
 use std::path::PathBuf;

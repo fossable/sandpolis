@@ -1,32 +1,101 @@
-use std::{env, fs, path::PathBuf};
+use std::{
+    env, fs,
+    path::{Component, Path, PathBuf},
+};
 
 fn main() {
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR not set");
 
     // Generate built.rs
     if built::write_built_file().is_err() {
-        let dest = std::path::Path::new(&out_dir).join("built.rs");
+        let dest = Path::new(&out_dir).join("built.rs");
         built::write_built_file_with_opts(Some(&PathBuf::from("..")), &dest)
             .expect("Failed to acquire build-time information");
     }
 
-    // Generate rust_analyzer.json for the LSP
+    // Generate rust_analyzer.json for the LSP. The analyzer indexes every
+    // `config.rs` file across the workspace under its real crate-qualified
+    // module path so that field-type lookups (e.g.
+    // `sandpolis_instance::database::config::DatabaseConfig`) resolve
+    // correctly at LSP serve time.
     let workspace_root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("..");
-    let mut analyzer = roniker::RustAnalyzer::new();
+    println!(
+        "cargo:rerun-if-changed={}",
+        workspace_root.join("Cargo.toml").display()
+    );
 
-    // Find and analyze all config.rs files in the workspace
-    for entry in walkdir::WalkDir::new(&workspace_root)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_file())
-        .filter(|e| e.file_name() == "config.rs")
-    {
-        let _ = analyzer.add_file(entry.path());
+    let mut analyzer = roniker::RustAnalyzer::with_root_type("crate::config::Configuration");
+
+    for member_dir in workspace_member_dirs(&workspace_root) {
+        let src_dir = member_dir.join("src");
+        if !src_dir.is_dir() {
+            continue;
+        }
+
+        let dir_name = member_dir
+            .file_name()
+            .and_then(|n| n.to_str())
+            .expect("workspace member directory name must be valid UTF-8");
+
+        // The binary `sandpolis` crate hosts the analyzer, so its types live
+        // under `crate::…`. Every other workspace member is referenced by its
+        // package name (directory name with `-` → `_`).
+        let crate_prefix: String = if dir_name == "sandpolis" {
+            "crate".into()
+        } else {
+            dir_name.replace('-', "_")
+        };
+
+        for entry in walkdir::WalkDir::new(&src_dir)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_type().is_file())
+            .filter(|e| e.file_name() == "config.rs")
+        {
+            println!("cargo:rerun-if-changed={}", entry.path().display());
+
+            let rel = entry
+                .path()
+                .strip_prefix(&src_dir)
+                .expect("walkdir entry lives under src_dir");
+
+            let module_path: Vec<String> = rel
+                .with_extension("")
+                .components()
+                .filter_map(|c| match c {
+                    Component::Normal(os) => os.to_str().map(|s| s.to_owned()),
+                    _ => None,
+                })
+                .collect();
+
+            let prefix = if module_path.is_empty() {
+                crate_prefix.clone()
+            } else {
+                format!("{}::{}", crate_prefix, module_path.join("::"))
+            };
+
+            let source =
+                fs::read_to_string(entry.path()).expect("Failed to read config.rs source");
+            let _ = analyzer.add_source_with_prefix(&prefix, &source);
+        }
     }
 
     let json = serde_json::to_string(&analyzer).expect("Failed to serialize RustAnalyzer");
     let dest = PathBuf::from(&out_dir).join("rust_analyzer.json");
     fs::write(&dest, json).expect("Failed to write rust_analyzer.json");
+}
 
-    println!("cargo:rerun-if-changed=../");
+/// Direct subdirectories of the workspace root that contain a `Cargo.toml`.
+fn workspace_member_dirs(workspace_root: &Path) -> Vec<PathBuf> {
+    let mut members = Vec::new();
+    let Ok(read_dir) = fs::read_dir(workspace_root) else {
+        return members;
+    };
+    for entry in read_dir.flatten() {
+        let path = entry.path();
+        if path.is_dir() && path.join("Cargo.toml").is_file() {
+            members.push(path);
+        }
+    }
+    members
 }
