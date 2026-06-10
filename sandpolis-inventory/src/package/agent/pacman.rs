@@ -1,6 +1,6 @@
 use super::PackageManager;
-use crate::{PackageData, PackageManager as PM};
-use anyhow::{bail, Result};
+use crate::package::{PackageData, PackageManager as PM};
+use anyhow::{Result, bail};
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;

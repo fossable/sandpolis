@@ -1,5 +1,5 @@
 use super::PackageManager;
-use crate::{PackageData, PackageManager as PM};
+use crate::package::{PackageData, PackageManager as PM};
 use anyhow::{bail, Result};
 use std::path::PathBuf;
 use std::process::Command;

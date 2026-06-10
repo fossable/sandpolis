@@ -87,11 +87,11 @@ impl DatabaseLayer {
 /// Create an in-memory database for testing.
 #[macro_export]
 macro_rules! test_db {
-    ($($model:ident),+) => {{
+    ($($model:ident),+ $(,)?) => {{
         let models = Box::leak(Box::new(native_db::Models::new()));
         $(
             models.define::<$model>().unwrap();
-        ),+
+        )+
 
         $crate::database::DatabaseLayer::new(
             $crate::database::config::DatabaseConfig {

@@ -57,7 +57,6 @@ pub enum Commands {
         output: Option<PathBuf>,
     },
 
-    // TODO no command
     InstallCert {},
 
     /// Show versions of all installed layers
@@ -70,7 +69,11 @@ pub enum Commands {
     /// Run a server instance
     #[cfg(feature = "server")]
     #[cfg(any(feature = "agent", feature = "client"))]
-    Server,
+    Server {
+        /// Configuration file path ($S7S_CONFIG)
+        #[clap(long)]
+        config: Option<PathBuf>,
+    },
 
     /// Run a client instance
     #[cfg(feature = "client")]

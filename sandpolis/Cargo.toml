@@ -20,6 +20,7 @@ clap = { workspace = true }
 colored = { workspace = true }
 dirs = "6"
 fossable = "0.1.2"
+fs2 = "0.4"
 futures = { workspace = true }
 ron = { workspace = true }
 native_db = { workspace = true }
@@ -99,6 +100,7 @@ agent = [
   "sandpolis-instance/agent",
   "sandpolis-inventory?/agent",
   "sandpolis-wake?/agent",
+  "sandpolis-server/agent",
   "sandpolis-shell?/agent",
 ]
 client = [
@@ -199,4 +201,8 @@ required-features = ["client-gui"]
 
 [[example]]
 name = "client_gui_instance_preview"
+required-features = ["client-gui"]
+
+[[example]]
+name = "client_gui_node_controller"
 required-features = ["client-gui"]

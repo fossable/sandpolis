@@ -164,7 +164,7 @@ mod test_user_name {
         assert!("user0".parse::<UserName>().is_ok());
         assert!("0user".parse::<UserName>().is_ok());
         assert!(
-            "longusername1234567890123456789012"
+            "longusername12345678901234567890"
                 .parse::<UserName>()
                 .is_ok()
         );

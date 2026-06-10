@@ -362,13 +362,13 @@ pub enum ServerStratum {
 
 /// Locates a server instance over the network. These have a format like:
 ///
-/// ```
+/// ```text
 /// https://example.com:8768/default
 /// ```
 ///
 /// With default information omitted, the URL can be as simple as:
 ///
-/// ```
+/// ```text
 /// https://example.com
 /// ```
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -419,11 +419,17 @@ impl FromStr for ServerUrl {
         // TODO
         url.query_pairs();
 
+        let host = url
+            .host_str()
+            .ok_or_else(|| anyhow!("Invalid host in URL"))?;
+        let host = host
+            .strip_prefix('[')
+            .and_then(|h| h.strip_suffix(']'))
+            .unwrap_or(host)
+            .to_string();
+
         Ok(Self {
-            host: url
-                .host_str()
-                .ok_or_else(|| anyhow!("Invalid host in URL"))?
-                .to_string(),
+            host,
             port: url.port().unwrap_or(ServerUrl::default_port()),
             realm: if url.path().len() > 1 {
                 url.path().trim_start_matches('/').parse()?
@@ -508,18 +514,18 @@ mod tests {
 
     #[test]
     fn test_server_url_from_str_with_realm() {
-        let url: ServerUrl = "example.com/my-realm".parse().unwrap();
+        let url: ServerUrl = "example.com/myrealm".parse().unwrap();
         assert_eq!(url.host, "example.com");
         assert_eq!(url.port, 8768);
-        assert_eq!(url.realm, "my-realm".parse().unwrap());
+        assert_eq!(url.realm, "myrealm".parse().unwrap());
     }
 
     #[test]
     fn test_server_url_from_str_full() {
-        let url: ServerUrl = "https://example.com:9000/my-realm".parse().unwrap();
+        let url: ServerUrl = "https://example.com:9000/myrealm".parse().unwrap();
         assert_eq!(url.host, "example.com");
         assert_eq!(url.port, 9000);
-        assert_eq!(url.realm, "my-realm".parse().unwrap());
+        assert_eq!(url.realm, "myrealm".parse().unwrap());
     }
 
     #[test]
@@ -557,10 +563,10 @@ mod tests {
         let url = ServerUrl {
             host: "example.com".to_string(),
             port: 8768,
-            realm: "my-realm".parse().unwrap(),
+            realm: "myrealm".parse().unwrap(),
             retry: RetryWait::default(),
         };
-        assert_eq!(url.to_string(), "https://example.com/my-realm");
+        assert_eq!(url.to_string(), "https://example.com/myrealm");
     }
 
     #[test]
@@ -568,10 +574,10 @@ mod tests {
         let url = ServerUrl {
             host: "example.com".to_string(),
             port: 9000,
-            realm: "my-realm".parse().unwrap(),
+            realm: "myrealm".parse().unwrap(),
             retry: RetryWait::default(),
         };
-        assert_eq!(url.to_string(), "https://example.com:9000/my-realm");
+        assert_eq!(url.to_string(), "https://example.com:9000/myrealm");
     }
 
     #[test]
@@ -608,7 +614,7 @@ mod tests {
 
     #[test]
     fn test_server_url_roundtrip() {
-        let original = "https://example.com:9000/my-realm";
+        let original = "https://example.com:9000/myrealm";
         let url: ServerUrl = original.parse().unwrap();
         assert_eq!(url.to_string(), original);
     }

@@ -1,6 +1,8 @@
-use crate::cli::CommandLine;
-use anyhow::Result;
+use anyhow::{Result, bail};
+use fs2::FileExt;
 use serde::{Deserialize, Serialize};
+use std::fs::OpenOptions;
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::PathBuf;
 use tracing::debug;
 
@@ -40,7 +42,12 @@ impl Configuration {
         }
     }
 
-    pub fn new(args: &CommandLine) -> Result<Self> {
+    /// Load configuration.
+    ///
+    /// `config_path` should come from the `--config` flag on the `server`
+    /// subcommand (server instances are the only ones with a writable on-disk
+    /// config). Falls back to `$S7S_CONFIG` then the platform default.
+    pub fn new(config_path: Option<PathBuf>) -> Result<Self> {
         // For agent instances, prefer the embedded config if present
         #[cfg(feature = "agent")]
         {
@@ -55,10 +62,7 @@ impl Configuration {
             }
         }
 
-        let path = args
-            .instance
-            .config
-            .clone()
+        let path = config_path
             .or_else(|| std::env::var("S7S_CONFIG").ok().map(PathBuf::from))
             .unwrap_or_else(Self::default_path);
 
@@ -80,18 +84,81 @@ impl Configuration {
     }
 
     /// Write the configuration back to the file it was loaded from.
+    ///
+    /// Acquires an exclusive advisory lock on the config file for the duration
+    /// of the write so concurrent `sandpolis` processes can't clobber each
+    /// other. The lock is released when the file handle is dropped.
     pub fn save(&self) -> Result<()> {
-        if let Some(path) = &self.path {
-            debug!(path = %path.display(), "Saving configuration");
+        let Some(path) = &self.path else {
+            return Ok(());
+        };
 
-            // Create parent directories if needed
-            if let Some(parent) = path.parent() {
-                std::fs::create_dir_all(parent)?;
-            }
+        debug!(path = %path.display(), "Saving configuration");
 
-            let contents = ron::ser::to_string_pretty(self, ron::ser::PrettyConfig::default())?;
-            std::fs::write(path, contents)?;
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
         }
+
+        let contents = ron::ser::to_string_pretty(self, ron::ser::PrettyConfig::default())?;
+
+        let mut file = OpenOptions::new()
+            .create(true)
+            .read(true)
+            .write(true)
+            .truncate(false)
+            .open(path)?;
+
+        FileExt::lock_exclusive(&file)?;
+        file.set_len(0)?;
+        file.seek(SeekFrom::Start(0))?;
+        file.write_all(contents.as_bytes())?;
+        file.sync_all()?;
+
+        Ok(())
+    }
+
+    /// Read-modify-write the on-disk config under an exclusive lock.
+    ///
+    /// Re-reads the file from disk after acquiring the lock so the closure
+    /// always sees the latest committed state, then writes the mutated value
+    /// back before releasing the lock. Use this whenever multiple processes
+    /// may be racing to update the same config.
+    pub fn modify<F>(&mut self, f: F) -> Result<()>
+    where
+        F: FnOnce(&mut Configuration) -> Result<()>,
+    {
+        let Some(path) = self.path.clone() else {
+            bail!("Configuration has no associated file path");
+        };
+
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        let mut file = OpenOptions::new()
+            .create(true)
+            .read(true)
+            .write(true)
+            .truncate(false)
+            .open(&path)?;
+
+        FileExt::lock_exclusive(&file)?;
+
+        let mut buf = String::new();
+        file.read_to_string(&mut buf)?;
+        if !buf.is_empty() {
+            *self = ron::from_str(&buf)?;
+            self.path = Some(path);
+        }
+
+        f(self)?;
+
+        let contents = ron::ser::to_string_pretty(self, ron::ser::PrettyConfig::default())?;
+        file.set_len(0)?;
+        file.seek(SeekFrom::Start(0))?;
+        file.write_all(contents.as_bytes())?;
+        file.sync_all()?;
+
         Ok(())
     }
 }

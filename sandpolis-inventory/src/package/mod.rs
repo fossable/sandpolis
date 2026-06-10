@@ -41,6 +41,7 @@ pub struct PackageManagerData {
 }
 
 #[data]
+#[derive(Default)]
 pub struct PackageData {
     /// Canonical name/identifier
     pub name: String,

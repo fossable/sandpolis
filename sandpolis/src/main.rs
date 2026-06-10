@@ -1,4 +1,6 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
+#[cfg(not(feature = "client"))]
+use clap::CommandFactory;
 use clap::Parser;
 use sandpolis::InstanceState;
 use sandpolis::cli::CommandLine;
@@ -17,8 +19,11 @@ async fn main() -> Result<ExitCode> {
         not(feature = "agent"),
         not(feature = "client")
     ))]
-    bail!("No instance was enabled at build time");
+    {
+        bail!("No instance was enabled at build time");
+    }
 
+    #[allow(unreachable_code)]
     let args = CommandLine::parse();
 
     // Initialize logging for the instance
@@ -48,12 +53,22 @@ async fn main() -> Result<ExitCode> {
         .install_default()
         .expect("crypto provider is available");
 
+    // Extract --config from the `server` subcommand (only server instances
+    // accept a config path; other instances use $S7S_CONFIG or the default).
+    #[allow(unused_mut)]
+    let mut config_path: Option<std::path::PathBuf> = None;
+    #[cfg(feature = "server")]
+    #[cfg(any(feature = "agent", feature = "client"))]
+    if let Some(sandpolis::cli::Commands::Server { config }) = &args.command {
+        config_path = config.clone();
+    }
+
     // Load config
-    let config = Configuration::new(&args)?;
+    let config = Configuration::new(config_path)?;
     debug!(config = ?config, "Instance configuration");
 
     // Default to all compiled instance types
-    #[allow(unused_mut)]
+    #[allow(unused_mut, unused_assignments)]
     let mut run_instances = Vec::<&str>::from([
         #[cfg(feature = "server")]
         "server",
@@ -77,10 +92,23 @@ async fn main() -> Result<ExitCode> {
 
         #[cfg(feature = "server")]
         #[cfg(any(feature = "agent", feature = "client"))]
-        Some(Commands::Server) => run_instances = vec!["server"],
+        Some(Commands::Server { .. }) => run_instances = vec!["server"],
 
         Some(command) => return command.dispatch(&config).await,
-        None => (),
+        None => {
+            // Default to the client when one is compiled in; otherwise the
+            // single remaining instance type. Refuse to guess if multiple
+            // non-client instance types are enabled.
+            #[cfg(feature = "client")]
+            {
+                run_instances = vec!["client"];
+            }
+            #[cfg(not(feature = "client"))]
+            if run_instances.len() > 1 {
+                CommandLine::command().print_help()?;
+                bail!("No default instance: specify a subcommand");
+            }
+        }
     }
 
     info!(

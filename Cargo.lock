@@ -4528,6 +4528,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "env_home"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7f84e12ccf0a7ddc17a6c41c93326024c42920d7ee630d04950e6926645c0fe"
+
+[[package]]
 name = "env_logger"
 version = "0.11.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4951,6 +4957,16 @@ checksum = "73fde052dbfc920003cfd2c8e2c6e6d4cc7c1091538c3a24226cec0665ab08c0"
 dependencies = [
  "autocfg",
  "tokio",
+]
+
+[[package]]
+name = "fs2"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9564fc758e15025b46aa6643b1b77d047d1a56a1aea6e01002ac0c7026876213"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]
@@ -9937,8 +9953,6 @@ dependencies = [
 [[package]]
 name = "roniker"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c162d7a3599a6dd65335f4cada5d94c2abfdd97230286d91f769d1dc5e6045c"
 dependencies = [
  "anyhow",
  "proc-macro2",
@@ -10327,6 +10341,7 @@ dependencies = [
  "egui_console",
  "egui_extras",
  "fossable",
+ "fs2",
  "futures",
  "image",
  "native_db",
@@ -10559,16 +10574,19 @@ dependencies = [
  "native_db",
  "native_model",
  "os_info",
+ "regex",
  "sandpolis-agent",
  "sandpolis-client",
  "sandpolis-instance",
  "sandpolis-macros",
  "serde",
+ "serde_json",
  "sysinfo 0.39.3",
  "tempfile",
  "test-log",
  "tokio",
  "tracing",
+ "which",
 ]
 
 [[package]]
@@ -10717,6 +10735,8 @@ dependencies = [
  "anyhow",
  "axum",
  "axum-macros",
+ "native_db",
+ "native_model",
  "ratatui",
  "sandpolis-client",
  "sandpolis-instance",
@@ -13380,6 +13400,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "which"
+version = "7.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24d643ce3fd3e5b54854602a080f34fb10ab75e0b813ee32d00ca2b44fa74762"
+dependencies = [
+ "either",
+ "env_home",
+ "rustix 1.1.4",
+ "winsafe",
+]
+
+[[package]]
 name = "wide"
 version = "0.7.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -14022,6 +14054,12 @@ checksum = "0592e1c9d151f854e6fd382574c3a0855250e1d9b2f99d9281c6e6391af352f1"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "winsafe"
+version = "0.0.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d135d17ab770252ad95e9a872d365cf3090e3be864a34ab46f48555993efc904"
 
 [[package]]
 name = "wit-bindgen"

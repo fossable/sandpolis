@@ -148,20 +148,26 @@ impl DiscoveredShell {
 
         // Search for bash
         match Command::new("bash").arg("--version").output().await {
-            Ok(output) => match String::from_utf8(output.stdout) {
-                Ok(stdout) => {
-                    if let Some(m) =
-                        Regex::new(r"version ([1-9]+\.[0-9]+\.[0-9]+\S*)")?.captures(&stdout)
-                    {
-                        shells.push(DiscoveredShell {
-                            shell_type: ShellType::Bash,
-                            location: todo!(),
-                            version: todo!(),
-                        })
-                    }
+            Ok(output) => {
+                if let Ok(stdout) = String::from_utf8(output.stdout) {
+                    let version = Regex::new(r"version ([1-9]+\.[0-9]+\.[0-9]+\S*)")?
+                        .captures(&stdout)
+                        .map(|m| m[1].to_string());
+
+                    let location = std::env::split_paths(
+                        &std::env::var_os("PATH").unwrap_or_default(),
+                    )
+                    .map(|p| p.join("bash"))
+                    .find(|p| p.is_file())
+                    .unwrap_or_else(|| PathBuf::from("bash"));
+
+                    shells.push(DiscoveredShell {
+                        shell_type: ShellType::Bash,
+                        location,
+                        version,
+                    });
                 }
-                Err(_) => todo!(),
-            },
+            }
             Err(_) => trace!("Bash shell not found"),
         };
 

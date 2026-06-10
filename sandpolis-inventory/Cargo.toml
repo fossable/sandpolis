@@ -16,6 +16,9 @@ native_db = { workspace = true }
 tokio = { workspace = true }
 native_model = { workspace = true }
 sysinfo = { version = "0.39.3", optional = true }
+which = { version = "7", optional = true }
+regex = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1", optional = true }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
@@ -31,7 +34,15 @@ tempfile = "3.15.0"
 test-log = { version = "0.2.18", features = ["trace"] }
 
 [features]
-agent = ["dep:sysinfo", "dep:axum", "dep:axum-macros", "dep:sandpolis-agent"]
+agent = [
+  "dep:sysinfo",
+  "dep:axum",
+  "dep:axum-macros",
+  "dep:sandpolis-agent",
+  "dep:which",
+  "dep:regex",
+  "dep:serde_json",
+]
 server = []
 client = []
 client-gui = [

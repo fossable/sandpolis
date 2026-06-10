@@ -1,21 +1,16 @@
 use anyhow::Result;
-use sandpolis_instance::InstanceId;
-use sandpolis_instance::network::NetworkLayer;
+use sandpolis_instance::network::{ConnectionData, NetworkLayer, NetworkLayerData};
+use sandpolis_instance::test_db;
 use sandpolis_wake::{WakeLayer, client::tui::WakeWidget};
-use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let temp_db = TemporaryDatabase::new()?;
+    let database = test_db!(NetworkLayerData, ConnectionData);
     let widget = WakeWidget {
-        instance: InstanceId::default(),
         wake: WakeLayer {
-            network: NetworkLayer {
-                data: temp_db.db.document("/network")?,
-                servers: Arc::new(Vec::new()),
-            },
+            network: NetworkLayer::new(database).await?,
         },
     };
-    sandpolis_client::tui::test_widget(&widget).await.unwrap();
+    sandpolis_client::tui::test_widget(widget).await.unwrap();
     Ok(())
 }

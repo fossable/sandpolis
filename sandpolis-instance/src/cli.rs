@@ -1,5 +1,4 @@
 use clap::Parser;
-use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
 pub struct InstanceCommandLine {
@@ -16,8 +15,4 @@ pub struct InstanceCommandLine {
     /// a security risk.
     #[clap(long, num_args = 0, default_value_t = false)]
     pub no_admin_socket: bool,
-
-    /// Configuration file path ($S7S_CONFIG)
-    #[clap(long)]
-    pub config: Option<PathBuf>,
 }

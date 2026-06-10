@@ -2,6 +2,10 @@ use super::PackageData;
 use anyhow::{Result, bail};
 use std::path::PathBuf;
 
+pub mod apt;
+pub mod nix;
+pub mod pacman;
+
 pub(crate) trait PackageManager {
     /// Get the location of the package manager's binary on the filesystem.
     fn get_location(&self) -> Result<PathBuf> {
