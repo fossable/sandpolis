@@ -6,8 +6,7 @@
 
 use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, LazyLock, RwLock};
 
 pub mod config;
 pub mod docker;
@@ -26,14 +25,44 @@ pub mod wol;
 #[cfg(feature = "client-gui")]
 pub mod client;
 
+/// Probes registered on this instance (populated from config at startup).
+///
+/// This is a global because GUI extension trait methods have no access to
+/// layer state when rendering.
+pub static REGISTERED_PROBES: LazyLock<Arc<RwLock<Vec<RegisteredProbe>>>> =
+    LazyLock::new(Default::default);
+
 /// The probe layer manages probe registrations and streaming state.
 #[derive(Clone)]
 #[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
-pub struct ProbeLayer {}
+pub struct ProbeLayer {
+    pub probes: Arc<RwLock<Vec<RegisteredProbe>>>,
+}
 
 impl ProbeLayer {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(config: config::ProbeLayerConfig, gateway: InstanceId) -> Self {
+        let mut probes = Vec::new();
+        for device in &config.devices {
+            if let Some(wol) = &device.wol {
+                probes.push(RegisteredProbe {
+                    id: probes.len() as u64 + 1,
+                    probe_type: ProbeType::Wol,
+                    name: wol
+                        .hostname
+                        .clone()
+                        .unwrap_or_else(|| device.ip.to_string()),
+                    gateway,
+                    config: ProbeConfig::Wol(wol.clone()),
+                    online: false,
+                    status_message: None,
+                });
+            }
+        }
+
+        *REGISTERED_PROBES.write().unwrap() = probes;
+        Self {
+            probes: REGISTERED_PROBES.clone(),
+        }
     }
 }
 

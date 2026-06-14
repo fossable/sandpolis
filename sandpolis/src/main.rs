@@ -53,14 +53,13 @@ async fn main() -> Result<ExitCode> {
         .install_default()
         .expect("crypto provider is available");
 
-    // Extract --config from the `server` subcommand (only server instances
-    // accept a config path; other instances use $S7S_CONFIG or the default).
+    // Only server instances accept a --config path; other instances use
+    // $S7S_CONFIG or the default.
     #[allow(unused_mut)]
     let mut config_path: Option<std::path::PathBuf> = None;
     #[cfg(feature = "server")]
-    #[cfg(any(feature = "agent", feature = "client"))]
-    if let Some(sandpolis::cli::Commands::Server { config }) = &args.command {
-        config_path = config.clone();
+    {
+        config_path = args.config.clone();
     }
 
     // Load config
@@ -92,7 +91,7 @@ async fn main() -> Result<ExitCode> {
 
         #[cfg(feature = "server")]
         #[cfg(any(feature = "agent", feature = "client"))]
-        Some(Commands::Server { .. }) => run_instances = vec!["server"],
+        Some(Commands::Server) => run_instances = vec!["server"],
 
         Some(command) => return command.dispatch(&config).await,
         None => {

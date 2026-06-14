@@ -8,7 +8,7 @@ use bevy_rapier2d::dynamics::{Damping, ExternalForce, RigidBody, Velocity};
 use bevy_rapier2d::geometry::{Collider, Restitution};
 use bevy_svg::prelude::{Origin, Svg2d};
 use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
-use sandpolis_client::gui::node::{NeedsScaling, NodeEntity, NodeSvg};
+use sandpolis_client::gui::node::{NeedsScaling, NodeEntity};
 use sandpolis_instance::{InstanceId, LayerName};
 
 use crate::config::{
@@ -44,6 +44,7 @@ pub struct ProbeNodeBundle {
     pub damping: Damping,
     pub restitution: Restitution,
     pub transform: Transform,
+    pub visibility: Visibility,
 }
 
 /// Spawn a probe node in the world view.
@@ -52,6 +53,7 @@ pub fn spawn_probe_node(
     commands: &mut Commands,
     probe: &RegisteredProbe,
     parent_position: Vec3,
+    visible: bool,
 ) {
     // Use the gateway's instance ID for the node entity
     let instance_id = probe.gateway;
@@ -86,16 +88,22 @@ pub fn spawn_probe_node(
             },
             restitution: Restitution::coefficient(0.7),
             transform: Transform::from_xyz(x, y, 0.0),
+            visibility: if visible {
+                Visibility::Inherited
+            } else {
+                Visibility::Hidden
+            },
         })
         .id();
 
-    // Spawn SVG as a child entity
+    // Spawn SVG as a child entity. Note: deliberately not tagged with NodeSvg
+    // so the layer visual systems don't replace the probe icon or rescale it
+    // to the regular node size.
     commands.entity(node_entity).with_children(|parent| {
         parent.spawn((
             Svg2d(asset_server.load(svg_path)),
             Origin::Center,
             Transform::default(),
-            NodeSvg,
             NeedsScaling,
             ProbeNodeSvg,
         ));
@@ -140,9 +148,15 @@ pub fn scale_probe_node_svgs(
 pub fn update_probe_nodes(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    current_layer: Res<sandpolis_client::gui::input::CurrentLayer>,
     existing_probes: Query<(Entity, &ProbeNode)>,
-    parent_nodes: Query<(&Transform, &NodeEntity)>,
+    parent_nodes: Query<(&Transform, &NodeEntity), Without<ProbeNode>>,
 ) {
+    // Probes spawned while another layer is active must start hidden
+    let show_probes = sandpolis_client::gui::layer_ext::get_extension_for_layer(&current_layer)
+        .map(|ext| ext.show_probe_nodes())
+        .unwrap_or(false);
+
     // Build a map of gateway positions
     let gateway_positions: std::collections::HashMap<InstanceId, Vec3> = parent_nodes
         .iter()
@@ -166,7 +180,7 @@ pub fn update_probe_nodes(
     for probe in &all_probes {
         if !existing_probe_ids.contains(&probe.id) {
             if let Some(&parent_pos) = gateway_positions.get(&probe.gateway) {
-                spawn_probe_node(&asset_server, &mut commands, probe, parent_pos);
+                spawn_probe_node(&asset_server, &mut commands, probe, parent_pos, show_probes);
             }
         }
     }
@@ -251,6 +265,9 @@ pub struct ProbeControllerState {
     pub form: ProbeFormState,
     /// Selected probe in the list view.
     pub selected_probe_id: Option<u64>,
+    /// Result of the last wake attempt.
+    #[serde(skip)]
+    pub wake_status: Option<String>,
 }
 
 /// View modes for the probe controller.
@@ -542,9 +559,14 @@ impl ProbeFormState {
 }
 
 /// Query registered probes for a gateway.
-pub fn query_probes(_gateway: InstanceId) -> Vec<RegisteredProbe> {
-    // TODO: Query from database
-    vec![]
+pub fn query_probes(gateway: InstanceId) -> Vec<RegisteredProbe> {
+    crate::REGISTERED_PROBES
+        .read()
+        .unwrap()
+        .iter()
+        .filter(|probe| probe.gateway == gateway)
+        .cloned()
+        .collect()
 }
 
 /// Render the probe controller.
@@ -627,14 +649,18 @@ fn render_probe_list(ui: &mut egui::Ui, instance_id: InstanceId, state: &mut Pro
         if let Some(probe_id) = state.selected_probe_id {
             if let Some(probe) = probes.iter().find(|p| p.id == probe_id) {
                 ui.separator();
-                render_probe_details(ui, probe);
+                render_probe_details(ui, probe, state);
             }
         }
     }
 }
 
 /// Render details for a selected probe.
-fn render_probe_details(ui: &mut egui::Ui, probe: &RegisteredProbe) {
+fn render_probe_details(
+    ui: &mut egui::Ui,
+    probe: &RegisteredProbe,
+    state: &mut ProbeControllerState,
+) {
     ui.label(egui::RichText::new(&probe.name).strong());
     ui.label(format!("Type: {}", probe.probe_type.display_name()));
 
@@ -643,6 +669,11 @@ fn render_probe_details(ui: &mut egui::Ui, probe: &RegisteredProbe) {
     }
 
     ui.horizontal(|ui| {
+        if let ProbeConfig::Wol(wol) = &probe.config {
+            if ui.button("Wake").clicked() {
+                state.wake_status = Some(send_wake(wol));
+            }
+        }
         if ui.button("Test Connection").clicked() {
             // TODO: Test probe connectivity
         }
@@ -650,6 +681,32 @@ fn render_probe_details(ui: &mut egui::Ui, probe: &RegisteredProbe) {
             // TODO: Delete probe
         }
     });
+
+    if let Some(msg) = &state.wake_status {
+        ui.label(msg);
+    }
+}
+
+/// Send a Wake-on-LAN magic packet and describe the outcome.
+fn send_wake(wol: &WolProbeConfig) -> String {
+    let mac_address = match wol.mac_address.parse::<macaddr::MacAddr6>() {
+        Ok(mac) => mac,
+        Err(e) => return format!("Invalid MAC address: {}", e),
+    };
+
+    match crate::wol::send_wol_packet(&crate::wol::WolPacketRequest {
+        mac_address,
+        broadcast_address: wol.broadcast_address.clone(),
+        port: wol.port,
+    }) {
+        crate::wol::WolPacketResponse::Ok => {
+            format!("Magic packet sent to {}", wol.mac_address)
+        }
+        crate::wol::WolPacketResponse::InvalidBroadcastAddress(addr) => {
+            format!("Invalid broadcast address: {}", addr)
+        }
+        crate::wol::WolPacketResponse::SendFailed(e) => format!("Send failed: {}", e),
+    }
 }
 
 /// Render the probe registration form.
@@ -1138,8 +1195,14 @@ impl LayerGuiExtension for ProbeGuiExtension {
                 scale_probe_node_svgs,
                 update_probe_nodes,
                 apply_probe_spring_forces,
-                update_probe_node_visibility,
             ),
+        );
+        // Must run after the generic node visibility system (which also
+        // matches probe nodes) so probe-specific visibility wins
+        app.add_systems(
+            PostUpdate,
+            update_probe_node_visibility
+                .after(sandpolis_client::gui::layer_visuals::update_node_visibility_for_layer),
         );
     }
 

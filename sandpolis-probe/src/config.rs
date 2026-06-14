@@ -6,14 +6,14 @@ use crate::rtsp::RtspConfig;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct ProbeLayerConfig {
-    devices: Vec<DeviceConfig>,
+    pub devices: Vec<DeviceConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DeviceConfig {
-    ip: IpAddr,
-    rtsp: Option<RtspConfig>,
-    wol: Option<WolProbeConfig>,
+    pub ip: IpAddr,
+    pub rtsp: Option<RtspConfig>,
+    pub wol: Option<WolProbeConfig>,
 }
 
 /// RDP probe configuration.

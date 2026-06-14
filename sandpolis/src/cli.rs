@@ -11,6 +11,11 @@ use tracing::info;
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about = "Test")]
 pub struct CommandLine {
+    /// Configuration file path ($S7S_CONFIG)
+    #[cfg(feature = "server")]
+    #[clap(long)]
+    pub config: Option<PathBuf>,
+
     #[cfg(feature = "client")]
     #[clap(flatten)]
     pub client: sandpolis_client::cli::ClientCommandLine,
@@ -69,11 +74,7 @@ pub enum Commands {
     /// Run a server instance
     #[cfg(feature = "server")]
     #[cfg(any(feature = "agent", feature = "client"))]
-    Server {
-        /// Configuration file path ($S7S_CONFIG)
-        #[clap(long)]
-        config: Option<PathBuf>,
-    },
+    Server,
 
     /// Run a client instance
     #[cfg(feature = "client")]

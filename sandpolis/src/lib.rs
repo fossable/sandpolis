@@ -103,7 +103,7 @@ impl InstanceState {
         let snapshot = sandpolis_snapshot::SnapshotLayer::new().await?;
 
         #[cfg(feature = "layer-probe")]
-        let probe = sandpolis_probe::ProbeLayer::new();
+        let probe = sandpolis_probe::ProbeLayer::new(config.probe.clone(), instance.instance_id);
 
         Ok(Self {
             #[cfg(feature = "layer-inventory")]

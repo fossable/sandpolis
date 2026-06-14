@@ -9,6 +9,7 @@ use tracing::debug;
 /// Application's global config.
 #[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Configuration {
     /// Path to the config file (not serialized)
     #[serde(skip)]
@@ -28,6 +29,13 @@ pub struct Configuration {
     pub snapshot: sandpolis_snapshot::config::SnapshotConfig,
     #[cfg(feature = "layer-probe")]
     pub probe: sandpolis_probe::config::ProbeLayerConfig,
+}
+
+/// RON parsing options for config files: allow optional fields without an
+/// explicit `Some`.
+fn ron_options() -> ron::Options {
+    ron::Options::default()
+        .with_default_extension(ron::extensions::Extensions::IMPLICIT_SOME)
 }
 
 impl Configuration {
@@ -57,7 +65,8 @@ impl Configuration {
 
             if EMBEDDED_CONFIG != PLACEHOLDER {
                 debug!("Loading embedded configuration");
-                let config: Configuration = ron::from_str(std::str::from_utf8(EMBEDDED_CONFIG)?)?;
+                let config: Configuration =
+                    ron_options().from_str(std::str::from_utf8(EMBEDDED_CONFIG)?)?;
                 return Ok(config);
             }
         }
@@ -69,7 +78,7 @@ impl Configuration {
         debug!(path = %path.display(), "Loading configuration");
 
         let mut config: Configuration = match std::fs::read_to_string(&path) {
-            Ok(contents) => ron::from_str(&contents)?,
+            Ok(contents) => ron_options().from_str(&contents)?,
             Err(error) => match error.kind() {
                 std::io::ErrorKind::NotFound => {
                     debug!("Config file not found, using defaults");
@@ -147,7 +156,7 @@ impl Configuration {
         let mut buf = String::new();
         file.read_to_string(&mut buf)?;
         if !buf.is_empty() {
-            *self = ron::from_str(&buf)?;
+            *self = ron_options().from_str(&buf)?;
             self.path = Some(path);
         }
 

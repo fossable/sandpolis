@@ -261,6 +261,11 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         ),
     );
 
+    // Layer-specific systems (probe nodes, etc)
+    for ext in layer_ext::get_layer_extensions() {
+        ext.register_systems(&mut app);
+    }
+
     app.run();
     Ok(())
 }
