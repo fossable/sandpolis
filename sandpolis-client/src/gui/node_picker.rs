@@ -1,9 +1,18 @@
+//! Node picker: a modal search over instance nodes that recenters the camera on
+//! the chosen node. Native `bevy_ui` (migrated off egui). Opened with the `N` key.
+
 use crate::gui::node::WorldView;
+use crate::gui::ui::gating::UiPointerState;
+use crate::gui::ui::panel::modal_scrim;
+use crate::gui::ui::text_input::{TextInput, text_input};
+use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
+use crate::gui::ui::widgets::{heading, muted, text};
+use bevy::input_focus::InputFocus;
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui};
+use bevy_ui_widgets::{Activate, Button};
 use sandpolis_instance::InstanceId;
 
-/// Resource to track node picker UI state
+/// Node picker state.
 #[derive(Resource, Default)]
 pub struct NodePickerState {
     pub show: bool,
@@ -11,276 +20,240 @@ pub struct NodePickerState {
     pub selected_index: usize,
 }
 
-/// Cached node information for display
-#[derive(Clone)]
-struct NodeInfo {
-    pub instance_id: InstanceId,
-    pub is_server: bool,
-    pub entity: Entity,
+/// Modal root marker.
+#[derive(Component)]
+pub struct NodePickerRoot;
+
+/// Search input marker.
+#[derive(Component)]
+pub struct NodeSearchInput;
+
+/// Rows container marker.
+#[derive(Component)]
+pub struct NodeRowsContainer;
+
+/// A single selectable node row.
+#[derive(Component)]
+pub struct NodeRow {
+    node_entity: Entity,
 }
 
-/// Get emoji for node type
-fn get_node_emoji(is_server: bool) -> &'static str {
-    if is_server { "🖧" } else { "🤖" }
-}
-
-/// Render node picker panel
-pub fn render_node_picker_panel(
-    mut contexts: EguiContexts,
-    mut picker_state: ResMut<NodePickerState>,
-    nodes: Query<(Entity, &InstanceId)>,
-    mut camera_query: Query<&mut Transform, With<WorldView>>,
-    node_transforms: Query<&Transform, (With<InstanceId>, Without<WorldView>)>,
-    windows: Query<&Window>,
-    keyboard: Res<ButtonInput<KeyCode>>,
-) {
-    if !picker_state.show {
-        return;
-    }
-
-    let Ok(window) = windows.single() else {
-        return;
-    };
-
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-
-    let window_size = Vec2::new(window.width(), window.height());
-    let is_mobile = window_size.x < 800.0;
-
-    // Collect all nodes
-    let mut all_nodes: Vec<NodeInfo> = nodes
+/// Collect nodes matching the query, sorted by instance id for stable ordering.
+fn collect_nodes(
+    nodes: &Query<(Entity, &InstanceId)>,
+    query: &str,
+) -> Vec<(Entity, InstanceId)> {
+    let query = query.to_lowercase();
+    let mut all: Vec<(Entity, InstanceId)> = nodes
         .iter()
-        .map(|(entity, instance_id)| NodeInfo {
-            instance_id: *instance_id,
-            is_server: instance_id.is_server(),
-            entity,
-        })
-        .collect();
-
-    // Sort by instance ID for consistent ordering
-    all_nodes.sort_by_key(|n| n.instance_id);
-
-    let search_query = picker_state.search_query.to_lowercase();
-
-    // Filter nodes based on search query
-    let filtered_nodes: Vec<_> = all_nodes
-        .iter()
-        .filter(|node| {
-            if search_query.is_empty() {
-                true
-            } else {
-                // Search by instance ID or server/agent status
-                format!("{}", node.instance_id)
-                    .to_lowercase()
-                    .contains(&search_query)
-                    || (node.is_server && "server".contains(&search_query))
-                    || (!node.is_server && "agent".contains(&search_query))
+        .filter(|(_, id)| {
+            if query.is_empty() {
+                return true;
             }
+            let is_server = id.is_server();
+            format!("{id}").to_lowercase().contains(&query)
+                || (is_server && "server".contains(&query))
+                || (!is_server && "agent".contains(&query))
         })
+        .map(|(entity, id)| (entity, *id))
         .collect();
+    all.sort_by_key(|(_, id)| *id);
+    all
+}
 
-    // Clamp selected index
-    if picker_state.selected_index >= filtered_nodes.len() && !filtered_nodes.is_empty() {
-        picker_state.selected_index = filtered_nodes.len() - 1;
+/// Toggle the picker with the `N` key (unless a text field is focused).
+pub fn handle_node_picker_toggle(
+    ui_pointer: Res<UiPointerState>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut picker: ResMut<NodePickerState>,
+) {
+    if ui_pointer.wants_keyboard {
+        return;
     }
-
-    // Panel dimensions
-    let panel_width = if is_mobile {
-        window_size.x * 0.9
-    } else {
-        400.0
-    };
-    let panel_height = if is_mobile {
-        window_size.y * 0.7
-    } else {
-        500.0
-    };
-
-    // Center the panel
-    let panel_pos = egui::Pos2::new(
-        (window_size.x - panel_width) / 2.0,
-        (window_size.y - panel_height) / 2.0,
-    );
-
-    let mut should_close = false;
-    let mut target_node: Option<(Entity, InstanceId)> = None;
-
-    egui::Window::new("Find Node")
-        .fixed_pos(panel_pos)
-        .fixed_size([panel_width, panel_height])
-        .collapsible(false)
-        .resizable(false)
-        .show(ctx, |ui| {
-            ui.heading("🔍 Search Nodes");
-            ui.separator();
-
-            // Search input
-            ui.horizontal(|ui| {
-                ui.label("Search:");
-                let text_edit = egui::TextEdit::singleline(&mut picker_state.search_query)
-                    .hint_text("ID, OS, hostname, server/agent...")
-                    .desired_width(panel_width - 100.0);
-
-                let response = ui.add(text_edit);
-
-                // Auto-focus the search box when the picker opens
-                if picker_state.is_changed() && picker_state.show {
-                    response.request_focus();
-                }
-
-                // Handle Enter key to select highlighted node
-                if response.lost_focus()
-                    && ui.input(|i| i.key_pressed(egui::Key::Enter))
-                    && !filtered_nodes.is_empty()
-                {
-                    let selected_node = &filtered_nodes[picker_state.selected_index];
-                    target_node = Some((selected_node.entity, selected_node.instance_id));
-                    should_close = true;
-                }
-            });
-
-            ui.add_space(8.0);
-
-            // Results count
-            ui.label(format!(
-                "Found {} node{}",
-                filtered_nodes.len(),
-                if filtered_nodes.len() == 1 { "" } else { "s" }
-            ));
-
-            ui.add_space(4.0);
-
-            // Node list
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                let button_height = if is_mobile { 60.0 } else { 50.0 };
-
-                if filtered_nodes.is_empty() {
-                    ui.label("No matching nodes found");
-                } else {
-                    for (index, node) in filtered_nodes.iter().enumerate() {
-                        let is_selected = index == picker_state.selected_index;
-
-                        // Build display text
-                        let display_text = format!(
-                            "{} {} ({})",
-                            get_node_emoji(node.is_server),
-                            node.instance_id,
-                            if node.is_server { "Server" } else { "Agent" }
-                        );
-
-                        let button_text = egui::RichText::new(display_text).size(if is_mobile {
-                            16.0
-                        } else {
-                            14.0
-                        });
-
-                        let button = egui::Button::new(button_text)
-                            .fill(if is_selected {
-                                egui::Color32::from_rgb(60, 120, 180)
-                            } else {
-                                egui::Color32::from_gray(40)
-                            })
-                            .min_size(egui::vec2(panel_width - 40.0, button_height));
-
-                        if ui.add(button).clicked() {
-                            target_node = Some((node.entity, node.instance_id));
-                            should_close = true;
-                        }
-
-                        ui.add_space(if is_mobile { 6.0 } else { 4.0 });
-                    }
-                }
-            });
-
-            ui.separator();
-
-            // Close button and hints at bottom
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
-                if ui
-                    .add_sized(
-                        [panel_width - 40.0, if is_mobile { 45.0 } else { 35.0 }],
-                        egui::Button::new(egui::RichText::new("Close").size(if is_mobile {
-                            18.0
-                        } else {
-                            16.0
-                        })),
-                    )
-                    .clicked()
-                {
-                    should_close = true;
-                }
-
-                ui.add_space(4.0);
-                ui.label(
-                    egui::RichText::new("Press Enter to jump to selected node")
-                        .size(12.0)
-                        .color(egui::Color32::from_gray(150)),
-                );
-            });
-        });
-
-    // Center camera on selected node
-    if let Some((target_entity, target_id)) = target_node
-        && let (Ok(mut camera_transform), Ok(node_transform)) = (
-            camera_query.single_mut(),
-            node_transforms.get(target_entity),
-        )
-    {
-        // Move camera to center on the node (preserve Z coordinate)
-        camera_transform.translation.x = node_transform.translation.x;
-        camera_transform.translation.y = node_transform.translation.y;
-
-        info!("Centered camera on node: {}", target_id);
-    }
-
-    if should_close {
-        picker_state.show = false;
-        picker_state.search_query.clear();
-        picker_state.selected_index = 0;
-    }
-
-    // Handle Escape key to close the picker
-    if !ctx.wants_keyboard_input() && keyboard.just_pressed(KeyCode::Escape) {
-        picker_state.show = false;
-        picker_state.search_query.clear();
-        picker_state.selected_index = 0;
-    }
-
-    // Handle arrow keys for navigation (when not typing)
-    if !ctx.wants_keyboard_input() && !filtered_nodes.is_empty() {
-        if keyboard.just_pressed(KeyCode::ArrowDown) {
-            picker_state.selected_index =
-                (picker_state.selected_index + 1).min(filtered_nodes.len() - 1);
-        }
-        if keyboard.just_pressed(KeyCode::ArrowUp) {
-            picker_state.selected_index = picker_state.selected_index.saturating_sub(1);
-        }
+    if keyboard.just_pressed(KeyCode::KeyN) {
+        picker.show = !picker.show;
     }
 }
 
-/// Handle keyboard shortcut to toggle node picker
-pub fn handle_node_picker_toggle(
-    mut contexts: EguiContexts,
-    keyboard: Res<ButtonInput<KeyCode>>,
-    mut picker_state: ResMut<NodePickerState>,
+/// Spawn the modal when shown, despawn it when hidden.
+pub fn manage_node_picker(
+    mut commands: Commands,
+    theme: Res<Theme>,
+    mut picker: ResMut<NodePickerState>,
+    mut focus: ResMut<InputFocus>,
+    root: Query<Entity, With<NodePickerRoot>>,
 ) {
-    // Don't handle if egui wants keyboard input
-    let Ok(ctx) = contexts.ctx_mut() else {
+    let exists = !root.is_empty();
+    if picker.show && !exists {
+        picker.selected_index = 0;
+        commands
+            .spawn((NodePickerRoot, modal_scrim()))
+            .with_children(|scrim| {
+                scrim
+                    .spawn((
+                        Node {
+                            flex_direction: FlexDirection::Column,
+                            width: Val::Px(400.0),
+                            padding: UiRect::all(Val::Px(12.0)),
+                            row_gap: Val::Px(8.0),
+                            border: UiRect::all(Val::Px(1.0)),
+                            ..default()
+                        },
+                        BackgroundColor(theme.color(Role::Panel)),
+                        ThemedBg(Role::Panel),
+                        BorderColor::all(theme.color(Role::Border)),
+                        ThemedBorder(Role::Border),
+                    ))
+                    .with_children(|panel| {
+                        panel.spawn(heading(&theme, "Find Node"));
+                        panel.spawn((NodeSearchInput, text_input(&theme, "id, server/agent...", false)));
+                        panel.spawn((
+                            NodeRowsContainer,
+                            Node {
+                                flex_direction: FlexDirection::Column,
+                                row_gap: Val::Px(4.0),
+                                ..default()
+                            },
+                        ));
+                    });
+            });
+    } else if !picker.show && exists {
+        for entity in &root {
+            commands.entity(entity).despawn();
+        }
+        focus.0 = None;
+    }
+}
+
+/// Focus the search box as soon as it is spawned.
+pub fn focus_node_search(
+    inputs: Query<Entity, Added<NodeSearchInput>>,
+    mut focus: ResMut<InputFocus>,
+) {
+    if let Ok(entity) = inputs.single() {
+        focus.0 = Some(entity);
+    }
+}
+
+/// Rebuild the row list when the query or selection changes.
+pub fn rebuild_node_rows(
+    mut commands: Commands,
+    theme: Res<Theme>,
+    picker: Res<NodePickerState>,
+    search: Query<Ref<TextInput>, With<NodeSearchInput>>,
+    nodes: Query<(Entity, &InstanceId)>,
+    container: Query<Entity, With<NodeRowsContainer>>,
+    rows: Query<Entity, With<NodeRow>>,
+) {
+    let Ok(search_input) = search.single() else {
         return;
     };
-    if ctx.wants_keyboard_input() {
+    let Ok(container_entity) = container.single() else {
+        return;
+    };
+    if !(search_input.is_changed() || picker.is_changed()) {
         return;
     }
 
-    // Toggle node picker with N key
-    if keyboard.just_pressed(KeyCode::KeyN) {
-        picker_state.show = !picker_state.show;
-        // Clear search query when opening
-        if picker_state.show {
-            picker_state.search_query.clear();
-            picker_state.selected_index = 0;
+    for entity in &rows {
+        commands.entity(entity).despawn();
+    }
+
+    let filtered = collect_nodes(&nodes, &search_input.value);
+    let selected = picker.selected_index.min(filtered.len().saturating_sub(1));
+
+    commands.entity(container_entity).with_children(|parent| {
+        if filtered.is_empty() {
+            parent.spawn(muted(&theme, "No matching nodes", theme.metrics.font_md));
+            return;
         }
+        for (index, (entity, id)) in filtered.into_iter().enumerate() {
+            let role = if index == selected {
+                Role::SurfaceActive
+            } else {
+                Role::Surface
+            };
+            let label = format!(
+                "{} {}",
+                if id.is_server() { "Server" } else { "Agent" },
+                id
+            );
+            parent
+                .spawn((
+                    NodeRow { node_entity: entity },
+                    Button,
+                    Interaction::default(),
+                    Node {
+                        width: Val::Percent(100.0),
+                        padding: UiRect::axes(Val::Px(8.0), Val::Px(6.0)),
+                        ..default()
+                    },
+                    BackgroundColor(theme.color(role)),
+                    children![text(&theme, label, theme.metrics.font_md, Role::Text)],
+                ))
+                .observe(on_node_row_click);
+        }
+    });
+}
+
+/// Recenter the camera on the clicked node and close the picker.
+fn on_node_row_click(
+    activate: On<Activate>,
+    rows: Query<&NodeRow>,
+    mut picker: ResMut<NodePickerState>,
+    mut camera: Query<&mut Transform, With<WorldView>>,
+    nodes: Query<&Transform, (With<InstanceId>, Without<WorldView>)>,
+) {
+    if let Ok(row) = rows.get(activate.entity) {
+        center_camera(row.node_entity, &mut camera, &nodes);
+        picker.show = false;
+    }
+}
+
+/// Keyboard navigation: arrows move the selection, Enter jumps, Escape closes.
+pub fn node_picker_keys(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut picker: ResMut<NodePickerState>,
+    search: Query<&TextInput, With<NodeSearchInput>>,
+    nodes: Query<(Entity, &InstanceId)>,
+    mut camera: Query<&mut Transform, With<WorldView>>,
+    node_transforms: Query<&Transform, (With<InstanceId>, Without<WorldView>)>,
+) {
+    if !picker.show {
+        return;
+    }
+    if keyboard.just_pressed(KeyCode::Escape) {
+        picker.show = false;
+        return;
+    }
+
+    let query = search.single().map(|t| t.value.clone()).unwrap_or_default();
+    let filtered = collect_nodes(&nodes, &query);
+    if filtered.is_empty() {
+        return;
+    }
+
+    if keyboard.just_pressed(KeyCode::ArrowDown) {
+        picker.selected_index = (picker.selected_index + 1).min(filtered.len() - 1);
+    }
+    if keyboard.just_pressed(KeyCode::ArrowUp) {
+        picker.selected_index = picker.selected_index.saturating_sub(1);
+    }
+    if keyboard.just_pressed(KeyCode::Enter) {
+        let index = picker.selected_index.min(filtered.len() - 1);
+        center_camera(filtered[index].0, &mut camera, &node_transforms);
+        picker.show = false;
+    }
+}
+
+/// Move the world camera to center on `node_entity` (preserving its Z).
+fn center_camera(
+    node_entity: Entity,
+    camera: &mut Query<&mut Transform, With<WorldView>>,
+    nodes: &Query<&Transform, (With<InstanceId>, Without<WorldView>)>,
+) {
+    if let (Ok(mut cam), Ok(node)) = (camera.single_mut(), nodes.get(node_entity)) {
+        cam.translation.x = node.translation.x;
+        cam.translation.y = node.translation.y;
     }
 }

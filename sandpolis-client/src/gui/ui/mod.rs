@@ -16,6 +16,8 @@ use bevy::prelude::*;
 
 pub mod gating;
 pub mod icon;
+pub mod panel;
+pub mod text_input;
 pub mod theme;
 pub mod widgets;
 
@@ -49,6 +51,7 @@ impl Plugin for UiPlugin {
         .add_plugins(bevy_ui_widgets::UiWidgetsPlugins)
             .add_plugins(theme::ThemePlugin)
             .add_plugins(gating::GatingPlugin)
-            .add_plugins(icon::IconPlugin);
+            .add_plugins(icon::IconPlugin)
+            .add_plugins(text_input::TextInputPlugin);
     }
 }

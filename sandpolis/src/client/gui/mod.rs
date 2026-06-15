@@ -43,8 +43,8 @@ use sandpolis_client::gui::input::{
     ZoomLevel, handle_camera, handle_keymap, handle_zoom,
 };
 use sandpolis_client::gui::layer_picker::{
-    LayerPickerState, handle_layer_picker_toggle, render_layer_picker_button,
-    render_layer_picker_panel,
+    LayerPickerState, focus_layer_search, handle_layer_picker_toggle, layer_picker_keys,
+    manage_layer_picker, rebuild_layer_rows,
 };
 use sandpolis_client::gui::layer_ui::{
     LayerIndicatorState, spawn_layer_indicator, update_layer_indicator,
@@ -65,14 +65,15 @@ use sandpolis_client::gui::login::{
 use sandpolis_client::gui::minimap::{MinimapViewport, spawn_minimap, update_minimap};
 use sandpolis_client::gui::node::{NodeEntity, WorldView, scale_node_svgs, spawn_node};
 use sandpolis_client::gui::node_picker::{
-    NodePickerState, handle_node_picker_toggle, render_node_picker_panel,
+    NodePickerState, focus_node_search, handle_node_picker_toggle, manage_node_picker,
+    node_picker_keys, rebuild_node_rows,
 };
 use sandpolis_client::gui::preview::{render_node_previews, toggle_node_preview_visibility};
 use sandpolis_client::gui::queries::{query_all_instances, query_instance_metadata};
 use sandpolis_client::gui::responsive::update_responsive_ui;
 use sandpolis_client::gui::theme::{
     CurrentTheme, ThemePickerState, apply_theme_to_egui, handle_theme_picker_toggle,
-    initialize_theme, render_theme_picker,
+    initialize_theme, manage_theme_picker, update_theme_rows,
 };
 
 // Re-export submodules for external access
@@ -162,6 +163,21 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .add_systems(
         Update,
         (
+            manage_layer_picker,
+            focus_layer_search,
+            rebuild_layer_rows,
+            layer_picker_keys,
+            manage_node_picker,
+            focus_node_search,
+            rebuild_node_rows,
+            node_picker_keys,
+            manage_theme_picker,
+            update_theme_rows,
+        ),
+    )
+    .add_systems(
+        Update,
+        (
             // Theme system (runs first to ensure theme is applied)
             apply_theme_to_egui,
             // Input handling (desktop)
@@ -218,15 +234,11 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         EguiPrimaryContextPass,
         (
             // UI rendering with egui
-            render_layer_picker_button,
-            render_layer_picker_panel,
-            render_node_picker_panel,
             render_node_previews,
             render_edge_labels,
             render_node_controller,
             render_selection_ui,
             render_about_screen,
-            render_theme_picker,
             handle_keymap,
         ),
     )
