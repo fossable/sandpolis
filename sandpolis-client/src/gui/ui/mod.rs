@@ -14,6 +14,7 @@
 
 use bevy::prelude::*;
 
+pub mod anchored;
 pub mod gating;
 pub mod icon;
 pub mod panel;
@@ -52,6 +53,7 @@ impl Plugin for UiPlugin {
             .add_plugins(theme::ThemePlugin)
             .add_plugins(gating::GatingPlugin)
             .add_plugins(icon::IconPlugin)
-            .add_plugins(text_input::TextInputPlugin);
+            .add_plugins(text_input::TextInputPlugin)
+            .add_plugins(anchored::AnchoredPlugin);
     }
 }

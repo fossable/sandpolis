@@ -1,11 +1,21 @@
 use crate::gui::controller::{ControllerType, NodeControllerState};
 use crate::gui::input::CurrentLayer;
+use crate::gui::layer_ui::layer_icon_path;
 use crate::gui::node::{NodeEntity, WorldView};
 use crate::gui::queries;
+use crate::gui::ui::anchored::WorldAnchored;
+use crate::gui::ui::gating::UiPointerState;
+use crate::gui::ui::icon::{IconAssetRoot, IconCache};
+use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
+use crate::gui::ui::widgets::{button, muted, text};
+use crate::gui::ui::z;
+use bevy::image::Image;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
+use bevy_ui_widgets::Activate;
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::LayerName;
+use sandpolis_instance::network::NetworkLayer;
 
 /// Zoom threshold above which the minimal preview is shown.
 /// At zoom level 1.0, preview is full. Above this value (more zoomed out), preview becomes minimal.
@@ -508,5 +518,192 @@ pub fn toggle_node_preview_visibility(
         for mut preview in node_query.iter_mut() {
             preview.show = !preview.show;
         }
+    }
+}
+
+// ── Native node previews ─────────────────────────────────────────────────────
+
+/// Icon size for preview cards, in pixels.
+const PREVIEW_ICON_PX: u32 = 20;
+
+/// Whether node preview cards are shown (toggled with `P`).
+#[derive(Resource)]
+pub struct PreviewsVisible(pub bool);
+
+impl Default for PreviewsVisible {
+    fn default() -> Self {
+        Self(true)
+    }
+}
+
+/// Marker for a preview card root (one per node).
+#[derive(Component)]
+pub struct NodePreviewUi {
+    pub node: Entity,
+    pub instance_id: InstanceId,
+}
+
+/// Marker for a preview card's layer icon.
+#[derive(Component)]
+pub struct PreviewIcon;
+
+/// Marker for a preview card's detail line.
+#[derive(Component)]
+pub struct PreviewDetail {
+    pub instance_id: InstanceId,
+}
+
+/// Marker for a preview card's "open controller" button.
+#[derive(Component)]
+pub struct PreviewOpenButton {
+    pub instance_id: InstanceId,
+}
+
+/// Toggle preview visibility with `P` (unless a text field is focused).
+pub fn toggle_previews(
+    ui_pointer: Res<UiPointerState>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut visible: ResMut<PreviewsVisible>,
+) {
+    if ui_pointer.wants_keyboard {
+        return;
+    }
+    if keyboard.just_pressed(KeyCode::KeyP) {
+        visible.0 = !visible.0;
+    }
+}
+
+/// Spawn a preview card per node, despawn orphans, and clear all when hidden.
+#[allow(clippy::too_many_arguments)]
+pub fn sync_node_previews(
+    mut commands: Commands,
+    theme: Res<Theme>,
+    visible: Res<PreviewsVisible>,
+    current_layer: Res<CurrentLayer>,
+    network_layer: Res<NetworkLayer>,
+    mut images: ResMut<Assets<Image>>,
+    mut icon_cache: ResMut<IconCache>,
+    icon_root: Res<IconAssetRoot>,
+    nodes: Query<(Entity, &NodeEntity)>,
+    previews: Query<(Entity, &NodePreviewUi)>,
+) {
+    if !visible.0 {
+        for (entity, _) in &previews {
+            commands.entity(entity).despawn();
+        }
+        return;
+    }
+
+    // Spawn cards for new nodes.
+    for (node_entity, node) in &nodes {
+        if previews.iter().any(|(_, p)| p.node == node_entity) {
+            continue;
+        }
+        let icon = icon_cache.get_or_rasterize(
+            &mut images,
+            &icon_root.0,
+            layer_icon_path(&current_layer),
+            PREVIEW_ICON_PX,
+        );
+        let hostname = get_hostname(node.instance_id);
+        let detail = get_layer_details(&current_layer, &network_layer, node.instance_id);
+        let instance_id = node.instance_id;
+
+        commands
+            .spawn((
+                NodePreviewUi {
+                    node: node_entity,
+                    instance_id,
+                },
+                WorldAnchored {
+                    target: node_entity,
+                    offset: Vec2::new(0.0, 55.0),
+                },
+                GlobalZIndex(z::ANCHORED),
+                Node {
+                    position_type: PositionType::Absolute,
+                    flex_direction: FlexDirection::Row,
+                    align_items: AlignItems::Center,
+                    column_gap: Val::Px(6.0),
+                    padding: UiRect::all(Val::Px(6.0)),
+                    border: UiRect::all(Val::Px(1.0)),
+                    ..default()
+                },
+                BackgroundColor(theme.color(Role::Panel)),
+                ThemedBg(Role::Panel),
+                BorderColor::all(theme.color(Role::Border)),
+                ThemedBorder(Role::Border),
+            ))
+            .with_children(|card| {
+                card.spawn((
+                    PreviewIcon,
+                    ImageNode::new(icon),
+                    Node {
+                        width: Val::Px(PREVIEW_ICON_PX as f32),
+                        height: Val::Px(PREVIEW_ICON_PX as f32),
+                        ..default()
+                    },
+                ));
+                card.spawn(Node {
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                })
+                .with_children(|col| {
+                    col.spawn(text(&theme, hostname, theme.metrics.font_md, Role::Text));
+                    col.spawn((
+                        PreviewDetail { instance_id },
+                        text(&theme, detail, theme.metrics.font_sm, Role::TextMuted),
+                    ));
+                });
+                card.spawn((PreviewOpenButton { instance_id }, button(&theme, "Open")))
+                    .observe(on_preview_open);
+            });
+    }
+
+    // Despawn cards whose node is gone.
+    for (preview_entity, preview) in &previews {
+        if !nodes.iter().any(|(entity, _)| entity == preview.node) {
+            commands.entity(preview_entity).despawn();
+        }
+    }
+}
+
+/// Refresh preview icon + detail when the active layer changes.
+pub fn update_preview_content(
+    current_layer: Res<CurrentLayer>,
+    network_layer: Res<NetworkLayer>,
+    mut images: ResMut<Assets<Image>>,
+    mut icon_cache: ResMut<IconCache>,
+    icon_root: Res<IconAssetRoot>,
+    mut icons: Query<&mut ImageNode, With<PreviewIcon>>,
+    mut details: Query<(&PreviewDetail, &mut Text)>,
+) {
+    if !current_layer.is_changed() {
+        return;
+    }
+    let handle = icon_cache.get_or_rasterize(
+        &mut images,
+        &icon_root.0,
+        layer_icon_path(&current_layer),
+        PREVIEW_ICON_PX,
+    );
+    for mut icon in &mut icons {
+        icon.image = handle.clone();
+    }
+    for (detail, mut label) in &mut details {
+        label.0 = get_layer_details(&current_layer, &network_layer, detail.instance_id);
+    }
+}
+
+/// Open the node controller for the clicked preview's node.
+fn on_preview_open(
+    activate: On<Activate>,
+    buttons: Query<&PreviewOpenButton>,
+    current_layer: Res<CurrentLayer>,
+    mut controller_state: ResMut<NodeControllerState>,
+) {
+    if let Ok(button) = buttons.get(activate.entity) {
+        controller_state.expanded_node = Some(button.instance_id);
+        controller_state.controller_type = ControllerType::from_layer(&current_layer);
     }
 }

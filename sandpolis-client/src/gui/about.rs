@@ -2,8 +2,13 @@
 //!
 //! The about screen can be activated by triple-clicking on the layer indicator.
 
+use crate::gui::ui::panel::modal_scrim;
+use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
+use crate::gui::ui::widgets::{button, heading, muted, text};
+use bevy::camera::ClearColorConfig;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
+use bevy_ui_widgets::Activate;
 use std::time::{Duration, Instant};
 
 /// Resource to track about screen state.
@@ -108,6 +113,9 @@ pub fn spawn_about_logo(
                         .looking_at(Vec3::new(0.0, 2.0, 0.0), Vec3::Y),
                     Camera {
                         order: 1, // Render after the main 2D camera
+                        // Don't clear: overlay the logo on the world rather than
+                        // erasing it (the native about panel renders separately).
+                        clear_color: ClearColorConfig::None,
                         ..default()
                     },
                     AboutCamera,
@@ -220,4 +228,83 @@ pub fn render_about_screen(
                 }
             });
         });
+}
+
+// ── Native about panel ───────────────────────────────────────────────────────
+
+/// Marker for the native about panel root.
+#[derive(Component)]
+pub struct AboutRoot;
+
+/// Spawn/despawn the native about panel (the 3D logo renders above it).
+pub fn manage_about_panel(
+    mut commands: Commands,
+    theme: Res<Theme>,
+    about_state: Res<AboutScreenState>,
+    root: Query<Entity, With<AboutRoot>>,
+) {
+    let exists = !root.is_empty();
+    if about_state.show && !exists {
+        commands
+            .spawn((
+                AboutRoot,
+                crate::gui::ui::gating::BlocksWorldInput,
+                GlobalZIndex(crate::gui::ui::z::CHROME),
+                Node {
+                    position_type: PositionType::Absolute,
+                    left: Val::Px(0.0),
+                    right: Val::Px(0.0),
+                    bottom: Val::Px(40.0),
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },
+            ))
+            .with_children(|root| {
+                root.spawn((
+                    Node {
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::Center,
+                        width: Val::Px(360.0),
+                        padding: UiRect::all(Val::Px(16.0)),
+                        row_gap: Val::Px(6.0),
+                        border: UiRect::all(Val::Px(1.0)),
+                        ..default()
+                    },
+                    BackgroundColor(theme.color(Role::Panel)),
+                    ThemedBg(Role::Panel),
+                    BorderColor::all(theme.color(Role::Border)),
+                    ThemedBorder(Role::Border),
+                ))
+                .with_children(|p| {
+                    p.spawn(heading(&theme, "SANDPOLIS"));
+                    p.spawn(muted(
+                        &theme,
+                        "Security & Systems Management Platform",
+                        theme.metrics.font_md,
+                    ));
+                    p.spawn(text(
+                        &theme,
+                        format!("Version {}", env!("CARGO_PKG_VERSION")),
+                        theme.metrics.font_sm,
+                        Role::Text,
+                    ));
+                    p.spawn(muted(
+                        &theme,
+                        "github.com/fossable/sandpolis",
+                        theme.metrics.font_sm,
+                    ));
+                    p.spawn(button(&theme, "Close")).observe(on_about_close);
+                });
+            });
+    } else if !about_state.show && exists {
+        for entity in &root {
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
+fn on_about_close(_activate: On<Activate>, mut about_state: ResMut<AboutScreenState>) {
+    about_state.show = false;
+    about_state.logo_click_count = 0;
+    about_state.last_logo_click = None;
 }

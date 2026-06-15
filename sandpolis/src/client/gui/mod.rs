@@ -19,7 +19,7 @@ use sandpolis_instance::LayerName;
 
 // Import GUI types from sandpolis-client submodules
 use sandpolis_client::gui::about::{
-    AboutScreenState, handle_about_easter_egg, render_about_screen, rotate_about_logo,
+    AboutScreenState, handle_about_easter_egg, manage_about_panel, rotate_about_logo,
     spawn_about_logo,
 };
 use sandpolis_client::gui::activity::{
@@ -35,16 +35,13 @@ use sandpolis_client::gui::drag::{
     render_selection_ui, start_node_drag, stop_node_drag, update_node_drag,
     update_selection_visuals,
 };
-use sandpolis_client::gui::edges::{
-    render_edge_labels, render_edges, update_edge_visibility, update_edges_for_layer,
-};
+use sandpolis_client::gui::edges::{render_edges, update_edge_visibility, update_edges_for_layer};
 use sandpolis_client::gui::input::{
     CurrentLayer, HelpScreenState, LayerChangeTimer, LoginDialogState, MousePressed, PanningState,
-    ZoomLevel, handle_camera, handle_keymap, handle_zoom,
+    ZoomLevel, handle_camera, handle_zoom, manage_help_panel, toggle_help, toggle_login,
 };
 use sandpolis_client::gui::layer_picker::{
-    LayerPickerState, focus_layer_search, handle_layer_picker_toggle, layer_picker_keys,
-    manage_layer_picker, rebuild_layer_rows,
+    LayerPickerState, focus_layer_search, layer_picker_keys, manage_layer_picker, rebuild_layer_rows,
 };
 use sandpolis_client::gui::layer_ui::{
     LayerIndicatorState, spawn_layer_indicator, update_layer_indicator,
@@ -60,7 +57,8 @@ use sandpolis_client::gui::listeners::{
     DatabaseUpdate, DatabaseUpdateChannel, DatabaseUpdateSender, setup_all_listeners,
 };
 use sandpolis_client::gui::login::{
-    LoginOperation, check_saved_servers, handle_login_phase1, handle_login_phase2,
+    LoginOperation, check_saved_servers, focus_login_input, handle_login_phase1,
+    handle_login_phase2, manage_login, sync_login_inputs, update_login_error,
 };
 use sandpolis_client::gui::minimap::{MinimapViewport, spawn_minimap, update_minimap};
 use sandpolis_client::gui::node::{NodeEntity, WorldView, scale_node_svgs, spawn_node};
@@ -68,7 +66,9 @@ use sandpolis_client::gui::node_picker::{
     NodePickerState, focus_node_search, handle_node_picker_toggle, manage_node_picker,
     node_picker_keys, rebuild_node_rows,
 };
-use sandpolis_client::gui::preview::{render_node_previews, toggle_node_preview_visibility};
+use sandpolis_client::gui::preview::{
+    PreviewsVisible, sync_node_previews, toggle_previews, update_preview_content,
+};
 use sandpolis_client::gui::queries::{query_all_instances, query_instance_metadata};
 use sandpolis_client::gui::responsive::update_responsive_ui;
 use sandpolis_client::gui::theme::{
@@ -154,6 +154,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(config)
     .insert_resource(MousePressed(false))
     .insert_resource(PanningState::default())
+    .insert_resource(PreviewsVisible::default())
     .add_systems(Startup, setup)
     .add_systems(Startup, install_egui_loaders)
     .add_systems(Startup, initialize_theme)
@@ -173,7 +174,20 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             node_picker_keys,
             manage_theme_picker,
             update_theme_rows,
+            // Help / about / login modals (native)
+            toggle_help,
+            toggle_login,
+            manage_help_panel,
+            manage_about_panel,
+            manage_login,
+            focus_login_input,
+            sync_login_inputs,
+            update_login_error,
         ),
+    )
+    .add_systems(
+        Update,
+        (sync_node_previews, toggle_previews, update_preview_content),
     )
     .add_systems(
         Update,
@@ -190,7 +204,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             sandpolis_client::gui::input::handle_touch_camera,
             #[cfg(target_os = "android")]
             sandpolis_client::gui::input::handle_touch_zoom,
-            handle_layer_picker_toggle,
             handle_node_picker_toggle,
             handle_theme_picker_toggle,
             button_handler,
@@ -233,20 +246,14 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .add_systems(
         EguiPrimaryContextPass,
         (
-            // UI rendering with egui
-            render_node_previews,
-            render_edge_labels,
+            // UI rendering with egui (remaining: node controller, selection count)
             render_node_controller,
             render_selection_ui,
-            render_about_screen,
-            handle_keymap,
         ),
     )
     .add_systems(
         PostUpdate,
         (
-            // Non-egui systems
-            toggle_node_preview_visibility,
             // Edge systems
             render_edges,
             update_edges_for_layer,

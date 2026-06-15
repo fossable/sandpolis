@@ -5,7 +5,11 @@ use bevy::{
     prelude::*,
 };
 use crate::gui::ui::gating::UiPointerState;
+use crate::gui::ui::panel::modal_scrim;
+use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
+use crate::gui::ui::widgets::{button, heading, muted};
 use bevy_egui::{EguiContexts, egui};
+use bevy_ui_widgets::Activate;
 use sandpolis_instance::LayerName;
 use std::ops::Range;
 
@@ -579,4 +583,96 @@ pub fn handle_keymap(
                 help_state.show = false;
             }
         });
+}
+
+// ── Native help screen + dialog toggles ──────────────────────────────────────
+
+/// Modal root marker for the native help screen.
+#[derive(Component)]
+pub struct HelpRoot;
+
+/// Toggle the help screen with `H` (unless a text field is focused).
+pub fn toggle_help(
+    ui_pointer: Res<UiPointerState>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut help_state: ResMut<HelpScreenState>,
+) {
+    if ui_pointer.wants_keyboard {
+        return;
+    }
+    if keyboard.just_pressed(KeyCode::KeyH) {
+        help_state.show = !help_state.show;
+    }
+}
+
+/// Toggle the login dialog with `L` (unless a text field is focused).
+pub fn toggle_login(
+    ui_pointer: Res<UiPointerState>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut login_state: ResMut<LoginDialogState>,
+) {
+    if ui_pointer.wants_keyboard {
+        return;
+    }
+    if keyboard.just_pressed(KeyCode::KeyL) {
+        login_state.show = !login_state.show;
+    }
+}
+
+/// Spawn/despawn the native help modal.
+pub fn manage_help_panel(
+    mut commands: Commands,
+    theme: Res<Theme>,
+    help_state: Res<HelpScreenState>,
+    root: Query<Entity, With<HelpRoot>>,
+) {
+    const SHORTCUTS: &[&str] = &[
+        "Arrow keys / drag  -  Pan camera",
+        "Mouse wheel  -  Zoom",
+        "L  -  Login dialog",
+        "N  -  Find node",
+        "T  -  Theme picker",
+        "P  -  Toggle node previews",
+        "H  -  This help",
+        "Click layer indicator  -  Switch layers",
+        "Double-click a node  -  Open controller",
+    ];
+
+    let exists = !root.is_empty();
+    if help_state.show && !exists {
+        commands
+            .spawn((HelpRoot, modal_scrim()))
+            .with_children(|scrim| {
+                scrim
+                    .spawn((
+                        Node {
+                            flex_direction: FlexDirection::Column,
+                            width: Val::Px(360.0),
+                            padding: UiRect::all(Val::Px(16.0)),
+                            row_gap: Val::Px(6.0),
+                            border: UiRect::all(Val::Px(1.0)),
+                            ..default()
+                        },
+                        BackgroundColor(theme.color(Role::Panel)),
+                        ThemedBg(Role::Panel),
+                        BorderColor::all(theme.color(Role::Border)),
+                        ThemedBorder(Role::Border),
+                    ))
+                    .with_children(|p| {
+                        p.spawn(heading(&theme, "Keyboard Shortcuts"));
+                        for line in SHORTCUTS {
+                            p.spawn(muted(&theme, *line, theme.metrics.font_md));
+                        }
+                        p.spawn(button(&theme, "Close")).observe(on_help_close);
+                    });
+            });
+    } else if !help_state.show && exists {
+        for entity in &root {
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
+fn on_help_close(_activate: On<Activate>, mut help_state: ResMut<HelpScreenState>) {
+    help_state.show = false;
 }

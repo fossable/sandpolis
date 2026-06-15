@@ -1,6 +1,12 @@
 use crate::gui::input::{LoginDialogState, LoginPhase};
 use crate::gui::listeners::{DatabaseUpdate, DatabaseUpdateSender};
+use crate::gui::ui::panel::modal_scrim;
+use crate::gui::ui::text_input::{TextInput, text_input};
+use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
+use crate::gui::ui::widgets::{button, heading, muted, text};
+use bevy::input_focus::InputFocus;
 use bevy::prelude::*;
+use bevy_ui_widgets::Activate;
 use sandpolis_instance::database::{DataCreation, DataIdentifier};
 use sandpolis_server::ServerUrl;
 use sandpolis_server::client::SavedServerData;
@@ -276,4 +282,214 @@ pub fn check_saved_servers(
             return;
         }
     }
+}
+
+// ── Native login UI ──────────────────────────────────────────────────────────
+
+/// Modal root; tracks which phase the form was built for so it can be rebuilt
+/// when the login flow advances.
+#[derive(Component)]
+pub struct LoginRoot {
+    pub phase: u8,
+}
+
+#[derive(Component)]
+pub struct LoginServerInput;
+#[derive(Component)]
+pub struct LoginUserInput;
+#[derive(Component)]
+pub struct LoginPassInput;
+#[derive(Component)]
+pub struct LoginOtpInput;
+#[derive(Component)]
+pub struct LoginErrorText;
+
+fn phase_id(phase: &LoginPhase) -> u8 {
+    match phase {
+        LoginPhase::ServerAddress => 0,
+        LoginPhase::Credentials { .. } => 1,
+    }
+}
+
+/// Spawn/despawn the login modal, rebuilding it when the phase changes.
+pub fn manage_login(
+    mut commands: Commands,
+    theme: Res<Theme>,
+    state: Res<LoginDialogState>,
+    root: Query<(Entity, &LoginRoot)>,
+    mut focus: ResMut<InputFocus>,
+) {
+    let existing = root.iter().next();
+    if !state.show {
+        if let Some((entity, _)) = existing {
+            commands.entity(entity).despawn();
+            focus.0 = None;
+        }
+        return;
+    }
+
+    let phase = phase_id(&state.phase);
+    let needs_rebuild = match existing {
+        Some((_, root)) => root.phase != phase,
+        None => true,
+    };
+    if needs_rebuild {
+        if let Some((entity, _)) = existing {
+            commands.entity(entity).despawn();
+        }
+        spawn_login_modal(&mut commands, &theme, &state, phase);
+    }
+}
+
+fn spawn_login_modal(commands: &mut Commands, theme: &Theme, state: &LoginDialogState, phase: u8) {
+    commands
+        .spawn((LoginRoot { phase }, modal_scrim()))
+        .with_children(|scrim| {
+            scrim
+                .spawn((
+                    Node {
+                        flex_direction: FlexDirection::Column,
+                        width: Val::Px(360.0),
+                        padding: UiRect::all(Val::Px(16.0)),
+                        row_gap: Val::Px(6.0),
+                        border: UiRect::all(Val::Px(1.0)),
+                        ..default()
+                    },
+                    BackgroundColor(theme.color(Role::Panel)),
+                    ThemedBg(Role::Panel),
+                    BorderColor::all(theme.color(Role::Border)),
+                    ThemedBorder(Role::Border),
+                ))
+                .with_children(|p| {
+                    p.spawn(heading(theme, "Login to Server"));
+                    if phase == 0 {
+                        p.spawn(muted(theme, "Server address", theme.metrics.font_sm));
+                        p.spawn((LoginServerInput, text_input(theme, "host:port", false)));
+                    } else {
+                        if let LoginPhase::Credentials { banner } = &state.phase {
+                            if let Some(message) = &banner.message {
+                                p.spawn(text(theme, message.clone(), theme.metrics.font_md, Role::Text));
+                            }
+                            if banner.maintenance {
+                                p.spawn(text(
+                                    theme,
+                                    "Server is in maintenance mode",
+                                    theme.metrics.font_sm,
+                                    Role::Warn,
+                                ));
+                            }
+                        }
+                        p.spawn(muted(
+                            theme,
+                            format!("Server: {}", state.server_address),
+                            theme.metrics.font_sm,
+                        ));
+                        p.spawn(muted(theme, "Username", theme.metrics.font_sm));
+                        p.spawn((LoginUserInput, text_input(theme, "username", false)));
+                        p.spawn(muted(theme, "Password", theme.metrics.font_sm));
+                        p.spawn((LoginPassInput, text_input(theme, "password", true)));
+                        let mfa = matches!(&state.phase, LoginPhase::Credentials { banner } if banner.mfa);
+                        if mfa {
+                            p.spawn(muted(theme, "One-time code", theme.metrics.font_sm));
+                            p.spawn((LoginOtpInput, text_input(theme, "OTP", false)));
+                        }
+                    }
+                    p.spawn((
+                        LoginErrorText,
+                        text(theme, String::new(), theme.metrics.font_sm, Role::Error),
+                    ));
+                    p.spawn(Node {
+                        column_gap: Val::Px(8.0),
+                        ..default()
+                    })
+                    .with_children(|row| {
+                        let primary = if phase == 0 { "Connect" } else { "Login" };
+                        row.spawn(button(theme, primary)).observe(on_login_primary);
+                        if phase == 1 {
+                            row.spawn(button(theme, "Back")).observe(on_login_back);
+                        }
+                        row.spawn(button(theme, "Cancel")).observe(on_login_cancel);
+                    });
+                });
+        });
+}
+
+/// Focus the first field when a form is (re)built.
+pub fn focus_login_input(
+    server: Query<Entity, Added<LoginServerInput>>,
+    user: Query<Entity, Added<LoginUserInput>>,
+    mut focus: ResMut<InputFocus>,
+) {
+    if let Ok(entity) = server.single() {
+        focus.0 = Some(entity);
+    } else if let Ok(entity) = user.single() {
+        focus.0 = Some(entity);
+    }
+}
+
+/// Copy text-input contents into [`LoginDialogState`] for the login systems.
+pub fn sync_login_inputs(
+    mut state: ResMut<LoginDialogState>,
+    server: Query<&TextInput, With<LoginServerInput>>,
+    user: Query<&TextInput, With<LoginUserInput>>,
+    pass: Query<&TextInput, With<LoginPassInput>>,
+    otp: Query<&TextInput, With<LoginOtpInput>>,
+) {
+    if let Ok(input) = server.single() {
+        if state.server_address != input.value {
+            state.server_address = input.value.clone();
+        }
+    }
+    if let Ok(input) = user.single() {
+        if state.username != input.value {
+            state.username = input.value.clone();
+        }
+    }
+    if let Ok(input) = pass.single() {
+        if state.password != input.value {
+            state.password = input.value.clone();
+        }
+    }
+    if let Ok(input) = otp.single() {
+        if state.otp != input.value {
+            state.otp = input.value.clone();
+        }
+    }
+}
+
+/// Mirror the login error message into the form's error label.
+pub fn update_login_error(
+    state: Res<LoginDialogState>,
+    mut label: Query<&mut Text, With<LoginErrorText>>,
+) {
+    if let Ok(mut text) = label.single_mut() {
+        let message = state.error_message.clone().unwrap_or_default();
+        if text.0 != message {
+            text.0 = message;
+        }
+    }
+}
+
+fn on_login_primary(_activate: On<Activate>, mut state: ResMut<LoginDialogState>) {
+    state.loading = true;
+    state.error_message = None;
+}
+
+fn on_login_back(_activate: On<Activate>, mut state: ResMut<LoginDialogState>) {
+    state.phase = LoginPhase::ServerAddress;
+    state.username.clear();
+    state.password.clear();
+    state.otp.clear();
+    state.error_message = None;
+    state.loading = false;
+}
+
+fn on_login_cancel(_activate: On<Activate>, mut state: ResMut<LoginDialogState>) {
+    state.show = false;
+    state.phase = LoginPhase::ServerAddress;
+    state.username.clear();
+    state.password.clear();
+    state.otp.clear();
+    state.error_message = None;
+    state.loading = false;
 }
