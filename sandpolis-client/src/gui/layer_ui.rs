@@ -1,19 +1,44 @@
+//! Layer indicator: a small always-on chrome element (bottom-right, above the
+//! minimap) showing the active layer's icon + name. Clicking it opens the layer
+//! picker; triple-clicking is the About easter egg.
+//!
+//! This is native `bevy_ui` (migrated off egui). It is spawned once and updated
+//! by systems: the label/icon change when the active layer changes, and the whole
+//! element fades in on a layer change.
+
 use crate::gui::about::{AboutScreenState, register_logo_click};
 use crate::gui::input::CurrentLayer;
 use crate::gui::layer_picker::LayerPickerState;
-use crate::gui::minimap::MinimapViewport;
+use crate::gui::ui::gating::BlocksWorldInput;
+use crate::gui::ui::icon::{IconAssetRoot, IconCache};
+use crate::gui::ui::theme::{Role, Theme};
+use crate::gui::ui::z;
+use bevy::image::Image;
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui};
+use bevy_ui_widgets::{Activate, Button};
 use sandpolis_instance::LayerName;
 
-/// Marker component for layer indicator UI.
+/// How long the fade-in takes after a layer change, in seconds.
+const FADE_IN_SECS: f32 = 0.4;
+/// Icon rasterization size in pixels.
+const ICON_PX: u32 = 24;
+
+/// Marker for the layer indicator root (the clickable element).
 #[derive(Component)]
 pub struct LayerIndicator;
 
-/// Resource for layer indicator state.
+/// Marker for the indicator's icon child.
+#[derive(Component)]
+pub struct LayerIndicatorIcon;
+
+/// Marker for the indicator's label child.
+#[derive(Component)]
+pub struct LayerIndicatorLabel;
+
+/// Resource holding the fade timer for the layer indicator.
 #[derive(Resource)]
 pub struct LayerIndicatorState {
-    pub show_timer: Timer, // Display for N seconds after layer change
+    pub show_timer: Timer,
 }
 
 impl Default for LayerIndicatorState {
@@ -24,177 +49,144 @@ impl Default for LayerIndicatorState {
     }
 }
 
-/// Get the SVG file URI for a layer
-fn get_layer_svg_uri(layer: &LayerName) -> String {
-    let relative_path = match layer.name() {
-        "Account" => "layers/Account.svg",
-        "Agent" => "layers/Network.svg",
-        "Audit" => "layers/Audit.svg",
-        "Client" => "layers/Network.svg",
-        "Deploy" => "layers/Deploy.svg",
-        "Desktop" => "layers/Desktop.svg",
-        "Filesystem" => "layers/Filesystem.svg",
-        "Health" => "layers/Health.svg",
-        "Inventory" => "layers/Inventory.svg",
-        "Network" => "layers/Network.svg",
-        "Probe" => "layers/Probe.svg",
-        "Server" => "layers/Network.svg",
-        "Shell" => "layers/Shell.svg",
-        "Snapshot" => "layers/Snapshot.svg",
-        "Tunnel" => "layers/Tunnel.svg",
-        _ => "layers/Network.svg",
-    };
-
-    // Use file:// URI with absolute path from current working directory
-    // The app runs from the sandpolis/ directory, assets are in ../sandpolis-client/assets
-    let current_dir = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
-    let asset_path = current_dir
-        .join("../sandpolis-client/assets")
-        .join(relative_path);
-
-    // Canonicalize to get absolute path and convert to file:// URI
-    if let Ok(canonical) = asset_path.canonicalize() {
-        format!("file://{}", canonical.display())
-    } else {
-        // Fallback to relative path if canonicalization fails
-        format!("../sandpolis-client/assets/{}", relative_path)
-    }
-}
-
-/// Render the layer indicator above the minimap
-/// Shows the currently active layer permanently with fade in/fade out on layer changes
-/// Clicking the indicator opens the layer picker
-pub fn render_layer_indicator(
-    mut contexts: EguiContexts,
-    current_layer: Res<CurrentLayer>,
-    mut indicator_state: ResMut<LayerIndicatorState>,
-    mut picker_state: ResMut<LayerPickerState>,
-    mut about_state: ResMut<AboutScreenState>,
-    minimap_viewport: Res<MinimapViewport>,
-    time: Res<Time>,
-    windows: Query<&Window>,
-) {
-    // Tick the timer
-    indicator_state.show_timer.tick(time.delta());
-
-    // Reset timer when layer changes
-    if current_layer.is_changed() && !current_layer.is_added() {
-        indicator_state.show_timer.reset();
-    }
-
-    let Ok(window) = windows.single() else {
-        return;
-    };
-    let window_size = Vec2::new(window.width(), window.height());
-
-    // Calculate fade animation based on timer
-    let elapsed = indicator_state.show_timer.elapsed_secs();
-
-    // Fade in: 0.0 to 1.0 over first 0.4 seconds when layer changes
-    let fade_in_duration = 0.4;
-    let alpha = if elapsed < fade_in_duration {
-        (elapsed / fade_in_duration).min(1.0)
-    } else {
-        1.0 // Stay fully visible after fade in completes
-    };
-
-    // Position above minimap (static position, no jiggling)
-    let indicator_pos = egui::Pos2::new(
-        window_size.x - minimap_viewport.width - minimap_viewport.bottom_right_offset.x,
-        window_size.y - minimap_viewport.height - minimap_viewport.bottom_right_offset.y - 40.0,
-    );
-
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-
-    egui::Window::new("Layer Indicator")
-        .title_bar(false)
-        .resizable(false)
-        .movable(false)
-        .fixed_pos(indicator_pos)
-        .frame(egui::Frame::NONE)
-        .show(ctx, |ui| {
-            // Custom styled button with gradient-like appearance
-            let button_alpha = (alpha * 200.0) as u8;
-            let text_alpha = (alpha * 255.0) as u8;
-
-            let layer_name = layer_display_name(&current_layer);
-            let svg_uri = get_layer_svg_uri(&current_layer);
-
-            // Calculate button width to match minimap width
-            let button_width = minimap_viewport.width;
-
-            // Create horizontal layout with SVG icon and button
-            let response = ui
-                .horizontal(|ui| {
-                    ui.spacing_mut().item_spacing = egui::vec2(4.0, 0.0);
-
-                    // SVG icon with size hint for proper rendering
-                    let icon_size = egui::vec2(24.0, 24.0);
-                    ui.add(egui::Image::new(svg_uri).fit_to_exact_size(icon_size).tint(
-                        egui::Color32::from_rgba_premultiplied(220, 240, 255, text_alpha),
-                    ));
-
-                    // Button with layer name - adjust width to account for icon
-                    ui.add(
-                        egui::Button::new(egui::RichText::new(layer_name).size(16.0).color(
-                            egui::Color32::from_rgba_premultiplied(220, 240, 255, text_alpha),
-                        ))
-                        .fill(egui::Color32::from_rgba_unmultiplied(
-                            30,
-                            50,
-                            70,
-                            button_alpha,
-                        ))
-                        .stroke(egui::Stroke::new(
-                            1.5,
-                            egui::Color32::from_rgba_unmultiplied(80, 140, 200, text_alpha),
-                        ))
-                        .corner_radius(6.0)
-                        .min_size(egui::vec2(button_width - icon_size.x - 8.0, 32.0)),
-                    )
-                })
-                .inner;
-
-            if response.clicked() {
-                // Easter egg: Triple-click to open about screen
-                register_logo_click(&mut about_state);
-
-                // Normal behavior: Open layer picker
-                picker_state.show = !picker_state.show;
-            }
-
-            // Show hover hint
-            if response.hovered() {
-                response.on_hover_text("Click to switch layers");
-            }
-        });
-}
-
-/// Get a display-friendly name for a layer
+/// Display name for a layer.
 pub fn layer_display_name(layer: &LayerName) -> &str {
     layer.name()
 }
 
-/// Get an icon/emoji for a layer
-pub fn get_layer_icon(layer: &LayerName) -> &'static str {
+/// SVG asset path (relative to the asset root) for a layer's icon.
+pub fn layer_icon_path(layer: &LayerName) -> &'static str {
     match layer.name() {
-        "Account" => "👤",
-        "Agent" => "🤖",
-        "Audit" => "🔍",
-        "Client" => "💻",
-        "Deploy" => "🚀",
-        "Desktop" => "🖥️",
-        "Filesystem" => "📁",
-        "Health" => "❤️",
-        "Inventory" => "📦",
-        "Network" => "🌐",
-        "Probe" => "📡",
-        "Server" => "🖧",
-        "Shell" => "⌨️",
-        "Snapshot" => "📸",
-        "Tunnel" => "🔗",
-        _ => "❓",
+        "Account" => "layer/Account.svg",
+        "Audit" => "layer/Audit.svg",
+        "Deploy" => "layer/Deploy.svg",
+        "Desktop" => "layer/Desktop.svg",
+        "Filesystem" => "layer/Filesystem.svg",
+        "Health" => "layer/Health.svg",
+        "Inventory" => "layer/Inventory.svg",
+        "Probe" => "layer/Probe.svg",
+        "Shell" => "layer/Shell.svg",
+        "Snapshot" => "layer/Snapshot.svg",
+        "Tunnel" => "layer/Tunnel.svg",
+        // Network and the instance-type layers share the network icon.
+        _ => "layer/Network.svg",
+    }
+}
+
+/// Spawn the layer indicator UI (startup).
+pub fn spawn_layer_indicator(
+    mut commands: Commands,
+    theme: Res<Theme>,
+    current_layer: Res<CurrentLayer>,
+    mut images: ResMut<Assets<Image>>,
+    mut icon_cache: ResMut<IconCache>,
+    icon_root: Res<IconAssetRoot>,
+) {
+    let icon = icon_cache.get_or_rasterize(
+        &mut images,
+        &icon_root.0,
+        layer_icon_path(&current_layer),
+        ICON_PX,
+    );
+
+    commands
+        .spawn((
+            LayerIndicator,
+            Button,
+            Interaction::default(),
+            BlocksWorldInput,
+            GlobalZIndex(z::CHROME),
+            Node {
+                position_type: PositionType::Absolute,
+                right: Val::Px(10.0),
+                bottom: Val::Px(168.0),
+                width: Val::Px(200.0),
+                height: Val::Px(36.0),
+                align_items: AlignItems::Center,
+                column_gap: Val::Px(6.0),
+                padding: UiRect::horizontal(Val::Px(8.0)),
+                border: UiRect::all(Val::Px(1.5)),
+                ..default()
+            },
+            BackgroundColor(theme.color(Role::Surface)),
+            BorderColor::all(theme.color(Role::Accent)),
+            children![
+                (
+                    LayerIndicatorIcon,
+                    ImageNode::new(icon),
+                    Node {
+                        width: Val::Px(ICON_PX as f32),
+                        height: Val::Px(ICON_PX as f32),
+                        ..default()
+                    },
+                ),
+                (
+                    LayerIndicatorLabel,
+                    Text::new(layer_display_name(&current_layer).to_string()),
+                    theme.text_font(theme.metrics.font_lg),
+                    TextColor(theme.color(Role::Text)),
+                ),
+            ],
+        ))
+        .observe(on_indicator_click);
+}
+
+/// Open the layer picker on click (and register an About easter-egg click).
+fn on_indicator_click(
+    _activate: On<Activate>,
+    mut picker: ResMut<LayerPickerState>,
+    mut about: ResMut<AboutScreenState>,
+) {
+    register_logo_click(&mut about);
+    picker.show = !picker.show;
+}
+
+/// Update the indicator's label/icon on layer change and apply the fade.
+pub fn update_layer_indicator(
+    time: Res<Time>,
+    theme: Res<Theme>,
+    current_layer: Res<CurrentLayer>,
+    mut state: ResMut<LayerIndicatorState>,
+    mut images: ResMut<Assets<Image>>,
+    mut icon_cache: ResMut<IconCache>,
+    icon_root: Res<IconAssetRoot>,
+    mut root: Query<(&Interaction, &mut BackgroundColor), With<LayerIndicator>>,
+    mut label: Query<(&mut Text, &mut TextColor), With<LayerIndicatorLabel>>,
+    mut icon: Query<&mut ImageNode, With<LayerIndicatorIcon>>,
+) {
+    state.show_timer.tick(time.delta());
+
+    if current_layer.is_changed() {
+        state.show_timer.reset();
+        if let Ok((mut text, _)) = label.single_mut() {
+            text.0 = layer_display_name(&current_layer).to_string();
+        }
+        let handle = icon_cache.get_or_rasterize(
+            &mut images,
+            &icon_root.0,
+            layer_icon_path(&current_layer),
+            ICON_PX,
+        );
+        if let Ok(mut image_node) = icon.single_mut() {
+            image_node.image = handle;
+        }
+    }
+
+    // Fade in over FADE_IN_SECS, then stay fully visible.
+    let alpha = (state.show_timer.elapsed_secs() / FADE_IN_SECS).clamp(0.0, 1.0);
+
+    if let Ok((interaction, mut bg)) = root.single_mut() {
+        let surface = match *interaction {
+            Interaction::Pressed => theme.color(Role::SurfaceActive),
+            Interaction::Hovered => theme.color(Role::SurfaceHover),
+            Interaction::None => theme.color(Role::Surface),
+        };
+        bg.0 = surface.with_alpha(alpha);
+    }
+    if let Ok((_, mut color)) = label.single_mut() {
+        color.0 = theme.color(Role::Text).with_alpha(alpha);
+    }
+    if let Ok(mut image_node) = icon.single_mut() {
+        image_node.color = Color::WHITE.with_alpha(alpha);
     }
 }

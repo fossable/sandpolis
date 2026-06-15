@@ -4,6 +4,7 @@ use bevy::{
     input::mouse::{MouseButtonInput, MouseMotion, MouseWheel},
     prelude::*,
 };
+use crate::gui::ui::gating::UiPointerState;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_instance::LayerName;
 use std::ops::Range;
@@ -176,11 +177,18 @@ const CAMERA_ZOOM_RANGE: Range<f32> = 0.5..2.0;
 /// Zooms toward the center of the screen by adjusting the orthographic projection scale.
 pub fn handle_zoom(
     mut contexts: EguiContexts,
+    ui_pointer: Res<UiPointerState>,
     mut mouse_wheel_input: MessageReader<MouseWheel>,
     mut zoom_level: ResMut<ZoomLevel>,
     mut camera_query: Query<(&mut Projection, &Transform), With<Camera2d>>,
     controller_state: Res<super::controller::NodeControllerState>,
 ) {
+    // Native UI captured the pointer (e.g. hovering the minimap) — don't zoom.
+    if ui_pointer.over_ui_blocking {
+        mouse_wheel_input.clear();
+        return;
+    }
+
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
@@ -232,6 +240,7 @@ pub fn handle_zoom(
 /// Handle camera movement (panning) using the mouse or keyboard.
 pub fn handle_camera(
     mut contexts: EguiContexts,
+    ui_pointer: Res<UiPointerState>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut mouse_button_events: MessageReader<MouseButtonInput>,
     mut mouse_motion_events: MessageReader<MouseMotion>,
@@ -244,8 +253,9 @@ pub fn handle_camera(
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
-    let egui_wants_keyboard = ctx.wants_keyboard_input();
-    let egui_wants_pointer = ctx.wants_pointer_input() || ctx.is_pointer_over_area();
+    let egui_wants_keyboard = ctx.wants_keyboard_input() || ui_pointer.wants_keyboard;
+    let egui_wants_pointer =
+        ctx.wants_pointer_input() || ctx.is_pointer_over_area() || ui_pointer.over_ui_blocking;
 
     // Update transforms.
     for mut camera_transform in cameras.iter_mut() {

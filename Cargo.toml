@@ -100,6 +100,8 @@ bevy_egui = { version = "0.39.1" }
 bevy_svg = { version = "0.18.0", features = ["2d"] }
 bevy_rapier2d = { version = "0.34.0" }
 bevy_stl = { version = "0.18.0" }
+bevy_ui_widgets = { version = "=0.18.1" }
+resvg = { version = "0.45" }
 eframe = { version = "0.33" }
 egui-file-dialog = { version = "0.12.0" }
 egui_console = { version = "0.3.1" }

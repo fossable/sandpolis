@@ -46,7 +46,9 @@ use sandpolis_client::gui::layer_picker::{
     LayerPickerState, handle_layer_picker_toggle, render_layer_picker_button,
     render_layer_picker_panel,
 };
-use sandpolis_client::gui::layer_ui::{LayerIndicatorState, render_layer_indicator};
+use sandpolis_client::gui::layer_ui::{
+    LayerIndicatorState, spawn_layer_indicator, update_layer_indicator,
+};
 use sandpolis_client::gui::layer_visuals::{
     update_node_colors_for_layer, update_node_svgs_for_layer, update_node_visibility_for_layer,
 };
@@ -60,7 +62,7 @@ use sandpolis_client::gui::listeners::{
 use sandpolis_client::gui::login::{
     LoginOperation, check_saved_servers, handle_login_phase1, handle_login_phase2,
 };
-use sandpolis_client::gui::minimap::{MinimapViewport, render_minimap};
+use sandpolis_client::gui::minimap::{MinimapViewport, spawn_minimap, update_minimap};
 use sandpolis_client::gui::node::{NodeEntity, WorldView, scale_node_svgs, spawn_node};
 use sandpolis_client::gui::node_picker::{
     NodePickerState, handle_node_picker_toggle, render_node_picker_panel,
@@ -120,6 +122,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .add_plugins(bevy_svg::prelude::SvgPlugin)
     .add_plugins(bevy_stl::StlPlugin)
     .add_plugins(EguiPlugin::default())
+    .add_plugins(sandpolis_client::gui::ui::UiPlugin)
     .insert_resource(CurrentLayer(LayerName::from("Desktop")))
     .insert_resource(ZoomLevel(1.0))
     .insert_resource(LayerChangeTimer(Timer::from_seconds(3.0, TimerMode::Once)))
@@ -153,6 +156,9 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .add_systems(Startup, setup)
     .add_systems(Startup, install_egui_loaders)
     .add_systems(Startup, initialize_theme)
+    // Native bevy_ui chrome (migrated off egui).
+    .add_systems(Startup, (spawn_minimap, spawn_layer_indicator))
+    .add_systems(Update, (update_minimap, update_layer_indicator))
     .add_systems(
         Update,
         (
@@ -212,8 +218,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         EguiPrimaryContextPass,
         (
             // UI rendering with egui
-            render_minimap,
-            render_layer_indicator,
             render_layer_picker_button,
             render_layer_picker_panel,
             render_node_picker_panel,
@@ -289,10 +293,13 @@ fn setup(
         rapier_config.gravity = Vec2::ZERO;
     }
 
-    // Spawn main camera with WorldView marker
+    // Spawn main camera with WorldView marker. Mark it as the default UI camera so
+    // native bevy_ui always targets it (the About easter egg spawns a second,
+    // higher-order camera that would otherwise capture the UI).
     commands.spawn((
         Camera2d,
         WorldView,
+        bevy::ui::IsDefaultUiCamera,
         // MSAA makes some Android devices panic, this is under investigation
         // https://github.com/bevyengine/bevy/issues/8229
         #[cfg(target_os = "android")]

@@ -7,6 +7,7 @@
 use crate::gui::input::CurrentLayer;
 use crate::gui::layer_ext::get_extension_for_layer;
 use crate::gui::node::{NodeEntity, WorldView};
+use crate::gui::ui::gating::UiPointerState;
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 use sandpolis_instance::InstanceId;
@@ -78,6 +79,7 @@ impl ControllerType {
 /// Detect double-click on nodes to open controller
 pub fn handle_node_double_click(
     mut contexts: EguiContexts,
+    ui_pointer: Res<UiPointerState>,
     mouse_button: Res<ButtonInput<MouseButton>>,
     time: Res<Time>,
     windows: Query<&Window>,
@@ -91,7 +93,7 @@ pub fn handle_node_double_click(
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
-    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() {
+    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() || ui_pointer.over_ui_blocking {
         return;
     }
 

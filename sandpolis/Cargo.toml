@@ -71,6 +71,7 @@ bevy_egui = { workspace = true, optional = true }
 bevy_svg = { workspace = true, optional = true, features = ["2d"] }
 bevy_rapier2d = { workspace = true, optional = true }
 bevy_stl = { workspace = true, optional = true }
+bevy_ui_widgets = { workspace = true, optional = true }
 egui-file-dialog = { workspace = true, optional = true }
 egui_console = { workspace = true, optional = true }
 egui_extras = { workspace = true, optional = true }
@@ -147,6 +148,7 @@ client-gui = [
   "dep:bevy_svg",
   "dep:bevy_rapier2d",
   "dep:bevy_stl",
+  "dep:bevy_ui_widgets",
   "dep:egui-file-dialog",
   "dep:egui_console",
   "dep:egui_extras",

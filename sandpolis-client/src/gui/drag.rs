@@ -1,4 +1,5 @@
 use crate::gui::node::{NodeEntity, Selected, WorldView};
+use crate::gui::ui::gating::UiPointerState;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{EguiContexts, egui};
@@ -25,6 +26,7 @@ pub struct Dragging;
 /// Handle node selection on click (single-click to select, Ctrl-click to multi-select)
 pub fn handle_node_selection(
     mut contexts: EguiContexts,
+    ui_pointer: Res<UiPointerState>,
     mouse_button: Res<ButtonInput<MouseButton>>,
     keyboard: Res<ButtonInput<KeyCode>>,
     windows: Query<&Window, With<PrimaryWindow>>,
@@ -37,7 +39,7 @@ pub fn handle_node_selection(
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
-    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() {
+    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() || ui_pointer.over_ui_blocking {
         return;
     }
 
@@ -129,6 +131,7 @@ pub fn handle_node_selection(
 /// Detect mouse click on nodes and start dragging
 pub fn start_node_drag(
     mut contexts: EguiContexts,
+    ui_pointer: Res<UiPointerState>,
     mouse_button: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window, With<PrimaryWindow>>,
     camera_query: Query<(&Camera, &GlobalTransform), With<WorldView>>,
@@ -140,7 +143,7 @@ pub fn start_node_drag(
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
-    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() {
+    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() || ui_pointer.over_ui_blocking {
         return;
     }
 
