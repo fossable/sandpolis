@@ -2,7 +2,6 @@ use crate::gui::input::CurrentLayer;
 use crate::gui::node::{NodeEntity, WorldView};
 use crate::gui::queries;
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui};
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::LayerName;
 use std::collections::HashMap;
@@ -122,87 +121,3 @@ pub fn update_edge_visibility(
     }
 }
 
-/// Render edge labels for network layer (latency, throughput)
-pub fn render_edge_labels(
-    mut contexts: EguiContexts,
-    current_layer: Res<CurrentLayer>,
-    network_layer: Res<sandpolis_instance::network::NetworkLayer>,
-    edge_query: Query<&Edge>,
-    node_query: Query<(&Transform, &NodeEntity)>,
-    camera_query: Query<(&Camera, &GlobalTransform), With<WorldView>>,
-) {
-    // Only show labels on Network layer
-    if **current_layer != "Network" {
-        return;
-    }
-
-    let Ok((camera, camera_transform)) = camera_query.single() else {
-        return;
-    };
-
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-
-    // Build position lookup map once - O(N) instead of O(N*M)
-    let node_positions: HashMap<InstanceId, Vec3> = node_query
-        .iter()
-        .map(|(transform, node)| (node.instance_id, transform.translation))
-        .collect();
-
-    // Render label for each edge
-    for edge in edge_query.iter() {
-        if edge.layer != "Network" {
-            continue;
-        }
-
-        // O(1) lookup instead of O(N) iteration
-        let Some(&from) = node_positions.get(&edge.from) else {
-            continue;
-        };
-        let Some(&to) = node_positions.get(&edge.to) else {
-            continue;
-        };
-
-        // Calculate midpoint in world space
-        let midpoint_world = (from + to) / 2.0;
-
-        // Convert to screen space
-        let Ok(screen_pos) = camera.world_to_viewport(camera_transform, midpoint_world) else {
-            continue;
-        };
-
-        // Query network stats for this edge
-        let Ok(stats) = queries::query_network_stats(&network_layer, edge.to) else {
-            continue;
-        };
-
-        // Build label text
-        let label_text = match (stats.latency_ms, stats.throughput_bps) {
-            (Some(latency), Some(throughput)) => {
-                let mbps = throughput as f64 / 1_000_000.0;
-                format!("{}ms | {:.1}Mbps", latency, mbps)
-            }
-            (Some(latency), None) => format!("{}ms", latency),
-            (None, Some(throughput)) => {
-                let mbps = throughput as f64 / 1_000_000.0;
-                format!("{:.1}Mbps", mbps)
-            }
-            (None, None) => continue,
-        };
-
-        // Render label at midpoint - use Hash-based ID instead of format string
-        let label_pos = egui::Pos2::new(screen_pos.x, screen_pos.y);
-
-        egui::Area::new(egui::Id::new("edge_label").with(edge.from).with(edge.to))
-            .fixed_pos(label_pos)
-            .show(ctx, |ui| {
-                ui.label(
-                    egui::RichText::new(label_text)
-                        .size(10.0)
-                        .background_color(egui::Color32::from_rgba_unmultiplied(0, 0, 0, 150))
-                        .color(egui::Color32::WHITE),
-                );
-            });
-    }
-}

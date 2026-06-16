@@ -15,12 +15,19 @@
 use bevy::prelude::*;
 
 pub mod anchored;
+pub mod bind;
+pub mod controller;
 pub mod gating;
 pub mod icon;
 pub mod panel;
 pub mod text_input;
 pub mod theme;
+pub mod tooltip;
 pub mod widgets;
+
+/// Re-export of the `bevy_ui_widgets` activation event so layer crates can observe
+/// button clicks without depending on `bevy_ui_widgets` directly.
+pub use bevy_ui_widgets::Activate;
 
 /// `GlobalZIndex` tiers. `bevy_ui` does not auto-stack overlapping UI the way egui
 /// does, so every floating element is assigned an explicit tier.
@@ -54,6 +61,9 @@ impl Plugin for UiPlugin {
             .add_plugins(gating::GatingPlugin)
             .add_plugins(icon::IconPlugin)
             .add_plugins(text_input::TextInputPlugin)
-            .add_plugins(anchored::AnchoredPlugin);
+            .add_plugins(anchored::AnchoredPlugin)
+            .add_plugins(bind::BindPlugin)
+            .add_plugins(tooltip::TooltipPlugin)
+            .init_resource::<controller::LayerRegistry>();
     }
 }

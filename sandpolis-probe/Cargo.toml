@@ -25,10 +25,10 @@ sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 
 # GUI dependencies
 bevy = { workspace = true, optional = true }
-bevy_egui = { workspace = true, optional = true }
 bevy_svg = { workspace = true, optional = true, features = ["2d"] }
 bevy_rapier2d = { workspace = true, optional = true }
 inventory = { workspace = true, optional = true }
+include_dir = { workspace = true, optional = true }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
 
 [features]
@@ -36,10 +36,10 @@ agent = ["dep:rups", "dep:vnc", "dep:russh", "dep:retina"]
 server = ["dep:rups", "dep:vnc", "dep:russh", "dep:retina"]
 client-gui = [
   "dep:bevy",
-  "dep:bevy_egui",
   "dep:bevy_svg",
   "dep:bevy_rapier2d",
   "dep:inventory",
+  "dep:include_dir",
   "dep:sandpolis-client",
   "sandpolis-client/client-gui",
 ]

@@ -8,7 +8,6 @@ use crate::gui::ui::gating::UiPointerState;
 use crate::gui::ui::panel::modal_scrim;
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use crate::gui::ui::widgets::{button, heading, muted};
-use bevy_egui::{EguiContexts, egui};
 use bevy_ui_widgets::Activate;
 use sandpolis_instance::LayerName;
 use std::ops::Range;
@@ -74,17 +73,14 @@ pub enum LoginPhase {
 /// Handle touch input for panning on mobile devices
 #[cfg(target_os = "android")]
 pub fn handle_touch_camera(
-    mut contexts: EguiContexts,
+    ui_pointer: Res<UiPointerState>,
     windows: Query<&Window>,
     mut touches: MessageReader<TouchInput>,
     mut camera: Query<&mut Transform, With<Camera2d>>,
     mut last_position: Local<Option<Vec2>>,
 ) {
-    // Don't handle touch if egui wants the input
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() {
+    // Don't handle touch if the pointer is over blocking UI
+    if ui_pointer.over_ui_blocking {
         touches.clear();
         *last_position = None;
         return;
@@ -113,18 +109,15 @@ pub fn handle_touch_camera(
 /// Handle pinch-to-zoom gestures on mobile devices using two-finger touch
 #[cfg(target_os = "android")]
 pub fn handle_touch_zoom(
-    mut contexts: EguiContexts,
+    ui_pointer: Res<UiPointerState>,
     mut touches: MessageReader<TouchInput>,
     mut zoom_level: ResMut<ZoomLevel>,
     mut camera_query: Query<&mut Projection, With<Camera2d>>,
     mut touch_positions: Local<std::collections::HashMap<u64, Vec2>>,
     mut last_distance: Local<Option<f32>>,
 ) {
-    // Don't handle zoom if egui wants the input
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() {
+    // Don't handle zoom if the pointer is over blocking UI
+    if ui_pointer.over_ui_blocking {
         touches.clear();
         touch_positions.clear();
         *last_distance = None;
@@ -180,42 +173,14 @@ const CAMERA_ZOOM_RANGE: Range<f32> = 0.5..2.0;
 /// Handle zooming using the mouse wheel or keyboard.
 /// Zooms toward the center of the screen by adjusting the orthographic projection scale.
 pub fn handle_zoom(
-    mut contexts: EguiContexts,
     ui_pointer: Res<UiPointerState>,
     mut mouse_wheel_input: MessageReader<MouseWheel>,
     mut zoom_level: ResMut<ZoomLevel>,
     mut camera_query: Query<(&mut Projection, &Transform), With<Camera2d>>,
-    controller_state: Res<super::controller::NodeControllerState>,
 ) {
-    // Native UI captured the pointer (e.g. hovering the minimap) — don't zoom.
+    // Native UI captured the pointer (e.g. hovering the minimap or a panel) —
+    // don't zoom. Previews use `Pickable::IGNORE`, so zooming over them is allowed.
     if ui_pointer.over_ui_blocking {
-        mouse_wheel_input.clear();
-        return;
-    }
-
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-
-    // Check if we're hovering over a controller window (which may have scrollable content)
-    // Controller windows have expandable_node set
-    let over_controller = controller_state.expanded_node.is_some() && ctx.is_pointer_over_area();
-
-    // Allow zoom if:
-    // 1. Not over any egui area, OR
-    // 2. Over a preview window (not a controller)
-    // Preview windows are identified by having is_pointer_over_area() true but not being the controller
-    let should_handle_zoom = if ctx.is_pointer_over_area() {
-        // We're over some egui area
-        // Only block zoom if we're over the controller window specifically
-        !over_controller
-    } else {
-        // Not over any egui area - always handle zoom
-        true
-    };
-
-    if !should_handle_zoom {
-        // Clear the events so they don't accumulate
         mouse_wheel_input.clear();
         return;
     }
@@ -243,7 +208,6 @@ pub fn handle_zoom(
 
 /// Handle camera movement (panning) using the mouse or keyboard.
 pub fn handle_camera(
-    mut contexts: EguiContexts,
     ui_pointer: Res<UiPointerState>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut mouse_button_events: MessageReader<MouseButtonInput>,
@@ -253,13 +217,9 @@ pub fn handle_camera(
     mut cameras: Query<&mut Transform, With<Camera2d>>,
     drag_state: Res<super::drag::DragState>,
 ) {
-    // Don't handle camera movement if egui wants the input
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    let egui_wants_keyboard = ctx.wants_keyboard_input() || ui_pointer.wants_keyboard;
-    let egui_wants_pointer =
-        ctx.wants_pointer_input() || ctx.is_pointer_over_area() || ui_pointer.over_ui_blocking;
+    // Don't handle camera movement if the native UI captured the pointer/keyboard.
+    let egui_wants_keyboard = ui_pointer.wants_keyboard;
+    let egui_wants_pointer = ui_pointer.over_ui_blocking;
 
     // Update transforms.
     for mut camera_transform in cameras.iter_mut() {
@@ -320,273 +280,6 @@ pub fn handle_camera(
     }
 }
 
-/// Show a help window with keyboard shortcuts.
-pub fn handle_keymap(
-    mut contexts: EguiContexts,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut help_state: ResMut<HelpScreenState>,
-    mut login_state: ResMut<LoginDialogState>,
-    windows: Query<&Window>,
-) {
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-
-    // Don't handle hotkeys if egui wants keyboard input (e.g., typing in text fields)
-    // But we still need to check for hotkeys to toggle dialogs off even when they're open
-    let egui_wants_keyboard = ctx.wants_keyboard_input();
-
-    // Toggle help screen with 'H' key (only when not typing)
-    if !egui_wants_keyboard && keyboard_input.just_pressed(KeyCode::KeyH) {
-        help_state.show = !help_state.show;
-    }
-
-    // Toggle login dialog with 'L' key (only when not typing)
-    if !egui_wants_keyboard && keyboard_input.just_pressed(KeyCode::KeyL) {
-        login_state.show = !login_state.show;
-    }
-
-    let Ok(window) = windows.single() else {
-        return;
-    };
-    let window_size = Vec2::new(window.width(), window.height());
-
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-
-    // Render login dialog
-    if login_state.show {
-        let is_server_address_phase = matches!(login_state.phase, LoginPhase::ServerAddress);
-
-        // Extract banner data to avoid borrow checker issues
-        let (banner_message, banner_mfa, banner_maintenance) =
-            if let LoginPhase::Credentials { banner } = &login_state.phase {
-                (banner.message.clone(), banner.mfa, banner.maintenance)
-            } else {
-                (None, false, false)
-            };
-
-        egui::Window::new("Login to Server")
-            .id(egui::Id::new("login_dialog"))
-            .pivot(egui::Align2::CENTER_CENTER)
-            .resizable(false)
-            .movable(false)
-            .collapsible(false)
-            .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y / 2.0))
-            .show(ctx, |ui| {
-                if is_server_address_phase {
-                    // Phase 1: Server address input
-                    ui.vertical_centered(|ui| {
-                        ui.add_space(8.0);
-                        ui.heading("🏰 SANDPOLIS");
-                        ui.label("Security & Systems Management");
-                        ui.add_space(8.0);
-                    });
-
-                    ui.separator();
-                    ui.add_space(8.0);
-
-                    // Server address field
-                    ui.horizontal(|ui| {
-                        ui.label("Server Address:");
-                        ui.add_space(4.0);
-                    });
-                    ui.text_edit_singleline(&mut login_state.server_address);
-                    ui.add_space(8.0);
-
-                    // Show error message if any
-                    if let Some(error) = &login_state.error_message {
-                        ui.colored_label(egui::Color32::RED, error);
-                        ui.add_space(8.0);
-                    }
-
-                    ui.separator();
-                    ui.add_space(8.0);
-
-                    // Buttons
-                    ui.horizontal(|ui| {
-                        ui.add_enabled_ui(!login_state.loading, |ui| {
-                            if ui
-                                .button(if login_state.loading {
-                                    "Connecting..."
-                                } else {
-                                    "Connect"
-                                })
-                                .clicked()
-                            {
-                                login_state.loading = true;
-                                login_state.error_message = None;
-                                // Connection logic will be handled in a system
-                            }
-                        });
-
-                        if ui.button("Cancel (L)").clicked() {
-                            login_state.show = false;
-                            login_state.error_message = None;
-                            login_state.loading = false;
-                        }
-                    });
-                } else {
-                    // Phase 2: Credentials input with server banner
-                    ui.vertical_centered(|ui| {
-                        ui.add_space(8.0);
-
-                        // TODO: Display banner image if available
-                        // For now, just show the default heading
-                        ui.heading("🏰 SANDPOLIS");
-
-                        // Display server banner message if available
-                        if let Some(message) = &banner_message {
-                            ui.label(message);
-                        }
-                        ui.add_space(8.0);
-                    });
-
-                    if banner_maintenance {
-                        ui.colored_label(
-                            egui::Color32::YELLOW,
-                            "⚠ Server is in maintenance mode. Only admin users can login.",
-                        );
-                        ui.add_space(8.0);
-                    }
-
-                    ui.separator();
-                    ui.add_space(8.0);
-
-                    // Show server address (read-only)
-                    ui.horizontal(|ui| {
-                        ui.label("Server:");
-                        ui.colored_label(egui::Color32::GRAY, &login_state.server_address);
-                    });
-                    ui.add_space(8.0);
-
-                    // Username field
-                    ui.horizontal(|ui| {
-                        ui.label("Username:");
-                        ui.add_space(4.0);
-                    });
-                    ui.text_edit_singleline(&mut login_state.username);
-                    ui.add_space(8.0);
-
-                    // Password field
-                    ui.horizontal(|ui| {
-                        ui.label("Password:");
-                        ui.add_space(4.0);
-                    });
-                    let password_edit =
-                        egui::TextEdit::singleline(&mut login_state.password).password(true);
-                    ui.add(password_edit);
-                    ui.add_space(8.0);
-
-                    // OTP field (shown based on MFA requirement)
-                    if banner_mfa {
-                        ui.horizontal(|ui| {
-                            ui.label("OTP:");
-                            ui.add_space(4.0);
-                        });
-                        ui.text_edit_singleline(&mut login_state.otp);
-                        ui.add_space(8.0);
-                    }
-
-                    // Show error message if any
-                    if let Some(error) = &login_state.error_message {
-                        ui.colored_label(egui::Color32::RED, error);
-                        ui.add_space(8.0);
-                    }
-
-                    ui.separator();
-                    ui.add_space(8.0);
-
-                    // Buttons
-                    ui.horizontal(|ui| {
-                        ui.add_enabled_ui(!login_state.loading, |ui| {
-                            if ui
-                                .button(if login_state.loading {
-                                    "Logging in..."
-                                } else {
-                                    "Login"
-                                })
-                                .clicked()
-                            {
-                                login_state.loading = true;
-                                login_state.error_message = None;
-                                // Login logic will be handled in a system
-                            }
-                        });
-
-                        if ui.button("Back").clicked() {
-                            login_state.phase = LoginPhase::ServerAddress;
-                            login_state.username.clear();
-                            login_state.password.clear();
-                            login_state.otp.clear();
-                            login_state.error_message = None;
-                            login_state.loading = false;
-                        }
-
-                        if ui.button("Cancel (L)").clicked() {
-                            login_state.show = false;
-                            login_state.phase = LoginPhase::ServerAddress;
-                            login_state.username.clear();
-                            login_state.password.clear();
-                            login_state.otp.clear();
-                            login_state.error_message = None;
-                            login_state.loading = false;
-                        }
-                    });
-                }
-            });
-    }
-
-    // Render help screen
-    if !help_state.show {
-        return;
-    }
-
-    egui::Window::new("Keyboard Shortcuts")
-        .id(egui::Id::new("keymap"))
-        .pivot(egui::Align2::CENTER_CENTER)
-        .resizable(false)
-        .movable(false)
-        .collapsible(false)
-        .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y / 2.0))
-        .show(ctx, |ui| {
-            ui.heading("Camera Controls");
-            ui.separator();
-            ui.label("Arrow Keys     Pan camera");
-            ui.label("Mouse Drag     Pan camera");
-            ui.label("Mouse Wheel    Zoom in/out");
-            ui.add_space(8.0);
-
-            ui.heading("Layer Switching");
-            ui.separator();
-            ui.label("Click Layer    Open layer picker");
-            #[cfg(feature = "layer-filesystem")]
-            ui.label("F              Filesystem layer");
-            #[cfg(feature = "layer-desktop")]
-            ui.label("D              Desktop layer");
-            ui.add_space(8.0);
-
-            ui.heading("UI Controls");
-            ui.separator();
-            ui.label("L              Toggle login dialog");
-            ui.label("N              Toggle node picker");
-            ui.label("P              Toggle node previews");
-            ui.label("T              Toggle theme picker");
-            ui.label("H              Toggle this help screen");
-            ui.label("Click node     Select and open controller");
-            ui.label("Drag node      Move node position");
-            ui.add_space(8.0);
-
-            ui.separator();
-            if ui.button("Close (H)").clicked() {
-                help_state.show = false;
-            }
-        });
-}
-
-// ── Native help screen + dialog toggles ──────────────────────────────────────
-
 /// Modal root marker for the native help screen.
 #[derive(Component)]
 pub struct HelpRoot;
@@ -605,20 +298,6 @@ pub fn toggle_help(
     }
 }
 
-/// Toggle the login dialog with `L` (unless a text field is focused).
-pub fn toggle_login(
-    ui_pointer: Res<UiPointerState>,
-    keyboard: Res<ButtonInput<KeyCode>>,
-    mut login_state: ResMut<LoginDialogState>,
-) {
-    if ui_pointer.wants_keyboard {
-        return;
-    }
-    if keyboard.just_pressed(KeyCode::KeyL) {
-        login_state.show = !login_state.show;
-    }
-}
-
 /// Spawn/despawn the native help modal.
 pub fn manage_help_panel(
     mut commands: Commands,
@@ -629,7 +308,6 @@ pub fn manage_help_panel(
     const SHORTCUTS: &[&str] = &[
         "Arrow keys / drag  -  Pan camera",
         "Mouse wheel  -  Zoom",
-        "L  -  Login dialog",
         "N  -  Find node",
         "T  -  Theme picker",
         "P  -  Toggle node previews",

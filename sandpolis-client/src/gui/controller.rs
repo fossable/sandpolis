@@ -1,102 +1,124 @@
-//! Node controller UI components.
+//! Node controller host.
 //!
-//! This module provides the core controller infrastructure. Layer-specific
-//! controller implementations are provided by the respective layer crates
-//! via the `LayerGuiExtension` trait.
+//! The host opens a draggable [`FloatingPanel`](crate::gui::ui::panel::FloatingPanel)
+//! for the active layer's [`NodeController`](crate::gui::ui::controller::NodeController)
+//! when a node is double-clicked (or its preview's "Open" button is pressed), and
+//! despawns it on close / layer change. Layer-specific content is built by the
+//! controller registered in the [`LayerRegistry`].
 
 use crate::gui::input::CurrentLayer;
-use crate::gui::layer_ext::get_extension_for_layer;
 use crate::gui::node::{NodeEntity, WorldView};
+use crate::gui::ui::controller::LayerRegistry;
 use crate::gui::ui::gating::UiPointerState;
+use crate::gui::ui::panel::{FloatingPanel, PanelClosed, spawn_floating_panel};
+use crate::gui::ui::theme::Theme;
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui};
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::LayerName;
 
-/// Resource tracking which node controller is currently open
+/// Which node's controller is currently open (if any).
 #[derive(Resource, Default)]
 pub struct NodeControllerState {
-    pub expanded_node: Option<InstanceId>,
-    pub controller_type: ControllerType,
-    pub window_size: Vec2,
+    pub open: Option<InstanceId>,
 }
 
 impl NodeControllerState {
-    /// Get responsive controller dimensions based on window size
+    /// Responsive controller dimensions based on window size. Mobile screens use
+    /// most of the viewport; desktop uses a fixed size.
     pub fn get_controller_dimensions(window_width: f32, window_height: f32) -> (f32, f32) {
-        // For mobile screens (< 800px width), use full screen with padding
-        let is_mobile = window_width < 800.0;
-
-        if is_mobile {
-            // Use 95% of screen with minimum padding
+        if window_width < 800.0 {
             let width = (window_width * 0.95).max(280.0);
             let height = (window_height * 0.80).max(400.0);
             (width, height)
         } else {
-            // Desktop: fixed size
-            (600.0, 400.0)
+            (600.0, 440.0)
         }
     }
 }
 
-/// Types of controllers available
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub enum ControllerType {
-    #[default]
-    None,
-    FileBrowser,
-    Terminal,
-    SystemInfo,
-    PackageManager,
-    DesktopViewer,
-}
+/// Marks the controller's floating panel and records which instance it is for.
+#[derive(Component)]
+pub struct ControllerPanel(pub InstanceId);
 
-impl ControllerType {
-    /// Get the controller type for a given layer
-    pub fn from_layer(layer: &LayerName) -> Self {
-        match layer.name() {
-            "Filesystem" => ControllerType::FileBrowser,
-            "Shell" => ControllerType::Terminal,
-            "Inventory" => ControllerType::SystemInfo,
-            "Desktop" => ControllerType::DesktopViewer,
-            _ => ControllerType::SystemInfo, // Default fallback
-        }
-    }
+/// Installs the controller host: state, panel management, and close handling.
+pub struct ControllerHostPlugin;
 
-    /// Get display name for this controller
-    pub fn display_name(&self) -> &'static str {
-        match self {
-            ControllerType::None => "None",
-            ControllerType::FileBrowser => "File Browser",
-            ControllerType::Terminal => "Terminal",
-            ControllerType::SystemInfo => "System Information",
-            ControllerType::PackageManager => "Package Manager",
-            ControllerType::DesktopViewer => "Desktop Viewer",
-        }
+impl Plugin for ControllerHostPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<NodeControllerState>()
+            .add_observer(on_panel_closed)
+            .add_systems(Update, manage_controller)
+            .add_systems(
+                PostUpdate,
+                (handle_node_double_click, close_controller_on_layer_change),
+            );
     }
 }
 
-/// Detect double-click on nodes to open controller
+/// Spawn / rebuild / despawn the controller panel to match [`NodeControllerState`].
+pub fn manage_controller(
+    mut commands: Commands,
+    theme: Res<Theme>,
+    state: Res<NodeControllerState>,
+    registry: Res<LayerRegistry>,
+    current_layer: Res<CurrentLayer>,
+    windows: Query<&Window>,
+    existing: Query<(Entity, &ControllerPanel), With<FloatingPanel>>,
+) {
+    let current = existing.iter().next();
+
+    match (state.open, current) {
+        (Some(instance), Some((_, panel))) if panel.0 == instance => {
+            // Already showing the right controller.
+        }
+        (None, None) => {}
+        (want, current) => {
+            // Despawn any stale panel.
+            if let Some((entity, _)) = current {
+                commands.entity(entity).despawn();
+            }
+            // Spawn a fresh one if requested.
+            if let Some(instance) = want {
+                let Some(info) = registry.get(&current_layer) else {
+                    return;
+                };
+                let Some(controller) = info.controller.clone() else {
+                    return;
+                };
+                let (win_w, win_h) = windows
+                    .single()
+                    .map(|w| (w.width(), w.height()))
+                    .unwrap_or((1280.0, 720.0));
+                let (w, h) = NodeControllerState::get_controller_dimensions(win_w, win_h);
+                let pos = Vec2::new((win_w - w) / 2.0, (win_h - h) / 2.0);
+                let panel =
+                    spawn_floating_panel(&mut commands, &theme, controller.title(), pos, Vec2::new(w, h));
+                commands.entity(panel.root).insert(ControllerPanel(instance));
+                controller.build(&mut commands, panel.body, instance, &theme);
+            }
+        }
+    }
+}
+
+/// Close the controller when its panel's close button is clicked.
+fn on_panel_closed(closed: On<PanelClosed>, mut state: ResMut<NodeControllerState>) {
+    let _ = closed;
+    state.open = None;
+}
+
+/// Detect a double-click on a node to toggle its controller.
 pub fn handle_node_double_click(
-    mut contexts: EguiContexts,
     ui_pointer: Res<UiPointerState>,
     mouse_button: Res<ButtonInput<MouseButton>>,
     time: Res<Time>,
     windows: Query<&Window>,
     camera_query: Query<(&Camera, &GlobalTransform), With<WorldView>>,
     node_query: Query<(&Transform, &NodeEntity)>,
-    current_layer: Res<CurrentLayer>,
     mut controller_state: ResMut<NodeControllerState>,
-    mut last_click: Local<(f32, Option<InstanceId>)>, // (time, entity)
+    mut last_click: Local<(f32, Option<InstanceId>)>,
 ) {
-    // Don't handle clicks if egui wants the input
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() || ui_pointer.over_ui_blocking {
+    if ui_pointer.over_ui_blocking {
         return;
     }
-
     if !mouse_button.just_pressed(MouseButton::Left) {
         return;
     }
@@ -104,137 +126,45 @@ pub fn handle_node_double_click(
     let Ok(window) = windows.single() else {
         return;
     };
-
     let Some(cursor_position) = window.cursor_position() else {
         return;
     };
-
     let Ok((camera, camera_transform)) = camera_query.single() else {
         return;
     };
-
     let Ok(world_position) = camera.viewport_to_world_2d(camera_transform, cursor_position) else {
         return;
     };
 
-    // Find clicked node
     const CLICK_RADIUS: f32 = 50.0;
     let mut clicked_node: Option<InstanceId> = None;
-
     for (transform, node_entity) in node_query.iter() {
-        let node_pos = transform.translation.truncate();
-        let distance = world_position.distance(node_pos);
-
-        if distance <= CLICK_RADIUS {
+        if world_position.distance(transform.translation.truncate()) <= CLICK_RADIUS {
             clicked_node = Some(node_entity.instance_id);
             break;
         }
     }
 
-    // Check for double-click
     let current_time = time.elapsed_secs();
     let (last_time, last_entity) = *last_click;
-
     if let Some(clicked_id) = clicked_node {
         if current_time - last_time < 0.3 && last_entity == Some(clicked_id) {
-            // Double-click detected - open/close controller
-            if controller_state.expanded_node == Some(clicked_id) {
-                // Close if already open
-                controller_state.expanded_node = None;
-                controller_state.controller_type = ControllerType::None;
+            controller_state.open = if controller_state.open == Some(clicked_id) {
+                None
             } else {
-                // Open controller for this node
-                controller_state.expanded_node = Some(clicked_id);
-                controller_state.controller_type = ControllerType::from_layer(&current_layer);
-            }
+                Some(clicked_id)
+            };
         }
         *last_click = (current_time, Some(clicked_id));
     }
 }
 
-/// Render the node controller window
-///
-/// This function uses trait-based dispatching to render layer-specific
-/// controller content. Each layer crate provides its own implementation
-/// via the `LayerGuiExtension` trait.
-pub fn render_node_controller(
-    mut contexts: EguiContexts,
-    mut controller_state: ResMut<NodeControllerState>,
-    current_layer: Res<CurrentLayer>,
-    windows: Query<&Window>,
-) {
-    let Some(instance_id) = controller_state.expanded_node else {
-        return;
-    };
-
-    if controller_state.controller_type == ControllerType::None {
-        return;
-    }
-
-    let Ok(window) = windows.single() else {
-        return;
-    };
-
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-
-    let window_size = Vec2::new(window.width(), window.height());
-
-    // Get responsive controller dimensions
-    let (controller_width, controller_height) =
-        NodeControllerState::get_controller_dimensions(window_size.x, window_size.y);
-
-    // Center the controller window
-    let controller_pos = egui::Pos2::new(
-        (window_size.x - controller_width) / 2.0,
-        (window_size.y - controller_height) / 2.0,
-    );
-
-    controller_state.window_size = Vec2::new(controller_width, controller_height);
-
-    // Get the layer extension for rendering
-    let extension = get_extension_for_layer(&current_layer);
-
-    egui::Window::new(controller_state.controller_type.display_name())
-        .fixed_pos(controller_pos)
-        .fixed_size([controller_width, controller_height])
-        .collapsible(false)
-        .resizable(false)
-        .show(ctx, |ui| {
-            // Close button
-            ui.horizontal(|ui| {
-                ui.label(format!("Instance: {}", instance_id));
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.button("Close").clicked() {
-                        controller_state.expanded_node = None;
-                        controller_state.controller_type = ControllerType::None;
-                    }
-                });
-            });
-
-            ui.separator();
-
-            // Render controller content via trait dispatch
-            if let Some(ext) = extension {
-                ext.render_controller(ui, instance_id);
-            } else {
-                // Fallback for layers without GUI extension
-                ui.label(format!(
-                    "No controller available for {} layer",
-                    current_layer.name()
-                ));
-            }
-        });
-}
-
-/// Close controller when switching layers
+/// Close the controller when switching layers.
 pub fn close_controller_on_layer_change(
     current_layer: Res<CurrentLayer>,
     mut controller_state: ResMut<NodeControllerState>,
 ) {
     if current_layer.is_changed() && !current_layer.is_added() {
-        controller_state.expanded_node = None;
-        controller_state.controller_type = ControllerType::None;
+        controller_state.open = None;
     }
 }

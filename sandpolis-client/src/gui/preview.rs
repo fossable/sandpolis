@@ -1,200 +1,29 @@
-use crate::gui::controller::{ControllerType, NodeControllerState};
+//! World-anchored node preview cards.
+//!
+//! Each node gets a small card anchored below it (via
+//! [`WorldAnchored`](crate::gui::ui::anchored::WorldAnchored)) showing a layer
+//! icon, the hostname, a layer-specific detail line, and an "Open" button that
+//! opens the node controller. Toggled with `P`.
+
+use crate::gui::controller::NodeControllerState;
 use crate::gui::input::CurrentLayer;
 use crate::gui::layer_ui::layer_icon_path;
-use crate::gui::node::{NodeEntity, WorldView};
+use crate::gui::node::NodeEntity;
 use crate::gui::queries;
+use crate::gui::ui::Activate;
 use crate::gui::ui::anchored::WorldAnchored;
 use crate::gui::ui::gating::UiPointerState;
-use crate::gui::ui::icon::{IconAssetRoot, IconCache};
+use crate::gui::ui::icon::IconCache;
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
-use crate::gui::ui::widgets::{button, muted, text};
+use crate::gui::ui::widgets::{button, text};
 use crate::gui::ui::z;
 use bevy::image::Image;
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui};
-use bevy_ui_widgets::Activate;
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::LayerName;
 use sandpolis_instance::network::NetworkLayer;
 
-/// Zoom threshold above which the minimal preview is shown.
-/// At zoom level 1.0, preview is full. Above this value (more zoomed out), preview becomes minimal.
-const MINIMAL_PREVIEW_ZOOM_THRESHOLD: f32 = 1.2;
-
-/// Component tracking NodePreview state for each node
-#[derive(Component)]
-pub struct NodePreview {
-    pub show: bool,
-    pub width: f32,
-    pub height: f32,
-}
-
-impl NodePreview {
-    /// Create responsive preview based on window size
-    pub fn from_window_size(window_width: f32, _window_height: f32) -> Self {
-        // For mobile screens (< 800px width), use smaller preview
-        let is_mobile = window_width < 800.0;
-
-        if is_mobile {
-            Self {
-                show: true,
-                width: (window_width * 0.35).clamp(140.0, 180.0),
-                height: 80.0,
-            }
-        } else {
-            Self::default()
-        }
-    }
-}
-
-impl Default for NodePreview {
-    fn default() -> Self {
-        Self {
-            show: true,
-            width: 280.0,
-            height: 80.0,
-        }
-    }
-}
-
-/// Render NodePreview windows below each node with layer-specific content
-pub fn render_node_previews(
-    mut contexts: EguiContexts,
-    current_layer: Res<CurrentLayer>,
-    network_layer: Res<sandpolis_instance::network::NetworkLayer>,
-    mut controller_state: ResMut<NodeControllerState>,
-    camera_query: Query<(&Camera, &GlobalTransform, &Projection), With<WorldView>>,
-    node_query: Query<(&Transform, &NodeEntity, Option<&NodePreview>)>,
-    windows: Query<&Window>,
-) {
-    let Ok(window) = windows.single() else {
-        return;
-    };
-
-    let Ok((camera, camera_transform, projection)) = camera_query.single() else {
-        return;
-    };
-
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-
-    // Get the camera's orthographic scale (zoom level)
-    let camera_scale = if let Projection::Orthographic(ortho) = projection {
-        ortho.scale
-    } else {
-        1.0
-    };
-
-    // Get window dimensions for bounds checking
-    let window_width = window.width();
-    let window_height = window.height();
-
-    // Determine if we should use minimal preview based on zoom level
-    let use_minimal = camera_scale > MINIMAL_PREVIEW_ZOOM_THRESHOLD;
-
-    // Minimal preview dimensions
-    const MINIMAL_WIDTH: f32 = 150.0;
-    const MINIMAL_HEIGHT: f32 = 44.0;
-
-    // Render preview for each node
-    for (transform, node_entity, preview_opt) in node_query.iter() {
-        // Get preview settings
-        let default_preview = NodePreview::default();
-        let preview = preview_opt.unwrap_or(&default_preview);
-
-        // Choose dimensions based on zoom level
-        let (preview_width, preview_height) = if use_minimal {
-            (MINIMAL_WIDTH, MINIMAL_HEIGHT)
-        } else {
-            (preview.width, preview.height)
-        };
-
-        // Always try to convert world position to screen position
-        // This helps us determine if the node is on-screen or off-screen
-        let viewport_result = camera.world_to_viewport(camera_transform, transform.translation);
-
-        // Determine if we should show the preview
-        let mut should_show = preview.show;
-        let mut preview_pos = egui::Pos2::ZERO;
-
-        if let Ok(viewport_pos) = viewport_result {
-            // Calculate the node's visual radius in screen space
-            let node_radius_screen = 50.0 / camera_scale;
-
-            // Check if the node is actually visible in the viewport
-            // Add some margin to account for the node's size and preview
-            let margin = node_radius_screen + preview_height + 20.0;
-            let is_node_visible = viewport_pos.x >= -margin
-                && viewport_pos.x <= window_width + margin
-                && viewport_pos.y >= -margin
-                && viewport_pos.y <= window_height + margin;
-
-            // Only show if preview is enabled AND node is visible
-            should_show = should_show && is_node_visible;
-
-            if should_show {
-                // Position preview below the node with a constant distance from the bottom edge
-                preview_pos = egui::Pos2::new(
-                    viewport_pos.x - preview_width / 2.0,
-                    viewport_pos.y + node_radius_screen + 10.0,
-                );
-            }
-        } else {
-            // world_to_viewport failed - node is definitely off-screen
-            should_show = false;
-        }
-
-        // Skip rendering if the preview shouldn't be shown
-        if !should_show {
-            continue;
-        }
-
-        // Use instance_id's string representation directly as the window name for uniqueness
-        // This ensures each window has a completely unique ID
-        let window_name = format!("##preview_{}", node_entity.instance_id);
-
-        egui::Window::new(&window_name)
-            .title_bar(false)
-            .resizable(false)
-            .movable(false)
-            .fixed_pos(preview_pos)
-            .fixed_size([preview_width, preview_height])
-            .show(ctx, |ui| {
-                if use_minimal {
-                    render_minimal_preview_content(
-                        ui,
-                        &current_layer,
-                        &network_layer,
-                        &mut controller_state,
-                        node_entity.instance_id,
-                    );
-                } else {
-                    render_preview_content(
-                        ui,
-                        &current_layer,
-                        &network_layer,
-                        &mut controller_state,
-                        node_entity.instance_id,
-                    );
-                }
-            });
-    }
-}
-
-/// Get layer-specific icon path for the left circular icon
-pub fn get_layer_icon(layer: &LayerName) -> &'static str {
-    match layer.name() {
-        "Filesystem" => "📁",
-        "Shell" => "💻",
-        "Inventory" => "📊",
-        "Desktop" => "🖥",
-        "Network" => "🌐",
-        _ => "📦",
-    }
-}
-
-/// Get hostname for an instance
+/// Get hostname for an instance.
 pub fn get_hostname(instance_id: InstanceId) -> String {
     queries::query_instance_metadata(instance_id)
         .ok()
@@ -202,10 +31,10 @@ pub fn get_hostname(instance_id: InstanceId) -> String {
         .unwrap_or_else(|| format!("Node {}", instance_id))
 }
 
-/// Get layer-specific bottom line details
+/// Get layer-specific bottom line details for a node's preview card.
 pub fn get_layer_details(
     layer: &LayerName,
-    network_layer: &sandpolis_instance::network::NetworkLayer,
+    network_layer: &NetworkLayer,
     instance_id: InstanceId,
 ) -> String {
     match layer.name() {
@@ -279,250 +108,6 @@ pub fn get_layer_details(
     }
 }
 
-/// Render the new 4-part preview layout
-pub fn render_preview_content(
-    ui: &mut egui::Ui,
-    current_layer: &LayerName,
-    network_layer: &sandpolis_instance::network::NetworkLayer,
-    controller_state: &mut NodeControllerState,
-    instance_id: InstanceId,
-) {
-    // Get data for the preview
-    let hostname = get_hostname(instance_id);
-    let layer_icon = get_layer_icon(current_layer);
-    let layer_details = get_layer_details(current_layer, network_layer, instance_id);
-
-    // Use a horizontal layout for the main content
-    ui.horizontal(|ui| {
-        // Left side: Circular icon area (60x60 pixels)
-        ui.vertical(|ui| {
-            ui.set_width(60.0);
-            ui.set_height(60.0);
-
-            // Create circular background with unique ID
-            let (rect, _response) =
-                ui.allocate_exact_size(egui::vec2(60.0, 60.0), egui::Sense::hover());
-
-            // Draw circle background
-            let center = rect.center();
-            let radius = 28.0;
-            ui.painter()
-                .circle_filled(center, radius, ui.visuals().widgets.inactive.bg_fill);
-
-            // Draw icon text centered in circle
-            ui.painter().text(
-                center,
-                egui::Align2::CENTER_CENTER,
-                layer_icon,
-                egui::FontId::proportional(32.0),
-                ui.visuals().text_color(),
-            );
-        });
-
-        ui.add_space(8.0);
-
-        // Center: Hostname (top) and Details (bottom)
-        ui.vertical(|ui| {
-            ui.set_height(60.0);
-            ui.set_width(160.0);
-
-            // Top line: Hostname
-            ui.label(egui::RichText::new(&hostname).strong().size(14.0));
-
-            ui.add_space(4.0);
-
-            // Bottom line: Layer-specific details
-            ui.label(
-                egui::RichText::new(&layer_details)
-                    .size(11.0)
-                    .color(ui.visuals().weak_text_color()),
-            );
-        });
-
-        ui.add_space(4.0);
-
-        // Right side: Button to open controller
-        ui.vertical(|ui| {
-            ui.set_width(40.0);
-            ui.set_height(60.0);
-
-            // Center the button vertically
-            ui.add_space(10.0);
-
-            // Create circular button
-            let button_size = egui::vec2(40.0, 40.0);
-            let (rect, response) = ui.allocate_exact_size(button_size, egui::Sense::click());
-
-            // Change color on hover/click
-            let bg_color = if response.clicked() {
-                ui.visuals().widgets.active.bg_fill
-            } else if response.hovered() {
-                ui.visuals().widgets.hovered.bg_fill
-            } else {
-                ui.visuals().widgets.inactive.bg_fill
-            };
-
-            // Draw circular button background
-            let center = rect.center();
-            let radius = 18.0;
-            ui.painter().circle_filled(center, radius, bg_color);
-
-            // Draw arrow icon in button
-            ui.painter().text(
-                center,
-                egui::Align2::CENTER_CENTER,
-                "→",
-                egui::FontId::proportional(24.0),
-                ui.visuals().text_color(),
-            );
-
-            // Handle click to open controller
-            if response.clicked() {
-                controller_state.expanded_node = Some(instance_id);
-                controller_state.controller_type = ControllerType::from_layer(current_layer);
-                info!(
-                    "Opening {:?} controller for {}",
-                    controller_state.controller_type, instance_id
-                );
-            }
-
-            // Show tooltip on hover
-            if response.hovered() {
-                response.on_hover_text(format!(
-                    "Open {} controller",
-                    ControllerType::from_layer(current_layer).display_name()
-                ));
-            }
-        });
-    });
-}
-
-/// Render a minimal preview showing just the layer icon and hostname
-/// Used when zoomed out to reduce visual clutter
-fn render_minimal_preview_content(
-    ui: &mut egui::Ui,
-    current_layer: &LayerName,
-    network_layer: &sandpolis_instance::network::NetworkLayer,
-    controller_state: &mut NodeControllerState,
-    instance_id: InstanceId,
-) {
-    let _ = network_layer; // May be used in future for network stats
-    let hostname = get_hostname(instance_id);
-    let layer_icon = get_layer_icon(current_layer);
-
-    ui.horizontal(|ui| {
-        // Small circular icon (36x36)
-        ui.vertical(|ui| {
-            ui.set_width(36.0);
-            ui.set_height(36.0);
-
-            let (rect, _response) =
-                ui.allocate_exact_size(egui::vec2(36.0, 36.0), egui::Sense::hover());
-
-            // Draw circle background
-            let center = rect.center();
-            let radius = 16.0;
-            ui.painter()
-                .circle_filled(center, radius, ui.visuals().widgets.inactive.bg_fill);
-
-            // Draw icon
-            ui.painter().text(
-                center,
-                egui::Align2::CENTER_CENTER,
-                layer_icon,
-                egui::FontId::proportional(18.0),
-                ui.visuals().text_color(),
-            );
-        });
-
-        ui.add_space(4.0);
-
-        // Hostname only (truncated if needed)
-        ui.vertical(|ui| {
-            ui.set_height(36.0);
-            ui.set_width(80.0);
-
-            ui.add_space(8.0);
-
-            // Truncate hostname if too long
-            let display_name = if hostname.len() > 12 {
-                format!("{}...", &hostname[..9])
-            } else {
-                hostname.clone()
-            };
-
-            ui.label(egui::RichText::new(&display_name).strong().size(11.0));
-        });
-
-        // Small clickable arrow button
-        ui.vertical(|ui| {
-            ui.set_width(24.0);
-            ui.set_height(36.0);
-
-            ui.add_space(6.0);
-
-            let button_size = egui::vec2(24.0, 24.0);
-            let (rect, response) = ui.allocate_exact_size(button_size, egui::Sense::click());
-
-            let bg_color = if response.clicked() {
-                ui.visuals().widgets.active.bg_fill
-            } else if response.hovered() {
-                ui.visuals().widgets.hovered.bg_fill
-            } else {
-                ui.visuals().widgets.inactive.bg_fill
-            };
-
-            let center = rect.center();
-            let radius = 10.0;
-            ui.painter().circle_filled(center, radius, bg_color);
-
-            ui.painter().text(
-                center,
-                egui::Align2::CENTER_CENTER,
-                "→",
-                egui::FontId::proportional(14.0),
-                ui.visuals().text_color(),
-            );
-
-            if response.clicked() {
-                controller_state.expanded_node = Some(instance_id);
-                controller_state.controller_type = ControllerType::from_layer(current_layer);
-            }
-
-            if response.hovered() {
-                response.on_hover_text(format!(
-                    "Open {} controller",
-                    ControllerType::from_layer(current_layer).display_name()
-                ));
-            }
-        });
-    });
-}
-
-/// Toggle NodePreview visibility based on user input
-pub fn toggle_node_preview_visibility(
-    mut contexts: bevy_egui::EguiContexts,
-    keyboard: Res<ButtonInput<KeyCode>>,
-    mut node_query: Query<&mut NodePreview>,
-) {
-    // Don't handle hotkey if egui wants keyboard input
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    if ctx.wants_keyboard_input() {
-        return;
-    }
-
-    // Press 'P' to toggle preview visibility
-    if keyboard.just_pressed(KeyCode::KeyP) {
-        for mut preview in node_query.iter_mut() {
-            preview.show = !preview.show;
-        }
-    }
-}
-
-// ── Native node previews ─────────────────────────────────────────────────────
-
 /// Icon size for preview cards, in pixels.
 const PREVIEW_ICON_PX: u32 = 20;
 
@@ -583,7 +168,6 @@ pub fn sync_node_previews(
     network_layer: Res<NetworkLayer>,
     mut images: ResMut<Assets<Image>>,
     mut icon_cache: ResMut<IconCache>,
-    icon_root: Res<IconAssetRoot>,
     nodes: Query<(Entity, &NodeEntity)>,
     previews: Query<(Entity, &NodePreviewUi)>,
 ) {
@@ -601,7 +185,6 @@ pub fn sync_node_previews(
         }
         let icon = icon_cache.get_or_rasterize(
             &mut images,
-            &icon_root.0,
             layer_icon_path(&current_layer),
             PREVIEW_ICON_PX,
         );
@@ -674,7 +257,6 @@ pub fn update_preview_content(
     network_layer: Res<NetworkLayer>,
     mut images: ResMut<Assets<Image>>,
     mut icon_cache: ResMut<IconCache>,
-    icon_root: Res<IconAssetRoot>,
     mut icons: Query<&mut ImageNode, With<PreviewIcon>>,
     mut details: Query<(&PreviewDetail, &mut Text)>,
 ) {
@@ -683,7 +265,6 @@ pub fn update_preview_content(
     }
     let handle = icon_cache.get_or_rasterize(
         &mut images,
-        &icon_root.0,
         layer_icon_path(&current_layer),
         PREVIEW_ICON_PX,
     );
@@ -699,11 +280,9 @@ pub fn update_preview_content(
 fn on_preview_open(
     activate: On<Activate>,
     buttons: Query<&PreviewOpenButton>,
-    current_layer: Res<CurrentLayer>,
     mut controller_state: ResMut<NodeControllerState>,
 ) {
     if let Ok(button) = buttons.get(activate.entity) {
-        controller_state.expanded_node = Some(button.instance_id);
-        controller_state.controller_type = ControllerType::from_layer(&current_layer);
+        controller_state.open = Some(button.instance_id);
     }
 }

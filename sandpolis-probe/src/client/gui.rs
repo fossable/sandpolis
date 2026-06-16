@@ -1,21 +1,31 @@
 //! GUI components for the Probe layer.
 //!
-//! This module provides the probe controller and layer-specific GUI elements.
+//! Provides probe-node spawning/physics, the probe node controller, and the
+//! layer's client plugin.
+//!
+//! Note: the exhaustive per-protocol registration form (host/port/credentials and
+//! protocol-specific fields, ~25 inputs across 12 probe types) is deferred — its
+//! submission path was unimplemented. The native controller surfaces the
+//! registered-probe list and the working Wake-on-LAN action.
 
+use bevy::input_focus::InputFocus;
 use bevy::prelude::*;
-use bevy_egui::egui;
 use bevy_rapier2d::dynamics::{Damping, ExternalForce, RigidBody, Velocity};
 use bevy_rapier2d::geometry::{Collider, Restitution};
 use bevy_svg::prelude::{Origin, Svg2d};
-use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
-use sandpolis_client::gui::node::{NeedsScaling, NodeEntity};
-use sandpolis_instance::{InstanceId, LayerName};
-
-use crate::config::{
-    DockerProbeConfig, HttpProbeConfig, IpmiProbeConfig, LibvirtProbeConfig, OnvifProbeConfig,
-    RdpProbeConfig, RtspProbeConfig, SnmpProbeConfig, SnmpVersion, SshProbeConfig, UpsProbeConfig,
-    VncProbeConfig, WolProbeConfig,
+use sandpolis_client::gui::ui::Activate;
+use sandpolis_client::gui::ui::bind::bind_text;
+use sandpolis_client::gui::ui::controller::{
+    LayerClientInfo, LayerRegistry, NodeController, RegisterLayerClient,
 };
+use sandpolis_client::gui::ui::panel::modal_scrim;
+use sandpolis_client::gui::ui::text_input::{TextInput, text_input};
+use sandpolis_client::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
+use sandpolis_client::gui::ui::widgets::{button, heading, muted, row, text};
+use sandpolis_client::gui::node::{NeedsScaling, NodeEntity};
+use sandpolis_instance::{InstanceId, InstanceLayer, InstanceType, LayerName};
+
+use crate::config::WolProbeConfig;
 use crate::{ProbeConfig, ProbeType, RegisteredProbe};
 
 /// Marker component for probe nodes (smaller nodes attached to agents).
@@ -149,13 +159,12 @@ pub fn update_probe_nodes(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     current_layer: Res<sandpolis_client::gui::input::CurrentLayer>,
+    registry: Res<LayerRegistry>,
     existing_probes: Query<(Entity, &ProbeNode)>,
     parent_nodes: Query<(&Transform, &NodeEntity), Without<ProbeNode>>,
 ) {
     // Probes spawned while another layer is active must start hidden
-    let show_probes = sandpolis_client::gui::layer_ext::get_extension_for_layer(&current_layer)
-        .map(|ext| ext.show_probe_nodes())
-        .unwrap_or(false);
+    let show_probes = registry.show_probe_nodes(&current_layer);
 
     // Build a map of gateway positions
     let gateway_positions: std::collections::HashMap<InstanceId, Vec3> = parent_nodes
@@ -229,10 +238,11 @@ pub fn apply_probe_spring_forces(
 
 /// System to update probe node visibility based on the current layer.
 ///
-/// Probe nodes are only visible when the current layer's `show_probe_nodes()` returns true.
-/// This is typically only the Probe layer.
+/// Probe nodes are only visible when the current layer shows probe nodes (the
+/// Probe layer).
 pub fn update_probe_node_visibility(
     current_layer: Res<sandpolis_client::gui::input::CurrentLayer>,
+    registry: Res<LayerRegistry>,
     mut probe_query: Query<&mut Visibility, With<ProbeNode>>,
 ) {
     // Only update when layer changes
@@ -240,10 +250,7 @@ pub fn update_probe_node_visibility(
         return;
     }
 
-    // Check if the current layer should show probe nodes
-    let show_probes = sandpolis_client::gui::layer_ext::get_extension_for_layer(&current_layer)
-        .map(|ext| ext.show_probe_nodes())
-        .unwrap_or(false);
+    let show_probes = registry.show_probe_nodes(&current_layer);
 
     for mut visibility in probe_query.iter_mut() {
         *visibility = if show_probes {
@@ -251,310 +258,6 @@ pub fn update_probe_node_visibility(
         } else {
             Visibility::Hidden
         };
-    }
-}
-
-/// State for the probe controller persisted in egui memory.
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-pub struct ProbeControllerState {
-    /// Current view mode.
-    pub view: ProbeView,
-    /// Selected probe type for registration.
-    pub selected_probe_type: Option<ProbeType>,
-    /// Form state for new probe registration.
-    pub form: ProbeFormState,
-    /// Selected probe in the list view.
-    pub selected_probe_id: Option<u64>,
-    /// Result of the last wake attempt.
-    #[serde(skip)]
-    pub wake_status: Option<String>,
-}
-
-/// View modes for the probe controller.
-#[derive(Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum ProbeView {
-    /// List of registered probes.
-    #[default]
-    List,
-    /// Register a new probe.
-    Register,
-}
-
-/// Form state for probe registration.
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-pub struct ProbeFormState {
-    pub name: String,
-    // Common fields
-    pub host: String,
-    pub port: String,
-    pub username: String,
-    pub password: String,
-    // RDP specific
-    pub domain: String,
-    // SSH specific
-    pub private_key_path: String,
-    pub fingerprint: String,
-    // UPS specific
-    pub ups_name: String,
-    // WOL specific
-    pub mac_address: String,
-    pub broadcast_address: String,
-    pub wol_hostname: String,
-    // HTTP specific
-    pub url: String,
-    pub expected_status: String,
-    pub timeout_secs: String,
-    pub verify_tls: bool,
-    pub http_method: String,
-    // IPMI specific
-    pub interface_type: String,
-    // RTSP specific
-    pub transport: String,
-    // SNMP specific
-    pub snmp_version: SnmpVersion,
-    pub community: String,
-    pub auth_protocol: String,
-    pub auth_password: String,
-    pub priv_protocol: String,
-    pub priv_password: String,
-    // ONVIF specific
-    pub profile_token: String,
-    // Docker specific
-    pub tls_ca_cert: String,
-    pub tls_cert: String,
-    pub tls_key: String,
-    pub tls_verify: bool,
-    // libvirt specific
-    pub uri: String,
-}
-
-impl ProbeFormState {
-    /// Reset form fields to defaults.
-    pub fn reset(&mut self) {
-        *self = Self::default();
-    }
-
-    /// Build a ProbeConfig from form state for the given probe type.
-    pub fn build_config(&self, probe_type: ProbeType) -> ProbeConfig {
-        match probe_type {
-            ProbeType::Rdp => ProbeConfig::Rdp(RdpProbeConfig {
-                host: self.host.clone(),
-                port: self.port.parse().ok(),
-                username: if self.username.is_empty() {
-                    None
-                } else {
-                    Some(self.username.clone())
-                },
-                password: if self.password.is_empty() {
-                    None
-                } else {
-                    Some(self.password.clone())
-                },
-                domain: if self.domain.is_empty() {
-                    None
-                } else {
-                    Some(self.domain.clone())
-                },
-            }),
-            ProbeType::Ssh => ProbeConfig::Ssh(SshProbeConfig {
-                host: self.host.clone(),
-                port: self.port.parse().ok(),
-                username: if self.username.is_empty() {
-                    None
-                } else {
-                    Some(self.username.clone())
-                },
-                password: if self.password.is_empty() {
-                    None
-                } else {
-                    Some(self.password.clone())
-                },
-                private_key_path: if self.private_key_path.is_empty() {
-                    None
-                } else {
-                    Some(self.private_key_path.clone())
-                },
-                fingerprint: if self.fingerprint.is_empty() {
-                    None
-                } else {
-                    Some(self.fingerprint.clone())
-                },
-            }),
-            ProbeType::Ups => ProbeConfig::Ups(UpsProbeConfig {
-                host: self.host.clone(),
-                port: self.port.parse().ok(),
-                ups_name: self.ups_name.clone(),
-                username: if self.username.is_empty() {
-                    None
-                } else {
-                    Some(self.username.clone())
-                },
-                password: if self.password.is_empty() {
-                    None
-                } else {
-                    Some(self.password.clone())
-                },
-            }),
-            ProbeType::Vnc => ProbeConfig::Vnc(VncProbeConfig {
-                host: self.host.clone(),
-                port: self.port.parse().ok(),
-                password: if self.password.is_empty() {
-                    None
-                } else {
-                    Some(self.password.clone())
-                },
-            }),
-            ProbeType::Wol => ProbeConfig::Wol(WolProbeConfig {
-                mac_address: self.mac_address.clone(),
-                broadcast_address: if self.broadcast_address.is_empty() {
-                    None
-                } else {
-                    Some(self.broadcast_address.clone())
-                },
-                port: self.port.parse().ok(),
-                hostname: if self.wol_hostname.is_empty() {
-                    None
-                } else {
-                    Some(self.wol_hostname.clone())
-                },
-            }),
-            ProbeType::Http => ProbeConfig::Http(HttpProbeConfig {
-                url: self.url.clone(),
-                expected_status: self.expected_status.parse().ok(),
-                timeout_secs: self.timeout_secs.parse().ok(),
-                verify_tls: Some(self.verify_tls),
-                method: if self.http_method.is_empty() {
-                    None
-                } else {
-                    Some(self.http_method.clone())
-                },
-                username: if self.username.is_empty() {
-                    None
-                } else {
-                    Some(self.username.clone())
-                },
-                password: if self.password.is_empty() {
-                    None
-                } else {
-                    Some(self.password.clone())
-                },
-            }),
-            ProbeType::Ipmi => ProbeConfig::Ipmi(IpmiProbeConfig {
-                host: self.host.clone(),
-                port: self.port.parse().ok(),
-                username: self.username.clone(),
-                password: self.password.clone(),
-                interface_type: if self.interface_type.is_empty() {
-                    None
-                } else {
-                    Some(self.interface_type.clone())
-                },
-            }),
-            ProbeType::Rtsp => ProbeConfig::Rtsp(RtspProbeConfig {
-                url: self.url.clone(),
-                username: if self.username.is_empty() {
-                    None
-                } else {
-                    Some(self.username.clone())
-                },
-                password: if self.password.is_empty() {
-                    None
-                } else {
-                    Some(self.password.clone())
-                },
-                transport: if self.transport.is_empty() {
-                    None
-                } else {
-                    Some(self.transport.clone())
-                },
-            }),
-            ProbeType::Snmp => ProbeConfig::Snmp(SnmpProbeConfig {
-                host: self.host.clone(),
-                port: self.port.parse().ok(),
-                version: self.snmp_version,
-                community: if self.community.is_empty() {
-                    None
-                } else {
-                    Some(self.community.clone())
-                },
-                username: if self.username.is_empty() {
-                    None
-                } else {
-                    Some(self.username.clone())
-                },
-                auth_protocol: if self.auth_protocol.is_empty() {
-                    None
-                } else {
-                    Some(self.auth_protocol.clone())
-                },
-                auth_password: if self.auth_password.is_empty() {
-                    None
-                } else {
-                    Some(self.auth_password.clone())
-                },
-                priv_protocol: if self.priv_protocol.is_empty() {
-                    None
-                } else {
-                    Some(self.priv_protocol.clone())
-                },
-                priv_password: if self.priv_password.is_empty() {
-                    None
-                } else {
-                    Some(self.priv_password.clone())
-                },
-            }),
-            ProbeType::Onvif => ProbeConfig::Onvif(OnvifProbeConfig {
-                host: self.host.clone(),
-                port: self.port.parse().ok(),
-                username: if self.username.is_empty() {
-                    None
-                } else {
-                    Some(self.username.clone())
-                },
-                password: if self.password.is_empty() {
-                    None
-                } else {
-                    Some(self.password.clone())
-                },
-                profile_token: if self.profile_token.is_empty() {
-                    None
-                } else {
-                    Some(self.profile_token.clone())
-                },
-            }),
-            ProbeType::Docker => ProbeConfig::Docker(DockerProbeConfig {
-                host: self.host.clone(),
-                tls_ca_cert: if self.tls_ca_cert.is_empty() {
-                    None
-                } else {
-                    Some(self.tls_ca_cert.clone())
-                },
-                tls_cert: if self.tls_cert.is_empty() {
-                    None
-                } else {
-                    Some(self.tls_cert.clone())
-                },
-                tls_key: if self.tls_key.is_empty() {
-                    None
-                } else {
-                    Some(self.tls_key.clone())
-                },
-                tls_verify: Some(self.tls_verify),
-            }),
-            ProbeType::Libvirt => ProbeConfig::Libvirt(LibvirtProbeConfig {
-                uri: self.uri.clone(),
-                username: if self.username.is_empty() {
-                    None
-                } else {
-                    Some(self.username.clone())
-                },
-                private_key_path: if self.private_key_path.is_empty() {
-                    None
-                } else {
-                    Some(self.private_key_path.clone())
-                },
-            }),
-        }
     }
 }
 
@@ -567,124 +270,6 @@ pub fn query_probes(gateway: InstanceId) -> Vec<RegisteredProbe> {
         .filter(|probe| probe.gateway == gateway)
         .cloned()
         .collect()
-}
-
-/// Render the probe controller.
-pub fn render_probe_controller(ui: &mut egui::Ui, instance_id: InstanceId) {
-    let state_id = egui::Id::new(format!("probe_controller_{}", instance_id));
-    let mut state = ui.data_mut(|d| {
-        d.get_persisted::<ProbeControllerState>(state_id)
-            .unwrap_or_default()
-    });
-
-    // Header with view toggle
-    ui.horizontal(|ui| {
-        if ui
-            .selectable_label(state.view == ProbeView::List, "Registered Probes")
-            .clicked()
-        {
-            state.view = ProbeView::List;
-        }
-        if ui
-            .selectable_label(state.view == ProbeView::Register, "Register New")
-            .clicked()
-        {
-            state.view = ProbeView::Register;
-            state.selected_probe_type = None;
-            state.form.reset();
-        }
-    });
-
-    ui.separator();
-
-    match state.view {
-        ProbeView::List => render_probe_list(ui, instance_id, &mut state),
-        ProbeView::Register => render_probe_registration(ui, instance_id, &mut state),
-    }
-
-    ui.data_mut(|d| d.insert_persisted(state_id, state));
-}
-
-/// Render the list of registered probes.
-fn render_probe_list(ui: &mut egui::Ui, instance_id: InstanceId, state: &mut ProbeControllerState) {
-    let probes = query_probes(instance_id);
-
-    if probes.is_empty() {
-        ui.vertical_centered(|ui| {
-            ui.add_space(20.0);
-            ui.label("No probes registered on this node.");
-            ui.add_space(10.0);
-            if ui.button("Register a Probe").clicked() {
-                state.view = ProbeView::Register;
-            }
-        });
-    } else {
-        egui::ScrollArea::vertical()
-            .max_height(300.0)
-            .show(ui, |ui| {
-                for probe in &probes {
-                    let is_selected = state.selected_probe_id == Some(probe.id);
-                    let status_icon = if probe.online { "●" } else { "○" };
-                    let status_color = if probe.online {
-                        egui::Color32::from_rgb(100, 200, 100)
-                    } else {
-                        egui::Color32::from_rgb(150, 150, 150)
-                    };
-
-                    ui.horizontal(|ui| {
-                        ui.colored_label(status_color, status_icon);
-                        if ui
-                            .selectable_label(
-                                is_selected,
-                                format!("{} ({})", probe.name, probe.probe_type.display_name()),
-                            )
-                            .clicked()
-                        {
-                            state.selected_probe_id = Some(probe.id);
-                        }
-                    });
-                }
-            });
-
-        if let Some(probe_id) = state.selected_probe_id {
-            if let Some(probe) = probes.iter().find(|p| p.id == probe_id) {
-                ui.separator();
-                render_probe_details(ui, probe, state);
-            }
-        }
-    }
-}
-
-/// Render details for a selected probe.
-fn render_probe_details(
-    ui: &mut egui::Ui,
-    probe: &RegisteredProbe,
-    state: &mut ProbeControllerState,
-) {
-    ui.label(egui::RichText::new(&probe.name).strong());
-    ui.label(format!("Type: {}", probe.probe_type.display_name()));
-
-    if let Some(msg) = &probe.status_message {
-        ui.label(format!("Status: {}", msg));
-    }
-
-    ui.horizontal(|ui| {
-        if let ProbeConfig::Wol(wol) = &probe.config {
-            if ui.button("Wake").clicked() {
-                state.wake_status = Some(send_wake(wol));
-            }
-        }
-        if ui.button("Test Connection").clicked() {
-            // TODO: Test probe connectivity
-        }
-        if ui.button("Delete").clicked() {
-            // TODO: Delete probe
-        }
-    });
-
-    if let Some(msg) = &state.wake_status {
-        ui.label(msg);
-    }
 }
 
 /// Send a Wake-on-LAN magic packet and describe the outcome.
@@ -709,395 +294,6 @@ fn send_wake(wol: &WolProbeConfig) -> String {
     }
 }
 
-/// Render the probe registration form.
-fn render_probe_registration(
-    ui: &mut egui::Ui,
-    _instance_id: InstanceId,
-    state: &mut ProbeControllerState,
-) {
-    // Probe type selection
-    if state.selected_probe_type.is_none() {
-        ui.label("Select probe type:");
-        ui.add_space(8.0);
-
-        egui::ScrollArea::vertical()
-            .max_height(320.0)
-            .show(ui, |ui| {
-                egui::Grid::new("probe_type_grid")
-                    .num_columns(2)
-                    .spacing([10.0, 8.0])
-                    .show(ui, |ui| {
-                        for (i, probe_type) in ProbeType::all().iter().enumerate() {
-                            if ui
-                                .button(format!(
-                                    "{}\n{}",
-                                    probe_type.display_name(),
-                                    probe_type.description()
-                                ))
-                                .clicked()
-                            {
-                                state.selected_probe_type = Some(*probe_type);
-                                state.form.reset();
-                            }
-                            if i % 2 == 1 {
-                                ui.end_row();
-                            }
-                        }
-                    });
-            });
-    } else {
-        let probe_type = state.selected_probe_type.unwrap();
-
-        // Back button and type header
-        ui.horizontal(|ui| {
-            if ui.button("< Back").clicked() {
-                state.selected_probe_type = None;
-                state.form.reset();
-            }
-            ui.label(egui::RichText::new(probe_type.display_name()).strong());
-        });
-
-        ui.separator();
-
-        egui::ScrollArea::vertical()
-            .max_height(280.0)
-            .show(ui, |ui| {
-                // Name field (common to all)
-                ui.horizontal(|ui| {
-                    ui.label("Name:");
-                    ui.text_edit_singleline(&mut state.form.name);
-                });
-
-                ui.add_space(8.0);
-
-                // Type-specific fields
-                render_probe_form_fields(ui, probe_type, &mut state.form);
-            });
-
-        ui.add_space(8.0);
-        ui.separator();
-
-        ui.horizontal(|ui| {
-            if ui.button("Test Connection").clicked() {
-                // TODO: Test connectivity
-            }
-            if ui.button("Register").clicked() {
-                // TODO: Submit registration
-            }
-        });
-    }
-}
-
-/// Render form fields for a specific probe type.
-fn render_probe_form_fields(ui: &mut egui::Ui, probe_type: ProbeType, form: &mut ProbeFormState) {
-    match probe_type {
-        ProbeType::Rdp => {
-            render_host_port_fields(ui, form, 3389);
-            ui.horizontal(|ui| {
-                ui.label("Domain:");
-                ui.text_edit_singleline(&mut form.domain);
-            });
-            render_credential_fields(ui, form);
-        }
-        ProbeType::Ssh => {
-            render_host_port_fields(ui, form, 22);
-            render_credential_fields(ui, form);
-            ui.horizontal(|ui| {
-                ui.label("Private Key:");
-                ui.text_edit_singleline(&mut form.private_key_path);
-            });
-            ui.horizontal(|ui| {
-                ui.label("Fingerprint:");
-                ui.text_edit_singleline(&mut form.fingerprint);
-            });
-        }
-        ProbeType::Ups => {
-            render_host_port_fields(ui, form, 3493);
-            ui.horizontal(|ui| {
-                ui.label("UPS Name:");
-                ui.text_edit_singleline(&mut form.ups_name);
-            });
-            render_credential_fields(ui, form);
-        }
-        ProbeType::Vnc => {
-            render_host_port_fields(ui, form, 5900);
-            ui.horizontal(|ui| {
-                ui.label("Password:");
-                ui.add(egui::TextEdit::singleline(&mut form.password).password(true));
-            });
-        }
-        ProbeType::Wol => {
-            ui.horizontal(|ui| {
-                ui.label("MAC Address:");
-                ui.text_edit_singleline(&mut form.mac_address);
-            });
-            ui.horizontal(|ui| {
-                ui.label("Broadcast:");
-                ui.text_edit_singleline(&mut form.broadcast_address);
-            });
-            ui.horizontal(|ui| {
-                ui.label("Port:");
-                ui.add(
-                    egui::TextEdit::singleline(&mut form.port)
-                        .hint_text("9")
-                        .desired_width(60.0),
-                );
-            });
-            ui.horizontal(|ui| {
-                ui.label("Hostname:");
-                ui.text_edit_singleline(&mut form.wol_hostname);
-            });
-        }
-        ProbeType::Http => {
-            ui.horizontal(|ui| {
-                ui.label("URL:");
-                ui.text_edit_singleline(&mut form.url);
-            });
-            ui.horizontal(|ui| {
-                ui.label("Method:");
-                ui.add(
-                    egui::TextEdit::singleline(&mut form.http_method)
-                        .hint_text("GET")
-                        .desired_width(60.0),
-                );
-                ui.label("Status:");
-                ui.add(
-                    egui::TextEdit::singleline(&mut form.expected_status)
-                        .hint_text("200")
-                        .desired_width(50.0),
-                );
-            });
-            ui.horizontal(|ui| {
-                ui.label("Timeout (s):");
-                ui.add(
-                    egui::TextEdit::singleline(&mut form.timeout_secs)
-                        .hint_text("30")
-                        .desired_width(50.0),
-                );
-                ui.checkbox(&mut form.verify_tls, "Verify TLS");
-            });
-            render_credential_fields(ui, form);
-        }
-        ProbeType::Ipmi => {
-            render_host_port_fields(ui, form, 623);
-            render_credential_fields(ui, form);
-            ui.horizontal(|ui| {
-                ui.label("Interface:");
-                ui.add(
-                    egui::TextEdit::singleline(&mut form.interface_type)
-                        .hint_text("lanplus")
-                        .desired_width(80.0),
-                );
-            });
-        }
-        ProbeType::Rtsp => {
-            ui.horizontal(|ui| {
-                ui.label("RTSP URL:");
-                ui.text_edit_singleline(&mut form.url);
-            });
-            render_credential_fields(ui, form);
-            ui.horizontal(|ui| {
-                ui.label("Transport:");
-                egui::ComboBox::new("rtsp_transport", "")
-                    .selected_text(if form.transport.is_empty() {
-                        "UDP"
-                    } else {
-                        &form.transport
-                    })
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut form.transport, "UDP".to_string(), "UDP");
-                        ui.selectable_value(&mut form.transport, "TCP".to_string(), "TCP");
-                        ui.selectable_value(&mut form.transport, "HTTP".to_string(), "HTTP");
-                    });
-            });
-        }
-        ProbeType::Snmp => {
-            render_host_port_fields(ui, form, 161);
-            ui.horizontal(|ui| {
-                ui.label("Version:");
-                egui::ComboBox::new("snmp_version", "")
-                    .selected_text(match form.snmp_version {
-                        SnmpVersion::V1 => "v1",
-                        SnmpVersion::V2c => "v2c",
-                        SnmpVersion::V3 => "v3",
-                    })
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut form.snmp_version, SnmpVersion::V1, "v1");
-                        ui.selectable_value(&mut form.snmp_version, SnmpVersion::V2c, "v2c");
-                        ui.selectable_value(&mut form.snmp_version, SnmpVersion::V3, "v3");
-                    });
-            });
-            match form.snmp_version {
-                SnmpVersion::V1 | SnmpVersion::V2c => {
-                    ui.horizontal(|ui| {
-                        ui.label("Community:");
-                        ui.text_edit_singleline(&mut form.community);
-                    });
-                }
-                SnmpVersion::V3 => {
-                    ui.horizontal(|ui| {
-                        ui.label("Username:");
-                        ui.text_edit_singleline(&mut form.username);
-                    });
-                    ui.horizontal(|ui| {
-                        ui.label("Auth Protocol:");
-                        egui::ComboBox::new("snmp_auth", "")
-                            .selected_text(if form.auth_protocol.is_empty() {
-                                "None"
-                            } else {
-                                &form.auth_protocol
-                            })
-                            .show_ui(ui, |ui| {
-                                ui.selectable_value(
-                                    &mut form.auth_protocol,
-                                    "".to_string(),
-                                    "None",
-                                );
-                                ui.selectable_value(
-                                    &mut form.auth_protocol,
-                                    "MD5".to_string(),
-                                    "MD5",
-                                );
-                                ui.selectable_value(
-                                    &mut form.auth_protocol,
-                                    "SHA".to_string(),
-                                    "SHA",
-                                );
-                            });
-                    });
-                    if !form.auth_protocol.is_empty() {
-                        ui.horizontal(|ui| {
-                            ui.label("Auth Password:");
-                            ui.add(
-                                egui::TextEdit::singleline(&mut form.auth_password).password(true),
-                            );
-                        });
-                    }
-                    ui.horizontal(|ui| {
-                        ui.label("Privacy Protocol:");
-                        egui::ComboBox::new("snmp_priv", "")
-                            .selected_text(if form.priv_protocol.is_empty() {
-                                "None"
-                            } else {
-                                &form.priv_protocol
-                            })
-                            .show_ui(ui, |ui| {
-                                ui.selectable_value(
-                                    &mut form.priv_protocol,
-                                    "".to_string(),
-                                    "None",
-                                );
-                                ui.selectable_value(
-                                    &mut form.priv_protocol,
-                                    "AES".to_string(),
-                                    "AES",
-                                );
-                                ui.selectable_value(
-                                    &mut form.priv_protocol,
-                                    "DES".to_string(),
-                                    "DES",
-                                );
-                            });
-                    });
-                    if !form.priv_protocol.is_empty() {
-                        ui.horizontal(|ui| {
-                            ui.label("Privacy Password:");
-                            ui.add(
-                                egui::TextEdit::singleline(&mut form.priv_password).password(true),
-                            );
-                        });
-                    }
-                }
-            }
-        }
-        ProbeType::Onvif => {
-            render_host_port_fields(ui, form, 80);
-            render_credential_fields(ui, form);
-            ui.horizontal(|ui| {
-                ui.label("Profile Token:");
-                ui.text_edit_singleline(&mut form.profile_token);
-            });
-        }
-        ProbeType::Docker => {
-            ui.horizontal(|ui| {
-                ui.label("Host:");
-                ui.text_edit_singleline(&mut form.host);
-            });
-            ui.label(
-                egui::RichText::new("e.g., unix:///var/run/docker.sock or tcp://host:2375")
-                    .small()
-                    .weak(),
-            );
-            ui.add_space(4.0);
-            ui.collapsing("TLS Settings", |ui| {
-                ui.checkbox(&mut form.tls_verify, "Verify TLS");
-                ui.horizontal(|ui| {
-                    ui.label("CA Cert:");
-                    ui.text_edit_singleline(&mut form.tls_ca_cert);
-                });
-                ui.horizontal(|ui| {
-                    ui.label("Client Cert:");
-                    ui.text_edit_singleline(&mut form.tls_cert);
-                });
-                ui.horizontal(|ui| {
-                    ui.label("Client Key:");
-                    ui.text_edit_singleline(&mut form.tls_key);
-                });
-            });
-        }
-        ProbeType::Libvirt => {
-            ui.horizontal(|ui| {
-                ui.label("URI:");
-                ui.text_edit_singleline(&mut form.uri);
-            });
-            ui.label(
-                egui::RichText::new("e.g., qemu:///system or qemu+ssh://user@host/system")
-                    .small()
-                    .weak(),
-            );
-            ui.add_space(4.0);
-            ui.collapsing("SSH Settings", |ui| {
-                ui.horizontal(|ui| {
-                    ui.label("Username:");
-                    ui.text_edit_singleline(&mut form.username);
-                });
-                ui.horizontal(|ui| {
-                    ui.label("Private Key:");
-                    ui.text_edit_singleline(&mut form.private_key_path);
-                });
-            });
-        }
-    }
-}
-
-/// Render common host/port fields.
-fn render_host_port_fields(ui: &mut egui::Ui, form: &mut ProbeFormState, default_port: u16) {
-    ui.horizontal(|ui| {
-        ui.label("Host:");
-        ui.text_edit_singleline(&mut form.host);
-    });
-    ui.horizontal(|ui| {
-        ui.label("Port:");
-        ui.add(
-            egui::TextEdit::singleline(&mut form.port)
-                .hint_text(default_port.to_string())
-                .desired_width(60.0),
-        );
-    });
-}
-
-/// Render common username/password fields.
-fn render_credential_fields(ui: &mut egui::Ui, form: &mut ProbeFormState) {
-    ui.horizontal(|ui| {
-        ui.label("Username:");
-        ui.text_edit_singleline(&mut form.username);
-    });
-    ui.horizontal(|ui| {
-        ui.label("Password:");
-        ui.add(egui::TextEdit::singleline(&mut form.password).password(true));
-    });
-}
-
 /// Get the SVG asset path for a probe type.
 pub fn get_probe_svg(probe_type: ProbeType) -> &'static str {
     match probe_type {
@@ -1116,114 +312,256 @@ pub fn get_probe_svg(probe_type: ProbeType) -> &'static str {
     }
 }
 
-/// Probe layer GUI extension.
-pub struct ProbeGuiExtension;
+/// The probe layer's node controller (registered-probe manager).
+pub struct ProbeController;
 
-impl LayerGuiExtension for ProbeGuiExtension {
-    fn layer(&self) -> &LayerName {
-        static LAYER: std::sync::LazyLock<LayerName> =
-            std::sync::LazyLock::new(|| LayerName::from("Probe"));
-        &LAYER
-    }
-
-    fn description(&self) -> &'static str {
-        "Device monitoring probes"
-    }
-
-    fn render_controller(&self, ui: &mut egui::Ui, instance_id: InstanceId) {
-        render_probe_controller(ui, instance_id);
-    }
-
-    fn controller_name(&self) -> &'static str {
+impl NodeController for ProbeController {
+    fn title(&self) -> &str {
         "Probe Manager"
     }
 
-    fn get_node_svg(&self, _instance_id: InstanceId) -> &'static str {
-        "layer/Probe.svg"
-    }
+    fn build(&self, commands: &mut Commands, body: Entity, instance: InstanceId, theme: &Theme) {
+        let probes = query_probes(instance);
 
-    fn get_node_color(&self, instance_id: InstanceId) -> Color {
-        // Color based on probe health - green if all probes online, yellow if some offline, red if all offline
-        let probes = query_probes(instance_id);
-        if probes.is_empty() {
-            return Color::WHITE;
+        commands.entity(body).with_children(|p| {
+            p.spawn((
+                heading(theme, "Registered Probes"),
+                bind_text(move || {
+                    let n = query_probes(instance).len();
+                    format!("Registered Probes ({})", n)
+                }),
+            ));
+
+            if probes.is_empty() {
+                p.spawn(muted(theme, "No probes registered on this node.", theme.metrics.font_md));
+            }
+
+            for probe in &probes {
+                let status = if probe.online { "●" } else { "○" };
+                let label = format!(
+                    "{} {} ({})",
+                    status,
+                    probe.name,
+                    probe.probe_type.display_name()
+                );
+                p.spawn(row(theme.metrics.space_sm)).with_children(|row_node| {
+                    row_node.spawn(text(theme, label, theme.metrics.font_md, Role::Text));
+
+                    // Wake-on-LAN is the one working action.
+                    if let ProbeConfig::Wol(wol) = &probe.config {
+                        let wol = wol.clone();
+                        row_node
+                            .spawn(button(theme, "Wake"))
+                            .observe(move |_: On<Activate>| {
+                                info!("{}", send_wake(&wol));
+                            });
+                    }
+
+                    let probe_name = probe.name.clone();
+                    row_node
+                        .spawn(button(theme, "Test"))
+                        .observe(move |_: On<Activate>| {
+                            info!("Probe: test connection to {}", probe_name);
+                        });
+                });
+            }
+
+            p.spawn(muted(
+                theme,
+                "Registration form is deferred; register probes via the CLI.",
+                theme.metrics.font_sm,
+            ));
+        });
+    }
+}
+
+/// State of the "register probe" dialog.
+///
+/// Minimal scope: registers a Wake-on-LAN probe (the one type with a working
+/// action) into the in-process [`crate::REGISTERED_PROBES`] store. Additional
+/// probe types/fields are deferred.
+#[derive(Resource, Default)]
+pub struct RegisterProbeDialogState {
+    pub show: bool,
+    pub name: String,
+    pub mac_address: String,
+}
+
+/// Modal root marker.
+#[derive(Component)]
+pub struct RegisterProbeRoot;
+
+/// Probe-name input marker.
+#[derive(Component)]
+pub struct RegisterProbeNameInput;
+
+/// MAC-address input marker.
+#[derive(Component)]
+pub struct RegisterProbeMacInput;
+
+/// Spawn/despawn the register-probe modal.
+pub fn manage_register_probe(
+    mut commands: Commands,
+    theme: Res<Theme>,
+    state: Res<RegisterProbeDialogState>,
+    root: Query<Entity, With<RegisterProbeRoot>>,
+    mut focus: ResMut<InputFocus>,
+) {
+    let exists = !root.is_empty();
+    if state.show && !exists {
+        commands
+            .spawn((RegisterProbeRoot, modal_scrim()))
+            .with_children(|scrim| {
+                scrim
+                    .spawn((
+                        Node {
+                            flex_direction: FlexDirection::Column,
+                            width: Val::Px(360.0),
+                            padding: UiRect::all(Val::Px(16.0)),
+                            row_gap: Val::Px(6.0),
+                            border: UiRect::all(Val::Px(1.0)),
+                            ..default()
+                        },
+                        BackgroundColor(theme.color(Role::Panel)),
+                        ThemedBg(Role::Panel),
+                        BorderColor::all(theme.color(Role::Border)),
+                        ThemedBorder(Role::Border),
+                    ))
+                    .with_children(|p| {
+                        p.spawn(heading(&theme, "Register Probe"));
+                        p.spawn(muted(&theme, "Name", theme.metrics.font_sm));
+                        p.spawn((RegisterProbeNameInput, text_input(&theme, "probe name", false)));
+                        p.spawn(muted(&theme, "MAC address (Wake-on-LAN)", theme.metrics.font_sm));
+                        p.spawn((RegisterProbeMacInput, text_input(&theme, "00:11:22:33:44:55", false)));
+                        p.spawn(muted(
+                            &theme,
+                            "Only Wake-on-LAN probes are supported for now.",
+                            theme.metrics.font_sm,
+                        ));
+                        p.spawn(Node {
+                            column_gap: Val::Px(8.0),
+                            ..default()
+                        })
+                        .with_children(|row| {
+                            row.spawn(button(&theme, "Register"))
+                                .observe(on_register_probe_submit);
+                            row.spawn(button(&theme, "Cancel"))
+                                .observe(on_register_probe_cancel);
+                        });
+                    });
+            });
+    } else if !state.show && exists {
+        for entity in &root {
+            commands.entity(entity).despawn();
         }
+        focus.0 = None;
+    }
+}
 
-        let online_count = probes.iter().filter(|p| p.online).count();
-        let total = probes.len();
+/// Focus the name field when the dialog opens.
+pub fn focus_register_probe_input(
+    inputs: Query<Entity, Added<RegisterProbeNameInput>>,
+    mut focus: ResMut<InputFocus>,
+) {
+    if let Ok(entity) = inputs.single() {
+        focus.0 = Some(entity);
+    }
+}
 
-        if online_count == total {
-            Color::srgb(0.7, 1.0, 0.7) // Green - all online
-        } else if online_count == 0 {
-            Color::srgb(1.0, 0.7, 0.7) // Red - all offline
-        } else {
-            Color::srgb(1.0, 1.0, 0.7) // Yellow - some offline
+/// Copy the input contents into [`RegisterProbeDialogState`].
+pub fn sync_register_probe_inputs(
+    mut state: ResMut<RegisterProbeDialogState>,
+    name: Query<&TextInput, With<RegisterProbeNameInput>>,
+    mac: Query<&TextInput, With<RegisterProbeMacInput>>,
+) {
+    if let Ok(input) = name.single() {
+        if state.name != input.value {
+            state.name = input.value.clone();
         }
     }
-
-    fn preview_icon(&self) -> &'static str {
-        "Probe"
-    }
-
-    fn preview_details(&self, instance_id: InstanceId) -> String {
-        let probes = query_probes(instance_id);
-        if probes.is_empty() {
-            "No probes registered".to_string()
-        } else {
-            let online = probes.iter().filter(|p| p.online).count();
-            format!("{}/{} probes online", online, probes.len())
+    if let Ok(input) = mac.single() {
+        if state.mac_address != input.value {
+            state.mac_address = input.value.clone();
         }
     }
+}
 
-    fn edge_color(&self) -> Color {
-        Color::srgb(0.8, 0.5, 0.3) // Orange
-    }
+fn on_register_probe_submit(
+    _activate: On<Activate>,
+    mut state: ResMut<RegisterProbeDialogState>,
+    instance_layer: Res<InstanceLayer>,
+) {
+    let mut probes = crate::REGISTERED_PROBES.write().unwrap();
+    let next_id = probes.iter().map(|p| p.id).max().unwrap_or(0) + 1;
+    probes.push(RegisteredProbe {
+        id: next_id,
+        probe_type: ProbeType::Wol,
+        name: state.name.clone(),
+        gateway: instance_layer.instance_id,
+        config: ProbeConfig::Wol(WolProbeConfig {
+            mac_address: state.mac_address.clone(),
+            broadcast_address: None,
+            port: None,
+            hostname: None,
+        }),
+        online: false,
+        status_message: None,
+    });
+    drop(probes);
 
-    fn activity_types(&self) -> Vec<ActivityTypeInfo> {
-        vec![ActivityTypeInfo {
-            id: "probe_check",
-            name: "Probe Check",
-            color: Color::srgb(0.8, 0.5, 0.3),
-            size: 5.0,
-        }]
-    }
+    state.show = false;
+    state.name.clear();
+    state.mac_address.clear();
+}
 
-    fn register_systems(&self, app: &mut App) {
+fn on_register_probe_cancel(_activate: On<Activate>, mut state: ResMut<RegisterProbeDialogState>) {
+    state.show = false;
+    state.name.clear();
+    state.mac_address.clear();
+}
+
+/// The probe layer's client plugin.
+pub struct ProbeClientPlugin;
+
+impl Plugin for ProbeClientPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<RegisterProbeDialogState>();
         app.add_systems(
             Update,
             (
                 scale_probe_node_svgs,
                 update_probe_nodes,
                 apply_probe_spring_forces,
+                manage_register_probe,
+                focus_register_probe_input,
+                sync_register_probe_inputs,
             ),
         );
-        // Must run after the generic node visibility system (which also
-        // matches probe nodes) so probe-specific visibility wins
+        // Must run after the generic node visibility system (which also matches
+        // probe nodes) so probe-specific visibility wins.
         app.add_systems(
             PostUpdate,
             update_probe_node_visibility
                 .after(sandpolis_client::gui::layer_visuals::update_node_visibility_for_layer),
         );
+        app.register_layer_client(
+            LayerClientInfo::new(LayerName::from("Probe"), "Device monitoring probes")
+                .with_controller(ProbeController)
+                .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
+                .showing_probe_nodes()
+                .with_toolbar_action(
+                    "Register probe",
+                    "toolbar/register_probe.svg",
+                    |commands| {
+                        commands.queue(|world: &mut World| {
+                            if let Some(mut state) =
+                                world.get_resource_mut::<RegisterProbeDialogState>()
+                            {
+                                state.show = true;
+                            }
+                        });
+                    },
+                ),
+        );
     }
-
-    fn visible_instance_types(&self) -> &'static [sandpolis_instance::InstanceType] {
-        // Probe layer shows servers and agents (not clients)
-        &[
-            sandpolis_instance::InstanceType::Server,
-            sandpolis_instance::InstanceType::Agent,
-        ]
-    }
-
-    fn show_probe_nodes(&self) -> bool {
-        // Probe layer is the only layer that shows probe nodes
-        true
-    }
-}
-
-/// Static instance of the probe GUI extension.
-static PROBE_GUI_EXT: ProbeGuiExtension = ProbeGuiExtension;
-
-// Register the extension with inventory
-inventory::submit! {
-    &PROBE_GUI_EXT as &dyn LayerGuiExtension
 }

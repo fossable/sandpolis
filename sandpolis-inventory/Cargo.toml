@@ -26,7 +26,6 @@ sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional =
 
 # GUI dependencies
 bevy = { workspace = true, optional = true }
-bevy_egui = { workspace = true, optional = true }
 inventory = { workspace = true, optional = true }
 
 [dev-dependencies]
@@ -48,7 +47,6 @@ client = []
 client-gui = [
   "client",
   "dep:bevy",
-  "dep:bevy_egui",
   "dep:inventory",
   "dep:sandpolis-client",
   "sandpolis-client/client-gui",

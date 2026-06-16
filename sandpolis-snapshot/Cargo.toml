@@ -10,11 +10,14 @@ anyhow = { workspace = true }
 tokio = { workspace = true, optional = true }
 serde = { workspace = true }
 uuid = { workspace = true }
-qcow = { version = "1.2.0", optional = true }
+# qcow = { version = "1.2.0", optional = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 
 [features]
-server = ["dep:qcow", "dep:tokio"]
+server = [
+  #"dep:qcow",
+  "dep:tokio",
+]
 client = []
 bootagent = []
 agent = ["dep:tokio"]

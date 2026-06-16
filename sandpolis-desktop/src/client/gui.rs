@@ -1,12 +1,43 @@
 //! GUI components for the Desktop layer.
 //!
-//! This module provides the desktop viewer controller and layer-specific GUI elements.
+//! Provides the desktop-viewer node controller and the layer's client plugin.
+//!
+//! The controller wires the full client-side stream pipeline:
+//! [`DesktopStreamRequester`] decodes incoming frames into RGBA8, a Bevy system
+//! drains them and uploads them to the display node's texture, and pointer /
+//! keyboard input over that node is mapped into [`DesktopStreamInputEvent`]s.
+//!
+//! **Transport seam:** a client currently has no stream-capable connection
+//! (`ServerConnection` talks to the server over HTTP polling and never builds a
+//! websocket `InstanceConnection`, and there is no server-side routing to a
+//! target agent). So the requester is constructed and held ready, but it is not
+//! yet registered on a connection — meaning no bytes actually flow. The single
+//! place that registration + outbound forwarding would happen is marked `SEAM`
+//! below. Once client stream transport exists, register `requester` on the
+//! connection and forward the session's `outbound` receiver over the stream.
 
+use bevy::asset::RenderAssetUsages;
+use bevy::image::Image;
+use bevy::input::ButtonState;
+use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
-use bevy_egui::egui;
-use sandpolis_instance::{InstanceId, LayerName};
+use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
+use bevy::ui::RelativeCursorPosition;
+use sandpolis_client::gui::ui::Activate;
+use sandpolis_client::gui::ui::bind::bind_text;
+use sandpolis_client::gui::ui::controller::{LayerClientInfo, NodeController, RegisterLayerClient};
+use sandpolis_client::gui::ui::theme::{Role, Theme};
+use sandpolis_client::gui::ui::widgets::{button, heading, row, text};
+use sandpolis_instance::{InstanceId, InstanceType, LayerName};
+use std::collections::HashMap;
+use tokio::sync::mpsc::{Receiver, Sender, UnboundedReceiver, channel};
 
-use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
+use crate::screenshot::{DesktopScreenshotRequest, DesktopScreenshotRequester, DesktopScreenshotResult};
+use crate::session::{
+    DesktopFrame, DesktopStreamColorMode, DesktopStreamCompressionMode, DesktopStreamEvent,
+    DesktopStreamInputEvent, DesktopStreamPointerButton, DesktopStreamRequest,
+    DesktopStreamRequester,
+};
 
 /// Instance metadata.
 #[derive(Clone, Debug, Default)]
@@ -21,141 +52,429 @@ pub fn query_instance_metadata(_id: InstanceId) -> anyhow::Result<InstanceMetada
     Ok(InstanceMetadata::default())
 }
 
-/// Render desktop viewer controller.
-pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
-    // Desktop stream placeholder
-    ui.label(egui::RichText::new("Desktop Stream").size(16.0).strong());
-
-    ui.separator();
-
-    // Display area for desktop stream
-    let stream_size = egui::Vec2::new(560.0, 315.0); // 16:9 aspect ratio
-    let (rect, _response) = ui.allocate_exact_size(stream_size, egui::Sense::hover());
-
-    ui.painter().rect_filled(
-        rect,
-        egui::CornerRadius::ZERO,
-        egui::Color32::from_rgb(30, 30, 30),
-    );
-
-    ui.painter().text(
-        rect.center(),
-        egui::Align2::CENTER_CENTER,
-        "Desktop stream not active",
-        egui::FontId::proportional(14.0),
-        egui::Color32::GRAY,
-    );
-
-    ui.separator();
-
-    // Control buttons
-    ui.horizontal(|ui| {
-        if ui.button("Start Stream").clicked() {
-            // TODO: Start desktop stream via database write
-        }
-
-        if ui.button("Stop Stream").clicked() {
-            // TODO: Stop desktop stream
-        }
-
-        if ui.button("Screenshot").clicked() {
-            // TODO: Request screenshot via database
-        }
-    });
-
-    ui.separator();
-
-    // Desktop information
-    if let Ok(metadata) = query_instance_metadata(instance_id) {
-        ui.label(format!("OS: {}", metadata.os_type));
-        if let Some(hostname) = metadata.hostname {
-            ui.label(format!("Hostname: {}", hostname));
-        }
-    }
-
-    // Stream quality settings
-    ui.separator();
-    ui.label("Stream Quality:");
-    ui.horizontal(|ui| {
-        ui.radio_value(&mut 1, 1, "Low");
-        ui.radio_value(&mut 2, 2, "Medium");
-        ui.radio_value(&mut 3, 3, "High");
-    });
+/// Active client-side desktop sessions, keyed by instance.
+#[derive(Resource, Default)]
+struct DesktopStreams {
+    streams: HashMap<InstanceId, StreamSession>,
+    screenshots: HashMap<InstanceId, ScreenshotSession>,
 }
 
-/// Desktop layer GUI extension.
-pub struct DesktopGuiExtension;
+/// A live stream the GUI is rendering.
+struct StreamSession {
+    /// Kept alive so the requester's event channel stays open; registered on a
+    /// stream-capable connection at the transport seam once one exists.
+    _requester: DesktopStreamRequester,
+    /// Decoded frames/state pushed by the requester.
+    events: UnboundedReceiver<DesktopStreamEvent>,
+    /// Outbound requests (initial Start, input, Stop). Forwarded over the stream
+    /// once transport exists; until then `try_send` simply drops when full.
+    outbound: Sender<DesktopStreamRequest>,
+    /// Receiving end of `outbound`; handed to the transport forwarder at the seam.
+    _outbound_rx: Receiver<DesktopStreamRequest>,
+    /// The display node showing this stream.
+    view: Entity,
+    /// Remote display dimensions, once known.
+    size: Option<(u32, u32)>,
+    /// Last pointer position sent, to avoid flooding identical moves.
+    last_pointer: Option<(i32, i32)>,
+}
 
-impl LayerGuiExtension for DesktopGuiExtension {
-    fn layer(&self) -> &LayerName {
-        static LAYER: std::sync::LazyLock<LayerName> =
-            std::sync::LazyLock::new(|| LayerName::from("Desktop"));
-        &LAYER
-    }
+/// A pending one-shot screenshot.
+struct ScreenshotSession {
+    _requester: DesktopScreenshotRequester,
+    result: UnboundedReceiver<DesktopScreenshotResult>,
+    _outbound: Sender<DesktopScreenshotRequest>,
+    _outbound_rx: Receiver<DesktopScreenshotRequest>,
+    view: Entity,
+}
 
-    fn description(&self) -> &'static str {
-        "Remote desktop viewing and control"
-    }
+/// The display node showing a desktop stream/screenshot for `instance`.
+#[derive(Component)]
+struct DesktopStreamView {
+    instance: InstanceId,
+}
 
-    fn render_controller(&self, ui: &mut egui::Ui, instance_id: InstanceId) {
-        render(ui, instance_id);
-    }
+/// A status label reflecting the stream state for `instance`.
+#[derive(Component)]
+struct DesktopStatusText {
+    instance: InstanceId,
+}
 
-    fn controller_name(&self) -> &'static str {
+/// The desktop layer's node controller (remote desktop viewer).
+pub struct DesktopController;
+
+impl NodeController for DesktopController {
+    fn title(&self) -> &str {
         "Desktop Viewer"
     }
 
-    fn get_node_svg(&self, _instance_id: InstanceId) -> &'static str {
-        "desktop/Screen.svg"
-    }
+    fn build(&self, commands: &mut Commands, body: Entity, instance: InstanceId, theme: &Theme) {
+        commands.entity(body).with_children(|p| {
+            p.spawn(heading(theme, "Desktop Stream"));
 
-    fn get_node_color(&self, _instance_id: InstanceId) -> Color {
-        // Default color for desktop layer
-        Color::WHITE
-    }
+            // Live stream display: an `ImageNode` (transparent until frames
+            // arrive, so the dark background shows through) over a dark
+            // background. `RelativeCursorPosition` maps the pointer into the
+            // remote display's coordinate space for input forwarding.
+            p.spawn((
+                DesktopStreamView { instance },
+                Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Px(280.0),
+                    ..default()
+                },
+                BackgroundColor(Color::srgb_u8(30, 30, 30)),
+                ImageNode {
+                    color: Color::NONE,
+                    ..default()
+                },
+                Interaction::default(),
+                RelativeCursorPosition::default(),
+            ));
 
-    fn preview_icon(&self) -> &'static str {
-        "Monitor"
-    }
+            // Controls.
+            p.spawn(row(theme.metrics.space_sm)).with_children(|controls| {
+                controls
+                    .spawn(button(theme, "Start Stream"))
+                    .observe(
+                        move |_: On<Activate>,
+                              mut streams: ResMut<DesktopStreams>,
+                              views: Query<(Entity, &DesktopStreamView)>| {
+                            if streams.streams.contains_key(&instance) {
+                                return;
+                            }
+                            let Some((view, _)) =
+                                views.iter().find(|(_, v)| v.instance == instance)
+                            else {
+                                return;
+                            };
 
-    fn preview_details(&self, instance_id: InstanceId) -> String {
-        if let Ok(metadata) = query_instance_metadata(instance_id) {
-            if let Some(hostname) = metadata.hostname {
-                format!("{} - {}", hostname, metadata.os_type)
-            } else {
-                metadata.os_type
-            }
-        } else {
-            "Desktop status unknown".to_string()
-        }
-    }
+                            let (requester, events) = DesktopStreamRequester::channel();
+                            let (outbound, outbound_rx) = channel(64);
 
-    fn edge_color(&self) -> Color {
-        Color::srgb(0.8, 0.3, 0.8) // Purple
-    }
+                            // SEAM: register `requester` on a stream-capable
+                            // connection and forward `outbound_rx` (starting with
+                            // this Start request) over the stream once client
+                            // transport exists. See module docs.
+                            let _ = outbound.try_send(DesktopStreamRequest::Start {
+                                desktop_uuid: String::new(),
+                                scale_factor: 1.0,
+                                color_mode: DesktopStreamColorMode::Rgb888,
+                                compression_mode: DesktopStreamCompressionMode::Zstd,
+                            });
 
-    fn activity_types(&self) -> Vec<ActivityTypeInfo> {
-        vec![ActivityTypeInfo {
-            id: "desktop_stream",
-            name: "Desktop Stream",
-            color: Color::srgb(0.8, 0.3, 0.8),
-            size: 10.0,
-        }]
-    }
+                            streams.streams.insert(
+                                instance,
+                                StreamSession {
+                                    _requester: requester,
+                                    events,
+                                    outbound,
+                                    _outbound_rx: outbound_rx,
+                                    view,
+                                    size: None,
+                                    last_pointer: None,
+                                },
+                            );
+                            info!("Desktop stream requested for {}", instance);
+                        },
+                    );
 
-    fn visible_instance_types(&self) -> &'static [sandpolis_instance::InstanceType] {
-        // Desktop layer shows servers and agents (not clients)
-        &[
-            sandpolis_instance::InstanceType::Server,
-            sandpolis_instance::InstanceType::Agent,
-        ]
+                controls.spawn(button(theme, "Stop Stream")).observe(
+                    move |_: On<Activate>,
+                          mut streams: ResMut<DesktopStreams>,
+                          mut nodes: Query<&mut ImageNode>| {
+                        if let Some(session) = streams.streams.remove(&instance) {
+                            let _ = session.outbound.try_send(DesktopStreamRequest::Stop);
+                            if let Ok(mut node) = nodes.get_mut(session.view) {
+                                node.color = Color::NONE;
+                            }
+                            info!("Desktop stream stopped for {}", instance);
+                        }
+                    },
+                );
+
+                controls.spawn(button(theme, "Screenshot")).observe(
+                    move |_: On<Activate>,
+                          mut streams: ResMut<DesktopStreams>,
+                          views: Query<(Entity, &DesktopStreamView)>| {
+                        let Some((view, _)) = views.iter().find(|(_, v)| v.instance == instance)
+                        else {
+                            return;
+                        };
+                        let (requester, result) = DesktopScreenshotRequester::channel();
+                        let (outbound, outbound_rx) = channel(4);
+                        // SEAM: same as the stream case (one-shot request).
+                        let _ = outbound.try_send(DesktopScreenshotRequest {
+                            desktop_uuid: String::new(),
+                        });
+                        streams.screenshots.insert(
+                            instance,
+                            ScreenshotSession {
+                                _requester: requester,
+                                result,
+                                _outbound: outbound,
+                                _outbound_rx: outbound_rx,
+                                view,
+                            },
+                        );
+                        info!("Screenshot requested for {}", instance);
+                    },
+                );
+            });
+
+            // Stream status line.
+            p.spawn((
+                DesktopStatusText { instance },
+                text(theme, "Stream inactive", theme.metrics.font_sm, Role::TextMuted),
+            ));
+
+            // Desktop information.
+            p.spawn((
+                text(theme, "", theme.metrics.font_md, Role::Text),
+                bind_text(move || {
+                    let m = query_instance_metadata(instance).unwrap_or_default();
+                    let host = m.hostname.unwrap_or_else(|| "unknown".into());
+                    let os = if m.os_type.is_empty() {
+                        "Unknown".into()
+                    } else {
+                        m.os_type
+                    };
+                    format!("{} — OS: {}", host, os)
+                }),
+            ));
+        });
     }
 }
 
-/// Static instance of the desktop GUI extension.
-static DESKTOP_GUI_EXT: DesktopGuiExtension = DesktopGuiExtension;
+/// Build an RGBA8 [`Image`] for a decoded frame.
+fn image_from_rgba(width: u32, height: u32, rgba: Vec<u8>) -> Image {
+    Image::new(
+        Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
+        TextureDimension::D2,
+        rgba,
+        TextureFormat::Rgba8UnormSrgb,
+        RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
+    )
+}
 
-// Register the extension with inventory
-inventory::submit! {
-    &DESKTOP_GUI_EXT as &dyn LayerGuiExtension
+/// Drain decoded stream frames and upload the latest to the display texture.
+fn drive_desktop_streams(
+    mut streams: ResMut<DesktopStreams>,
+    mut images: ResMut<Assets<Image>>,
+    mut nodes: Query<&mut ImageNode>,
+) {
+    for session in streams.streams.values_mut() {
+        // Coalesce to the most recent frame so we only upload one texture/tick.
+        let mut latest: Option<DesktopFrame> = None;
+        while let Ok(event) = session.events.try_recv() {
+            match event {
+                DesktopStreamEvent::Started { width, height } => {
+                    session.size = Some((width, height));
+                }
+                DesktopStreamEvent::Frame(frame) => latest = Some(frame),
+                DesktopStreamEvent::Stopped => {}
+            }
+        }
+
+        if let Some(frame) = latest {
+            if frame.width == 0 || frame.height == 0 {
+                continue;
+            }
+            session.size = Some((frame.width, frame.height));
+            let handle = images.add(image_from_rgba(frame.width, frame.height, frame.rgba));
+            if let Ok(mut node) = nodes.get_mut(session.view) {
+                node.image = handle;
+                node.color = Color::WHITE;
+            }
+        }
+    }
+}
+
+/// Drain pending screenshots and display the returned image.
+fn drive_desktop_screenshots(
+    mut streams: ResMut<DesktopStreams>,
+    mut images: ResMut<Assets<Image>>,
+    mut nodes: Query<&mut ImageNode>,
+) {
+    let mut finished = Vec::new();
+    for (instance, session) in streams.screenshots.iter_mut() {
+        while let Ok(result) = session.result.try_recv() {
+            match result {
+                DesktopScreenshotResult::Ok(frame) if frame.width > 0 && frame.height > 0 => {
+                    let handle =
+                        images.add(image_from_rgba(frame.width, frame.height, frame.rgba));
+                    if let Ok(mut node) = nodes.get_mut(session.view) {
+                        node.image = handle;
+                        node.color = Color::WHITE;
+                    }
+                    info!("Screenshot received for {}", instance);
+                }
+                DesktopScreenshotResult::Ok(_) => {}
+                DesktopScreenshotResult::Failed => {
+                    warn!("Screenshot failed for {}", instance);
+                }
+            }
+            finished.push(*instance);
+        }
+    }
+    for instance in finished {
+        streams.screenshots.remove(&instance);
+    }
+}
+
+/// Reflect each instance's stream state in its status label.
+fn update_desktop_status(
+    streams: Res<DesktopStreams>,
+    mut labels: Query<(&DesktopStatusText, &mut Text)>,
+) {
+    for (status, mut label) in &mut labels {
+        let value = match streams.streams.get(&status.instance) {
+            Some(session) => match session.size {
+                Some((w, h)) => format!("Streaming {}×{}", w, h),
+                None => "Connecting…".to_string(),
+            },
+            None => "Stream inactive".to_string(),
+        };
+        if label.0 != value {
+            label.0 = value;
+        }
+    }
+}
+
+/// Map a just-pressed/just-released mouse button to a stream pointer button.
+fn pointer_button(
+    mouse: &ButtonInput<MouseButton>,
+    pressed: bool,
+) -> Option<DesktopStreamPointerButton> {
+    let hit = |b: MouseButton| {
+        if pressed {
+            mouse.just_pressed(b)
+        } else {
+            mouse.just_released(b)
+        }
+    };
+    if hit(MouseButton::Left) {
+        Some(DesktopStreamPointerButton::Primary)
+    } else if hit(MouseButton::Right) {
+        Some(DesktopStreamPointerButton::Secondary)
+    } else if hit(MouseButton::Middle) {
+        Some(DesktopStreamPointerButton::Middle)
+    } else {
+        None
+    }
+}
+
+/// Extract a typed character from a logical key, if any.
+fn logical_char(key: &Key) -> Option<char> {
+    match key {
+        Key::Character(s) => s.chars().next(),
+        Key::Space => Some(' '),
+        _ => None,
+    }
+}
+
+/// An input event with no fields set.
+fn empty_input() -> DesktopStreamInputEvent {
+    DesktopStreamInputEvent {
+        key_pressed: None,
+        key_released: None,
+        key_typed: None,
+        pointer_pressed: None,
+        pointer_released: None,
+        pointer_x: None,
+        pointer_y: None,
+        scale_factor: None,
+        clipboard: None,
+    }
+}
+
+/// Forward pointer and keyboard input over the hovered active stream.
+fn forward_desktop_input(
+    mut streams: ResMut<DesktopStreams>,
+    mouse: Res<ButtonInput<MouseButton>>,
+    mut keys: MessageReader<KeyboardInput>,
+    views: Query<(&DesktopStreamView, &RelativeCursorPosition)>,
+) {
+    // Keyboard events are global; route them to whichever view is hovered.
+    let key_events: Vec<(Option<char>, ButtonState)> = keys
+        .read()
+        .map(|ev| (logical_char(&ev.logical_key), ev.state))
+        .collect();
+
+    for (view, rel) in &views {
+        let Some(session) = streams.streams.get_mut(&view.instance) else {
+            continue;
+        };
+        let Some((w, h)) = session.size else {
+            continue;
+        };
+        let Some(norm) = rel.normalized else {
+            // Pointer left the view; reset so re-entry re-sends a position.
+            session.last_pointer = None;
+            continue;
+        };
+
+        let x = (norm.x.clamp(0.0, 1.0) * w as f32).round() as i32;
+        let y = (norm.y.clamp(0.0, 1.0) * h as f32).round() as i32;
+        let pressed = pointer_button(&mouse, true);
+        let released = pointer_button(&mouse, false);
+        let moved = session.last_pointer != Some((x, y));
+
+        if moved || pressed.is_some() || released.is_some() {
+            let mut event = empty_input();
+            event.pointer_x = Some(x);
+            event.pointer_y = Some(y);
+            event.pointer_pressed = pressed;
+            event.pointer_released = released;
+            let _ = session.outbound.try_send(DesktopStreamRequest::Input(event));
+            session.last_pointer = Some((x, y));
+        }
+
+        for (character, state) in &key_events {
+            let Some(c) = character else {
+                continue;
+            };
+            let mut event = empty_input();
+            match state {
+                ButtonState::Pressed => {
+                    event.key_pressed = Some(*c);
+                    event.key_typed = Some(*c);
+                }
+                ButtonState::Released => {
+                    event.key_released = Some(*c);
+                }
+            }
+            let _ = session.outbound.try_send(DesktopStreamRequest::Input(event));
+        }
+    }
+}
+
+/// The desktop layer's client plugin.
+pub struct DesktopClientPlugin;
+
+impl Plugin for DesktopClientPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<DesktopStreams>()
+            .add_systems(
+                Update,
+                (
+                    drive_desktop_streams,
+                    drive_desktop_screenshots,
+                    update_desktop_status,
+                    forward_desktop_input,
+                ),
+            )
+            .register_layer_client(
+                LayerClientInfo::new(
+                    LayerName::from("Desktop"),
+                    "Remote desktop viewing and control",
+                )
+                .with_controller(DesktopController)
+                .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent]),
+            );
+    }
 }

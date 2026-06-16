@@ -3,7 +3,7 @@
 //! indicator or the `L` key.
 
 use crate::gui::input::CurrentLayer;
-use crate::gui::layer_ext::{get_extension_for_layer, get_layer_extensions};
+use crate::gui::ui::controller::LayerRegistry;
 use crate::gui::ui::gating::UiPointerState;
 use crate::gui::ui::panel::modal_scrim;
 use crate::gui::ui::text_input::{TextInput, text_input};
@@ -28,7 +28,7 @@ impl Default for LayerPickerState {
     fn default() -> Self {
         Self {
             show: false,
-            available_layers: get_available_layers(),
+            available_layers: core_layers(),
             search_query: String::new(),
             selected_index: 0,
         }
@@ -53,27 +53,31 @@ pub struct LayerRow {
     layer: LayerName,
 }
 
-/// Discover available layers (core layers plus those with GUI extensions).
-fn get_available_layers() -> Vec<LayerName> {
-    let mut layers = vec![
+/// The always-present core layers (those without a registered `LayerClientPlugin`).
+fn core_layers() -> Vec<LayerName> {
+    vec![
         LayerName::from("Agent"),
         LayerName::from("Client"),
         LayerName::from("Network"),
         LayerName::from("Server"),
-    ];
-    for ext in get_layer_extensions() {
-        let layer = ext.layer().clone();
-        if !layers.contains(&layer) {
-            layers.push(layer);
+    ]
+}
+
+/// Discover available layers (core layers plus those with a registered client).
+fn available_layers(registry: &LayerRegistry) -> Vec<LayerName> {
+    let mut layers = core_layers();
+    for info in registry.iter() {
+        if !layers.contains(&info.layer) {
+            layers.push(info.layer.clone());
         }
     }
     layers
 }
 
-/// Description for a layer (from its extension, with fallbacks for core layers).
-fn get_layer_description(layer: &LayerName) -> &'static str {
-    if let Some(ext) = get_extension_for_layer(layer) {
-        return ext.description();
+/// Description for a layer (from its registered client, with core fallbacks).
+fn get_layer_description(registry: &LayerRegistry, layer: &LayerName) -> &'static str {
+    if let Some(info) = registry.get(layer) {
+        return info.description;
     }
     match layer.name() {
         "Agent" => "Managed instances running the agent",
@@ -112,6 +116,7 @@ pub fn handle_layer_picker_toggle(
 pub fn manage_layer_picker(
     mut commands: Commands,
     theme: Res<Theme>,
+    registry: Res<LayerRegistry>,
     mut picker: ResMut<LayerPickerState>,
     mut focus: ResMut<InputFocus>,
     root: Query<Entity, With<LayerPickerRoot>>,
@@ -119,6 +124,7 @@ pub fn manage_layer_picker(
     let exists = !root.is_empty();
     if picker.show && !exists {
         picker.selected_index = 0;
+        picker.available_layers = available_layers(&registry);
         commands
             .spawn((LayerPickerRoot, modal_scrim()))
             .with_children(|scrim| {
@@ -172,6 +178,7 @@ pub fn focus_layer_search(
 pub fn rebuild_layer_rows(
     mut commands: Commands,
     theme: Res<Theme>,
+    registry: Res<LayerRegistry>,
     picker: Res<LayerPickerState>,
     current: Res<CurrentLayer>,
     search: Query<Ref<TextInput>, With<LayerSearchInput>>,
@@ -225,7 +232,7 @@ pub fn rebuild_layer_rows(
                     BackgroundColor(theme.color(role)),
                     children![
                         text(&theme, layer.name().to_string(), theme.metrics.font_md, Role::Text),
-                        muted(&theme, get_layer_description(&layer), theme.metrics.font_sm),
+                        muted(&theme, get_layer_description(&registry, &layer), theme.metrics.font_sm),
                     ],
                 ))
                 .observe(on_row_click);

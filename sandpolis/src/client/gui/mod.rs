@@ -2,18 +2,20 @@ use crate::{InstanceState, config::Configuration};
 use anyhow::Result;
 use bevy::{
     app::PluginGroup,
+    asset::{
+        AssetApp,
+        io::{AssetSourceBuilder, AssetSourceId},
+    },
     audio::AudioSinkPlayback,
-    color::palettes::basic::{BLUE, GRAY, WHITE},
     ecs::schedule::IntoScheduleConfigs,
     prelude::{
-        App, AssetPlugin, AssetServer, AudioSink, BackgroundColor, Button, Camera2d, Changed,
-        Commands, DefaultPlugins, Entity, Interaction, MessageReader, MonitorSelection, PostUpdate,
-        Query, Res, ResMut, Startup, Timer, TimerMode, Update, Vec2, Vec3, Window, WindowPlugin,
-        With, default, info,
+        App, AssetServer, AudioSink, Camera2d, Commands, DefaultPlugins, Entity, MessageReader,
+        MonitorSelection, PostUpdate, Query, Res, ResMut, Startup, Timer, TimerMode, Update, Vec2,
+        Vec3, Window, WindowPlugin, default, info,
     },
     window::{AppLifecycle, WindowMode},
 };
-use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
+use sandpolis_client::gui::assets::EmbeddedDirReader;
 use bevy_rapier2d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use sandpolis_instance::LayerName;
 
@@ -26,23 +28,22 @@ use sandpolis_client::gui::activity::{
     animate_activity_lines, cleanup_layer_activity_lines, despawn_completed_activity_lines,
     spawn_network_activity_lines, spawn_transfer_activity_lines, update_activity_line_positions,
 };
-use sandpolis_client::gui::controller::{
-    NodeControllerState, close_controller_on_layer_change, handle_node_double_click,
-    render_node_controller,
-};
+use sandpolis_client::gui::controller::ControllerHostPlugin;
 use sandpolis_client::gui::drag::{
     DragState, SelectionSet, disable_forces_while_dragging, handle_node_selection,
-    render_selection_ui, start_node_drag, stop_node_drag, update_node_drag,
+    start_node_drag, stop_node_drag, update_node_drag, update_selection_ui,
     update_selection_visuals,
 };
 use sandpolis_client::gui::edges::{render_edges, update_edge_visibility, update_edges_for_layer};
+use sandpolis_client::gui::add_agent::CoreLayerToolbarPlugin;
 use sandpolis_client::gui::input::{
     CurrentLayer, HelpScreenState, LayerChangeTimer, LoginDialogState, MousePressed, PanningState,
-    ZoomLevel, handle_camera, handle_zoom, manage_help_panel, toggle_help, toggle_login,
+    ZoomLevel, handle_camera, handle_zoom, manage_help_panel, toggle_help,
 };
 use sandpolis_client::gui::layer_picker::{
     LayerPickerState, focus_layer_search, layer_picker_keys, manage_layer_picker, rebuild_layer_rows,
 };
+use sandpolis_client::gui::layer_toolbar::rebuild_layer_toolbar;
 use sandpolis_client::gui::layer_ui::{
     LayerIndicatorState, spawn_layer_indicator, update_layer_indicator,
 };
@@ -72,13 +73,11 @@ use sandpolis_client::gui::preview::{
 use sandpolis_client::gui::queries::{query_all_instances, query_instance_metadata};
 use sandpolis_client::gui::responsive::update_responsive_ui;
 use sandpolis_client::gui::theme::{
-    CurrentTheme, ThemePickerState, apply_theme_to_egui, handle_theme_picker_toggle,
-    initialize_theme, manage_theme_picker, update_theme_rows,
+    ThemePickerState, handle_theme_picker_toggle, manage_theme_picker, update_theme_rows,
 };
 
 // Re-export submodules for external access
 pub use sandpolis_client::gui::controller;
-pub use sandpolis_client::gui::layer_ext;
 pub use sandpolis_client::gui::preview;
 
 /// Initialize and start rendering the UI.
@@ -95,12 +94,21 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     let mut app = App::new();
 
+    // Serve all GUI assets from compile-time-embedded bundles so release builds
+    // are self-contained. Each asset-owning crate contributes its own embedded
+    // directory; they're overlaid (earlier shadows later) behind the default
+    // asset source. Must be registered before `AssetPlugin` (part of
+    // `DefaultPlugins`) is built.
+    let mut asset_dirs = vec![sandpolis_client::gui::assets::dir()];
+    #[cfg(feature = "layer-probe")]
+    asset_dirs.push(sandpolis_probe::client::assets::dir());
+    app.register_asset_source(
+        AssetSourceId::Default,
+        AssetSourceBuilder::new(move || Box::new(EmbeddedDirReader::new(asset_dirs.clone()))),
+    );
+
     app.add_plugins(
         DefaultPlugins
-            .set(AssetPlugin {
-                file_path: "../sandpolis-client/assets".to_string(),
-                ..default()
-            })
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     resizable: true,
@@ -122,8 +130,9 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     // .add_plugins(RapierDebugRenderPlugin::default())
     .add_plugins(bevy_svg::prelude::SvgPlugin)
     .add_plugins(bevy_stl::StlPlugin)
-    .add_plugins(EguiPlugin::default())
     .add_plugins(sandpolis_client::gui::ui::UiPlugin)
+    .add_plugins(ControllerHostPlugin)
+    .add_plugins(CoreLayerToolbarPlugin)
     .insert_resource(CurrentLayer(LayerName::from("Desktop")))
     .insert_resource(ZoomLevel(1.0))
     .insert_resource(LayerChangeTimer(Timer::from_seconds(3.0, TimerMode::Once)))
@@ -138,7 +147,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(LayoutConfig::default())
     .insert_resource(LayoutState::default())
     .insert_resource(DragState::default())
-    .insert_resource(NodeControllerState::default())
     .insert_resource(LayerPickerState::default())
     .insert_resource(NodePickerState::default())
     .insert_resource(HelpScreenState::default())
@@ -146,7 +154,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(LoginOperation::default())
     .insert_resource(SelectionSet::default())
     .insert_resource(AboutScreenState::default())
-    .insert_resource(CurrentTheme::default())
     .insert_resource(ThemePickerState::default())
     .insert_resource(state.instance.clone())
     .insert_resource(state.network.clone())
@@ -156,8 +163,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(PanningState::default())
     .insert_resource(PreviewsVisible::default())
     .add_systems(Startup, setup)
-    .add_systems(Startup, install_egui_loaders)
-    .add_systems(Startup, initialize_theme)
     // Native bevy_ui chrome (migrated off egui).
     .add_systems(Startup, (spawn_minimap, spawn_layer_indicator))
     .add_systems(Update, (update_minimap, update_layer_indicator))
@@ -167,6 +172,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             manage_layer_picker,
             focus_layer_search,
             rebuild_layer_rows,
+            rebuild_layer_toolbar,
             layer_picker_keys,
             manage_node_picker,
             focus_node_search,
@@ -176,7 +182,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             update_theme_rows,
             // Help / about / login modals (native)
             toggle_help,
-            toggle_login,
             manage_help_panel,
             manage_about_panel,
             manage_login,
@@ -192,8 +197,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .add_systems(
         Update,
         (
-            // Theme system (runs first to ensure theme is applied)
-            apply_theme_to_egui,
             // Input handling (desktop)
             #[cfg(not(target_os = "android"))]
             handle_zoom,
@@ -206,7 +209,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             sandpolis_client::gui::input::handle_touch_zoom,
             handle_node_picker_toggle,
             handle_theme_picker_toggle,
-            button_handler,
             handle_lifetime,
             // Responsive UI updates
             update_responsive_ui,
@@ -231,6 +233,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             update_node_drag,
             stop_node_drag,
             disable_forces_while_dragging,
+            // Native selection-count badge (migrated off egui)
+            update_selection_ui,
         ),
     )
     .add_systems(
@@ -241,14 +245,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             apply_spring_forces,
             apply_damping,
             check_stabilization,
-        ),
-    )
-    .add_systems(
-        EguiPrimaryContextPass,
-        (
-            // UI rendering with egui (remaining: node controller, selection count)
-            render_node_controller,
-            render_selection_ui,
         ),
     )
     .add_systems(
@@ -264,9 +260,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             update_node_visibility_for_layer,
             // Node SVG scaling - MUST run after update_node_svgs_for_layer
             scale_node_svgs.after(update_node_svgs_for_layer),
-            // Controller systems
-            handle_node_double_click,
-            close_controller_on_layer_change,
             // Database updates
             process_database_updates,
         ),
@@ -284,20 +277,21 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         ),
     );
 
-    // Layer-specific systems (probe nodes, etc)
-    for ext in layer_ext::get_layer_extensions() {
-        ext.register_systems(&mut app);
-    }
+    // Per-layer client plugins (controllers, node visibility, probe systems).
+    // These replace the old `inventory`-collected `LayerGuiExtension`s.
+    #[cfg(feature = "layer-inventory")]
+    app.add_plugins(sandpolis_inventory::client::gui::InventoryClientPlugin);
+    #[cfg(feature = "layer-desktop")]
+    app.add_plugins(sandpolis_desktop::client::gui::DesktopClientPlugin);
+    #[cfg(feature = "layer-filesystem")]
+    app.add_plugins(sandpolis_filesystem::client::gui::FilesystemClientPlugin);
+    #[cfg(feature = "layer-shell")]
+    app.add_plugins(sandpolis_shell::client::gui::ShellClientPlugin);
+    #[cfg(feature = "layer-probe")]
+    app.add_plugins(sandpolis_probe::client::gui::ProbeClientPlugin);
 
     app.run();
     Ok(())
-}
-
-/// Install egui image loaders for SVG support (runs once at startup)
-fn install_egui_loaders(mut contexts: bevy_egui::EguiContexts) {
-    if let Ok(ctx) = contexts.ctx_mut() {
-        egui_extras::install_image_loaders(ctx);
-    }
 }
 
 fn setup(
@@ -387,27 +381,6 @@ fn process_database_updates(
             }
             _ => {
                 // Other updates will be handled in later phases
-            }
-        }
-    }
-}
-
-fn button_handler(
-    mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
-    >,
-) {
-    for (interaction, mut color) in &mut interaction_query {
-        match *interaction {
-            Interaction::Pressed => {
-                *color = BLUE.into();
-            }
-            Interaction::Hovered => {
-                *color = GRAY.into();
-            }
-            Interaction::None => {
-                *color = WHITE.into();
             }
         }
     }

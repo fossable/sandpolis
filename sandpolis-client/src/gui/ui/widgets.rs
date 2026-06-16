@@ -90,3 +90,37 @@ pub fn button(theme: &Theme, label: impl Into<String>) -> impl Bundle {
         ThemedBorder(Role::Border),        children![text(theme, label, theme.metrics.font_md, Role::Text)],
     )
 }
+
+/// A themed, square icon-only button.
+///
+/// The caller rasterizes the SVG (via `IconCache`) and passes the resulting
+/// [`Handle<Image>`]. Emits [`bevy_ui_widgets::Activate`] on click. Pair it with a
+/// [`super::tooltip::Tooltip`] to surface the action's full label on hover.
+pub fn icon_button(theme: &Theme, icon: Handle<Image>) -> impl Bundle {
+    const BUTTON_PX: f32 = 30.0;
+    const ICON_PX: f32 = 20.0;
+    (
+        Button,
+        ThemedButton,
+        Interaction::default(),
+        Node {
+            width: Val::Px(BUTTON_PX),
+            height: Val::Px(BUTTON_PX),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            border: UiRect::all(Val::Px(1.0)),
+            ..default()
+        },
+        BackgroundColor(theme.color(Role::Surface)),
+        BorderColor::all(theme.color(Role::Border)),
+        ThemedBorder(Role::Border),
+        children![(
+            ImageNode::new(icon),
+            Node {
+                width: Val::Px(ICON_PX),
+                height: Val::Px(ICON_PX),
+                ..default()
+            },
+        )],
+    )
+}

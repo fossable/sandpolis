@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Login to server: server panel with an arrow entering -->
+  <rect x="34" y="10" width="20" height="44" rx="3"
+        fill="#ECEFF1" stroke="#607D8B" stroke-width="2"/>
+  <line x1="38" y1="18" x2="50" y2="18" stroke="#90A4AE" stroke-width="2"/>
+  <line x1="38" y1="26" x2="50" y2="26" stroke="#90A4AE" stroke-width="2"/>
+  <circle cx="44" cy="44" r="2.5" fill="#2ecc71"/>
+
+  <!-- Enter arrow -->
+  <path d="M10 32H32 M24 24L32 32L24 40"
+        fill="none" stroke="#1E88E5" stroke-width="4"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

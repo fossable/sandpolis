@@ -1,30 +1,20 @@
 //! GUI components for the Shell layer.
 //!
-//! This module provides the terminal controller and layer-specific GUI elements.
+//! Provides a minimal native terminal node controller (scrollback + single-line
+//! prompt) and the layer's client plugin. This matches today's echo-only behavior
+//! (shell session routing is itself unimplemented); a real VT100/PTY terminal is
+//! deferred.
 
 use bevy::prelude::*;
-use bevy_egui::egui;
-use egui_console::{ConsoleBuilder, ConsoleEvent, ConsoleWindow};
-use sandpolis_instance::{InstanceId, LayerName};
-
-use sandpolis_client::gui::layer_ext::{ActivityTypeInfo, LayerGuiExtension};
-
-/// Per-instance terminal state stored in egui memory.
-#[derive(serde::Serialize, serde::Deserialize, Default)]
-pub struct TerminalState {
-    pub session_id: Option<String>,
-    #[serde(skip)]
-    pub console: Option<ConsoleWindow>,
-}
-
-impl Clone for TerminalState {
-    fn clone(&self) -> Self {
-        Self {
-            session_id: self.session_id.clone(),
-            console: None, // ConsoleWindow doesn't implement Clone, so we skip it
-        }
-    }
-}
+use sandpolis_client::gui::ui::Activate;
+use sandpolis_client::gui::ui::bind::bind_text;
+use sandpolis_client::gui::ui::controller::{
+    LayerClientInfo, NodeController, RegisterLayerClient,
+};
+use sandpolis_client::gui::ui::text_input::{TextInput, TextSubmit, text_input};
+use sandpolis_client::gui::ui::theme::{Role, Theme};
+use sandpolis_client::gui::ui::widgets::{button, muted, row, text};
+use sandpolis_instance::{InstanceId, InstanceType, LayerName};
 
 /// Shell session information.
 #[derive(Clone, Debug)]
@@ -39,190 +29,117 @@ pub fn query_shell_sessions(_id: InstanceId) -> anyhow::Result<Vec<ShellSession>
     Ok(vec![])
 }
 
-/// Render terminal controller with egui_console.
-pub fn render(ui: &mut egui::Ui, instance_id: InstanceId) {
-    let state_id = egui::Id::new(format!("terminal_{}", instance_id));
+/// Marks the scrollback container of a terminal controller.
+#[derive(Component)]
+pub struct TerminalScrollback;
 
-    let mut terminal_state = ui.data_mut(|d| {
-        d.get_persisted::<TerminalState>(state_id)
-            .unwrap_or_default()
-    });
-
-    // Session management header
-    ui.horizontal(|ui| {
-        ui.label("Shell Session:");
-        if let Ok(sessions) = query_shell_sessions(instance_id) {
-            if sessions.is_empty() {
-                ui.label("No active sessions");
-                if ui.button("Create Session").clicked() {
-                    // TODO: Create new shell session via WebSocket
-                    tracing::info!("Creating new shell session for instance {}", instance_id);
-                }
-            } else {
-                ui.label(format!("{} session(s) active", sessions.len()));
-                if let Some(session_id) = &terminal_state.session_id {
-                    ui.label(format!("Current: {}", session_id));
-                }
-            }
-        }
-    });
-
-    ui.separator();
-
-    // Initialize console if not present (can't be cloned/serialized)
-    if terminal_state.console.is_none() {
-        let console = ConsoleBuilder::new()
-            .prompt("$ ")
-            .history_size(100)
-            .tab_quote_character('"')
-            .build();
-
-        terminal_state.console = Some(console);
-    }
-
-    // Render the console window
-    if let Some(console) = &mut terminal_state.console {
-        // Set up command completion (common shell commands)
-        let commands = vec![
-            "ls", "cd", "pwd", "cat", "echo", "mkdir", "rm", "cp", "mv", "grep", "find", "ps",
-            "kill", "top", "df", "du", "wget", "curl", "tar", "zip", "unzip", "chmod", "chown",
-            "nano", "vim", "clear", "exit", "help",
-        ];
-
-        let command_table = console.command_table_mut();
-        command_table.clear();
-        for cmd in commands {
-            command_table.push(cmd.to_string());
-        }
-
-        // Draw console and handle events
-        match console.draw(ui) {
-            ConsoleEvent::Command(command) => {
-                tracing::info!("Shell command entered: {}", command);
-                // TODO: Send command to remote shell session via WebSocket
-                // For now, write placeholder response
-                console.write(&format!("> {}\n", command));
-                console.write("Command sent to remote shell (implementation pending)\n");
-            }
-            ConsoleEvent::None => {
-                // No command entered this frame
-            }
-        }
-    }
-
-    ui.separator();
-
-    // Connection status and controls
-    ui.horizontal(|ui| {
-        ui.label("Status:");
-        if terminal_state.session_id.is_some() {
-            ui.colored_label(egui::Color32::GREEN, "Connected");
-
-            if ui.button("Disconnect").clicked() {
-                // TODO: Close WebSocket connection
-                terminal_state.session_id = None;
-                if let Some(console) = &mut terminal_state.console {
-                    console.write("Disconnected from remote shell\n");
-                }
-            }
-        } else {
-            ui.colored_label(egui::Color32::GRAY, "Disconnected");
-
-            if ui.button("Connect").clicked() {
-                // TODO: Establish WebSocket connection
-                tracing::info!("Connecting to shell session for instance {}", instance_id);
-                if let Some(console) = &mut terminal_state.console {
-                    console.write("Connecting to remote shell...\n");
-                }
-            }
-        }
-    });
-
-    // Persist state
-    ui.data_mut(|d| d.insert_persisted(state_id, terminal_state));
+/// Marks the prompt input and points at its scrollback container.
+#[derive(Component)]
+pub struct TerminalPrompt {
+    pub instance: InstanceId,
+    pub scrollback: Entity,
 }
 
-/// Shell layer GUI extension.
-pub struct ShellGuiExtension;
+/// The shell layer's node controller (minimal terminal).
+pub struct ShellController;
 
-impl LayerGuiExtension for ShellGuiExtension {
-    fn layer(&self) -> &LayerName {
-        static LAYER: std::sync::LazyLock<LayerName> =
-            std::sync::LazyLock::new(|| LayerName::from("Shell"));
-        &LAYER
-    }
-
-    fn description(&self) -> &'static str {
-        "Remote shell access and command execution"
-    }
-
-    fn render_controller(&self, ui: &mut egui::Ui, instance_id: InstanceId) {
-        render(ui, instance_id);
-    }
-
-    fn controller_name(&self) -> &'static str {
+impl NodeController for ShellController {
+    fn title(&self) -> &str {
         "Terminal"
     }
 
-    fn get_node_svg(&self, _instance_id: InstanceId) -> &'static str {
-        "shell/Terminal.svg"
-    }
+    fn build(&self, commands: &mut Commands, body: Entity, instance: InstanceId, theme: &Theme) {
+        // Header + session status.
+        let header = commands
+            .spawn(row(theme.metrics.space_sm))
+            .with_children(|h| {
+                h.spawn(text(theme, "Shell session:", theme.metrics.font_md, Role::TextMuted));
+                h.spawn((
+                    text(theme, "", theme.metrics.font_md, Role::Text),
+                    bind_text(move || match query_shell_sessions(instance) {
+                        Ok(sessions) if sessions.is_empty() => "No active sessions".into(),
+                        Ok(sessions) => format!("{} session(s) active", sessions.len()),
+                        Err(_) => "Unknown".into(),
+                    }),
+                ));
+                h.spawn(button(theme, "Create"))
+                    .observe(move |_: On<Activate>| info!("Shell: create session on {}", instance));
+            })
+            .id();
 
-    fn get_node_color(&self, instance_id: InstanceId) -> Color {
-        // Color based on session status
-        if let Ok(sessions) = query_shell_sessions(instance_id) {
-            if sessions.is_empty() {
-                Color::WHITE
-            } else {
-                Color::srgb(0.7, 1.0, 0.7) // Green for active session
-            }
-        } else {
-            Color::WHITE
-        }
-    }
+        // Scrollback area.
+        let scrollback = commands
+            .spawn((
+                TerminalScrollback,
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(theme.metrics.space_xs),
+                    flex_grow: 1.0,
+                    padding: UiRect::all(Val::Px(theme.metrics.space_sm)),
+                    overflow: Overflow::clip(),
+                    ..default()
+                },
+                BackgroundColor(Color::srgb_u8(18, 18, 22)),
+            ))
+            .id();
+        commands.entity(scrollback).with_children(|s| {
+            s.spawn(muted(theme, "Connected to local echo shell.", theme.metrics.font_sm));
+        });
 
-    fn preview_icon(&self) -> &'static str {
-        "Terminal"
-    }
+        // Prompt input.
+        let prompt = commands
+            .spawn((
+                TerminalPrompt {
+                    instance,
+                    scrollback,
+                },
+                text_input(theme, "type a command and press Enter", false),
+            ))
+            .id();
 
-    fn preview_details(&self, instance_id: InstanceId) -> String {
-        if let Ok(sessions) = query_shell_sessions(instance_id) {
-            if sessions.is_empty() {
-                "No active sessions".to_string()
-            } else {
-                format!("{} active session(s)", sessions.len())
-            }
-        } else {
-            "Shell status unknown".to_string()
-        }
-    }
-
-    fn edge_color(&self) -> Color {
-        Color::srgb(0.8, 0.8, 0.3) // Yellow
-    }
-
-    fn activity_types(&self) -> Vec<ActivityTypeInfo> {
-        vec![ActivityTypeInfo {
-            id: "shell_command",
-            name: "Shell Command",
-            color: Color::srgb(0.8, 0.8, 0.3),
-            size: 6.0,
-        }]
-    }
-
-    fn visible_instance_types(&self) -> &'static [sandpolis_instance::InstanceType] {
-        // Shell layer shows servers and agents (not clients)
-        &[
-            sandpolis_instance::InstanceType::Server,
-            sandpolis_instance::InstanceType::Agent,
-        ]
+        commands.entity(body).add_children(&[header, scrollback, prompt]);
     }
 }
 
-/// Static instance of the shell GUI extension.
-static SHELL_GUI_EXT: ShellGuiExtension = ShellGuiExtension;
+/// Append the submitted command (and a placeholder response) to the scrollback.
+fn on_terminal_submit(
+    submit: On<TextSubmit>,
+    theme: Res<Theme>,
+    mut prompts: Query<(&TerminalPrompt, &mut TextInput)>,
+    mut commands: Commands,
+) {
+    let Ok((prompt, mut input)) = prompts.get_mut(submit.entity) else {
+        return;
+    };
+    let cmd = std::mem::take(&mut input.value);
+    if cmd.trim().is_empty() {
+        return;
+    }
+    info!("Shell command on {}: {}", prompt.instance, cmd);
+    let scrollback = prompt.scrollback;
+    let echo = format!("$ {}", cmd);
+    commands.entity(scrollback).with_children(|s| {
+        s.spawn(text(&theme, echo, theme.metrics.font_sm, Role::Text));
+        s.spawn(muted(
+            &theme,
+            "Command sent to remote shell (implementation pending)",
+            theme.metrics.font_sm,
+        ));
+    });
+}
 
-// Register the extension with inventory
-inventory::submit! {
-    &SHELL_GUI_EXT as &dyn LayerGuiExtension
+/// The shell layer's client plugin.
+pub struct ShellClientPlugin;
+
+impl Plugin for ShellClientPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_observer(on_terminal_submit).register_layer_client(
+            LayerClientInfo::new(
+                LayerName::from("Shell"),
+                "Remote shell access and command execution",
+            )
+            .with_controller(ShellController)
+            .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent]),
+        );
+    }
 }

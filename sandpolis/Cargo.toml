@@ -67,18 +67,10 @@ tui-popup = { workspace = true, optional = true }
 
 # GUI client exclusive
 bevy = { workspace = true, optional = true }
-bevy_egui = { workspace = true, optional = true }
 bevy_svg = { workspace = true, optional = true, features = ["2d"] }
 bevy_rapier2d = { workspace = true, optional = true }
 bevy_stl = { workspace = true, optional = true }
 bevy_ui_widgets = { workspace = true, optional = true }
-egui-file-dialog = { workspace = true, optional = true }
-egui_console = { workspace = true, optional = true }
-egui_extras = { workspace = true, optional = true }
-
-[dev-dependencies]
-# For running egui components as examples for testing
-eframe = { workspace = true }
 
 [features]
 # Instances
@@ -144,14 +136,10 @@ default = [
 client-gui = [
   "client",
   "dep:bevy",
-  "dep:bevy_egui",
   "dep:bevy_svg",
   "dep:bevy_rapier2d",
   "dep:bevy_stl",
   "dep:bevy_ui_widgets",
-  "dep:egui-file-dialog",
-  "dep:egui_console",
-  "dep:egui_extras",
   "sandpolis-client/client-gui",
   "sandpolis-desktop?/client-gui",
   "sandpolis-filesystem?/client-gui",
@@ -199,12 +187,4 @@ required-features = ["client-gui"]
 
 [[example]]
 name = "client_gui_controllers"
-required-features = ["client-gui"]
-
-[[example]]
-name = "client_gui_instance_preview"
-required-features = ["client-gui"]
-
-[[example]]
-name = "client_gui_node_controller"
 required-features = ["client-gui"]

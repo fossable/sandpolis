@@ -94,7 +94,7 @@ impl InstanceState {
         let filesystem = sandpolis_filesystem::FilesystemLayer::new().await?;
 
         #[cfg(feature = "layer-desktop")]
-        let desktop = sandpolis_desktop::DesktopLayer::new().await?;
+        let desktop = sandpolis_desktop::DesktopLayer::new(database.clone()).await?;
 
         #[cfg(feature = "layer-account")]
         let account = sandpolis_account::AccountLayer::new(database.clone()).await?;
@@ -230,6 +230,12 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     #[cfg(feature = "layer-shell")]
     {
         m.define::<sandpolis_shell::ShellSessionData>().unwrap();
+    }
+
+    // Desktop layer
+    #[cfg(feature = "layer-desktop")]
+    {
+        m.define::<sandpolis_desktop::DesktopData>().unwrap();
     }
 
     // Account layer

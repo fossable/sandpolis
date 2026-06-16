@@ -7,7 +7,6 @@ use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use crate::gui::ui::widgets::{button, heading, muted, text};
 use bevy::camera::ClearColorConfig;
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui};
 use bevy_ui_widgets::Activate;
 use std::time::{Duration, Instant};
 
@@ -151,86 +150,6 @@ pub fn rotate_about_logo(time: Res<Time>, mut logo_query: Query<&mut Transform, 
         transform.rotate_x(-0.5 * time.delta_secs());
     }
 }
-
-/// System to render the about screen UI with egui.
-pub fn render_about_screen(
-    mut contexts: EguiContexts,
-    mut about_state: ResMut<AboutScreenState>,
-    windows: Query<&Window>,
-) {
-    if !about_state.show {
-        return;
-    }
-
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-
-    let Ok(window) = windows.single() else {
-        return;
-    };
-
-    let window_size = Vec2::new(window.width(), window.height());
-
-    egui::Window::new("About Sandpolis")
-        .id(egui::Id::new("about_screen"))
-        .pivot(egui::Align2::CENTER_CENTER)
-        .resizable(false)
-        .movable(false)
-        .collapsible(false)
-        .fixed_pos(egui::Pos2::new(window_size.x / 2.0, window_size.y / 2.0))
-        .show(ctx, |ui| {
-            ui.vertical_centered(|ui| {
-                // Space for the 3D logo rendering at the top
-                ui.add_space(320.0); // Height of the 3D viewport + padding
-
-                ui.heading("SANDPOLIS");
-                ui.add_space(8.0);
-
-                ui.label("Security & Systems Management Platform");
-                ui.add_space(16.0);
-
-                ui.separator();
-                ui.add_space(16.0);
-
-                ui.label("A Rust-based platform for managing and monitoring");
-                ui.label("distributed systems and security infrastructure.");
-                ui.add_space(16.0);
-
-                ui.separator();
-                ui.add_space(16.0);
-
-                // Version information
-                ui.horizontal(|ui| {
-                    ui.label("Version:");
-                    ui.colored_label(egui::Color32::GRAY, env!("CARGO_PKG_VERSION"));
-                });
-                ui.add_space(8.0);
-
-                // Project links
-                ui.horizontal(|ui| {
-                    ui.label("Project:");
-                    ui.hyperlink_to(
-                        "github.com/fossable/sandpolis",
-                        "https://github.com/fossable/sandpolis",
-                    );
-                });
-                ui.add_space(16.0);
-
-                ui.separator();
-                ui.add_space(16.0);
-
-                // Close button
-                if ui.button("Close").clicked() {
-                    about_state.show = false;
-                    about_state.logo_click_count = 0;
-                    about_state.last_logo_click = None;
-                }
-            });
-        });
-}
-
-// ── Native about panel ───────────────────────────────────────────────────────
 
 /// Marker for the native about panel root.
 #[derive(Component)]

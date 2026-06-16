@@ -9,8 +9,9 @@
 use crate::gui::about::{AboutScreenState, register_logo_click};
 use crate::gui::input::CurrentLayer;
 use crate::gui::layer_picker::LayerPickerState;
+use crate::gui::layer_toolbar::LayerToolbarRoot;
 use crate::gui::ui::gating::BlocksWorldInput;
-use crate::gui::ui::icon::{IconAssetRoot, IconCache};
+use crate::gui::ui::icon::IconCache;
 use crate::gui::ui::theme::{Role, Theme};
 use crate::gui::ui::z;
 use bevy::image::Image;
@@ -22,6 +23,11 @@ use sandpolis_instance::LayerName;
 const FADE_IN_SECS: f32 = 0.4;
 /// Icon rasterization size in pixels.
 const ICON_PX: u32 = 24;
+
+/// Marker for the bottom-right chrome column that holds the layer toolbar (top)
+/// and the layer indicator (bottom, just above the minimap).
+#[derive(Component)]
+pub struct LayerChrome;
 
 /// Marker for the layer indicator root (the clickable element).
 #[derive(Component)]
@@ -80,55 +86,78 @@ pub fn spawn_layer_indicator(
     current_layer: Res<CurrentLayer>,
     mut images: ResMut<Assets<Image>>,
     mut icon_cache: ResMut<IconCache>,
-    icon_root: Res<IconAssetRoot>,
 ) {
-    let icon = icon_cache.get_or_rasterize(
-        &mut images,
-        &icon_root.0,
-        layer_icon_path(&current_layer),
-        ICON_PX,
-    );
+    let icon = icon_cache.get_or_rasterize(&mut images, layer_icon_path(&current_layer), ICON_PX);
 
     commands
         .spawn((
-            LayerIndicator,
-            Button,
-            Interaction::default(),
-            BlocksWorldInput,
+            LayerChrome,
             GlobalZIndex(z::CHROME),
             Node {
                 position_type: PositionType::Absolute,
                 right: Val::Px(10.0),
                 bottom: Val::Px(168.0),
-                width: Val::Px(200.0),
-                height: Val::Px(36.0),
-                align_items: AlignItems::Center,
-                column_gap: Val::Px(6.0),
-                padding: UiRect::horizontal(Val::Px(8.0)),
-                border: UiRect::all(Val::Px(1.5)),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::FlexEnd,
+                row_gap: Val::Px(6.0),
                 ..default()
             },
-            BackgroundColor(theme.color(Role::Surface)),
-            BorderColor::all(theme.color(Role::Accent)),
-            children![
-                (
-                    LayerIndicatorIcon,
-                    ImageNode::new(icon),
+        ))
+        .with_children(|chrome| {
+            // Toolbar row (above the indicator): same width as the indicator so its
+            // first button's left edge aligns with the indicator's left edge;
+            // buttons wrap to a second row if they exceed that width.
+            chrome.spawn((
+                LayerToolbarRoot,
+                BlocksWorldInput,
+                Node {
+                    width: Val::Px(200.0),
+                    flex_direction: FlexDirection::Row,
+                    flex_wrap: FlexWrap::Wrap,
+                    justify_content: JustifyContent::FlexStart,
+                    column_gap: Val::Px(6.0),
+                    row_gap: Val::Px(6.0),
+                    ..default()
+                },
+            ));
+
+            chrome
+                .spawn((
+                    LayerIndicator,
+                    Button,
+                    Interaction::default(),
+                    BlocksWorldInput,
                     Node {
-                        width: Val::Px(ICON_PX as f32),
-                        height: Val::Px(ICON_PX as f32),
+                        width: Val::Px(200.0),
+                        height: Val::Px(36.0),
+                        align_items: AlignItems::Center,
+                        column_gap: Val::Px(6.0),
+                        padding: UiRect::horizontal(Val::Px(8.0)),
+                        border: UiRect::all(Val::Px(1.5)),
                         ..default()
                     },
-                ),
-                (
-                    LayerIndicatorLabel,
-                    Text::new(layer_display_name(&current_layer).to_string()),
-                    theme.text_font(theme.metrics.font_lg),
-                    TextColor(theme.color(Role::Text)),
-                ),
-            ],
-        ))
-        .observe(on_indicator_click);
+                    BackgroundColor(theme.color(Role::Surface)),
+                    BorderColor::all(theme.color(Role::Accent)),
+                    children![
+                        (
+                            LayerIndicatorIcon,
+                            ImageNode::new(icon),
+                            Node {
+                                width: Val::Px(ICON_PX as f32),
+                                height: Val::Px(ICON_PX as f32),
+                                ..default()
+                            },
+                        ),
+                        (
+                            LayerIndicatorLabel,
+                            Text::new(layer_display_name(&current_layer).to_string()),
+                            theme.text_font(theme.metrics.font_lg),
+                            TextColor(theme.color(Role::Text)),
+                        ),
+                    ],
+                ))
+                .observe(on_indicator_click);
+        });
 }
 
 /// Open the layer picker on click (and register an About easter-egg click).
@@ -149,7 +178,6 @@ pub fn update_layer_indicator(
     mut state: ResMut<LayerIndicatorState>,
     mut images: ResMut<Assets<Image>>,
     mut icon_cache: ResMut<IconCache>,
-    icon_root: Res<IconAssetRoot>,
     mut root: Query<(&Interaction, &mut BackgroundColor), With<LayerIndicator>>,
     mut label: Query<(&mut Text, &mut TextColor), With<LayerIndicatorLabel>>,
     mut icon: Query<&mut ImageNode, With<LayerIndicatorIcon>>,
@@ -161,12 +189,8 @@ pub fn update_layer_indicator(
         if let Ok((mut text, _)) = label.single_mut() {
             text.0 = layer_display_name(&current_layer).to_string();
         }
-        let handle = icon_cache.get_or_rasterize(
-            &mut images,
-            &icon_root.0,
-            layer_icon_path(&current_layer),
-            ICON_PX,
-        );
+        let handle =
+            icon_cache.get_or_rasterize(&mut images, layer_icon_path(&current_layer), ICON_PX);
         if let Ok(mut image_node) = icon.single_mut() {
             image_node.image = handle;
         }

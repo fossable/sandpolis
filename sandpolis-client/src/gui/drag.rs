@@ -2,7 +2,6 @@ use crate::gui::node::{NodeEntity, Selected, WorldView};
 use crate::gui::ui::gating::UiPointerState;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::{EguiContexts, egui};
 use bevy_rapier2d::prelude::*;
 use sandpolis_instance::InstanceId;
 
@@ -25,7 +24,6 @@ pub struct Dragging;
 
 /// Handle node selection on click (single-click to select, Ctrl-click to multi-select)
 pub fn handle_node_selection(
-    mut contexts: EguiContexts,
     ui_pointer: Res<UiPointerState>,
     mouse_button: Res<ButtonInput<MouseButton>>,
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -35,11 +33,8 @@ pub fn handle_node_selection(
     node_query: Query<(Entity, &Transform, &NodeEntity)>,
     mut selection_set: ResMut<SelectionSet>,
 ) {
-    // Don't handle selection if egui wants the input
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() || ui_pointer.over_ui_blocking {
+    // Don't handle selection if the pointer is over blocking UI
+    if ui_pointer.over_ui_blocking {
         return;
     }
 
@@ -130,7 +125,6 @@ pub fn handle_node_selection(
 
 /// Detect mouse click on nodes and start dragging
 pub fn start_node_drag(
-    mut contexts: EguiContexts,
     ui_pointer: Res<UiPointerState>,
     mouse_button: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window, With<PrimaryWindow>>,
@@ -139,11 +133,8 @@ pub fn start_node_drag(
     mut commands: Commands,
     node_query: Query<(Entity, &Transform), With<NodeEntity>>,
 ) {
-    // Don't start drag if egui wants the input
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    if ctx.wants_pointer_input() || ctx.is_pointer_over_area() || ui_pointer.over_ui_blocking {
+    // Don't start drag if the pointer is over blocking UI
+    if ui_pointer.over_ui_blocking {
         return;
     }
 
@@ -297,40 +288,54 @@ pub fn update_selection_visuals(
     }
 }
 
-/// Render UI element showing selected node count
-pub fn render_selection_ui(
-    mut contexts: EguiContexts,
+/// Marker for the native selection-count badge (top-right corner).
+#[derive(Component)]
+pub struct SelectionBadge;
+
+/// Show/update a native badge with the selected node count when more than one node
+/// is selected; hide it otherwise.
+pub fn update_selection_ui(
+    mut commands: Commands,
+    theme: Res<crate::gui::ui::theme::Theme>,
     selection_set: Res<SelectionSet>,
-    windows: Query<&Window>,
+    badge: Query<Entity, With<SelectionBadge>>,
+    mut labels: Query<&mut Text, With<SelectionBadge>>,
 ) {
-    // Only show UI when multiple nodes are selected
-    if selection_set.selected_nodes.len() <= 1 {
+    use crate::gui::ui::theme::{Role, ThemedBg, ThemedBorder};
+
+    let count = selection_set.selected_nodes.len();
+    if count <= 1 {
+        for entity in &badge {
+            commands.entity(entity).despawn();
+        }
         return;
     }
 
-    let Ok(ctx) = contexts.ctx_mut() else {
+    let label = format!("{} nodes selected", count);
+    if let Ok(mut text) = labels.single_mut() {
+        if text.0 != label {
+            text.0 = label;
+        }
         return;
-    };
+    }
 
-    let Ok(window) = windows.single() else {
-        return;
-    };
-
-    let window_size = bevy::math::Vec2::new(window.width(), window.height());
-
-    // Show selection count in top-right corner
-    egui::Window::new("Selection")
-        .id(egui::Id::new("selection_count"))
-        .title_bar(false)
-        .resizable(false)
-        .movable(false)
-        .fixed_pos(egui::Pos2::new(window_size.x - 120.0, 10.0))
-        .show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.label(format!(
-                    "📌 {} nodes selected",
-                    selection_set.selected_nodes.len()
-                ));
-            });
-        });
+    commands.spawn((
+        SelectionBadge,
+        Text::new(label),
+        theme.text_font(theme.metrics.font_md),
+        TextColor(theme.color(Role::Text)),
+        Node {
+            position_type: PositionType::Absolute,
+            top: Val::Px(10.0),
+            right: Val::Px(10.0),
+            padding: UiRect::axes(Val::Px(theme.metrics.space_md), Val::Px(theme.metrics.space_sm)),
+            border: UiRect::all(Val::Px(1.0)),
+            ..default()
+        },
+        BackgroundColor(theme.color(Role::Panel)),
+        ThemedBg(Role::Panel),
+        BorderColor::all(theme.color(Role::Border)),
+        ThemedBorder(Role::Border),
+        GlobalZIndex(crate::gui::ui::z::CHROME),
+    ));
 }

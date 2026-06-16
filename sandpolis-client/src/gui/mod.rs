@@ -5,12 +5,14 @@
 
 pub mod about;
 pub mod activity;
+pub mod add_agent;
+pub mod assets;
 pub mod controller;
 pub mod drag;
 pub mod edges;
 pub mod input;
-pub mod layer_ext;
 pub mod layer_picker;
+pub mod layer_toolbar;
 pub mod layer_ui;
 pub mod layer_visuals;
 pub mod layout;

@@ -1,6 +1,6 @@
 use crate::gui::input::CurrentLayer;
-use crate::gui::layer_ext::get_extension_for_layer;
 use crate::gui::node::{NeedsScaling, NodeEntity, NodeSvg};
+use crate::gui::ui::controller::LayerRegistry;
 use crate::gui::queries;
 use bevy::prelude::*;
 use bevy_svg::prelude::{Origin, Svg2d};
@@ -217,6 +217,7 @@ fn get_layer_color_tint(
 /// the current layer's filter criteria.
 pub fn update_node_visibility_for_layer(
     current_layer: Res<CurrentLayer>,
+    registry: Res<LayerRegistry>,
     mut node_query: Query<(&NodeEntity, &mut Visibility)>,
 ) {
     // Only update when layer changes
@@ -225,7 +226,7 @@ pub fn update_node_visibility_for_layer(
     }
 
     // Get the visible instance types for the current layer
-    let visible_types = get_visible_instance_types_for_layer(&current_layer);
+    let visible_types = get_visible_instance_types_for_layer(&registry, &current_layer);
 
     for (node_entity, mut visibility) in node_query.iter_mut() {
         let instance_id = node_entity.instance_id;
@@ -245,13 +246,16 @@ pub fn update_node_visibility_for_layer(
 
 /// Get the visible instance types for a layer.
 ///
-/// This checks if there's a LayerGuiExtension for the layer and uses its
-/// visible_instance_types() method. If no extension exists, falls back to
-/// default behavior based on layer name.
-fn get_visible_instance_types_for_layer(layer: &LayerName) -> &'static [InstanceType] {
-    // First, check if there's a registered extension for this layer
-    if let Some(ext) = get_extension_for_layer(layer) {
-        return ext.visible_instance_types();
+/// This checks if there's a registered `LayerClientInfo` for the layer and uses
+/// its `visible_instance_types`. If none exists, falls back to default behavior
+/// based on layer name.
+fn get_visible_instance_types_for_layer(
+    registry: &LayerRegistry,
+    layer: &LayerName,
+) -> &'static [InstanceType] {
+    // First, check if there's a registered client for this layer
+    if let Some(info) = registry.get(layer) {
+        return info.visible_instance_types;
     }
 
     // Fall back to default behavior based on layer name

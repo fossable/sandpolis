@@ -6,36 +6,25 @@
 //! in the dependency tree) and display them with [`ImageNode`]. Results are cached
 //! by `(path, size)` so we only rasterize once.
 //!
-//! Icons are read from [`IconAssetRoot`] (the same asset directory the
-//! `AssetPlugin` serves from). Tint per-state via [`ImageNode::color`] rather than
-//! baking the tint into the cache key.
+//! Icons are read from the compile-time-embedded asset bundle
+//! ([`crate::gui::assets`]), so rasterization doesn't depend on the process
+//! working directory or the on-disk asset layout. Tint per-state via
+//! [`ImageNode::color`] rather than baking the tint into the cache key.
 
+use crate::gui::assets;
 use bevy::asset::RenderAssetUsages;
 use bevy::image::Image;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use resvg::{tiny_skia, usvg};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 
-/// Installs the icon cache and asset-root resources.
+/// Installs the icon cache.
 pub struct IconPlugin;
 
 impl Plugin for IconPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<IconCache>()
-            .init_resource::<IconAssetRoot>();
-    }
-}
-
-/// Filesystem root from which SVG icons are read. Defaults to the same path the
-/// `AssetPlugin` is configured with in the GUI bootstrap.
-#[derive(Resource)]
-pub struct IconAssetRoot(pub PathBuf);
-
-impl Default for IconAssetRoot {
-    fn default() -> Self {
-        Self(PathBuf::from("../sandpolis-client/assets"))
+        app.init_resource::<IconCache>();
     }
 }
 
@@ -46,13 +35,12 @@ pub struct IconCache {
 }
 
 impl IconCache {
-    /// Get a cached icon texture, rasterizing it from `<root>/<path>` at the given
-    /// square pixel size on first use. Returns a default (empty) handle if the SVG
-    /// can't be read or parsed.
+    /// Get a cached icon texture, rasterizing the embedded SVG at `path` to the
+    /// given square pixel size on first use. Returns a default (empty) handle if
+    /// the SVG isn't embedded or can't be parsed.
     pub fn get_or_rasterize(
         &mut self,
         images: &mut Assets<Image>,
-        root: &Path,
         path: &str,
         size: u32,
     ) -> Handle<Image> {
@@ -60,7 +48,7 @@ impl IconCache {
         if let Some(handle) = self.cache.get(&key) {
             return handle.clone();
         }
-        let handle = rasterize_svg(root, path, size)
+        let handle = rasterize_svg(path, size)
             .map(|image| images.add(image))
             .unwrap_or_default();
         self.cache.insert(key, handle.clone());
@@ -68,12 +56,13 @@ impl IconCache {
     }
 }
 
-/// Rasterize an SVG file into a square RGBA [`Image`], preserving aspect ratio.
-fn rasterize_svg(root: &Path, path: &str, size: u32) -> Option<Image> {
-    let bytes = std::fs::read(root.join(path))
-        .map_err(|e| warn!("icon read failed for {path}: {e}"))
-        .ok()?;
-    let tree = usvg::Tree::from_data(&bytes, &usvg::Options::default())
+/// Rasterize an embedded SVG into a square RGBA [`Image`], preserving aspect ratio.
+fn rasterize_svg(path: &str, size: u32) -> Option<Image> {
+    let bytes = assets::asset_bytes(path).or_else(|| {
+        warn!("icon not found in embedded assets: {path}");
+        None
+    })?;
+    let tree = usvg::Tree::from_data(bytes, &usvg::Options::default())
         .map_err(|e| warn!("icon parse failed for {path}: {e}"))
         .ok()?;
 
