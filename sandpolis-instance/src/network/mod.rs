@@ -37,6 +37,8 @@ pub fn collected_responders() -> impl Iterator<Item = &'static dyn RegisterRespo
     inventory::iter::<ResponderRegistration>().map(|r| r.0)
 }
 
+#[cfg(any(feature = "agent", feature = "client"))]
+pub mod client;
 pub mod cli;
 pub mod config;
 pub mod messages;
@@ -44,6 +46,7 @@ pub mod ping;
 #[cfg(feature = "server")]
 pub mod server;
 pub mod stream;
+pub mod sync;
 
 #[data]
 #[derive(Default)]
@@ -57,6 +60,9 @@ pub struct NetworkLayer {
     /// Inbound connections
     pub inbound: Arc<RwLock<Vec<Arc<InstanceConnection>>>>,
 
+    /// Server-side stream relay (forwards client streams to target agents).
+    pub relay: Arc<stream::Relay>,
+
     /// All connections tracked in the database
     pub connections: ResidentVec<ConnectionData>,
 
@@ -68,8 +74,10 @@ impl NetworkLayer {
         debug!("Initializing network layer");
 
         let realm = database.realm(RealmName::default())?;
+        let inbound = Arc::new(RwLock::new(Vec::new()));
         let network = Self {
-            inbound: Arc::new(RwLock::new(Vec::new())),
+            relay: Arc::new(stream::Relay::new(inbound.clone())),
+            inbound,
             data: realm.resident(())?,
             connections: realm.resident_vec(())?,
             database,
@@ -149,6 +157,28 @@ impl InstanceConnection {
     /// Remove a stream (Drop handles cleanup on the handler).
     pub fn close_stream(&self, stream_id: StreamId) {
         self.streams.close(stream_id);
+    }
+
+    /// Open a stream addressed to `target`, so a server relays it there. Sends
+    /// the `initial` request and returns the stream id plus the outbound sender.
+    pub async fn open_stream_to<S: StreamRequester>(
+        &self,
+        target: InstanceId,
+        handler: S,
+        initial: S::Out,
+    ) -> anyhow::Result<(StreamId, tokio::sync::mpsc::Sender<StreamMessage>)>
+    where
+        S::Out: Send + 'static,
+    {
+        let (id, tx) = self.streams.register_to(handler, Some(target));
+        let payload = serde_cbor::to_vec(&initial)?;
+        tx.send(StreamMessage {
+            stream_id: id,
+            payload,
+            dst: Some(target),
+        })
+        .await?;
+        Ok((id, tx))
     }
 }
 

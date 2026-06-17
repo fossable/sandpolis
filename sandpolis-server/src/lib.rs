@@ -10,7 +10,9 @@ use reqwest::{ClientBuilder, Method};
 use sandpolis_instance::database::DatabaseLayer;
 use sandpolis_instance::database::Resident;
 use sandpolis_instance::database::ResidentVec;
-use sandpolis_instance::network::{ConnectionData, InstanceConnection, NetworkLayer, RetryWait};
+use sandpolis_instance::network::{
+    ConnectionData, InstanceConnection, NetworkLayer, RetryWait, collected_responders,
+};
 use sandpolis_instance::realm::RealmLayer;
 use sandpolis_instance::realm::RealmName;
 use sandpolis_instance::{ClusterId, InstanceId};
@@ -106,7 +108,7 @@ impl ServerLayer {
         let token = CancellationToken::new();
 
         let connection = ServerConnection {
-            inner: Arc::new(None),
+            inner: Arc::new(RwLock::new(None)),
             strategy: ServerConnectStrategy::Continuous,
             client: Arc::new(tokio::sync::RwLock::new(Some(client_builder()?))),
             data: self.database.realm(url.realm)?.resident(())?,
@@ -214,7 +216,8 @@ pub struct ServerConnection {
     pub retry: Arc<RwLock<RetryWait>>,
     pub cancel: CancellationToken,
     pub banner: ServerBanner,
-    inner: Arc<Option<InstanceConnection>>,
+    /// Active websocket connection used for streams / sync, once established.
+    pub inner: Arc<RwLock<Option<Arc<InstanceConnection>>>>,
     pub realm: RealmName,
     pub cluster_id: ClusterId,
 }
@@ -229,6 +232,57 @@ impl ServerConnection {
     /// Get the remote address of this connection.
     pub fn address(&self) -> Option<SocketAddr> {
         self.data.read().remote_socket
+    }
+
+    /// Establish the websocket connection used for streams and DB sync, retaining
+    /// it on this `ServerConnection` and in `network.inbound`.
+    #[cfg(any(feature = "client", feature = "agent"))]
+    pub async fn open_websocket(
+        &self,
+        network: &NetworkLayer,
+        instance_id: InstanceId,
+    ) -> Result<Arc<InstanceConnection>> {
+        use reqwest_websocket::Upgrade;
+
+        let url = format!("https://{}.{}/connect", self.cluster_id, self.realm);
+        let response = {
+            let guard = self.client.read().await;
+            let client = guard
+                .as_ref()
+                .ok_or_else(|| anyhow!("connection has no http client"))?;
+            client
+                .get(&url)
+                .header("x-realm", self.realm.to_string())
+                .header("x-instance-id", instance_id.to_string())
+                .upgrade()
+                .send()
+                .await?
+        };
+        let socket = response.into_websocket().await?;
+
+        let data = network
+            .connections
+            .push(ConnectionData::default())
+            .map_err(|e| anyhow!("{e}"))?;
+
+        // Serve our local realm database to the peer's sync subscriptions
+        // (an agent answering the server's all-filter requester).
+        let realm_db = network.database.realm(self.realm.clone())?;
+        let sync_reg =
+            sandpolis_instance::network::sync::SyncResponderRegistration::new(realm_db);
+        let mut handlers: Vec<&dyn sandpolis_instance::network::RegisterResponders> =
+            collected_responders().collect();
+        handlers.push(&sync_reg);
+        let connection = InstanceConnection::websocket_client(
+            socket,
+            data,
+            self.realm.clone(),
+            self.cluster_id,
+            &handlers,
+        );
+        network.inbound.write().unwrap().push(connection.clone());
+        *self.inner.write().unwrap() = Some(connection.clone());
+        Ok(connection)
     }
 
     pub async fn get<Response>(&self, endpoint: &str, body: impl Serialize) -> Result<Response>

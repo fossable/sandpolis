@@ -34,6 +34,7 @@ sandpolis-client = { path = "../sandpolis-client", version = "0.0.1" }
 sandpolis-deploy = { path = "../sandpolis-deploy", version = "0.0.1", optional = true }
 sandpolis-desktop = { path = "../sandpolis-desktop", version = "0.0.1", optional = true }
 sandpolis-filesystem = { path = "../sandpolis-filesystem", version = "0.0.1", optional = true }
+sandpolis-health = { path = "../sandpolis-health", version = "0.0.1", optional = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 sandpolis-inventory = { path = "../sandpolis-inventory", version = "0.0.1", optional = true }
@@ -80,6 +81,7 @@ server = [
   "dep:axum-macros",
   "sandpolis-desktop?/server",
   "sandpolis-filesystem?/server",
+  "sandpolis-health?/server",
   "sandpolis-instance/server",
   "sandpolis-inventory?/server",
   "sandpolis-wake?/server",
@@ -90,6 +92,7 @@ agent = [
   "sandpolis-agent/agent",
   "sandpolis-desktop?/agent",
   "sandpolis-filesystem?/agent",
+  "sandpolis-health?/agent",
   "sandpolis-instance/agent",
   "sandpolis-inventory?/agent",
   "sandpolis-wake?/agent",
@@ -109,7 +112,7 @@ layer-audit = ["dep:sandpolis-audit"]
 layer-deploy = ["dep:sandpolis-deploy"]
 layer-desktop = ["dep:sandpolis-desktop"]
 layer-filesystem = ["dep:sandpolis-filesystem"]
-layer-health = []
+layer-health = ["dep:sandpolis-health"]
 layer-inventory = ["dep:sandpolis-inventory"]
 layer-shell = ["dep:sandpolis-shell"]
 layer-snapshot = ["dep:sandpolis-snapshot"]
@@ -124,6 +127,7 @@ default = [
   "layer-deploy",
   "layer-desktop",
   "layer-filesystem",
+  "layer-health",
   "layer-inventory",
   "layer-wake",
   "layer-probe",
@@ -143,6 +147,7 @@ client-gui = [
   "sandpolis-client/client-gui",
   "sandpolis-desktop?/client-gui",
   "sandpolis-filesystem?/client-gui",
+  "sandpolis-health?/client-gui",
   "sandpolis-instance/client-gui",
   "sandpolis-inventory?/client-gui",
   "sandpolis-probe?/client-gui",
@@ -160,6 +165,7 @@ client-tui = [
   "sandpolis-client/client-tui",
   "sandpolis-desktop?/client-tui",
   "sandpolis-filesystem?/client-tui",
+  "sandpolis-health?/client-tui",
   "sandpolis-inventory?/client-tui",
   "sandpolis-wake?/client-tui",
   "sandpolis-shell?/client-tui",

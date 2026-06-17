@@ -172,6 +172,24 @@ impl Display for InstanceId {
     }
 }
 
+impl FromStr for InstanceId {
+    type Err = anyhow::Error;
+
+    /// Inverse of [`Display`]: parse the uuid-formatted string back into the
+    /// little-endian bytes used to construct it.
+    fn from_str(s: &str) -> Result<Self> {
+        let hex: String = s.chars().filter(|c| *c != '-').collect();
+        if hex.len() != 32 {
+            anyhow::bail!("invalid InstanceId: {s}");
+        }
+        let mut bytes = [0u8; 16];
+        for (i, byte) in bytes.iter_mut().enumerate() {
+            *byte = u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16)?;
+        }
+        Ok(InstanceId(u128::from_le_bytes(bytes)))
+    }
+}
+
 impl ToKey for InstanceId {
     fn to_key(&self) -> native_db::Key {
         native_db::Key::new(self.0.to_be_bytes().to_vec())

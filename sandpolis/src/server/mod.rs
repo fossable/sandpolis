@@ -26,6 +26,10 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         post(sandpolis_server::login::server::post_login),
     );
 
+    // Websocket connection endpoint (clients + agents) for streams / sync
+    let app: Router<InstanceState> =
+        app.route("/connect", get(sandpolis_server::user::server::connect));
+
     // TODO from_fn_with_state for IP blocking
     let app = app.route_layer(axum::middleware::from_fn(
         sandpolis_instance::realm::server::auth_middleware,

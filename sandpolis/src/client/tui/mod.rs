@@ -30,9 +30,13 @@ struct App {
     // Layers
     #[cfg(feature = "layer-wake")]
     wake: sandpolis_wake::client::tui::WakeWidget,
+    #[cfg(feature = "layer-health")]
+    health: sandpolis_health::client::tui::HealthWidget,
 }
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
+    crate::client::spawn_client_sync(state.clone());
+
     let terminal = ratatui::init();
 
     let app_result = App {
@@ -45,6 +49,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         },
         #[cfg(feature = "layer-wake")]
         wake: sandpolis_wake::client::tui::WakeWidget::new(state.wake.clone()),
+        #[cfg(feature = "layer-health")]
+        health: sandpolis_health::client::tui::HealthWidget::new(state.instance.instance_id),
     }
     .run(terminal)
     .await;

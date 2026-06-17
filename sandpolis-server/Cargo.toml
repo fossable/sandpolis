@@ -29,6 +29,7 @@ png = { workspace = true }
 rand = { workspace = true }
 regex = { workspace = true }
 reqwest = { workspace = true }
+reqwest-websocket = { workspace = true, optional = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 serde_bytes = { workspace = true }
@@ -59,7 +60,8 @@ client = [
   "dep:totp-rs",
   "totp-rs?/qr",
   "dep:argon2",
+  "dep:reqwest-websocket",
 ]
-agent = ["sandpolis-instance/agent"]
+agent = ["sandpolis-instance/agent", "dep:reqwest-websocket"]
 client-tui = ["client"]
 client-gui = ["client", "dep:bevy"]

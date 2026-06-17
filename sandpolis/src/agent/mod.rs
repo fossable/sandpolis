@@ -34,8 +34,29 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     }
 
     let mut tasks = tokio::task::JoinSet::new();
+
+    // Periodically refresh the systemd collector. Its updates land in the local
+    // database, which the SyncResponder streams to the server on demand.
+    #[cfg(feature = "layer-health")]
+    {
+        let health = state.health.clone();
+        tasks.spawn(async move {
+            loop {
+                {
+                    let mut collector = health.systemd.lock().await;
+                    if let Err(e) = sandpolis_agent::Collector::refresh(&mut *collector).await {
+                        debug!(error = %e, "Failed to refresh systemd units");
+                    }
+                }
+                sleep(std::time::Duration::from_secs(30)).await;
+            }
+        });
+    }
+
     for url in urls {
         let server = state.server.clone();
+        let network = state.network.clone();
+        let instance_id = state.instance.instance_id;
         tasks.spawn(async move {
             let mut retry = RetryWait::default();
             loop {
@@ -45,6 +66,12 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
                         let cancel = connection.cancel.clone();
                         let entry = Arc::new(connection);
                         server.outbound.write().unwrap().push(entry.clone());
+
+                        // Establish the websocket so the server can sync our
+                        // database.
+                        if let Err(e) = entry.open_websocket(&network, instance_id).await {
+                            warn!(error = %e, url = %url, "Failed to open websocket");
+                        }
                         retry = RetryWait::default();
                         // Stay alive while the internal poll loop handles its
                         // own per-request retries. When the connection is

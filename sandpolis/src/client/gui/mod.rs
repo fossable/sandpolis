@@ -82,6 +82,8 @@ pub use sandpolis_client::gui::preview;
 
 /// Initialize and start rendering the UI.
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
+    crate::client::spawn_client_sync(state.clone());
+
     // Create channel for database updates from resident listeners
     let (db_update_tx, db_update_rx) = tokio::sync::mpsc::unbounded_channel();
 
@@ -285,6 +287,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     app.add_plugins(sandpolis_desktop::client::gui::DesktopClientPlugin);
     #[cfg(feature = "layer-filesystem")]
     app.add_plugins(sandpolis_filesystem::client::gui::FilesystemClientPlugin);
+    #[cfg(feature = "layer-health")]
+    app.add_plugins(sandpolis_health::client::gui::HealthClientPlugin);
     #[cfg(feature = "layer-shell")]
     app.add_plugins(sandpolis_shell::client::gui::ShellClientPlugin);
     #[cfg(feature = "layer-probe")]

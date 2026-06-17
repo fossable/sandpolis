@@ -20,6 +20,7 @@ use tracing::{debug, trace, warn};
 
 pub mod cli;
 pub mod config;
+pub mod sync;
 
 /// This layer manages separate databases for each realm.
 #[derive(Clone)]
@@ -111,6 +112,12 @@ pub struct RealmDatabase(Arc<native_db::Database<'static>>);
 impl RealmDatabase {
     fn new(inner: native_db::Database<'static>) -> Self {
         Self(Arc::new(inner))
+    }
+
+    /// Direct access to the underlying native_db database (for low-level
+    /// operations like watches in the sync layer).
+    pub(crate) fn db(&self) -> &native_db::Database<'static> {
+        &self.0
     }
 
     /// Direct access to a new read-write transaction.

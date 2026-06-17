@@ -33,6 +33,8 @@ pub struct InstanceState {
     pub desktop: sandpolis_desktop::DesktopLayer,
     #[cfg(feature = "layer-filesystem")]
     pub filesystem: sandpolis_filesystem::FilesystemLayer,
+    #[cfg(feature = "layer-health")]
+    pub health: sandpolis_health::HealthLayer,
     pub realm: sandpolis_instance::realm::RealmLayer,
     pub instance: sandpolis_instance::InstanceLayer,
     pub network: sandpolis_instance::network::NetworkLayer,
@@ -82,6 +84,10 @@ impl InstanceState {
         let inventory =
             sandpolis_inventory::InventoryLayer::new(database.clone(), instance.clone()).await?;
 
+        #[cfg(feature = "layer-health")]
+        let health =
+            sandpolis_health::HealthLayer::new(database.clone(), instance.clone()).await?;
+
         #[cfg(feature = "layer-wake")]
         let wake = sandpolis_wake::WakeLayer {
             network: network.clone(),
@@ -108,6 +114,8 @@ impl InstanceState {
         Ok(Self {
             #[cfg(feature = "layer-inventory")]
             inventory,
+            #[cfg(feature = "layer-health")]
+            health,
             #[cfg(feature = "layer-wake")]
             wake,
             #[cfg(feature = "layer-shell")]
@@ -242,6 +250,14 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     #[cfg(feature = "layer-account")]
     {
         m.define::<sandpolis_account::AccountLayerData>().unwrap();
+    }
+
+    // Health layer
+    #[cfg(feature = "layer-health")]
+    {
+        m.define::<sandpolis_health::HealthLayerData>().unwrap();
+        m.define::<sandpolis_health::systemd::SystemdUnitData>()
+            .unwrap();
     }
 
     // Inventory layer

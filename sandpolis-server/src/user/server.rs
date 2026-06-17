@@ -16,6 +16,7 @@ use native_db::ToKey;
 use native_model::Model;
 use passwords::PasswordGenerator;
 use rand::RngExt;
+use sandpolis_instance::network::ConnectionData;
 use sandpolis_instance::network::InstanceConnection;
 use sandpolis_instance::network::RequestResult;
 use sandpolis_instance::realm::RealmName;
@@ -362,20 +363,62 @@ impl FromRequestParts<UserLayer> for Claims {
     }
 }
 
+/// Accept a websocket from a client or agent.
+///
+/// Authentication is by realm cert (the `x-realm` header is validated upstream by
+/// `auth_middleware`). The peer reports its own `InstanceId` via `x-instance-id`
+/// so the server can tell agents (which it pulls all data from) from clients
+/// (which subscribe to subsets). The resulting connection is retained in
+/// `network.inbound`; dropping it would cancel the socket.
+// TODO: verify the reported instance id against the connection's certificate.
 #[axum_macros::debug_handler]
 pub async fn connect(
     State(state): State<UserLayer>,
-    claims: Claims,
+    TypedHeader(realm): TypedHeader<RealmName>,
+    headers: axum::http::HeaderMap,
     ws: WebSocketUpgrade,
 ) -> impl axum::response::IntoResponse {
-    let database = state.database.clone();
-    let realm = claims.realm.clone();
+    let network = state.network.clone();
     let cluster_id = state.instance.cluster_id;
+    let remote_instance = headers
+        .get("x-instance-id")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.parse::<sandpolis_instance::InstanceId>().ok());
+
     ws.on_upgrade(move |socket| async move {
-        let data = database.realm(realm.clone()).unwrap().resident(()).unwrap();
-        // Collect all registered responder handlers from inventory
-        let handlers: Vec<&dyn sandpolis_instance::network::RegisterResponders> =
+        let mut cd = ConnectionData::default();
+        if let Some(id) = remote_instance {
+            cd.remote_instance = id;
+        }
+        cd.established = chrono::Utc::now();
+        let data = network.connections.push(cd).unwrap();
+
+        // Serve this peer's subscriptions from our local realm database.
+        let realm_db = network.database.realm(realm.clone()).unwrap();
+        let sync_reg =
+            sandpolis_instance::network::sync::SyncResponderRegistration::new(realm_db.clone());
+
+        let mut handlers: Vec<&dyn sandpolis_instance::network::RegisterResponders> =
             sandpolis_instance::network::collected_responders().collect();
-        InstanceConnection::websocket(socket, data, realm, cluster_id, &handlers);
+        handlers.push(&sync_reg);
+        let connection =
+            InstanceConnection::websocket(socket, data, realm, cluster_id, &handlers);
+
+        // Let this connection relay streams to other connections (client -> agent).
+        connection
+            .streams
+            .set_relay(std::sync::Arc::downgrade(&network.relay));
+
+        // Pull everything from agents into our database (the long-lived sync).
+        if remote_instance.is_some_and(|id| id.is_agent()) {
+            if let Err(e) = connection
+                .open_sync(realm_db, vec![sandpolis_instance::database::sync::SyncFilter::all()])
+                .await
+            {
+                tracing::warn!(error = %e, "Failed to open agent sync stream");
+            }
+        }
+
+        network.inbound.write().unwrap().push(connection);
     })
 }

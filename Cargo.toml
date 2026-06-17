@@ -12,6 +12,7 @@ members = [
   "sandpolis-deploy",
   "sandpolis-desktop",
   "sandpolis-filesystem",
+  "sandpolis-health",
   "sandpolis-instance",
   "sandpolis-inventory",
   "sandpolis-macros",
@@ -77,6 +78,7 @@ url = { version = "2.5.4", features = ["serde"] }
 uuid = { version = "1.15.1", features = ["v7", "serde", "rng-getrandom"] }
 validator = { version = "0.20", features = ["derive"] }
 inventory = "0.3"
+zbus = { version = "5.5.0", default-features = false, features = ["tokio"] }
 reqwest = { version = "0.13.4", default-features = false, features = [
   "stream",
   "cookies",

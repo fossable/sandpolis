@@ -28,6 +28,7 @@ use sandpolis_client::gui::ui::bind::bind_text;
 use sandpolis_client::gui::ui::controller::{LayerClientInfo, NodeController, RegisterLayerClient};
 use sandpolis_client::gui::ui::theme::{Role, Theme};
 use sandpolis_client::gui::ui::widgets::{button, heading, row, text};
+use sandpolis_instance::network::stream::StreamMessage;
 use sandpolis_instance::{InstanceId, InstanceType, LayerName};
 use std::collections::HashMap;
 use tokio::sync::mpsc::{Receiver, Sender, UnboundedReceiver, channel};
@@ -61,16 +62,12 @@ struct DesktopStreams {
 
 /// A live stream the GUI is rendering.
 struct StreamSession {
-    /// Kept alive so the requester's event channel stays open; registered on a
-    /// stream-capable connection at the transport seam once one exists.
-    _requester: DesktopStreamRequester,
-    /// Decoded frames/state pushed by the requester.
+    /// Decoded frames/state pushed by the requester (registered on the
+    /// connection; the requester holds the sending half).
     events: UnboundedReceiver<DesktopStreamEvent>,
-    /// Outbound requests (initial Start, input, Stop). Forwarded over the stream
-    /// once transport exists; until then `try_send` simply drops when full.
+    /// Outbound requests (input, Stop). A background task forwards these over the
+    /// relayed stream to the agent.
     outbound: Sender<DesktopStreamRequest>,
-    /// Receiving end of `outbound`; handed to the transport forwarder at the seam.
-    _outbound_rx: Receiver<DesktopStreamRequest>,
     /// The display node showing this stream.
     view: Entity,
     /// Remote display dimensions, once known.
@@ -81,10 +78,7 @@ struct StreamSession {
 
 /// A pending one-shot screenshot.
 struct ScreenshotSession {
-    _requester: DesktopScreenshotRequester,
     result: UnboundedReceiver<DesktopScreenshotResult>,
-    _outbound: Sender<DesktopScreenshotRequest>,
-    _outbound_rx: Receiver<DesktopScreenshotRequest>,
     view: Entity,
 }
 
@@ -152,24 +146,21 @@ impl NodeController for DesktopController {
                             let (requester, events) = DesktopStreamRequester::channel();
                             let (outbound, outbound_rx) = channel(64);
 
-                            // SEAM: register `requester` on a stream-capable
-                            // connection and forward `outbound_rx` (starting with
-                            // this Start request) over the stream once client
-                            // transport exists. See module docs.
-                            let _ = outbound.try_send(DesktopStreamRequest::Start {
+                            // Open a relayed stream to the agent and forward all
+                            // subsequent outbound requests (input, Stop) over it.
+                            let initial = DesktopStreamRequest::Start {
                                 desktop_uuid: String::new(),
                                 scale_factor: 1.0,
                                 color_mode: DesktopStreamColorMode::Rgb888,
                                 compression_mode: DesktopStreamCompressionMode::Zstd,
-                            });
+                            };
+                            spawn_stream(instance, requester, initial, outbound_rx);
 
                             streams.streams.insert(
                                 instance,
                                 StreamSession {
-                                    _requester: requester,
                                     events,
                                     outbound,
-                                    _outbound_rx: outbound_rx,
                                     view,
                                     size: None,
                                     last_pointer: None,
@@ -202,20 +193,18 @@ impl NodeController for DesktopController {
                             return;
                         };
                         let (requester, result) = DesktopScreenshotRequester::channel();
-                        let (outbound, outbound_rx) = channel(4);
-                        // SEAM: same as the stream case (one-shot request).
-                        let _ = outbound.try_send(DesktopScreenshotRequest {
-                            desktop_uuid: String::new(),
-                        });
+                        // One-shot: open a relayed stream to the agent with the
+                        // screenshot request; the response returns via `result`.
+                        spawn_screenshot(
+                            instance,
+                            requester,
+                            DesktopScreenshotRequest {
+                                desktop_uuid: String::new(),
+                            },
+                        );
                         streams.screenshots.insert(
                             instance,
-                            ScreenshotSession {
-                                _requester: requester,
-                                result,
-                                _outbound: outbound,
-                                _outbound_rx: outbound_rx,
-                                view,
-                            },
+                            ScreenshotSession { result, view },
                         );
                         info!("Screenshot requested for {}", instance);
                     },

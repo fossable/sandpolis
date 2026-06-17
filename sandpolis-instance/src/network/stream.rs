@@ -6,11 +6,12 @@
 //! (one or more than one). The `StreamResponder` is created as a result of the
 //! `StreamRequester`'s first request and sends "responses" (one or more than one).
 
+use crate::InstanceId;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::future::Future;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use tokio::sync::mpsc::Sender;
 
 /// Connections may have multiple streams running concurrently, so this identifier
@@ -33,6 +34,13 @@ impl StreamId {
 pub struct StreamMessage {
     pub stream_id: StreamId,
     pub payload: Vec<u8>,
+
+    /// Destination instance for a relayed stream. `None` means the message is
+    /// handled by the receiving peer directly (e.g. sync, or responses on their
+    /// way back to the origin). `Some(id)` means a server should forward this to
+    /// the connection for that instance.
+    #[serde(default)]
+    pub dst: Option<InstanceId>,
 }
 
 /// Implemented by stream types to generate unique IDs.
@@ -142,6 +150,9 @@ pub struct StreamRegistry {
     responder_factories: RwLock<HashMap<u32, Box<dyn RawResponderFactory>>>,
     /// Sender for outgoing stream messages.
     tx: Sender<StreamMessage>,
+    /// Server-side relay for forwarding streams to other connections. Held as a
+    /// `Weak` to avoid a reference cycle (relay -> connections -> registry).
+    relay: RwLock<Option<std::sync::Weak<Relay>>>,
 }
 
 impl StreamRegistry {
@@ -150,7 +161,19 @@ impl StreamRegistry {
             streams: RwLock::new(HashMap::new()),
             responder_factories: RwLock::new(HashMap::new()),
             tx,
+            relay: RwLock::new(None),
         }
+    }
+
+    /// Attach a relay so unknown streams can be forwarded to other connections.
+    /// Only used on the server.
+    pub fn set_relay(&self, relay: std::sync::Weak<Relay>) {
+        *self.relay.write().unwrap() = Some(relay);
+    }
+
+    /// Send a raw message directly to this connection's peer.
+    pub async fn send_raw(&self, message: StreamMessage) {
+        let _ = self.tx.send(message).await;
     }
 
     /// Register a responder factory for a given stream type.
@@ -186,44 +209,72 @@ impl StreamRegistry {
 
         if let Some((handler, response_tx)) = handler_opt {
             handler.on_receive_raw(&message.payload, response_tx).await;
-        } else {
-            // No existing handler - try to create a responder from factory
-            let type_tag = message.stream_id.tag();
-            let factory_opt = {
-                let factories = self.responder_factories.read().unwrap();
-                factories.get(&type_tag).map(|f| f.create())
-            };
+            return;
+        }
 
-            if let Some(handler) = factory_opt {
-                // Create channel for response messages from the handler
-                let (response_tx, mut response_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(32);
-
-                // Register the new responder
-                self.streams
-                    .write()
-                    .unwrap()
-                    .insert(message.stream_id, (handler.clone(), response_tx.clone()));
-
-                // Spawn task to forward response bytes as StreamMessages
-                let tx = self.tx.clone();
-                let stream_id = message.stream_id;
-                tokio::spawn(async move {
-                    while let Some(payload) = response_rx.recv().await {
-                        let msg = StreamMessage { stream_id, payload };
-                        if tx.send(msg).await.is_err() {
-                            break;
-                        }
-                    }
-                });
-
-                // Dispatch the message to the newly created handler
-                handler.on_receive_raw(&message.payload, response_tx).await;
+        // No local handler. On a server, try to relay to another connection.
+        let relay = self.relay.read().unwrap().clone();
+        if let Some(relay) = relay.and_then(|r| r.upgrade()) {
+            if relay.route(&message, &self.tx).await {
+                return;
             }
+        }
+
+        // Otherwise create a responder from a registered factory.
+        let type_tag = message.stream_id.tag();
+        let factory_opt = {
+            let factories = self.responder_factories.read().unwrap();
+            factories.get(&type_tag).map(|f| f.create())
+        };
+
+        if let Some(handler) = factory_opt {
+            // Create channel for response messages from the handler
+            let (response_tx, mut response_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(32);
+
+            // Register the new responder
+            self.streams
+                .write()
+                .unwrap()
+                .insert(message.stream_id, (handler.clone(), response_tx.clone()));
+
+            // Spawn task to forward response bytes as StreamMessages. Responses
+            // carry no `dst`: they travel back to whoever opened the stream
+            // (either the direct peer, or via the relay's routing table).
+            let tx = self.tx.clone();
+            let stream_id = message.stream_id;
+            tokio::spawn(async move {
+                while let Some(payload) = response_rx.recv().await {
+                    let msg = StreamMessage {
+                        stream_id,
+                        payload,
+                        dst: None,
+                    };
+                    if tx.send(msg).await.is_err() {
+                        break;
+                    }
+                }
+            });
+
+            // Dispatch the message to the newly created handler
+            handler.on_receive_raw(&message.payload, response_tx).await;
         }
     }
 
     /// Register a stream handler and return a sender for outbound messages.
     pub fn register<S: StreamRequester>(&self, handler: S) -> (StreamId, Sender<StreamMessage>)
+    where
+        S::Out: Send + 'static,
+    {
+        self.register_to(handler, None)
+    }
+
+    /// Like [`register`](Self::register) but stamps `dst` on every outbound
+    /// message for the stream, so a server relays it to the target instance.
+    pub fn register_to<S: StreamRequester>(
+        &self,
+        handler: S,
+        dst: Option<InstanceId>,
+    ) -> (StreamId, Sender<StreamMessage>)
     where
         S::Out: Send + 'static,
     {
@@ -239,19 +290,24 @@ impl StreamRegistry {
             .unwrap()
             .insert(id, (wrapped, response_tx));
 
-        // Spawn task to forward response bytes as StreamMessages
+        // Spawn task to forward the handler's outgoing bytes as StreamMessages.
         let tx = self.tx.clone();
         let stream_id = id;
         tokio::spawn(async move {
             while let Some(payload) = response_rx.recv().await {
-                let msg = StreamMessage { stream_id, payload };
+                let msg = StreamMessage {
+                    stream_id,
+                    payload,
+                    dst,
+                };
                 if tx.send(msg).await.is_err() {
                     break;
                 }
             }
         });
 
-        // Create channel for outgoing request messages from the caller
+        // Create channel for outgoing request messages from the caller. These
+        // are pre-built `StreamMessage`s (the caller sets `dst`).
         let tx2 = self.tx.clone();
         let (msg_tx, mut msg_rx) = tokio::sync::mpsc::channel::<StreamMessage>(32);
         tokio::spawn(async move {
@@ -265,9 +321,79 @@ impl StreamRegistry {
         (id, msg_tx)
     }
 
-    /// Remove a stream from the registry.
+    /// Remove a stream from the registry and drop any relay route for it.
     pub fn close(&self, stream_id: StreamId) {
         self.streams.write().unwrap().remove(&stream_id);
+        if let Some(relay) = self.relay.read().unwrap().clone().and_then(|r| r.upgrade()) {
+            relay.routes.lock().unwrap().remove(&stream_id);
+        }
+    }
+}
+
+/// Server-side stream router. Forwards messages between a client connection and a
+/// target agent connection, keyed by stream id.
+pub struct Relay {
+    /// All connections the server holds (shared with `NetworkLayer::inbound`).
+    connections: Arc<RwLock<Vec<Arc<super::InstanceConnection>>>>,
+    /// stream id -> the origin connection's outbound sender (for responses).
+    routes: Mutex<HashMap<StreamId, Sender<StreamMessage>>>,
+}
+
+impl Relay {
+    pub fn new(connections: Arc<RwLock<Vec<Arc<super::InstanceConnection>>>>) -> Self {
+        Self {
+            connections,
+            routes: Mutex::new(HashMap::new()),
+        }
+    }
+
+    fn find(&self, target: InstanceId) -> Option<Arc<super::InstanceConnection>> {
+        self.connections
+            .read()
+            .unwrap()
+            .iter()
+            .find(|c| c.data.read().remote_instance == target)
+            .cloned()
+    }
+
+    /// Attempt to route an unhandled message. Returns `true` if it was forwarded
+    /// (and should not be handled locally).
+    async fn route(&self, message: &StreamMessage, origin_tx: &Sender<StreamMessage>) -> bool {
+        // Client -> agent: an addressed message. Remember the origin so responses
+        // can return, then forward to the target connection.
+        if let Some(target) = message.dst {
+            let Some(conn) = self.find(target) else {
+                // Unknown target: swallow it rather than mis-handling locally.
+                return true;
+            };
+            self.routes
+                .lock()
+                .unwrap()
+                .insert(message.stream_id, origin_tx.clone());
+            conn.streams
+                .send_raw(StreamMessage {
+                    stream_id: message.stream_id,
+                    payload: message.payload.clone(),
+                    dst: Some(target),
+                })
+                .await;
+            return true;
+        }
+
+        // Agent -> client: a response on a relayed stream goes back to its origin.
+        let origin = self.routes.lock().unwrap().get(&message.stream_id).cloned();
+        if let Some(origin) = origin {
+            let _ = origin
+                .send(StreamMessage {
+                    stream_id: message.stream_id,
+                    payload: message.payload.clone(),
+                    dst: None,
+                })
+                .await;
+            return true;
+        }
+
+        false
     }
 }
 
@@ -417,5 +543,132 @@ mod tests {
         // Give time for async processing
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
         assert_eq!(received_count.load(Ordering::SeqCst), 84);
+    }
+}
+
+#[cfg(test)]
+mod relay_tests {
+    use super::*;
+    use crate::network::{ConnectionData, InstanceConnection};
+    use crate::realm::RealmName;
+    use crate::{ClusterId, InstanceId, InstanceType, test_db};
+    use sandpolis_macros::Stream;
+    use tokio::sync::mpsc;
+    use tokio::time::{Duration, timeout};
+    use tokio_util::sync::CancellationToken;
+
+    #[derive(Serialize, Deserialize)]
+    struct RelayPing(u64);
+    #[derive(Serialize, Deserialize)]
+    struct RelayPong(u64);
+
+    #[derive(Stream, Default)]
+    struct RelayEchoResponder;
+    impl StreamResponder for RelayEchoResponder {
+        type In = RelayPing;
+        type Out = RelayPong;
+        async fn on_message(&self, ping: Self::In, sender: Sender<Self::Out>) -> Result<()> {
+            sender.send(RelayPong(ping.0 * 2)).await?;
+            Ok(())
+        }
+    }
+
+    #[derive(Stream)]
+    struct RelayEchoRequester {
+        result: mpsc::Sender<u64>,
+    }
+    impl StreamRequester for RelayEchoRequester {
+        type In = RelayPong;
+        type Out = RelayPing;
+        async fn new(_: Self::Out, _: Sender<Self::Out>) -> Result<Self> {
+            anyhow::bail!("constructed directly")
+        }
+        async fn on_message(&self, pong: Self::In, _: Sender<Self::Out>) -> Result<()> {
+            let _ = self.result.send(pong.0).await;
+            Ok(())
+        }
+    }
+
+    fn pump(mut rx: mpsc::Receiver<StreamMessage>, dst: Arc<StreamRegistry>) {
+        tokio::spawn(async move {
+            while let Some(msg) = rx.recv().await {
+                dst.dispatch(msg).await;
+            }
+        });
+    }
+
+    /// A client opens a stream addressed to an agent; the server relays the
+    /// request to the agent and the agent's response back to the client.
+    #[tokio::test]
+    async fn relays_client_to_agent_and_back() -> anyhow::Result<()> {
+        let db = test_db!(ConnectionData);
+        let realm = db.realm(RealmName::default())?;
+        let conns = realm.resident_vec::<ConnectionData>(())?;
+
+        let agent_id = InstanceId::new(&[InstanceType::Agent]);
+        let client_id = InstanceId::new(&[InstanceType::Client]);
+
+        // Channels named by the dispatch they feed.
+        let (c2s_tx, c2s_rx) = mpsc::channel(32); // client -> server (client-facing)
+        let (s2c_tx, s2c_rx) = mpsc::channel(32); // server -> client
+        let (s2a_tx, s2a_rx) = mpsc::channel(32); // server -> agent
+        let (a2s_tx, a2s_rx) = mpsc::channel(32); // agent -> server (agent-facing)
+
+        let client_reg = Arc::new(StreamRegistry::new(c2s_tx));
+        let server_client_reg = Arc::new(StreamRegistry::new(s2c_tx));
+        let server_agent_reg = Arc::new(StreamRegistry::new(s2a_tx));
+        let agent_reg = Arc::new(StreamRegistry::new(a2s_tx));
+
+        agent_reg.register_responder(RelayEchoResponder::default);
+
+        // Server connections (so the relay can find the agent by instance id).
+        let mut agent_data = ConnectionData::default();
+        agent_data.remote_instance = agent_id;
+        let mut client_data = ConnectionData::default();
+        client_data.remote_instance = client_id;
+        let agent_conn = Arc::new(InstanceConnection {
+            data: conns.push(agent_data)?,
+            realm: RealmName::default(),
+            cluster_id: ClusterId::default(),
+            cancel: CancellationToken::new(),
+            streams: server_agent_reg.clone(),
+        });
+        let client_conn = Arc::new(InstanceConnection {
+            data: conns.push(client_data)?,
+            realm: RealmName::default(),
+            cluster_id: ClusterId::default(),
+            cancel: CancellationToken::new(),
+            streams: server_client_reg.clone(),
+        });
+
+        let connections = Arc::new(RwLock::new(vec![agent_conn, client_conn]));
+        let relay = Arc::new(Relay::new(connections));
+        server_client_reg.set_relay(Arc::downgrade(&relay));
+        server_agent_reg.set_relay(Arc::downgrade(&relay));
+
+        pump(c2s_rx, server_client_reg.clone());
+        pump(s2c_rx, client_reg.clone());
+        pump(s2a_rx, agent_reg.clone());
+        pump(a2s_rx, server_agent_reg.clone());
+
+        // Client opens a stream addressed to the agent.
+        let (result_tx, mut result_rx) = mpsc::channel(8);
+        let (id, tx) = client_reg.register_to(
+            RelayEchoRequester { result: result_tx },
+            Some(agent_id),
+        );
+        tx.send(StreamMessage {
+            stream_id: id,
+            payload: serde_cbor::to_vec(&RelayPing(21))?,
+            dst: Some(agent_id),
+        })
+        .await?;
+
+        let got = timeout(Duration::from_secs(2), result_rx.recv())
+            .await?
+            .expect("relayed response");
+        assert_eq!(got, 42);
+
+        Ok(())
     }
 }
