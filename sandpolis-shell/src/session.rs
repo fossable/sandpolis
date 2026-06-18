@@ -139,6 +139,60 @@ impl Drop for ShellSessionStreamResponder {
     }
 }
 
+#[cfg(feature = "client")]
+mod client {
+    use super::*;
+    use sandpolis_instance::network::StreamRequester;
+    use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
+
+    /// An output chunk surfaced to the GUI terminal as a shell session runs.
+    pub struct ShellOutput {
+        pub stdout: Vec<u8>,
+        pub stderr: Vec<u8>,
+    }
+
+    /// Client side of a shell session: forwards stdout/stderr to the GUI through
+    /// an unbounded channel. The tag matches [`ShellSessionStreamResponder`] so
+    /// the agent terminates the relayed stream with a real PTY.
+    #[derive(Stream)]
+    pub struct ShellSessionStreamRequester {
+        output: UnboundedSender<ShellOutput>,
+    }
+
+    impl ShellSessionStreamRequester {
+        /// Construct a requester paired with the receiver the GUI drains.
+        pub fn channel() -> (Self, UnboundedReceiver<ShellOutput>) {
+            let (output, rx) = unbounded_channel();
+            (Self { output }, rx)
+        }
+    }
+
+    impl StreamRequester for ShellSessionStreamRequester {
+        type In = ShellSessionStreamResponse;
+        type Out = ShellSessionStreamRequest;
+
+        async fn new(initial: Self::Out, tx: Sender<Self::Out>) -> Result<Self> {
+            tx.send(initial).await?;
+            // The GUI-facing constructor is `channel()`; this trait path has no
+            // receiver attached, so decoded output is discarded.
+            let (output, _rx) = unbounded_channel();
+            Ok(Self { output })
+        }
+
+        async fn on_message(&self, response: Self::In, _tx: Sender<Self::Out>) -> Result<()> {
+            // GUI receiver may be gone (controller closed); dropping is fine.
+            let _ = self.output.send(ShellOutput {
+                stdout: response.stdout,
+                stderr: response.stderr,
+            });
+            Ok(())
+        }
+    }
+}
+
+#[cfg(feature = "client")]
+pub use client::{ShellOutput, ShellSessionStreamRequester};
+
 #[cfg(test)]
 mod test_shell_session {
     use super::*;

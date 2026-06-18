@@ -11723,6 +11723,7 @@ dependencies = [
  "sandpolis-instance",
  "sandpolis-macros",
  "serde 1.0.228",
+ "serde_cbor",
  "tokio",
  "tracing",
  "tui-term",

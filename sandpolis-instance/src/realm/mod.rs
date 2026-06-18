@@ -131,6 +131,14 @@ pub struct RealmLayer {
     database: DatabaseLayer,
     data: Resident<RealmLayerData>,
     pub realms: ResidentVec<RealmData>,
+
+    /// Agent realm certs loaded from `--realm-cert`. Kept in memory only.
+    #[cfg(feature = "agent")]
+    agent_certs: Vec<RealmAgentCert>,
+
+    /// Client realm certs loaded from `--realm-cert`. Kept in memory only.
+    #[cfg(feature = "client")]
+    client_certs: Vec<RealmClientCert>,
 }
 
 impl RealmLayer {
@@ -194,52 +202,37 @@ impl RealmLayer {
             }
         }
 
-        // Import configured certs if newer than what we have in the database
+        // Load realm certs from the paths supplied on the command line. These
+        // are kept in memory only and used directly when connecting to a
+        // server; nothing is persisted to the database, so they must be
+        // supplied on every run.
         #[cfg(feature = "agent")]
-        for path in config.agent_certs.as_ref().unwrap_or(&Vec::new()) {
-            let new_cert = RealmAgentCert::read(path)?;
-
-            let db = database.realm(new_cert.name()?)?;
-            let rw = db.rw_transaction()?;
-            let certs: Vec<RealmAgentCert> =
-                rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
-
-            // Only import if the given certificate is newer than the one
-            // already in the database.
-            if let Some(old_cert) = certs.iter().find(|c| c.name().ok() == new_cert.name().ok()) {
-                if new_cert.creation_time()? > old_cert.creation_time()? {
-                    info!(path = %path.display(), "Importing updated realm certificate");
-                    rw.upsert(new_cert)?;
-                    rw.commit()?;
-                }
-            } else {
-                info!(path = %path.display(), "Importing new realm certificate");
-                rw.insert(new_cert)?;
-                rw.commit()?;
-            }
-        }
-
+        let mut agent_certs = Vec::new();
         #[cfg(feature = "client")]
-        for path in config.client_certs.as_ref().unwrap_or(&Vec::new()) {
-            let new_cert = RealmClientCert::read(path)?;
+        let mut client_certs = Vec::new();
 
-            let db = database.realm(new_cert.name()?)?;
-            let rw = db.rw_transaction()?;
-            let certs: Vec<RealmClientCert> =
-                rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+        for path in &config.realm_certs {
+            #[allow(unused_mut, unused_assignments)]
+            let mut loaded = false;
 
-            // Only import if the given certificate is newer than the one
-            // already in the database.
-            if let Some(old_cert) = certs.iter().find(|c| c.name().ok() == new_cert.name().ok()) {
-                if new_cert.creation_time()? > old_cert.creation_time()? {
-                    info!(path = %path.display(), "Importing updated realm certificate");
-                    rw.upsert(new_cert)?;
-                    rw.commit()?;
+            #[cfg(feature = "agent")]
+            if let Ok(cert) = RealmAgentCert::read(path) {
+                info!(path = %path.display(), "Loaded agent realm certificate");
+                agent_certs.push(cert);
+                loaded = true;
+            }
+
+            #[cfg(feature = "client")]
+            if !loaded {
+                if let Ok(cert) = RealmClientCert::read(path) {
+                    info!(path = %path.display(), "Loaded client realm certificate");
+                    client_certs.push(cert);
+                    loaded = true;
                 }
-            } else {
-                info!(path = %path.display(), "Importing new realm certificate");
-                rw.insert(new_cert)?;
-                rw.commit()?;
+            }
+
+            if !loaded {
+                bail!("Failed to load realm certificate: {}", path.display());
             }
         }
 
@@ -247,6 +240,10 @@ impl RealmLayer {
             database,
             data: default_realm.resident(())?,
             realms,
+            #[cfg(feature = "agent")]
+            agent_certs,
+            #[cfg(feature = "client")]
+            client_certs,
         })
     }
 
@@ -262,40 +259,24 @@ impl RealmLayer {
 
     #[cfg(feature = "client")]
     pub fn find_client_cert(&self, realm: RealmName) -> Result<RealmClientCert> {
-        let db = self.realm(realm.clone())?;
-        let r = db.r_transaction()?;
-
-        {
-            let certs: Vec<RealmClientCert> =
-                r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
-
-            for cert in certs {
-                if cert.name()? == realm {
-                    return Ok(cert);
-                }
+        for cert in &self.client_certs {
+            if cert.name()? == realm {
+                return Ok(cert.clone());
             }
-
-            bail!("Failed to find cert");
         }
+
+        bail!("No client realm certificate loaded for realm: {realm}");
     }
 
     #[cfg(feature = "agent")]
     pub fn find_agent_cert(&self, realm: RealmName) -> Result<RealmAgentCert> {
-        let db = self.realm(realm.clone())?;
-        let r = db.r_transaction()?;
-
-        {
-            let certs: Vec<RealmAgentCert> =
-                r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
-
-            for cert in certs {
-                if cert.name()? == realm {
-                    return Ok(cert);
-                }
+        for cert in &self.agent_certs {
+            if cert.name()? == realm {
+                return Ok(cert.clone());
             }
-
-            bail!("Failed to find cert");
         }
+
+        bail!("No agent realm certificate loaded for realm: {realm}");
     }
 }
 

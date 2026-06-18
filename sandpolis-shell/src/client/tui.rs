@@ -1,4 +1,5 @@
 use crate::ShellLayer;
+use crate::session::{ShellOutput, ShellSessionStreamRequest, ShellSessionStreamRequester};
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -7,20 +8,33 @@ use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget, WidgetRef};
 use sandpolis_client::tui::EventHandler;
 use sandpolis_instance::InstanceId;
+use sandpolis_instance::network::stream::StreamMessage;
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Mutex;
+use tokio::sync::mpsc::{Receiver, Sender, UnboundedReceiver, channel};
+use tracing::warn;
 use tui_term::widget::PseudoTerminal;
 
 pub struct ShellTerminalWidget {
     pub shell: ShellLayer,
-    pub parser: tui_term::vt100::Parser,
+    /// Target agent this terminal connects to.
+    instance: InstanceId,
+    /// VT100 screen state. Behind a `Mutex` so async output can be drained
+    /// during the `&self` render pass.
+    parser: Mutex<tui_term::vt100::Parser>,
     pub shell_path: Option<PathBuf>,
     pub connected: bool,
     pub input_buffer: String,
     pub status_message: String,
+    /// stdout/stderr produced by the relayed session, drained each render.
+    output: Mutex<Option<UnboundedReceiver<ShellOutput>>>,
+    /// Outbound stdin/resize to the agent; dropping it closes the stream.
+    outbound: Option<Sender<ShellSessionStreamRequest>>,
 }
 
 impl ShellTerminalWidget {
-    pub fn new(_instance: InstanceId, shell: ShellLayer) -> Self {
+    pub fn new(instance: InstanceId, shell: ShellLayer) -> Self {
         let mut parser = tui_term::vt100::Parser::new(24, 80, 0);
         // Initialize with a welcome message
         parser.process(b"Shell Terminal - Press Enter to connect\r\n");
@@ -28,11 +42,14 @@ impl ShellTerminalWidget {
 
         Self {
             shell,
-            parser,
+            instance,
+            parser: Mutex::new(parser),
             shell_path: None,
             connected: false,
             input_buffer: String::new(),
             status_message: "Ready to connect".to_string(),
+            output: Mutex::new(None),
+            outbound: None,
         }
     }
 
@@ -42,77 +59,83 @@ impl ShellTerminalWidget {
     }
 
     pub fn connect(&mut self) {
-        if let Some(shell_path) = &self.shell_path {
-            self.connected = true;
-            self.status_message = format!("Connected to {}", shell_path.display());
-
-            // Write welcome message to parser
-            let welcome = format!("Connected to shell: {}\r\n", shell_path.display());
-            self.parser.process(welcome.as_bytes());
-            self.parser.process(b"$ "); // Simple prompt
-        } else {
-            self.status_message = "No shell path set".to_string();
+        if self.connected {
+            return;
         }
+
+        let path = self
+            .shell_path
+            .clone()
+            .unwrap_or_else(|| PathBuf::from("/bin/sh"));
+
+        let (rows, cols) = {
+            let parser = self.parser.lock().unwrap();
+            parser.screen().size()
+        };
+
+        let (requester, output) = ShellSessionStreamRequester::channel();
+        let (outbound, outbound_rx) = channel(64);
+
+        let initial = ShellSessionStreamRequest::Start {
+            path: path.clone(),
+            environment: HashMap::new(),
+            rows: rows as u32,
+            cols: cols as u32,
+        };
+        spawn_shell_stream(self.instance, requester, initial, outbound_rx);
+
+        *self.output.lock().unwrap() = Some(output);
+        self.outbound = Some(outbound);
+        self.connected = true;
+        self.status_message = format!("Connected to {}", path.display());
+
+        let welcome = format!("Connected to shell: {}\r\n", path.display());
+        self.parser.lock().unwrap().process(welcome.as_bytes());
     }
 
     pub fn disconnect(&mut self) {
         self.connected = false;
+        // Dropping the sender closes the relayed stream's outbound channel.
+        self.outbound = None;
+        *self.output.lock().unwrap() = None;
         self.status_message = "Disconnected".to_string();
-        self.parser.process(b"\r\nDisconnected from shell\r\n");
+        self.parser
+            .lock()
+            .unwrap()
+            .process(b"\r\nDisconnected from shell\r\n");
     }
 
-    pub fn send_input(&mut self, input: &str) {
-        if self.connected {
-            // Echo the input to the parser
-            self.parser.process(input.as_bytes());
-
-            if input.ends_with('\r') || input.ends_with('\n') {
-                // Process the command here - in a real implementation,
-                // this would send the command to the actual shell process
-                self.parser.process(b"\r\n");
-
-                // Simple command simulation
-                let command = input.trim();
-                match command {
-                    "exit" | "quit" => {
-                        self.disconnect();
-                        return;
-                    }
-                    "clear" => {
-                        // Clear the screen by creating new parser
-                        self.parser = tui_term::vt100::Parser::new(24, 80, 0);
-                        self.parser.process(b"$ ");
-                        return;
-                    }
-                    _ => {
-                        // Simulate command output
-                        let output = format!("Command executed: {}\r\n", command);
-                        self.parser.process(output.as_bytes());
-                    }
-                }
-
-                // Show prompt again
-                self.parser.process(b"$ ");
-            }
+    /// Forward raw bytes to the agent's shell as stdin.
+    fn send_stdin(&mut self, data: Vec<u8>) {
+        if let Some(tx) = &self.outbound {
+            let _ = tx.try_send(ShellSessionStreamRequest::Stdin { data });
         }
     }
 
     pub fn resize(&mut self, width: u16, height: u16) {
-        // Create new parser with new dimensions
-        let mut new_parser = tui_term::vt100::Parser::new(height, width, 0);
-        // Copy current screen content if needed
-        if self.connected {
-            new_parser.process(b"$ ");
-        } else {
-            new_parser.process(b"Shell Terminal - Press Enter to connect\r\n");
-            new_parser.process(b"Use Ctrl+C to disconnect\r\n");
+        *self.parser.lock().unwrap() = tui_term::vt100::Parser::new(height, width, 0);
+        if let Some(tx) = &self.outbound {
+            let _ = tx.try_send(ShellSessionStreamRequest::Resize {
+                rows: height as u32,
+                cols: width as u32,
+            });
         }
-        self.parser = new_parser;
     }
 }
 
 impl WidgetRef for ShellTerminalWidget {
     fn render_ref(&self, area: Rect, buf: &mut Buffer) {
+        // Drain any output produced by the relayed session into the parser.
+        if let Ok(mut output) = self.output.lock() {
+            if let Some(rx) = output.as_mut() {
+                while let Ok(chunk) = rx.try_recv() {
+                    let mut parser = self.parser.lock().unwrap();
+                    parser.process(&chunk.stdout);
+                    parser.process(&chunk.stderr);
+                }
+            }
+        }
+
         // Split the area into terminal and status bar
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -137,8 +160,11 @@ impl WidgetRef for ShellTerminalWidget {
         terminal_block.render(chunks[0], buf);
 
         // Render the terminal content
-        let terminal_widget = PseudoTerminal::new(self.parser.screen());
-        Widget::render(terminal_widget, terminal_inner, buf);
+        {
+            let parser = self.parser.lock().unwrap();
+            let terminal_widget = PseudoTerminal::new(parser.screen());
+            Widget::render(terminal_widget, terminal_inner, buf);
+        }
 
         // Render status bar
         let status_text = vec![
@@ -172,10 +198,12 @@ impl EventHandler for ShellTerminalWidget {
                         if !self.connected {
                             self.connect();
                         } else {
-                            // Send the current input buffer and clear it
-                            let input = format!("{}\r", self.input_buffer);
-                            self.send_input(&input);
-                            self.input_buffer.clear();
+                            // Forward the buffered line as stdin (pipes don't
+                            // echo, so echo locally first), then clear it.
+                            let mut data = std::mem::take(&mut self.input_buffer).into_bytes();
+                            data.push(b'\n');
+                            self.parser.lock().unwrap().process(b"\r\n");
+                            self.send_stdin(data);
                         }
                         return None;
                     }
@@ -192,24 +220,23 @@ impl EventHandler for ShellTerminalWidget {
                     KeyCode::Char(c) => {
                         if self.connected {
                             self.input_buffer.push(c);
-                            // Send character immediately for real-time feedback
-                            self.send_input(&c.to_string());
+                            // Local echo for real-time feedback.
+                            self.parser.lock().unwrap().process(c.to_string().as_bytes());
                         }
                         return None;
                     }
                     KeyCode::Backspace => {
                         if self.connected && !self.input_buffer.is_empty() {
                             self.input_buffer.pop();
-                            // Send backspace sequence
-                            self.parser.process(b"\x08 \x08");
+                            // Erase one character on screen.
+                            self.parser.lock().unwrap().process(b"\x08 \x08");
                         }
                         return None;
                     }
                     KeyCode::Tab => {
                         if self.connected {
-                            // Tab completion placeholder
                             self.input_buffer.push('\t');
-                            self.send_input("\t");
+                            self.parser.lock().unwrap().process(b"\t");
                         }
                         return None;
                     }
@@ -222,6 +249,47 @@ impl EventHandler for ShellTerminalWidget {
         }
         Some(event)
     }
+}
+
+/// Open a relayed shell session to `instance` and forward outbound requests
+/// (stdin, resize) over it until the channel closes.
+fn spawn_shell_stream(
+    instance: InstanceId,
+    requester: ShellSessionStreamRequester,
+    initial: ShellSessionStreamRequest,
+    mut outbound_rx: Receiver<ShellSessionStreamRequest>,
+) {
+    let Some(conn) = sandpolis_client::sync::connection() else {
+        warn!("No server connection; cannot start shell session");
+        return;
+    };
+    tokio::spawn(async move {
+        let (id, msg_tx) = match conn.open_stream_to(instance, requester, initial).await {
+            Ok(v) => v,
+            Err(e) => {
+                warn!(error = %e, "Failed to open shell session");
+                return;
+            }
+        };
+        while let Some(req) = outbound_rx.recv().await {
+            let payload = match serde_cbor::to_vec(&req) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+            if msg_tx
+                .send(StreamMessage {
+                    stream_id: id,
+                    payload,
+                    dst: Some(instance),
+                })
+                .await
+                .is_err()
+            {
+                break;
+            }
+        }
+        conn.close_stream(id);
+    });
 }
 
 /// Shell selector widget for choosing which shell to use

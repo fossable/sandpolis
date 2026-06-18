@@ -235,6 +235,65 @@ impl NodeController for DesktopController {
     }
 }
 
+/// Open a relayed desktop stream to `instance` and forward outbound requests
+/// (input, Stop) over it until the channel closes.
+fn spawn_stream(
+    instance: InstanceId,
+    requester: DesktopStreamRequester,
+    initial: DesktopStreamRequest,
+    mut outbound_rx: Receiver<DesktopStreamRequest>,
+) {
+    let Some(conn) = sandpolis_client::sync::connection() else {
+        warn!("No server connection; cannot start desktop stream");
+        return;
+    };
+    tokio::spawn(async move {
+        let (id, msg_tx) = match conn.open_stream_to(instance, requester, initial).await {
+            Ok(v) => v,
+            Err(e) => {
+                warn!(error = %e, "Failed to open desktop stream");
+                return;
+            }
+        };
+        while let Some(req) = outbound_rx.recv().await {
+            let payload = match serde_cbor::to_vec(&req) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+            if msg_tx
+                .send(StreamMessage {
+                    stream_id: id,
+                    payload,
+                    dst: Some(instance),
+                })
+                .await
+                .is_err()
+            {
+                break;
+            }
+        }
+        conn.close_stream(id);
+    });
+}
+
+/// Open a one-shot relayed screenshot stream to `instance`. The response returns
+/// over the requester's channel.
+fn spawn_screenshot(
+    instance: InstanceId,
+    requester: DesktopScreenshotRequester,
+    initial: DesktopScreenshotRequest,
+) {
+    let Some(conn) = sandpolis_client::sync::connection() else {
+        warn!("No server connection; cannot request screenshot");
+        return;
+    };
+    tokio::spawn(async move {
+        if let Err(e) = conn.open_stream_to(instance, requester, initial).await {
+            warn!(error = %e, "Failed to request screenshot");
+        }
+    });
+}
+
 /// Build an RGBA8 [`Image`] for a decoded frame.
 fn image_from_rgba(width: u32, height: u32, rgba: Vec<u8>) -> Image {
     Image::new(

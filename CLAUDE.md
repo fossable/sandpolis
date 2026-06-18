@@ -46,7 +46,6 @@ cd android && ./gradlew assembleDebug
 
 ## Core features
 
-- ~Persistent database stores native rust structs~
 - Consume auditd
 - Manage firmware updates
 - Inspect nixpkgs package versions
@@ -85,17 +84,22 @@ cd android && ./gradlew assembleDebug
 
 ## Probe layer
 
-> `sandpolis-probe` exposes one-line stub files for most protocols. Each is a
-> separate roadmap item.
+In the UI, the probes should have a node controller window below them with tabs
+for each of the following probe "integrations":
 
 - Docker probe (`docker.rs`)
+  - Control the docker daemon by starting/stopping containers, etc
 - HTTP probe (`http.rs`)
 - libvirt probe (`libvirt.rs`)
+  - Control virtual machines
 - ONVIF probe (`onvif.rs`)
+  - View the video stream
 - RDP probe (`rdp.rs`)
 - RTSP probe (`rtsp/`)
+  - View the video stream
 - SSH probe (`ssh.rs`)
 - VNC probe (`vnc.rs`)
+  - Use the `vnc` crate. We have an example of usage at @../goldboot
 - IPMI probe (skeleton in `ipmi.rs`, needs real BMC queries)
 - SNMP probe — partial, needs MIB-driven discovery
 - ARP probe (`arp/`) — verify completeness
@@ -106,10 +110,6 @@ cd android && ./gradlew assembleDebug
 - Agent self-uninstall (`sandpolis-agent/src/uninstall.rs` is `todo!()`)
 - Embedded config support (`sandpolis-agent/src/config.rs` TODO)
 - Connection retry logic (`sandpolis/src/agent/mod.rs` TODO)
-
-## CLI
-
-- General command coverage audit — several arms are `todo!()`
 
 ## Client — TUI
 

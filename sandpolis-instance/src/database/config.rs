@@ -7,7 +7,9 @@ use validator::Validate;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DatabaseConfig {
-    /// Override default storage directory
+    /// Storage directory, set via the `--data-dir` flag. Not part of the on-disk
+    /// config.
+    #[serde(skip)]
     pub storage: Option<PathBuf>,
 
     /// Don't persist any data

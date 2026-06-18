@@ -32,6 +32,7 @@ ratatui-image = { workspace = true, optional = true }
 bevy = { workspace = true, optional = true }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
 inventory = { workspace = true, optional = true }
+serde_cbor = { workspace = true, optional = true }
 
 [features]
 agent = [
@@ -45,7 +46,7 @@ agent = [
 ]
 # Client stream requesters decode frames (zstd + color modes) and screenshots
 # (PNG), so they need the same codec deps as the agent encoder.
-client = ["dep:zstd", "dep:image", "dep:tokio"]
+client = ["dep:zstd", "dep:image", "dep:tokio", "dep:serde_cbor"]
 client-gui = [
   "client",
   "dep:bevy",

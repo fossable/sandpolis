@@ -63,7 +63,15 @@ async fn main() -> Result<ExitCode> {
     }
 
     // Load config
-    let config = Configuration::new(config_path)?;
+    let mut config = Configuration::new(config_path)?;
+
+    // Realm certs come from the command line only; they're loaded fresh on
+    // every run and never persisted to the config or database.
+    config.realm.realm_certs = args.realm.realm_cert.clone();
+
+    // The database location comes from the command line, not the config file.
+    config.database.storage = args.database.data_dir.clone();
+
     debug!(config = ?config, "Instance configuration");
 
     // Default to all compiled instance types
