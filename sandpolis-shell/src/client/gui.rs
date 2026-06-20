@@ -164,7 +164,7 @@ fn spawn_shell_stream(
         warn!("No server connection; cannot start shell session");
         return;
     };
-    tokio::spawn(async move {
+    sandpolis_client::sync::spawn(async move {
         let (id, msg_tx) = match conn.open_stream_to(instance, requester, initial).await {
             Ok(v) => v,
             Err(e) => {

@@ -140,6 +140,20 @@ async fn main() -> Result<ExitCode> {
             .push(format!("https://127.0.0.1:{}/default", config.server.listen.port()));
     }
 
+    // TODO do this somewhere else
+    #[cfg(all(feature = "server", feature = "layer-probe"))]
+    if run_instances.contains(&"server") {
+        let base = config.clone();
+        sandpolis_probe::set_device_persist(move |devices| {
+            let mut cfg = base.clone();
+            let probe = sandpolis_probe::devices_to_config(devices);
+            cfg.modify(|c| {
+                c.probe = probe.clone();
+                Ok(())
+            })
+        });
+    }
+
     // Load state
     let state = InstanceState::new(
         config.clone(),

@@ -1,4 +1,4 @@
-use crate::gui::node::{NodeEntity, Selected, WorldView};
+use crate::gui::node::{ExcludeFromSelection, NodeEntity, Selected, WorldView};
 use crate::gui::ui::gating::UiPointerState;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
@@ -30,7 +30,7 @@ pub fn handle_node_selection(
     windows: Query<&Window, With<PrimaryWindow>>,
     camera_query: Query<(&Camera, &GlobalTransform), With<WorldView>>,
     mut commands: Commands,
-    node_query: Query<(Entity, &Transform, &NodeEntity)>,
+    node_query: Query<(Entity, &Transform, &NodeEntity), Without<ExcludeFromSelection>>,
     mut selection_set: ResMut<SelectionSet>,
 ) {
     // Don't handle selection if the pointer is over blocking UI

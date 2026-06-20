@@ -35,6 +35,11 @@ pub trait NodeController: Send + Sync + 'static {
 /// any layer-specific resource types.
 pub type ToolbarCallback = Arc<dyn Fn(&mut Commands) + Send + Sync>;
 
+/// Predicate deciding whether a toolbar button is currently enabled. It reads the
+/// `World` (e.g. a layer-specific selection resource) so the registry needs no
+/// knowledge of layer-specific types. Evaluated every frame.
+pub type ToolbarEnabledFn = Arc<dyn Fn(&World) -> bool + Send + Sync>;
+
 /// A single button shown in the layer toolbar while a layer is active.
 #[derive(Clone)]
 pub struct ToolbarAction {
@@ -44,6 +49,9 @@ pub struct ToolbarAction {
     pub icon: &'static str,
     /// Invoked when the button is clicked.
     pub on_click: ToolbarCallback,
+    /// Whether the button is currently enabled. Disabled buttons are dimmed and
+    /// ignore clicks. Defaults to always-enabled.
+    pub enabled: ToolbarEnabledFn,
 }
 
 /// Everything the client needs to know about a layer, registered by its
@@ -95,6 +103,25 @@ impl LayerClientInfo {
             label,
             icon,
             on_click: Arc::new(on_click),
+            enabled: Arc::new(|_| true),
+        });
+        self
+    }
+
+    /// Add a toolbar button whose enabled state is decided each frame by
+    /// `enabled` (e.g. a button active only while something is selected).
+    pub fn with_toolbar_action_gated(
+        mut self,
+        label: &'static str,
+        icon: &'static str,
+        on_click: impl Fn(&mut Commands) + Send + Sync + 'static,
+        enabled: impl Fn(&World) -> bool + Send + Sync + 'static,
+    ) -> Self {
+        self.toolbar_actions.push(ToolbarAction {
+            label,
+            icon,
+            on_click: Arc::new(on_click),
+            enabled: Arc::new(enabled),
         });
         self
     }

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Delete probe: trash can -->
+  <!-- Lid -->
+  <line x1="14" y1="18" x2="50" y2="18" stroke="#2c3e50" stroke-width="3" stroke-linecap="round"/>
+  <path d="M26 18 L26 13 L38 13 L38 18" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Body -->
+  <path d="M18 18 L20 52 Q20 54 22 54 L42 54 Q44 54 44 52 L46 18 Z"
+        fill="none" stroke="#e74c3c" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Slots -->
+  <line x1="27" y1="26" x2="27" y2="46" stroke="#7f8c8d" stroke-width="2" stroke-linecap="round"/>
+  <line x1="32" y1="26" x2="32" y2="46" stroke="#7f8c8d" stroke-width="2" stroke-linecap="round"/>
+  <line x1="37" y1="26" x2="37" y2="46" stroke="#7f8c8d" stroke-width="2" stroke-linecap="round"/>
+</svg>

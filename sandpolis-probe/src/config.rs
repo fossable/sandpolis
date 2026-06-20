@@ -2,22 +2,61 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::net::IpAddr;
 
-use crate::rtsp::RtspConfig;
-
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
 pub struct ProbeLayerConfig {
     pub devices: Vec<DeviceConfig>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+/// A single managed device. One device may expose several protocols (e.g. an IP
+/// camera reachable over both RTSP and ONVIF), so each protocol is an optional
+/// sub-config. This is both the authoring format and the persisted format.
+///
+/// The device's [`ip`](DeviceConfig::ip) is the single source of the device's
+/// address; per-protocol configs reference it rather than repeating an address.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DeviceConfig {
+    /// Human-readable name for the device.
+    pub name: Option<String>,
+    /// The device's network address. Protocols that connect to the device (e.g.
+    /// RTSP) use this address.
     pub ip: IpAddr,
-    pub rtsp: Option<RtspConfig>,
+    pub rtsp: Option<RtspProbeConfig>,
     pub wol: Option<WolProbeConfig>,
+    pub ssh: Option<SshProbeConfig>,
+    pub rdp: Option<RdpProbeConfig>,
+    pub vnc: Option<VncProbeConfig>,
+    pub http: Option<HttpProbeConfig>,
+    pub ipmi: Option<IpmiProbeConfig>,
+    pub snmp: Option<SnmpProbeConfig>,
+    pub onvif: Option<OnvifProbeConfig>,
+    pub docker: Option<DockerProbeConfig>,
+    pub libvirt: Option<LibvirtProbeConfig>,
+    pub ups: Option<UpsProbeConfig>,
+}
+
+impl Default for DeviceConfig {
+    fn default() -> Self {
+        Self {
+            name: None,
+            ip: IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED),
+            rtsp: None,
+            wol: None,
+            ssh: None,
+            rdp: None,
+            vnc: None,
+            http: None,
+            ipmi: None,
+            snmp: None,
+            onvif: None,
+            docker: None,
+            libvirt: None,
+            ups: None,
+        }
+    }
 }
 
 /// RDP probe configuration.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct RdpProbeConfig {
     /// Hostname or IP address.
     pub host: String,
@@ -32,7 +71,7 @@ pub struct RdpProbeConfig {
 }
 
 /// SSH probe configuration.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct SshProbeConfig {
     /// Hostname or IP address.
     pub host: String,
@@ -49,7 +88,7 @@ pub struct SshProbeConfig {
 }
 
 /// UPS probe configuration (via NUT).
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct UpsProbeConfig {
     /// NUT server hostname.
     pub host: String,
@@ -64,7 +103,7 @@ pub struct UpsProbeConfig {
 }
 
 /// VNC probe configuration.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct VncProbeConfig {
     /// Hostname or IP address.
     pub host: String,
@@ -75,7 +114,7 @@ pub struct VncProbeConfig {
 }
 
 /// Wake-on-LAN probe configuration.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct WolProbeConfig {
     /// MAC address of the target device.
     pub mac_address: String,
@@ -88,7 +127,7 @@ pub struct WolProbeConfig {
 }
 
 /// HTTP probe configuration.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct HttpProbeConfig {
     /// URL to probe.
     pub url: String,
@@ -107,7 +146,7 @@ pub struct HttpProbeConfig {
 }
 
 /// IPMI probe configuration.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct IpmiProbeConfig {
     /// BMC hostname or IP address.
     pub host: String,
@@ -121,21 +160,25 @@ pub struct IpmiProbeConfig {
     pub interface_type: Option<String>,
 }
 
-/// RTSP probe configuration.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+/// RTSP probe configuration. The host comes from the device's
+/// [`ip`](DeviceConfig::ip); the streaming URL is built as
+/// `rtsp://[user:pass@]<device ip>:<port>/<path>`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct RtspProbeConfig {
-    /// RTSP URL (rtsp://host:port/path).
-    pub url: String,
+    /// RTSP port (default: 554).
+    pub port: Option<u16>,
+    /// Stream path (e.g. `cam/realmonitor?channel=1&subtype=1` or `stream1`).
+    pub path: String,
     /// Username for RTSP authentication.
     pub username: Option<String>,
     /// Password for RTSP authentication.
     pub password: Option<String>,
-    /// Transport protocol (UDP, TCP, HTTP).
+    /// Transport protocol (udp, tcp).
     pub transport: Option<String>,
 }
 
 /// SNMP probe configuration.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct SnmpProbeConfig {
     /// Hostname or IP address.
     pub host: String,
@@ -167,7 +210,7 @@ pub enum SnmpVersion {
 }
 
 /// ONVIF probe configuration.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct OnvifProbeConfig {
     /// Camera hostname or IP address.
     pub host: String,
@@ -182,7 +225,7 @@ pub struct OnvifProbeConfig {
 }
 
 /// Docker probe configuration.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct DockerProbeConfig {
     /// Docker host URL (e.g., unix:///var/run/docker.sock or tcp://host:2375).
     pub host: String,
@@ -197,7 +240,7 @@ pub struct DockerProbeConfig {
 }
 
 /// libvirt probe configuration.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct LibvirtProbeConfig {
     /// libvirt connection URI (e.g., qemu:///system, qemu+ssh://user@host/system).
     pub uri: String,
@@ -205,4 +248,48 @@ pub struct LibvirtProbeConfig {
     pub username: Option<String>,
     /// Private key path for SSH-based connections.
     pub private_key_path: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn device_config_ron_round_trip() {
+        let config = ProbeLayerConfig {
+            devices: vec![
+                DeviceConfig {
+                    name: Some("Front door camera".into()),
+                    ip: "10.0.0.220".parse().unwrap(),
+                    rtsp: Some(RtspProbeConfig {
+                        port: Some(554),
+                        path: "stream1".into(),
+                        username: Some("admin".into()),
+                        password: Some("hunter2".into()),
+                        transport: None,
+                    }),
+                    wol: Some(WolProbeConfig {
+                        mac_address: "f4:4d:30:62:c0:45".into(),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                },
+                DeviceConfig {
+                    name: Some("Rack switch".into()),
+                    ip: "10.0.0.2".parse().unwrap(),
+                    ssh: Some(SshProbeConfig {
+                        host: "10.0.0.2".into(),
+                        port: Some(22),
+                        username: Some("root".into()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                },
+            ],
+        };
+
+        let serialized = ron::ser::to_string(&config).unwrap();
+        let parsed: ProbeLayerConfig = ron::from_str(&serialized).unwrap();
+        assert_eq!(config, parsed);
+    }
 }

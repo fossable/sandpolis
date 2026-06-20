@@ -247,7 +247,7 @@ fn spawn_stream(
         warn!("No server connection; cannot start desktop stream");
         return;
     };
-    tokio::spawn(async move {
+    sandpolis_client::sync::spawn(async move {
         let (id, msg_tx) = match conn.open_stream_to(instance, requester, initial).await {
             Ok(v) => v,
             Err(e) => {
@@ -287,7 +287,7 @@ fn spawn_screenshot(
         warn!("No server connection; cannot request screenshot");
         return;
     };
-    tokio::spawn(async move {
+    sandpolis_client::sync::spawn(async move {
         if let Err(e) = conn.open_stream_to(instance, requester, initial).await {
             warn!(error = %e, "Failed to request screenshot");
         }

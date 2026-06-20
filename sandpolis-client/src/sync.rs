@@ -13,6 +13,7 @@ use sandpolis_instance::network::stream::{StreamId, StreamMessage};
 use sandpolis_instance::realm::RealmName;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
+use tokio::runtime::Handle;
 use tokio::sync::mpsc::Sender;
 
 static HANDLE: OnceLock<SyncHandle> = OnceLock::new();
@@ -27,8 +28,29 @@ pub fn init(connection: Arc<InstanceConnection>, database: DatabaseLayer) {
             connection,
             database,
             subs: Mutex::new(HashMap::new()),
+            // Captured here because `init` runs inside the Tokio runtime. UI
+            // callers (e.g. Bevy systems) invoke `subscribe`/`unsubscribe` from
+            // threads with no runtime context, so we spawn through this handle.
+            runtime: Handle::current(),
         }),
     });
+}
+
+/// Spawn a future onto the client's Tokio runtime from any thread.
+///
+/// UI code (Bevy systems, etc.) runs off the runtime's worker threads, so
+/// `tokio::spawn` would panic there. This routes through the runtime handle
+/// captured in [`init`]. Returns `false` if sync hasn't been initialized yet.
+pub fn spawn<F>(future: F) -> bool
+where
+    F: std::future::Future<Output = ()> + Send + 'static,
+{
+    if let Some(handle) = HANDLE.get() {
+        handle.inner.runtime.spawn(future);
+        true
+    } else {
+        false
+    }
 }
 
 /// The client's local database, if initialized. UI query functions read from it.
@@ -76,6 +98,7 @@ struct SyncHandleInner {
     connection: Arc<InstanceConnection>,
     database: DatabaseLayer,
     subs: Mutex<HashMap<SubKey, SubState>>,
+    runtime: Handle,
 }
 
 impl SyncHandle {
@@ -97,7 +120,7 @@ impl SyncHandle {
             }
         };
         let this = self.clone();
-        tokio::spawn(async move {
+        self.inner.runtime.spawn(async move {
             let filters = vec![SyncFilter {
                 model_id: Some(model_id),
                 instance,
@@ -125,7 +148,7 @@ impl SyncHandle {
         let state = self.inner.subs.lock().unwrap().remove(&key);
         if let Some(SubState::Active { id, tx }) = state {
             let connection = self.inner.connection.clone();
-            tokio::spawn(async move {
+            self.inner.runtime.spawn(async move {
                 let _ = connection.close_sync(id, &tx).await;
             });
         }

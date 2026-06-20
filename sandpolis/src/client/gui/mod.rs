@@ -45,7 +45,7 @@ use sandpolis_client::gui::input::{
 use sandpolis_client::gui::layer_picker::{
     LayerPickerState, focus_layer_search, layer_picker_keys, manage_layer_picker, rebuild_layer_rows,
 };
-use sandpolis_client::gui::layer_toolbar::rebuild_layer_toolbar;
+use sandpolis_client::gui::layer_toolbar::{rebuild_layer_toolbar, update_toolbar_button_enabled};
 use sandpolis_client::gui::layer_ui::{
     LayerIndicatorState, spawn_layer_indicator, update_layer_indicator,
 };
@@ -177,6 +177,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             focus_layer_search,
             rebuild_layer_rows,
             rebuild_layer_toolbar,
+            update_toolbar_button_enabled,
             layer_picker_keys,
             manage_node_picker,
             focus_node_search,

@@ -8715,6 +8715,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 
 [[package]]
+name = "openh264"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a12b82c14f702c2cece4e0fc28896c6a6bed5317dc13448c86ac41df91a6f82"
+dependencies = [
+ "openh264-sys2",
+ "wide 0.7.33",
+]
+
+[[package]]
+name = "openh264-sys2"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa9e072e9b270f3b291c80488dc160abc31ecc214ab3bfde937213cfd8c83b32"
+dependencies = [
+ "cc",
+ "nasm-rs",
+ "walkdir",
+]
+
+[[package]]
 name = "openssl"
 version = "0.10.80"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11649,14 +11670,17 @@ dependencies = [
  "inventory",
  "ipmi-rs",
  "macaddr",
+ "openh264",
  "rasn-snmp",
  "retina",
+ "ron",
  "rups",
  "russh",
  "sandpolis-client",
  "sandpolis-instance",
  "sandpolis-macros",
  "serde 1.0.228",
+ "serde_cbor",
  "tokio",
  "tracing",
  "url",

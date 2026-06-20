@@ -4,15 +4,17 @@
 //! to represent devices such as SSH hosts, IPMI-enabled servers, UPS devices,
 //! cameras, and more.
 
+use config::{DeviceConfig, ProbeLayerConfig};
 use sandpolis_instance::InstanceId;
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, LazyLock, RwLock};
+use std::sync::{Arc, LazyLock, OnceLock, RwLock};
 
 pub mod config;
 pub mod docker;
 pub mod http;
 pub mod ipmi;
 pub mod libvirt;
+pub mod management;
 pub mod onvif;
 pub mod rdp;
 pub mod rtsp;
@@ -25,43 +27,71 @@ pub mod wol;
 #[cfg(feature = "client-gui")]
 pub mod client;
 
-/// Probes registered on this instance (populated from config at startup).
+/// Devices registered on this instance (populated from config at startup, kept
+/// in sync over the management stream).
 ///
-/// This is a global because GUI extension trait methods have no access to
-/// layer state when rendering.
-pub static REGISTERED_PROBES: LazyLock<Arc<RwLock<Vec<RegisteredProbe>>>> =
+/// This is a global because GUI extension trait methods have no access to layer
+/// state when rendering, and the server-side management responder is constructed
+/// by a stateless factory.
+pub static REGISTERED_DEVICES: LazyLock<Arc<RwLock<Vec<RegisteredDevice>>>> =
     LazyLock::new(Default::default);
 
-/// The probe layer manages probe registrations and streaming state.
+/// Hook installed by the top-level `sandpolis` crate (server only) to persist the
+/// device list back to `sandpolis.ron`. The probe crate cannot reference the main
+/// crate's `Configuration` directly, so persistence is injected here.
+static DEVICE_PERSIST: OnceLock<
+    Box<dyn Fn(&[RegisteredDevice]) -> anyhow::Result<()> + Send + Sync>,
+> = OnceLock::new();
+
+/// Install the persistence hook (see [`DEVICE_PERSIST`]). Idempotent: the first
+/// caller wins.
+pub fn set_device_persist(
+    f: impl Fn(&[RegisteredDevice]) -> anyhow::Result<()> + Send + Sync + 'static,
+) {
+    let _ = DEVICE_PERSIST.set(Box::new(f));
+}
+
+/// Persist the current device list if a hook is installed.
+pub fn persist_devices(devices: &[RegisteredDevice]) {
+    if let Some(f) = DEVICE_PERSIST.get() {
+        if let Err(e) = f(devices) {
+            tracing::warn!(error = %e, "Failed to persist probe devices");
+        }
+    }
+}
+
+/// Rebuild the on-disk config from the current device list.
+pub fn devices_to_config(devices: &[RegisteredDevice]) -> ProbeLayerConfig {
+    ProbeLayerConfig {
+        devices: devices.iter().map(|d| d.device.clone()).collect(),
+    }
+}
+
+/// The probe layer manages device registrations and streaming state.
 #[derive(Clone)]
 #[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 pub struct ProbeLayer {
-    pub probes: Arc<RwLock<Vec<RegisteredProbe>>>,
+    pub devices: Arc<RwLock<Vec<RegisteredDevice>>>,
 }
 
 impl ProbeLayer {
-    pub fn new(config: config::ProbeLayerConfig, gateway: InstanceId) -> Self {
-        let mut probes = Vec::new();
-        for device in &config.devices {
-            if let Some(wol) = &device.wol {
-                probes.push(RegisteredProbe {
-                    id: probes.len() as u64 + 1,
-                    probe_type: ProbeType::Wol,
-                    name: wol
-                        .hostname
-                        .clone()
-                        .unwrap_or_else(|| device.ip.to_string()),
-                    gateway,
-                    config: ProbeConfig::Wol(wol.clone()),
-                    online: false,
-                    status_message: None,
-                });
-            }
-        }
+    pub fn new(config: ProbeLayerConfig, gateway: InstanceId) -> Self {
+        let devices: Vec<RegisteredDevice> = config
+            .devices
+            .into_iter()
+            .enumerate()
+            .map(|(i, device)| RegisteredDevice {
+                id: i as u64 + 1,
+                gateway,
+                device,
+                online: false,
+                status_message: None,
+            })
+            .collect();
 
-        *REGISTERED_PROBES.write().unwrap() = probes;
+        *REGISTERED_DEVICES.write().unwrap() = devices;
         Self {
-            probes: REGISTERED_PROBES.clone(),
+            devices: REGISTERED_DEVICES.clone(),
         }
     }
 }
@@ -151,151 +181,82 @@ impl ProbeType {
     }
 }
 
-/// Registered probe data stored in the database.
+/// A registered device, the runtime counterpart of a [`DeviceConfig`]. Each
+/// device maps to exactly one graph node; the protocols it exposes become tabs in
+/// its controller.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct RegisteredProbe {
-    /// Unique identifier for this probe.
+pub struct RegisteredDevice {
+    /// Unique identifier for this device (stable for the process lifetime).
     pub id: u64,
 
-    /// The type of probe.
-    pub probe_type: ProbeType,
-
-    /// Human-readable name for this probe.
-    pub name: String,
-
-    /// The gateway instance that manages this probe.
+    /// The gateway instance that reaches this device.
     pub gateway: InstanceId,
 
-    /// Type-specific configuration.
-    pub config: ProbeConfig,
+    /// Name/address plus the per-protocol configuration.
+    pub device: DeviceConfig,
 
-    /// Whether the probe is currently online/reachable.
+    /// Whether the device is currently online/reachable.
     pub online: bool,
 
     /// Last status message.
     pub status_message: Option<String>,
 }
 
-/// Type-specific probe configuration.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum ProbeConfig {
-    Rdp(config::RdpProbeConfig),
-    Ssh(config::SshProbeConfig),
-    Ups(config::UpsProbeConfig),
-    Vnc(config::VncProbeConfig),
-    Wol(config::WolProbeConfig),
-    Http(config::HttpProbeConfig),
-    Ipmi(config::IpmiProbeConfig),
-    Rtsp(config::RtspProbeConfig),
-    Snmp(config::SnmpProbeConfig),
-    Onvif(config::OnvifProbeConfig),
-    Docker(config::DockerProbeConfig),
-    Libvirt(config::LibvirtProbeConfig),
-}
-
-impl ProbeConfig {
-    pub fn probe_type(&self) -> ProbeType {
-        match self {
-            ProbeConfig::Rdp(_) => ProbeType::Rdp,
-            ProbeConfig::Ssh(_) => ProbeType::Ssh,
-            ProbeConfig::Ups(_) => ProbeType::Ups,
-            ProbeConfig::Vnc(_) => ProbeType::Vnc,
-            ProbeConfig::Wol(_) => ProbeType::Wol,
-            ProbeConfig::Http(_) => ProbeType::Http,
-            ProbeConfig::Ipmi(_) => ProbeType::Ipmi,
-            ProbeConfig::Rtsp(_) => ProbeType::Rtsp,
-            ProbeConfig::Snmp(_) => ProbeType::Snmp,
-            ProbeConfig::Onvif(_) => ProbeType::Onvif,
-            ProbeConfig::Docker(_) => ProbeType::Docker,
-            ProbeConfig::Libvirt(_) => ProbeType::Libvirt,
-        }
+impl RegisteredDevice {
+    /// Display name: the configured name, otherwise the IP.
+    pub fn display_name(&self) -> String {
+        self.device
+            .name
+            .clone()
+            .unwrap_or_else(|| self.device.ip.to_string())
     }
 }
 
-/// Initiate a scan for probes matching the given criteria.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ProbeScanRequest {
-    /// Only scan for probes of this type.
-    pub probe_type: ProbeType,
+impl DeviceConfig {
+    /// The protocols this device exposes, in a stable display order.
+    pub fn protocols(&self) -> Vec<ProbeType> {
+        let mut out = Vec::new();
+        if self.rtsp.is_some() {
+            out.push(ProbeType::Rtsp);
+        }
+        if self.onvif.is_some() {
+            out.push(ProbeType::Onvif);
+        }
+        if self.vnc.is_some() {
+            out.push(ProbeType::Vnc);
+        }
+        if self.rdp.is_some() {
+            out.push(ProbeType::Rdp);
+        }
+        if self.ssh.is_some() {
+            out.push(ProbeType::Ssh);
+        }
+        if self.http.is_some() {
+            out.push(ProbeType::Http);
+        }
+        if self.ipmi.is_some() {
+            out.push(ProbeType::Ipmi);
+        }
+        if self.snmp.is_some() {
+            out.push(ProbeType::Snmp);
+        }
+        if self.docker.is_some() {
+            out.push(ProbeType::Docker);
+        }
+        if self.libvirt.is_some() {
+            out.push(ProbeType::Libvirt);
+        }
+        if self.ups.is_some() {
+            out.push(ProbeType::Ups);
+        }
+        if self.wol.is_some() {
+            out.push(ProbeType::Wol);
+        }
+        out
+    }
 
-    /// Limit the scan to this network (CIDR).
-    pub network: String,
-}
-
-/// Progress update during a probe scan.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ProbeScanData {
-    /// Discovered probe addresses/identifiers.
-    pub found: Vec<String>,
-    /// Scan progress (0.0 to 1.0).
-    pub progress: f32,
-    /// Estimated seconds until completion.
-    pub estimated_completion: Option<u32>,
-}
-
-/// Request to register a new probe.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct RegisterProbeRequest {
-    /// Human-readable name for the probe.
-    pub name: String,
-
-    /// The gateway instance that will manage this probe.
-    pub gateway: InstanceId,
-
-    /// Probe configuration.
-    pub config: ProbeConfig,
-}
-
-/// Response from registering a probe.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum RegisterProbeResponse {
-    /// Probe registered successfully.
-    Ok { probe_id: u64 },
-    /// Failed to register probe.
-    Failed(String),
-}
-
-/// Request to list all probes for a gateway.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ListProbesRequest {
-    /// The gateway instance to list probes for.
-    pub gateway: InstanceId,
-}
-
-/// Response from listing probes.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ListProbesResponse {
-    /// List of registered probes.
-    pub probes: Vec<RegisteredProbe>,
-}
-
-/// Request to delete a probe.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DeleteProbeRequest {
-    /// The probe ID to delete.
-    pub probe_id: u64,
-}
-
-/// Response from deleting a probe.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum DeleteProbeResponse {
-    Ok,
-    NotFound,
-    Failed(String),
-}
-
-/// Request to test probe connectivity.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct TestProbeRequest {
-    /// The probe configuration to test.
-    pub config: ProbeConfig,
-}
-
-/// Response from testing probe connectivity.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum TestProbeResponse {
-    /// Connection successful.
-    Ok { message: String },
-    /// Connection failed.
-    Failed { error: String },
+    /// The protocol used to represent the device's graph node icon.
+    pub fn primary(&self) -> Option<ProbeType> {
+        self.protocols().first().copied()
+    }
 }

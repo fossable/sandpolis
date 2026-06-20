@@ -20,6 +20,13 @@ pub struct NodeEntity {
 #[derive(Component)]
 pub struct Selected;
 
+/// Marker for nodes that the generic node-selection handler must ignore (e.g.
+/// probe/device nodes, which have their own per-device selection). These nodes
+/// share their gateway's `InstanceId`, so the `InstanceId`-keyed selection set
+/// can't represent them.
+#[derive(Component)]
+pub struct ExcludeFromSelection;
+
 /// The desired visual diameter for all nodes
 const NODE_VISUAL_DIAMETER: f32 = 100.0;
 
